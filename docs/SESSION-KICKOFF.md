@@ -74,6 +74,15 @@ bootstrap rules in Section 4. Note that the enrolment screen shipped in
 0.4.0 is UNREACHABLE (nothing calls `show("#s-enroll")`); the burner URL
 is what should reach it.
 
+ARCHITECTURE DEBT, recorded in Section 9: the root of trust is unmodelled.
+Three parts of the design lean on it, and the only thing implementing it is
+ADMIN_TOKEN, a bootstrap credential that became the root of trust by
+accident of being the only thing that can reclaim an instance. It is a
+proxy for hosting access, has no custody model, is not auditable, and
+cannot be rotated without returning the instance to unclaimed. Deciding
+what a root of trust should BE for a BIO group is a doctrine question of
+the same weight as the membership model and deserves its own session.
+
 Also scheduled: secure verified export (Section 8), which is what makes
 every governance rule enforceable, since a group that cannot leave can be
 held. The migration tooling already performs a verified transfer of the

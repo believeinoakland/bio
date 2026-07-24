@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**v1.3, July 24, 2026.** First-class architecture document, peer to
+**v1.4, July 24, 2026.** First-class architecture document, peer to
 BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and
 BIO_Functional_Architecture. Specified by Bob Krause in session, July 24,
 2026.
@@ -406,7 +406,60 @@ groups form and dissolve freely; Requirement 13 says compromising one
 group must not compromise the network. Applied inward, a captured instance
 is a captured group, and the prescribed response is to fork away from it.
 
-## 9. Data model sketch
+## 9. Architecture debt: the root of trust is unmodelled
+
+Recorded July 24, 2026 as debt, deliberately not resolved.
+
+This document leans on "the root of trust" in three places: as the
+backstop when an administrator is captured (4.6), as the reason hosting
+access must be separated from administrator status (4.8), and as the
+credential that gates full working-corpus export (8.1). In each case the
+concept does real load-bearing work.
+
+**The system has no first-class representation of it.** What exists is
+ADMIN_TOKEN, a bootstrap credential living in the Worker's own settings,
+which was designed for a different job: to be spent once when a group
+claims its instance, and to serve as the recovery path when a password is
+lost. It became the root of trust by accident of being the only thing that
+can reclaim an instance.
+
+Four consequences, all of them debt rather than defects:
+
+1. **It is a proxy, not the thing itself.** Anyone with hosting access can
+   read or replace ADMIN_TOKEN. So gating export on ADMIN_TOKEN really
+   gates it on hosting access, which is the correct effect reached by an
+   unmodelled route. Section 4.8 asks groups to separate hosting access
+   from administrator status, and the software cannot verify that they
+   did, cannot show them whether they did, and cannot behave differently
+   if they did not.
+
+2. **It has no custody model.** There is one string. There is no m-of-n,
+   no split custody, no way for a group to require two of its three
+   trusted holders to act together. For the single most consequential
+   power in a group's instance, that is thin.
+
+3. **It is not auditable.** A change of ADMIN_TOKEN happens in a hosting
+   dashboard and leaves no trace in the record. The instance can observe
+   that its bootstrap credential no longer matches what it saw before, and
+   in fact does exactly that to offer re-claiming, but a group cannot ask
+   the record who held the root of trust and when that changed.
+
+4. **It cannot be rotated without ceremony.** Replacing it returns the
+   instance to unclaimed, which is appropriate for recovery and much too
+   heavy for hygiene. So in practice it will not be rotated, and a
+   credential that is never rotated accumulates exposure.
+
+**Why this is recorded rather than fixed.** Doing it properly means
+deciding what the root of trust IS for a BIO group: a set of named key
+holders, a threshold policy, an out-of-band recovery instrument, or
+something that deliberately lives outside the software. That is a doctrine
+question of the same weight as the membership model itself, and it
+deserves its own analysis rather than being settled as a footnote to this
+one. Until then, every claim in this document about the root of trust
+should be read as "whoever controls the hosting account," because that is
+what it actually means today.
+
+## 10. Data model sketch
 
 Extends the existing `members` and `signers` tables rather than replacing
 them. Concrete DDL belongs with the implementation; the shape is:
@@ -423,7 +476,7 @@ them. Concrete DDL belongs with the implementation; the shape is:
 Handles are the join key everywhere, so the record never stores a cover
 alongside content.
 
-## 10. What must be true before this ships
+## 11. What must be true before this ships
 
 1. The index MUST filter derived reverse edges by the viewer's position
    with respect to each project. An unfiltered index leaks the interest
