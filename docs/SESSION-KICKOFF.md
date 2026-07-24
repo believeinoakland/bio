@@ -44,18 +44,21 @@ deliberately not used).
 
 Read it first. It is the design; do not re-derive it.
 
-ONE THING IS UNDECIDED. Section 4.6: whether removing a captured
-administrator deserves a proportionate path short of reclaiming the whole
-instance through ADMIN_TOKEN. Administrator status is irrevocable by
-design, and the holders of ADMIN_TOKEN are the group's root of trust, so
-the nuclear path always works. The question is whether it should be the
-only one. Ask Bob before building the admin model.
+NOTHING IN THE DOCUMENT IS UNDECIDED. Sections 4.6 and 7.9 were both
+settled on July 24, 2026 and the reasoning is recorded there.
 
-Section 7.9 is RESOLVED: a non-participant sees a project's skeleton (the
-Problems it stands above, the Information it cites, the Actions it
-initiates) and not its substance (analysis, work product, evaluations,
-session log, participant list). The evidence corpus stays shared among
-members; what participation scopes is the group's thinking.
+Two obligations from it that are easy to miss and expensive to retrofit:
+
+1. Project visibility has THREE positions, not two: uninvited (the project
+   is invisible entirely), invited-not-joined (skeleton only: the Problems
+   it stands above, the Information it cites, the Actions it initiates),
+   and joined (everything). Do not collapse the first two.
+2. The index derives the reverse-edge graph, and those derived edges MUST
+   be filtered by the viewer's position. Unfiltered, the index leaks which
+   projects are interested in which Information to every member, which
+   defeats the visibility model. The edge itself lives on the citing
+   object per State Rules 5.2, so the underlying data is already correct;
+   only the derived projection needs the filter.
 
 The member half below Section 7 is unblocked and can be built immediately:
 identity and handle with uniqueness enforcement, the required

@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**v1.1, July 24, 2026.** First-class architecture document, peer to
+**v1.2, July 24, 2026.** First-class architecture document, peer to
 BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and
 BIO_Functional_Architecture. Specified by Bob Krause in session, July 24,
 2026.
@@ -156,11 +156,29 @@ per Design Requirement 1 it is shared among at least two individuals and
 is transferable. Second, no interface may describe the administrator model
 as though it bounds this power, because it does not.
 
-**Still open:** whether removing a captured administrator should have a
-proportionate path short of reclaiming the whole instance. Candidates:
-unanimous consent of all other administrators, or supermajority with a
-waiting period and a recorded reason. The nuclear path exists and works;
-the question is whether it is the only one that should.
+**Removing a captured administrator.** No mechanism is safe at exactly
+two administrators: any removal power there is unilateral by construction,
+so either one can remove the other and a single capture is fatal. That is
+arithmetic, not a design failure, and it is why the floor of two is a
+floor rather than a target.
+
+At three or more, the rule is **unanimous consent of every administrator
+other than the target**, with a waiting period and a recorded reason. A
+lone captured administrator can never remove anyone, because they can
+never constitute the whole of "all others." Two honest administrators can
+remove a captured third. The rule fails only against a colluding
+majority, and nothing survives a colluding majority; that is a general
+property of governance rather than a defect here.
+
+So: no removal at two, unanimity-of-others at three or more, and the
+ADMIN_TOKEN reset as the backstop in every case.
+
+**Separating the root of trust from the administrators.** The holders of
+ADMIN_TOKEN need not be in-app administrators, and there is a real
+argument that they should not be. If the hosting account is held by
+someone outside the administrator set, the root of trust becomes an
+external check rather than a superset of the thing it checks. Groups
+should be told this is available and why it matters.
 
 ## 5. Capabilities
 
@@ -252,28 +270,46 @@ vocabulary of BIO_State_Rules_Consistency Section 5.1:
 Nothing in this hierarchy is exclusive. An Information cited by one
 Project may be cited by another, and by Problems under neither.
 
-**A member who is not a participant of a project sees its skeleton, not
-its substance.** Visible to any member: the objects the project points at,
-which is to say the Problems it stands above, the Information it cites,
-and the Actions it initiates. Not visible: the project's own content, its
-analysis record, its work product, its evaluations, its session log, and
-its participant list.
+**Three positions, not two.** Visibility depends on which of three
+positions a member occupies with respect to a project:
 
-This is the middle position between the two candidates this document
-previously recorded as open, and it is the right one. It preserves the
-record as a corpus shared among the group's members, so evidence gathered
-under one project is not walled off from a member working on another,
-which would fracture the very thing the record exists to be. What is
-withheld is the group's thinking: where an argument has got to, what has
-been ruled out, what is being prepared. That is the material with
-strategic and tactical value before publication, and it is exactly what
-project participation should scope.
+- **Uninvited.** The project is not visible at all. Not its existence, not
+  its name, not its references, not its participants.
+- **Invited, not joined.** The project's SKELETON is visible: the Problems
+  it stands above, the Information it cites, and the Actions it initiates.
+  View rights only.
+- **Joined.** Everything, subject to the member's capabilities.
 
-A consequence worth stating: because Information is shared and
-non-exclusive, a member can infer that SOME project is interested in a
-given piece of Information without being able to see which project or
-why. That is acceptable. Concealing the interest graph would require
-compartmenting the evidence corpus, which is the option rejected above.
+Administrators see all projects and all participant lists.
+
+**What the skeleton excludes**, for the invited: the project's own
+content, its analysis record, its work product, its evaluations, its
+session log, and its participant list.
+
+**The interest graph does not leak, and this is a property of the edge
+model rather than a concession.** Per BIO_State_Rules_Consistency Section
+5.2, `cites` lives on the citing object, so a Project's interest in a
+piece of Information is a property of the Project. The Information carries
+no record of who cites it. A member who cannot see a project therefore
+cannot see what it cites, and cannot recover it by inspecting the
+Information either.
+
+The one place the graph could escape is the index, which derives the
+reverse-edge graph (Section 5.3). Because the index is regenerable,
+per-group, and explicitly never authoritative, **derived reverse edges
+into projects MUST be filtered by the viewer's position**. This is an
+implementation obligation, not a design tradeoff, and it costs nothing
+doctrinally. An unfiltered index would leak the interest graph to every
+member and would be a defect.
+
+**Why the evidence corpus stays shared.** Information and Problems remain
+visible to the group's members generally. Compartmenting the evidence
+would fracture the thing the record exists to be, and would mean a member
+working on one project could not see material another project had already
+gathered. What project participation scopes is the group's thinking:
+where an argument has got to, what has been ruled out, what is being
+prepared. That is the material with strategic and tactical value before
+publication.
 
 ## 8. Data model sketch
 
@@ -294,10 +330,9 @@ alongside content.
 
 ## 9. What must be true before this ships
 
-1. Section 4.6: whether a proportionate path exists for removing a
-   captured administrator, short of reclaiming the instance through
-   ADMIN_TOKEN. The nuclear path works; this asks whether it should be
-   the only one.
+1. The index MUST filter derived reverse edges by the viewer's position
+   with respect to each project. An unfiltered index leaks the interest
+   graph and is a defect, not a tradeoff.
 2. The cover field labelled and documented as a distinguishing label
    rather than a legal name, wherever it appears.
 3. BIO_Technical_Architecture_Decisions v10 Section 10 annotated to point
