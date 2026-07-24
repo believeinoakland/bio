@@ -98,11 +98,21 @@ dependencies, injected filesystem). The gate port is no longer blocked on
 access. Read bio-plane/checks/README.md for the five injection seams that
 are the whole porting surface.
 
-TWO SHIPPED DEFECTS found by the July 24 consistency audit and recorded in
+THE MIGRATED RECORD IS CONFORMANT. The catalog was run against all 30
+bundles on biosmoke6 and found zero content findings. Do not re-migrate.
+
+THREE SHIPPED DEFECTS found by the July 24 consistency audit and recorded in
 BIO_DATAPLANE_STATE.md: the intake UI stamps illegal first states for
-Problems and Actions, and writes four frontmatter fields where the catalog
-requires fifteen. Fix these with the port, not before, so the gate proves
-the fix rather than the fix being asserted.
+Problems and Actions; it writes four frontmatter fields where the catalog
+requires fifteen; and readImage emits history as _history/<key>/<path> where
+the canonical layout is _history/bundle_<key>.md, which makes every bundle
+fail C-12.2 against the real checker. The third is the one to fix FIRST,
+because nothing else can be verified through a projection the checker cannot
+parse. schema.mjs line 3 settles which side changes: the bundle format is
+authoritative and the projection must never bend it.
+
+Fix the first two with the port, not before, so the gate proves the fix
+rather than the fix being asserted.
 
 Also outstanding: the C-series gate catalog port (the plane
 ships `plane-gate/0.1`, mechanical checks only), and the Conversion Plan

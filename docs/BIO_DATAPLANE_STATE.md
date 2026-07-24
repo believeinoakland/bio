@@ -154,7 +154,61 @@ Both findings have the same root cause. The intake UI was written against the
 plane's own tolerant store rather than against the catalog, because the catalog
 was unavailable. It is available now.
 
-**Finding 3: the relationship vocabulary disagrees between document and
+**Finding 3: the plane's history projection is incompatible with the
+authoritative checker.** Severity: real defect in the plane's read path. NOT a
+migration defect.
+
+The catalog was run against all 30 migrated bundles on biosmoke6, the first
+time the authoritative checks have ever been applied to the live record. Result:
+30 of 30 bundles report errors, and every one of the 168 errors is the same
+check with the same shape:
+
+```
+C-12.2: history file '_history/20260719T044000Z_9ed7a0c8/bundle.md'
+        maps to no manifest entry
+```
+
+The cause is a layout disagreement, not missing or corrupt content. The plane's
+`readImage` emits history as a directory path:
+
+```
+_history/<snap_key>/<path>              store.mjs line 59
+```
+
+The canonical bundle layout, which the catalog parses and which Drive used, is
+flat with the key as a filename suffix:
+
+```
+_history/bundle_<snap_key>.md          bio-checks checkHistoryCoherence
+```
+
+Same snapshots, same keys, same bytes, different arrangement. The catalog looks
+for `bundle_<key>.md` beside the manifest, finds a directory instead, and
+reports every snapshot as unaccounted for.
+
+**Which side is wrong is not a matter of taste.** `schema.mjs` states the rule
+in its own second line: "The bundle format is authoritative; this is a
+projection of it and must never bend it." The plane's projection is the
+deviation and the plane is what changes. Rewriting the catalog's path
+expectations would bend the format to fit the projection, which is the one thing
+the rule forbids.
+
+**What this result says about the migration: it is sound, and now
+independently so.** Beyond the projection mismatch there were ZERO findings.
+No missing core fields, no illegal states, no wrong headings, no unresolved
+references, no append-only violations, no hash mismatches, no release-authority
+violations. The catalog checked frontmatter contracts, state legality and
+transition edges, append-only surfaces against history snapshots, reference
+resolution across the whole store, citation registers, provenance registers,
+and mechanical-writer conformance, and found the migrated content conformant
+throughout. The earlier migration verification compared the plane against the
+Drive mirror; this is a stronger statement, because it checks the content
+against the specification rather than against its source.
+
+**There is therefore no reason to wipe and re-migrate.** The record is intact.
+One function in the plane's read path emits the wrong shape.
+
+**Finding 4: the relationship vocabulary disagrees between document and
 implementation.** Severity: documentation drift.
 
 State Rules 5.1 declares the vocabulary "closed until amended by this spec" and
@@ -164,7 +218,7 @@ implementation is ahead of its specification, and since the spec claims to be
 the closed authority, the document needs the amendment rather than the code
 needing a change.
 
-**What was checked and found consistent.** Object type prefixes and their
+**What else was checked and found consistent.** Object type prefixes and their
 type-root mapping; Project lifecycle and the work-product readiness ladder
 against State Rules 4.3; Action kinds and risk tiers against 4.4; the
 `bio-release` SSHSIG namespace, which the plane, the catalog, and the member

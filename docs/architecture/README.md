@@ -13,11 +13,12 @@ naming policy the documents follow: individuals appear only in their
 official capacity in connection with specific documented actions, and
 accountability belongs to the role and the institution.
 
-**Each document is authored as `.docx` and published with a generated
-`.md` beside it.** The `.docx` is the source of truth and the `.md` is a
-projection: greppable, diffable, and readable by a session or by anyone
-without Word. When a document changes, both are regenerated. If they ever
-disagree, the `.docx` governs.
+**Markdown is the source of truth.** Decided July 24, 2026. These documents
+were authored in Word and converted once; the `.docx` originals were removed
+in the same commit rather than kept as a second copy that could silently
+diverge. Prose belongs in text that greps, diffs, reviews in a pull request,
+and renders in place, and binary blobs in version history are permanent and
+opaque. Edit the `.md` files directly from here on.
 
 ## Mission and objectives
 
