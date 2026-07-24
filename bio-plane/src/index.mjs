@@ -2,6 +2,8 @@ import { SCHEMA } from "./schema.mjs";
 import { livefire } from "./livefire.mjs";
 import { SETUP_HTML } from "./setup.mjs";
 import { liveToken } from "./tokens.mjs";
+import { runGate, GATE_VERSION } from "./gate.mjs";
+import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
 export { Store } from "./store.mjs";
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -43,12 +45,60 @@ const OPS = {
   lease:      { classes: ["admin", "member", "probe"],           mutating: true  },
   purge:      { classes: ["admin", "probe"],                     mutating: true  },
   capture:    { classes: ["admin", "member", "probe"],           mutating: true  },
-  /* The bootstrap trio is the only unauthenticated surface. Each enforces its
-     own gate: bootstrap reveals nothing but claimed/unclaimed, claim requires
-     the bootstrap secret and refuses once spent, login requires the password. */
+  /* Write arc. Ratification's authority is the SSHSIG itself, checked
+     against the registered signers; the token or session only reaches the
+     surface. Member and signer administration is admin-only. Probe class
+     reaches everything so the whole write arc is exercisable against
+     scratch, whose Durable Object is a different instance with its own
+     member tables, so scratch enrollment can never touch the live roster. */
+  ratify:       { classes: ["admin", "member", "probe"],           mutating: true  },
+  publishedlist:{ classes: ["admin", "member", "probe", "public"], mutating: false },
+  inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
+  inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
+  inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },
+  memberadd:    { classes: ["admin", "probe"],                     mutating: true  },
+  memberlist:   { classes: ["admin", "member", "probe"],           mutating: false },
+  memberset:    { classes: ["admin", "probe"],                     mutating: true  },
+  signeradd:    { classes: ["admin", "probe"],                     mutating: true  },
+  signerlist:   { classes: ["admin", "member", "probe"],           mutating: false },
+  signerset:    { classes: ["admin", "probe"],                     mutating: true  },
+  /* The bootstrap trio and the doorbell are the unauthenticated surface.
+     Each enforces its own gate: bootstrap reveals nothing but
+     claimed/unclaimed, claim requires the bootstrap secret and refuses once
+     spent, login requires the password, enroll requires a live one-time
+     invite. verify answers only from the published projection, which has
+     never seen unratified material, so there is nothing to leak. knock
+     lands in a quarantined inbox, size-capped and rate-limited; the worst
+     case under attack is a full inbox. */
   bootstrap:  { classes: null,                                   mutating: false },
   claim:      { classes: null,                                   mutating: true  },
   login:      { classes: null,                                   mutating: false },
+  enroll:     { classes: null,                                   mutating: true  },
+  verify:     { classes: null,                                   mutating: false },
+  knock:      { classes: null,                                   mutating: true  },
+};
+
+/* What a signed-in browser session may do, the write arc's evolution of the
+   read-only session rule. Intake is browser-writable: it is append-only,
+   CAS-protected, history-preserving, and runs through the same promote path
+   as everything else. Publishing requires a registered key's signature
+   regardless of how the caller authenticated, and purge stays reachable
+   only by machine credential. Member sessions get intake and review; admin
+   sessions additionally manage the roster and keys. */
+const SESSION_OPS = {
+  member: new Set(["promote", "lease", "allocid", "capture", "ratify",
+                   "inbox", "inboxget", "inboxresolve"]),
+  admin:  new Set(["promote", "lease", "allocid", "capture", "ratify",
+                   "inbox", "inboxget", "inboxresolve",
+                   "memberadd", "memberset", "signeradd", "signerset"]),
+};
+
+const KNOCK = {
+  windowMs: 10 * 60 * 1000,
+  perIp: 12,          // knocks per source per window
+  global: 300,        // knocks per instance per window; bounds hostile R2 writes
+  maxBytes: 8 * 1024 * 1024,   // with R2: enough for a captured PDF
+  maxInline: 64 * 1024,        // without R2: inline into the DO, small only
 };
 
 const SCRATCH = "scratch";
@@ -127,6 +177,66 @@ export default {
           method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) }));
         return json(await r.json(), 200);
       }
+      if (op === "enroll") {
+        const body = await req.json().catch(() => ({}));
+        const r = await stub.fetch(new Request("http://do/enroll", {
+          method: "POST", body: JSON.stringify(body) }));
+        return json(await r.json(), 200);
+      }
+      /* 7a. Anyone, no token, no session. The DO consults only the
+         published projection. */
+      if (op === "verify") {
+        const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+        if (!/^[0-9a-f]{64}$/.test(sha))
+          return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
+        const r = await stub.fetch(new Request(`http://do/verify?sha256=${sha}`));
+        const out = await r.json();
+        return json({ ok: true, ...out.result }, 200);
+      }
+      /* 7b. Anyone, no token, no session. Size-capped, rate-limited, and
+         confined to the inbox namespace: payload bytes land under
+         bio/inbox/<sha256> in the working bucket and nowhere else, the way
+         probe is confined to scratch. Nothing is read back out except by a
+         signed-in member. */
+      if (op === "knock") {
+        if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
+        const raw = await req.arrayBuffer();
+        if (raw.byteLength > KNOCK.maxBytes + 4096)
+          return json({ ok: false, reason: "TOO_LARGE", maxBytes: KNOCK.maxBytes }, 413);
+        let body; try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
+        if (!body || (typeof body.contentB64 !== "string" && typeof body.contentText !== "string"))
+          return json({ ok: false, error: "knock requires contentB64 or contentText, plus optional note and contact" }, 400);
+        let bytes;
+        try {
+          bytes = body.contentB64 !== undefined
+            ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0))
+            : new TextEncoder().encode(body.contentText);
+        } catch { return json({ ok: false, error: "contentB64 is not valid base64" }, 400); }
+        if (bytes.length === 0) return json({ ok: false, reason: "EMPTY" }, 400);
+        const r2 = typeof env.CAPTURES?.put === "function";
+        const cap = r2 ? KNOCK.maxBytes : KNOCK.maxInline;
+        if (bytes.length > cap)
+          return json({ ok: false, reason: "TOO_LARGE", maxBytes: cap,
+                        detail: r2 ? undefined : "this instance stores knocks inline; large material needs its evidence storage configured" }, 413);
+        const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
+          .map((x) => x.toString(16).padStart(2, "0")).join("");
+        const win = Math.floor(Date.now() / KNOCK.windowMs);
+        const ipHash = (await fingerprint(req.headers.get("cf-connecting-ip") || "unknown")) || "unknown";
+        const knockId = `KNOCK-${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
+        const rec = await (await stub.fetch(new Request("http://do/knock", {
+          method: "POST", body: JSON.stringify({
+            knockId, sha256: sha, bytes: bytes.length,
+            content: r2 ? null : new TextDecoder().decode(bytes),
+            inR2: r2, note: body.note, contact: body.contact,
+            ipBucket: `ip:${ipHash}:${win}`, globalBucket: `all:${win}`,
+            perIpLimit: KNOCK.perIp, globalLimit: KNOCK.global,
+          }) }))).json();
+        if (!rec.result?.ok) return json({ ok: false, ...rec.result }, 429);
+        if (r2) await env.CAPTURES.put(`bio/inbox/${sha}`, bytes,
+          { sha256: await crypto.subtle.digest("SHA-256", bytes) });
+        return json({ ok: true, knockId, sha256: sha, bytes: bytes.length,
+                      received: "Your material is in the group's inbox awaiting member review." }, 200);
+      }
       const r = await stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`));
       const out = await r.json();
       return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
@@ -135,11 +245,15 @@ export default {
 
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;
-    /* A browser signed in with the instance password holds a session token,
-       not a machine credential. Sessions authenticate READ operations only:
-       the record is browsable by a person, and every write still requires a
-       machine credential. capture is nominally mutating because of its PUT
-       path; its GET is a read and is treated as one. */
+    let sessMember = null;
+    /* A browser signed in with a password holds a session token, not a
+       machine credential. The write arc opens INTAKE to sessions: promote,
+       lease, allocid, capture, ratify, and inbox review run through the
+       same gated paths as machine callers, with authorship stamped
+       server-side from the session identity so a browser can never claim
+       to be someone else. Everything outside SESSION_OPS, purge above all,
+       still requires a machine credential. capture is nominally mutating
+       because of its PUT path; its GET is a read and is treated as one. */
     if (!cls) {
       const t = url.searchParams.get("token");
       if (t && /^[0-9a-f]{64}$/.test(t)) {
@@ -147,9 +261,12 @@ export default {
         const r = await (await st.fetch(`http://do/session?t=${t}`)).json();
         const sess = r?.result?.session;
         if (sess) {
-          if (spec.mutating && !(op === "capture" && req.method === "GET"))
-            return json({ ok: false, error: "a signed-in session can read the record but never write it; writes require a machine credential", op }, 403);
-          cls = sess.role === "admin" ? "admin" : "member";
+          const kind = sess.role === "admin" ? "admin" : "member";
+          if (spec.mutating && !(op === "capture" && req.method === "GET")
+              && !SESSION_OPS[kind].has(op))
+            return json({ ok: false, error: "this operation requires a machine credential, not a signed-in session", op }, 403);
+          cls = kind;
+          sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
           viaSession = true;
         }
       }
@@ -277,11 +394,131 @@ export default {
     }
 
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
-    const inner = new URL("http://x/" + op);
+
+    /* Ratification: the act that moves a bundle into the published corpus.
+       The authority is the SSHSIG over the canonical statement, verified
+       against the registered active signers; the token or session only
+       reached this surface. The caller states the sha it reviewed, so
+       ratification has its own CAS: nobody can ratify a revision they have
+       not seen. Order of operations is deliberate: verify everything, then
+       commit the published rows, then copy bytes to the published bucket.
+       A failure mid-copy leaves rows that a re-ratification converges. */
+    if (op === "ratify") {
+      const body = await req.json().catch(() => null);
+      if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")
+        return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
+
+      const facts = (await (await stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}`)).json()).result;
+      if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
+      if (facts.row.bundle_sha !== body.expectedSha)
+        return json({ ok: false, reason: "RATIFY_STALE",
+                      detail: "the bundle has changed since it was reviewed; read it again and re-sign",
+                      expected: facts.row.bundle_sha, got: body.expectedSha, store: storeName, tokenClass: cls }, 409);
+
+      if (!facts.signers.length)
+        return json({ ok: false, reason: "NO_SIGNERS",
+                      detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
+                      store: storeName, tokenClass: cls }, 409);
+      const sv = await verifySshsig(body.sig, ratifyStatement(body.bundleId, body.expectedSha),
+                                    NS_RATIFY, facts.signers.map((s) => s.key_b64));
+      if (!sv.ok)
+        return json({ ok: false, reason: "SIG_" + sv.reason,
+                      ...(sv.keyB64 ? { keyB64: sv.keyB64 } : {}),
+                      ...(sv.detail ? { detail: sv.detail } : {}),
+                      store: storeName, tokenClass: cls }, 403);
+      const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
+
+      const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}`)).json()).result;
+      const r2 = typeof env.CAPTURES?.head === "function";
+      const gate = await runGate({
+        bundleId: body.bundleId, row: facts.row, image,
+        manifest: facts.manifest, history: facts.history,
+        registers: facts.registers, dangling: facts.dangling,
+        hasCapture: async (sha) => {
+          if (!r2) return { present: false, bytes: 0 };
+          const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
+          return h ? { present: true, bytes: h.size } : { present: false, bytes: 0 };
+        },
+      });
+      if (!gate.ok)
+        return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
+                      findings: gate.findings, store: storeName, tokenClass: cls }, 409);
+
+      const shas = [];
+      for (const [path, v] of Object.entries(image)) {
+        if (path.startsWith("_history/")) continue;
+        if (typeof v === "string") {
+          const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v)))]
+            .map((x) => x.toString(16).padStart(2, "0")).join("");
+          shas.push({ sha256: sha, path, kind: path === "bundle.md" ? "bundle" : "file",
+                      bytes: new TextEncoder().encode(v).length, text: v });
+        } else {
+          shas.push({ sha256: v.blobSha, path, kind: "capture" });
+        }
+      }
+
+      const pub = (await (await stub.fetch(new Request("http://do/publish", {
+        method: "POST", body: JSON.stringify({
+          bundleId: body.bundleId, bundleSha: body.expectedSha,
+          attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? sessMember,
+          gateVersion: gate.gateVersion, sigArmored: body.sig,
+          shas: shas.map(({ text, ...s }) => s),
+        }) }))).json()).result;
+      if (!pub?.ok) return json({ ok: false, reason: "PUBLISH_FAILED", detail: pub, store: storeName, tokenClass: cls }, 500);
+
+      /* The fence: ratified bytes land content-addressed in the published
+         bucket, so the published corpus is self-contained. Existing keys
+         are immutable and skipped; captures stream across from the working
+         bucket where their presence was just gate-verified. */
+      let copied = 0, present = 0, r2state = "not configured";
+      if (typeof env.PUBLISHED?.put === "function" && r2) {
+        r2state = "ok";
+        for (const s of shas) {
+          const key = `${storeName}/published/${s.sha256}`;
+          if (await env.PUBLISHED.head(key)) { present++; continue; }
+          if (s.kind === "capture") {
+            const obj = await env.CAPTURES.get(`${storeName}/captures/${s.sha256}`);
+            if (!obj) { r2state = "INCOMPLETE: capture vanished between gate and copy"; continue; }
+            await env.PUBLISHED.put(key, obj.body);
+          } else {
+            await env.PUBLISHED.put(key, new TextEncoder().encode(s.text));
+          }
+          copied++;
+        }
+      }
+
+      return json({ ok: true, bundleId: body.bundleId, bundleSha: body.expectedSha,
+                    existed: pub.existed, ratifiedAt: pub.ratifiedAt,
+                    attestor: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
+                    published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
+                    store: storeName, tokenClass: cls }, 200);
+    }
+
+    /* A few ops read better at the edge than they do inside the store, so
+       the public name and the internal name differ. The map is the only
+       place that difference lives. */
+    const DO_PATH = { inbox: "inboxlist", memberlist: "memberlist", signerlist: "signerlist" };
+    const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
-    const res = await stub.fetch(new Request(inner, {
-      method: req.method, body: req.method === "POST" ? await req.text() : undefined,
-    }));
+    /* Authorship from a session is stamped by the server, never taken from
+       the request: a browser cannot write history as someone else. */
+    if (viaSession && op === "lease") inner.searchParams.set("actor", sessMember);
+    let passBody = req.method === "POST" ? await req.text() : undefined;
+    if (viaSession && op === "promote" && passBody) {
+      try { const b = JSON.parse(passBody); b.author = sessMember; passBody = JSON.stringify(b); }
+      catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* Who dispositioned a knock is part of the record. A session signs its
+       own name; a machine credential says so plainly rather than borrowing
+       a person's. */
+    if (op === "inboxresolve" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.by = viaSession ? sessMember : `token:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    const res = await stub.fetch(new Request(inner, { method: req.method, body: passBody }));
     const body = await res.json();
     return json({ ...body, store: storeName, tokenClass: cls }, res.status);
   },

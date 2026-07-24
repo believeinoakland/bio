@@ -25,6 +25,9 @@
 
 import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS } from "./ui.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
+/* One verifier, shared with the plane. The installer and the instance
+   agree on what a valid signature is because they run the same code. */
+import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 
 export const CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",
@@ -52,6 +55,24 @@ const vcmp = (a, b) => {
   return 0;
 };
 
+/* The keys this installer will trust to have signed a release.
+ *
+ * A hash in RELEASE.json proves the bytes were not corrupted in transit.
+ * It proves nothing about who put them there: whoever can write the
+ * repository can write both the asset and the hash of the asset. A
+ * signature is the part that names a person, and the only copy of the
+ * public key that matters is this one, compiled into the installer the
+ * group is already trusting to touch their account.
+ *
+ * Empty means unarmed: the installer verifies hashes, notes plainly that
+ * releases are not yet signed, and installs. Once a key is listed, an
+ * unsigned or wrongly signed repository release is refused outright and
+ * the built-in copy installs instead. Adding the first key is a
+ * deliberate act by the maintainer, not a default. */
+export const ARMED_SIGNERS = [
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGfzETopBeZe5mbD7ukYwaZczyBPjJ4S3sX+Ly3rN3Vl bio-release",
+];
+
 const relHeaders = { "user-agent": "bio-installer" };
 async function fetchRepoManifest() {
   const rj = await fetch(CFG.RELEASE_LATEST + "/RELEASE.json", { redirect: "follow", headers: relHeaders });
@@ -65,6 +86,15 @@ async function fetchRepoAsset(man) {
   const got = hex(await crypto.subtle.digest("SHA-256", bytes));
   if (got !== man.sha256) {
     const e = new Error("integrity"); e.integrity = true; throw e;
+  }
+  if (ARMED_SIGNERS.length) {
+    if (typeof man.sig !== "string" || !man.sig.trim()) {
+      const e = new Error("unsigned"); e.unsigned = true; throw e;
+    }
+    const v = await verifySshsig(man.sig, bytes, NS_RELEASE, ARMED_SIGNERS);
+    if (!v.ok) {
+      const e = new Error("signature"); e.signature = true; e.reason = v.reason; throw e;
+    }
   }
   return new TextDecoder().decode(bytes);
 }
@@ -80,17 +110,27 @@ async function selectRelease(emit) {
     if (vcmp(man.version, RELEASE_VERSION) > 0) {
       const source = await fetchRepoAsset(man);
       emit.ok("rel", "The repository has " + man.version + ", newer than the built-in "
-        + RELEASE_VERSION + ". Its integrity checked out, so that is what installs.");
+        + RELEASE_VERSION + ". "
+        + (ARMED_SIGNERS.length
+            ? "It carries a valid signature from a key this installer trusts, so that is what installs."
+            : "Its integrity checked out, so that is what installs."));
       return { version: String(man.version), source, from: "repository" };
     }
     emit.ok("rel", "The built-in release (" + RELEASE_VERSION + ") is current.");
   } catch (e) {
-    emit.ok("rel", e && e.integrity
-      ? "The repository's copy did not pass its integrity check, so it was NOT used. The installer's "
-        + "own built-in release (" + RELEASE_VERSION + ") installs instead, which is safe. This is "
-        + "worth mentioning to Believe in Oakland."
-      : "The public repository was not reachable just now, so the built-in release ("
-        + RELEASE_VERSION + ") is used. That is fine.");
+    const fallback = " The installer's own built-in release (" + RELEASE_VERSION
+      + ") installs instead, which is safe. This is worth mentioning to Believe in Oakland.";
+    emit.ok("rel",
+      e && e.integrity
+        ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback
+      : e && e.unsigned
+        ? "The repository's copy carries no signature, and this installer only accepts signed releases, "
+          + "so it was NOT used." + fallback
+      : e && e.signature
+        ? "The repository's copy is signed, but not by a key this installer trusts (" + (e.reason || "invalid")
+          + "), so it was NOT used." + fallback
+        : "The public repository was not reachable just now, so the built-in release ("
+          + RELEASE_VERSION + ") is used. That is fine.");
   }
   return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in" };
 }

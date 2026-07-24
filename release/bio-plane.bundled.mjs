@@ -129,6 +129,84 @@ CREATE TABLE IF NOT EXISTS bootstrap (
   consumed_at TEXT,
   token_fp    TEXT
 );
+
+-- ---- write arc ----
+
+-- Members. Each member signs in with their own password (stored in
+-- credentials under role 'member:<member_id>', which is why sessions and
+-- credentials needed no schema change). invite_hash is the SHA-256 of a
+-- one-time enrollment code; it is cleared the moment the member enrolls, so
+-- a leaked invite cannot re-enroll an active member.
+CREATE TABLE IF NOT EXISTS members (
+  member_id   TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  role        TEXT NOT NULL DEFAULT 'member',
+  status      TEXT NOT NULL DEFAULT 'invited',
+  invite_hash TEXT,
+  created     TEXT NOT NULL,
+  updated     TEXT NOT NULL
+);
+
+-- Registered signing keys, the plane's projection of the member key
+-- registry. key_b64 is the bare base64 of the OpenSSH wire public key, the
+-- exact bytes an SSHSIG embeds, so matching is byte equality.
+CREATE TABLE IF NOT EXISTS signers (
+  key_b64   TEXT PRIMARY KEY,
+  member_id TEXT NOT NULL,
+  comment   TEXT,
+  status    TEXT NOT NULL DEFAULT 'active',
+  added     TEXT NOT NULL
+);
+
+-- The published projection: the ONLY tables the public doorbell reads.
+-- Nothing lands here except through ratification, so answering a public
+-- query from these tables can never leak working material. published_shas
+-- is append-only across re-ratifications: a hash once published stays
+-- verifiable forever, which is what a document holder needs.
+CREATE TABLE IF NOT EXISTS published_bundles (
+  bundle_id       TEXT PRIMARY KEY,
+  bundle_sha      TEXT NOT NULL,
+  ratified_at     TEXT NOT NULL,
+  attestor_key    TEXT NOT NULL,
+  attestor_member TEXT,
+  gate_version    TEXT NOT NULL,
+  sig_armored     TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS published_shas (
+  sha256    TEXT NOT NULL,
+  bundle_id TEXT NOT NULL,
+  path      TEXT NOT NULL,
+  kind      TEXT NOT NULL,
+  bytes     INTEGER,
+  published TEXT NOT NULL,
+  PRIMARY KEY (sha256, bundle_id, path)
+);
+CREATE INDEX IF NOT EXISTS published_shas_sha ON published_shas(sha256);
+
+-- The knock: quarantined public intake. Payload bytes live in R2 under
+-- <store>/inbox/<sha256> when R2 is configured, else inline here (small
+-- only). Nothing reads this table except member review; nothing here
+-- touches the record until a member pulls it through the gate.
+CREATE TABLE IF NOT EXISTS inbox (
+  knock_id    TEXT PRIMARY KEY,
+  sha256      TEXT NOT NULL,
+  bytes       INTEGER NOT NULL,
+  content     TEXT,
+  in_r2       INTEGER NOT NULL DEFAULT 0,
+  note        TEXT,
+  contact     TEXT,
+  received    TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'new',
+  resolved    TEXT,
+  resolved_by TEXT
+);
+CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
+
+-- Fixed-window knock rate accounting. Rows are pruned as windows pass.
+CREATE TABLE IF NOT EXISTS knock_rate (
+  bucket TEXT PRIMARY KEY,
+  count  INTEGER NOT NULL
+);
 `;
 
 // src/tokens.mjs
@@ -442,7 +520,10 @@ table.rec tr.row:hover td{background:#F6F7F2}
 
 <section id="s-login">
   <h1>Sign in</h1>
-  <p>This copy is claimed. Sign in with the administrator password.</p>
+  <p>This copy is claimed. Members sign in with their own name and password.
+  Leave the name empty to sign in as the administrator.</p>
+  <label for="lwho">Your member name</label>
+  <input id="lwho" autocomplete="username" placeholder="leave empty for administrator">
   <label for="lpw">Password</label>
   <input id="lpw" type="password" autocomplete="current-password">
   <button id="do-login">Sign in</button>
@@ -462,14 +543,19 @@ table.rec tr.row:hover td{background:#F6F7F2}
     <div class="kv"><span class="k">Roles with passwords</span><span class="v" id="p-roles"></span></div>
     <div class="kv"><span class="k">Session expires</span><span class="v" id="p-expires"></span></div>
   </div>
-  <div class="actions" style="margin:22px 0 6px"><button id="go-browse">Browse the record</button></div>
+  <div class="actions" style="margin:22px 0 6px">
+    <button id="go-browse">Browse the record</button>
+    <button id="go-new">Add something new</button>
+    <button id="go-inbox">Review the inbox</button>
+    <button id="go-members" hidden>Members and keys</button>
+  </div>
   <h2>What this page is, and is not</h2>
-  <p>This page proves the copy answers, is claimed, and that your password
-  works, and it opens the record for reading. Changing the record happens
-  through the tools your group connects to it, using the member and probe
-  credentials stored when this copy was installed. Those live in your
-  password manager and in this worker's settings in the Cloudflare
-  dashboard.</p>
+  <p>This page opens the record for reading, takes in new material, and
+  publishes what the group has ratified. Signing in with a password lets you
+  write into the working record. Publishing something to the world needs more
+  than a password: it needs a signature from a key the group has registered,
+  which you make on the signing page and paste in. Deleting anything is not
+  possible from here at all.</p>
   <p class="small">To update the software later, return to the installer and
   choose the update option. Updates never touch your passwords or your record.</p>
 </section>
@@ -492,6 +578,86 @@ table.rec tr.row:hover td{background:#F6F7F2}
   <p class="small">Every revision this bundle has ever had, oldest first. The
   record is append-only: nothing here can be edited or removed.</p>
   <div class="card" id="b-history"></div>
+  <div id="b-ratify"></div>
+</section>
+
+<section id="s-new">
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; New</p>
+  <h1>Add something new</h1>
+  <p class="small">This creates a bundle in the working record. Nothing here is
+  public: the working record has never been published and cannot be read by
+  anyone without a password.</p>
+  <label for="n-type">What kind of thing is this?</label>
+  <select id="n-type">
+    <option value="information">Information</option>
+    <option value="problem">Problem</option>
+    <option value="project">Project</option>
+    <option value="action">Action</option>
+  </select>
+  <label for="n-title">Title</label>
+  <input id="n-title" placeholder="what this is about">
+  <label for="n-body">What do you know?</label>
+  <textarea id="n-body" rows="14" placeholder="Write it plainly. Markdown headings and lists work."></textarea>
+  <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
+  <p class="err" id="n-err"></p>
+</section>
+
+<section id="s-edit">
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; <a id="e-back">Bundle</a> &rsaquo; Edit</p>
+  <h1>Revise this</h1>
+  <p class="small">Saving adds a revision. The version you are replacing stays in
+  the history forever; nothing is overwritten and nothing is lost.</p>
+  <div class="card"><div class="kv"><span class="k">Bundle</span><span class="v mono" id="e-id"></span></div></div>
+  <label for="e-body">The record</label>
+  <textarea id="e-body" rows="20" spellcheck="false"></textarea>
+  <div class="actions" style="margin-top:16px"><button id="e-save">Save a revision</button></div>
+  <p class="err" id="e-err"></p>
+</section>
+
+<section id="s-inbox">
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; Inbox</p>
+  <h1>The inbox</h1>
+  <p class="small">Material left by people outside the group. Nothing here is part
+  of the record, and nothing here has been examined. Treat every item as
+  unverified until the group has checked it.</p>
+  <div id="inbox-body"><p class="small">Loading&hellip;</p></div>
+</section>
+
+<section id="s-members">
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; Members</p>
+  <h1>Members and keys</h1>
+  <p class="small">Members sign in with their own name and password. Registered
+  keys are what allow a member to publish; a password alone never can.</p>
+  <h2>Members</h2>
+  <div class="card" id="m-list"></div>
+  <label for="m-id">Add a member (lowercase letters, digits, dashes)</label>
+  <input id="m-id" placeholder="ruth">
+  <label for="m-name">Their full name</label>
+  <input id="m-name" placeholder="Ruth">
+  <div class="actions" style="margin-top:12px"><button id="m-add">Invite them</button></div>
+  <p class="err" id="m-err"></p>
+  <div id="m-invite"></div>
+  <h2>Registered keys</h2>
+  <div class="card" id="k-list"></div>
+  <label for="k-key">Public key from the signing page</label>
+  <textarea id="k-key" rows="3" placeholder="ssh-ed25519 AAAA... bio-ratify" spellcheck="false"></textarea>
+  <label for="k-who">Belongs to which member</label>
+  <input id="k-who" placeholder="ruth">
+  <div class="actions" style="margin-top:12px"><button id="k-add">Register this key</button></div>
+  <p class="err" id="k-err"></p>
+</section>
+
+<section id="s-enroll">
+  <h1>Set your password</h1>
+  <p>You were invited to this group. Choose a password and your account is live.</p>
+  <label for="en-id">Your member name</label>
+  <input id="en-id">
+  <label for="en-inv">The invitation code you were given</label>
+  <input id="en-inv" spellcheck="false">
+  <label for="en-pw">Choose a password (12 characters or more)</label>
+  <input id="en-pw" type="password" autocomplete="new-password">
+  <div class="actions" style="margin-top:12px"><button id="en-go">Set it</button></div>
+  <p class="err" id="en-err"></p>
 </section>
 
 </main>
@@ -513,6 +679,7 @@ async function state(){
     const saved = JSON.parse(sessionStorage.getItem("bio-session") || "null");
     if (saved && saved.t && (!saved.e || saved.e > Date.now())) {
       SESSION = saved.t;
+      WHO = saved.w || "admin";
       const probe = await fetch("/api/?op=stats&token="+saved.t);
       if (probe.ok) {
         const b2 = await api("bootstrap");
@@ -560,22 +727,32 @@ $("#do-login").addEventListener("click", async ()=>{
   const e = $("#login-err"); e.textContent = "";
   $("#do-login").disabled = true;
   try {
-    const l = await api("login", { role: "admin", password: $("#lpw").value });
-    if (!l.result || !l.result.ok) { e.textContent = "That password was not accepted."; return; }
+    const who = $("#lwho").value.trim();
+    const role = who ? "member:" + who : "admin";
+    const l = await api("login", { role, password: $("#lpw").value });
+    if (!l.result || !l.result.ok) {
+      e.textContent = l.result && l.result.reason === "NO_SUCH_ROLE"
+        ? "No member by that name has set a password on this copy yet."
+        : "That name and password were not accepted."; return; }
+    WHO = who || "admin";
     const b = await api("bootstrap");
     panel(l.result, b.consumedAt);
   } catch(err){ e.textContent = "Sign-in did not go through: " + err.message; }
   finally { $("#do-login").disabled = false; }
 });
 let SESSION = null;
+let WHO = "admin";
 function panel(login, claimedAt){
   if (login && login.token) {
     SESSION = login.token;
-    try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "" })); } catch {}
+    try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
   }
+  $("#go-members").hidden = WHO !== "admin";
+  $("#panel-lede").textContent = WHO === "admin"
+    ? "Signed in as administrator." : "Signed in as " + WHO + ".";
   $("#p-version").textContent = window.__ver || "unknown";
   $("#p-claimed").textContent = claimedAt ? new Date(claimedAt).toLocaleString() : "just now";
-  $("#p-roles").textContent = "admin";
+  $("#p-roles").textContent = WHO;
   $("#p-expires").textContent = login && login.expires ? new Date(login.expires).toLocaleString() : "";
   show("#s-panel");
 }
@@ -676,6 +853,7 @@ function renderBundle(id, img, revisionKey){
     (revText !== null ? '<div class="revnote">Viewing a historical revision ('+escH(revisionKey)+'). <button class="histbtn" id="back-live">Back to the live record</button></div>' : "")
     + mdRender(body);
   const bl = $("#back-live"); if (bl) bl.addEventListener("click",()=>renderBundle(id, img, null));
+  ratifyPanel(id, liveText, revText !== null);
 
   const files = Object.keys(img).filter(k=>!k.startsWith("_history/")).sort();
   $("#b-files").innerHTML = files.map(k=>{
@@ -703,10 +881,475 @@ $("#go-browse").addEventListener("click", openBrowse);
 $("#crumb-panel").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
 $("#crumb-panel2").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
 $("#crumb-browse").addEventListener("click", openBrowse);
+
+/* ---- publishing: the one action a password alone cannot take ----
+   Ratifying copies this exact revision into the published record, where
+   anyone can check a hash against it. It needs a signature made with a
+   registered key, so the authority to publish is held by people, not by
+   whoever is holding a session. */
+async function ratifyPanel(id, liveText, historical){
+  const box = $("#b-ratify");
+  if (historical) { box.innerHTML = ""; return; }
+  const sha = await sha256Text(liveText);
+  box.innerHTML = "<h2>Publish this</h2>"
+    + '<p class="small">Publishing puts this revision where the public can verify it by hash. '
+    + "It cannot be undone: a published hash answers forever, even after later revisions.</p>"
+    + '<div class="card"><div class="kv"><span class="k">Bundle</span><span class="v mono">'+escH(id)+"</span></div>"
+    + '<div class="kv"><span class="k">This revision</span><span class="v mono">'+escH(sha)+"</span></div></div>"
+    + '<p class="small">On the signing page, choose Sign a ratification, paste those two values, '
+    + "and paste what it gives you here.</p>"
+    + '<textarea id="r-sig" rows="6" spellcheck="false" placeholder="-----BEGIN SSH SIGNATURE-----"></textarea>'
+    + '<div class="actions" style="margin-top:12px"><button id="r-go">Publish it</button>'
+    + ' <button id="r-edit">Revise instead</button></div><p class="err" id="r-err"></p>';
+  $("#r-edit").addEventListener("click", ()=>openEdit(id, liveText));
+  $("#r-go").addEventListener("click", async ()=>{
+    const e = $("#r-err"); e.textContent = "";
+    const sig = $("#r-sig").value.trim();
+    if (!sig) { e.textContent = "Paste the signature from the signing page."; return; }
+    $("#r-go").disabled = true;
+    try {
+      const r = await post("ratify", { bundleId: id, expectedSha: sha, sig });
+      if (r.ok) {
+        box.innerHTML = '<div class="okbox"><p style="margin:0">Published, attested by '
+          + escH(r.attestor||"a registered key") + ". " + escH(r.published.shas)
+          + " hashes are now publicly verifiable.</p></div>";
+        return; }
+      e.textContent = ratifyWhy(r);
+    } catch(err){ e.textContent = "That did not go through: " + err.message; }
+    finally { const g=$("#r-go"); if (g) g.disabled = false; }
+  });
+}
+function ratifyWhy(r){
+  const why = r.reason || r.error || "unknown";
+  if (why === "RATIFY_STALE") return "Someone saved a newer revision while you were signing. Reload this bundle and sign the new hash.";
+  if (why === "NO_SIGNERS") return "No keys are registered on this copy yet, so nothing can be published. An administrator registers keys under Members and keys.";
+  if (why === "SIG_UNKNOWN_KEY") return "That signature was made with a key this group has not registered, or one that has been revoked.";
+  if (why === "SIG_BAD_SIGNATURE") return "That signature does not match this bundle and hash. Sign the exact values shown above.";
+  if (why === "SIG_NAMESPACE") return "That signature was made for something other than ratification. Use the Sign a ratification tab.";
+  if (why === "MALFORMED") return "That does not look like a signature. Copy the whole block, including the BEGIN and END lines.";
+  if (why === "GATE_REFUSED") return "The checks refused this bundle: "
+    + (r.findings||[]).map(f=>f.check + (f.where ? " (" + f.where + ")" : "")).join(", ")
+    + ". Publishing is blocked until those are fixed.";
+  return "Refused: " + why;
+}
+
+/* ---- intake: writing into the working record from this page ----
+   Every write below goes through the same gated API a machine caller uses.
+   Authorship is stamped by the server from the session, so nothing typed
+   here can claim to be someone else. */
+const NL = String.fromCharCode(10);
+const PREFIX = { information:"INFO", problem:"PROB", project:"PROJ", action:"ACTN" };
+const FIRST_STATE = { information:"collected", problem:"forming", project:"forming", action:"forming" };
+const post = async (op, body)=>{
+  const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
+    { method:"POST", body: JSON.stringify(body) });
+  if (r.status === 401) { SESSION=null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); }
+  return r.json();
+};
+const sha256Text = async (text)=>{
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+};
+const stamp = ()=>{
+  const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+  let r = ""; const h = "0123456789abcdef";
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  for (const x of bytes) r += h[x>>4] + h[x&15];
+  return d + "_" + r;
+};
+const mdFor = (id, type, state, title, body)=>
+  ["---","id: "+id,"object_type: "+type,"current_state: "+state,"title: "+title,"---","","## Summary","",body,""].join(NL);
+
+/* ---- create ---- */
+$("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; show("#s-new"); });
+$("#n-save").addEventListener("click", async ()=>{
+  const e = $("#n-err"); e.textContent = "";
+  const type = $("#n-type").value, title = $("#n-title").value.trim(), body = $("#n-body").value.trim();
+  if (!title) { e.textContent = "Give it a title."; return; }
+  if (!body) { e.textContent = "Write something in the body."; return; }
+  $("#n-save").disabled = true;
+  try {
+    const year = String(new Date().getFullYear());
+    const a = await rec("allocid", { prefix: PREFIX[type], year });
+    const id = a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    const state = FIRST_STATE[type];
+    const text = mdFor(id, type, state, title, body);
+    const now = new Date().toISOString();
+    const r = await post("promote", {
+      bundleId: id, base: null, snapKey: stamp(), author: WHO,
+      meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
+      files: [{ path:"bundle.md", text, bytes:text.length, sha256: await sha256Text(text) }],
+      refs: [], register: [],
+    });
+    if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+    $("#n-title").value = ""; $("#n-body").value = "";
+    openBundle(id);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#n-save").disabled = false; }
+});
+
+/* ---- revise ---- */
+let EDIT_ID = null;
+async function openEdit(id, text){
+  EDIT_ID = id; $("#e-err").textContent = "";
+  $("#e-id").textContent = id; $("#e-body").value = text;
+  show("#s-edit");
+}
+$("#e-back").addEventListener("click", ()=>openBundle(EDIT_ID));
+$("#e-save").addEventListener("click", async ()=>{
+  const e = $("#e-err"); e.textContent = "";
+  const text = $("#e-body").value;
+  const fmv = splitFm(text).fm;
+  if (!fmv.id) { e.textContent = "The record must keep its heading block, including its id line."; return; }
+  $("#e-save").disabled = true;
+  try {
+    const lease = await rec("lease", { id: EDIT_ID });
+    if (!lease.result || lease.result.ok === false) {
+      e.textContent = "Someone else is editing this right now (" + (lease.result&&lease.result.heldBy) + ")."; return; }
+    const now = new Date().toISOString();
+    const r = await post("promote", {
+      bundleId: EDIT_ID, base: lease.result.baseSha, snapKey: stamp(), author: WHO,
+      meta: { object_type: fmv.object_type, group:"believe-in-oakland", title: fmv.title || EDIT_ID,
+              current_state: fmv.current_state, created: now, last_updated: now },
+      files: [{ path:"bundle.md", text, bytes:text.length, sha256: await sha256Text(text) }],
+      refs: [], register: [],
+    });
+    if (!r.result || !r.result.ok) {
+      e.textContent = r.result && r.result.reason === "STALE"
+        ? "Someone saved a newer version while you were writing. Open it again and redo your change."
+        : "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown");
+      return; }
+    openBundle(EDIT_ID);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#e-save").disabled = false; }
+});
+
+/* ---- the inbox ---- */
+$("#go-inbox").addEventListener("click", openInbox);
+async function openInbox(){
+  show("#s-inbox");
+  const r = await rec("inbox");
+  const rows = (r.result && r.result.inbox) || [];
+  if (!rows.length) { $("#inbox-body").innerHTML = '<p class="small">Nothing has been left at the door.</p>'; return; }
+  $("#inbox-body").innerHTML = rows.map(k=>
+    '<div class="card"><div class="kv"><span class="k mono">'+escH(k.knock_id)+'</span><span class="v">'
+    + chip(k.status) + ' <span class="dim">' + fmtWhen(k.received) + "</span></span></div>"
+    + '<div class="kv"><span class="k">Hash</span><span class="v mono">'+escH(k.sha256)+"</span></div>"
+    + '<div class="kv"><span class="k">Size</span><span class="v">'+escH(k.bytes)+" bytes</span></div>"
+    + (k.note ? '<div class="kv"><span class="k">Note</span><span class="v">'+escH(k.note)+"</span></div>" : "")
+    + (k.contact ? '<div class="kv"><span class="k">Contact</span><span class="v">'+escH(k.contact)+"</span></div>" : "")
+    + (k.resolved_by ? '<div class="kv"><span class="k">Handled by</span><span class="v">'+escH(k.resolved_by)+"</span></div>" : "")
+    + '<div class="actions" style="margin-top:10px">'
+    + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
+    + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div></div>').join("");
+  document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", async ()=>{
+    await post("inboxresolve", { knockId: b.dataset.id, status: b.dataset.to });
+    openInbox();
+  }));
+}
+
+/* ---- members and keys ---- */
+$("#go-members").addEventListener("click", openMembers);
+async function openMembers(){
+  show("#s-members"); $("#m-err").textContent=""; $("#k-err").textContent="";
+  const m = await rec("memberlist");
+  const rows = (m.result && m.result.members) || [];
+  $("#m-list").innerHTML = rows.length ? rows.map(x=>
+    '<div class="kv"><span class="k mono">'+escH(x.member_id)+'</span><span class="v">'
+    + escH(x.name||"") + " " + chip(x.status)
+    + (x.invite_pending ? ' <span class="dim">invitation not used yet</span>' : "")
+    + ' <button class="mbtn" data-id="'+escH(x.member_id)+'" data-to="'
+    + (x.status==="revoked"?"active":"revoked") + '">'
+    + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
+    : '<p class="small" style="margin:0">No members yet.</p>';
+  document.querySelectorAll("#m-list .mbtn").forEach(b=>b.addEventListener("click", async ()=>{
+    await post("memberset", { memberId: b.dataset.id, status: b.dataset.to }); openMembers();
+  }));
+  const k = await rec("signerlist");
+  const keys = (k.result && k.result.signers) || [];
+  $("#k-list").innerHTML = keys.length ? keys.map(x=>
+    '<div class="kv"><span class="k">'+escH(x.member_id)+'</span><span class="v"><span class="mono dim">'
+    + escH(String(x.key_b64).slice(0,24)) + "&hellip;</span> " + chip(x.status)
+    + ' <button class="kbtn" data-key="'+escH(x.key_b64)+'" data-to="'
+    + (x.status==="revoked"?"active":"revoked") + '">'
+    + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
+    : '<p class="small" style="margin:0">No keys registered. Until a key is registered, nothing can be published.</p>';
+  document.querySelectorAll("#k-list .kbtn").forEach(b=>b.addEventListener("click", async ()=>{
+    await post("signerset", { keyB64: b.dataset.key, status: b.dataset.to }); openMembers();
+  }));
+}
+$("#m-add").addEventListener("click", async ()=>{
+  const e = $("#m-err"); e.textContent = ""; $("#m-invite").innerHTML = "";
+  const r = await post("memberadd", { memberId: $("#m-id").value.trim(), name: $("#m-name").value.trim() });
+  if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+  $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Give '
+    + escH($("#m-id").value.trim()) + ' this invitation code. It works once and is not shown again.</p>'
+    + '<p class="mono" style="margin:8px 0 0">' + escH(r.result.invite) + "</p></div>";
+  $("#m-id").value = ""; $("#m-name").value = "";
+  openMembers();
+});
+$("#k-add").addEventListener("click", async ()=>{
+  const e = $("#k-err"); e.textContent = "";
+  const r = await post("signeradd", { keyB64: $("#k-key").value.trim(), memberId: $("#k-who").value.trim() });
+  if (!r.result || !r.result.ok) {
+    e.textContent = r.result && r.result.reason === "BAD_KEY"
+      ? "That is not a public key this system can read. Copy the whole line from the signing page."
+      : "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown");
+    return; }
+  $("#k-key").value = ""; $("#k-who").value = ""; openMembers();
+});
+
+/* ---- enrolment, for an invited member with no password yet ---- */
+$("#en-go").addEventListener("click", async ()=>{
+  const e = $("#en-err"); e.textContent = "";
+  const r = await api("enroll", { memberId: $("#en-id").value.trim(),
+    invite: $("#en-inv").value.trim(), password: $("#en-pw").value });
+  if (!r.result || !r.result.ok) {
+    e.textContent = r.result && r.result.reason === "PASSWORD_TOO_SHORT"
+      ? "The password needs at least 12 characters."
+      : "That invitation was not accepted. Check the name and the code.";
+    return; }
+  $("#lwho").value = $("#en-id").value.trim(); $("#lpw").value = "";
+  show("#s-login");
+});
+document.querySelectorAll(".crumb-home").forEach(a=>a.addEventListener("click", ()=>{
+  document.querySelector("main").classList.remove("wide"); show("#s-panel"); }));
+
 state();
 </script>
 </body>
 </html>`;
+
+// src/gate.mjs
+var GATE_VERSION = "plane-gate/0.1";
+var sha256hex2 = async (s) => {
+  const b = await crypto.subtle.digest(
+    "SHA-256",
+    typeof s === "string" ? new TextEncoder().encode(s) : s
+  );
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+function parseFrontmatter(text) {
+  const m = String(text || "").match(/^---\n([\s\S]*?)\n---\n?/);
+  if (!m) return null;
+  const fm = {};
+  for (const line of m[1].split("\n")) {
+    const i = line.indexOf(":");
+    if (i > 0) fm[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+  }
+  return fm;
+}
+async function runGate({ bundleId, row, image, manifest, history, registers, dangling, hasCapture }) {
+  const findings = [];
+  const refuse = (check, detail, where) => findings.push({ check, detail, ...where ? { where } : {} });
+  if (!image || !image["bundle.md"] || typeof image["bundle.md"] !== "string")
+    refuse("G1_BUNDLE_MD", "bundle.md is missing or not inline");
+  else {
+    const fm = parseFrontmatter(image["bundle.md"]);
+    if (!fm) refuse("G1_FRONTMATTER", "bundle.md has no parseable frontmatter");
+    else {
+      if (fm.id !== bundleId)
+        refuse("G1_ID", `frontmatter id ${JSON.stringify(fm.id)} does not match bundle ${bundleId}`);
+      if (row && fm.object_type !== row.object_type)
+        refuse("G1_TYPE", `frontmatter object_type ${JSON.stringify(fm.object_type)} does not match the row ${JSON.stringify(row.object_type)}`);
+      if (row && fm.current_state !== row.current_state)
+        refuse("G1_STATE", `frontmatter current_state ${JSON.stringify(fm.current_state)} does not match the row ${JSON.stringify(row.current_state)}`);
+    }
+  }
+  const liveShas = {};
+  for (const [path, v] of Object.entries(image || {})) {
+    if (path.startsWith("_history/")) continue;
+    if (typeof v === "string") liveShas[path] = await sha256hex2(v);
+  }
+  if (row && liveShas["bundle.md"] && liveShas["bundle.md"] !== row.bundle_sha)
+    refuse(
+      "G2_LIVE_SHA",
+      "live bundle.md does not hash to the recorded bundle_sha",
+      { want: row.bundle_sha, got: liveShas["bundle.md"] }
+    );
+  const histSha = new Map(history.map((h) => [h.snap_key, h.sha256]));
+  for (const m of manifest) {
+    const snap = histSha.get(m.snap_key);
+    if (snap === void 0)
+      refuse("G3_CHAIN_SNAPSHOT", `manifest entry ${m.snap_key} has no bundle.md snapshot`);
+    else if (m.base !== snap)
+      refuse(
+        "G3_CHAIN_BASE",
+        `manifest entry ${m.snap_key} base does not match its snapshot`,
+        { base: m.base, snapshot: snap }
+      );
+  }
+  const regBySha = new Map(registers.map((r) => [r.capture_sha, r]));
+  for (const [path, v] of Object.entries(image || {})) {
+    if (path.startsWith("_history/") || typeof v === "string") continue;
+    const reg = regBySha.get(v.blobSha ?? v.sha256);
+    if (!reg) {
+      refuse("G4_UNREGISTERED", `live blob file has no register row`, { path });
+      continue;
+    }
+    const probe = await hasCapture(reg.capture_sha);
+    if (!probe.present)
+      refuse("G4_MISSING_BYTES", `registered capture is absent from the working bucket`, { path, sha256: reg.capture_sha });
+    else if (typeof reg.bytes === "number" && probe.bytes !== reg.bytes)
+      refuse("G4_SIZE", `capture bytes differ from the register`, { path, want: reg.bytes, got: probe.bytes });
+  }
+  for (const target of dangling)
+    refuse("G5_DANGLING_REF", `reference target does not exist`, { target });
+  return { gateVersion: GATE_VERSION, ok: findings.length === 0, findings };
+}
+
+// src/sshsig.mjs
+var te = new TextEncoder();
+var b64ToBytes = (b64) => {
+  const bin = atob(b64.replace(/\s+/g, ""));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+};
+var bytesToB64 = (bytes) => {
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+};
+var Rd = class {
+  constructor(buf) {
+    this.b = buf;
+    this.o = 0;
+  }
+  bytes(n) {
+    if (this.o + n > this.b.length) throw new Error("sshsig: truncated");
+    const v = this.b.slice(this.o, this.o + n);
+    this.o += n;
+    return v;
+  }
+  u32() {
+    const b = this.bytes(4);
+    return (b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3]) >>> 0;
+  }
+  str() {
+    return this.bytes(this.u32());
+  }
+  done() {
+    return this.o === this.b.length;
+  }
+};
+var wStr = (bytes) => {
+  const out = new Uint8Array(4 + bytes.length);
+  new DataView(out.buffer).setUint32(0, bytes.length);
+  out.set(bytes, 4);
+  return out;
+};
+var cat = (...parts) => {
+  const n = parts.reduce((a, p) => a + p.length, 0);
+  const out = new Uint8Array(n);
+  let o = 0;
+  for (const p of parts) {
+    out.set(p, o);
+    o += p.length;
+  }
+  return out;
+};
+function parsePubkeyLine(line) {
+  const m = String(line || "").trim().split(/\s+/);
+  if (m.length < 2) throw new Error("pubkey: not an OpenSSH public key line");
+  const [keyType, b64] = m;
+  if (keyType !== "ssh-ed25519") throw new Error("pubkey: only ssh-ed25519 is supported, got " + keyType);
+  const blob = b64ToBytes(b64);
+  const r = new Rd(blob);
+  const t = new TextDecoder().decode(r.str());
+  if (t !== "ssh-ed25519") throw new Error("pubkey: wire type mismatch");
+  const raw = r.str();
+  if (raw.length !== 32) throw new Error("pubkey: ed25519 key must be 32 bytes");
+  return { keyType, raw, b64, comment: m.slice(2).join(" ") };
+}
+function wirePubkey(raw) {
+  return cat(wStr(te.encode("ssh-ed25519")), wStr(raw));
+}
+function normalizeKey(entry) {
+  const toks = String(entry || "").trim().split(/\s+/);
+  const i = toks.indexOf("ssh-ed25519");
+  const b64 = i >= 0 ? toks[i + 1] : toks.length === 1 ? toks[0] : null;
+  if (!b64 || !b64.startsWith("AAAA")) return null;
+  try {
+    return parsePubkeyLine("ssh-ed25519 " + b64).b64;
+  } catch {
+    return null;
+  }
+}
+var dearmor = (text) => {
+  const m = String(text || "").match(
+    /-----BEGIN SSH SIGNATURE-----\s*([\s\S]*?)\s*-----END SSH SIGNATURE-----/
+  );
+  if (!m) throw new Error("sshsig: missing armor");
+  return b64ToBytes(m[1]);
+};
+function parseSshsig(armored) {
+  const blob = dearmor(armored);
+  const r = new Rd(blob);
+  const magic = new TextDecoder().decode(r.bytes(6));
+  if (magic !== "SSHSIG") throw new Error("sshsig: bad magic");
+  const version = r.u32();
+  if (version !== 1) throw new Error("sshsig: unsupported version " + version);
+  const pubkeyBlob = r.str();
+  const namespace = new TextDecoder().decode(r.str());
+  const reserved = r.str();
+  const hashAlg = new TextDecoder().decode(r.str());
+  const sigBlob = r.str();
+  const pr = new Rd(pubkeyBlob);
+  const keyType = new TextDecoder().decode(pr.str());
+  if (keyType !== "ssh-ed25519") throw new Error("sshsig: only ssh-ed25519 keys are supported");
+  const pubRaw = pr.str();
+  if (pubRaw.length !== 32) throw new Error("sshsig: bad ed25519 key length");
+  const sr = new Rd(sigBlob);
+  const sigType = new TextDecoder().decode(sr.str());
+  if (sigType !== "ssh-ed25519") throw new Error("sshsig: signature type mismatch");
+  const sigRaw = sr.str();
+  if (sigRaw.length !== 64) throw new Error("sshsig: bad ed25519 signature length");
+  if (hashAlg !== "sha512" && hashAlg !== "sha256")
+    throw new Error("sshsig: unsupported hash " + hashAlg);
+  return {
+    version,
+    namespace,
+    hashAlg,
+    reserved,
+    pubRaw,
+    pubkeyBlob,
+    sigRaw,
+    pubB64: bytesToB64(wirePubkey(pubRaw))
+  };
+}
+async function verifySshsig(armored, message, expectNamespace, allowedKeys) {
+  let p;
+  try {
+    p = parseSshsig(armored);
+  } catch (e) {
+    return { ok: false, reason: "MALFORMED", detail: String(e.message || e) };
+  }
+  if (p.namespace !== expectNamespace)
+    return { ok: false, reason: "NAMESPACE", expected: expectNamespace, got: p.namespace };
+  const allowed = (allowedKeys || []).map(normalizeKey).filter(Boolean);
+  if (!allowed.includes(p.pubB64))
+    return { ok: false, reason: "UNKNOWN_KEY", keyB64: p.pubB64 };
+  const hash = await crypto.subtle.digest(p.hashAlg === "sha512" ? "SHA-512" : "SHA-256", message);
+  const signed = cat(
+    te.encode("SSHSIG"),
+    wStr(te.encode(p.namespace)),
+    wStr(p.reserved),
+    wStr(te.encode(p.hashAlg)),
+    wStr(new Uint8Array(hash))
+  );
+  let key;
+  try {
+    key = await crypto.subtle.importKey("raw", p.pubRaw, { name: "Ed25519" }, false, ["verify"]);
+  } catch (e) {
+    return { ok: false, reason: "CRYPTO_UNAVAILABLE", detail: String(e.message || e) };
+  }
+  const good = await crypto.subtle.verify({ name: "Ed25519" }, key, p.sigRaw, signed);
+  return good ? { ok: true, keyB64: p.pubB64, namespace: p.namespace } : { ok: false, reason: "BAD_SIGNATURE", keyB64: p.pubB64 };
+}
+var NS_RATIFY = "bio-ratify";
+var ratifyStatement = (bundleId, bundleSha) => te.encode(`bio-ratify ${bundleId} ${bundleSha}
+`);
 
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
@@ -1074,6 +1717,250 @@ var Store = class _Store extends DurableObject {
     }
     return { role: s.role, expires: s.expires };
   }
+  /* ---- members: each person their own credential, admin-invited ----
+  
+       The invite is spent exactly like the bootstrap credential is spent: its
+       hash is cleared on enrollment, so possession of an old invite buys
+       nothing against an enrolled member. Passwords live only as PBKDF2
+       hashes under credentials role 'member:<id>'. */
+  async memberAdd({ memberId, name, role = "member" } = {}) {
+    if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
+      return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+    if (!name || typeof name !== "string")
+      return { ok: false, reason: "NO_NAME" };
+    if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
+      return { ok: false, reason: "EXISTS", memberId };
+    const invite = _Store.#rand(16);
+    const hash = await _Store.#sha256(invite);
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(
+      `INSERT INTO members (member_id,name,role,status,invite_hash,created,updated) VALUES (?,?,?,?,?,?,?)`,
+      memberId,
+      name,
+      role === "admin" ? "admin" : "member",
+      "invited",
+      hash,
+      now,
+      now
+    );
+    return { ok: true, memberId, invite };
+  }
+  async enroll({ memberId, invite, password } = {}) {
+    const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (m.status === "revoked") return { ok: false, reason: "REVOKED" };
+    if (!m.invite_hash) return { ok: false, reason: "ALREADY_ENROLLED" };
+    if (!invite || await _Store.#sha256(invite) !== m.invite_hash)
+      return { ok: false, reason: "BAD_INVITE" };
+    if (typeof password !== "string" || password.length < 12)
+      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+    await this.setPassword({ role: `member:${memberId}`, password });
+    this.sql.exec(
+      `UPDATE members SET status='active', invite_hash=NULL, updated=? WHERE member_id=?`,
+      (/* @__PURE__ */ new Date()).toISOString(),
+      memberId
+    );
+    return { ok: true, memberId };
+  }
+  memberList() {
+    return { members: this.#rows(
+      `SELECT member_id, name, role, status, created, updated,
+              CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
+       FROM members ORDER BY member_id`
+    ) };
+  }
+  memberSet({ memberId, status } = {}) {
+    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    const m = this.#one(`SELECT status FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    this.sql.exec(
+      `UPDATE members SET status=?, updated=? WHERE member_id=?`,
+      status,
+      (/* @__PURE__ */ new Date()).toISOString(),
+      memberId
+    );
+    if (status === "revoked") {
+      this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
+      this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
+    }
+    return { ok: true, memberId, status };
+  }
+  /* ---- signers: the registered-key projection ---- */
+  signerAdd({ keyB64, memberId, comment } = {}) {
+    if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
+      return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
+    if (!this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
+      return { ok: false, reason: "NO_SUCH_MEMBER" };
+    this.sql.exec(
+      `INSERT INTO signers (key_b64,member_id,comment,status,added) VALUES (?,?,?,'active',?)
+       ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
+         comment=excluded.comment, status='active'`,
+      keyB64,
+      memberId,
+      comment ?? null,
+      (/* @__PURE__ */ new Date()).toISOString()
+    );
+    return { ok: true, keyB64, memberId };
+  }
+  signerList() {
+    return { signers: this.#rows(`SELECT key_b64, member_id, comment, status, added FROM signers ORDER BY added`) };
+  }
+  signerSet({ keyB64, status } = {}) {
+    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    if (!this.#one(`SELECT key_b64 FROM signers WHERE key_b64=?`, keyB64))
+      return { ok: false, reason: "NO_SUCH_KEY" };
+    this.sql.exec(`UPDATE signers SET status=? WHERE key_b64=?`, status, keyB64);
+    return { ok: true, keyB64, status };
+  }
+  /* ---- ratification support: facts out, published rows in ----
+  
+       The gate and the signature check run at the control plane, which also
+       owns all R2 traffic. This store only hands out the facts and commits
+       the published rows in one transaction. */
+  gateFacts(bundleId) {
+    const row = this.#one(
+      `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`,
+      bundleId
+    );
+    if (!row) return { ok: false, reason: "ABSENT", bundleId };
+    return {
+      ok: true,
+      row,
+      manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created`, bundleId),
+      history: this.#rows(`SELECT snap_key, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`, bundleId),
+      registers: this.#rows(`SELECT capture_sha, path, bytes FROM register WHERE bundle_id=?`, bundleId),
+      dangling: this.#rows(
+        `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
+         WHERE r.bundle_id=? AND b.bundle_id IS NULL`,
+        bundleId
+      ).map((r) => r.target_id),
+      signers: this.#rows(
+        `SELECT s.key_b64, s.member_id FROM signers s
+         JOIN members m ON m.member_id=s.member_id
+         WHERE s.status='active' AND m.status='active'`
+      )
+    };
+  }
+  publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas } = {}) {
+    if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
+      return { ok: false, reason: "MALFORMED" };
+    return this.ctx.storage.transactionSync(() => {
+      const cur = this.#one(`SELECT bundle_sha FROM published_bundles WHERE bundle_id=?`, bundleId);
+      const existed = !!(cur && cur.bundle_sha === bundleSha);
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      this.sql.exec(
+        `INSERT INTO published_bundles (bundle_id,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored)
+         VALUES (?,?,?,?,?,?,?)
+         ON CONFLICT(bundle_id) DO UPDATE SET bundle_sha=excluded.bundle_sha,
+           ratified_at=excluded.ratified_at, attestor_key=excluded.attestor_key,
+           attestor_member=excluded.attestor_member, gate_version=excluded.gate_version,
+           sig_armored=excluded.sig_armored`,
+        bundleId,
+        bundleSha,
+        now,
+        attestorKey,
+        attestorMember ?? null,
+        gateVersion,
+        sigArmored
+      );
+      for (const s of shas)
+        this.sql.exec(
+          `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+           ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
+          s.sha256,
+          bundleId,
+          s.path,
+          s.kind,
+          s.bytes ?? null,
+          now
+        );
+      return { ok: true, bundleId, bundleSha, existed, ratifiedAt: now };
+    });
+  }
+  /* ---- the doorbell, store side ---- */
+  /* 7a: answers ONLY from the published projection. Working material is not
+     consulted, so there is nothing to leak: a hash that was never ratified
+     is indistinguishable from a hash that never existed. */
+  verifySha(sha) {
+    const matches = this.#rows(
+      `SELECT bundle_id, path, kind, published FROM published_shas WHERE sha256=? ORDER BY published`,
+      sha
+    );
+    return { published: matches.length > 0, sha256: sha, matches };
+  }
+  publishedList() {
+    return { bundles: this.#rows(
+      `SELECT bundle_id, bundle_sha, ratified_at, attestor_member, gate_version FROM published_bundles ORDER BY bundle_id`
+    ) };
+  }
+  /* 7b: the knock. Rate accounting and the row land in one transaction, so
+     an attacker cannot slip past the caps on a race. The worst case is by
+     construction a full inbox. */
+  knock({
+    knockId,
+    sha256: sha2562,
+    bytes,
+    content,
+    inR2,
+    note,
+    contact,
+    ipBucket,
+    globalBucket,
+    perIpLimit,
+    globalLimit
+  } = {}) {
+    return this.ctx.storage.transactionSync(() => {
+      const cnt = (b) => this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0;
+      if (cnt(ipBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
+      if (cnt(globalBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
+      for (const b of [ipBucket, globalBucket])
+        this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
+                       ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
+      const win = globalBucket.split(":").pop();
+      this.sql.exec(`DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ?`, win);
+      this.sql.exec(
+        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status)
+         VALUES (?,?,?,?,?,?,?,?,'new')`,
+        knockId,
+        sha2562,
+        bytes,
+        content ?? null,
+        inR2 ? 1 : 0,
+        (note || "").slice(0, 2e3),
+        (contact || "").slice(0, 300),
+        (/* @__PURE__ */ new Date()).toISOString()
+      );
+      return { ok: true, knockId, sha256: sha2562, bytes };
+    });
+  }
+  inboxList(status) {
+    return { inbox: this.#rows(
+      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by
+       FROM inbox ${status ? "WHERE status=?" : ""} ORDER BY received DESC`,
+      ...status ? [status] : []
+    ) };
+  }
+  inboxGet(knockId) {
+    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status FROM inbox WHERE knock_id=?`, knockId);
+    return r ? { ok: true, item: r } : { ok: false, reason: "NOT_FOUND" };
+  }
+  inboxResolve({ knockId, status, by } = {}) {
+    if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    const r = this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId);
+    if (!r) return { ok: false, reason: "NOT_FOUND" };
+    this.sql.exec(
+      `UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
+      status,
+      (/* @__PURE__ */ new Date()).toISOString(),
+      by ?? null,
+      knockId
+    );
+    return { ok: true, knockId, status };
+  }
+  static async #sha256(v) {
+    const b = await crypto.subtle.digest("SHA-256", _Store.#enc.encode(v));
+    return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  }
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -1092,7 +1979,29 @@ var Store = class _Store extends DurableObject {
         stats: () => this.stats(),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
-        login: () => this.login(body || {}),
+        login: async () => {
+          const role = body?.role || "admin";
+          if (role.startsWith("member:")) {
+            const m = this.#one(`SELECT status FROM members WHERE member_id=?`, role.slice(7));
+            if (!m || m.status !== "active") return { ok: false, reason: "NO_SUCH_ROLE" };
+          }
+          return this.login(body || {});
+        },
+        memberadd: () => this.memberAdd(body || {}),
+        enroll: () => this.enroll(body || {}),
+        memberlist: () => this.memberList(),
+        memberset: () => this.memberSet(body || {}),
+        signeradd: () => this.signerAdd(body || {}),
+        signerlist: () => this.signerList(),
+        signerset: () => this.signerSet(body || {}),
+        gatefacts: () => this.gateFacts(url.searchParams.get("id")),
+        publish: () => this.publish(body || {}),
+        verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
+        publishedlist: () => this.publishedList(),
+        knock: () => this.knock(body || {}),
+        inboxlist: () => this.inboxList(url.searchParams.get("status") || null),
+        inboxget: () => this.inboxGet(url.searchParams.get("id")),
+        inboxresolve: () => this.inboxResolve(body || {}),
         setpassword: () => this.setPassword(body || {}),
         session: () => ({ session: this.session(url.searchParams.get("t")) }),
         purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") })
@@ -1121,12 +2030,74 @@ var OPS = {
   lease: { classes: ["admin", "member", "probe"], mutating: true },
   purge: { classes: ["admin", "probe"], mutating: true },
   capture: { classes: ["admin", "member", "probe"], mutating: true },
-  /* The bootstrap trio is the only unauthenticated surface. Each enforces its
-     own gate: bootstrap reveals nothing but claimed/unclaimed, claim requires
-     the bootstrap secret and refuses once spent, login requires the password. */
+  /* Write arc. Ratification's authority is the SSHSIG itself, checked
+     against the registered signers; the token or session only reaches the
+     surface. Member and signer administration is admin-only. Probe class
+     reaches everything so the whole write arc is exercisable against
+     scratch, whose Durable Object is a different instance with its own
+     member tables, so scratch enrollment can never touch the live roster. */
+  ratify: { classes: ["admin", "member", "probe"], mutating: true },
+  publishedlist: { classes: ["admin", "member", "probe", "public"], mutating: false },
+  inbox: { classes: ["admin", "member", "probe"], mutating: false },
+  inboxget: { classes: ["admin", "member", "probe"], mutating: false },
+  inboxresolve: { classes: ["admin", "member", "probe"], mutating: true },
+  memberadd: { classes: ["admin", "probe"], mutating: true },
+  memberlist: { classes: ["admin", "member", "probe"], mutating: false },
+  memberset: { classes: ["admin", "probe"], mutating: true },
+  signeradd: { classes: ["admin", "probe"], mutating: true },
+  signerlist: { classes: ["admin", "member", "probe"], mutating: false },
+  signerset: { classes: ["admin", "probe"], mutating: true },
+  /* The bootstrap trio and the doorbell are the unauthenticated surface.
+     Each enforces its own gate: bootstrap reveals nothing but
+     claimed/unclaimed, claim requires the bootstrap secret and refuses once
+     spent, login requires the password, enroll requires a live one-time
+     invite. verify answers only from the published projection, which has
+     never seen unratified material, so there is nothing to leak. knock
+     lands in a quarantined inbox, size-capped and rate-limited; the worst
+     case under attack is a full inbox. */
   bootstrap: { classes: null, mutating: false },
   claim: { classes: null, mutating: true },
-  login: { classes: null, mutating: false }
+  login: { classes: null, mutating: false },
+  enroll: { classes: null, mutating: true },
+  verify: { classes: null, mutating: false },
+  knock: { classes: null, mutating: true }
+};
+var SESSION_OPS = {
+  member: /* @__PURE__ */ new Set([
+    "promote",
+    "lease",
+    "allocid",
+    "capture",
+    "ratify",
+    "inbox",
+    "inboxget",
+    "inboxresolve"
+  ]),
+  admin: /* @__PURE__ */ new Set([
+    "promote",
+    "lease",
+    "allocid",
+    "capture",
+    "ratify",
+    "inbox",
+    "inboxget",
+    "inboxresolve",
+    "memberadd",
+    "memberset",
+    "signeradd",
+    "signerset"
+  ])
+};
+var KNOCK = {
+  windowMs: 10 * 60 * 1e3,
+  perIp: 12,
+  // knocks per source per window
+  global: 300,
+  // knocks per instance per window; bounds hostile R2 writes
+  maxBytes: 8 * 1024 * 1024,
+  // with R2: enough for a captured PDF
+  maxInline: 64 * 1024
+  // without R2: inline into the DO, small only
 };
 var SCRATCH = "scratch";
 async function fingerprint(v) {
@@ -1186,6 +2157,85 @@ var index_default = {
         }));
         return json(await r2.json(), 200);
       }
+      if (op === "enroll") {
+        const body2 = await req.json().catch(() => ({}));
+        const r2 = await stub2.fetch(new Request("http://do/enroll", {
+          method: "POST",
+          body: JSON.stringify(body2)
+        }));
+        return json(await r2.json(), 200);
+      }
+      if (op === "verify") {
+        const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+        if (!/^[0-9a-f]{64}$/.test(sha))
+          return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
+        const r2 = await stub2.fetch(new Request(`http://do/verify?sha256=${sha}`));
+        const out2 = await r2.json();
+        return json({ ok: true, ...out2.result }, 200);
+      }
+      if (op === "knock") {
+        if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
+        const raw = await req.arrayBuffer();
+        if (raw.byteLength > KNOCK.maxBytes + 4096)
+          return json({ ok: false, reason: "TOO_LARGE", maxBytes: KNOCK.maxBytes }, 413);
+        let body2;
+        try {
+          body2 = JSON.parse(new TextDecoder().decode(raw));
+        } catch {
+          body2 = null;
+        }
+        if (!body2 || typeof body2.contentB64 !== "string" && typeof body2.contentText !== "string")
+          return json({ ok: false, error: "knock requires contentB64 or contentText, plus optional note and contact" }, 400);
+        let bytes;
+        try {
+          bytes = body2.contentB64 !== void 0 ? Uint8Array.from(atob(body2.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body2.contentText);
+        } catch {
+          return json({ ok: false, error: "contentB64 is not valid base64" }, 400);
+        }
+        if (bytes.length === 0) return json({ ok: false, reason: "EMPTY" }, 400);
+        const r2 = typeof env.CAPTURES?.put === "function";
+        const cap = r2 ? KNOCK.maxBytes : KNOCK.maxInline;
+        if (bytes.length > cap)
+          return json({
+            ok: false,
+            reason: "TOO_LARGE",
+            maxBytes: cap,
+            detail: r2 ? void 0 : "this instance stores knocks inline; large material needs its evidence storage configured"
+          }, 413);
+        const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
+        const win = Math.floor(Date.now() / KNOCK.windowMs);
+        const ipHash = await fingerprint(req.headers.get("cf-connecting-ip") || "unknown") || "unknown";
+        const knockId = `KNOCK-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
+        const rec = await (await stub2.fetch(new Request("http://do/knock", {
+          method: "POST",
+          body: JSON.stringify({
+            knockId,
+            sha256: sha,
+            bytes: bytes.length,
+            content: r2 ? null : new TextDecoder().decode(bytes),
+            inR2: r2,
+            note: body2.note,
+            contact: body2.contact,
+            ipBucket: `ip:${ipHash}:${win}`,
+            globalBucket: `all:${win}`,
+            perIpLimit: KNOCK.perIp,
+            globalLimit: KNOCK.global
+          })
+        }))).json();
+        if (!rec.result?.ok) return json({ ok: false, ...rec.result }, 429);
+        if (r2) await env.CAPTURES.put(
+          `bio/inbox/${sha}`,
+          bytes,
+          { sha256: await crypto.subtle.digest("SHA-256", bytes) }
+        );
+        return json({
+          ok: true,
+          knockId,
+          sha256: sha,
+          bytes: bytes.length,
+          received: "Your material is in the group's inbox awaiting member review."
+        }, 200);
+      }
       const r = await stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`));
       const out = await r.json();
       return json({
@@ -1198,6 +2248,7 @@ var index_default = {
     }
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;
+    let sessMember = null;
     if (!cls) {
       const t = url.searchParams.get("token");
       if (t && /^[0-9a-f]{64}$/.test(t)) {
@@ -1205,9 +2256,11 @@ var index_default = {
         const r = await (await st.fetch(`http://do/session?t=${t}`)).json();
         const sess = r?.result?.session;
         if (sess) {
-          if (spec.mutating && !(op === "capture" && req.method === "GET"))
-            return json({ ok: false, error: "a signed-in session can read the record but never write it; writes require a machine credential", op }, 403);
-          cls = sess.role === "admin" ? "admin" : "member";
+          const kind = sess.role === "admin" ? "admin" : "member";
+          if (spec.mutating && !(op === "capture" && req.method === "GET") && !SESSION_OPS[kind].has(op))
+            return json({ ok: false, error: "this operation requires a machine credential, not a signed-in session", op }, 403);
+          cls = kind;
+          sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
           viaSession = true;
         }
       }
@@ -1323,12 +2376,157 @@ var index_default = {
       });
     }
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
-    const inner = new URL("http://x/" + op);
+    if (op === "ratify") {
+      const body2 = await req.json().catch(() => null);
+      if (!body2?.bundleId || !body2?.expectedSha || typeof body2?.sig !== "string")
+        return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
+      const facts = (await (await stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body2.bundleId)}`)).json()).result;
+      if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
+      if (facts.row.bundle_sha !== body2.expectedSha)
+        return json({
+          ok: false,
+          reason: "RATIFY_STALE",
+          detail: "the bundle has changed since it was reviewed; read it again and re-sign",
+          expected: facts.row.bundle_sha,
+          got: body2.expectedSha,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
+      if (!facts.signers.length)
+        return json({
+          ok: false,
+          reason: "NO_SIGNERS",
+          detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
+          store: storeName,
+          tokenClass: cls
+        }, 409);
+      const sv = await verifySshsig(
+        body2.sig,
+        ratifyStatement(body2.bundleId, body2.expectedSha),
+        NS_RATIFY,
+        facts.signers.map((s) => s.key_b64)
+      );
+      if (!sv.ok)
+        return json({
+          ok: false,
+          reason: "SIG_" + sv.reason,
+          ...sv.keyB64 ? { keyB64: sv.keyB64 } : {},
+          ...sv.detail ? { detail: sv.detail } : {},
+          store: storeName,
+          tokenClass: cls
+        }, 403);
+      const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
+      const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body2.bundleId)}`)).json()).result;
+      const r2 = typeof env.CAPTURES?.head === "function";
+      const gate = await runGate({
+        bundleId: body2.bundleId,
+        row: facts.row,
+        image,
+        manifest: facts.manifest,
+        history: facts.history,
+        registers: facts.registers,
+        dangling: facts.dangling,
+        hasCapture: async (sha) => {
+          if (!r2) return { present: false, bytes: 0 };
+          const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
+          return h ? { present: true, bytes: h.size } : { present: false, bytes: 0 };
+        }
+      });
+      if (!gate.ok)
+        return json({
+          ok: false,
+          reason: "GATE_REFUSED",
+          gateVersion: gate.gateVersion,
+          findings: gate.findings,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
+      const shas = [];
+      for (const [path2, v] of Object.entries(image)) {
+        if (path2.startsWith("_history/")) continue;
+        if (typeof v === "string") {
+          const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v)))].map((x) => x.toString(16).padStart(2, "0")).join("");
+          shas.push({
+            sha256: sha,
+            path: path2,
+            kind: path2 === "bundle.md" ? "bundle" : "file",
+            bytes: new TextEncoder().encode(v).length,
+            text: v
+          });
+        } else {
+          shas.push({ sha256: v.blobSha, path: path2, kind: "capture" });
+        }
+      }
+      const pub = (await (await stub.fetch(new Request("http://do/publish", {
+        method: "POST",
+        body: JSON.stringify({
+          bundleId: body2.bundleId,
+          bundleSha: body2.expectedSha,
+          attestorKey: sv.keyB64,
+          attestorMember: attestor?.member_id ?? sessMember,
+          gateVersion: gate.gateVersion,
+          sigArmored: body2.sig,
+          shas: shas.map(({ text, ...s }) => s)
+        })
+      }))).json()).result;
+      if (!pub?.ok) return json({ ok: false, reason: "PUBLISH_FAILED", detail: pub, store: storeName, tokenClass: cls }, 500);
+      let copied = 0, present = 0, r2state = "not configured";
+      if (typeof env.PUBLISHED?.put === "function" && r2) {
+        r2state = "ok";
+        for (const s of shas) {
+          const key = `${storeName}/published/${s.sha256}`;
+          if (await env.PUBLISHED.head(key)) {
+            present++;
+            continue;
+          }
+          if (s.kind === "capture") {
+            const obj = await env.CAPTURES.get(`${storeName}/captures/${s.sha256}`);
+            if (!obj) {
+              r2state = "INCOMPLETE: capture vanished between gate and copy";
+              continue;
+            }
+            await env.PUBLISHED.put(key, obj.body);
+          } else {
+            await env.PUBLISHED.put(key, new TextEncoder().encode(s.text));
+          }
+          copied++;
+        }
+      }
+      return json({
+        ok: true,
+        bundleId: body2.bundleId,
+        bundleSha: body2.expectedSha,
+        existed: pub.existed,
+        ratifiedAt: pub.ratifiedAt,
+        attestor: attestor?.member_id ?? null,
+        gateVersion: gate.gateVersion,
+        published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
+        store: storeName,
+        tokenClass: cls
+      }, 200);
+    }
+    const DO_PATH = { inbox: "inboxlist", memberlist: "memberlist", signerlist: "signerlist" };
+    const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
-    const res = await stub.fetch(new Request(inner, {
-      method: req.method,
-      body: req.method === "POST" ? await req.text() : void 0
-    }));
+    if (viaSession && op === "lease") inner.searchParams.set("actor", sessMember);
+    let passBody = req.method === "POST" ? await req.text() : void 0;
+    if (viaSession && op === "promote" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.author = sessMember;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if (op === "inboxresolve" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.by = viaSession ? sessMember : `token:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    const res = await stub.fetch(new Request(inner, { method: req.method, body: passBody }));
     const body = await res.json();
     return json({ ...body, store: storeName, tokenClass: cls }, res.status);
   }

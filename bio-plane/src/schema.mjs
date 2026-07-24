@@ -128,4 +128,82 @@ CREATE TABLE IF NOT EXISTS bootstrap (
   consumed_at TEXT,
   token_fp    TEXT
 );
+
+-- ---- write arc ----
+
+-- Members. Each member signs in with their own password (stored in
+-- credentials under role 'member:<member_id>', which is why sessions and
+-- credentials needed no schema change). invite_hash is the SHA-256 of a
+-- one-time enrollment code; it is cleared the moment the member enrolls, so
+-- a leaked invite cannot re-enroll an active member.
+CREATE TABLE IF NOT EXISTS members (
+  member_id   TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  role        TEXT NOT NULL DEFAULT 'member',
+  status      TEXT NOT NULL DEFAULT 'invited',
+  invite_hash TEXT,
+  created     TEXT NOT NULL,
+  updated     TEXT NOT NULL
+);
+
+-- Registered signing keys, the plane's projection of the member key
+-- registry. key_b64 is the bare base64 of the OpenSSH wire public key, the
+-- exact bytes an SSHSIG embeds, so matching is byte equality.
+CREATE TABLE IF NOT EXISTS signers (
+  key_b64   TEXT PRIMARY KEY,
+  member_id TEXT NOT NULL,
+  comment   TEXT,
+  status    TEXT NOT NULL DEFAULT 'active',
+  added     TEXT NOT NULL
+);
+
+-- The published projection: the ONLY tables the public doorbell reads.
+-- Nothing lands here except through ratification, so answering a public
+-- query from these tables can never leak working material. published_shas
+-- is append-only across re-ratifications: a hash once published stays
+-- verifiable forever, which is what a document holder needs.
+CREATE TABLE IF NOT EXISTS published_bundles (
+  bundle_id       TEXT PRIMARY KEY,
+  bundle_sha      TEXT NOT NULL,
+  ratified_at     TEXT NOT NULL,
+  attestor_key    TEXT NOT NULL,
+  attestor_member TEXT,
+  gate_version    TEXT NOT NULL,
+  sig_armored     TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS published_shas (
+  sha256    TEXT NOT NULL,
+  bundle_id TEXT NOT NULL,
+  path      TEXT NOT NULL,
+  kind      TEXT NOT NULL,
+  bytes     INTEGER,
+  published TEXT NOT NULL,
+  PRIMARY KEY (sha256, bundle_id, path)
+);
+CREATE INDEX IF NOT EXISTS published_shas_sha ON published_shas(sha256);
+
+-- The knock: quarantined public intake. Payload bytes live in R2 under
+-- <store>/inbox/<sha256> when R2 is configured, else inline here (small
+-- only). Nothing reads this table except member review; nothing here
+-- touches the record until a member pulls it through the gate.
+CREATE TABLE IF NOT EXISTS inbox (
+  knock_id    TEXT PRIMARY KEY,
+  sha256      TEXT NOT NULL,
+  bytes       INTEGER NOT NULL,
+  content     TEXT,
+  in_r2       INTEGER NOT NULL DEFAULT 0,
+  note        TEXT,
+  contact     TEXT,
+  received    TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'new',
+  resolved    TEXT,
+  resolved_by TEXT
+);
+CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
+
+-- Fixed-window knock rate accounting. Rows are pruned as windows pass.
+CREATE TABLE IF NOT EXISTS knock_rate (
+  bucket TEXT PRIMARY KEY,
+  count  INTEGER NOT NULL
+);
 `;

@@ -226,4 +226,4 @@ console.log("\n--- an interrupted migration resumes from where it stopped ---");
 await mf.dispose();
 rmSync(ROOT, { recursive: true, force: true });
 console.log(`\nmigrate: ${pass} passed, ${fail} failed`);
-if (fail) process.exit(1);
+process.exit(fail ? 1 : 0);

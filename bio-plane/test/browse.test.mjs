@@ -58,14 +58,17 @@ t("capture answers a session", dlr.status, 200);
 t("the filename travels", dlr.headers.get("content-disposition"), 'attachment; filename="doc.bin"');
 t("bytes are exact", sha(Buffer.from(await dlr.arrayBuffer())), capSha);
 
-console.log("\n--- a session can never write ---");
-t("promote via session is refused, in plain words",
-  (await post(`/api/?op=promote&token=${S}`, { bundleId: "X" })).error.includes("never write"), true);
-t("capture PUT via session is refused",
-  (await j(`/api/?op=capture&token=${S}&sha256=${capSha}`, { method: "PUT", body: cap })).error.includes("never write"), true);
-t("purge via session is refused",
-  (await j(`/api/?op=purge&token=${S}&confirm=bio`)).error.includes("never write"), true);
+/* The write arc opened intake to sessions, so the boundary moved rather than
+   disappeared: a browser may add to the working record, and may not destroy
+   anything or hand itself new powers. The refusals below are the boundary. */
+console.log("\n--- a session writes intake and nothing else ---");
+t("purge via session is refused, in plain words",
+  (await j(`/api/?op=purge&token=${S}&confirm=bio`)).error.includes("machine credential"), true);
+t("the live-fire battery is refused",
+  (await j(`/api/?op=livefire&token=${S}`)).error.includes("machine credential"), true);
 t("nothing was purged", (await j(`/api/?op=stats&token=${S}`)).result.bundles, 1);
+t("a session may take a lease, which is intake",
+  (await j(`/api/?op=lease&token=${S}&id=INFO-2026-7001-x`)).result.ok, true);
 
 console.log("\n--- garbage and expiry stay outside ---");
 t("a made-up 64-hex token is refused", (await j(`/api/?op=list&token=${"a".repeat(64)}`)).error, "unauthenticated");
@@ -77,6 +80,13 @@ t("browse section present", page.includes('id="s-browse"'), true);
 t("bundle section present", page.includes('id="s-bundle"'), true);
 t("the door from the panel exists", page.includes('id="go-browse"'), true);
 t("history is explained as append-only", page.includes("append-only"), true);
+
+console.log("\n--- the page ships the intake surface ---");
+for (const [what, id] of [["create", "s-new"], ["revise", "s-edit"], ["inbox", "s-inbox"],
+                          ["members", "s-members"], ["enrolment", "s-enroll"]])
+  t(`the ${what} section is present`, page.includes(`id="${id}"`), true);
+t("publishing is presented as needing a signature", page.includes("Paste the signature from the signing page."), true);
+t("members can sign in by name", page.includes('id="lwho"'), true);
 
 console.log("\n--- the served script is real JavaScript that really runs ---");
 /* The page is generated from a template that eats backslashes and backticks,
@@ -118,4 +128,4 @@ if (hooks) {
 
 await mf.dispose();
 console.log(`\nbrowse: ${pass} passed, ${fail} failed`);
-if (fail) process.exit(1);
+process.exit(fail ? 1 : 0);

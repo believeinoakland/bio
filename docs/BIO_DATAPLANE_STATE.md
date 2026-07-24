@@ -1,8 +1,94 @@
 # BIO data plane: source state, migration plan, and build status
 
-v12, July 24, 2026. REPO DISTRIBUTION IS LIVE AND PROVEN: repo pushed by Claude (46 files, commit cf4f7616, tag v0.3.11), release verified from the public URLs, and Bob ran the updater against biosmoke6, which pulled from the repo. All good. Tree deliverable renamed: it is the whole BIO source, so it is bio-<version>.zip from now on (Bob, July 24). Distribution recut to committed release files at raw.githubusercontent.com/believeinoakland/bio/main/release/ plus a git tag per version, because Claude pushes releases through the GitHub API directly and the network policy of Claude sessions does not reach GitHub Releases asset uploads. Claude performs all repo pushes and releases from the session; Bob provides only the one-time account and a repo-scoped fine-grained access token per release session. REPO-BASED DISTRIBUTION IS BUILT (tree 0.3.10, wizard 75 assertions green). The installer now checks https://github.com/believeinoakland/bio releases on every install and update: a newer release is fetched, verified against the SHA-256 in its RELEASE.json manifest, and installed; equal or older means the built-in copy is used without downloading; an unreachable repository falls back to the built-in with a gentle note; a copy that fails verification is NEVER installed and the page says so. Once the repo exists, wizard re-pastes are only needed when the wizard itself changes; releases flow by uploading two asset files to a new GitHub release. THE READ VIEW IS BUILT AND FIXED (tree 0.3.9). The 0.3.8 instance page shipped with a generation bug (the page template ate backslashes and backticks in the new browser script, so the served script died at parse and the page hung on its loading screen). 0.3.9 corrects the generation and adds permanent guards: the browse suite now parses AND executes the served script under a stub document and asserts its parsing functions behave (24 assertions). An instance installed or updated to 0.3.8 shows the hang; updating it to 0.3.9 fixes it. biosmoke6 on 0.3.6 was never affected and the record is untouched. Bob raised performance verification; status recorded in the plan below. THE RECORD IS LIVE ON BIOSMOKE6. All 30 bundles migrated and verified (ledger in BIOSMOKE6-MIGRATION.log). The migration tool gained resume: interrupted runs converge, completed bundles are recognized, partial bundles continue from the exact revision reached, and a plane holding unrecognized content hard-stops. Tree 0.3.7 (migrate suite 40 assertions; biosmoke6 stays on 0.3.6, which is fine). biosmoke5 is deleted; biosmoke6 was created by the hardened 0.3.6 installer, proving the storage-required branch live: both buckets created, bound, and answering read-write on a fresh install with zero dashboard work. Supersedes all earlier versions. biosmoke5 is the development instance; a production instance comes later. Adds the
-Conversion Plan reconciliation, the capture op, the built and tested
-migration tool, and one reversal forced by evidence found in the store.
+v13, July 24, 2026. THE WRITE ARC IS BUILT (tree 0.4.0, 324 assertions
+green across fifteen suites, whole battery 23 seconds). Members, intake, the gate, the doorbell,
+and release signing all ship together, and the instance page is now a
+working front end rather than a read-only window.
+
+**Member credentials.** Admin invites a member, who spends a one-time
+code to set their own password. Passwords live as PBKDF2 hashes under
+credentials role `member:<id>`, which is why sessions and credentials
+needed no schema change. Revoking a member kills their live sessions,
+their login, and their signing keys in one stroke.
+
+**Sessions can now write intake.** This reverses the 0.3.8 rule that a
+signed-in browser could only read. A session may promote, lease, allocid,
+capture, ratify, and review the inbox; it may never purge or run the
+live-fire battery, and only an admin session may touch the roster.
+Authorship is stamped server-side from the session, so a browser cannot
+write history as someone else; the members suite proves it by sending an
+author of "IMPOSTOR" and finding the real member in the record.
+
+**The gate** is plane-native and versioned `plane-gate/0.1`, recorded on
+every publish. It is honestly scoped to mechanical integrity: frontmatter
+coherence, live hashes against the recorded bundle_sha, the base chain
+against history snapshots, registered captures present in R2 at the
+recorded size, and no dangling references. The full C-series catalog
+still lives in the record rather than the repo and is a later port, which
+is why the version string exists.
+
+**Ratification.** Authority is an SSHSIG over `bio-ratify <id> <sha>`
+from a registered active member key, verified against the signer
+registry. It has its own CAS, so you can only publish the revision you
+read. Publishing copies bytes content-addressed into the PUBLISHED
+bucket and appends hash rows; re-ratifying converges, and a hash once
+published verifies forever, including after later revisions.
+
+**The doorbell.** `verify` is unauthenticated and answers ONLY from the
+published projection, so working material cannot leak through it.
+`knock` accepts material from anyone into a quarantined inbox, capped at
+8MB with R2 or 64KB inline, rate-limited to 12 per source and 300 per
+instance per ten minutes, transactional so a race cannot slip the caps.
+Worst case under attack is a full inbox.
+
+**Release signing is armed.** RELEASE.json carries `sig` and `signer`;
+the installer holds Bob's release public key in ARMED_SIGNERS and refuses
+any repository release that is unsigned, signed by a stranger, or signed
+for a different purpose, falling back to its built-in copy and saying so
+in plain words. Namespace separation means a ratification signature can
+never install software. Bob signs in `tools/sign-release.html`, a single
+local file with no network access, whose output stock `ssh-keygen -Y
+verify` accepts. Development keys were generated July 24, 2026 and are
+disposable; production gets fresh, passphrase-protected keys.
+
+**The instance page** gained: member sign-in by name, create a bundle,
+revise through lease plus CAS, inbox review with dispositions, member and
+key administration for admins, enrolment for invited members, and a
+publish panel that shows the exact id and hash to sign and explains every
+refusal in plain words. The browse suite still parses AND executes the
+served script, which is what caught the 0.3.8 generation defect.
+
+**Standing credentials, revised by Bob (July 24).** Long-lived GitHub and
+MEMBER tokens are acceptable during development; per-session minting was
+friction without a threat, since nobody runs BIO while it is in
+development. Claude still cannot carry a secret across sessions, so the
+value is pasted once per session. Revisit at production.
+
+**Two test-harness defects found by measuring, both costing hours.**
+First, three suites written this session built Miniflare and never
+disposed it. Miniflare runs a real workerd child process, so each suite
+printed its result in about a second and then hung until something killed
+it: roughly 150 seconds per suite per run, with nothing failing and no
+symptom except slowness. Second, the whole plane battery now runs as one
+command. `npm test` covers all fourteen suites in 23 seconds, and it runs
+`hygiene.test.mjs` FIRST, which reads its sibling suites as text and
+fails the battery if any of them constructs a Miniflare it does not
+dispose, or ends without exiting on its own result. That guard caught
+four older suites relying on the event loop draining; all are now
+uniform. The lesson recorded for future sessions: measure before
+theorising about performance, because both defects were invisible to
+every assertion and obvious to a wall clock.
+
+**One defect found and fixed in the existing wizard suite.** Four probe
+stubs answered `{ ok: true }` without the `bindings.STORE` field the
+installer requires, so `verifyInstall` exhausted ten retries at three
+seconds each in eight blocks. The suite spent 240 of its 241 seconds
+asleep and three original blocks had been silently exercising a failed
+verification path. Fixed; the suite now runs in under a second.
+
+NEXT: port the C-series catalog into the gate (needs the record), the
+5,000 and 20,000 bundle benchmark from Conversion Plan step 6, and the
+retrieval arc.
 
 ## The source of record, verified live today
 

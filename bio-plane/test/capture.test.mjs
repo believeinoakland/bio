@@ -71,4 +71,4 @@ t("unknown sha is NOT_FOUND", (await j(`/api/capture?token=mem-capture-test&sha2
 
 await mf.dispose();
 console.log(`\ncapture: ${pass} passed, ${fail} failed`);
-if (fail) process.exit(1);
+process.exit(fail ? 1 : 0);

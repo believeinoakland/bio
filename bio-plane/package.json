@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node test/store.test.mjs && node test/purge.test.mjs && node test/bootstrap.test.mjs && node test/livefire.test.mjs && node test/installer.test.mjs && node test/capture.test.mjs && node test/migrate.test.mjs && node test/browse.test.mjs",
+    "test": "node test/hygiene.test.mjs && node test/store.test.mjs && node test/purge.test.mjs && node test/bootstrap.test.mjs && node test/livefire.test.mjs && node test/installer.test.mjs && node test/capture.test.mjs && node test/migrate.test.mjs && node test/browse.test.mjs && node test/sshsig.test.mjs && node test/members.test.mjs && node test/ratify.test.mjs && node test/doorbell.test.mjs && node test/signpage.test.mjs",
     "test:store": "node test/store.test.mjs",
     "test:livefire": "node test/livefire.test.mjs",
     "test:bundle": "node test/bundle.test.mjs",
@@ -13,7 +13,15 @@
     "test:bootstrap": "node test/bootstrap.test.mjs",
     "test:capture": "node test/capture.test.mjs",
     "test:migrate": "node test/migrate.test.mjs",
-    "test:browse": "node test/browse.test.mjs"
+    "test:browse": "node test/browse.test.mjs",
+    "test:hygiene": "node test/hygiene.test.mjs",
+    "test:purge": "node test/purge.test.mjs",
+    "test:installer": "node test/installer.test.mjs",
+    "test:sshsig": "node test/sshsig.test.mjs",
+    "test:members": "node test/members.test.mjs",
+    "test:ratify": "node test/ratify.test.mjs",
+    "test:doorbell": "node test/doorbell.test.mjs",
+    "test:signpage": "node test/signpage.test.mjs"
   },
   "devDependencies": {
     "miniflare": "^4.20260722.0",

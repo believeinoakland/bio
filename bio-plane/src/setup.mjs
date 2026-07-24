@@ -135,7 +135,10 @@ table.rec tr.row:hover td{background:#F6F7F2}
 
 <section id="s-login">
   <h1>Sign in</h1>
-  <p>This copy is claimed. Sign in with the administrator password.</p>
+  <p>This copy is claimed. Members sign in with their own name and password.
+  Leave the name empty to sign in as the administrator.</p>
+  <label for="lwho">Your member name</label>
+  <input id="lwho" autocomplete="username" placeholder="leave empty for administrator">
   <label for="lpw">Password</label>
   <input id="lpw" type="password" autocomplete="current-password">
   <button id="do-login">Sign in</button>
@@ -155,14 +158,19 @@ table.rec tr.row:hover td{background:#F6F7F2}
     <div class="kv"><span class="k">Roles with passwords</span><span class="v" id="p-roles"></span></div>
     <div class="kv"><span class="k">Session expires</span><span class="v" id="p-expires"></span></div>
   </div>
-  <div class="actions" style="margin:22px 0 6px"><button id="go-browse">Browse the record</button></div>
+  <div class="actions" style="margin:22px 0 6px">
+    <button id="go-browse">Browse the record</button>
+    <button id="go-new">Add something new</button>
+    <button id="go-inbox">Review the inbox</button>
+    <button id="go-members" hidden>Members and keys</button>
+  </div>
   <h2>What this page is, and is not</h2>
-  <p>This page proves the copy answers, is claimed, and that your password
-  works, and it opens the record for reading. Changing the record happens
-  through the tools your group connects to it, using the member and probe
-  credentials stored when this copy was installed. Those live in your
-  password manager and in this worker's settings in the Cloudflare
-  dashboard.</p>
+  <p>This page opens the record for reading, takes in new material, and
+  publishes what the group has ratified. Signing in with a password lets you
+  write into the working record. Publishing something to the world needs more
+  than a password: it needs a signature from a key the group has registered,
+  which you make on the signing page and paste in. Deleting anything is not
+  possible from here at all.</p>
   <p class="small">To update the software later, return to the installer and
   choose the update option. Updates never touch your passwords or your record.</p>
 </section>
@@ -185,6 +193,86 @@ table.rec tr.row:hover td{background:#F6F7F2}
   <p class="small">Every revision this bundle has ever had, oldest first. The
   record is append-only: nothing here can be edited or removed.</p>
   <div class="card" id="b-history"></div>
+  <div id="b-ratify"></div>
+</section>
+
+<section id="s-new">
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; New</p>
+  <h1>Add something new</h1>
+  <p class="small">This creates a bundle in the working record. Nothing here is
+  public: the working record has never been published and cannot be read by
+  anyone without a password.</p>
+  <label for="n-type">What kind of thing is this?</label>
+  <select id="n-type">
+    <option value="information">Information</option>
+    <option value="problem">Problem</option>
+    <option value="project">Project</option>
+    <option value="action">Action</option>
+  </select>
+  <label for="n-title">Title</label>
+  <input id="n-title" placeholder="what this is about">
+  <label for="n-body">What do you know?</label>
+  <textarea id="n-body" rows="14" placeholder="Write it plainly. Markdown headings and lists work."></textarea>
+  <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
+  <p class="err" id="n-err"></p>
+</section>
+
+<section id="s-edit">
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; <a id="e-back">Bundle</a> &rsaquo; Edit</p>
+  <h1>Revise this</h1>
+  <p class="small">Saving adds a revision. The version you are replacing stays in
+  the history forever; nothing is overwritten and nothing is lost.</p>
+  <div class="card"><div class="kv"><span class="k">Bundle</span><span class="v mono" id="e-id"></span></div></div>
+  <label for="e-body">The record</label>
+  <textarea id="e-body" rows="20" spellcheck="false"></textarea>
+  <div class="actions" style="margin-top:16px"><button id="e-save">Save a revision</button></div>
+  <p class="err" id="e-err"></p>
+</section>
+
+<section id="s-inbox">
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; Inbox</p>
+  <h1>The inbox</h1>
+  <p class="small">Material left by people outside the group. Nothing here is part
+  of the record, and nothing here has been examined. Treat every item as
+  unverified until the group has checked it.</p>
+  <div id="inbox-body"><p class="small">Loading&hellip;</p></div>
+</section>
+
+<section id="s-members">
+  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; Members</p>
+  <h1>Members and keys</h1>
+  <p class="small">Members sign in with their own name and password. Registered
+  keys are what allow a member to publish; a password alone never can.</p>
+  <h2>Members</h2>
+  <div class="card" id="m-list"></div>
+  <label for="m-id">Add a member (lowercase letters, digits, dashes)</label>
+  <input id="m-id" placeholder="ruth">
+  <label for="m-name">Their full name</label>
+  <input id="m-name" placeholder="Ruth">
+  <div class="actions" style="margin-top:12px"><button id="m-add">Invite them</button></div>
+  <p class="err" id="m-err"></p>
+  <div id="m-invite"></div>
+  <h2>Registered keys</h2>
+  <div class="card" id="k-list"></div>
+  <label for="k-key">Public key from the signing page</label>
+  <textarea id="k-key" rows="3" placeholder="ssh-ed25519 AAAA... bio-ratify" spellcheck="false"></textarea>
+  <label for="k-who">Belongs to which member</label>
+  <input id="k-who" placeholder="ruth">
+  <div class="actions" style="margin-top:12px"><button id="k-add">Register this key</button></div>
+  <p class="err" id="k-err"></p>
+</section>
+
+<section id="s-enroll">
+  <h1>Set your password</h1>
+  <p>You were invited to this group. Choose a password and your account is live.</p>
+  <label for="en-id">Your member name</label>
+  <input id="en-id">
+  <label for="en-inv">The invitation code you were given</label>
+  <input id="en-inv" spellcheck="false">
+  <label for="en-pw">Choose a password (12 characters or more)</label>
+  <input id="en-pw" type="password" autocomplete="new-password">
+  <div class="actions" style="margin-top:12px"><button id="en-go">Set it</button></div>
+  <p class="err" id="en-err"></p>
 </section>
 
 </main>
@@ -206,6 +294,7 @@ async function state(){
     const saved = JSON.parse(sessionStorage.getItem("bio-session") || "null");
     if (saved && saved.t && (!saved.e || saved.e > Date.now())) {
       SESSION = saved.t;
+      WHO = saved.w || "admin";
       const probe = await fetch("/api/?op=stats&token="+saved.t);
       if (probe.ok) {
         const b2 = await api("bootstrap");
@@ -253,22 +342,32 @@ $("#do-login").addEventListener("click", async ()=>{
   const e = $("#login-err"); e.textContent = "";
   $("#do-login").disabled = true;
   try {
-    const l = await api("login", { role: "admin", password: $("#lpw").value });
-    if (!l.result || !l.result.ok) { e.textContent = "That password was not accepted."; return; }
+    const who = $("#lwho").value.trim();
+    const role = who ? "member:" + who : "admin";
+    const l = await api("login", { role, password: $("#lpw").value });
+    if (!l.result || !l.result.ok) {
+      e.textContent = l.result && l.result.reason === "NO_SUCH_ROLE"
+        ? "No member by that name has set a password on this copy yet."
+        : "That name and password were not accepted."; return; }
+    WHO = who || "admin";
     const b = await api("bootstrap");
     panel(l.result, b.consumedAt);
   } catch(err){ e.textContent = "Sign-in did not go through: " + err.message; }
   finally { $("#do-login").disabled = false; }
 });
 let SESSION = null;
+let WHO = "admin";
 function panel(login, claimedAt){
   if (login && login.token) {
     SESSION = login.token;
-    try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "" })); } catch {}
+    try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
   }
+  $("#go-members").hidden = WHO !== "admin";
+  $("#panel-lede").textContent = WHO === "admin"
+    ? "Signed in as administrator." : "Signed in as " + WHO + ".";
   $("#p-version").textContent = window.__ver || "unknown";
   $("#p-claimed").textContent = claimedAt ? new Date(claimedAt).toLocaleString() : "just now";
-  $("#p-roles").textContent = "admin";
+  $("#p-roles").textContent = WHO;
   $("#p-expires").textContent = login && login.expires ? new Date(login.expires).toLocaleString() : "";
   show("#s-panel");
 }
@@ -369,6 +468,7 @@ function renderBundle(id, img, revisionKey){
     (revText !== null ? '<div class="revnote">Viewing a historical revision ('+escH(revisionKey)+'). <button class="histbtn" id="back-live">Back to the live record</button></div>' : "")
     + mdRender(body);
   const bl = $("#back-live"); if (bl) bl.addEventListener("click",()=>renderBundle(id, img, null));
+  ratifyPanel(id, liveText, revText !== null);
 
   const files = Object.keys(img).filter(k=>!k.startsWith("_history/")).sort();
   $("#b-files").innerHTML = files.map(k=>{
@@ -396,6 +496,240 @@ $("#go-browse").addEventListener("click", openBrowse);
 $("#crumb-panel").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
 $("#crumb-panel2").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
 $("#crumb-browse").addEventListener("click", openBrowse);
+
+/* ---- publishing: the one action a password alone cannot take ----
+   Ratifying copies this exact revision into the published record, where
+   anyone can check a hash against it. It needs a signature made with a
+   registered key, so the authority to publish is held by people, not by
+   whoever is holding a session. */
+async function ratifyPanel(id, liveText, historical){
+  const box = $("#b-ratify");
+  if (historical) { box.innerHTML = ""; return; }
+  const sha = await sha256Text(liveText);
+  box.innerHTML = "<h2>Publish this</h2>"
+    + '<p class="small">Publishing puts this revision where the public can verify it by hash. '
+    + "It cannot be undone: a published hash answers forever, even after later revisions.</p>"
+    + '<div class="card"><div class="kv"><span class="k">Bundle</span><span class="v mono">'+escH(id)+"</span></div>"
+    + '<div class="kv"><span class="k">This revision</span><span class="v mono">'+escH(sha)+"</span></div></div>"
+    + '<p class="small">On the signing page, choose Sign a ratification, paste those two values, '
+    + "and paste what it gives you here.</p>"
+    + '<textarea id="r-sig" rows="6" spellcheck="false" placeholder="-----BEGIN SSH SIGNATURE-----"></textarea>'
+    + '<div class="actions" style="margin-top:12px"><button id="r-go">Publish it</button>'
+    + ' <button id="r-edit">Revise instead</button></div><p class="err" id="r-err"></p>';
+  $("#r-edit").addEventListener("click", ()=>openEdit(id, liveText));
+  $("#r-go").addEventListener("click", async ()=>{
+    const e = $("#r-err"); e.textContent = "";
+    const sig = $("#r-sig").value.trim();
+    if (!sig) { e.textContent = "Paste the signature from the signing page."; return; }
+    $("#r-go").disabled = true;
+    try {
+      const r = await post("ratify", { bundleId: id, expectedSha: sha, sig });
+      if (r.ok) {
+        box.innerHTML = '<div class="okbox"><p style="margin:0">Published, attested by '
+          + escH(r.attestor||"a registered key") + ". " + escH(r.published.shas)
+          + " hashes are now publicly verifiable.</p></div>";
+        return; }
+      e.textContent = ratifyWhy(r);
+    } catch(err){ e.textContent = "That did not go through: " + err.message; }
+    finally { const g=$("#r-go"); if (g) g.disabled = false; }
+  });
+}
+function ratifyWhy(r){
+  const why = r.reason || r.error || "unknown";
+  if (why === "RATIFY_STALE") return "Someone saved a newer revision while you were signing. Reload this bundle and sign the new hash.";
+  if (why === "NO_SIGNERS") return "No keys are registered on this copy yet, so nothing can be published. An administrator registers keys under Members and keys.";
+  if (why === "SIG_UNKNOWN_KEY") return "That signature was made with a key this group has not registered, or one that has been revoked.";
+  if (why === "SIG_BAD_SIGNATURE") return "That signature does not match this bundle and hash. Sign the exact values shown above.";
+  if (why === "SIG_NAMESPACE") return "That signature was made for something other than ratification. Use the Sign a ratification tab.";
+  if (why === "MALFORMED") return "That does not look like a signature. Copy the whole block, including the BEGIN and END lines.";
+  if (why === "GATE_REFUSED") return "The checks refused this bundle: "
+    + (r.findings||[]).map(f=>f.check + (f.where ? " (" + f.where + ")" : "")).join(", ")
+    + ". Publishing is blocked until those are fixed.";
+  return "Refused: " + why;
+}
+
+/* ---- intake: writing into the working record from this page ----
+   Every write below goes through the same gated API a machine caller uses.
+   Authorship is stamped by the server from the session, so nothing typed
+   here can claim to be someone else. */
+const NL = String.fromCharCode(10);
+const PREFIX = { information:"INFO", problem:"PROB", project:"PROJ", action:"ACTN" };
+const FIRST_STATE = { information:"collected", problem:"forming", project:"forming", action:"forming" };
+const post = async (op, body)=>{
+  const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
+    { method:"POST", body: JSON.stringify(body) });
+  if (r.status === 401) { SESSION=null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); }
+  return r.json();
+};
+const sha256Text = async (text)=>{
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+};
+const stamp = ()=>{
+  const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+  let r = ""; const h = "0123456789abcdef";
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  for (const x of bytes) r += h[x>>4] + h[x&15];
+  return d + "_" + r;
+};
+const mdFor = (id, type, state, title, body)=>
+  ["---","id: "+id,"object_type: "+type,"current_state: "+state,"title: "+title,"---","","## Summary","",body,""].join(NL);
+
+/* ---- create ---- */
+$("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; show("#s-new"); });
+$("#n-save").addEventListener("click", async ()=>{
+  const e = $("#n-err"); e.textContent = "";
+  const type = $("#n-type").value, title = $("#n-title").value.trim(), body = $("#n-body").value.trim();
+  if (!title) { e.textContent = "Give it a title."; return; }
+  if (!body) { e.textContent = "Write something in the body."; return; }
+  $("#n-save").disabled = true;
+  try {
+    const year = String(new Date().getFullYear());
+    const a = await rec("allocid", { prefix: PREFIX[type], year });
+    const id = a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    const state = FIRST_STATE[type];
+    const text = mdFor(id, type, state, title, body);
+    const now = new Date().toISOString();
+    const r = await post("promote", {
+      bundleId: id, base: null, snapKey: stamp(), author: WHO,
+      meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
+      files: [{ path:"bundle.md", text, bytes:text.length, sha256: await sha256Text(text) }],
+      refs: [], register: [],
+    });
+    if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+    $("#n-title").value = ""; $("#n-body").value = "";
+    openBundle(id);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#n-save").disabled = false; }
+});
+
+/* ---- revise ---- */
+let EDIT_ID = null;
+async function openEdit(id, text){
+  EDIT_ID = id; $("#e-err").textContent = "";
+  $("#e-id").textContent = id; $("#e-body").value = text;
+  show("#s-edit");
+}
+$("#e-back").addEventListener("click", ()=>openBundle(EDIT_ID));
+$("#e-save").addEventListener("click", async ()=>{
+  const e = $("#e-err"); e.textContent = "";
+  const text = $("#e-body").value;
+  const fmv = splitFm(text).fm;
+  if (!fmv.id) { e.textContent = "The record must keep its heading block, including its id line."; return; }
+  $("#e-save").disabled = true;
+  try {
+    const lease = await rec("lease", { id: EDIT_ID });
+    if (!lease.result || lease.result.ok === false) {
+      e.textContent = "Someone else is editing this right now (" + (lease.result&&lease.result.heldBy) + ")."; return; }
+    const now = new Date().toISOString();
+    const r = await post("promote", {
+      bundleId: EDIT_ID, base: lease.result.baseSha, snapKey: stamp(), author: WHO,
+      meta: { object_type: fmv.object_type, group:"believe-in-oakland", title: fmv.title || EDIT_ID,
+              current_state: fmv.current_state, created: now, last_updated: now },
+      files: [{ path:"bundle.md", text, bytes:text.length, sha256: await sha256Text(text) }],
+      refs: [], register: [],
+    });
+    if (!r.result || !r.result.ok) {
+      e.textContent = r.result && r.result.reason === "STALE"
+        ? "Someone saved a newer version while you were writing. Open it again and redo your change."
+        : "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown");
+      return; }
+    openBundle(EDIT_ID);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#e-save").disabled = false; }
+});
+
+/* ---- the inbox ---- */
+$("#go-inbox").addEventListener("click", openInbox);
+async function openInbox(){
+  show("#s-inbox");
+  const r = await rec("inbox");
+  const rows = (r.result && r.result.inbox) || [];
+  if (!rows.length) { $("#inbox-body").innerHTML = '<p class="small">Nothing has been left at the door.</p>'; return; }
+  $("#inbox-body").innerHTML = rows.map(k=>
+    '<div class="card"><div class="kv"><span class="k mono">'+escH(k.knock_id)+'</span><span class="v">'
+    + chip(k.status) + ' <span class="dim">' + fmtWhen(k.received) + "</span></span></div>"
+    + '<div class="kv"><span class="k">Hash</span><span class="v mono">'+escH(k.sha256)+"</span></div>"
+    + '<div class="kv"><span class="k">Size</span><span class="v">'+escH(k.bytes)+" bytes</span></div>"
+    + (k.note ? '<div class="kv"><span class="k">Note</span><span class="v">'+escH(k.note)+"</span></div>" : "")
+    + (k.contact ? '<div class="kv"><span class="k">Contact</span><span class="v">'+escH(k.contact)+"</span></div>" : "")
+    + (k.resolved_by ? '<div class="kv"><span class="k">Handled by</span><span class="v">'+escH(k.resolved_by)+"</span></div>" : "")
+    + '<div class="actions" style="margin-top:10px">'
+    + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
+    + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div></div>').join("");
+  document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", async ()=>{
+    await post("inboxresolve", { knockId: b.dataset.id, status: b.dataset.to });
+    openInbox();
+  }));
+}
+
+/* ---- members and keys ---- */
+$("#go-members").addEventListener("click", openMembers);
+async function openMembers(){
+  show("#s-members"); $("#m-err").textContent=""; $("#k-err").textContent="";
+  const m = await rec("memberlist");
+  const rows = (m.result && m.result.members) || [];
+  $("#m-list").innerHTML = rows.length ? rows.map(x=>
+    '<div class="kv"><span class="k mono">'+escH(x.member_id)+'</span><span class="v">'
+    + escH(x.name||"") + " " + chip(x.status)
+    + (x.invite_pending ? ' <span class="dim">invitation not used yet</span>' : "")
+    + ' <button class="mbtn" data-id="'+escH(x.member_id)+'" data-to="'
+    + (x.status==="revoked"?"active":"revoked") + '">'
+    + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
+    : '<p class="small" style="margin:0">No members yet.</p>';
+  document.querySelectorAll("#m-list .mbtn").forEach(b=>b.addEventListener("click", async ()=>{
+    await post("memberset", { memberId: b.dataset.id, status: b.dataset.to }); openMembers();
+  }));
+  const k = await rec("signerlist");
+  const keys = (k.result && k.result.signers) || [];
+  $("#k-list").innerHTML = keys.length ? keys.map(x=>
+    '<div class="kv"><span class="k">'+escH(x.member_id)+'</span><span class="v"><span class="mono dim">'
+    + escH(String(x.key_b64).slice(0,24)) + "&hellip;</span> " + chip(x.status)
+    + ' <button class="kbtn" data-key="'+escH(x.key_b64)+'" data-to="'
+    + (x.status==="revoked"?"active":"revoked") + '">'
+    + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
+    : '<p class="small" style="margin:0">No keys registered. Until a key is registered, nothing can be published.</p>';
+  document.querySelectorAll("#k-list .kbtn").forEach(b=>b.addEventListener("click", async ()=>{
+    await post("signerset", { keyB64: b.dataset.key, status: b.dataset.to }); openMembers();
+  }));
+}
+$("#m-add").addEventListener("click", async ()=>{
+  const e = $("#m-err"); e.textContent = ""; $("#m-invite").innerHTML = "";
+  const r = await post("memberadd", { memberId: $("#m-id").value.trim(), name: $("#m-name").value.trim() });
+  if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+  $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Give '
+    + escH($("#m-id").value.trim()) + ' this invitation code. It works once and is not shown again.</p>'
+    + '<p class="mono" style="margin:8px 0 0">' + escH(r.result.invite) + "</p></div>";
+  $("#m-id").value = ""; $("#m-name").value = "";
+  openMembers();
+});
+$("#k-add").addEventListener("click", async ()=>{
+  const e = $("#k-err"); e.textContent = "";
+  const r = await post("signeradd", { keyB64: $("#k-key").value.trim(), memberId: $("#k-who").value.trim() });
+  if (!r.result || !r.result.ok) {
+    e.textContent = r.result && r.result.reason === "BAD_KEY"
+      ? "That is not a public key this system can read. Copy the whole line from the signing page."
+      : "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown");
+    return; }
+  $("#k-key").value = ""; $("#k-who").value = ""; openMembers();
+});
+
+/* ---- enrolment, for an invited member with no password yet ---- */
+$("#en-go").addEventListener("click", async ()=>{
+  const e = $("#en-err"); e.textContent = "";
+  const r = await api("enroll", { memberId: $("#en-id").value.trim(),
+    invite: $("#en-inv").value.trim(), password: $("#en-pw").value });
+  if (!r.result || !r.result.ok) {
+    e.textContent = r.result && r.result.reason === "PASSWORD_TOO_SHORT"
+      ? "The password needs at least 12 characters."
+      : "That invitation was not accepted. Check the name and the code.";
+    return; }
+  $("#lwho").value = $("#en-id").value.trim(); $("#lpw").value = "";
+  show("#s-login");
+});
+document.querySelectorAll(".crumb-home").forEach(a=>a.addEventListener("click", ()=>{
+  document.querySelector("main").classList.remove("wide"); show("#s-panel"); }));
+
 state();
 </script>
 </body>

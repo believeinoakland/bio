@@ -340,6 +340,212 @@ export class Store extends DurableObject {
     return { role: s.role, expires: s.expires };
   }
 
+  /* ---- members: each person their own credential, admin-invited ----
+
+     The invite is spent exactly like the bootstrap credential is spent: its
+     hash is cleared on enrollment, so possession of an old invite buys
+     nothing against an enrolled member. Passwords live only as PBKDF2
+     hashes under credentials role 'member:<id>'. */
+
+  async memberAdd({ memberId, name, role = "member" } = {}) {
+    if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
+      return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+    if (!name || typeof name !== "string")
+      return { ok: false, reason: "NO_NAME" };
+    if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
+      return { ok: false, reason: "EXISTS", memberId };
+    const invite = Store.#rand(16);
+    const hash = await Store.#sha256(invite);
+    const now = new Date().toISOString();
+    this.sql.exec(
+      `INSERT INTO members (member_id,name,role,status,invite_hash,created,updated) VALUES (?,?,?,?,?,?,?)`,
+      memberId, name, role === "admin" ? "admin" : "member", "invited", hash, now, now);
+    /* The plaintext invite appears exactly once, here, for handing to the
+       person. It is never readable again. */
+    return { ok: true, memberId, invite };
+  }
+
+  async enroll({ memberId, invite, password } = {}) {
+    const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (m.status === "revoked") return { ok: false, reason: "REVOKED" };
+    if (!m.invite_hash) return { ok: false, reason: "ALREADY_ENROLLED" };
+    if (!invite || (await Store.#sha256(invite)) !== m.invite_hash)
+      return { ok: false, reason: "BAD_INVITE" };
+    if (typeof password !== "string" || password.length < 12)
+      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+    await this.setPassword({ role: `member:${memberId}`, password });
+    this.sql.exec(`UPDATE members SET status='active', invite_hash=NULL, updated=? WHERE member_id=?`,
+      new Date().toISOString(), memberId);
+    return { ok: true, memberId };
+  }
+
+  memberList() {
+    return { members: this.#rows(
+      `SELECT member_id, name, role, status, created, updated,
+              CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
+       FROM members ORDER BY member_id`) };
+  }
+
+  memberSet({ memberId, status } = {}) {
+    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    const m = this.#one(`SELECT status FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    this.sql.exec(`UPDATE members SET status=?, updated=? WHERE member_id=?`,
+      status, new Date().toISOString(), memberId);
+    if (status === "revoked") {
+      /* Revocation is immediate: live sessions die with it, and the member's
+         registered keys stop attesting. */
+      this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
+      this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
+    }
+    return { ok: true, memberId, status };
+  }
+
+  /* ---- signers: the registered-key projection ---- */
+
+  signerAdd({ keyB64, memberId, comment } = {}) {
+    if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
+      return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
+    if (!this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
+      return { ok: false, reason: "NO_SUCH_MEMBER" };
+    this.sql.exec(
+      `INSERT INTO signers (key_b64,member_id,comment,status,added) VALUES (?,?,?,'active',?)
+       ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
+         comment=excluded.comment, status='active'`,
+      keyB64, memberId, comment ?? null, new Date().toISOString());
+    return { ok: true, keyB64, memberId };
+  }
+
+  signerList() {
+    return { signers: this.#rows(`SELECT key_b64, member_id, comment, status, added FROM signers ORDER BY added`) };
+  }
+
+  signerSet({ keyB64, status } = {}) {
+    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    if (!this.#one(`SELECT key_b64 FROM signers WHERE key_b64=?`, keyB64))
+      return { ok: false, reason: "NO_SUCH_KEY" };
+    this.sql.exec(`UPDATE signers SET status=? WHERE key_b64=?`, status, keyB64);
+    return { ok: true, keyB64, status };
+  }
+
+  /* ---- ratification support: facts out, published rows in ----
+
+     The gate and the signature check run at the control plane, which also
+     owns all R2 traffic. This store only hands out the facts and commits
+     the published rows in one transaction. */
+
+  gateFacts(bundleId) {
+    const row = this.#one(
+      `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!row) return { ok: false, reason: "ABSENT", bundleId };
+    return {
+      ok: true, row,
+      manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created`, bundleId),
+      history: this.#rows(`SELECT snap_key, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`, bundleId),
+      registers: this.#rows(`SELECT capture_sha, path, bytes FROM register WHERE bundle_id=?`, bundleId),
+      dangling: this.#rows(
+        `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
+         WHERE r.bundle_id=? AND b.bundle_id IS NULL`, bundleId).map((r) => r.target_id),
+      signers: this.#rows(
+        `SELECT s.key_b64, s.member_id FROM signers s
+         JOIN members m ON m.member_id=s.member_id
+         WHERE s.status='active' AND m.status='active'`),
+    };
+  }
+
+  publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas } = {}) {
+    if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
+      return { ok: false, reason: "MALFORMED" };
+    return this.ctx.storage.transactionSync(() => {
+      const cur = this.#one(`SELECT bundle_sha FROM published_bundles WHERE bundle_id=?`, bundleId);
+      const existed = !!(cur && cur.bundle_sha === bundleSha);
+      const now = new Date().toISOString();
+      this.sql.exec(
+        `INSERT INTO published_bundles (bundle_id,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored)
+         VALUES (?,?,?,?,?,?,?)
+         ON CONFLICT(bundle_id) DO UPDATE SET bundle_sha=excluded.bundle_sha,
+           ratified_at=excluded.ratified_at, attestor_key=excluded.attestor_key,
+           attestor_member=excluded.attestor_member, gate_version=excluded.gate_version,
+           sig_armored=excluded.sig_armored`,
+        bundleId, bundleSha, now, attestorKey, attestorMember ?? null, gateVersion, sigArmored);
+      /* Append-only: a hash once published stays answerable forever, across
+         any number of re-ratifications. */
+      for (const s of shas)
+        this.sql.exec(
+          `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+           ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
+          s.sha256, bundleId, s.path, s.kind, s.bytes ?? null, now);
+      return { ok: true, bundleId, bundleSha, existed, ratifiedAt: now };
+    });
+  }
+
+  /* ---- the doorbell, store side ---- */
+
+  /* 7a: answers ONLY from the published projection. Working material is not
+     consulted, so there is nothing to leak: a hash that was never ratified
+     is indistinguishable from a hash that never existed. */
+  verifySha(sha) {
+    const matches = this.#rows(
+      `SELECT bundle_id, path, kind, published FROM published_shas WHERE sha256=? ORDER BY published`, sha);
+    return { published: matches.length > 0, sha256: sha, matches };
+  }
+
+  publishedList() {
+    return { bundles: this.#rows(
+      `SELECT bundle_id, bundle_sha, ratified_at, attestor_member, gate_version FROM published_bundles ORDER BY bundle_id`) };
+  }
+
+  /* 7b: the knock. Rate accounting and the row land in one transaction, so
+     an attacker cannot slip past the caps on a race. The worst case is by
+     construction a full inbox. */
+  knock({ knockId, sha256, bytes, content, inR2, note, contact,
+          ipBucket, globalBucket, perIpLimit, globalLimit } = {}) {
+    return this.ctx.storage.transactionSync(() => {
+      const cnt = (b) => this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0;
+      if (cnt(ipBucket) >= perIpLimit) return { ok: false, reason: "RATE_IP" };
+      if (cnt(globalBucket) >= globalLimit) return { ok: false, reason: "RATE_GLOBAL" };
+      for (const b of [ipBucket, globalBucket])
+        this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
+                       ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
+      /* Prune buckets from past windows; bucket names embed their window. */
+      const win = globalBucket.split(":").pop();
+      this.sql.exec(`DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ?`, win);
+      this.sql.exec(
+        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status)
+         VALUES (?,?,?,?,?,?,?,?,'new')`,
+        knockId, sha256, bytes, content ?? null, inR2 ? 1 : 0,
+        (note || "").slice(0, 2000), (contact || "").slice(0, 300), new Date().toISOString());
+      return { ok: true, knockId, sha256, bytes };
+    });
+  }
+
+  inboxList(status) {
+    return { inbox: this.#rows(
+      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by
+       FROM inbox ${status ? "WHERE status=?" : ""} ORDER BY received DESC`,
+      ...(status ? [status] : [])) };
+  }
+
+  inboxGet(knockId) {
+    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status FROM inbox WHERE knock_id=?`, knockId);
+    return r ? { ok: true, item: r } : { ok: false, reason: "NOT_FOUND" };
+  }
+
+  inboxResolve({ knockId, status, by } = {}) {
+    if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    const r = this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId);
+    if (!r) return { ok: false, reason: "NOT_FOUND" };
+    this.sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
+      status, new Date().toISOString(), by ?? null, knockId);
+    return { ok: true, knockId, status };
+  }
+
+  static async #sha256(v) {
+    const b = await crypto.subtle.digest("SHA-256", Store.#enc.encode(v));
+    return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  }
+
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -358,7 +564,31 @@ export class Store extends DurableObject {
         stats: () => this.stats(),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
-        login: () => this.login(body || {}),
+        login: async () => {
+          /* A member login is refused unless the member is active, so
+             revocation closes the front door as well as the sessions. */
+          const role = body?.role || "admin";
+          if (role.startsWith("member:")) {
+            const m = this.#one(`SELECT status FROM members WHERE member_id=?`, role.slice(7));
+            if (!m || m.status !== "active") return { ok: false, reason: "NO_SUCH_ROLE" };
+          }
+          return this.login(body || {});
+        },
+        memberadd: () => this.memberAdd(body || {}),
+        enroll: () => this.enroll(body || {}),
+        memberlist: () => this.memberList(),
+        memberset: () => this.memberSet(body || {}),
+        signeradd: () => this.signerAdd(body || {}),
+        signerlist: () => this.signerList(),
+        signerset: () => this.signerSet(body || {}),
+        gatefacts: () => this.gateFacts(url.searchParams.get("id")),
+        publish: () => this.publish(body || {}),
+        verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
+        publishedlist: () => this.publishedList(),
+        knock: () => this.knock(body || {}),
+        inboxlist: () => this.inboxList(url.searchParams.get("status") || null),
+        inboxget: () => this.inboxGet(url.searchParams.get("id")),
+        inboxresolve: () => this.inboxResolve(body || {}),
         setpassword: () => this.setPassword(body || {}),
         session: () => ({ session: this.session(url.searchParams.get("t")) }),
         purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") }),

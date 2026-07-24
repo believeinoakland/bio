@@ -10,13 +10,21 @@
  *   - an update keeps the instance's bindings and carries no migration
  *   - a state mismatch stops everything before the token endpoint is touched
  */
-import worker, { CFG } from "../src/index.mjs";
+import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
 
 let pass = 0, fail = 0;
 const t = (l, g, w) => { const ok = JSON.stringify(g) === JSON.stringify(w);
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${l}${ok ? "" : `  want ${JSON.stringify(w)} got ${JSON.stringify(g)}`}`);
   ok ? pass++ : fail++; };
+
+/* Release-signature trust is a property of the installer build, so each
+   block below states which installer it is describing rather than inheriting
+   whatever the shipped constant happens to be. Both configurations are real:
+   armed is what ships, unarmed is what a fork that has not adopted a signing
+   key still gets. */
+const armWith = (line) => { ARMED_SIGNERS.length = 0; ARMED_SIGNERS.push(line); };
+const disarm = () => { ARMED_SIGNERS.length = 0; };
 
 const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";
 const PUBLISHED = "df362a63adbe5d1d96a2942e39fd60e3fbb412eaadf7317266c19a4efea658ba";
@@ -242,6 +250,7 @@ console.log("\n--- release: a newer verified repository copy installs ---");
   const repoSrc = "export default { fetch(){ return new Response('repo release'); } }; export class Store {};";
   const repoVer = bump(RELEASE_VERSION);
   const repoSha = await shaHex(repoSrc);
+  disarm();  /* an unarmed installer has only the hash to go on */
   const { cookie, state } = await begin("fresh-town");
   const calls = script([
     ...REL({ manifest: () => jres({ version: repoVer, sha256: repoSha, asset: "bio-plane.bundled.mjs" }),
@@ -253,7 +262,8 @@ console.log("\n--- release: a newer verified repository copy installs ---");
     { m: (u, mth) => u.endsWith("/scripts/fresh-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/fresh-town/subdomain") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "fr" }) },
-    { m: (u) => u.startsWith("https://fresh-town.fr.workers.dev/"), f: () => jres({ ok: true }) },
+    { m: (u) => u.startsWith("https://fresh-town.fr.workers.dev/"),
+      f: () => jres({ ok: true, bindings: { STORE: true } }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/fresh-town"));
@@ -265,6 +275,7 @@ console.log("\n--- release: a newer verified repository copy installs ---");
 
 console.log("\n--- release: a copy that fails verification is never installed ---");
 {
+  disarm();  /* integrity is checked before any signature question arises */
   const { cookie, state } = await begin("wary-town");
   const calls = script([
     ...REL({ manifest: () => jres({ version: bump(RELEASE_VERSION), sha256: "0".repeat(64) }),
@@ -276,7 +287,8 @@ console.log("\n--- release: a copy that fails verification is never installed --
     { m: (u, mth) => u.endsWith("/scripts/wary-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/wary-town/subdomain") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "wy" }) },
-    { m: (u) => u.startsWith("https://wary-town.wy.workers.dev/"), f: () => jres({ ok: true }) },
+    { m: (u) => u.startsWith("https://wary-town.wy.workers.dev/"),
+      f: () => jres({ ok: true, bindings: { STORE: true } }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/wary-town"));
@@ -288,6 +300,7 @@ console.log("\n--- release: a copy that fails verification is never installed --
 
 console.log("\n--- release: a current built-in is stated as current ---");
 {
+  disarm();  /* nothing is fetched at all when the built-in is current */
   const { cookie, state } = await begin("even-town");
   script([
     ...REL({ manifest: () => jres({ version: RELEASE_VERSION, sha256: "irrelevant" }), asset: () => new Response("x") }),
@@ -298,7 +311,8 @@ console.log("\n--- release: a current built-in is stated as current ---");
     { m: (u, mth) => u.endsWith("/scripts/even-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/even-town/subdomain") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "ev" }) },
-    { m: (u) => u.startsWith("https://even-town.ev.workers.dev/"), f: () => jres({ ok: true }) },
+    { m: (u) => u.startsWith("https://even-town.ev.workers.dev/"),
+      f: () => jres({ ok: true, bindings: { STORE: true } }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("equal versions use the built-in without fetching the asset", body.includes("is current"), true);
@@ -395,6 +409,108 @@ console.log("\n--- update: a missing name changes nothing ---");
   t("stops and says nothing was changed", body.includes("Nothing was changed"), true);
   t("no upload was attempted", calls.some((c) => c.method === "PUT"), false);
   globalThis.fetch = realFetch;
+}
+
+
+/* ---- release signing: the installer's trust, once it has a key ----
+   Unarmed, a hash is all there is and the installer says so by installing.
+   Armed, the hash stops being sufficient: an unsigned or wrongly signed
+   repository copy is refused and the built-in installs instead. These are
+   the tests that matter for supply chain, because the repository is the
+   one thing a group's installer trusts that Believe in Oakland does not
+   control end to end. */
+
+/* A real signer, built the way the browser page builds one. */
+const relKey = await crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+const rawPub = new Uint8Array(await crypto.subtle.exportKey("raw", relKey.publicKey));
+const wireU32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
+const catBytes = (...ps) => { let n = 0; for (const p of ps) n += p.length;
+  const o = new Uint8Array(n); let i = 0; for (const p of ps) { o.set(p, i); i += p.length; } return o; };
+const wireStr = (v) => { const b = typeof v === "string" ? new TextEncoder().encode(v) : v;
+  return catBytes(wireU32(b.length), b); };
+const toB64 = (b) => { let s = ""; for (const x of b) s += String.fromCharCode(x); return btoa(s); };
+const relPubLine = "ssh-ed25519 " + toB64(catBytes(wireStr("ssh-ed25519"), wireStr(rawPub))) + " release-test";
+async function signAsset(bytes, ns = "bio-release", key = relKey.privateKey, pub = rawPub) {
+  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", bytes));
+  const signed = catBytes(new TextEncoder().encode("SSHSIG"), wireStr(ns), wireStr(""), wireStr("sha512"), wireStr(h));
+  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", key, signed));
+  const blob = catBytes(new TextEncoder().encode("SSHSIG"), wireU32(1),
+    wireStr(catBytes(wireStr("ssh-ed25519"), wireStr(pub))), wireStr(ns), wireStr(""), wireStr("sha512"),
+    wireStr(catBytes(wireStr("ssh-ed25519"), wireStr(sig))));
+  return "-----BEGIN SSH SIGNATURE-----\n" + toB64(blob).replace(/(.{70})/g, "$1\n") + "\n-----END SSH SIGNATURE-----\n";
+}
+
+/* One scripted install, parameterised by what the repository serves. */
+async function installWith(slug, sub, manifestExtra, src) {
+  const { cookie, state } = await begin(slug);
+  const calls = script([
+    ...REL({ manifest: () => jres({ version: bump(RELEASE_VERSION), sha256: manifestExtra.sha256,
+                                    asset: "bio-plane.bundled.mjs", ...manifestExtra.rest }),
+             asset: () => new Response(src) }),
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "S1", name: "Signed" }]) },
+    { m: (u) => u.includes(`/scripts/${slug}/settings`), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith(`/scripts/${slug}`) && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith(`/scripts/${slug}/subdomain`) && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: sub }) },
+    { m: (u) => u.startsWith(`https://${slug}.${sub}.workers.dev/`),
+      f: () => jres({ ok: true, bindings: { STORE: true } }) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  const put = calls.find((c) => c.method === "PUT" && c.u.endsWith(`/scripts/${slug}`));
+  globalThis.fetch = realFetch;
+  return { body, source: await sourceOf(put), meta: await metadataOf(put) };
+}
+
+const repoSrc2 = "export default { fetch(){ return new Response('signed repo release'); } }; export class Store {};";
+const repoSha2 = await shaHex(repoSrc2);
+const goodSig = await signAsset(new TextEncoder().encode(repoSrc2));
+
+console.log("\n--- release signing: unarmed, the hash stands alone ---");
+{
+  disarm();
+  const r = await installWith("unarmed-town", "ua", { sha256: repoSha2 }, repoSrc2);
+  t("an unsigned repository copy still installs", r.source, repoSrc2);
+  t("and the page does not claim a signature it did not check", r.body.includes("signature"), false);
+}
+
+console.log("\n--- release signing: armed, a valid signature installs ---");
+{
+  armWith(relPubLine);
+  const r = await installWith("signed-town", "st", { sha256: repoSha2, rest: { sig: goodSig } }, repoSrc2);
+  t("the signed repository copy installs", r.source, repoSrc2);
+  t("the page says the signature was checked", r.body.includes("signature from a key this installer trusts"), true);
+}
+
+console.log("\n--- release signing: armed, an unsigned copy is refused ---");
+{
+  armWith(relPubLine);
+  const r = await installWith("bare-town", "bt", { sha256: repoSha2 }, repoSrc2);
+  t("the built-in installed instead", r.source.includes("signed repo release"), false);
+  t("VERSION stays the built-in", r.meta.bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+  t("the page says why in plain words", r.body.includes("carries no signature"), true);
+}
+
+console.log("\n--- release signing: armed, a stranger's signature is refused ---");
+{
+  const other = await crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+  const otherPub = new Uint8Array(await crypto.subtle.exportKey("raw", other.publicKey));
+  const strangerSig = await signAsset(new TextEncoder().encode(repoSrc2), "bio-release", other.privateKey, otherPub);
+  armWith(relPubLine);
+  const r = await installWith("stranger-town", "sg", { sha256: repoSha2, rest: { sig: strangerSig } }, repoSrc2);
+  t("the built-in installed instead", r.source.includes("signed repo release"), false);
+  t("the page names the problem as trust, not corruption", r.body.includes("not by a key this installer trusts"), true);
+}
+
+console.log("\n--- release signing: armed, a signature from another purpose is refused ---");
+{
+  const wrongNs = await signAsset(new TextEncoder().encode(repoSrc2), "bio-ratify");
+  armWith(relPubLine);
+  const r = await installWith("crossns-town", "cn", { sha256: repoSha2, rest: { sig: wrongNs } }, repoSrc2);
+  t("a ratification signature cannot install software", r.source.includes("signed repo release"), false);
+  t("the page says the signature did not check out", r.body.includes("not by a key this installer trusts"), true);
+  disarm();
 }
 
 console.log(`\nwizard: ${pass} passed, ${fail} failed`);
