@@ -218,6 +218,47 @@ implementation is ahead of its specification, and since the spec claims to be
 the closed authority, the document needs the amendment rather than the code
 needing a change.
 
+**Capture integrity, verified independently.** The conformance run above
+ELIDED capture bytes, because the plane's image returns blob references rather
+than content, so C-18.6 (registered hashes verify against stored bytes) was
+skipped. Provenance rests on precisely that check, so the conformance result did
+not cover it. Closed separately: all 67 distinct captures referenced anywhere in
+the record, live or historical, were fetched and hashed in this session.
+
+```
+verified byte-identical : 67
+hash mismatch           : 0
+absent from storage     : 0
+total bytes hashed      : 148.4 MB
+```
+
+Census also matches: 28 information, 1 problem, 1 project, 30 total, which is
+what the Drive store held.
+
+**One residual, small and named.** The register holds 87 rows; 67 are referenced
+by a file in some revision of some bundle. The remaining 20 are registered
+captures nothing in the record points at, most plausibly bytes superseded by a
+later revision plus the dropped transport twins, and they were not verified
+because nothing references them. Storage bookkeeping rather than provenance:
+no claim in the record depends on them.
+
+**The boundary of what is known.** Two things are established: the record is
+conformant to its own specification, and every capture it references hashes
+correctly. One thing is not: this session has never read the Drive store, so
+fidelity to the source rests on the migration tool's own comparison against the
+Drive mirror rather than on independent confirmation. Spec conformance is the
+stronger check for the purposes the record serves, and it is the one that was
+missing until now, but it is not the same claim as source fidelity and should
+not be reported as though it were.
+
+**THE STORE OF REFERENCE IS NOW BIOSMOKE6.** Decided July 24, 2026 on the
+evidence above. The Drive CivicOS store is demoted to a frozen snapshot: it is
+kept, it is not written to, and it is not of record. Two planes of record cannot
+coexist, and the one with independent verification wins. Note the standing
+qualification Bob attached: this corpus is real data taken from the web, and no
+production system will ever use it without refetching from source, so its role
+is development reference rather than evidentiary archive.
+
 **What else was checked and found consistent.** Object type prefixes and their
 type-root mapping; Project lifecycle and the work-product readiness ladder
 against State Rules 4.3; Action kinds and risk tiers against 4.4; the
@@ -233,7 +274,8 @@ retrieval arc.
 
 ## The source of record, verified live today
 
-The real record lives in Google Drive under `CivicOS`
+FROZEN SNAPSHOT as of July 24, 2026, no longer of record. The former source
+lived in Google Drive under `CivicOS`
 (ID `1xBxJIjOCHShLqoo5fJx-Aevlu2397GuU`): `information/` (28 bundles),
 `problems/` (1, state elevated), `projects/` (1, state forming),
 `actions/` (0), and `index/` holding `index.json` (registry v0.12.10, all
