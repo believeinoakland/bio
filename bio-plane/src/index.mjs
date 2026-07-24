@@ -1,6 +1,7 @@
 import { SCHEMA } from "./schema.mjs";
 import { livefire } from "./livefire.mjs";
 import { SETUP_HTML } from "./setup.mjs";
+import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
 import { runGate, GATE_VERSION } from "./gate.mjs";
 import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
@@ -147,6 +148,13 @@ export default {
        and gets the page. The legacy root query API (/?op=...) still answers,
        for the one deployment that predates this, and should be dropped once
        that instance is gone. */
+    /* The signing page, served by the group's own instance. It is the same
+       self-contained file that ships in tools/, with no network calls, and
+       it holds no secret: keys are made and used in the visitor's browser.
+       Serving it means the instance can LINK to it, which is the difference
+       between a step an ordinary person can follow and one they cannot. */
+    if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
+      return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (req.method === "GET" && !url.pathname.startsWith("/api")
         && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
       return new Response(SETUP_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });

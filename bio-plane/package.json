@@ -7,7 +7,7 @@
     "test:store": "node test/store.test.mjs",
     "test:livefire": "node test/livefire.test.mjs",
     "test:bundle": "node test/bundle.test.mjs",
-    "build": "esbuild src/index.mjs --bundle --format=esm --platform=neutral --external:cloudflare:workers --external:node:* --outfile=dist/bio-plane.bundled.mjs",
+    "build": "npm run embed:sign && esbuild src/index.mjs --bundle --format=esm --platform=neutral --external:cloudflare:workers --external:node:* --outfile=dist/bio-plane.bundled.mjs",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "test:bootstrap": "node test/bootstrap.test.mjs",
@@ -21,7 +21,8 @@
     "test:members": "node test/members.test.mjs",
     "test:ratify": "node test/ratify.test.mjs",
     "test:doorbell": "node test/doorbell.test.mjs",
-    "test:signpage": "node test/signpage.test.mjs"
+    "test:signpage": "node test/signpage.test.mjs",
+    "embed:sign": "node scripts/embed-signpage.mjs"
   },
   "devDependencies": {
     "miniflare": "^4.20260722.0",

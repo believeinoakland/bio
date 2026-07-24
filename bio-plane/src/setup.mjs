@@ -245,19 +245,32 @@ table.rec tr.row:hover td{background:#F6F7F2}
   keys are what allow a member to publish; a password alone never can.</p>
   <h2>Members</h2>
   <div class="card" id="m-list"></div>
-  <label for="m-id">Add a member (lowercase letters, digits, dashes)</label>
-  <input id="m-id" placeholder="ruth">
+  <label for="m-id">Add a member: a short sign-in name</label>
+  <input id="m-id">
+  <p class="hint">Lowercase, no spaces. Anything you type is tidied to fit.</p>
   <label for="m-name">Their full name</label>
-  <input id="m-name" placeholder="Ruth">
+  <input id="m-name">
   <div class="actions" style="margin-top:12px"><button id="m-add">Invite them</button></div>
   <p class="err" id="m-err"></p>
   <div id="m-invite"></div>
   <h2>Registered keys</h2>
   <div class="card" id="k-list"></div>
-  <label for="k-key">Public key from the signing page</label>
-  <textarea id="k-key" rows="3" placeholder="ssh-ed25519 AAAA... bio-ratify" spellcheck="false"></textarea>
+  <div class="card">
+    <p style="margin:0 0 10px"><b>Where a key comes from.</b> Each member makes their own
+    on this copy's signing page. It runs entirely in their browser and sends nothing
+    anywhere. It gives them two things: a private key they keep, and a public key they
+    hand to you for this box. You cannot sign anything with what goes in this box, which
+    is why it is safe to email it or read it aloud.</p>
+    <p style="margin:0"><a class="filelink" id="k-open" href="/sign" target="_blank" rel="noopener">Open the signing page</a>
+    &middot; on it, press <b>Generate my keys</b>, then copy the <b>ratification</b> public key.</p>
+  </div>
+  <label for="k-key">Their ratification public key</label>
+  <textarea id="k-key" rows="3" spellcheck="false"></textarea>
+  <p class="hint">One line. It starts with <span class="mono">ssh-ed25519</span> and ends with
+  <span class="mono">bio-ratify</span>.</p>
+  <div id="k-read"></div>
   <label for="k-who">Belongs to which member</label>
-  <input id="k-who" placeholder="ruth">
+  <input id="k-who">
   <div class="actions" style="margin-top:12px"><button id="k-add">Register this key</button></div>
   <p class="err" id="k-err"></p>
 </section>
@@ -511,8 +524,9 @@ async function ratifyPanel(id, liveText, historical){
     + "It cannot be undone: a published hash answers forever, even after later revisions.</p>"
     + '<div class="card"><div class="kv"><span class="k">Bundle</span><span class="v mono">'+escH(id)+"</span></div>"
     + '<div class="kv"><span class="k">This revision</span><span class="v mono">'+escH(sha)+"</span></div></div>"
-    + '<p class="small">On the signing page, choose Sign a ratification, paste those two values, '
-    + "and paste what it gives you here.</p>"
+    + '<p class="small">Open the <a class="filelink" href="/sign" target="_blank" rel="noopener">signing page</a>, '
+    + "unlock your key, choose Sign a ratification, paste in those two values, and paste what it "
+    + "hands back into the box below.</p>"
     + '<textarea id="r-sig" rows="6" spellcheck="false" placeholder="-----BEGIN SSH SIGNATURE-----"></textarea>'
     + '<div class="actions" style="margin-top:12px"><button id="r-go">Publish it</button>'
     + ' <button id="r-edit">Revise instead</button></div><p class="err" id="r-err"></p>';
@@ -693,23 +707,58 @@ async function openMembers(){
     await post("signerset", { keyB64: b.dataset.key, status: b.dataset.to }); openMembers();
   }));
 }
+function memberWhy(res, wanted){
+  const why = (res && res.reason) || "unknown";
+  if (why === "BAD_MEMBER_ID") return "A member name is lowercase letters, digits and dashes, at least two characters. "
+    + (wanted ? "Try " + wanted + "." : "");
+  if (why === "NO_NAME") return "Give them a full name as well as a member name.";
+  if (why === "EXISTS") return "There is already a member with that name.";
+  if (why === "NO_SUCH_MEMBER") return "There is no member by that name. Add them first, then register their key.";
+  return "Refused: " + why;
+}
 $("#m-add").addEventListener("click", async ()=>{
   const e = $("#m-err"); e.textContent = ""; $("#m-invite").innerHTML = "";
-  const r = await post("memberadd", { memberId: $("#m-id").value.trim(), name: $("#m-name").value.trim() });
-  if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+  const wanted = $("#m-id").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
+  $("#m-id").value = wanted;
+  const r = await post("memberadd", { memberId: wanted, name: $("#m-name").value.trim() });
+  if (!r.result || !r.result.ok) { e.textContent = memberWhy(r.result, wanted); return; }
   $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Give '
     + escH($("#m-id").value.trim()) + ' this invitation code. It works once and is not shown again.</p>'
     + '<p class="mono" style="margin:8px 0 0">' + escH(r.result.invite) + "</p></div>";
   $("#m-id").value = ""; $("#m-name").value = "";
   openMembers();
 });
+/* Echo the pasted key back in words. A person pasting 80 opaque characters
+   deserves to be told what the machine thinks they just handed it, BEFORE
+   they commit it. */
+function describeKey(line){
+  const t = String(line||"").trim().split(" ").filter(function(x){ return x; });
+  if (t.length < 2 || t[0] !== "ssh-ed25519" || !/^AAAA/.test(t[1]))
+    return { ok:false, why:"That does not look like a public key line. It should be one line starting with ssh-ed25519." };
+  const label = t.slice(2).join(" ");
+  if (label === "bio-release")
+    return { ok:false, why:"That is the RELEASE key, which signs software. This box wants the ratification key, the one labelled bio-ratify." };
+  return { ok:true, label: label || "(no label)", fp: t[1].slice(0,16) };
+}
+$("#k-key").addEventListener("input", ()=>{
+  const v = $("#k-key").value.trim();
+  if (!v) { $("#k-read").innerHTML = ""; return; }
+  const d = describeKey(v);
+  $("#k-read").innerHTML = d.ok
+    ? '<p class="small" style="color:var(--verdigris-dk)">Reads as a ratification key labelled <b>'
+      + escH(d.label) + '</b>, beginning <span class="mono">' + escH(d.fp) + "</span>.</p>"
+    : '<p class="err" style="min-height:0">' + escH(d.why) + "</p>";
+});
 $("#k-add").addEventListener("click", async ()=>{
   const e = $("#k-err"); e.textContent = "";
-  const r = await post("signeradd", { keyB64: $("#k-key").value.trim(), memberId: $("#k-who").value.trim() });
+  const d = describeKey($("#k-key").value);
+  if (!d.ok) { e.textContent = d.why; return; }
+  const r = await post("signeradd", { keyB64: $("#k-key").value.trim(),
+    memberId: $("#k-who").value.trim().toLowerCase() });
   if (!r.result || !r.result.ok) {
     e.textContent = r.result && r.result.reason === "BAD_KEY"
       ? "That is not a public key this system can read. Copy the whole line from the signing page."
-      : "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown");
+      : memberWhy(r.result);
     return; }
   $("#k-key").value = ""; $("#k-who").value = ""; openMembers();
 });

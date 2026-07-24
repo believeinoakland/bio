@@ -1,7 +1,9 @@
 # BIO data plane: source state, migration plan, and build status
 
-v13, July 24, 2026. THE WRITE ARC IS BUILT (tree 0.4.0, 324 assertions
-green across fifteen suites, whole battery 23 seconds). Members, intake, the gate, the doorbell,
+v13, July 24, 2026. THE WRITE ARC IS BUILT AND LIVE ON BIOSMOKE6 (tree
+0.4.1, 328 assertions green across fifteen suites, whole plane battery 20
+seconds). 0.4.1 adds the instance-served signing page and the plain-words
+roster refusals described at the end of this section. Members, intake, the gate, the doorbell,
 and release signing all ship together, and the instance page is now a
 working front end rather than a read-only window.
 
@@ -85,6 +87,28 @@ installer requires, so `verifyInstall` exhausted ten retries at three
 seconds each in eight blocks. The suite spent 240 of its 241 seconds
 asleep and three original blocks had been silently exercising a failed
 verification path. Fixed; the suite now runs in under a second.
+
+**0.4.1, from watching Bob use it.** Three things were opaque or wrong.
+(a) The instance asked for "the public key from the signing page" with no
+link to any such page and no way to tell which of a member's two keys it
+wanted. The plane now SERVES the signing page at `/sign`, embedded at
+build time by `scripts/embed-signpage.mjs` from the same
+`tools/sign-release.html` the conformance suite tests, and the roster page
+links to it and explains in two sentences where a key comes from and why
+the public half is safe to hand around. (b) The key box now reads a pasted
+line back in words before it is committed, naming the label it sees and
+refusing the RELEASE key by name if that is what was pasted. (c) Roster
+refusals printed raw store codes (`BAD_MEMBER_ID`); they are now sentences,
+and the member-name field normalizes what is typed instead of rejecting a
+capital letter.
+
+**A generation defect caught before it shipped.** The first cut of the key
+reader used `split(/\s+/)` inside the page template, and the template ate
+the backslash, so the browser would have received `split(/s+/)`: valid
+JavaScript that splits on the letter s. That is the identical mechanism
+that broke 0.3.8. The browse suite now executes the SERVED script and
+asserts the key reader's behaviour, which is the only way this class of
+defect is visible, and the page avoids backslash escapes entirely.
 
 NEXT: port the C-series catalog into the gate (needs the record), the
 5,000 and 20,000 bundle benchmark from Conversion Plan step 6, and the

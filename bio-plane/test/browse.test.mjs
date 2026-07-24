@@ -87,6 +87,8 @@ for (const [what, id] of [["create", "s-new"], ["revise", "s-edit"], ["inbox", "
   t(`the ${what} section is present`, page.includes(`id="${id}"`), true);
 t("publishing is presented as needing a signature", page.includes("Paste the signature from the signing page."), true);
 t("members can sign in by name", page.includes('id="lwho"'), true);
+t("the key box says where a key comes from", page.includes("Where a key comes from"), true);
+t("and links to the signing page the instance serves", page.includes('href="/sign"'), true);
 
 console.log("\n--- the served script is real JavaScript that really runs ---");
 /* The page is generated from a template that eats backslashes and backticks,
@@ -110,7 +112,7 @@ sandbox.window = sandbox;
 let ran = true, hooks = null;
 try {
   const fn = new Function(...Object.keys(sandbox),
-    scriptSrc + "\n;return { splitFm, mdRender };");
+    scriptSrc + "\n;return { splitFm, mdRender, describeKey };");
   hooks = fn(...Object.values(sandbox));
   await new Promise((r) => setTimeout(r, 10));
 } catch (e) { ran = false; console.log("    execution error:", e.message); }
@@ -124,7 +126,24 @@ if (hooks) {
   t("lists render", html.includes("<li>one</li>"), true);
   t("bold and code render", html.includes("<b>bold</b>") && html.includes("<code>code</code>"), true);
   t("html in the record is escaped, never executed", hooks.mdRender("<img src=x>").includes("&lt;img"), true);
-}
+
+
+/* describeKey reads a pasted public key back to the person in words. It is
+   tested through the SERVED script, not the source, because the page is
+   generated: an eaten backslash produces valid JavaScript that silently does
+   the wrong thing, which is how the 0.3.8 defect shipped. */
+{
+  const dk = hooks.describeKey;
+  t("the served page exposes the key reader", typeof dk, "function");
+  const ratify = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKGAY test-ratify";
+  t("a ratification key is accepted", dk(ratify).ok, true);
+  t("its label is read back", dk(ratify).label, "test-ratify");
+  t("spacing does not matter", dk("  ssh-ed25519   AAAAC3Nz   lbl  ").ok, true);
+  t("the release key is refused by name", /RELEASE key/.test(dk("ssh-ed25519 AAAAC3Nz bio-release").why || ""), true);
+  t("a private key is refused", dk("BIOKEY-RAW1.bio-ratify.abc").ok, false);
+  t("prose is refused", dk("here is my key").ok, false);
+  t("an empty box is refused", dk("").ok, false);
+}}
 
 await mf.dispose();
 console.log(`\nbrowse: ${pass} passed, ${fail} failed`);
