@@ -92,7 +92,19 @@ every governance rule enforceable, since a group that cannot leave can be
 held. The migration tooling already performs a verified transfer of the
 real record, so this is productization rather than new ground.
 
-Also outstanding, unrelated: the C-series gate catalog port (the plane
+THE C-SERIES CATALOG IS NOW IN THE REPO, hash-verified, at
+bio-plane/checks/bio-checks.mjs (version 1.16.4, 49 checks, zero
+dependencies, injected filesystem). The gate port is no longer blocked on
+access. Read bio-plane/checks/README.md for the five injection seams that
+are the whole porting surface.
+
+TWO SHIPPED DEFECTS found by the July 24 consistency audit and recorded in
+BIO_DATAPLANE_STATE.md: the intake UI stamps illegal first states for
+Problems and Actions, and writes four frontmatter fields where the catalog
+requires fifteen. Fix these with the port, not before, so the gate proves
+the fix rather than the fix being asserted.
+
+Also outstanding: the C-series gate catalog port (the plane
 ships `plane-gate/0.1`, mechanical checks only), and the Conversion Plan
 step 6 benchmark at 5,000 and 20,000 bundles.
 

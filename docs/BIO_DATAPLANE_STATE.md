@@ -110,6 +110,69 @@ that broke 0.3.8. The browse suite now executes the SERVED script and
 asserts the key reader's behaviour, which is the only way this class of
 defect is visible, and the page avoids backslash escapes entirely.
 
+## Consistency audit, July 24, 2026
+
+Run after the doctrine corpus and the Apps Script promotion service were both
+brought into the repository, comparing the documents, the authoritative check
+catalog, and the shipped plane against each other. The catalog is
+`bio-plane/checks/bio-checks.mjs`, version 1.16.4, hash-verified against the
+constant the accelerator pinned beside it.
+
+**Finding 1: the plane's intake UI creates bundles the catalog would refuse.**
+Severity: real defect, shipped in 0.4.0 and 0.4.1.
+
+The "Add something new" form stamps `current_state` from a table reading
+`{information: collected, problem: forming, project: forming, action: forming}`.
+Only two of those are legal. The catalog's `STATES` table is:
+
+| type | legal states |
+|---|---|
+| information | collected, verified, retired |
+| problem | surfaced, elevated, deferred, dismissed |
+| project | forming, investigating, matured, closed |
+| action | planned, active, awaiting_response, resolved, abandoned |
+
+So a Problem created through the browser lands at `forming`, which is not a
+Problem state at all, and an Action lands at `forming`, which is not an Action
+state. Check C-4.1 refuses both. `plane-gate/0.1` does not implement C-4.1, so
+the plane accepts them silently and the defect is invisible until the catalog
+is ported. Correct first states are `surfaced` for a Problem and `planned` for
+an Action.
+
+**Finding 2: the plane writes four frontmatter fields where fifteen are
+required.** Severity: real defect, same scope.
+
+`CORE_FIELDS` requires id, object_type, schema, title, current_state,
+prior_state, created, last_updated, produced_by, group, references,
+state_history, annotations_open, reeval_pending, visuals. The intake form
+writes id, object_type, current_state, and title. Check C-2.2 fires once per
+missing field, so every bundle created through the browser carries eleven
+errors. The canonical headings per type (C-3.1) are also unmet: the form
+writes `## Summary` for every type, which is right only for Information.
+
+Both findings have the same root cause. The intake UI was written against the
+plane's own tolerant store rather than against the catalog, because the catalog
+was unavailable. It is available now.
+
+**Finding 3: the relationship vocabulary disagrees between document and
+implementation.** Severity: documentation drift.
+
+State Rules 5.1 declares the vocabulary "closed until amended by this spec" and
+lists six values: cites, relates_to, elevated_into, initiates, derived_from,
+supersedes. The catalog's `REL_VOCAB` carries a seventh, `corroborates`. The
+implementation is ahead of its specification, and since the spec claims to be
+the closed authority, the document needs the amendment rather than the code
+needing a change.
+
+**What was checked and found consistent.** Object type prefixes and their
+type-root mapping; Project lifecycle and the work-product readiness ladder
+against State Rules 4.3; Action kinds and risk tiers against 4.4; the
+`bio-release` SSHSIG namespace, which the plane, the catalog, and the member
+key registry all agree on; and the intake doctrine's release-authority rule
+that a collected-to-verified transition is never authored by a surface or AI
+identity, which the catalog enforces as C-18.1 and the plane's ratification
+signature requirement independently satisfies.
+
 NEXT: port the C-series catalog into the gate (needs the record), the
 5,000 and 20,000 bundle benchmark from Conversion Plan step 6, and the
 retrieval arc.
