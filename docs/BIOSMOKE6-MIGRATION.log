@@ -1,0 +1,113 @@
+target: bio-plane 0.3.6, store answers, tokenClass member
+30 bundle(s) selected
+  ALREADY MIGRATED INFO-2026-0001-sewer-transfer-series: 11 promotions, 0 captures, live d85479dbf97d
+  VERIFIED INFO-2026-0001-sewer-transfer-series
+  ALREADY MIGRATED INFO-2026-0098-accelerator-selftest: 20 promotions, 0 captures, live c58a43c96103
+    note: HISTORY_TRUNCATED 
+    note: PROVENANCE_VERIFIED snapshots/livefire-20260720T215300Z.bin
+  VERIFIED INFO-2026-0098-accelerator-selftest
+  MIGRATED INFO-2026-0099-auditor-report-feb-2022: 3 promotions, 4 captures, live 964cbdf901af
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-auditor-report-feb-2022.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-auditor-report-feb-2022.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-auditor-report-feb-2022.pdf
+  VERIFIED INFO-2026-0099-auditor-report-feb-2022
+  MIGRATED INFO-2026-0100-acfr-fy2023-24-fund-statements: 3 promotions, 3 captures, live 6096b8ab22d1
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-acfr-fy2023-24-fund-statements.html.tsr.b64
+  VERIFIED INFO-2026-0100-acfr-fy2023-24-fund-statements
+  MIGRATED INFO-2026-0100-adopted-budget-fy2026-27: 3 promotions, 3 captures, live 9107dc513f64
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-adopted-budget-fy2026-27.html.tsr.b64
+  VERIFIED INFO-2026-0100-adopted-budget-fy2026-27
+  MIGRATED INFO-2026-0101-opengov-transfer-series: 4 promotions, 3 captures, live 4b086c34096c
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-opengov-transfer-series.html.tsr.b64
+  VERIFIED INFO-2026-0101-opengov-transfer-series
+  MIGRATED INFO-2026-0102-opengov-transfer-series: 3 promotions, 3 captures, live c5fe7d12dcfd
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-opengov-transfer-series.html.tsr.b64
+  VERIFIED INFO-2026-0102-opengov-transfer-series
+  MIGRATED INFO-2026-0103-acfr-fy2023-24-pdf: 3 promotions, 4 captures, live b8a3b4fadebf
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-acfr-fy2023-24-pdf.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-acfr-fy2023-24-pdf.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-acfr-fy2023-24-pdf.pdf
+  VERIFIED INFO-2026-0103-acfr-fy2023-24-pdf
+  MIGRATED INFO-2026-0104-adopted-budget-book-pdf: 3 promotions, 4 captures, live fd28ae2b9e50
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-adopted-budget-book-pdf.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-adopted-budget-book-pdf.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-adopted-budget-book-pdf.pdf
+  VERIFIED INFO-2026-0104-adopted-budget-book-pdf
+  MIGRATED INFO-2026-0105-adopted-budget-fy13-15-csv: 3 promotions, 3 captures, live 8679e410b865
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-adopted-budget-fy13-15-csv.txt.tsr.b64
+  VERIFIED INFO-2026-0105-adopted-budget-fy13-15-csv
+  MIGRATED INFO-2026-0106-acfr-fy2021-22-pdf: 3 promotions, 4 captures, live 492c9735eff8
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-acfr-fy2021-22-pdf.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-acfr-fy2021-22-pdf.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-acfr-fy2021-22-pdf.pdf
+  VERIFIED INFO-2026-0106-acfr-fy2021-22-pdf
+  MIGRATED INFO-2026-0106-revenue-expenditure-reports-page: 3 promotions, 3 captures, live 9356275c1b1a
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-revenue-expenditure-reports-page.html.tsr.b64
+  VERIFIED INFO-2026-0106-revenue-expenditure-reports-page
+  MIGRATED INFO-2026-0107-revenue-expenditure-reports-page: 4 promotions, 3 captures, live 36a450a51844
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-revenue-expenditure-reports-page.html.tsr.b64
+  VERIFIED INFO-2026-0107-revenue-expenditure-reports-page
+  MIGRATED INFO-2026-0108-zolly-opinion: 3 promotions, 3 captures, live 109f1c707945
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-zolly-opinion.html.tsr.b64
+  VERIFIED INFO-2026-0108-zolly-opinion
+  MIGRATED INFO-2026-0109-legistar-sewer-matters: 2 promotions, 3 captures, live 39cf3372db6e
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-legistar-sewer-matters.json.tsr.b64
+  VERIFIED INFO-2026-0109-legistar-sewer-matters
+  MIGRATED INFO-2026-0110-key-matter-attachments: 2 promotions, 3 captures, live e7325ccb3b66
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-key-matter-attachments.json.tsr.b64
+  VERIFIED INFO-2026-0110-key-matter-attachments
+  MIGRATED INFO-2026-0111-ebmud-agreement-attachments: 2 promotions, 3 captures, live 9f3dcbd69073
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-ebmud-agreement-attachments.json.tsr.b64
+  VERIFIED INFO-2026-0111-ebmud-agreement-attachments
+  MIGRATED INFO-2026-0112-ord-13035-attachments: 2 promotions, 3 captures, live 6f48adc54acf
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-ord-13035-attachments.json.tsr.b64
+  VERIFIED INFO-2026-0112-ord-13035-attachments
+  MIGRATED INFO-2026-0113-fund-amendments-2010-attachments: 2 promotions, 3 captures, live 7916c0b741c4
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-fund-amendments-2010-attachments.json.tsr.b64
+  VERIFIED INFO-2026-0113-fund-amendments-2010-attachments
+  MIGRATED INFO-2026-0114-ebmud-agreement-staff-report: 2 promotions, 4 captures, live 4bae824e3b8e
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-ebmud-agreement-staff-report.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-ebmud-agreement-staff-report.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-ebmud-agreement-staff-report.pdf
+  VERIFIED INFO-2026-0114-ebmud-agreement-staff-report
+  MIGRATED INFO-2026-0115-resolution-89688-cms: 2 promotions, 4 captures, live 5cff903b1254
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-resolution-89688-cms.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-resolution-89688-cms.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-resolution-89688-cms.pdf
+  VERIFIED INFO-2026-0115-resolution-89688-cms
+  MIGRATED INFO-2026-0116-ordinance-13035-cms: 2 promotions, 4 captures, live 2a9c1257e71c
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-ordinance-13035-cms.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-ordinance-13035-cms.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-ordinance-13035-cms.pdf
+  VERIFIED INFO-2026-0116-ordinance-13035-cms
+  MIGRATED INFO-2026-0117-ord-13035-staff-report: 2 promotions, 4 captures, live c3496e639631
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-ord-13035-staff-report.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-ord-13035-staff-report.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-ord-13035-staff-report.pdf
+  VERIFIED INFO-2026-0117-ord-13035-staff-report
+  MIGRATED INFO-2026-0118-fund-amendments-2010-doc-2: 2 promotions, 4 captures, live 702fba0fe1ad
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-fund-amendments-2010-doc-2.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-fund-amendments-2010-doc-2.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-fund-amendments-2010-doc-2.pdf
+  VERIFIED INFO-2026-0118-fund-amendments-2010-doc-2
+  MIGRATED INFO-2026-0119-fund-amendments-2010-doc-1: 2 promotions, 4 captures, live 7a9d8b6e5218
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-19-fund-amendments-2010-doc-1.pdf.b64.tsr.b64
+    note: TWIN_REPRODUCIBLE_DROPPED snapshots/capture-2026-07-19-fund-amendments-2010-doc-1.pdf.b64
+    note: PROVENANCE_VERIFIED snapshots/capture-2026-07-19-fund-amendments-2010-doc-1.pdf
+  VERIFIED INFO-2026-0119-fund-amendments-2010-doc-1
+  MIGRATED INFO-2026-0120-d5-acceptance-test: 4 promotions, 5 captures, live d4e72f1001c0
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-2026-07-20-d5-acceptance-test.json.tsr.b64
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/capture-20260720T184642Z.json.tsr.b64
+  VERIFIED INFO-2026-0120-d5-acceptance-test
+  MIGRATED INFO-2026-0301-fy-2023-25-adopted-policy-budget-book: 3 promotions, 4 captures, live 62f70e7c0ebb
+    note: PROVENANCE_VERIFIED snapshots/FY23-25-Adopted-Budget-Book-FINAL-Reduced-Size.pdf
+  VERIFIED INFO-2026-0301-fy-2023-25-adopted-policy-budget-book
+  MIGRATED INFO-2026-5460-member-release-key-registry: 5 promotions, 4 captures, live 89e386d75fc9
+    note: RECORDED_FILE_UNRECOVERABLE snapshots/allowed_signers.sig
+  VERIFIED INFO-2026-5460-member-release-key-registry
+  MIGRATED PROB-2026-0001-sewer-franchise-diversion: 2 promotions, 1 captures, live b16a5b984bb8
+  VERIFIED PROB-2026-0001-sewer-franchise-diversion
+  MIGRATED PROJ-2026-0001-sewer-franchise-diversion: 3 promotions, 1 captures, live 712418962f75
+  VERIFIED PROJ-2026-0001-sewer-franchise-diversion
+
+all selected bundles migrated and verified clean
