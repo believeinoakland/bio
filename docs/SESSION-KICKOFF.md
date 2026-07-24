@@ -35,7 +35,7 @@ before any real group installs.
 ## Next session's task: implement the membership architecture
 
 `docs/BIO_Membership_Architecture_v1.md` is a first-class architecture
-document specifying identity and handles, administrators, capabilities,
+document specifying covers and handles, administrators, capabilities,
 burner-URL invitations, and project participation. It was written on July
 24, 2026 from Bob's specification, checked against the existing
 architecture documents, and it supersedes one decision in
@@ -44,17 +44,18 @@ deliberately not used).
 
 Read it first. It is the design; do not re-derive it.
 
-TWO THINGS ARE UNDECIDED AND BLOCK PARTS OF THE BUILD:
+ONE THING IS UNDECIDED. Section 4.6: whether removing a captured
+administrator deserves a proportionate path short of reclaiming the whole
+instance through ADMIN_TOKEN. Administrator status is irrevocable by
+design, and the holders of ADMIN_TOKEN are the group's root of trust, so
+the nuclear path always works. The question is whether it should be the
+only one. Ask Bob before building the admin model.
 
-1. Section 4.6, how a compromised administrator is removed. Administrator
-   status is irrevocable by design, so an infiltrated or coerced admin
-   cannot be removed by the others, and Design Requirement 13 assumes
-   exactly that adversary. Ask Bob before building the admin model.
-2. Section 7.9, the reach of project visibility. Narrow (hide the project
-   and its participants) is additive. Full (hide the evidence gathered
-   under it) restructures the record's privacy model and requires bundles
-   to belong to projects, which today they do not. Ask Bob before
-   building project visibility.
+Section 7.9 is RESOLVED: a non-participant sees a project's skeleton (the
+Problems it stands above, the Information it cites, the Actions it
+initiates) and not its substance (analysis, work product, evaluations,
+session log, participant list). The evidence corpus stays shared among
+members; what participation scopes is the group's thinking.
 
 The member half below Section 7 is unblocked and can be built immediately:
 identity and handle with uniqueness enforcement, the required

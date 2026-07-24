@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**v1, July 24, 2026.** First-class architecture document, peer to
+**v1.1, July 24, 2026.** First-class architecture document, peer to
 BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and
 BIO_Functional_Architecture. Specified by Bob Krause in session, July 24,
 2026.
@@ -27,7 +27,7 @@ does not add integrity, and must never be described as though it does.
 
 Four purposes, in the order they matter.
 
-**1.1 Identity, possibly anonymous.** A group needs a stable way to refer
+**1.1 A stable name, possibly anonymous.** A group needs a stable way to refer
 to a participant across time without necessarily knowing, recording, or
 being able to reveal who that participant is in the world.
 
@@ -72,41 +72,44 @@ This is what preserves Design Requirement 1: the network remains
 distributed with no hierarchy, no headquarters, and no central authority,
 because nothing here crosses a group boundary.
 
-## 3. Identity and handle
+## 3. Cover and handle
 
 Two names, assigned by two different parties, for two different purposes.
 
-**Identity** is assigned by an administrator when the invitation is
-created. It distinguishes one participant from another in the
-administrator's roster. **It is a label, not necessarily a legal name.**
-"Ruth C.", "the CPA from the Tuesday meeting", and "volunteer-7" are all
-valid identities. A group operating under pressure should choose
-identities that do not resolve to civil identities, and the interface
-must say so where the field is filled in.
+**Cover** is assigned by an administrator when the invitation is created.
+It distinguishes one participant from another in the administrator's
+roster. The word is deliberate: a cover is what an administrator needs to
+tell participants apart, and it is explicitly NOT a claim about who
+someone is in the world. "Ruth C.", "the CPA from the Tuesday meeting",
+and "volunteer-7" are all valid covers. A group operating under pressure
+should choose covers that do not resolve to civil identities. The term
+was chosen over "identity" precisely because "identity" invites an
+administrator to type a legal name, and the field must not invite that.
 
-Identity is **required**. A roster of anonymous handles with no
+Cover is **required**. A roster of anonymous handles with no
 administrator-held distinguishing label offers no defense against a
 participant who accumulates handles, submits garbage evidence, or ratifies
 indiscriminately. The administrator must be able to say "these two handles
-are the same person" or "this handle is that person we vetted."
+are the same person" or "this handle is the person we vetted."
 
 **Handle** is chosen by the member at enrolment and must be unique across
 the instance. It is what appears in the record: the author of a promotion,
 the attestor of a ratification, the source of hand-carried material, the
 participant list of a project. Members and the public see handles.
 
-**Pairing.** Only administrators see identity and handle together. Whether
+**Pairing.** Only administrators see cover and handle together. Whether
 a given pairing is published is a per-member decision that either the
 member or an administrator may make, which is what allows known and
 anonymous members to coexist in the same group without structural
 difference.
 
-**Residual risk, stated plainly.** The identity-to-handle table is an
+**Residual risk, stated plainly.** The cover-to-handle table is an
 artifact that does not exist under shared tokens, and it lives in
-infrastructure subject to legal process. The mitigation is that identity
-is a label rather than a legal name; the mitigation only works if groups
-actually use it that way, which is a documentation and interface
-obligation, not a technical guarantee.
+infrastructure subject to legal process. The mitigation is that a cover is
+a label rather than a legal name, and it only works if groups actually use
+it that way, which is a documentation and interface obligation rather than
+a technical guarantee. Naming the field "cover" is the first and cheapest
+part of that obligation.
 
 ## 4. Administrators
 
@@ -132,17 +135,32 @@ acts first in a dispute.
 Resignation is the transfer mechanism: promote the successor, then step
 down. The two-administrator floor holds at all times.
 
-**4.6 Open question, recorded not resolved.** Because 4.4 makes
-administrator status irrevocable, a co-opted, coerced, or compromised
-administrator cannot be removed by the others. Design Requirement 13
-assumes active opposition including infiltration and co-option, so this
-needs an answer. The only present escape hatch is replacing ADMIN_TOKEN in
-the hosting dashboard, which returns the whole instance to an unclaimed
-state and is not proportionate. Candidate answers: removal by unanimous
-consent of all other administrators; removal by supermajority with a
-mandatory waiting period and a recorded reason; or an explicit decision
-that the nuclear path is the intended one. **This must be decided before
-any group runs with more than a handful of participants.**
+**4.6 The root of trust, and the limit of administrator irrevocability.**
+
+Because 4.4 makes administrator status irrevocable, a co-opted, coerced,
+or compromised administrator cannot be removed by the other
+administrators. The escape hatch is replacing ADMIN_TOKEN in the hosting
+dashboard, which returns the instance to an unclaimed state and lets it be
+claimed afresh.
+
+That escape hatch cuts both ways, and the document should say so plainly:
+whoever can set ADMIN_TOKEN can take the group over. There is no
+arrangement in which nobody holds that power, because the instance runs in
+somebody's hosting account. **The holders of ADMIN_TOKEN are the root of
+trust for that group**, and every other rule in this document sits beneath
+them. Membership does not and cannot constrain them.
+
+Two obligations follow. First, holding ADMIN_TOKEN must be a deliberate,
+named arrangement rather than an accident of who created the account, and
+per Design Requirement 1 it is shared among at least two individuals and
+is transferable. Second, no interface may describe the administrator model
+as though it bounds this power, because it does not.
+
+**Still open:** whether removing a captured administrator should have a
+proportionate path short of reclaiming the whole instance. Candidates:
+unanimous consent of all other administrators, or supermajority with a
+waiting period and a recorded reason. The nuclear path exists and works;
+the question is whether it is the only one that should.
 
 ## 5. Capabilities
 
@@ -173,7 +191,7 @@ link is inert and reveals neither the group nor the invitee.
 
 At enrolment the member chooses a handle, which the system enforces as
 unique across the instance, and a password. The administrator-assigned
-identity and capabilities are already attached and are not visible to the
+cover and capabilities are already attached and are not visible to the
 member as editable fields.
 
 ## 7. Projects
@@ -217,37 +235,71 @@ handles of all other participants of that project. Administrators see all
 of them, and every entry in the administrator's roster lists the projects
 that member participates in.
 
-**7.9 Reach of visibility.** OPEN. Whether being outside a project hides
-only the project object and its participants (narrow), or also hides the
-information and problem bundles gathered under it (full), is not decided.
-Narrow is additive and preserves the record as a corpus shared among the
-group's members. Full restructures the privacy model and requires bundles
-to belong to projects, which today they do not. This must be settled
-before project visibility is implemented.
+**7.9 Containment, and what non-participants see. RESOLVED.**
+
+The containment hierarchy, expressed in the closed relationship
+vocabulary of BIO_State_Rules_Consistency Section 5.1:
+
+- Information is the raw material and refers to nothing above it.
+- A Problem `cites` zero or more pieces of Information, not necessarily
+  uniquely: the same Information may be cited by many Problems.
+- A Project stands above zero or more Problems (the Problem carries the
+  `elevated_into` edge; the reverse is derived by the index and never
+  hand-maintained) and `cites` zero or more pieces of Information
+  directly.
+- A Project `initiates` zero or more Actions.
+
+Nothing in this hierarchy is exclusive. An Information cited by one
+Project may be cited by another, and by Problems under neither.
+
+**A member who is not a participant of a project sees its skeleton, not
+its substance.** Visible to any member: the objects the project points at,
+which is to say the Problems it stands above, the Information it cites,
+and the Actions it initiates. Not visible: the project's own content, its
+analysis record, its work product, its evaluations, its session log, and
+its participant list.
+
+This is the middle position between the two candidates this document
+previously recorded as open, and it is the right one. It preserves the
+record as a corpus shared among the group's members, so evidence gathered
+under one project is not walled off from a member working on another,
+which would fracture the very thing the record exists to be. What is
+withheld is the group's thinking: where an argument has got to, what has
+been ruled out, what is being prepared. That is the material with
+strategic and tactical value before publication, and it is exactly what
+project participation should scope.
+
+A consequence worth stating: because Information is shared and
+non-exclusive, a member can infer that SOME project is interested in a
+given piece of Information without being able to see which project or
+why. That is acceptable. Concealing the interest graph would require
+compartmenting the evidence corpus, which is the option rejected above.
 
 ## 8. Data model sketch
 
 Extends the existing `members` and `signers` tables rather than replacing
 them. Concrete DDL belongs with the implementation; the shape is:
 
-- `members`: handle (primary key, unique instance-wide), identity
+- `members`: handle (primary key, unique instance-wide), cover
   (required, administrator-assigned), pairing_published (boolean),
   capabilities (set), expertise (list), status, timestamps.
-- `invitations`: code hash, identity, capabilities, created, spent_at.
+- `invitations`: code hash, cover, capabilities, created, spent_at.
   Spent rows retain no addressing information.
 - `projects`: bundle_id (the PROJ- bundle), owner_handle, created.
 - `project_participants`: bundle_id, handle, state (invited, joined,
   leave_requested), comment, timestamps, acted_by.
 
-Handles are the join key everywhere, so the record never stores identity
+Handles are the join key everywhere, so the record never stores a cover
 alongside content.
 
 ## 9. What must be true before this ships
 
-1. Section 4.6 answered: how a compromised administrator is removed.
-2. Section 7.9 answered: the reach of project visibility.
-3. The identity field labelled and documented as a distinguishing label
+1. Section 4.6: whether a proportionate path exists for removing a
+   captured administrator, short of reclaiming the instance through
+   ADMIN_TOKEN. The nuclear path works; this asks whether it should be
+   the only one.
+2. The cover field labelled and documented as a distinguishing label
    rather than a legal name, wherever it appears.
-4. BIO_Technical_Architecture_Decisions v10 Section 10 annotated to point
+3. BIO_Technical_Architecture_Decisions v10 Section 10 annotated to point
    at this document, so the two do not disagree in silence.
-5. The one-person case verified to touch none of this.
+4. The one-person case verified to touch none of this.
