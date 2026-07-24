@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**v1.2, July 24, 2026.** First-class architecture document, peer to
+**v1.3, July 24, 2026.** First-class architecture document, peer to
 BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and
 BIO_Functional_Architecture. Specified by Bob Krause in session, July 24,
 2026.
@@ -156,29 +156,68 @@ per Design Requirement 1 it is shared among at least two individuals and
 is transferable. Second, no interface may describe the administrator model
 as though it bounds this power, because it does not.
 
-**Removing a captured administrator.** No mechanism is safe at exactly
-two administrators: any removal power there is unilateral by construction,
-so either one can remove the other and a single capture is fatal. That is
-arithmetic, not a design failure, and it is why the floor of two is a
-floor rather than a target.
+**4.7 Adding and removing administrators.** Confirmed July 24, 2026.
 
-At three or more, the rule is **unanimous consent of every administrator
-other than the target**, with a waiting period and a recorded reason. A
-lone captured administrator can never remove anyone, because they can
-never constitute the whole of "all others." Two honest administrators can
-remove a captured third. The rule fails only against a colluding
-majority, and nothing survives a colluding majority; that is a general
-property of governance rather than a defect here.
+**Addition.** The first administrator may add a second administrator
+unilaterally, because a group of one has nobody to consult and Design
+Requirement 1 wants the second holder to exist as early as possible. Every
+subsequent addition requires the consensus of all existing
+administrators.
 
-So: no removal at two, unanimity-of-others at three or more, and the
-ADMIN_TOKEN reset as the backstop in every case.
+Consensus on addition is the load-bearing half of this rule. Without it, a
+captured administrator recruits confederates and manufactures the majority
+that then ejects the honest ones. Closing that door is what makes the
+removal rule below safe.
 
-**Separating the root of trust from the administrators.** The holders of
-ADMIN_TOKEN need not be in-app administrators, and there is a real
-argument that they should not be. If the hosting account is held by
-someone outside the administrator set, the root of trust becomes an
-external check rather than a superset of the thing it checks. Groups
-should be told this is available and why it matters.
+**Removal.** A majority of all administrators, counting the target in the
+denominator but not permitting them to vote. Ties do not eject. The
+arithmetic:
+
+| Administrators | Votes needed | Eligible voters | Effect |
+|---|---|---|---|
+| 2 | 2 | 1 | impossible, which is correct |
+| 3 | 2 | 2 | unanimity of the others |
+| 4 | 3 | 3 | unanimity of the others |
+| 5 | 3 | 4 | three of four |
+| 7 | 4 | 6 | four of six |
+
+Counting the target in the denominator is what makes removal impossible at
+two without needing a special case, demands unanimity while the group is
+small enough for unanimity to be reasonable, and loosens as the group
+grows. A lone captured administrator can never eject anyone. The rule
+fails only to a colluding majority, and nothing survives a colluding
+majority.
+
+Removals are recorded with the deciding administrators and a reason.
+
+**4.8 Hosting access is separated from administrator status.** Confirmed
+July 24, 2026.
+
+An in-app removal cannot reach someone who controls the machine. An
+ejected administrator who holds the hosting account simply sets
+ADMIN_TOKEN, reclaims the instance, and bans everyone else. Governance
+decides who runs this copy; it cannot decide who runs the machine, and no
+interface may imply otherwise.
+
+Therefore hosting-account access and administrator status are separate
+things held by different people wherever a group can manage it. The
+hosting account must never be a single person's personal login; the
+platform supports multiple account members and a group uses that.
+
+**When this is enforced.** Not at install, because Design Requirement 2
+demands the system be genuinely useful to one person, and a solo
+participant is necessarily both the hosting holder and the administrator.
+The obligation activates at the moment a group stops being one person:
+when the second administrator is added, the group is required to record
+who holds hosting access and prompted to make that a different person or,
+at minimum, a second account member. That is the first moment the question
+is meaningful and the last moment the group is paying attention to setup.
+
+**Ejection is a two-part act.** Removing an administrator in the
+application is half of it. The other half is rotating ADMIN_TOKEN and
+reviewing hosting-account membership. The interface states this at the
+moment of ejection rather than leaving a group to discover it after the
+fact.
 
 ## 5. Capabilities
 
@@ -311,7 +350,63 @@ where an argument has got to, what has been ruled out, what is being
 prepared. That is the material with strategic and tactical value before
 publication.
 
-## 8. Data model sketch
+## 8. Secure verified export
+
+Scheduled July 24, 2026. Export is the only real answer to a captured root
+of trust, because a group that cannot leave is a group that can be held.
+It is also, and this is the whole difficulty, exactly the capability an
+attacker wants most.
+
+**The tension, stated before the design.** A full export of the working
+corpus is the group's entire unpublished position: what it has found, what
+it is preparing, what it has ruled out. If any administrator can take
+that, then a single captured administrator exfiltrates everything, and
+the export feature becomes the most efficient attack in the system. An
+export capability that is safe to leave lying around is not an export
+capability worth having.
+
+**Two paths, because there are two situations.**
+
+**8.1 Full working-corpus export requires the root of trust.** Not
+in-app administrator status: the ADMIN_TOKEN-class credential. The
+export is recorded in the append-only history, so it can never happen
+silently, and every administrator is notified. This is the path for a
+group deliberately moving hosts, splitting, or dissolving. A captured
+in-app administrator cannot use it.
+
+**8.2 Published-record reconstruction requires nothing at all.** Published
+material is content-addressed, and its hashes are public and verifiable by
+anyone with `ssh-keygen` and the doorbell. Any member, or any stranger,
+can rebuild and independently verify the published record without the
+cooperation, permission, or continued existence of the instance it came
+from. Nothing can be withheld here, by construction, because withholding
+it was never possible.
+
+**The honest limit.** If the root of trust itself is captured, the
+remaining members leave with everything published and lose the unpublished
+thinking. That is a real loss and it should be stated to groups plainly
+rather than glossed. It is also the correct trade: the unpublished
+material is precisely what must not be extractable by whoever acquired a
+credential. A group worried about this holds its own local copies through
+normal use, which the bundle format already supports.
+
+**What "verified" must mean.** An export carries its own manifest and is
+checked on both sides: every file hashed on the way out, every bundle's
+history chain and base links re-derived on the way in, every registered
+capture byte-compared. The receiving instance trusts nothing the sending
+instance asserts. The migration tooling already demonstrates a full
+verified transfer of the real record, so this is a productization of a
+proven path rather than new ground.
+
+**Why this belongs in this document.** Exit is what makes every other rule
+here enforceable. Consensus on adding administrators, majority on removing
+them, and separation of hosting access all assume that a group which loses
+those arguments can still walk away with its work. Requirement 3 says
+groups form and dissolve freely; Requirement 13 says compromising one
+group must not compromise the network. Applied inward, a captured instance
+is a captured group, and the prescribed response is to fork away from it.
+
+## 9. Data model sketch
 
 Extends the existing `members` and `signers` tables rather than replacing
 them. Concrete DDL belongs with the implementation; the shape is:
@@ -328,7 +423,7 @@ them. Concrete DDL belongs with the implementation; the shape is:
 Handles are the join key everywhere, so the record never stores a cover
 alongside content.
 
-## 9. What must be true before this ships
+## 10. What must be true before this ships
 
 1. The index MUST filter derived reverse edges by the viewer's position
    with respect to each project. An unfiltered index leaks the interest
