@@ -2,7 +2,11 @@
 
 Claude reads everything it needs from this public repository at the start
 of a session, with no credentials: the full source tree and the documents
-in docs/. Attach nothing.
+in docs/. Attach nothing. As of July 24, 2026 that includes the whole
+doctrine corpus in docs/architecture/, so the mission, the requirements,
+the functional and technical architecture, the state rules, and the intake
+doctrine are all readable without an upload. docs/architecture/README.md
+indexes them and marks which are superseded.
 
 Say what to work on. If the session will do any of the following, grant
 the matching permission when asked, or up front:
@@ -91,6 +95,10 @@ real record, so this is productization rather than new ground.
 Also outstanding, unrelated: the C-series gate catalog port (the plane
 ships `plane-gate/0.1`, mechanical checks only), and the Conversion Plan
 step 6 benchmark at 5,000 and 20,000 bundles.
+
+Read docs/architecture/README.md before designing anything. This session's
+membership work was designed BEFORE the corpus was read and had to be
+reconciled afterward; that is avoidable now.
 
 Document layout is explained in docs/README.md. The two files at the top of
 docs/ are the entry points: this one and BIO_DATAPLANE_STATE.md. Doctrine
