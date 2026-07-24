@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bio-plane",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "vars": { "VERSION": "0.3.11" },
+
+  // The store. new_sqlite_classes is required: SQLite-backed Durable Objects
+  // are a different storage backend from the legacy key-value one and cannot
+  // be switched after the fact.
+  "durable_objects": {
+    "bindings": [{ "name": "STORE", "class_name": "Store" }]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Store"] }
+  ],
+
+  // Captures, split by fence. Bindings, not access keys: nothing outside
+  // Cloudflare signs an R2 request, so there is no key to leak or rotate.
+  //
+  // CAPTURES  working corpus. Everything lands here on intake, ratified or
+  //           not. Private. Backs the working-scope AI Search instance.
+  // PUBLISHED ratified material only, written by the publisher as the act of
+  //           ratification. Public. Backs the published-scope instance.
+  //
+  // The fence is the bucket boundary, so a published-scope query cannot reach
+  // unratified material by any bug in any predicate: that corpus has never
+  // seen it. Scope is the caller-facing parameter; two buckets is what makes
+  // the parameter safe rather than advisory.
+  "r2_buckets": [
+    { "binding": "CAPTURES",  "bucket_name": "bio-captures" },
+    { "binding": "PUBLISHED", "bucket_name": "bio-published" }
+  ],
+
+  "observability": { "enabled": true }
+}

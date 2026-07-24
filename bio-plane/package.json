@@ -1,0 +1,36 @@
+{
+  "name": "bio-plane",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test/store.test.mjs && node test/purge.test.mjs && node test/bootstrap.test.mjs && node test/livefire.test.mjs && node test/installer.test.mjs && node test/capture.test.mjs && node test/migrate.test.mjs && node test/browse.test.mjs",
+    "test:store": "node test/store.test.mjs",
+    "test:livefire": "node test/livefire.test.mjs",
+    "test:bundle": "node test/bundle.test.mjs",
+    "build": "esbuild src/index.mjs --bundle --format=esm --platform=neutral --external:cloudflare:workers --external:node:* --outfile=dist/bio-plane.bundled.mjs",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test:bootstrap": "node test/bootstrap.test.mjs",
+    "test:capture": "node test/capture.test.mjs",
+    "test:migrate": "node test/migrate.test.mjs",
+    "test:browse": "node test/browse.test.mjs"
+  },
+  "devDependencies": {
+    "miniflare": "^4.20260722.0",
+    "wrangler": "^4.114.0",
+    "esbuild": "^0.25.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "ADMIN_TOKEN": {
+        "description": "Full control, including deleting everything. Generate a long random value and store it in a password manager. **Do not reuse a password.**"
+      },
+      "MEMBER_TOKEN": {
+        "description": "Day-to-day access for working group members. Generate a *different* long random value."
+      },
+      "PROBE_TOKEN": {
+        "description": "Testing only. Can read, but can only change a scratch area. Safe to share. Generate a *third* value."
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "newgroup",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-07-01",
+
+  // Deliberately NO bindings of any kind. The wizard briefly holds a scoped
+  // OAuth access token while it provisions a group's instance, and the
+  // guarantee that the token is never stored is structural: there is no
+  // storage to write it to. Do not add a binding to this Worker without
+  // treating that guarantee as the thing being changed.
+
+  "observability": { "enabled": true }
+}

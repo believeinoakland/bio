@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start a group — Believe in Oakland</title>
+<meta name="description" content="Set up your group's own copy of the Believe in Oakland accountability record, in your own Cloudflare account, under your own control.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400;9..144,600;9..144,700&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
+  --verdigris:#2F6F62; --verdigris-dk:#1F4F45;
+  --signal:#B3441E; --rule:#C6CBBF; --muted:#5C6B66;
+  --display:"Fraunces",Georgia,serif;
+  --body:"Public Sans",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+main{max-width:700px;margin:0 auto;padding:56px 24px 90px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--verdigris);margin:0 0 14px}
+h1{font-family:var(--display);font-variation-settings:"SOFT" 0,"WONK" 1,"opsz" 90;
+  font-weight:600;font-size:clamp(30px,4.6vw,46px);line-height:1.08;letter-spacing:-.015em;margin:0 0 18px}
+h2{font-family:var(--display);font-variation-settings:"WONK" 1;font-weight:600;
+  font-size:21px;margin:34px 0 10px;letter-spacing:-.01em}
+p{margin:0 0 16px;max-width:62ch}
+.lede{font-size:19px;color:#26343F}
+.small{font-size:14.5px;color:var(--muted)}
+ul{margin:0 0 18px;padding-left:20px}
+ul li{margin-bottom:9px;max-width:58ch}
+.card{border:1px solid var(--rule);background:#F6F7F2;padding:20px 22px;margin:0 0 20px}
+.okbox{border-left:3px solid var(--verdigris);background:#EDF3F0;padding:16px 20px;margin:0 0 20px}
+a{color:var(--verdigris-dk)}
+a.btn{display:inline-block;margin-top:6px;padding:14px 26px;font-size:16px;font-weight:700;
+  background:var(--verdigris);color:#fff;border:1px solid var(--verdigris-dk);text-decoration:none}
+a.btn:hover{background:var(--verdigris-dk)}
+a:focus-visible{outline:2px solid var(--verdigris);outline-offset:2px}
+.mono{font-family:var(--mono);font-size:14px}
+hr{border:0;border-top:1px solid var(--rule);margin:34px 0}
+</style>
+</head>
+<body>
+<main>
+<p class="eyebrow">Believe in Oakland</p>
+<h1>Start your group's own accountability record</h1>
+
+<p class="lede">Believe in Oakland runs on a public, tamper-evident record:
+every capture signed, every change kept, nothing quietly rewritten. Your
+group can run the same system for your own city, your own agency, your own
+fight. Not an account on our servers. Your own copy, in your own
+infrastructure, from the first second.</p>
+
+<h2>What you get</h2>
+<ul>
+<li>Your own copy of the record, running in your own free Cloudflare
+account, at your own web address.</li>
+<li>Full control: your passwords, your credentials, your data. Believe in
+Oakland holds no key to any of it and cannot see inside it.</li>
+<li>An append-only history, so what your group has established can be shown
+and cannot be silently altered, by anyone, including you.</li>
+</ul>
+
+<h2>What it needs, honestly</h2>
+<ul>
+<li><b>A Cloudflare account.</b> Free. An email address and a couple of
+minutes. <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create
+one here</a> if you do not have one.</li>
+<li><b>No card.</b> A new group's record fits comfortably in the free tier.
+The one optional extra, storage for very large attached files, does require
+a card on file with Cloudflare even though it stays free at this scale. You
+can add it later, deliberately, if your group ever needs it.</li>
+<li><b>About five minutes,</b> in a browser. No terminal, no code, nothing
+to download.</li>
+</ul>
+
+<h2>What happens, and what we can and cannot see</h2>
+<p>The setup assistant asks Cloudflare to show you a permission screen
+naming exactly what it may do in your account: install the software and set
+up its storage. You approve it on Cloudflare's own page, and you can revoke
+it any time from your dashboard. That permission passes through our
+assistant for the seconds the installation takes, is stored nowhere, and is
+never seen by a person. After setup, nothing your group does routes through
+Believe in Oakland at all.</p>
+<p class="small">Prefer that nothing pass through us even once? The manual
+path is documented and permanently supported, using only the Cloudflare
+dashboard. It exists so your group could stand a copy up even if Believe in
+Oakland disappeared tomorrow. Ask us for it, or find it in the project
+documentation.</p>
+
+<hr>
+
+<div class="okbox">
+<p style="margin:0"><b>One thing before you press the button.</b> It takes
+you to <span class="mono">newgroup.believeinoakland.workers.dev</span>. That
+is Believe in Oakland's setup assistant, running on Cloudflare's worker
+platform, which is why the address ends the way it does. You will see the
+name in your address bar the whole time. We send you there with a button
+rather than a silent redirect, so you always know where you are.</p>
+</div>
+
+<p><a class="btn" href="https://newgroup.believeinoakland.workers.dev/">Set up my group's copy</a></p>
+
+<p class="small">Already running a copy and want the latest software? That
+is a separate page:
+<span class="mono">newgroup.believeinoakland.workers.dev/update</span>.
+Updates never touch your passwords or your record.</p>
+
+</main>
+</body>
+</html>
