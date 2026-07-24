@@ -34,7 +34,7 @@ before any real group installs.
 
 ## Next session's task: implement the membership architecture
 
-`docs/BIO_Membership_Architecture_v1.md` is a first-class architecture
+`docs/architecture/BIO_Membership_Architecture_v1.md` is a first-class architecture
 document specifying covers and handles, administrators, capabilities,
 burner-URL invitations, and project participation. It was written on July
 24, 2026 from Bob's specification, checked against the existing
@@ -91,6 +91,10 @@ real record, so this is productization rather than new ground.
 Also outstanding, unrelated: the C-series gate catalog port (the plane
 ships `plane-gate/0.1`, mechanical checks only), and the Conversion Plan
 step 6 benchmark at 5,000 and 20,000 bundles.
+
+Document layout is explained in docs/README.md. The two files at the top of
+docs/ are the entry points: this one and BIO_DATAPLANE_STATE.md. Doctrine
+lives in docs/architecture/, operational records in docs/development/.
 
 The state of the work lives in docs/BIO_DATAPLANE_STATE.md in this
 repository. Claude keeps it current with every release.
