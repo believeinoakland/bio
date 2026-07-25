@@ -237,7 +237,7 @@ worth having. Tested both ways: authored, the legacy queue is refused; replayed,
 it lands and the history says so.
 
 ### S-5 Capture and the provenance register
-**Status: todo** · Depends: S-4
+**Status: acquisition done (0.7.1), register assembly next** · Depends: S-4
 
 The plane moves bytes today; what is missing is what makes a capture evidence.
 `data/provenance.json` per C-18.1: locator, authority, retrieved instant, and a
@@ -247,6 +247,38 @@ catalog's incremental SHA-256 so peak residency is one part.
 
 **Accepts when:** C-18.1, C-18.3, and C-18.6 pass on a freshly captured
 document, including a multi-part capture over the single-value storage limit.
+
+**Acquisition done, 0.7.1**, 44 assertions in `test/acquire.test.mjs`. `op=acquire`
+fetches a public locator, hashes at receipt, stores content-addressed, and returns
+a provenance document in the shape C-18.1 requires, so a caller cannot get that
+shape subtly wrong. It writes no bundle state, because the doctrine is explicit
+that no intake path writes live state and the daemon and the member are writers
+like any other.
+
+**Two questions I had were answered by the corpus, not by me.**
+
+*What grade does a Worker produce?* B, and it says so. Intake Doctrine Section 3
+defines Grade B as "the document bytes as fetched by a capable surface, hashed at
+receipt, with locator and instant", and Grade A as a WACZ or equivalent
+chain-of-custody capture of the source as served, which this surface cannot make.
+Overclaiming would defeat the entire grading scheme, whose premise is that "a
+claim about evidence is only as strong as its weakest named layer". The response
+also says in words why A is unavailable, so nobody has to know the doctrine to
+understand what they got.
+
+*What bounds a Worker fetching a member's URL?* The catalog's own
+`isPublicHttpsLocator`, the same function guarding the gathering queue, so there
+is one definition of a reachable address rather than two. Refused and tested:
+plain http, localhost, bare IP addresses, credentials in the authority,
+hostnames with no public dot, and non-URL schemes.
+
+Bounded at 20MB, because a Worker holds the document in memory to hash it. Beyond
+that the document is captured as registered parts, which the catalog's incremental
+SHA-256 streams one part at a time; that path belongs to the client.
+
+**Still owed on this step:** assembling `data/provenance.json` from acquired
+documents and promoting it, which is what makes C-18.1, C-18.3, and C-18.6
+assertable end to end, plus the parts path for oversize documents.
 
 ### S-6 Co-attestation
 **Status: todo** · Depends: S-5

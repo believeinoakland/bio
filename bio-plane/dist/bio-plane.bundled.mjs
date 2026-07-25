@@ -4848,6 +4848,10 @@ var OPS = {
   lease: { classes: ["admin", "member", "probe"], mutating: true },
   purge: { classes: ["admin", "probe"], mutating: true },
   capture: { classes: ["admin", "member", "probe"], mutating: true },
+  /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
+     and no bundle state, because the doctrine is explicit that no intake path
+     writes live state and the daemon and the member are writers like any other. */
+  acquire: { classes: ["admin", "member", "probe"], mutating: true },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -4886,6 +4890,7 @@ var SESSION_OPS = {
     "lease",
     "allocid",
     "capture",
+    "acquire",
     "ratify",
     "inbox",
     "inboxget",
@@ -4896,6 +4901,7 @@ var SESSION_OPS = {
     "lease",
     "allocid",
     "capture",
+    "acquire",
     "ratify",
     "inbox",
     "inboxget",
@@ -5202,6 +5208,80 @@ var index_default = {
           ...dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}
         }
       });
+    }
+    if (op === "acquire") {
+      if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);
+      if (typeof env.CAPTURES?.put !== "function")
+        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+      const body2 = await req.json().catch(() => null);
+      const locator = body2?.locator;
+      if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
+        return json({
+          ok: false,
+          reason: "BAD_LOCATOR",
+          detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address"
+        }, 400);
+      if (typeof body2?.authority !== "string" || !body2.authority.trim())
+        return json({
+          ok: false,
+          reason: "NO_AUTHORITY",
+          detail: "record who issued the document; the capture chain and the source are separate claims and both are named"
+        }, 400);
+      const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+      let res2;
+      try {
+        res2 = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+      } catch (e) {
+        return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
+      }
+      if (!res2.ok)
+        return json({ ok: false, reason: "SOURCE_REFUSED", status: res2.status, locator }, 502);
+      const MAX = 20 * 1024 * 1024;
+      const bytes = new Uint8Array(await res2.arrayBuffer());
+      if (bytes.length > MAX)
+        return json({
+          ok: false,
+          reason: "TOO_LARGE",
+          bytes: bytes.length,
+          maxBytes: MAX,
+          detail: "acquire holds the document in memory to hash it; a document this size is captured as registered parts instead"
+        }, 413);
+      if (bytes.length === 0)
+        return json({ ok: false, reason: "EMPTY", locator }, 502);
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      const sha = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
+      const key = `${storeName}/captures/${sha}`;
+      const existed = !!await env.CAPTURES.head(key);
+      if (!existed) await env.CAPTURES.put(key, bytes, { sha256: digest });
+      const ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
+      const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
+      return json({
+        ok: true,
+        existed,
+        document: {
+          file: `snapshots/${name}`,
+          locator,
+          authority: body2.authority.trim(),
+          retrieved,
+          capture: {
+            method: "bio-plane acquire, https fetch, hashed at receipt",
+            grade: "B",
+            actor_class: viaSession ? "member" : cls === "probe" ? "session" : "daemon",
+            sha256: sha,
+            encoding: "binary",
+            bytes: bytes.length,
+            ...ct ? { content_type: ct } : {}
+          },
+          origin: {
+            kind: body2.matchedSweep ? "sweep" : "named_request",
+            ...body2.matchedSweep ? { matched_sweep: body2.matchedSweep, deeming_actor: sessMember || cls } : {}
+          },
+          attestation_attempts: []
+        },
+        note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
+        store: storeName,
+        tokenClass: cls
+      }, 200);
     }
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
     if (op === "ratify") {

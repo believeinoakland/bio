@@ -5,6 +5,11 @@ import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
 import { runGate, GATE_VERSION } from "./gate.mjs";
 import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
+/* The locator fence, taken from the catalog rather than restated: https only,
+   public hosts only, no credentials in the authority, no bare IPs, no localhost.
+   It is the one bound between a member typing a URL and this Worker fetching it,
+   so it must be the same function the checker uses on the queue. */
+import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
 export { Store } from "./store.mjs";
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -46,6 +51,10 @@ const OPS = {
   lease:      { classes: ["admin", "member", "probe"],           mutating: true  },
   purge:      { classes: ["admin", "probe"],                     mutating: true  },
   capture:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
+     and no bundle state, because the doctrine is explicit that no intake path
+     writes live state and the daemon and the member are writers like any other. */
+  acquire:    { classes: ["admin", "member", "probe"],           mutating: true  },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -87,9 +96,9 @@ const OPS = {
    only by machine credential. Member sessions get intake and review; admin
    sessions additionally manage the roster and keys. */
 const SESSION_OPS = {
-  member: new Set(["promote", "lease", "allocid", "capture", "ratify",
+  member: new Set(["promote", "lease", "allocid", "capture", "acquire", "ratify",
                    "inbox", "inboxget", "inboxresolve"]),
-  admin:  new Set(["promote", "lease", "allocid", "capture", "ratify",
+  admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "ratify",
                    "inbox", "inboxget", "inboxresolve",
                    "memberadd", "memberset", "signeradd", "signerset"]),
 };
@@ -408,6 +417,88 @@ export default {
                    "access-control-allow-origin": "*", "x-capture-sha256": sha,
                    ...(dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}) },
       });
+    }
+
+    /* Acquisition: the fetch layer the intake doctrine calls M2'.
+     *
+     * What it produces is Grade B and says so. The doctrine's Section 3 is
+     * precise: Grade B is "the document bytes as fetched by a capable surface,
+     * hashed at receipt, with locator and instant", and Grade A requires a WACZ
+     * or equivalent chain-of-custody capture of the source as served, which a
+     * Worker cannot produce. Claiming A here would be the one thing the grading
+     * scheme exists to prevent, since "a claim about evidence is only as strong
+     * as its weakest named layer".
+     *
+     * It writes no bundle state. The doctrine: "No intake path writes live
+     * state; the daemon and the member are writers like every writer." So this
+     * returns a provenance document and the caller promotes it.
+     */
+    if (op === "acquire") {
+      if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);
+      if (typeof env.CAPTURES?.put !== "function")
+        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+      const body = await req.json().catch(() => null);
+      const locator = body?.locator;
+      if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
+        return json({ ok: false, reason: "BAD_LOCATOR",
+                      detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address" }, 400);
+      if (typeof body?.authority !== "string" || !body.authority.trim())
+        return json({ ok: false, reason: "NO_AUTHORITY",
+                      detail: "record who issued the document; the capture chain and the source are separate claims and both are named" }, 400);
+
+      const retrieved = new Date().toISOString().split(".")[0] + "Z";
+      let res;
+      try {
+        res = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+      } catch (e) {
+        return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
+      }
+      if (!res.ok)
+        return json({ ok: false, reason: "SOURCE_REFUSED", status: res.status, locator }, 502);
+
+      /* Bounded because a Worker holds this in memory to hash it. Beyond the
+         cap the document goes in as parts, which the catalog supports and which
+         streams through its incremental hash one part at a time; that path is
+         the client's, not this one's. */
+      const MAX = 20 * 1024 * 1024;
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      if (bytes.length > MAX)
+        return json({ ok: false, reason: "TOO_LARGE", bytes: bytes.length, maxBytes: MAX,
+                      detail: "acquire holds the document in memory to hash it; a document this size is captured as registered parts instead" }, 413);
+      if (bytes.length === 0)
+        return json({ ok: false, reason: "EMPTY", locator }, 502);
+
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      const sha = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
+      const key = `${storeName}/captures/${sha}`;
+      const existed = !!(await env.CAPTURES.head(key));
+      if (!existed) await env.CAPTURES.put(key, bytes, { sha256: digest });
+
+      const ct = (res.headers.get("content-type") || "").split(";")[0].trim();
+      const name = (body.file || locator.split("/").pop() || "capture")
+        .replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
+
+      /* The shape C-18.1 requires, assembled here so the caller does not have to
+         know it and cannot get it subtly wrong. */
+      return json({
+        ok: true, existed,
+        document: {
+          file: `snapshots/${name}`,
+          locator, authority: body.authority.trim(), retrieved,
+          capture: {
+            method: "bio-plane acquire, https fetch, hashed at receipt",
+            grade: "B",
+            actor_class: viaSession ? "member" : (cls === "probe" ? "session" : "daemon"),
+            sha256: sha, encoding: "binary", bytes: bytes.length,
+            ...(ct ? { content_type: ct } : {}),
+          },
+          origin: { kind: body.matchedSweep ? "sweep" : "named_request",
+                    ...(body.matchedSweep ? { matched_sweep: body.matchedSweep, deeming_actor: sessMember || cls } : {}) },
+          attestation_attempts: [],
+        },
+        note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
+        store: storeName, tokenClass: cls,
+      }, 200);
     }
 
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
