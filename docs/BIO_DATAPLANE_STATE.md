@@ -1,5 +1,26 @@
 # BIO data plane: source state, migration plan, and build status
 
+v14, July 25, 2026. Current state, on top of the v13 narrative below. The plane
+is 0.14.0. The development instance is now biosmoke7.believeinoakland.workers.dev
+(v13 below still names biosmoke5/6; the record moved forward with each fresh
+install). The live record is 30 bundles, 87 register rows, and audits 30 clean
+against the full 49-check catalog run inside the object via `op=audit`. The
+battery is 660 assertions across 21 suites in about 52 seconds; `npm test` in
+bio-plane runs all of it. plane-gate is `plane-gate/1.0` running the catalog
+(1.16.6) rather than the `plane-gate/0.1` mechanical subset the v13 text
+describes.
+
+**Retrieval probe 1 answered (July 25).** FTS5 exists in the Durable Object's
+SQLite and was measured against an exported index at 5,000 and 20,000 bundles
+with three-way exact agreement against a brute-force scan. FTS5 wins on
+corpus-independent selective latency, on being the one-call-in-answer-out shape
+D-26 chose, and on keeping the index behind the two-bucket fence. Record and
+open design questions in `development/RETRIEVAL-PROBE.md`; plan step S-10. No
+retrieval op ships until the design questions are answered by Bob. The plane
+source is unchanged by this probe.
+
+---
+
 v13, July 24, 2026. THE WRITE ARC IS BUILT AND LIVE ON BIOSMOKE6 (tree
 0.4.1, 328 assertions green across fifteen suites, whole plane battery 20
 seconds). 0.4.1 adds the instance-served signing page and the plain-words

@@ -538,10 +538,19 @@ because nothing has ever needed less. Pagination or a projection with fewer
 columns is the answer when a group gets there, and this is the measurement that
 says when.
 
-**Probe 1, FTS5 virtual tables versus export, is NOT answered** and I am not
-pretending otherwise. It needs the retrieval arc to exist before there is anything
-to compare, and folding it in here was optimistic: the benchmark measured what
-exists, and FTS5 does not.
+**Probe 1, FTS5 virtual tables versus export, is now ANSWERED**, separately,
+once there was a fixed conformant corpus to index. FTS5 exists in the Durable
+Object's SQLite (FTS4 and `PRAGMA compile_options` are refused by workerd's
+authorizer; FTS5 is not), and the FTS5-versus-export comparison was measured at
+5,000 and 20,000 with three-way exact agreement against a brute-force scan.
+FTS5 wins: its cost tracks result size rather than corpus size, it is the
+one-call-in-answer-out shape D-26 already chose, and it keeps the index on the
+protected side of the two-bucket fence, where an exported artifact cannot stay.
+Full record, actuals, and the design questions that remain are in
+`RETRIEVAL-PROBE.md`. The measurement was optimistically folded into S-8; it
+could not run here because FTS5 did not exist yet in a form there was anything
+to compare, so it ran as its own probe (`bio-plane/test/retrieval-probe.mjs`,
+`npm run probe:retrieval`).
 
 ### S-9 Retire the old plane
 **Status: todo** · Debt: D-11 · Depends: S-6
@@ -554,6 +563,27 @@ condition.
 
 **Accepts when:** the deployment is gone, the four credentials are revoked in
 their own systems, and the source file is removed in a commit that says why.
+
+### S-10 Retrieval
+**Status: blocked (on a design conversation, not on code)** · Depends: S-8 (probe answered)
+
+The mechanism is decided by measurement: FTS5 inside the Durable Object, per
+`RETRIEVAL-PROBE.md`. The DESIGN is not decided and must not be inferred. Before
+any `op=search` is built, Bob settles the five open questions recorded at the
+end of that document: the indexed surface (frontmatter carries locators, which
+is a fence question), the result contract (ids, ranked snippets, provenance into
+Context), viewer-position visibility filtering (the D-15 obligation, coupled to
+the membership model), public scope and the latent `op=index` public-class
+inconsistency, and transactional maintenance inside `promote`.
+
+A flat member-scope search over the working corpus is not coupled to the unbuilt
+membership work; a viewer-filtered search is. That is the natural seam if the
+arc is split.
+
+**Accepts when:** the design questions are answered by Bob, then an `op=search`
+that runs FTS5 inside the object returns results agreeing exactly with a
+brute-force scan over the same query semantics, proven by a test held to the
+`op=audit` agreement standard, and is reachable only by member class or above.
 
 ---
 
