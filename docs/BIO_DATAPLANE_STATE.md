@@ -1,5 +1,61 @@
 # BIO data plane: source state, migration plan, and build status
 
+v16, July 25, 2026. Current state, on top of v15 and the v14 and v13 narratives
+below. The plane is **0.17.0**. S-10 RETRIEVAL IS COMPLETE: steps 1 through 5.
+Battery **1032 assertions across 25 suites in about 79 seconds**. Live record
+unchanged at 30 bundles.
+
+**Selections shipped (step 5).** Two kinds, because two intents were wearing one
+word. A QUERY selection is what select-all makes: the operator picked a
+criterion, so the current answer to the criterion is the correct set, and no
+items are stored at all. That is O(1) storage and it is the honest
+representation of what was meant rather than a size optimisation in disguise. An
+ENUMERATED selection is specific items: membership frozen, each stored with the
+sha it carried when picked. An enumeration above 10,000 items is REFUSED rather
+than downgraded to a query, because downgrading would change what the operator's
+click meant.
+
+Drift is detected exactly and never absorbed. A revision is reported and
+CLASSIFIED from the manifest's own `writer` and `operation`, so a monitor tick
+reads differently from a member's rewrite. A purge is named. Visibility can only
+shrink a selection, and that is not a policy choice: a frozen selection that
+preserved access past a revocation would be a visibility leak outliving the
+revocation. What drift MEANS depends on the action's weight, per Bob: a citing
+action proceeds and reports, a state-changing action refuses and hands over
+nothing so it cannot half-run.
+
+Keep-alive is 300 seconds refreshed on read, the same number and shape as
+`leases`, because a Worker holds no connection and a closed view is
+unobservable, so the plane requires proof of life instead. A Durable Object alarm
+sweeps what the lazy sweep cannot reach. A selection is the first thing in this
+store that is legitimately collectable, and that exception to append-only
+doctrine is written into the schema comment as well as the register.
+
+**MEASURED, and the correction that matters (D-32).** `npm run bench:retrieval`
+loads a corpus through the real `promote` and drives the real `op=search`. At
+20,000 bundles the shipped path runs 5ms to 163ms. Probe 2 recorded nothing
+above ~46ms, and those numbers were taken with a probe object that is not this
+code: no gate, no provenance projection, no facet pass. Quoting them for this
+code was wrong and has stopped.
+
+Two structural causes were found by that bench and fixed, halving the worst
+shape from 305ms:
+
+- The viewer gate was a CTE intersected into every statement, costing a full
+  table scan per statement. It is now a WHERE predicate on rows already
+  selected. Same guarantee, same single compilation point, a fraction of the
+  cost.
+- The facet pass ran one statement per field, rebuilding the same scope six
+  times. It is now batched.
+
+**Two workerd limits, both far below SQLite's documented defaults, both found by
+the bench and not by the suite (D-36).** A statement binds about 100 variables,
+not 32,766. A compound SELECT takes five terms, not 500. The second would have
+broken the compiler on six metadata filters, which is one ordinary pass over a
+filter sidebar. Compound chains now nest through subqueries at four per
+compound, id lists chunk at 64, and the suite asserts the nesting across four
+query shapes.
+
 v15, July 25, 2026. Current state, on top of the v14 and v13 narratives below.
 The plane is **0.16.0**. S-10 RETRIEVAL steps 2, 3 and 4 shipped: the text index,
 the query language, and `op=search`. Battery **1030 assertions across 24 suites

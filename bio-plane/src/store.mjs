@@ -134,6 +134,52 @@ export class Store extends DurableObject {
       `CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(
          ${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`);
 
+    /* S-10 step 5: server-side selections.
+     *
+     * A selection is the FIRST thing in this store that is legitimately
+     * collectable. Everything else is append-only by doctrine, and a sweep that
+     * deletes rows would read as a violation to anyone who did not know why, so
+     * the exception is written here as well as in the debt register: a selection
+     * is DERIVED, it holds no assertion about the world, and losing one costs a
+     * member a click. Nothing else in this schema has that property.
+     *
+     * Two kinds, because two different intents were wearing one word:
+     *   query       the operator picked a CRITERION and said "all of these", so
+     *               the current answer to the criterion is the correct set by
+     *               definition. No items are stored at all: the query plus a
+     *               digest of the ordered id list is O(1) and still detects
+     *               drift exactly.
+     *   enumerated  the operator picked SPECIFIC items. Membership is frozen,
+     *               and items are stored with the sha each carried when it was
+     *               picked, which is what makes revision drift a comparison.
+     *
+     * Collapsing the two would mean a large enumeration silently became a query
+     * at whatever size a storage cap sat, which changes what the operator's
+     * click meant. So the cap on an enumeration is a REFUSAL, not a fallback. */
+    this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS selections (
+         handle     TEXT PRIMARY KEY,
+         owner      TEXT NOT NULL,
+         kind       TEXT NOT NULL,
+         q          TEXT NOT NULL,
+         sort_field TEXT, sort_dir TEXT,
+         created    TEXT NOT NULL,
+         touched    TEXT NOT NULL,
+         expires    TEXT NOT NULL,
+         n          INTEGER NOT NULL,
+         digest     TEXT NOT NULL
+       )`);
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS selections_owner ON selections(owner)`);
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS selections_expires ON selections(expires)`);
+    this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS selection_items (
+         handle     TEXT NOT NULL,
+         ord        INTEGER NOT NULL,
+         bundle_id  TEXT NOT NULL,
+         bundle_sha TEXT NOT NULL,
+         PRIMARY KEY (handle, ord)
+       )`);
+
     /* Backfill. Rows written before these columns existed carry an empty
        projection, and nothing downstream can tell that apart from a bundle whose
        frontmatter genuinely says nothing. Re-derive from the stored bundle.md,
@@ -373,9 +419,12 @@ export class Store extends DurableObject {
     }
 
     if (input.facets !== false && mode !== "count") {
-      out.facets = {};
-      for (const f of plan.facetFields)
-        out.facets[f] = this.#runQuery(plan.statements.facet(f), tally);
+      out.facets = Object.fromEntries(plan.facetFields.map((f) => [f, []]));
+      /* One statement for every facet, not one per field. Six statements meant
+         six rebuilds of the same scope and measured 283ms at 20,000 bundles. */
+      for (const stmt of plan.statements.facets())
+        for (const r of this.#runQuery(stmt, tally))
+          (out.facets[r.field] ||= []).push({ value: r.value, n: r.n });
     }
 
     /* The affordance that makes AND safe. AND's failure mode is nothing found
@@ -462,6 +511,268 @@ export class Store extends DurableObject {
       cursor: rows.length === cap ? last : null,
       ok: findings.length === 0 && orphans.length === 0,
     };
+  }
+
+  /* ---- S-10 step 5: selections ----
+   *
+   * KEEP-ALIVE, 300 seconds, refreshed on read. The same number and the same
+   * shape as `leases`, deliberately: a Worker holds no connection, so a closed
+   * tab is unobservable and the plane can only require proof of life. A view
+   * that is still on screen keeps its selection alive by using it; one that is
+   * gone stops paying. Bob's decision, 2026-07-25, explicitly provisional: only
+   * operational experience will say whether 300s is right.
+   */
+  static SELECTION_TTL_MS = 300000;
+  static SELECTION_MAX_ITEMS = 10000;   // an enumeration above this is REFUSED, never downgraded
+  static SELECTION_MAX_PER_OWNER = 32;
+  /* MEASURED, and lower than SQLite's documented default by two orders of
+     magnitude: workerd refuses a statement binding more than about 100
+     variables. Binary-searched through this exact code path on 2026-07-25, where
+     the largest id list that compiled was 99, with the gate, ranking and limit
+     arguments sharing the same budget. 64 leaves headroom for arguments a future
+     CTE arm adds without silently reintroducing the failure. Found by the scale
+     bench and not by the suite, because no test had ever enumerated more than a
+     handful of ids; test/selection.test.mjs now crosses the boundary on purpose. */
+  static SELECTION_ID_CHUNK = 64;
+
+  #sweepSelections() {
+    const now = new Date().toISOString();
+    const dead = this.#rows(`SELECT handle FROM selections WHERE expires < ?`, now).map((r) => r.handle);
+    for (const h of dead) {
+      this.sql.exec(`DELETE FROM selection_items WHERE handle=?`, h);
+      this.sql.exec(`DELETE FROM selections WHERE handle=?`, h);
+    }
+    return dead.length;
+  }
+
+  /* The alarm is the backstop for the case the lazy sweep cannot cover: a member
+     makes a selection and never comes back, so no later call arrives to clean up
+     behind them. Rescheduled while any selection is live and left unset when
+     none is, so an idle instance carries no timer. */
+  async #armSweep() {
+    const live = this.#one(`SELECT count(*) c FROM selections`).c;
+    const at = await this.ctx.storage.getAlarm();
+    if (live > 0 && at === null)
+      await this.ctx.storage.setAlarm(Date.now() + Store.SELECTION_TTL_MS + 30000);
+  }
+
+  async alarm() {
+    this.#sweepSelections();
+    if (this.#one(`SELECT count(*) c FROM selections`).c > 0)
+      await this.ctx.storage.setAlarm(Date.now() + Store.SELECTION_TTL_MS + 30000);
+  }
+
+  static #digestOf(ids) {
+    /* A cheap order-sensitive digest. It answers "is this the same ordered set"
+       and nothing else, which is exactly what a query selection needs and all it
+       can afford at O(1) storage. */
+    let h1 = 0x811c9dc5, h2 = 0x01000193;
+    for (const s of ids) for (let i = 0; i < s.length; i++) {
+      h1 = Math.imul(h1 ^ s.charCodeAt(i), 0x01000193) >>> 0;
+      h2 = Math.imul(h2 + s.charCodeAt(i) + i, 0x85ebca6b) >>> 0;
+    }
+    return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
+  }
+
+  /** Create a selection. `kind` is decided by what the caller supplied, not by
+   *  size: an explicit id list is an enumeration, a bare query is a query
+   *  selection. Bob settled that select-all means the query, 2026-07-25. */
+  async selectionCreate({ q = "", viewer = null, owner = null, sort = null, dir = null,
+                          ids = null, kind = null } = {}) {
+    if (!owner) return { ok: false, reason: "NO_OWNER", detail: "a selection is owned by the credential that made it" };
+    this.#sweepSelections();
+    const wanted = kind || (Array.isArray(ids) && ids.length ? "enumerated" : "query");
+    if (wanted !== "query" && wanted !== "enumerated")
+      return { ok: false, reason: "BAD_KIND", detail: "a selection is 'query' or 'enumerated'" };
+
+    const tally = { applied: 0 };
+    let members = [];
+    if (wanted === "enumerated") {
+      const list = [...new Set((ids || []).map(String))];
+      if (!list.length) return { ok: false, reason: "EMPTY", detail: "an enumerated selection needs at least one id" };
+      if (list.length > Store.SELECTION_MAX_ITEMS)
+        return { ok: false, reason: "TOO_LARGE", limit: Store.SELECTION_MAX_ITEMS, got: list.length,
+                 detail: "an enumeration this large is refused rather than quietly turned into a query selection, "
+                       + "because that would change what the operator's click meant. Select by query instead." };
+      /* Chunked, because SQLite bounds how many variables one statement binds.
+         Every chunk still goes through compile() and therefore through the
+         viewer gate: an id the viewer may not see never enters the selection. */
+      for (let i = 0; i < list.length; i += Store.SELECTION_ID_CHUNK) {
+        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + Store.SELECTION_ID_CHUNK) });
+        members.push(...this.#runQuery(plan.statements.snapshot(), tally));
+      }
+    } else {
+      const plan = compile({ q, viewer, sort, dir });
+      members = this.#runQuery(plan.statements.snapshot(), tally);
+    }
+
+    const handle = "sel-" + Store.#rand(12);
+    const now = new Date();
+    const rec = {
+      handle, owner, kind: wanted, q: String(q ?? ""),
+      sort_field: sort || null, sort_dir: dir || null,
+      created: now.toISOString(), touched: now.toISOString(),
+      expires: new Date(now.getTime() + Store.SELECTION_TTL_MS).toISOString(),
+      n: members.length, digest: Store.#digestOf(members.map((m) => m.bundle_id)),
+    };
+    this.ctx.storage.transactionSync(() => {
+      /* Over the per-owner cap, the OLDEST is collected rather than the new one
+         refused. A selection is derived and losing one costs a click, so
+         refusing a member's current action to preserve a stale one is the wrong
+         trade. */
+      const mine = this.#rows(`SELECT handle FROM selections WHERE owner=? ORDER BY created`, owner);
+      for (const old of mine.slice(0, Math.max(0, mine.length + 1 - Store.SELECTION_MAX_PER_OWNER))) {
+        this.sql.exec(`DELETE FROM selection_items WHERE handle=?`, old.handle);
+        this.sql.exec(`DELETE FROM selections WHERE handle=?`, old.handle);
+      }
+      this.sql.exec(
+        `INSERT INTO selections (handle,owner,kind,q,sort_field,sort_dir,created,touched,expires,n,digest)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        rec.handle, rec.owner, rec.kind, rec.q, rec.sort_field, rec.sort_dir,
+        rec.created, rec.touched, rec.expires, rec.n, rec.digest);
+      /* A query selection stores NO items. The criterion is the intent, so the
+         current answer to it is the correct set, and the digest is enough to
+         say whether it moved. */
+      if (rec.kind === "enumerated")
+        members.forEach((m, i) => this.sql.exec(
+          `INSERT INTO selection_items (handle,ord,bundle_id,bundle_sha) VALUES (?,?,?,?)`,
+          rec.handle, i, m.bundle_id, m.bundle_sha));
+    });
+    await this.#armSweep();
+    return { ok: true, handle: rec.handle, kind: rec.kind, n: rec.n, q: rec.q,
+             expires: rec.expires, ttlSeconds: Store.SELECTION_TTL_MS / 1000,
+             gate: { applied: tally.applied } };
+  }
+
+  /* How a revision is classified. The manifest already records who wrote a
+     revision and what operation they claimed, so a monitor tick can be told
+     apart from a member rewriting the analysis without inventing a second
+     record of the same fact. */
+  #revisionKind(bundleId) {
+    const m = this.#one(
+      `SELECT writer, operation FROM manifest WHERE bundle_id=? ORDER BY created DESC, snap_key DESC LIMIT 1`, bundleId);
+    if (!m) return { class: "unknown" };
+    return m.writer === "mechanical"
+      ? { class: "mechanical", operation: m.operation || null }
+      : { class: "authored" };
+  }
+
+  /** Resolve a selection to its current membership, with a drift report.
+   *
+   *  `weight` is the ACTION's weight, and it decides what drift means:
+   *    report   the action proceeds and says what moved. Citing Information in
+   *             a Project is this: the operator's intent survives a source
+   *             having been re-captured.
+   *    refuse   the action stops and the operator looks again. Anything that
+   *             changes state is this, because a state transition landing on a
+   *             set the operator did not see is exactly the accountability
+   *             failure the record exists to prevent.
+   *  Bob's decision, 2026-07-25. */
+  selectionResolve({ handle, viewer = null, owner = null, weight = "report" } = {}) {
+    this.#sweepSelections();
+    const sel = this.#one(`SELECT * FROM selections WHERE handle=?`, handle);
+    if (!sel) return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
+    /* Ownership is enforced, not inferred from the handle being hard to guess.
+       A capability that is only protected by being unguessable is protected by
+       nothing once it appears in a log. */
+    if (!owner || sel.owner !== owner)
+      return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
+
+    const now = new Date();
+    this.sql.exec(`UPDATE selections SET touched=?, expires=? WHERE handle=?`,
+      now.toISOString(), new Date(now.getTime() + Store.SELECTION_TTL_MS).toISOString(), handle);
+
+    const tally = { applied: 0 };
+    const drift = { revised: [], purged: [], hidden: [], added: 0, removed: 0, kind: sel.kind };
+    let members;
+
+    if (sel.kind === "enumerated") {
+      const stored = this.#rows(
+        `SELECT ord, bundle_id, bundle_sha FROM selection_items WHERE handle=? ORDER BY ord`, handle);
+      /* Re-run through the compiler with the CURRENT viewer, so an item the
+         viewer may no longer see leaves the selection. This is not a courtesy:
+         a frozen selection that preserved access past a revocation would be a
+         visibility leak that outlives the revocation. */
+      const visible = new Map();
+      const idList = stored.map((r) => r.bundle_id);
+      for (let i = 0; i < idList.length; i += Store.SELECTION_ID_CHUNK) {
+        const plan = compile({ q: "", viewer, sort: sel.sort_field, dir: sel.sort_dir, ids: idList.slice(i, i + Store.SELECTION_ID_CHUNK) });
+        for (const r of this.#runQuery(plan.statements.snapshot(), tally)) visible.set(r.bundle_id, r.bundle_sha);
+      }
+      members = [];
+      for (const s of stored) {
+        if (!visible.has(s.bundle_id)) {
+          const exists = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, s.bundle_id);
+          (exists ? drift.hidden : drift.purged).push(s.bundle_id);
+          continue;
+        }
+        const nowSha = visible.get(s.bundle_id);
+        if (nowSha !== s.bundle_sha)
+          drift.revised.push({ bundleId: s.bundle_id, was: s.bundle_sha, now: nowSha, ...this.#revisionKind(s.bundle_id) });
+        members.push({ bundle_id: s.bundle_id, bundle_sha: nowSha });
+      }
+      drift.removed = drift.purged.length + drift.hidden.length;
+      /* Never added. The operator picked items, not a criterion, so a bundle
+         that started matching is not something they asked for. */
+    } else {
+      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir });
+      members = this.#runQuery(plan.statements.snapshot(), tally);
+      const digest = Store.#digestOf(members.map((m) => m.bundle_id));
+      if (digest !== sel.digest) {
+        drift.added = Math.max(0, members.length - sel.n);
+        drift.removed = Math.max(0, sel.n - members.length);
+        drift.digestChanged = true;
+        /* A query selection stores no items, so it can say the set moved and by
+           how much, and cannot say which rows moved. That is the cost of O(1)
+           storage and it is the right thing to lose: the criterion is the
+           intent, so the current answer is the correct set. */
+        drift.detail = "the criterion now answers differently; which rows moved is not recoverable "
+                     + "because a query selection stores the criterion rather than the rows";
+      }
+    }
+
+    const moved = drift.revised.length + drift.removed + drift.added > 0;
+    const stopped = moved && weight === "refuse";
+    return {
+      ok: !stopped, handle, kind: sel.kind, q: sel.q, owner: sel.owner,
+      n: members.length, snapshotN: sel.n, weight, moved,
+      ...(stopped ? { reason: "SET_MOVED",
+                      detail: "this action changes state, so it will not run against a set that moved "
+                            + "since it was selected. Look at the selection again and re-select." } : {}),
+      drift, members: stopped ? [] : members.map((m) => m.bundle_id),
+      expires: new Date(now.getTime() + Store.SELECTION_TTL_MS).toISOString(),
+      gate: { applied: tally.applied },
+    };
+  }
+
+  selectionList({ owner = null } = {}) {
+    this.#sweepSelections();
+    if (!owner) return { ok: false, reason: "NO_OWNER" };
+    return {
+      ok: true, ttlSeconds: Store.SELECTION_TTL_MS / 1000,
+      selections: this.#rows(
+        `SELECT handle, kind, q, n, created, touched, expires FROM selections WHERE owner=? ORDER BY created DESC`, owner),
+      caps: { maxItems: Store.SELECTION_MAX_ITEMS, maxPerOwner: Store.SELECTION_MAX_PER_OWNER },
+      bytes: this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`).b,
+    };
+  }
+
+  selectionRelease({ handle = null, owner = null } = {}) {
+    if (!owner) return { ok: false, reason: "NO_OWNER" };
+    const sel = handle ? this.#one(`SELECT owner FROM selections WHERE handle=?`, handle) : null;
+    if (handle && (!sel || sel.owner !== owner)) return { ok: false, reason: "NOT_YOURS" };
+    const before = this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c;
+    this.ctx.storage.transactionSync(() => {
+      if (handle) {
+        this.sql.exec(`DELETE FROM selection_items WHERE handle=?`, handle);
+        this.sql.exec(`DELETE FROM selections WHERE handle=?`, handle);
+      } else {
+        for (const r of this.#rows(`SELECT handle FROM selections WHERE owner=?`, owner))
+          this.sql.exec(`DELETE FROM selection_items WHERE handle=?`, r.handle);
+        this.sql.exec(`DELETE FROM selections WHERE owner=?`, owner);
+      }
+    });
+    return { ok: true, released: before - this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c };
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -905,6 +1216,7 @@ export class Store extends DurableObject {
     return {
       bundles: n("bundles"), files: n("files"), history: n("history"),
       refs: n("refs"), register: n("register"), indexed: n("bundles_fts"),
+      selections: n("selections"), selectionItems: n("selection_items"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -939,6 +1251,12 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM bundles_fts`);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`);
         this.sql.exec(`DELETE FROM bundles`);
+        /* Selections are derived, so a purge of everything takes them too. A
+           purge of ONE bundle deliberately leaves them alone: the selection
+           should report that item as purged rather than silently forget it was
+           ever picked. */
+        this.sql.exec(`DELETE FROM selection_items`);
+        this.sql.exec(`DELETE FROM selections`);
       }
     });
     const after = this.stats();
@@ -1296,6 +1614,27 @@ export class Store extends DurableObject {
           snippetChars: Number(url.searchParams.get("snippet")) || 12,
         }),
         searchfields: () => this.searchFields(),
+        /* Selections. `viewer` and `owner` are both stamped by the control plane
+           from the authenticated credential and are never taken from the
+           caller's own parameters there. */
+        select: () => this.selectionCreate({
+          q: url.searchParams.get("q") ?? "",
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          sort: url.searchParams.get("sort"),
+          dir: url.searchParams.get("dir"),
+          kind: url.searchParams.get("kind"),
+          ids: Array.isArray(body?.ids) ? body.ids : null,
+        }),
+        selection: () => this.selectionResolve({
+          handle: url.searchParams.get("handle"),
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          weight: url.searchParams.get("weight") === "refuse" ? "refuse" : "report",
+        }),
+        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
+        selectionrelease: () => this.selectionRelease({
+          handle: url.searchParams.get("handle"), owner: url.searchParams.get("owner") }),
         searchindexcheck: () => this.searchIndexCheck({
           after: url.searchParams.get("after") || "",
           limit: url.searchParams.get("limit"),

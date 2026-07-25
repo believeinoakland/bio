@@ -112,6 +112,13 @@ export const GATE_MARK = "/*viewer-gate*/";
  * dangerous default is the permissive one, and this makes the permissive answer
  * something a viewer must earn.
  * ------------------------------------------------------------------------- */
+/* The predicate is written over the alias `b`, which every statement binds to
+   `bundles`. It is a WHERE clause and NOT a set intersected into the scope CTE:
+   the first shipped version made it a CTE and paid a full table scan plus an
+   INTERSECT in every statement, which measured 283ms for a facet sidebar at
+   20,000 bundles against the probe's 5ms. A predicate on rows already selected
+   is the same guarantee at a fraction of the cost, and it is still exactly one
+   compilation point because every statement below takes its WHERE from here. */
 export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
   /* class:<token class> for a machine credential, member:<id> for a session.
@@ -460,6 +467,32 @@ function rankExpr(atoms) {
 
 const ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
 
+/* MEASURED: workerd refuses a compound SELECT of more than five terms
+   ("too many terms in compound SELECT"), which is far below SQLite's documented
+   default of 500. Six metadata filters, which is one ordinary pass over a filter
+   sidebar, is enough to reach it. Found by the scale bench on 2026-07-25 while
+   folding the facet counts into one statement, and it turned out to threaten the
+   COMPILER rather than only the facets. Four per compound leaves headroom, and
+   longer chains nest through a subquery, which is its own compound and starts the
+   count again. */
+const MAX_COMPOUND = 4;
+
+function chain(op, parts) {
+  if (!parts.length) return { sql: ALL, args: [], compound: false };
+  if (parts.length === 1) return { sql: parts[0].sql, args: parts[0].args, compound: !!parts[0].compound };
+  if (parts.length <= MAX_COMPOUND)
+    return { sql: parts.map((p) => p.sql).join(` ${op} `), args: parts.flatMap((p) => p.args), compound: true };
+  /* Grouped left to right, which preserves meaning for all three operators:
+     INTERSECT and UNION are associative, and EXCEPT is left-associative, so
+     (a EXCEPT b EXCEPT c) EXCEPT d is what an unwrapped chain would have meant. */
+  const groups = [];
+  for (let i = 0; i < parts.length; i += MAX_COMPOUND) groups.push(parts.slice(i, i + MAX_COMPOUND));
+  return chain(op, groups.map((g) => {
+    const c = chain(op, g);
+    return { sql: c.compound ? `SELECT fid FROM (${c.sql})` : c.sql, args: c.args, compound: false };
+  }));
+}
+
 function metaSql(node) {
   const lhs = node.json ? `json_extract(fm_json, ?)` : node.col;
   const args = node.json ? [node.json] : [];
@@ -484,23 +517,18 @@ function setSql(node) {
     const inner = operand(setSql(node.kid));
     return { sql: `${ALL} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
   }
-  if (node.op === "or") {
-    const parts = node.kids.map((k) => operand(setSql(k)));
-    return { sql: parts.map((p) => p.sql).join(" UNION "), args: parts.flatMap((p) => p.args), compound: true };
-  }
+  if (node.op === "or")
+    return chain("UNION", node.kids.map((k) => operand(setSql(k))));
   if (node.op === "and") {
     const pos = node.kids.filter((k) => k.op !== "not");
     const neg = node.kids.filter((k) => k.op === "not").map((k) => k.kid);
-    const posParts = (pos.length ? pos : [null]).map((k) => operand(setSql(k)));
-    let sql = posParts.map((p) => p.sql).join(" INTERSECT ");
-    let args = posParts.flatMap((p) => p.args);
-    if (neg.length) {
-      /* The positive side is a compound in its own right when there was more
-         than one arm, so it is wrapped before EXCEPT is applied to it. */
-      if (posParts.length > 1) sql = `SELECT fid FROM (${sql})`;
-      for (const n of neg) { const o = operand(setSql(n)); sql += ` EXCEPT ${o.sql}`; args = args.concat(o.args); }
-    }
-    return { sql, args, compound: posParts.length > 1 || neg.length > 0 };
+    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k))));
+    if (!neg.length) return posChain;
+    /* The positive side is a compound in its own right when it had more than one
+       arm, so it is wrapped before EXCEPT is applied to it. */
+    const head = { sql: posChain.compound ? `SELECT fid FROM (${posChain.sql})` : posChain.sql,
+                   args: posChain.args, compound: false };
+    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n)))]);
   }
   return { sql: ALL, args: [], compound: false };
 }
@@ -524,7 +552,7 @@ export const PROVENANCE_COLS = [
 export const LIMIT_DEFAULT = 50, LIMIT_MAX = 500, IDS_MAX = 50000;
 
 export function compile({ q = "", viewer = null, sort = null, dir = null,
-                          limit = LIMIT_DEFAULT, offset = 0,
+                          limit = LIMIT_DEFAULT, offset = 0, ids = null,
                           facets = null, implicitOp = "and", snippetChars = 12 } = {}) {
   const ctx = { warnings: [], textAtoms: [], sort: null };
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
@@ -550,12 +578,27 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      facets, and select-all identically. There is no path to `hits` that does
      not go through `scope`. */
   const cte = (withRanked) => {
-    const parts = [
-      `gated(fid) AS (SELECT fts_id AS fid FROM bundles WHERE ${gate.sql} AND fts_id IS NOT NULL)`,
-      `hits(fid) AS (${set.sql})`,
-      `scope(fid) AS (SELECT fid FROM hits INTERSECT SELECT fid FROM gated)`,
-    ];
-    const args = [...gate.args, ...set.args];
+    /* An explicit id list is an ARM of the query, not a filter applied after it.
+       Compiling it here is what keeps a stored selection on the same path as
+       everything else: it passes the viewer gate, it obeys the sort, and it is
+       executed by the one guarded executor. A selection resolved by any other
+       route would be the second query path this design exists to prevent.
+       The caller chunks the list; SQLite bounds how many variables one statement
+       may bind, and a 10,000-item selection would exceed it. */
+    const idArm = Array.isArray(ids) && ids.length
+      ? { sql: `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids }
+      : null;
+    /* `picked` exists only when there IS an id restriction. The first version
+       emitted a match-all CTE and intersected it unconditionally, which is a
+       second full table scan buying nothing. */
+    const parts = [`hits(fid) AS (${set.sql})`];
+    if (idArm) {
+      parts.push(`picked(fid) AS (${idArm.sql})`);
+      parts.push(`scope(fid) AS (SELECT fid FROM hits INTERSECT SELECT fid FROM picked)`);
+    } else {
+      parts.push(`scope(fid) AS (SELECT fid FROM hits)`);
+    }
+    const args = [...set.args, ...(idArm ? idArm.args : [])];
     if (withRanked && rank) {
       parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, `
                + `snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
@@ -585,28 +628,58 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   const page = () => {
     const c = cte(true);
     return { sql: `${c.sql}\nSELECT ${cols}${scored} FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
-                + `ORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, lim, off] };
+                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
   };
   const count = () => {
     const c = cte(false);
-    return { sql: `${c.sql}\nSELECT count(*) AS n FROM scope`, args: c.args };
+    return { sql: `${c.sql}\nSELECT count(*) AS n FROM scope s JOIN bundles b ON b.fts_id = s.fid WHERE ${gate.sql}`,
+             args: [...c.args, ...gate.args] };
   };
   /* Select-all: every id in the set in the presentation order, which is a
      different request from a page and is treated as one. Ordered identically so
      the set an operator selected is the set they were looking at. */
-  const ids = () => {
+  const idsStmt = () => {
     const c = cte(true);
     return { sql: `${c.sql}\nSELECT b.bundle_id FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
-                + `ORDER BY ${order} LIMIT ?`, args: [...c.args, IDS_MAX] };
+                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
+  };
+  /* A selection snapshot needs the sha each item carried WHEN IT WAS SELECTED,
+     because that is what makes revision drift detectable later as a comparison
+     rather than a guess. Same order as the page, so the set an operator selected
+     is the set they were looking at. */
+  const snapshot = () => {
+    const c = cte(true);
+    return { sql: `${c.sql}\nSELECT b.bundle_id, b.bundle_sha FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
+                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
   const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS)
     .map((f) => String(f).toLowerCase()).filter((f) => f in FIELDS);
-  const facet = (name) => {
-    const f = FIELDS[name];
-    if (!f) return null;
-    const c = cte(false);
-    return { sql: `${c.sql}\nSELECT b.${f.col} AS value, count(*) AS n FROM scope s JOIN bundles b ON b.fts_id = s.fid\n`
-                + `WHERE b.${f.col} IS NOT NULL GROUP BY b.${f.col} ORDER BY n DESC, value ASC LIMIT 64`, args: c.args };
+  /* ALL the facets in ONE statement. The first version ran one statement per
+     field, so a six-facet sidebar rebuilt the scope six times and measured 283ms
+     at 20,000 bundles. MATERIALIZED tells SQLite to compute the scope once and
+     reuse it across the arms rather than inlining it into each. */
+  /* Facet counts batched into as few statements as the compound limit allows,
+     rather than one statement per field. One per field meant a six-facet sidebar
+     rebuilt the same scope six times and measured 283ms at 20,000 bundles.
+     MATERIALIZED tells SQLite to compute the scope once and reuse it across the
+     arms instead of inlining it into each. */
+  const facets_ = () => {
+    if (!facetList.length) return [];
+    const out = [];
+    for (let i = 0; i < facetList.length; i += MAX_COMPOUND) {
+      const group = facetList.slice(i, i + MAX_COMPOUND);
+      const c = cte(false);
+      const arms = group.map((name) => {
+        const f = FIELDS[name];
+        return `SELECT '${name}' AS field, b.${f.col} AS value, count(*) AS n\n`
+             + `  FROM scope s JOIN bundles b ON b.fts_id = s.fid\n`
+             + `  WHERE ${gate.sql} AND b.${f.col} IS NOT NULL GROUP BY b.${f.col}`;
+      });
+      out.push({ sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}\n`
+                    + arms.join("\nUNION ALL\n") + `\nORDER BY field ASC, n DESC, value ASC`,
+                 args: [...c.args, ...group.flatMap(() => gate.args)] });
+    }
+    return out;
   };
 
   return {
@@ -614,6 +687,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     sort: { field: sortField, dir: sortDir }, limit: lim, offset: off,
     match: rank, terms: ctx.textAtoms.map((a) => a.value), widenable,
     facetFields: facetList,
-    statements: { page, count, ids, facet },
+    restricted: Array.isArray(ids) && ids.length > 0,
+    statements: { page, count, ids: idsStmt, snapshot, facets: facets_ },
   };
 }

@@ -78,10 +78,17 @@ console.log("\n--- the compiler is the only place a query comes from ---");
   /* Every compiled statement the store executes goes through the one guarded
      executor. Checked on the source because the guard is what protects the code
      that has not been written yet. */
-  const uses = store.split("\n").filter((l) => /\.statements\./.test(l));
+  /* Checked in a WINDOW rather than per line, because a batched statement is
+     consumed by a loop whose #runQuery sits on the next line. What matters is
+     that no compiled statement reaches the engine by any other route. */
+  const uses = [];
+  for (let i = store.indexOf(".statements."); i !== -1; i = store.indexOf(".statements.", i + 1))
+    uses.push(store.slice(Math.max(0, i - 80), i + 160));
   t("the store executes compiled statements", uses.length > 0, true);
   t("and every one of them goes through #runQuery",
-    uses.filter((l) => !/#runQuery\(/.test(l)).map((l) => l.trim()), []);
+    uses.filter((w) => !/#runQuery\(/.test(w)).length, 0);
+  t("no compiled statement is handed to the raw row helper instead",
+    /#rows\([^)]*statements\./.test(store) || /sql\.exec\([^)]*statements\./.test(store), false);
   t("the guard refuses a statement without the gate", /REFUSED: a retrieval statement/.test(store), true);
 }
 
@@ -278,8 +285,11 @@ console.log("\n--- the viewer gate returns nothing on every shape, not merely on
     Object.values(facets.facets).every((v) => v.length === 0), true);
   t("an unrecognised viewer string is denied, not trusted",
     (await call("/search?q=fund&viewer=admin-ish")).gate.scope, "DENY");
+  /* Four, not eight: a count, a page, and the facet pass batched into two
+     statements. It was eight when each of six facets ran its own statement, and
+     that cost 283ms at 20,000 bundles. */
   t("the gate is applied to every statement the request ran",
-    (await call("/search?q=fund&viewer=class:member")).gate.applied, 8);
+    (await call("/search?q=fund&viewer=class:member")).gate.applied, 4);
 }
 
 console.log("\n--- AND semantics, and the affordance that makes AND safe ---");
@@ -369,6 +379,15 @@ console.log("\n--- facet counts drive the filter sidebar ---");
   t("a caller can name the facets it wants",
     Object.keys((await S("q=&facets=criticality")).facets), ["criticality"]);
   t("and can turn them off", (await S("q=&facets=none")).facets, undefined);
+  /* Reachable by a member with one pass over a filter sidebar, and it failed
+     until 2026-07-25: workerd refuses a compound SELECT of more than five terms,
+     so seven filters must nest rather than chain. */
+  t("seven metadata filters execute rather than being refused by the engine",
+    (await S("q=type:information state:collected criticality:crucial classification:fact "
+           + "schema:information@2 status:modified monitored:true&facets=none".replace(/ /g, "+")))
+      .total >= 0, true);
+  t("a seven-arm OR executes too",
+    (await S("q=state:collected+OR+state:reviewed+OR+state:surfaced+OR+state:retired+OR+state:a+OR+state:b+OR+state:c&facets=none")).total >= 0, true);
 }
 
 console.log("\n--- select-all is a different request from a page ---");

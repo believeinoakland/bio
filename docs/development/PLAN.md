@@ -565,7 +565,7 @@ condition.
 their own systems, and the source file is removed in a commit that says why.
 
 ### S-10 Retrieval
-**Status: in progress. Steps 1 to 4 are DONE in 0.16.0. Step 5 is next** · Depends: S-8 (probe answered)
+**Status: COMPLETE. Steps 1 to 5 done, 0.15.0 through 0.17.0** · Depends: S-8 (probe answered)
 
 **Step 1, done in 0.15.0.** The `bundles` projection now carries every field the
 UX filters on: `schema_id`, `produced_mode`, `capability_tier`, `source_locator`,
@@ -617,20 +617,30 @@ provenance with bm25 relevance and snippets, facet counts for the sidebar, and
 `mode=ids` for select-all. `op=searchfields` publishes the vocabulary so a UI does
 not keep a drifting copy.
 
-**Step 5, server-side selection, is next, and it is a design step first.** D-34
-holds the resource question: a Worker holds no connection, so a closed view is
-unobservable and the plane can only require proof of life. Ownership by session,
-a TTL refreshed on read, an alarm sweep, caps by bytes before count, and
-query-plus-hash instead of materialised ids above the cap. D-35 holds the drift
-question and answers it: detect exactly, classify using the manifest's `writer`
-and `operation` so a monitor tick reads differently from a member's rewrite, and
-never absorb, because a selection records intent and an action landing on rows
-the operator never saw is an accountability failure.
+**Step 5, selections, done in 0.17.0.** Bob settled the three questions on
+2026-07-25. Select-all means the QUERY, so a query selection stores the
+criterion and no items; an enumerated selection freezes specific items with the
+sha each carried; an enumeration above 10,000 is refused rather than downgraded,
+because downgrading would change what the click meant. Keep-alive is 300s
+refreshed on read, with a Durable Object alarm sweeping what the lazy sweep
+cannot reach. Drift is detected exactly, classified from the manifest's `writer`
+and `operation`, and never absorbed; visibility can only shrink a selection, and
+that one is a requirement rather than a policy. What drift means depends on the
+action's weight: citing proceeds and reports, state-changing refuses and hands
+over nothing.
 
-**Read the numbers honestly (D-32).** The 20,000-bundle actuals in
-RETRIEVAL-SUBSTRATE.md came from a probe object that is not this code. The
-shipped path is verified at 600 bundles against workerd and at 30 against the
-live record. Bob's decision was to ship in that condition and carry it forward.
+**The numbers, measured on the real path (D-32).** `npm run bench:retrieval`
+loads a corpus through the real `promote` and drives the real `op=search`: 5ms
+to 163ms at 20,000 bundles, against probe 2's ~46ms ceiling for the substrate
+alone. The bench found two structural costs, both fixed, which halved the worst
+shape from 305ms: the gate was a CTE intersected into every statement rather
+than a WHERE predicate, and the facet pass ran one statement per field. It also
+found two undocumented workerd ceilings, 100 bound variables and five compound
+terms, the second of which would have broken the compiler on six metadata
+filters (D-36).
+
+**Next: the actions that refer to a selection.** The gate they call already
+exists and takes a weight; nothing calls it yet.
 
 
 The scope is a full search, filter, list, sort, and select surface, not free-text

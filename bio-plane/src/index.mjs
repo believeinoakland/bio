@@ -81,6 +81,17 @@ const OPS = {
   /* The verifier for "the index cannot diverge from the corpus": it re-derives
      the expected text row for every bundle and compares. Read-only. */
   searchindexcheck: { classes: ["admin", "member", "probe"],     mutating: false },
+  /* S-10 step 5. A selection is a server-side construct so the set an operator
+     selected is the set an action lands on. Two kinds: a QUERY selection, where
+     the operator picked a criterion and the current answer to it is the correct
+     set by definition, and an ENUMERATED one, where they picked specific items
+     and membership is frozen. `select` is mutating because it writes a snapshot;
+     it writes nothing about the corpus and a probe-class caller is still
+     confined to scratch. */
+  select:          { classes: ["admin", "member", "probe"],      mutating: true  },
+  selection:       { classes: ["admin", "member", "probe"],      mutating: false },
+  selectionlist:   { classes: ["admin", "member", "probe"],      mutating: false },
+  selectionrelease:{ classes: ["admin", "member", "probe"],      mutating: true  },
   list:       { classes: ["admin", "member", "probe"],           mutating: false },
   image:      { classes: ["admin", "member", "probe"],           mutating: false },
   file:       { classes: ["admin", "member", "probe"],           mutating: false },
@@ -148,9 +159,9 @@ const OPS = {
    sessions additionally manage the roster and keys. */
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
-                   "inbox", "inboxget", "inboxresolve", "audit"]),
+                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease"]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
-                   "inbox", "inboxget", "inboxresolve", "audit",
+                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    "memberadd", "memberset", "signeradd", "signerset"]),
 };
 
@@ -979,7 +990,14 @@ export default {
        the only place the identity comes from. A viewer the compiler does not
        recognise compiles to a deny predicate, so the failure mode of a missing
        stamp is an empty result rather than an unfiltered one. */
-    if (op === "search") inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+    if (op === "search" || op === "select" || op === "selection") {
+      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+    }
+    /* Ownership of a selection is the same server-side stamp. A selection is
+       readable only by the credential that made it, and "only by the credential"
+       is worth nothing if the caller names the credential. */
+    if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease")
+      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `class:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
     if (viaSession && op === "promote" && passBody) {
       try { const b = JSON.parse(passBody); b.author = sessMember; passBody = JSON.stringify(b); }

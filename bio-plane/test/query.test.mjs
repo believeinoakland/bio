@@ -29,7 +29,7 @@ const t = (label, got, want) => {
 };
 const M = "class:member";
 const all = (p) => [p.statements.page(), p.statements.count(), p.statements.ids(),
-                    ...p.facetFields.map((f) => p.statements.facet(f))];
+                    p.statements.snapshot(), ...p.statements.facets()];
 
 console.log("\n--- the viewer gate is the single compilation point (D-15) ---");
 {
@@ -46,9 +46,15 @@ console.log("\n--- the viewer gate is the single compilation point (D-15) ---");
   const p = compile({ q: "sewer state:collected", viewer: M });
   const stmts = all(p);
   t("every statement carries the gate", stmts.every((s) => s.sql.includes(GATE_MARK)), true);
-  t("and there are four kinds of statement plus a facet each", stmts.length, 3 + p.facetFields.length);
-  t("the gate appears exactly once per statement",
-    stmts.every((s) => s.sql.split(GATE_MARK).length - 1 === 1), true);
+  t("there are four single statements plus the batched facet statements",
+    stmts.length, 4 + p.statements.facets().length);
+  /* The facet statement counts every field in ONE statement, so it carries the
+     gate once per arm. Every other statement carries it exactly once. What
+     matters is that none carries it zero times. */
+  t("the gate appears at least once in every statement",
+    stmts.every((s) => s.sql.split(GATE_MARK).length - 1 >= 1), true);
+  t("and once per arm across the facet statements",
+    p.statements.facets().reduce((n, st) => n + st.sql.split(GATE_MARK).length - 1, 0), p.facetFields.length);
   t("a denied viewer still produces statements, all of them empty by predicate",
     all(compile({ q: "sewer", viewer: null })).every((s) => s.sql.includes("0=1")), true);
 }
@@ -234,6 +240,35 @@ console.log("\n--- text mixed with metadata is set algebra, because MATCH only k
   t("a compound operand is wrapped as a subquery", hard.sql.includes("SELECT fid FROM (SELECT"), true);
   const ex = compile({ q: "type:information -state:collected", viewer: M }).statements.count();
   t("a negated metadata arm is EXCEPT", ex.sql.includes("EXCEPT"), true);
+}
+
+console.log("\n--- workerd's compound SELECT limit, which is five and not five hundred ---");
+{
+  /* MEASURED, 2026-07-25: workerd refuses a compound of more than five terms.
+     Six metadata filters is one ordinary pass over a filter sidebar, so this is
+     reachable by a member rather than by a stress test. Longer chains nest
+     through a subquery, which starts the count again. */
+  const deepest = (sql) => {
+    let best = 0;
+    for (const seg of sql.split(/SELECT fid FROM \(|\)/)) {
+      const n = (seg.match(/ UNION | INTERSECT | EXCEPT /g) || []).length + 1;
+      if (n > best) best = n;
+    }
+    return best;
+  };
+  for (const [label, q] of [
+    ["a seven-arm OR", "state:a OR state:b OR state:c OR state:d OR state:e OR state:f OR state:g"],
+    ["seven metadata filters", "type:a state:b criticality:c classification:d schema:e status:f mode:g"],
+    ["a twelve-arm OR", Array.from({ length: 12 }, (_, i) => `state:s${i}`).join(" OR ")],
+    ["seven negations", "type:a -state:b -state:c -state:d -state:e -state:f -state:g"],
+  ]) {
+    const p = compile({ q, viewer: M });
+    t(`${label} nests within the limit`, deepest(p.statements.count().sql) <= 5, true);
+  }
+  t("the facet pass is batched rather than one statement per field",
+    compile({ q: "", viewer: M }).statements.facets().length, 2);
+  t("and a single facet is a single statement",
+    compile({ q: "", viewer: M, facets: ["state"] }).statements.facets().length, 1);
 }
 
 console.log("\n--- paging bounds ---");

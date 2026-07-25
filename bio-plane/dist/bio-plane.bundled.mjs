@@ -4659,6 +4659,19 @@ function rankExpr(atoms) {
   return parts.length === 1 ? parts[0] : "(" + parts.join(" OR ") + ")";
 }
 var ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
+var MAX_COMPOUND = 4;
+function chain(op, parts) {
+  if (!parts.length) return { sql: ALL, args: [], compound: false };
+  if (parts.length === 1) return { sql: parts[0].sql, args: parts[0].args, compound: !!parts[0].compound };
+  if (parts.length <= MAX_COMPOUND)
+    return { sql: parts.map((p) => p.sql).join(` ${op} `), args: parts.flatMap((p) => p.args), compound: true };
+  const groups = [];
+  for (let i = 0; i < parts.length; i += MAX_COMPOUND) groups.push(parts.slice(i, i + MAX_COMPOUND));
+  return chain(op, groups.map((g) => {
+    const c = chain(op, g);
+    return { sql: c.compound ? `SELECT fid FROM (${c.sql})` : c.sql, args: c.args, compound: false };
+  }));
+}
 function metaSql(node) {
   const lhs = node.json ? `json_extract(fm_json, ?)` : node.col;
   const args = node.json ? [node.json] : [];
@@ -4684,25 +4697,19 @@ function setSql(node) {
     const inner = operand(setSql(node.kid));
     return { sql: `${ALL} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
   }
-  if (node.op === "or") {
-    const parts = node.kids.map((k) => operand(setSql(k)));
-    return { sql: parts.map((p) => p.sql).join(" UNION "), args: parts.flatMap((p) => p.args), compound: true };
-  }
+  if (node.op === "or")
+    return chain("UNION", node.kids.map((k) => operand(setSql(k))));
   if (node.op === "and") {
     const pos = node.kids.filter((k) => k.op !== "not");
     const neg = node.kids.filter((k) => k.op === "not").map((k) => k.kid);
-    const posParts = (pos.length ? pos : [null]).map((k) => operand(setSql(k)));
-    let sql = posParts.map((p) => p.sql).join(" INTERSECT ");
-    let args = posParts.flatMap((p) => p.args);
-    if (neg.length) {
-      if (posParts.length > 1) sql = `SELECT fid FROM (${sql})`;
-      for (const n of neg) {
-        const o = operand(setSql(n));
-        sql += ` EXCEPT ${o.sql}`;
-        args = args.concat(o.args);
-      }
-    }
-    return { sql, args, compound: posParts.length > 1 || neg.length > 0 };
+    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k))));
+    if (!neg.length) return posChain;
+    const head = {
+      sql: posChain.compound ? `SELECT fid FROM (${posChain.sql})` : posChain.sql,
+      args: posChain.args,
+      compound: false
+    };
+    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n)))]);
   }
   return { sql: ALL, args: [], compound: false };
 }
@@ -4745,6 +4752,7 @@ function compile({
   dir = null,
   limit = LIMIT_DEFAULT,
   offset = 0,
+  ids = null,
   facets = null,
   implicitOp = "and",
   snippetChars = 12
@@ -4759,12 +4767,15 @@ function compile({
   const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
   const off = Math.max(0, Math.floor(Number(offset) || 0));
   const cte = (withRanked) => {
-    const parts = [
-      `gated(fid) AS (SELECT fts_id AS fid FROM bundles WHERE ${gate.sql} AND fts_id IS NOT NULL)`,
-      `hits(fid) AS (${set.sql})`,
-      `scope(fid) AS (SELECT fid FROM hits INTERSECT SELECT fid FROM gated)`
-    ];
-    const args = [...gate.args, ...set.args];
+    const idArm = Array.isArray(ids) && ids.length ? { sql: `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids } : null;
+    const parts = [`hits(fid) AS (${set.sql})`];
+    if (idArm) {
+      parts.push(`picked(fid) AS (${idArm.sql})`);
+      parts.push(`scope(fid) AS (SELECT fid FROM hits INTERSECT SELECT fid FROM picked)`);
+    } else {
+      parts.push(`scope(fid) AS (SELECT fid FROM hits)`);
+    }
+    const args = [...set.args, ...idArm ? idArm.args : []];
     if (withRanked && rank) {
       parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
       args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank);
@@ -4787,27 +4798,52 @@ function compile({
     const c = cte(true);
     return { sql: `${c.sql}
 SELECT ${cols}${scored} FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
-ORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, lim, off] };
+WHERE ${gate.sql}
+ORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
   };
   const count = () => {
     const c = cte(false);
-    return { sql: `${c.sql}
-SELECT count(*) AS n FROM scope`, args: c.args };
+    return {
+      sql: `${c.sql}
+SELECT count(*) AS n FROM scope s JOIN bundles b ON b.fts_id = s.fid WHERE ${gate.sql}`,
+      args: [...c.args, ...gate.args]
+    };
   };
-  const ids = () => {
+  const idsStmt = () => {
     const c = cte(true);
     return { sql: `${c.sql}
 SELECT b.bundle_id FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
-ORDER BY ${order} LIMIT ?`, args: [...c.args, IDS_MAX] };
+WHERE ${gate.sql}
+ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
+  };
+  const snapshot = () => {
+    const c = cte(true);
+    return { sql: `${c.sql}
+SELECT b.bundle_id, b.bundle_sha FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+WHERE ${gate.sql}
+ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
   const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS).map((f2) => String(f2).toLowerCase()).filter((f2) => f2 in FIELDS);
-  const facet = (name) => {
-    const f2 = FIELDS[name];
-    if (!f2) return null;
-    const c = cte(false);
-    return { sql: `${c.sql}
-SELECT b.${f2.col} AS value, count(*) AS n FROM scope s JOIN bundles b ON b.fts_id = s.fid
-WHERE b.${f2.col} IS NOT NULL GROUP BY b.${f2.col} ORDER BY n DESC, value ASC LIMIT 64`, args: c.args };
+  const facets_ = () => {
+    if (!facetList.length) return [];
+    const out = [];
+    for (let i = 0; i < facetList.length; i += MAX_COMPOUND) {
+      const group = facetList.slice(i, i + MAX_COMPOUND);
+      const c = cte(false);
+      const arms = group.map((name) => {
+        const f2 = FIELDS[name];
+        return `SELECT '${name}' AS field, b.${f2.col} AS value, count(*) AS n
+  FROM scope s JOIN bundles b ON b.fts_id = s.fid
+  WHERE ${gate.sql} AND b.${f2.col} IS NOT NULL GROUP BY b.${f2.col}`;
+      });
+      out.push({
+        sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}
+` + arms.join("\nUNION ALL\n") + `
+ORDER BY field ASC, n DESC, value ASC`,
+        args: [...c.args, ...group.flatMap(() => gate.args)]
+      });
+    }
+    return out;
   };
   return {
     ast,
@@ -4821,7 +4857,8 @@ WHERE b.${f2.col} IS NOT NULL GROUP BY b.${f2.col} ORDER BY n DESC, value ASC LI
     terms: ctx.textAtoms.map((a) => a.value),
     widenable,
     facetFields: facetList,
-    statements: { page, count, ids, facet }
+    restricted: Array.isArray(ids) && ids.length > 0,
+    statements: { page, count, ids: idsStmt, snapshot, facets: facets_ }
   };
 }
 
@@ -4900,6 +4937,31 @@ var Store = class _Store extends DurableObject {
     this.sql.exec(
       `CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(
          ${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`
+    );
+    this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS selections (
+         handle     TEXT PRIMARY KEY,
+         owner      TEXT NOT NULL,
+         kind       TEXT NOT NULL,
+         q          TEXT NOT NULL,
+         sort_field TEXT, sort_dir TEXT,
+         created    TEXT NOT NULL,
+         touched    TEXT NOT NULL,
+         expires    TEXT NOT NULL,
+         n          INTEGER NOT NULL,
+         digest     TEXT NOT NULL
+       )`
+    );
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS selections_owner ON selections(owner)`);
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS selections_expires ON selections(expires)`);
+    this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS selection_items (
+         handle     TEXT NOT NULL,
+         ord        INTEGER NOT NULL,
+         bundle_id  TEXT NOT NULL,
+         bundle_sha TEXT NOT NULL,
+         PRIMARY KEY (handle, ord)
+       )`
     );
     this.#backfillProjection(500);
   }
@@ -5164,9 +5226,10 @@ var Store = class _Store extends DurableObject {
       out.truncated = ids.length >= IDS_MAX;
     }
     if (input.facets !== false && mode !== "count") {
-      out.facets = {};
-      for (const f2 of plan.facetFields)
-        out.facets[f2] = this.#runQuery(plan.statements.facet(f2), tally);
+      out.facets = Object.fromEntries(plan.facetFields.map((f2) => [f2, []]));
+      for (const stmt of plan.statements.facets())
+        for (const r of this.#runQuery(stmt, tally))
+          (out.facets[r.field] ||= []).push({ value: r.value, n: r.n });
     }
     out.widen = null;
     if (total === 0 && plan.widenable && input.widen !== false) {
@@ -5259,6 +5322,282 @@ var Store = class _Store extends DurableObject {
       cursor: rows.length === cap ? last : null,
       ok: findings.length === 0 && orphans.length === 0
     };
+  }
+  /* ---- S-10 step 5: selections ----
+   *
+   * KEEP-ALIVE, 300 seconds, refreshed on read. The same number and the same
+   * shape as `leases`, deliberately: a Worker holds no connection, so a closed
+   * tab is unobservable and the plane can only require proof of life. A view
+   * that is still on screen keeps its selection alive by using it; one that is
+   * gone stops paying. Bob's decision, 2026-07-25, explicitly provisional: only
+   * operational experience will say whether 300s is right.
+   */
+  static SELECTION_TTL_MS = 3e5;
+  static SELECTION_MAX_ITEMS = 1e4;
+  // an enumeration above this is REFUSED, never downgraded
+  static SELECTION_MAX_PER_OWNER = 32;
+  /* MEASURED, and lower than SQLite's documented default by two orders of
+     magnitude: workerd refuses a statement binding more than about 100
+     variables. Binary-searched through this exact code path on 2026-07-25, where
+     the largest id list that compiled was 99, with the gate, ranking and limit
+     arguments sharing the same budget. 64 leaves headroom for arguments a future
+     CTE arm adds without silently reintroducing the failure. Found by the scale
+     bench and not by the suite, because no test had ever enumerated more than a
+     handful of ids; test/selection.test.mjs now crosses the boundary on purpose. */
+  static SELECTION_ID_CHUNK = 64;
+  #sweepSelections() {
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const dead = this.#rows(`SELECT handle FROM selections WHERE expires < ?`, now).map((r) => r.handle);
+    for (const h of dead) {
+      this.sql.exec(`DELETE FROM selection_items WHERE handle=?`, h);
+      this.sql.exec(`DELETE FROM selections WHERE handle=?`, h);
+    }
+    return dead.length;
+  }
+  /* The alarm is the backstop for the case the lazy sweep cannot cover: a member
+     makes a selection and never comes back, so no later call arrives to clean up
+     behind them. Rescheduled while any selection is live and left unset when
+     none is, so an idle instance carries no timer. */
+  async #armSweep() {
+    const live = this.#one(`SELECT count(*) c FROM selections`).c;
+    const at = await this.ctx.storage.getAlarm();
+    if (live > 0 && at === null)
+      await this.ctx.storage.setAlarm(Date.now() + _Store.SELECTION_TTL_MS + 3e4);
+  }
+  async alarm() {
+    this.#sweepSelections();
+    if (this.#one(`SELECT count(*) c FROM selections`).c > 0)
+      await this.ctx.storage.setAlarm(Date.now() + _Store.SELECTION_TTL_MS + 3e4);
+  }
+  static #digestOf(ids) {
+    let h1 = 2166136261, h2 = 16777619;
+    for (const s of ids) for (let i = 0; i < s.length; i++) {
+      h1 = Math.imul(h1 ^ s.charCodeAt(i), 16777619) >>> 0;
+      h2 = Math.imul(h2 + s.charCodeAt(i) + i, 2246822507) >>> 0;
+    }
+    return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
+  }
+  /** Create a selection. `kind` is decided by what the caller supplied, not by
+   *  size: an explicit id list is an enumeration, a bare query is a query
+   *  selection. Bob settled that select-all means the query, 2026-07-25. */
+  async selectionCreate({
+    q = "",
+    viewer = null,
+    owner = null,
+    sort = null,
+    dir = null,
+    ids = null,
+    kind = null
+  } = {}) {
+    if (!owner) return { ok: false, reason: "NO_OWNER", detail: "a selection is owned by the credential that made it" };
+    this.#sweepSelections();
+    const wanted = kind || (Array.isArray(ids) && ids.length ? "enumerated" : "query");
+    if (wanted !== "query" && wanted !== "enumerated")
+      return { ok: false, reason: "BAD_KIND", detail: "a selection is 'query' or 'enumerated'" };
+    const tally = { applied: 0 };
+    let members = [];
+    if (wanted === "enumerated") {
+      const list = [...new Set((ids || []).map(String))];
+      if (!list.length) return { ok: false, reason: "EMPTY", detail: "an enumerated selection needs at least one id" };
+      if (list.length > _Store.SELECTION_MAX_ITEMS)
+        return {
+          ok: false,
+          reason: "TOO_LARGE",
+          limit: _Store.SELECTION_MAX_ITEMS,
+          got: list.length,
+          detail: "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead."
+        };
+      for (let i = 0; i < list.length; i += _Store.SELECTION_ID_CHUNK) {
+        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + _Store.SELECTION_ID_CHUNK) });
+        members.push(...this.#runQuery(plan.statements.snapshot(), tally));
+      }
+    } else {
+      const plan = compile({ q, viewer, sort, dir });
+      members = this.#runQuery(plan.statements.snapshot(), tally);
+    }
+    const handle = "sel-" + _Store.#rand(12);
+    const now = /* @__PURE__ */ new Date();
+    const rec = {
+      handle,
+      owner,
+      kind: wanted,
+      q: String(q ?? ""),
+      sort_field: sort || null,
+      sort_dir: dir || null,
+      created: now.toISOString(),
+      touched: now.toISOString(),
+      expires: new Date(now.getTime() + _Store.SELECTION_TTL_MS).toISOString(),
+      n: members.length,
+      digest: _Store.#digestOf(members.map((m) => m.bundle_id))
+    };
+    this.ctx.storage.transactionSync(() => {
+      const mine = this.#rows(`SELECT handle FROM selections WHERE owner=? ORDER BY created`, owner);
+      for (const old of mine.slice(0, Math.max(0, mine.length + 1 - _Store.SELECTION_MAX_PER_OWNER))) {
+        this.sql.exec(`DELETE FROM selection_items WHERE handle=?`, old.handle);
+        this.sql.exec(`DELETE FROM selections WHERE handle=?`, old.handle);
+      }
+      this.sql.exec(
+        `INSERT INTO selections (handle,owner,kind,q,sort_field,sort_dir,created,touched,expires,n,digest)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        rec.handle,
+        rec.owner,
+        rec.kind,
+        rec.q,
+        rec.sort_field,
+        rec.sort_dir,
+        rec.created,
+        rec.touched,
+        rec.expires,
+        rec.n,
+        rec.digest
+      );
+      if (rec.kind === "enumerated")
+        members.forEach((m, i) => this.sql.exec(
+          `INSERT INTO selection_items (handle,ord,bundle_id,bundle_sha) VALUES (?,?,?,?)`,
+          rec.handle,
+          i,
+          m.bundle_id,
+          m.bundle_sha
+        ));
+    });
+    await this.#armSweep();
+    return {
+      ok: true,
+      handle: rec.handle,
+      kind: rec.kind,
+      n: rec.n,
+      q: rec.q,
+      expires: rec.expires,
+      ttlSeconds: _Store.SELECTION_TTL_MS / 1e3,
+      gate: { applied: tally.applied }
+    };
+  }
+  /* How a revision is classified. The manifest already records who wrote a
+     revision and what operation they claimed, so a monitor tick can be told
+     apart from a member rewriting the analysis without inventing a second
+     record of the same fact. */
+  #revisionKind(bundleId) {
+    const m = this.#one(
+      `SELECT writer, operation FROM manifest WHERE bundle_id=? ORDER BY created DESC, snap_key DESC LIMIT 1`,
+      bundleId
+    );
+    if (!m) return { class: "unknown" };
+    return m.writer === "mechanical" ? { class: "mechanical", operation: m.operation || null } : { class: "authored" };
+  }
+  /** Resolve a selection to its current membership, with a drift report.
+   *
+   *  `weight` is the ACTION's weight, and it decides what drift means:
+   *    report   the action proceeds and says what moved. Citing Information in
+   *             a Project is this: the operator's intent survives a source
+   *             having been re-captured.
+   *    refuse   the action stops and the operator looks again. Anything that
+   *             changes state is this, because a state transition landing on a
+   *             set the operator did not see is exactly the accountability
+   *             failure the record exists to prevent.
+   *  Bob's decision, 2026-07-25. */
+  selectionResolve({ handle, viewer = null, owner = null, weight = "report" } = {}) {
+    this.#sweepSelections();
+    const sel = this.#one(`SELECT * FROM selections WHERE handle=?`, handle);
+    if (!sel) return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
+    if (!owner || sel.owner !== owner)
+      return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
+    const now = /* @__PURE__ */ new Date();
+    this.sql.exec(
+      `UPDATE selections SET touched=?, expires=? WHERE handle=?`,
+      now.toISOString(),
+      new Date(now.getTime() + _Store.SELECTION_TTL_MS).toISOString(),
+      handle
+    );
+    const tally = { applied: 0 };
+    const drift = { revised: [], purged: [], hidden: [], added: 0, removed: 0, kind: sel.kind };
+    let members;
+    if (sel.kind === "enumerated") {
+      const stored = this.#rows(
+        `SELECT ord, bundle_id, bundle_sha FROM selection_items WHERE handle=? ORDER BY ord`,
+        handle
+      );
+      const visible = /* @__PURE__ */ new Map();
+      const idList = stored.map((r) => r.bundle_id);
+      for (let i = 0; i < idList.length; i += _Store.SELECTION_ID_CHUNK) {
+        const plan = compile({ q: "", viewer, sort: sel.sort_field, dir: sel.sort_dir, ids: idList.slice(i, i + _Store.SELECTION_ID_CHUNK) });
+        for (const r of this.#runQuery(plan.statements.snapshot(), tally)) visible.set(r.bundle_id, r.bundle_sha);
+      }
+      members = [];
+      for (const s of stored) {
+        if (!visible.has(s.bundle_id)) {
+          const exists = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, s.bundle_id);
+          (exists ? drift.hidden : drift.purged).push(s.bundle_id);
+          continue;
+        }
+        const nowSha = visible.get(s.bundle_id);
+        if (nowSha !== s.bundle_sha)
+          drift.revised.push({ bundleId: s.bundle_id, was: s.bundle_sha, now: nowSha, ...this.#revisionKind(s.bundle_id) });
+        members.push({ bundle_id: s.bundle_id, bundle_sha: nowSha });
+      }
+      drift.removed = drift.purged.length + drift.hidden.length;
+    } else {
+      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir });
+      members = this.#runQuery(plan.statements.snapshot(), tally);
+      const digest = _Store.#digestOf(members.map((m) => m.bundle_id));
+      if (digest !== sel.digest) {
+        drift.added = Math.max(0, members.length - sel.n);
+        drift.removed = Math.max(0, sel.n - members.length);
+        drift.digestChanged = true;
+        drift.detail = "the criterion now answers differently; which rows moved is not recoverable because a query selection stores the criterion rather than the rows";
+      }
+    }
+    const moved = drift.revised.length + drift.removed + drift.added > 0;
+    const stopped = moved && weight === "refuse";
+    return {
+      ok: !stopped,
+      handle,
+      kind: sel.kind,
+      q: sel.q,
+      owner: sel.owner,
+      n: members.length,
+      snapshotN: sel.n,
+      weight,
+      moved,
+      ...stopped ? {
+        reason: "SET_MOVED",
+        detail: "this action changes state, so it will not run against a set that moved since it was selected. Look at the selection again and re-select."
+      } : {},
+      drift,
+      members: stopped ? [] : members.map((m) => m.bundle_id),
+      expires: new Date(now.getTime() + _Store.SELECTION_TTL_MS).toISOString(),
+      gate: { applied: tally.applied }
+    };
+  }
+  selectionList({ owner = null } = {}) {
+    this.#sweepSelections();
+    if (!owner) return { ok: false, reason: "NO_OWNER" };
+    return {
+      ok: true,
+      ttlSeconds: _Store.SELECTION_TTL_MS / 1e3,
+      selections: this.#rows(
+        `SELECT handle, kind, q, n, created, touched, expires FROM selections WHERE owner=? ORDER BY created DESC`,
+        owner
+      ),
+      caps: { maxItems: _Store.SELECTION_MAX_ITEMS, maxPerOwner: _Store.SELECTION_MAX_PER_OWNER },
+      bytes: this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`).b
+    };
+  }
+  selectionRelease({ handle = null, owner = null } = {}) {
+    if (!owner) return { ok: false, reason: "NO_OWNER" };
+    const sel = handle ? this.#one(`SELECT owner FROM selections WHERE handle=?`, handle) : null;
+    if (handle && (!sel || sel.owner !== owner)) return { ok: false, reason: "NOT_YOURS" };
+    const before = this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c;
+    this.ctx.storage.transactionSync(() => {
+      if (handle) {
+        this.sql.exec(`DELETE FROM selection_items WHERE handle=?`, handle);
+        this.sql.exec(`DELETE FROM selections WHERE handle=?`, handle);
+      } else {
+        for (const r of this.#rows(`SELECT handle FROM selections WHERE owner=?`, owner))
+          this.sql.exec(`DELETE FROM selection_items WHERE handle=?`, r.handle);
+        this.sql.exec(`DELETE FROM selections WHERE owner=?`, owner);
+      }
+    });
+    return { ok: true, released: before - this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c };
   }
   #rows(q, ...a) {
     return [...this.sql.exec(q, ...a)];
@@ -5696,6 +6035,8 @@ var Store = class _Store extends DurableObject {
       refs: n("refs"),
       register: n("register"),
       indexed: n("bundles_fts"),
+      selections: n("selections"),
+      selectionItems: n("selection_items"),
       dbBytes: this.ctx.storage.sql.databaseSize
     };
   }
@@ -5724,6 +6065,8 @@ var Store = class _Store extends DurableObject {
         this.sql.exec(`DELETE FROM bundles_fts`);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`);
         this.sql.exec(`DELETE FROM bundles`);
+        this.sql.exec(`DELETE FROM selection_items`);
+        this.sql.exec(`DELETE FROM selections`);
       }
     });
     const after = this.stats();
@@ -6137,6 +6480,29 @@ var Store = class _Store extends DurableObject {
           snippetChars: Number(url.searchParams.get("snippet")) || 12
         }),
         searchfields: () => this.searchFields(),
+        /* Selections. `viewer` and `owner` are both stamped by the control plane
+           from the authenticated credential and are never taken from the
+           caller's own parameters there. */
+        select: () => this.selectionCreate({
+          q: url.searchParams.get("q") ?? "",
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          sort: url.searchParams.get("sort"),
+          dir: url.searchParams.get("dir"),
+          kind: url.searchParams.get("kind"),
+          ids: Array.isArray(body?.ids) ? body.ids : null
+        }),
+        selection: () => this.selectionResolve({
+          handle: url.searchParams.get("handle"),
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          weight: url.searchParams.get("weight") === "refuse" ? "refuse" : "report"
+        }),
+        selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
+        selectionrelease: () => this.selectionRelease({
+          handle: url.searchParams.get("handle"),
+          owner: url.searchParams.get("owner")
+        }),
         searchindexcheck: () => this.searchIndexCheck({
           after: url.searchParams.get("after") || "",
           limit: url.searchParams.get("limit")
@@ -6222,6 +6588,17 @@ var OPS = {
   /* The verifier for "the index cannot diverge from the corpus": it re-derives
      the expected text row for every bundle and compares. Read-only. */
   searchindexcheck: { classes: ["admin", "member", "probe"], mutating: false },
+  /* S-10 step 5. A selection is a server-side construct so the set an operator
+     selected is the set an action lands on. Two kinds: a QUERY selection, where
+     the operator picked a criterion and the current answer to it is the correct
+     set by definition, and an ENUMERATED one, where they picked specific items
+     and membership is frozen. `select` is mutating because it writes a snapshot;
+     it writes nothing about the corpus and a probe-class caller is still
+     confined to scratch. */
+  select: { classes: ["admin", "member", "probe"], mutating: true },
+  selection: { classes: ["admin", "member", "probe"], mutating: false },
+  selectionlist: { classes: ["admin", "member", "probe"], mutating: false },
+  selectionrelease: { classes: ["admin", "member", "probe"], mutating: true },
   list: { classes: ["admin", "member", "probe"], mutating: false },
   image: { classes: ["admin", "member", "probe"], mutating: false },
   file: { classes: ["admin", "member", "probe"], mutating: false },
@@ -6292,7 +6669,9 @@ var SESSION_OPS = {
     "inbox",
     "inboxget",
     "inboxresolve",
-    "audit"
+    "audit",
+    "select",
+    "selectionrelease"
   ]),
   admin: /* @__PURE__ */ new Set([
     "promote",
@@ -6307,6 +6686,8 @@ var SESSION_OPS = {
     "inboxget",
     "inboxresolve",
     "audit",
+    "select",
+    "selectionrelease",
     "memberadd",
     "memberset",
     "signeradd",
@@ -7155,7 +7536,11 @@ var index_default = {
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
     if (viaSession && op === "lease") inner.searchParams.set("actor", sessMember);
-    if (op === "search") inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+    if (op === "search" || op === "select" || op === "selection") {
+      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+    }
+    if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease")
+      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `class:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : void 0;
     if (viaSession && op === "promote" && passBody) {
       try {

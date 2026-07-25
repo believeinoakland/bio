@@ -96,42 +96,41 @@ before any real group installs.
 
 ## Current state and next task, as of 2026-07-25
 
-The plane is **0.16.0**, signed, tagged `v0.16.0`, and running on
-biosmoke7.believeinoakland.workers.dev. Battery 1030 assertions across 24 suites
-in about 63 seconds (`npm test` in bio-plane); installer wizard 90 assertions
+The plane is **0.17.0**, signed, tagged `v0.17.0`, and running on
+biosmoke7.believeinoakland.workers.dev. Battery 1032 assertions across 25 suites
+in about 79 seconds (`npm test` in bio-plane); installer wizard 90 assertions
 (`node test/wizard.test.mjs` in newgroup). Live record: 30 bundles, 87 register
 rows, `op=audit` 30 checked with zero findings.
 
-**S-10 RETRIEVAL: steps 1 through 4 are DONE.** The projection (0.15.0), the text
-index inside `promote`'s transaction, the query parser and compiler, and
-`op=search`. Read `development/RETRIEVAL-SUBSTRATE.md` before touching retrieval;
-it is the specification and its design questions are settled, not open.
+**S-10 RETRIEVAL IS COMPLETE, steps 1 through 5.** The projection, the text
+index, the query language, `op=search`, and server-side selections.
+`development/RETRIEVAL-SUBSTRATE.md` is the specification and its design
+questions are settled, not open.
 
-New ops, all member class and above because they read the working corpus:
-`search` (the five verbs in one call: q, filter selectors, facets, sort, and
-`mode=ids` for select-all), `searchfields` (the query vocabulary, so a UI need
-not keep its own copy), `searchindexcheck` (re-derives the expected index row for
-every bundle and compares).
+Ops, all member class and above because they read the working corpus: `search`,
+`searchfields`, `searchindexcheck`, `select`, `selection`, `selectionlist`,
+`selectionrelease`.
 
-**Step 5, server-side selection, is the next retrieval task**, and it is a design
-step before it is a coding step. D-34 and D-35 hold what it has to answer:
-ownership by session, a TTL refreshed on read, an alarm sweep, caps by bytes
-before count, query-plus-hash instead of materialised ids above the cap, and
-drift that is classified using the manifest's `writer` and `operation` rather
-than absorbed. Auto-updating a selection is rejected and the reasoning is in
-D-35; do not re-open it.
+**Read the performance numbers from the bench, not from the probe (D-32).**
+`npm run bench:retrieval` measures the REAL path: 5ms to 163ms at 20,000
+bundles. The ~46ms ceiling in RETRIEVAL-SUBSTRATE.md was measured with a probe
+object that is not the plane and must not be quoted as describing this code.
 
-**Carry the unverified condition forward.** D-32: the 20,000-bundle retrieval
-numbers were measured with a probe object that is not the plane. The shipped path
-is verified at 600 bundles and at the live 30. Bob's decision was to ship in that
-condition and to keep saying so, so a later step does not read those numbers as
-earned by this code.
+**Two workerd ceilings are load-bearing and undocumented (D-36).** A statement
+binds about 100 variables; a compound SELECT takes five terms. Both were found
+by the bench, both broke real code, and both are now guarded. Any new statement
+shape can meet another one, so run the bench when you add one.
 
-Also open, in Bob's order of interest: D-1 (root of trust unmodelled, doctrine
-work), D-9 (20 unreferenced register rows, needs an admin credential), S-9
-(retire the Apps Script plane, Bob's hands), D-15 (viewer-position filtering,
-when project visibility is built; the single compilation point is now in place
-and asserted, so this is a change in one function).
+Open, in Bob's order of interest: D-1 (root of trust unmodelled, doctrine work),
+D-9 (20 unreferenced register rows, needs an admin credential), S-9 (retire the
+Apps Script plane, Bob's hands), D-15 (viewer-position filtering, when project
+visibility is built; the single compilation point is in place, asserted, and now
+a WHERE predicate over the alias `b`, so this is a change in one function),
+D-32 (further retrieval optimisation), D-37 (the 300s keep-alive is a guess).
+
+**The actions that refer to a selection are the natural next step.** The gate
+they call already exists: `selectionResolve` takes a weight and either hands over
+the members or refuses. What does not exist is any action that calls it.
 
 ---
 
