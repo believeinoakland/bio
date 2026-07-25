@@ -31,20 +31,24 @@ const t = (label, got, want) => {
 };
 
 console.log("\n--- roster administration is admin-only ---");
-const add = await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", cover: "the CPA from Tuesday" });
+/* Ruth is the SECOND member of this group, so she must be an administrator:
+   the first invitation a group issues creates a second administrator, and there
+   are no ordinary members until two exist (Membership Architecture 4.2, 4.3).
+   This suite predates that rule and used to invite her as an ordinary member. */
+const add = await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", cover: "the CPA from Tuesday", role: "admin" });
 t("admin creates a member", add.result.ok, true);
 t("the invite appears exactly once", typeof add.result.invite, "string");
-t("duplicate member refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", cover: "the CPA from Tuesday" })).result.reason, "EXISTS");
+t("duplicate member refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", cover: "the CPA from Tuesday", role: "admin" })).result.reason, "EXISTS");
 t("bad id refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "Not A Slug", cover: "x" })).result.reason, "BAD_MEMBER_ID");
 t("member token cannot create members", (await POST("op=memberadd&token=t-member-1", { memberId: "x", name: "x" })).error, "forbidden for token class");
 t("public path cannot create members", (await POST("op=memberadd", { memberId: "x", name: "x" })).error, "unauthenticated");
 
 console.log("\n--- enrollment spends the invite ---");
-t("wrong invite refused", (await POST("op=enroll", { memberId: "ruth", invite: "nope", password: "long-enough-password" })).result.reason, "BAD_INVITE");
-t("short password refused", (await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, password: "short" })).result.reason, "PASSWORD_TOO_SHORT");
-const en = await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, password: "ruth-passphrase-1" });
+t("wrong invite refused", (await POST("op=enroll", { memberId: "ruth", invite: "nope", handle: "ruth", password: "long-enough-password" })).result.reason, "BAD_INVITE");
+t("short password refused", (await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, handle: "ruth", password: "short" })).result.reason, "PASSWORD_TOO_SHORT");
+const en = await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, handle: "ruth", password: "ruth-passphrase-1" });
 t("enrollment succeeds", en.result.ok, true);
-t("the invite is spent", (await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, password: "another-passphrase" })).result.reason, "ALREADY_ENROLLED");
+t("the invite is spent", (await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, handle: "ruth2", password: "another-passphrase" })).result.reason, "ALREADY_ENROLLED");
 
 console.log("\n--- member sign-in and the intake powers ---");
 const lg = await POST("op=login", { role: "member:ruth", password: "ruth-passphrase-1" });
@@ -140,16 +144,29 @@ await POST("op=claim", { bootstrapToken: "t-admin-1", password: "steward-passphr
 const alg = await POST("op=login", { role: "admin", password: "steward-passphrase-1" });
 t("admin logs in", alg.result.ok, true);
 const A = "token=" + alg.result.token;
-const add2 = await POST(`op=memberadd&${A}`, { memberId: "meilan", name: "Meilan" });
+const add2 = await POST(`op=memberadd&${A}`, { memberId: "meilan", cover: "Meilan" });
 t("admin session invites a member", add2.result.ok, true);
 t("admin session still cannot purge", (await GET(`op=purge&confirm=bio&${A}`)).error, "this operation requires a machine credential, not a signed-in session");
 
 console.log("\n--- revocation closes every door ---");
-t("revoke", (await POST(`op=memberset&${A}`, { memberId: "ruth", status: "revoked" })).result.ok, true);
-t("revoked member's session is dead", (await GET(`op=list&${S}`)).error, "unauthenticated");
-t("revoked member cannot log in", (await POST("op=login", { role: "member:ruth", password: "ruth-passphrase-1" })).result.reason, "NO_SUCH_ROLE");
-t("reinstate", (await POST(`op=memberset&${A}`, { memberId: "ruth", status: "active" })).result.ok, true);
-t("reinstated member logs in again", (await POST("op=login", { role: "member:ruth", password: "ruth-passphrase-1" })).result.ok, true);
+/* Revocation is demonstrated on an ORDINARY member. Ruth is an administrator
+   here (4.2: the second member of a group must be one), and an administrator
+   cannot be revoked by another administrator at all: that takes the section 4.7
+   vote, and at two administrators it is impossible by design. This suite used
+   to revoke Ruth directly, which the rule now correctly refuses. */
+t("an administrator cannot be revoked directly (4.4)",
+  (await POST(`op=memberset&${A}`, { memberId: "ruth", status: "revoked" })).result.reason, "ADMIN_REQUIRES_VOTE");
+const men = await POST("op=enroll", { memberId: "meilan", invite: add2.result.invite,
+  handle: "meilan", password: "meilan-passphrase-1" });
+t("the ordinary member enrols", men.result.ok, true);
+const mlg = await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" });
+const M = "token=" + mlg.result.token;
+t("and holds a live session", (await GET(`op=list&${M}`)).result.length >= 0, true);
+t("revoke", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "revoked" })).result.ok, true);
+t("revoked member's session is dead", (await GET(`op=list&${M}`)).error, "unauthenticated");
+t("revoked member cannot log in", (await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" })).result.reason, "NO_SUCH_ROLE");
+t("reinstate", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "active" })).result.ok, true);
+t("reinstated member logs in again", (await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" })).result.ok, true);
 
 console.log("\n--- the roster is visible, invites are not ---");
 const ml = await GET(`op=memberlist&token=t-member-1`);

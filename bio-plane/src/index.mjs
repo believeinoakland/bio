@@ -146,6 +146,14 @@ const OPS = {
   memberadd:    { classes: ["admin", "probe"],                     mutating: true  },
   memberlist:   { classes: ["admin", "member", "probe"],           mutating: false },
   memberset:    { classes: ["admin", "probe"],                     mutating: true  },
+  /* The membership model's member half. All admin-only: memberlist pairs cover
+     with handle and only administrators see those together (section 3), and the
+     rest is section 4 governance. `adminarith` is a read of the rule itself, so
+     a UI can tell a group what a removal would take before they begin one. */
+  membercaps:   { classes: ["admin", "probe"],                     mutating: true  },
+  adminendorse: { classes: ["admin", "probe"],                     mutating: true  },
+  adminremove:  { classes: ["admin", "probe"],                     mutating: true  },
+  adminarith:   { classes: ["admin", "member", "probe"],           mutating: false },
   signeradd:    { classes: ["admin", "probe"],                     mutating: true  },
   signerlist:   { classes: ["admin", "member", "probe"],           mutating: false },
   signerset:    { classes: ["admin", "probe"],                     mutating: true  },

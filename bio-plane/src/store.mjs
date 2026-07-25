@@ -63,6 +63,22 @@ export class Store extends DurableObject {
     if (memberCols.includes("name") && !memberCols.includes("cover"))
       this.sql.exec(`ALTER TABLE members RENAME COLUMN name TO cover`);
     for (const [table, column, decl] of [
+      /* The membership model's member half. A COVER is what an administrator
+         calls someone in the roster; a HANDLE is what the member chooses at
+         enrolment and what the RECORD shows. Two names assigned by two parties
+         for two purposes, and only administrators see them together
+         (Membership Architecture section 3). Additive and nullable, so a member
+         enrolled before handles existed simply has none until they choose one. */
+      ["members", "handle", "TEXT"],
+      /* Capabilities, section 5. Stored as a JSON array rather than a column
+         apiece because the set is expected to grow and a column per capability
+         is a migration per capability. `administer` is deliberately NOT in this
+         list even though it is a capability: it is granted and removed only by
+         the section 4 process, never by editing a field. */
+      ["members", "capabilities", "TEXT"],
+      /* Declared expertise, section 1.3: metadata that informs humans and gates
+         nothing. Recorded here so it cannot drift into being consulted. */
+      ["members", "expertise", "TEXT"],
       ["manifest", "writer", "TEXT"],
       ["manifest", "operation", "TEXT"],
       /* S-10 step 1: the metadata projection the retrieval surface filters and
@@ -156,6 +172,31 @@ export class Store extends DurableObject {
      * Collapsing the two would mean a large enumeration silently became a query
      * at whatever size a storage cap sat, which changes what the operator's
      * click meant. So the cap on an enumeration is a REFUSAL, not a fallback. */
+    /* A handle is unique across the instance, because a roster in which two
+       people can answer to one name defeats the purpose of having one. Partial,
+       so the many members with no handle yet do not collide on NULL. */
+    this.sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS members_handle ON members(handle) WHERE handle IS NOT NULL`);
+
+    /* Administrator governance, Membership Architecture section 4.7. Every vote
+       is a row and nothing is tallied anywhere else, so the record of WHO
+       decided and WHY survives the decision. Append-only like the rest of the
+       store: a spent proposal keeps its votes.
+         kind    'add'    an endorsement, and addition needs the consensus of
+                          every existing administrator
+                 'remove' a vote to eject, and removal needs a majority of ALL
+                          administrators counting the target in the denominator
+       Nothing is ever deleted from here, so an ejection can be audited after
+       the fact by the people it was done to. */
+    this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS admin_votes (
+         kind      TEXT NOT NULL,
+         target    TEXT NOT NULL,
+         voter     TEXT NOT NULL,
+         reason    TEXT,
+         created   TEXT NOT NULL,
+         PRIMARY KEY (kind, target, voter)
+       )`);
+
     this.sql.exec(
       `CREATE TABLE IF NOT EXISTS selections (
          handle     TEXT PRIMARY KEY,
@@ -1955,7 +1996,173 @@ export class Store extends DurableObject {
      nothing against an enrolled member. Passwords live only as PBKDF2
      hashes under credentials role 'member:<id>'. */
 
-  async memberAdd({ memberId, cover, name, role = "member" } = {}) {
+  /* ---- the membership model's member half, Architecture sections 3 to 6 ----
+   *
+   * The arithmetic of section 4.7 lives in ONE place, `adminArithmetic`, and
+   * every rule below reads it rather than restating it. The table in the
+   * architecture document is the specification and `test/membership.test.mjs`
+   * asserts it row by row, because this is the part of the design that is cheap
+   * to get subtly wrong and expensive to discover wrong.
+   */
+  static CAPABILITIES = ["contribute", "publish", "create_projects"];
+
+  /** Removal takes a MAJORITY OF ALL ADMINISTRATORS, counting the target in the
+   *  denominator but not letting them vote, and ties do not eject.
+   *
+   *  That one sentence is what makes removal impossible at two without needing a
+   *  special case, demands unanimity while the group is small enough for
+   *  unanimity to be reasonable, and loosens as the group grows. A lone captured
+   *  administrator can never eject anyone at any size. It fails only to a
+   *  colluding majority, and nothing survives a colluding majority. */
+  static adminMath(n) {
+    const votesNeeded = Math.floor(n / 2) + 1;
+    const eligibleVoters = Math.max(0, n - 1);
+    return { administrators: n, votesNeeded, eligibleVoters, possible: votesNeeded <= eligibleVoters };
+  }
+
+  /** The table, computed rather than transcribed, so the code and the document
+   *  cannot drift. Exposed as an op because a UI must be able to tell a group
+   *  what it would take BEFORE they start a removal. */
+  adminArithmetic() {
+    const table = [];
+    for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9]) table.push(Store.adminMath(n));
+    return { ok: true, table, live: Store.adminMath(this.#activeAdmins().length) };
+  }
+
+  /* Who counts as an administrator.
+   *
+   * The FOUNDING administrator has no members row. They claimed the instance by
+   * spending ADMIN_TOKEN, which is what 4.1 describes: the solo participant is
+   * the administrator, and the whole membership apparatus stays invisible until
+   * a second person exists. Counting only member rows made a claimed instance
+   * with one invited administrator look like a group of one, so the second
+   * invitation was issued unilaterally when it should have needed consensus.
+   * Found by the existing members suite failing, not by the new one.
+   *
+   * The founder is named `admin`, the credentials role they hold, and they
+   * cannot be removed by vote: per 4.6 the holders of ADMIN_TOKEN are the root
+   * of trust and every rule in the membership model sits beneath them.
+   * Membership does not and cannot constrain them, and an interface that
+   * implied otherwise would be lying. */
+  static ROOT_ADMIN = "admin";
+
+  #activeAdmins() {
+    const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'`)
+      .map((r) => r.member_id);
+    const claimed = !!this.#one(`SELECT role FROM credentials WHERE role=?`, Store.ROOT_ADMIN);
+    return claimed ? [Store.ROOT_ADMIN, ...rows] : rows;
+  }
+
+  #capsOf(row) {
+    try { const v = JSON.parse(row.capabilities || "[]"); return Array.isArray(v) ? v : []; }
+    catch { return []; }
+  }
+
+  /** Set a member's capabilities. NOT a route to administrator status: that is
+   *  granted and removed only by the section 4 process, and 4.4 says no
+   *  administrator may strip another, so this refuses to touch either side of
+   *  that line. */
+  memberCaps({ memberId, capabilities } = {}) {
+    const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    const want = Array.isArray(capabilities) ? capabilities : null;
+    if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
+    if (want.includes("administer") || m.role === "admin")
+      return { ok: false, reason: "NOT_A_CAPABILITY_GRANT",
+               detail: "administrator status is granted and removed only by the section 4 process, never by "
+                     + "editing a field. 4.4: no administrator may strip another." };
+    const bad = want.filter((c) => !Store.CAPABILITIES.includes(c));
+    if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad, known: Store.CAPABILITIES };
+    this.sql.exec(`UPDATE members SET capabilities=?, updated=? WHERE member_id=?`,
+      JSON.stringify(want), new Date().toISOString(), memberId);
+    return { ok: true, memberId, capabilities: want };
+  }
+
+  /** Endorse a proposed administrator. Addition above the second requires the
+   *  CONSENSUS of every existing administrator, and that is the load-bearing
+   *  half of 4.7: without it a captured administrator recruits confederates and
+   *  manufactures the majority that ejects the honest ones. */
+  async adminEndorse({ memberId, by } = {}) {
+    const m = this.#one(`SELECT member_id, status, role FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (m.status !== "proposed") return { ok: false, reason: "NOT_PROPOSED", status: m.status };
+    const admins = this.#activeAdmins();
+    if (!by || !admins.includes(by)) return { ok: false, reason: "NOT_AN_ADMIN", by };
+    const now = new Date().toISOString();
+    this.sql.exec(`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,?,?)`,
+      memberId, by, null, now);
+    const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId)
+      .map((r) => r.voter).filter((v) => admins.includes(v));
+    const awaiting = admins.filter((a) => !have.includes(a));
+    if (awaiting.length)
+      return { ok: false, reason: "CONSENSUS_REQUIRED", memberId, have: have.sort(), awaiting: awaiting.sort(),
+               detail: "every existing administrator must endorse an addition beyond the second" };
+    /* Consensus reached: the invitation is issued now, and the plaintext code
+       appears exactly once, here, as it does for any other invitation. */
+    const invite = Store.#rand(16);
+    const hash = await Store.#sha256(invite);
+    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, updated=? WHERE member_id=?`,
+      hash, now, memberId);
+    return { ok: true, memberId, invite, endorsedBy: have.sort() };
+  }
+
+  /** Vote to remove an administrator. Section 4.7. */
+  adminRemove({ memberId, by, reason } = {}) {
+    /* The founding administrator is the root of trust (4.6) and is not
+       removable by the membership model, because the membership model runs on
+       an instance they control. Saying so plainly is an obligation of 4.6: no
+       interface may describe the administrator model as though it bounds this
+       power, because it does not. The escape hatch in the other direction is
+       replacing ADMIN_TOKEN in the hosting dashboard, which returns the
+       instance to unclaimed. */
+    if (memberId === Store.ROOT_ADMIN)
+      return { ok: false, reason: "ROOT_OF_TRUST",
+               detail: "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the "
+                     + "application. Whoever can set ADMIN_TOKEN can take the group over, and there is no "
+                     + "arrangement in which nobody holds that power, because the instance runs in somebody's "
+                     + "hosting account. The remedy is at the hosting account, not here (section 4.6)." };
+    const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (m.role !== "admin") return { ok: false, reason: "NOT_AN_ADMIN", detail: "this member is not an administrator" };
+    const admins = this.#activeAdmins();
+    if (memberId === by) return { ok: false, reason: "TARGET_CANNOT_VOTE",
+      detail: "the target is counted in the denominator but does not vote" };
+    if (!by || !admins.includes(by)) return { ok: false, reason: "NOT_AN_ADMIN", by };
+    const why = String(reason ?? "").trim();
+    if (!why) return { ok: false, reason: "NO_REASON", detail: "removals are recorded with a reason" };
+
+    const math = Store.adminMath(admins.length);
+    if (!math.possible)
+      return { ok: false, reason: "IMPOSSIBLE_AT_TWO", ...math,
+               detail: `removal takes ${math.votesNeeded} of ${math.administrators} administrators and only `
+                     + `${math.eligibleVoters} may vote, so it cannot be carried. That is the rule working, not `
+                     + `a defect: a lone administrator must never be able to eject the other.` };
+
+    if (this.#one(`SELECT voter FROM admin_votes WHERE kind='remove' AND target=? AND voter=?`, memberId, by))
+      return { ok: false, reason: "ALREADY_VOTED", by };
+    const now = new Date().toISOString();
+    this.sql.exec(`INSERT INTO admin_votes (kind,target,voter,reason,created) VALUES ('remove',?,?,?,?)`,
+      memberId, by, why, now);
+
+    const votes = this.#rows(`SELECT voter, reason FROM admin_votes WHERE kind='remove' AND target=?`, memberId)
+      .filter((v) => admins.includes(v.voter) && v.voter !== memberId);
+    if (votes.length < math.votesNeeded)
+      return { ok: false, reason: "VOTES_SHORT", memberId, have: votes.length, need: math.votesNeeded,
+               ...math, deciders: votes.map((v) => v.voter).sort() };
+
+    /* Carried. Revocation is immediate and takes sessions and signing keys with
+       it, exactly as an ordinary revocation does. */
+    this.sql.exec(`UPDATE members SET status='revoked', updated=? WHERE member_id=?`, now, memberId);
+    this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
+    this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
+    return { ok: true, memberId, removed: true, ...math,
+             deciders: votes.map((v) => v.voter).sort(), reasons: votes.map((v) => v.reason).filter(Boolean),
+             alsoDo: "removing an administrator in the application is half of an ejection. The other half is "
+                   + "rotating ADMIN_TOKEN and reviewing hosting-account membership (4.8)." };
+  }
+
+  async memberAdd({ memberId, cover, name, role = "member", capabilities = null,
+                    expertise = null, by = null } = {}) {
     /* `name` is still read, because an older caller may send it, but the field
        is a cover and the response says so. */
     const label = typeof cover === "string" && cover.trim() ? cover : name;
@@ -1966,43 +2173,112 @@ export class Store extends DurableObject {
                detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name" };
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
       return { ok: false, reason: "EXISTS", memberId };
+
+    const wantAdmin = role === "admin";
+    const admins = this.#activeAdmins();
+    /* 4.2 and 4.3. The FIRST invitation a group issues creates a second
+       administrator, and the group cannot grow past the two-administrator floor
+       in any other order. This satisfies Design Requirement 1 and Requirement 14
+       at the earliest moment it is possible to satisfy them, and it is a refusal
+       rather than a nudge because an ordinary member added first is a group with
+       a single point of failure that nobody notices until it fails. */
+    if (!wantAdmin && admins.length < 2)
+      return { ok: false, reason: "ADMINS_FIRST", administrators: admins.length,
+               detail: "the second member of a group must be an administrator, and there are no ordinary "
+                     + "members until two exist. Administrative access is shared among at least two people "
+                     + "so that losing one person does not lose the group." };
+
+    const caps = Array.isArray(capabilities) ? capabilities.filter((c) => Store.CAPABILITIES.includes(c))
+                                             : ["contribute"];
+    const now = new Date().toISOString();
+
+    /* 4.7 addition. The first administrator may add a second unilaterally,
+       because a group of one has nobody to consult. Every subsequent addition
+       needs the consensus of all existing administrators: without that, a
+       captured administrator recruits confederates and manufactures the majority
+       that ejects the honest ones. */
+    if (wantAdmin && admins.length >= 2) {
+      this.sql.exec(
+        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
+         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?)`,
+        memberId, label, JSON.stringify(caps), expertise ?? null, now, now);
+      if (by && admins.includes(by))
+        this.sql.exec(`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,NULL,?)`,
+          memberId, by, now);
+      const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId)
+        .map((r) => r.voter).filter((v) => admins.includes(v));
+      return { ok: false, reason: "CONSENSUS_REQUIRED", memberId, proposed: true,
+               have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort(),
+               detail: "adding an administrator beyond the second requires the consensus of every existing "
+                     + "administrator. No invitation is issued until they have all endorsed it." };
+    }
+
     const invite = Store.#rand(16);
     const hash = await Store.#sha256(invite);
-    const now = new Date().toISOString();
     this.sql.exec(
-      `INSERT INTO members (member_id,cover,role,status,invite_hash,created,updated) VALUES (?,?,?,?,?,?,?)`,
-      memberId, label, role === "admin" ? "admin" : "member", "invited", hash, now, now);
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
+       VALUES (?,?,NULL,?,?,?,?,?,?,?)`,
+      memberId, label, wantAdmin ? "admin" : "member", "invited", hash,
+      JSON.stringify(caps), expertise ?? null, now, now);
     /* The plaintext invite appears exactly once, here, for handing to the
        person. It is never readable again. */
-    return { ok: true, memberId, invite };
+    return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps };
   }
 
-  async enroll({ memberId, invite, password } = {}) {
+  async enroll({ memberId, invite, handle, password } = {}) {
     const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     if (m.status === "revoked") return { ok: false, reason: "REVOKED" };
+    if (m.status === "proposed") return { ok: false, reason: "NOT_YET_INVITED",
+      detail: "this administrator has been proposed but not yet endorsed by every existing administrator" };
     if (!m.invite_hash) return { ok: false, reason: "ALREADY_ENROLLED" };
     if (!invite || (await Store.#sha256(invite)) !== m.invite_hash)
       return { ok: false, reason: "BAD_INVITE" };
+    /* The handle is the member's OWN name and the one the record shows, so it is
+       chosen here and not by the administrator who issued the invitation. Unique
+       across the instance, because a roster in which two people can answer to one
+       name defeats the purpose of having one. */
+    const h = String(handle ?? "").trim();
+    if (!h) return { ok: false, reason: "NO_HANDLE",
+      detail: "choose a handle. It is what the record shows: the author of a promotion, the attestor of a "
+            + "ratification, the participant list of a project. It is yours, not the label the administrator "
+            + "used to invite you." };
+    if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))
+      return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+    if (this.#one(`SELECT member_id FROM members WHERE handle=? AND member_id<>?`, h, memberId))
+      return { ok: false, reason: "HANDLE_TAKEN", handle: h };
     if (typeof password !== "string" || password.length < 12)
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
     await this.setPassword({ role: `member:${memberId}`, password });
-    this.sql.exec(`UPDATE members SET status='active', invite_hash=NULL, updated=? WHERE member_id=?`,
-      new Date().toISOString(), memberId);
-    return { ok: true, memberId };
+    /* The invite hash is cleared, so the burner URL resolves to nothing after
+       use and a leaked or archived link is inert. */
+    this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, updated=? WHERE member_id=?`,
+      h, new Date().toISOString(), memberId);
+    return { ok: true, memberId, handle: h };
   }
 
   memberList() {
+    /* Cover AND handle together, which only an administrator sees. Every op that
+       reaches this is admin-only at the control plane. */
     return { members: this.#rows(
-      `SELECT member_id, cover, role, status, created, updated,
+      `SELECT member_id, cover, handle, role, status, capabilities, expertise, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
-       FROM members ORDER BY member_id`) };
+       FROM members ORDER BY member_id`).map((r) => ({ ...r, capabilities: this.#capsOf(r) })) };
   }
 
   memberSet({ memberId, status } = {}) {
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    const m = this.#one(`SELECT status FROM members WHERE member_id=?`, memberId);
+    const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    /* 4.4: administrator status cannot be taken away by another administrator.
+       Revoking an administrator IS taking it away, so it goes through the
+       section 4.7 vote or it does not happen. This is what stops an instance
+       being captured by whoever acts first in a dispute. */
+    if (m.role === "admin" && status === "revoked")
+      return { ok: false, reason: "ADMIN_REQUIRES_VOTE",
+               detail: "an administrator is removed by a majority of all administrators, counting the target "
+                     + "in the denominator but not letting them vote (section 4.7). No administrator may strip "
+                     + "another unilaterally." };
     this.sql.exec(`UPDATE members SET status=?, updated=? WHERE member_id=?`,
       status, new Date().toISOString(), memberId);
     if (status === "revoked") {
@@ -2299,6 +2575,13 @@ export class Store extends DurableObject {
         enroll: () => this.enroll(body || {}),
         memberlist: () => this.memberList(),
         memberset: () => this.memberSet(body || {}),
+        /* The membership model's member half. All admin-only at the control
+           plane: memberlist pairs cover with handle, which only an
+           administrator sees, and the rest are section 4 governance. */
+        membercaps: () => this.memberCaps(body || {}),
+        adminendorse: () => this.adminEndorse(body || {}),
+        adminremove: () => this.adminRemove(body || {}),
+        adminarith: () => this.adminArithmetic(),
         signeradd: () => this.signerAdd(body || {}),
         signerlist: () => this.signerList(),
         signerset: () => this.signerSet(body || {}),
