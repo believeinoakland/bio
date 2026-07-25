@@ -96,7 +96,7 @@ const pkg = (n, base, snap) => {
       { path: "data/probe.json", text: dataJson, bytes: dataJson.length, sha256: sha(dataJson) },
       { path: "snapshots/evidence.bin", blobSha: capSha, bytes: capBytes.length, sha256: capSha },
     ],
-    refs: [], register: [{ sha256: capSha, path: "snapshots/evidence.bin", encoding: "binary", bytes: capBytes.length }],
+    register: [{ sha256: capSha, path: "snapshots/evidence.bin", encoding: "binary", bytes: capBytes.length }],
   };
 };
 const c1 = await POST("op=promote&token=mem-ratify", pkg(1, null, "20260724T100000Z_aaaa1111"));
@@ -157,7 +157,9 @@ const badPkg = {
   meta: { object_type: "information", group: "believe-in-oakland", title: "Ratify target",
           current_state: "collected", created: NOW, last_updated: NOW },
   files: [{ path: "bundle.md", text: badMd, bytes: badMd.length, sha256: sha(badMd) }],
-  refs: [{ target: "INFO-2026-0000-does-not-exist", kind: "cites" }], register: [],
+  /* The dangling edge lives in the frontmatter above, which is now its only
+     home; sending it in the payload would be refused as REFS_IN_PAYLOAD. */
+  register: [],
 };
 const bc = await POST("op=promote&token=mem-ratify", badPkg);
 const bad = await POST("op=ratify&token=adm-ratify", { bundleId: BAD, expectedSha: bc.result.bundleSha, sig: signRatify("sparky", BAD, bc.result.bundleSha) });

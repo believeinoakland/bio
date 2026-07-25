@@ -60,7 +60,7 @@ const md = `---\nid: ${id}\nobject_type: information\ncurrent_state: collected\n
 const pr = await POST(`op=promote&${S}`, {
   bundleId: id, base: null, snapKey: "20260724T120000Z_aaaa1111", author: "IMPOSTOR",
   meta: { object_type: "information", group: "believe-in-oakland", title: "intake", current_state: "collected", created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T00:00:00Z" },
-  files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], refs: [], register: [] });
+  files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] });
 t("session promotes a creation", pr.result.ok, true);
 const lease = await GET(`op=lease&id=${id}&actor=IMPOSTOR&${S}`);
 t("session lease is stamped with the member, not the claimed actor", lease.result.actor, "ruth");
@@ -73,7 +73,7 @@ const md2 = md + "\nrevised\n";
 const pr2 = await POST(`op=promote&${S}`, {
   bundleId: id, base: pr.result.bundleSha, snapKey: "20260724T130000Z_bbbb2222", author: "IMPOSTOR",
   meta: { object_type: "information", group: "believe-in-oakland", title: "intake", current_state: "collected", created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T01:00:00Z" },
-  files: [{ path: "bundle.md", text: md2, bytes: md2.length, sha256: sha(md2) }], refs: [], register: [] });
+  files: [{ path: "bundle.md", text: md2, bytes: md2.length, sha256: sha(md2) }], register: [] });
 t("session promotes an update", pr2.result.ok, true);
 const img2 = await GET(`op=image&id=${id}&token=t-admin-1`);
 const man2 = JSON.parse(img2.result["_history/manifest.json"]);

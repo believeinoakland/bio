@@ -52,7 +52,7 @@ export async function livefire(env, storeName) {
       bundleId: id, snapKey: "20260723T190000Z_livefire", author: "livefire",
       meta: { object_type: "information", group: "believe-in-oakland", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: new Date().toISOString() },
       files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: await sha256(body) }, ...extra],
-      refs: [], register: [],
+      register: [],
     };
   };
 

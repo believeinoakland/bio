@@ -19,7 +19,7 @@ const pkg = (id) => {
             current_state: "collected", created: "2026-01-01T00:00:00Z",
             last_updated: "2026-07-23T10:00:00Z" },
     files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) }],
-    refs: [], register: [], base: null,
+    register: [], base: null,
   };
 };
 

@@ -315,6 +315,27 @@ the 0.3.8 defect class (D-24). `hygiene.test.mjs` now scans the template for
 unescaped backticks, counts interpolations, loads the module, and parses the
 script it serves. Twice by accident is enough.
 
+### Out-of-band, 0.6.2: references have one home
+
+D-21 closed. References lived in the promote payload and in the document, only
+the document was ever checked, and nothing compared them. Promote now reads them
+out of `bundle.md` using the CATALOG'S OWN `parseFrontmatter`, so the store's
+`refs` table is a projection of the document rather than a second place to state
+the same thing, and the store's dangling-reference view and the catalog's C-6.2
+read the same edges by construction rather than by agreement.
+
+The payload field is gone. A caller still sending it is refused as
+`REFS_IN_PAYLOAD` rather than quietly overridden, because a silent override is
+exactly how the two drifted apart. That refusal caught four test suites and the
+scaling harness still passing the dead field, which is the point of making it
+loud.
+
+The migrate tool no longer derives references at all: the migrated document
+carries them as Drive wrote them, and the store projects that.
+
+Proven by a test that repoints a live reference at nothing and asserts that the
+store's own view and the catalog name the same single finding, C-6.2.
+
 ## Notes
 
 - Steps S-1 through S-3 are conformance and are not optional. S-4 through S-7 are

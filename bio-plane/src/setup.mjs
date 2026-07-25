@@ -671,7 +671,7 @@ $("#n-save").addEventListener("click", async ()=>{
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
       files: [{ path:"bundle.md", text, bytes:text.length, sha256: await sha256Text(text) }],
-      refs: [], register: [],
+      register: [],
     });
     if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
     $("#n-title").value = ""; $("#n-body").value = "";
@@ -752,7 +752,7 @@ $("#e-save").addEventListener("click", async ()=>{
       meta: { object_type: fmv.object_type, group:"believe-in-oakland", title: fmv.title || EDIT_ID,
               current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
       files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) }],
-      refs: [], register: [],
+      register: [],
     });
     if (!r.result || !r.result.ok) {
       const why = (r.result && r.result.reason) || r.error || "unknown";

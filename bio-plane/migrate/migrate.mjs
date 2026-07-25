@@ -371,7 +371,10 @@ export function buildPackages(bundleId, loaded, states, revisionFiles, provRegis
         criticality: fm.criticality ?? null, classification: fm.classification ?? null,
       },
       files: revisionFiles[i],
-      refs: (fm.references || []).map((t) => ({ target: t })),
+      /* References are no longer sent: promote reads them out of bundle.md with
+         the catalog's own parser, so the migrated document carries them exactly
+         as Drive wrote them and the store projects that rather than a
+         re-derivation of it. */
       register: i === N ? provRegister : [],
     });
   }

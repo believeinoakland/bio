@@ -271,7 +271,6 @@ rev ${rev}
       author: "livefire",
       meta: { object_type: "information", group: "believe-in-oakland", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: (/* @__PURE__ */ new Date()).toISOString() },
       files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: await sha256(body) }, ...extra],
-      refs: [],
       register: []
     };
   };
@@ -3636,7 +3635,7 @@ $("#n-save").addEventListener("click", async ()=>{
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
       files: [{ path:"bundle.md", text, bytes:text.length, sha256: await sha256Text(text) }],
-      refs: [], register: [],
+      register: [],
     });
     if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
     $("#n-title").value = ""; $("#n-body").value = "";
@@ -3717,7 +3716,7 @@ $("#e-save").addEventListener("click", async ()=>{
       meta: { object_type: fmv.object_type, group:"believe-in-oakland", title: fmv.title || EDIT_ID,
               current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
       files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) }],
-      refs: [], register: [],
+      register: [],
     });
     if (!r.result || !r.result.ok) {
       const why = (r.result && r.result.reason) || r.error || "unknown";
@@ -4212,7 +4211,13 @@ var Store = class _Store extends DurableObject {
    */
   promote(pkg) {
     if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
-    const { bundleId, base, files, meta, snapKey, author, refs = [], register = [] } = pkg;
+    const { bundleId, base, files, meta, snapKey, author, register = [] } = pkg;
+    if (Array.isArray(pkg.refs) && pkg.refs.length)
+      return {
+        ok: false,
+        reason: "REFS_IN_PAYLOAD",
+        detail: "references are read from bundle.md frontmatter, not from the promote payload; remove the refs field"
+      };
     if (!bundleId || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
     return this.ctx.storage.transactionSync(() => {
       const cur = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
@@ -4306,8 +4311,17 @@ var Store = class _Store extends DurableObject {
         bundleId
       );
       this.sql.exec(`DELETE FROM refs WHERE bundle_id=?`, bundleId);
-      for (const t of refs)
-        this.sql.exec(`INSERT OR REPLACE INTO refs (bundle_id,target_id,kind) VALUES (?,?,?)`, bundleId, t.target, t.kind ?? "");
+      const md = files.find((f2) => f2.path === "bundle.md");
+      const fmRefs = md && typeof md.text === "string" ? parseFrontmatter(md.text).data?.references ?? [] : [];
+      for (const t of Array.isArray(fmRefs) ? fmRefs : []) {
+        if (!t || typeof t !== "object" || typeof t.target !== "string") continue;
+        this.sql.exec(
+          `INSERT OR REPLACE INTO refs (bundle_id,target_id,kind) VALUES (?,?,?)`,
+          bundleId,
+          t.target,
+          typeof t.rel === "string" ? t.rel : ""
+        );
+      }
       for (const c of register)
         this.sql.exec(
           `INSERT OR REPLACE INTO register (capture_sha,bundle_id,path,encoding,bytes,registered) VALUES (?,?,?,?,?,?)`,

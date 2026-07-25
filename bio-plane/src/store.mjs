@@ -1,4 +1,8 @@
 import { DurableObject } from "cloudflare:workers";
+/* The catalog's own frontmatter parser. References are read from the document
+   with the same code that later checks them, so the store's projection and the
+   checker's view cannot disagree about what the document says. */
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 
 /* BIO store, plane layer, step 1.
@@ -161,7 +165,16 @@ export class Store extends DurableObject {
    */
   promote(pkg) {
     if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
-    const { bundleId, base, files, meta, snapKey, author, refs = [], register = [] } = pkg;
+    const { bundleId, base, files, meta, snapKey, author, register = [] } = pkg;
+    /* References used to arrive in the payload AND live in the frontmatter, and
+       only the frontmatter was ever checked, so the two could disagree with
+       nothing noticing (DEBT D-21). The document is authoritative. A caller
+       still sending the old field is refused rather than quietly overridden,
+       because a silent override is how the two drifted apart in the first
+       place. */
+    if (Array.isArray(pkg.refs) && pkg.refs.length)
+      return { ok: false, reason: "REFS_IN_PAYLOAD",
+               detail: "references are read from bundle.md frontmatter, not from the promote payload; remove the refs field" };
     if (!bundleId || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
     return this.ctx.storage.transactionSync(() => {
       const cur = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
@@ -234,9 +247,17 @@ export class Store extends DurableObject {
         bundleId, meta.object_type, meta.group, meta.title, meta.current_state, meta.prior_state ?? null,
         meta.created, meta.last_updated, meta.criticality ?? null, meta.classification ?? null, newSha, bundleId);
 
+      /* Projected from the document, every promotion, so the table is a view of
+         bundle.md rather than a second place to state the same thing. */
       this.sql.exec(`DELETE FROM refs WHERE bundle_id=?`, bundleId);
-      for (const t of refs)
-        this.sql.exec(`INSERT OR REPLACE INTO refs (bundle_id,target_id,kind) VALUES (?,?,?)`, bundleId, t.target, t.kind ?? "");
+      const md = files.find((f) => f.path === "bundle.md");
+      const fmRefs = md && typeof md.text === "string"
+        ? (parseFrontmatter(md.text).data?.references ?? []) : [];
+      for (const t of Array.isArray(fmRefs) ? fmRefs : []) {
+        if (!t || typeof t !== "object" || typeof t.target !== "string") continue;
+        this.sql.exec(`INSERT OR REPLACE INTO refs (bundle_id,target_id,kind) VALUES (?,?,?)`,
+          bundleId, t.target, typeof t.rel === "string" ? t.rel : "");
+      }
 
       for (const c of register)
         this.sql.exec(

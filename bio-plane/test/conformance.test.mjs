@@ -77,7 +77,7 @@ const pkg = (rev, state, base, snapKey) => {
       { path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) },
       { path: "data/dataset.json", text: data, bytes: data.length, sha256: sha(data) },
     ],
-    refs: [], register: [],
+    register: [],
   };
 };
 
@@ -236,6 +236,46 @@ console.log("\n--- a revision through the browser stays conformant ---");
     rev2.includes("### Session 2026-07-25T09:00:00Z"), true);
   t("Review Notes still follows the Session Log",
     rev2.indexOf("## Review Notes") > rev2.indexOf("### Session 2026-07-25T09:00:00Z"), true);
+}
+
+
+console.log("\n--- references have one home ---");
+{
+  /* The document is authoritative. A caller sending the old payload field is
+     refused by name, and the refs table is a projection of the frontmatter, so
+     the dangling-reference view and the catalog's C-6.2 read the same edges. */
+  const RID = "INFO-2026-0004-refs-check";
+  const withRef = (target) => md("collected", 1).replace("id: " + ID, "id: " + RID)
+    .replace("references: []", ["references:", "  - rel: cites",
+      "    target: " + target, "    status: confirmed", '    note: ""'].join("\n"));
+  const body1 = withRef(ID);
+  const mk = (text, base, snapKey) => ({
+    bundleId: RID, base, snapKey, author: "claude",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Conformance target",
+            current_state: "collected", created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T01:00:00Z" },
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+    register: [],
+  });
+  const bad = await post("promote", { ...mk(body1, null, "20260724T040000Z_dddd4444"), refs: [{ target: ID }] });
+  t("a caller still sending payload refs is refused by name", bad.result.reason, "REFS_IN_PAYLOAD");
+
+  const good = await post("promote", mk(body1, null, "20260724T040000Z_dddd4444"));
+  t("without it, the promotion lands", good.result.ok, true);
+  const dang1 = (await get(`op=dangling`)).result.dangling.filter((d) => d.bundle_id === RID);
+  t("a reference to something that exists is not dangling", dang1.length, 0);
+
+  const body2 = withRef("INFO-2026-9999-nowhere");
+  const upd = await post("promote", mk(body2, good.result.bundleSha, "20260724T050000Z_eeee5555"));
+  t("repointing it at nothing lands as a document edit", upd.result.ok, true);
+  const dang2 = (await get(`op=dangling`)).result.dangling.filter((d) => d.bundle_id === RID);
+  t("and the store's own view now sees the dangle", dang2.map((d) => d.target_id), ["INFO-2026-9999-nowhere"]);
+
+  const img2 = (await get(`op=image&id=${RID}`)).result;
+  const f4 = new Map(); for (const [p2, v] of Object.entries(img2)) if (typeof v === "string") f4.set(p2, v);
+  const { findings: rf2 } = await checkBundle({ folderName: RID, files: f4,
+    sha256: shaHex, sha512: sha512Hex, resolveTarget: (x) => x === RID || x === ID });
+  t("and the catalog agrees, by name",
+    rf2.filter((x) => x.severity === "error").map((x) => x.check), ["C-6.2"]);
 }
 
 await mf.dispose();

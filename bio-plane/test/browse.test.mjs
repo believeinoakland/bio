@@ -39,7 +39,7 @@ await post("/api/?op=promote&token=mem-browse-test-1", {
     { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
     { path: "snapshots/doc.bin", blobSha: capSha, bytes: cap.length, sha256: capSha },
   ],
-  refs: [], register: [{ path: "snapshots/doc.bin", sha256: capSha, bytes: cap.length, encoding: "binary" }],
+  register: [{ path: "snapshots/doc.bin", sha256: capSha, bytes: cap.length, encoding: "binary" }],
 });
 
 console.log("\n--- a password sign-in yields a working read session ---");

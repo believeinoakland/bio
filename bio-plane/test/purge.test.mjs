@@ -31,7 +31,7 @@ const pkg = (id) => {
     meta: { object_type: "information", group: "believe-in-oakland", title: "t",
             current_state: "collected", created: "2026-01-01T00:00:00Z", last_updated: "2026-07-23T10:00:00Z" },
     files: [{ path: "bundle.md", text: b, bytes: b.length, sha256: sha(b) }],
-    refs: [], register: [], base: null };
+    register: [], base: null };
 };
 const post = (q, body) => j(q, { method: "POST", body: JSON.stringify(body) });
 

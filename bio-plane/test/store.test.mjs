@@ -29,7 +29,7 @@ const pkg = (state, n, extra = []) => {
     bundleId: "INFO-2026-0001-x", snapKey: "20260723T100000Z_aaaa1111", author: "claude",
     meta: { object_type: "information", group: "believe-in-oakland", title: "t", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: "2026-07-23T10:00:00Z" },
     files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) }, ...extra],
-    refs: [], register: [],
+    register: [],
   };
 };
 
