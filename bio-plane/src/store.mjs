@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 /* The catalog's own frontmatter parser. References are read from the document
    with the same code that later checks them, so the store's projection and the
    checker's view cannot disagree about what the document says. */
-import { parseFrontmatter } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, checkGatheringGrammar } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 
 /* BIO store, plane layer, step 1.
@@ -190,6 +190,31 @@ export class Store extends DurableObject {
         if (f.text !== undefined && f.text.length > INLINE_MAX)
           return { ok: false, reason: "OVERSIZE_INLINE", path: f.path, bytes: f.text.length };
       }
+      /* A gathering queue is validated at the WRITE, not only at ratification.
+         C-18.5's grammar exists because a leaked write token must be able to
+         litter the queue without steering a member's session: the exporter
+         renders these fields as quoted data and the grammar bounds what they can
+         carry. Refusing at the write means a malformed request never lands, so
+         nobody has to read it to find out it was junk. The catalog's own function
+         does the judging; the store supplies the file and reports its findings
+         verbatim. */
+      /* Historical replay is not authorship. The record's own history contains
+         gathering queues written before this grammar existed, and a migration
+         replays them verbatim through this same front door. Refusing them would
+         mean the plane cannot faithfully hold its own past, so a replay says so
+         explicitly and the manifest entry records it forever. The exemption is
+         narrow by construction: it skips THIS check and nothing else, and it
+         cannot hide, because a replayed revision is marked in the history a
+         reader can see. */
+      const gj = pkg.replay ? null : files.find((f) => f.path === "data/gathering.json");
+      if (gj && typeof gj.text === "string") {
+        const gf = [];
+        checkGatheringGrammar({ files: new Map([["data/gathering.json", gj.text]]) }, gf);
+        const errs = gf.filter((x) => x.severity === "error");
+        if (errs.length)
+          return { ok: false, reason: "GATHERING_REFUSED",
+                   findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
+      }
 
       // history is append-only: snapshot the outgoing live state first
       /* A creation records a manifest entry with the empty-string SHA as its
@@ -201,7 +226,7 @@ export class Store extends DurableObject {
       if (!cur) {
         this.sql.exec(
           `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
-          bundleId, snapKey, "promotion", EMPTY_STRING_SHA, author,
+          bundleId, snapKey, pkg.replay ? "promotion-replay" : "promotion", EMPTY_STRING_SHA, author,
           meta.last_updated || new Date().toISOString(),
           JSON.stringify(files.map((f) => f.path)));
       }
@@ -216,7 +241,7 @@ export class Store extends DurableObject {
              that is the vocabulary. A creation is still distinguishable, by a
              base equal to the empty-string SHA, which is how the accelerator
              recorded it and how C-20.1 recognises one. */
-          bundleId, snapKey, "promotion", base, author,
+          bundleId, snapKey, pkg.replay ? "promotion-replay" : "promotion", base, author,
           /* The revision's own time, never the server's wall clock. C-12.1
              compares live last_updated against earlier entries' created, and a
              signed ratification legitimately backdates last_updated to the

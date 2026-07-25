@@ -1,5 +1,5 @@
 // @ts-check
-// bio-checks 1.16.5. See checks/README.md for the divergence from the 1.16.4
+// bio-checks 1.16.6. See checks/README.md for the divergence from the 1.16.4
 // bytes the retired Apps Script pinned.
 // bio-checks: the one check codebase (BIO_State_Rules_Consistency v1.1, Mechanical Verification Law).
 // Plain JavaScript, ES modules, zero dependencies, no build step.
@@ -1546,7 +1546,12 @@ async function checkInfo2Contract(ctx, findings) {
  *  these fields as quoted data, and this grammar bounds what they can carry
  *  (F5, doctrine 0.7). Scoped by declared contract: enforced only where the
  *  file is present. */
-function checkGatheringGrammar(ctx, findings) {
+/* 1.16.6: exported. The gate already ran this at ratification, but a queue
+   entry that cannot steer a session can still waste a member's attention, and a
+   request refused at the WRITE never lands at all. Exporting the existing
+   function is how the plane refuses at write without reimplementing the grammar,
+   which would be a second grammar pretending to be the same one. */
+export function checkGatheringGrammar(ctx, findings) {
   const raw = ctx.files.get('data/gathering.json');
   if (!raw) return;
   let g;

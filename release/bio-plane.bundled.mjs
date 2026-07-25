@@ -4231,12 +4231,24 @@ var Store = class _Store extends DurableObject {
         if (f2.text !== void 0 && f2.text.length > INLINE_MAX)
           return { ok: false, reason: "OVERSIZE_INLINE", path: f2.path, bytes: f2.text.length };
       }
+      const gj = pkg.replay ? null : files.find((f2) => f2.path === "data/gathering.json");
+      if (gj && typeof gj.text === "string") {
+        const gf2 = [];
+        checkGatheringGrammar({ files: /* @__PURE__ */ new Map([["data/gathering.json", gj.text]]) }, gf2);
+        const errs = gf2.filter((x) => x.severity === "error");
+        if (errs.length)
+          return {
+            ok: false,
+            reason: "GATHERING_REFUSED",
+            findings: errs.map((x) => ({ check: x.check, detail: x.message }))
+          };
+      }
       if (!cur) {
         this.sql.exec(
           `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
           bundleId,
           snapKey,
-          "promotion",
+          pkg.replay ? "promotion-replay" : "promotion",
           EMPTY_STRING_SHA2,
           author,
           meta.last_updated || (/* @__PURE__ */ new Date()).toISOString(),
@@ -4263,7 +4275,7 @@ var Store = class _Store extends DurableObject {
              recorded it and how C-20.1 recognises one. */
           bundleId,
           snapKey,
-          "promotion",
+          pkg.replay ? "promotion-replay" : "promotion",
           base,
           author,
           /* The revision's own time, never the server's wall clock. C-12.1

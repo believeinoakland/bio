@@ -371,6 +371,13 @@ export function buildPackages(bundleId, loaded, states, revisionFiles, provRegis
         criticality: fm.criticality ?? null, classification: fm.classification ?? null,
       },
       files: revisionFiles[i],
+      /* This is replay, not authorship. The store skips the gathering-queue
+         grammar for a replayed revision, because the record's own history holds
+         queues written before that grammar existed and a migration must be able
+         to carry the past verbatim. The manifest entry records the replay, so
+         which revisions were reconstructed rather than authored stays visible in
+         the history forever. */
+      replay: true,
       /* References are no longer sent: promote reads them out of bundle.md with
          the catalog's own parser, so the migrated document carries them exactly
          as Drive wrote them and the store projects that rather than a

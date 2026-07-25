@@ -197,7 +197,7 @@ fragment, which never reaches a server, and it opens the enrolment screen that
 had existed since 0.4.0 with no reachable path to it.
 
 ### S-4 Gathering requests
-**Status: todo** · Depends: S-2
+**Status: done (0.7.0)** · Depends: S-2
 
 `data/gathering.json` per the C-18.5 grammar: GATH identifiers, dual-audience
 targets, locators validated by the catalog's own `isPublicHttpsLocator`, and the
@@ -208,6 +208,33 @@ a new one.
 **Accepts when:** a request survives a round trip and C-18.5 passes; a request
 carrying a non-public locator, a multiline target, or an oversize description is
 refused at the write with the check's own message.
+
+**Outcome, 0.7.0.** Done, 40 assertions in `test/gathering.test.mjjs`. The write
+path runs the catalog's `checkGatheringGrammar`, which required exporting it
+(catalog 1.16.6, no logic changed). Refused at the write rather than only at
+ratification, because the queue is an instruction channel: a session reads it and
+acts on it, so a malformed entry that lands has already cost a member's attention
+even if the gate would later catch it.
+
+Refused and named: non-https locators, bare IPs, credentials in the authority,
+localhost, multiline targets, oversize targets and descriptions, identifiers
+outside the GATH grammar, criticality and status outside their enums, requests
+with no locators, and sweep sources that are not public https. Each reports
+C-18.5 with the catalog's own message. A separate assertion proves nothing landed
+when a write was refused.
+
+**One real conflict, resolved explicitly rather than papered over.** Enforcing the
+grammar at the write broke historical replay: the record's own history contains
+gathering queues written before this grammar existed, and a migration replays them
+verbatim through the same front door. Refusing them would mean the plane cannot
+faithfully hold its own past.
+
+So a replay declares itself. `promote` accepts `replay: true`, which skips THIS
+check and nothing else, and the manifest entry records `kind: promotion-replay`,
+so which revisions were reconstructed rather than authored stays visible in the
+history permanently. The exemption cannot hide, which is the only version of it
+worth having. Tested both ways: authored, the legacy queue is refused; replayed,
+it lands and the history says so.
 
 ### S-5 Capture and the provenance register
 **Status: todo** · Depends: S-4

@@ -33,9 +33,17 @@ The plane has WebCrypto, so a port should inject platform primitives at those
 seams rather than carry the hand-rolled versions, and the catalog is written
 to allow exactly that.
 
+## 1.16.6, recorded 2026-07-24
+
+`checkGatheringGrammar` is exported. No logic changed. The gate already ran it at
+ratification; the plane now also runs it at the WRITE, so a malformed gathering
+request never lands rather than being caught later. Exporting the existing
+function is how that happens without a second grammar pretending to be the same
+one.
+
 ## Divergence from 1.16.4, recorded 2026-07-24
 
-This file is now **1.16.5** and no longer matches the SHA-256 the retired Apps
+This file is now **1.16.6** and no longer matches the SHA-256 the retired Apps
 Script pinned. One line changed, for one reason.
 
 C-12.2's history-snapshot presence check used `ctx.files.has(snapPath)`. The
