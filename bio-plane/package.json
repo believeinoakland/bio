@@ -30,7 +30,8 @@
     "test:mechanical": "node test/mechanical.test.mjs",
     "test:audit": "node test/audit.test.mjs",
     "bench": "node test/scale.mjs",
-    "probe:retrieval": "node test/retrieval-probe.mjs"
+    "probe:retrieval": "node test/retrieval-probe.mjs",
+    "probe:facets": "node test/facet-probe.mjs 20000"
   },
   "devDependencies": {
     "miniflare": "^4.20260722.0",

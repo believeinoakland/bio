@@ -567,14 +567,39 @@ their own systems, and the source file is removed in a commit that says why.
 ### S-10 Retrieval
 **Status: blocked (on a design conversation, not on code)** · Depends: S-8 (probe answered)
 
-The mechanism is decided by measurement: FTS5 inside the Durable Object, per
-`RETRIEVAL-PROBE.md`. The DESIGN is not decided and must not be inferred. Before
-any `op=search` is built, Bob settles the five open questions recorded at the
-end of that document: the indexed surface (frontmatter carries locators, which
-is a fence question), the result contract (ids, ranked snippets, provenance into
-Context), viewer-position visibility filtering (the D-15 obligation, coupled to
-the membership model), public scope and the latent `op=index` public-class
-inconsistency, and transactional maintenance inside `promote`.
+The scope is a full search, filter, list, sort, and select surface, not free-text
+search. Free text is one substrate element. The control surface is a collapsible
+sidebar of data presentation and editing views, with filter and sort integrated
+into presentation header controls, and selection through keystroke and mouse
+modifiers and context-menu actions. Query syntax is Google-like: a bare string at
+the simple end, compound nested booleans with metadata type and value selectors
+at the rich end. Metadata and frontmatter are searchable, not only body text.
+
+The mechanism is decided by measurement, in two probes:
+
+- `RETRIEVAL-PROBE.md` (probe 1): FTS5 inside the Durable Object beats an exported
+  index, because cost tracks result size rather than corpus size.
+- `RETRIEVAL-SUBSTRATE.md` (probe 2): the other four verbs measured. The engine
+  has every feature the query language needs (nested booleans, phrases, prefix,
+  NEAR, bm25, snippets, column-scoped terms, JSON1, generated columns, expression
+  indexes). Typed indexed columns beat a facet table by ~9x on write and ~5.5x on
+  space, with JSON1 covering the heterogeneous per-schema tail. Nothing exceeds
+  ~46ms at 20,000 bundles, facet counts for the sidebar included.
+
+Two obligations fall out of the measurements and are not open questions. Every
+sort compiles to `ORDER BY <field> <dir>, id ASC`, because without a declared
+stable tiebreak paging is wrong rather than merely inconsistent, on any field
+with ties. And select-all is a distinct operation from a page, returning every id
+in the set, with the set stable between selection and action.
+
+The DESIGN is not decided and must not be inferred. Before any `op=search` is
+built, Bob settles the open questions at the end of `RETRIEVAL-SUBSTRATE.md`:
+which text and metadata fields are searchable and to whom (frontmatter carries
+locators, which is a fence question), the result contract (ids, ranked snippets,
+provenance into Context), viewer-position visibility filtering (the D-15
+obligation, coupled to the membership model), public scope and the latent
+`op=index` public-class inconsistency, and whether a selection is client-held ids
+or a server-side snapshot.
 
 A flat member-scope search over the working corpus is not coupled to the unbuilt
 membership work; a viewer-filtered search is. That is the natural seam if the
@@ -582,8 +607,9 @@ arc is split.
 
 **Accepts when:** the design questions are answered by Bob, then an `op=search`
 that runs FTS5 inside the object returns results agreeing exactly with a
-brute-force scan over the same query semantics, proven by a test held to the
-`op=audit` agreement standard, and is reachable only by member class or above.
+brute-force scan over the same query semantics, across all five verbs and not
+free text alone, proven by a test held to the `op=audit` agreement standard, and
+is reachable only by member class or above.
 
 ---
 

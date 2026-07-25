@@ -19,6 +19,21 @@ open design questions in `development/RETRIEVAL-PROBE.md`; plan step S-10. No
 retrieval op ships until the design questions are answered by Bob. The plane
 source is unchanged by this probe.
 
+**Retrieval probe 2 answered (July 25).** Bob set the scope: the surface is
+search, filter, list, sort, and select, with Google-like query syntax and
+searchable metadata and frontmatter, not free text alone. Probe 2 measured the
+four verbs probe 1 did not. The engine has every feature the query language
+needs, including nested booleans, phrases, prefix, NEAR, bm25, snippets,
+column-scoped terms, JSON1, generated columns, and expression indexes. Typed
+indexed columns beat a facet table by about 9x on write cost and 5.5x on space,
+with JSON1 covering the heterogeneous per-schema frontmatter tail, so no facet
+table is needed. Nothing exceeds about 46ms at 20,000 bundles, sidebar facet
+counts included, and all shapes agree exactly with an unindexed ground truth at
+20,000 and on the real 30-bundle corpus. The current `bundles` projection covers
+roughly half the frontmatter the UX must filter on and needs extending. Record in
+`development/RETRIEVAL-SUBSTRATE.md`. The plane source is unchanged by this probe
+as well.
+
 ---
 
 v13, July 24, 2026. THE WRITE ARC IS BUILT AND LIVE ON BIOSMOKE6 (tree
