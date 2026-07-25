@@ -92,6 +92,76 @@ every governance rule enforceable, since a group that cannot leave can be
 held. The migration tooling already performs a verified transfer of the
 real record, so this is productization rather than new ground.
 
+THE CONFORMANCE AND ACQUISITION ARCS ARE DONE. PLAN.md steps S-1 through S-8
+are complete and recorded there with their outcomes. The battery is 592
+assertions across twenty-one suites in about 52 seconds; `npm test` in
+bio-plane runs all of it and `npm run bench 20000` runs the scale harness.
+The live record at biosmoke7 audits at 30 clean against the full catalog.
+
+S-9, retiring the old plane, is Bob's: revoke the R2 key pair in Cloudflare
+and the SPN2 pair in the Internet Archive account, delete the Apps Script
+deployment (which retires its four bearer tokens by removing what they open),
+then delete docs/development/apps-script/promotion-service.gs per its own
+expiry condition. The SPN2 pair only needs revoking, not replacing, because
+co-attestation went anonymous in 0.9.1.
+
+## THE NEXT ARC IS RETRIEVAL, AND IT NEEDS A DESIGN CONVERSATION FIRST
+
+Do not start implementing. The technical design does not exist yet, and this
+is the trap that cost the membership work a whole reconciliation:
+
+**Nothing in docs/architecture/ specifies retrieval.** The Roadmap has a
+Search UX category (user-initiated retrieval, persistent requests, results
+carrying provenance into Context) and that is all. FTS5, Vectorize and
+reciprocal rank fusion appear ONLY in docs/development/, which is to say they
+are prior sessions' intentions, not doctrine. Search the corpus and confirm
+this before believing it, then ask Bob rather than inferring, the way the
+membership model should have been asked about and was not.
+
+What IS settled and should shape the conversation:
+
+- Whole-store work inside the Durable Object costs about 0.2ms per bundle
+  (S-8). A brute-force scan of 20,000 bundles is under four seconds inside
+  the object and about eight on the deployed plane. Retrieval is therefore
+  not needed for correctness at any plausible group's scale, which makes it a
+  usability question rather than a feasibility one, and changes what a good
+  answer looks like.
+- `op=audit` already demonstrates the shape a whole-store operation takes:
+  cursor-paginated, run where the data is, agreeing exactly with the
+  equivalent pass from outside. Test/audit.test.mjs asserts that agreement,
+  and any index must be held to the same standard: an index that disagrees
+  with a scan is worse than no index.
+- The two-bucket fence is absolute. An index over the working corpus must not
+  be readable through any public surface, and the doorbell's `verify` answers
+  only from the published projection. Whatever is built, the fence is not
+  negotiable and no index may become a way around it.
+- Conversion Plan probe 1, FTS5 virtual tables versus an exported index, is
+  UNANSWERED. It was folded into S-8 optimistically and could not be measured
+  because FTS5 does not exist yet. It is a real question and it now has a
+  measurement harness (test/scale.mjs) to answer it in.
+
+The member half below Section 7 is unblocked and can be built immediately:
+identity and handle with uniqueness enforcement, the required
+administrator-assigned identity label, capabilities, burner-URL
+invitations replacing the current invitation code, and the two-admin
+bootstrap rules in Section 4. Note that the enrolment screen shipped in
+0.4.0 is UNREACHABLE (nothing calls `show("#s-enroll")`); the burner URL
+is what should reach it.
+
+ARCHITECTURE DEBT, recorded in Section 9: the root of trust is unmodelled.
+Three parts of the design lean on it, and the only thing implementing it is
+ADMIN_TOKEN, a bootstrap credential that became the root of trust by
+accident of being the only thing that can reclaim an instance. It is a
+proxy for hosting access, has no custody model, is not auditable, and
+cannot be rotated without returning the instance to unclaimed. Deciding
+what a root of trust should BE for a BIO group is a doctrine question of
+the same weight as the membership model and deserves its own session.
+
+Also scheduled: secure verified export (Section 8), which is what makes
+every governance rule enforceable, since a group that cannot leave can be
+held. The migration tooling already performs a verified transfer of the
+real record, so this is productization rather than new ground.
+
 THE NEXT ARC IS SPECIFIED. Read
 docs/development/CONFORMANCE-AND-INTAKE-ARC.md first. It is the work plan:
 make the plane conformant to the check catalog, then rebuild on it the
@@ -174,3 +244,39 @@ lives in docs/architecture/, operational records in docs/development/.
 
 The state of the work lives in docs/BIO_DATAPLANE_STATE.md in this
 repository. Claude keeps it current with every release.
+
+## What the session of 2026-07-24 knew that is not written elsewhere
+
+Recorded deliberately, because the risk in ending a long session is
+undocumented context rather than unfinished code.
+
+- **The catalog is the authority and the plane RUNS it.** `bio-plane/checks/`
+  is 1.16.6 and diverges from the 1.16.4 the retired Apps Script pinned by
+  two changes, both recorded in that directory's README with reasoning. Never
+  reimplement a check: the three-implementation conformance requirement is
+  satisfied by three callers of the same bytes, and a rewrite is a fourth
+  implementation pretending to be agreement.
+- **The instance page is one enormous template literal.** An unescaped
+  backtick terminates it and a dollar-brace starts an interpolation, so a
+  COMMENT written in ordinary prose can destroy the served script. This has
+  happened twice, at 0.3.8 and again on 2026-07-24.
+  `test/hygiene.test.mjs` now scans for it, loads the module, and parses what
+  it serves. Trust that suite and do not hand-verify.
+- **`promote` writes a whole image.** As of 0.13.1 it refuses to drop a file
+  the previous revision had unless the caller names it in `drop[]`. That
+  refusal exists because three separate callers destroyed evidence by
+  mentioning only the file they cared about.
+- **Every Miniflare instance must be disposed and every suite must exit on
+  its own result.** `hygiene.test.mjs` enforces both. Three suites without
+  that discipline cost about 150 seconds each per run and reported nothing
+  wrong.
+- **Bob's own error rate observation applies to Claude too.** This session
+  introduced roughly ten defects of its own, several in shipped code: a token
+  sliced at the wrong offset, a monitor that deleted provenance registers, a
+  promotion record carrying pre-image hashes which silently disabled the
+  mechanical audit entirely, and a benchmark measured over non-conformant
+  input. Every one was caught by a test written in the same sitting, which is
+  the process working. The lesson recorded for successors: write the
+  violation test before the feature, and measure rather than assume, because
+  the failures that cost the most here were checks that silently declined to
+  run rather than checks that failed.
