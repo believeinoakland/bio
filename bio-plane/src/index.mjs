@@ -10,6 +10,8 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    It is the one bound between a member typing a URL and this Worker fetching it,
    so it must be the same function the checker uses on the queue. */
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
+import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
+         TSA_CONTENT_TYPE, TSA_ACCEPT } from "./tsa.mjs";
 export { Store } from "./store.mjs";
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -55,6 +57,10 @@ const OPS = {
      and no bundle state, because the doctrine is explicit that no intake path
      writes live state and the daemon and the member are writers like any other. */
   acquire:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* Co-attestation. Asks a timestamp authority to attest that a capture existed
+     at a claimed instant, which is the one part of provenance a group cannot
+     fabricate for itself. */
+  attest:     { classes: ["admin", "member", "probe"],           mutating: true  },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -96,9 +102,9 @@ const OPS = {
    only by machine credential. Member sessions get intake and review; admin
    sessions additionally manage the roster and keys. */
 const SESSION_OPS = {
-  member: new Set(["promote", "lease", "allocid", "capture", "acquire", "ratify",
+  member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "ratify",
                    "inbox", "inboxget", "inboxresolve"]),
-  admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "ratify",
+  admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "ratify",
                    "inbox", "inboxget", "inboxresolve",
                    "memberadd", "memberset", "signeradd", "signerset"]),
 };
@@ -499,6 +505,81 @@ export default {
         note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
         store: storeName, tokenClass: cls,
       }, 200);
+    }
+
+    /* Co-attestation over a capture hash.
+     *
+     * The doctrine's asymmetry: a self-recorded hash proves integrity since
+     * capture and nothing about origin, because it is the group attesting to
+     * itself. A timestamp token is issued by somebody the group does not
+     * control, so it proves the capture EXISTED at the claimed instant, which
+     * is the part an attacker holding a write token cannot forge.
+     *
+     * Every attempt is recorded, successes and failures alike, in the shape
+     * C-18.1 requires. The doctrine is explicit that a failed attempt is
+     * recorded with its reason and never omitted: a provenance register showing
+     * no attempt and one showing an attempt that failed are different claims,
+     * and collapsing them would let an absence read as a success.
+     */
+    if (op === "attest") {
+      if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
+      if (typeof env.CAPTURES?.put !== "function")
+        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+      const body = await req.json().catch(() => null);
+      const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
+      if (!/^[0-9a-f]{64}$/.test(sha))
+        return json({ ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" }, 400);
+      if (!(await env.CAPTURES.head(`${storeName}/captures/${sha}`)))
+        return json({ ok: false, reason: "NO_SUCH_CAPTURE",
+                      detail: "nothing in this store has that hash; capture the document before attesting it" }, 404);
+
+      const attempts = [];
+      let token = null, tokenSha = null, service = null;
+      for (const endpoint of TSA_ENDPOINTS) {
+        const attempted = new Date().toISOString().split(".")[0] + "Z";
+        try {
+          const { der } = timestampRequest(sha);
+          const res = await fetch(endpoint, {
+            method: "POST", body: der,
+            headers: { "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT },
+          });
+          if (!res.ok) {
+            attempts.push({ service: endpoint, attempted, ok: false, note: `http ${res.status}` });
+            continue;
+          }
+          const parsed = parseTimestampResponse(new Uint8Array(await res.arrayBuffer()), sha);
+          if (!parsed.ok) {
+            attempts.push({ service: endpoint, attempted, ok: false, note: parsed.reason });
+            continue;
+          }
+          const digest = await crypto.subtle.digest("SHA-256", parsed.token);
+          tokenSha = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
+          await env.CAPTURES.put(`${storeName}/captures/${tokenSha}`, parsed.token, { sha256: digest });
+          token = parsed.token; service = endpoint;
+          attempts.push({ service: endpoint, attempted, ok: true, kind: "rfc3161",
+                          token_sha256: tokenSha, token_bytes: parsed.token.length });
+          break;
+        } catch (e) {
+          attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
+        }
+      }
+
+      return json({
+        ok: !!token,
+        attempts,
+        ...(token ? {
+          attestation: {
+            file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
+            kind: "rfc3161", service, sha256: tokenSha, bytes: token.length,
+            over: sha,
+          },
+          note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
+        } : {
+          reason: "NO_ATTESTATION",
+          note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped.",
+        }),
+        store: storeName, tokenClass: cls,
+      }, token ? 200 : 502);
     }
 
     const stub = env.STORE.get(env.STORE.idFromName(storeName));

@@ -304,7 +304,7 @@ catalog supports `parts` and its incremental SHA-256 streams them one at a time;
 nothing in the plane assembles them yet.
 
 ### S-6 Co-attestation
-**Status: todo** · Depends: S-5
+**Status: RFC 3161 done (0.9.0), Save Page Now next** · Depends: S-5
 
 RFC 3161 primary, per the decision above. DER encode a TimeStampReq, parse the
 TimeStampResp, store the token as a registered capture, record the attempt.
@@ -314,6 +314,53 @@ default.
 
 **Accepts when:** a captured document carries a verifiable RFC 3161 token that
 `openssl ts -verify` accepts, and C-18.4 stops warning on crucial material.
+
+**RFC 3161 done, 0.9.0**, 37 assertions in `test/attest.test.mjs`. `op=attest`
+takes the hash of a capture already in the store, asks a timestamp authority to
+attest it existed, stores the token content-addressed, and returns the attempt
+record in the shape C-18.1 requires.
+
+**The load-bearing assertion is byte-identity with OpenSSL.** Reimplemented ASN.1
+is worth exactly what its conformance test is worth, so the suite builds a
+TimeStampReq, has openssl parse it, then rebuilds it with the nonce openssl chose
+for its own request and compares the bytes. They are identical. openssl is also
+the tool the doctrine's verification path uses, so agreeing with it is the entire
+guarantee rather than a nicety.
+
+**Three design decisions worth not relitigating.**
+
+*The endpoints are a compiled constant, never request input.* This op makes the
+plane send an outbound POST, and a caller-supplied endpoint list would turn every
+instance into a probe of whatever an attacker named. The evidence-locator fence
+exists for member-supplied addresses; not accepting one at all is stronger than
+validating it. A test greps the attest path to prove no endpoint is read from the
+body. They are http rather than https deliberately: the token carries its own
+signature and transport encryption adds nothing to it, which is why the RFC's own
+examples are http.
+
+*Verification is not done here and is not claimed.* Checking a token means parsing
+CMS, validating a certificate chain, and deciding which roots to trust; a Worker
+that got any of that subtly wrong would be worse than one that does not claim it.
+The doctrine already places verification at review. What the plane does guarantee
+is BINDING: the returned token must contain the digest we asked about, so an
+authority cannot hand back a token for something else and have it filed as ours.
+The response says in words that the signature was not verified here.
+
+*Every attempt is recorded, and failures are not dropped.* A register showing an
+attempt that failed and one showing no attempt are different claims about what the
+group tried, and collapsing them lets an absence read as a success. Tested: all
+authorities failing yields `ok: false` with a reason per authority, and one
+authority being down falls through to the next with the failure still in the
+record beside the success.
+
+**One defect the suite caught immediately.** The token was sliced out of the whole
+response using indices relative to the inner sequence, so every token came out
+shifted by the length of the outer header and the binding check refused them all.
+Found on the first run.
+
+**Still owed on this step:** Save Page Now as the opt-in second path, and wiring
+`attestation_attempts` into the provenance register the intake form writes so a
+document arrives already attested.
 
 ### S-7 Monitoring as mechanical writers
 **Status: todo** · Depends: S-5

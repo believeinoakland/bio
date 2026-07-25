@@ -4126,6 +4126,100 @@ var NS_RATIFY = "bio-ratify";
 var ratifyStatement = (bundleId, bundleSha) => te2.encode(`bio-ratify ${bundleId} ${bundleSha}
 `);
 
+// src/tsa.mjs
+var cat2 = (...parts) => {
+  let n = 0;
+  for (const p of parts) n += p.length;
+  const out = new Uint8Array(n);
+  let i = 0;
+  for (const p of parts) {
+    out.set(p, i);
+    i += p.length;
+  }
+  return out;
+};
+function derLen(n) {
+  if (n < 128) return new Uint8Array([n]);
+  const bytes = [];
+  for (let v = n; v > 0; v = Math.floor(v / 256)) bytes.unshift(v % 256);
+  return new Uint8Array([128 | bytes.length, ...bytes]);
+}
+var tlv = (tag, body) => cat2(new Uint8Array([tag]), derLen(body.length), body);
+var derSequence = (...items) => tlv(48, cat2(...items));
+var derOctetString = (bytes) => tlv(4, bytes);
+var derNull = () => new Uint8Array([5, 0]);
+var derBoolean = (v) => new Uint8Array([1, 1, v ? 255 : 0]);
+function derInteger(bytes) {
+  let i = 0;
+  while (i < bytes.length - 1 && bytes[i] === 0 && (bytes[i + 1] & 128) === 0) i++;
+  const trimmed = bytes.slice(i);
+  return tlv(2, trimmed[0] & 128 ? cat2(new Uint8Array([0]), trimmed) : trimmed);
+}
+var derIntegerSmall = (n) => derInteger(new Uint8Array([n]));
+var OID_SHA256 = new Uint8Array([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 1]);
+var hexToBytes = (hex2) => {
+  const out = new Uint8Array(hex2.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex2.substr(i * 2, 2), 16);
+  return out;
+};
+function timestampRequest(sha256Hex, nonceBytes) {
+  const nonce = nonceBytes || crypto.getRandomValues(new Uint8Array(8));
+  return {
+    der: derSequence(
+      derIntegerSmall(1),
+      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex))),
+      derInteger(nonce),
+      derBoolean(true)
+    ),
+    nonce
+  };
+}
+function readTlv(bytes, at) {
+  if (at + 2 > bytes.length) return null;
+  const tag = bytes[at];
+  let i = at + 1, length = bytes[i++];
+  if (length & 128) {
+    const count = length & 127;
+    if (count === 0 || i + count > bytes.length) return null;
+    length = 0;
+    for (let k = 0; k < count; k++) length = length * 256 + bytes[i++];
+  }
+  if (i + length > bytes.length) return null;
+  return { tag, value: bytes.subarray(i, i + length), end: i + length, headerEnd: i };
+}
+function parseTimestampResponse(bytes, expectDigestHex) {
+  const outer = readTlv(bytes, 0);
+  if (!outer || outer.tag !== 48) return { ok: false, reason: "MALFORMED" };
+  const info = readTlv(outer.value, 0);
+  if (!info || info.tag !== 48) return { ok: false, reason: "MALFORMED" };
+  const statusTlv = readTlv(info.value, 0);
+  if (!statusTlv || statusTlv.tag !== 2) return { ok: false, reason: "MALFORMED" };
+  let status = 0;
+  for (const b of statusTlv.value) status = status * 256 + b;
+  if (status !== 0 && status !== 1) return { ok: false, reason: "REJECTED", status };
+  const token = readTlv(outer.value, info.end);
+  if (!token || token.tag !== 48) return { ok: false, reason: "NO_TOKEN", status };
+  const tokenBytes = outer.value.subarray(info.end, token.end);
+  if (expectDigestHex) {
+    const want = hexToBytes(expectDigestHex);
+    let found = false;
+    outer: for (let i = 0; i + want.length <= tokenBytes.length; i++) {
+      for (let k = 0; k < want.length; k++) if (tokenBytes[i + k] !== want[k]) continue outer;
+      found = true;
+      break;
+    }
+    if (!found) return { ok: false, reason: "NOT_BOUND", status };
+  }
+  return { ok: true, status, token: tokenBytes };
+}
+var TSA_ENDPOINTS = [
+  "http://timestamp.digicert.com",
+  "http://timestamp.sectigo.com",
+  "http://rfc3161.ai.moda"
+];
+var TSA_CONTENT_TYPE = "application/timestamp-query";
+var TSA_ACCEPT = "application/timestamp-reply";
+
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -4912,6 +5006,10 @@ var OPS = {
      and no bundle state, because the doctrine is explicit that no intake path
      writes live state and the daemon and the member are writers like any other. */
   acquire: { classes: ["admin", "member", "probe"], mutating: true },
+  /* Co-attestation. Asks a timestamp authority to attest that a capture existed
+     at a claimed instant, which is the one part of provenance a group cannot
+     fabricate for itself. */
+  attest: { classes: ["admin", "member", "probe"], mutating: true },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -4951,6 +5049,7 @@ var SESSION_OPS = {
     "allocid",
     "capture",
     "acquire",
+    "attest",
     "ratify",
     "inbox",
     "inboxget",
@@ -4962,6 +5061,7 @@ var SESSION_OPS = {
     "allocid",
     "capture",
     "acquire",
+    "attest",
     "ratify",
     "inbox",
     "inboxget",
@@ -5342,6 +5442,79 @@ var index_default = {
         store: storeName,
         tokenClass: cls
       }, 200);
+    }
+    if (op === "attest") {
+      if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
+      if (typeof env.CAPTURES?.put !== "function")
+        return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
+      const body2 = await req.json().catch(() => null);
+      const sha = typeof body2?.sha256 === "string" ? body2.sha256.toLowerCase() : "";
+      if (!/^[0-9a-f]{64}$/.test(sha))
+        return json({ ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" }, 400);
+      if (!await env.CAPTURES.head(`${storeName}/captures/${sha}`))
+        return json({
+          ok: false,
+          reason: "NO_SUCH_CAPTURE",
+          detail: "nothing in this store has that hash; capture the document before attesting it"
+        }, 404);
+      const attempts = [];
+      let token = null, tokenSha = null, service = null;
+      for (const endpoint of TSA_ENDPOINTS) {
+        const attempted = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+        try {
+          const { der } = timestampRequest(sha);
+          const res2 = await fetch(endpoint, {
+            method: "POST",
+            body: der,
+            headers: { "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT }
+          });
+          if (!res2.ok) {
+            attempts.push({ service: endpoint, attempted, ok: false, note: `http ${res2.status}` });
+            continue;
+          }
+          const parsed = parseTimestampResponse(new Uint8Array(await res2.arrayBuffer()), sha);
+          if (!parsed.ok) {
+            attempts.push({ service: endpoint, attempted, ok: false, note: parsed.reason });
+            continue;
+          }
+          const digest = await crypto.subtle.digest("SHA-256", parsed.token);
+          tokenSha = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
+          await env.CAPTURES.put(`${storeName}/captures/${tokenSha}`, parsed.token, { sha256: digest });
+          token = parsed.token;
+          service = endpoint;
+          attempts.push({
+            service: endpoint,
+            attempted,
+            ok: true,
+            kind: "rfc3161",
+            token_sha256: tokenSha,
+            token_bytes: parsed.token.length
+          });
+          break;
+        } catch (e) {
+          attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
+        }
+      }
+      return json({
+        ok: !!token,
+        attempts,
+        ...token ? {
+          attestation: {
+            file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
+            kind: "rfc3161",
+            service,
+            sha256: tokenSha,
+            bytes: token.length,
+            over: sha
+          },
+          note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature."
+        } : {
+          reason: "NO_ATTESTATION",
+          note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped."
+        },
+        store: storeName,
+        tokenClass: cls
+      }, token ? 200 : 502);
     }
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
     if (op === "ratify") {
