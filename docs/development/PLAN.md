@@ -91,9 +91,32 @@ Writing that suite immediately produced two findings nothing else had:
   comments record this deadlock freezing a bundle in production on 2026-07-22.
   The entry now takes the revision's own time. See D-17.
 
-**Still owed on this step:** the live-record half of the acceptance test. The
-instance runs 0.4.1 with the old projection, so the 168-to-zero confirmation
-against biosmoke6 needs 0.5.0 deployed. Re-run the audit after the update.
+**Live-record result, 0.5.0 deployed.** 168 findings became 89, and the residue
+splits into two things of different kinds.
+
+**71 were my harness, not the plane.** C-12.2 uses `files.has` directly rather
+than the elided-aware helper, so a tier-scoped image that carries blob
+references instead of blob bytes fails it even though the bytes are in R2.
+Proven by making one bundle's image byte-complete: every C-12.2 error vanished
+and only the item below remained. The audit harness now fetches capture bytes.
+
+This carries a real consequence for S-2. The gate needs BYTE-COMPLETE images
+including history snapshots, so gating a bundle whose history holds large
+captures means pulling those bytes. For the auditor report that was 4 blobs; for
+the record as a whole it was 148MB. Measure it in S-8 rather than assuming it is
+free, and consider whether history-snapshot presence can be satisfied from R2
+`head` rather than a full fetch.
+
+**18 are real, and they are stale data rather than stale code.** C-12.1 compares
+live `last_updated` against earlier entries' `created`, and the migrated entries
+carry the MIGRATION's wall clock (2026-07-24T16:20) instead of the original
+promotion times. D-17 fixed the code that stamps this, but only for promotions
+made after 0.5.0; rows written by the old code keep the wrong value.
+
+The cure is a re-migration on 0.5.1, because the migrate tool replays promotes
+carrying each revision's own `last_updated`, so the entries come out with honest
+times. Nothing needs repairing in place, and the corpus is development reference
+that production will refetch, so a reload costs only the run.
 
 ### S-2 plane-gate/1.0 runs the catalog
 **Status: todo, next** · Debt: D-5 · Depends: S-1 (done). S-3 landed first deliberately: switching on 49 checks before the intake path was conformant would have made the browser form unusable at the moment the gate started working.
