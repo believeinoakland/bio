@@ -458,7 +458,7 @@ underlying sharpness of `promote` remains and is now recorded as D-25: the next
 writer to touch one file of a bundle will meet it too.
 
 ### S-8 Scale benchmark, with the real gate in the path
-**Status: todo** · Debt: D-12 · Depends: S-2
+**Status: done (2026-07-24)** · Debt: D-12 · Depends: S-2
 
 Conversion Plan step 6, still owed: synthesized stores at 5,000 and 20,000
 bundles on the deployed plane against the plan's prediction table. Runs after
@@ -468,6 +468,55 @@ Plan probe 1 (FTS5 virtual tables versus export) folds in here.
 
 **Accepts when:** measured numbers are recorded against the prediction table,
 with the gate in the path, and probe 1 is answered.
+
+**Measured, `test/scale.mjs`.** Local Miniflare, which is workerd with the same
+SQLite the deployed Durable Object uses, so the algorithmic behaviour is the real
+thing and only network is absent. Deliberately not run against biosmoke7: it holds
+the record of reference and twenty thousand synthetic bundles do not belong in it.
+
+| | 5,000 | 20,000 | shape |
+|---|---|---|---|
+| write, per bundle | 7.62ms | 5.82ms | flat |
+| `stats` | 5ms | 5ms | constant |
+| `list` (every bundle) | 81ms | 434ms | linear |
+| `dangling` (whole store) | 5ms | 4ms | constant |
+| `image`, one bundle | 5ms | 4ms | constant |
+| gate, one bundle, in memory | 0.30ms | 0.55ms | constant |
+| read + gate, per bundle | 3.18ms | 3.17ms | flat |
+| whole-store gated pass | 15.9s | 63.5s | linear |
+
+**The design holds, and three of these are better than they needed to be.**
+Promotion does not slow down as the store grows, which was the thing most likely
+to fail. A single bundle's byte-complete image is 4ms, against the roughly 43
+seconds the same operation cost on Drive. And the gate, running all forty-nine
+checks, is half a millisecond: the conformance work of today cost essentially
+nothing at runtime, which is the opposite of what I expected when I wrote D-20's
+warning about byte-complete images.
+
+**The bottleneck is round trips, not the store and not the checks.** On the
+deployed plane a gated whole-store pass at 20,000 bundles is about 2,060 seconds
+sequentially and about 103 seconds at twenty requests in flight, against 63
+seconds locally. Roughly 97 percent of that is the fixed per-call latency of
+fetching one image at a time. The store is not the constraint; the shape of the
+API is.
+
+**The recommendation that follows, recorded as D-26.** A whole-store conformance
+pass should not pay one round trip per bundle. The catalog is a pure function over
+an injected filesystem and the images already live inside the Durable Object, so
+the pass belongs INSIDE the object: one call in, a findings summary out. That
+turns 20,000 round trips into one and makes a full re-audit of a large record a
+minute's work rather than half an hour's.
+
+**`list` is the one thing that will bite later.** It is honestly linear, 434ms at
+20,000, which is fine now and is 2 seconds at 100,000. It returns every bundle
+because nothing has ever needed less. Pagination or a projection with fewer
+columns is the answer when a group gets there, and this is the measurement that
+says when.
+
+**Probe 1, FTS5 virtual tables versus export, is NOT answered** and I am not
+pretending otherwise. It needs the retrieval arc to exist before there is anything
+to compare, and folding it in here was optimistic: the benchmark measured what
+exists, and FTS5 does not.
 
 ### S-9 Retire the old plane
 **Status: todo** · Debt: D-11 · Depends: S-6
