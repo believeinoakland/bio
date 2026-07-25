@@ -96,73 +96,70 @@ before any real group installs.
 
 ## Current state and next task, as of 2026-07-25
 
-The plane is **0.18.0**, signed, tagged `v0.18.0`, deployed and verified on
+The plane is **0.19.0**, signed, tagged `v0.19.0`, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
-signed release asset. Battery **1124 assertions across 26 suites in about 92
-seconds** (`npm test` in bio-plane); installer wizard 90 assertions (`node
-test/wizard.test.mjs` in newgroup). Live record unchanged at 30 bundles, 87
-register rows, `op=audit` 30 checked with zero findings.
+signed release asset. Battery **1184 assertions across 27 suites** (`npm test` in
+bio-plane); installer wizard 90 (`node test/wizard.test.mjs` in newgroup). Live
+record unchanged at 30 bundles, `op=audit` 30 clean.
 
-**S-10 RETRIEVAL IS COMPLETE** (projection, text index, query language,
-`op=search`, selections) and **S-11 HAS STARTED**: the actions that USE a
-selection, built one at a time, lightest first.
+**S-10 RETRIEVAL IS COMPLETE. S-11, the actions that USE a selection, is two
+steps in.** Step 1 was `op=cite` at weight `report` (0.18.0). Step 2 was
+`op=sever` and `op=reinstate` at weight `refuse` (0.19.0), the first callers of
+`selectionResolve`'s refusing arm.
 
-**Step 1 is done: `op=cite`, citing Information in a Project, at weight
-`report`.** It is `selectionResolve`'s first caller. It splices `rel: cites`
-entries into the Project's `bundle.md` frontmatter and promotes a whole image,
-because `refs` is a projection re-derived from the document inside `promote`'s
-transaction and `promote` refuses a `refs` payload outright (D-21). Edges land
-`confirmed` per State Rules 5.1.
+**NEXT STEP, decided: an action that moves an OBJECT's state rather than an
+edge's.** In ascending doctrinal weight: bulk disposition of Problems (`surfaced`
+to `deferred` or `dismissed`; C-2.8 requires a non-empty `disposition_reason`),
+bulk retirement of Information (`verified` to `retired`), and bulk release
+(`collected` to `verified`). Release is last and arguably should never be a bulk
+action: C-18.1 makes it a named member's per-document decision and C-18.7 wants a
+signed release record, so it is the one shape here the intake doctrine argues
+against.
 
-**NEXT STEP, decided: the first STATE-CHANGING action, at weight `refuse`.** That
-is what gives the refusing arm of `selectionResolve` its first caller, and it is
-deliberately a separate commit from citing. It is also where reinstating a
-SEVERED citation belongs: Bob decided on 2026-07-25 that citing a target whose
-edge is severed REFUSES rather than reinstating it silently or skipping past it,
-because a severance is a recorded human judgment and both alternatives decide
-something the operator did not. Reinstatement must record its own reason, the way
-severing does.
+Ops on a Project's citation edges, all member class and above, all mutating, all
+selection-backed: `cite` (report weight, adds), `sever` and `reinstate` (refuse
+weight, move an edge's status, require a reason). Severing never deletes.
 
-Ops added in 0.18.0: `cite` (member class and above, mutating). `SESSION_OPS`
-also gained `search`, `searchfields`, `searchindexcheck`, `selection`,
-`selectionlist` and `cite` for browser sessions, closing a gap where a signed-in
-member could create a selection and then neither search to build one nor resolve
-the one they had made.
+**Debt cleared in 0.19.0:** D-18, D-28, D-32 (further), D-33, D-39. **Open and
+UNBLOCKED:** D-36's class (a probe now exists; keep using it), D-40 (three shared
+fixtures write an illegal `criticality` value as deliberate facet test data).
+**Open and BLOCKED, with the blocker named:** D-1 (root of trust: doctrine work
+needing Bob's decision on what a root of trust should BE), D-9 (needs an
+ADMIN_TOKEN no session has ever held), D-11 and S-9 (revocations in Bob's
+Cloudflare and Internet Archive accounts), D-15 (due when project visibility
+exists, which is the membership architecture; the single compilation point is
+reserved and waiting), D-37 (needs operational experience, not code), D-38
+(open by Bob's decision).
+
+**THE LARGEST UNBLOCKED THING IS THE MEMBERSHIP ARCHITECTURE'S MEMBER HALF.**
+`architecture/BIO_Membership_Architecture_v1.md` below Section 7 is unblocked and
+specified: identity and handle with uniqueness enforcement, the required
+administrator-assigned identity label, capabilities, burner-URL invitations
+replacing the current invitation code, and the two-admin bootstrap rules in
+Section 4. Nothing in that document is undecided. Building it is also what
+unblocks D-15.
 
 **Read the performance numbers from the bench, not from the probe (D-32).**
-`npm run bench:retrieval` measures the REAL path: worst shape 190ms at 20,000
-bundles, index vs corpus clean. The ~46ms ceiling in RETRIEVAL-SUBSTRATE.md was
-measured with a probe object that is not the plane and must not be quoted as
-describing this code.
+`npm run bench:retrieval`. Facet counting now runs as a SINGLE SCAN tallied in
+JS rather than a GROUP BY per field, measured 1.4x to 5x faster on every shape,
+with both forms kept and asserted to agree exactly in the suite and again at
+size in the bench.
 
-**Three undocumented ceilings are load-bearing.** A workerd statement binds about
-100 variables and a compound SELECT takes five terms (D-36). A Project is bounded
-in total cited edges by the 1MB inline file limit rather than by the 10,000
-selection cap, because every edge is written into `bundle.md` (D-38). All three
-were found by scale harnesses, none by the suite, and all three broke real code.
-Run the harnesses when you add a statement shape or change what a write emits.
+**FOUR harnesses, and they find what the suite cannot.** `bench:retrieval` (the
+query path at 20,000, plus paging integrity and the facet head-to-head),
+`bench` (the store harness), `probe:cite` (the citing write, which found D-38),
+and `probe:limits` (workerd's undocumented SQL ceilings, which found that a query
+dies at 98 filter terms on the VARIABLE limit rather than the compound-term
+limit). Run the relevant one before signing anything that changes a statement
+shape or what a write emits.
 
-Open, in Bob's order of interest: D-1 (root of trust unmodelled, doctrine work),
-D-9 (20 unreferenced register rows, needs an admin credential), S-9 (retire the
-Apps Script plane, Bob's hands), D-15 (viewer-position filtering, when project
-visibility is built), D-32 (further retrieval optimisation), D-37 (the 300s
-keep-alive is a guess), D-39 (an empty POST body returns a Cloudflare exception
-rather than a named refusal, general and one line to fix).
-
-**Standing rule: run the bench before signing.** `npm run bench:retrieval` loads a
-corpus through the real `promote` and drives the real `op=search` at 20,000
-bundles. Run it before signing any release that touched how a statement is built,
-and read its worst-shape line. On 2026-07-25 it found two undocumented workerd
-ceilings that 1032 assertions did not, one of which would have broken the query
-compiler on six metadata filters, which is one ordinary pass over a filter
-sidebar. `npm run probe:cite` is the same discipline for the citing write, and it
-found D-38 on its first run.
-
-**A pass at small scale is not a pass, and a fixed list is not a fence.** In
-0.18.0 `fence.test.mjs` was found to test a hardcoded list of ops, so a new
-mutating op that reads the working corpus passed it without a single assertion
-touching it. It now reads the guarded set out of the module. Prefer structural
-assertions that a later addition cannot dodge by not being mentioned.
+**Two standing lessons, both learned the hard way here.** A probe that never
+saw a failure has not found a ceiling, it has found the top of the range it was
+given: `probe:limits`' first draft reported four such numbers as measurements and
+one of them as "headroom 1436" on a path that structurally cannot reach the
+limit. And prefer STRUCTURAL assertions over fixed lists: `fence.test.mjs` let a
+new mutating op through untested because it enumerated ops by hand, and now reads
+the guarded set out of the module.
 
 ---
 

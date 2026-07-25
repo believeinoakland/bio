@@ -843,7 +843,7 @@ Proven by a test that repoints a live reference at nothing and asserts that the
 store's own view and the catalog name the same single finding, C-6.2.
 
 ### S-11 Selection-backed actions
-**Status: STARTED. Citing done, 0.18.0** · Depends: S-10 step 5
+**Status: STARTED. Citing 0.18.0, severing and reinstating 0.19.0** · Depends: S-10 step 5
 
 `selectionResolve` shipped in 0.17.0 with a weight parameter and no caller. This
 step is the set of actions that call it, built one at a time, lightest first.
@@ -871,11 +871,29 @@ Held to the catalog, not to itself: the suite runs `checkBundle` over the Projec
 BEFORE and after citing, and the before-check is what makes the after-check mean
 anything.
 
-**Step 2, next, and deliberately not the same commit: the first STATE-CHANGING
-action, at weight `refuse`.** That is what gives the refusing arm of
-`selectionResolve` its first caller. It also gives reinstatement of a severed
-citation its home: reinstating is a state change and must record its own reason,
-the way severing does.
+**Step 2, done in 0.19.0: SEVERING and REINSTATING a citation, `op=sever` and
+`op=reinstate`, both at weight `refuse`.** These are the first state-changing
+actions to refer to a selection and therefore the first callers of
+`selectionResolve`'s refusing arm.
+
+They also close a hole step 1 opened. Citing created edges and nothing could
+withdraw one, so a citation list was an accumulation rather than a record of what
+a group currently relies on, and the step-1 suite had to hand-edit frontmatter to
+produce a severed edge at all.
+
+Severing is not deletion: the edge keeps its target and its rel and only its
+status moves. The reason is appended to the note rather than substituted, both
+actions require one, and the whole set moves or none of it does, because a
+half-run state change is what weight `refuse` exists to prevent.
+
+**Step 3, next: an action that moves an OBJECT's state rather than an edge's.**
+The candidates in ascending doctrinal weight are bulk disposition of Problems
+(`surfaced` to `deferred` or `dismissed`, which C-2.8 requires a non-empty
+`disposition_reason` for), bulk retirement of Information (`verified` to
+`retired`), and bulk release (`collected` to `verified`). Release is LAST and
+should probably never be a bulk action at all: C-18.1 makes it a named member's
+per-document decision and C-18.7 wants a signed release record, so a bulk
+release is the one shape in this family the intake doctrine argues against.
 
 **Accepts when:** each action names its own weight and does not read one from the
 caller; a report-weight action proceeds on drift and says what moved; a

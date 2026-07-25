@@ -76,7 +76,7 @@ reeval_pending:
   since: null
   source: null
 visuals: []
-criticality: notable
+criticality: supporting
 classification: fact
 source_status: unchanged
 source:
@@ -164,7 +164,7 @@ const infoMeta = (b) => ({
   object_type: "information", group: "believe-in-oakland", title: b.title,
   current_state: b.state || "collected", prior_state: null,
   created: "2026-07-01T00:00:00Z", last_updated: b.updated || "2026-07-02T00:00:00Z",
-  criticality: "notable", classification: "fact",
+  criticality: "supporting", classification: "fact",
 });
 const projMeta = (p) => ({
   object_type: "project", group: "believe-in-oakland", title: p.title,

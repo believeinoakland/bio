@@ -1,5 +1,82 @@
 # BIO data plane: source state, migration plan, and build status
 
+v18, July 25, 2026. Current state, on top of v17 and the narratives below. The
+plane is **0.19.0**, signed, tagged `v0.19.0`, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset. Battery **1184 assertions across 27 suites**, from 1124.
+Live record unchanged at 30 bundles, `op=audit` 30 clean.
+
+**S-11 STEP 2: `op=sever` and `op=reinstate`, both at weight `refuse`.** These
+are the first STATE-CHANGING actions to refer to a selection and therefore the
+first callers of `selectionResolve`'s refusing arm, which shipped unused in
+0.17.0. They also close a hole 0.18.0 opened: `cite` created edges and nothing
+could withdraw one, which makes a citation list an accumulation rather than a
+record of what a group currently relies on. The 0.18.0 suite had to hand-edit
+frontmatter to produce a severed edge at all.
+
+SEVERING IS NOT DELETION. The edge keeps its target and its rel and only its
+status moves, the same doctrine that greys a dismissed Problem rather than
+removing it. The reason is APPENDED to the note and never substituted, because
+why a group cited something is as much a part of the record as why they stopped
+relying on it. Both actions REQUIRE a reason: the catalog's own remediation for
+a bad reference is "sever with reason" (C-6.1), and an edge moved with no reason
+is an unexplained change wearing a status field.
+
+THE WHOLE SET MOVES OR NONE OF IT DOES. A member in the wrong state refuses the
+batch by name rather than applying to the eligible subset, because a half-run
+state change is precisely what weight `refuse` exists to prevent and applying to
+whatever happens to qualify would reintroduce it through the back door.
+
+The refusing arm is now exercised: moving a record under a live selection makes
+the severance refuse with `SET_MOVED`, hand over no members, and leave the
+project byte-identical; re-selecting lets it proceed. Verified in the suite and
+again on the deployed plane.
+
+**The suite found two defects in this session's own code**, which is the process
+working. An EMPTY selection made both actions succeed as no-ops that still
+promoted an unchanged revision into an append-only history, a record saying
+nothing happened, reported as success. And `reason` carried a refusal CODE on
+failure but the operator's prose on success, so a caller checking it could not
+tell the two apart. Both fixed, and the empty-selection guard was missing from
+`cite` as well.
+
+**D-32 CLOSED FURTHER, by measurement.** The register named two remaining
+options and this implements one: counting facets from a SINGLE SCAN in JS
+instead of a GROUP BY per field. Driven through the real op at 20,000 bundles,
+`scan` beats `groupby` on every shape by 1.4x to 5x, and the facet sidebar over
+the whole corpus is no longer the worst shape in the release. Both forms are
+KEPT: `test/search.test.mjs` asserts they agree exactly across six query shapes
+and the bench asserts it again at size, because an optimisation that disagrees
+with the thing it replaces is not an optimisation. Same standard `op=audit` is
+held to against an outside pass.
+
+**Four more debt items cleared.** D-39, an empty POST body threw before any op
+dispatched so every op answered a Cloudflare 1101 exception instead of a BIO
+refusal. D-18, already true in code since S-3 and only the comment was stale.
+D-33, the id tiebreak was held by a compile-time assertion alone and the bench
+now pages the whole 20,000-row corpus on a heavily tied field and requires the
+pages to partition it exactly, at a size where the sorter spills. D-28, the
+absent Conversion Plan is now recorded in `architecture/README.md`, the index a
+reader actually consults.
+
+**D-36's open item was the CLASS of undocumented ceilings**, so
+`npm run probe:limits` binary-searches them against a real Durable Object
+instead of discovering them one at a time after they break something. Its first
+draft reported four ceilings that were only the top of the ranges it was given,
+plus a variables ceiling of 1500 with "headroom 1436" measured against 400
+bundles through a path that chunks internally and therefore cannot reach the
+limit at all. It measured nothing and said yes to everything. Corrected, it
+distinguishes a measured ceiling from "never failed up to n", and found
+something real: a query fails at **98 metadata filter terms on the VARIABLE
+limit**, not the five-term compound limit, so the compiler's subquery nesting
+successfully evades the ceiling D-36 documented and then meets a different one.
+
+**Bench before signing:** worst shape 119ms at 20,000 bundles, index versus
+corpus 20,000 checked with zero findings, paging exact. The absolute numbers moved
+down from the 0.18.0 run on faster container hardware; the FACET improvement is
+the like-for-like comparison, measured in the same run against the same corpus.
+
+
 v17, July 25, 2026. Current state, on top of v16 and the narratives below. The
 plane is **0.18.0**, signed, tagged `v0.18.0`, deployed and verified on
 biosmoke7.believeinoakland.workers.dev. Deployed bytes hash identically to the

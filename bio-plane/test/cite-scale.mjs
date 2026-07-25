@@ -42,7 +42,7 @@ produced_by:
   capability_tier: standard
 group: believe-in-oakland
 references: []
-criticality: notable
+criticality: supporting
 classification: fact
 source:
   locator: "https://x/${id}"

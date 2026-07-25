@@ -63,7 +63,7 @@ reeval_pending:
   since: null
   source: null
 visuals: []
-criticality: notable
+criticality: supporting
 classification: fact
 source_status: unchanged
 source:
@@ -105,7 +105,7 @@ for (let i = 0; i < SEED; i++) {
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: h(text) }],
     meta: { object_type: "information", group: "believe-in-oakland", title: "probe",
             current_state: "collected", created: "2026-07-01T00:00:00Z",
-            last_updated: "2026-07-01T00:00:00Z", criticality: "notable", classification: "fact" },
+            last_updated: "2026-07-01T00:00:00Z", criticality: "supporting", classification: "fact" },
   });
   if (i % 100 === 0) process.stdout.write(".");
 }
