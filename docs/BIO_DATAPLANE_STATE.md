@@ -1,5 +1,50 @@
 # BIO data plane: source state, migration plan, and build status
 
+v20, July 25, 2026. Current state, on top of v19 and the narratives below. The
+plane is **0.21.1**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset. Battery **1280 assertions across 28 suites**. Live record
+unchanged at 30 bundles, `op=audit` 30 clean.
+
+**BURNER-URL INVITATIONS (section 6, closing D-42).** The token in the URL is
+the whole credential. It is spent the moment it is used, and afterwards the link
+resolves to nothing and carries no record of what it formerly addressed.
+
+The previous link was `#invite=<memberId>:<code>`, so anyone who saw a leaked or
+archived one learned who had been invited, which broke half of what section 6
+requires outright. The token is now opaque, the member id is never in it, never
+returned by the lookup, and no longer needed to enrol. Invitations are looked up
+BY HASH, so the store never holds a usable invitation and a leaked database is
+not a set of live credentials.
+
+A SPENT TOKEN AND A TOKEN THAT NEVER EXISTED RETURN BYTE-IDENTICAL ANSWERS,
+asserted in the suite and confirmed on the deployed instance. That is the
+security property rather than tidiness: a response distinguishing them would
+confirm to whoever found the archived link that it had once addressed somebody
+real. Cover, capabilities and role stay the administrator's and are not read
+from the enrolment call, so an invitee cannot make themselves an administrator
+by asking.
+
+**0.21.0 SHIPPED THIS BROKEN AND 1276 ASSERTIONS DID NOT NOTICE.** The
+control-plane branch referenced `stub2` and `body2`, which do not exist in that
+scope, so every live call answered a Cloudflare 1101 worker exception. The
+burner suite drove the Durable Object directly, the way every store-level suite
+does, and exercised the control-plane route to it not at all.
+
+That is a general lesson and not a slip. `op=invitelook` is `classes: null`,
+which means the control plane is the ONLY way a real caller reaches it: the
+invitee holds no credential, so there is no other path. A store-level test of an
+unauthenticated op tests the half nobody uses. `fence.test.mjs` now drives it
+through the control plane, which is where the rule about the unauthenticated
+surface already lived.
+
+It was found by exercising the deployed artifact. The suite was green, the
+release was signed, the deployed bytes hashed identically to the signed asset,
+and the feature did not work. Verifying against the deployment rather than only
+the suite is what caught it, and it is the fourth time in two days that
+discipline has paid.
+
+
 v19, July 25, 2026. Current state, on top of v18 and the narratives below. The
 plane is **0.20.0**, signed, tagged `v0.20.0`, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the

@@ -96,9 +96,9 @@ before any real group installs.
 
 ## Current state and next task, as of 2026-07-25
 
-The plane is **0.20.0**, signed, tagged `v0.20.0`, deployed and verified on
+The plane is **0.21.1**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
-signed release asset. Battery **1255 assertions across 28 suites** (`npm test` in
+signed release asset. Battery **1280 assertions across 28 suites** (`npm test` in
 bio-plane); installer wizard 90. Live record unchanged at 30 bundles,
 `op=audit` 30 clean.
 
@@ -114,12 +114,17 @@ Three releases shipped on 2026-07-25 after 0.17.0:
 - **0.20.0** the membership model's member half: cover and handle, capabilities,
   and the Section 4 administrator arithmetic.
 
-**NEXT, and it is S-12 step 1: burner-URL invitations (Section 6, D-42).** The
-URL is the credential, spent on use, and afterwards resolves to nothing and
-reveals neither the group nor the invitee. Half of it exists. After that,
-Section 7 project participation and the THREE visibility positions, which is what
-D-15 waits on and where the reserved compilation point in `query.mjs` gets used.
-`PLAN.md` S-12 has the ordered list.
+**0.21.0 and 0.21.1 shipped S-12 step 1, burner-URL invitations (D-42).** The
+token is the whole credential, spent on use, and a spent one is byte-identical to
+one that never existed.
+
+**NEXT: Section 7, project participation and the THREE visibility positions.**
+Uninvited (the project is invisible entirely), invited-not-joined (skeleton only:
+Problems it stands above, Information it cites, Actions it initiates), and joined
+(everything). DO NOT COLLAPSE THE FIRST TWO. This is what D-15 waits on, and the
+single compilation point reserved in `query.mjs` is where it lands. After that,
+capability enforcement at the op layer, then secure verified export. `PLAN.md`
+S-12 has the ordered list.
 
 **Do not re-derive the membership design.** It is settled in
 `architecture/BIO_Membership_Architecture_v1.md` and 0.20.0 implements sections
@@ -162,6 +167,12 @@ write emits.
    rather than the rule exempted from them.
 4. Conformance-check the fixture BEFORE the change as well as after, or the
    after-check is measuring nothing.
+5. AN UNAUTHENTICATED OP TESTED ONLY AT THE DURABLE OBJECT IS UNTESTED. For a
+   `classes: null` op the control plane is the only route a real caller has,
+   because the caller holds no credential. `op=invitelook` shipped broken at the
+   control plane in 0.21.0 with 1276 green assertions behind it, and was found by
+   exercising the deployed instance. See D-43; the rest of that surface still
+   has no such assertion.
 
 ---
 
