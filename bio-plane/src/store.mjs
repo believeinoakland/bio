@@ -22,6 +22,9 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
  * root of trust, and the gate runs over a byte-complete image.
  */
 
+/* The SHA-256 of the empty string: the canonical base of a creation, as the
+   accelerator recorded it and as the check catalog recognises it. */
+const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2MiB
 
 export class Store extends DurableObject {
@@ -49,19 +52,66 @@ export class Store extends DurableObject {
     return r.content !== null ? { text: r.content, sha256: r.sha256 } : { blobSha: r.blob_sha, bytes: r.bytes, sha256: r.sha256 };
   }
 
+  /** The canonical snapshot path for a file archived under a snapshot key.
+   *
+   *  The key goes in the FILENAME, not in a directory: `bundle.md` archived
+   *  under key K is `_history/bundle_K.md`, and `data/changes.json` is
+   *  `_history/data/changes_K.json`. This is not a style choice. The bundle
+   *  format is authoritative (see schema.mjs line 3) and the check catalog
+   *  parses exactly this shape, so a directory-per-key projection makes every
+   *  snapshot in every bundle unaccountable to C-12.2 while losing no bytes.
+   *  That is precisely what happened: 168 findings across 30 bundles, all of
+   *  them this one mistake, invisible until the catalog could be run. */
+  static snapPath(path, snapKey) {
+    const cut = path.lastIndexOf("/");
+    const dir = cut === -1 ? "" : path.slice(0, cut + 1);
+    const name = cut === -1 ? path : path.slice(cut + 1);
+    const dot = name.lastIndexOf(".");
+    return dot === -1
+      ? `_history/${dir}${name}_${snapKey}`
+      : `_history/${dir}${name.slice(0, dot)}_${snapKey}${name.slice(dot)}`;
+  }
+
   /** The byte-complete image the gate consumes. One bundle, one call, no
-   *  per-file resolution. This is the operation that cost ~43s on Drive. */
+   *  per-file resolution. This is the operation that cost ~43s on Drive.
+   *
+   *  Projects three things the catalog requires and an earlier version of this
+   *  method did not: canonical snapshot paths, a verbatim promotion record per
+   *  manifest entry, and the manifest's own entries. The promotion record is
+   *  load-bearing beyond its own check: classifyDivergence reconstructs the
+   *  bundle.md hash chain from the per-file sha256 lists inside it, and C-20.1
+   *  uses it to establish what a mechanical writer actually changed. Without
+   *  the records both are unreachable rather than passing. */
   readImage(bundleId) {
     const img = {};
     for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
       img[r.path] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
-    for (const r of this.sql.exec(`SELECT snap_key, path, content, blob_sha, sha256 FROM history WHERE bundle_id=?`, bundleId))
-      img[`_history/${r.snap_key}/${r.path}`] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
+    /* Per-snapshot file hashes, collected while walking history so the
+       promotion records below can carry them without a second pass. */
+    const snapFiles = new Map();
+    for (const r of this.sql.exec(`SELECT snap_key, path, content, blob_sha, sha256 FROM history WHERE bundle_id=?`, bundleId)) {
+      img[Store.snapPath(r.path, r.snap_key)] =
+        r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
+      if (!snapFiles.has(r.snap_key)) snapFiles.set(r.snap_key, []);
+      snapFiles.get(r.snap_key).push({ name: r.path, sha256: r.sha256 });
+    }
+    const entries = [];
     for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json FROM manifest WHERE bundle_id=?`, bundleId)) {
-      const key = "_history/manifest.json";
-      const m = img[key] ? JSON.parse(img[key]) : { entries: [] };
-      m.entries.push({ key: r.snap_key, kind: r.kind, base: r.base, author: r.author, created: r.created, files: JSON.parse(r.files_json) });
-      img[key] = JSON.stringify(m, null, 2);
+      const files = JSON.parse(r.files_json);
+      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f) => f.name);
+      entries.push({ key: r.snap_key, kind: r.kind, base: r.base, author: r.author,
+                     created: r.created, files, snapshotted });
+      /* The verbatim promotion record, in the shape the original accelerator
+         wrote and the catalog reads: what was targeted, what it was based on,
+         and the hash of every file as promoted. */
+      img[`_history/promotion_${r.snap_key}.json`] = JSON.stringify({
+        target: bundleId, base: r.base, files: snapFiles.get(r.snap_key) || [],
+        created: r.created, author: r.author, skill_version: "bio-plane",
+      }, null, 2);
+    }
+    if (entries.length) {
+      entries.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+      img["_history/manifest.json"] = JSON.stringify({ entries }, null, 2);
     }
     return Object.keys(img).length ? img : null;
   }
@@ -129,6 +179,19 @@ export class Store extends DurableObject {
       }
 
       // history is append-only: snapshot the outgoing live state first
+      /* A creation records a manifest entry with the empty-string SHA as its
+         base and no snapshot, because there is no prior state to snapshot.
+         The accelerator did exactly this and the catalog depends on it:
+         classifyDivergence anchors the hash chain on entry bases, and C-20.1
+         recognises a creation by that same sentinel. Omitting the entry, which
+         is what this method did before, leaves the chain with no first link. */
+      if (!cur) {
+        this.sql.exec(
+          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
+          bundleId, snapKey, "promotion", EMPTY_STRING_SHA, author,
+          meta.last_updated || new Date().toISOString(),
+          JSON.stringify(files.map((f) => f.path)));
+      }
       if (cur) {
         for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
           this.sql.exec(
@@ -136,8 +199,18 @@ export class Store extends DurableObject {
             bundleId, snapKey, r.path, r.content, r.blob_sha, r.sha256, new Date().toISOString());
         this.sql.exec(
           `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
-          bundleId, snapKey, base === null ? "creation" : "direct_write", base, author,
-          new Date().toISOString(), JSON.stringify(files.map(f => f.path)));
+          /* The catalog switches on kind === 'promotion' (C-12.2, C-20.1), so
+             that is the vocabulary. A creation is still distinguishable, by a
+             base equal to the empty-string SHA, which is how the accelerator
+             recorded it and how C-20.1 recognises one. */
+          bundleId, snapKey, "promotion", base, author,
+          /* The revision's own time, never the server's wall clock. C-12.1
+             compares live last_updated against earlier entries' created, and a
+             signed ratification legitimately backdates last_updated to the
+             transition instant. Stamping server time here made that comparison
+             fail on honest content. */
+          meta.last_updated || new Date().toISOString(),
+          JSON.stringify(files.map(f => f.path)));
       }
 
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);

@@ -74,7 +74,9 @@ export async function livefire(env, storeName) {
 
   const live = await get(`image?id=${id}`);
   assert("live state is the winning revision", /rev 3/.test(live["bundle.md"]), true);
-  assert("history holds the superseded revision", /rev 1/.test(live["_history/20260723T190000Z_livefire/bundle.md"] || ""), true);
+  assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire.md"] || ""), true);
+  assert("the verbatim promotion record is projected", "_history/promotion_20260723T190000Z_livefire.json" in live, true,
+    "classifyDivergence and C-20.1 both read these records; without them the checks are unreachable, not passing");
   assert("manifest projected", "_history/manifest.json" in live, true);
 
   const big = "x".repeat(1024 * 1024 + 1);

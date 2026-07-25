@@ -182,7 +182,7 @@ t("A verifies clean", { ok: vA.ok, findings: vA.findings }, { ok: true, findings
 const vB = await verifyBundle(client, bundles[1], { indexEntry: index.bundles[B] });
 t("B verifies clean", { ok: vB.ok, findings: vB.findings }, { ok: true, findings: [] });
 const imgA = (await client.image(A)).result;
-t("history preserves the Drive snapshot keys", imgA[`_history/${K2}/data/gathering.json`] !== undefined, true);
+t("history preserves the Drive snapshot keys", imgA[`_history/data/gathering_${K2}.json`] !== undefined, true);
 t("live gathering is the final content", imgA["data/gathering.json"], g1);
 const provRow = (await client.image(B)).result;
 t("capture rows are blob references", typeof provRow["snapshots/capture-2026-07-05-doc.pdf"], "object");
@@ -220,7 +220,7 @@ console.log("\n--- an interrupted migration resumes from where it stopped ---");
   t("the tool resumed rather than restarted", resumed.resumedFrom, 1);
   t("and completed the chain", resumed.ok, true);
   const img = (await client.image(P)).result;
-  t("resumed history is complete", img[`_history/${K2}/data/gathering.json`] !== undefined, true);
+  t("resumed history is complete", img[`_history/data/gathering_${K2}.json`] !== undefined, true);
 }
 
 await mf.dispose();

@@ -476,7 +476,15 @@ export async function verifyBundle(client, bundle, { indexEntry = null } = {}) {
   for (let i = 1; i <= N; i++) {
     const key = loaded.promotions[i].key;
     for (const [path, ] of states[i - 1]) {
-      const hp = `_history/${key}/${path}`;
+      /* Canonical snapshot path, matching the plane's projection and the
+         check catalog: the snapshot key is a filename suffix. */
+      const cut = path.lastIndexOf("/");
+      const dir = cut === -1 ? "" : path.slice(0, cut + 1);
+      const nm = cut === -1 ? path : path.slice(cut + 1);
+      const dot = nm.lastIndexOf(".");
+      const hp = dot === -1
+        ? `_history/${dir}${nm}_${key}`
+        : `_history/${dir}${nm.slice(0, dot)}_${key}${nm.slice(dot)}`;
       if (img[hp] === undefined) findings.push(`HISTORY_MISSING ${hp}`);
     }
   }

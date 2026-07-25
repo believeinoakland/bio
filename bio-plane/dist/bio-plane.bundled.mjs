@@ -292,7 +292,13 @@ rev ${rev}
   assert("garbage base refused", (await post("promote", { ...await pkgFor("ratified", 5), base: "deadbeef" })).reason, "CAS_STALE");
   const live = await get(`image?id=${id}`);
   assert("live state is the winning revision", /rev 3/.test(live["bundle.md"]), true);
-  assert("history holds the superseded revision", /rev 1/.test(live["_history/20260723T190000Z_livefire/bundle.md"] || ""), true);
+  assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire.md"] || ""), true);
+  assert(
+    "the verbatim promotion record is projected",
+    "_history/promotion_20260723T190000Z_livefire.json" in live,
+    true,
+    "classifyDivergence and C-20.1 both read these records; without them the checks are unreachable, not passing"
+  );
   assert("manifest projected", "_history/manifest.json" in live, true);
   const big = "x".repeat(1024 * 1024 + 1);
   const overPkg = await pkgFor("verified", 6, [{ path: "big.md", text: big, bytes: big.length, sha256: await sha256(big) }]);
@@ -852,8 +858,9 @@ async function openBundle(id){
 }
 function renderBundle(id, img, revisionKey){
   const liveText = typeof img["bundle.md"] === "string" ? img["bundle.md"] : "";
-  const revText = revisionKey && typeof img["_history/"+revisionKey+"/bundle.md"] === "string"
-    ? img["_history/"+revisionKey+"/bundle.md"] : null;
+  /* Canonical snapshot path: the key lives in the filename, not a directory. */
+  const revPath = revisionKey ? "_history/bundle_"+revisionKey+".md" : null;
+  const revText = revPath && typeof img[revPath] === "string" ? img[revPath] : null;
   const { fm, body } = splitFm(revText ?? liveText);
   $("#b-title").textContent = fm.title || id;
   const facts = [["State", fm.current_state ? chip(fm.current_state) : ""],
@@ -881,7 +888,7 @@ function renderBundle(id, img, revisionKey){
   try { entries = JSON.parse(img["_history/manifest.json"]||"{}").entries || []; } catch {}
   entries = entries.slice().sort((a,b)=>String(a.key).localeCompare(String(b.key)));
   $("#b-history").innerHTML = entries.map(e=>{
-    const viewable = typeof img["_history/"+e.key+"/bundle.md"] === "string";
+    const viewable = typeof img["_history/bundle_"+e.key+".md"] === "string";
     return '<div class="kv"><span class="k mono">'+escH(e.key)+'</span><span class="v">'
       + escH(e.kind||"") + " by " + escH(e.author||"unknown") + ' <span class="dim">' + fmtWhen(e.created) + "</span> "
       + (viewable ? '<button class="histbtn" data-rev="'+escH(e.key)+'">view</button>' : "")
@@ -1219,8 +1226,10 @@ async function runGate({ bundleId, row, image, manifest, history, registers, dan
       "live bundle.md does not hash to the recorded bundle_sha",
       { want: row.bundle_sha, got: liveShas["bundle.md"] }
     );
+  const EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
   const histSha = new Map(history.map((h) => [h.snap_key, h.sha256]));
   for (const m of manifest) {
+    if (m.base === EMPTY_STRING_SHA2 || m.base === null) continue;
     const snap = histSha.get(m.snap_key);
     if (snap === void 0)
       refuse("G3_CHAIN_SNAPSHOT", `manifest entry ${m.snap_key} has no bundle.md snapshot`);
@@ -1405,6 +1414,7 @@ var ratifyStatement = (bundleId, bundleSha) => te.encode(`bio-ratify ${bundleId}
 
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
+var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var Store = class _Store extends DurableObject {
   constructor(ctx, env) {
@@ -1434,19 +1444,68 @@ var Store = class _Store extends DurableObject {
     if (!r) return null;
     return r.content !== null ? { text: r.content, sha256: r.sha256 } : { blobSha: r.blob_sha, bytes: r.bytes, sha256: r.sha256 };
   }
+  /** The canonical snapshot path for a file archived under a snapshot key.
+   *
+   *  The key goes in the FILENAME, not in a directory: `bundle.md` archived
+   *  under key K is `_history/bundle_K.md`, and `data/changes.json` is
+   *  `_history/data/changes_K.json`. This is not a style choice. The bundle
+   *  format is authoritative (see schema.mjs line 3) and the check catalog
+   *  parses exactly this shape, so a directory-per-key projection makes every
+   *  snapshot in every bundle unaccountable to C-12.2 while losing no bytes.
+   *  That is precisely what happened: 168 findings across 30 bundles, all of
+   *  them this one mistake, invisible until the catalog could be run. */
+  static snapPath(path, snapKey) {
+    const cut = path.lastIndexOf("/");
+    const dir = cut === -1 ? "" : path.slice(0, cut + 1);
+    const name = cut === -1 ? path : path.slice(cut + 1);
+    const dot = name.lastIndexOf(".");
+    return dot === -1 ? `_history/${dir}${name}_${snapKey}` : `_history/${dir}${name.slice(0, dot)}_${snapKey}${name.slice(dot)}`;
+  }
   /** The byte-complete image the gate consumes. One bundle, one call, no
-   *  per-file resolution. This is the operation that cost ~43s on Drive. */
+   *  per-file resolution. This is the operation that cost ~43s on Drive.
+   *
+   *  Projects three things the catalog requires and an earlier version of this
+   *  method did not: canonical snapshot paths, a verbatim promotion record per
+   *  manifest entry, and the manifest's own entries. The promotion record is
+   *  load-bearing beyond its own check: classifyDivergence reconstructs the
+   *  bundle.md hash chain from the per-file sha256 lists inside it, and C-20.1
+   *  uses it to establish what a mechanical writer actually changed. Without
+   *  the records both are unreachable rather than passing. */
   readImage(bundleId) {
     const img = {};
     for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
       img[r.path] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
-    for (const r of this.sql.exec(`SELECT snap_key, path, content, blob_sha, sha256 FROM history WHERE bundle_id=?`, bundleId))
-      img[`_history/${r.snap_key}/${r.path}`] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
+    const snapFiles = /* @__PURE__ */ new Map();
+    for (const r of this.sql.exec(`SELECT snap_key, path, content, blob_sha, sha256 FROM history WHERE bundle_id=?`, bundleId)) {
+      img[_Store.snapPath(r.path, r.snap_key)] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
+      if (!snapFiles.has(r.snap_key)) snapFiles.set(r.snap_key, []);
+      snapFiles.get(r.snap_key).push({ name: r.path, sha256: r.sha256 });
+    }
+    const entries = [];
     for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json FROM manifest WHERE bundle_id=?`, bundleId)) {
-      const key = "_history/manifest.json";
-      const m = img[key] ? JSON.parse(img[key]) : { entries: [] };
-      m.entries.push({ key: r.snap_key, kind: r.kind, base: r.base, author: r.author, created: r.created, files: JSON.parse(r.files_json) });
-      img[key] = JSON.stringify(m, null, 2);
+      const files = JSON.parse(r.files_json);
+      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f) => f.name);
+      entries.push({
+        key: r.snap_key,
+        kind: r.kind,
+        base: r.base,
+        author: r.author,
+        created: r.created,
+        files,
+        snapshotted
+      });
+      img[`_history/promotion_${r.snap_key}.json`] = JSON.stringify({
+        target: bundleId,
+        base: r.base,
+        files: snapFiles.get(r.snap_key) || [],
+        created: r.created,
+        author: r.author,
+        skill_version: "bio-plane"
+      }, null, 2);
+    }
+    if (entries.length) {
+      entries.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+      img["_history/manifest.json"] = JSON.stringify({ entries }, null, 2);
     }
     return Object.keys(img).length ? img : null;
   }
@@ -1512,6 +1571,18 @@ var Store = class _Store extends DurableObject {
         if (f.text !== void 0 && f.text.length > INLINE_MAX)
           return { ok: false, reason: "OVERSIZE_INLINE", path: f.path, bytes: f.text.length };
       }
+      if (!cur) {
+        this.sql.exec(
+          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
+          bundleId,
+          snapKey,
+          "promotion",
+          EMPTY_STRING_SHA,
+          author,
+          meta.last_updated || (/* @__PURE__ */ new Date()).toISOString(),
+          JSON.stringify(files.map((f) => f.path))
+        );
+      }
       if (cur) {
         for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
           this.sql.exec(
@@ -1526,12 +1597,21 @@ var Store = class _Store extends DurableObject {
           );
         this.sql.exec(
           `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
+          /* The catalog switches on kind === 'promotion' (C-12.2, C-20.1), so
+             that is the vocabulary. A creation is still distinguishable, by a
+             base equal to the empty-string SHA, which is how the accelerator
+             recorded it and how C-20.1 recognises one. */
           bundleId,
           snapKey,
-          base === null ? "creation" : "direct_write",
+          "promotion",
           base,
           author,
-          (/* @__PURE__ */ new Date()).toISOString(),
+          /* The revision's own time, never the server's wall clock. C-12.1
+             compares live last_updated against earlier entries' created, and a
+             signed ratification legitimately backdates last_updated to the
+             transition instant. Stamping server time here made that comparison
+             fail on honest content. */
+          meta.last_updated || (/* @__PURE__ */ new Date()).toISOString(),
           JSON.stringify(files.map((f) => f.path))
         );
       }

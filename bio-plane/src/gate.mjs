@@ -84,8 +84,14 @@ export async function runGate({ bundleId, row, image, manifest, history, registe
      its snap_key, and its base is the outgoing bundle.md's hash, so every
      manifest row must agree with its own snapshot. A broken link here means
      history was tampered with or lost. */
+  /* A creation carries a manifest entry whose base is the empty-string SHA and
+     which snapshots nothing, because there was no prior state to snapshot. The
+     check catalog recognises that sentinel the same way (isCreation), so the
+     chain walk starts at the first entry that actually superseded something. */
+  const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
   const histSha = new Map(history.map((h) => [h.snap_key, h.sha256]));
   for (const m of manifest) {
+    if (m.base === EMPTY_STRING_SHA || m.base === null) continue;
     const snap = histSha.get(m.snap_key);
     if (snap === undefined)
       refuse("G3_CHAIN_SNAPSHOT", `manifest entry ${m.snap_key} has no bundle.md snapshot`);

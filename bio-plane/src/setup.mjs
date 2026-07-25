@@ -467,8 +467,9 @@ async function openBundle(id){
 }
 function renderBundle(id, img, revisionKey){
   const liveText = typeof img["bundle.md"] === "string" ? img["bundle.md"] : "";
-  const revText = revisionKey && typeof img["_history/"+revisionKey+"/bundle.md"] === "string"
-    ? img["_history/"+revisionKey+"/bundle.md"] : null;
+  /* Canonical snapshot path: the key lives in the filename, not a directory. */
+  const revPath = revisionKey ? "_history/bundle_"+revisionKey+".md" : null;
+  const revText = revPath && typeof img[revPath] === "string" ? img[revPath] : null;
   const { fm, body } = splitFm(revText ?? liveText);
   $("#b-title").textContent = fm.title || id;
   const facts = [["State", fm.current_state ? chip(fm.current_state) : ""],
@@ -496,7 +497,7 @@ function renderBundle(id, img, revisionKey){
   try { entries = JSON.parse(img["_history/manifest.json"]||"{}").entries || []; } catch {}
   entries = entries.slice().sort((a,b)=>String(a.key).localeCompare(String(b.key)));
   $("#b-history").innerHTML = entries.map(e=>{
-    const viewable = typeof img["_history/"+e.key+"/bundle.md"] === "string";
+    const viewable = typeof img["_history/bundle_"+e.key+".md"] === "string";
     return '<div class="kv"><span class="k mono">'+escH(e.key)+'</span><span class="v">'
       + escH(e.kind||"") + " by " + escH(e.author||"unknown") + ' <span class="dim">' + fmtWhen(e.created) + "</span> "
       + (viewable ? '<button class="histbtn" data-rev="'+escH(e.key)+'">view</button>' : "")

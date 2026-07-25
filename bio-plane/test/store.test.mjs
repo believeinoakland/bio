@@ -60,10 +60,21 @@ t("update against an absent bundle is refused", c6.result.reason, "ABSENT");
 
 console.log("\n--- history is append-only ---");
 const img = (await call("/image?id=INFO-2026-0001-x")).result;
-t("history snapshot present for the superseded rev", Object.keys(img).some(k => k.startsWith("_history/20260723T100000Z_aaaa1111/")), true);
+t("history snapshot present for the superseded rev", "_history/bundle_20260723T100000Z_aaaa1111.md" in img, true);
+t("the snapshot key is a filename suffix, not a directory", Object.keys(img).some(k => k.startsWith("_history/20260723T100000Z")), false);
+t("the verbatim promotion record is projected", "_history/promotion_20260723T100000Z_aaaa1111.json" in img, true);
 t("manifest projected into the image", "_history/manifest.json" in img, true);
 t("live bundle.md is the winning revision", /rev 3/.test(img["bundle.md"]), true);
-t("history holds the prior revision, not the stale one", /rev 1/.test(img["_history/20260723T100000Z_aaaa1111/bundle.md"]), true);
+t("history holds the prior revision, not the stale one", /rev 1/.test(img["_history/bundle_20260723T100000Z_aaaa1111.md"]), true);
+{
+  const rec = JSON.parse(img["_history/promotion_20260723T100000Z_aaaa1111.json"]);
+  t("the promotion record names its target", rec.target, "INFO-2026-0001-x");
+  t("and carries a per-file sha256 the hash chain can be rebuilt from",
+    typeof (rec.files.find(f => f.name === "bundle.md") || {}).sha256, "string");
+  const man = JSON.parse(img["_history/manifest.json"]);
+  t("manifest entries use the catalog's kind vocabulary", man.entries[0].kind, "promotion");
+  t("and record what was snapshotted", man.entries[0].snapshotted.includes("bundle.md"), true);
+}
 
 console.log("\n--- the Drive defect classes, now structurally impossible ---");
 const dup = await call("/promote", { ...pkg("collected", 7), base: null });
