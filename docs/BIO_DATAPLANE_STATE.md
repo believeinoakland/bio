@@ -1,5 +1,87 @@
 # BIO data plane: source state, migration plan, and build status
 
+v19, July 25, 2026. Current state, on top of v18 and the narratives below. The
+plane is **0.20.0**, signed, tagged `v0.20.0`, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset. Battery **1255 assertions across 28 suites**, from 1184.
+Live record unchanged at 30 bundles, `op=audit` 30 clean.
+
+**THE MEMBERSHIP MODEL'S MEMBER HALF IS BUILT.**
+`architecture/BIO_Membership_Architecture_v1.md` below Section 7 was the largest
+unblocked piece of work in the repository and nothing in it was undecided.
+
+**Cover and handle (section 3).** Two names assigned by two parties for two
+purposes. A COVER is what an administrator calls someone in the roster and is
+explicitly not a claim about who they are in the world; a HANDLE is chosen by the
+member at enrolment, is unique across the instance, and is what the RECORD shows.
+Only administrators see them together, which is why `op=memberlist` is admin-only.
+The uniqueness is a partial unique index rather than a convention, because a
+roster in which two people answer to one name defeats the purpose of having one.
+
+**Capabilities (section 5):** `contribute`, `publish`, `create_projects`, stored
+as JSON because the set will grow and a column per capability is a migration per
+capability. `administer` is deliberately NOT among them. It is granted and
+removed only by the Section 4 process, so `memberCaps` refuses both to grant it
+and to touch an administrator at all.
+
+**The Section 4 arithmetic, which is the point.** The first invitation a group
+issues creates a SECOND ADMINISTRATOR and there are no ordinary members until two
+exist (4.2, 4.3), refused rather than nudged, because an ordinary member added
+first is a group with a single point of failure that nobody notices until it
+fails. Administrator status cannot be taken away (4.4): `memberSet` refuses to
+revoke an administrator and that takes the 4.7 vote or it does not happen, which
+is what stops an instance being captured by whoever acts first in a dispute.
+
+Addition: the first administrator adds the second unilaterally, and every
+subsequent addition needs the CONSENSUS of every existing administrator. That is
+the load-bearing half of 4.7, because without it a captured administrator
+recruits confederates and manufactures the majority that ejects the honest ones.
+A proposal issues no invitation until all have endorsed.
+
+Removal: a majority of ALL administrators, counting the target in the denominator
+but not letting them vote, ties not ejecting. That single rule makes removal
+impossible at two without a special case, demands unanimity while the group is
+small enough for unanimity to be reasonable, and loosens as it grows. The table
+in the architecture document is COMPUTED by `adminMath` rather than transcribed,
+so code and document cannot drift, and it is exposed as `op=adminarith` so a UI
+can tell a group what a removal would take before they begin one. Every vote is a
+row in `admin_votes` and nothing is tallied anywhere else, so who decided and why
+survives the decision.
+
+**4.6, the root of trust, and it was the EXISTING suite that found it.** The
+founding administrator has no members row: they claimed the instance by spending
+ADMIN_TOKEN, which is what 4.1 describes. Counting only member rows made a
+claimed instance with one invited administrator look like a group of one, so the
+second invitation was being issued unilaterally when it should have required
+consensus. The census now counts them, and they cannot be removed from inside the
+application: whoever can set ADMIN_TOKEN can take the group over, there is no
+arrangement in which nobody holds that power because the instance runs in
+somebody's hosting account, and no interface may imply the membership model
+bounds it.
+
+**Three existing suites encoded the pre-Section-4 behaviour** and were updated
+rather than worked around. `members.test.mjs` invited an ordinary member first
+and revoked an administrator directly; `ratify.test.mjs` did the same. Both now
+make their second member an administrator, which is what the rule requires. A
+rule that breaks old tests is doing its job; a rule quietly exempted from them is
+not a rule.
+
+**What is NOT built, and is the next membership work.** Burner-URL invitations
+exist in outline only: the invite is still a code the administrator hands over
+and the enrolment screen is reached by a URL fragment (D-14), not by a
+single-use URL that resolves to nothing afterwards. Section 7 project
+participation and visibility positions are untouched, and they are what D-15
+waits on. Section 8 secure verified export is untouched.
+
+**Verified live to the limit a MEMBER_TOKEN allows.** Version converged, record
+identical, all six bindings present, `op=audit` 30 clean, deployed bytes hashing
+identically to the signed asset, and `op=adminarith` answering correctly. The
+governance write path could NOT be exercised against the deployed plane, because
+`memberadd`, `adminendorse` and `adminremove` are admin-only and no session has
+ever held ADMIN_TOKEN. It is covered by 66 assertions in the suite instead, and
+that gap is worth closing the next time an admin credential is issued.
+
+
 v18, July 25, 2026. Current state, on top of v17 and the narratives below. The
 plane is **0.19.0**, signed, tagged `v0.19.0`, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the

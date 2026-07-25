@@ -96,70 +96,72 @@ before any real group installs.
 
 ## Current state and next task, as of 2026-07-25
 
-The plane is **0.19.0**, signed, tagged `v0.19.0`, deployed and verified on
+The plane is **0.20.0**, signed, tagged `v0.20.0`, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
-signed release asset. Battery **1184 assertions across 27 suites** (`npm test` in
-bio-plane); installer wizard 90 (`node test/wizard.test.mjs` in newgroup). Live
-record unchanged at 30 bundles, `op=audit` 30 clean.
+signed release asset. Battery **1255 assertions across 28 suites** (`npm test` in
+bio-plane); installer wizard 90. Live record unchanged at 30 bundles,
+`op=audit` 30 clean.
 
-**S-10 RETRIEVAL IS COMPLETE. S-11, the actions that USE a selection, is two
-steps in.** Step 1 was `op=cite` at weight `report` (0.18.0). Step 2 was
-`op=sever` and `op=reinstate` at weight `refuse` (0.19.0), the first callers of
-`selectionResolve`'s refusing arm.
+Three releases shipped on 2026-07-25 after 0.17.0:
 
-**NEXT STEP, decided: an action that moves an OBJECT's state rather than an
-edge's.** In ascending doctrinal weight: bulk disposition of Problems (`surfaced`
-to `deferred` or `dismissed`; C-2.8 requires a non-empty `disposition_reason`),
-bulk retirement of Information (`verified` to `retired`), and bulk release
-(`collected` to `verified`). Release is last and arguably should never be a bulk
-action: C-18.1 makes it a named member's per-document decision and C-18.7 wants a
-signed release record, so it is the one shape here the intake doctrine argues
-against.
+- **0.18.0** `op=cite`, citing Information in a Project at weight `report`, the
+  first action to refer to a selection.
+- **0.19.0** `op=sever` and `op=reinstate` at weight `refuse`, the first
+  STATE-CHANGING actions and the first callers of `selectionResolve`'s refusing
+  arm. Severing never deletes. Five debt items cleared, including D-32 by
+  measurement: facet counting is now a single scan tallied in JS, 1.4x to 5x
+  faster on every shape, with both forms kept and asserted to agree.
+- **0.20.0** the membership model's member half: cover and handle, capabilities,
+  and the Section 4 administrator arithmetic.
 
-Ops on a Project's citation edges, all member class and above, all mutating, all
-selection-backed: `cite` (report weight, adds), `sever` and `reinstate` (refuse
-weight, move an edge's status, require a reason). Severing never deletes.
+**NEXT, and it is S-12 step 1: burner-URL invitations (Section 6, D-42).** The
+URL is the credential, spent on use, and afterwards resolves to nothing and
+reveals neither the group nor the invitee. Half of it exists. After that,
+Section 7 project participation and the THREE visibility positions, which is what
+D-15 waits on and where the reserved compilation point in `query.mjs` gets used.
+`PLAN.md` S-12 has the ordered list.
 
-**Debt cleared in 0.19.0:** D-18, D-28, D-32 (further), D-33, D-39. **Open and
-UNBLOCKED:** D-36's class (a probe now exists; keep using it), D-40 (three shared
-fixtures write an illegal `criticality` value as deliberate facet test data).
-**Open and BLOCKED, with the blocker named:** D-1 (root of trust: doctrine work
-needing Bob's decision on what a root of trust should BE), D-9 (needs an
-ADMIN_TOKEN no session has ever held), D-11 and S-9 (revocations in Bob's
-Cloudflare and Internet Archive accounts), D-15 (due when project visibility
-exists, which is the membership architecture; the single compilation point is
-reserved and waiting), D-37 (needs operational experience, not code), D-38
-(open by Bob's decision).
+**Do not re-derive the membership design.** It is settled in
+`architecture/BIO_Membership_Architecture_v1.md` and 0.20.0 implements sections
+3, 4 and 5 from it directly. Two obligations from it that are easy to miss: the
+three visibility positions must not be collapsed to two, and full working-corpus
+export requires the ROOT OF TRUST credential rather than in-app administrator
+status, because an export any administrator can run is the most efficient attack
+in the system.
 
-**THE LARGEST UNBLOCKED THING IS THE MEMBERSHIP ARCHITECTURE'S MEMBER HALF.**
-`architecture/BIO_Membership_Architecture_v1.md` below Section 7 is unblocked and
-specified: identity and handle with uniqueness enforcement, the required
-administrator-assigned identity label, capabilities, burner-URL invitations
-replacing the current invitation code, and the two-admin bootstrap rules in
-Section 4. Nothing in that document is undecided. Building it is also what
-unblocks D-15.
+**Open and UNBLOCKED:** D-36's class (a probe exists, keep using it), D-40
+(three shared fixtures write an illegal `criticality` value as deliberate facet
+test data), D-42 (burner URLs, half built).
 
-**Read the performance numbers from the bench, not from the probe (D-32).**
-`npm run bench:retrieval`. Facet counting now runs as a SINGLE SCAN tallied in
-JS rather than a GROUP BY per field, measured 1.4x to 5x faster on every shape,
-with both forms kept and asserted to agree exactly in the suite and again at
-size in the bench.
+**Open and BLOCKED, with the blocker named:** D-1 (root of trust as DOCTRINE:
+0.20.0 implements 4.6 mechanically, but what a root of trust should BE for a BIO
+group is still Bob's decision), D-9 and D-41 (both need an ADMIN_TOKEN no
+session has ever held; D-41 is the governance write path never having run
+against a deployed instance), D-11 and S-9 (revocations in Bob's Cloudflare and
+Internet Archive accounts), D-15 (needs Section 7 project visibility), D-37
+(needs operational experience), D-38 (open by Bob's decision).
 
-**FOUR harnesses, and they find what the suite cannot.** `bench:retrieval` (the
-query path at 20,000, plus paging integrity and the facet head-to-head),
-`bench` (the store harness), `probe:cite` (the citing write, which found D-38),
-and `probe:limits` (workerd's undocumented SQL ceilings, which found that a query
-dies at 98 filter terms on the VARIABLE limit rather than the compound-term
-limit). Run the relevant one before signing anything that changes a statement
-shape or what a write emits.
+**FOUR harnesses, and they find what the suite cannot.**
+`bench:retrieval` (query path at 20,000, paging integrity, facet head-to-head),
+`bench` (store harness), `probe:cite` (the citing write; found D-38),
+`probe:limits` (workerd's undocumented SQL ceilings; found that a query dies at
+98 filter terms on the VARIABLE limit rather than the compound-term limit). Run
+the relevant one before signing anything that changes a statement shape or what a
+write emits.
 
-**Two standing lessons, both learned the hard way here.** A probe that never
-saw a failure has not found a ceiling, it has found the top of the range it was
-given: `probe:limits`' first draft reported four such numbers as measurements and
-one of them as "headroom 1436" on a path that structurally cannot reach the
-limit. And prefer STRUCTURAL assertions over fixed lists: `fence.test.mjs` let a
-new mutating op through untested because it enumerated ops by hand, and now reads
-the guarded set out of the module.
+**Four standing lessons, all learned the hard way in this repository.**
+
+1. A probe that never saw a failure has not found a ceiling, it has found the top
+   of the range it was given. `probe:limits`' first draft reported four such
+   numbers as measurements, one of them as "headroom 1436" on a path that
+   structurally cannot reach the limit.
+2. Prefer STRUCTURAL assertions to fixed lists. `fence.test.mjs` let a new
+   mutating op through untested because it enumerated ops by hand.
+3. A rule that breaks old tests is doing its job. 0.20.0's Section 4 rules broke
+   three suites that encoded the older behaviour, and the suites were corrected
+   rather than the rule exempted from them.
+4. Conformance-check the fixture BEFORE the change as well as after, or the
+   after-check is measuring nothing.
 
 ---
 

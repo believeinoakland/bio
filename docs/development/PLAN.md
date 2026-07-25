@@ -900,6 +900,49 @@ caller; a report-weight action proceeds on drift and says what moved; a
 refuse-weight action stops and hands over nothing so it cannot half-run; and the
 bundle is conformant to the catalog after every one of them.
 
+### S-12 Membership, the member half
+**Status: STARTED. Sections 3, 4 and 5 done, 0.20.0** · Depends: nothing
+
+`architecture/BIO_Membership_Architecture_v1.md` is the design and nothing in it
+is undecided. Do not re-derive it.
+
+**Done in 0.20.0.** Cover and handle as two names assigned by two parties
+(section 3), with the handle unique across the instance and shown in the record.
+Capabilities (section 5), with `administer` deliberately excluded because it
+moves only by the Section 4 process. And the Section 4 arithmetic: the
+two-administrator floor, consensus on every addition past the second, and removal
+by a majority of all administrators counting the target in the denominator
+without letting them vote. The table is computed rather than transcribed and
+exposed as `op=adminarith`.
+
+The founding administrator has no roster row and is the root of trust (4.6). They
+count in the census and cannot be removed from inside the application. This was
+found by an EXISTING suite failing, not by the new one.
+
+**Next, in order.**
+
+1. **Burner-URL invitations (section 6), D-42.** The URL is the credential, it is
+   spent on use, and afterwards it resolves to nothing and reveals neither the
+   group nor the invitee. Half of this exists already.
+2. **Project participation and the three visibility positions (section 7).**
+   Uninvited (the project is invisible entirely), invited-not-joined (skeleton
+   only: Problems it stands above, Information it cites, Actions it initiates),
+   and joined (everything). DO NOT COLLAPSE THE FIRST TWO. This is what D-15
+   waits on, and the single compilation point in `query.mjs` is reserved for it.
+3. **Capability enforcement at the op layer.** Capabilities are recorded but
+   nothing consults them yet: a member with no `publish` capability can still
+   reach `op=ratify` and is stopped only by the signing key. Section 5 says a
+   capability a member does not hold is ABSENT from their interface rather than
+   present and refused, so this is a UI obligation as much as an ACL one.
+4. **Secure verified export (section 8)**, which is what makes every governance
+   rule enforceable, since a group that cannot leave can be held. Note that it
+   requires the ROOT OF TRUST credential and not in-app administrator status: an
+   export any administrator can run is the most efficient attack in the system.
+
+**Accepts when:** the arithmetic in 4.7 is computed in one place and asserted row
+by row; no interface implies the membership model bounds whoever holds
+ADMIN_TOKEN; and a leaked invitation URL reveals nothing.
+
 ## Notes
 
 - S-10 is the retrieval substrate and S-11 is what USES it: the actions that
