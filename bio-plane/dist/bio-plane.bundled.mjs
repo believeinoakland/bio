@@ -146,7 +146,13 @@ CREATE TABLE IF NOT EXISTS bootstrap (
 -- a leaked invite cannot re-enroll an active member.
 CREATE TABLE IF NOT EXISTS members (
   member_id   TEXT PRIMARY KEY,
-  name        TEXT NOT NULL,
+  -- A COVER, not a name. It is the label an administrator uses to tell
+  -- participants apart, and it is explicitly NOT a claim about who someone is
+  -- in the world. The word matters: a field called "name" invites an
+  -- administrator to type a legal name, and the cover-and-handle split exists
+  -- precisely so that a roster seized or subpoenaed does not deanonymise the
+  -- group. See docs/architecture/BIO_Membership_Architecture_v1.md section 3.
+  cover       TEXT NOT NULL,
   role        TEXT NOT NULL DEFAULT 'member',
   status      TEXT NOT NULL DEFAULT 'invited',
   invite_hash TEXT,
@@ -3246,15 +3252,23 @@ table.rec tr.row:hover td{background:#F6F7F2}
 <section id="s-members">
   <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; Members</p>
   <h1>Members and keys</h1>
-  <p class="small">Members sign in with their own name and password. Registered
+  <p class="small">Members sign in with a handle they choose and a password they
+  choose. You assign each one a cover, which is the label you tell them apart by
+  and is not a legal name. Only administrators see cover and handle together, and
+  publishing the pairing is a separate decision either of you can make. Registered
   keys are what allow a member to publish; a password alone never can.</p>
   <h2>Members</h2>
   <div class="card" id="m-list"></div>
-  <label for="m-id">Add a member: a short sign-in name</label>
+  <label for="m-id">Add a member: the name they will sign in with</label>
   <input id="m-id">
   <p class="hint">Lowercase, no spaces. Anything you type is tidied to fit.</p>
-  <label for="m-name">Their full name</label>
+  <label for="m-name">A cover to tell them apart by</label>
   <input id="m-name">
+  <p class="hint">This is a label for your own use, not a legal name, and it is not
+  a form to fill in truthfully. "The CPA from Tuesday" and "volunteer-7" are as
+  valid as anything else. Only administrators ever see it, and only they can see
+  which handle it belongs to. If your group is working under any real pressure,
+  choose covers that would tell an outsider nothing.</p>
   <div class="actions" style="margin-top:12px"><button id="m-add">Invite them</button></div>
   <p class="err" id="m-err"></p>
   <div id="m-invite"></div>
@@ -3881,7 +3895,7 @@ async function openMembers(){
   const rows = (m.result && m.result.members) || [];
   $("#m-list").innerHTML = rows.length ? rows.map(x=>
     '<div class="kv"><span class="k mono">'+escH(x.member_id)+'</span><span class="v">'
-    + escH(x.name||"") + " " + chip(x.status)
+    + escH(x.cover||"") + " " + chip(x.status)
     + (x.invite_pending ? ' <span class="dim">invitation not used yet</span>' : "")
     + ' <button class="mbtn" data-id="'+escH(x.member_id)+'" data-to="'
     + (x.status==="revoked"?"active":"revoked") + '">'
@@ -3907,7 +3921,7 @@ function memberWhy(res, wanted){
   const why = (res && res.reason) || "unknown";
   if (why === "BAD_MEMBER_ID") return "A member name is lowercase letters, digits and dashes, at least two characters. "
     + (wanted ? "Try " + wanted + "." : "");
-  if (why === "NO_NAME") return "Give them a full name as well as a member name.";
+  if (why === "NO_COVER") return "Give a cover as well as a sign-in name: a label you will recognise them by. It does not have to be their real name.";
   if (why === "EXISTS") return "There is already a member with that name.";
   if (why === "NO_SUCH_MEMBER") return "There is no member by that name. Add them first, then register their key.";
   return "Refused: " + why;
@@ -3916,7 +3930,7 @@ $("#m-add").addEventListener("click", async ()=>{
   const e = $("#m-err"); e.textContent = ""; $("#m-invite").innerHTML = "";
   const wanted = $("#m-id").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
   $("#m-id").value = wanted;
-  const r = await post("memberadd", { memberId: wanted, name: $("#m-name").value.trim() });
+  const r = await post("memberadd", { memberId: wanted, cover: $("#m-name").value.trim() });
   if (!r.result || !r.result.ok) { e.textContent = memberWhy(r.result, wanted); return; }
   /* A link, not a bare code. The code rides the URL fragment, which never
      reaches any server, and the enrolment screen it opens had no reachable
@@ -4307,6 +4321,9 @@ var Store = class _Store extends DurableObject {
       const t = s.trim();
       if (t) this.sql.exec(t);
     }
+    const memberCols = [...this.sql.exec(`PRAGMA table_info(members)`)].map((r) => r.name);
+    if (memberCols.includes("name") && !memberCols.includes("cover"))
+      this.sql.exec(`ALTER TABLE members RENAME COLUMN name TO cover`);
     for (const [table, column, decl] of [
       ["manifest", "writer", "TEXT"],
       ["manifest", "operation", "TEXT"]
@@ -4474,6 +4491,17 @@ var Store = class _Store extends DurableObject {
     }
     return Object.keys(img).length ? img : null;
   }
+  /* Every bundle, or a page of them.
+   *
+   * Measured: 81ms at 5,000 bundles and 434ms at 20,000, which is honestly linear
+   * and about two seconds at 100,000. It returned everything because nothing had
+   * ever needed less, and a caller that wants everything can still have it, since
+   * breaking that would break the browser, the audit, and the migration verifier
+   * at once.
+   *
+   * So paging is OPT-IN and shaped like the audit's: a cursor that is the last
+   * identifier seen, which makes it resumable and independent of any snapshot of
+   * the store. A caller that passes no limit gets what it always got. */
   listBundles(filter = {}) {
     let q = `SELECT bundle_id, object_type, current_state, title, last_updated, bundle_sha FROM bundles`;
     const w = [], a = [];
@@ -4485,8 +4513,21 @@ var Store = class _Store extends DurableObject {
       w.push(`current_state=?`);
       a.push(filter.state);
     }
+    if (filter.after) {
+      w.push(`bundle_id > ?`);
+      a.push(filter.after);
+    }
     if (w.length) q += ` WHERE ` + w.join(" AND ");
-    return this.#rows(q + ` ORDER BY bundle_id`, ...a);
+    q += ` ORDER BY bundle_id`;
+    const limit = Number(filter.limit);
+    if (!Number.isFinite(limit) || limit <= 0) return this.#rows(q, ...a);
+    const cap = Math.min(5e3, Math.floor(limit));
+    const rows = this.#rows(q + ` LIMIT ?`, ...a, cap);
+    return {
+      bundles: rows,
+      cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
+      total: this.#one(`SELECT COUNT(*) AS n FROM bundles`).n
+    };
   }
   /** The index projection. One stored artifact on Drive, one query here.
    *  Note the absence of `locator`: there is no substrate path to leak. */
@@ -4873,20 +4914,25 @@ var Store = class _Store extends DurableObject {
        hash is cleared on enrollment, so possession of an old invite buys
        nothing against an enrolled member. Passwords live only as PBKDF2
        hashes under credentials role 'member:<id>'. */
-  async memberAdd({ memberId, name, role = "member" } = {}) {
+  async memberAdd({ memberId, cover, name, role = "member" } = {}) {
+    const label = typeof cover === "string" && cover.trim() ? cover : name;
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
       return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    if (!name || typeof name !== "string")
-      return { ok: false, reason: "NO_NAME" };
+    if (!label || typeof label !== "string")
+      return {
+        ok: false,
+        reason: "NO_COVER",
+        detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name"
+      };
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
       return { ok: false, reason: "EXISTS", memberId };
     const invite = _Store.#rand(16);
     const hash = await _Store.#sha256(invite);
     const now = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
-      `INSERT INTO members (member_id,name,role,status,invite_hash,created,updated) VALUES (?,?,?,?,?,?,?)`,
+      `INSERT INTO members (member_id,cover,role,status,invite_hash,created,updated) VALUES (?,?,?,?,?,?,?)`,
       memberId,
-      name,
+      label,
       role === "admin" ? "admin" : "member",
       "invited",
       hash,
@@ -4914,7 +4960,7 @@ var Store = class _Store extends DurableObject {
   }
   memberList() {
     return { members: this.#rows(
-      `SELECT member_id, name, role, status, created, updated,
+      `SELECT member_id, cover, role, status, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
        FROM members ORDER BY member_id`
     ) };
@@ -5128,7 +5174,12 @@ var Store = class _Store extends DurableObject {
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 3e5),
         image: () => this.readImage(url.searchParams.get("id")),
         file: () => this.readFile(url.searchParams.get("id"), url.searchParams.get("path")),
-        list: () => this.listBundles({ type: url.searchParams.get("type"), state: url.searchParams.get("state") }),
+        list: () => this.listBundles({
+          type: url.searchParams.get("type"),
+          state: url.searchParams.get("state"),
+          after: url.searchParams.get("after") || null,
+          limit: url.searchParams.get("limit")
+        }),
         index: () => this.buildIndex(),
         dangling: () => ({ dangling: this.danglingRefs() }),
         stats: () => this.stats(),

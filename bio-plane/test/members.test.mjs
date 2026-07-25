@@ -31,11 +31,11 @@ const t = (label, got, want) => {
 };
 
 console.log("\n--- roster administration is admin-only ---");
-const add = await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", name: "Ruth" });
+const add = await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", cover: "the CPA from Tuesday" });
 t("admin creates a member", add.result.ok, true);
 t("the invite appears exactly once", typeof add.result.invite, "string");
-t("duplicate member refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", name: "Ruth" })).result.reason, "EXISTS");
-t("bad id refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "Not A Slug", name: "x" })).result.reason, "BAD_MEMBER_ID");
+t("duplicate member refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", cover: "the CPA from Tuesday" })).result.reason, "EXISTS");
+t("bad id refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "Not A Slug", cover: "x" })).result.reason, "BAD_MEMBER_ID");
 t("member token cannot create members", (await POST("op=memberadd&token=t-member-1", { memberId: "x", name: "x" })).error, "forbidden for token class");
 t("public path cannot create members", (await POST("op=memberadd", { memberId: "x", name: "x" })).error, "unauthenticated");
 
@@ -109,6 +109,24 @@ t("no invite material in the roster", JSON.stringify(ml.result).includes(add2.re
 /* Miniflare holds a live workerd child process. Without dispose the suite
    prints its result and then hangs forever, which costs minutes per run and
    teaches nothing. Dispose, then exit on the result. */
+
+console.log("\n--- the roster records a cover, not a name ---");
+{
+  /* The word is the mitigation. A field called "name" invites an administrator
+     to type a legal name, and the cover-and-handle split exists precisely so a
+     roster seized or subpoenaed does not deanonymise the group. */
+  const rs = (await GET("op=memberlist&token=t-admin-1")).result.members;
+  const ruth = rs.find((m) => m.member_id === "ruth");
+  t("the roster field is called cover", "cover" in ruth, true);
+  t("and there is no name field to mistake for one", "name" in ruth, false);
+  t("it holds whatever the administrator chose", ruth.cover, "the CPA from Tuesday");
+  t("a member with no cover is refused",
+    (await POST("op=memberadd&token=t-admin-1", { memberId: "nobody" })).result.reason, "NO_COVER");
+  t("and the refusal says it need not be a real name",
+    /does not have to be|need not be|not be a legal name/.test(
+      (await POST("op=memberadd&token=t-admin-1", { memberId: "nobody" })).result.detail || ""), true);
+}
+
 await mf.dispose();
 console.log(`\nmembers: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

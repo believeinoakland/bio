@@ -275,15 +275,23 @@ table.rec tr.row:hover td{background:#F6F7F2}
 <section id="s-members">
   <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; Members</p>
   <h1>Members and keys</h1>
-  <p class="small">Members sign in with their own name and password. Registered
+  <p class="small">Members sign in with a handle they choose and a password they
+  choose. You assign each one a cover, which is the label you tell them apart by
+  and is not a legal name. Only administrators see cover and handle together, and
+  publishing the pairing is a separate decision either of you can make. Registered
   keys are what allow a member to publish; a password alone never can.</p>
   <h2>Members</h2>
   <div class="card" id="m-list"></div>
-  <label for="m-id">Add a member: a short sign-in name</label>
+  <label for="m-id">Add a member: the name they will sign in with</label>
   <input id="m-id">
   <p class="hint">Lowercase, no spaces. Anything you type is tidied to fit.</p>
-  <label for="m-name">Their full name</label>
+  <label for="m-name">A cover to tell them apart by</label>
   <input id="m-name">
+  <p class="hint">This is a label for your own use, not a legal name, and it is not
+  a form to fill in truthfully. "The CPA from Tuesday" and "volunteer-7" are as
+  valid as anything else. Only administrators ever see it, and only they can see
+  which handle it belongs to. If your group is working under any real pressure,
+  choose covers that would tell an outsider nothing.</p>
   <div class="actions" style="margin-top:12px"><button id="m-add">Invite them</button></div>
   <p class="err" id="m-err"></p>
   <div id="m-invite"></div>
@@ -910,7 +918,7 @@ async function openMembers(){
   const rows = (m.result && m.result.members) || [];
   $("#m-list").innerHTML = rows.length ? rows.map(x=>
     '<div class="kv"><span class="k mono">'+escH(x.member_id)+'</span><span class="v">'
-    + escH(x.name||"") + " " + chip(x.status)
+    + escH(x.cover||"") + " " + chip(x.status)
     + (x.invite_pending ? ' <span class="dim">invitation not used yet</span>' : "")
     + ' <button class="mbtn" data-id="'+escH(x.member_id)+'" data-to="'
     + (x.status==="revoked"?"active":"revoked") + '">'
@@ -936,7 +944,7 @@ function memberWhy(res, wanted){
   const why = (res && res.reason) || "unknown";
   if (why === "BAD_MEMBER_ID") return "A member name is lowercase letters, digits and dashes, at least two characters. "
     + (wanted ? "Try " + wanted + "." : "");
-  if (why === "NO_NAME") return "Give them a full name as well as a member name.";
+  if (why === "NO_COVER") return "Give a cover as well as a sign-in name: a label you will recognise them by. It does not have to be their real name.";
   if (why === "EXISTS") return "There is already a member with that name.";
   if (why === "NO_SUCH_MEMBER") return "There is no member by that name. Add them first, then register their key.";
   return "Refused: " + why;
@@ -945,7 +953,7 @@ $("#m-add").addEventListener("click", async ()=>{
   const e = $("#m-err"); e.textContent = ""; $("#m-invite").innerHTML = "";
   const wanted = $("#m-id").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
   $("#m-id").value = wanted;
-  const r = await post("memberadd", { memberId: wanted, name: $("#m-name").value.trim() });
+  const r = await post("memberadd", { memberId: wanted, cover: $("#m-name").value.trim() });
   if (!r.result || !r.result.ok) { e.textContent = memberWhy(r.result, wanted); return; }
   /* A link, not a bare code. The code rides the URL fragment, which never
      reaches any server, and the enrolment screen it opens had no reachable

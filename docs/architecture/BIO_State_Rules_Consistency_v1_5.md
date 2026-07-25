@@ -858,6 +858,22 @@ Relationship vocabulary, closed until amended by this spec: cites
 require a spec revision, not an inline invention; the checker rejects
 unknown values.
 
+**Amendment, 2026-07-24 (v1.5a).** The vocabulary gains a seventh value,
+**corroborates**: an edge asserting that the citing object's content is
+independently supported by the target, as distinct from `cites`, which asserts
+dependency on it. Two documents that agree without either deriving from the
+other are corroborating, and until now that had to be recorded as `cites`,
+which overstated the dependency and understated the independence, in exactly
+the situation where independence is the point.
+
+This amendment records what the implementation already did. `bio-checks` has
+carried `corroborates` in `REL_VOCAB` since before this document was published,
+so a bundle using it passed the checker while contradicting the spec that claims
+to be the closed authority. Discovered by the consistency audit of 2026-07-24
+and recorded as DEBT D-8. The implementation was right and the document was
+stale; this closes the gap in the direction of what already works, rather than
+breaking records that use a value the checker has always accepted.
+
 ### 5.2 Direction and ownership
 
 Each edge is written on the object that depends on or points to the

@@ -49,6 +49,14 @@ export class Store extends DurableObject {
        here rather than in a versioned migration ladder because these are
        additive and nullable: an older row simply has no writer, which is exactly
        what a hand-authored promotion means. */
+    /* members.name became members.cover on 2026-07-24. A field called "name"
+       invites an administrator to type a legal name, which is the whole exposure
+       the cover-and-handle split exists to prevent, so the column carries the
+       honest word. Renamed rather than aliased: two words for one thing is how
+       the drift this repo keeps finding gets started. */
+    const memberCols = [...this.sql.exec(`PRAGMA table_info(members)`)].map((r) => r.name);
+    if (memberCols.includes("name") && !memberCols.includes("cover"))
+      this.sql.exec(`ALTER TABLE members RENAME COLUMN name TO cover`);
     for (const [table, column, decl] of [
       ["manifest", "writer", "TEXT"],
       ["manifest", "operation", "TEXT"],
@@ -215,13 +223,33 @@ export class Store extends DurableObject {
     return Object.keys(img).length ? img : null;
   }
 
+  /* Every bundle, or a page of them.
+   *
+   * Measured: 81ms at 5,000 bundles and 434ms at 20,000, which is honestly linear
+   * and about two seconds at 100,000. It returned everything because nothing had
+   * ever needed less, and a caller that wants everything can still have it, since
+   * breaking that would break the browser, the audit, and the migration verifier
+   * at once.
+   *
+   * So paging is OPT-IN and shaped like the audit's: a cursor that is the last
+   * identifier seen, which makes it resumable and independent of any snapshot of
+   * the store. A caller that passes no limit gets what it always got. */
   listBundles(filter = {}) {
     let q = `SELECT bundle_id, object_type, current_state, title, last_updated, bundle_sha FROM bundles`;
     const w = [], a = [];
     if (filter.type) { w.push(`object_type=?`); a.push(filter.type); }
     if (filter.state) { w.push(`current_state=?`); a.push(filter.state); }
+    if (filter.after) { w.push(`bundle_id > ?`); a.push(filter.after); }
     if (w.length) q += ` WHERE ` + w.join(" AND ");
-    return this.#rows(q + ` ORDER BY bundle_id`, ...a);
+    q += ` ORDER BY bundle_id`;
+    const limit = Number(filter.limit);
+    if (!Number.isFinite(limit) || limit <= 0) return this.#rows(q, ...a);
+    const cap = Math.min(5000, Math.floor(limit));
+    const rows = this.#rows(q + ` LIMIT ?`, ...a, cap);
+    /* The shape changes only when paging was asked for, so no existing caller
+       has to learn a new answer. */
+    return { bundles: rows, cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
+             total: this.#one(`SELECT COUNT(*) AS n FROM bundles`).n };
   }
 
   /** The index projection. One stored artifact on Drive, one query here.
@@ -597,19 +625,23 @@ export class Store extends DurableObject {
      nothing against an enrolled member. Passwords live only as PBKDF2
      hashes under credentials role 'member:<id>'. */
 
-  async memberAdd({ memberId, name, role = "member" } = {}) {
+  async memberAdd({ memberId, cover, name, role = "member" } = {}) {
+    /* `name` is still read, because an older caller may send it, but the field
+       is a cover and the response says so. */
+    const label = typeof cover === "string" && cover.trim() ? cover : name;
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
       return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    if (!name || typeof name !== "string")
-      return { ok: false, reason: "NO_NAME" };
+    if (!label || typeof label !== "string")
+      return { ok: false, reason: "NO_COVER",
+               detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name" };
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
       return { ok: false, reason: "EXISTS", memberId };
     const invite = Store.#rand(16);
     const hash = await Store.#sha256(invite);
     const now = new Date().toISOString();
     this.sql.exec(
-      `INSERT INTO members (member_id,name,role,status,invite_hash,created,updated) VALUES (?,?,?,?,?,?,?)`,
-      memberId, name, role === "admin" ? "admin" : "member", "invited", hash, now, now);
+      `INSERT INTO members (member_id,cover,role,status,invite_hash,created,updated) VALUES (?,?,?,?,?,?,?)`,
+      memberId, label, role === "admin" ? "admin" : "member", "invited", hash, now, now);
     /* The plaintext invite appears exactly once, here, for handing to the
        person. It is never readable again. */
     return { ok: true, memberId, invite };
@@ -632,7 +664,7 @@ export class Store extends DurableObject {
 
   memberList() {
     return { members: this.#rows(
-      `SELECT member_id, name, role, status, created, updated,
+      `SELECT member_id, cover, role, status, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
        FROM members ORDER BY member_id`) };
   }
@@ -813,7 +845,9 @@ export class Store extends DurableObject {
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
         image: () => this.readImage(url.searchParams.get("id")),
         file: () => this.readFile(url.searchParams.get("id"), url.searchParams.get("path")),
-        list: () => this.listBundles({ type: url.searchParams.get("type"), state: url.searchParams.get("state") }),
+        list: () => this.listBundles({ type: url.searchParams.get("type"), state: url.searchParams.get("state"),
+                                       after: url.searchParams.get("after") || null,
+                                       limit: url.searchParams.get("limit") }),
         index: () => this.buildIndex(),
         dangling: () => ({ dangling: this.danglingRefs() }),
         stats: () => this.stats(),

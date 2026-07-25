@@ -611,6 +611,36 @@ I fixed the trap rather than a third call site. The first two times I patched th
 caller; the third time the caller was going to be a group's own member losing
 their evidence, and the interface is what was wrong.
 
+### Out-of-band, 0.14.0: three truthfulness fixes (D-8, D-16, D-27)
+
+**D-8, the vocabulary.** State Rules 5.1 declared a closed set of six relationship
+values while `bio-checks` had carried a seventh, `corroborates`, since before that
+document was published. A bundle using it passed the checker while contradicting
+the spec that claims to be the closed authority. The document is amended, in the
+direction of what already works: `corroborates` asserts that the citing object is
+independently supported by the target, as distinct from `cites`, which asserts
+dependency on it. Two documents that agree without either deriving from the other
+are corroborating, and recording that as `cites` overstated the dependency and
+understated the independence in exactly the situation where independence is the
+point.
+
+**D-16, the cover.** `members.name` is now `members.cover`, renamed rather than
+aliased, because two words for one thing is how the drift this repo keeps finding
+gets started. The word is the mitigation: a field called "name" invites an
+administrator to type a legal name, which is the entire exposure the
+cover-and-handle split exists to prevent. The interface now says so where the
+field is, in the plainest terms available: it is a label for your own use, not a
+legal name and not a form to fill in truthfully, "the CPA from Tuesday" is as
+valid as anything else, and if your group is under real pressure choose covers
+that would tell an outsider nothing. The refusal for a missing cover says the same.
+
+**D-27, list paging.** Measured at 81ms for 5,000 rows and 434ms for 20,000, which
+is honestly linear and about two seconds at 100,000. Paging is OPT-IN and shaped
+like the audit's, a cursor that is the last identifier seen. A caller passing no
+limit gets exactly what it always got, because the browser, the audit and the
+migration verifier all want everything, and changing the answer they receive to
+prepare for a store nobody has yet would break three callers today.
+
 ## Out-of-band fixes
 
 Small, self-contained corrections that do not belong to a numbered step.

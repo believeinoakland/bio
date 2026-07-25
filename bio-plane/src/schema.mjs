@@ -145,7 +145,13 @@ CREATE TABLE IF NOT EXISTS bootstrap (
 -- a leaked invite cannot re-enroll an active member.
 CREATE TABLE IF NOT EXISTS members (
   member_id   TEXT PRIMARY KEY,
-  name        TEXT NOT NULL,
+  -- A COVER, not a name. It is the label an administrator uses to tell
+  -- participants apart, and it is explicitly NOT a claim about who someone is
+  -- in the world. The word matters: a field called "name" invites an
+  -- administrator to type a legal name, and the cover-and-handle split exists
+  -- precisely so that a roster seized or subpoenaed does not deanonymise the
+  -- group. See docs/architecture/BIO_Membership_Architecture_v1.md section 3.
+  cover       TEXT NOT NULL,
   role        TEXT NOT NULL DEFAULT 'member',
   status      TEXT NOT NULL DEFAULT 'invited',
   invite_hash TEXT,
