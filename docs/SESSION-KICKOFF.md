@@ -128,9 +128,25 @@ visibility is built; the single compilation point is in place, asserted, and now
 a WHERE predicate over the alias `b`, so this is a change in one function),
 D-32 (further retrieval optimisation), D-37 (the 300s keep-alive is a guess).
 
-**The actions that refer to a selection are the natural next step.** The gate
-they call already exists: `selectionResolve` takes a weight and either hands over
-the members or refuses. What does not exist is any action that calls it.
+**Next step, decided: wire the first action to a selection.** The gate already
+exists and is tested; `selectionResolve` takes a weight and either hands over the
+members or refuses. Nothing calls it yet. The first one to build is CITING
+INFORMATION IN A PROJECT, at weight `report`, because it is the lightest real
+action in the corpus: it adds references rather than moving state, so drift is
+survivable and the reporting path gets exercised before anything can be broken by
+it. The refusing path then gets its first caller from the first state-changing
+action, which should NOT be the same commit.
+
+**Standing rule: run the bench before signing.** `npm run bench:retrieval` loads
+a corpus through the real `promote` and drives the real `op=search` at 20,000
+bundles. Run it before signing any release that touched how a statement is
+built, and read its worst-shape line. This is not a suggestion recorded after
+the fact: on 2026-07-25 it found two undocumented workerd ceilings that 1032
+assertions did not, one of which (a five-term compound SELECT) would have broken
+the query compiler on six metadata filters, which is one ordinary pass over a
+filter sidebar. It also found the shipped path running 6x the numbers the
+specification quoted, because those numbers came from a probe object that was
+not the plane. A suite at small scale cannot find either class of thing.
 
 ---
 
