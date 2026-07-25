@@ -196,5 +196,71 @@ console.log("\n--- what it refuses ---");
   await mf.dispose();
 }
 
+
+console.log("\n--- the public archive is opt-in, and off by default ---");
+{
+  const seen = [];
+  const mf = mk(async (request) => {
+    const u = new URL(request.url);
+    seen.push(u.host + u.pathname.slice(0, 24));
+    if (u.host === "web.archive.org")
+      return new Response("saved", { status: 200,
+        headers: { "content-location": "/web/20260724120000/https://www.oaklandca.gov/report.pdf" } });
+    return new Response(grantedResp, { headers: { "content-type": "application/timestamp-reply" } });
+  });
+  await mf.dispatchFetch(`http://x/api/?op=capture&token=mem-att&sha256=${DOC_SHA}`, { method: "PUT", body: DOC });
+
+  const plain = await (await mf.dispatchFetch("http://x/api/?op=attest&token=mem-att",
+    { method: "POST", body: JSON.stringify({ sha256: DOC_SHA, locator: "https://www.oaklandca.gov/report.pdf" }) })).json();
+  t("without asking, no archive is contacted", seen.some((h) => h.startsWith("web.archive.org")), false);
+  t("and no archive attempt is claimed", plain.attempts.some((a) => /archive/.test(a.service)), false);
+
+  seen.length = 0;
+  const asked = await (await mf.dispatchFetch("http://x/api/?op=attest&token=mem-att",
+    { method: "POST", body: JSON.stringify({ sha256: DOC_SHA, locator: "https://www.oaklandca.gov/report.pdf", archive: true }) })).json();
+  t("asking contacts the archive", seen.some((h) => h.startsWith("web.archive.org")), true);
+  const arch = asked.attempts.find((a) => /archive/.test(a.service));
+  t("the archive attempt is recorded", arch.ok, true);
+  t("with the archived locator, which is the evidence", arch.archived_locator,
+    "https://web.archive.org/web/20260724120000/https://www.oaklandca.gov/report.pdf");
+  t("and it sits beside the timestamp rather than replacing it",
+    asked.attempts.filter((a) => a.ok).length, 2);
+  await mf.dispose();
+}
+
+console.log("\n--- an archive that fails is recorded, not hidden ---");
+{
+  const mf = mk(async (request) => {
+    const u = new URL(request.url);
+    if (u.host === "web.archive.org") return new Response("busy", { status: 429 });
+    return new Response(grantedResp, { headers: { "content-type": "application/timestamp-reply" } });
+  });
+  await mf.dispatchFetch(`http://x/api/?op=capture&token=mem-att&sha256=${DOC_SHA}`, { method: "PUT", body: DOC });
+  const r = await (await mf.dispatchFetch("http://x/api/?op=attest&token=mem-att",
+    { method: "POST", body: JSON.stringify({ sha256: DOC_SHA, locator: "https://www.oaklandca.gov/report.pdf", archive: true }) })).json();
+  t("the timestamp still succeeds", r.ok, true);
+  const arch = r.attempts.find((a) => /archive/.test(a.service));
+  t("the archive failure is in the record", arch.ok, false);
+  t("with its reason", /429/.test(arch.note), true);
+  t("and no archive is claimed", r.archive, undefined);
+  await mf.dispose();
+}
+
+console.log("\n--- the archive host cannot be redirected by a caller ---");
+{
+  const seen = [];
+  const mf = mk(async (request) => {
+    seen.push(new URL(request.url).host);
+    return new Response(grantedResp, { headers: { "content-type": "application/timestamp-reply" } });
+  });
+  await mf.dispatchFetch(`http://x/api/?op=capture&token=mem-att&sha256=${DOC_SHA}`, { method: "PUT", body: DOC });
+  await mf.dispatchFetch("http://x/api/?op=attest&token=mem-att", { method: "POST", body: JSON.stringify({
+    sha256: DOC_SHA, archive: true, locator: "https://evil.example.com/x",
+    archiveBase: "https://attacker.example/", service: "https://attacker.example/" }) });
+  t("only the compiled archive host is ever contacted",
+    seen.filter((h) => h !== "web.archive.org" && !TSA_ENDPOINTS.some((e) => new URL(e).host === h)), []);
+  await mf.dispose();
+}
+
 console.log(`\nattest: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

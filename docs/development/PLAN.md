@@ -304,7 +304,7 @@ catalog supports `parts` and its incremental SHA-256 streams them one at a time;
 nothing in the plane assembles them yet.
 
 ### S-6 Co-attestation
-**Status: RFC 3161 done (0.9.0), Save Page Now next** · Depends: S-5
+**Status: done (0.9.1)** · Depends: S-5
 
 RFC 3161 primary, per the decision above. DER encode a TimeStampReq, parse the
 TimeStampResp, store the token as a registered capture, record the attempt.
@@ -358,9 +358,28 @@ response using indices relative to the inner sequence, so every token came out
 shifted by the length of the outer header and the binding check refused them all.
 Found on the first run.
 
-**Still owed on this step:** Save Page Now as the opt-in second path, and wiring
-`attestation_attempts` into the provenance register the intake form writes so a
-document arrives already attested.
+**The archive path and the wiring, 0.9.1.** 48 assertions total.
+
+The public archive is opt-in and off by default, and the reason is not
+politeness: asking an archive to fetch a URL publishes the fact of interest, so
+anyone watching it can see the group looked. Under Design Requirement 13 that is
+a tell, and whether to leave one is a tactical judgement no default should make.
+The checkbox says exactly that in the interface: stronger evidence, and public.
+
+Anonymous mode, so there is no credential to hold, rotate, or leak, and nothing
+ties the request to an account. This also means the SPN2 keys being revoked with
+the Apps Script decommissioning do not need replacing. The host is a compiled
+constant and the only variable part is a locator that has already passed
+`isPublicHttpsLocator`; a test throws `archiveBase` and `service` overrides at the
+op and asserts no host outside the compiled set is ever contacted.
+
+Wired into intake. Capture, then attest immediately while the capture is fresh,
+because a timestamp is a claim about WHEN and one obtained later says less. The
+attempts land in the document's `attestation_attempts` whichever way they went,
+and the timestamp token joins the bundle as a registered capture rather than
+sitting only in the store: a token nobody can find is a token nobody will check.
+An archive failure does not stop the bundle, and the failed attempt stays in the
+register, because that is a different and more honest claim than no attempt.
 
 ### S-7 Monitoring as mechanical writers
 **Status: todo** · Depends: S-5

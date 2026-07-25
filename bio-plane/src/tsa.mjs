@@ -177,3 +177,33 @@ export const TSA_ENDPOINTS = [
 
 export const TSA_CONTENT_TYPE = "application/timestamp-query";
 export const TSA_ACCEPT = "application/timestamp-reply";
+
+/* ---- the public archive, the opt-in second path ----
+ *
+ * A co-archive is evidence of a different kind from a timestamp. A timestamp
+ * proves a hash existed at an instant; an independent archive proves what the
+ * page SAID, held by somebody the group does not control. The doctrine wants
+ * both where the source permits.
+ *
+ * It is opt-in per capture and off by default, and the reason is not politeness.
+ * Asking a public archive to fetch a URL publishes the fact of interest: anyone
+ * watching that archive can see the group looked. Under Design Requirement 13
+ * that is a tell, and a group deciding whether to leave one is making a
+ * tactical judgement no default should make for them.
+ *
+ * Anonymous mode, so there is no credential to hold, rotate, or leak, and
+ * nothing ties the request to an account. The host is a compiled constant and
+ * the only variable part is a locator that has already passed
+ * isPublicHttpsLocator, so this cannot be pointed anywhere else.
+ */
+export const ARCHIVE_SAVE_BASE = "https://web.archive.org/save/";
+export const ARCHIVE_SERVICE = "web.archive.org/save (anonymous)";
+
+/** Pull an archived locator out of whatever the archive answered with. */
+export function archiveLocatorFrom(res, requested) {
+  const loc = res.headers.get("content-location") || res.headers.get("location") || "";
+  if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
+  if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
+  if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(res.url || "")) return res.url;
+  return null;
+}

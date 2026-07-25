@@ -11,7 +11,8 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    so it must be the same function the checker uses on the queue. */
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
-         TSA_CONTENT_TYPE, TSA_ACCEPT } from "./tsa.mjs";
+         TSA_CONTENT_TYPE, TSA_ACCEPT,
+         ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 export { Store } from "./store.mjs";
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -564,9 +565,39 @@ export default {
         }
       }
 
+      /* The opt-in second path. Off unless the caller asks, because asking a
+         public archive to fetch a URL publishes the fact of interest, and that
+         is a tactical judgement rather than a default. */
+      let archive = null;
+      if (body.archive === true) {
+        const attempted = new Date().toISOString().split(".")[0] + "Z";
+        const locator = typeof body.locator === "string" ? body.locator : "";
+        if (!isPublicHttpsLocator(locator)) {
+          attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
+                          note: "no public https locator to archive" });
+        } else {
+          try {
+            const res = await fetch(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
+            const archived = archiveLocatorFrom(res, locator);
+            if (res.ok && archived) {
+              archive = { service: ARCHIVE_SERVICE, locator: archived };
+              attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: true,
+                              kind: "co-archive", archived_locator: archived });
+            } else {
+              attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
+                              note: res.ok ? "archived but returned no locator" : `http ${res.status}` });
+            }
+          } catch (e) {
+            attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
+                            note: String(e && e.message || e).slice(0, 120) });
+          }
+        }
+      }
+
       return json({
         ok: !!token,
         attempts,
+        ...(archive ? { archive } : {}),
         ...(token ? {
           attestation: {
             file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,

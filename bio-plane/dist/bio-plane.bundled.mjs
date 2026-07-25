@@ -3202,6 +3202,13 @@ table.rec tr.row:hover td{background:#F6F7F2}
       <input id="n-auth" placeholder="City Auditor, Public Works Department, a named newspaper">
       <p class="hint">Who issued the document and how faithfully it was captured are two separate
       claims. Both get recorded, and neither stands in for the other.</p>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:14px">
+        <input type="checkbox" id="n-arch" style="width:auto;margin-top:4px">
+        <span>Also ask a public web archive to keep its own copy.
+        <span class="dim">This is stronger evidence, because an archive nobody in this group controls
+        can show what the page said. It is also public: anyone watching that archive can see that
+        someone asked for this page. Leave it off if being seen to look would matter.</span></span>
+      </label>
     </div>
   </div>
   <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
@@ -3649,6 +3656,10 @@ async function docFiles(text, doc, textSha){
                sha256: await sha256Text(prov) });
   files.push({ path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256,
                bytes: doc.capture.bytes });
+  /* The timestamp token is evidence too, so it lives in the bundle rather than
+     only in the store. A token nobody can find is a token nobody will check. */
+  for (const a of (doc.attestations || []))
+    files.push({ path: a.file, blobSha: a.sha256, sha256: a.sha256, bytes: a.bytes });
   return files;
 }
 function acquireWhy(a){
@@ -3687,6 +3698,16 @@ $("#n-save").addEventListener("click", async ()=>{
       const acq = await post("acquire", { locator: loc, authority: auth });
       if (!acq.ok) { e.textContent = acquireWhy(acq); return; }
       doc = acq.document;
+      /* Co-attestation happens now, while the capture is fresh, because a
+         timestamp is a claim about WHEN and one obtained later says less. A
+         failure here does not stop the bundle: the attempts are recorded either
+         way, and a register showing a failed attempt is a different and more
+         honest claim than one showing none. */
+      const wantArchive = !!($("#n-arch") && $("#n-arch").checked);
+      const att = await post("attest", { sha256: doc.capture.sha256, locator: loc, archive: wantArchive });
+      doc.attestation_attempts = (att.attempts || []);
+      if (att.attestation) doc.attestations = [att.attestation];
+      if (att.archive) doc.co_archive = att.archive;
     }
     const text = mdFor(id, type, state, title, body, now, !!doc);
     const r = await post("promote", {
@@ -3694,7 +3715,9 @@ $("#n-save").addEventListener("click", async ()=>{
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
       files: await docFiles(text, doc, await sha256Text(text)),
       register: doc ? [{ sha256: doc.capture.sha256, path: doc.file,
-                         encoding: doc.capture.encoding, bytes: doc.capture.bytes }] : [],
+                         encoding: doc.capture.encoding, bytes: doc.capture.bytes },
+                       ...(doc.attestations || []).map((a) => ({
+                         sha256: a.sha256, path: a.file, encoding: "binary", bytes: a.bytes }))] : [],
     });
     if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
     $("#n-title").value = ""; $("#n-body").value = "";
@@ -4219,6 +4242,15 @@ var TSA_ENDPOINTS = [
 ];
 var TSA_CONTENT_TYPE = "application/timestamp-query";
 var TSA_ACCEPT = "application/timestamp-reply";
+var ARCHIVE_SAVE_BASE = "https://web.archive.org/save/";
+var ARCHIVE_SERVICE = "web.archive.org/save (anonymous)";
+function archiveLocatorFrom(res, requested) {
+  const loc = res.headers.get("content-location") || res.headers.get("location") || "";
+  if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
+  if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
+  if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(res.url || "")) return res.url;
+  return null;
+}
 
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
@@ -5495,9 +5527,52 @@ var index_default = {
           attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
         }
       }
+      let archive = null;
+      if (body2.archive === true) {
+        const attempted = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+        const locator = typeof body2.locator === "string" ? body2.locator : "";
+        if (!isPublicHttpsLocator(locator)) {
+          attempts.push({
+            service: ARCHIVE_SERVICE,
+            attempted,
+            ok: false,
+            note: "no public https locator to archive"
+          });
+        } else {
+          try {
+            const res2 = await fetch(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
+            const archived = archiveLocatorFrom(res2, locator);
+            if (res2.ok && archived) {
+              archive = { service: ARCHIVE_SERVICE, locator: archived };
+              attempts.push({
+                service: ARCHIVE_SERVICE,
+                attempted,
+                ok: true,
+                kind: "co-archive",
+                archived_locator: archived
+              });
+            } else {
+              attempts.push({
+                service: ARCHIVE_SERVICE,
+                attempted,
+                ok: false,
+                note: res2.ok ? "archived but returned no locator" : `http ${res2.status}`
+              });
+            }
+          } catch (e) {
+            attempts.push({
+              service: ARCHIVE_SERVICE,
+              attempted,
+              ok: false,
+              note: String(e && e.message || e).slice(0, 120)
+            });
+          }
+        }
+      }
       return json({
         ok: !!token,
         attempts,
+        ...archive ? { archive } : {},
         ...token ? {
           attestation: {
             file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
