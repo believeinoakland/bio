@@ -1,7 +1,7 @@
 # BIO data plane: source state, migration plan, and build status
 
 v14, July 25, 2026. Current state, on top of the v13 narrative below. The plane
-is 0.14.1. The development instance is now biosmoke7.believeinoakland.workers.dev
+is 0.14.2. The development instance is now biosmoke7.believeinoakland.workers.dev
 (v13 below still names biosmoke5/6; the record moved forward with each fresh
 install). The live record is 30 bundles, 87 register rows, and audits 30 clean
 against the full 49-check catalog run inside the object via `op=audit`. The
@@ -33,6 +33,28 @@ counts included, and all shapes agree exactly with an unindexed ground truth at
 roughly half the frontmatter the UX must filter on and needs extending. Record in
 `development/RETRIEVAL-SUBSTRATE.md`. The plane source is unchanged by this probe
 as well.
+
+**0.14.2 retires the public token class (July 25).** A credential handed to the
+public is not a credential: to be public it must be widely distributed, and once
+distributed it bounds nothing. The class bought exactly two ops, `selftest` and
+`publishedlist`, and cost one real defect, because its existence is what invited
+`op=index` onto its list while `op=index` reads the working corpus (D-30). The
+public surface is protected structurally instead, by the `classes: null` ops that
+each enforce their own gate and answer only from the published projection, which
+has never held unratified material: safety comes from where an op reads, not from
+who holds a token, which is the model `verify` already followed. Observably a
+no-op, since the installer issues exactly three credentials and no instance has
+ever bound `PUBLIC_TOKEN`. `test/fence.test.mjs` now asserts the binding is
+INERT, so a value left in that env slot authenticates nothing; it was written
+first and failed on nine assertions. Battery 680, wizard 90, both green. Signed,
+tagged `v0.14.2`, asset sha256
+`b30ecc4f0c4e6e7f4cf19b4adf4ac08cfa029294eea8676dffbf9e17554b65fd`, and deployed
+to biosmoke7: running bytes byte-identical to the signed release, zero
+occurrences of `PUBLIC_TOKEN` in the running code, all seven bindings preserved,
+`stats` identical before and after, `op=audit` 30 checked with zero findings.
+Note for future deploys: the two version endpoints disagreed for about a minute
+after upload while edge locations propagated, which is expected and not a failed
+deploy; confirm convergence rather than reading one endpoint once.
 
 **Retrieval design settled, and one fence hole closed in 0.14.1 (July 25).** Bob
 answered all five design questions, so S-10 is unblocked: `source.locator` and
