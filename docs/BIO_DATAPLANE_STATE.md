@@ -1,7 +1,7 @@
 # BIO data plane: source state, migration plan, and build status
 
 v14, July 25, 2026. Current state, on top of the v13 narrative below. The plane
-is 0.14.0. The development instance is now biosmoke7.believeinoakland.workers.dev
+is 0.14.1. The development instance is now biosmoke7.believeinoakland.workers.dev
 (v13 below still names biosmoke5/6; the record moved forward with each fresh
 install). The live record is 30 bundles, 87 register rows, and audits 30 clean
 against the full 49-check catalog run inside the object via `op=audit`. The
@@ -33,6 +33,27 @@ counts included, and all shapes agree exactly with an unindexed ground truth at
 roughly half the frontmatter the UX must filter on and needs extending. Record in
 `development/RETRIEVAL-SUBSTRATE.md`. The plane source is unchanged by this probe
 as well.
+
+**Retrieval design settled, and one fence hole closed in 0.14.1 (July 25).** Bob
+answered all five design questions, so S-10 is unblocked: `source.locator` and
+`source.authority` are searchable, a result carries ids plus full provenance,
+default order is relevance with reordering trivially available, and a selection is
+a server-side construct rather than a client-held set. Search ships at flat member
+scope ahead of the membership model, with the D-15 viewer-visibility filter
+designed in as a single compilation point that returns true for a member today, so
+satisfying D-15 later is one function rather than an audit of every query path.
+
+0.14.1 is the one source change: `op=index` no longer grants the `public` token
+class (D-30). It reads the working-corpus `bundles` table while the module's own
+header says the public class is published-scope reads only, so a public credential
+was receiving every bundle's id, title, current state, last-updated time, and
+image hash. `publishedlist` remains the public listing surface and reads the
+projection that has never held unratified material. A new suite,
+`test/fence.test.mjs`, holds the boundary and is run against the built `dist`
+artifact as well as `src`; it was written first and failed on exactly the three
+assertions covering the hole. The battery is now 22 suites. RELEASE.json still
+carries signed 0.14.0: cutting 0.14.1 needs Bob's signature over the new bundle,
+sha256 `9bccbd44596b1ad423afc5f256a679e0c22519458fe0cabe91a2c3bdbc84a37a`.
 
 ---
 

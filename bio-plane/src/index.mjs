@@ -43,7 +43,13 @@ const OPS = {
   //  op          class allowed              mutating
   selftest:   { classes: ["admin", "member", "probe", "public"], mutating: false },
   livefire:   { classes: ["admin", "probe"],                     mutating: true  },
-  index:      { classes: ["admin", "member", "probe", "public"], mutating: false },
+  /* op=index reads the `bundles` table, which is WORKING corpus, so it is not a
+     published-scope read and the public class must not have it. A title is the
+     leak that matters: it names what the group is looking into, and the state
+     says how far along they are, both before there is anything to answer. The
+     public surface for a listing is `publishedlist`, which reads the projection
+     that has never held unratified material. Asserted in test/fence.test.mjs. */
+  index:      { classes: ["admin", "member", "probe"],           mutating: false },
   list:       { classes: ["admin", "member", "probe"],           mutating: false },
   image:      { classes: ["admin", "member", "probe"],           mutating: false },
   file:       { classes: ["admin", "member", "probe"],           mutating: false },

@@ -123,7 +123,12 @@ The export wins only on already-resident query latency, and it buys that with
 build cost, transfer, staleness, and a custody problem across the fence. The
 trade is not worth it.
 
-## What is NOT decided, and needs Bob before any retrieval op is built
+## Design questions, since answered
+
+Bob settled all five on 2026-07-25, and probe 2 measured the four verbs this
+probe did not touch. `RETRIEVAL-SUBSTRATE.md` supersedes this section and holds
+the answers, the build order, and the fix for the `op=index` hole noted in
+question 4. The questions as they stood:
 
 The kickoff is right that retrieval has no technical design in the corpus and
 that inferring one is the trap that cost the membership work a reconciliation.

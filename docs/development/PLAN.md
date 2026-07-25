@@ -565,7 +565,7 @@ condition.
 their own systems, and the source file is removed in a commit that says why.
 
 ### S-10 Retrieval
-**Status: blocked (on a design conversation, not on code)** · Depends: S-8 (probe answered)
+**Status: unblocked (design settled July 25)** · Depends: S-8 (probe answered)
 
 The scope is a full search, filter, list, sort, and select surface, not free-text
 search. Free text is one substrate element. The control surface is a collapsible
@@ -592,24 +592,27 @@ stable tiebreak paging is wrong rather than merely inconsistent, on any field
 with ties. And select-all is a distinct operation from a page, returning every id
 in the set, with the set stable between selection and action.
 
-The DESIGN is not decided and must not be inferred. Before any `op=search` is
-built, Bob settles the open questions at the end of `RETRIEVAL-SUBSTRATE.md`:
-which text and metadata fields are searchable and to whom (frontmatter carries
-locators, which is a fence question), the result contract (ids, ranked snippets,
-provenance into Context), viewer-position visibility filtering (the D-15
-obligation, coupled to the membership model), public scope and the latent
-`op=index` public-class inconsistency, and whether a selection is client-held ids
-or a server-side snapshot.
+The DESIGN is now settled (Bob, July 25), recorded in `RETRIEVAL-SUBSTRATE.md`:
+`source.locator` and `source.authority` are searchable; a result carries ids plus
+full provenance; default order is relevance with trivially easy reordering;
+a selection is a server-side construct because a client-held set neither scales
+nor stays stable; and the `op=index` public-class hole is fixed in 0.14.1.
 
-A flat member-scope search over the working corpus is not coupled to the unbuilt
-membership work; a viewer-filtered search is. That is the natural seam if the
-arc is split.
+Search ships at flat member scope ahead of the membership model, with the D-15
+viewer-visibility filter designed in as a single compilation point that returns
+true for a member today and a real predicate when projects exist. A test asserts
+no query path reaches the store without passing through it. That makes the later
+change one function rather than an audit of every query.
 
-**Accepts when:** the design questions are answered by Bob, then an `op=search`
-that runs FTS5 inside the object returns results agreeing exactly with a
-brute-force scan over the same query semantics, across all five verbs and not
-free text alone, proven by a test held to the `op=audit` agreement standard, and
-is reachable only by member class or above.
+**Status: unblocked, not started** · Build order in `RETRIEVAL-SUBSTRATE.md`:
+extend the projection, maintain it transactionally in `promote`, then the parser
+and compiler, then `op=search`, then server-side selection, then the real viewer
+predicate when membership lands.
+
+**Accepts when:** an `op=search` that runs FTS5 inside the object returns results
+agreeing exactly with a brute-force scan over the same query semantics, across all
+five verbs and not free text alone, proven by a test held to the `op=audit`
+agreement standard, and is reachable only by member class or above.
 
 ---
 

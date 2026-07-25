@@ -195,14 +195,89 @@ One substrate, inside the Durable Object:
 This keeps the whole surface behind the two-bucket fence by construction and
 keeps the shape D-26 chose: one call in, one answer out, run where the data is.
 
-## Open, and not decided by measurement
+## Settled design (Bob, 2026-07-25)
 
-1. Which text and which metadata fields are searchable, and to whom. `source.locator`
-   and `source.authority` are the citation surface and also a minable index.
-2. The result contract: ids, ranked snippets, or full provenance per hit.
-3. Whether results are filtered by the viewer's position now or when the
-   membership model exists (D-15).
-4. Whether working-corpus metadata is public, given `op=index` is granted to the
-   `public` token class while reading the working corpus.
-5. Result-set stability for selection: whether a selection is a set of ids held by
-   the client or a server-side snapshot the action refers to.
+The design conversation S-10 was blocked on has happened. All five questions are
+answered, so S-10 is unblocked.
+
+1. **`source.locator` and `source.authority` are searchable.** Searching is
+   mining, and mining is the workflow. The citation surface is part of what a
+   researcher searches on, not a field held back from them.
+2. **A result carries ids plus full provenance.** Not ids alone, and not ids plus
+   a snippet. A hit arrives with the provenance behind it, so it drops straight
+   into Context without a second round trip. bm25 plus snippets measured at 21ms
+   for 50 results, so this is a contract choice, not a cost choice.
+3. **Default order is relevance**, which is bm25. Reordering by any listed field
+   must be trivially straightforward in the UX, so every presentation header is a
+   sort control and `sort:` is a first-class part of the query syntax.
+4. **A selection is a server-side construct**, because a client-held set does not
+   scale and cannot be stable. The plane snapshots a result set and an action
+   refers to it by handle, so the set an operator selected is the set the action
+   lands on even if the corpus moves in between.
+5. **`op=index` no longer grants the public class.** Fixed in 0.14.1, below.
+
+Two obligations already fell out of the measurements and are not choices: every
+sort compiles to `ORDER BY <field> <dir>, id ASC`, and select-all is a distinct
+operation from a page.
+
+## The public-class fence hole, fixed in 0.14.1
+
+`op=index` reads the `bundles` table, which is working corpus, and it was granted
+to the `public` token class. The control plane's own header says the public class
+is published-scope reads only, and its note on `verify` says that op is safe
+unauthenticated precisely because it answers from the published projection, which
+has never seen unratified material. `op=index` met neither condition.
+
+The exposure was concrete rather than theoretical. A public-class credential
+received every working-corpus bundle's id, title, current state, last-updated
+time, and image hash. A title is the leak that matters: it names what the group is
+looking into, and the state says how far along they are, both before there is
+anything to answer. For a platform whose purpose is investigating an institution,
+that is the disclosure the two-bucket fence exists to prevent.
+
+`op=index` is now `admin`, `member`, `probe`. The public listing surface is
+`publishedlist`, which reads the projection that has never held unratified
+material and is correctly public. `test/fence.test.mjs` holds the line: a member
+sees the title, a public credential is refused by `index`, `list`, `image`,
+`file`, `stats`, `dangling`, and `audit`, the published list still answers a
+public credential and does not contain the unratified bundle, and an
+unauthenticated caller gets nothing. The suite was written before the fix and
+failed on exactly the three assertions covering the hole. It is also run against
+the built `dist` artifact, not only `src`, because the artifact is what deploys.
+
+No caller anywhere in the repository depended on the removed grant.
+
+## Serialization against the membership model
+
+Search ships now, at flat member scope, ahead of the membership model. Reasons:
+
+- The research, analysis, reporting, and action workflow is what the system is
+  for, and search is its entry point. The membership model sits behind unbuilt
+  doctrine work (D-1, the root of trust), so waiting couples the product's
+  central capability to the longest open question.
+- Probe 2 says the substrate is ready and cheap at 20,000 bundles.
+- Server-side selection, the extended projection, the parser, and the result
+  contract are all uncoupled from membership.
+
+The D-15 obligation is real: anything derived from project relationships must be
+filtered by what the viewer may see, or it leaks which projects are interested in
+which Information. What makes shipping first safe is that the filter is designed
+in from the first commit as a single compilation point. Every query compiles
+through one function that takes a viewer and returns a predicate. Today, for a
+member, it returns true. When projects and positions exist it returns a real
+predicate, and that is a change in one function rather than an audit of every
+query path. A test asserts that no query path reaches the store without passing
+through it, so the seam cannot rot while it is trivial.
+
+Build order:
+
+1. Extend the projection to cover the frontmatter fields the UX filters and sorts
+   on, per finding 2. Nothing else can be built on half a projection.
+2. Maintain the text index and the projection transactionally inside `promote`,
+   so the index cannot diverge from the corpus.
+3. Query parser and compiler: Google-like syntax to `MATCH` plus indexed
+   predicates, relevance default, stable id tiebreak, viewer predicate applied at
+   the single compilation point.
+4. `op=search`, returning ids plus full provenance, member class and above.
+5. Server-side selection snapshots, and the actions that refer to them.
+6. The real viewer predicate, when the membership and project model lands.
