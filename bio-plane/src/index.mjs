@@ -36,12 +36,20 @@ export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
  *   admin   every op, including promotion against the live store
  *   member  read, lease, allocid, promote within the member's group
  *   probe   read-only ops, plus writes confined to the scratch namespace
- *   public  published-scope reads only
+ *
+ * There is deliberately no public class. A credential handed to the public is
+ * not a credential: to be public it must be widely distributed, and once
+ * distributed it bounds nothing. It bought two ops and cost one real defect,
+ * because the class existing invited op=index onto its list while op=index reads
+ * the working corpus (D-30). The public surface is protected STRUCTURALLY
+ * instead, by the classes:null ops below, each of which enforces its own gate
+ * and answers only from the published projection. Safety comes from WHERE an op
+ * reads, not from who holds a token.
  */
 
 const OPS = {
   //  op          class allowed              mutating
-  selftest:   { classes: ["admin", "member", "probe", "public"], mutating: false },
+  selftest:   { classes: ["admin", "member", "probe"],           mutating: false },
   livefire:   { classes: ["admin", "probe"],                     mutating: true  },
   /* op=index reads the `bundles` table, which is WORKING corpus, so it is not a
      published-scope read and the public class must not have it. A title is the
@@ -82,7 +90,7 @@ const OPS = {
      scratch, whose Durable Object is a different instance with its own
      member tables, so scratch enrollment can never touch the live roster. */
   ratify:       { classes: ["admin", "member", "probe"],           mutating: true  },
-  publishedlist:{ classes: ["admin", "member", "probe", "public"], mutating: false },
+  publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -144,7 +152,6 @@ async function classify(token, env) {
   if (token === env.ADMIN_TOKEN && (await liveToken(env.ADMIN_TOKEN))) return "admin";
   if (token === env.MEMBER_TOKEN && (await liveToken(env.MEMBER_TOKEN))) return "member";
   if (token === env.PROBE_TOKEN && (await liveToken(env.PROBE_TOKEN))) return "probe";
-  if (token === env.PUBLIC_TOKEN && (await liveToken(env.PUBLIC_TOKEN))) return "public";
   return null;
 }
 

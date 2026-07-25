@@ -105,7 +105,9 @@ export async function livefire(env, storeName) {
      the deployment itself. Unset tokens are legitimate only in the local
      credential-free suite, so each assertion is over configured tokens. */
   {
-    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "PUBLIC_TOKEN"];
+    /* PUBLIC_TOKEN is absent: there is no public token class. A value left in
+       that binding authenticates nothing, so there is no credential to vet. */
+    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"];
     const configured = names.filter((n) => typeof env[n] === "string" && env[n].length > 0);
     const published = [];
     for (const n of configured) {

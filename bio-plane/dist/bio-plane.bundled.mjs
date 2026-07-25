@@ -334,7 +334,7 @@ rev ${rev}
   const l2 = await get(`lease?id=${id}&actor=probe-b`);
   assert("second actor denied while lease holds", l2.ok, false);
   {
-    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "PUBLIC_TOKEN"];
+    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"];
     const configured = names.filter((n) => typeof env[n] === "string" && env[n].length > 0);
     const published = [];
     for (const n of configured) {
@@ -5227,7 +5227,7 @@ var Store = class _Store extends DurableObject {
 // src/index.mjs
 var OPS = {
   //  op          class allowed              mutating
-  selftest: { classes: ["admin", "member", "probe", "public"], mutating: false },
+  selftest: { classes: ["admin", "member", "probe"], mutating: false },
   livefire: { classes: ["admin", "probe"], mutating: true },
   /* op=index reads the `bundles` table, which is WORKING corpus, so it is not a
      published-scope read and the public class must not have it. A title is the
@@ -5268,7 +5268,7 @@ var OPS = {
      scratch, whose Durable Object is a different instance with its own
      member tables, so scratch enrollment can never touch the live roster. */
   ratify: { classes: ["admin", "member", "probe"], mutating: true },
-  publishedlist: { classes: ["admin", "member", "probe", "public"], mutating: false },
+  publishedlist: { classes: ["admin", "member", "probe"], mutating: false },
   inbox: { classes: ["admin", "member", "probe"], mutating: false },
   inboxget: { classes: ["admin", "member", "probe"], mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"], mutating: true },
@@ -5349,7 +5349,6 @@ async function classify(token, env) {
   if (token === env.ADMIN_TOKEN && await liveToken(env.ADMIN_TOKEN)) return "admin";
   if (token === env.MEMBER_TOKEN && await liveToken(env.MEMBER_TOKEN)) return "member";
   if (token === env.PROBE_TOKEN && await liveToken(env.PROBE_TOKEN)) return "probe";
-  if (token === env.PUBLIC_TOKEN && await liveToken(env.PUBLIC_TOKEN)) return "public";
   return null;
 }
 function scopeFor(cls, url) {

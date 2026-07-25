@@ -216,9 +216,43 @@ answered, so S-10 is unblocked.
    lands on even if the corpus moves in between.
 5. **`op=index` no longer grants the public class.** Fixed in 0.14.1, below.
 
+6. **A bare multi-word string means AND**, ranked by relevance. Delegated to
+   Claude, decided 2026-07-25.
+
 Two obligations already fell out of the measurements and are not choices: every
 sort compiles to `ORDER BY <field> <dir>, id ASC`, and select-all is a distinct
 operation from a page.
+
+## Why a bare string is AND
+
+Every search box a member has ever used narrows as they type more. Google,
+GitHub, Slack, and every mail client treat additional words as additional
+constraints, so AND is not a preference, it is the trained expectation, and
+violating it makes the control feel broken rather than generous.
+
+The mechanics agree. Under OR, adding a word broadens the result and the ranking
+carries the entire burden of putting the right thing on top. bm25 is good but it
+is not that good on a heterogeneous corpus of short frontmatter-heavy documents,
+and the group's own record is where it is weakest: at 30 bundles an OR query over
+two common words returns nearly the whole store, ranked by term statistics
+gathered from 30 documents. AND degrades gracefully as the corpus grows; OR gets
+worse, because the flood scales and the ranking does not.
+
+It also matches the workflow. Mining is iterative: cast, read, narrow, read
+again. AND makes each added word a deliberate narrowing the member can predict
+and undo. OR inverts that feedback loop, so the member cannot steer.
+
+The measurements assume it. Both probes measured AND semantics, so the actuals in
+this document describe the semantics being shipped rather than a near relative.
+
+**The affordance that makes AND safe.** AND's failure mode is zero results from a
+typo or one word too many, which reads as "the system has nothing" when the truth
+is "nothing matches all of these." So when an AND query returns nothing, the
+surface must run the OR interpretation and say so: no results for all terms, this
+many for any term, one click to widen. That converts the dead end into the next
+step and costs one extra query only in the case that already returned nothing.
+Explicit `OR`, quoted phrases, and prefix `term*` remain available at all times
+for a member who wants to widen deliberately.
 
 ## The public-class fence hole, fixed in 0.14.1
 

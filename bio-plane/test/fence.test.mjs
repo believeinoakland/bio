@@ -66,33 +66,40 @@ const memIdx = await j(`/api/?op=index&token=${MEM}`);
 t("a member sees the bundle in the index", memIdx.result.bundles.map((b) => b.id), ["INFO-2026-7100-fence"]);
 t("and the member sees its title", memIdx.result.bundles[0].title, SECRET_TITLE);
 
-console.log("\n--- and it is not readable by the public class, through any op ---");
+console.log("\n--- and it is not readable through op=index, which carried the hole ---");
 /* op=index is the one that carried the hole: it reads the `bundles` table, which
    is working corpus, and it was granted to the public class. */
 const pubIdx = await j(`/api/?op=index&token=${PUB}`);
-t("op=index refuses a public credential", pubIdx.error, "forbidden for token class");
-t("and returns no bundle metadata at all", pubIdx.result, undefined);
+t("op=index returns no bundle metadata to it", pubIdx.result, undefined);
 t("so the title does not appear anywhere in the response", JSON.stringify(pubIdx).includes("Sewer"), false);
 
-for (const op of ["list", "image", "file", "stats", "dangling", "audit"]) {
+/* A shared credential handed to the public is not a credential: to be public it
+   must be widely distributed, and once distributed it bounds nothing. The class
+   bought two ops and cost one real defect, because its existence invited
+   `op=index` onto its list (D-30). The published surface is protected
+   STRUCTURALLY instead, by the unauthenticated ops that read only the published
+   projection, which has never held unratified material. Safety comes from WHERE
+   an op reads, not from who holds a token.
+   PUBLIC_TOKEN is still bound in this suite's env, so these assert the binding
+   is INERT: the value is present and authenticates nothing. */
+for (const op of ["index", "list", "image", "file", "stats", "dangling", "audit",
+                  "publishedlist", "selftest"]) {
   const r = await j(`/api/?op=${op}&token=${PUB}&id=INFO-2026-7100-fence`);
-  t(`op=${op} refuses a public credential`, r.error, "forbidden for token class");
+  t(`op=${op} does not accept a PUBLIC_TOKEN value`, r.error, "unauthenticated");
 }
 
-console.log("\n--- the public class keeps what it is for: the published projection ---");
-/* publishedlist IS the public surface, and is correctly granted. The fence claim
-   is not that the public class reads nothing, it is that what it reads has been
-   ratified. An unratified bundle must be absent from it. */
-const pl = await j(`/api/?op=publishedlist&token=${PUB}`);
-t("publishedlist answers a public credential", pl.error, undefined);
-t("and the unratified bundle is not in it", JSON.stringify(pl).includes("Sewer"), false);
-const st = await j(`/api/?op=selftest&token=${PUB}`);
-t("selftest still answers a public credential", st.error, undefined);
-t("and it reports no bundle titles", JSON.stringify(st).includes("Sewer"), false);
+console.log("\n--- the unauthenticated surface still answers, and still leaks nothing ---");
+/* verify is the model the retired class should have followed: no credential, and
+   safe because it reads only the published projection. An unratified bundle's
+   hash is indistinguishable from one that never existed. */
+const vf = await j(`/api/?op=verify&sha256=${sha(md)}`);
+t("verify answers with no credential at all", vf.ok, true);
+t("and reports the unratified bundle as not published", vf.published, false);
+t("and names no title", JSON.stringify(vf).includes("Sewer"), false);
 
-console.log("\n--- an unauthenticated caller gets nothing either ---");
-const anon = await j("/api/?op=index");
-t("unauthenticated index is refused", anon.error, "unauthenticated");
+console.log("\n--- an unauthenticated caller gets nothing from the working corpus ---");
+t("unauthenticated index is refused", (await j("/api/?op=index")).error, "unauthenticated");
+t("unauthenticated publishedlist is refused", (await j("/api/?op=publishedlist")).error, "unauthenticated");
 
 await mf.dispose();
 console.log(`\nfence: ${pass} pass, ${fail} fail`);
