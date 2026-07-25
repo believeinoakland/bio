@@ -5,6 +5,11 @@ import { DurableObject } from "cloudflare:workers";
 import { parseFrontmatter, checkGatheringGrammar, MECHANICAL_FIELD_SETS,
          checkBundle } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
+/* The retrieval surface is compiled, never assembled here. This file executes
+   statements and maintains the index; it builds no query. That is what makes the
+   D-15 viewer gate a SINGLE compilation point rather than a convention: there is
+   no second place in the plane where a query could come from. */
+import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX } from "./query.mjs";
 
 /* BIO store, plane layer, step 1.
  *
@@ -86,6 +91,14 @@ export class Store extends DurableObject {
       ["bundles", "reeval_since", "TEXT"],
       ["bundles", "reeval_source", "TEXT"],
       ["bundles", "fm_json", "TEXT"],
+      /* S-10 step 2: the row key the text index is aligned on. FTS5 addresses
+         rows by integer rowid, and probe 2 chose an integer join over a string
+         join for text-plus-metadata queries, so a bundle needs a stable integer
+         of its own. NOT the table's implicit rowid: that is an implementation
+         detail SQLite is entitled to renumber, and an index keyed on a number
+         the engine may change is an index that can silently point at the wrong
+         document. */
+      ["bundles", "fts_id", "INTEGER"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -97,6 +110,29 @@ export class Store extends DurableObject {
     for (const c of ["schema_id", "produced_mode", "source_authority", "source_status",
                      "monitor_frequency", "reeval_flag", "annotations_open"])
       this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
+    this.sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles(fts_id)`);
+
+    /* S-10 step 2: the text index, inside the Durable Object, which is what
+       probe 1 measured and chose. Not an exported index: cost tracks result size
+       rather than corpus size, and the whole surface stays behind the two-bucket
+       fence by construction because it never leaves the object that holds the
+       working corpus.
+
+       Five columns rather than one blob, so a member can scope a term to the
+       part of the document they mean. `meta` carries the flattened frontmatter,
+       which is what makes the per-schema tail searchable without a column per
+       schema version: information@1, information@2, problem@1 and project@1
+       carry different field sets and more versions are coming.
+
+       A regular content table, not contentless and not external-content. A
+       contentless table cannot produce snippet(), and Bob settled that a result
+       carries provenance and context rather than bare ids. External content
+       requires the text to be reconstructable from one table with matching
+       columns, and `body` spans every inline text file in the bundle. The cost
+       is a second copy of the text, measured at roughly 430 bytes per document. */
+    this.sql.exec(
+      `CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(
+         ${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`);
 
     /* Backfill. Rows written before these columns existed carry an empty
        projection, and nothing downstream can tell that apart from a bundle whose
@@ -176,22 +212,65 @@ export class Store extends DurableObject {
     return p;
   }
 
-  #backfillProjection(limit) {
-    const stale = this.#rows(
-      `SELECT bundle_id FROM bundles WHERE fm_json IS NULL ORDER BY bundle_id LIMIT ?`, limit);
-    let n = 0;
-    for (const r of stale) {
-      const f = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
-      if (!f || f.content === null) continue;
-      this.#writeProjection(r.bundle_id, f.content);
-      n++;
-    }
-    return { reprojected: n, remaining: this.#one(`SELECT count(*) c FROM bundles WHERE fm_json IS NULL`).c };
+  /* The integer the text index is keyed on. Allocated once per bundle and never
+     reassigned while the bundle exists, so a revision replaces its own index row
+     rather than orphaning one. MAX+1 rather than a sequence because it is
+     allocated inside promote's transaction, and a Durable Object runs one
+     transaction at a time, so there is no race to lose. */
+  #ftsIdFor(bundleId) {
+    const cur = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
+    if (cur && cur.fts_id !== null && cur.fts_id !== undefined) return cur.fts_id;
+    const next = (this.#one(`SELECT COALESCE(MAX(fts_id), 0) AS m FROM bundles`).m || 0) + 1;
+    this.sql.exec(`UPDATE bundles SET fts_id=? WHERE bundle_id=?`, next, bundleId);
+    return next;
   }
 
-  /** Re-derive the projection for rows that lack one. Exposed because a deploy
-   *  runs the bounded pass once at construction and a large store may need more
-   *  than one. Idempotent: a row with a projection is left alone. */
+  /* Delete-then-insert rather than an FTS5 UPDATE, because a revision can change
+     which files exist and an in-place update of a virtual table row is the shape
+     that leaves stale terms behind. Called inside promote's transaction, so the
+     text index cannot be a revision behind the corpus. */
+  #writeText(bundleId, files) {
+    const fid = this.#ftsIdFor(bundleId);
+    const t = textOf(bundleId, files);
+    this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, fid);
+    this.sql.exec(
+      `INSERT INTO bundles_fts (rowid, ${FTS_COLUMNS.join(", ")}) VALUES (?, ${FTS_COLUMNS.map(() => "?").join(", ")})`,
+      fid, ...FTS_COLUMNS.map((c) => t[c]));
+    return { fts_id: fid, chars: FTS_COLUMNS.reduce((n, c) => n + t[c].length, 0) };
+  }
+
+  #filesOf(bundleId) {
+    return this.#rows(`SELECT path, content FROM files WHERE bundle_id=?`, bundleId)
+      .map((r) => ({ path: r.path, text: r.content }));
+  }
+
+  /* One backfill for both derived structures. A row is stale if it has no
+     projection or no text index, which covers a row written before either
+     existed and a row whose index was cleared for repair. Bounded per pass
+     because a Durable Object has a CPU budget: a large store finishes over
+     successive constructions rather than timing out on one. */
+  #backfillProjection(limit) {
+    const stale = this.#rows(
+      `SELECT bundle_id, fm_json IS NULL AS need_proj, fts_id IS NULL AS need_text
+         FROM bundles WHERE fm_json IS NULL OR fts_id IS NULL ORDER BY bundle_id LIMIT ?`, limit);
+    let n = 0, t = 0;
+    for (const r of stale) {
+      const files = this.#filesOf(r.bundle_id);
+      const md = files.find((f) => f.path === "bundle.md");
+      if (!md || md.text === null) continue;
+      if (r.need_proj) { this.#writeProjection(r.bundle_id, md.text); n++; }
+      if (r.need_text) { this.#writeText(r.bundle_id, files); t++; }
+    }
+    return {
+      reprojected: n, reindexed: t,
+      remaining: this.#one(`SELECT count(*) c FROM bundles WHERE fm_json IS NULL OR fts_id IS NULL`).c,
+    };
+  }
+
+  /** Re-derive the projection and the text index for rows that lack one. Exposed
+   *  because a deploy runs the bounded pass once at construction and a large
+   *  store may need more than one. Idempotent: a row that has both is left
+   *  alone. */
   reproject({ limit = 500 } = {}) {
     return this.#backfillProjection(limit);
   }
@@ -222,11 +301,167 @@ export class Store extends DurableObject {
 
   /** Test and repair support: clear a projection so the backfill path can be
    *  exercised against a row that looks like it predates the columns. */
-  projectionClear({ bundleId = null } = {}) {
+  projectionClear({ bundleId = null, text = true } = {}) {
     const set = Store.PROJECTION_COLS.map((c) => `${c}=NULL`).join(", ");
     if (bundleId) this.sql.exec(`UPDATE bundles SET ${set} WHERE bundle_id=?`, bundleId);
     else this.sql.exec(`UPDATE bundles SET ${set}`);
-    return { ok: true, scope: bundleId || "ALL" };
+    /* The text index is cleared with the projection by default, because the two
+       are one derived structure with one backfill and clearing half of it would
+       leave the repair path untested on the half that stayed. */
+    if (text) {
+      if (bundleId) {
+        const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
+        if (r && r.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
+        this.sql.exec(`UPDATE bundles SET fts_id=NULL WHERE bundle_id=?`, bundleId);
+      } else {
+        this.sql.exec(`DELETE FROM bundles_fts`);
+        this.sql.exec(`UPDATE bundles SET fts_id=NULL`);
+      }
+    }
+    return { ok: true, scope: bundleId || "ALL", text };
+  }
+
+  /* ---- S-10 step 3: the retrieval surface ----
+   *
+   * Five verbs, one call, run where the data is, which is the shape D-26 chose.
+   *   search  the query string, compiled by query.mjs
+   *   filter  selectors in that same string, plus facet counts to drive a sidebar
+   *   list    every hit arrives with full provenance, per Bob's decision
+   *   sort    any projected field, always with the declared id tiebreak
+   *   select  mode=ids returns the WHOLE set, which is a different request
+   *
+   * The store builds no SQL. Every statement comes from compile(), and this
+   * method refuses to execute one that does not carry the viewer gate, so a
+   * query path that skipped D-15's single compilation point fails loudly instead
+   * of quietly returning more than the viewer may see.
+   */
+  #runQuery(stmt, tally) {
+    if (!stmt || typeof stmt.sql !== "string" || !stmt.sql.includes(GATE_MARK))
+      throw new Error("REFUSED: a retrieval statement reached the store without the viewer visibility gate (D-15)");
+    tally.applied++;
+    return this.#rows(stmt.sql, ...stmt.args);
+  }
+
+  search(input = {}) {
+    const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
+    const plan = compile(input);
+    const tally = { applied: 0 };
+    const total = this.#runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
+
+    const out = {
+      query: {
+        q: String(input.q ?? ""), terms: plan.terms, match: plan.match,
+        sort: plan.sort, warnings: plan.warnings, mode,
+      },
+      /* The gate is reported, not assumed. `scope` is DENY when the caller
+         presented no recognisable viewer, which is the fail-closed answer, and
+         `applied` counts the statements that carried the gate. */
+      gate: { scope: plan.gate, applied: 0 },
+      total, limit: plan.limit, offset: plan.offset,
+    };
+
+    if (mode === "page") {
+      out.hits = this.#runQuery(plan.statements.page(), tally);
+    } else if (mode === "ids") {
+      /* Select-all. A distinct operation from a page because acting on a
+         selection needs every id in the set, not the fifty on screen, and the
+         payload and the cost are different. Ordered identically to the page so
+         the set an operator selected is the set they were looking at. */
+      const ids = this.#runQuery(plan.statements.ids(), tally).map((r) => r.bundle_id);
+      out.ids = ids;
+      out.truncated = ids.length >= IDS_MAX;
+    }
+
+    if (input.facets !== false && mode !== "count") {
+      out.facets = {};
+      for (const f of plan.facetFields)
+        out.facets[f] = this.#runQuery(plan.statements.facet(f), tally);
+    }
+
+    /* The affordance that makes AND safe. AND's failure mode is nothing found
+       because of a typo or one word too many, which reads as "the system has
+       nothing" when the truth is "nothing matches all of these". So a bare
+       conjunction that returns zero is re-run as OR and the wider count is
+       offered. It costs one extra query only in the case that already returned
+       nothing. */
+    out.widen = null;
+    if (total === 0 && plan.widenable && input.widen !== false) {
+      const or = compile({ ...input, implicitOp: "or" });
+      const n = this.#runQuery(or.statements.count(), tally)[0]?.n ?? 0;
+      if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
+                               detail: "no bundle matches all of these terms; this many match any of them" };
+    }
+    out.gate.applied = tally.applied;
+    return out;
+  }
+
+  /** The fields the surface knows, so a UI can build its own controls from the
+   *  plane's vocabulary rather than a copy of it that drifts. */
+  searchFields() {
+    return {
+      fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f]) =>
+        [k, { type: f.type, freeText: !!f.fts, column: f.col }])),
+      ftsColumns: FTS_COLUMNS, defaultFacets: DEFAULT_FACETS, idsMax: IDS_MAX,
+      syntax: [
+        "bare words are AND, ranked by relevance",
+        "\"quoted phrase\" is one unit",
+        "term* is a prefix match",
+        "-term and NOT term exclude",
+        "OR and parentheses nest",
+        "field:value filters; free-text fields (title, locator, authority) match text, enumerations match exactly",
+        "field:>value, field:<value, field:a..b compare and range",
+        "has:field asks whether the field carries any value",
+        "fm:path and fm:path=value reach frontmatter no column projects",
+        "sort:field and sort:-field order the result",
+      ],
+    };
+  }
+
+  /** The verifier for the claim that the index cannot diverge from the corpus.
+   *
+   *  "Maintained in the same transaction" is a design, and a design is not a
+   *  measurement. This re-derives the expected text row for every bundle from
+   *  the stored files and compares it against what the index actually holds,
+   *  which is the only thing that can tell the difference between an index that
+   *  cannot diverge and one that has not diverged yet. Paginated and resumable
+   *  by cursor, the same shape as the conformance audit. */
+  searchIndexCheck({ after = "", limit = 200 } = {}) {
+    const cap = Math.max(1, Math.min(1000, Math.floor(Number(limit) || 200)));
+    const rows = this.#rows(
+      `SELECT bundle_id, fts_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`, after, cap);
+    const findings = [];
+    for (const r of rows) {
+      if (r.fts_id === null || r.fts_id === undefined) {
+        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: "the bundle has no text index key" });
+        continue;
+      }
+      const have = this.#one(
+        `SELECT ${FTS_COLUMNS.join(", ")} FROM bundles_fts WHERE rowid=?`, r.fts_id);
+      if (!have) {
+        findings.push({ bundleId: r.bundle_id, finding: "NO_INDEX_ROW", ftsId: r.fts_id });
+        continue;
+      }
+      const want = textOf(r.bundle_id, this.#filesOf(r.bundle_id));
+      const bad = FTS_COLUMNS.filter((c) => String(have[c] ?? "") !== String(want[c] ?? ""));
+      if (bad.length)
+        findings.push({ bundleId: r.bundle_id, finding: "DIVERGED", columns: bad,
+                        chars: Object.fromEntries(bad.map((c) => [c, [String(have[c] ?? "").length, String(want[c] ?? "").length]])) });
+    }
+    /* Orphans: an index row no bundle claims. It matters because fts_id is
+       allocated as MAX+1, so an orphan can be inherited by a later bundle and
+       hand it a deleted document's text. */
+    const orphans = this.#rows(
+      `SELECT rowid AS fts_id FROM bundles_fts WHERE rowid NOT IN (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL) LIMIT 100`)
+      .map((r) => r.fts_id);
+    const last = rows.length ? rows[rows.length - 1].bundle_id : null;
+    return {
+      checked: rows.length, findings, orphans,
+      counts: { bundles: this.#one(`SELECT count(*) c FROM bundles`).c,
+                indexed: this.#one(`SELECT count(*) c FROM bundles_fts`).c,
+                keyed: this.#one(`SELECT count(*) c FROM bundles WHERE fts_id IS NOT NULL`).c },
+      cursor: rows.length === cap ? last : null,
+      ok: findings.length === 0 && orphans.length === 0,
+    };
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -621,6 +856,15 @@ export class Store extends DurableObject {
       const bundleMd = files.find(f => f.path === "bundle.md");
       this.#writeProjection(bundleId, bundleMd?.text ?? null);
 
+      /* S-10 step 2: the text index, written in the SAME transaction as the
+         files and the projection it describes. Inside, because an index
+         maintained by a separate pass is an index that can be a revision behind
+         the corpus, and a text index that disagrees with the documents does not
+         merely return stale hits, it returns hits for text that no longer exists
+         and misses text that does. Either the whole bundle advances with its
+         index or nothing does. */
+      this.#writeText(bundleId, files);
+
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version };
     });
@@ -660,7 +904,7 @@ export class Store extends DurableObject {
     const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
     return {
       bundles: n("bundles"), files: n("files"), history: n("history"),
-      refs: n("refs"), register: n("register"),
+      refs: n("refs"), register: n("register"), indexed: n("bundles_fts"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -682,9 +926,17 @@ export class Store extends DurableObject {
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
+        /* The text index row goes with the bundle it describes, and it goes
+           first, while the row that names its rowid still exists. An orphaned
+           FTS row is worse than a missing one: fts_id is allocated as MAX+1, so
+           a later bundle can be handed the same integer and inherit the deleted
+           document's text. */
+        const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
+        if (r && r.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t} WHERE bundle_id=?`, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
+        this.sql.exec(`DELETE FROM bundles_fts`);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`);
         this.sql.exec(`DELETE FROM bundles`);
       }
@@ -1026,6 +1278,27 @@ export class Store extends DurableObject {
           bundleId: url.searchParams.get("id"),
           jsonPath: url.searchParams.get("jsonPath"),
           jsonEquals: url.searchParams.get("jsonEquals"),
+        }),
+        /* Retrieval. `viewer` is stamped by the control plane and is never taken
+           from the caller's own parameters there; here it is simply read, and an
+           absent one compiles to the deny predicate. */
+        search: () => this.search({
+          q: url.searchParams.get("q") ?? "",
+          viewer: url.searchParams.get("viewer"),
+          sort: url.searchParams.get("sort"),
+          dir: url.searchParams.get("dir"),
+          limit: url.searchParams.get("limit"),
+          offset: url.searchParams.get("offset"),
+          mode: url.searchParams.get("mode"),
+          facets: url.searchParams.get("facets") === "none" ? false
+                : url.searchParams.get("facets") ? url.searchParams.get("facets").split(",") : null,
+          widen: url.searchParams.get("widen") !== "0",
+          snippetChars: Number(url.searchParams.get("snippet")) || 12,
+        }),
+        searchfields: () => this.searchFields(),
+        searchindexcheck: () => this.searchIndexCheck({
+          after: url.searchParams.get("after") || "",
+          limit: url.searchParams.get("limit"),
         }),
         projectionplan: () => this.projectionPlan(),
         projectionclear: () => this.projectionClear(body || {}),

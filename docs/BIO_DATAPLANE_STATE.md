@@ -1,5 +1,64 @@
 # BIO data plane: source state, migration plan, and build status
 
+v15, July 25, 2026. Current state, on top of the v14 and v13 narratives below.
+The plane is **0.16.0**. S-10 RETRIEVAL steps 2, 3 and 4 shipped: the text index,
+the query language, and `op=search`. Battery **1030 assertions across 24 suites
+in about 63 seconds** (`npm test` in bio-plane). Live record unchanged at 30
+bundles.
+
+**The text index (step 2).** FTS5 lives inside the Durable Object as
+`bundles_fts`, five columns (`title, body, meta, locator, authority`,
+`unicode61`), keyed on a new explicit `bundles.fts_id` integer. Not the table's
+implicit rowid: that is an implementation detail SQLite may renumber, and an
+index keyed on a number the engine can change is an index that can silently
+point at the wrong document. The row is written inside `promote`'s transaction,
+so a creation, a revision and a purge each carry their index with them.
+`meta` holds the flattened frontmatter, which is what makes the per-schema tail
+searchable without a column per schema version. R2 captures are not indexed:
+their bytes never enter the object. JSON data files are excluded from the
+free-text body because machine records flood the term statistics bm25 depends on.
+
+**The verifier.** "Maintained transactionally" is a design, and a design is not a
+measurement, so `op=searchindexcheck` re-derives the expected index row for every
+bundle from the stored files and compares it against what the index holds, and
+reports orphans. It gets a negative control in the suite: the index is
+deliberately broken, the checker must refuse and name the bundle, `op=reproject`
+repairs it, and the checker passes again.
+
+**The query language (step 3).** `src/query.mjs` is a parser and a compiler and
+holds no database handle, which is what makes the whole language assertable in
+plain node. `src/store.mjs` builds NO query at all and executes every compiled
+statement through one guarded executor that throws if the statement lacks the
+viewer gate. Bare words are AND ranked by relevance; a zero-result conjunction is
+re-run as OR and the wider count offered. Enumerated fields compile to indexed
+equality with the argument lowercased, which keeps the seek; free-text fields
+(`title`, `locator`, `authority`) compile to column-scoped MATCH, because
+equality on a title is a control that never answers. Also `-term`, `NOT`, `OR`,
+parens, quoted phrases, `term*`, `field:>v`, `field:a..b`, `has:field`,
+`fm:path=value` through json_extract, and `sort:field`. A pure-text subtree
+collapses to ONE MATCH; only genuine text-plus-metadata mixing becomes set
+algebra, since MATCH knows only the text table.
+
+**The viewer gate (D-15), designed in from the first commit.** One function,
+`viewerPredicate(viewer)`, returning true for a member today. FAIL CLOSED: an
+unrecognised or absent viewer compiles to `0=1`, so a missing stamp yields an
+empty result rather than an unfiltered one. The control plane stamps `viewer`
+from the authenticated credential AFTER copying the caller's parameters, so a
+forged `viewer=` is overwritten. Asserted structurally, behaviourally on every
+mode including facet counts, and at the door.
+
+**What is NOT verified, and is carried as debt rather than implied.** D-32: the
+20,000-bundle actuals in `development/RETRIEVAL-SUBSTRATE.md` were measured with
+a probe object that is not the plane. The shipped path is verified at 600 bundles
+against workerd and at 30 against the live record, and is unmeasured past that.
+Bob's decision, July 25: ship in that condition and carry it forward so later
+steps read those numbers as inherited rather than earned. D-33: removing the id
+tiebreak from the compiler does NOT make the 600-bundle paging suite fail, so the
+tiebreak is held by a compile-time assertion and by argument, not by a
+demonstrated runtime failure. D-34 and D-35: server-side selection snapshots
+(step 5) are absent, along with their lifecycle, ownership, byte caps and drift
+policy.
+
 v14, July 25, 2026. Current state, on top of the v13 narrative below. The plane
 is 0.15.0. The development instance is now biosmoke7.believeinoakland.workers.dev
 (v13 below still names biosmoke5/6; the record moved forward with each fresh

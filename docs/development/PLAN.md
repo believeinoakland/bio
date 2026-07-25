@@ -565,7 +565,7 @@ condition.
 their own systems, and the source file is removed in a commit that says why.
 
 ### S-10 Retrieval
-**Status: in progress. Step 1 (the projection) is DONE in 0.15.0** · Depends: S-8 (probe answered)
+**Status: in progress. Steps 1 to 4 are DONE in 0.16.0. Step 5 is next** · Depends: S-8 (probe answered)
 
 **Step 1, done in 0.15.0.** The `bundles` projection now carries every field the
 UX filters on: `schema_id`, `produced_mode`, `capability_tier`, `source_locator`,
@@ -593,8 +593,44 @@ a bounded pass at construction plus an admin `op=reproject` for a store larger
 than one pass. `op=projection` is member class and above, behind the same fence as
 `op=index`, because the projection carries `source.locator`.
 
-Next: maintain an FTS5 index alongside the projection in the same transaction,
-then the parser and compiler.
+**Steps 2, 3 and 4, done in 0.16.0.** The text index, the query language, and
+`op=search`.
+
+Step 2, the index. `bundles_fts` is an FTS5 table inside the Durable Object with
+five columns (`title, body, meta, locator, authority`, `unicode61`), keyed on a
+new explicit `bundles.fts_id`. Explicit because the table's implicit rowid is an
+implementation detail SQLite may renumber, and an index keyed on a number the
+engine can change is one that can silently point at the wrong document. Written
+inside `promote`'s transaction; `purge` takes the index row with it, which
+matters because `fts_id` is allocated MAX+1 and an orphan would otherwise be
+inherited by a later bundle. `op=searchindexcheck` re-derives the expected row for
+every bundle and compares, and the suite gives it a negative control by breaking
+the index and requiring it to say so.
+
+Step 3, the language. `src/query.mjs` holds no database handle, so `src/store.mjs`
+builds no query at all and every compiled statement goes through one guarded
+executor that throws without the viewer gate. That is what makes D-15's single
+compilation point structural rather than a convention.
+
+Step 4, the surface. `op=search`, member class and above, returning ids plus full
+provenance with bm25 relevance and snippets, facet counts for the sidebar, and
+`mode=ids` for select-all. `op=searchfields` publishes the vocabulary so a UI does
+not keep a drifting copy.
+
+**Step 5, server-side selection, is next, and it is a design step first.** D-34
+holds the resource question: a Worker holds no connection, so a closed view is
+unobservable and the plane can only require proof of life. Ownership by session,
+a TTL refreshed on read, an alarm sweep, caps by bytes before count, and
+query-plus-hash instead of materialised ids above the cap. D-35 holds the drift
+question and answers it: detect exactly, classify using the manifest's `writer`
+and `operation` so a monitor tick reads differently from a member's rewrite, and
+never absorb, because a selection records intent and an action landing on rows
+the operator never saw is an accountability failure.
+
+**Read the numbers honestly (D-32).** The 20,000-bundle actuals in
+RETRIEVAL-SUBSTRATE.md came from a probe object that is not this code. The
+shipped path is verified at 600 bundles against workerd and at 30 against the
+live record. Bob's decision was to ship in that condition and carry it forward.
 
 
 The scope is a full search, filter, list, sort, and select surface, not free-text

@@ -96,49 +96,42 @@ before any real group installs.
 
 ## Current state and next task, as of 2026-07-25
 
-The plane is **0.14.2**, signed, tagged `v0.14.2`, and running on
-biosmoke7.believeinoakland.workers.dev. Battery 680 assertions across 22 suites
-in about 50 seconds (`npm test` in bio-plane); installer wizard 90 assertions
+The plane is **0.16.0**, signed, tagged `v0.16.0`, and running on
+biosmoke7.believeinoakland.workers.dev. Battery 1030 assertions across 24 suites
+in about 63 seconds (`npm test` in bio-plane); installer wizard 90 assertions
 (`node test/wizard.test.mjs` in newgroup). Live record: 30 bundles, 87 register
 rows, `op=audit` 30 checked with zero findings.
 
-**S-10 RETRIEVAL IS UNBLOCKED AND UNDER WAY.** The design conversation the
-sections below insist on has HAPPENED; do not re-open it. Two measured probes and
-Bob's answers are recorded in `development/RETRIEVAL-PROBE.md` (probe 1, FTS5 vs
-an exported index) and `development/RETRIEVAL-SUBSTRATE.md` (probe 2, the other
-four verbs, plus the settled design and the build order). Read the substrate
-document before touching retrieval; it is the specification.
+**S-10 RETRIEVAL: steps 1 through 4 are DONE.** The projection (0.15.0), the text
+index inside `promote`'s transaction, the query parser and compiler, and
+`op=search`. Read `development/RETRIEVAL-SUBSTRATE.md` before touching retrieval;
+it is the specification and its design questions are settled, not open.
 
-The short version, so a session cannot drift from it:
+New ops, all member class and above because they read the working corpus:
+`search` (the five verbs in one call: q, filter selectors, facets, sort, and
+`mode=ids` for select-all), `searchfields` (the query vocabulary, so a UI need
+not keep its own copy), `searchindexcheck` (re-derives the expected index row for
+every bundle and compares).
 
-- The surface is five verbs, search, filter, list, sort, select. Not free-text
-  search. Google-like query syntax, metadata and frontmatter searchable,
-  `source.locator` and `source.authority` included.
-- FTS5 inside the Durable Object, with typed indexed columns for the fields the
-  UX filters and sorts on, and JSON1 with generated columns for the
-  per-schema tail. No facet table: measured at ~9x the write cost and ~5.5x the
-  space, never faster.
-- A result carries ids plus full provenance. Default order is relevance (bm25).
-  A bare multi-word string means AND; when an AND query returns nothing the
-  surface offers the OR interpretation.
-- Every sort compiles to `ORDER BY <field> <dir>, id ASC`. Without the stable
-  tiebreak paging is wrong, not merely inconsistent, on any field with ties.
-- Select-all is a distinct operation from a page, and a selection is a
-  server-side construct.
-- Search ships at flat member scope ahead of the membership model, with the
-  D-15 viewer-visibility filter designed in as a SINGLE compilation point that
-  returns true for a member today. A test must assert no query path reaches the
-  store without passing through it.
+**Step 5, server-side selection, is the next retrieval task**, and it is a design
+step before it is a coding step. D-34 and D-35 hold what it has to answer:
+ownership by session, a TTL refreshed on read, an alarm sweep, caps by bytes
+before count, query-plus-hash instead of materialised ids above the cap, and
+drift that is classified using the manifest's `writer` and `operation` rather
+than absorbed. Auto-updating a selection is rejected and the reasoning is in
+D-35; do not re-open it.
 
-Build order, from the substrate document: extend the projection to cover the
-frontmatter the UX filters on, maintain it transactionally inside `promote`, then
-the parser and compiler, then `op=search`, then server-side selection, then the
-real viewer predicate when membership lands.
+**Carry the unverified condition forward.** D-32: the 20,000-bundle retrieval
+numbers were measured with a probe object that is not the plane. The shipped path
+is verified at 600 bundles and at the live 30. Bob's decision was to ship in that
+condition and to keep saying so, so a later step does not read those numbers as
+earned by this code.
 
 Also open, in Bob's order of interest: D-1 (root of trust unmodelled, doctrine
 work), D-9 (20 unreferenced register rows, needs an admin credential), S-9
 (retire the Apps Script plane, Bob's hands), D-15 (viewer-position filtering,
-when project visibility is built).
+when project visibility is built; the single compilation point is now in place
+and asserted, so this is a change in one function).
 
 ---
 

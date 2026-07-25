@@ -64,6 +64,23 @@ const OPS = {
      same fence that governs op=index governs this. */
   projection: { classes: ["admin", "member", "probe"],           mutating: false },
   reproject:  { classes: ["admin", "probe"],                     mutating: true  },
+  /* S-10 steps 2 to 4: the retrieval surface. It reads the WORKING corpus, so it
+     is member class and above and never public, exactly like op=index and
+     op=projection. There is no public token class to grant it to and there must
+     never be one: a search result carries titles, states, locators and
+     authorities, which together name what the group is looking into and how far
+     along it is, before there is anything to answer.
+     `viewer` is stamped below from the authenticated identity and a
+     caller-supplied value is overwritten, because the D-15 visibility gate is
+     only a gate if the caller cannot choose whose view it compiles. */
+  search:     { classes: ["admin", "member", "probe"],           mutating: false },
+  /* The vocabulary of the query language, so a UI builds its controls from the
+     plane rather than from a copy that drifts. Working-corpus field names, so
+     the same fence applies. */
+  searchfields:{ classes: ["admin", "member", "probe"],          mutating: false },
+  /* The verifier for "the index cannot diverge from the corpus": it re-derives
+     the expected text row for every bundle and compares. Read-only. */
+  searchindexcheck: { classes: ["admin", "member", "probe"],     mutating: false },
   list:       { classes: ["admin", "member", "probe"],           mutating: false },
   image:      { classes: ["admin", "member", "probe"],           mutating: false },
   file:       { classes: ["admin", "member", "probe"],           mutating: false },
@@ -954,6 +971,15 @@ export default {
     /* Authorship from a session is stamped by the server, never taken from
        the request: a browser cannot write history as someone else. */
     if (viaSession && op === "lease") inner.searchParams.set("actor", sessMember);
+    /* D-15: whose view a query compiles for is decided by the SERVER, from the
+       credential that authenticated, and set AFTER the caller's parameters were
+       copied so a caller-supplied `viewer` is overwritten rather than honoured.
+       The gate is flat member scope today and returns true for a member; when
+       projects and positions land it returns a real predicate and this is still
+       the only place the identity comes from. A viewer the compiler does not
+       recognise compiles to a deny predicate, so the failure mode of a missing
+       stamp is an empty result rather than an unfiltered one. */
+    if (op === "search") inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
     if (viaSession && op === "promote" && passBody) {
       try { const b = JSON.parse(passBody); b.author = sessMember; passBody = JSON.stringify(b); }

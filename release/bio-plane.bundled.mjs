@@ -4305,6 +4305,527 @@ function archiveLocatorFrom(res, requested) {
 
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
+
+// src/query.mjs
+var FIELDS = {
+  id: { col: "bundle_id", type: "text" },
+  type: { col: "object_type", type: "text", lower: true },
+  group: { col: "group_id", type: "text", lower: true },
+  title: { col: "title", type: "text", fts: "title" },
+  state: { col: "current_state", type: "text", lower: true },
+  prior: { col: "prior_state", type: "text", lower: true },
+  created: { col: "created", type: "time" },
+  updated: { col: "last_updated", type: "time" },
+  criticality: { col: "criticality", type: "text", lower: true },
+  classification: { col: "classification", type: "text", lower: true },
+  sha: { col: "bundle_sha", type: "text", lower: true },
+  schema: { col: "schema_id", type: "text", lower: true },
+  mode: { col: "produced_mode", type: "text", lower: true },
+  tier: { col: "capability_tier", type: "text", lower: true },
+  locator: { col: "source_locator", type: "text", fts: "locator" },
+  authority: { col: "source_authority", type: "text", fts: "authority" },
+  retrieved: { col: "source_retrieved", type: "time" },
+  status: { col: "source_status", type: "text", lower: true },
+  hash: { col: "content_hash", type: "text", lower: true },
+  monitored: { col: "monitor_enabled", type: "bool" },
+  frequency: { col: "monitor_frequency", type: "text", lower: true },
+  checked: { col: "monitor_last_checked", type: "time" },
+  annotations: { col: "annotations_open", type: "number" },
+  reeval: { col: "reeval_flag", type: "bool" },
+  since: { col: "reeval_since", type: "time" },
+  reevalsource: { col: "reeval_source", type: "text", lower: true }
+};
+var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
+var SORTABLE = { relevance: null, ...Object.fromEntries(
+  Object.entries(FIELDS).map(([k, f2]) => [k, f2.col])
+) };
+var DEFAULT_FACETS = ["type", "state", "criticality", "classification", "schema", "status"];
+var GATE_MARK = "/*viewer-gate*/";
+function viewerPredicate(viewer) {
+  const v = typeof viewer === "string" ? viewer : "";
+  const m = /^(class:(admin|member|probe)|member:[A-Za-z0-9._:-]{1,128}|admin)$/.exec(v);
+  if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY" };
+  return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member" };
+}
+var TEXT_PATHS = /\.(md|txt)$/i;
+var TEXT_CAP = 128 * 1024;
+function textOf(bundleId, files) {
+  const list = (files || []).map((f2) => ({ path: f2.path, text: typeof f2.text === "string" ? f2.text : typeof f2.content === "string" ? f2.content : null }));
+  const md = list.find((f2) => f2.path === "bundle.md");
+  let fm = null, prose = "";
+  if (md && md.text !== null) {
+    let p = null;
+    try {
+      p = parseFrontmatter(md.text);
+    } catch {
+      p = null;
+    }
+    fm = p?.data ?? null;
+    prose = typeof p?.body === "string" ? p.body : md.text;
+  }
+  const bits = [];
+  const walk = (v) => {
+    if (v === null || v === void 0) return;
+    if (Array.isArray(v)) {
+      for (const x of v) walk(x);
+      return;
+    }
+    if (typeof v === "object") {
+      for (const [k, val] of Object.entries(v)) {
+        bits.push(k);
+        walk(val);
+      }
+      return;
+    }
+    bits.push(String(v));
+  };
+  walk(fm);
+  const others = list.filter((f2) => f2.path !== "bundle.md" && f2.text !== null && TEXT_PATHS.test(f2.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  const cap = (s) => String(s ?? "").slice(0, TEXT_CAP);
+  const nested = (block, key) => {
+    const b = fm && typeof fm === "object" ? fm[block] : null;
+    return b && typeof b === "object" && !Array.isArray(b) && b[key] != null ? String(b[key]) : "";
+  };
+  return {
+    title: cap(fm && fm.title != null ? String(fm.title) : ""),
+    body: cap([prose, ...others.map((f2) => f2.path + "\n" + f2.text)].join("\n\n")),
+    /* The identifier is folded into `meta` so pasting a bundle id into the
+       search bar finds the bundle, which is the first thing anyone tries. */
+    meta: cap([String(bundleId), ...bits].join(" ")),
+    locator: cap(nested("source", "locator")),
+    authority: cap(nested("source", "authority"))
+  };
+}
+var OPERATORS = { AND: "and", OR: "or", NOT: "not" };
+function tokenize(input) {
+  const src = String(input ?? "");
+  const out = [];
+  let i = 0;
+  const isSpace = (c) => c === " " || c === "	" || c === "\n" || c === "\r";
+  const readValue = () => {
+    if (src[i] === '"') {
+      i++;
+      let s2 = "";
+      while (i < src.length && src[i] !== '"') s2 += src[i++];
+      i++;
+      return { text: s2, quoted: true };
+    }
+    let s = "";
+    while (i < src.length && !isSpace(src[i]) && src[i] !== "(" && src[i] !== ")") s += src[i++];
+    return { text: s, quoted: false };
+  };
+  while (i < src.length) {
+    const c = src[i];
+    if (isSpace(c)) {
+      i++;
+      continue;
+    }
+    if (c === "(") {
+      out.push({ k: "(" });
+      i++;
+      continue;
+    }
+    if (c === ")") {
+      out.push({ k: ")" });
+      i++;
+      continue;
+    }
+    if (c === "-" && i + 1 < src.length && !isSpace(src[i + 1])) {
+      out.push({ k: "not" });
+      i++;
+      continue;
+    }
+    const start = i;
+    const first = readValue();
+    if (!first.quoted && first.text.includes(":")) {
+      const at = first.text.indexOf(":");
+      const field = first.text.slice(0, at);
+      let rest = first.text.slice(at + 1);
+      if (rest === "" && src[i] === '"') {
+        i = start + at + 1;
+        rest = readValue().text;
+        out.push({ k: "sel", field, value: rest, quoted: true });
+        continue;
+      }
+      out.push({ k: "sel", field, value: rest, quoted: false });
+      continue;
+    }
+    if (!first.quoted && OPERATORS[first.text.toUpperCase()] && first.text === first.text.toUpperCase()) {
+      out.push({ k: OPERATORS[first.text.toUpperCase()] });
+      continue;
+    }
+    if (first.text !== "") out.push({ k: "term", value: first.text, quoted: first.quoted });
+  }
+  return out;
+}
+function parseTokens(tokens, implicitOp, ctx) {
+  let p = 0;
+  const peek = () => tokens[p];
+  const eat = () => tokens[p++];
+  const primary = () => {
+    const t = peek();
+    if (!t) return null;
+    if (t.k === "(") {
+      eat();
+      const e = orExpr();
+      if (peek()?.k === ")") eat();
+      else ctx.warnings.push("unclosed parenthesis; read to the end of the query");
+      return e;
+    }
+    if (t.k === ")") return null;
+    if (t.k === "and" || t.k === "or") {
+      eat();
+      return primary();
+    }
+    if (t.k === "not") {
+      eat();
+      const k = unary();
+      return k ? { op: "not", kid: k } : null;
+    }
+    if (t.k === "term") {
+      eat();
+      return textAtom(null, t.value, t.quoted, ctx);
+    }
+    if (t.k === "sel") {
+      eat();
+      return selector(t, ctx);
+    }
+    eat();
+    return null;
+  };
+  const unary = () => primary();
+  const andExpr = () => {
+    const kids = [];
+    for (; ; ) {
+      const t = peek();
+      if (!t || t.k === ")") break;
+      if (t.k === "or") break;
+      if (t.k === "and") {
+        eat();
+        continue;
+      }
+      const k = unary();
+      if (k) kids.push(k);
+      else if (!peek() || peek()?.k === ")") break;
+    }
+    if (!kids.length) return null;
+    if (kids.length === 1) return kids[0];
+    return { op: implicitOp, kids };
+  };
+  const orExpr = () => {
+    const kids = [];
+    for (; ; ) {
+      const k = andExpr();
+      if (k) kids.push(k);
+      if (peek()?.k === "or") {
+        eat();
+        continue;
+      }
+      break;
+    }
+    if (!kids.length) return null;
+    if (kids.length === 1) return kids[0];
+    return { op: "or", kids };
+  };
+  const ast = orExpr();
+  return ast;
+}
+function textAtom(column, value, quoted, ctx) {
+  let v = value;
+  let prefix = false;
+  if (!quoted && v.endsWith("*") && v.length > 1) {
+    prefix = true;
+    v = v.slice(0, -1);
+  }
+  if (v === "") return null;
+  if (!/[\p{L}\p{N}]/u.test(v)) return null;
+  const atom = { op: "text", column, value: v, phrase: quoted && /\s/.test(v), prefix };
+  ctx.textAtoms.push(atom);
+  return atom;
+}
+var CMP = [[">=", ">="], ["<=", "<="], [">", ">"], ["<", "<"]];
+function selector(tok, ctx) {
+  const name = tok.field.toLowerCase();
+  if (name === "has") {
+    const f3 = FIELDS[String(tok.value).toLowerCase()];
+    if (!f3) {
+      ctx.warnings.push(`has: unknown field ${JSON.stringify(tok.value)}`);
+      return null;
+    }
+    return { op: "meta", col: f3.col, cmp: "present", value: null };
+  }
+  if (name === "sort") {
+    applySort(tok.value, ctx);
+    return null;
+  }
+  if (name === "text") return textAtom(null, tok.value, tok.quoted, ctx);
+  if (name === "fm") {
+    const at = tok.value.indexOf("=");
+    const path = at < 0 ? tok.value : tok.value.slice(0, at);
+    const val = at < 0 ? null : tok.value.slice(at + 1);
+    if (!/^[A-Za-z0-9_.[\]]{1,120}$/.test(path)) {
+      ctx.warnings.push(`fm: path ${JSON.stringify(path)} is not a frontmatter path`);
+      return null;
+    }
+    return val === null ? { op: "meta", json: "$." + path, cmp: "present", value: null } : { op: "meta", json: "$." + path, cmp: "=", value: val };
+  }
+  const f2 = FIELDS[name];
+  if (!f2) {
+    ctx.warnings.push(`unknown field ${JSON.stringify(tok.field)}; read as free text`);
+    return textAtom(null, `${tok.field} ${tok.value}`.trim(), true, ctx);
+  }
+  let raw = String(tok.value);
+  const range = raw.split("..");
+  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f2.type === "time" || f2.type === "number")) {
+    return { op: "and", kids: [
+      { op: "meta", col: f2.col, cmp: ">=", value: coerce(f2, range[0]) },
+      { op: "meta", col: f2.col, cmp: "<=", value: coerce(f2, range[1]) }
+    ] };
+  }
+  for (const [lead, cmp] of CMP)
+    if (raw.startsWith(lead)) return { op: "meta", col: f2.col, cmp, value: coerce(f2, raw.slice(lead.length)) };
+  if (raw === "" || raw === "*") return { op: "meta", col: f2.col, cmp: "present", value: null };
+  if (f2.fts) return textAtom(f2.fts, raw, tok.quoted, ctx);
+  return { op: "meta", col: f2.col, cmp: "=", value: coerce(f2, raw) };
+}
+function coerce(f2, v) {
+  if (f2.type === "number") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : v;
+  }
+  if (f2.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
+  return f2.lower ? String(v).toLowerCase() : String(v);
+}
+function applySort(spec, ctx) {
+  let s = String(spec || "");
+  let dir = null;
+  if (s.startsWith("-")) {
+    dir = "DESC";
+    s = s.slice(1);
+  }
+  const [name, tail] = s.split(":");
+  if (tail) dir = /^d/i.test(tail) ? "DESC" : "ASC";
+  const key = String(name || "").toLowerCase();
+  if (!(key in SORTABLE)) {
+    ctx.warnings.push(`sort: unknown field ${JSON.stringify(name)}`);
+    return;
+  }
+  ctx.sort = { field: key, dir: dir || (key === "relevance" ? "ASC" : "DESC") };
+}
+var ftsLiteral = (s) => `"${String(s).replace(/"/g, '""')}"`;
+function ftsAtom(a) {
+  const lit = ftsLiteral(a.value) + (a.prefix ? "*" : "");
+  return a.column ? `{${a.column}} : ${lit}` : lit;
+}
+function ftsExpr(node) {
+  if (!node) return null;
+  if (node.op === "text") return ftsAtom(node);
+  if (node.op === "not") return null;
+  if (node.op === "or") {
+    const parts = node.kids.map(ftsExpr);
+    if (parts.some((x) => x === null)) return null;
+    return "(" + parts.join(" OR ") + ")";
+  }
+  if (node.op === "and") {
+    const pos = [], neg = [];
+    for (const k of node.kids) {
+      if (k.op === "not") {
+        const e2 = ftsExpr(k.kid);
+        if (e2 === null) return null;
+        neg.push(e2);
+      } else {
+        const e2 = ftsExpr(k);
+        if (e2 === null) return null;
+        pos.push(e2);
+      }
+    }
+    if (!pos.length) return null;
+    let e = "(" + pos.join(" AND ") + ")";
+    for (const n of neg) e = `(${e} NOT ${n})`;
+    return e;
+  }
+  return null;
+}
+function rankExpr(atoms) {
+  if (!atoms.length) return null;
+  const seen = /* @__PURE__ */ new Set(), parts = [];
+  for (const a of atoms) {
+    const e = ftsAtom(a);
+    if (!seen.has(e)) {
+      seen.add(e);
+      parts.push(e);
+    }
+  }
+  return parts.length === 1 ? parts[0] : "(" + parts.join(" OR ") + ")";
+}
+var ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
+function metaSql(node) {
+  const lhs = node.json ? `json_extract(fm_json, ?)` : node.col;
+  const args = node.json ? [node.json] : [];
+  if (node.cmp === "present")
+    return {
+      sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${lhs} IS NOT NULL AND ${lhs} <> ''`,
+      args: node.json ? [node.json, node.json] : []
+    };
+  return {
+    sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${lhs} ${node.cmp} ?`,
+    args: [...args, node.value]
+  };
+}
+function setSql(node) {
+  if (!node) return { sql: ALL, args: [], compound: false };
+  const fe = ftsExpr(node);
+  if (fe !== null)
+    return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [fe], compound: false };
+  if (node.op === "meta") return { ...metaSql(node), compound: false };
+  if (node.op === "text")
+    return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [ftsAtom(node)], compound: false };
+  if (node.op === "not") {
+    const inner = operand(setSql(node.kid));
+    return { sql: `${ALL} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
+  }
+  if (node.op === "or") {
+    const parts = node.kids.map((k) => operand(setSql(k)));
+    return { sql: parts.map((p) => p.sql).join(" UNION "), args: parts.flatMap((p) => p.args), compound: true };
+  }
+  if (node.op === "and") {
+    const pos = node.kids.filter((k) => k.op !== "not");
+    const neg = node.kids.filter((k) => k.op === "not").map((k) => k.kid);
+    const posParts = (pos.length ? pos : [null]).map((k) => operand(setSql(k)));
+    let sql = posParts.map((p) => p.sql).join(" INTERSECT ");
+    let args = posParts.flatMap((p) => p.args);
+    if (neg.length) {
+      if (posParts.length > 1) sql = `SELECT fid FROM (${sql})`;
+      for (const n of neg) {
+        const o = operand(setSql(n));
+        sql += ` EXCEPT ${o.sql}`;
+        args = args.concat(o.args);
+      }
+    }
+    return { sql, args, compound: posParts.length > 1 || neg.length > 0 };
+  }
+  return { sql: ALL, args: [], compound: false };
+}
+var operand = (s) => s.compound ? { sql: `SELECT fid FROM (${s.sql})`, args: s.args } : { sql: s.sql, args: s.args };
+var PROVENANCE_COLS = [
+  "bundle_id",
+  "object_type",
+  "group_id",
+  "title",
+  "current_state",
+  "prior_state",
+  "created",
+  "last_updated",
+  "criticality",
+  "classification",
+  "bundle_sha",
+  "schema_id",
+  "produced_mode",
+  "capability_tier",
+  "source_locator",
+  "source_authority",
+  "source_retrieved",
+  "source_status",
+  "content_hash",
+  "monitor_enabled",
+  "monitor_frequency",
+  "monitor_last_checked",
+  "annotations_open",
+  "reeval_flag",
+  "reeval_since",
+  "reeval_source"
+];
+var LIMIT_DEFAULT = 50;
+var LIMIT_MAX = 500;
+var IDS_MAX = 5e4;
+function compile({
+  q = "",
+  viewer = null,
+  sort = null,
+  dir = null,
+  limit = LIMIT_DEFAULT,
+  offset = 0,
+  facets = null,
+  implicitOp = "and",
+  snippetChars = 12
+} = {}) {
+  const ctx = { warnings: [], textAtoms: [], sort: null };
+  const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
+  if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
+  const gate = viewerPredicate(viewer);
+  const rank = rankExpr(ctx.textAtoms);
+  const set = setSql(ast);
+  const widenable = implicitOp !== "or" && ast?.op === "and" && Array.isArray(ast.kids) && ast.kids.length > 1;
+  const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
+  const off = Math.max(0, Math.floor(Number(offset) || 0));
+  const cte = (withRanked) => {
+    const parts = [
+      `gated(fid) AS (SELECT fts_id AS fid FROM bundles WHERE ${gate.sql} AND fts_id IS NOT NULL)`,
+      `hits(fid) AS (${set.sql})`,
+      `scope(fid) AS (SELECT fid FROM hits INTERSECT SELECT fid FROM gated)`
+    ];
+    const args = [...gate.args, ...set.args];
+    if (withRanked && rank) {
+      parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
+      args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank);
+    }
+    return { sql: "WITH " + parts.join(",\n     "), args };
+  };
+  const sortField = ctx.sort?.field || (rank ? "relevance" : "updated");
+  const sortDir = ctx.sort?.dir || (sortField === "relevance" ? "ASC" : "DESC");
+  let order;
+  if (sortField === "relevance" && rank) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
+  else if (sortField === "relevance") order = `b.last_updated DESC, b.bundle_id ASC`;
+  else {
+    const col = `b.${SORTABLE[sortField]}`;
+    order = `(${col} IS NULL) ASC, ${col} ${sortDir}, b.bundle_id ASC`;
+  }
+  const cols = PROVENANCE_COLS.map((c) => `b.${c}`).join(", ");
+  const joinRanked = rank ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
+  const scored = rank ? `, r.score AS score, r.snip AS snippet` : `, NULL AS score, NULL AS snippet`;
+  const page = () => {
+    const c = cte(true);
+    return { sql: `${c.sql}
+SELECT ${cols}${scored} FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+ORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, lim, off] };
+  };
+  const count = () => {
+    const c = cte(false);
+    return { sql: `${c.sql}
+SELECT count(*) AS n FROM scope`, args: c.args };
+  };
+  const ids = () => {
+    const c = cte(true);
+    return { sql: `${c.sql}
+SELECT b.bundle_id FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+ORDER BY ${order} LIMIT ?`, args: [...c.args, IDS_MAX] };
+  };
+  const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS).map((f2) => String(f2).toLowerCase()).filter((f2) => f2 in FIELDS);
+  const facet = (name) => {
+    const f2 = FIELDS[name];
+    if (!f2) return null;
+    const c = cte(false);
+    return { sql: `${c.sql}
+SELECT b.${f2.col} AS value, count(*) AS n FROM scope s JOIN bundles b ON b.fts_id = s.fid
+WHERE b.${f2.col} IS NOT NULL GROUP BY b.${f2.col} ORDER BY n DESC, value ASC LIMIT 64`, args: c.args };
+  };
+  return {
+    ast,
+    warnings: ctx.warnings,
+    gate: gate.scope,
+    viewer: gate.viewer,
+    sort: { field: sortField, dir: sortDir },
+    limit: lim,
+    offset: off,
+    match: rank,
+    terms: ctx.textAtoms.map((a) => a.value),
+    widenable,
+    facetFields: facetList,
+    statements: { page, count, ids, facet }
+  };
+}
+
+// src/store.mjs
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var Store = class _Store extends DurableObject {
@@ -4352,7 +4873,15 @@ var Store = class _Store extends DurableObject {
       ["bundles", "reeval_flag", "INTEGER"],
       ["bundles", "reeval_since", "TEXT"],
       ["bundles", "reeval_source", "TEXT"],
-      ["bundles", "fm_json", "TEXT"]
+      ["bundles", "fm_json", "TEXT"],
+      /* S-10 step 2: the row key the text index is aligned on. FTS5 addresses
+         rows by integer rowid, and probe 2 chose an integer join over a string
+         join for text-plus-metadata queries, so a bundle needs a stable integer
+         of its own. NOT the table's implicit rowid: that is an implementation
+         detail SQLite is entitled to renumber, and an index keyed on a number
+         the engine may change is an index that can silently point at the wrong
+         document. */
+      ["bundles", "fts_id", "INTEGER"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -4367,6 +4896,11 @@ var Store = class _Store extends DurableObject {
       "annotations_open"
     ])
       this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
+    this.sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles(fts_id)`);
+    this.sql.exec(
+      `CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(
+         ${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`
+    );
     this.#backfillProjection(500);
   }
   /* The projection derived from a bundle.md, using the CATALOG'S OWN parser so
@@ -4459,23 +4993,71 @@ var Store = class _Store extends DurableObject {
     );
     return p;
   }
+  /* The integer the text index is keyed on. Allocated once per bundle and never
+     reassigned while the bundle exists, so a revision replaces its own index row
+     rather than orphaning one. MAX+1 rather than a sequence because it is
+     allocated inside promote's transaction, and a Durable Object runs one
+     transaction at a time, so there is no race to lose. */
+  #ftsIdFor(bundleId) {
+    const cur = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
+    if (cur && cur.fts_id !== null && cur.fts_id !== void 0) return cur.fts_id;
+    const next = (this.#one(`SELECT COALESCE(MAX(fts_id), 0) AS m FROM bundles`).m || 0) + 1;
+    this.sql.exec(`UPDATE bundles SET fts_id=? WHERE bundle_id=?`, next, bundleId);
+    return next;
+  }
+  /* Delete-then-insert rather than an FTS5 UPDATE, because a revision can change
+     which files exist and an in-place update of a virtual table row is the shape
+     that leaves stale terms behind. Called inside promote's transaction, so the
+     text index cannot be a revision behind the corpus. */
+  #writeText(bundleId, files) {
+    const fid = this.#ftsIdFor(bundleId);
+    const t = textOf(bundleId, files);
+    this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, fid);
+    this.sql.exec(
+      `INSERT INTO bundles_fts (rowid, ${FTS_COLUMNS.join(", ")}) VALUES (?, ${FTS_COLUMNS.map(() => "?").join(", ")})`,
+      fid,
+      ...FTS_COLUMNS.map((c) => t[c])
+    );
+    return { fts_id: fid, chars: FTS_COLUMNS.reduce((n, c) => n + t[c].length, 0) };
+  }
+  #filesOf(bundleId) {
+    return this.#rows(`SELECT path, content FROM files WHERE bundle_id=?`, bundleId).map((r) => ({ path: r.path, text: r.content }));
+  }
+  /* One backfill for both derived structures. A row is stale if it has no
+     projection or no text index, which covers a row written before either
+     existed and a row whose index was cleared for repair. Bounded per pass
+     because a Durable Object has a CPU budget: a large store finishes over
+     successive constructions rather than timing out on one. */
   #backfillProjection(limit) {
     const stale = this.#rows(
-      `SELECT bundle_id FROM bundles WHERE fm_json IS NULL ORDER BY bundle_id LIMIT ?`,
+      `SELECT bundle_id, fm_json IS NULL AS need_proj, fts_id IS NULL AS need_text
+         FROM bundles WHERE fm_json IS NULL OR fts_id IS NULL ORDER BY bundle_id LIMIT ?`,
       limit
     );
-    let n = 0;
+    let n = 0, t = 0;
     for (const r of stale) {
-      const f2 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
-      if (!f2 || f2.content === null) continue;
-      this.#writeProjection(r.bundle_id, f2.content);
-      n++;
+      const files = this.#filesOf(r.bundle_id);
+      const md = files.find((f2) => f2.path === "bundle.md");
+      if (!md || md.text === null) continue;
+      if (r.need_proj) {
+        this.#writeProjection(r.bundle_id, md.text);
+        n++;
+      }
+      if (r.need_text) {
+        this.#writeText(r.bundle_id, files);
+        t++;
+      }
     }
-    return { reprojected: n, remaining: this.#one(`SELECT count(*) c FROM bundles WHERE fm_json IS NULL`).c };
+    return {
+      reprojected: n,
+      reindexed: t,
+      remaining: this.#one(`SELECT count(*) c FROM bundles WHERE fm_json IS NULL OR fts_id IS NULL`).c
+    };
   }
-  /** Re-derive the projection for rows that lack one. Exposed because a deploy
-   *  runs the bounded pass once at construction and a large store may need more
-   *  than one. Idempotent: a row with a projection is left alone. */
+  /** Re-derive the projection and the text index for rows that lack one. Exposed
+   *  because a deploy runs the bounded pass once at construction and a large
+   *  store may need more than one. Idempotent: a row that has both is left
+   *  alone. */
   reproject({ limit = 500 } = {}) {
     return this.#backfillProjection(limit);
   }
@@ -4516,11 +5098,167 @@ var Store = class _Store extends DurableObject {
   }
   /** Test and repair support: clear a projection so the backfill path can be
    *  exercised against a row that looks like it predates the columns. */
-  projectionClear({ bundleId = null } = {}) {
+  projectionClear({ bundleId = null, text = true } = {}) {
     const set = _Store.PROJECTION_COLS.map((c) => `${c}=NULL`).join(", ");
     if (bundleId) this.sql.exec(`UPDATE bundles SET ${set} WHERE bundle_id=?`, bundleId);
     else this.sql.exec(`UPDATE bundles SET ${set}`);
-    return { ok: true, scope: bundleId || "ALL" };
+    if (text) {
+      if (bundleId) {
+        const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
+        if (r && r.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
+        this.sql.exec(`UPDATE bundles SET fts_id=NULL WHERE bundle_id=?`, bundleId);
+      } else {
+        this.sql.exec(`DELETE FROM bundles_fts`);
+        this.sql.exec(`UPDATE bundles SET fts_id=NULL`);
+      }
+    }
+    return { ok: true, scope: bundleId || "ALL", text };
+  }
+  /* ---- S-10 step 3: the retrieval surface ----
+   *
+   * Five verbs, one call, run where the data is, which is the shape D-26 chose.
+   *   search  the query string, compiled by query.mjs
+   *   filter  selectors in that same string, plus facet counts to drive a sidebar
+   *   list    every hit arrives with full provenance, per Bob's decision
+   *   sort    any projected field, always with the declared id tiebreak
+   *   select  mode=ids returns the WHOLE set, which is a different request
+   *
+   * The store builds no SQL. Every statement comes from compile(), and this
+   * method refuses to execute one that does not carry the viewer gate, so a
+   * query path that skipped D-15's single compilation point fails loudly instead
+   * of quietly returning more than the viewer may see.
+   */
+  #runQuery(stmt, tally) {
+    if (!stmt || typeof stmt.sql !== "string" || !stmt.sql.includes(GATE_MARK))
+      throw new Error("REFUSED: a retrieval statement reached the store without the viewer visibility gate (D-15)");
+    tally.applied++;
+    return this.#rows(stmt.sql, ...stmt.args);
+  }
+  search(input = {}) {
+    const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
+    const plan = compile(input);
+    const tally = { applied: 0 };
+    const total = this.#runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
+    const out = {
+      query: {
+        q: String(input.q ?? ""),
+        terms: plan.terms,
+        match: plan.match,
+        sort: plan.sort,
+        warnings: plan.warnings,
+        mode
+      },
+      /* The gate is reported, not assumed. `scope` is DENY when the caller
+         presented no recognisable viewer, which is the fail-closed answer, and
+         `applied` counts the statements that carried the gate. */
+      gate: { scope: plan.gate, applied: 0 },
+      total,
+      limit: plan.limit,
+      offset: plan.offset
+    };
+    if (mode === "page") {
+      out.hits = this.#runQuery(plan.statements.page(), tally);
+    } else if (mode === "ids") {
+      const ids = this.#runQuery(plan.statements.ids(), tally).map((r) => r.bundle_id);
+      out.ids = ids;
+      out.truncated = ids.length >= IDS_MAX;
+    }
+    if (input.facets !== false && mode !== "count") {
+      out.facets = {};
+      for (const f2 of plan.facetFields)
+        out.facets[f2] = this.#runQuery(plan.statements.facet(f2), tally);
+    }
+    out.widen = null;
+    if (total === 0 && plan.widenable && input.widen !== false) {
+      const or = compile({ ...input, implicitOp: "or" });
+      const n = this.#runQuery(or.statements.count(), tally)[0]?.n ?? 0;
+      if (n > 0) out.widen = {
+        interpretation: "OR",
+        total: n,
+        q: String(input.q ?? ""),
+        detail: "no bundle matches all of these terms; this many match any of them"
+      };
+    }
+    out.gate.applied = tally.applied;
+    return out;
+  }
+  /** The fields the surface knows, so a UI can build its own controls from the
+   *  plane's vocabulary rather than a copy of it that drifts. */
+  searchFields() {
+    return {
+      fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f2]) => [k, { type: f2.type, freeText: !!f2.fts, column: f2.col }])),
+      ftsColumns: FTS_COLUMNS,
+      defaultFacets: DEFAULT_FACETS,
+      idsMax: IDS_MAX,
+      syntax: [
+        "bare words are AND, ranked by relevance",
+        '"quoted phrase" is one unit',
+        "term* is a prefix match",
+        "-term and NOT term exclude",
+        "OR and parentheses nest",
+        "field:value filters; free-text fields (title, locator, authority) match text, enumerations match exactly",
+        "field:>value, field:<value, field:a..b compare and range",
+        "has:field asks whether the field carries any value",
+        "fm:path and fm:path=value reach frontmatter no column projects",
+        "sort:field and sort:-field order the result"
+      ]
+    };
+  }
+  /** The verifier for the claim that the index cannot diverge from the corpus.
+   *
+   *  "Maintained in the same transaction" is a design, and a design is not a
+   *  measurement. This re-derives the expected text row for every bundle from
+   *  the stored files and compares it against what the index actually holds,
+   *  which is the only thing that can tell the difference between an index that
+   *  cannot diverge and one that has not diverged yet. Paginated and resumable
+   *  by cursor, the same shape as the conformance audit. */
+  searchIndexCheck({ after = "", limit = 200 } = {}) {
+    const cap = Math.max(1, Math.min(1e3, Math.floor(Number(limit) || 200)));
+    const rows = this.#rows(
+      `SELECT bundle_id, fts_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`,
+      after,
+      cap
+    );
+    const findings = [];
+    for (const r of rows) {
+      if (r.fts_id === null || r.fts_id === void 0) {
+        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: "the bundle has no text index key" });
+        continue;
+      }
+      const have = this.#one(
+        `SELECT ${FTS_COLUMNS.join(", ")} FROM bundles_fts WHERE rowid=?`,
+        r.fts_id
+      );
+      if (!have) {
+        findings.push({ bundleId: r.bundle_id, finding: "NO_INDEX_ROW", ftsId: r.fts_id });
+        continue;
+      }
+      const want = textOf(r.bundle_id, this.#filesOf(r.bundle_id));
+      const bad = FTS_COLUMNS.filter((c) => String(have[c] ?? "") !== String(want[c] ?? ""));
+      if (bad.length)
+        findings.push({
+          bundleId: r.bundle_id,
+          finding: "DIVERGED",
+          columns: bad,
+          chars: Object.fromEntries(bad.map((c) => [c, [String(have[c] ?? "").length, String(want[c] ?? "").length]]))
+        });
+    }
+    const orphans = this.#rows(
+      `SELECT rowid AS fts_id FROM bundles_fts WHERE rowid NOT IN (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL) LIMIT 100`
+    ).map((r) => r.fts_id);
+    const last = rows.length ? rows[rows.length - 1].bundle_id : null;
+    return {
+      checked: rows.length,
+      findings,
+      orphans,
+      counts: {
+        bundles: this.#one(`SELECT count(*) c FROM bundles`).c,
+        indexed: this.#one(`SELECT count(*) c FROM bundles_fts`).c,
+        keyed: this.#one(`SELECT count(*) c FROM bundles WHERE fts_id IS NOT NULL`).c
+      },
+      cursor: rows.length === cap ? last : null,
+      ok: findings.length === 0 && orphans.length === 0
+    };
   }
   #rows(q, ...a) {
     return [...this.sql.exec(q, ...a)];
@@ -4914,6 +5652,7 @@ var Store = class _Store extends DurableObject {
         );
       const bundleMd = files.find((f2) => f2.path === "bundle.md");
       this.#writeProjection(bundleId, bundleMd?.text ?? null);
+      this.#writeText(bundleId, files);
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version };
     });
@@ -4956,6 +5695,7 @@ var Store = class _Store extends DurableObject {
       history: n("history"),
       refs: n("refs"),
       register: n("register"),
+      indexed: n("bundles_fts"),
       dbBytes: this.ctx.storage.sql.databaseSize
     };
   }
@@ -4976,9 +5716,12 @@ var Store = class _Store extends DurableObject {
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
+        const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
+        if (r && r.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t} WHERE bundle_id=?`, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
+        this.sql.exec(`DELETE FROM bundles_fts`);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`);
         this.sql.exec(`DELETE FROM bundles`);
       }
@@ -5378,6 +6121,26 @@ var Store = class _Store extends DurableObject {
           jsonPath: url.searchParams.get("jsonPath"),
           jsonEquals: url.searchParams.get("jsonEquals")
         }),
+        /* Retrieval. `viewer` is stamped by the control plane and is never taken
+           from the caller's own parameters there; here it is simply read, and an
+           absent one compiles to the deny predicate. */
+        search: () => this.search({
+          q: url.searchParams.get("q") ?? "",
+          viewer: url.searchParams.get("viewer"),
+          sort: url.searchParams.get("sort"),
+          dir: url.searchParams.get("dir"),
+          limit: url.searchParams.get("limit"),
+          offset: url.searchParams.get("offset"),
+          mode: url.searchParams.get("mode"),
+          facets: url.searchParams.get("facets") === "none" ? false : url.searchParams.get("facets") ? url.searchParams.get("facets").split(",") : null,
+          widen: url.searchParams.get("widen") !== "0",
+          snippetChars: Number(url.searchParams.get("snippet")) || 12
+        }),
+        searchfields: () => this.searchFields(),
+        searchindexcheck: () => this.searchIndexCheck({
+          after: url.searchParams.get("after") || "",
+          limit: url.searchParams.get("limit")
+        }),
         projectionplan: () => this.projectionPlan(),
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
@@ -5442,6 +6205,23 @@ var OPS = {
      same fence that governs op=index governs this. */
   projection: { classes: ["admin", "member", "probe"], mutating: false },
   reproject: { classes: ["admin", "probe"], mutating: true },
+  /* S-10 steps 2 to 4: the retrieval surface. It reads the WORKING corpus, so it
+     is member class and above and never public, exactly like op=index and
+     op=projection. There is no public token class to grant it to and there must
+     never be one: a search result carries titles, states, locators and
+     authorities, which together name what the group is looking into and how far
+     along it is, before there is anything to answer.
+     `viewer` is stamped below from the authenticated identity and a
+     caller-supplied value is overwritten, because the D-15 visibility gate is
+     only a gate if the caller cannot choose whose view it compiles. */
+  search: { classes: ["admin", "member", "probe"], mutating: false },
+  /* The vocabulary of the query language, so a UI builds its controls from the
+     plane rather than from a copy that drifts. Working-corpus field names, so
+     the same fence applies. */
+  searchfields: { classes: ["admin", "member", "probe"], mutating: false },
+  /* The verifier for "the index cannot diverge from the corpus": it re-derives
+     the expected text row for every bundle and compares. Read-only. */
+  searchindexcheck: { classes: ["admin", "member", "probe"], mutating: false },
   list: { classes: ["admin", "member", "probe"], mutating: false },
   image: { classes: ["admin", "member", "probe"], mutating: false },
   file: { classes: ["admin", "member", "probe"], mutating: false },
@@ -6375,6 +7155,7 @@ var index_default = {
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
     if (viaSession && op === "lease") inner.searchParams.set("actor", sessMember);
+    if (op === "search") inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : void 0;
     if (viaSession && op === "promote" && passBody) {
       try {
