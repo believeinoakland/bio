@@ -92,6 +92,52 @@ every governance rule enforceable, since a group that cannot leave can be
 held. The migration tooling already performs a verified transfer of the
 real record, so this is productization rather than new ground.
 
+THE NEXT ARC IS SPECIFIED. Read
+docs/development/CONFORMANCE-AND-INTAKE-ARC.md first. It is the work plan:
+make the plane conformant to the check catalog, then rebuild on it the
+acquisition tooling the Apps Script accelerator carried. Order of work is in
+its Section 5 and the first three steps are not optional.
+
+Bob's direction, July 24, 2026: do not spend effort preserving what exists.
+The corpus is development reference and no production system will use it
+without refetching from source. Spend effort on rigorously recreating the
+capture tooling on the new plane, conformant to the architecture, and on
+making the storage and transport plane complete and performant.
+
+The catalog is at bio-plane/checks/bio-checks.mjs, version 1.16.4,
+hash-verified, 49 checks, zero dependencies, filesystem injected at five
+seams. plane-gate/1.0 must RUN it, not reimplement it: a reimplementation is
+a fourth implementation pretending to be conformance.
+
+FOUR MEASURED DIVERGENCES, detail in the arc document Section 1: history
+paths are laid out wrongly so all 30 bundles fail C-12.2; promotion records
+are not projected at all so two more checks are unreachable; the manifest
+kind vocabulary differs, which is what hid the second divergence; and the
+gate implements four checks where the catalog has 49, which is how the
+intake UI's defects shipped invisibly.
+
+The member half below Section 7 is unblocked and can be built immediately:
+identity and handle with uniqueness enforcement, the required
+administrator-assigned identity label, capabilities, burner-URL
+invitations replacing the current invitation code, and the two-admin
+bootstrap rules in Section 4. Note that the enrolment screen shipped in
+0.4.0 is UNREACHABLE (nothing calls `show("#s-enroll")`); the burner URL
+is what should reach it.
+
+ARCHITECTURE DEBT, recorded in Section 9: the root of trust is unmodelled.
+Three parts of the design lean on it, and the only thing implementing it is
+ADMIN_TOKEN, a bootstrap credential that became the root of trust by
+accident of being the only thing that can reclaim an instance. It is a
+proxy for hosting access, has no custody model, is not auditable, and
+cannot be rotated without returning the instance to unclaimed. Deciding
+what a root of trust should BE for a BIO group is a doctrine question of
+the same weight as the membership model and deserves its own session.
+
+Also scheduled: secure verified export (Section 8), which is what makes
+every governance rule enforceable, since a group that cannot leave can be
+held. The migration tooling already performs a verified transfer of the
+real record, so this is productization rather than new ground.
+
 THE C-SERIES CATALOG IS NOW IN THE REPO, hash-verified, at
 bio-plane/checks/bio-checks.mjs (version 1.16.4, 49 checks, zero
 dependencies, injected filesystem). The gate port is no longer blocked on
