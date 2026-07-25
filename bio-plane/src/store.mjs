@@ -508,6 +508,11 @@ export class Store extends DurableObject {
      owns all R2 traffic. This store only hands out the facts and commits
      the published rows in one transaction. */
 
+  /* Facts ratify needs that are not in the image: the row for its CAS check and
+     the active signer set. The manifest, history, and dangling-ref lists are
+     still returned because the migrate tool and the older gate consumed them;
+     plane-gate/1.0 reads all of that out of the image instead, since the catalog
+     wants the bundle as a filesystem rather than as query results. */
   gateFacts(bundleId) {
     const row = this.#one(
       `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);

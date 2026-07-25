@@ -66,14 +66,31 @@ const capSha = sha(capBytes);
 t("capture bytes land", (await PUT(`op=capture&token=mem-ratify&sha256=${capSha}`, capBytes)).ok, true);
 
 const ID = "INFO-2026-7001-ratify-target";
-const mkMd = (n) => `---\nid: ${ID}\nobject_type: information\ncurrent_state: verified\n---\n\n## Summary\n\nrevision ${n}\n`;
+/* Conformant to the catalog, because plane-gate/1.0 runs the catalog. A minimal
+   four-field frontmatter was fine against the four hand-written checks of 0.1
+   and is refused by the real thing, which is the point of the upgrade. */
+const NOW = "2026-07-24T00:00:00Z";
+const mkMd = (n, id = ID, state = "collected") => [
+  "---", `id: ${id}`, "object_type: information", "schema: information@1",
+  `title: "Ratify target"`, `current_state: ${state}`, "prior_state: null",
+  `created: ${NOW}`, `last_updated: ${NOW}`,
+  "produced_by:", "  mode: assisted", "  capability_tier: session",
+  "group: believe-in-oakland", "references: []", "state_history: []",
+  "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
+  "  source: null", "visuals: []", "criticality: supporting",
+  "classification: fact", "source_status: unchanged", "source:",
+  "  locator: in hand", "  authority: test", `  retrieved: ${NOW}`,
+  "monitoring:", "  enabled: false", "  frequency: none", "---", "",
+  "## Summary", "", `revision ${n}`, "", "## Provenance Notes", "",
+  "## Session Log", "", "## Review Notes", "",
+].join("\n");
 const dataJson = JSON.stringify({ probe: true }, null, 1);
 const pkg = (n, base, snap) => {
   const md = mkMd(n);
   return {
     bundleId: ID, base, snapKey: snap, author: "claude",
-    meta: { object_type: "information", group: "believe-in-oakland", title: "ratify target",
-            current_state: "verified", created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T00:00:00Z" },
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Ratify target",
+            current_state: "collected", created: NOW, last_updated: NOW },
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/probe.json", text: dataJson, bytes: dataJson.length, sha256: sha(dataJson) },
@@ -104,7 +121,7 @@ console.log("\n--- ratification ---");
 const rat = await POST("op=ratify&token=adm-ratify", { bundleId: ID, expectedSha: LIVE, sig: signRatify("sparky", ID, LIVE) });
 t("ratification succeeds", rat.ok, true);
 t("attested by the key's member", rat.attestor, "sparky");
-t("gate version recorded", rat.gateVersion, "plane-gate/0.1");
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.16.5)");
 t("bundle, file, and capture published", rat.published.shas, 3);
 t("all bytes copied to the published bucket", rat.published.copied, 3);
 
@@ -130,11 +147,15 @@ t("the new sha verifies too", (await GET(`op=verify&sha256=${c3.result.bundleSha
 
 console.log("\n--- the gate refuses a broken image ---");
 const BAD = "INFO-2026-7002-bad-frontmatter";
-const badMd = `---\nid: INFO-2026-0000-wrong-id\nobject_type: information\ncurrent_state: verified\n---\n\nbody\n`;
+/* Two deliberate breakages, each a different check family: the frontmatter id
+   disagrees with the folder (C-1.1), and a reference points nowhere (C-6.2). */
+const badMd = mkMd(1, "INFO-2026-0000-wrong-id").replace("references: []",
+  ["references:", "  - rel: cites", "    target: INFO-2026-0000-does-not-exist",
+   "    status: confirmed", '    note: ""'].join("\n"));
 const badPkg = {
   bundleId: BAD, base: null, snapKey: "20260724T130000Z_dddd4444", author: "claude",
-  meta: { object_type: "information", group: "believe-in-oakland", title: "bad", current_state: "verified",
-          created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T00:00:00Z" },
+  meta: { object_type: "information", group: "believe-in-oakland", title: "Ratify target",
+          current_state: "collected", created: NOW, last_updated: NOW },
   files: [{ path: "bundle.md", text: badMd, bytes: badMd.length, sha256: sha(badMd) }],
   refs: [{ target: "INFO-2026-0000-does-not-exist", kind: "cites" }], register: [],
 };
@@ -142,7 +163,7 @@ const bc = await POST("op=promote&token=mem-ratify", badPkg);
 const bad = await POST("op=ratify&token=adm-ratify", { bundleId: BAD, expectedSha: bc.result.bundleSha, sig: signRatify("sparky", BAD, bc.result.bundleSha) });
 t("gate refuses", bad.reason, "GATE_REFUSED");
 const checks = bad.findings.map((f) => f.check).sort();
-t("and says exactly why", checks, ["G1_ID", "G5_DANGLING_REF"]);
+t("and says exactly why, in the catalog's own vocabulary", checks, ["C-1.1", "C-6.2"]);
 t("the refused bundle published nothing", (await GET(`op=verify&sha256=${bc.result.bundleSha}`)).published, false);
 
 console.log("\n--- revocation stops attestation ---");

@@ -119,7 +119,7 @@ times. Nothing needs repairing in place, and the corpus is development reference
 that production will refetch, so a reload costs only the run.
 
 ### S-2 plane-gate/1.0 runs the catalog
-**Status: todo, next** · Debt: D-5 · Depends: S-1 (done). S-3 landed first deliberately: switching on 49 checks before the intake path was conformant would have made the browser form unusable at the moment the gate started working.
+**Status: done (0.6.0)** · Debt: D-5 · Depends: S-1 (done). S-3 landed first deliberately: switching on 49 checks before the intake path was conformant would have made the browser form unusable at the moment the gate started working.
 
 Replace the four hand-written checks with the catalog itself. Inject WebCrypto at
 the `sha256` and `sha512` seams, the store at `resolveTarget`, and the registry
@@ -132,6 +132,34 @@ Record the catalog's own version string on every publication, replacing
 **Accepts when:** every bundle in the live record gates with zero errors, and
 `ratify` refuses a bundle that the catalog refuses, proven by a test that
 tampers one bundle per check family.
+
+**Outcome, 0.6.0.** The gate imports `checkBundle` and reimplements nothing; the
+conformance suite asserts that by grepping the gate for check identifiers and
+finding none. `gateVersion` now reads `plane-gate/1.0 (bio-checks 1.16.5)`, so
+every publication records which catalog judged it.
+
+Two design choices about bytes, both deliberate:
+
+- **Blob-backed files are declared elided, not fetched.** The catalog's
+  three-tier read model exists for this. Fetching would mean pulling a 39.6MB
+  capture and its history copies into a Worker to gate one bundle.
+- **Capture integrity is not re-proven at the gate**, because the capture op
+  hashes the body server-side on write and refuses a mismatch. Bytes are proven
+  when they land, which is earlier and stronger than re-proving them on every
+  ratification. The plane still checks PRESENCE, by R2 head rather than fetch.
+
+That required one change to the catalog, recorded in `bio-plane/checks/README.md`
+and bumping it to 1.16.5: C-12.2's snapshot presence check used `files.has` where
+the catalog's own 1.13.0 rule says existence assertions consult files union
+elided. It was an existence assertion using the wrong helper, and it was the
+cause of the 71 phantom findings. The Apps Script embed is retired, so nothing
+now runs 1.16.4.
+
+**Upgrading the ratify suite to conformant fixtures found two more drifts**, both
+in DEBT: the plane's `refs` table is populated from the promote payload rather
+than parsed from `bundle.md`, so the two can disagree and only frontmatter is
+checked (D-21); and the browser's revise path does not append a Session Log
+entry, which C-13.2 requires of any bundle whose `last_updated` moves (D-22).
 
 ### S-3 Intake UI conformance
 **Status: done (0.5.1)** · Debt: D-6, D-7, D-14 · Depends: none, as it turned out

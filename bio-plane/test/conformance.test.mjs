@@ -56,7 +56,13 @@ const md = (state, rev) => [
   "  locator: in hand", "  authority: test", "  retrieved: 2026-07-24T00:00:00Z",
   "monitoring:", "  enabled: false", "  frequency: none", "---", "",
   "## Summary", "", `revision ${rev}`, "", "## Provenance Notes", "",
-  "## Session Log", "", "## Review Notes", "",
+  "## Session Log", "",
+  /* C-13.2: a bundle whose last_updated moves past created must say what
+     happened. A revision that logs nothing is a revision nobody can audit. */
+  /* C-5.1: the Session Log is append-only, so a revision carries every prior
+     entry as well as its own. Dropping earlier entries is tamper, not tidying. */
+  ...Array.from({ length: rev }, (_, i) => [`### Session ${i + 1}`, "", `Promoted revision ${i + 1}.`, ""]).flat(),
+  "## Review Notes", "",
 ].join("\n");
 
 const dataFor = (rev) => JSON.stringify({ rev }, null, 1);
@@ -122,14 +128,20 @@ const errs = findings.filter((f) => f.severity === "error");
 const c12 = errs.filter((f) => f.check.startsWith("C-12"));
 for (const f of c12) console.log(`         ${f.check}: ${f.message.slice(0, 120)}`);
 t("zero C-12 findings: history accounts for itself", c12.length, 0);
+t("and zero findings of any family: the projection is conformant", errs.length, 0);
 
-/* Reported, not asserted. See the header: the intake path owes D-7. */
-const byFamily = {};
-for (const f of errs) {
-  const fam = f.check.split(".")[0];
-  byFamily[fam] = (byFamily[fam] || 0) + 1;
+for (const f of errs) console.log(`         unexpected: ${f.check} ${f.message.slice(0, 110)}`);
+
+console.log("\n--- the gate runs the catalog, it does not imitate it ---");
+{
+  const { GATE_VERSION, CATALOG_VERSION } = await import("../src/gate.mjs");
+  t("the gate names the catalog version it ran", GATE_VERSION.includes(CATALOG_VERSION), true);
+  t("and calls itself 1.0, not 0.1", GATE_VERSION.startsWith("plane-gate/1.0"), true);
+  const gateSrc = readFileSync(fileURLToPath(new URL("../src/gate.mjs", import.meta.url)), "utf8");
+  t("it imports the catalog", /from "\.\.\/checks\/bio-checks\.mjs"/.test(gateSrc), true);
+  t("and reimplements no check of its own",
+    (gateSrc.match(/'C-\d/g) || []).length, 0);
 }
-console.log(`         remaining error families (not asserted yet): ${JSON.stringify(byFamily)}`);
 
 
 /* ---- the intake path, judged per type ----

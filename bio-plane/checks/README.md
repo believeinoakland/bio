@@ -33,6 +33,32 @@ The plane has WebCrypto, so a port should inject platform primitives at those
 seams rather than carry the hand-rolled versions, and the catalog is written
 to allow exactly that.
 
+## Divergence from 1.16.4, recorded 2026-07-24
+
+This file is now **1.16.5** and no longer matches the SHA-256 the retired Apps
+Script pinned. One line changed, for one reason.
+
+C-12.2's history-snapshot presence check used `ctx.files.has(snapPath)`. The
+catalog's own 1.13.0 presence rule, stated in the comment above `hasFile_`, is
+that a path exists if its bytes are carried OR it is declared elided, and that
+existence assertions consult the union while byte checks read `files` directly.
+A snapshot recorded in the manifest being "missing" is an existence assertion, so
+it should have used `hasFile_` and did not.
+
+The consequence was not theoretical. A tier-scoped read of the live record
+produced 71 phantom findings, and it forced any caller wanting to gate to build a
+byte-complete image: for the bundle carrying a 39.6MB capture that means pulling
+that capture and its history copies into a Worker's memory to answer a question
+about whether a file exists.
+
+Byte checks are untouched. Capture integrity is still verified, and verified
+earlier and more strongly than a gate could: the plane's capture op hashes the
+body server-side on write and refuses a mismatch, so bytes are proven when they
+land rather than re-proven on every ratification.
+
+The Apps Script embed is retired, so nothing now runs 1.16.4. This file is the
+one copy.
+
 Read `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` alongside it. The
 document is the specification; this is the implementation, and where they
 disagree the disagreement is itself a finding (see the state document for the

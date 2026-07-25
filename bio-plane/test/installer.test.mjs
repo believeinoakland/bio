@@ -110,5 +110,15 @@ console.log("\n--- the root serves the setup page; both APIs keep answering ---"
   await mf.dispose();
 }
 
+console.log("\n--- the version is one plain GET ---");
+{
+  const v = mk({ ADMIN_TOKEN: "a-ver", MEMBER_TOKEN: "m-ver", PROBE_TOKEN: "p-ver" });
+  const r = await v.dispatchFetch("http://x/version");
+  t("GET /version answers 200 with no credential", r.status, 200);
+  t("as plain text, not JSON", (r.headers.get("content-type") || "").startsWith("text/plain"), true);
+  t("carrying just the version", (await r.text()).trim(), "test");
+  await v.dispose();
+}
+
 console.log(`\ninstaller: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

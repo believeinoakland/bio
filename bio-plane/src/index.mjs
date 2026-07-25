@@ -153,6 +153,15 @@ export default {
        it holds no secret: keys are made and used in the visitor's browser.
        Serving it means the instance can LINK to it, which is the difference
        between a step an ordinary person can follow and one they cannot. */
+    /* Which version is this? A plain GET, no token, no op parameter, no JSON
+       field to know the name of. `op=bootstrap` has always carried the version
+       and always will, but "call bootstrap and read the version field" is not
+       something anyone should have to be told, and the question gets asked
+       after every update. */
+    if (req.method === "GET" && (url.pathname === "/version" || url.pathname === "/version/"))
+      return new Response((env.VERSION || "0.0.0") + "\n",
+        { headers: { "content-type": "text/plain; charset=utf-8",
+                     "access-control-allow-origin": "*" } });
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (req.method === "GET" && !url.pathname.startsWith("/api")
@@ -438,10 +447,14 @@ export default {
 
       const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}`)).json()).result;
       const r2 = typeof env.CAPTURES?.head === "function";
+      /* The catalog resolves references against the whole store, so it needs
+         to know which identifiers exist. One cheap query rather than a probe
+         per reference. */
+      const known = new Set(((await (await stub.fetch("http://do/list")).json()).result || [])
+        .map((b) => b.bundle_id));
       const gate = await runGate({
-        bundleId: body.bundleId, row: facts.row, image,
-        manifest: facts.manifest, history: facts.history,
-        registers: facts.registers, dangling: facts.dangling,
+        bundleId: body.bundleId, image, knownIds: known,
+        registers: facts.registers,
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);

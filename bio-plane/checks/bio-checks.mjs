@@ -1,4 +1,6 @@
 // @ts-check
+// bio-checks 1.16.5. See checks/README.md for the divergence from the 1.16.4
+// bytes the retired Apps Script pinned.
 // bio-checks: the one check codebase (BIO_State_Rules_Consistency v1.1, Mechanical Verification Law).
 // Plain JavaScript, ES modules, zero dependencies, no build step.
 // Runs identically at the bundle skill's pre-write gate (node) and in the client scan (browser import).
@@ -928,7 +930,16 @@ function checkHistoryCoherence(ctx, findings) {
       for (const name of e.snapshotted) {
         const dot = name.lastIndexOf('.');
         const snapPath = `_history/${name.slice(0, dot)}_${e.key}${name.slice(dot)}`;
-        if (!ctx.files.has(snapPath)) {
+        // 1.16.5: hasFile_, not files.has. This is an EXISTENCE assertion, and
+        // the 1.13.0 presence rule above says existence assertions consult
+        // files UNION elided. Using files.has here made every tier-scoped read
+        // report its history snapshots as lost: 71 phantom findings across a
+        // 30-bundle store, and it forced a byte-complete image on any caller
+        // that wanted to gate, which for a bundle carrying a 39.6MB capture
+        // means pulling that capture and its history copies into memory to
+        // answer a question about whether a file exists. Byte checks below are
+        // unchanged and still read ctx.files directly.
+        if (!hasFile_(ctx, snapPath)) {
           findings.push(f('C-12.2', 'error', `snapshot '${snapPath}' recorded in manifest entry '${e.key}' is missing`, ['record a history-loss finding and re-snapshot current state']));
         }
       }

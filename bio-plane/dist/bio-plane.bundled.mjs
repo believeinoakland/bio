@@ -403,6 +403,37 @@ rev ${rev}
 }
 
 // checks/bio-checks.mjs
+var BUNDLE_ID_RE = /^(INFO|PROB|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+var ANN_ID_RE = /^(INFO|PROB|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
+var FILENAME_RE = /^[A-Za-z0-9._-]+$/;
+var ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+var OBJECT_TYPES = { INFO: "information", PROB: "problem", PROJ: "project", ACTN: "action" };
+var CORE_FIELDS = [
+  "id",
+  "object_type",
+  "schema",
+  "title",
+  "current_state",
+  "prior_state",
+  "created",
+  "last_updated",
+  "produced_by",
+  "group",
+  "references",
+  "state_history",
+  "annotations_open",
+  "reeval_pending",
+  "visuals"
+];
+var FORBIDDEN_ALIASES = {
+  status: "current_state",
+  state: "current_state",
+  pipeline_state: "current_state",
+  verdict: "current_state",
+  type: "object_type",
+  updated: "last_updated",
+  modified: "last_updated"
+};
 var HEADINGS = {
   information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
   problem: ["## Statement", "## Why It Matters", "## Open Questions", "## Session Log", "## Review Notes"],
@@ -443,6 +474,1701 @@ var STATES = {
     }
   }
 };
+function f(check, severity, message, repairs) {
+  const out = { check, severity, message };
+  if (repairs) {
+    out.repairable = true;
+    out.repairs = repairs;
+  }
+  return out;
+}
+function stripComment(raw) {
+  let inS = false, inD = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (c === "'" && !inD) inS = !inS;
+    else if (c === '"' && !inS) inD = !inD;
+    else if (c === "#" && !inS && !inD && (i === 0 || raw[i - 1] === " ")) return raw.slice(0, i);
+  }
+  return raw;
+}
+function parseScalar(raw) {
+  let v = stripComment(raw).trim();
+  if (v === "") return "";
+  if (v === "null" || v === "~") return null;
+  if (v === "true") return true;
+  if (v === "false") return false;
+  if (v.startsWith('"') && v.endsWith('"') || v.startsWith("'") && v.endsWith("'")) return v.slice(1, -1);
+  if (v.startsWith("[") && v.endsWith("]")) {
+    const inner = v.slice(1, -1).trim();
+    if (inner === "") return [];
+    return inner.split(",").map((s) => parseScalar(s));
+  }
+  if (/^-?\d+$/.test(v)) return parseInt(v, 10);
+  if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
+  return v;
+}
+function parseFrontmatter(text) {
+  const findings = [];
+  const lines = text.split(/\r?\n/);
+  if (lines[0] !== "---") {
+    findings.push(f("C-2.1", "error", "bundle.md does not begin with a --- frontmatter fence"));
+    return { data: null, findings, body: text };
+  }
+  let end = -1;
+  for (let i = 1; i < lines.length; i++) if (lines[i] === "---") {
+    end = i;
+    break;
+  }
+  if (end === -1) {
+    findings.push(f("C-2.1", "error", "frontmatter fence is never closed"));
+    return { data: null, findings, body: text };
+  }
+  const data = {};
+  let topKey = null;
+  let topMode = null;
+  let curElem = null;
+  const keyLine = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
+  const indKeyLine = /^( +)([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
+  const itemLine = /^( +)- (.*)$/;
+  for (let n = 1; n < end; n++) {
+    const line = lines[n];
+    const stripped = stripComment(line);
+    if (stripped.trim() === "") continue;
+    let m;
+    if (m = keyLine.exec(line)) {
+      const key = m[1];
+      const rest = m[2];
+      topKey = null;
+      topMode = null;
+      curElem = null;
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        findings.push(f("C-2.1", "error", `duplicate top-level key '${key}' at line ${n + 1}`));
+      }
+      if (stripComment(rest).trim() === "") {
+        topKey = key;
+        data[key] = void 0;
+      } else {
+        data[key] = parseScalar(rest);
+      }
+    } else if (m = itemLine.exec(line)) {
+      const indent = m[1].length;
+      const rest = m[2];
+      if (!topKey) {
+        findings.push(f("C-2.1", "error", `array item outside any block at line ${n + 1}`));
+        continue;
+      }
+      if (indent !== 2) findings.push(f("C-2.1", "error", `array item indented ${indent} (expected 2) at line ${n + 1}`));
+      if (topMode === null) {
+        topMode = "array";
+        data[topKey] = [];
+      }
+      if (topMode !== "array") {
+        findings.push(f("C-2.1", "error", `array item inside a map block '${topKey}' at line ${n + 1}`));
+        continue;
+      }
+      const km = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/.exec(rest);
+      if (km && stripComment(km[2]).trim() !== "") {
+        curElem = {};
+        curElem[km[1]] = parseScalar(km[2]);
+        data[topKey].push(curElem);
+      } else {
+        curElem = null;
+        data[topKey].push(parseScalar(rest));
+      }
+    } else if (m = indKeyLine.exec(line)) {
+      const indent = m[1].length;
+      const key = m[2];
+      const rest = m[3];
+      const isCore = CORE_FIELDS.includes(key) || key in FORBIDDEN_ALIASES;
+      if (topKey && topMode === null && indent === 2) {
+        topMode = "map";
+        data[topKey] = {};
+        data[topKey][key] = parseScalar(rest);
+      } else if (topKey && topMode === "map" && indent === 2) {
+        data[topKey][key] = parseScalar(rest);
+      } else if (topKey && topMode === "array" && curElem && indent === 4) {
+        curElem[key] = parseScalar(rest);
+      } else {
+        if (isCore) {
+          findings.push(f(
+            "C-2.4",
+            "error",
+            `top-level key '${key}' is buried by stray indentation at line ${n + 1} and will not register`,
+            [`re-indent '${key}' to column 0`]
+          ));
+          data[key] = parseScalar(rest);
+        } else {
+          findings.push(f("C-2.1", "error", `key '${key}' indented ${indent} does not fit the restricted grammar at line ${n + 1}`));
+        }
+      }
+    } else {
+      findings.push(f("C-2.1", "error", `line ${n + 1} does not fit the restricted grammar: ${line.slice(0, 60)}`));
+    }
+  }
+  for (const k of Object.keys(data)) if (data[k] === void 0) data[k] = [];
+  return { data, findings, body: lines.slice(end + 1).join("\n") };
+}
+function asText(v) {
+  if (typeof v === "string") return v;
+  return new TextDecoder().decode(v);
+}
+function hasFile_(ctx, path) {
+  return ctx.files.has(path) || ctx.elided && ctx.elided.has(path);
+}
+function checkIdentity(ctx, findings) {
+  const id = ctx.fm?.id;
+  if (typeof id !== "string" || !BUNDLE_ID_RE.test(id)) {
+    findings.push(f("C-1.2", "error", `frontmatter id '${id}' does not match the canonical ID grammar`));
+  }
+  if (typeof id === "string" && id !== ctx.folderName) {
+    findings.push(f(
+      "C-1.1",
+      "error",
+      `folder name '${ctx.folderName}' does not equal frontmatter id '${id}'`,
+      ["restore folder name from frontmatter id", "restore frontmatter id from folder name if history confirms it"]
+    ));
+  }
+  const seen = /* @__PURE__ */ new Set();
+  for (const path of ctx.files.keys()) {
+    if (!path.startsWith("annotations/")) continue;
+    const name = path.slice("annotations/".length);
+    if (!name.endsWith(".json")) {
+      findings.push(f("C-1.3", "error", `annotation file '${name}' is not a .json record`));
+      continue;
+    }
+    let rec;
+    try {
+      rec = JSON.parse(asText(ctx.files.get(path)));
+    } catch {
+      findings.push(f("C-1.3", "error", `annotation record '${name}' does not parse`));
+      continue;
+    }
+    const rid = rec.id;
+    if (typeof rid !== "string" || !ANN_ID_RE.test(rid)) {
+      findings.push(f("C-1.3", "error", `annotation id '${rid}' does not match the v1.1 timestamp-author grammar`));
+      continue;
+    }
+    if (!rid.startsWith(ctx.folderName + ".ann-")) {
+      findings.push(f("C-1.3", "error", `annotation '${rid}' does not belong to parent '${ctx.folderName}'`));
+    }
+    const expectedFile = rid.slice(ctx.folderName.length + 1) + ".json";
+    if (name !== expectedFile) {
+      findings.push(f("C-1.3", "error", `annotation file '${name}' does not match its id (expected '${expectedFile}')`));
+    }
+    if (seen.has(rid)) {
+      findings.push(f("C-1.3", "error", `duplicate annotation id '${rid}'`, ["adjust the later record timestamp suffix by one second, logged"]));
+    }
+    seen.add(rid);
+  }
+  let pending = 0;
+  for (const path of ctx.files.keys()) {
+    if (!path.startsWith("annotations/") || !path.endsWith(".json")) continue;
+    try {
+      if (JSON.parse(asText(ctx.files.get(path))).state === "pending") pending++;
+    } catch {
+    }
+  }
+  if (ctx.fm && typeof ctx.fm.annotations_open === "number" && ctx.fm.annotations_open !== pending) {
+    findings.push(f("C-1.3", "warn", `annotations_open is ${ctx.fm.annotations_open} but ${pending} annotation record(s) are pending`, ["refresh annotations_open on the next write"]));
+  }
+}
+function checkFrontmatterContract(ctx, findings) {
+  const fm = ctx.fm;
+  if (!fm) return;
+  for (const key of CORE_FIELDS) {
+    if (!(key in fm)) findings.push(f("C-2.2", "error", `required core field '${key}' is missing`));
+  }
+  for (const [alias, canonical] of Object.entries(FORBIDDEN_ALIASES)) {
+    if (alias in fm) findings.push(f("C-2.3", "error", `forbidden alias '${alias}' present (canonical name is '${canonical}')`, [`rename '${alias}' to '${canonical}'`]));
+  }
+  const ot = fm.object_type;
+  if (!Object.values(OBJECT_TYPES).includes(ot)) {
+    findings.push(f("C-2.5", "error", `object_type '${ot}' is not a known type`));
+  } else {
+    const prefix = fm.id && String(fm.id).slice(0, 4);
+    const wantType = OBJECT_TYPES[prefix];
+    if (wantType && wantType !== ot) findings.push(f("C-2.5", "error", `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
+    const schema = fm.schema;
+    const sm = typeof schema === "string" && /^([a-z]+)@(\d+)$/.exec(schema);
+    if (!sm) findings.push(f("C-2.5", "error", `schema stamp '${schema}' is not of the form <type>@<n>`));
+    else {
+      if (sm[1] !== ot) findings.push(f("C-2.5", "error", `schema stamp '${schema}' does not match object_type '${ot}'`));
+      if (!ctx.knownSchemas.includes(schema)) findings.push(f("C-2.5", "error", `schema version '${schema}' is not known to this check catalog`));
+    }
+  }
+  for (const key of ["created", "last_updated"]) {
+    if (typeof fm[key] === "string" && !ISO_TS_RE.test(fm[key])) {
+      findings.push(f("C-2.6", "error", `${key} '${fm[key]}' is not ISO 8601 UTC (YYYY-MM-DDTHH:MM:SSZ)`));
+    }
+  }
+  if (fm.produced_by && typeof fm.produced_by === "object") {
+    if (!fm.produced_by.mode) findings.push(f("C-2.2", "error", "produced_by.mode is missing"));
+    if (!fm.produced_by.capability_tier) findings.push(f("C-2.2", "error", "produced_by.capability_tier is missing"));
+  }
+  checkReevalPending(ctx, findings);
+}
+var REEVAL_SOURCES = ["deletion", "source_status", "wp_retraction", "annotation"];
+function checkReevalPending(ctx, findings) {
+  const rp = ctx.fm?.reeval_pending;
+  if (rp === void 0) return;
+  const ageDays = ctx.maxReevalAgeDays ?? 30;
+  if (typeof rp === "boolean") {
+    if (rp === true) {
+      findings.push(f(
+        "C-10.1",
+        "warn",
+        "reeval_pending is a legacy boolean true with no since/source; staleness cannot be checked",
+        ["migrate reeval_pending to {flag, since, source}"]
+      ));
+    }
+    return;
+  }
+  if (typeof rp !== "object") {
+    findings.push(f("C-10.1", "error", `reeval_pending must be a {flag, since, source} record or boolean, got ${typeof rp}`));
+    return;
+  }
+  if (typeof rp.flag !== "boolean") {
+    findings.push(f("C-10.1", "error", "reeval_pending.flag must be boolean"));
+    return;
+  }
+  if (rp.flag === false) {
+    if (rp.since != null || rp.source != null) {
+      findings.push(f(
+        "C-10.1",
+        "warn",
+        "reeval_pending.flag is false but since/source are not null",
+        ["reset since and source to null when clearing the flag"]
+      ));
+    }
+    return;
+  }
+  if (!ISO_TS_RE.test(rp.since || "")) {
+    findings.push(f(
+      "C-10.1",
+      "error",
+      "reeval_pending.flag is true but since is not an ISO-8601 UTC instant",
+      ["stamp since with the cascade event time"]
+    ));
+  } else {
+    const ageMs = (ctx.nowMs ?? Date.now()) - Date.parse(rp.since);
+    if (ageMs > ageDays * 864e5) {
+      findings.push(f(
+        "C-10.1",
+        "info",
+        `reeval_pending set ${Math.floor(ageMs / 864e5)}d ago (policy age ${ageDays}d) with no recorded re-evaluation`,
+        ["perform and record the re-evaluation", "record an explicit accept-risk note (policy permitting)"]
+      ));
+    }
+  }
+  if (!REEVAL_SOURCES.includes(rp.source)) {
+    findings.push(f("C-10.1", "error", `reeval_pending.source '${rp.source}' is not one of: ${REEVAL_SOURCES.join(", ")}`));
+  }
+}
+function checkHeadings(ctx, findings) {
+  const ot = ctx.fm?.object_type;
+  const required = HEADINGS[ot];
+  if (!required) return;
+  const present = (ctx.body.match(/^## .*$/gm) || []).map((h) => h.trimEnd());
+  for (const h of required) {
+    if (!present.includes(h)) findings.push(f("C-3.1", "error", `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
+  }
+  for (const h of present) {
+    if (!required.includes(h)) findings.push(f("C-3.1", "error", `heading '${h}' is not in the canonical set for ${ot}`, ["rename to the canonical heading, preserving body"]));
+  }
+}
+function checkStateLegality(ctx, findings) {
+  const ot = ctx.fm?.object_type;
+  const spec = STATES[ot];
+  if (!spec) return;
+  const cur = ctx.fm.current_state;
+  if (!spec.legal.includes(cur)) {
+    findings.push(f("C-4.1", "error", `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(", ")})`));
+  }
+  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+  let prevTs = null;
+  for (let i = 0; i < hist.length; i++) {
+    const e = hist[i];
+    if (typeof e !== "object" || e === null) {
+      findings.push(f("C-4.2", "error", `state_history[${i}] is not an object`));
+      continue;
+    }
+    for (const k of ["timestamp", "from_state", "to_state", "blurb", "author"]) {
+      if (!(k in e)) findings.push(f("C-4.2", "error", `state_history[${i}] missing '${k}'`));
+    }
+    if (typeof e.timestamp === "string" && !ISO_TS_RE.test(e.timestamp)) {
+      findings.push(f("C-2.6", "error", `state_history[${i}].timestamp '${e.timestamp}' is not ISO 8601 UTC`));
+    }
+    if (prevTs && e.timestamp && e.timestamp < prevTs) {
+      findings.push(f("C-4.2", "error", `state_history[${i}] is out of chronological order`));
+    }
+    prevTs = e.timestamp || prevTs;
+    const edges = spec.edges[e.from_state];
+    if (edges && !edges.includes(e.to_state)) {
+      findings.push(f("C-4.2", "error", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge`));
+    }
+  }
+  if (hist.length > 0) {
+    const last = hist[hist.length - 1];
+    if (last.to_state !== cur) findings.push(f("C-4.2", "error", `current_state '${cur}' disagrees with last transition to '${last.to_state}'`));
+    if (ctx.fm.prior_state !== last.from_state) findings.push(f("C-4.2", "error", `prior_state '${ctx.fm.prior_state}' disagrees with last transition from '${last.from_state}'`));
+  } else if (ctx.fm.prior_state !== null && ctx.fm.prior_state !== void 0) {
+    findings.push(f("C-4.2", "error", `prior_state is '${ctx.fm.prior_state}' but state_history is empty (expected null)`));
+  }
+}
+function checkWriteCompleteness(ctx, findings) {
+  const fm = ctx.fm;
+  if (!fm) return;
+  if (typeof fm.created === "string" && typeof fm.last_updated === "string" && fm.last_updated < fm.created) {
+    findings.push(f("C-13.1", "error", `last_updated '${fm.last_updated}' precedes created '${fm.created}'`));
+  }
+  const hist = Array.isArray(fm.state_history) ? fm.state_history : [];
+  if (hist.length > 0) {
+    const newest = hist[hist.length - 1].timestamp;
+    if (typeof newest === "string" && typeof fm.last_updated === "string" && fm.last_updated < newest) {
+      findings.push(f("C-13.1", "error", `last_updated precedes the newest state_history timestamp '${newest}'`));
+    }
+  }
+  if (typeof fm.created === "string" && typeof fm.last_updated === "string" && fm.last_updated > fm.created) {
+    const idx = ctx.body.indexOf("## Session Log");
+    const section = idx >= 0 ? ctx.body.slice(idx, ctx.body.indexOf("\n## ", idx + 1) === -1 ? void 0 : ctx.body.indexOf("\n## ", idx + 1)) : "";
+    if (!/^### Session /m.test(section)) {
+      findings.push(f("C-13.2", "error", "bundle has been updated but carries no Session Log entry", ["append the missing Session Log entry naming the gap"]));
+    }
+  }
+}
+function checkFormatHygiene(ctx, findings) {
+  const escapeRe = /\\[#*_\-\[\]!~&]/;
+  for (const [path, content] of ctx.files) {
+    const name = path.split("/").pop() || path;
+    if (!FILENAME_RE.test(name) || name.includes(" ") || !name.includes(".") || !/\.[a-z0-9]+$/.test(name)) {
+      findings.push(f("C-14.2", "error", `filename '${path}' violates the naming rule`, ["rename file and update references"]));
+    }
+    if (name.endsWith(".md")) {
+      const text = asText(content);
+      const m = escapeRe.exec(text);
+      if (m) findings.push(f("C-14.1", "error", `escaped markdown character '${m[0]}' in ${path}`, ["normalize to clean markdown"]));
+    }
+    if (name.endsWith(".json")) {
+      try {
+        JSON.parse(asText(content));
+      } catch {
+        findings.push(f("C-14.3", "error", `${path} does not parse as JSON`, ["restore from history"]));
+      }
+    }
+  }
+  const visuals = Array.isArray(ctx.fm?.visuals) ? ctx.fm.visuals : [];
+  const svgOnDisk = [...ctx.files.keys()].filter((p) => !p.includes("/") && p.endsWith(".svg"));
+  for (const v of visuals) {
+    if (typeof v !== "object" || !v.file || !v.description) {
+      findings.push(f("C-14.4", "error", `visuals entry ${JSON.stringify(v).slice(0, 50)} lacks file+description`));
+      continue;
+    }
+    if (!ctx.files.has(v.file)) findings.push(f("C-14.4", "error", `visuals entry '${v.file}' has no file on disk`));
+  }
+  for (const svg of svgOnDisk) {
+    if (!visuals.some((v) => v && v.file === svg)) {
+      findings.push(f("C-14.4", "error", `svg '${svg}' on disk is absent from the visuals array`));
+    }
+  }
+}
+async function checkQueueAndBase(ctx, findings) {
+  const staleMs = 10 * 60 * 1e3;
+  const gateMarkerStaleMs = 48 * 60 * 60 * 1e3;
+  for (const p of ctx.files.keys()) {
+    const gm = /^GATE_PASSED-[0-9a-f]{8}\.json$/.exec(p);
+    const lm = gm ? null : /^LEASE-[A-Za-z0-9][A-Za-z0-9-]{0,63}\.json$/.exec(p);
+    const m = gm || lm ? null : /^(PROMOTING|PRESENCE)-.+\.json$/.exec(p);
+    if (!gm && !lm && !m) continue;
+    let stale;
+    if (lm) {
+      let expires = null;
+      try {
+        expires = Date.parse(JSON.parse(asText(ctx.files.get(p))).expires || "");
+      } catch {
+      }
+      stale = expires === null || Number.isNaN(expires) || (ctx.nowMs ?? Date.now()) > expires;
+    } else {
+      const windowMs = gm ? gateMarkerStaleMs : staleMs;
+      let ts = null;
+      try {
+        const rec = JSON.parse(asText(ctx.files.get(p)));
+        ts = Date.parse(rec.ts || rec["started-at"] || rec.started_at || "");
+      } catch {
+      }
+      stale = ts === null || Number.isNaN(ts) || (ctx.nowMs ?? Date.now()) - ts > windowMs;
+    }
+    if (stale) {
+      findings.push(f("C-16.5", "info", `stale advisory artifact '${p}' (crashed or ended actor)`, ["delete the stale claim or presence marker"]));
+    }
+  }
+  const manifestRaw = ctx.files.get("PENDING_PROMOTION.json");
+  const pendingFiles = [...ctx.files.keys()].filter((p) => p.endsWith(".pending"));
+  if (!manifestRaw) {
+    for (const p of pendingFiles) {
+      findings.push(f("C-16.4", "error", `orphaned pending file '${p}' with no manifest`, ["complete consumption: archive manifest, delete consumed files (idempotent)"]));
+    }
+    return;
+  }
+  let man;
+  try {
+    man = JSON.parse(asText(manifestRaw));
+  } catch {
+    findings.push(f("C-16.1", "error", "PENDING_PROMOTION.json does not parse"));
+    return;
+  }
+  for (const k of ["target", "base", "files", "created", "author", "skill_version"]) {
+    if (!(k in man)) findings.push(f("C-16.1", "error", `manifest missing '${k}'`));
+  }
+  if (man.target && man.target !== ctx.folderName) {
+    findings.push(f("C-16.1", "error", `manifest target '${man.target}' does not match bundle '${ctx.folderName}'`));
+  }
+  const listed = /* @__PURE__ */ new Set();
+  if (Array.isArray(man.files)) {
+    for (const entry of man.files) {
+      if (!entry || !entry.name || !entry.sha256) {
+        findings.push(f("C-16.1", "error", `manifest files entry ${JSON.stringify(entry)} lacks name+sha256`));
+        continue;
+      }
+      listed.add(entry.name + ".pending");
+      const pending = ctx.files.get(entry.name + ".pending");
+      if (!pending) {
+        findings.push(f("C-16.2", "error", `package file '${entry.name}.pending' listed in manifest is missing`, ["discard the package with a finding to the producing author", "re-produce the package from the originating session outputs"]));
+        continue;
+      }
+      const hash = await ctx.sha256(pending);
+      if (hash !== entry.sha256) {
+        findings.push(f("C-16.2", "error", `hash mismatch on '${entry.name}.pending' (manifest ${String(entry.sha256).slice(0, 12)}\u2026, actual ${hash.slice(0, 12)}\u2026)`, ["discard the package (never promote)", "re-produce the package"]));
+      }
+    }
+  }
+  for (const p of pendingFiles) {
+    if (!listed.has(p)) findings.push(f("C-16.4", "error", `pending file '${p}' is not listed in the manifest`, ["complete consumption or discard with reason"]));
+  }
+  if (typeof man.created === "string" && ISO_TS_RE.test(man.created)) {
+    const ageDays = ((ctx.nowMs ?? Date.now()) - Date.parse(man.created)) / 864e5;
+    if (ageDays > ctx.maxPackageAgeDays) {
+      findings.push(f("C-16.3", "warn", `pending package is ${Math.floor(ageDays)} days old (policy ${ctx.maxPackageAgeDays})`, ["promote now", "discard with reason if superseded, preserving the manifest as a record"]));
+    }
+  } else {
+    findings.push(f("C-16.1", "error", `manifest created '${man.created}' is not ISO 8601 UTC`));
+  }
+  const live = ctx.files.get("bundle.md");
+  if (live && typeof man.base === "string") {
+    const liveHash = await ctx.sha256(live);
+    if (liveHash === man.base) {
+      findings.push(f("C-17.1", "info", "pending package base matches live bundle.md: fast-forward eligible"));
+    } else {
+      findings.push(f("C-17.1", "warn", `pending package base ${String(man.base).slice(0, 12)}\u2026 does not match live bundle.md ${liveHash.slice(0, 12)}\u2026: divergence`, ["rebase via a reconciliation session", "supersede: human selects one, the other preserved as a diverged branch in _history", "apply-disjoint if file sets prove disjoint (requires history manifests)"]));
+      const cls = classifyDivergence(man, ctx.files);
+      if (cls.rung === "disjoint-auto") {
+        findings.push(f("C-17.2", "info", `divergence classified disjoint-auto: base found in history at ${cls.baseKey}; intervening promotion(s) [${cls.intervening.join(", ")}] touched {${[...cls.interveningFiles].join(", ")}}, package touches {${man.files.map((e) => e.name).join(", ")}}, sets disjoint; apply in sequence recording both bases`, ["apply-disjoint: promote in sequence, recording base and applied-over in the history manifest entry"]));
+      } else {
+        findings.push(f("C-17.2", "warn", `divergence classified adjudicated: ${cls.reason}`, ["rebase via a reconciliation session", "supersede: human selects one, the other preserved as a diverged branch in _history", "apply-disjoint only if re-examination shows the overlap illusory"]));
+      }
+    }
+  }
+}
+function classifyDivergence(man, files) {
+  const histRaw = files.get("_history/manifest.json");
+  if (histRaw == null) return { rung: "adjudicated", reason: "no history manifest: disjointness unverifiable" };
+  let hist;
+  try {
+    hist = JSON.parse(typeof histRaw === "string" ? histRaw : new TextDecoder().decode(histRaw));
+  } catch {
+    return { rung: "adjudicated", reason: "history manifest unreadable" };
+  }
+  const entries = Array.isArray(hist.entries) ? [...hist.entries].sort((a, b) => a.key < b.key ? -1 : 1) : [];
+  if (entries.length === 0) return { rung: "adjudicated", reason: "history manifest has no entries" };
+  let start = -1;
+  let anchor = null;
+  for (let i = 0; i < entries.length; i++) {
+    if (entries[i].base === man.base) {
+      start = i;
+      anchor = `before ${entries[i].key}`;
+    }
+  }
+  let recordGap = false;
+  for (let i = 0; i < entries.length; i++) {
+    const recRaw = files.get(`_history/promotion_${entries[i].key}.json`);
+    if (recRaw == null) {
+      recordGap = true;
+      continue;
+    }
+    try {
+      const rec = JSON.parse(typeof recRaw === "string" ? recRaw : new TextDecoder().decode(recRaw));
+      const b = Array.isArray(rec.files) ? rec.files.find((x) => x.name === "bundle.md") : null;
+      if (b && b.sha256 === man.base && i + 1 > start) {
+        start = i + 1;
+        anchor = `after ${entries[i].key}`;
+      }
+    } catch {
+      recordGap = true;
+    }
+  }
+  if (start === -1) {
+    return { rung: "adjudicated", reason: recordGap ? "package base not found in recorded history (and some promotion records are missing or unreadable: chain incomplete)" : "package base not found anywhere in recorded history" };
+  }
+  const intervening = entries.slice(start);
+  if (intervening.length === 0) return { rung: "adjudicated", reason: "base resolves to the chain tail yet live differs: unrecorded live edit" };
+  const interveningFiles = /* @__PURE__ */ new Set();
+  for (const e of intervening) for (const n of e.files || []) interveningFiles.add(n);
+  const overlap = man.files.map((e) => e.name).filter((n) => interveningFiles.has(n));
+  if (overlap.length > 0) return { rung: "adjudicated", reason: `overlapping substantive divergence on {${overlap.join(", ")}}`, interveningFiles };
+  return { rung: "disjoint-auto", baseKey: anchor, intervening: intervening.map((e) => e.key), interveningFiles };
+}
+function canonicalJson(v) {
+  if (Array.isArray(v)) return "[" + v.map(canonicalJson).join(",") + "]";
+  if (v !== null && typeof v === "object") {
+    return "{" + Object.keys(v).sort().map((k) => JSON.stringify(k) + ":" + canonicalJson(v[k])).join(",") + "}";
+  }
+  return JSON.stringify(v);
+}
+var INFO_ENUMS = {
+  criticality: ["crucial", "supporting"],
+  classification: ["fact", "analysis", "judgment"],
+  source_status: ["unchanged", "modified", "removed"]
+};
+var MONITOR_FREQ = ["hourly", "daily", "weekly", "monthly", "per_meeting", "none"];
+var CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
+async function checkInformationExtension(ctx, findings) {
+  if (ctx.fm?.object_type !== "information") return;
+  const fm = ctx.fm;
+  for (const [field, legal] of Object.entries(INFO_ENUMS)) {
+    if (!legal.includes(fm[field])) {
+      findings.push(f("C-2.7", "error", `${field} '${fm[field]}' is not one of: ${legal.join(", ")}`));
+    }
+  }
+  const src = fm.source;
+  if (!src || typeof src !== "object") findings.push(f("C-2.7", "error", "source block is missing"));
+  else for (const k of ["locator", "authority", "retrieved"]) {
+    if (!src[k]) findings.push(f("C-2.7", "error", `source.${k} is missing`));
+  }
+  const mon = fm.monitoring;
+  if (!mon || typeof mon !== "object") findings.push(f("C-2.7", "error", "monitoring block is missing"));
+  else {
+    if (typeof mon.enabled !== "boolean") findings.push(f("C-2.7", "error", `monitoring.enabled '${mon.enabled}' is not boolean`));
+    if (!MONITOR_FREQ.includes(mon.frequency)) findings.push(f("C-2.7", "error", `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ.join(", ")}`));
+  }
+  const ch = fm.content_hash;
+  const chOk = typeof ch === "string" && CONTENT_HASH_RE.test(ch);
+  if (ch !== void 0 && ch !== null && ch !== "" && !chOk) {
+    findings.push(f("C-2.7", "error", `content_hash '${String(ch).slice(0, 24)}\u2026' is not sha256:<64 hex>`));
+  }
+  const dsRaw = ctx.files.get("data/dataset.json");
+  if (dsRaw && chOk) {
+    try {
+      const canon = canonicalJson(JSON.parse(asText(dsRaw)));
+      const actual = "sha256:" + await ctx.sha256(canon);
+      if (actual !== ch) {
+        findings.push(f(
+          "C-2.7",
+          "error",
+          `content_hash does not match the canonicalized data/dataset.json (declared ${ch.slice(7, 19)}\u2026, actual ${actual.slice(7, 19)}\u2026)`,
+          ["refresh content_hash and append a change record", "restore data/dataset.json from history"]
+        ));
+      }
+    } catch {
+    }
+  }
+  if (fm.current_state === "verified") {
+    if (!chOk) findings.push(f("C-2.7", "error", "verified state requires a well-formed content_hash"));
+    if (!dsRaw) findings.push(f("C-2.7", "error", "verified state requires data/dataset.json"));
+    const hasSnap = [...ctx.files.keys()].some((p) => p.startsWith("snapshots/")) || ctx.elided && [...ctx.elided].some((p) => p.startsWith("snapshots/"));
+    if (!hasSnap) findings.push(f("C-2.7", "error", "verified state requires at least one file in snapshots/"));
+  }
+  const chRaw = ctx.files.get("data/changes.json");
+  if (chRaw) {
+    try {
+      const recs = JSON.parse(asText(chRaw));
+      const arr = recs && Array.isArray(recs.records) ? recs.records : null;
+      if (!arr) findings.push(f("C-2.7", "error", 'data/changes.json must be {"records": [...]}'));
+      else for (let i = 0; i < arr.length; i++) {
+        const r = arr[i];
+        if (!r || !ISO_TS_RE.test(r.detected || "") || !["modified", "removed", "corrected"].includes(r.kind) || !r.summary) {
+          findings.push(f("C-2.7", "error", `changes.json records[${i}] lacks detected/kind/summary in the required shape`));
+        }
+      }
+    } catch {
+    }
+  }
+}
+var REL_VOCAB = ["cites", "relates_to", "elevated_into", "initiates", "derived_from", "supersedes", "corroborates"];
+var EDGE_STATUS = ["proposed", "confirmed", "severed"];
+function sectionText(body, heading) {
+  const idx = body.indexOf(heading);
+  if (idx < 0) return null;
+  const next = body.indexOf("\n## ", idx + 1);
+  return body.slice(idx, next === -1 ? void 0 : next);
+}
+var NON_MEMBER_AUTHORS = ["claude", "pwa-client", "daemon", "sweep", "session", "accelerator", "apps-script", "system", "agent", "ai"];
+var CAPTURE_GRADES = ["A", "B", "C"];
+var ACTOR_CLASSES = ["daemon", "session", "member"];
+var ORIGIN_KINDS = ["named_request", "sweep", "member"];
+function checkReleaseAuthority(ctx, findings) {
+  if (ctx.fm?.object_type !== "information") return;
+  const raw = ctx.files.get("data/provenance.json");
+  if (!raw) return;
+  let reg;
+  try {
+    reg = JSON.parse(asText(raw));
+  } catch {
+    return;
+  }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+  if (!docs) {
+    findings.push(f("C-18.1", "error", 'data/provenance.json must be {"documents": [...]} (the intake provenance register)'));
+    return;
+  }
+  let sweepOrigin = false;
+  docs.forEach((d, i) => {
+    if (!d || typeof d !== "object") {
+      findings.push(f("C-18.1", "error", `provenance documents[${i}] is not an object`));
+      return;
+    }
+    for (const k of ["file", "locator", "authority", "retrieved"]) {
+      if (!d[k]) findings.push(f("C-18.1", "error", `provenance documents[${i}] missing '${k}'`));
+    }
+    if (d.file && !hasFile_(ctx, String(d.file)) && !Array.isArray(d.parts)) {
+      findings.push(f("C-18.1", "error", `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
+    }
+    const cap = d.capture;
+    if (!cap || typeof cap !== "object") findings.push(f("C-18.1", "error", `provenance documents[${i}] missing capture block`));
+    else {
+      if (!cap.method) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture missing 'method'`));
+      if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
+      if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
+    }
+    const or = d.origin;
+    if (!or || typeof or !== "object" || !ORIGIN_KINDS.includes(or.kind)) {
+      findings.push(f("C-18.1", "error", `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(", ")}`));
+    } else if (or.kind === "sweep") {
+      sweepOrigin = true;
+      if (!or.matched_sweep) findings.push(f("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'matched_sweep'`));
+      if (!or.deeming_actor) findings.push(f("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'deeming_actor'`));
+    }
+  });
+  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+  const releases = hist.filter((e) => e && e.from_state === "collected" && e.to_state === "verified");
+  for (const e of releases) {
+    const a = String(e.author || "").toLowerCase();
+    if (!a || NON_MEMBER_AUTHORS.includes(a)) {
+      findings.push(f(
+        "C-18.1",
+        "error",
+        `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
+        ["a named member re-makes the release decision and records the transition under their identity", "return the bundle to collected pending member ratification"]
+      ));
+    }
+  }
+  const everVerified = ctx.fm.current_state === "verified" || hist.some((e) => e && e.to_state === "verified");
+  const memberRelease = releases.some((e) => {
+    const a = String(e.author || "").toLowerCase();
+    return a && !NON_MEMBER_AUTHORS.includes(a);
+  });
+  if (sweepOrigin && everVerified && !memberRelease) {
+    findings.push(f(
+      "C-18.1",
+      "error",
+      "sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)",
+      ["set current_state to collected pending ratification", "a named member ratifies and records the collected -> verified transition"]
+    ));
+  }
+}
+function latestHistorySnapshot(ctx) {
+  const snaps = [...ctx.files.keys()].filter((p) => /^_history\/bundle_.*\.md$/.test(p)).sort();
+  return snaps.length ? snaps[snaps.length - 1] : null;
+}
+function checkAppendOnly(ctx, findings) {
+  const snapPath = latestHistorySnapshot(ctx);
+  if (!snapPath || !ctx.fm) return;
+  const snap = parseFrontmatter(asText(ctx.files.get(snapPath)));
+  if (!snap.data) return;
+  const prior = Array.isArray(snap.data.state_history) ? snap.data.state_history : [];
+  const live = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+  if (live.length < prior.length) {
+    findings.push(f("C-5.1", "error", `state_history shrank from ${prior.length} to ${live.length} entries vs. the latest snapshot`, ["restore from _history and re-append new material"]));
+  } else {
+    for (let i = 0; i < prior.length; i++) {
+      if (JSON.stringify(prior[i]) !== JSON.stringify(live[i])) {
+        findings.push(f("C-5.1", "error", `state_history[${i}] was modified retroactively (append-only surface)`, ["restore from _history and re-append new material"]));
+        break;
+      }
+    }
+  }
+  const rn = sectionText(snap.body, "## Review Notes");
+  if (rn && rn.trim() !== "## Review Notes" && !ctx.body.includes(rn.trimEnd())) {
+    findings.push(f("C-5.1", "error", "Review Notes content from the prior version is missing or altered (verbatim-immutable)", ["restore from _history and re-append new material", "record a tamper finding if history lacks the original"]));
+  }
+  const priorLog = sectionText(snap.body, "## Session Log") || "";
+  for (const header of priorLog.match(/^### Session .*$/gm) || []) {
+    if (!ctx.body.includes(header)) {
+      findings.push(f("C-5.1", "error", `Session Log entry '${header.slice(0, 60)}' from the prior version is missing (append-only surface)`, ["restore from _history and re-append new material"]));
+    }
+  }
+  const chSnaps = [...ctx.files.keys()].filter((p) => /^_history\/data\/changes_.*\.json$/.test(p)).sort();
+  const liveCh = ctx.files.get("data/changes.json");
+  if (chSnaps.length && liveCh) {
+    try {
+      const priorRecs = JSON.parse(asText(ctx.files.get(chSnaps[chSnaps.length - 1]))).records || [];
+      const liveRecs = JSON.parse(asText(liveCh)).records || [];
+      if (liveRecs.length < priorRecs.length || JSON.stringify(liveRecs.slice(0, priorRecs.length)) !== JSON.stringify(priorRecs)) {
+        findings.push(f("C-5.1", "error", "data/changes.json records were mutated or removed (append-only surface)", ["restore from _history and re-append new material"]));
+      }
+    } catch {
+    }
+  }
+}
+function checkReferences(ctx, findings) {
+  const refs = Array.isArray(ctx.fm?.references) ? ctx.fm.references : [];
+  for (let i = 0; i < refs.length; i++) {
+    const r = refs[i];
+    if (typeof r !== "object" || r === null) {
+      findings.push(f("C-6.1", "error", `references[${i}] is not an object`));
+      continue;
+    }
+    if (!REL_VOCAB.includes(r.rel)) findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' is not in the closed vocabulary`, ["map to the nearest vocabulary value", "sever with reason"]));
+    if (!EDGE_STATUS.includes(r.status)) findings.push(f("C-6.1", "error", `references[${i}].status '${r.status}' is not one of: ${EDGE_STATUS.join(", ")}`));
+    const t = r.target;
+    if (typeof t !== "string" || /:\/\/|[/\\]|drive\.google/i.test(t)) {
+      findings.push(f("C-6.1", "error", `references[${i}].target '${String(t).slice(0, 40)}' looks like a substrate locator; targets are canonical IDs only`));
+    } else if (!BUNDLE_ID_RE.test(t)) {
+      findings.push(f("C-6.1", "error", `references[${i}].target '${t}' does not match the canonical ID grammar`));
+    } else if (ctx.resolveTarget) {
+      if (!ctx.resolveTarget(t)) {
+        findings.push(f("C-6.2", "error", `references[${i}].target '${t}' does not resolve in the store`, ["restore target from history", "re-point to the successor object (derived_from chain)", "sever the edge with a reason note"]));
+      }
+    }
+  }
+  if (ctx.fm?.object_type === "problem" && ctx.fm.current_state === "elevated") {
+    if (!refs.some((r) => r && r.rel === "elevated_into")) {
+      findings.push(f("C-6.3", "error", "an elevated Problem must carry at least one 'elevated_into' reference"));
+    }
+  }
+  if (ctx.fm?.workproduct_state === "distributed") {
+    const hasDist = [...ctx.files.keys()].some((p) => p.startsWith("distributions/"));
+    if (!hasDist) findings.push(f("C-6.3", "error", "workproduct_state is distributed but distributions/ is empty"));
+  }
+}
+function checkHistoryCoherence(ctx, findings) {
+  const histFiles = [...ctx.files.keys()].filter((p) => p.startsWith("_history/"));
+  const manRaw = ctx.files.get("_history/manifest.json");
+  if (!manRaw) {
+    if (histFiles.length) findings.push(f("C-12.1", "error", "_history contains files but no manifest.json", ["rebuild manifest entry from surviving files"]));
+    return;
+  }
+  let man;
+  try {
+    man = JSON.parse(asText(manRaw));
+  } catch {
+    findings.push(f("C-12.1", "error", "_history/manifest.json does not parse", ["rebuild manifest entry from surviving files"]));
+    return;
+  }
+  const entries = Array.isArray(man.entries) ? man.entries : [];
+  const keys = /* @__PURE__ */ new Set();
+  let prevKey = "";
+  const bundleMdCreated = [];
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    for (const k of ["key", "kind", "created", "files"]) if (!(k in (e || {}))) findings.push(f("C-12.1", "error", `manifest entry[${i}] missing '${k}'`));
+    if (e?.key) {
+      if (keys.has(e.key)) findings.push(f("C-12.1", "error", `duplicate manifest key '${e.key}'`));
+      if (e.key < prevKey) findings.push(f("C-12.1", "error", `manifest keys out of order at '${e.key}'`));
+      keys.add(e.key);
+      prevKey = e.key;
+    }
+    if (typeof e?.created === "string" && Array.isArray(e?.snapshotted) && e.snapshotted.includes("bundle.md")) {
+      bundleMdCreated.push(e.created);
+    }
+    if (e?.kind === "promotion" && e.key && !ctx.files.has(`_history/promotion_${e.key}.json`)) {
+      findings.push(f("C-12.2", "error", `promotion record for '${e.key}' is missing`, ["rebuild manifest entry from surviving files", "record a history-loss finding and re-snapshot current state"]));
+    }
+    if (Array.isArray(e?.snapshotted)) {
+      for (const name of e.snapshotted) {
+        const dot = name.lastIndexOf(".");
+        const snapPath = `_history/${name.slice(0, dot)}_${e.key}${name.slice(dot)}`;
+        if (!hasFile_(ctx, snapPath)) {
+          findings.push(f("C-12.2", "error", `snapshot '${snapPath}' recorded in manifest entry '${e.key}' is missing`, ["record a history-loss finding and re-snapshot current state"]));
+        }
+      }
+    }
+  }
+  const REFUSAL_RECORD = /^_history\/refused_(\d{8}T\d{6}Z_[0-9a-f]{8,64}|unknown_[0-9a-f]{8,64}|[^/]*nomanifest)\.json$/;
+  const REFUSAL_PAYLOAD = /^_history\/refused_(\d{8}T\d{6}Z_[0-9a-f]{8,64}|unknown_[0-9a-f]{8,64}|[^/]*nomanifest)\//;
+  for (const p of histFiles) {
+    if (p === "_history/manifest.json") continue;
+    const rec = REFUSAL_RECORD.exec(p);
+    if (rec) {
+      let parsed = null;
+      try {
+        parsed = JSON.parse(asText(ctx.files.get(p)));
+      } catch {
+      }
+      if (!parsed || !parsed.outcome) {
+        findings.push(f(
+          "C-12.2",
+          "error",
+          `refusal record '${p}' does not parse or names no outcome`,
+          ["restore the refusal record from history", "remove the unexplained refusal artifacts"]
+        ));
+      }
+      continue;
+    }
+    const pay = REFUSAL_PAYLOAD.exec(p);
+    if (pay) {
+      const sibling = `_history/refused_${pay[1]}.json`;
+      if (!ctx.files.has(sibling)) {
+        findings.push(f(
+          "C-12.2",
+          "error",
+          `preserved refusal payload '${p}' has no refusal record at '${sibling}'`,
+          ["restore the refusal record", "remove the orphaned preserved payload"]
+        ));
+      }
+      continue;
+    }
+    const m = /_((?:\d{8}T\d{6}Z)_[0-9a-f]{8})\./.exec(p) || /^_history\/promotion_(.+)\.json$/.exec(p);
+    const key = m ? m[1] : null;
+    if (!key || !keys.has(key)) {
+      findings.push(f("C-12.2", "error", `history file '${p}' maps to no manifest entry`, ["rebuild manifest entry from surviving files"]));
+    }
+  }
+  const sorted = bundleMdCreated.slice().sort();
+  sorted.pop();
+  const newestPrior = sorted.length ? sorted[sorted.length - 1] : "";
+  if (typeof ctx.fm?.last_updated === "string" && newestPrior && ctx.fm.last_updated < newestPrior) {
+    findings.push(f(
+      "C-12.1",
+      "error",
+      `live last_updated '${ctx.fm.last_updated}' precedes an earlier history entry '${newestPrior}': the live bundle.md is older than a version already superseded`,
+      ["restore the newer bundle.md from history", "correct last_updated to reflect the live content"]
+    ));
+  }
+}
+function checkRecheckCoverage(ctx, findings) {
+  if (ctx.fm?.object_type !== "problem") return;
+  const rts = Array.isArray(ctx.fm.recheck_triggers) ? ctx.fm.recheck_triggers : [];
+  if (rts.length === 0) {
+    findings.push(f("C-15.1", "error", "every Problem, in every disposition including dismissed, carries at least one recheck trigger", ["author a trigger, dual-audience shape, dated when time-bound"]));
+    return;
+  }
+  for (let i = 0; i < rts.length; i++) {
+    const t = rts[i];
+    if (typeof t !== "object" || !t?.text || !t?.description) {
+      findings.push(f("C-15.1", "error", `recheck_triggers[${i}] lacks the dual-audience {text, description} shape`));
+    } else if (t.date !== void 0 && !/^\d{4}-\d{2}-\d{2}$/.test(String(t.date))) {
+      findings.push(f("C-15.1", "error", `recheck_triggers[${i}].date '${t.date}' is not YYYY-MM-DD`));
+    }
+  }
+}
+var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function checkProblemExtension(ctx, findings) {
+  if (ctx.fm?.object_type !== "problem") return;
+  const fm = ctx.fm;
+  if (!["agent", "human"].includes(fm.surfaced_by)) {
+    findings.push(f("C-2.8", "error", `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
+  }
+  if (["deferred", "dismissed"].includes(fm.current_state)) {
+    if (typeof fm.disposition_reason !== "string" || fm.disposition_reason.trim() === "") {
+      findings.push(f("C-2.8", "error", `${fm.current_state} state requires a non-empty disposition_reason`));
+    }
+  }
+}
+function checkProjectExtension(ctx, findings) {
+  if (ctx.fm?.object_type !== "project") return;
+  const fm = ctx.fm;
+  if (typeof fm.objective !== "string" || fm.objective.trim() === "") {
+    findings.push(f("C-2.9", "error", "objective is missing or empty"));
+  }
+  const WS = ["draft", "internally_checked", "externally_compliant", "distributed"];
+  if (fm.workproduct_state !== void 0 && fm.workproduct_state !== null && !WS.includes(fm.workproduct_state)) {
+    findings.push(f("C-2.9", "error", `workproduct_state '${fm.workproduct_state}' is not one of: ${WS.join(", ")}`));
+  }
+  const evals = Array.isArray(fm.evaluations) ? fm.evaluations : [];
+  for (let i = 0; i < evals.length; i++) {
+    const e = evals[i];
+    if (!e || !["compliance", "argument"].includes(e.kind) || !["internal", "external"].includes(e.strictness) || !["pass", "findings"].includes(e.result) || !ISO_TS_RE.test(e.timestamp || "")) {
+      findings.push(f("C-2.9", "error", `evaluations[${i}] lacks the required kind/strictness/result/timestamp shape`));
+    } else if (e.result === "findings" && !e.findings_ref) {
+      findings.push(f("C-2.9", "error", `evaluations[${i}] result is findings but findings_ref is empty`));
+    }
+  }
+  if (fm.current_state === "closed" && !["resolved", "superseded", "abandoned"].includes(fm.closed_reason)) {
+    findings.push(f("C-2.9", "error", `closed state requires closed_reason in: resolved, superseded, abandoned`));
+  }
+  const ws = fm.workproduct_state;
+  const passed = (kind, stricts) => evals.some((e) => e && e.kind === kind && e.result === "pass" && stricts.includes(e.strictness));
+  if (["internally_checked", "externally_compliant", "distributed"].includes(ws)) {
+    for (const kind of ["compliance", "argument"]) {
+      if (!passed(kind, ["internal", "external"])) {
+        findings.push(f(
+          "C-9.1",
+          "error",
+          `workproduct_state '${ws}' requires a passing ${kind} evaluation (internal strictness or better)`,
+          ["run the missing evaluation", "demote workproduct_state to the highest earned rung"]
+        ));
+      }
+    }
+  }
+  if (["externally_compliant", "distributed"].includes(ws)) {
+    for (const kind of ["compliance", "argument"]) {
+      if (!passed(kind, ["external"])) {
+        findings.push(f(
+          "C-9.1",
+          "error",
+          `workproduct_state '${ws}' requires a passing external-strictness ${kind} evaluation`,
+          ["run the missing evaluation", "demote workproduct_state to the highest earned rung"]
+        ));
+      }
+    }
+  }
+}
+function checkCitationRegister(ctx, findings) {
+  const raw = ctx.files.get("data/citations.json");
+  if (!raw) return;
+  let reg;
+  try {
+    reg = JSON.parse(asText(raw));
+  } catch {
+    return;
+  }
+  const claims = Array.isArray(reg?.claims) ? reg.claims : null;
+  if (!claims) {
+    findings.push(f("C-8.1", "error", 'data/citations.json must be {"claims": [...]}'));
+    return;
+  }
+  for (let i = 0; i < claims.length; i++) {
+    const c = claims[i];
+    if (!c || !c.claim_id || !c.claim || !Array.isArray(c.cites) || c.cites.length === 0 || !c.snapshot || !DATE_RE.test(c.as_of || "")) {
+      findings.push(f(
+        "C-8.1",
+        "error",
+        `citations claims[${i}] lacks claim_id/claim/cites[]/snapshot/as_of`,
+        ["supply keys resolving to an Information object", "demote claim to commentary", "move claim to Open Questions"]
+      ));
+      continue;
+    }
+    if (!CONTENT_HASH_RE.test(c.hash || "")) {
+      findings.push(f("C-8.1", "error", `citations ${c.claim_id}: hash '${String(c.hash).slice(0, 20)}' is not sha256:<64 hex>`));
+    }
+    for (const t of c.cites) {
+      if (!BUNDLE_ID_RE.test(t)) {
+        findings.push(f("C-8.1", "error", `citations ${c.claim_id}: cite '${t}' is not a canonical ID`));
+      } else if (ctx.resolveTarget && !ctx.resolveTarget(t)) {
+        findings.push(f(
+          "C-8.1",
+          "error",
+          `citations ${c.claim_id}: cite '${t}' does not resolve in the store`,
+          ["supply keys resolving to an Information object", "demote claim to commentary", "move claim to Open Questions"]
+        ));
+      }
+    }
+  }
+}
+function checkActionExtension(ctx, findings) {
+  if (ctx.fm?.object_type !== "action") return;
+  const fm = ctx.fm;
+  const KINDS = ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "other"];
+  if (!KINDS.includes(fm.action_kind)) findings.push(f("C-2.10", "error", `action_kind '${fm.action_kind}' is not in the suite`));
+  if (![1, 2, 3].includes(fm.risk_tier)) findings.push(f("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not 1, 2, or 3`));
+  if (typeof fm.counterparty !== "string" || fm.counterparty.trim() === "") {
+    findings.push(f("C-2.10", "error", "counterparty is missing or empty"));
+  }
+  if (fm.current_state === "resolved" && !["complied", "denied", "escalated", "withdrawn"].includes(fm.resolution)) {
+    findings.push(f("C-2.10", "error", "resolved state requires resolution in: complied, denied, escalated, withdrawn"));
+  }
+  const clock = Array.isArray(fm.clock) ? fm.clock : [];
+  const today = new Date(ctx.nowMs ?? Date.now()).toISOString().slice(0, 10);
+  const STATUSES = ["pending", "met", "overdue", "waived"];
+  for (let i = 0; i < clock.length; i++) {
+    const e = clock[i];
+    if (!e || !e.text || !e.description) {
+      findings.push(f("C-11.1", "error", `clock[${i}] lacks the dual-audience {text, description} shape`));
+      continue;
+    }
+    if (!DATE_RE.test(e.date || "")) findings.push(f("C-11.1", "error", `clock[${i}].date '${e.date}' is not YYYY-MM-DD`));
+    if (typeof e.basis !== "string" || e.basis.trim() === "") {
+      findings.push(f("C-11.1", "error", `clock[${i}] has no basis (the statute, order, or commitment the date derives from)`, ["supply basis"]));
+    }
+    if (!STATUSES.includes(e.status)) findings.push(f("C-11.1", "error", `clock[${i}].status '${e.status}' is not one of: ${STATUSES.join(", ")}`));
+    if (DATE_RE.test(e.date || "") && e.date < today && e.status === "pending") {
+      findings.push(f(
+        "C-11.1",
+        "error",
+        `clock[${i}] '${e.text}' is silently past-due (${e.date} < today, status still pending)`,
+        ["mark overdue", "mark met", "mark waived with reason"]
+      ));
+    }
+  }
+}
+function checkDeletionRecords(ctx, findings) {
+  const raw = ctx.files.get("data/deletions.json");
+  if (!raw) return;
+  let del;
+  try {
+    del = JSON.parse(asText(raw));
+  } catch {
+    return;
+  }
+  const recs = Array.isArray(del?.records) ? del.records : null;
+  if (!recs) {
+    findings.push(f("C-7.1", "error", 'data/deletions.json must be {"records": [...]}'));
+    return;
+  }
+  for (let i = 0; i < recs.length; i++) {
+    const r = recs[i];
+    if (!r || !ISO_TS_RE.test(r.timestamp || "") || typeof r.reason !== "string" || r.reason.trim() === "" || !Array.isArray(r.items) || r.items.length === 0 || !r.preserved_to) {
+      findings.push(f(
+        "C-7.1",
+        "error",
+        `deletions records[${i}] lacks timestamp/reason/items[]/preserved_to`,
+        ["restore removed material", "convert to a gated deletion retroactively: reason, preservation, cascade"]
+      ));
+    }
+  }
+}
+function isPublicHttpsLocator(url) {
+  if (typeof url !== "string" || !/^https:\/\//.test(url)) return false;
+  const m = /^https:\/\/([^/?#]+)/.exec(url);
+  if (!m) return false;
+  const hostport = m[1];
+  if (hostport.indexOf("@") !== -1) return false;
+  const host = hostport.split(":")[0].toLowerCase();
+  if (host === "localhost" || host.charAt(0) === "[") return false;
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+  if (host.indexOf(".") === -1) return false;
+  return true;
+}
+var GATH_ID_RE = /^GATH-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+var CRITICALITY_ENUM = ["crucial", "supporting"];
+var CADENCE_ENUM = ["hourly", "daily", "weekly", "monthly", "none"];
+var GATH_STATUS_ENUM = ["open", "captured", "retired"];
+function checkRegisterIntegrity(ctx, findings) {
+  if (ctx.fm?.object_type !== "information") return;
+  const raw = ctx.files.get("data/provenance.json");
+  if (!raw) return;
+  let reg;
+  try {
+    reg = JSON.parse(asText(raw));
+  } catch {
+    return;
+  }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+  if (!docs) return;
+  const byHash = {};
+  for (let i = 0; i < docs.length; i++) {
+    const h = docs[i] && docs[i].capture && docs[i].capture.sha256;
+    if (!h) continue;
+    (byHash[h] = byHash[h] || []).push(i);
+  }
+  for (const h of Object.keys(byHash)) {
+    if (byHash[h].length > 1) {
+      findings.push(f(
+        "C-18.3",
+        "error",
+        `capture hash ${h.slice(0, 16)}\u2026 appears in ${byHash[h].length} register documents (indices ${byHash[h].join(", ")}); identical content is corroboration on one entry, never duplicate review items`,
+        ["fold the duplicates into corroborations[] on the earliest entry", "if the captures genuinely differ, correct the recorded hashes"]
+      ));
+    }
+  }
+  if (ctx.fm.criticality === "crucial") {
+    for (let i = 0; i < docs.length; i++) {
+      const d = docs[i];
+      if (!d || typeof d !== "object") continue;
+      if (!d.co_archive && !d.timestamp) {
+        findings.push(f(
+          "C-18.4",
+          "warn",
+          `crucial-criticality document[${i}] (${d.file || "?"}) carries neither co_archive nor timestamp; a reviewing member must verify co-attestation before release (F4)`,
+          ["attach a co-archive or trusted timestamp", "record the verified provenance in Review Notes at ratification"]
+        ));
+      }
+    }
+  }
+}
+var CAPTURE_ENCODINGS = ["utf8", "base64", "binary"];
+var HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+var RAW_SHA_RE = /^[0-9a-f]{64}$/;
+function b64ToBytes(s) {
+  const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const clean = String(s).replace(/[\s=]+/g, "");
+  const out = new Uint8Array(Math.floor(clean.length * 3 / 4));
+  let o = 0, buf = 0, bits = 0;
+  for (let i = 0; i < clean.length; i++) {
+    const v = A.indexOf(clean[i]);
+    if (v === -1) throw new Error("invalid base64 at position " + i);
+    buf = buf << 6 | v;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      out[o++] = buf >> bits & 255;
+    }
+  }
+  return out.subarray(0, o);
+}
+function createSha256() {
+  const K = [
+    1116352408,
+    1899447441,
+    3049323471,
+    3921009573,
+    961987163,
+    1508970993,
+    2453635748,
+    2870763221,
+    3624381080,
+    310598401,
+    607225278,
+    1426881987,
+    1925078388,
+    2162078206,
+    2614888103,
+    3248222580,
+    3835390401,
+    4022224774,
+    264347078,
+    604807628,
+    770255983,
+    1249150122,
+    1555081692,
+    1996064986,
+    2554220882,
+    2821834349,
+    2952996808,
+    3210313671,
+    3336571891,
+    3584528711,
+    113926993,
+    338241895,
+    666307205,
+    773529912,
+    1294757372,
+    1396182291,
+    1695183700,
+    1986661051,
+    2177026350,
+    2456956037,
+    2730485921,
+    2820302411,
+    3259730800,
+    3345764771,
+    3516065817,
+    3600352804,
+    4094571909,
+    275423344,
+    430227734,
+    506948616,
+    659060556,
+    883997877,
+    958139571,
+    1322822218,
+    1537002063,
+    1747873779,
+    1955562222,
+    2024104815,
+    2227730452,
+    2361852424,
+    2428436474,
+    2756734187,
+    3204031479,
+    3329325298
+  ];
+  let h0 = 1779033703 | 0, h1 = 3144134277 | 0, h2 = 1013904242 | 0, h3 = 2773480762 | 0;
+  let h4 = 1359893119 | 0, h5 = 2600822924 | 0, h6 = 528734635 | 0, h7 = 1541459225 | 0;
+  const buf = new Uint8Array(64);
+  const w = new Int32Array(64);
+  let bufLen = 0;
+  let total = 0;
+  let finalized = false;
+  function compress(bytes, off) {
+    for (let i = 0; i < 16; i++) {
+      w[i] = bytes[off] << 24 | bytes[off + 1] << 16 | bytes[off + 2] << 8 | bytes[off + 3];
+      off += 4;
+    }
+    for (let i = 16; i < 64; i++) {
+      const x = w[i - 15], y = w[i - 2];
+      const s0 = (x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ x >>> 3;
+      const s1 = (y >>> 17 | y << 15) ^ (y >>> 19 | y << 13) ^ y >>> 10;
+      w[i] = w[i - 16] + s0 + w[i - 7] + s1 | 0;
+    }
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f2 = h5, g = h6, h = h7;
+    for (let i = 0; i < 64; i++) {
+      const S1 = (e >>> 6 | e << 26) ^ (e >>> 11 | e << 21) ^ (e >>> 25 | e << 7);
+      const ch = e & f2 ^ ~e & g;
+      const t1 = h + S1 + ch + K[i] + w[i] | 0;
+      const S0 = (a >>> 2 | a << 30) ^ (a >>> 13 | a << 19) ^ (a >>> 22 | a << 10);
+      const maj = a & b ^ a & c ^ b & c;
+      const t2 = S0 + maj | 0;
+      h = g;
+      g = f2;
+      f2 = e;
+      e = d + t1 | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = t1 + t2 | 0;
+    }
+    h0 = h0 + a | 0;
+    h1 = h1 + b | 0;
+    h2 = h2 + c | 0;
+    h3 = h3 + d | 0;
+    h4 = h4 + e | 0;
+    h5 = h5 + f2 | 0;
+    h6 = h6 + g | 0;
+    h7 = h7 + h | 0;
+  }
+  return {
+    /** Feed a chunk of bytes. Chainable. */
+    update(chunk) {
+      if (finalized) throw new Error("sha256 stream already finalized");
+      let c = chunk;
+      if (!(c instanceof Uint8Array)) c = Uint8Array.from(c);
+      let i = 0;
+      const n = c.length;
+      total += n;
+      if (bufLen > 0) {
+        while (bufLen < 64 && i < n) buf[bufLen++] = c[i++];
+        if (bufLen === 64) {
+          compress(buf, 0);
+          bufLen = 0;
+        }
+      }
+      while (n - i >= 64) {
+        compress(c, i);
+        i += 64;
+      }
+      while (i < n) buf[bufLen++] = c[i++];
+      return this;
+    },
+    /** Finalize and return the lowercase hex digest. */
+    hex() {
+      if (finalized) throw new Error("sha256 stream already finalized");
+      finalized = true;
+      const bitHi = Math.floor(total / 536870912);
+      const bitLo = total % 536870912 * 8;
+      buf[bufLen++] = 128;
+      if (bufLen > 56) {
+        while (bufLen < 64) buf[bufLen++] = 0;
+        compress(buf, 0);
+        bufLen = 0;
+      }
+      while (bufLen < 56) buf[bufLen++] = 0;
+      buf[56] = bitHi >>> 24 & 255;
+      buf[57] = bitHi >>> 16 & 255;
+      buf[58] = bitHi >>> 8 & 255;
+      buf[59] = bitHi & 255;
+      buf[60] = bitLo >>> 24 & 255;
+      buf[61] = bitLo >>> 16 & 255;
+      buf[62] = bitLo >>> 8 & 255;
+      buf[63] = bitLo & 255;
+      compress(buf, 0);
+      let out = "";
+      const H = [h0, h1, h2, h3, h4, h5, h6, h7];
+      for (let i = 0; i < 8; i++) {
+        const v = H[i] >>> 0;
+        out += ("00000000" + v.toString(16)).slice(-8);
+      }
+      return out;
+    }
+  };
+}
+function storedToHashable(v, encoding) {
+  if (encoding === "base64") return b64ToBytes(asText(v));
+  return v;
+}
+async function checkInfo2Contract(ctx, findings) {
+  if (ctx.fm?.object_type !== "information" || ctx.fm?.schema !== "information@2") return;
+  const raw = ctx.files.get("data/provenance.json");
+  if (!raw) {
+    findings.push(f("C-18.1", "error", "information@2 requires data/provenance.json: the schema bump makes the intake provenance register mandatory"));
+    return;
+  }
+  let reg;
+  try {
+    reg = JSON.parse(asText(raw));
+  } catch {
+    return;
+  }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+  if (!docs) return;
+  for (let i = 0; i < docs.length; i++) {
+    const d = docs[i];
+    if (!d || typeof d !== "object") continue;
+    const cap = d.capture && typeof d.capture === "object" ? d.capture : {};
+    if (!CAPTURE_ENCODINGS.includes(cap.encoding)) {
+      findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.encoding '${cap.encoding}' is not one of: ${CAPTURE_ENCODINGS.join(", ")} (@2)`));
+    }
+    const or = d.origin && typeof d.origin === "object" ? d.origin : {};
+    if (or.kind === "member") {
+      if (cap.actor_class !== "member") {
+        findings.push(f("C-18.1", "error", `provenance documents[${i}]: member-origin capture must record actor_class 'member' (@2)`));
+      }
+      const c = d.custody;
+      if (!c || typeof c !== "object") {
+        findings.push(f("C-18.1", "error", `provenance documents[${i}]: member-origin document missing custody block {holder, obtained, setting, attestation} (doctrine 3a) (@2)`));
+      } else {
+        for (const k of ["holder", "setting", "attestation"]) {
+          if (!c[k]) findings.push(f("C-18.1", "error", `provenance documents[${i}].custody missing '${k}' (@2)`));
+        }
+        if (!HIST_TS_RE.test(c.obtained || "")) {
+          findings.push(f("C-18.1", "error", `provenance documents[${i}].custody.obtained '${c.obtained}' is not YYYY-MM-DDTHH:MM:SSZ (@2)`));
+        }
+      }
+      if (d.attestation_attempts === void 0) {
+        findings.push(f("C-18.1", "error", `provenance documents[${i}]: member-origin document missing attestation_attempts; the 7.7 asymmetry is recorded honestly, attempted false with the reason in note (@2)`));
+      }
+    }
+    if (d.attestation_attempts !== void 0) {
+      if (!Array.isArray(d.attestation_attempts)) {
+        findings.push(f("C-18.1", "error", `provenance documents[${i}].attestation_attempts must be an array (@2)`));
+      } else {
+        d.attestation_attempts.forEach((a, j) => {
+          if (!a || typeof a !== "object" || !a.service || typeof a.attempted !== "boolean" || typeof a.ok !== "boolean") {
+            findings.push(f("C-18.1", "error", `provenance documents[${i}].attestation_attempts[${j}] lacks the {service, attempted, ok} shape (@2)`));
+          }
+        });
+      }
+    }
+    if (d.parts !== void 0) {
+      if (!Array.isArray(d.parts) || !d.parts.length) {
+        findings.push(f("C-18.1", "error", `provenance documents[${i}].parts must be a nonempty array (@2)`));
+      } else {
+        if (!RAW_SHA_RE.test(cap.sha256 || "")) {
+          findings.push(f("C-18.1", "error", `provenance documents[${i}]: parts require capture.sha256 over the reassembled whole (@2)`));
+        }
+        d.parts.forEach((p, j) => {
+          if (!p || typeof p !== "object" || !p.file || !RAW_SHA_RE.test(p.sha256 || "") || !(Number.isInteger(p.bytes) && p.bytes > 0)) {
+            findings.push(f("C-18.1", "error", `provenance documents[${i}].parts[${j}] lacks the {file, sha256, bytes} shape (@2)`));
+          } else if (!hasFile_(ctx, String(p.file))) {
+            findings.push(f("C-18.1", "error", `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the bundle (@2)`));
+          }
+        });
+      }
+    }
+    if (d.derived !== void 0) {
+      const dv = d.derived;
+      const shapeOk = dv && typeof dv === "object" && dv.transform && dv.reason && (dv.from_file || dv.from_ref);
+      if (!shapeOk) {
+        findings.push(f("C-18.1", "error", `provenance documents[${i}].derived lacks the {transform, reason, from_file|from_ref} shape (doctrine 4a) (@2)`));
+      } else if (dv.from_file && !hasFile_(ctx, String(dv.from_file))) {
+        findings.push(f("C-18.1", "error", `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the bundle (@2)`));
+      }
+    }
+  }
+  if (reg.releases !== void 0) {
+    if (!Array.isArray(reg.releases)) {
+      findings.push(f("C-18.1", "error", "provenance releases must be an array (@2)"));
+    } else {
+      reg.releases.forEach((r, i) => {
+        if (!r || typeof r !== "object" || !HIST_TS_RE.test(r.transition || "") || !r.author) {
+          findings.push(f("C-18.1", "error", `provenance releases[${i}] lacks the {transition, author} shape (@2)`));
+          return;
+        }
+        if (r.signature_file) {
+          if (!hasFile_(ctx, String(r.signature_file))) {
+            findings.push(f("C-18.1", "error", `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the bundle (@2)`));
+          }
+          if (!r.signer) findings.push(f("C-18.1", "error", `provenance releases[${i}] carries a signature_file but no signer (@2)`));
+          if (r.namespace !== "bio-release") {
+            findings.push(f("C-18.1", "error", `provenance releases[${i}].namespace '${r.namespace}' must be 'bio-release' (ssh-keygen -Y namespace discipline) (@2)`));
+          }
+        }
+      });
+    }
+  }
+  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+  const rels = Array.isArray(reg.releases) ? reg.releases : [];
+  for (const e of hist) {
+    if (!e || e.from_state !== "collected" || e.to_state !== "verified") continue;
+    const signed = rels.some((r) => r && r.transition === e.timestamp && r.signature_file);
+    if (!signed) {
+      findings.push(f(
+        "C-18.7",
+        "warn",
+        `collected -> verified transition at ${e.timestamp} has no signed release record; the target mechanism is a detached SSH signature over the transition record (ssh-keygen -Y sign, namespace bio-release; doctrine 4a)`,
+        ["sign the transition record and add the releases[] entry with signature_file, signer, namespace", "record the interim member review of the release log in Review Notes"]
+      ));
+    }
+  }
+  for (let i = 0; i < docs.length; i++) {
+    const d = docs[i];
+    if (!d || typeof d !== "object") continue;
+    const cap = d.capture && typeof d.capture === "object" ? d.capture : {};
+    if (!RAW_SHA_RE.test(cap.sha256 || "") || !CAPTURE_ENCODINGS.includes(cap.encoding)) continue;
+    let hashable = null;
+    let actual = null;
+    try {
+      if (Array.isArray(d.parts) && d.parts.length && d.parts.every((p) => p && p.file && ctx.files.has(String(p.file)))) {
+        const stored = d.parts.map((p) => ctx.files.get(String(p.file)));
+        const textStored = (v) => cap.encoding !== "base64" && typeof v === "string";
+        if (stored.every((v) => textStored(v))) {
+          hashable = stored.join("");
+        } else if (stored.every((v) => !textStored(v))) {
+          const h = createSha256();
+          for (const v of stored) h.update(cap.encoding === "base64" ? b64ToBytes(asText(v)) : v);
+          actual = h.hex();
+        } else {
+          throw new Error("parts mix text and binary storage");
+        }
+      } else if (d.file && ctx.files.has(String(d.file))) {
+        hashable = storedToHashable(ctx.files.get(String(d.file)), cap.encoding);
+      }
+    } catch (err) {
+      findings.push(f("C-18.6", "error", `provenance documents[${i}]: stored content could not be decoded for hash verification (${err && err.message}) (@2)`));
+      continue;
+    }
+    if (actual === null) {
+      if (hashable === null) continue;
+      actual = await ctx.sha256(hashable);
+    }
+    if (actual !== cap.sha256) {
+      findings.push(f(
+        "C-18.6",
+        "error",
+        `provenance documents[${i}]: stored bytes hash ${actual.slice(0, 12)}\u2026 but the register records ${String(cap.sha256).slice(0, 12)}\u2026; silent content mutation fails the gate (@2)`,
+        ["restore the capture from history", "correct the register only if the recorded hash was wrong at intake, with a Session Log entry"]
+      ));
+    }
+  }
+}
+function checkGatheringGrammar(ctx, findings) {
+  const raw = ctx.files.get("data/gathering.json");
+  if (!raw) return;
+  let g;
+  try {
+    g = JSON.parse(asText(raw));
+  } catch {
+    return;
+  }
+  if (typeof g !== "object" || g === null || Array.isArray(g)) {
+    findings.push(f("C-18.5", "error", "data/gathering.json must be a JSON object"));
+    return;
+  }
+  if (g.daemon !== void 0) {
+    const dmn = g.daemon;
+    if (typeof dmn !== "object" || dmn === null || Array.isArray(dmn)) {
+      findings.push(f("C-18.5", "error", "gathering.json daemon block must be an object"));
+    } else {
+      if (typeof dmn.enabled !== "boolean") findings.push(f("C-18.5", "error", "gathering.json daemon.enabled must be boolean"));
+      for (const bk of ["tick_budget", "sweep_budget"]) {
+        if (dmn[bk] !== void 0 && !(Number.isInteger(dmn[bk]) && dmn[bk] >= 0)) {
+          findings.push(f("C-18.5", "error", `gathering.json daemon.${bk} must be a non-negative integer`));
+        }
+      }
+    }
+  }
+  const reqs = Array.isArray(g.requests) ? g.requests : [];
+  for (let i = 0; i < reqs.length; i++) {
+    const r = reqs[i];
+    if (typeof r !== "object" || r === null) {
+      findings.push(f("C-18.5", "error", `gathering.json requests[${i}] is not an object`));
+      continue;
+    }
+    if (!GATH_ID_RE.test(r.id || "")) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].id '${r.id}' does not match the GATH grammar`));
+    const tgt = r.target;
+    if (!tgt || typeof tgt !== "object") findings.push(f("C-18.5", "error", `gathering.json requests[${i}] missing target block`));
+    else {
+      if (typeof tgt.text !== "string" || tgt.text.length === 0 || tgt.text.length > 200 || /[\r\n]/.test(tgt.text)) {
+        findings.push(f("C-18.5", "error", `gathering.json requests[${i}].target.text must be a nonempty single-line string under 200 chars`));
+      }
+      if (tgt.description !== void 0 && (typeof tgt.description !== "string" || tgt.description.length > 2e3)) {
+        findings.push(f("C-18.5", "error", `gathering.json requests[${i}].target.description must be a string under 2000 chars`));
+      }
+    }
+    const locs = Array.isArray(r.locators) ? r.locators : null;
+    if (!locs || locs.length === 0) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].locators must be a nonempty array`));
+    else for (let L = 0; L < locs.length; L++) {
+      if (!isPublicHttpsLocator(locs[L])) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].locators[${L}] '${String(locs[L]).slice(0, 40)}' is not an https public-host locator`));
+    }
+    if (typeof r.authority !== "string" || r.authority.trim() === "") findings.push(f("C-18.5", "error", `gathering.json requests[${i}].authority must be a nonempty string`));
+    if (!CRITICALITY_ENUM.includes(r.criticality)) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].criticality must be one of: ${CRITICALITY_ENUM.join(", ")}`));
+    if (r.cadence !== void 0 && !CADENCE_ENUM.includes(r.cadence)) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].cadence must be one of: ${CADENCE_ENUM.join(", ")}`));
+    if (!GATH_STATUS_ENUM.includes(r.status)) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].status must be one of: ${GATH_STATUS_ENUM.join(", ")}`));
+    if (r.planted !== void 0 && !ISO_TS_RE.test(r.planted)) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].planted must be an ISO 8601 UTC instant`));
+  }
+  const sweeps = Array.isArray(g.sweeps) ? g.sweeps : [];
+  for (let i = 0; i < sweeps.length; i++) {
+    const s = sweeps[i];
+    if (typeof s !== "object" || s === null) {
+      findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}] is not an object`));
+      continue;
+    }
+    if (typeof s.id !== "string" || s.id.trim() === "") findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}].id must be a nonempty string`));
+    if (s.ratified !== void 0 && typeof s.ratified !== "boolean") findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}].ratified must be boolean`));
+    if (s.sources !== void 0) {
+      if (!Array.isArray(s.sources)) findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}].sources must be an array`));
+      else for (let L = 0; L < s.sources.length; L++) if (!isPublicHttpsLocator(s.sources[L])) findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}].sources[${L}] is not an https public-host locator`));
+    }
+  }
+}
+var MECHANICAL_FIELD_SETS = {
+  "monitor-tick": ["source_status", "monitoring.last_checked", "reeval_pending.flag", "reeval_pending.since", "reeval_pending.source", "last_updated"],
+  "sweep": [],
+  "deadline-recheck": ["clock[].status", "last_updated"],
+  "member-attest": ["last_updated"]
+};
+var MECHANICAL_APPEND_FILES = ["data/changes.json", "data/provenance.json"];
+function flattenFm(fm) {
+  const out = {};
+  if (!fm || typeof fm !== "object") return out;
+  for (const k of Object.keys(fm)) {
+    const v = fm[k];
+    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+      for (const c of Object.keys(v)) out[k + "." + c] = canonicalJson(v[c]);
+    } else {
+      out[k] = canonicalJson(v);
+    }
+  }
+  return out;
+}
+function fmDiffPaths(prevFm, nextFm) {
+  const changed = /* @__PURE__ */ new Set();
+  const a = flattenFm(prevFm), b = flattenFm(nextFm);
+  const keys = /* @__PURE__ */ new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const k of keys) {
+    if (k === "clock") {
+      const pc = Array.isArray(prevFm.clock) ? prevFm.clock : [];
+      const nc = Array.isArray(nextFm.clock) ? nextFm.clock : [];
+      const n = Math.max(pc.length, nc.length);
+      for (let i = 0; i < n; i++) {
+        const pe = pc[i] || {}, ne = nc[i] || {};
+        for (const field of /* @__PURE__ */ new Set([...Object.keys(pe), ...Object.keys(ne)])) {
+          if (canonicalJson(pe[field]) !== canonicalJson(ne[field])) changed.add("clock[]." + field);
+        }
+      }
+      continue;
+    }
+    if (a[k] !== b[k]) changed.add(k);
+  }
+  return changed;
+}
+function bodySections(body) {
+  const out = {};
+  const re = /^## .*$/gm;
+  let m, starts = [];
+  while ((m = re.exec(body)) !== null) starts.push({ h: m[0].trimEnd(), i: m.index });
+  for (let i = 0; i < starts.length; i++) {
+    const end = i + 1 < starts.length ? starts[i + 1].i : body.length;
+    out[starts[i].h] = body.slice(starts[i].i, end);
+  }
+  return out;
+}
+async function checkMechanicalConformance(ctx, findings) {
+  const manRaw = ctx.files.get("_history/manifest.json");
+  if (!manRaw) return;
+  let man;
+  try {
+    man = JSON.parse(asText(manRaw));
+  } catch {
+    return;
+  }
+  const entries = Array.isArray(man.entries) ? [...man.entries].sort((a, b) => a.key < b.key ? -1 : 1) : [];
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    if (!e || e.kind !== "promotion" || !e.key) continue;
+    const recRaw = ctx.files.get(`_history/promotion_${e.key}.json`);
+    if (!recRaw) continue;
+    let rec;
+    try {
+      rec = JSON.parse(asText(recRaw));
+    } catch {
+      continue;
+    }
+    const man2 = rec.manifest || rec;
+    const writer = man2.writer || rec.writer;
+    if (writer !== "mechanical") continue;
+    const op = man2.operation || rec.operation;
+    if (!op || !(op in MECHANICAL_FIELD_SETS)) {
+      findings.push(f(
+        "C-20.1",
+        "error",
+        `history entry '${e.key}' is marked mechanical but names undeclared operation '${op}'`,
+        ["a mechanical promotion must name a registered operation", "if hand-authored, remove the mechanical marker"]
+      ));
+      continue;
+    }
+    const preSnapPath = `_history/bundle_${e.key}.md`;
+    const preSnap = ctx.files.has(preSnapPath) ? ctx.files.get(preSnapPath) : null;
+    const base = man2.base;
+    const isCreation = base === EMPTY_STRING_SHA || preSnap === null;
+    let postRaw = null, postUnknowable = false;
+    for (let j = i + 1; j < entries.length; j++) {
+      const p = `_history/bundle_${entries[j].key}.md`;
+      if (ctx.files.has(p)) {
+        postRaw = ctx.files.get(p);
+        break;
+      }
+      if ((entries[j].files || []).includes("bundle.md")) {
+        postUnknowable = true;
+        break;
+      }
+    }
+    if (postRaw === null && !postUnknowable) {
+      const liveRaw = ctx.files.get("bundle.md");
+      if (liveRaw) {
+        const rb = Array.isArray(man2.files) ? man2.files.find((x) => x.name === "bundle.md") : null;
+        if (rb && rb.sha256) {
+          const liveHash = await ctx.sha256(liveRaw);
+          if (liveHash === rb.sha256) postRaw = liveRaw;
+          else postUnknowable = true;
+        } else {
+          postRaw = liveRaw;
+        }
+      }
+    }
+    if (!postRaw) continue;
+    const post = parseFrontmatter(asText(postRaw));
+    if (isCreation) {
+      if (post.data && post.data.current_state && post.data.current_state !== "collected" && post.data.object_type === "information") {
+        findings.push(f(
+          "C-20.1",
+          "error",
+          `mechanical creation '${e.key}' lands at '${post.data.current_state}', not collected (daemon creations never elevate)`,
+          ["re-produce the creation at collected", "if a member released it, the release transition must be a separate member-authored promotion"]
+        ));
+      }
+      continue;
+    }
+    const prev = parseFrontmatter(asText(preSnap));
+    const allowed = new Set(MECHANICAL_FIELD_SETS[op]);
+    const changed = fmDiffPaths(prev.data || {}, post.data || {});
+    for (const path of changed) {
+      if (!allowed.has(path)) {
+        findings.push(f(
+          "C-20.1",
+          "error",
+          `mechanical '${op}' promotion '${e.key}' changed frontmatter '${path}', outside its declared field set {${[...allowed].join(", ")}}`,
+          ["revert the out-of-envelope change", "if the change is legitimate, it belongs to a member-authored promotion, not a mechanical one"]
+        ));
+      }
+    }
+    const prevSec = bodySections(prev.body || ""), postSec = bodySections(post.body || "");
+    for (const h of /* @__PURE__ */ new Set([...Object.keys(prevSec), ...Object.keys(postSec)])) {
+      if (h === "## Session Log") continue;
+      if ((prevSec[h] || "") !== (postSec[h] || "")) {
+        findings.push(f(
+          "C-20.1",
+          "error",
+          `mechanical '${op}' promotion '${e.key}' changed body section '${h}'; a mechanical writer touches only the Session Log`,
+          ["revert the body change outside the Session Log"]
+        ));
+      }
+    }
+    const touched = Array.isArray(man2.files) ? man2.files.map((x) => x.name) : [];
+    for (const name of touched) {
+      const ok = name === "bundle.md" || name.startsWith("snapshots/") || MECHANICAL_APPEND_FILES.includes(name);
+      if (!ok) {
+        findings.push(f(
+          "C-20.1",
+          "error",
+          `mechanical '${op}' promotion '${e.key}' wrote '${name}', outside the mechanical envelope (bundle.md, snapshots/, ${MECHANICAL_APPEND_FILES.join(", ")})`,
+          ["revert the out-of-envelope write"]
+        ));
+      }
+    }
+  }
+}
+var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var D2 = new Float64Array([
   61785,
   9906,
@@ -573,6 +2299,690 @@ var ORDER_L = new Float64Array([
   0,
   16
 ]);
+function gf(init) {
+  const r = new Float64Array(16);
+  if (init) for (let i = 0; i < init.length; i++) r[i] = init[i];
+  return r;
+}
+function fAdd(o, a, b) {
+  for (let i = 0; i < 16; i++) o[i] = a[i] + b[i];
+}
+function fSub(o, a, b) {
+  for (let i = 0; i < 16; i++) o[i] = a[i] - b[i];
+}
+function car25519(o) {
+  let c = 1, v;
+  for (let i = 0; i < 16; i++) {
+    v = o[i] + c + 65535;
+    c = Math.floor(v / 65536);
+    o[i] = v - c * 65536;
+  }
+  o[0] += c - 1 + 37 * (c - 1);
+}
+function fMul(o, a, b) {
+  const t = new Float64Array(31);
+  for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) t[i + j] += a[i] * b[j];
+  for (let i = 0; i < 15; i++) t[i] += 38 * t[i + 16];
+  for (let i = 0; i < 16; i++) o[i] = t[i];
+  car25519(o);
+  car25519(o);
+}
+function fSq(o, a) {
+  fMul(o, a, a);
+}
+function sel25519(p, q, b) {
+  const c = ~(b - 1);
+  for (let i = 0; i < 16; i++) {
+    const t = c & (p[i] ^ q[i]);
+    p[i] ^= t;
+    q[i] ^= t;
+  }
+}
+function pack25519(o, n) {
+  const m = gf(), t = gf();
+  for (let i = 0; i < 16; i++) t[i] = n[i];
+  car25519(t);
+  car25519(t);
+  car25519(t);
+  for (let j = 0; j < 2; j++) {
+    m[0] = t[0] - 65517;
+    for (let i = 1; i < 15; i++) {
+      m[i] = t[i] - 65535 - (m[i - 1] >> 16 & 1);
+      m[i - 1] &= 65535;
+    }
+    m[15] = t[15] - 32767 - (m[14] >> 16 & 1);
+    const b = m[15] >> 16 & 1;
+    m[14] &= 65535;
+    sel25519(t, m, 1 - b);
+  }
+  for (let i = 0; i < 16; i++) {
+    o[2 * i] = t[i] & 255;
+    o[2 * i + 1] = t[i] >> 8;
+  }
+}
+function neq25519(a, b) {
+  const c = new Uint8Array(32), d = new Uint8Array(32);
+  pack25519(c, a);
+  pack25519(d, b);
+  let diff = 0;
+  for (let i = 0; i < 32; i++) diff |= c[i] ^ d[i];
+  return (1 & diff - 1 >>> 8) - 1;
+}
+function par25519(a) {
+  const d = new Uint8Array(32);
+  pack25519(d, a);
+  return d[0] & 1;
+}
+function unpack25519(o, n) {
+  for (let i = 0; i < 16; i++) o[i] = n[2 * i] + (n[2 * i + 1] << 8);
+  o[15] &= 32767;
+}
+function inv25519(o, i) {
+  const c = gf();
+  for (let a = 0; a < 16; a++) c[a] = i[a];
+  for (let a = 253; a >= 0; a--) {
+    fSq(c, c);
+    if (a !== 2 && a !== 4) fMul(c, c, i);
+  }
+  for (let a = 0; a < 16; a++) o[a] = c[a];
+}
+function pow2523(o, i) {
+  const c = gf();
+  for (let a = 0; a < 16; a++) c[a] = i[a];
+  for (let a = 250; a >= 0; a--) {
+    fSq(c, c);
+    if (a !== 1) fMul(c, c, i);
+  }
+  for (let a = 0; a < 16; a++) o[a] = c[a];
+}
+function edAdd(p, q) {
+  const a = gf(), b = gf(), c = gf(), d = gf(), e = gf(), f2 = gf(), g = gf(), h = gf(), t = gf();
+  fSub(a, p[1], p[0]);
+  fSub(t, q[1], q[0]);
+  fMul(a, a, t);
+  fAdd(b, p[0], p[1]);
+  fAdd(t, q[0], q[1]);
+  fMul(b, b, t);
+  fMul(c, p[3], q[3]);
+  fMul(c, c, D2);
+  fMul(d, p[2], q[2]);
+  fAdd(d, d, d);
+  fSub(e, b, a);
+  fSub(f2, d, c);
+  fAdd(g, d, c);
+  fAdd(h, b, a);
+  fMul(p[0], e, f2);
+  fMul(p[1], h, g);
+  fMul(p[2], g, f2);
+  fMul(p[3], e, h);
+}
+function cswap(p, q, b) {
+  for (let i = 0; i < 4; i++) sel25519(p[i], q[i], b);
+}
+function scalarmult(p, q, s) {
+  for (let i = 0; i < 16; i++) {
+    p[0][i] = GF0[i];
+    p[1][i] = GF1[i];
+    p[2][i] = GF1[i];
+    p[3][i] = GF0[i];
+  }
+  for (let i = 255; i >= 0; --i) {
+    const b = s[i / 8 | 0] >> (i & 7) & 1;
+    cswap(p, q, b);
+    edAdd(q, p);
+    edAdd(p, p);
+    cswap(p, q, b);
+  }
+}
+function scalarbase(p, s) {
+  const q = [gf(), gf(), gf(), gf()];
+  for (let i = 0; i < 16; i++) {
+    q[0][i] = BX[i];
+    q[1][i] = BY[i];
+    q[2][i] = GF1[i];
+  }
+  fMul(q[3], BX, BY);
+  scalarmult(p, q, s);
+}
+function unpackneg(r, p) {
+  const t = gf(), chk = gf(), num = gf(), den = gf(), den2 = gf(), den4 = gf(), den6 = gf();
+  for (let i = 0; i < 16; i++) {
+    r[2][i] = GF1[i];
+  }
+  unpack25519(r[1], p);
+  fSq(num, r[1]);
+  fMul(den, num, DD);
+  fSub(num, num, r[2]);
+  fAdd(den, r[2], den);
+  fSq(den2, den);
+  fSq(den4, den2);
+  fMul(den6, den4, den2);
+  fMul(t, den6, num);
+  fMul(t, t, den);
+  pow2523(t, t);
+  fMul(t, t, num);
+  fMul(t, t, den);
+  fMul(t, t, den);
+  fMul(r[0], t, den);
+  fSq(chk, r[0]);
+  fMul(chk, chk, den);
+  if (neq25519(chk, num)) fMul(r[0], r[0], I25);
+  fSq(chk, r[0]);
+  fMul(chk, chk, den);
+  if (neq25519(chk, num)) return -1;
+  if (par25519(r[0]) === p[31] >> 7) fSub(r[0], GF0, r[0]);
+  fMul(r[3], r[0], r[1]);
+  return 0;
+}
+function modL(r, x) {
+  let carry;
+  for (let i = 63; i >= 32; --i) {
+    carry = 0;
+    let j = i - 32;
+    for (; j < i - 12; ++j) {
+      x[j] += carry - 16 * x[i] * ORDER_L[j - (i - 32)];
+      carry = Math.floor((x[j] + 128) / 256);
+      x[j] -= carry * 256;
+    }
+    x[j] += carry;
+    x[i] = 0;
+  }
+  carry = 0;
+  for (let j = 0; j < 32; j++) {
+    x[j] += carry - (x[31] >> 4) * ORDER_L[j];
+    carry = x[j] >> 8;
+    x[j] &= 255;
+  }
+  for (let j = 0; j < 32; j++) x[j] -= carry * ORDER_L[j];
+  for (let i = 0; i < 32; i++) {
+    x[i + 1] += x[i] >> 8;
+    r[i] = x[i] & 255;
+  }
+}
+function reduce(r) {
+  const x = new Float64Array(64);
+  for (let i = 0; i < 64; i++) x[i] = r[i];
+  for (let i = 0; i < 64; i++) r[i] = 0;
+  modL(r, x);
+}
+async function ed25519Verify(sig, msg, pub, sha512) {
+  if (!(sig && sig.length === 64) || !(pub && pub.length === 32)) return false;
+  const p = [gf(), gf(), gf(), gf()], q = [gf(), gf(), gf(), gf()];
+  if (unpackneg(q, pub)) return false;
+  for (let i = 31; i >= 0; i--) {
+    if (sig[32 + i] > ORDER_L[i]) return false;
+    if (sig[32 + i] < ORDER_L[i]) break;
+    if (i === 0) return false;
+  }
+  const pre = new Uint8Array(64 + msg.length);
+  pre.set(sig.subarray(0, 32), 0);
+  pre.set(pub, 32);
+  pre.set(msg, 64);
+  const h = await sha512(pre);
+  const k = new Uint8Array(64);
+  k.set(h);
+  reduce(k);
+  scalarmult(p, q, k);
+  const s = new Uint8Array(32);
+  s.set(sig.subarray(32, 64));
+  const t = [gf(), gf(), gf(), gf()];
+  scalarbase(t, s);
+  edAdd(p, t);
+  const packed = new Uint8Array(32);
+  packEdwards(packed, p);
+  let diff = 0;
+  for (let i = 0; i < 32; i++) diff |= packed[i] ^ sig[i];
+  return diff === 0;
+}
+function packEdwards(r, p) {
+  const tx = gf(), ty = gf(), zi = gf();
+  inv25519(zi, p[2]);
+  fMul(tx, p[0], zi);
+  fMul(ty, p[1], zi);
+  pack25519(r, ty);
+  r[31] ^= par25519(tx) << 7;
+}
+function be32(b, o) {
+  return (b[o] << 24 | b[o + 1] << 16 | b[o + 2] << 8 | b[o + 3]) >>> 0;
+}
+function sshStr(b, o) {
+  if (o + 4 > b.length) throw new Error("sshsig: truncated length prefix");
+  const n = be32(b, o);
+  if (o + 4 + n > b.length) throw new Error("sshsig: string overruns buffer");
+  return [b.subarray(o + 4, o + 4 + n), o + 4 + n];
+}
+function encStr(bytes) {
+  const out = new Uint8Array(4 + bytes.length);
+  out[0] = bytes.length >>> 24 & 255;
+  out[1] = bytes.length >>> 16 & 255;
+  out[2] = bytes.length >>> 8 & 255;
+  out[3] = bytes.length & 255;
+  out.set(bytes, 4);
+  return out;
+}
+function ascii(u8) {
+  let s = "";
+  for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+  return s;
+}
+var SSHSIG_BEGIN = "-----BEGIN SSH SIGNATURE-----";
+var SSHSIG_END = "-----END SSH SIGNATURE-----";
+function parseSshSig(armored) {
+  const text = String(armored || "").trim();
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l !== "");
+  if (lines.length < 3 || lines[0] !== SSHSIG_BEGIN || lines[lines.length - 1] !== SSHSIG_END) {
+    throw new Error("sshsig: missing or malformed PEM armor");
+  }
+  const b64 = lines.slice(1, -1).join("");
+  const blob = b64ToBytes(b64);
+  if (blob.length < 10) throw new Error("sshsig: blob too short");
+  if (ascii(blob.subarray(0, 6)) !== "SSHSIG") throw new Error("sshsig: bad magic preamble");
+  let o = 6;
+  const version = be32(blob, o);
+  o += 4;
+  if (version !== 1) throw new Error("sshsig: unsupported version " + version);
+  let pkField, nsField, rsvField, haField, sigField;
+  [pkField, o] = sshStr(blob, o);
+  [nsField, o] = sshStr(blob, o);
+  [rsvField, o] = sshStr(blob, o);
+  [haField, o] = sshStr(blob, o);
+  [sigField, o] = sshStr(blob, o);
+  if (o !== blob.length) throw new Error("sshsig: trailing bytes after signature field");
+  let kt, publicKey, p = 0;
+  [kt, p] = sshStr(pkField, 0);
+  [publicKey] = sshStr(pkField, p);
+  let st, signature;
+  p = 0;
+  [st, p] = sshStr(sigField, 0);
+  [signature] = sshStr(sigField, p);
+  return {
+    keyType: ascii(kt),
+    publicKey,
+    namespace: ascii(nsField),
+    reserved: rsvField,
+    hashAlgorithm: ascii(haField),
+    sigType: ascii(st),
+    signature
+  };
+}
+function sshsigSignedBlob(namespace, reserved, hashAlgorithm, messageHash) {
+  const enc = (s) => {
+    const u = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i) & 255;
+    return u;
+  };
+  const parts = [
+    enc("SSHSIG"),
+    encStr(enc(namespace)),
+    encStr(reserved),
+    encStr(enc(hashAlgorithm)),
+    encStr(messageHash)
+  ];
+  let n = 0;
+  for (const p of parts) n += p.length;
+  const out = new Uint8Array(n);
+  let o = 0;
+  for (const p of parts) {
+    out.set(p, o);
+    o += p.length;
+  }
+  return out;
+}
+var SIGNER_TS_RE = /^(\d{4})(\d{2})(\d{2})(?:(\d{2})(\d{2})(?:(\d{2}))?)?Z?$/;
+function parseSignerTimestamp(v) {
+  const m = SIGNER_TS_RE.exec(String(v || "").replace(/^"|"$/g, ""));
+  if (!m) return null;
+  return `${m[1]}-${m[2]}-${m[3]}T${m[4] || "00"}:${m[5] || "00"}:${m[6] || "00"}Z`;
+}
+function parseAllowedSigners(text) {
+  const entries = [];
+  const lines = String(text || "").split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line === "" || line.charAt(0) === "#") continue;
+    const toks = line.split(/\s+/);
+    if (toks.length < 3) {
+      entries.push({ line: i + 1, error: "too few fields" });
+      continue;
+    }
+    const principals = toks[0].split(",").filter(Boolean);
+    let ki = 1;
+    const options = {};
+    while (ki < toks.length && !/^(ssh-|ecdsa-|sk-)/.test(toks[ki])) {
+      const t = toks[ki];
+      const eq = t.indexOf("=");
+      if (eq === -1) options[t.toLowerCase()] = true;
+      else options[t.slice(0, eq).toLowerCase()] = t.slice(eq + 1).replace(/^"|"$/g, "");
+      ki++;
+    }
+    if (ki + 1 >= toks.length) {
+      entries.push({ line: i + 1, error: "no key found" });
+      continue;
+    }
+    const keyType = toks[ki];
+    const keyB64 = toks[ki + 1];
+    const comment = toks.slice(ki + 2).join(" ");
+    let keyBytes = null, err = null;
+    try {
+      const blob = b64ToBytes(keyB64);
+      let t2, p = 0;
+      [t2, p] = sshStr(blob, 0);
+      if (ascii(t2) !== keyType) throw new Error("key type mismatch inside blob");
+      [keyBytes] = sshStr(blob, p);
+    } catch (e) {
+      err = "unparsable key: " + (e && e.message);
+    }
+    entries.push({
+      line: i + 1,
+      principals,
+      options,
+      keyType,
+      keyB64,
+      comment,
+      keyBytes,
+      error: err,
+      validAfter: options["valid-after"] ? parseSignerTimestamp(options["valid-after"]) : null,
+      validBefore: options["valid-before"] ? parseSignerTimestamp(options["valid-before"]) : null
+    });
+  }
+  return entries;
+}
+function signerKeysAt(entries, principal, atIso) {
+  const out = [];
+  for (const e of entries) {
+    if (e.error || !e.principals) continue;
+    if (e.principals.indexOf(principal) === -1) continue;
+    if (e.validAfter && atIso < e.validAfter) continue;
+    if (e.validBefore && atIso >= e.validBefore) continue;
+    out.push(e);
+  }
+  return out;
+}
+async function verifyReleaseSignature(opts) {
+  const { armored, message, signersText, namespace, at, sha512 } = opts;
+  let sig;
+  try {
+    sig = parseSshSig(armored);
+  } catch (e) {
+    return { ok: false, reason: "unparsable", detail: e && e.message };
+  }
+  if (sig.keyType !== "ssh-ed25519" || sig.sigType !== "ssh-ed25519") {
+    return { ok: false, reason: "unsupported_key_type", detail: sig.keyType };
+  }
+  if (sig.namespace !== namespace) {
+    return { ok: false, reason: "namespace_mismatch", detail: sig.namespace };
+  }
+  if (sig.hashAlgorithm !== "sha512") {
+    return { ok: false, reason: "unsupported_hash", detail: sig.hashAlgorithm };
+  }
+  const entries = parseAllowedSigners(signersText);
+  const candidates = signerKeysAt(entries, opts.principal, at);
+  if (candidates.length === 0) {
+    return { ok: false, reason: "no_valid_key_for_principal", detail: opts.principal };
+  }
+  let matched = null;
+  for (const c of candidates) {
+    if (!c.keyBytes || c.keyBytes.length !== sig.publicKey.length) continue;
+    let same = true;
+    for (let i = 0; i < c.keyBytes.length; i++) if (c.keyBytes[i] !== sig.publicKey[i]) {
+      same = false;
+      break;
+    }
+    if (same) {
+      matched = c;
+      break;
+    }
+  }
+  if (!matched) return { ok: false, reason: "key_not_registered_for_principal", detail: opts.principal };
+  const mh = await sha512(message);
+  const signed = sshsigSignedBlob(sig.namespace, sig.reserved, sig.hashAlgorithm, mh);
+  const good = await ed25519Verify(sig.signature, signed, sig.publicKey, sha512);
+  return good ? { ok: true, principal: opts.principal, line: matched.line } : { ok: false, reason: "bad_signature" };
+}
+function releaseMessage(fields) {
+  return canonicalJson({
+    v: "bio-release/1",
+    bundle: fields.bundle,
+    transition: fields.transition,
+    from_state: fields.from_state,
+    to_state: fields.to_state,
+    signer: fields.signer,
+    bundle_md_sha256: fields.bundle_md_sha256,
+    registry_sha256: fields.registry_sha256
+  });
+}
+function normalizeRootKey(k) {
+  const v = String(k || "").trim();
+  if (v === "") return v;
+  if (/^(ssh-|ecdsa-|sk-)/.test(v)) return v;
+  return "ssh-ed25519 " + v.split(/\s+/)[0];
+}
+async function verifyRegistryRoot(reg, sha512) {
+  if (!reg) return { trusted: false, reason: "registry_absent" };
+  const enforce = reg.rootEnforceFrom || null;
+  if (!reg.rootSignature) {
+    return enforce ? { trusted: false, reason: "root_signature_missing" } : { trusted: true, reason: "root_not_enforced" };
+  }
+  const keys = Array.isArray(reg.rootKeys) ? reg.rootKeys : [];
+  if (keys.length === 0) {
+    return enforce ? { trusted: false, reason: "no_pinned_root_keys" } : { trusted: true, reason: "root_not_enforced" };
+  }
+  const signersText = keys.map((k) => `operator ${normalizeRootKey(k)}`).join("\n");
+  const enc = (s) => {
+    const u = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i) & 255;
+    return u;
+  };
+  const r = await verifyReleaseSignature({
+    armored: reg.rootSignature,
+    message: enc(reg.signers),
+    signersText,
+    namespace: reg.rootNamespace || "bio-registry",
+    principal: "operator",
+    at: enforce || "9999-12-31T23:59:59Z",
+    sha512
+  });
+  if (r.ok) return { trusted: true, reason: "root_verified" };
+  return enforce ? { trusted: false, reason: "root_signature_invalid:" + r.reason } : { trusted: true, reason: "root_invalid_but_not_enforced:" + r.reason };
+}
+async function checkReleaseSignature(ctx, findings) {
+  if (ctx.fm?.object_type !== "information") return;
+  const regAny = ctx.releaseRegistry || null;
+  if (regAny && regAny.unavailable) {
+    findings.push(f(
+      "C-18.8",
+      "error",
+      `the key registry is declared present but unreadable at this call site (${regAny.reason || "no reason given"}); the gate cannot check signatures and will not pass them`,
+      ["restore access to the registry bundle", "do not promote until the registry reads"]
+    ));
+    return;
+  }
+  if (ctx.fm?.schema !== "information@2") {
+    const migration0 = regAny && regAny.migrationInstant ? regAny.migrationInstant : null;
+    if (!migration0) return;
+    const hist0 = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+    const post0 = hist0.filter((e) => e && e.from_state === "collected" && e.to_state === "verified" && e.timestamp && e.timestamp >= migration0);
+    for (const e of post0) {
+      findings.push(f(
+        "C-18.8",
+        "error",
+        `release at ${e.timestamp} is at or after the migration instant ${migration0}, but this bundle is ${ctx.fm.schema || "a pre-contract schema"}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check`,
+        [
+          "migrate the bundle to information@2, then sign the transition and add the releases[] entry",
+          "return the bundle to collected pending a signed ratification"
+        ]
+      ));
+    }
+    return;
+  }
+  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+  const releases = hist.filter((e) => e && e.from_state === "collected" && e.to_state === "verified");
+  if (releases.length === 0) return;
+  const reg = ctx.releaseRegistry || null;
+  const migration = reg && reg.migrationInstant ? reg.migrationInstant : null;
+  const post = releases.filter((e) => migration && e.timestamp >= migration);
+  if (post.length === 0) return;
+  const root = await verifyRegistryRoot(reg, ctx.sha512);
+  if (!root.trusted) {
+    findings.push(f(
+      "C-18.8",
+      "error",
+      `the key registry does not prove itself (${root.reason}); it is treated as absent, so no principal in it resolves`,
+      ["restore the registry root signature", "sign the registry with a pinned root key", "clear root.enforce_from only with a recorded reason"]
+    ));
+    return;
+  }
+  const rawReg = ctx.files.get("data/provenance.json");
+  let rels = [];
+  if (rawReg) {
+    try {
+      const p = JSON.parse(asText(rawReg));
+      rels = Array.isArray(p.releases) ? p.releases : [];
+    } catch {
+    }
+  }
+  const bundleMd = ctx.files.get("bundle.md");
+  const bundleSha = bundleMd ? await ctx.sha256(bundleMd) : null;
+  for (const e of post) {
+    const rec = rels.find((r) => r && r.transition === e.timestamp);
+    if (!rec || !rec.signature_file) {
+      findings.push(f(
+        "C-18.8",
+        "error",
+        `release at ${e.timestamp} is at or after the migration instant ${migration} and carries no signed release record`,
+        ["sign the transition and add the releases[] entry", "return the bundle to collected pending a signed ratification"]
+      ));
+      continue;
+    }
+    const author = String(e.author || "");
+    if (String(rec.signer || "") !== author) {
+      findings.push(f(
+        "C-18.8",
+        "error",
+        `release at ${e.timestamp}: signer '${rec.signer}' does not equal transition author '${author}'`,
+        ["record the release under one identity"]
+      ));
+      continue;
+    }
+    if (NON_MEMBER_AUTHORS.includes(author.toLowerCase())) {
+      findings.push(f("C-18.8", "error", `release at ${e.timestamp} is authored by '${author}', a surface or AI identity, never a release author`));
+      continue;
+    }
+    const wantNs = reg.namespace || "bio-release";
+    if (rec.namespace !== wantNs) {
+      findings.push(f("C-18.8", "error", `release at ${e.timestamp}: namespace '${rec.namespace}' is not the registry namespace '${wantNs}'`));
+      continue;
+    }
+    const armored = ctx.files.get(String(rec.signature_file));
+    if (armored == null) {
+      findings.push(f("C-18.8", "error", `release at ${e.timestamp}: signature file '${rec.signature_file}' holds no bytes at the gate`));
+      continue;
+    }
+    if (rec.registry_sha256 && reg.sha256 && rec.registry_sha256 !== reg.sha256) {
+      findings.push(f(
+        "C-18.8",
+        "warn",
+        `release at ${e.timestamp} records registry ${String(rec.registry_sha256).slice(0, 12)}\u2026 but the registry in force is ${String(reg.sha256).slice(0, 12)}\u2026; the usual cause is signing against a stale mirror`,
+        ["re-verify against the recorded registry version out of the registry bundle history"]
+      ));
+    }
+    const msg = releaseMessage({
+      bundle: ctx.folderName,
+      transition: e.timestamp,
+      from_state: e.from_state,
+      to_state: e.to_state,
+      signer: rec.signer,
+      bundle_md_sha256: bundleSha,
+      registry_sha256: rec.registry_sha256 || reg.sha256
+    });
+    const enc = (s) => {
+      const u = new Uint8Array(s.length);
+      for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i) & 255;
+      return u;
+    };
+    const v = await verifyReleaseSignature({
+      armored: asText(armored),
+      message: enc(msg),
+      signersText: reg.signers,
+      namespace: wantNs,
+      principal: rec.signer,
+      at: e.timestamp,
+      sha512: ctx.sha512
+    });
+    if (!v.ok) {
+      findings.push(f(
+        "C-18.8",
+        "error",
+        `release at ${e.timestamp} does not verify (${v.reason}) for signer '${rec.signer}'`,
+        ["re-sign the transition over the exact released bundle.md", "confirm the signer key is registered and valid at the transition instant"]
+      ));
+    }
+  }
+}
+async function checkBundle(input, opts = {}) {
+  const findings = [];
+  const bundleRaw = input.files.get("bundle.md");
+  const ctx = {
+    folderName: input.folderName,
+    files: input.files,
+    // 1.13.0 (three-tier read model): paths known to exist in the
+    // authoritative store but whose bytes the caller deliberately did not
+    // carry (a tier-scoped client mirror eliding snapshots/ and _history/).
+    // Presence assertions ("this registered path must exist") consult
+    // files UNION elided via hasFile_; byte checks (hashing, parsing,
+    // history audits) stay files-only and skip elided content exactly as
+    // they skip absent content, so nothing is ever verified against bytes
+    // the caller does not hold. The gate and cli pass nothing here and are
+    // byte-complete as before.
+    elided: input.elidedPaths instanceof Set ? input.elidedPaths : new Set(Array.isArray(input.elidedPaths) ? input.elidedPaths : []),
+    sha256: input.sha256,
+    nowMs: input.nowMs,
+    maxPackageAgeDays: input.maxPackageAgeDays ?? 14,
+    maxReevalAgeDays: input.maxReevalAgeDays ?? 30,
+    knownSchemas: opts.knownSchemas ?? ["information@1", "information@2", "problem@1", "project@1", "action@1"],
+    resolveTarget: input.resolveTarget,
+    // D2.3: the key registry, injected exactly like resolveTarget. Absent
+    // is legal and means pre-migration behavior; absent WITH a
+    // post-migration release is an error, never a skip.
+    releaseRegistry: input.releaseRegistry || null,
+    sha512: input.sha512 || null,
+    fm: null,
+    body: ""
+  };
+  if (!bundleRaw) {
+    findings.push(f("C-13.1", "error", "bundle.md is missing"));
+  } else {
+    const parsed = parseFrontmatter(asText(bundleRaw));
+    findings.push(...parsed.findings);
+    ctx.fm = parsed.data;
+    ctx.body = parsed.body;
+    checkIdentity(ctx, findings);
+    checkFrontmatterContract(ctx, findings);
+    checkHeadings(ctx, findings);
+    checkStateLegality(ctx, findings);
+    checkWriteCompleteness(ctx, findings);
+    await checkInformationExtension(ctx, findings);
+    checkReleaseAuthority(ctx, findings);
+    checkRegisterIntegrity(ctx, findings);
+    await checkInfo2Contract(ctx, findings);
+    await checkReleaseSignature(ctx, findings);
+    checkGatheringGrammar(ctx, findings);
+    await checkMechanicalConformance(ctx, findings);
+    checkReferences(ctx, findings);
+    checkRecheckCoverage(ctx, findings);
+    checkProblemExtension(ctx, findings);
+    checkProjectExtension(ctx, findings);
+    checkActionExtension(ctx, findings);
+    checkCitationRegister(ctx, findings);
+    checkDeletionRecords(ctx, findings);
+    checkAppendOnly(ctx, findings);
+    checkHistoryCoherence(ctx, findings);
+  }
+  checkFormatHygiene(ctx, findings);
+  await checkQueueAndBase(ctx, findings);
+  const pass = !findings.some((x) => x.severity === "error");
+  return { pass, findings };
+}
 
 // src/setup.mjs
 var FIRST_STATE_JSON = JSON.stringify(
@@ -1412,88 +3822,52 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>BIO signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no BIO code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>BIO signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a BIO private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/gate.mjs
-var GATE_VERSION = "plane-gate/0.1";
-var sha256hex2 = async (s) => {
-  const b = await crypto.subtle.digest(
-    "SHA-256",
-    typeof s === "string" ? new TextEncoder().encode(s) : s
-  );
-  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-};
-function parseFrontmatter(text) {
-  const m = String(text || "").match(/^---\n([\s\S]*?)\n---\n?/);
-  if (!m) return null;
-  const fm = {};
-  for (const line of m[1].split("\n")) {
-    const i = line.indexOf(":");
-    if (i > 0) fm[line.slice(0, i).trim()] = line.slice(i + 1).trim();
-  }
-  return fm;
-}
-async function runGate({ bundleId, row, image, manifest, history, registers, dangling, hasCapture }) {
-  const findings = [];
-  const refuse = (check, detail, where) => findings.push({ check, detail, ...where ? { where } : {} });
-  if (!image || !image["bundle.md"] || typeof image["bundle.md"] !== "string")
-    refuse("G1_BUNDLE_MD", "bundle.md is missing or not inline");
-  else {
-    const fm = parseFrontmatter(image["bundle.md"]);
-    if (!fm) refuse("G1_FRONTMATTER", "bundle.md has no parseable frontmatter");
-    else {
-      if (fm.id !== bundleId)
-        refuse("G1_ID", `frontmatter id ${JSON.stringify(fm.id)} does not match bundle ${bundleId}`);
-      if (row && fm.object_type !== row.object_type)
-        refuse("G1_TYPE", `frontmatter object_type ${JSON.stringify(fm.object_type)} does not match the row ${JSON.stringify(row.object_type)}`);
-      if (row && fm.current_state !== row.current_state)
-        refuse("G1_STATE", `frontmatter current_state ${JSON.stringify(fm.current_state)} does not match the row ${JSON.stringify(row.current_state)}`);
-    }
-  }
-  const liveShas = {};
+var CATALOG_VERSION = "1.16.5";
+var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
+var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var te = new TextEncoder();
+async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry }) {
+  const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
   for (const [path, v] of Object.entries(image || {})) {
-    if (path.startsWith("_history/")) continue;
-    if (typeof v === "string") liveShas[path] = await sha256hex2(v);
+    if (typeof v === "string") files.set(path, v);
+    else elided.add(path);
   }
-  if (row && liveShas["bundle.md"] && liveShas["bundle.md"] !== row.bundle_sha)
-    refuse(
-      "G2_LIVE_SHA",
-      "live bundle.md does not hash to the recorded bundle_sha",
-      { want: row.bundle_sha, got: liveShas["bundle.md"] }
-    );
-  const EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-  const histSha = new Map(history.map((h) => [h.snap_key, h.sha256]));
-  for (const m of manifest) {
-    if (m.base === EMPTY_STRING_SHA2 || m.base === null) continue;
-    const snap = histSha.get(m.snap_key);
-    if (snap === void 0)
-      refuse("G3_CHAIN_SNAPSHOT", `manifest entry ${m.snap_key} has no bundle.md snapshot`);
-    else if (m.base !== snap)
-      refuse(
-        "G3_CHAIN_BASE",
-        `manifest entry ${m.snap_key} base does not match its snapshot`,
-        { base: m.base, snapshot: snap }
-      );
-  }
-  const regBySha = new Map(registers.map((r) => [r.capture_sha, r]));
-  for (const [path, v] of Object.entries(image || {})) {
-    if (path.startsWith("_history/") || typeof v === "string") continue;
-    const reg = regBySha.get(v.blobSha ?? v.sha256);
-    if (!reg) {
-      refuse("G4_UNREGISTERED", `live blob file has no register row`, { path });
-      continue;
-    }
-    const probe = await hasCapture(reg.capture_sha);
+  const { findings } = await checkBundle({
+    folderName: bundleId,
+    files,
+    elidedPaths: elided,
+    sha256: async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v)),
+    sha512: async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b)),
+    resolveTarget: (id) => knownIds.has(id),
+    releaseRegistry: releaseRegistry || null
+  });
+  const errors = findings.filter((f2) => f2.severity === "error").map((f2) => ({ check: f2.check, detail: f2.message, ...f2.repairs ? { repairs: f2.repairs } : {} }));
+  for (const r of registers || []) {
+    const probe = await hasCapture(r.capture_sha);
     if (!probe.present)
-      refuse("G4_MISSING_BYTES", `registered capture is absent from the working bucket`, { path, sha256: reg.capture_sha });
-    else if (typeof reg.bytes === "number" && probe.bytes !== reg.bytes)
-      refuse("G4_SIZE", `capture bytes differ from the register`, { path, want: reg.bytes, got: probe.bytes });
+      errors.push({
+        check: "PLANE_MISSING_BYTES",
+        detail: `registered capture is absent from the working bucket`,
+        where: { path: r.path, sha256: r.capture_sha }
+      });
+    else if (typeof r.bytes === "number" && probe.bytes !== r.bytes)
+      errors.push({
+        check: "PLANE_SIZE",
+        detail: `capture bytes differ from the register`,
+        where: { path: r.path, want: r.bytes, got: probe.bytes }
+      });
   }
-  for (const target of dangling)
-    refuse("G5_DANGLING_REF", `reference target does not exist`, { target });
-  return { gateVersion: GATE_VERSION, ok: findings.length === 0, findings };
+  return {
+    gateVersion: GATE_VERSION,
+    ok: errors.length === 0,
+    findings: errors,
+    warnings: findings.filter((f2) => f2.severity !== "error").length
+  };
 }
 
 // src/sshsig.mjs
-var te = new TextEncoder();
-var b64ToBytes = (b64) => {
+var te2 = new TextEncoder();
+var b64ToBytes2 = (b64) => {
   const bin = atob(b64.replace(/\s+/g, ""));
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
@@ -1547,7 +3921,7 @@ function parsePubkeyLine(line) {
   if (m.length < 2) throw new Error("pubkey: not an OpenSSH public key line");
   const [keyType, b64] = m;
   if (keyType !== "ssh-ed25519") throw new Error("pubkey: only ssh-ed25519 is supported, got " + keyType);
-  const blob = b64ToBytes(b64);
+  const blob = b64ToBytes2(b64);
   const r = new Rd(blob);
   const t = new TextDecoder().decode(r.str());
   if (t !== "ssh-ed25519") throw new Error("pubkey: wire type mismatch");
@@ -1556,7 +3930,7 @@ function parsePubkeyLine(line) {
   return { keyType, raw, b64, comment: m.slice(2).join(" ") };
 }
 function wirePubkey(raw) {
-  return cat(wStr(te.encode("ssh-ed25519")), wStr(raw));
+  return cat(wStr(te2.encode("ssh-ed25519")), wStr(raw));
 }
 function normalizeKey(entry) {
   const toks = String(entry || "").trim().split(/\s+/);
@@ -1574,7 +3948,7 @@ var dearmor = (text) => {
     /-----BEGIN SSH SIGNATURE-----\s*([\s\S]*?)\s*-----END SSH SIGNATURE-----/
   );
   if (!m) throw new Error("sshsig: missing armor");
-  return b64ToBytes(m[1]);
+  return b64ToBytes2(m[1]);
 };
 function parseSshsig(armored) {
   const blob = dearmor(armored);
@@ -1625,10 +3999,10 @@ async function verifySshsig(armored, message, expectNamespace, allowedKeys) {
     return { ok: false, reason: "UNKNOWN_KEY", keyB64: p.pubB64 };
   const hash = await crypto.subtle.digest(p.hashAlg === "sha512" ? "SHA-512" : "SHA-256", message);
   const signed = cat(
-    te.encode("SSHSIG"),
-    wStr(te.encode(p.namespace)),
+    te2.encode("SSHSIG"),
+    wStr(te2.encode(p.namespace)),
     wStr(p.reserved),
-    wStr(te.encode(p.hashAlg)),
+    wStr(te2.encode(p.hashAlg)),
     wStr(new Uint8Array(hash))
   );
   let key;
@@ -1641,12 +4015,12 @@ async function verifySshsig(armored, message, expectNamespace, allowedKeys) {
   return good ? { ok: true, keyB64: p.pubB64, namespace: p.namespace } : { ok: false, reason: "BAD_SIGNATURE", keyB64: p.pubB64 };
 }
 var NS_RATIFY = "bio-ratify";
-var ratifyStatement = (bundleId, bundleSha) => te.encode(`bio-ratify ${bundleId} ${bundleSha}
+var ratifyStatement = (bundleId, bundleSha) => te2.encode(`bio-ratify ${bundleId} ${bundleSha}
 `);
 
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
-var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var Store = class _Store extends DurableObject {
   constructor(ctx, env) {
@@ -1716,7 +4090,7 @@ var Store = class _Store extends DurableObject {
     const entries = [];
     for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json FROM manifest WHERE bundle_id=?`, bundleId)) {
       const files = JSON.parse(r.files_json);
-      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f) => f.name);
+      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f2) => f2.name);
       entries.push({
         key: r.snap_key,
         kind: r.kind,
@@ -1799,9 +4173,9 @@ var Store = class _Store extends DurableObject {
         return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
-      for (const f of files) {
-        if (f.text !== void 0 && f.text.length > INLINE_MAX)
-          return { ok: false, reason: "OVERSIZE_INLINE", path: f.path, bytes: f.text.length };
+      for (const f2 of files) {
+        if (f2.text !== void 0 && f2.text.length > INLINE_MAX)
+          return { ok: false, reason: "OVERSIZE_INLINE", path: f2.path, bytes: f2.text.length };
       }
       if (!cur) {
         this.sql.exec(
@@ -1809,10 +4183,10 @@ var Store = class _Store extends DurableObject {
           bundleId,
           snapKey,
           "promotion",
-          EMPTY_STRING_SHA,
+          EMPTY_STRING_SHA2,
           author,
           meta.last_updated || (/* @__PURE__ */ new Date()).toISOString(),
-          JSON.stringify(files.map((f) => f.path))
+          JSON.stringify(files.map((f2) => f2.path))
         );
       }
       if (cur) {
@@ -1844,21 +4218,21 @@ var Store = class _Store extends DurableObject {
              transition instant. Stamping server time here made that comparison
              fail on honest content. */
           meta.last_updated || (/* @__PURE__ */ new Date()).toISOString(),
-          JSON.stringify(files.map((f) => f.path))
+          JSON.stringify(files.map((f2) => f2.path))
         );
       }
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
-      for (const f of files)
+      for (const f2 of files)
         this.sql.exec(
           `INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`,
           bundleId,
-          f.path,
-          f.text ?? null,
-          f.blobSha ?? null,
-          f.bytes,
-          f.sha256
+          f2.path,
+          f2.text ?? null,
+          f2.blobSha ?? null,
+          f2.bytes,
+          f2.sha256
         );
-      const newSha = files.find((f) => f.path === "bundle.md")?.sha256;
+      const newSha = files.find((f2) => f2.path === "bundle.md")?.sha256;
       if (!newSha) return { ok: false, reason: "NO_BUNDLE_MD" };
       this.sql.exec(
         `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,classification,bundle_sha,row_version)
@@ -2181,6 +4555,11 @@ var Store = class _Store extends DurableObject {
        The gate and the signature check run at the control plane, which also
        owns all R2 traffic. This store only hands out the facts and commits
        the published rows in one transaction. */
+  /* Facts ratify needs that are not in the image: the row for its CAS check and
+     the active signer set. The manifest, history, and dangling-ref lists are
+     still returned because the migrate tool and the older gate consumed them;
+     plane-gate/1.0 reads all of that out of the image instead, since the catalog
+     wants the bundle as a filesystem rather than as query results. */
   gateFacts(bundleId) {
     const row = this.#one(
       `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`,
@@ -2491,6 +4870,14 @@ var index_default = {
     const url = new URL(req.url);
     if (req.method === "OPTIONS")
       return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
+    if (req.method === "GET" && (url.pathname === "/version" || url.pathname === "/version/"))
+      return new Response(
+        (env.VERSION || "0.0.0") + "\n",
+        { headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*"
+        } }
+      );
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
@@ -2784,14 +5171,12 @@ var index_default = {
       const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
       const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body2.bundleId)}`)).json()).result;
       const r2 = typeof env.CAPTURES?.head === "function";
+      const known = new Set(((await (await stub.fetch("http://do/list")).json()).result || []).map((b) => b.bundle_id));
       const gate = await runGate({
         bundleId: body2.bundleId,
-        row: facts.row,
         image,
-        manifest: facts.manifest,
-        history: facts.history,
+        knownIds: known,
         registers: facts.registers,
-        dangling: facts.dangling,
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
