@@ -382,7 +382,7 @@ An archive failure does not stop the bundle, and the failed attempt stays in the
 register, because that is a different and more honest claim than no attempt.
 
 ### S-7 Monitoring as mechanical writers
-**Status: todo** · Depends: S-5
+**Status: envelope enforced (0.10.0), the daemon itself next** · Depends: S-5
 
 Source change detection, deadline and recheck sweeps, inside the
 `MECHANICAL_FIELD_SETS` envelope. C-20.1 enforces the envelope by diffing history
@@ -391,6 +391,43 @@ creation lands at `collected` and never higher.
 
 **Accepts when:** a monitor tick that touches a field outside its declared set is
 refused by the gate, proven by a deliberate violation test.
+
+**Accepted, 0.10.0**, 20 assertions in `test/mechanical.test.mjs`, written as
+deliberate violations so the gate had to refuse each one.
+
+The store now carries `writer` and `operation` on every manifest entry and emits
+both in the verbatim promotion record, which is where C-20.1 reads them. A
+mechanical promotion naming an operation the catalog does not know is refused at
+the WRITE, so a daemon cannot leave an unaccountable mechanical revision in the
+history and find out at ratification.
+
+Refused by the gate, each with the field or section named: a monitor tick that
+changed `criticality`, which is outside its declared set; a tick that rewrote the
+Summary, when a mechanical writer touches only the Session Log; a sweep that
+changed any frontmatter at all, its declared set being empty; and a mechanical
+creation landing at `verified`, when daemon creations never elevate. A
+hand-authored promotion doing all of those things is held to no envelope and
+produces no finding, which is the point: the constraint is on the actor that
+claims to be mechanical, not on everyone.
+
+**One real defect this uncovered, and it had been silently disabling the audit.**
+The verbatim promotion record listed the PRE-image file hashes where the catalog
+expects the hashes the promotion WROTE. C-20.1 compares live against the recorded
+bundle.md hash to decide whether live is still that promotion's result, so with
+the wrong hashes it concluded the post state was unknowable and skipped every
+mechanical entry rather than judging it. The audit was returning clean because it
+was not looking. `classifyDivergence` rebuilds its chain from the same field, so
+it was equally blind.
+
+`files_json` now stores name and hash pairs, and the two consumers get the views
+they each need: the manifest entry gets names, because C-20.1 asks whether a later
+entry touched bundle.md, and the promotion record gets the hashes. The live record
+re-audits at 30 clean with the changed projection.
+
+**Still owed:** the daemon itself, which fetches a monitored source, compares it
+to the recorded capture hash, and writes the tick. The envelope it must write
+inside is now enforced, which is the right order: the constraint exists before the
+thing it constrains.
 
 ### S-8 Scale benchmark, with the real gate in the path
 **Status: todo** · Debt: D-12 · Depends: S-2

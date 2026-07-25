@@ -63,6 +63,13 @@ CREATE TABLE IF NOT EXISTS manifest (
   base       TEXT,
   author     TEXT,
   created    TEXT NOT NULL,
+  -- Who wrote it and what operation they claim. C-20.1 keys entirely off these
+  -- two: a promotion marked mechanical is held to the field set its named
+  -- operation declares, and one that names no registered operation is refused.
+  -- Null for a hand-authored promotion, which is the common case and is not
+  -- held to any envelope beyond the ordinary checks.
+  writer     TEXT,
+  operation  TEXT,
   files_json TEXT NOT NULL,
   PRIMARY KEY (bundle_id, snap_key)
 );
@@ -4270,6 +4277,13 @@ var Store = class _Store extends DurableObject {
       const t = s.trim();
       if (t) this.sql.exec(t);
     }
+    for (const [table, column, decl] of [
+      ["manifest", "writer", "TEXT"],
+      ["manifest", "operation", "TEXT"]
+    ]) {
+      const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
+      if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    }
   }
   #rows(q, ...a) {
     return [...this.sql.exec(q, ...a)];
@@ -4322,8 +4336,10 @@ var Store = class _Store extends DurableObject {
       snapFiles.get(r.snap_key).push({ name: r.path, sha256: r.sha256 });
     }
     const entries = [];
-    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json FROM manifest WHERE bundle_id=?`, bundleId)) {
-      const files = JSON.parse(r.files_json);
+    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json, writer, operation FROM manifest WHERE bundle_id=?`, bundleId)) {
+      const written = JSON.parse(r.files_json);
+      const writtenPairs = written.map((f2) => typeof f2 === "string" ? { name: f2, sha256: null } : f2);
+      const files = writtenPairs.map((f2) => f2.name);
       const snapshotted = (snapFiles.get(r.snap_key) || []).map((f2) => f2.name);
       entries.push({
         key: r.snap_key,
@@ -4332,15 +4348,20 @@ var Store = class _Store extends DurableObject {
         author: r.author,
         created: r.created,
         files,
-        snapshotted
+        snapshotted,
+        ...r.writer ? { writer: r.writer, operation: r.operation } : {}
       });
       img[`_history/promotion_${r.snap_key}.json`] = JSON.stringify({
         target: bundleId,
         base: r.base,
-        files: snapFiles.get(r.snap_key) || [],
+        files: writtenPairs,
         created: r.created,
         author: r.author,
-        skill_version: "bio-plane"
+        skill_version: "bio-plane",
+        /* C-20.1 reads the writer and operation from HERE, not from the
+           manifest, so a mechanical claim that is not in the promotion record is
+           a claim the auditor never sees. */
+        ...r.writer ? { writer: r.writer, operation: r.operation } : {}
       }, null, 2);
     }
     if (entries.length) {
@@ -4398,6 +4419,15 @@ var Store = class _Store extends DurableObject {
   promote(pkg) {
     if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
     const { bundleId, base, files, meta, snapKey, author, register = [] } = pkg;
+    const writer = pkg.writer === "mechanical" ? "mechanical" : null;
+    const operation = writer ? pkg.operation : null;
+    if (writer && !(operation in MECHANICAL_FIELD_SETS))
+      return {
+        ok: false,
+        reason: "UNDECLARED_OPERATION",
+        detail: `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS).join(", ")}`,
+        got: operation ?? null
+      };
     if (Array.isArray(pkg.refs) && pkg.refs.length)
       return {
         ok: false,
@@ -4431,14 +4461,16 @@ var Store = class _Store extends DurableObject {
       }
       if (!cur) {
         this.sql.exec(
-          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
+          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           bundleId,
           snapKey,
           pkg.replay ? "promotion-replay" : "promotion",
           EMPTY_STRING_SHA2,
           author,
           meta.last_updated || (/* @__PURE__ */ new Date()).toISOString(),
-          JSON.stringify(files.map((f2) => f2.path))
+          JSON.stringify(files.map((f2) => ({ name: f2.path, sha256: f2.sha256 }))),
+          writer,
+          operation
         );
       }
       if (cur) {
@@ -4454,7 +4486,7 @@ var Store = class _Store extends DurableObject {
             (/* @__PURE__ */ new Date()).toISOString()
           );
         this.sql.exec(
-          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
+          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           /* The catalog switches on kind === 'promotion' (C-12.2, C-20.1), so
              that is the vocabulary. A creation is still distinguishable, by a
              base equal to the empty-string SHA, which is how the accelerator
@@ -4470,7 +4502,9 @@ var Store = class _Store extends DurableObject {
              transition instant. Stamping server time here made that comparison
              fail on honest content. */
           meta.last_updated || (/* @__PURE__ */ new Date()).toISOString(),
-          JSON.stringify(files.map((f2) => f2.path))
+          JSON.stringify(files.map((f2) => ({ name: f2.path, sha256: f2.sha256 }))),
+          writer,
+          operation
         );
       }
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);

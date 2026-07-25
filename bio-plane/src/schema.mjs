@@ -62,6 +62,13 @@ CREATE TABLE IF NOT EXISTS manifest (
   base       TEXT,
   author     TEXT,
   created    TEXT NOT NULL,
+  -- Who wrote it and what operation they claim. C-20.1 keys entirely off these
+  -- two: a promotion marked mechanical is held to the field set its named
+  -- operation declares, and one that names no registered operation is refused.
+  -- Null for a hand-authored promotion, which is the common case and is not
+  -- held to any envelope beyond the ordinary checks.
+  writer     TEXT,
+  operation  TEXT,
   files_json TEXT NOT NULL,
   PRIMARY KEY (bundle_id, snap_key)
 );

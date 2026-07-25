@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 /* The catalog's own frontmatter parser. References are read from the document
    with the same code that later checks them, so the store's projection and the
    checker's view cannot disagree about what the document says. */
-import { parseFrontmatter, checkGatheringGrammar } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, checkGatheringGrammar, MECHANICAL_FIELD_SETS } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 
 /* BIO store, plane layer, step 1.
@@ -43,6 +43,18 @@ export class Store extends DurableObject {
   #migrate() {
     const bare = (this.env.SCHEMA || SCHEMA_TEXT || "").split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
+    /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
+       columns added after a store was first written need adding by hand. Done
+       here rather than in a versioned migration ladder because these are
+       additive and nullable: an older row simply has no writer, which is exactly
+       what a hand-authored promotion means. */
+    for (const [table, column, decl] of [
+      ["manifest", "writer", "TEXT"],
+      ["manifest", "operation", "TEXT"],
+    ]) {
+      const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
+      if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    }
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -100,17 +112,33 @@ export class Store extends DurableObject {
       snapFiles.get(r.snap_key).push({ name: r.path, sha256: r.sha256 });
     }
     const entries = [];
-    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json FROM manifest WHERE bundle_id=?`, bundleId)) {
-      const files = JSON.parse(r.files_json);
+    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json, writer, operation FROM manifest WHERE bundle_id=?`, bundleId)) {
+      /* files_json holds the files as WRITTEN by this promotion, with their
+         hashes. Two consumers want different views of it and both are right:
+         the manifest entry wants names, because C-20.1 asks whether a later
+         entry touched bundle.md; the verbatim promotion record wants the
+         hashes, because that is how classifyDivergence rebuilds the chain and
+         how C-20.1 decides whether live is still this promotion's result. An
+         earlier version stored only names here and put the PRE-image hashes in
+         the record, which made every mechanical audit unknowable and silently
+         skipped. */
+      const written = JSON.parse(r.files_json);
+      const writtenPairs = written.map((f) => typeof f === "string" ? { name: f, sha256: null } : f);
+      const files = writtenPairs.map((f) => f.name);
       const snapshotted = (snapFiles.get(r.snap_key) || []).map((f) => f.name);
       entries.push({ key: r.snap_key, kind: r.kind, base: r.base, author: r.author,
-                     created: r.created, files, snapshotted });
+                     created: r.created, files, snapshotted,
+                     ...(r.writer ? { writer: r.writer, operation: r.operation } : {}) });
       /* The verbatim promotion record, in the shape the original accelerator
          wrote and the catalog reads: what was targeted, what it was based on,
          and the hash of every file as promoted. */
       img[`_history/promotion_${r.snap_key}.json`] = JSON.stringify({
-        target: bundleId, base: r.base, files: snapFiles.get(r.snap_key) || [],
+        target: bundleId, base: r.base, files: writtenPairs,
         created: r.created, author: r.author, skill_version: "bio-plane",
+        /* C-20.1 reads the writer and operation from HERE, not from the
+           manifest, so a mechanical claim that is not in the promotion record is
+           a claim the auditor never sees. */
+        ...(r.writer ? { writer: r.writer, operation: r.operation } : {}),
       }, null, 2);
     }
     if (entries.length) {
@@ -166,6 +194,17 @@ export class Store extends DurableObject {
   promote(pkg) {
     if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
     const { bundleId, base, files, meta, snapKey, author, register = [] } = pkg;
+    /* A mechanical writer must name an operation the catalog knows, because
+       C-20.1 holds it to that operation's declared field set and refuses one
+       that names nothing. Validated here so a daemon cannot write an
+       unaccountable mechanical revision and discover the problem at
+       ratification, when the revision is already in the history. */
+    const writer = pkg.writer === "mechanical" ? "mechanical" : null;
+    const operation = writer ? pkg.operation : null;
+    if (writer && !(operation in MECHANICAL_FIELD_SETS))
+      return { ok: false, reason: "UNDECLARED_OPERATION",
+               detail: `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS).join(", ")}`,
+               got: operation ?? null };
     /* References used to arrive in the payload AND live in the frontmatter, and
        only the frontmatter was ever checked, so the two could disagree with
        nothing noticing (DEBT D-21). The document is authoritative. A caller
@@ -225,10 +264,10 @@ export class Store extends DurableObject {
          is what this method did before, leaves the chain with no first link. */
       if (!cur) {
         this.sql.exec(
-          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
+          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           bundleId, snapKey, pkg.replay ? "promotion-replay" : "promotion", EMPTY_STRING_SHA, author,
           meta.last_updated || new Date().toISOString(),
-          JSON.stringify(files.map((f) => f.path)));
+          JSON.stringify(files.map((f) => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
       }
       if (cur) {
         for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
@@ -236,7 +275,7 @@ export class Store extends DurableObject {
             `INSERT OR REPLACE INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`,
             bundleId, snapKey, r.path, r.content, r.blob_sha, r.sha256, new Date().toISOString());
         this.sql.exec(
-          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`,
+          `INSERT OR REPLACE INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
           /* The catalog switches on kind === 'promotion' (C-12.2, C-20.1), so
              that is the vocabulary. A creation is still distinguishable, by a
              base equal to the empty-string SHA, which is how the accelerator
@@ -248,7 +287,7 @@ export class Store extends DurableObject {
              transition instant. Stamping server time here made that comparison
              fail on honest content. */
           meta.last_updated || new Date().toISOString(),
-          JSON.stringify(files.map(f => f.path)));
+          JSON.stringify(files.map(f => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
       }
 
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
