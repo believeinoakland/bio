@@ -63,9 +63,23 @@ repo's own `verifySshsig` accepts it and refuses wrong namespace, altered bytes,
 and a stranger-only allow list; and the installer's real verification path accepts
 the committed manifest. Finally the published bytes were fetched back from
 `raw.githubusercontent.com/believeinoakland/bio/main/release`, the path the
-installer actually uses, re-verified, and confirmed to carry the ACL fix. The
-deployed instance still runs 0.14.0 until someone with Cloudflare credentials
-deploys; no `PUBLIC_TOKEN` is set there, so nothing was exposed in practice.
+installer actually uses, re-verified, and confirmed to carry the ACL fix.
+
+**biosmoke7 runs 0.14.1 as of July 25.** Updated through the same shape the
+wizard's update path uses: `keep_bindings` for `secret_text` and
+`durable_object_namespace`, R2 bound explicitly because both buckets exist, and no
+`migrations` field, because the `Store` class already exists and its storage
+backend never changes. Verified after: the module Cloudflare is running is
+byte-identical to the signed release asset (sha256
+`9bccbd44596b1ad423afc5f256a679e0c22519458fe0cabe91a2c3bdbc84a37a`), its `op=index`
+classes read admin, member, probe with `publishedlist` still public, all seven
+bindings survived including the three secrets, `stats` is identical before and
+after (30 bundles, 137 files, 239 history, 10 refs, 87 register, dbBytes
+1200128), `op=audit` reports 30 checked with zero findings, a member still reads
+the index and unauthenticated and bogus credentials are refused, and the
+`newgroup` wizard on the same account was untouched. No `PUBLIC_TOKEN` is bound on
+this instance, so the public-class refusal itself is proven by
+`test/fence.test.mjs` and by the deployed bytes rather than by a live call.
 
 ---
 
