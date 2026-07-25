@@ -4315,6 +4315,80 @@ var Store = class _Store extends DurableObject {
     const dot = name.lastIndexOf(".");
     return dot === -1 ? `_history/${dir}${name}_${snapKey}` : `_history/${dir}${name.slice(0, dot)}_${snapKey}${name.slice(dot)}`;
   }
+  /* A whole-store conformance pass, run WHERE THE DATA IS.
+   *
+   * The benchmark that produced this: gating 20,000 bundles from outside costs
+   * about 2,060 seconds on the deployed plane and 63 locally, and roughly 97% of
+   * the difference is one network round trip per image. The store and the checks
+   * are not the constraint; fetching bundles one at a time is. The catalog is a
+   * pure function over an injected filesystem and the images are already here, so
+   * the pass belongs here too.
+   *
+   * Paginated rather than exhaustive, because a Durable Object has a CPU budget
+   * and 20,000 bundles is about 63 seconds of work. A page of a few hundred is
+   * well inside it, and a hundred calls instead of twenty thousand captures
+   * essentially all of the benefit. The cursor is the last bundle id seen, so a
+   * pass is resumable and does not depend on a snapshot of the store.
+   *
+   * Blob-backed files are declared elided, exactly as the gate does: existence
+   * assertions see them, byte checks skip them, and capture integrity was proven
+   * at write time by the capture op rather than re-proven here.
+   */
+  async auditPass({ after = "", limit = 200 } = {}) {
+    const cap = Math.max(1, Math.min(1e3, Number(limit) || 200));
+    const known = new Set(this.#rows(`SELECT bundle_id FROM bundles`).map((r) => r.bundle_id));
+    const page = this.#rows(
+      `SELECT bundle_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`,
+      after,
+      cap
+    );
+    const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+    const te3 = new TextEncoder();
+    const sha2562 = async (v) => hex2(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te3.encode(v) : v));
+    const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
+    const tally = {};
+    const offenders = [];
+    let clean = 0, withErrors = 0;
+    for (const row of page) {
+      const img = this.readImage(row.bundle_id) || {};
+      const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
+      for (const [path, v] of Object.entries(img)) {
+        if (typeof v === "string") files.set(path, v);
+        else elided.add(path);
+      }
+      const { findings } = await checkBundle({
+        folderName: row.bundle_id,
+        files,
+        elidedPaths: elided,
+        sha256: sha2562,
+        sha512,
+        resolveTarget: (id) => known.has(id)
+      });
+      const errs = findings.filter((f2) => f2.severity === "error");
+      if (!errs.length) {
+        clean++;
+        continue;
+      }
+      withErrors++;
+      for (const e of errs) tally[e.check] = (tally[e.check] || 0) + 1;
+      if (offenders.length < 20)
+        offenders.push({
+          bundleId: row.bundle_id,
+          errors: errs.slice(0, 5).map((e) => ({ check: e.check, detail: e.message }))
+        });
+    }
+    const last = page.length ? page[page.length - 1].bundle_id : after;
+    return {
+      ok: true,
+      checked: page.length,
+      clean,
+      withErrors,
+      tally,
+      offenders,
+      cursor: page.length === cap ? last : null,
+      total: known.size
+    };
+  }
   /** The byte-complete image the gate consumes. One bundle, one call, no
    *  per-file resolution. This is the operation that cost ~43s on Drive.
    *
@@ -5033,6 +5107,10 @@ var Store = class _Store extends DurableObject {
         signerlist: () => this.signerList(),
         signerset: () => this.signerSet(body || {}),
         gatefacts: () => this.gateFacts(url.searchParams.get("id")),
+        audit: () => this.auditPass({
+          after: url.searchParams.get("after") || "",
+          limit: url.searchParams.get("limit")
+        }),
         publish: () => this.publish(body || {}),
         verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
         publishedlist: () => this.publishedList(),
@@ -5080,6 +5158,9 @@ var OPS = {
      captured and records the answer as a mechanical monitor-tick, inside the
      field set C-20.1 holds that operation to. */
   monitor: { classes: ["admin", "member", "probe"], mutating: true },
+  /* A conformance pass over the whole store, run inside the Durable Object where
+     the images already are. Read-only, paginated, and resumable by cursor. */
+  audit: { classes: ["admin", "member", "probe"], mutating: false },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -5124,7 +5205,8 @@ var SESSION_OPS = {
     "ratify",
     "inbox",
     "inboxget",
-    "inboxresolve"
+    "inboxresolve",
+    "audit"
   ]),
   admin: /* @__PURE__ */ new Set([
     "promote",
@@ -5138,6 +5220,7 @@ var SESSION_OPS = {
     "inbox",
     "inboxget",
     "inboxresolve",
+    "audit",
     "memberadd",
     "memberset",
     "signeradd",

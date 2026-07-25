@@ -532,6 +532,40 @@ their own systems, and the source file is removed in a commit that says why.
 
 ---
 
+### Out-of-band, 0.12.0: the pass moves inside (D-26)
+
+The benchmark named one bottleneck and this closes it. `op=audit` runs the
+catalog inside the Durable Object where the images already are, paginated by
+cursor because a Durable Object has a CPU budget and 20,000 bundles is about four
+seconds of work.
+
+| | 5,000 | 20,000 |
+|---|---|---|
+| gated pass from outside, local | 15.2s | 63.9s |
+| in-object pass, local | 1.1s over 11 calls | 3.9s over 41 calls |
+| per bundle | 0.22ms | 0.20ms |
+| deployed, from outside, sequential | ~515s | ~2,064s |
+| deployed, in-object (calls x round trip + work) | ~2.2s | ~8s |
+
+Roughly 250x on the deployed plane, and the reason is not cleverness: it is that
+97% of the old figure was network, and the work was never the expensive part.
+
+The assertion that matters is agreement, not speed. A faster answer that differs
+is worthless, so the suite gates every bundle from outside and from inside and
+compares the clean count, the error count, and the tally check for check. It also
+proves the pagination is honest: every bundle seen exactly once across many pages,
+the same verdict as one large page, and a final page that says there is no more.
+
+Offenders are reported but bounded at twenty, because a pass over a broken store
+must not answer with a megabyte of repetition; the tally counts all of them and
+the sample shows what they look like.
+
+**One defect in my own benchmark, found by writing this suite.** The synthetic ids
+used a six-digit sequence where `BUNDLE_ID_RE` is four, so every "clean" bundle in
+the first benchmark run was quietly failing C-1.2 and the numbers were measured
+over non-conformant input. Re-measured with valid ids; the figures held, but they
+were not the figures I thought I was reporting.
+
 ## Out-of-band fixes
 
 Small, self-contained corrections that do not belong to a numbered step.

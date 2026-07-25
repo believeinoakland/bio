@@ -66,6 +66,9 @@ const OPS = {
      captured and records the answer as a mechanical monitor-tick, inside the
      field set C-20.1 holds that operation to. */
   monitor:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* A conformance pass over the whole store, run inside the Durable Object where
+     the images already are. Read-only, paginated, and resumable by cursor. */
+  audit:      { classes: ["admin", "member", "probe"],           mutating: false },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -108,9 +111,9 @@ const OPS = {
    sessions additionally manage the roster and keys. */
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
-                   "inbox", "inboxget", "inboxresolve"]),
+                   "inbox", "inboxget", "inboxresolve", "audit"]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
-                   "inbox", "inboxget", "inboxresolve",
+                   "inbox", "inboxget", "inboxresolve", "audit",
                    "memberadd", "memberset", "signeradd", "signerset"]),
 };
 

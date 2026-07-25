@@ -59,7 +59,11 @@ const md = (id, i) => [
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", "",
 ].join("\n");
 
-const id = (i) => `INFO-2026-${String(i).padStart(6, "0")}-synthetic`;
+/* Four digits in the sequence, not six: BUNDLE_ID_RE is \d{4}-\d{4}, and an
+   id outside the grammar makes every bundle non-conformant, which measures and
+   asserts the wrong thing. The first version of this used six and every
+   "clean" bundle was quietly failing C-1.2. */
+const id = (i) => `INFO-2026-${String(i).padStart(4, "0")}-synthetic`;
 
 console.log(`\n=== ${N} bundles, local workerd SQLite, no network ===\n`);
 
@@ -124,7 +128,19 @@ for (let i = 0; i < SAMPLE; i++) {
 }
 const perBundle = (now() - t) / SAMPLE;
 console.log(`read+gate        ${perBundle.toFixed(2).padStart(6)}ms per bundle   sampled ${SAMPLE}`);
-console.log(`\nwhole-store gated pass, extrapolated: ${ms(perBundle * N)} for ${N} bundles`);
+console.log(`\nwhole-store gated pass, from OUTSIDE, extrapolated: ${ms(perBundle * N)} for ${N} bundles`);
+
+/* The same pass, run inside the Durable Object where the images already are. */
+let inside = 0, seen = 0, after = "", pages = 0;
+for (;;) {
+  const s0 = now();
+  const r = (await get(`op=audit&limit=500&after=${encodeURIComponent(after)}`)).result;
+  inside += now() - s0; seen += r.checked; pages++;
+  if (!r.cursor) break;
+  after = r.cursor;
+}
+console.log(`in-object pass   ${String(inside).padStart(6)}ms   ${seen} bundles over ${pages} calls, ${(inside / seen).toFixed(2)}ms each`);
+console.log(`  same work from outside would be ${ms(perBundle * seen)}: ${(perBundle * seen / (inside || 1)).toFixed(1)}x`);
 console.log(`  and on the deployed plane, adding ~100ms fixed round trip per image read:`);
 console.log(`  ${ms((perBundle + 100) * N)} sequential, or ${ms((perBundle + 100) * N / 20)} at 20 in flight`);
 

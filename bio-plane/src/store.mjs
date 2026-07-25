@@ -2,7 +2,8 @@ import { DurableObject } from "cloudflare:workers";
 /* The catalog's own frontmatter parser. References are read from the document
    with the same code that later checks them, so the store's projection and the
    checker's view cannot disagree about what the document says. */
-import { parseFrontmatter, checkGatheringGrammar, MECHANICAL_FIELD_SETS } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, checkGatheringGrammar, MECHANICAL_FIELD_SETS,
+         checkBundle } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 
 /* BIO store, plane layer, step 1.
@@ -86,6 +87,66 @@ export class Store extends DurableObject {
     return dot === -1
       ? `_history/${dir}${name}_${snapKey}`
       : `_history/${dir}${name.slice(0, dot)}_${snapKey}${name.slice(dot)}`;
+  }
+
+
+  /* A whole-store conformance pass, run WHERE THE DATA IS.
+   *
+   * The benchmark that produced this: gating 20,000 bundles from outside costs
+   * about 2,060 seconds on the deployed plane and 63 locally, and roughly 97% of
+   * the difference is one network round trip per image. The store and the checks
+   * are not the constraint; fetching bundles one at a time is. The catalog is a
+   * pure function over an injected filesystem and the images are already here, so
+   * the pass belongs here too.
+   *
+   * Paginated rather than exhaustive, because a Durable Object has a CPU budget
+   * and 20,000 bundles is about 63 seconds of work. A page of a few hundred is
+   * well inside it, and a hundred calls instead of twenty thousand captures
+   * essentially all of the benefit. The cursor is the last bundle id seen, so a
+   * pass is resumable and does not depend on a snapshot of the store.
+   *
+   * Blob-backed files are declared elided, exactly as the gate does: existence
+   * assertions see them, byte checks skip them, and capture integrity was proven
+   * at write time by the capture op rather than re-proven here.
+   */
+  async auditPass({ after = "", limit = 200 } = {}) {
+    const cap = Math.max(1, Math.min(1000, Number(limit) || 200));
+    const known = new Set(this.#rows(`SELECT bundle_id FROM bundles`).map((r) => r.bundle_id));
+    const page = this.#rows(
+      `SELECT bundle_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`, after, cap);
+    const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+    const te = new TextEncoder();
+    const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
+    const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
+
+    const tally = {}; const offenders = [];
+    let clean = 0, withErrors = 0;
+    for (const row of page) {
+      const img = this.readImage(row.bundle_id) || {};
+      const files = new Map(), elided = new Set();
+      for (const [path, v] of Object.entries(img)) {
+        if (typeof v === "string") files.set(path, v); else elided.add(path);
+      }
+      const { findings } = await checkBundle({
+        folderName: row.bundle_id, files, elidedPaths: elided,
+        sha256, sha512, resolveTarget: (id) => known.has(id),
+      });
+      const errs = findings.filter((f) => f.severity === "error");
+      if (!errs.length) { clean++; continue; }
+      withErrors++;
+      for (const e of errs) tally[e.check] = (tally[e.check] || 0) + 1;
+      /* Bounded: a pass over a broken store must not answer with a megabyte of
+         repetition. The tally says how much, these say what it looks like. */
+      if (offenders.length < 20)
+        offenders.push({ bundleId: row.bundle_id,
+                         errors: errs.slice(0, 5).map((e) => ({ check: e.check, detail: e.message })) });
+    }
+    const last = page.length ? page[page.length - 1].bundle_id : after;
+    return {
+      ok: true, checked: page.length, clean, withErrors, tally, offenders,
+      cursor: page.length === cap ? last : null,
+      total: known.size,
+    };
   }
 
   /** The byte-complete image the gate consumes. One bundle, one call, no
@@ -751,6 +812,8 @@ export class Store extends DurableObject {
         signerlist: () => this.signerList(),
         signerset: () => this.signerSet(body || {}),
         gatefacts: () => this.gateFacts(url.searchParams.get("id")),
+        audit: () => this.auditPass({ after: url.searchParams.get("after") || "",
+                                      limit: url.searchParams.get("limit") }),
         publish: () => this.publish(body || {}),
         verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
         publishedlist: () => this.publishedList(),
