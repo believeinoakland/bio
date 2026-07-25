@@ -122,6 +122,56 @@ t("unauthenticated is refused",
 t("a GET is refused", (await (await mf.dispatchFetch("http://x/api/?op=acquire&token=mem-acq")).json()).error,
   "acquire is a POST");
 
+console.log("\n--- acquisition becomes evidence in the record ---");
+{
+  /* End to end: the browser's own assembly of a captured document into a bundle,
+     then the catalog's verdict on the result. The document is registered as a
+     blob and its bytes are supplied here so the byte checks actually run, which
+     the gate deliberately skips (they were proven at capture). */
+  const { SETUP_HTML } = await import("../src/setup.mjs");
+  const script = SETUP_HTML.slice(SETUP_HTML.lastIndexOf("<script>") + 8, SETUP_HTML.lastIndexOf("</script>"));
+  const el = () => ({ addEventListener() {}, classList: { add() {}, remove() {} },
+    textContent: "", innerHTML: "", value: "", style: {}, hidden: false, dataset: {} });
+  const sb = {
+    document: { querySelector: () => el(), querySelectorAll: () => [], getElementById: () => el(),
+                addEventListener() {}, createElement: () => el(), body: { appendChild() {}, removeChild() {} } },
+    location: { hash: "", pathname: "/", origin: "https://x" }, history: { replaceState() {} },
+    sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    fetch: async () => ({ ok: true, status: 200, json: async () => ({ ok: true }) }),
+    URLSearchParams, console, JSON, Date, RegExp, String, Number, Object, Array,
+    crypto: (await import("node:crypto")).webcrypto, setTimeout, TextEncoder,
+    navigator: { clipboard: { writeText: async () => {} } },
+  };
+  sb.window = sb;
+  const ui = new Function(...Object.keys(sb),
+    script + "\n;return { mdFor, docFiles, FIRST_STATE, schemaFor };")(...Object.values(sb));
+
+  const NOW = "2026-07-24T12:00:00Z";
+  const ID = "INFO-2026-0600-captured-report";
+  t("a bundle carrying a document is information@2", ui.schemaFor("information", true), "information@2");
+  t("and one without stays information@1", ui.schemaFor("information", false), "information@1");
+
+  const body = ui.mdFor(ID, "information", "collected", "Captured report", "What the report shows.", NOW, true);
+  const sha256Text = async (v) => createHash("sha256").update(v, "utf8").digest("hex");
+  const files = await ui.docFiles(body, a.document, await sha256Text(body));
+  t("three files: the record, the register, and the document", files.map((f) => f.path).sort(),
+    ["bundle.md", "data/provenance.json", "snapshots/report.pdf"]);
+  t("the document is a blob reference, not inlined", files.find((f) => f.path === a.document.file).blobSha, DOC_SHA);
+
+  const { checkBundle } = await import("../checks/bio-checks.mjs");
+  const map = new Map();
+  for (const fl of files) map.set(fl.path, fl.text !== undefined ? fl.text : DOC);
+  const { findings } = await checkBundle({
+    folderName: ID, files: map,
+    sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
+    sha512: async (b) => new Uint8Array(await (await import("node:crypto")).webcrypto.subtle.digest("SHA-512", b)),
+    resolveTarget: () => true,
+  });
+  const errs = findings.filter((x) => x.severity === "error");
+  for (const x of errs) console.log(`         ${x.check}: ${x.message.slice(0, 130)}`);
+  t("the assembled bundle has zero findings", errs.length, 0);
+}
+
 await mf.dispose();
 console.log(`\nacquire: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

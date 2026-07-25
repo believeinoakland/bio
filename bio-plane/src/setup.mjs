@@ -225,6 +225,21 @@ table.rec tr.row:hover td{background:#F6F7F2}
   <input id="n-title" placeholder="what this is about">
   <label for="n-body">What do you know?</label>
   <textarea id="n-body" rows="14" placeholder="Write it plainly. Markdown headings and lists work."></textarea>
+  <div id="n-src">
+    <div class="card">
+      <p style="margin:0 0 10px"><b>Is there a document behind this?</b> Give its web address and
+      this copy will fetch it, hash it at the moment it arrives, keep the bytes, and record where
+      it came from. Leave both blank if you are writing down something you know rather than
+      capturing something published.</p>
+      <label for="n-loc">Web address of the document</label>
+      <input id="n-loc" placeholder="https://..." spellcheck="false">
+      <p class="hint">Must be an https address on a public site. This copy will not fetch anything else.</p>
+      <label for="n-auth">Who issued it?</label>
+      <input id="n-auth" placeholder="City Auditor, Public Works Department, a named newspaper">
+      <p class="hint">Who issued the document and how faithfully it was captured are two separate
+      claims. Both get recorded, and neither stands in for the other.</p>
+    </div>
+  </div>
   <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
   <p class="err" id="n-err"></p>
 </section>
@@ -603,7 +618,13 @@ const HEADINGS = ${HEADINGS_JSON};
    typing what they know has no document, so @2 would demand a register with
    nothing honest to put in it. Material arriving WITH a document is @2 and
    carries custody, which is the capture path (PLAN.md S-5), not this one. */
+/* information@1 for a member writing down what they know, because the @2
+   contract makes the intake provenance register mandatory and a register
+   describes captured DOCUMENTS. The moment a document IS captured the bundle is
+   @2 and carries the register, which is the honest distinction rather than a
+   version preference. */
 const SCHEMA_OF = { information:"information@1", problem:"problem@1", project:"project@1", action:"action@1" };
+const schemaFor = (type, hasDoc)=> type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
 const post = async (op, body)=>{
   const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
     { method:"POST", body: JSON.stringify(body) });
@@ -627,8 +648,8 @@ const stamp = ()=>{
    and the per-type extension fields each type's own check requires. The first
    prose section carries what the member wrote, and the rest are present and
    empty, which is what the catalog asks for. */
-const mdFor = (id, type, state, title, body, now)=>{
-  const fm = ["---","id: "+id,"object_type: "+type,"schema: "+SCHEMA_OF[type],
+const mdFor = (id, type, state, title, body, now, hasDoc)=>{
+  const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
     "produced_by:","  mode: assisted","  capability_tier: session",
@@ -652,6 +673,31 @@ const mdFor = (id, type, state, title, body, now)=>{
   return out.join(NL);
 };
 
+/* The bundle's files, with the captured document beside the record and the
+   provenance register naming it. C-18.1 wants the register to point at a file
+   that exists in the bundle, so the document is registered as a blob reference
+   and the register entry names the same path. */
+async function docFiles(text, doc, textSha){
+  const files = [{ path:"bundle.md", text, bytes:text.length, sha256:textSha }];
+  if (!doc) return files;
+  const prov = JSON.stringify({ documents: [doc] }, null, 1);
+  files.push({ path:"data/provenance.json", text: prov, bytes: prov.length,
+               sha256: await sha256Text(prov) });
+  files.push({ path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256,
+               bytes: doc.capture.bytes });
+  return files;
+}
+function acquireWhy(a){
+  const why = a.reason || a.error || "unknown";
+  if (why === "BAD_LOCATOR") return "That address cannot be fetched. It must be an https address on a public site: not a plain http address, not an address on this machine, and not one carrying a username or password.";
+  if (why === "NO_AUTHORITY") return "Say who issued the document.";
+  if (why === "SOURCE_REFUSED") return "The site answered with an error (" + a.status + "). The address may be wrong, or the document may no longer be published there.";
+  if (why === "FETCH_FAILED") return "The site could not be reached just now. Nothing was written.";
+  if (why === "EMPTY") return "The site returned an empty document, so there was nothing to keep.";
+  if (why === "TOO_LARGE") return "That document is too large to capture this way (" + a.bytes + " bytes). Large documents are captured in parts.";
+  return "The document could not be captured: " + why;
+}
+
 /* ---- create ---- */
 $("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; show("#s-new"); });
 $("#n-save").addEventListener("click", async ()=>{
@@ -666,15 +712,29 @@ $("#n-save").addEventListener("click", async ()=>{
     const id = a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const state = FIRST_STATE[type];
     const now = new Date().toISOString().split(".")[0] + "Z";
-    const text = mdFor(id, type, state, title, body, now);
+    /* Capture first, because a failed fetch should not leave a half-made bundle
+       in the record. If the document cannot be had, nothing is written and the
+       member is told what the source did. */
+    const loc = ($("#n-loc") ? $("#n-loc").value.trim() : "");
+    const auth = ($("#n-auth") ? $("#n-auth").value.trim() : "");
+    let doc = null;
+    if (loc) {
+      if (!auth) { e.textContent = "Say who issued the document as well as where it lives."; return; }
+      const acq = await post("acquire", { locator: loc, authority: auth });
+      if (!acq.ok) { e.textContent = acquireWhy(acq); return; }
+      doc = acq.document;
+    }
+    const text = mdFor(id, type, state, title, body, now, !!doc);
     const r = await post("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
-      files: [{ path:"bundle.md", text, bytes:text.length, sha256: await sha256Text(text) }],
-      register: [],
+      files: await docFiles(text, doc, await sha256Text(text)),
+      register: doc ? [{ sha256: doc.capture.sha256, path: doc.file,
+                         encoding: doc.capture.encoding, bytes: doc.capture.bytes }] : [],
     });
     if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
     $("#n-title").value = ""; $("#n-body").value = "";
+    if ($("#n-loc")) { $("#n-loc").value = ""; $("#n-auth").value = ""; }
     openBundle(id);
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
   finally { $("#n-save").disabled = false; }

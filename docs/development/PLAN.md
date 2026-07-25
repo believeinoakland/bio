@@ -237,7 +237,7 @@ worth having. Tested both ways: authored, the legacy queue is refused; replayed,
 it lands and the history says so.
 
 ### S-5 Capture and the provenance register
-**Status: acquisition done (0.7.1), register assembly next** · Depends: S-4
+**Status: done (0.8.0), except the parts path** · Depends: S-4
 
 The plane moves bytes today; what is missing is what makes a capture evidence.
 `data/provenance.json` per C-18.1: locator, authority, retrieved instant, and a
@@ -276,9 +276,32 @@ Bounded at 20MB, because a Worker holds the document in memory to hash it. Beyon
 that the document is captured as registered parts, which the catalog's incremental
 SHA-256 streams one part at a time; that path belongs to the client.
 
-**Still owed on this step:** assembling `data/provenance.json` from acquired
-documents and promoting it, which is what makes C-18.1, C-18.3, and C-18.6
-assertable end to end, plus the parts path for oversize documents.
+**Register assembly done, 0.8.0.** The intake form now takes an optional web
+address and issuing authority. Given both, it acquires the document BEFORE
+writing anything, so a source that cannot be reached leaves no half-made bundle
+in the record, then assembles three files: the record, `data/provenance.json`
+naming the document, and the document itself as a blob reference rather than
+inlined bytes. The capture register entry points at the same path the provenance
+register names.
+
+The schema follows the evidence rather than a preference: a bundle carrying a
+document is `information@2`, which is what makes the provenance register
+mandatory; one where a member wrote down what they know stays `@1`, because a
+register describes captured documents and there is none.
+
+Proven end to end. The suite lifts the browser's own assembly out of the SERVED
+script, runs it on a genuinely acquired document, supplies the bytes so the byte
+checks actually execute rather than being skipped as the gate skips them, and the
+catalog returns zero findings. C-18.1, C-18.3, and C-18.6 all pass on a freshly
+captured document.
+
+Every refusal a source can produce is translated: a non-public address, a missing
+authority, an HTTP error with its status, an unreachable host, an empty body, and
+an oversize document each get a sentence a member can act on.
+
+**Still owed:** the parts path for documents over the 20MB in-memory bound. The
+catalog supports `parts` and its incremental SHA-256 streams them one at a time;
+nothing in the plane assembles them yet.
 
 ### S-6 Co-attestation
 **Status: todo** · Depends: S-5
