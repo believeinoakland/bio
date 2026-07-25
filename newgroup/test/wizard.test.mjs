@@ -26,6 +26,13 @@ const t = (l, g, w) => { const ok = JSON.stringify(g) === JSON.stringify(w);
 const armWith = (line) => { ARMED_SIGNERS.length = 0; ARMED_SIGNERS.push(line); };
 const disarm = () => { ARMED_SIGNERS.length = 0; };
 
+/* An instance mid-update: it answers with the version it is running, and after
+   the upload it answers with the new one. The wizard asks BEFORE uploading so a
+   no-op can be named (D-10), so a fixture that answers with the target version
+   from the start describes a no-op, not an update. */
+const midUpdate = (from, to) => { let n = 0;
+  return () => jres({ ok: true, version: n++ === 0 ? from : to, bindings: { STORE: true } }); };
+
 const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";
 const PUBLISHED = "df362a63adbe5d1d96a2942e39fd60e3fbb412eaadf7317266c19a4efea658ba";
 
@@ -331,7 +338,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
     { m: (u, mth) => u.endsWith("/scripts/oak-watch") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "oakwatch" }) },
     { m: (u) => u.includes("oak-watch.oakwatch.workers.dev/api/?op=bootstrap"),
-      f: () => jres({ ok: true, version: RELEASE_VERSION }) },
+      f: midUpdate("0.1.0", RELEASE_VERSION) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT");
@@ -361,13 +368,13 @@ console.log("\n--- update: storage unavailable never blocks an update ---");
     { m: (u, mth) => u.endsWith("/scripts/old-copy") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "old" }) },
     { m: (u) => u.includes("old-copy.old.workers.dev/api/?op=bootstrap"),
-      f: () => jres({ ok: true, version: RELEASE_VERSION }) },
+      f: midUpdate("0.1.0", RELEASE_VERSION) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const meta = await metadataOf(calls.find((c) => c.method === "PUT"));
   t("existing buckets kept, none invented", meta.keep_bindings.includes("r2_bucket")
     && meta.bindings.filter((b) => b.type === "r2_bucket").length === 0, true);
-  t("the update still lands", body.includes("Updated to"), true);
+  t("the update still lands", body.includes("Updated from 0.1.0 to"), true);
   globalThis.fetch = realFetch;
 }
 
@@ -389,7 +396,7 @@ console.log("\n--- update: unconfirmed version reads as done, with a patient not
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   globalThis.setTimeout = realTimeout;
-  t("the outcome is presented as done", body.includes("Updated to"), true);
+  t("the outcome is presented as done", body.includes("Updated from 0.0.1 to"), true);
   t("the note is patient, not alarming", body.includes("can take a few minutes"), true);
   t("no failure framing anywhere", /not confirmed|failed|broken/i.test(body), false);
   t("the step is not marked red", body.includes('class="no"'), false);
@@ -511,6 +518,35 @@ console.log("\n--- release signing: armed, a signature from another purpose is r
   t("a ratification signature cannot install software", r.source.includes("signed repo release"), false);
   t("the page says the signature did not check out", r.body.includes("not by a key this installer trusts"), true);
   disarm();
+}
+
+/* ---- a no-op update says so ----
+   The failure this guards against is not a crash. It is an update that uploads
+   the same version over itself and reports "Updated to X", which reads as work
+   done. Observed live 2026-07-24 (DEBT D-10). */
+console.log("\n--- update: replacing a version with itself is not a success ---");
+{
+  disarm();
+  const { cookie, state } = await begin("same-town", "update");
+  script([
+    ...REL({ manifest: () => jres({ version: RELEASE_VERSION, sha256: "x" }), asset: () => new Response("y") }),
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "N1", name: "Same" }]) },
+    { m: (u) => u.includes("/scripts/same-town/settings"),
+      f: () => cfok({ bindings: [{ type: "plain_text", name: "VERSION", text: RELEASE_VERSION }] }) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/same-town") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "sm" }) },
+    /* The instance answers with the version it already runs. */
+    { m: (u) => u.startsWith("https://same-town.sm.workers.dev/"),
+      f: () => jres({ ok: true, version: RELEASE_VERSION, bindings: { STORE: true } }) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("the step names it as a re-upload of the same version", body.includes("already runs"), true);
+  t("the outcome says nothing changed", body.includes("Nothing changed"), true);
+  t("and does not claim an update happened", /<b>Updated (from|to)/.test(body), false);
+  t("and says what to check instead", body.includes("newer release has actually been published"), true);
+  globalThis.fetch = realFetch;
 }
 
 console.log(`\nwizard: ${pass} passed, ${fail} failed`);

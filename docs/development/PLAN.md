@@ -242,6 +242,24 @@ their own systems, and the source file is removed in a commit that says why.
 
 ---
 
+## Out-of-band fixes
+
+Small, self-contained corrections that do not belong to a numbered step.
+
+- **D-10, the no-op update.** Fixed in the wizard, 0.5.1. The installer now asks
+  what the instance is running BEFORE uploading. A re-upload of the same version
+  says "Nothing changed: your copy was already running X" and tells the operator
+  to check whether a newer release was actually published, instead of reporting
+  "Updated to X" and letting them believe work happened. A real update now names
+  both versions: "Updated from 0.1.0 to 0.5.1".
+
+  Writing the test for it exposed that three existing update fixtures had the
+  instance already answering with the target version, so those blocks had been
+  describing no-ops while claiming to test updates. Nothing had looked at the
+  before-version until now, so nothing had noticed. They now answer with the old
+  version before the upload and the new one after, which is what an update
+  actually looks like.
+
 ## Notes
 
 - Steps S-1 through S-3 are conformance and are not optional. S-4 through S-7 are

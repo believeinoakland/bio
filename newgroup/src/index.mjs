@@ -551,7 +551,26 @@ async function runUpdate(emit, code, saved) {
 
   const release = await selectRelease(emit);
 
-  emit.step("up", `Updating the software to ${release.version}`);
+  /* What is it running now? Asked before the upload, so an update that changes
+     nothing can say so instead of reading as a success. A no-op reported as
+     "Updated to X" is worse than a plain refusal: the operator believes the
+     work happened and moves on. Observed live on 2026-07-24, a 0.3.10 over
+     0.3.10 update where the only honest line was easy to skim past. */
+  let before = null;
+  try {
+    const sub0 = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain;
+    if (sub0) {
+      const r = await fetch(`https://${slug}.${sub0}.workers.dev/api/?op=bootstrap`);
+      if (r.ok) before = (await r.json())?.version || null;
+    }
+  } catch { /* not knowing is fine; it only costs the comparison */ }
+  const noop = before !== null && before === release.version;
+
+  emit.step("up", noop
+    ? `Your copy already runs ${release.version}. Re-uploading the same version`
+    : before
+      ? `Updating the software from ${before} to ${release.version}`
+      : `Updating the software to ${release.version}`);
   try { await uploadUpdate(token, acct.id, slug, withR2, release); emit.ok("up"); }
   catch (e) {
     emit.no("up");
@@ -577,7 +596,13 @@ async function runUpdate(emit, code, saved) {
       + "minutes after an update and nothing needs fixing.");
   }
 
-  emit.done(`<div class="okbox"><p style="margin:0"><b>Updated to ${esc(release.version)}.</b>
+  emit.done(noop
+    ? `<div class="notice"><p style="margin:0"><b>Nothing changed: your copy was already running ${esc(release.version)}.</b>
+The upload succeeded, but it replaced that version with the same version, so this update moved nothing.
+If you expected something newer, the installer had nothing newer to give: it uses the newest release it can
+verify, and that is ${esc(release.version)}. Check that a newer release has actually been published before
+running this again.</p></div>`
+    : `<div class="okbox"><p style="margin:0"><b>Updated ${before ? "from " + esc(before) + " " : ""}to ${esc(release.version)}.</b>
 ${confirmed ? "The new version is answering."
   : "The upload finished successfully. The address can take a few minutes to start serving the new version, so open your copy a little later and its page will show " + esc(release.version) + "."}
 Your passwords, your credentials, and everything in the record are exactly as they were.
