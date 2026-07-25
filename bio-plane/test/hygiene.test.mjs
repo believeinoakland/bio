@@ -48,5 +48,49 @@ for (const f of suites) {
   t(`${f} exits deterministically`, /process\.exit\((?!1\))/.test(tail) || /process\.exit\(fail/.test(tail), true);
 }
 
+
+/* ---- the generated page cannot be broken by its own comments ----
+ * setup.mjs is one enormous template literal. An unescaped backtick inside it
+ * TERMINATES the literal, and a ${ starts an interpolation, so a comment
+ * written in ordinary prose can silently destroy the module or the served
+ * script. This has now happened twice: the 0.3.8 hang, where escapes were eaten
+ * and the browser received a dead script, and again on 2026-07-24, where a
+ * comment quoting two field names in backticks made the module unparseable.
+ *
+ * Both were found by accident. This finds them on purpose.
+ */
+console.log("\n--- the served page template is intact ---");
+{
+  const src = readFileSync(join(DIR, "..", "src", "setup.mjs"), "utf8");
+  const open = src.indexOf("export const SETUP_HTML = `");
+  t("setup.mjs still exports one template literal", open > -1, true);
+  const body = src.slice(open + "export const SETUP_HTML = `".length, src.lastIndexOf("`;"));
+  let ticks = 0, interps = 0, i = 0;
+  while (i < body.length) {
+    if (body[i] === "\\") { i += 2; continue; }
+    if (body[i] === "`") ticks++;
+    if (body[i] === "$" && body[i + 1] === "{") interps++;
+    i += 1;
+  }
+  t("no unescaped backtick inside it", ticks, 0);
+  /* Interpolations are legitimate: the page injects the catalog's tables. They
+     are counted so a surprising jump is visible in a diff rather than silent. */
+  t("interpolations are few and deliberate", interps <= 4, true);
+
+  /* The strongest check available without a browser: the module loads, and the
+     script it serves parses as JavaScript. */
+  let loaded = null;
+  try { loaded = (await import("../src/setup.mjs")).SETUP_HTML; } catch (e) {
+    console.log("    load error:", e.message);
+  }
+  t("the module loads", typeof loaded, "string");
+  if (typeof loaded === "string") {
+    const script = loaded.slice(loaded.lastIndexOf("<script>") + 8, loaded.lastIndexOf("</script>"));
+    let parses = true;
+    try { new Function(script); } catch (e) { parses = false; console.log("    parse error:", e.message); }
+    t("the script it serves parses", parses, true);
+  }
+}
+
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

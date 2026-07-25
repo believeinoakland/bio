@@ -165,7 +165,7 @@ console.log("\n--- the intake form writes conformant bundles ---");
     setTimeout, TextEncoder, navigator: { clipboard: { writeText: async () => {} } },
   };
   sandbox.window = sandbox;
-  const fn = new Function(...Object.keys(sandbox), script + "\n;return { mdFor, FIRST_STATE, PREFIX };");
+  const fn = new Function(...Object.keys(sandbox), script + "\n;return { mdFor, FIRST_STATE, PREFIX, reviseText };");
   const ui = fn(...Object.values(sandbox));
 
   t("first states come from the catalog, not from memory", ui.FIRST_STATE,
@@ -187,6 +187,55 @@ console.log("\n--- the intake form writes conformant bundles ---");
     for (const x of errs.slice(0, 4)) console.log(`         ${type}: ${x.check} ${x.message.slice(0, 110)}`);
     t(`a new ${type} bundle has zero errors`, errs.length, 0);
   }
+}
+
+
+console.log("\n--- a revision through the browser stays conformant ---");
+{
+  const { SETUP_HTML } = await import("../src/setup.mjs");
+  const script2 = SETUP_HTML.slice(SETUP_HTML.lastIndexOf("<script>") + 8, SETUP_HTML.lastIndexOf("</script>"));
+  const el2 = () => ({ addEventListener() {}, classList: { add() {}, remove() {} },
+    textContent: "", innerHTML: "", value: "", style: {}, hidden: false, dataset: {} });
+  const sb = {
+    document: { querySelector: () => el2(), querySelectorAll: () => [], getElementById: () => el2(),
+                addEventListener() {}, createElement: () => el2(), body: { appendChild() {}, removeChild() {} } },
+    location: { hash: "", pathname: "/", origin: "https://x" }, history: { replaceState() {} },
+    sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    fetch: async () => ({ ok: true, status: 200, json: async () => ({ ok: true }) }),
+    URLSearchParams, console, JSON, Date, RegExp, String, Number, Object, Array, crypto: webcrypto,
+    setTimeout, TextEncoder, navigator: { clipboard: { writeText: async () => {} } },
+  };
+  sb.window = sb;
+  const ui2 = new Function(...Object.keys(sb), script2 + "\n;return { mdFor, FIRST_STATE, reviseText };")(...Object.values(sb));
+
+  const created = "2026-07-01T00:00:00Z";
+  const first = ui2.mdFor("INFO-2026-0003-revise-check", "information", "collected",
+    "Revise check", "First writing.", created);
+  const later = "2026-07-24T12:00:00Z";
+  const rev = ui2.reviseText(first + "\nEdited by hand.\n", "ruth", later);
+
+  t("created is preserved, not overwritten with the save time",
+    /^created: 2026-07-01T00:00:00Z$/m.test(rev), true);
+  t("last_updated moves in the document itself",
+    /^last_updated: 2026-07-24T12:00:00Z$/m.test(rev), true);
+  t("a session entry is appended naming who did it",
+    rev.includes("### Session " + later) && rev.includes("Revised by ruth."), true);
+
+  const f3 = new Map([["bundle.md", rev]]);
+  const { findings: rf } = await checkBundle({ folderName: "INFO-2026-0003-revise-check",
+    files: f3, sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+  const re = rf.filter((x) => x.severity === "error");
+  for (const x of re) console.log(`         ${x.check}: ${x.message.slice(0, 120)}`);
+  t("the revised bundle has zero errors", re.length, 0);
+
+  /* A second revision must not eat the first one's entry (C-5.1). */
+  const rev2 = ui2.reviseText(rev, "sparky", "2026-07-25T09:00:00Z");
+  t("the earlier session entry survives a second revision",
+    rev2.includes("### Session " + later), true);
+  t("and the later one is present too",
+    rev2.includes("### Session 2026-07-25T09:00:00Z"), true);
+  t("Review Notes still follows the Session Log",
+    rev2.indexOf("## Review Notes") > rev2.indexOf("### Session 2026-07-25T09:00:00Z"), true);
 }
 
 await mf.dispose();

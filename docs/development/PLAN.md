@@ -288,6 +288,33 @@ Small, self-contained corrections that do not belong to a numbered step.
   version before the upload and the new one after, which is what an update
   actually looks like.
 
+### Out-of-band, 0.6.1: the revise path
+
+D-22 said the revise path wrote no Session Log entry. Fixing it found that the
+path had never worked at all (D-23). Four things were wrong in the same twenty
+lines:
+
+- It read `lease.result.baseSha`; the lease returns `base`. Every revision sent
+  `base: undefined`, the store correctly refused it as a stale write, and the
+  page printed the raw code because its friendly message matched on `STALE`
+  rather than `CAS_STALE`.
+- It overwrote `created` with the save time, destroying when the bundle was
+  actually created, which no history holds elsewhere.
+- It never moved `last_updated` in the DOCUMENT, only in the promote metadata,
+  and the catalog reads the document.
+- It appended no Session Log entry, which C-13.2 requires of any bundle whose
+  `last_updated` moves and C-5.1 requires be preserved across revisions.
+
+All four fixed, and the transform is a pure function tested through the SERVED
+script against the catalog: created preserved, last_updated moved, an entry
+appended naming the member, prior entries surviving a second revision, and
+Review Notes still following the Session Log.
+
+Writing it, I broke the served page with a comment containing backticks, which is
+the 0.3.8 defect class (D-24). `hygiene.test.mjs` now scans the template for
+unescaped backticks, counts interpolations, loads the module, and parses the
+script it serves. Twice by accident is enough.
+
 ## Notes
 
 - Steps S-1 through S-3 are conformance and are not optional. S-4 through S-7 are

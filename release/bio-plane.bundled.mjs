@@ -3653,6 +3653,50 @@ async function openEdit(id, text){
   show("#s-edit");
 }
 $("#e-back").addEventListener("click", ()=>openBundle(EDIT_ID));
+/* Prepare a revision. Pure, so it can be tested against the check catalog
+   without a browser.
+ *
+ * Three things the catalog requires of any revision, none of which the earlier
+ * save path did:
+ *   last_updated moves, in the DOCUMENT and not only in the promote metadata,
+ *     because C-12.1 and C-13.1 read the frontmatter and nothing else;
+ *   created is PRESERVED, because overwriting it with the save time destroys
+ *     when the thing was actually created and no history holds it elsewhere;
+ *   a Session Log entry is appended, because C-13.2 refuses a bundle whose
+ *     last_updated moved with nothing recorded, and C-5.1 refuses one whose
+ *     prior entries went missing, so the entry is added rather than replacing.
+ */
+function reviseText(text, who, now){
+  const parts = splitFm(text);
+  const lines = text.split(NL);
+  let out = [], inFm = false, seenFence = 0, wroteUpdated = false;
+  for (const line of lines){
+    if (line === "---" && seenFence < 2){ seenFence++; inFm = seenFence === 1; out.push(line); continue; }
+    if (seenFence === 1 && /^last_updated:/.test(line)){ out.push("last_updated: " + now); wroteUpdated = true; continue; }
+    if (seenFence === 1 && /^created:/.test(line) && parts.fm.created){ out.push("created: " + parts.fm.created); continue; }
+    out.push(line);
+  }
+  if (!wroteUpdated){
+    /* No last_updated at all: put one at the end of the frontmatter rather than
+       silently leaving the document unable to pass C-2.2. */
+    const at = out.lastIndexOf("---");
+    if (at > 0) out.splice(at, 0, "last_updated: " + now);
+  }
+  let body = out.join(NL);
+  const entry = ["### Session " + now, "", "Revised by " + who + ".", ""].join(NL);
+  const i = body.indexOf("## Session Log");
+  if (i < 0){
+    body = body + NL + "## Session Log" + NL + NL + entry;
+  } else {
+    /* Insert at the END of the Session Log section, before whatever heading
+       follows it, so earlier entries keep their order and their place. */
+    const rest = body.indexOf(NL + "## ", i + 1);
+    const cut = rest === -1 ? body.length : rest + 1;
+    body = body.slice(0, cut) + entry + body.slice(cut);
+  }
+  return body;
+}
+
 $("#e-save").addEventListener("click", async ()=>{
   const e = $("#e-err"); e.textContent = "";
   const text = $("#e-body").value;
@@ -3663,18 +3707,23 @@ $("#e-save").addEventListener("click", async ()=>{
     const lease = await rec("lease", { id: EDIT_ID });
     if (!lease.result || lease.result.ok === false) {
       e.textContent = "Someone else is editing this right now (" + (lease.result&&lease.result.heldBy) + ")."; return; }
-    const now = new Date().toISOString();
+    const now = new Date().toISOString().split(".")[0] + "Z";
+    const revised = reviseText(text, WHO, now);
     const r = await post("promote", {
-      bundleId: EDIT_ID, base: lease.result.baseSha, snapKey: stamp(), author: WHO,
+      /* The lease returns a field named base. Reading baseSha sent undefined,
+         which the store correctly refused as a stale write, so no revision
+         through this page had ever succeeded. */
+      bundleId: EDIT_ID, base: lease.result.base, snapKey: stamp(), author: WHO,
       meta: { object_type: fmv.object_type, group:"believe-in-oakland", title: fmv.title || EDIT_ID,
-              current_state: fmv.current_state, created: now, last_updated: now },
-      files: [{ path:"bundle.md", text, bytes:text.length, sha256: await sha256Text(text) }],
+              current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
+      files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) }],
       refs: [], register: [],
     });
     if (!r.result || !r.result.ok) {
-      e.textContent = r.result && r.result.reason === "STALE"
+      const why = (r.result && r.result.reason) || r.error || "unknown";
+      e.textContent = (why === "CAS_STALE" || why === "STALE")
         ? "Someone saved a newer version while you were writing. Open it again and redo your change."
-        : "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown");
+        : "Refused: " + why;
       return; }
     openBundle(EDIT_ID);
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
