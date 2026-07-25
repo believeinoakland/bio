@@ -169,6 +169,11 @@ const OPS = {
   claim:      { classes: null,                                   mutating: true  },
   login:      { classes: null,                                   mutating: false },
   enroll:     { classes: null,                                   mutating: true  },
+  /* What a burner URL resolves to. Unauthenticated by necessity: the invitee
+     holds no credential yet, which is the whole point of an invitation. It
+     answers only for a LIVE invitation, and a spent token is indistinguishable
+     from one that never existed, so it leaks nothing about who was invited. */
+  invitelook: { classes: null,                                   mutating: false },
   verify:     { classes: null,                                   mutating: false },
   knock:      { classes: null,                                   mutating: true  },
 };
@@ -300,6 +305,12 @@ export default {
         const r = await stub.fetch(new Request("http://do/login", {
           method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) }));
         return json(await r.json(), 200);
+      }
+      if (op === "invitelook") {
+        const body2 = await req.json().catch(() => ({}));
+        const r2 = await stub2.fetch(new Request("http://do/invitelook", {
+          method: "POST", body: JSON.stringify(body2) }));
+        return json(await r2.json(), 200);
       }
       if (op === "enroll") {
         const body = await req.json().catch(() => ({}));

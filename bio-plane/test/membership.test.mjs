@@ -51,7 +51,7 @@ const of = async (id) => (await list()).find((m) => m.member_id === id) || null;
 const join = async (id, cover, role, handle, caps) => {
   const a = await add({ memberId: id, cover, role, capabilities: caps });
   if (!a.ok) return a;
-  return enroll({ memberId: id, invite: a.invite, handle, password: `${id}-passphrase-x` });
+  return enroll({ invite: a.invite, handle, password: `${id}-passphrase-x` });
 };
 
 /* ------------------------------------------------------------------ suite */
@@ -86,14 +86,14 @@ console.log("\n--- cover and handle are different things (3) ---");
   t("the roster carries the administrator's cover", m.cover, "the second");
   t("and the member's own handle", m.handle, "second");
   const a = await add({ memberId: "dup", cover: "wants a taken handle", role: "member" });
-  const e = await enroll({ memberId: "dup", invite: a.invite, handle: "second", password: "dup-passphrase-x" });
+  const e = await enroll({ invite: a.invite, handle: "second", password: "dup-passphrase-x" });
   t("a handle already in use is refused", e.reason, "HANDLE_TAKEN");
   t("a handle is required at enrolment", (await enroll({
-    memberId: "dup", invite: a.invite, password: "dup-passphrase-x" })).reason, "NO_HANDLE");
-  const ok = await enroll({ memberId: "dup", invite: a.invite, handle: "dup-handle", password: "dup-passphrase-x" });
+    invite: a.invite, password: "dup-passphrase-x" })).reason, "NO_HANDLE");
+  const ok = await enroll({ invite: a.invite, handle: "dup-handle", password: "dup-passphrase-x" });
   t("a free handle is accepted", ok.ok, true);
   t("the invite is spent by the successful enrolment", (await enroll({
-    memberId: "dup", invite: a.invite, handle: "another", password: "dup-passphrase-x" })).reason, "ALREADY_ENROLLED");
+    invite: a.invite, handle: "another", password: "dup-passphrase-x" })).reason, "NO_SUCH_INVITATION");
 }
 
 console.log("\n--- capabilities are granted, and absent means absent (5) ---");
@@ -135,7 +135,7 @@ console.log("\n--- adding an administrator past the second needs consensus (4.7)
   t("and hands over the invite exactly once", typeof e.invite, "string");
   t("the proposal is now a normal pending invitation", (await of("third")).status, "invited");
 
-  const done = await enroll({ memberId: "third", invite: e.invite, handle: "third", password: "third-passphrase-x" });
+  const done = await enroll({ invite: e.invite, handle: "third", password: "third-passphrase-x" });
   t("the third administrator enrols", done.ok, true);
   t("and is an administrator", (await of("third")).role, "admin");
 }
@@ -204,6 +204,66 @@ console.log("\n--- a lone captured administrator can never eject anyone ---");
   t("no removal can ever be carried by one vote", lone, []);
   t("and at one administrator removal is impossible for want of a voter",
     arith.table.find((x) => x.administrators === 1).possible, false);
+}
+
+console.log("\n--- burner-URL invitations: the URL IS the credential (6) ---");
+{
+  const a = await add({ memberId: "burner-one", cover: "the burner test", role: "member",
+                        capabilities: ["contribute"] });
+  t("an invitation issues a token", typeof a.invite, "string");
+  /* The whole point. A leaked or archived link must reveal neither the group nor
+     the invitee, and the previous scheme put `<memberId>:<code>` in the URL, so
+     anyone who saw the link learned who had been invited. */
+  t("the token does not contain the member id", a.invite.includes("burner-one"), false);
+  t("nor anything else recognisable", /[:@]/.test(a.invite), false);
+
+  const look = await call("/invitelook", { invite: a.invite });
+  t("a live token resolves", look.ok, true);
+  t("to the cover the administrator set", look.cover, "the burner test");
+  t("and the capabilities already attached", look.capabilities, ["contribute"]);
+  t("but NOT to the member id, which is the group's business", look.memberId, undefined);
+
+  const e = await enroll({ invite: a.invite, handle: "burner-handle", password: "burner-passphrase-x" });
+  t("enrolment takes the token, a handle and a password, and no member id", e.ok, true);
+  t("the handle is the member's own", e.handle, "burner-handle");
+  t("and the roster now shows it", (await of("burner-one")).handle, "burner-handle");
+}
+
+console.log("\n--- and afterwards the link is inert and says nothing (6) ---");
+{
+  const a = await add({ memberId: "burner-two", cover: "spent test", role: "member" });
+  await enroll({ invite: a.invite, handle: "spent-handle", password: "spent-passphrase-x" });
+
+  const spent = await call("/invitelook", { invite: a.invite });
+  const never = await call("/invitelook", { invite: "0".repeat(32) });
+  t("a spent token resolves to nothing", spent.ok, false);
+  t("a token that never existed resolves to nothing", never.ok, false);
+  /* INDISTINGUISHABLE, and that is the security property rather than tidiness:
+     a response that said "this invitation was used" would confirm to whoever
+     found the archived link that it had once addressed somebody real. */
+  t("and the two answers are byte-identical", JSON.stringify(spent), JSON.stringify(never));
+  t("neither names a member", JSON.stringify(spent).includes("burner-two"), false);
+  t("nor a cover", JSON.stringify(spent).includes("spent test"), false);
+
+  t("a spent token cannot enrol again",
+    (await enroll({ invite: a.invite, handle: "again", password: "again-passphrase-x" })).reason,
+    "NO_SUCH_INVITATION");
+  t("and a made-up token is refused the same way",
+    (await enroll({ invite: "f".repeat(32), handle: "nope", password: "nope-passphrase-x" })).reason,
+    "NO_SUCH_INVITATION");
+}
+
+console.log("\n--- the invitee cannot set what the administrator set (6) ---");
+{
+  const a = await add({ memberId: "burner-three", cover: "admin chose this", role: "member",
+                        capabilities: ["contribute"] });
+  const e = await enroll({ invite: a.invite, handle: "three-handle", password: "three-passphrase-x",
+                           cover: "I choose my own", capabilities: ["publish"], role: "admin" });
+  t("enrolment succeeds", e.ok, true);
+  const m = await of("burner-three");
+  t("the cover is still the administrator's", m.cover, "admin chose this");
+  t("the capabilities are still the administrator's", m.capabilities, ["contribute"]);
+  t("and the invitee did not make themselves an administrator", m.role, "member");
 }
 
 console.log("\n--- negative controls ---");

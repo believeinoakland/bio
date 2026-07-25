@@ -56,7 +56,7 @@ const signRatify = (k, bundleId, bundleSha) => {
    are no ordinary members until two exist. Enrolment now also takes a HANDLE,
    which is the name the record shows (Membership Architecture 3). */
 const add = await POST("op=memberadd&token=adm-ratify", { memberId: "sparky", cover: "Bob", role: "admin" });
-await POST("op=enroll", { memberId: "sparky", invite: add.result.invite, handle: "sparky", password: "sparky-passphrase" });
+await POST("op=enroll", { invite: add.result.invite, handle: "sparky", password: "sparky-passphrase" });
 const reg = await POST("op=signeradd&token=adm-ratify", { keyB64: keyB64("sparky"), memberId: "sparky", comment: "sparky laptop" });
 
 console.log("\n--- signer registration ---");

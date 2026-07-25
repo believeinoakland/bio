@@ -44,11 +44,15 @@ t("member token cannot create members", (await POST("op=memberadd&token=t-member
 t("public path cannot create members", (await POST("op=memberadd", { memberId: "x", name: "x" })).error, "unauthenticated");
 
 console.log("\n--- enrollment spends the invite ---");
-t("wrong invite refused", (await POST("op=enroll", { memberId: "ruth", invite: "nope", handle: "ruth", password: "long-enough-password" })).result.reason, "BAD_INVITE");
-t("short password refused", (await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, handle: "ruth", password: "short" })).result.reason, "PASSWORD_TOO_SHORT");
-const en = await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, handle: "ruth", password: "ruth-passphrase-1" });
+/* An invitation is now identified by its TOKEN alone, and a wrong, spent or
+   never-existent one all answer identically: a response that told them apart
+   would confirm to whoever found an archived link that it once addressed
+   somebody real (Membership Architecture 6). */
+t("wrong invite refused", (await POST("op=enroll", { invite: "nope", handle: "ruth", password: "long-enough-password" })).result.reason, "NO_SUCH_INVITATION");
+t("short password refused", (await POST("op=enroll", { invite: add.result.invite, handle: "ruth", password: "short" })).result.reason, "PASSWORD_TOO_SHORT");
+const en = await POST("op=enroll", { invite: add.result.invite, handle: "ruth", password: "ruth-passphrase-1" });
 t("enrollment succeeds", en.result.ok, true);
-t("the invite is spent", (await POST("op=enroll", { memberId: "ruth", invite: add.result.invite, handle: "ruth2", password: "another-passphrase" })).result.reason, "ALREADY_ENROLLED");
+t("the invite is spent, and says nothing about what it addressed", (await POST("op=enroll", { invite: add.result.invite, handle: "ruth2", password: "another-passphrase" })).result.reason, "NO_SUCH_INVITATION");
 
 console.log("\n--- member sign-in and the intake powers ---");
 const lg = await POST("op=login", { role: "member:ruth", password: "ruth-passphrase-1" });
@@ -156,7 +160,7 @@ console.log("\n--- revocation closes every door ---");
    to revoke Ruth directly, which the rule now correctly refuses. */
 t("an administrator cannot be revoked directly (4.4)",
   (await POST(`op=memberset&${A}`, { memberId: "ruth", status: "revoked" })).result.reason, "ADMIN_REQUIRES_VOTE");
-const men = await POST("op=enroll", { memberId: "meilan", invite: add2.result.invite,
+const men = await POST("op=enroll", { invite: add2.result.invite,
   handle: "meilan", password: "meilan-passphrase-1" });
 t("the ordinary member enrols", men.result.ok, true);
 const mlg = await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" });

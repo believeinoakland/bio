@@ -2225,15 +2225,51 @@ export class Store extends DurableObject {
     return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps };
   }
 
-  async enroll({ memberId, invite, handle, password } = {}) {
-    const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.status === "revoked") return { ok: false, reason: "REVOKED" };
-    if (m.status === "proposed") return { ok: false, reason: "NOT_YET_INVITED",
-      detail: "this administrator has been proposed but not yet endorsed by every existing administrator" };
-    if (!m.invite_hash) return { ok: false, reason: "ALREADY_ENROLLED" };
-    if (!invite || (await Store.#sha256(invite)) !== m.invite_hash)
-      return { ok: false, reason: "BAD_INVITE" };
+  /* An invitation is a BURNER: the token in the URL is the whole credential, and
+   * after use the URL resolves to nothing and carries no record of what it
+   * formerly addressed (Membership Architecture section 6).
+   *
+   * The previous scheme put `<memberId>:<code>` in the link, so anyone who saw a
+   * leaked or archived one learned who had been invited. The token is now opaque
+   * and the member id is never in it, never returned by this lookup, and never
+   * needed to enrol.
+   *
+   * A SPENT token and a token that never existed return byte-identical answers.
+   * That is the security property and not tidiness: a response distinguishing
+   * them would confirm to whoever found the archived link that it had once
+   * addressed somebody real, which is exactly what the burner is for. */
+  static #INVITE_MISS = { ok: false, reason: "NO_SUCH_INVITATION",
+    detail: "this invitation is not live. An invitation is spent the moment it is used, and a spent one "
+          + "cannot be told apart from one that never existed." };
+
+  async #invited(invite) {
+    if (typeof invite !== "string" || !/^[0-9a-f]{16,64}$/.test(invite)) return null;
+    const hash = await Store.#sha256(invite);
+    /* Looked up BY HASH, so the store never holds a usable invitation and a
+       leaked database is not a set of live credentials. */
+    return this.#one(
+      `SELECT member_id, cover, role, status, capabilities, expertise
+       FROM members WHERE invite_hash=? AND status='invited'`, hash);
+  }
+
+  /** What a burner URL resolves to. Unauthenticated by necessity: the invitee
+   *  holds no credential yet, which is what the invitation is for. */
+  async inviteLook({ invite } = {}) {
+    const m = await this.#invited(invite);
+    if (!m) return { ...Store.#INVITE_MISS };
+    /* The cover and capabilities are shown because the invitee is entitled to
+       see what they are being asked to join as. The member id is NOT: it is the
+       administrator's handle on them inside the roster, and the record will show
+       the handle they are about to choose instead. */
+    return { ok: true, cover: m.cover, role: m.role, capabilities: this.#capsOf(m),
+             expertise: m.expertise ?? null };
+  }
+
+  async enroll({ invite, handle, password } = {}) {
+    /* No member id. The token identifies the invitation, and requiring the id as
+       well meant the link had to carry it, which is what leaked the invitee. */
+    const m = await this.#invited(invite);
+    if (!m) return { ...Store.#INVITE_MISS };
     /* The handle is the member's OWN name and the one the record shows, so it is
        chosen here and not by the administrator who issued the invitation. Unique
        across the instance, because a roster in which two people can answer to one
@@ -2245,16 +2281,20 @@ export class Store extends DurableObject {
             + "used to invite you." };
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))
       return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    if (this.#one(`SELECT member_id FROM members WHERE handle=? AND member_id<>?`, h, memberId))
+    if (this.#one(`SELECT member_id FROM members WHERE handle=? AND member_id<>?`, h, m.member_id))
       return { ok: false, reason: "HANDLE_TAKEN", handle: h };
     if (typeof password !== "string" || password.length < 12)
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    await this.setPassword({ role: `member:${memberId}`, password });
-    /* The invite hash is cleared, so the burner URL resolves to nothing after
-       use and a leaked or archived link is inert. */
+    await this.setPassword({ role: `member:${m.member_id}`, password });
+    /* Cover, capabilities and role are the administrator's and are NOT read from
+       this call. An invitee who posts their own is ignored rather than refused,
+       because the fields are not theirs to send and naming them in an error
+       would teach a caller to try. Section 6: already attached, not editable.
+       The invite hash is cleared, so the burner URL resolves to nothing
+       afterwards and a leaked or archived link is inert. */
     this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, updated=? WHERE member_id=?`,
-      h, new Date().toISOString(), memberId);
-    return { ok: true, memberId, handle: h };
+      h, new Date().toISOString(), m.member_id);
+    return { ok: true, memberId: m.member_id, handle: h };
   }
 
   memberList() {
@@ -2573,6 +2613,7 @@ export class Store extends DurableObject {
         },
         memberadd: () => this.memberAdd(body || {}),
         enroll: () => this.enroll(body || {}),
+        invitelook: () => this.inviteLook(body || {}),
         memberlist: () => this.memberList(),
         memberset: () => this.memberSet(body || {}),
         /* The membership model's member half. All admin-only at the control

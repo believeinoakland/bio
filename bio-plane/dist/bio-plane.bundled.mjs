@@ -3295,12 +3295,13 @@ table.rec tr.row:hover td{background:#F6F7F2}
 </section>
 
 <section id="s-enroll">
-  <h1>Set your password</h1>
-  <p>You were invited to this group. Choose a password and your account is live.</p>
-  <label for="en-id">Your member name</label>
-  <input id="en-id">
-  <label for="en-inv">The invitation code you were given</label>
-  <input id="en-inv" spellcheck="false">
+  <h1>Join this group</h1>
+  <p id="en-lede">You were invited. Choose the name the record will show, and a password.</p>
+  <div class="card" id="en-who" hidden></div>
+  <label for="en-handle">Your handle</label>
+  <input id="en-handle" spellcheck="false" placeholder="lowercase letters, digits and dashes">
+  <p class="hint">This is what the record shows: the author of anything you write, and the
+  name other members see. It is yours, not the label the administrator used to invite you.</p>
   <label for="en-pw">Choose a password (12 characters or more)</label>
   <input id="en-pw" type="password" autocomplete="new-password">
   <div class="actions" style="margin-top:12px"><button id="en-go">Set it</button></div>
@@ -3325,11 +3326,26 @@ async function state(){
        never reaches any server, and is stripped immediately either way. The
        screen this reveals existed since 0.4.0 with nothing able to show it
        (DEBT D-14). */
-    const code = decodeURIComponent(inv[1]);
+    /* The token IS the credential and carries nothing else. The previous link
+       was memberId:code, so anyone who saw a leaked or archived one learned who
+       had been invited. */
+    INVITE = decodeURIComponent(inv[1]);
     history.replaceState({}, "", location.pathname);
-    const parts = code.split(":");
-    if (parts.length === 2) { $("#en-id").value = parts[0]; $("#en-inv").value = parts[1]; }
-    else $("#en-inv").value = code;
+    const look = await api("invitelook", { invite: INVITE });
+    if (!look.result || !look.result.ok) {
+      $("#en-lede").textContent = "This invitation link is not live. An invitation is used up the "
+        + "moment someone joins with it. Ask whoever invited you for a new one.";
+      document.querySelectorAll("#s-enroll label, #s-enroll input, #s-enroll .hint, #en-go")
+        .forEach((x) => { x.hidden = true; });
+      show("#s-enroll"); return;
+    }
+    const w = look.result;
+    $("#en-who").hidden = false;
+    $("#en-who").innerHTML = '<div class="kv"><span class="k">Invited as</span><span class="v">'
+      + escH(w.cover) + '</span></div>'
+      + '<div class="kv"><span class="k">Role</span><span class="v">' + escH(w.role) + '</span></div>'
+      + '<div class="kv"><span class="k">You can</span><span class="v">'
+      + escH((w.capabilities || []).join(", ") || "read") + '</span></div>';
     show("#s-enroll"); return;
   }
   const m = location.hash.match(/boot=([^&]+)/);
@@ -3402,6 +3418,7 @@ $("#do-login").addEventListener("click", async ()=>{
 });
 let SESSION = null;
 let WHO = "admin";
+let INVITE = null;
 function panel(login, claimedAt){
   if (login && login.token) {
     SESSION = login.token;
@@ -3935,8 +3952,11 @@ $("#m-add").addEventListener("click", async ()=>{
   /* A link, not a bare code. The code rides the URL fragment, which never
      reaches any server, and the enrolment screen it opens had no reachable
      path at all before this (DEBT D-14). */
+  /* The token alone. Nothing about who it addresses rides in the URL, so a
+     leaked or archived link reveals neither the group nor the invitee, and it
+     resolves to nothing once it has been used. */
   const link = location.origin + location.pathname + "#invite="
-    + encodeURIComponent(wanted + ":" + r.result.invite);
+    + encodeURIComponent(r.result.invite);
   $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Send '
     + escH(wanted) + ' this link. It works once, it is not shown again, and it '
     + 'goes nowhere after it has been used.</p>'
@@ -3982,14 +4002,17 @@ $("#k-add").addEventListener("click", async ()=>{
 /* ---- enrolment, for an invited member with no password yet ---- */
 $("#en-go").addEventListener("click", async ()=>{
   const e = $("#en-err"); e.textContent = "";
-  const r = await api("enroll", { memberId: $("#en-id").value.trim(),
-    invite: $("#en-inv").value.trim(), password: $("#en-pw").value });
+  const r = await api("enroll", { invite: INVITE,
+    handle: $("#en-handle").value.trim().toLowerCase(), password: $("#en-pw").value });
   if (!r.result || !r.result.ok) {
-    e.textContent = r.result && r.result.reason === "PASSWORD_TOO_SHORT"
-      ? "The password needs at least 12 characters."
-      : "That invitation was not accepted. Check the name and the code.";
+    const why = r.result && r.result.reason;
+    e.textContent = why === "PASSWORD_TOO_SHORT" ? "The password needs at least 12 characters."
+      : why === "HANDLE_TAKEN" ? "Someone already uses that handle. Choose another."
+      : why === "NO_HANDLE" ? "Choose a handle. It is the name the record will show."
+      : why === "BAD_HANDLE" ? "A handle is lowercase letters, digits and dashes, at least two characters."
+      : "This invitation link is not live. Ask whoever invited you for a new one.";
     return; }
-  $("#lwho").value = $("#en-id").value.trim(); $("#lpw").value = "";
+  $("#lwho").value = r.result.memberId; $("#lpw").value = "";
   show("#s-login");
 });
 document.querySelectorAll(".crumb-home").forEach(a=>a.addEventListener("click", ()=>{
@@ -7115,18 +7138,49 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     );
     return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps };
   }
-  async enroll({ memberId, invite, handle, password } = {}) {
-    const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.status === "revoked") return { ok: false, reason: "REVOKED" };
-    if (m.status === "proposed") return {
-      ok: false,
-      reason: "NOT_YET_INVITED",
-      detail: "this administrator has been proposed but not yet endorsed by every existing administrator"
+  /* An invitation is a BURNER: the token in the URL is the whole credential, and
+   * after use the URL resolves to nothing and carries no record of what it
+   * formerly addressed (Membership Architecture section 6).
+   *
+   * The previous scheme put `<memberId>:<code>` in the link, so anyone who saw a
+   * leaked or archived one learned who had been invited. The token is now opaque
+   * and the member id is never in it, never returned by this lookup, and never
+   * needed to enrol.
+   *
+   * A SPENT token and a token that never existed return byte-identical answers.
+   * That is the security property and not tidiness: a response distinguishing
+   * them would confirm to whoever found the archived link that it had once
+   * addressed somebody real, which is exactly what the burner is for. */
+  static #INVITE_MISS = {
+    ok: false,
+    reason: "NO_SUCH_INVITATION",
+    detail: "this invitation is not live. An invitation is spent the moment it is used, and a spent one cannot be told apart from one that never existed."
+  };
+  async #invited(invite) {
+    if (typeof invite !== "string" || !/^[0-9a-f]{16,64}$/.test(invite)) return null;
+    const hash = await _Store.#sha256(invite);
+    return this.#one(
+      `SELECT member_id, cover, role, status, capabilities, expertise
+       FROM members WHERE invite_hash=? AND status='invited'`,
+      hash
+    );
+  }
+  /** What a burner URL resolves to. Unauthenticated by necessity: the invitee
+   *  holds no credential yet, which is what the invitation is for. */
+  async inviteLook({ invite } = {}) {
+    const m = await this.#invited(invite);
+    if (!m) return { ..._Store.#INVITE_MISS };
+    return {
+      ok: true,
+      cover: m.cover,
+      role: m.role,
+      capabilities: this.#capsOf(m),
+      expertise: m.expertise ?? null
     };
-    if (!m.invite_hash) return { ok: false, reason: "ALREADY_ENROLLED" };
-    if (!invite || await _Store.#sha256(invite) !== m.invite_hash)
-      return { ok: false, reason: "BAD_INVITE" };
+  }
+  async enroll({ invite, handle, password } = {}) {
+    const m = await this.#invited(invite);
+    if (!m) return { ..._Store.#INVITE_MISS };
     const h = String(handle ?? "").trim();
     if (!h) return {
       ok: false,
@@ -7135,18 +7189,18 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))
       return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    if (this.#one(`SELECT member_id FROM members WHERE handle=? AND member_id<>?`, h, memberId))
+    if (this.#one(`SELECT member_id FROM members WHERE handle=? AND member_id<>?`, h, m.member_id))
       return { ok: false, reason: "HANDLE_TAKEN", handle: h };
     if (typeof password !== "string" || password.length < 12)
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    await this.setPassword({ role: `member:${memberId}`, password });
+    await this.setPassword({ role: `member:${m.member_id}`, password });
     this.sql.exec(
       `UPDATE members SET status='active', handle=?, invite_hash=NULL, updated=? WHERE member_id=?`,
       h,
       (/* @__PURE__ */ new Date()).toISOString(),
-      memberId
+      m.member_id
     );
-    return { ok: true, memberId, handle: h };
+    return { ok: true, memberId: m.member_id, handle: h };
   }
   memberList() {
     return { members: this.#rows(
@@ -7492,6 +7546,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         },
         memberadd: () => this.memberAdd(body || {}),
         enroll: () => this.enroll(body || {}),
+        invitelook: () => this.inviteLook(body || {}),
         memberlist: () => this.memberList(),
         memberset: () => this.memberSet(body || {}),
         /* The membership model's member half. All admin-only at the control
@@ -7651,6 +7706,11 @@ var OPS = {
   claim: { classes: null, mutating: true },
   login: { classes: null, mutating: false },
   enroll: { classes: null, mutating: true },
+  /* What a burner URL resolves to. Unauthenticated by necessity: the invitee
+     holds no credential yet, which is the whole point of an invitation. It
+     answers only for a LIVE invitation, and a spent token is indistinguishable
+     from one that never existed, so it leaks nothing about who was invited. */
+  invitelook: { classes: null, mutating: false },
   verify: { classes: null, mutating: false },
   knock: { classes: null, mutating: true }
 };
@@ -7754,7 +7814,7 @@ var index_default = {
     if (!spec) return json({ ok: false, error: "unknown op", op }, 400);
     if (spec.classes === null) {
       const fp = await fingerprint(env.ADMIN_TOKEN);
-      const stub2 = env.STORE.get(env.STORE.idFromName("bio"));
+      const stub3 = env.STORE.get(env.STORE.idFromName("bio"));
       if (op === "claim") {
         const body2 = await req.json().catch(() => ({}));
         if (!env.ADMIN_TOKEN) return json({ ok: false, error: "instance has no bootstrap credential set" }, 409);
@@ -7762,7 +7822,7 @@ var index_default = {
           return json({ ok: false, error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard" }, 409);
         if (body2.bootstrapToken !== env.ADMIN_TOKEN)
           return json({ ok: false, error: "bootstrap credential does not match" }, 403);
-        const r2 = await stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
+        const r2 = await stub3.fetch(new Request(`http://do/claim?fp=${fp}`, {
           method: "POST",
           body: JSON.stringify({ role: "admin", password: body2.password })
         }));
@@ -7770,15 +7830,23 @@ var index_default = {
       }
       if (op === "login") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await stub2.fetch(new Request("http://do/login", {
+        const r2 = await stub3.fetch(new Request("http://do/login", {
           method: "POST",
           body: JSON.stringify({ role: body2.role || "admin", password: body2.password })
         }));
         return json(await r2.json(), 200);
       }
+      if (op === "invitelook") {
+        const body2 = await req.json().catch(() => ({}));
+        const r2 = await stub2.fetch(new Request("http://do/invitelook", {
+          method: "POST",
+          body: JSON.stringify(body2)
+        }));
+        return json(await r2.json(), 200);
+      }
       if (op === "enroll") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await stub2.fetch(new Request("http://do/enroll", {
+        const r2 = await stub3.fetch(new Request("http://do/enroll", {
           method: "POST",
           body: JSON.stringify(body2)
         }));
@@ -7788,7 +7856,7 @@ var index_default = {
         const sha = (url.searchParams.get("sha256") || "").toLowerCase();
         if (!/^[0-9a-f]{64}$/.test(sha))
           return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
-        const r2 = await stub2.fetch(new Request(`http://do/verify?sha256=${sha}`));
+        const r2 = await stub3.fetch(new Request(`http://do/verify?sha256=${sha}`));
         const out2 = await r2.json();
         return json({ ok: true, ...out2.result }, 200);
       }
@@ -7825,7 +7893,7 @@ var index_default = {
         const win = Math.floor(Date.now() / KNOCK.windowMs);
         const ipHash = await fingerprint(req.headers.get("cf-connecting-ip") || "unknown") || "unknown";
         const knockId = `KNOCK-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
-        const rec = await (await stub2.fetch(new Request("http://do/knock", {
+        const rec = await (await stub3.fetch(new Request("http://do/knock", {
           method: "POST",
           body: JSON.stringify({
             knockId,
@@ -7855,7 +7923,7 @@ var index_default = {
           received: "Your material is in the group's inbox awaiting member review."
         }, 200);
       }
-      const r = await stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`));
+      const r = await stub3.fetch(new Request(`http://do/bootstrap?fp=${fp}`));
       const out = await r.json();
       return json({
         ok: true,

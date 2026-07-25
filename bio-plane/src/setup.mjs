@@ -318,12 +318,13 @@ table.rec tr.row:hover td{background:#F6F7F2}
 </section>
 
 <section id="s-enroll">
-  <h1>Set your password</h1>
-  <p>You were invited to this group. Choose a password and your account is live.</p>
-  <label for="en-id">Your member name</label>
-  <input id="en-id">
-  <label for="en-inv">The invitation code you were given</label>
-  <input id="en-inv" spellcheck="false">
+  <h1>Join this group</h1>
+  <p id="en-lede">You were invited. Choose the name the record will show, and a password.</p>
+  <div class="card" id="en-who" hidden></div>
+  <label for="en-handle">Your handle</label>
+  <input id="en-handle" spellcheck="false" placeholder="lowercase letters, digits and dashes">
+  <p class="hint">This is what the record shows: the author of anything you write, and the
+  name other members see. It is yours, not the label the administrator used to invite you.</p>
   <label for="en-pw">Choose a password (12 characters or more)</label>
   <input id="en-pw" type="password" autocomplete="new-password">
   <div class="actions" style="margin-top:12px"><button id="en-go">Set it</button></div>
@@ -348,11 +349,26 @@ async function state(){
        never reaches any server, and is stripped immediately either way. The
        screen this reveals existed since 0.4.0 with nothing able to show it
        (DEBT D-14). */
-    const code = decodeURIComponent(inv[1]);
+    /* The token IS the credential and carries nothing else. The previous link
+       was memberId:code, so anyone who saw a leaked or archived one learned who
+       had been invited. */
+    INVITE = decodeURIComponent(inv[1]);
     history.replaceState({}, "", location.pathname);
-    const parts = code.split(":");
-    if (parts.length === 2) { $("#en-id").value = parts[0]; $("#en-inv").value = parts[1]; }
-    else $("#en-inv").value = code;
+    const look = await api("invitelook", { invite: INVITE });
+    if (!look.result || !look.result.ok) {
+      $("#en-lede").textContent = "This invitation link is not live. An invitation is used up the "
+        + "moment someone joins with it. Ask whoever invited you for a new one.";
+      document.querySelectorAll("#s-enroll label, #s-enroll input, #s-enroll .hint, #en-go")
+        .forEach((x) => { x.hidden = true; });
+      show("#s-enroll"); return;
+    }
+    const w = look.result;
+    $("#en-who").hidden = false;
+    $("#en-who").innerHTML = '<div class="kv"><span class="k">Invited as</span><span class="v">'
+      + escH(w.cover) + '</span></div>'
+      + '<div class="kv"><span class="k">Role</span><span class="v">' + escH(w.role) + '</span></div>'
+      + '<div class="kv"><span class="k">You can</span><span class="v">'
+      + escH((w.capabilities || []).join(", ") || "read") + '</span></div>';
     show("#s-enroll"); return;
   }
   const m = location.hash.match(/boot=([^&]+)/);
@@ -425,6 +441,7 @@ $("#do-login").addEventListener("click", async ()=>{
 });
 let SESSION = null;
 let WHO = "admin";
+let INVITE = null;
 function panel(login, claimedAt){
   if (login && login.token) {
     SESSION = login.token;
@@ -958,8 +975,11 @@ $("#m-add").addEventListener("click", async ()=>{
   /* A link, not a bare code. The code rides the URL fragment, which never
      reaches any server, and the enrolment screen it opens had no reachable
      path at all before this (DEBT D-14). */
+  /* The token alone. Nothing about who it addresses rides in the URL, so a
+     leaked or archived link reveals neither the group nor the invitee, and it
+     resolves to nothing once it has been used. */
   const link = location.origin + location.pathname + "#invite="
-    + encodeURIComponent(wanted + ":" + r.result.invite);
+    + encodeURIComponent(r.result.invite);
   $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Send '
     + escH(wanted) + ' this link. It works once, it is not shown again, and it '
     + 'goes nowhere after it has been used.</p>'
@@ -1005,14 +1025,17 @@ $("#k-add").addEventListener("click", async ()=>{
 /* ---- enrolment, for an invited member with no password yet ---- */
 $("#en-go").addEventListener("click", async ()=>{
   const e = $("#en-err"); e.textContent = "";
-  const r = await api("enroll", { memberId: $("#en-id").value.trim(),
-    invite: $("#en-inv").value.trim(), password: $("#en-pw").value });
+  const r = await api("enroll", { invite: INVITE,
+    handle: $("#en-handle").value.trim().toLowerCase(), password: $("#en-pw").value });
   if (!r.result || !r.result.ok) {
-    e.textContent = r.result && r.result.reason === "PASSWORD_TOO_SHORT"
-      ? "The password needs at least 12 characters."
-      : "That invitation was not accepted. Check the name and the code.";
+    const why = r.result && r.result.reason;
+    e.textContent = why === "PASSWORD_TOO_SHORT" ? "The password needs at least 12 characters."
+      : why === "HANDLE_TAKEN" ? "Someone already uses that handle. Choose another."
+      : why === "NO_HANDLE" ? "Choose a handle. It is the name the record will show."
+      : why === "BAD_HANDLE" ? "A handle is lowercase letters, digits and dashes, at least two characters."
+      : "This invitation link is not live. Ask whoever invited you for a new one.";
     return; }
-  $("#lwho").value = $("#en-id").value.trim(); $("#lpw").value = "";
+  $("#lwho").value = r.result.memberId; $("#lpw").value = "";
   show("#s-login");
 });
 document.querySelectorAll(".crumb-home").forEach(a=>a.addEventListener("click", ()=>{
