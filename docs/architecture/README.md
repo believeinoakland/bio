@@ -85,10 +85,31 @@ preference.
 
 ## A note on what is not here
 
-The C-series check catalog is referenced throughout State Rules and the
-Bundle Skill design, but its implementation, `bio-checks`, lives in the
-Apps Script codebase rather than in this corpus. The Cloudflare plane
-currently ships `plane-gate/0.1`, which implements the mechanical integrity
-subset and records its own version on every publication so the gap is
-visible in the record rather than assumed away. Porting the full catalog
-needs the check source, not these documents.
+**The Conversion Plan is referenced but is NOT in this repository.** Six
+documents cite it, most often as "Conversion Plan step 6" (a benchmark at 5,000
+and 20,000 bundles against a prediction table) and "Conversion Plan probe 1"
+(FTS5 virtual tables versus an exported index). A reader following those
+references will not find the document, and the benchmark they name records
+actuals with nothing to compare them against. Recorded here rather than edited
+out of the six documents, because the references are honest about what was
+DECIDED and only misleading about what is READABLE, and rewriting six documents'
+prose to remove a name risks changing what they meant.
+
+What survives of it, and where the answers actually live:
+
+- **Probe 1 was answered by measurement, not by the plan.** FTS5 inside the
+  Durable Object won, and `development/RETRIEVAL-SUBSTRATE.md` is the resulting
+  specification. `development/RETRIEVAL-PROBE.md` holds the actuals.
+- **Step 6's benchmark exists and runs**, as `npm run bench:retrieval` at 20,000
+  bundles, and `npm run bench 20000` for the store harness. There is no
+  prediction table to check them against and there will not be one, so the bench
+  is judged against the previous run and against the shape of the curve rather
+  than against a threshold nobody can read. That is weaker than the plan
+  intended and it is the honest position. See D-28.
+
+The C-series check catalog was also once listed here as absent. It is not
+anymore: `bio-plane/checks/bio-checks.mjs` carries it, hash-verified, and
+`plane-gate/1.0` RUNS it rather than reimplementing it. That note is kept in
+outline only so a reader of an older revision can see the gap closed rather than
+wonder whether it was quietly dropped.
+

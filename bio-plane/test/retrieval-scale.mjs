@@ -146,7 +146,77 @@ rows.push(await best("facet sidebar after a metadata filter", "q=criticality:not
 rows.push(await best("select-all, every id", "q=&mode=ids&facets=none"));
 rows.push(await best("select-all after a filter", "q=type:problem&mode=ids&facets=none"));
 
-console.log("\nSelections:");
+/* D-32, head to head. The debt register named two remaining options and the
+   only honest way to choose between them is to run both over the same corpus
+   through the real op. `scan` pulls the facet columns of every row in scope and
+   counts in JS; `groupby` makes SQLite aggregate and sort per field. */
+console.log("\nFacet strategy, head to head (D-32), min of five:");
+console.log("  shape                                  groupby      scan   verdict");
+const facetShapes = [
+  ["sidebar over the whole corpus", "q="],
+  ["sidebar after a broad text filter", "q=fund"],
+  ["sidebar after a metadata filter", "q=criticality:notable"],
+  ["sidebar on a selective text filter", `q=${RARE}`],
+  ["sidebar on an empty result", "q=zzzznothingmatches"],
+];
+const facetRows = [];
+for (const [label, qs] of facetShapes) {
+  const run = async (mode) => {
+    let min = Infinity, snap = null;
+    for (let k = 0; k < 5; k++) {
+      const a = Date.now();
+      const r = await call(`/search?viewer=class:member&owner=class:member&facetmode=${mode}&${qs}`);
+      const ms = Date.now() - a;
+      if (ms < min) { min = ms; }
+      snap = JSON.stringify(r.facets);
+    }
+    return { ms: min, snap };
+  };
+  const g = await run("groupby"), s = await run("scan");
+  /* Agreement at SIZE, not only in the suite. The suite compares the two forms
+     over a handful of bundles; a disagreement that only appears once SQLite
+     changes plan would slip straight past it. */
+  const agree = g.snap === s.snap;
+  const verdict = !agree ? "DISAGREE" : `${(g.ms / Math.max(s.ms, 1)).toFixed(1)}x ${s.ms < g.ms ? "scan" : "groupby"}`;
+  console.log(`  ${label.padEnd(38)}${String(g.ms + "ms").padStart(7)}${String(s.ms + "ms").padStart(10)}   ${verdict}`);
+  facetRows.push({ label, groupby: g.ms, scan: s.ms, agree });
+}
+const disagreed = facetRows.filter((r) => !r.agree);
+console.log(disagreed.length
+  ? `  DISAGREEMENT on ${disagreed.length} shape(s): the fast path is not the same answer, which is a defect not a tradeoff`
+  : "  both strategies returned identical counts on every shape");
+
+/* D-33. The id tiebreak was required by ARGUMENT and by a compile-time
+   assertion, never by anything that ran. `test/search.test.mjs` pages 600 tied
+   rows and still passes with the tiebreak removed, because at that size SQLite
+   happens to return tied rows in a stable order. The hazard is that the delivery
+   order is a property of the QUERY PLAN, and the plan changes with corpus size,
+   with an added index, and with an engine upgrade. So the check belongs here, at
+   a size where the sorter actually spills: page the whole corpus on a heavily
+   tied field and require the pages to partition it exactly. A row appearing
+   twice or not at all is the failure this tiebreak exists to prevent, and until
+   now nothing would have caught it. */
+console.log("\nPaging integrity on a heavily tied sort (D-33):");
+{
+  const PAGE = 500;
+  const seen = new Map();
+  let pages = 0;
+  for (let off = 0; off < N; off += PAGE) {
+    const r = await call(`/search?viewer=class:member&owner=class:member&q=&sort=criticality&facets=none&limit=${PAGE}&offset=${off}`);
+    pages++;
+    for (const h of r.hits) seen.set(h.bundle_id, (seen.get(h.bundle_id) || 0) + 1);
+  }
+  const dupes = [...seen.entries()].filter(([, n]) => n > 1);
+  const total = await call("/search?viewer=class:member&owner=class:member&q=&facets=none&mode=count");
+  const expect = total.total ?? N;
+  console.log(`  ${pages} pages of ${PAGE} over a field with ${Math.round(N / 2)}-way ties`);
+  console.log(`  distinct rows delivered: ${seen.size} of ${expect}`);
+  console.log(`  rows delivered twice:    ${dupes.length}`);
+  console.log(`  rows never delivered:    ${expect - seen.size}`);
+  console.log(seen.size === expect && dupes.length === 0
+    ? "  the pages partition the corpus exactly: the tiebreak holds at spill size"
+    : "  PAGING IS WRONG: the tiebreak does not hold at this size");
+}
 const selBest = async (label, fn) => {
   let min = Infinity, out = null;
   for (let k = 0; k < 5; k++) { const a = Date.now(); out = await fn(); const ms = Date.now() - a; if (ms < min) min = ms; }

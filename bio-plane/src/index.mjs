@@ -99,6 +99,14 @@ const OPS = {
      every other reader of the working corpus, and there is no public class to
      grant it to. */
   cite:            { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
+     therefore the first callers of selectionResolve's REFUSING arm. Severing
+     withdraws a citation without deleting it and reinstating restores one; both
+     require a reason, because the catalog's own remediation for a bad reference
+     is "sever with reason" and an edge moved with no reason is an unexplained
+     change wearing a status field. */
+  sever:           { classes: ["admin", "member", "probe"],      mutating: true  },
+  reinstate:       { classes: ["admin", "member", "probe"],      mutating: true  },
   list:       { classes: ["admin", "member", "probe"],           mutating: false },
   image:      { classes: ["admin", "member", "probe"],           mutating: false },
   file:       { classes: ["admin", "member", "probe"],           mutating: false },
@@ -172,13 +180,17 @@ const OPS = {
    session already reads through op=index and op=audit, so this widens no fence:
    `viewer` and `owner` are stamped from the session's own identity below. */
 const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
+/* The selection-backed actions on a Project's citation edges. Named as a set
+   rather than listed twice, because the member and admin session lists drifting
+   apart is exactly the class of defect this repository keeps finding. */
+const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, "cite"]),
+                   ...RETRIEVAL_READS, ...EDGE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, "cite",
+                   ...RETRIEVAL_READS, ...EDGE_ACTIONS,
                    "memberadd", "memberset", "signeradd", "signerset"]),
 };
 
@@ -1007,21 +1019,21 @@ export default {
        the only place the identity comes from. A viewer the compiler does not
        recognise compiles to a deny predicate, so the failure mode of a missing
        stamp is an empty result rather than an unfiltered one. */
-    if (op === "search" || op === "select" || op === "selection" || op === "cite") {
+    if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
     /* Ownership of a selection is the same server-side stamp. A selection is
        readable only by the credential that made it, and "only by the credential"
        is worth nothing if the caller names the credential. */
     if (op === "select" || op === "selection" || op === "selectionlist" ||
-        op === "selectionrelease" || op === "cite")
+        op === "selectionrelease" || EDGE_ACTIONS.includes(op))
       inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `class:${cls}`);
     /* Who cited is part of the record, and citing writes a Session Log entry
        carrying the name. Stamped like every other authorship in this file: a
        browser cannot write history as someone else, and a machine credential
        says plainly that it was a machine rather than borrowing a person's name.
        A caller-supplied `author` is overwritten, not honoured. */
-    if (op === "cite")
+    if (EDGE_ACTIONS.includes(op))
       inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
     if (viaSession && op === "promote" && passBody) {

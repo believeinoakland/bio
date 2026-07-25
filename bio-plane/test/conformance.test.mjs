@@ -8,12 +8,13 @@
  * plane's history layout diverged from canonical in three ways at once without
  * a single test noticing.
  *
- * Scope today is the C-12 history family, which is what the canonical
- * projection work (PLAN.md S-1) claims to fix. Findings from other families are
- * counted and reported but not failed, because the intake path does not yet
- * write all fifteen core fields (DEBT.md D-7) and pretending otherwise would
- * make this suite red for a reason it is not testing. When S-3 lands, the
- * assertion below tightens from "zero C-12 findings" to "zero findings".
+ * Scope was once the C-12 history family alone, with other families counted and
+ * reported but not failed, because the intake path did not yet write all fifteen
+ * core fields (D-7). S-3 landed that in 0.5.1 and the gate port landed in 0.6.0,
+ * so the assertion tightened to ZERO FINDINGS OF ANY FAMILY and has held there
+ * since. Both assertions are kept below rather than collapsed into one: the
+ * C-12 line names the family this suite was created for, and the general line is
+ * the one that would catch a regression anywhere else. D-18 closed 0.19.0.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

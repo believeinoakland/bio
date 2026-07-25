@@ -285,11 +285,43 @@ console.log("\n--- the viewer gate returns nothing on every shape, not merely on
     Object.values(facets.facets).every((v) => v.length === 0), true);
   t("an unrecognised viewer string is denied, not trusted",
     (await call("/search?q=fund&viewer=admin-ish")).gate.scope, "DENY");
-  /* Four, not eight: a count, a page, and the facet pass batched into two
-     statements. It was eight when each of six facets ran its own statement, and
-     that cost 283ms at 20,000 bundles. */
+  /* Three, not four and not eight. A count, a page, and ONE facet scan. It was
+     eight when each of six facets ran its own statement (283ms at 20,000), four
+     when they were batched into two compound statements, and is three now that
+     the counting happens in JS over a single scan (D-32). The number is asserted
+     rather than described because it is the thing that regresses silently. */
   t("the gate is applied to every statement the request ran",
-    (await call("/search?q=fund&viewer=class:member")).gate.applied, 4);
+    (await call("/search?q=fund&viewer=class:member")).gate.applied, 3);
+}
+
+console.log("\n--- the two facet strategies agree exactly (D-32) ---");
+{
+  /* An optimisation that disagrees with the thing it replaces is not an
+     optimisation. Same standard op=audit is held to against an outside pass:
+     the fast path is only allowed to be fast, never to be different. */
+  const shapes = [
+    ["whole corpus", "q="],
+    ["a text filter", "q=fund"],
+    ["a metadata filter", "q=state:collected"],
+    ["text and metadata", "q=fund+state:collected"],
+    ["a named facet subset", "q=&facets=state,type"],
+    ["an empty result", "q=zzzznothingmatchesthis"],
+  ];
+  for (const [label, qs] of shapes) {
+    const scan = await call(`/search?${qs}&viewer=class:member&facetmode=scan`);
+    const grp = await call(`/search?${qs}&viewer=class:member&facetmode=groupby`);
+    t(`${label}: identical facet counts`,
+      JSON.stringify(scan.facets), JSON.stringify(grp.facets));
+  }
+  /* And the agreement is not vacuous: prove the shapes above actually produced
+     counts, or six comparisons of {} would pass and mean nothing. */
+  const filled = await call("/search?q=&viewer=class:member&facetmode=scan");
+  const total = Object.values(filled.facets).reduce((a, v) => a + v.length, 0);
+  t("the comparison was not over empty facet sets", total > 0, true);
+  /* NULL is absence in both forms. A column no bundle fills must appear as an
+     empty list, never as a bucket counting nulls. */
+  const nulls = Object.values(filled.facets).flat().filter((x) => x.value === null);
+  t("neither form counts NULL as a value", nulls, []);
 }
 
 console.log("\n--- AND semantics, and the affordance that makes AND safe ---");

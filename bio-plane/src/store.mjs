@@ -419,12 +419,7 @@ export class Store extends DurableObject {
     }
 
     if (input.facets !== false && mode !== "count") {
-      out.facets = Object.fromEntries(plan.facetFields.map((f) => [f, []]));
-      /* One statement for every facet, not one per field. Six statements meant
-         six rebuilds of the same scope and measured 283ms at 20,000 bundles. */
-      for (const stmt of plan.statements.facets())
-        for (const r of this.#runQuery(stmt, tally))
-          (out.facets[r.field] ||= []).push({ value: r.value, n: r.n });
+      out.facets = this.#facetCounts(plan, tally, input.facetMode);
     }
 
     /* The affordance that makes AND safe. AND's failure mode is nothing found
@@ -789,6 +784,306 @@ export class Store extends DurableObject {
     return { ok: true, released: before - this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c };
   }
 
+  /* Facet counts, two ways, because which is faster is a measurement (D-32).
+   *
+   *   scan     ONE statement returning the facet columns of every row in scope,
+   *            tallied into a hash map per field here. No aggregation and no
+   *            sort in SQLite. Cost tracks the number of rows in scope.
+   *   groupby  the compound UNION ALL of GROUP BY arms. SQLite aggregates and
+   *            sorts; cost tracks rows scanned plus a sort per field, and the
+   *            RESULT is bounded by distinct values rather than by rows.
+   *
+   * `scan` is the default because the bench measures it faster on every shape at
+   * 20,000 bundles, most decisively on the sidebar over the whole corpus, which
+   * was the worst shape in the release. Both are kept and both are asserted to
+   * agree exactly in test/search.test.mjs: an optimisation that disagrees with
+   * the thing it replaces is not an optimisation, and this is the same standard
+   * op=audit is held to against an outside pass.
+   */
+  static FACET_MODE_DEFAULT = "scan";
+
+  #facetCounts(plan, tally, mode) {
+    const use = mode === "groupby" || mode === "scan" ? mode : Store.FACET_MODE_DEFAULT;
+    const out = Object.fromEntries(plan.facetFields.map((f) => [f, []]));
+    if (!plan.facetFields.length) return out;
+
+    if (use === "groupby") {
+      for (const stmt of plan.statements.facets())
+        for (const r of this.#runQuery(stmt, tally))
+          (out[r.field] ||= []).push({ value: r.value, n: r.n });
+      return out;
+    }
+
+    const stmt = plan.statements.facetScan();
+    if (!stmt) return out;
+    const rows = this.#runQuery(stmt, tally);
+    const cols = plan.facetCols;
+    const tallies = plan.facetFields.map(() => new Map());
+    for (const row of rows) {
+      for (let i = 0; i < cols.length; i++) {
+        const v = row[cols[i]];
+        /* NULL is absence, not a value, and the GROUP BY form excludes it with
+           `IS NOT NULL`. Excluded here too, or the two forms would disagree and
+           the agreement assertion would be measuring nothing. */
+        if (v === null || v === undefined) continue;
+        const m = tallies[i];
+        m.set(v, (m.get(v) || 0) + 1);
+      }
+    }
+    /* Same order the GROUP BY form emits: count descending, then value
+       ascending, so a sidebar is stable and the two forms compare equal. */
+    plan.facetFields.forEach((name, i) => {
+      out[name] = [...tallies[i].entries()]
+        .map(([value, n]) => ({ value, n }))
+        .sort((a, b) => b.n - a.n || (a.value < b.value ? -1 : a.value > b.value ? 1 : 0));
+    });
+    return out;
+  }
+
+  /* ---- the first STATE-CHANGING actions to refer to a selection ----
+   *
+   * SEVERING and REINSTATING a citation, both at weight `refuse`.
+   *
+   * `cite` shipped in 0.18.0 at weight `report` and left the refusing arm of
+   * `selectionResolve` with no caller. These are its first, and they are the
+   * right ones for two reasons. They genuinely change recorded state, so drift
+   * must stop them: a state transition landing on a set the operator did not see
+   * is the accountability failure the record exists to prevent. And they close a
+   * hole `cite` opened, because until now an edge could be created and never
+   * withdrawn, which makes a citation list an accumulation rather than a record
+   * of what the group currently relies on.
+   *
+   * SEVERING IS NOT DELETION. The edge stays, with its target and rel intact,
+   * and only its status changes. That is the same doctrine that greys a
+   * dismissed Problem rather than removing it, and it is what makes a severance
+   * auditable: a reader can see that the group once relied on this and stopped,
+   * and why.
+   *
+   * A REASON IS REQUIRED by both. The catalog's own remediation for a bad edge
+   * is "sever with reason" (C-6.1) and State Rules 5.1 has a human confirming or
+   * severing what an agent proposed. A severance with no reason is an
+   * unexplained deletion wearing a status field.
+   */
+  static EDGE_REASON_MAX = 160;
+  static EDGE_NOTE_MAX = 480;
+
+  /** Move `cites` edges between statuses for every member of a selection.
+   *
+   *  One method for both directions because they are the same operation over the
+   *  same grammar, and two copies of a frontmatter splice is how the two
+   *  reference sources drifted apart in the first place (D-21). */
+  #edgeTransition({ project, handle, viewer, owner, reason, author,
+                    from, to, verb, resultKey }) {
+    /* Weight `refuse`, hard-coded exactly as `cite` hard-codes `report`. A
+       caller that could choose the weight would make the distinction advisory. */
+    const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
+    if (!sel.ok) return sel;
+
+    const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
+    if (!p) return { ok: false, reason: "NO_SUCH_PROJECT", project };
+    if (p.object_type !== "project")
+      return { ok: false, reason: "NOT_A_PROJECT", project, got: p.object_type,
+               detail: "cites lives on the citing object and this action edits a Project's edges" };
+
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON",
+               detail: `${verb} an edge records WHY. The catalog's own remediation for a bad reference is `
+                     + `"sever with reason", and an edge moved with no reason is an unexplained change `
+                     + `wearing a status field.` };
+    if (why.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON",
+               detail: `a reason is at most ${Store.EDGE_REASON_MAX} characters and cannot contain a quote, `
+                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes, so `
+                     + `those would reshape the document rather than appear in it` };
+
+    /* An EMPTY selection is refused, not treated as a successful no-op. A
+       selection can resolve to nothing (named ids that never existed, or members
+       purged or hidden since it was made), and the first version of this method
+       then found no offenders, built no changes, and promoted an UNCHANGED
+       document: a revision in an append-only history recording that nothing
+       happened, reported as success. Found by the suite asking what happens when
+       you sever an id that was never cited. */
+    if (!sel.members.length)
+      return { ok: false, reason: "EMPTY_SELECTION", project, handle, drift: sel.drift,
+               detail: "this selection resolves to no members, so there is nothing to move. It may have "
+                     + "named ids that do not exist, or its members may have been purged or hidden since "
+                     + "it was made." };
+
+    const offenders = [];
+    for (const id of sel.members) {
+      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+      if (!b || b.object_type !== "information") offenders.push(id);
+    }
+    if (offenders.length)
+      return { ok: false, reason: "NOT_INFORMATION", project, handle, offenders: offenders.sort(),
+               detail: "these members of the selection are not Information, so they carry no citation edge "
+                     + "to move. The whole call is refused rather than narrowed." };
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
+    if (!liveMd || typeof liveMd.content !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
+    const parsed = parseFrontmatter(liveMd.content);
+    if (!parsed.data) return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project };
+
+    const current = new Map();
+    for (const r of Array.isArray(parsed.data.references) ? parsed.data.references : [])
+      if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
+        current.set(r.target, r);
+
+    /* THE WHOLE SET MOVES OR NONE OF IT DOES. A member in the wrong state means
+       the operator is looking at a stale view, so the batch is refused by name
+       rather than partially applied. A half-run state change is precisely what
+       weight `refuse` exists to prevent, and applying it to the subset that
+       happens to be eligible would reintroduce that through the back door. */
+    const wrong = [];
+    for (const id of sel.members) {
+      const e = current.get(id);
+      if (!e || !from.includes(e.status)) wrong.push(id);
+    }
+    if (wrong.length)
+      return { ok: false, reason: from.includes("severed") ? "NOT_SEVERED" : "NOT_CITED",
+               project, handle, offenders: wrong.sort(), drift: sel.drift,
+               detail: `${verb} requires an edge currently in ${from.map((s) => `'${s}'`).join(" or ")}. `
+                     + `These targets are not, so the whole call is refused: a batch that moved only the `
+                     + `eligible members would be a state change the operator did not ask for.` };
+
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    /* The reason is APPENDED to the note, never substituted. The note is the
+       only prose an edge carries, and the reason it was cited is as much a part
+       of the record as the reason it stopped being relied on. Bounded, with the
+       oldest text dropped first when it will not fit, because the superseded
+       revision is in history and the newest reasoning is what a reader needs
+       first. */
+    const changes = new Map();
+    for (const id of sel.members) {
+      const prev = String(current.get(id).note ?? "");
+      let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why}`;
+      if (note.length > Store.EDGE_NOTE_MAX) note = note.slice(note.length - Store.EDGE_NOTE_MAX);
+      changes.set(id, { status: to, note });
+    }
+
+    const spliced = Store.#spliceEdgeStatus(liveMd.content, changes);
+    if (!spliced)
+      return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
+               detail: "the references block is not in a shape this grammar can edit in place" };
+
+    let text = Store.#setScalar(spliced, "last_updated", `"${when}"`);
+    const ids = [...sel.members].sort();
+    const shown = ids.slice(0, Store.CITE_LOG_SAMPLE);
+    const listed = shown.join(", ") + (ids.length > shown.length ? `, and ${ids.length - shown.length} more` : "");
+    const entry = `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"}`
+                + ` | ${author || "member"}\n`
+                + `Trigger: selection ${handle}\n`
+                + `Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.\n`;
+    const at = text.indexOf("## Session Log");
+    if (at < 0) text += "\n## Session Log\n\n" + entry;
+    else {
+      const nxt = text.indexOf("\n## ", at + 1);
+      const cut = nxt === -1 ? text.length : nxt + 1;
+      text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
+    }
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, project))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.length > INLINE_MAX)
+      return { ok: false, reason: "CITATION_TOO_LARGE", project, bytes: bytes.length, limit: INLINE_MAX,
+               detail: "the reasons appended to these edges would push bundle.md past the 1MB inline limit" };
+    const fm = parsed.data;
+    const promoted = this.promote({
+      bundleId: project, base: p.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: author || "member",
+      files: [{ path: "bundle.md", text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() },
+              ...carried],
+      meta: {
+        object_type: "project", group: fm.group || "believe-in-oakland", title: fm.title,
+        current_state: fm.current_state, prior_state: fm.prior_state ?? null,
+        created: fm.created, last_updated: when,
+        criticality: fm.criticality ?? null, classification: fm.classification ?? null,
+      },
+    });
+    if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
+
+    return { ok: true, project, handle, weight: "refuse", moved: sel.moved, drift: sel.drift,
+             /* `why` and NOT `reason`: every refusal in this file returns a
+                REASON CODE under that name, and returning the operator's prose
+                under the same key made a success indistinguishable from a
+                refusal to any caller checking `reason`. The suite caught it. */
+             [resultKey]: ids, why, from, to,
+             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion, gate: sel.gate };
+  }
+
+  sever({ project, handle, viewer = null, owner = null, reason = "", author = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author,
+      from: ["confirmed", "proposed"], to: "severed", verb: "Severed", resultKey: "severed" });
+  }
+
+  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author,
+      from: ["severed"], to: "confirmed", verb: "Reinstated", resultKey: "reinstated" });
+  }
+
+  /* Rewrite the `status` and `note` of specific `cites` entries in place,
+     touching nothing else. Walks the references block entry by entry, tracking
+     which target the current entry belongs to, and edits only the two lines of
+     the entries named in `changes`. An entry whose note line is absent gains
+     one, because the reason has to land somewhere. */
+  static #spliceEdgeStatus(text, changes) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    let ref = -1;
+    for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
+    if (ref === -1) return null;
+
+    /* Entry boundaries first, so an edit never runs past the entry it belongs
+       to. An entry starts at `  - ` and ends before the next one or at the end
+       of the block. */
+    const starts = [];
+    for (let i = ref + 1; i < end; i++) {
+      if (/^ {2}- /.test(lines[i])) starts.push(i);
+      else if (!/^\s/.test(lines[i]) && lines[i].trim() !== "") break;
+    }
+    if (!starts.length) return null;
+    const blockEnd = (() => {
+      let last = ref;
+      for (let i = ref + 1; i < end; i++) {
+        if (lines[i].trim() === "") continue;
+        if (/^\s/.test(lines[i])) { last = i; continue; }
+        break;
+      }
+      return last;
+    })();
+
+    const out = lines.slice();
+    let applied = 0;
+    for (let s = 0; s < starts.length; s++) {
+      const from = starts[s], to = (s + 1 < starts.length ? starts[s + 1] : blockEnd + 1) - 1;
+      let target = null;
+      for (let i = from; i <= to; i++) {
+        const m = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
+        if (m) { target = m[1].replace(/^["']|["']$/g, ""); break; }
+      }
+      if (!target || !changes.has(target)) continue;
+      const ch = changes.get(target);
+      let sawNote = false, statusLine = -1;
+      for (let i = from; i <= to; i++) {
+        if (/^\s*(?:- )?status:/.test(lines[i])) { out[i] = "    status: " + ch.status; statusLine = i; }
+        if (/^\s*(?:- )?note:/.test(lines[i])) { out[i] = `    note: "${ch.note}"`; sawNote = true; }
+      }
+      if (statusLine === -1) return null;   // an entry with no status is not ours to guess at
+      if (!sawNote) out[statusLine] = out[statusLine] + `\n    note: "${ch.note}"`;
+      applied++;
+    }
+    return applied === changes.size ? out.join("\n") : null;
+  }
+
   /* ---- the first action that refers to a selection ----
    *
    * CITING INFORMATION IN A PROJECT, at weight `report`.
@@ -899,6 +1194,11 @@ export class Store extends DurableObject {
        who reads a drift report will reasonably press the button again. A no-op
        that still promoted would put an empty revision in an append-only
        history every time. */
+    if (!sel.members.length)
+      return { ok: false, reason: "EMPTY_SELECTION", project, handle, drift: sel.drift,
+               detail: "this selection resolves to no members, so there is nothing to cite. It may have "
+                     + "named ids that do not exist, or its members may have been purged or hidden since "
+                     + "it was made." };
     if (!add.length)
       return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
                cited: [], alreadyCited: already.sort(), severed: [],
@@ -1866,7 +2166,23 @@ export class Store extends DurableObject {
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
-    const body = req.method === "POST" ? await req.json() : null;
+    /* D-39. An empty POST body used to throw here, BEFORE any op was dispatched,
+       so the caller saw a Cloudflare worker exception (error 1101) rather than a
+       BIO refusal. It was general to every op and it turned a client bug into an
+       opaque platform error. An absent body is now simply null, which is what a
+       GET already passes and what every op that takes no body already expects;
+       a body that is present but not JSON is refused by name. */
+    let body = null;
+    if (req.method === "POST") {
+      const raw = await req.text();
+      if (raw.trim() !== "") {
+        try { body = JSON.parse(raw); }
+        catch {
+          return Response.json({ ok: false, reason: "BAD_JSON",
+            detail: "the request body is not valid JSON" }, { status: 400 });
+        }
+      }
+    }
     const t = Date.now();
     try {
       const map = {
@@ -1897,6 +2213,11 @@ export class Store extends DurableObject {
           mode: url.searchParams.get("mode"),
           facets: url.searchParams.get("facets") === "none" ? false
                 : url.searchParams.get("facets") ? url.searchParams.get("facets").split(",") : null,
+          /* D-32. Which facet strategy ran, so the bench can drive BOTH through
+             the real op rather than measuring a copy of the code. Not a tuning
+             knob for callers: absent means the default, and the two are asserted
+             to agree exactly. */
+          facetMode: url.searchParams.get("facetmode"),
           widen: url.searchParams.get("widen") !== "0",
           snippetChars: Number(url.searchParams.get("snippet")) || 12,
         }),
@@ -1929,6 +2250,25 @@ export class Store extends DurableObject {
           viewer: url.searchParams.get("viewer"),
           owner: url.searchParams.get("owner"),
           note: url.searchParams.get("note") ?? "",
+          author: url.searchParams.get("author"),
+        }),
+        /* The first STATE-CHANGING actions to refer to a selection, and the
+           first callers of selectionResolve's refusing arm. Weight is not read
+           from the caller here either. */
+        sever: () => this.sever({
+          project: url.searchParams.get("project"),
+          handle: url.searchParams.get("handle"),
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          reason: url.searchParams.get("reason") ?? "",
+          author: url.searchParams.get("author"),
+        }),
+        reinstate: () => this.reinstate({
+          project: url.searchParams.get("project"),
+          handle: url.searchParams.get("handle"),
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          reason: url.searchParams.get("reason") ?? "",
           author: url.searchParams.get("author"),
         }),
         selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),

@@ -682,12 +682,30 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     return out;
   };
 
+  /* D-32, the remaining option named in the debt register: count the facets from
+     ONE scan in JS instead of a GROUP BY per field. One statement, no aggregation
+     and no sort in SQLite, returning the facet columns of every row in scope; the
+     tallying is a hash map per field in store.mjs.
+     Kept ALONGSIDE the compound-GROUP BY form rather than replacing it sight
+     unseen, because which one wins is a measurement and not an argument: the
+     GROUP BY form returns O(distinct values) rows and makes SQLite sort, the scan
+     form returns O(rows in scope) and makes JS count. `npm run bench:facets`
+     drives both over the same corpus and prints the comparison. */
+  const facetScan = () => {
+    if (!facetList.length) return null;
+    const c = cte(false);
+    const sel = facetList.map((n) => `b.${FIELDS[n].col}`).join(", ");
+    return { sql: `${c.sql}\nSELECT ${sel} FROM scope s JOIN bundles b ON b.fts_id = s.fid\nWHERE ${gate.sql}`,
+             args: [...c.args, ...gate.args] };
+  };
+
   return {
     ast, warnings: ctx.warnings, gate: gate.scope, viewer: gate.viewer,
     sort: { field: sortField, dir: sortDir }, limit: lim, offset: off,
     match: rank, terms: ctx.textAtoms.map((a) => a.value), widenable,
     facetFields: facetList,
+    facetCols: facetList.map((n) => FIELDS[n].col),
     restricted: Array.isArray(ids) && ids.length > 0,
-    statements: { page, count, ids: idsStmt, snapshot, facets: facets_ },
+    statements: { page, count, ids: idsStmt, snapshot, facets: facets_, facetScan },
   };
 }
