@@ -51,9 +51,21 @@ image hash. `publishedlist` remains the public listing surface and reads the
 projection that has never held unratified material. A new suite,
 `test/fence.test.mjs`, holds the boundary and is run against the built `dist`
 artifact as well as `src`; it was written first and failed on exactly the three
-assertions covering the hole. The battery is now 22 suites. RELEASE.json still
-carries signed 0.14.0: cutting 0.14.1 needs Bob's signature over the new bundle,
-sha256 `9bccbd44596b1ad423afc5f256a679e0c22519458fe0cabe91a2c3bdbc84a37a`.
+assertions covering the hole. The battery is now 22 suites.
+
+**0.14.1 is cut, signed, and published**, tag `v0.14.1`, asset sha256
+`9bccbd44596b1ad423afc5f256a679e0c22519458fe0cabe91a2c3bdbc84a37a`. Signed with
+the `bio-release` key in the `bio-release` namespace over the asset bytes. Verified
+four ways with negative controls at each: the signing key derives exactly the
+public key compiled into the installer's `ARMED_SIGNERS`; stock `ssh-keygen -Y
+verify` accepts it and refuses both a wrong namespace and altered bytes; the
+repo's own `verifySshsig` accepts it and refuses wrong namespace, altered bytes,
+and a stranger-only allow list; and the installer's real verification path accepts
+the committed manifest. Finally the published bytes were fetched back from
+`raw.githubusercontent.com/believeinoakland/bio/main/release`, the path the
+installer actually uses, re-verified, and confirmed to carry the ACL fix. The
+deployed instance still runs 0.14.0 until someone with Cloudflare credentials
+deploys; no `PUBLIC_TOKEN` is set there, so nothing was exposed in practice.
 
 ---
 
