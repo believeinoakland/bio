@@ -1,7 +1,7 @@
 # BIO data plane: source state, migration plan, and build status
 
 v14, July 25, 2026. Current state, on top of the v13 narrative below. The plane
-is 0.14.2. The development instance is now biosmoke7.believeinoakland.workers.dev
+is 0.15.0. The development instance is now biosmoke7.believeinoakland.workers.dev
 (v13 below still names biosmoke5/6; the record moved forward with each fresh
 install). The live record is 30 bundles, 87 register rows, and audits 30 clean
 against the full 49-check catalog run inside the object via `op=audit`. The
@@ -33,6 +33,28 @@ counts included, and all shapes agree exactly with an unindexed ground truth at
 roughly half the frontmatter the UX must filter on and needs extending. Record in
 `development/RETRIEVAL-SUBSTRATE.md`. The plane source is unchanged by this probe
 as well.
+
+**0.15.0 is S-10 step 1: the metadata projection (July 25).** `bundles` now
+carries every field the retrieval surface filters and sorts on, sixteen columns
+plus `fm_json` for the per-schema tail, seven of them indexed with the query plan
+asserted rather than assumed. Derived from bundle.md with the catalog's own
+parser, written inside `promote`'s transaction so it cannot lag the document, and
+NULL rather than guessed when frontmatter will not parse. `op=projection` is
+member class and above, behind the same fence as `op=index`, because the
+projection carries `source.locator`. Battery 718 across 23 suites, wizard 90.
+Signed, tagged `v0.15.0`, asset sha256
+`32684a72b594392314030ad35ab7b08a192c06f84a8aac7ae4c1c8ec98a7fb48`, deployed and
+verified on biosmoke7.
+
+The backfill was tested by the live record rather than only by the suite: all 30
+bundles, written long before these columns existed, came back with a full
+projection derived from their stored bundle.md. 28 carry `source.locator`; the two
+that do not are the Problem and the Project, whose schemas have no source block,
+which is the heterogeneity `fm_json` exists for. `json_extract` over the tail
+finds `surfaced_by=agent` on the Problem, a field no column holds. Record
+unchanged at 30 bundles, 137 files, 239 history, 10 refs, 87 register rows;
+dbBytes moved 1,200,128 to 1,286,144, which is the new columns and indexes.
+`op=audit` 30 checked, zero findings.
 
 **0.14.2 retires the public token class (July 25).** A credential handed to the
 public is not a credential: to be public it must be widely distributed, and once
