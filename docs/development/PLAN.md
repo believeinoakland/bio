@@ -842,8 +842,50 @@ carries them as Drive wrote them, and the store projects that.
 Proven by a test that repoints a live reference at nothing and asserts that the
 store's own view and the catalog name the same single finding, C-6.2.
 
+### S-11 Selection-backed actions
+**Status: STARTED. Citing done, 0.18.0** · Depends: S-10 step 5
+
+`selectionResolve` shipped in 0.17.0 with a weight parameter and no caller. This
+step is the set of actions that call it, built one at a time, lightest first.
+
+**Step 1, done in 0.18.0: CITING INFORMATION IN A PROJECT, `op=cite`, weight
+`report`.** Chosen first because it ADDS references rather than moving state, so
+drift is survivable and the reporting arm of the gate is exercised before
+anything can be broken by it.
+
+It writes the DOCUMENT, not the projection. `refs` is re-derived from `bundle.md`
+frontmatter inside `promote`'s transaction and `promote` refuses a `refs` payload
+outright (D-21), so citing splices `rel: cites` entries into the Project's
+frontmatter and promotes a whole image. Edges land `confirmed` per State Rules
+5.1. Every other file is carried forward, which is the property the suite asserts
+directly: `promote` writes a whole image, so a writer that mentions one file
+deletes the rest, and that default has destroyed provenance twice in this repo.
+
+Three refusals, each writing nothing, and each a doctrine position rather than
+validation: `SEVERED_EDGE` (a severed edge is a recorded human judgment, so
+citing neither reverses it silently nor skips past it), `NOT_INFORMATION` (a
+selection carrying anything else is refused whole, offenders named, never
+narrowed to the citable subset), and `CITATION_TOO_LARGE` (D-38).
+
+Held to the catalog, not to itself: the suite runs `checkBundle` over the Project
+BEFORE and after citing, and the before-check is what makes the after-check mean
+anything.
+
+**Step 2, next, and deliberately not the same commit: the first STATE-CHANGING
+action, at weight `refuse`.** That is what gives the refusing arm of
+`selectionResolve` its first caller. It also gives reinstatement of a severed
+citation its home: reinstating is a state change and must record its own reason,
+the way severing does.
+
+**Accepts when:** each action names its own weight and does not read one from the
+caller; a report-weight action proceeds on drift and says what moved; a
+refuse-weight action stops and hands over nothing so it cannot half-run; and the
+bundle is conformant to the catalog after every one of them.
+
 ## Notes
 
+- S-10 is the retrieval substrate and S-11 is what USES it: the actions that
+  refer to a selection, built one at a time, lightest first.
 - Steps S-1 through S-3 are conformance and are not optional. S-4 through S-7 are
   the acquisition tooling the Apps Script accelerator carried. S-8 is the number
   that says whether the design holds. S-9 is the point at which one plane of

@@ -1,5 +1,101 @@
 # BIO data plane: source state, migration plan, and build status
 
+v17, July 25, 2026. Current state, on top of v16 and the narratives below. The
+plane is **0.18.0**, signed, tagged `v0.18.0`, deployed and verified on
+biosmoke7.believeinoakland.workers.dev. Deployed bytes hash identically to the
+signed release asset. Battery **1124 assertions across 26 suites in about 92
+seconds**, from 1032. Live record unchanged at 30 bundles, 137 files, 239 history
+rows, 10 refs, 87 register rows, 30 indexed, `op=audit` 30 clean,
+`op=searchindexcheck` clean.
+
+**THE FIRST ACTION THAT REFERS TO A SELECTION IS BUILT: citing Information in a
+Project, `op=cite`, at weight `report`.** `selectionResolve` shipped in 0.17.0
+with no caller. Citing is the right first one because it ADDS references rather
+than moving state, so drift is surfaced and survived rather than fatal, and the
+reporting arm of the gate is exercised before anything can be broken by it. The
+REFUSING arm still has no caller, deliberately: it gets one from the first
+state-changing action, which is not this commit.
+
+Citing writes the DOCUMENT, not the projection. `refs` is re-derived from
+`bundle.md` frontmatter inside `promote`'s transaction and `promote` refuses a
+`refs` payload outright (D-21), so `op=cite` splices `rel: cites` entries into
+the Project's frontmatter and promotes a whole image. Edges land at `status:
+confirmed`, per State Rules 5.1: an edge is proposed by an agent and confirmed by
+a human, and a member driving a selection is the human act.
+
+It is fully SYNCHRONOUS inside the Durable Object, which is load-bearing rather
+than incidental. The catalog's own `createSha256` is pure JS, so nothing between
+resolving the selection and committing the promotion awaits, and no other write
+can interleave. The CAS is still passed and checked, but it is a backstop here
+rather than the only guard.
+
+**Three decisions, Bob's, 2026-07-25.**
+
+A SEVERED EDGE IS NOT AN ABSENT ONE. A severed `cites` edge is a recorded human
+judgment, preserved with its reason the way a dismissed Problem is greyed and
+never deleted. Citing a severed target REFUSES, offenders named, nothing written.
+Reinstating one silently would be a state change riding inside a report-weight
+action; skipping past it would quietly narrow the operator's set. Both decide
+something the operator did not, so the call is handed back. Reinstatement becomes
+its own action, at weight `refuse`, recording its own reason the way severing
+does. The distinction that keeps this consistent with proceeding on drift: drift
+is the world moving under the operator and their intent still applies to the
+shifted set, whereas a severance collision is the record itself contesting the
+request.
+
+THE OPERATOR'S SET IS NEVER QUIETLY NARROWED. A selection carrying anything that
+is not Information is refused whole with the offenders listed, never filtered to
+the citable subset. Same doctrine as the enumeration cap.
+
+WEIGHT IS NOT A PARAMETER. `op=cite` reads no weight from the caller and is
+`report` because of what it IS. A caller that could choose the weight would make
+the whole distinction advisory and the gate decoration. Asserted.
+
+**Found by scaling, and only by scaling (D-38).** `SELECTION_MAX_ITEMS` (10,000)
+and `INLINE_MAX` (1MB) were set independently and collided: a maximum legal
+enumeration produced a 1,070,846-byte `bundle.md` and was refused by `promote`
+with `OVERSIZE_INLINE`, which is an error about inline byte storage handed to an
+operator who selected a legal number of records. Part of the cause was this
+session's own first draft, whose Session Log entry listed every cited id at 24
+bytes per edge on top of the 83 the reference block costs. Bounding that entry to
+20 ids plus a count, on the same reasoning `op=audit` bounds its offender list,
+took an edge from 107 to 84 bytes and lets a maximum selection fit at 841KB. A
+`CITATION_TOO_LARGE` refusal now names the real limit and the room remaining
+before anything is written. The ceiling is now reachable only cumulatively, and
+IS: at 12,000 edges a further 2,000 refuses and leaves the document
+byte-identical. Bob's decision: leave it, revisit if a real corpus approaches it.
+
+**Two gaps this work exposed, both fixed here.** `SESSION_OPS` gave a browser
+member session `select` but not `search`, `searchfields`, `searchindexcheck`,
+`selection` or `selectionlist`, so a signed-in member could create a selection
+and then neither search to build one nor resolve the one they had made: the
+browser half of S-10 was unreachable from a session. And `fence.test.mjs` tested
+a FIXED LIST of ops, so `cite` passed it without a single assertion touching it
+despite being mutating and reading the working corpus. The fence suite now reads
+the guarded set out of the module and asserts the extraction discriminates by
+confirming the `classes:null` public surface is excluded, so an op added later
+cannot pass it by not being mentioned in it.
+
+**Bench before signing, per the standing rule.** Worst shape 190ms (facet sidebar
+over the whole corpus) at 20,000 bundles, index vs corpus 20,000 checked with
+zero findings. v16 recorded 163ms for the same shape; this release touches
+nothing in the facet path and the difference is machine variance in the session
+container, recorded here rather than quietly restated.
+
+**Verified against the deployed artifact, not only the suite.** Version converged
+on `/version` and `op=selftest`, `stats` identical before and after, all six
+bindings still present, `op=audit` 30 clean, and the deployed bytes read back out
+of the multipart script envelope hash identically to the signed release asset.
+`op=cite` was exercised end to end on the DEPLOYED plane in the `scratch`
+namespace: edge written at `confirmed`, note landed, a sibling file survived the
+whole-image write, Session Log entry present, idempotent on a second call,
+`NOT_A_PROJECT` refused, scratch audit clean. Deliberately NOT exercised against
+the real record: citing asserts that a Project depends on specific evidence, and
+that is an editorial claim for the group to make, not a verification step. Two
+test bundles remain in `scratch`; clearing them needs `op=purge`, which is
+admin-only and no session has ever held ADMIN_TOKEN.
+
+
 v16, July 25, 2026. Current state, on top of v15 and the v14 and v13 narratives
 below. The plane is **0.17.0**. S-10 RETRIEVAL IS COMPLETE: steps 1 through 5.
 Battery **1032 assertions across 25 suites in about 79 seconds**. Live record

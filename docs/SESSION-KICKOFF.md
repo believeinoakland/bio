@@ -96,57 +96,73 @@ before any real group installs.
 
 ## Current state and next task, as of 2026-07-25
 
-The plane is **0.17.0**, signed, tagged `v0.17.0`, and running on
-biosmoke7.believeinoakland.workers.dev. Battery 1032 assertions across 25 suites
-in about 79 seconds (`npm test` in bio-plane); installer wizard 90 assertions
-(`node test/wizard.test.mjs` in newgroup). Live record: 30 bundles, 87 register
-rows, `op=audit` 30 checked with zero findings.
+The plane is **0.18.0**, signed, tagged `v0.18.0`, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset. Battery **1124 assertions across 26 suites in about 92
+seconds** (`npm test` in bio-plane); installer wizard 90 assertions (`node
+test/wizard.test.mjs` in newgroup). Live record unchanged at 30 bundles, 87
+register rows, `op=audit` 30 checked with zero findings.
 
-**S-10 RETRIEVAL IS COMPLETE, steps 1 through 5.** The projection, the text
-index, the query language, `op=search`, and server-side selections.
-`development/RETRIEVAL-SUBSTRATE.md` is the specification and its design
-questions are settled, not open.
+**S-10 RETRIEVAL IS COMPLETE** (projection, text index, query language,
+`op=search`, selections) and **S-11 HAS STARTED**: the actions that USE a
+selection, built one at a time, lightest first.
 
-Ops, all member class and above because they read the working corpus: `search`,
-`searchfields`, `searchindexcheck`, `select`, `selection`, `selectionlist`,
-`selectionrelease`.
+**Step 1 is done: `op=cite`, citing Information in a Project, at weight
+`report`.** It is `selectionResolve`'s first caller. It splices `rel: cites`
+entries into the Project's `bundle.md` frontmatter and promotes a whole image,
+because `refs` is a projection re-derived from the document inside `promote`'s
+transaction and `promote` refuses a `refs` payload outright (D-21). Edges land
+`confirmed` per State Rules 5.1.
+
+**NEXT STEP, decided: the first STATE-CHANGING action, at weight `refuse`.** That
+is what gives the refusing arm of `selectionResolve` its first caller, and it is
+deliberately a separate commit from citing. It is also where reinstating a
+SEVERED citation belongs: Bob decided on 2026-07-25 that citing a target whose
+edge is severed REFUSES rather than reinstating it silently or skipping past it,
+because a severance is a recorded human judgment and both alternatives decide
+something the operator did not. Reinstatement must record its own reason, the way
+severing does.
+
+Ops added in 0.18.0: `cite` (member class and above, mutating). `SESSION_OPS`
+also gained `search`, `searchfields`, `searchindexcheck`, `selection`,
+`selectionlist` and `cite` for browser sessions, closing a gap where a signed-in
+member could create a selection and then neither search to build one nor resolve
+the one they had made.
 
 **Read the performance numbers from the bench, not from the probe (D-32).**
-`npm run bench:retrieval` measures the REAL path: 5ms to 163ms at 20,000
-bundles. The ~46ms ceiling in RETRIEVAL-SUBSTRATE.md was measured with a probe
-object that is not the plane and must not be quoted as describing this code.
+`npm run bench:retrieval` measures the REAL path: worst shape 190ms at 20,000
+bundles, index vs corpus clean. The ~46ms ceiling in RETRIEVAL-SUBSTRATE.md was
+measured with a probe object that is not the plane and must not be quoted as
+describing this code.
 
-**Two workerd ceilings are load-bearing and undocumented (D-36).** A statement
-binds about 100 variables; a compound SELECT takes five terms. Both were found
-by the bench, both broke real code, and both are now guarded. Any new statement
-shape can meet another one, so run the bench when you add one.
+**Three undocumented ceilings are load-bearing.** A workerd statement binds about
+100 variables and a compound SELECT takes five terms (D-36). A Project is bounded
+in total cited edges by the 1MB inline file limit rather than by the 10,000
+selection cap, because every edge is written into `bundle.md` (D-38). All three
+were found by scale harnesses, none by the suite, and all three broke real code.
+Run the harnesses when you add a statement shape or change what a write emits.
 
 Open, in Bob's order of interest: D-1 (root of trust unmodelled, doctrine work),
 D-9 (20 unreferenced register rows, needs an admin credential), S-9 (retire the
 Apps Script plane, Bob's hands), D-15 (viewer-position filtering, when project
-visibility is built; the single compilation point is in place, asserted, and now
-a WHERE predicate over the alias `b`, so this is a change in one function),
-D-32 (further retrieval optimisation), D-37 (the 300s keep-alive is a guess).
+visibility is built), D-32 (further retrieval optimisation), D-37 (the 300s
+keep-alive is a guess), D-39 (an empty POST body returns a Cloudflare exception
+rather than a named refusal, general and one line to fix).
 
-**Next step, decided: wire the first action to a selection.** The gate already
-exists and is tested; `selectionResolve` takes a weight and either hands over the
-members or refuses. Nothing calls it yet. The first one to build is CITING
-INFORMATION IN A PROJECT, at weight `report`, because it is the lightest real
-action in the corpus: it adds references rather than moving state, so drift is
-survivable and the reporting path gets exercised before anything can be broken by
-it. The refusing path then gets its first caller from the first state-changing
-action, which should NOT be the same commit.
+**Standing rule: run the bench before signing.** `npm run bench:retrieval` loads a
+corpus through the real `promote` and drives the real `op=search` at 20,000
+bundles. Run it before signing any release that touched how a statement is built,
+and read its worst-shape line. On 2026-07-25 it found two undocumented workerd
+ceilings that 1032 assertions did not, one of which would have broken the query
+compiler on six metadata filters, which is one ordinary pass over a filter
+sidebar. `npm run probe:cite` is the same discipline for the citing write, and it
+found D-38 on its first run.
 
-**Standing rule: run the bench before signing.** `npm run bench:retrieval` loads
-a corpus through the real `promote` and drives the real `op=search` at 20,000
-bundles. Run it before signing any release that touched how a statement is
-built, and read its worst-shape line. This is not a suggestion recorded after
-the fact: on 2026-07-25 it found two undocumented workerd ceilings that 1032
-assertions did not, one of which (a five-term compound SELECT) would have broken
-the query compiler on six metadata filters, which is one ordinary pass over a
-filter sidebar. It also found the shipped path running 6x the numbers the
-specification quoted, because those numbers came from a probe object that was
-not the plane. A suite at small scale cannot find either class of thing.
+**A pass at small scale is not a pass, and a fixed list is not a fence.** In
+0.18.0 `fence.test.mjs` was found to test a hardcoded list of ops, so a new
+mutating op that reads the working corpus passed it without a single assertion
+touching it. It now reads the guarded set out of the module. Prefer structural
+assertions that a later addition cannot dodge by not being mentioned.
 
 ---
 
