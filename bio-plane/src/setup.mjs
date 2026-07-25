@@ -690,8 +690,16 @@ async function docFiles(text, doc, textSha){
   const prov = JSON.stringify({ documents: [doc] }, null, 1);
   files.push({ path:"data/provenance.json", text: prov, bytes: prov.length,
                sha256: await sha256Text(prov) });
-  files.push({ path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256,
-               bytes: doc.capture.bytes });
+  if (Array.isArray(doc.parts) && doc.parts.length) {
+    /* A parted document has no single file: each part is registered separately
+       and the catalog verifies the whole by streaming them. Registering a
+       phantom whole would name bytes the store does not hold. */
+    for (const p of doc.parts)
+      files.push({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes });
+  } else {
+    files.push({ path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256,
+                 bytes: doc.capture.bytes });
+  }
   /* The timestamp token is evidence too, so it lives in the bundle rather than
      only in the store. A token nobody can find is a token nobody will check. */
   for (const a of (doc.attestations || []))
@@ -750,8 +758,11 @@ $("#n-save").addEventListener("click", async ()=>{
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
       files: await docFiles(text, doc, await sha256Text(text)),
-      register: doc ? [{ sha256: doc.capture.sha256, path: doc.file,
-                         encoding: doc.capture.encoding, bytes: doc.capture.bytes },
+      register: doc ? [...(Array.isArray(doc.parts) && doc.parts.length
+                        ? doc.parts.map((p) => ({ sha256: p.sha256, path: p.file,
+                                                  encoding: "binary", bytes: p.bytes }))
+                        : [{ sha256: doc.capture.sha256, path: doc.file,
+                             encoding: doc.capture.encoding, bytes: doc.capture.bytes }]),
                        ...(doc.attestations || []).map((a) => ({
                          sha256: a.sha256, path: a.file, encoding: "binary", bytes: a.bytes }))] : [],
     });

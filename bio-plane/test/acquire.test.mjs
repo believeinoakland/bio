@@ -34,7 +34,12 @@ const mf = new Miniflare({
     if (u.pathname === "/report.pdf")
       return new Response(DOC, { headers: { "content-type": "application/pdf" } });
     if (u.pathname === "/empty") return new Response(new Uint8Array(0));
-    if (u.pathname === "/huge") return new Response(new Uint8Array(21 * 1024 * 1024));
+    if (u.pathname === "/huge") {
+      const b = new Uint8Array(21 * 1024 * 1024);
+      for (let i = 0; i < b.length; i++) b[i] = (i * 31 + 7) % 256;
+      return new Response(b);
+    }
+    if (u.pathname === "/enormous") return new Response(new Uint8Array(257 * 1024 * 1024));
     if (u.pathname === "/gone") return new Response("nope", { status: 404 });
     return new Response("unscripted", { status: 500 });
   },
@@ -97,9 +102,63 @@ t("a 404 is named with its status",
   (await acquire({ ...GOOD, locator: "https://www.oaklandca.gov/gone" })).reason, "SOURCE_REFUSED");
 t("an empty body is not a capture",
   (await acquire({ ...GOOD, locator: "https://www.oaklandca.gov/empty" })).reason, "EMPTY");
+console.log("\n--- a document too large to hold is captured in parts ---");
+const HUGE = new Uint8Array(21 * 1024 * 1024);
+for (let i = 0; i < HUGE.length; i++) HUGE[i] = (i * 31 + 7) % 256;
+const HUGE_SHA = createHash("sha256").update(HUGE).digest("hex");
 const huge = await acquire({ ...GOOD, locator: "https://www.oaklandca.gov/huge" });
-t("an oversize document is refused rather than half-captured", huge.reason, "TOO_LARGE");
-t("and the refusal explains the parts path", /registered parts/.test(huge.detail), true);
+t("the capture succeeds where it used to be refused", huge.ok, true);
+t("it came in parts", huge.parts > 1, true);
+t("and the whole hashes correctly across them", huge.document.capture.sha256, HUGE_SHA);
+t("the recorded size is the whole document", huge.document.capture.bytes, HUGE.length);
+t("each part names a file inside the bundle",
+  huge.document.parts.every((p) => /^snapshots\/.+\.part\d{3}$/.test(p.file)), true);
+t("the parts sum to the whole",
+  huge.document.parts.reduce((a, p) => a + p.bytes, 0), HUGE.length);
+t("the method says it streamed", /streamed in \d+ parts/.test(huge.document.capture.method), true);
+
+/* The point of parts is that the catalog can verify the whole from them without
+   any consumer ever holding it: C-18.6 streams them through the same incremental
+   hasher the plane used on the way in. */
+{
+  const { checkBundle } = await import("../checks/bio-checks.mjs");
+  const ID = "INFO-2026-0800-parted";
+  const files = new Map();
+  const bodyMd = [
+    "---", `id: ${ID}`, "object_type: information", "schema: information@2",
+    'title: "Parted capture"', "current_state: collected", "prior_state: null",
+    "created: 2026-07-24T00:00:00Z", "last_updated: 2026-07-24T00:00:00Z",
+    "produced_by:", "  mode: assisted", "  capability_tier: session",
+    "group: believe-in-oakland", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
+    "  source: null", "visuals: []", "criticality: supporting",
+    "classification: fact", "source_status: unchanged", "source:",
+    "  locator: https://www.oaklandca.gov/huge", "  authority: City Auditor",
+    "  retrieved: 2026-07-24T00:00:00Z",
+    "monitoring:", "  enabled: false", "  frequency: none", "---", "",
+    "## Summary", "", "A large document, captured in parts.", "",
+    "## Provenance Notes", "", "## Session Log", "", "## Review Notes", "",
+  ].join("\n");
+  files.set("bundle.md", bodyMd);
+  files.set("data/provenance.json", JSON.stringify({ documents: [huge.document] }, null, 1));
+  /* The parts, as bytes, exactly as the store holds them. */
+  let at = 0;
+  for (const p of huge.document.parts) {
+    files.set(p.file, HUGE.subarray(at, at + p.bytes));
+    at += p.bytes;
+  }
+  const { findings } = await checkBundle({ folderName: ID, files,
+    sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
+    sha512: async (b) => new Uint8Array(await (await import("node:crypto")).webcrypto.subtle.digest("SHA-512", b)),
+    resolveTarget: () => true });
+  const errs = findings.filter((x) => x.severity === "error");
+  for (const x of errs) console.log(`         ${x.check}: ${x.message.slice(0, 130)}`);
+  t("the catalog verifies the whole from the parts alone", errs.length, 0);
+}
+
+console.log("\n--- and there is still a ceiling ---");
+t("a document beyond the parts ceiling is refused",
+  (await acquire({ ...GOOD, locator: "https://www.oaklandca.gov/enormous" })).reason, "TOO_LARGE");
 
 console.log("\n--- the record it hands back is the shape C-18.1 wants ---");
 for (const k of ["file", "locator", "authority", "retrieved", "capture", "origin", "attestation_attempts"])

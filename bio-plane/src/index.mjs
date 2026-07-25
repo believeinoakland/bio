@@ -9,7 +9,7 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    public hosts only, no credentials in the authority, no bare IPs, no localhost.
    It is the one bound between a member typing a URL and this Worker fetching it,
    so it must be the same function the checker uses on the queue. */
-import { isPublicHttpsLocator, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { isPublicHttpsLocator, parseFrontmatter, createSha256 } from "../checks/bio-checks.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
@@ -470,23 +470,73 @@ export default {
       if (!res.ok)
         return json({ ok: false, reason: "SOURCE_REFUSED", status: res.status, locator }, 502);
 
-      /* Bounded because a Worker holds this in memory to hash it. Beyond the
-         cap the document goes in as parts, which the catalog supports and which
-         streams through its incremental hash one part at a time; that path is
-         the client's, not this one's. */
-      const MAX = 20 * 1024 * 1024;
-      const bytes = new Uint8Array(await res.arrayBuffer());
-      if (bytes.length > MAX)
-        return json({ ok: false, reason: "TOO_LARGE", bytes: bytes.length, maxBytes: MAX,
-                      detail: "acquire holds the document in memory to hash it; a document this size is captured as registered parts instead" }, 413);
-      if (bytes.length === 0)
-        return json({ ok: false, reason: "EMPTY", locator }, 502);
+      /* Streamed in parts, so peak residency is one part rather than the whole
+         document. The 39.6MB budget book in the real record is the case that
+         forced this: a Worker that must hold a document to hash it cannot
+         capture the documents a city actually publishes.
+         *
+         * The incremental hasher is the CATALOG'S, the same one C-18.6 uses to
+         * verify parts on the way back out. If the plane hashed the whole with
+         * WebCrypto and the catalog rehashed the parts with its own
+         * implementation, a disagreement between the two would look like
+         * tampering. Using one hasher for both makes that class of false alarm
+         * impossible.
+         *
+         * A single part under the inline bound stays a single capture, so the
+         * common case is unchanged and the parts shape appears only when a
+         * document actually needs it. */
+      const PART = 8 * 1024 * 1024;
+      const MAX = 256 * 1024 * 1024;
+      const whole = createSha256();
+      const parts = [];
+      let total = 0, held = [], heldBytes = 0, oversize = false;
 
-      const digest = await crypto.subtle.digest("SHA-256", bytes);
-      const sha = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
-      const key = `${storeName}/captures/${sha}`;
-      const existed = !!(await env.CAPTURES.head(key));
-      if (!existed) await env.CAPTURES.put(key, bytes, { sha256: digest });
+      const flush = async () => {
+        if (!heldBytes) return;
+        const buf = new Uint8Array(heldBytes);
+        let at = 0; for (const c of held) { buf.set(c, at); at += c.length; }
+        held = []; heldBytes = 0;
+        const d = await crypto.subtle.digest("SHA-256", buf);
+        const psha = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+        if (!(await env.CAPTURES.head(`${storeName}/captures/${psha}`)))
+          await env.CAPTURES.put(`${storeName}/captures/${psha}`, buf, { sha256: d });
+        parts.push({ sha256: psha, bytes: buf.length });
+      };
+
+      const reader = res.body && res.body.getReader ? res.body.getReader() : null;
+      if (!reader) return json({ ok: false, reason: "NO_BODY", locator }, 502);
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > MAX) { oversize = true; break; }
+        whole.update(value);
+        held.push(value); heldBytes += value.length;
+        if (heldBytes >= PART) await flush();
+      }
+      if (oversize) {
+        try { await reader.cancel(); } catch { /* the source may already be gone */ }
+        return json({ ok: false, reason: "TOO_LARGE", bytes: total, maxBytes: MAX,
+                      detail: "the document exceeds what this surface will capture even in parts" }, 413);
+      }
+      await flush();
+      if (total === 0) return json({ ok: false, reason: "EMPTY", locator }, 502);
+      const sha = whole.hex();
+
+      /* One part and small enough to be a plain capture: store the whole under
+         its own hash so the ordinary single-file shape still applies. */
+      let existed = false, multipart = parts.length > 1;
+      if (!multipart) {
+        const only = parts[0];
+        if (only.sha256 !== sha) {
+          /* Cannot happen: one part IS the whole. Asserted rather than assumed,
+             because a mismatch here would mean the incremental hasher and
+             WebCrypto disagree, and that would be worth knowing loudly. */
+          return json({ ok: false, reason: "HASH_DISAGREEMENT",
+                        detail: "the incremental hash and the block hash of the same bytes differ" }, 500);
+        }
+        existed = !!(await env.CAPTURES.head(`${storeName}/captures/${sha}`));
+      }
 
       const ct = (res.headers.get("content-type") || "").split(";")[0].trim();
       const name = (body.file || locator.split("/").pop() || "capture")
@@ -500,16 +550,24 @@ export default {
           file: `snapshots/${name}`,
           locator, authority: body.authority.trim(), retrieved,
           capture: {
-            method: "bio-plane acquire, https fetch, hashed at receipt",
+            method: multipart
+              ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt`
+              : "bio-plane acquire, https fetch, hashed at receipt",
             grade: "B",
             actor_class: viaSession ? "member" : (cls === "probe" ? "session" : "daemon"),
-            sha256: sha, encoding: "binary", bytes: bytes.length,
+            /* Over the reassembled whole, which is what C-18.1 requires of a
+               parted document and what C-18.6 checks by streaming the parts. */
+            sha256: sha, encoding: "binary", bytes: total,
             ...(ct ? { content_type: ct } : {}),
           },
+          ...(multipart ? { parts: parts.map((p, i) => ({
+            file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
+            sha256: p.sha256, bytes: p.bytes })) } : {}),
           origin: { kind: body.matchedSweep ? "sweep" : "named_request",
                     ...(body.matchedSweep ? { matched_sweep: body.matchedSweep, deeming_actor: sessMember || cls } : {}) },
           attestation_attempts: [],
         },
+        ...(multipart ? { parts: parts.length } : {}),
         note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
         store: storeName, tokenClass: cls,
       }, 200);

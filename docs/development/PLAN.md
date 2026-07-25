@@ -237,7 +237,7 @@ worth having. Tested both ways: authored, the legacy queue is refused; replayed,
 it lands and the history says so.
 
 ### S-5 Capture and the provenance register
-**Status: done (0.8.0), except the parts path** · Depends: S-4
+**Status: done (0.13.0)** · Depends: S-4
 
 The plane moves bytes today; what is missing is what makes a capture evidence.
 `data/provenance.json` per C-18.1: locator, authority, retrieved instant, and a
@@ -299,9 +299,34 @@ Every refusal a source can produce is translated: a non-public address, a missin
 authority, an HTTP error with its status, an unreachable host, an empty body, and
 an oversize document each get a sentence a member can act on.
 
-**Still owed:** the parts path for documents over the 20MB in-memory bound. The
-catalog supports `parts` and its incremental SHA-256 streams them one at a time;
-nothing in the plane assembles them yet.
+**The parts path, 0.13.0.** Acquisition now STREAMS. The response body is read in
+chunks, each 8MB boundary is flushed to storage as its own capture, and peak
+residency is one part rather than the whole document. The 39.6MB budget book in
+the real record is the case that forced it: a surface that must hold a document to
+hash it cannot capture the documents a city actually publishes.
+
+`capture.sha256` is over the reassembled whole and each part carries
+`{file, sha256, bytes}`, which is what C-18.1 requires and what C-18.6 verifies by
+streaming the parts through its own incremental hasher.
+
+**The plane hashes the whole with the CATALOG'S hasher, not WebCrypto**, and that
+is the decision worth keeping. If the plane hashed with one implementation and the
+catalog re-hashed the parts with another, any disagreement between them would
+present as tampering: a hash mismatch on honest bytes, reported as silent content
+mutation. One hasher on both sides makes that false alarm impossible. The
+single-part path additionally asserts that the incremental hash equals the block
+hash of the same bytes, and refuses loudly if they ever differ, because that would
+be worth knowing immediately.
+
+A single part under the bound is stored as one plain capture, so the ordinary shape
+is unchanged and `parts` appears only when a document actually needs it. The
+ceiling moved from 20MB to 256MB, and beyond it the refusal is still honest rather
+than a truncated capture.
+
+Proven by capturing a 21MB document and letting the catalog verify the whole FROM
+THE PARTS ALONE, with zero findings and nothing ever holding the reassembled
+document. The browser assembly registers each part rather than a phantom whole,
+since registering a whole would name bytes the store does not hold.
 
 ### S-6 Co-attestation
 **Status: done (0.9.1)** · Depends: S-5

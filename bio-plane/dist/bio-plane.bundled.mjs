@@ -3661,8 +3661,16 @@ async function docFiles(text, doc, textSha){
   const prov = JSON.stringify({ documents: [doc] }, null, 1);
   files.push({ path:"data/provenance.json", text: prov, bytes: prov.length,
                sha256: await sha256Text(prov) });
-  files.push({ path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256,
-               bytes: doc.capture.bytes });
+  if (Array.isArray(doc.parts) && doc.parts.length) {
+    /* A parted document has no single file: each part is registered separately
+       and the catalog verifies the whole by streaming them. Registering a
+       phantom whole would name bytes the store does not hold. */
+    for (const p of doc.parts)
+      files.push({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes });
+  } else {
+    files.push({ path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256,
+                 bytes: doc.capture.bytes });
+  }
   /* The timestamp token is evidence too, so it lives in the bundle rather than
      only in the store. A token nobody can find is a token nobody will check. */
   for (const a of (doc.attestations || []))
@@ -3721,8 +3729,11 @@ $("#n-save").addEventListener("click", async ()=>{
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
       files: await docFiles(text, doc, await sha256Text(text)),
-      register: doc ? [{ sha256: doc.capture.sha256, path: doc.file,
-                         encoding: doc.capture.encoding, bytes: doc.capture.bytes },
+      register: doc ? [...(Array.isArray(doc.parts) && doc.parts.length
+                        ? doc.parts.map((p) => ({ sha256: p.sha256, path: p.file,
+                                                  encoding: "binary", bytes: p.bytes }))
+                        : [{ sha256: doc.capture.sha256, path: doc.file,
+                             encoding: doc.capture.encoding, bytes: doc.capture.bytes }]),
                        ...(doc.attestations || []).map((a) => ({
                          sha256: a.sha256, path: a.file, encoding: "binary", bytes: a.bytes }))] : [],
     });
@@ -5551,23 +5562,70 @@ var index_default = {
       }
       if (!res2.ok)
         return json({ ok: false, reason: "SOURCE_REFUSED", status: res2.status, locator }, 502);
-      const MAX = 20 * 1024 * 1024;
-      const bytes = new Uint8Array(await res2.arrayBuffer());
-      if (bytes.length > MAX)
+      const PART = 8 * 1024 * 1024;
+      const MAX = 256 * 1024 * 1024;
+      const whole = createSha256();
+      const parts = [];
+      let total = 0, held = [], heldBytes = 0, oversize = false;
+      const flush = async () => {
+        if (!heldBytes) return;
+        const buf = new Uint8Array(heldBytes);
+        let at = 0;
+        for (const c of held) {
+          buf.set(c, at);
+          at += c.length;
+        }
+        held = [];
+        heldBytes = 0;
+        const d = await crypto.subtle.digest("SHA-256", buf);
+        const psha = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+        if (!await env.CAPTURES.head(`${storeName}/captures/${psha}`))
+          await env.CAPTURES.put(`${storeName}/captures/${psha}`, buf, { sha256: d });
+        parts.push({ sha256: psha, bytes: buf.length });
+      };
+      const reader = res2.body && res2.body.getReader ? res2.body.getReader() : null;
+      if (!reader) return json({ ok: false, reason: "NO_BODY", locator }, 502);
+      for (; ; ) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > MAX) {
+          oversize = true;
+          break;
+        }
+        whole.update(value);
+        held.push(value);
+        heldBytes += value.length;
+        if (heldBytes >= PART) await flush();
+      }
+      if (oversize) {
+        try {
+          await reader.cancel();
+        } catch {
+        }
         return json({
           ok: false,
           reason: "TOO_LARGE",
-          bytes: bytes.length,
+          bytes: total,
           maxBytes: MAX,
-          detail: "acquire holds the document in memory to hash it; a document this size is captured as registered parts instead"
+          detail: "the document exceeds what this surface will capture even in parts"
         }, 413);
-      if (bytes.length === 0)
-        return json({ ok: false, reason: "EMPTY", locator }, 502);
-      const digest = await crypto.subtle.digest("SHA-256", bytes);
-      const sha = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
-      const key = `${storeName}/captures/${sha}`;
-      const existed = !!await env.CAPTURES.head(key);
-      if (!existed) await env.CAPTURES.put(key, bytes, { sha256: digest });
+      }
+      await flush();
+      if (total === 0) return json({ ok: false, reason: "EMPTY", locator }, 502);
+      const sha = whole.hex();
+      let existed = false, multipart = parts.length > 1;
+      if (!multipart) {
+        const only = parts[0];
+        if (only.sha256 !== sha) {
+          return json({
+            ok: false,
+            reason: "HASH_DISAGREEMENT",
+            detail: "the incremental hash and the block hash of the same bytes differ"
+          }, 500);
+        }
+        existed = !!await env.CAPTURES.head(`${storeName}/captures/${sha}`);
+      }
       const ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
       const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
       return json({
@@ -5579,20 +5637,28 @@ var index_default = {
           authority: body2.authority.trim(),
           retrieved,
           capture: {
-            method: "bio-plane acquire, https fetch, hashed at receipt",
+            method: multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
             grade: "B",
             actor_class: viaSession ? "member" : cls === "probe" ? "session" : "daemon",
+            /* Over the reassembled whole, which is what C-18.1 requires of a
+               parted document and what C-18.6 checks by streaming the parts. */
             sha256: sha,
             encoding: "binary",
-            bytes: bytes.length,
+            bytes: total,
             ...ct ? { content_type: ct } : {}
           },
+          ...multipart ? { parts: parts.map((p, i) => ({
+            file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
+            sha256: p.sha256,
+            bytes: p.bytes
+          })) } : {},
           origin: {
             kind: body2.matchedSweep ? "sweep" : "named_request",
             ...body2.matchedSweep ? { matched_sweep: body2.matchedSweep, deeming_actor: sessMember || cls } : {}
           },
           attestation_attempts: []
         },
+        ...multipart ? { parts: parts.length } : {},
         note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
         store: storeName,
         tokenClass: cls
