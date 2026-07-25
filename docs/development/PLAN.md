@@ -96,7 +96,7 @@ instance runs 0.4.1 with the old projection, so the 168-to-zero confirmation
 against biosmoke6 needs 0.5.0 deployed. Re-run the audit after the update.
 
 ### S-2 plane-gate/1.0 runs the catalog
-**Status: todo** · Debt: D-5 · Depends: S-1
+**Status: todo, next** · Debt: D-5 · Depends: S-1 (done). S-3 landed first deliberately: switching on 49 checks before the intake path was conformant would have made the browser form unusable at the moment the gate started working.
 
 Replace the four hand-written checks with the catalog itself. Inject WebCrypto at
 the `sha256` and `sha512` seams, the store at `resolveTarget`, and the registry
@@ -111,7 +111,7 @@ Record the catalog's own version string on every publication, replacing
 tampers one bundle per check family.
 
 ### S-3 Intake UI conformance
-**Status: todo** · Debt: D-6, D-7, D-14 · Depends: S-2
+**Status: done (0.5.1)** · Debt: D-6, D-7, D-14 · Depends: none, as it turned out
 
 The browser form stamps illegal first states for Problems and Actions, writes
 four of fifteen required core fields, and uses `## Summary` for every type where
@@ -121,6 +121,29 @@ the checker again. Also repair the unreachable enrolment screen (D-14).
 
 **Accepts when:** one bundle of each of the four types, created through the
 browser, gates clean with no repair step.
+
+**Outcome, 0.5.1.** Done, and it did not need S-2 first: the conformance suite
+lifts the bundle writer out of the SERVED page and runs the catalog on the exact
+bytes a member's browser produces, so the acceptance test does not require the
+gate to be switched on. All four types now report zero errors.
+
+The form takes its tables from the catalog by import rather than by copy, so a
+catalog change moves the UI with it. It writes all fifteen core fields, the
+canonical heading set for the type, and the per-type extension fields each
+type's own check requires: source and monitoring blocks for Information,
+`surfaced_by` and a recheck trigger for a Problem, an `objective` for a Project,
+`action_kind`, `risk_tier`, and `counterparty` for an Action.
+
+One judgment inside it. Typed intake stamps `information@1`, not `@2`. The @2
+contract makes the intake provenance register mandatory, and a register
+describes captured DOCUMENTS with a locator, an authority, a capture method, a
+grade, and a hash. A member typing what they know has no document, so @2 would
+demand a register with nothing honest in it. Material arriving WITH a document
+is @2 and carries custody, which is S-5's path rather than this one.
+
+D-14 closed alongside: an invitation is now a link carrying the code in the URL
+fragment, which never reaches a server, and it opens the enrolment screen that
+had existed since 0.4.0 with no reachable path to it.
 
 ### S-4 Gathering requests
 **Status: todo** · Depends: S-2

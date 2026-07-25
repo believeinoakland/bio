@@ -111,11 +111,12 @@ const files = new Map(), elided = new Set();
 for (const [p, v] of Object.entries(img)) {
   if (typeof v === "string") files.set(p, v); else elided.add(p);
 }
+const shaHex = async (v) => createHash("sha256")
+  .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
+const sha512Hex = async (b) => new Uint8Array(await webcrypto.subtle.digest("SHA-512", b));
 const { findings } = await checkBundle({
   folderName: ID, files, elidedPaths: elided,
-  sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
-  sha512: async (b) => new Uint8Array(await webcrypto.subtle.digest("SHA-512", b)),
-  resolveTarget: (x) => x === ID,
+  sha256: shaHex, sha512: sha512Hex, resolveTarget: (x) => x === ID,
 });
 const errs = findings.filter((f) => f.severity === "error");
 const c12 = errs.filter((f) => f.check.startsWith("C-12"));
@@ -129,6 +130,52 @@ for (const f of errs) {
   byFamily[fam] = (byFamily[fam] || 0) + 1;
 }
 console.log(`         remaining error families (not asserted yet): ${JSON.stringify(byFamily)}`);
+
+
+/* ---- the intake path, judged per type ----
+   The instance page's bundle writer is lifted out of the SERVED page and run
+   here, so this tests the bytes a member's browser actually produces rather
+   than a reimplementation of them. Four types, four canonical heading sets,
+   four different sets of extension fields, and the catalog decides. */
+console.log("\n--- the intake form writes conformant bundles ---");
+{
+  const { SETUP_HTML } = await import("../src/setup.mjs");
+  const script = SETUP_HTML.slice(SETUP_HTML.lastIndexOf("<script>") + 8, SETUP_HTML.lastIndexOf("</script>"));
+  const el = () => ({ addEventListener() {}, classList: { add() {}, remove() {} },
+    textContent: "", innerHTML: "", value: "", style: {}, hidden: false, dataset: {} });
+  const sandbox = {
+    document: { querySelector: () => el(), querySelectorAll: () => [], getElementById: () => el(),
+                addEventListener() {}, createElement: () => el(), body: { appendChild() {}, removeChild() {} } },
+    location: { hash: "", pathname: "/", origin: "https://x" }, history: { replaceState() {} },
+    sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    fetch: async () => ({ ok: true, status: 200, json: async () => ({ ok: true }) }),
+    URLSearchParams, console, JSON, Date, RegExp, String, Number, Object, Array, crypto: webcrypto,
+    setTimeout, TextEncoder, navigator: { clipboard: { writeText: async () => {} } },
+  };
+  sandbox.window = sandbox;
+  const fn = new Function(...Object.keys(sandbox), script + "\n;return { mdFor, FIRST_STATE, PREFIX };");
+  const ui = fn(...Object.values(sandbox));
+
+  t("first states come from the catalog, not from memory", ui.FIRST_STATE,
+    { information: "collected", problem: "surfaced", project: "forming", action: "planned" });
+
+  const now = "2026-07-24T12:00:00Z";
+  for (const type of ["information", "problem", "project", "action"]) {
+    const id = `${ui.PREFIX[type]}-2026-0002-intake-check`;
+    const text = ui.mdFor(id, type, ui.FIRST_STATE[type], "Intake check", "What the member wrote.", now);
+    const f2 = new Map([["bundle.md", text]]);
+    if (type === "information") {
+      /* verified state would demand a dataset and a snapshot; collected does
+         not, so an Information bundle at intake is complete as written. */
+    }
+    const { findings } = await checkBundle({
+      folderName: id, files: f2, sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true,
+    });
+    const errs = findings.filter((x) => x.severity === "error");
+    for (const x of errs.slice(0, 4)) console.log(`         ${type}: ${x.check} ${x.message.slice(0, 110)}`);
+    t(`a new ${type} bundle has zero errors`, errs.length, 0);
+  }
+}
 
 await mf.dispose();
 console.log(`\nconformance: ${pass} pass, ${fail} fail`);

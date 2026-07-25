@@ -402,7 +402,183 @@ rev ${rev}
   };
 }
 
+// checks/bio-checks.mjs
+var HEADINGS = {
+  information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
+  problem: ["## Statement", "## Why It Matters", "## Open Questions", "## Session Log", "## Review Notes"],
+  project: ["## Thesis Summary", "## Open Questions", "## Ruled Out", "## Session Log", "## Review Notes"],
+  action: ["## Plan", "## Status", "## Correspondence", "## Session Log", "## Review Notes"]
+};
+var STATES = {
+  information: {
+    legal: ["collected", "verified", "retired"],
+    edges: { collected: ["verified"], verified: ["retired"], retired: [] }
+  },
+  problem: {
+    legal: ["surfaced", "elevated", "deferred", "dismissed"],
+    edges: {
+      surfaced: ["elevated", "deferred", "dismissed"],
+      deferred: ["surfaced", "elevated", "dismissed"],
+      dismissed: ["surfaced", "elevated", "deferred"],
+      elevated: []
+    }
+  },
+  project: {
+    legal: ["forming", "investigating", "matured", "closed"],
+    edges: {
+      forming: ["investigating", "closed"],
+      investigating: ["matured", "closed"],
+      matured: ["closed"],
+      closed: ["investigating"]
+    }
+  },
+  action: {
+    legal: ["planned", "active", "awaiting_response", "resolved", "abandoned"],
+    edges: {
+      planned: ["active", "abandoned"],
+      active: ["awaiting_response", "resolved", "abandoned"],
+      awaiting_response: ["active", "resolved", "abandoned"],
+      resolved: [],
+      abandoned: []
+    }
+  }
+};
+var D2 = new Float64Array([
+  61785,
+  9906,
+  39828,
+  60374,
+  45398,
+  33411,
+  5274,
+  224,
+  53552,
+  61171,
+  33010,
+  6542,
+  64743,
+  22239,
+  55772,
+  9222
+]);
+var DD = new Float64Array([
+  30883,
+  4953,
+  19914,
+  30187,
+  55467,
+  16705,
+  2637,
+  112,
+  59544,
+  30585,
+  16505,
+  36039,
+  65139,
+  11119,
+  27886,
+  20995
+]);
+var GF0 = new Float64Array(16);
+var GF1 = (() => {
+  const g = new Float64Array(16);
+  g[0] = 1;
+  return g;
+})();
+var I25 = new Float64Array([
+  41136,
+  18958,
+  6951,
+  50414,
+  58488,
+  44335,
+  6150,
+  12099,
+  55207,
+  15867,
+  153,
+  11085,
+  57099,
+  20417,
+  9344,
+  11139
+]);
+var BX = new Float64Array([
+  54554,
+  36645,
+  11616,
+  51542,
+  42930,
+  38181,
+  51040,
+  26924,
+  56412,
+  64982,
+  57905,
+  49316,
+  21502,
+  52590,
+  14035,
+  8553
+]);
+var BY = new Float64Array([
+  26200,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214,
+  26214
+]);
+var ORDER_L = new Float64Array([
+  237,
+  211,
+  245,
+  92,
+  26,
+  99,
+  18,
+  88,
+  214,
+  156,
+  247,
+  162,
+  222,
+  249,
+  222,
+  20,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  16
+]);
+
 // src/setup.mjs
+var FIRST_STATE_JSON = JSON.stringify(
+  Object.fromEntries(Object.entries(STATES).map(([t, s]) => [t, s.legal[0]]))
+);
+var HEADINGS_JSON = JSON.stringify(HEADINGS);
 var SETUP_HTML = `<!doctype html>
 <html lang="en">
 <head>
@@ -691,6 +867,19 @@ let boot0 = null;
 async function state(){
   /* The wizard hands over with the one-time password in the URL fragment.
      Fragments never reach any server. Strip it immediately either way. */
+  const inv = location.hash.match(/invite=([^&]+)/);
+  if (inv) {
+    /* An invited member arrives by link. The code rides the fragment, which
+       never reaches any server, and is stripped immediately either way. The
+       screen this reveals existed since 0.4.0 with nothing able to show it
+       (DEBT D-14). */
+    const code = decodeURIComponent(inv[1]);
+    history.replaceState({}, "", location.pathname);
+    const parts = code.split(":");
+    if (parts.length === 2) { $("#en-id").value = parts[0]; $("#en-inv").value = parts[1]; }
+    else $("#en-inv").value = code;
+    show("#s-enroll"); return;
+  }
   const m = location.hash.match(/boot=([^&]+)/);
   if (m) boot0 = decodeURIComponent(m[1]);
   if (location.hash) history.replaceState({}, "", location.pathname);
@@ -960,7 +1149,16 @@ function ratifyWhy(r){
    here can claim to be someone else. */
 const NL = String.fromCharCode(10);
 const PREFIX = { information:"INFO", problem:"PROB", project:"PROJ", action:"ACTN" };
-const FIRST_STATE = { information:"collected", problem:"forming", project:"forming", action:"forming" };
+/* From the check catalog, not from memory. */
+const FIRST_STATE = ${FIRST_STATE_JSON};
+const HEADINGS = ${HEADINGS_JSON};
+/* information@1 for typed intake, deliberately. The @2 contract makes the
+   intake provenance register mandatory (C-18.1), and a register describes
+   captured DOCUMENTS: locator, authority, capture method, grade, hash. A member
+   typing what they know has no document, so @2 would demand a register with
+   nothing honest to put in it. Material arriving WITH a document is @2 and
+   carries custody, which is the capture path (PLAN.md S-5), not this one. */
+const SCHEMA_OF = { information:"information@1", problem:"problem@1", project:"project@1", action:"action@1" };
 const post = async (op, body)=>{
   const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
     { method:"POST", body: JSON.stringify(body) });
@@ -978,8 +1176,36 @@ const stamp = ()=>{
   for (const x of bytes) r += h[x>>4] + h[x&15];
   return d + "_" + r;
 };
-const mdFor = (id, type, state, title, body)=>
-  ["---","id: "+id,"object_type: "+type,"current_state: "+state,"title: "+title,"---","","## Summary","",body,""].join(NL);
+/* A conformant bundle.md. Fifteen core fields, because C-2.2 fires once per
+   missing one and the previous version wrote four; the canonical heading set for
+   the type, because C-3.1 refuses both a missing heading and an unexpected one;
+   and the per-type extension fields each type's own check requires. The first
+   prose section carries what the member wrote, and the rest are present and
+   empty, which is what the catalog asks for. */
+const mdFor = (id, type, state, title, body, now)=>{
+  const fm = ["---","id: "+id,"object_type: "+type,"schema: "+SCHEMA_OF[type],
+    "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
+    "created: "+now,"last_updated: "+now,
+    "produced_by:","  mode: assisted","  capability_tier: session",
+    "group: believe-in-oakland","references: []","state_history: []",
+    "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
+    "  source: null","visuals: []"];
+  if (type === "information") fm.push(
+    "criticality: supporting","classification: fact","source_status: unchanged",
+    "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
+    "monitoring:","  enabled: false","  frequency: none");
+  if (type === "problem") fm.push(
+    "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
+    "    description: A member set no specific trigger at creation; replace this with a real one.");
+  if (type === "project") fm.push("objective: "+JSON.stringify(title));
+  if (type === "action") fm.push(
+    "action_kind: other","risk_tier: 1","counterparty: to be named");
+  fm.push("---","");
+  const heads = HEADINGS[type] || ["## Summary"];
+  const out = fm.slice();
+  heads.forEach((h,i)=>{ out.push(h,""); if (i===0) out.push(body,""); });
+  return out.join(NL);
+};
 
 /* ---- create ---- */
 $("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; show("#s-new"); });
@@ -994,8 +1220,8 @@ $("#n-save").addEventListener("click", async ()=>{
     const a = await rec("allocid", { prefix: PREFIX[type], year });
     const id = a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const state = FIRST_STATE[type];
-    const text = mdFor(id, type, state, title, body);
-    const now = new Date().toISOString();
+    const now = new Date().toISOString().split(".")[0] + "Z";
+    const text = mdFor(id, type, state, title, body, now);
     const r = await post("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
@@ -1114,9 +1340,15 @@ $("#m-add").addEventListener("click", async ()=>{
   $("#m-id").value = wanted;
   const r = await post("memberadd", { memberId: wanted, name: $("#m-name").value.trim() });
   if (!r.result || !r.result.ok) { e.textContent = memberWhy(r.result, wanted); return; }
-  $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Give '
-    + escH($("#m-id").value.trim()) + ' this invitation code. It works once and is not shown again.</p>'
-    + '<p class="mono" style="margin:8px 0 0">' + escH(r.result.invite) + "</p></div>";
+  /* A link, not a bare code. The code rides the URL fragment, which never
+     reaches any server, and the enrolment screen it opens had no reachable
+     path at all before this (DEBT D-14). */
+  const link = location.origin + location.pathname + "#invite="
+    + encodeURIComponent(wanted + ":" + r.result.invite);
+  $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Send '
+    + escH(wanted) + ' this link. It works once, it is not shown again, and it '
+    + 'goes nowhere after it has been used.</p>'
+    + '<p class="mono" style="margin:8px 0 0;word-break:break-all">' + escH(link) + "</p></div>";
   $("#m-id").value = ""; $("#m-name").value = "";
   openMembers();
 });
