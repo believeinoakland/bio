@@ -105,6 +105,23 @@ t("verify answers with no credential at all", vf.ok, true);
 t("and reports the unratified bundle as not published", vf.published, false);
 t("and names no title", JSON.stringify(vf).includes("Sewer"), false);
 
+console.log("\n--- the unauthenticated surface answers, and says nothing it should not ---");
+{
+  /* EVERY classes:null op is reached through the control plane and must
+     actually WORK there. The burner lookup shipped in 0.21.0 with a
+     ReferenceError in this exact branch: its suite drove the Durable Object
+     directly and never the control plane, so 1276 assertions passed while the
+     deployed op answered a worker exception. Found on the live instance, not
+     here, which is why the assertion is here now. */
+  const look = await post(`/api/?op=invitelook`, { invite: "0".repeat(32) });
+  t("invitelook answers unauthenticated rather than throwing", look.ok, true);
+  t("with the uniform miss inside", look.result.reason, "NO_SUCH_INVITATION");
+  const bad = await post(`/api/?op=invitelook`, { invite: "nope" });
+  t("a malformed token gets the same answer", bad.result.reason, "NO_SUCH_INVITATION");
+  t("and the two results are byte-identical",
+    JSON.stringify(look.result), JSON.stringify(bad.result));
+}
+
 console.log("\n--- an unauthenticated caller gets nothing from the working corpus ---");
 t("unauthenticated index is refused", (await j("/api/?op=index")).error, "unauthenticated");
 t("unauthenticated publishedlist is refused", (await j("/api/?op=publishedlist")).error, "unauthenticated");

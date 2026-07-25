@@ -307,10 +307,10 @@ export default {
         return json(await r.json(), 200);
       }
       if (op === "invitelook") {
-        const body2 = await req.json().catch(() => ({}));
-        const r2 = await stub2.fetch(new Request("http://do/invitelook", {
-          method: "POST", body: JSON.stringify(body2) }));
-        return json(await r2.json(), 200);
+        const body = await req.json().catch(() => ({}));
+        const r = await stub.fetch(new Request("http://do/invitelook", {
+          method: "POST", body: JSON.stringify(body) }));
+        return json(await r.json(), 200);
       }
       if (op === "enroll") {
         const body = await req.json().catch(() => ({}));

@@ -7814,7 +7814,7 @@ var index_default = {
     if (!spec) return json({ ok: false, error: "unknown op", op }, 400);
     if (spec.classes === null) {
       const fp = await fingerprint(env.ADMIN_TOKEN);
-      const stub3 = env.STORE.get(env.STORE.idFromName("bio"));
+      const stub2 = env.STORE.get(env.STORE.idFromName("bio"));
       if (op === "claim") {
         const body2 = await req.json().catch(() => ({}));
         if (!env.ADMIN_TOKEN) return json({ ok: false, error: "instance has no bootstrap credential set" }, 409);
@@ -7822,7 +7822,7 @@ var index_default = {
           return json({ ok: false, error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard" }, 409);
         if (body2.bootstrapToken !== env.ADMIN_TOKEN)
           return json({ ok: false, error: "bootstrap credential does not match" }, 403);
-        const r2 = await stub3.fetch(new Request(`http://do/claim?fp=${fp}`, {
+        const r2 = await stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
           method: "POST",
           body: JSON.stringify({ role: "admin", password: body2.password })
         }));
@@ -7830,7 +7830,7 @@ var index_default = {
       }
       if (op === "login") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await stub3.fetch(new Request("http://do/login", {
+        const r2 = await stub2.fetch(new Request("http://do/login", {
           method: "POST",
           body: JSON.stringify({ role: body2.role || "admin", password: body2.password })
         }));
@@ -7846,7 +7846,7 @@ var index_default = {
       }
       if (op === "enroll") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await stub3.fetch(new Request("http://do/enroll", {
+        const r2 = await stub2.fetch(new Request("http://do/enroll", {
           method: "POST",
           body: JSON.stringify(body2)
         }));
@@ -7856,7 +7856,7 @@ var index_default = {
         const sha = (url.searchParams.get("sha256") || "").toLowerCase();
         if (!/^[0-9a-f]{64}$/.test(sha))
           return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
-        const r2 = await stub3.fetch(new Request(`http://do/verify?sha256=${sha}`));
+        const r2 = await stub2.fetch(new Request(`http://do/verify?sha256=${sha}`));
         const out2 = await r2.json();
         return json({ ok: true, ...out2.result }, 200);
       }
@@ -7893,7 +7893,7 @@ var index_default = {
         const win = Math.floor(Date.now() / KNOCK.windowMs);
         const ipHash = await fingerprint(req.headers.get("cf-connecting-ip") || "unknown") || "unknown";
         const knockId = `KNOCK-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
-        const rec = await (await stub3.fetch(new Request("http://do/knock", {
+        const rec = await (await stub2.fetch(new Request("http://do/knock", {
           method: "POST",
           body: JSON.stringify({
             knockId,
@@ -7923,7 +7923,7 @@ var index_default = {
           received: "Your material is in the group's inbox awaiting member review."
         }, 200);
       }
-      const r = await stub3.fetch(new Request(`http://do/bootstrap?fp=${fp}`));
+      const r = await stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`));
       const out = await r.json();
       return json({
         ok: true,
