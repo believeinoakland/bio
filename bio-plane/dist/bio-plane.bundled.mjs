@@ -4327,8 +4327,8 @@ var Store = class _Store extends DurableObject {
    *  the records both are unreachable rather than passing. */
   readImage(bundleId) {
     const img = {};
-    for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
-      img[r.path] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
+    for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=?`, bundleId))
+      img[r.path] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes };
     const snapFiles = /* @__PURE__ */ new Map();
     for (const r of this.sql.exec(`SELECT snap_key, path, content, blob_sha, sha256 FROM history WHERE bundle_id=?`, bundleId)) {
       img[_Store.snapPath(r.path, r.snap_key)] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
@@ -5076,6 +5076,10 @@ var OPS = {
      at a claimed instant, which is the one part of provenance a group cannot
      fabricate for itself. */
   attest: { classes: ["admin", "member", "probe"], mutating: true },
+  /* The monitor. Checks whether a monitored source still serves what was
+     captured and records the answer as a mechanical monitor-tick, inside the
+     field set C-20.1 holds that operation to. */
+  monitor: { classes: ["admin", "member", "probe"], mutating: true },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -5116,6 +5120,7 @@ var SESSION_OPS = {
     "capture",
     "acquire",
     "attest",
+    "monitor",
     "ratify",
     "inbox",
     "inboxget",
@@ -5128,6 +5133,7 @@ var SESSION_OPS = {
     "capture",
     "acquire",
     "attest",
+    "monitor",
     "ratify",
     "inbox",
     "inboxget",
@@ -5624,6 +5630,175 @@ var index_default = {
         store: storeName,
         tokenClass: cls
       }, token ? 200 : 502);
+    }
+    if (op === "monitor") {
+      if (req.method !== "POST") return json({ ok: false, error: "monitor is a POST" }, 405);
+      const body2 = await req.json().catch(() => null);
+      const bundleId = body2?.bundleId;
+      if (typeof bundleId !== "string" || !bundleId)
+        return json({ ok: false, error: "monitor needs a bundleId" }, 400);
+      const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
+      const img = (await (await stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}`)).json()).result;
+      if (!img || typeof img["bundle.md"] !== "string")
+        return json({ ok: false, reason: "ABSENT", bundleId }, 404);
+      const live = img["bundle.md"];
+      const fm = parseFrontmatter(live).data || {};
+      if (!fm.monitoring || fm.monitoring.enabled !== true)
+        return json({
+          ok: false,
+          reason: "NOT_MONITORED",
+          detail: "this bundle does not ask to be monitored"
+        }, 409);
+      const locator = fm.source?.locator;
+      if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
+        return json({
+          ok: false,
+          reason: "NO_LOCATOR",
+          detail: "monitoring needs a public https locator in source.locator"
+        }, 409);
+      let baseline = null;
+      try {
+        const reg = JSON.parse(img["data/provenance.json"] || "{}");
+        const match = (reg.documents || []).find((d) => d && d.locator === locator);
+        baseline = match?.capture?.sha256 || null;
+      } catch {
+      }
+      const checked = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+      let status = null, note = null, seen = null;
+      try {
+        const res2 = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-monitor" } });
+        if (res2.status === 404 || res2.status === 410) {
+          status = "removed";
+          note = `the source answered ${res2.status}`;
+        } else if (!res2.ok) {
+          note = `the source answered ${res2.status}`;
+        } else {
+          const bytes = new Uint8Array(await res2.arrayBuffer());
+          const d = await crypto.subtle.digest("SHA-256", bytes);
+          seen = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+          if (!baseline) note = "no captured baseline to compare against; recorded the check only";
+          else if (seen === baseline) {
+            status = "unchanged";
+            note = "the source still serves the captured bytes";
+          } else {
+            status = "modified";
+            note = "the source no longer serves the captured bytes";
+          }
+        }
+      } catch (e) {
+        note = "the source could not be reached: " + String(e && e.message || e).slice(0, 90);
+      }
+      const flags = status === "modified" || status === "removed";
+      const out = [];
+      let fence = 0, inMon = false, inRe = false;
+      for (const line of live.split("\n")) {
+        if (line === "---" && fence < 2) {
+          fence++;
+          inMon = inRe = false;
+          out.push(line);
+          continue;
+        }
+        if (fence === 1) {
+          if (/^[a-zA-Z_]/.test(line)) {
+            inMon = /^monitoring:/.test(line);
+            inRe = /^reeval_pending:/.test(line);
+          }
+          if (status && /^source_status:/.test(line)) {
+            out.push("source_status: " + status);
+            continue;
+          }
+          if (/^last_updated:/.test(line)) {
+            out.push("last_updated: " + checked);
+            continue;
+          }
+          if (inMon && /^\s+last_checked:/.test(line)) {
+            out.push("  last_checked: " + checked);
+            continue;
+          }
+          if (inRe && flags && /^\s+flag:/.test(line)) {
+            out.push("  flag: true");
+            continue;
+          }
+          if (inRe && flags && /^\s+since:/.test(line)) {
+            out.push("  since: " + checked);
+            continue;
+          }
+          if (inRe && flags && /^\s+source:/.test(line)) {
+            out.push("  source: source_status");
+            continue;
+          }
+        }
+        out.push(line);
+      }
+      let text = out.join("\n");
+      if (!/^\s+last_checked:/m.test(text) && /^monitoring:/m.test(text))
+        text = text.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
+      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + "\n";
+      const at = text.indexOf("## Session Log");
+      if (at < 0) text += "\n## Session Log\n\n" + entry;
+      else {
+        const nxt = text.indexOf("\n## ", at + 1);
+        const cut = nxt === -1 ? text.length : nxt + 1;
+        text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
+      }
+      const carried = [];
+      for (const [path2, v] of Object.entries(img)) {
+        if (path2 === "bundle.md" || path2.startsWith("_history/")) continue;
+        if (typeof v === "string") {
+          const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
+          carried.push({
+            path: path2,
+            text: v,
+            bytes: v.length,
+            sha256: [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("")
+          });
+        } else carried.push({ path: path2, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
+      }
+      const liveSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(live)))].map((x) => x.toString(16).padStart(2, "0")).join("");
+      const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))].map((x) => x.toString(16).padStart(2, "0")).join("");
+      const stamp = checked.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
+      const promoted = await (await stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
+        bundleId,
+        base: liveSha,
+        snapKey: stamp,
+        author: "bio-monitor",
+        writer: "mechanical",
+        operation: "monitor-tick",
+        meta: {
+          object_type: fm.object_type,
+          group: fm.group || "believe-in-oakland",
+          title: fm.title,
+          current_state: fm.current_state,
+          prior_state: fm.prior_state ?? null,
+          created: fm.created,
+          last_updated: checked
+        },
+        /* Every OTHER file carried forward untouched. promote writes a whole
+           image, so a writer that mentions one file deletes the rest: the first
+           version of this tick removed the provenance register, which took the
+           monitoring baseline with it and left an information@2 bundle with no
+           register at all. A mechanical writer silently destroying evidence is
+           the worst thing in this system, and the shape of promote made it the
+           DEFAULT behaviour of a careless caller. */
+        files: [
+          { path: "bundle.md", text, bytes: text.length, sha256: textSha },
+          ...carried
+        ],
+        register: []
+      }) })).json();
+      return json({
+        ok: !!promoted.result?.ok,
+        checked,
+        status,
+        note,
+        baseline,
+        seen,
+        reeval_raised: flags,
+        ...promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail },
+        note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
+        store: storeName,
+        tokenClass: cls
+      }, promoted.result?.ok ? 200 : 409);
     }
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
     if (op === "ratify") {

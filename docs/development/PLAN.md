@@ -382,7 +382,7 @@ An archive failure does not stop the bundle, and the failed attempt stays in the
 register, because that is a different and more honest claim than no attempt.
 
 ### S-7 Monitoring as mechanical writers
-**Status: envelope enforced (0.10.0), the daemon itself next** · Depends: S-5
+**Status: done (0.11.0)** · Depends: S-5
 
 Source change detection, deadline and recheck sweeps, inside the
 `MECHANICAL_FIELD_SETS` envelope. C-20.1 enforces the envelope by diffing history
@@ -424,10 +424,38 @@ they each need: the manifest entry gets names, because C-20.1 asks whether a lat
 entry touched bundle.md, and the promotion record gets the hashes. The live record
 re-audits at 30 clean with the changed projection.
 
-**Still owed:** the daemon itself, which fetches a monitored source, compares it
-to the recorded capture hash, and writes the tick. The envelope it must write
-inside is now enforced, which is the right order: the constraint exists before the
-thing it constrains.
+**The monitor itself, 0.11.0.** `op=monitor` reads the live record, takes its
+baseline from whatever the provenance register says was captured from that
+locator, fetches, compares, and writes a mechanical `monitor-tick` through promote
+like any other writer. Unchanged, modified and removed each resolve from evidence
+rather than from a flag: `removed` only on a 404 or 410, `modified` only when the
+bytes differ from the recorded capture, and with no baseline it records the check
+and says it had nothing to compare against rather than inventing a status.
+
+**It does not record the new document's hash, and that absence is the design.**
+The field set does not permit it, and it should not: detecting that a source moved
+is mechanical, deciding what the new version MEANS is not. So the tick raises
+`reeval_pending` and a human or a session decides whether to capture the new
+bytes. That is the escalation ladder expressed as one operation, and the envelope
+is what makes it impossible for the daemon to quietly do more.
+
+The load-bearing test is that the plane's own ticks are judged by the catalog:
+three real ticks across unchanged, modified, and removed, then `checkBundle` over
+the result, zero findings. A daemon whose own output the auditor refuses is worse
+than no daemon.
+
+**One defect this found that would have destroyed evidence.** `promote` writes a
+WHOLE image, so a writer that mentions one file deletes every other. The first
+version of the tick supplied only `bundle.md` and therefore removed the provenance
+register from every bundle it touched, which took the monitoring baseline with it
+and left an `information@2` bundle with no register at all. A mechanical writer
+silently destroying evidence is the worst thing this system could do, and the
+shape of `promote` made it the DEFAULT behaviour of a careless caller.
+
+Fixed by carrying every other file forward untouched, and the image now includes a
+blob's size alongside its hash so a partial writer CAN hand the rest back. The
+underlying sharpness of `promote` remains and is now recorded as D-25: the next
+writer to touch one file of a bundle will meet it too.
 
 ### S-8 Scale benchmark, with the real gate in the path
 **Status: todo** · Debt: D-12 · Depends: S-2

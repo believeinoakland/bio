@@ -100,8 +100,14 @@ export class Store extends DurableObject {
    *  the records both are unreachable rather than passing. */
   readImage(bundleId) {
     const img = {};
-    for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
-      img[r.path] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
+    /* A blob reference carries its size as well as its hash, because a caller
+       rewriting one file of a bundle has to hand every OTHER file back to
+       promote unchanged, and promote needs bytes to record. Without this a
+       partial writer silently drops what it did not mention: the monitor's
+       first tick deleted the provenance register of every bundle it touched. */
+    for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=?`, bundleId))
+      img[r.path] = r.content !== null ? r.content
+        : { blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes };
     /* Per-snapshot file hashes, collected while walking history so the
        promotion records below can carry them without a second pass. */
     const snapFiles = new Map();

@@ -181,6 +181,98 @@ console.log("\n--- a hand-authored promotion is held to no envelope ---");
   t("no mechanical claim, no envelope, no finding", await judge(ID6), []);
 }
 
+
+console.log("\n--- the monitor tick, written by the plane and audited by the gate ---");
+{
+  /* The real thing: the plane builds the tick itself, so the assertion is that
+     the code which writes it stays inside the envelope the previous section
+     proved is enforced. A daemon whose own output the auditor refuses is worse
+     than no daemon. */
+  const ID7 = "INFO-2026-0707-real-tick";
+  const DOC = new Uint8Array(1024).map((_, i) => (i * 7) % 256);
+  const DOC_SHA = createHash("sha256").update(DOC).digest("hex");
+  const CHANGED = new Uint8Array(1024).map((_, i) => (i * 9) % 256);
+
+  let serve = DOC, status = 200;
+  const mfm = new Miniflare({
+    modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "Store", useSQLite: true } },
+    r2Buckets: ["CAPTURES", "PUBLISHED"],
+    bindings: { ADMIN_TOKEN: "a2", MEMBER_TOKEN: "m2", PROBE_TOKEN: "p2", VERSION: "test" },
+    outboundService: async () => status === 200
+      ? new Response(serve) : new Response("gone", { status }),
+  });
+  const P = async (op, b) => (await mfm.dispatchFetch("http://x/api/?op=" + op + "&token=m2",
+    { method: "POST", body: JSON.stringify(b) })).json();
+  const G = async (q) => (await mfm.dispatchFetch("http://x/api/?token=m2&" + q)).json();
+
+  const LOC = "https://www.oaklandca.gov/report.pdf";
+  const prov = JSON.stringify({ documents: [{
+    file: "snapshots/report.pdf", locator: LOC, authority: "City Auditor",
+    retrieved: "2026-07-24T00:00:00Z",
+    capture: { method: "test", grade: "B", actor_class: "daemon", sha256: DOC_SHA, encoding: "binary" },
+    origin: { kind: "named_request" }, attestation_attempts: [],
+  }] }, null, 1);
+  const body0 = md(ID7).replace("schema: information@1", "schema: information@2")
+    .replace("  last_checked: null", "  last_checked: null");
+  await mfm.dispatchFetch(`http://x/api/?op=capture&token=m2&sha256=${DOC_SHA}`, { method: "PUT", body: DOC });
+  const created = await P("promote", {
+    bundleId: ID7, base: null, snapKey: "20260724T010000Z_7777aaaa", author: "member",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Monitored source",
+            current_state: "collected", created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T01:00:00Z" },
+    files: [{ path: "bundle.md", text: body0, bytes: body0.length, sha256: sha(body0) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            { path: "snapshots/report.pdf", blobSha: DOC_SHA, sha256: DOC_SHA, bytes: DOC.length }],
+    register: [{ sha256: DOC_SHA, path: "snapshots/report.pdf", encoding: "binary", bytes: DOC.length }],
+  });
+  t("the monitored bundle is created", created.result.ok, true);
+
+  const same = await P("monitor", { bundleId: ID7 });
+  t("an unchanged source reads as unchanged", same.status, "unchanged");
+  t("and raises no re-evaluation", same.reeval_raised, false);
+  t("the tick is a real revision", typeof same.revision, "string");
+
+  serve = CHANGED;
+  const moved = await P("monitor", { bundleId: ID7 });
+  t("a changed source reads as modified", moved.status, "modified");
+  t("and raises re-evaluation", moved.reeval_raised, true);
+  t("it does not record the new hash: that is not a mechanical judgement",
+    /not a mechanical judgement/.test(moved.note2), true);
+
+  status = 404;
+  const gone = await P("monitor", { bundleId: ID7 });
+  t("a withdrawn source reads as removed", gone.status, "removed");
+
+  /* The whole point: the plane's own tick, judged by the catalog. */
+  const img = (await G(`op=image&id=${ID7}`)).result;
+  const files = new Map();
+  for (const [p2, v] of Object.entries(img)) if (typeof v === "string") files.set(p2, v);
+  const el = new Set(Object.entries(img).filter(([, v]) => typeof v !== "string").map(([k]) => k));
+  const { findings } = await checkBundle({ folderName: ID7, files, elidedPaths: el,
+    sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+  const errs = findings.filter((f) => f.severity === "error");
+  for (const x of errs) console.log(`         ${x.check}: ${x.message.slice(0, 130)}`);
+  t("three of the plane's own ticks, and the gate finds nothing", errs.length, 0);
+
+  const live = files.get("bundle.md");
+  t("the live record shows the last status", /^source_status: removed$/m.test(live), true);
+  t("the re-evaluation flag is up", /^\s+flag: true$/m.test(live), true);
+  t("and every tick left a session entry",
+    (live.match(/### Session 20/g) || []).length >= 3, true);
+
+  const UNMON = "INFO-2026-0708-unmonitored";
+  const ub = md(UNMON).replace("  enabled: true", "  enabled: false");
+  await P("promote", { bundleId: UNMON, base: null, snapKey: "20260724T010000Z_8888aaaa", author: "member",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Monitored source",
+            current_state: "collected", created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T01:00:00Z" },
+    files: [{ path: "bundle.md", text: ub, bytes: ub.length, sha256: sha(ub) }], register: [] });
+  t("a bundle that does not ask to be monitored is refused",
+    (await P("monitor", { bundleId: UNMON })).reason, "NOT_MONITORED");
+  t("an absent bundle is refused", (await P("monitor", { bundleId: "INFO-2026-9999-nope" })).reason, "ABSENT");
+  await mfm.dispose();
+}
+
 await mf.dispose();
 console.log(`\nmechanical: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
