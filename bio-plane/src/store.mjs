@@ -357,6 +357,31 @@ export class Store extends DurableObject {
           JSON.stringify(files.map(f => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
       }
 
+      /* Silent deletion has no legitimate use in an append-only record.
+       *
+       * promote writes a WHOLE image, so a caller that mentions one file removes
+       * every other one. That is efficient and it is a trap, and it has already
+       * cost twice: the monitor's first tick destroyed the provenance register of
+       * every bundle it touched, and the browser's revise path did the same thing
+       * for anyone who edited a captured document. Both were the DEFAULT
+       * behaviour of a caller doing the obvious thing.
+       *
+       * So a promotion that drops a path the previous revision had must name it.
+       * A deliberate deletion is still possible and is now on the record; an
+       * accidental one is refused with the paths listed. Replay is exempt because
+       * the history it reconstructs may legitimately contain deletions, and a
+       * replayed revision is already marked as such in the manifest.
+       */
+      if (cur && !pkg.replay) {
+        const had = new Set(this.#rows(`SELECT path FROM files WHERE bundle_id=?`, bundleId).map((r) => r.path));
+        const now2 = new Set(files.map((f) => f.path));
+        const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
+        const dropped = [...had].filter((p) => !now2.has(p) && !declared.has(p));
+        if (dropped.length)
+          return { ok: false, reason: "FILES_DROPPED", paths: dropped.sort(),
+                   detail: "this promotion would remove files the previous revision had. "
+                         + "Carry them forward, or name them in drop[] to delete them on purpose." };
+      }
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
       for (const f of files)
         this.sql.exec(

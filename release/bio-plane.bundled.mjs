@@ -3747,6 +3747,7 @@ $("#n-save").addEventListener("click", async ()=>{
 
 /* ---- revise ---- */
 let EDIT_ID = null;
+let EDIT_IMAGE = null;
 async function openEdit(id, text){
   EDIT_ID = id; $("#e-err").textContent = "";
   $("#e-id").textContent = id; $("#e-body").value = text;
@@ -3797,6 +3798,19 @@ function reviseText(text, who, now){
   return body;
 }
 
+/* Every file the bundle has, other than the one being edited, handed back
+   unchanged. promote writes a whole image, so a save that mentions only
+   bundle.md deletes the provenance register and every capture beside it. */
+async function carryForward(id, exclude){
+  const img = (await rec("image", { id })).result || {};
+  const out = [];
+  for (const [path, v] of Object.entries(img)){
+    if (path === exclude || path.indexOf("_history/") === 0) continue;
+    if (typeof v === "string") out.push({ path, text: v, bytes: v.length, sha256: await sha256Text(v) });
+    else out.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
+  }
+  return out;
+}
 $("#e-save").addEventListener("click", async ()=>{
   const e = $("#e-err"); e.textContent = "";
   const text = $("#e-body").value;
@@ -3816,11 +3830,16 @@ $("#e-save").addEventListener("click", async ()=>{
       bundleId: EDIT_ID, base: lease.result.base, snapKey: stamp(), author: WHO,
       meta: { object_type: fmv.object_type, group:"believe-in-oakland", title: fmv.title || EDIT_ID,
               current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
-      files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) }],
+      files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) },
+              ...(await carryForward(EDIT_ID, "bundle.md"))],
       register: [],
     });
     if (!r.result || !r.result.ok) {
       const why = (r.result && r.result.reason) || r.error || "unknown";
+      if (why === "FILES_DROPPED") {
+        e.textContent = "Saving would have removed files this bundle holds ("
+          + (r.result.paths || []).join(", ") + "). Nothing was saved.";
+        return; }
       e.textContent = (why === "CAS_STALE" || why === "STALE")
         ? "Someone saved a newer version while you were writing. Open it again and redo your change."
         : "Refused: " + why;
@@ -4591,6 +4610,19 @@ var Store = class _Store extends DurableObject {
           writer,
           operation
         );
+      }
+      if (cur && !pkg.replay) {
+        const had = new Set(this.#rows(`SELECT path FROM files WHERE bundle_id=?`, bundleId).map((r) => r.path));
+        const now2 = new Set(files.map((f2) => f2.path));
+        const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
+        const dropped = [...had].filter((p) => !now2.has(p) && !declared.has(p));
+        if (dropped.length)
+          return {
+            ok: false,
+            reason: "FILES_DROPPED",
+            paths: dropped.sort(),
+            detail: "this promotion would remove files the previous revision had. Carry them forward, or name them in drop[] to delete them on purpose."
+          };
       }
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
       for (const f2 of files)

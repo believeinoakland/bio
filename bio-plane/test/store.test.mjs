@@ -99,6 +99,36 @@ const idx = (await call("/index")).result;
 t("index carries no substrate locator", Object.keys(idx.bundles[0]).includes("locator"), false);
 t("index carries the C-13 diff key", "sha256" in idx.bundles[0], true);
 
+
+console.log("\n--- a promotion cannot silently delete files ---");
+{
+  /* This trap cost twice before it was closed: the monitor's first tick removed
+     the provenance register of every bundle it touched, and the browser's revise
+     path did the same for anyone editing a captured document. Both were the
+     default behaviour of a caller doing the obvious thing. */
+  const DID = "INFO-2026-0003-two-files";
+  const body = pkg("collected", 1).files[0].text;
+  const extra = JSON.stringify({ note: "beside the record" }, null, 1);
+  const two = { ...pkg("collected", 1), bundleId: DID, base: null,
+    snapKey: "20260723T120000Z_dddd1111",
+    files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) },
+            { path: "data/extra.json", text: extra, bytes: extra.length, sha256: sha(extra) }] };
+  const a = await call("/promote", two);
+  t("a bundle with two files is created", a.result.ok, true);
+
+  const onlyMd = { ...two, base: a.result.bundleSha, snapKey: "20260723T130000Z_dddd2222",
+    files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) }] };
+  const dropped = await call("/promote", onlyMd);
+  t("mentioning one file is refused, not obeyed", dropped.result.reason, "FILES_DROPPED");
+  t("and the refusal names what would have gone", dropped.result.paths, ["data/extra.json"]);
+  t("nothing was removed", Object.keys((await call("/image?id=" + DID)).result).includes("data/extra.json"), true);
+
+  const declared = await call("/promote", { ...onlyMd, drop: ["data/extra.json"] });
+  t("naming it deletes it on purpose", declared.result.ok, true);
+  t("and then it really is gone",
+    Object.keys((await call("/image?id=" + DID)).result).includes("data/extra.json"), false);
+}
+
 console.log(`\n${fail ? "FAILED" : "OK"}  ${pass} passed, ${fail} failed`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

@@ -591,6 +591,26 @@ the first benchmark run was quietly failing C-1.2 and the numbers were measured
 over non-conformant input. Re-measured with valid ids; the figures held, but they
 were not the figures I thought I was reporting.
 
+### Out-of-band, 0.13.1: silent deletion is refused (D-25, D-29)
+
+`promote` writes a whole image, so a caller that mentions one file removes every
+other. Efficient, and a trap, and it had already cost twice: the monitor's first
+tick destroyed the provenance register of every bundle it touched, and closing
+this found the browser's revise path doing exactly the same thing to anyone who
+edited a bundle with a captured document (D-29). Both were the DEFAULT behaviour
+of a caller doing the obvious thing, which is the definition of a bad interface
+rather than two careless callers.
+
+A promotion that drops a path the previous revision had must now name it in
+`drop[]`. Deliberate deletion is still possible and is on the record; accidental
+deletion is refused with the paths listed. Replay is exempt, because the history
+it reconstructs may legitimately contain deletions and a replayed revision is
+already marked as such.
+
+I fixed the trap rather than a third call site. The first two times I patched the
+caller; the third time the caller was going to be a group's own member losing
+their evidence, and the interface is what was wrong.
+
 ## Out-of-band fixes
 
 Small, self-contained corrections that do not belong to a numbered step.
