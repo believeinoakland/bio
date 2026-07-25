@@ -3,7 +3,7 @@ import { DurableObject } from "cloudflare:workers";
    with the same code that later checks them, so the store's projection and the
    checker's view cannot disagree about what the document says. */
 import { parseFrontmatter, checkGatheringGrammar, MECHANICAL_FIELD_SETS,
-         checkBundle } from "../checks/bio-checks.mjs";
+         checkBundle, createSha256 } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
@@ -535,6 +535,20 @@ export class Store extends DurableObject {
      handful of ids; test/selection.test.mjs now crosses the boundary on purpose. */
   static SELECTION_ID_CHUNK = 64;
 
+  /* Citing writes one frontmatter entry per cited record into a single
+     bundle.md, so the number of edges a Project can carry is bounded by
+     INLINE_MAX and NOT by SELECTION_MAX_ITEMS. The two were set independently
+     and they collide: a maximum legal enumeration of 10,000 produces a
+     1,070,846-byte document against a 1,048,576-byte ceiling. MEASURED at 83
+     bytes per edge for the reference block at a 25-character bundle id
+     (2026-07-25, test/cite-scale.mjs); used only to tell an operator roughly how
+     many would fit, never to decide the refusal, which is made on the real
+     encoded length. */
+  static CITE_EDGE_BYTES = 83;
+  /* How many ids a Session Log entry names before it summarises. Bounded for
+     the same reason the audit bounds its offender list. */
+  static CITE_LOG_SAMPLE = 20;
+
   #sweepSelections() {
     const now = new Date().toISOString();
     const dead = this.#rows(`SELECT handle FROM selections WHERE expires < ?`, now).map((r) => r.handle);
@@ -773,6 +787,279 @@ export class Store extends DurableObject {
       }
     });
     return { ok: true, released: before - this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c };
+  }
+
+  /* ---- the first action that refers to a selection ----
+   *
+   * CITING INFORMATION IN A PROJECT, at weight `report`.
+   *
+   * `selectionResolve` shipped in 0.17.0 with no caller. This is its first, and
+   * citing was chosen for it because it ADDS references rather than moving
+   * state: drift is survivable, so the reporting arm of the gate gets exercised
+   * before anything can be broken by it. The refusing arm gets its first caller
+   * from the first state-changing action, deliberately not this one.
+   *
+   * WEIGHT IS NOT A PARAMETER. It is `report` because of what this action IS,
+   * and the op reads no weight from the caller. A caller that could choose the
+   * weight would make the whole distinction advisory.
+   *
+   * Citing writes the edge into bundle.md and promotes, because `refs` is a
+   * PROJECTION re-derived from frontmatter inside promote's transaction and
+   * promote refuses a refs field in the payload outright (D-21). The document is
+   * authoritative; there is no second place to state an edge.
+   *
+   * Fully synchronous, and that is load-bearing rather than incidental. The
+   * catalog's own sha256 is pure JS, so nothing between resolving the selection
+   * and committing the promotion awaits, and a Durable Object is single
+   * threaded: no other write can interleave. The CAS is still passed and still
+   * checked, but it is a backstop here rather than the only guard.
+   */
+  cite({ project = null, handle = null, viewer = null, owner = null,
+         note = "", author = null } = {}) {
+    /* The gate first, so an unknown or someone else's selection is refused
+       before this method has looked at a project at all. */
+    const sel = this.selectionResolve({ handle, viewer, owner, weight: "report" });
+    if (!sel.ok) return sel;
+
+    const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
+    if (!p) return { ok: false, reason: "NO_SUCH_PROJECT", project,
+                     detail: "the citing object must exist before it can cite anything" };
+    if (p.object_type !== "project")
+      return { ok: false, reason: "NOT_A_PROJECT", project, got: p.object_type,
+               detail: "cites lives on the citing object and this action cites INTO a Project (State Rules 5.2)" };
+
+    /* A note is written into the restricted frontmatter grammar, whose scalar
+       parser strips surrounding quotes and understands no escapes at all. A
+       quote or a newline in here would not be escaped, it would silently
+       reshape the document. Refused rather than sanitised: mangling an
+       operator's words is worse than declining them. */
+    const nt = String(note ?? "");
+    if (nt.length > 200 || /["\\\r\n]/.test(nt))
+      return { ok: false, reason: "BAD_NOTE",
+               detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline" };
+
+    /* Every member of the selection must be Information. A selection carrying
+       anything else is REFUSED with the offenders named, never filtered down to
+       the citable subset: quietly narrowing a set changes what the operator's
+       click meant, which is the same reason an oversized enumeration is refused
+       rather than downgraded. This also catches a Project citing itself, which
+       is a cycle with nothing to mean. */
+    const offenders = [];
+    for (const id of sel.members) {
+      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+      if (!b || b.object_type !== "information") offenders.push(id);
+    }
+    if (offenders.length)
+      return { ok: false, reason: "NOT_INFORMATION", project, handle,
+               offenders: offenders.sort(), drift: sel.drift,
+               detail: "citing Information means Information. These members of the selection are not, "
+                     + "and the whole call is refused rather than narrowed to the ones that are." };
+
+    const liveMd = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
+    if (!liveMd || typeof liveMd.content !== "string")
+      return { ok: false, reason: "NO_BUNDLE_MD", project };
+    const parsed = parseFrontmatter(liveMd.content);
+    if (!parsed.data)
+      return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project,
+               detail: "the project's own bundle.md does not parse under the restricted grammar" };
+
+    /* Partition the selection against the edges the document already carries.
+     *
+     * SEVERED IS NOT ABSENT. A severed edge is a recorded human judgment,
+     * preserved with its reason the same way a dismissed Problem is greyed and
+     * never deleted. Reinstating one is a state change and cannot ride inside a
+     * report-weight action; skipping one quietly narrows the operator's set.
+     * Both would decide something the operator did not, so the call is refused
+     * and handed back. Reinstatement is its own action, at weight `refuse`,
+     * requiring a reason the way severing does. Bob's decision, 2026-07-25. */
+    const existing = Array.isArray(parsed.data.references) ? parsed.data.references : [];
+    const byTarget = new Map();
+    for (const r of existing)
+      if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
+        byTarget.set(r.target, r.status);
+
+    const severed = [], already = [], add = [];
+    for (const id of sel.members) {
+      const st = byTarget.get(id);
+      if (st === "severed") severed.push(id);
+      else if (st !== undefined) already.push(id);
+      else add.push(id);
+    }
+    if (severed.length)
+      return { ok: false, reason: "SEVERED_EDGE", project, handle,
+               offenders: severed.sort(), drift: sel.drift,
+               detail: "these targets already carry a SEVERED cites edge, which is a recorded decision to cut "
+                     + "the dependency, not the absence of one. Citing neither reverses it silently nor skips "
+                     + "past it. Reinstating a severance is a separate action that records its own reason." };
+
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+
+    /* Nothing to do is a SUCCESS that writes nothing. Citing has to be safely
+       retryable, because drift is reported rather than fatal and an operator
+       who reads a drift report will reasonably press the button again. A no-op
+       that still promoted would put an empty revision in an append-only
+       history every time. */
+    if (!add.length)
+      return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
+               cited: [], alreadyCited: already.sort(), severed: [],
+               bundleSha: p.bundle_sha, rowVersion: null,
+               detail: "every member of the selection was already cited; nothing was written" };
+
+    const spliced = Store.#spliceReferences(
+      liveMd.content, add.map((target) => ({ rel: "cites", target, status: "confirmed", note: nt })));
+    if (!spliced)
+      return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
+               detail: "the project's references block is not in a shape this grammar can extend in place. "
+                     + "Citing edits only that block and never rewrites the rest of the document." };
+
+    /* last_updated moves, so C-13.2 requires a Session Log entry. That is not
+       check-appeasement: what the record is FOR is saying who did what and on
+       what basis, and an edge appearing with no account of why is the shape of
+       an unaccountable change. */
+    let text = Store.#setScalar(spliced, "last_updated", `"${when}"`);
+    /* BOUNDED, on the same reasoning as the audit's offender list: a Session Log
+       entry must not answer with a megabyte of repetition. Listing every id was
+       measured at 24 bytes per edge on top of the 83 the reference block itself
+       costs, so an unbounded entry put nearly a quarter of the document's growth
+       into prose restating what the references array already says exactly. The
+       edges are the record; the log entry accounts for the act. */
+    const shown = add.slice(0, Store.CITE_LOG_SAMPLE);
+    const listed = shown.join(", ")
+                 + (add.length > shown.length ? `, and ${add.length - shown.length} more` : "");
+    const entry = `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"}`
+                + ` | ${author || "member"}\n`
+                + `Trigger: selection ${handle}${sel.moved ? " (the set had moved since it was made; "
+                    + "citing is report-weight and proceeded)" : ""}\n`
+                + `Changes: cites edges added to ${listed}.`
+                + `${nt ? ` Note: ${nt}.` : ""}\n`;
+    const at = text.indexOf("## Session Log");
+    if (at < 0) text += "\n## Session Log\n\n" + entry;
+    else {
+      const nxt = text.indexOf("\n## ", at + 1);
+      const cut = nxt === -1 ? text.length : nxt + 1;
+      text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
+    }
+
+    /* Every OTHER file carried forward untouched. promote writes a whole image,
+       so a writer that mentions one file deletes the rest, and that default has
+       already destroyed evidence twice here: the monitor's first tick removed
+       the provenance register of every bundle it touched. Citing rewrites
+       bundle.md and is exactly the same shape of writer. */
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, project))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const bytes = new TextEncoder().encode(text);
+
+    /* MEASURED, 2026-07-25, and a collision between two numbers that were set
+       independently and had never met. An enumerated selection is capped at
+       10,000 members (SELECTION_MAX_ITEMS) and every member costs about 83
+       bytes of references block, so a MAXIMUM LEGAL SELECTION produced a
+       1,070,846-byte bundle.md against an INLINE_MAX of 1,048,576 and was
+       refused by promote with OVERSIZE_INLINE: an error about inline byte
+       storage, in answer to an operator who selected a legal number of records
+       and pressed cite.
+       Refused here instead, before anything is written, in words that name the
+       real limit and what to do. The whole call is refused rather than the first
+       N edges taken, for the same reason an oversized enumeration is refused
+       rather than downgraded: citing a prefix would silently change which
+       records the operator's click meant. bundle.md cannot spill to R2 to escape
+       this, because the gate compares it byte-wise against history (C-5, C-12)
+       and schema.mjs keeps every file the gate reads inline by rule. */
+    if (bytes.length > INLINE_MAX) {
+      const overhead = bytes.length - add.length * Store.CITE_EDGE_BYTES;
+      return { ok: false, reason: "CITATION_TOO_LARGE",
+               project, handle, drift: sel.drift,
+               requested: add.length, bytes: bytes.length, limit: INLINE_MAX,
+               roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / Store.CITE_EDGE_BYTES)),
+               detail: "citing this many records at once would push the Project's bundle.md past the "
+                     + "1MB inline limit. Every edge is written into the document, so the ceiling is on "
+                     + "edges in one Project, not on the size of a selection. Cite in smaller batches; "
+                     + "nothing has been written." };
+    }
+
+    const textSha = createSha256().update(bytes).hex();
+    const fm = parsed.data;
+
+    /* Hand-authored, not mechanical. A member citing evidence is authorship, so
+       no writer and no operation are claimed and C-20.1's mechanical envelope
+       does not apply. It also means #revisionKind classifies a citation
+       revision as `authored`, which is what a later drift report should say
+       about it. */
+    const promoted = this.promote({
+      bundleId: project, base: p.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: author || "member",
+      files: [{ path: "bundle.md", text, bytes: bytes.length, sha256: textSha }, ...carried],
+      meta: {
+        object_type: "project", group: fm.group || "believe-in-oakland", title: fm.title,
+        current_state: fm.current_state, prior_state: fm.prior_state ?? null,
+        created: fm.created, last_updated: when,
+        criticality: fm.criticality ?? null, classification: fm.classification ?? null,
+      },
+    });
+    if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
+
+    return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
+             cited: add.slice().sort(), alreadyCited: already.sort(), severed: [],
+             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
+             gate: sel.gate, expires: sel.expires };
+  }
+
+  /* Rewrite ONE column-0 scalar inside the frontmatter, leaving every other
+     byte alone. Line-oriented on purpose: the same approach the monitor takes,
+     and the reason is that this repo has no frontmatter SERIALIZER, only a
+     parser. Re-emitting a parsed document would reorder keys, drop comments and
+     renormalise quoting across the whole file to change one field. */
+  static #setScalar(text, key, value) {
+    const lines = text.split("\n");
+    const end = lines.indexOf("---", 1);
+    for (let i = 1; i < (end === -1 ? lines.length : end); i++) {
+      if (lines[i].startsWith(key + ":")) { lines[i] = `${key}: ${value}`; return lines.join("\n"); }
+    }
+    return text;
+  }
+
+  /* Splice new entries into the `references` block, touching nothing else.
+   *
+   * Three shapes are reachable in the corpus and all three are handled: an
+   * inline empty `references: []`, a populated block, and a document with no
+   * references key at all. A key whose value is any OTHER inline scalar is
+   * refused by returning null rather than guessed at, because the restricted
+   * grammar cannot express an inline array of objects and a wrong guess would
+   * corrupt the document silently. */
+  static #spliceReferences(text, additions) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+
+    const block = additions.map((a) =>
+      `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`);
+
+    let ref = -1;
+    for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
+
+    if (ref === -1)   // no key at all: open one immediately before the closing fence
+      return [...lines.slice(0, end), "references:", ...block, ...lines.slice(end)].join("\n");
+
+    const rest = lines[ref].slice("references:".length).trim();
+    if (rest === "[]")   // an empty inline array becomes a block
+      return [...lines.slice(0, ref), "references:", ...block, ...lines.slice(ref + 1)].join("\n");
+    if (rest !== "") return null;   // some other inline scalar: not ours to reinterpret
+
+    /* A block. Append after its LAST indented line, so a blank line sitting
+       between the block and the next column-0 key stays where the author put
+       it rather than being swallowed into the array. */
+    let last = ref;
+    for (let i = ref + 1; i < end; i++) {
+      if (lines[i].trim() === "") continue;
+      if (/^\s/.test(lines[i])) { last = i; continue; }
+      break;
+    }
+    return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1631,6 +1918,18 @@ export class Store extends DurableObject {
           viewer: url.searchParams.get("viewer"),
           owner: url.searchParams.get("owner"),
           weight: url.searchParams.get("weight") === "refuse" ? "refuse" : "report",
+        }),
+        /* The first action that refers to a selection. `weight` is deliberately
+           NOT read from the query string: citing is report-weight because of
+           what it is, and a caller that could choose would make the weight
+           distinction advisory. `author` is stamped by the control plane. */
+        cite: () => this.cite({
+          project: url.searchParams.get("project"),
+          handle: url.searchParams.get("handle"),
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          note: url.searchParams.get("note") ?? "",
+          author: url.searchParams.get("author"),
         }),
         selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
         selectionrelease: () => this.selectionRelease({

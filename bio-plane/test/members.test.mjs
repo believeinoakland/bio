@@ -79,6 +79,56 @@ const img2 = await GET(`op=image&id=${id}&token=t-admin-1`);
 const man2 = JSON.parse(img2.result["_history/manifest.json"]);
 t("history records the session identity as author", man2.entries[0].author, "ruth");
 
+console.log("\n--- a session can work the retrieval surface it is given ---");
+/* These reads were missing from SESSION_OPS until 2026-07-25: a signed-in
+   member could CREATE a selection and then neither search to build one nor
+   resolve the one they had made, so the browser half of S-10 was unreachable
+   from a session. Found when `cite` needed them. */
+{
+  const sr = await GET(`op=search&q=intake&${S}`);
+  t("session can search", sr.ok, true);
+  t("and gets the record it just wrote", sr.result.hits.map((h) => h.bundle_id), [id]);
+  /* The gate compiled for the SESSION's identity, not for a class. */
+  t("compiled against the member scope", sr.result.gate.scope, "member");
+  t("session can read the query vocabulary",
+    typeof (await GET(`op=searchfields&${S}`)).result.fields.title, "object");
+}
+{
+  const sel = await POST(`op=select&${S}`, { ids: [id] });
+  t("session creates a selection", sel.result.ok, true);
+  const h = sel.result.handle;
+  t("and can resolve the selection it just made",
+    (await GET(`op=selection&handle=${h}&${S}`)).result.ok, true);
+  t("and can list its own selections", (await GET(`op=selectionlist&${S}`)).result.ok, true);
+  /* Ownership is the server's stamp, so one member cannot resolve another's
+     handle even knowing it. The admin session is a different owner. */
+  /* cross-owner refusal is asserted in cite.test.mjs, where both owners exist */
+}
+
+console.log("\n--- a session cites, and the record says who did it ---");
+{
+  const pid = "PROJ-2026-0001-session";
+  const pmd = `---\nid: ${pid}\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-24T00:00:00Z"\nlast_updated: "2026-07-24T00:00:00Z"\n---\n\n## Session Log\n\n### Session 2026-07-24T00:00:00Z | Formation | interactive_agentic\nTrigger: elevation\nChanges: created.\n`;
+  const cr = await POST(`op=promote&${S}`, {
+    bundleId: pid, base: null, snapKey: "20260724T130000Z_bbbb2222", author: "ruth",
+    meta: { object_type: "project", group: "believe-in-oakland", title: "session project",
+            current_state: "forming", created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T00:00:00Z" },
+    files: [{ path: "bundle.md", text: pmd, bytes: pmd.length, sha256: sha(pmd) }], register: [] });
+  t("the project exists", cr.result.ok, true);
+
+  const sel = await POST(`op=select&${S}`, { ids: [id] });
+  /* author is supplied and must be IGNORED, the same impostor rule promote and
+     lease already follow. */
+  const c = await POST(`op=cite&project=${pid}&handle=${sel.result.handle}&author=IMPOSTOR&${S}`, {});
+  t("session cites", c.result.ok, true);
+  t("into a bundle that had no references key at all", c.result.cited, [id]);
+
+  const doc = (await GET(`op=file&id=${pid}&path=bundle.md&token=t-admin-1`)).result.text;
+  t("the edge is in the document", /rel: cites/.test(doc), true);
+  t("the Session Log names the session's member", /\| ruth$/m.test(doc.split("\n").find((l) => l.startsWith("### Session 2026-07-2") && l.includes("Cited")) ?? ""), true);
+  t("and not the claimed author", doc.includes("IMPOSTOR"), false);
+}
+
 console.log("\n--- what a session may never do ---");
 t("session cannot purge", (await GET(`op=purge&confirm=bio&${S}`)).error, "this operation requires a machine credential, not a signed-in session");
 t("session cannot livefire", (await GET(`op=livefire&${S}`)).error, "this operation requires a machine credential, not a signed-in session");

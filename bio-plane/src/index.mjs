@@ -92,6 +92,13 @@ const OPS = {
   selection:       { classes: ["admin", "member", "probe"],      mutating: false },
   selectionlist:   { classes: ["admin", "member", "probe"],      mutating: false },
   selectionrelease:{ classes: ["admin", "member", "probe"],      mutating: true  },
+  /* The first action that refers to a selection: citing Information in a
+     Project, at weight `report`. Mutating, because it promotes the Project with
+     the new edges written into its bundle.md; `refs` is a projection of that
+     document and is never written directly (D-21). Member class and above like
+     every other reader of the working corpus, and there is no public class to
+     grant it to. */
+  cite:            { classes: ["admin", "member", "probe"],      mutating: true  },
   list:       { classes: ["admin", "member", "probe"],           mutating: false },
   image:      { classes: ["admin", "member", "probe"],           mutating: false },
   file:       { classes: ["admin", "member", "probe"],           mutating: false },
@@ -157,11 +164,21 @@ const OPS = {
    regardless of how the caller authenticated, and purge stays reachable
    only by machine credential. Member sessions get intake and review; admin
    sessions additionally manage the roster and keys. */
+/* The retrieval READS belong here as much as `select` does, and their absence
+   was a real gap rather than a boundary: a signed-in member could create a
+   selection and then neither search to build one nor resolve the one they had
+   made, so the browser half of S-10 was unreachable from a session. Found when
+   `cite` needed them, 2026-07-25. They read the working corpus, which a member
+   session already reads through op=index and op=audit, so this widens no fence:
+   `viewer` and `owner` are stamped from the session's own identity below. */
+const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
-                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease"]),
+                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
+                   ...RETRIEVAL_READS, "cite"]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
+                   ...RETRIEVAL_READS, "cite",
                    "memberadd", "memberset", "signeradd", "signerset"]),
 };
 
@@ -990,14 +1007,22 @@ export default {
        the only place the identity comes from. A viewer the compiler does not
        recognise compiles to a deny predicate, so the failure mode of a missing
        stamp is an empty result rather than an unfiltered one. */
-    if (op === "search" || op === "select" || op === "selection") {
+    if (op === "search" || op === "select" || op === "selection" || op === "cite") {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
     /* Ownership of a selection is the same server-side stamp. A selection is
        readable only by the credential that made it, and "only by the credential"
        is worth nothing if the caller names the credential. */
-    if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease")
+    if (op === "select" || op === "selection" || op === "selectionlist" ||
+        op === "selectionrelease" || op === "cite")
       inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `class:${cls}`);
+    /* Who cited is part of the record, and citing writes a Session Log entry
+       carrying the name. Stamped like every other authorship in this file: a
+       browser cannot write history as someone else, and a machine credential
+       says plainly that it was a machine rather than borrowing a person's name.
+       A caller-supplied `author` is overwritten, not honoured. */
+    if (op === "cite")
+      inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
     if (viaSession && op === "promote" && passBody) {
       try { const b = JSON.parse(passBody); b.author = sessMember; passBody = JSON.stringify(b); }

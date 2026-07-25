@@ -109,6 +109,32 @@ console.log("\n--- an unauthenticated caller gets nothing from the working corpu
 t("unauthenticated index is refused", (await j("/api/?op=index")).error, "unauthenticated");
 t("unauthenticated publishedlist is refused", (await j("/api/?op=publishedlist")).error, "unauthenticated");
 
+/* STRUCTURAL, not a list. Every op naming a class must refuse an unauthenticated
+   caller, and the set is read from the module rather than retyped here, so an op
+   added later cannot pass this suite by not being mentioned in it. `cite` was
+   the op that showed the gap: it is mutating and it reads the working corpus,
+   and it would have passed a fixed-list fence suite without a single assertion
+   touching it. */
+console.log("\n--- and that holds for every guarded op, read from the module ---");
+{
+  const src = readFileSync(SRC, "utf8");
+  const block = src.slice(src.indexOf("const OPS = {"), src.indexOf("\n};", src.indexOf("const OPS = {")));
+  const guarded = [...block.matchAll(/^\s*([a-z]+):\s*\{\s*classes:\s*\[/gm)].map((m) => m[1]);
+  t("the module actually yielded a set of guarded ops", guarded.length > 20, true);
+  t("cite is among them", guarded.includes("cite"), true);
+  /* The extraction must DISCRIMINATE, or the loop below is asserting over a set
+     that happens to be everything. The classes:null ops are the public surface
+     and each enforces its own gate, so none of them may appear here. */
+  t("and the unauthenticated surface is excluded",
+    ["verify", "bootstrap", "login", "knock", "claim", "enroll"].filter((o) => guarded.includes(o)), []);
+  const leaked = [];
+  for (const op of guarded) {
+    const r = await j(`/api/?op=${op}`);
+    if (r.error !== "unauthenticated") leaked.push(`${op}:${r.error ?? "ANSWERED"}`);
+  }
+  t("no guarded op answers an unauthenticated caller", leaked, []);
+}
+
 await mf.dispose();
 console.log(`\nfence: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
