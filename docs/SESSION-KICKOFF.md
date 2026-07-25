@@ -8,23 +8,81 @@ the functional and technical architecture, the state rules, and the intake
 doctrine are all readable without an upload. docs/architecture/README.md
 indexes them and marks which are superseded.
 
-Say what to work on. If the session will do any of the following, grant
-the matching permission when asked, or up front:
+Say what to work on. Below is the COMPLETE list of credentials a session can
+need, what each unlocks, and what scope it must carry. Values are pasted into
+the session by Bob, never stored here.
 
-1. SHIP A RELEASE (push code, release files, or docs to this repo):
-   paste the GitHub token. It lives in Bob's notes and is long-lived by
-   his decision (July 24, 2026): during development the repo holds no
-   production instance and nobody else runs BIO, so per-session minting
-   was pure friction. Claude cannot carry a secret between sessions, so
-   the value has to be pasted once per session; that is a paste, not a
-   re-mint. Revisit when a real group installs.
+**Why the values are not in this file.** Not caution, mechanics. `tokens.mjs`
+denylists by SHA-256 every token value that has ever appeared in this
+repository and treats a denylisted value as NOT SET, so committing MEMBER_TOKEN
+or ADMIN_TOKEN here would make the plane refuse it: publishing the credential
+is the same act as revoking it. The release PRIVATE key is worse than that. Its
+public half is compiled into the installer's ARMED_SIGNERS, so anyone holding
+the private half can sign a release that every sovereign installer accepts as
+authentic; in a public repository that is a supply-chain key for the groups who
+install BIO, not just a key of Bob's. Bob's own standing decision, recorded
+below since July 24, is that these are pasted once per session, which is a
+paste and not a re-mint.
 
-2. TOUCH AN INSTANCE'S DATA (migrate, load, inspect the record from the
-   session): paste the MEMBER_TOKEN. Same standing arrangement.
+1. **SHIP A RELEASE** (push code, release files, docs, or tags to this repo):
+   the GitHub personal access token, repo scope on `believeinoakland/bio`.
+   Long-lived by Bob's decision (July 24, 2026): during development the repo
+   holds no production instance and nobody else runs BIO, so per-session
+   minting was pure friction. Revisit when a real group installs.
 
-3. INSTALL OR UPDATE AN INSTANCE: no grant needed. The installer at
-   newgroup.believeinoakland.workers.dev authenticates through
-   Cloudflare's own sign-in with a click.
+2. **TOUCH AN INSTANCE'S DATA** (read or write the live record from the
+   session): the instance MEMBER_TOKEN. Reads and intake writes. Note that
+   ADMIN_TOKEN has never been supplied to a session; D-9 (unreferenced register
+   rows) is the one open item that needs it.
+
+3. **SIGN A RELEASE**: the release private key, format
+   `BIOKEY-RAW1.bio-release.<base64 32-byte seed>`. Signs the asset BYTES in
+   namespace `bio-release`, sha512. A session with this key can cut a release
+   end to end; without it, Bob signs in `tools/sign-release.html` and pastes
+   the block back. The ratification key
+   (`BIOKEY-RAW1.bio-ratify.<seed>`, namespace `bio-ratify`, signing
+   `bio-ratify <bundleId> <sha256>`) attests documents for publishing.
+   Namespace separation is what stops a ratification signature installing
+   software, and `wizard.test.mjs` asserts it.
+
+4. **DEPLOY TO AN INSTANCE** (update a running Worker without the browser
+   wizard): a Cloudflare API token with exactly three account permissions,
+   **Workers Scripts: Edit**, **Workers R2 Storage: Edit**, **Account
+   Settings: Read**, scoped to the one account, with NO zone permissions and
+   NO IP filter. Zone permissions are unnecessary because instances live on
+   `workers.dev`, and leaving them off keeps DNS and the
+   `believeinoakland.org` zone out of reach. An IP filter breaks the token,
+   because a session's egress address is not stable. Set a TTL. The
+   permission applies account-wide rather than to one Worker, so a session
+   should target the script by name and say which.
+
+   The account id is not a secret and saves a lookup:
+   `20b533579290b9b93168345edd3b7f72`
+   (`Biocloudflare@neologic.com's Account`). It holds two Workers, `biosmoke7`
+   (the development plane) and `newgroup` (the installer wizard), and both R2
+   buckets, `bio-captures` and `bio-published`.
+
+5. **INSTALL OR UPDATE VIA THE WIZARD**: no grant needed. The installer at
+   newgroup.believeinoakland.workers.dev authenticates through Cloudflare's
+   own sign-in with a click, asking consent for the same three scopes.
+
+### The update shape, which is not obvious and is easy to get wrong
+
+A deploy that updates an existing instance must mirror `uploadUpdate` in
+`newgroup/src/index.mjs`. Two details are load-bearing:
+
+- `keep_bindings: ["secret_text", "durable_object_namespace"]`. Without it a
+  PUT deletes the instance's ADMIN_TOKEN, MEMBER_TOKEN, and PROBE_TOKEN.
+- **No `migrations` field at all.** The `Store` class already exists and its
+  SQLite backend never changes; re-sending `new_sqlite_classes` against a live
+  instance is how the record gets endangered. Migrations belong only to a
+  first install.
+
+Bind R2 explicitly when the buckets exist, supply VERSION fresh as
+`plain_text`, and verify after: version moved, `stats` identical before and
+after, `op=audit` clean, all bindings still present. Expect the version
+endpoints to disagree for up to a minute while edge locations propagate; poll
+for convergence rather than reading one endpoint once and declaring failure.
 
 Release signing is BUILT and ARMED as of 0.4.0. The installer carries
 Bob's release public key and refuses any repository release that is not
@@ -35,6 +93,54 @@ block into the session. Development keys were generated July 24, 2026
 and are disposable; production gets fresh keys, passphrase-protected,
 before any real group installs.
 
+
+## Current state and next task, as of 2026-07-25
+
+The plane is **0.14.2**, signed, tagged `v0.14.2`, and running on
+biosmoke7.believeinoakland.workers.dev. Battery 680 assertions across 22 suites
+in about 50 seconds (`npm test` in bio-plane); installer wizard 90 assertions
+(`node test/wizard.test.mjs` in newgroup). Live record: 30 bundles, 87 register
+rows, `op=audit` 30 checked with zero findings.
+
+**S-10 RETRIEVAL IS UNBLOCKED AND UNDER WAY.** The design conversation the
+sections below insist on has HAPPENED; do not re-open it. Two measured probes and
+Bob's answers are recorded in `development/RETRIEVAL-PROBE.md` (probe 1, FTS5 vs
+an exported index) and `development/RETRIEVAL-SUBSTRATE.md` (probe 2, the other
+four verbs, plus the settled design and the build order). Read the substrate
+document before touching retrieval; it is the specification.
+
+The short version, so a session cannot drift from it:
+
+- The surface is five verbs, search, filter, list, sort, select. Not free-text
+  search. Google-like query syntax, metadata and frontmatter searchable,
+  `source.locator` and `source.authority` included.
+- FTS5 inside the Durable Object, with typed indexed columns for the fields the
+  UX filters and sorts on, and JSON1 with generated columns for the
+  per-schema tail. No facet table: measured at ~9x the write cost and ~5.5x the
+  space, never faster.
+- A result carries ids plus full provenance. Default order is relevance (bm25).
+  A bare multi-word string means AND; when an AND query returns nothing the
+  surface offers the OR interpretation.
+- Every sort compiles to `ORDER BY <field> <dir>, id ASC`. Without the stable
+  tiebreak paging is wrong, not merely inconsistent, on any field with ties.
+- Select-all is a distinct operation from a page, and a selection is a
+  server-side construct.
+- Search ships at flat member scope ahead of the membership model, with the
+  D-15 viewer-visibility filter designed in as a SINGLE compilation point that
+  returns true for a member today. A test must assert no query path reaches the
+  store without passing through it.
+
+Build order, from the substrate document: extend the projection to cover the
+frontmatter the UX filters on, maintain it transactionally inside `promote`, then
+the parser and compiler, then `op=search`, then server-side selection, then the
+real viewer predicate when membership lands.
+
+Also open, in Bob's order of interest: D-1 (root of trust unmodelled, doctrine
+work), D-9 (20 unreferenced register rows, needs an admin credential), S-9
+(retire the Apps Script plane, Bob's hands), D-15 (viewer-position filtering,
+when project visibility is built).
+
+---
 
 ## Next session's task: implement the membership architecture
 

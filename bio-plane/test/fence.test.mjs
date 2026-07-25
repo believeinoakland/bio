@@ -82,11 +82,19 @@ t("so the title does not appear anywhere in the response", JSON.stringify(pubIdx
    an op reads, not from who holds a token.
    PUBLIC_TOKEN is still bound in this suite's env, so these assert the binding
    is INERT: the value is present and authenticates nothing. */
-for (const op of ["index", "list", "image", "file", "stats", "dangling", "audit",
-                  "publishedlist", "selftest"]) {
+for (const op of ["index", "projection", "list", "image", "file", "stats", "dangling",
+                  "audit", "publishedlist", "selftest"]) {
   const r = await j(`/api/?op=${op}&token=${PUB}&id=INFO-2026-7100-fence`);
   t(`op=${op} does not accept a PUBLIC_TOKEN value`, r.error, "unauthenticated");
 }
+
+/* The projection carries source.locator, which Bob made searchable. Searchable
+   to a MEMBER. It must not become a public list of every source the group has
+   touched, so it sits behind the same fence as op=index. */
+t("op=projection returns nothing to an unauthenticated caller",
+  (await j("/api/?op=projection")).error, "unauthenticated");
+const memProj = await j(`/api/?op=projection&token=${MEM}&id=INFO-2026-7100-fence`);
+t("but a member reads the projected row", memProj.result.bundle_id, "INFO-2026-7100-fence");
 
 console.log("\n--- the unauthenticated surface still answers, and still leaks nothing ---");
 /* verify is the model the retired class should have followed: no credential, and

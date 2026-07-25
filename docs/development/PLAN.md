@@ -565,7 +565,37 @@ condition.
 their own systems, and the source file is removed in a commit that says why.
 
 ### S-10 Retrieval
-**Status: unblocked (design settled July 25)** · Depends: S-8 (probe answered)
+**Status: in progress. Step 1 (the projection) is DONE in 0.15.0** · Depends: S-8 (probe answered)
+
+**Step 1, done in 0.15.0.** The `bundles` projection now carries every field the
+UX filters on: `schema_id`, `produced_mode`, `capability_tier`, `source_locator`,
+`source_authority`, `source_retrieved`, `source_status`, `content_hash`,
+`monitor_enabled`, `monitor_frequency`, `monitor_last_checked`,
+`annotations_open`, `reeval_flag`, `reeval_since`, `reeval_source`, plus `fm_json`
+holding the whole frontmatter for the per-schema tail. Seven of them are indexed
+and `test/projection.test.mjs` asserts the index is USED via EXPLAIN QUERY PLAN
+rather than trusting that creating it was enough.
+
+Three properties the tests hold, each of which is a defect class if it slips:
+
+- The projection is derived from bundle.md with the CATALOG'S OWN parser, so the
+  store's view and the checker's view cannot disagree about what the document
+  says. It is not taken from the caller's `meta`, which has no representation for
+  these fields at all.
+- It is written inside `promote`'s transaction, so it cannot be a revision behind
+  the document.
+- Unparseable frontmatter yields NULLs, never guesses. A wrong value in a
+  filterable column is worse than an absent one, because the filter silently
+  under-reports and the member cannot tell.
+
+Rows written before the columns existed are backfilled from stored bundle.md, in
+a bounded pass at construction plus an admin `op=reproject` for a store larger
+than one pass. `op=projection` is member class and above, behind the same fence as
+`op=index`, because the projection carries `source.locator`.
+
+Next: maintain an FTS5 index alongside the projection in the same transaction,
+then the parser and compiler.
+
 
 The scope is a full search, filter, list, sort, and select surface, not free-text
 search. Free text is one substrate element. The control surface is a collapsible

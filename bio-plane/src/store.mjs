@@ -60,10 +60,173 @@ export class Store extends DurableObject {
     for (const [table, column, decl] of [
       ["manifest", "writer", "TEXT"],
       ["manifest", "operation", "TEXT"],
+      /* S-10 step 1: the metadata projection the retrieval surface filters and
+         sorts on. Probe 2 (development/RETRIEVAL-SUBSTRATE.md) measured that the
+         original nine columns cover about half of what real frontmatter carries,
+         and that typed indexed columns beat a facet table by roughly 9x on write
+         cost and 5.5x on space while never being slower. So: a column for every
+         field the UX filters on, and fm_json for the per-schema tail, since
+         information@1, information@2, problem@1 and project@1 carry different
+         field sets and more versions are coming. All nullable and additive, so
+         an older row simply has an empty projection until the backfill below
+         re-derives it from bundle.md. */
+      ["bundles", "schema_id", "TEXT"],
+      ["bundles", "produced_mode", "TEXT"],
+      ["bundles", "capability_tier", "TEXT"],
+      ["bundles", "source_locator", "TEXT"],
+      ["bundles", "source_authority", "TEXT"],
+      ["bundles", "source_retrieved", "TEXT"],
+      ["bundles", "source_status", "TEXT"],
+      ["bundles", "content_hash", "TEXT"],
+      ["bundles", "monitor_enabled", "INTEGER"],
+      ["bundles", "monitor_frequency", "TEXT"],
+      ["bundles", "monitor_last_checked", "TEXT"],
+      ["bundles", "annotations_open", "INTEGER"],
+      ["bundles", "reeval_flag", "INTEGER"],
+      ["bundles", "reeval_since", "TEXT"],
+      ["bundles", "reeval_source", "TEXT"],
+      ["bundles", "fm_json", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
     }
+    /* Indexed because probe 2 recorded the difference in the query PLAN, not
+       only the latency: without an index a filter is a full table scan whose
+       cost grows with the corpus, and at 20,000 rows a scan is still fast
+       enough to look like success. */
+    for (const c of ["schema_id", "produced_mode", "source_authority", "source_status",
+                     "monitor_frequency", "reeval_flag", "annotations_open"])
+      this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
+
+    /* Backfill. Rows written before these columns existed carry an empty
+       projection, and nothing downstream can tell that apart from a bundle whose
+       frontmatter genuinely says nothing. Re-derive from the stored bundle.md,
+       which is the authority anyway. Bounded per construction because a Durable
+       Object has a CPU budget: the development record is 30 bundles and this is
+       milliseconds, but a large store finishes over successive constructions
+       rather than timing out on one. */
+    this.#backfillProjection(500);
+  }
+
+  /* The projection derived from a bundle.md, using the CATALOG'S OWN parser so
+     the store's view and the checker's view cannot disagree about what the
+     document says. Returns nulls rather than guesses when frontmatter does not
+     parse: a wrong value in a filterable column is worse than an absent one,
+     because a filter silently under-reports and the member cannot tell. */
+  static projectionOf(bundleMdText) {
+    const empty = {
+      schema_id: null, produced_mode: null, capability_tier: null,
+      source_locator: null, source_authority: null, source_retrieved: null,
+      source_status: null, content_hash: null, monitor_enabled: null,
+      monitor_frequency: null, monitor_last_checked: null, annotations_open: null,
+      reeval_flag: null, reeval_since: null, reeval_source: null, fm_json: null,
+    };
+    if (typeof bundleMdText !== "string") return empty;
+    let fm = null;
+    try { fm = parseFrontmatter(bundleMdText).data; } catch { return empty; }
+    if (!fm || typeof fm !== "object") return empty;
+    const s = (v) => (typeof v === "string" && v !== "" ? v : v === 0 ? "0" : v == null ? null : String(v));
+    const nested = (block, key) => {
+      const b = fm[block];
+      return b && typeof b === "object" && !Array.isArray(b) ? b[key] : undefined;
+    };
+    const bool = (v) => (v === true ? 1 : v === false ? 0 : null);
+    const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+    /* reeval_pending is a {flag, since, source} record, but the catalog also
+       tolerates a legacy boolean, so both shapes are read rather than one
+       assumed. */
+    const rp = fm.reeval_pending;
+    const rpObj = rp && typeof rp === "object" && !Array.isArray(rp);
+    return {
+      schema_id: s(fm.schema),
+      produced_mode: s(nested("produced_by", "mode")),
+      capability_tier: s(nested("produced_by", "capability_tier")),
+      source_locator: s(nested("source", "locator")),
+      source_authority: s(nested("source", "authority")),
+      source_retrieved: s(nested("source", "retrieved")),
+      source_status: s(fm.source_status),
+      content_hash: s(fm.content_hash),
+      monitor_enabled: bool(nested("monitoring", "enabled")),
+      monitor_frequency: s(nested("monitoring", "frequency")),
+      monitor_last_checked: s(nested("monitoring", "last_checked")),
+      annotations_open: num(fm.annotations_open),
+      reeval_flag: rpObj ? bool(rp.flag) : bool(rp),
+      reeval_since: rpObj ? s(rp.since) : null,
+      reeval_source: rpObj ? s(rp.source) : null,
+      fm_json: JSON.stringify(fm),
+    };
+  }
+
+  static PROJECTION_COLS = [
+    "schema_id", "produced_mode", "capability_tier", "source_locator",
+    "source_authority", "source_retrieved", "source_status", "content_hash",
+    "monitor_enabled", "monitor_frequency", "monitor_last_checked",
+    "annotations_open", "reeval_flag", "reeval_since", "reeval_source", "fm_json",
+  ];
+
+  /* Write the projection for one bundle. Called inside promote's transaction, so
+     the projection can never be a revision behind the document. */
+  #writeProjection(bundleId, bundleMdText) {
+    const p = Store.projectionOf(bundleMdText);
+    const set = Store.PROJECTION_COLS.map((c) => `${c}=?`).join(", ");
+    this.sql.exec(
+      `UPDATE bundles SET ${set} WHERE bundle_id=?`,
+      ...Store.PROJECTION_COLS.map((c) => p[c]), bundleId
+    );
+    return p;
+  }
+
+  #backfillProjection(limit) {
+    const stale = this.#rows(
+      `SELECT bundle_id FROM bundles WHERE fm_json IS NULL ORDER BY bundle_id LIMIT ?`, limit);
+    let n = 0;
+    for (const r of stale) {
+      const f = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
+      if (!f || f.content === null) continue;
+      this.#writeProjection(r.bundle_id, f.content);
+      n++;
+    }
+    return { reprojected: n, remaining: this.#one(`SELECT count(*) c FROM bundles WHERE fm_json IS NULL`).c };
+  }
+
+  /** Re-derive the projection for rows that lack one. Exposed because a deploy
+   *  runs the bounded pass once at construction and a large store may need more
+   *  than one. Idempotent: a row with a projection is left alone. */
+  reproject({ limit = 500 } = {}) {
+    return this.#backfillProjection(limit);
+  }
+
+  /** The projected metadata for one bundle, or a json_extract query over the
+   *  per-schema tail. This is what the retrieval compiler will filter on. */
+  projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = 200 } = {}) {
+    const cols = ["bundle_id", "object_type", "group_id", "title", "current_state",
+                  "prior_state", "created", "last_updated", "criticality",
+                  "classification", "bundle_sha", ...Store.PROJECTION_COLS].join(", ");
+    if (bundleId) return this.#one(`SELECT ${cols} FROM bundles WHERE bundle_id=?`, bundleId);
+    if (jsonPath !== null && jsonEquals !== null)
+      return this.#rows(
+        `SELECT ${cols} FROM bundles WHERE json_extract(fm_json, ?) = ? ORDER BY bundle_id LIMIT ?`,
+        jsonPath, jsonEquals, limit);
+    return this.#rows(`SELECT ${cols} FROM bundles ORDER BY bundle_id LIMIT ?`, limit);
+  }
+
+  /** EXPLAIN QUERY PLAN for representative filters, so a test can assert the
+   *  index is USED rather than trusting that creating it was enough. */
+  projectionPlan() {
+    const out = {};
+    for (const c of ["source_status", "produced_mode", "schema_id", "reeval_flag"])
+      out[c] = this.#rows(`EXPLAIN QUERY PLAN SELECT bundle_id FROM bundles WHERE ${c} = ?`, "x")
+        .map((r) => r.detail);
+    return out;
+  }
+
+  /** Test and repair support: clear a projection so the backfill path can be
+   *  exercised against a row that looks like it predates the columns. */
+  projectionClear({ bundleId = null } = {}) {
+    const set = Store.PROJECTION_COLS.map((c) => `${c}=NULL`).join(", ");
+    if (bundleId) this.sql.exec(`UPDATE bundles SET ${set} WHERE bundle_id=?`, bundleId);
+    else this.sql.exec(`UPDATE bundles SET ${set}`);
+    return { ok: true, scope: bundleId || "ALL" };
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -447,6 +610,16 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT OR REPLACE INTO register (capture_sha,bundle_id,path,encoding,bytes,registered) VALUES (?,?,?,?,?,?)`,
           c.sha256, bundleId, c.path, c.encoding ?? "utf8", c.bytes, new Date().toISOString());
+
+      /* S-10 step 1: derive the metadata projection from the bundle.md being
+         written, inside this same transaction. Inside, because a projection
+         maintained separately is a projection that can be a revision behind the
+         document, and the whole point of it is to be filtered on. From the
+         document rather than from `meta`, because these fields have no
+         representation in meta at all: the document is not the better source,
+         it is the only one. */
+      const bundleMd = files.find(f => f.path === "bundle.md");
+      this.#writeProjection(bundleId, bundleMd?.text ?? null);
 
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version };
@@ -849,6 +1022,14 @@ export class Store extends DurableObject {
                                        after: url.searchParams.get("after") || null,
                                        limit: url.searchParams.get("limit") }),
         index: () => this.buildIndex(),
+        projection: () => this.projection({
+          bundleId: url.searchParams.get("id"),
+          jsonPath: url.searchParams.get("jsonPath"),
+          jsonEquals: url.searchParams.get("jsonEquals"),
+        }),
+        projectionplan: () => this.projectionPlan(),
+        projectionclear: () => this.projectionClear(body || {}),
+        reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs() }),
         stats: () => this.stats(),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),

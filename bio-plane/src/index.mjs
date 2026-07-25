@@ -58,6 +58,12 @@ const OPS = {
      public surface for a listing is `publishedlist`, which reads the projection
      that has never held unratified material. Asserted in test/fence.test.mjs. */
   index:      { classes: ["admin", "member", "probe"],           mutating: false },
+  /* S-10 step 1. The metadata projection the retrieval surface filters and sorts
+     on, including source.locator and source.authority, which Bob settled as
+     searchable. Working corpus, so member class and above, never public: the
+     same fence that governs op=index governs this. */
+  projection: { classes: ["admin", "member", "probe"],           mutating: false },
+  reproject:  { classes: ["admin", "probe"],                     mutating: true  },
   list:       { classes: ["admin", "member", "probe"],           mutating: false },
   image:      { classes: ["admin", "member", "probe"],           mutating: false },
   file:       { classes: ["admin", "member", "probe"],           mutating: false },
