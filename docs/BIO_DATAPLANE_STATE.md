@@ -1,5 +1,56 @@
 # BIO data plane: source state, migration plan, and build status
 
+v28, July 26, 2026. Current state, on top of v27 and the narratives below. The
+plane is **0.31.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`9e28174b81e6a7e275e75acd80cdbff6a06bfc11c060e6c8fc54ea257a899315`).
+Battery **1490 assertions across 32 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean.
+
+**S-11 STEP 3: BULK DISPOSITION OF PROBLEMS, `op=dispose`, weight `refuse`.** The
+first selection-backed action to move an OBJECT's state rather than an edge's. An
+edge is a claim about a relationship; a state is a claim about where the group's
+thinking has got to.
+
+Only `deferred` and `dismissed`. `elevated` is a legal Problem state and is
+refused BY NAME rather than by omission, because elevating writes an
+`elevated_into` edge and a Project bundle, so as a bulk state flip it would
+produce Problems claiming to be elevated into nothing.
+
+A selection carrying a non-Problem is refused WHOLE with offenders named, never
+narrowed to the valid subset: the operator picked a set, and disposing part of it
+decides something they did not.
+
+**C-4.2 CAUGHT A REAL OMISSION.** The first version set `prior_state` and wrote
+no `state_history` entry, which leaves the document asserting a history it does
+not carry. `prior_state` is only a pointer; the ENTRY is the record. Now appended
+with the five fields the catalog wants, and a document whose block cannot be
+extended is refused rather than guessed at.
+
+**THE BEFORE-CHECK EARNED ITS PLACE AGAIN** (standing lesson 4). The new
+fixture was non-conformant on first write, missing the C-13.2 Session Log entry,
+so an after-check alone would have measured nothing.
+
+**SCALED UNTIL THE ASSUMPTION HELD** (standing lesson 1). Probed to 4,000
+Problems in one call out of tree: linear at about 1ms each, no ceiling found.
+D-36's variable and compound-term limits do NOT apply here, because `dispose`
+issues one promote per member rather than one statement over all of them, so
+there is no `IN (...)` list to chunk. The suite asserts 200 at a size the battery
+can afford and conformance-checks one of them, since moving 200 states is
+worthless if they are 200 documents the catalog rejects.
+
+**A TEST HELPER THAT WOULD HAVE LIED AT SCALE.** `stateOf` scanned
+`op=projection`, which caps at 200 rows, so it silently stopped finding things
+exactly when the corpus got big enough for the scale assertions to matter, and
+reported it as a crash rather than a miss. It asks for the one bundle now.
+
+**THE v27 CONVERGENCE LESSON PAID OFF ON THE FIRST USE.** Polling for the
+BEHAVIOUR rather than the version: try 1 answered version 0.30.0 and `unknown op`
+for `op=dispose`; try 2 answered 0.31.0 and `NO_SUCH_SELECTION`, correctly. Had
+this polled the version alone it would have reported convergence one poll early
+again.
+
 v27, July 26, 2026. Current state, on top of v26 and the narratives below. The
 plane is **0.30.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the

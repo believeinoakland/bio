@@ -843,7 +843,7 @@ Proven by a test that repoints a live reference at nothing and asserts that the
 store's own view and the catalog name the same single finding, C-6.2.
 
 ### S-11 Selection-backed actions
-**Status: STARTED. Citing 0.18.0, severing and reinstating 0.19.0** · Depends: S-10 step 5
+**Status: STARTED. Citing 0.18.0, severing and reinstating 0.19.0, disposition 0.31.0** · Depends: S-10 step 5
 
 `selectionResolve` shipped in 0.17.0 with a weight parameter and no caller. This
 step is the set of actions that call it, built one at a time, lightest first.
@@ -886,10 +886,19 @@ status moves. The reason is appended to the note rather than substituted, both
 actions require one, and the whole set moves or none of it does, because a
 half-run state change is what weight `refuse` exists to prevent.
 
-**Step 3, next: an action that moves an OBJECT's state rather than an edge's.**
-The candidates in ascending doctrinal weight are bulk disposition of Problems
-(`surfaced` to `deferred` or `dismissed`, which C-2.8 requires a non-empty
-`disposition_reason` for), bulk retirement of Information (`verified` to
+**Step 3, done in 0.31.0: BULK DISPOSITION OF PROBLEMS, `op=dispose`, weight
+`refuse`.** `surfaced` to `deferred` or `dismissed`, which C-2.8 requires a
+non-empty `disposition_reason` for. `elevated` is refused by name, not omitted:
+elevating writes an `elevated_into` edge and a Project bundle, so as a bulk state
+flip it would produce Problems claiming to be elevated into nothing.
+
+C-4.2 obliges a `state_history` entry wherever `prior_state` is set, which the
+first version missed. Probed to 4,000 in one call, linear at about 1ms each, no
+ceiling: D-36's limits do not apply because `dispose` issues one promote per
+member rather than one statement over all of them.
+
+**Step 4, next: an action that moves an OBJECT's state rather than an edge's.**
+The remaining candidates in ascending doctrinal weight are bulk retirement of Information (`verified` to
 `retired`), and bulk release (`collected` to `verified`). Release is LAST and
 should probably never be a bulk action at all: C-18.1 makes it a named member's
 per-document decision and C-18.7 wants a signed release record, so a bulk
