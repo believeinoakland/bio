@@ -1,5 +1,47 @@
 # BIO data plane: source state, migration plan, and build status
 
+v22, July 26, 2026. Current state, on top of v21 and the narratives below. The
+plane is **0.25.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`69fca0c356a1d324211e59bc070990aa3a64976863a71692ebd2d10c96a2cac7`).
+Battery **1380 assertions across 31 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean.
+
+**7.7 REVERSED, CLOSING D-46.** Only a project OWNER removes a participant.
+Verified live: `op=projectremove` answered `ADMIN_ONLY` at 0.24.0 and answers
+`NOT_THE_OWNER` at 0.25.0. Four assertions in `projects.test.mjs` asserted the
+old rule and were CORRECTED rather than exempted.
+
+**7.2 LOST ITS ADMINISTRATOR BYPASS, AND NOTHING HAD EVER EXERCISED IT.**
+`projectInvite` carried `|| this.#isAdminMember(by)` and no test drove that
+branch, so the bypass could have been removed or kept without a single assertion
+noticing. Both directions are now asserted. Both checks run through one
+`#isProjectOwner` helper, because the bypass sat on invite and remove with
+DIFFERENT shapes, which is how they drifted apart to begin with.
+
+**7.10 OWNER GOVERNANCE.** Ownership is a set. Addition follows 4.7 unchanged.
+Removal follows 4.7 EXCEPT at exactly two owners, where both must agree and the
+target is one of them.
+
+`Store.ownerMath` is deliberately NOT `adminMath` reused. They differ at exactly
+one row, n=2, and that row is the one a shared implementation gets wrong. For
+administrators, impossibility at two prevents a capture at the smallest size, and
+4.2's floor of two means a group never has to go below it. Projects have a floor
+of ONE, so impossibility at two would make a second owner permanent. At two the
+target votes, which is what the act is at that size: resignation with the other
+owner's assent. **The suite asserts the divergence against `op=adminarith`
+directly**, not only in isolation, so the two tables cannot silently converge.
+
+Removing ownership leaves the person a PARTICIPANT (7.10); removing them from the
+project entirely is then 7.7.
+
+**A POLLING SCRIPT, NOT THE PLANE.** The 0.25.0 deploy appeared not to converge
+for twenty polls. `op=selftest` reports `version` at the TOP level and the poll
+read `result.version`; the 0.24.0 poll had a `|| j.version` fallback and this one
+did not. The plane was healthy the whole time. Worth recording because the
+failure looked exactly like the edge-propagation gotcha it was not.
+
 v21, July 26, 2026. Current state, on top of v20 and the narratives below. The
 plane is **0.24.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the

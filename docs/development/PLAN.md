@@ -901,7 +901,7 @@ refuse-weight action stops and hands over nothing so it cannot half-run; and the
 bundle is conformant to the catalog after every one of them.
 
 ### S-12 Membership, the member half
-**Status: STARTED. Sections 3, 4, 5 (recorded AND enforced) and 7-participation done, 0.24.0** · Depends: nothing
+**Status: STARTED. Sections 3, 4, 5, and 7 except lifecycle authority and fork, done, 0.25.0** · Depends: nothing
 
 `architecture/BIO_Membership_Architecture_v2.md` is the design and nothing in it
 is undecided. Do not re-derive it. **v1 is superseded and must not be worked
@@ -970,12 +970,12 @@ compilation point in `query.mjs` filters by position and D-15 is closed.
       Administrators do not. `projectRemove` enforces administrator-only today
       and `projects.test.mjs` asserts it. Correct both; do not exempt them.
       Standing lesson 3.
-   c. **Owner governance (7.10).** Ownership is a set. Addition follows 4.7
+   c. **DONE in 0.25.0. Owner governance (7.10).** Ownership is a set. Addition follows 4.7
       unchanged. Removal follows 4.7 EXCEPT at exactly two owners, where both
       must agree and the target is one of them. Do not reuse `adminMath`
       unmodified: it diverges at exactly that row, and that row is the one a
       shared implementation gets wrong by reuse.
-   d. **Lifecycle authority and fork (7.11, 7.12).** Deactivation is `closed`
+   d. **NEXT. Lifecycle authority and fork (7.11, 7.12).** Deactivation is `closed`
       with `closed_reason: abandoned` and reactivation is the `closed` to
       `investigating` transition, both already legal in the check catalog, so
       nothing is added to the state vocabulary. What is missing is the
