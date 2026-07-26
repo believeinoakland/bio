@@ -25,6 +25,11 @@ const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  /* The capture bucket is needed by op=registeraudit below, which finishes its
+     classification by probing <store>/captures/<sha>. Without it the audit
+     degrades honestly, calling everything it cannot see unbacked and saying so,
+     which is the fail-safe direction but not what this suite is testing. */
+  r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-mech", MEMBER_TOKEN: "mem-mech", PROBE_TOKEN: "prb-mech", VERSION: "test" },
 });
 
@@ -271,6 +276,72 @@ console.log("\n--- the monitor tick, written by the plane and audited by the gat
     (await P("monitor", { bundleId: UNMON })).reason, "NOT_MONITORED");
   t("an absent bundle is refused", (await P("monitor", { bundleId: "INFO-2026-9999-nope" })).reason, "ABSENT");
   await mfm.dispose();
+}
+
+
+console.log("\n--- op=registeraudit: the diagnostic must ask R2, and must be able to say no ---");
+{
+  /* 0.22.0 shipped this looking only in `files` and `history`, called anything
+     else "dropped", and produced a confident wrong finding that the Apps Script
+     migration was unauditable. The bytes were in R2. Neither that version nor
+     the corrected one was exercised by any suite: the battery held at 1282
+     across both, which is the D-43 shape again. */
+  const id = "INFO-2026-7900-regaudit";
+  const md = `---\nid: ${id}\nobject_type: information\ncurrent_state: collected\n---\n\n## Summary\n\nAudit.\n`;
+  const CAP = "capture bytes that really exist";
+  const capSha = sha(CAP);
+
+  /* A register entry backed by a file IN the payload: the `live` class. */
+  await post("promote", {
+    bundleId: id, base: null, snapKey: "20260726T010000Z_regaudit", author: "suite",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Audit",
+            current_state: "collected", created: "2026-07-26T00:00:00Z", last_updated: "2026-07-26T00:00:00Z" },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
+    register: [{ path: "bundle.md", sha256: sha(md), encoding: "utf8", bytes: md.length }] });
+
+  const audit = async () => (await (await mf.dispatchFetch("http://x/api/?op=registeraudit&token=adm-mech")).json()).result;
+  const a = await audit();
+  t("the audit probed the bucket rather than guessing", a.probed, true);
+  t("an entry backed by a file in the image is live", a.live >= 1, true);
+  t("and the store reads sound", a.sound, true);
+  t("with nothing to report", a.sample, []);
+
+  /* THE NEGATIVE CONTROL. A register entry for bytes that are in neither the
+     image nor the bucket is the one genuinely broken state, and an audit that
+     cannot say so is worth nothing. Written directly, because promote does not
+     refuse it: the gate does, at ratify, with PLANE_MISSING_BYTES (D-45). */
+  const id2 = "INFO-2026-7901-unbacked";
+  const md2 = `---\nid: ${id2}\nobject_type: information\ncurrent_state: collected\n---\n\n## Summary\n\nB.\n`;
+  await post("promote", {
+    bundleId: id2, base: null, snapKey: "20260726T010100Z_unbacked", author: "suite",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Unbacked",
+            current_state: "collected", created: "2026-07-26T00:00:00Z", last_updated: "2026-07-26T00:00:00Z" },
+    files: [{ path: "bundle.md", text: md2, bytes: md2.length, sha256: sha(md2) }],
+    register: [{ path: "captures/ghost.bin", sha256: sha("nowhere at all"), encoding: "binary", bytes: 14 }] });
+
+  const b = await audit();
+  t("the audit reports the unbacked entry", b.unbacked, 1);
+  t("the store no longer reads sound", b.sound, false);
+  t("the offender is named", b.sample[0].path, "captures/ghost.bin");
+  t("with the reason", b.sample[0].why, "no bytes in the working bucket");
+
+  /* And a capture whose bytes ARE in the bucket but which is deliberately not
+     in the bundle image is SOUND, not broken. This is the migrate.mjs pattern
+     and the whole reason the first version of this audit was wrong. */
+  await mf.dispatchFetch(`http://x/api/?op=capture&token=mem-mech&sha256=${capSha}`,
+    { method: "PUT", body: CAP });
+  const id3 = "INFO-2026-7902-captured";
+  const md3 = `---\nid: ${id3}\nobject_type: information\ncurrent_state: collected\n---\n\n## Summary\n\nC.\n`;
+  await post("promote", {
+    bundleId: id3, base: null, snapKey: "20260726T010200Z_captured", author: "suite",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "Captured",
+            current_state: "collected", created: "2026-07-26T00:00:00Z", last_updated: "2026-07-26T00:00:00Z" },
+    files: [{ path: "bundle.md", text: md3, bytes: md3.length, sha256: sha(md3) }],
+    register: [{ path: "migration/drive-provenance.json", sha256: capSha, encoding: "utf8", bytes: CAP.length }] });
+
+  const c = await audit();
+  t("a capture held only in the bucket counts as captured, not broken", c.captured >= 1, true);
+  t("and it is not counted as unbacked", c.unbacked, 1);
 }
 
 await mf.dispose();
