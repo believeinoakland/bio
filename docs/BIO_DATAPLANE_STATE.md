@@ -1,5 +1,60 @@
 # BIO data plane: source state, migration plan, and build status
 
+v26, July 26, 2026. Current state, on top of v25 and the narratives below. The
+plane is **0.29.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`796ce83c569a389e6a4e849243ba07ac74c3443a9ff9e352ded77f9e791a77b0`).
+Battery **1444 assertions across 31 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean.
+
+**S-12 IS COMPLETE.** Every section of Membership Architecture v2 is built except
+7.13, which is tracked as D-47.
+
+**SECTION 8, AND THE SHARP READING OF 8.1.** "The ADMIN_TOKEN-class credential,
+not in-app administrator status" is NOT satisfied by a SESSION belonging to an
+administrator. A session is derived from a password; the root of trust is the
+token set in the hosting dashboard. So `op=export` refuses a stolen admin
+password, refuses an in-app administrator's browser, and refuses **the FOUNDER's
+own browser**, which is the one place in this system where being the founder is
+not enough. 4.6 puts the founder above the membership model everywhere else;
+section 8 is the exception, and it has to be, because the whole point is that a
+credential someone can steal must not reach the corpus.
+
+The refusal is checked BEFORE the generic session ACL. That ACL answers "this
+operation requires a machine credential", which is true and misleading: a
+MEMBER_TOKEN machine credential cannot export either. The op whose misuse takes
+the entire unpublished corpus deserves the actual rule in its answer.
+
+**8.2 REQUIRES NOTHING**, on the same unauthenticated path as `op=verify`,
+reading the published projection and never the working corpus. That is the whole
+safety of an open endpoint and it is asserted rather than intended: nothing from
+the working corpus appears in the result. Live it answers 0 published bundles,
+which is correct, because nothing has ever been ratified on this instance.
+
+**AN EXPORT CAN NEVER HAPPEN SILENTLY.** `export_log` is append-only and readable
+by in-app administrators, who cannot RUN an export and must be able to SEE that
+one happened. An export a captured root of trust could take unnoticed would
+defeat the recording.
+
+**VERIFIED LIVE AGAINST THE REAL RECORD.** `op=export` with ADMIN_TOKEN returned
+30 bundles and 137 files, matching `op=stats` exactly, with every bundle carrying
+a sha, every file carrying a sha256, and the promotion chain and base links
+present for re-derivation. The export log recorded it. A member-class token was
+refused at the op table.
+
+**A FOUNDER ASSERTION THAT TESTED NOTHING**, caught before it was trusted.
+`setpassword` is Durable-Object-only and is not a control-plane op, so the first
+version of the founder case built the string `"token=undefined"` and was
+exercising an invalid credential rather than the founder. It goes through
+`op=claim` now, which is the real path. This is the third time this session that
+an assertion passed or failed for a reason other than the one it named.
+
+**NOT DONE: NOTIFICATION.** Section 8.1 says every administrator is notified of
+an export. There is no notification channel in this system, so what is
+implemented is recording plus a readable log, which makes an export discoverable
+rather than announced. Tracked as D-52.
+
 v25, July 26, 2026. Current state, on top of v24 and the narratives below. The
 plane is **0.28.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
