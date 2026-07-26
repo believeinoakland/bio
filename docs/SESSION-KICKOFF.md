@@ -94,85 +94,79 @@ and are disposable; production gets fresh keys, passphrase-protected,
 before any real group installs.
 
 
-## Current state and next task, as of 2026-07-25
+## Current state and next task, as of 2026-07-26
 
-The plane is **0.21.1**, signed, tagged, deployed and verified on
+The plane is **0.23.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
-signed release asset. Battery **1280 assertions across 28 suites** (`npm test` in
-bio-plane); installer wizard 90. Live record unchanged at 30 bundles,
-`op=audit` 30 clean.
+signed release asset. Battery **1321 assertions across 30 suites** (`npm test` in
+bio-plane); installer wizard 90. Live record unchanged throughout at 30 bundles,
+137 files, 239 history rows, `op=audit` 30 clean, `op=registeraudit` sound.
 
-Three releases shipped on 2026-07-25 after 0.17.0:
+Eight releases shipped on 2026-07-25/26 after 0.17.0:
 
-- **0.18.0** `op=cite`, citing Information in a Project at weight `report`, the
-  first action to refer to a selection.
-- **0.19.0** `op=sever` and `op=reinstate` at weight `refuse`, the first
-  STATE-CHANGING actions and the first callers of `selectionResolve`'s refusing
-  arm. Severing never deletes. Five debt items cleared, including D-32 by
-  measurement: facet counting is now a single scan tallied in JS, 1.4x to 5x
-  faster on every shape, with both forms kept and asserted to agree.
+- **0.18.0** `op=cite`, the first action to refer to a selection, weight `report`.
+- **0.19.0** `op=sever` and `op=reinstate`, weight `refuse`, the first callers of
+  `selectionResolve`'s refusing arm. Five debt items, including D-32 by
+  measurement (facet counting as a single scan, 1.4x to 5x faster).
 - **0.20.0** the membership model's member half: cover and handle, capabilities,
   and the Section 4 administrator arithmetic.
+- **0.21.0/0.21.1** burner-URL invitations. 0.21.0 shipped BROKEN at the control
+  plane; see the lessons below.
+- **0.21.2** invitation ops reach the store the invitation was created in (D-44).
+- **0.22.0/0.22.1** `op=registeraudit`, corrected to probe R2 (D-9).
+- **0.23.0** project participation and the three visibility positions (D-15).
 
-**0.21.0 and 0.21.1 shipped S-12 step 1, burner-URL invitations (D-42).** The
-token is the whole credential, spent on use, and a spent one is byte-identical to
-one that never existed.
-
-**NEXT: Section 7, project participation and the THREE visibility positions.**
-Uninvited (the project is invisible entirely), invited-not-joined (skeleton only:
-Problems it stands above, Information it cites, Actions it initiates), and joined
-(everything). DO NOT COLLAPSE THE FIRST TWO. This is what D-15 waits on, and the
-single compilation point reserved in `query.mjs` is where it lands. After that,
-capability enforcement at the op layer, then secure verified export. `PLAN.md`
-S-12 has the ordered list.
-
-**Do not re-derive the membership design.** It is settled in
-`architecture/BIO_Membership_Architecture_v1.md` and 0.20.0 implements sections
-3, 4 and 5 from it directly. Two obligations from it that are easy to miss: the
-three visibility positions must not be collapsed to two, and full working-corpus
-export requires the ROOT OF TRUST credential rather than in-app administrator
-status, because an export any administrator can run is the most efficient attack
-in the system.
+**NEXT: S-12 step 3, capability enforcement at the op layer.** Capabilities are
+recorded and nothing consults them. A member without `publish` can still reach
+`op=ratify` and is stopped only by the signing key. Section 5 says a capability a
+member does not hold is ABSENT from their interface rather than present and
+refused, so this is a UI obligation as much as an ACL one. After that, Section 8
+secure verified export, which requires the ROOT OF TRUST credential and not
+in-app administrator status, because an export any administrator can run is the
+most efficient attack in the system. `PLAN.md` S-12 has the ordered list.
 
 **Open and UNBLOCKED:** D-36's class (a probe exists, keep using it), D-40
 (three shared fixtures write an illegal `criticality` value as deliberate facet
-test data), D-42 (burner URLs, half built).
+test data), D-45 (an unbacked register entry is refused at ratify, not at
+promote; the recorded default is to LEAVE IT).
 
-**Open and BLOCKED, with the blocker named:** D-1 (root of trust as DOCTRINE:
-0.20.0 implements 4.6 mechanically, but what a root of trust should BE for a BIO
-group is still Bob's decision), D-9 and D-41 (both need an ADMIN_TOKEN no
-session has ever held; D-41 is the governance write path never having run
-against a deployed instance), D-11 and S-9 (revocations in Bob's Cloudflare and
-Internet Archive accounts), D-15 (needs Section 7 project visibility), D-37
-(needs operational experience), D-38 (open by Bob's decision).
+**Open and BLOCKED, blocker named:** D-9 is closed, D-15 is closed, D-37 is
+closed by decision, D-41 is closed, D-43 is closed. D-1 is closed by Bob's
+ruling of 2026-07-26: the root of trust is the administrator set and the
+Section 4 process, with the Cloudflare account credentials acknowledged as the
+layer beneath, left as discussed. Remaining: D-11 and S-9 need revocations in
+Bob's Cloudflare and Internet Archive accounts.
 
-**FOUR harnesses, and they find what the suite cannot.**
-`bench:retrieval` (query path at 20,000, paging integrity, facet head-to-head),
-`bench` (store harness), `probe:cite` (the citing write; found D-38),
-`probe:limits` (workerd's undocumented SQL ceilings; found that a query dies at
-98 filter terms on the VARIABLE limit rather than the compound-term limit). Run
-the relevant one before signing anything that changes a statement shape or what a
-write emits.
+**FOUR harnesses, and they find what the suite cannot.** `bench:retrieval`,
+`bench`, `probe:cite`, `probe:limits`. Run the relevant one before signing
+anything that changes a statement shape or what a write emits.
 
-**Four standing lessons, all learned the hard way in this repository.**
+## Standing lessons, all learned the hard way here
 
-1. A probe that never saw a failure has not found a ceiling, it has found the top
-   of the range it was given. `probe:limits`' first draft reported four such
-   numbers as measurements, one of them as "headroom 1436" on a path that
-   structurally cannot reach the limit.
-2. Prefer STRUCTURAL assertions to fixed lists. `fence.test.mjs` let a new
+1. **A probe that never saw a failure has not found a ceiling**, it has found the
+   top of the range it was given. `probe:limits`' first draft reported four such
+   numbers as measurements.
+2. **Prefer structural assertions to fixed lists.** `fence.test.mjs` let a new
    mutating op through untested because it enumerated ops by hand.
-3. A rule that breaks old tests is doing its job. 0.20.0's Section 4 rules broke
-   three suites that encoded the older behaviour, and the suites were corrected
-   rather than the rule exempted from them.
-4. Conformance-check the fixture BEFORE the change as well as after, or the
-   after-check is measuring nothing.
-5. AN UNAUTHENTICATED OP TESTED ONLY AT THE DURABLE OBJECT IS UNTESTED. For a
-   `classes: null` op the control plane is the only route a real caller has,
-   because the caller holds no credential. `op=invitelook` shipped broken at the
-   control plane in 0.21.0 with 1276 green assertions behind it, and was found by
-   exercising the deployed instance. See D-43; the rest of that surface still
-   has no such assertion.
+3. **A rule that breaks old tests is doing its job.** 0.20.0's Section 4 rules
+   broke three suites that encoded older behaviour; the suites were corrected
+   rather than the rule exempted.
+4. **Conformance-check the fixture BEFORE the change as well as after**, or the
+   after-check measures nothing.
+5. **An unauthenticated op tested only at the Durable Object is untested.** For a
+   `classes: null` op the control plane is the only route a real caller has.
+   `op=invitelook` shipped throwing a ReferenceError behind 1276 green
+   assertions and was found on the deployed instance. Now closed as a class.
+6. **CHECK WHAT THE HARNESS IS ACTUALLY MEASURING.** The bench drives
+   `viewer=class:member`, which is the one path the D-15 participation filter
+   does not filter, so twenty green shapes exercised none of the new code. A
+   green harness is not evidence until you know which path it took.
+7. **READ THE ENFORCEMENT PATH BEFORE DECLARING SOMETHING UNENFORCED.** The
+   2026-07-26 session claimed four times that something was missing and was
+   wrong each time: the selection sweep already had an alarm, the migration
+   bytes were already in R2, `gate.mjs` already refused unbacked register
+   entries, and `op=selection` already was the keep-alive. Every claim was made
+   after reading one file and before reading the next.
 
 ---
 
