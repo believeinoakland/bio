@@ -116,6 +116,14 @@ console.log("\n--- the unauthenticated surface answers, and says nothing it shou
   const look = await post(`/api/?op=invitelook`, { invite: "0".repeat(32) });
   t("invitelook answers unauthenticated rather than throwing", look.ok, true);
   t("with the uniform miss inside", look.result.reason, "NO_SUCH_INVITATION");
+  /* And the invitation ops must reach the store the invitation was CREATED in.
+     Pinned to `bio`, an invitation made in `scratch` was unredeemable while
+     `memberadd` still answered ok, which is a silent dead end. The token is the
+     authority and lives in exactly one store, so naming the store grants a
+     caller nothing. Found against the deployed plane, not here. */
+  const looks = await post(`/api/?op=invitelook&store=scratch`, { invite: "0".repeat(32) });
+  t("invitelook reaches the scratch namespace rather than refusing", looks.ok, true);
+  t("and answers with the same uniform miss", looks.result.reason, "NO_SUCH_INVITATION");
   const bad = await post(`/api/?op=invitelook`, { invite: "nope" });
   t("a malformed token gets the same answer", bad.result.reason, "NO_SUCH_INVITATION");
   t("and the two results are byte-identical",

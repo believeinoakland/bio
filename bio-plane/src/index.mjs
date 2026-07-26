@@ -289,6 +289,18 @@ export default {
     if (spec.classes === null) {
       const fp = await fingerprint(env.ADMIN_TOKEN);
       const stub = env.STORE.get(env.STORE.idFromName("bio"));
+      /* Claiming and logging in are pinned to `bio` above, because an instance
+         has ONE identity and there is nothing to claim in a scratch namespace.
+         The INVITATION ops are different: the token IS the authority and it
+         exists in exactly one store, so an unauthenticated caller naming a
+         store gains nothing they do not already have, and pinning them to `bio`
+         made an invitation created in `scratch` unredeemable. `memberadd` in
+         `scratch` answered ok and handed over a token that could never work,
+         which is a silent dead end and made the scratch namespace useless for
+         rehearsing the member surface. Found against the deployed plane while
+         closing D-41, not by the suite. */
+      const invStub = url.searchParams.get("store") === SCRATCH
+        ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub;
       if (op === "claim") {
         const body = await req.json().catch(() => ({}));
         if (!env.ADMIN_TOKEN) return json({ ok: false, error: "instance has no bootstrap credential set" }, 409);
@@ -308,13 +320,13 @@ export default {
       }
       if (op === "invitelook") {
         const body = await req.json().catch(() => ({}));
-        const r = await stub.fetch(new Request("http://do/invitelook", {
+        const r = await invStub.fetch(new Request("http://do/invitelook", {
           method: "POST", body: JSON.stringify(body) }));
         return json(await r.json(), 200);
       }
       if (op === "enroll") {
         const body = await req.json().catch(() => ({}));
-        const r = await stub.fetch(new Request("http://do/enroll", {
+        const r = await invStub.fetch(new Request("http://do/enroll", {
           method: "POST", body: JSON.stringify(body) }));
         return json(await r.json(), 200);
       }

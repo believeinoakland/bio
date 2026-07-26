@@ -7815,6 +7815,7 @@ var index_default = {
     if (spec.classes === null) {
       const fp = await fingerprint(env.ADMIN_TOKEN);
       const stub2 = env.STORE.get(env.STORE.idFromName("bio"));
+      const invStub = url.searchParams.get("store") === SCRATCH ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub2;
       if (op === "claim") {
         const body2 = await req.json().catch(() => ({}));
         if (!env.ADMIN_TOKEN) return json({ ok: false, error: "instance has no bootstrap credential set" }, 409);
@@ -7838,7 +7839,7 @@ var index_default = {
       }
       if (op === "invitelook") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await stub2.fetch(new Request("http://do/invitelook", {
+        const r2 = await invStub.fetch(new Request("http://do/invitelook", {
           method: "POST",
           body: JSON.stringify(body2)
         }));
@@ -7846,7 +7847,7 @@ var index_default = {
       }
       if (op === "enroll") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await stub2.fetch(new Request("http://do/enroll", {
+        const r2 = await invStub.fetch(new Request("http://do/enroll", {
           method: "POST",
           body: JSON.stringify(body2)
         }));
