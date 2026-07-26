@@ -901,7 +901,7 @@ refuse-weight action stops and hands over nothing so it cannot half-run; and the
 bundle is conformant to the catalog after every one of them.
 
 ### S-12 Membership, the member half
-**Status: COMPLETE except 7.13 (D-47), 0.29.0** · Depends: nothing
+**Status: COMPLETE, 0.30.0** · Depends: nothing
 
 `architecture/BIO_Membership_Architecture_v2.md` is the design and nothing in it
 is undecided. Do not re-derive it. **v1 is superseded and must not be worked

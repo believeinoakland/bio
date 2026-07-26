@@ -1,5 +1,53 @@
 # BIO data plane: source state, migration plan, and build status
 
+v27, July 26, 2026. Current state, on top of v26 and the narratives below. The
+plane is **0.30.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`b88abea4be66790c6da077e0f79ff4e11e7db6bdb115c8b63755a12d0f1a8608`).
+Battery **1454 assertions across 31 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean.
+
+**S-12 IS COMPLETE, INCLUDING 7.13.** Every section of Membership Architecture v2
+is now built.
+
+**7.13, CLOSING D-47.** The single participation power an administrator has.
+Only owners manage participation and lifecycle, and administrators may deactivate
+members; those two rules together strand a project, because an administrator can
+end the access of a project's only owner and then be unable to touch the project.
+
+The condition is EVERY owner inactive, not any, so an administrator cannot reach
+a live project by deactivating one inconvenient person. It ADDS rather than
+replaces: the inactive owners keep their rows, a reactivated owner is an owner
+again ALONGSIDE the added one, and removing them is then ordinary 7.10. Nothing
+here strips anyone, which is what keeps it from becoming a route around 7.10.
+
+**D-51 WAS NOT MERELY DRIFT.** v1.4 let an administrator ASSIGN expertise when
+creating the invitation, and v2 1.3 forbids exactly that: an administrator who
+can introduce the label is assigning rather than confirming. `memberAdd` now
+REFUSES an `expertise` argument rather than ignoring it, because silently
+dropping a caller's argument is how two copies of the same fact drift apart in
+the first place. `memberList` serves from `member_expertise`. The dead column
+stays, unused, since nothing here deletes.
+
+**VERSION CONVERGENCE IS NOT FULL CONVERGENCE.** A refinement of the recorded
+edge-propagation gotcha, learned the expensive way. After the 0.30.0 deploy,
+`op=selftest` reported 0.30.0 on the FIRST poll, and a live call to the new
+`op=projectownerrescue` still answered `unknown op`. The source was correct, the
+local control plane resolved it, the built bundle contained it, and the deployed
+bytes hashed identically to the signed asset. Different edges converge at
+different times, and the version string converging says nothing about whether the
+edge you reach next has the new op table. Poll for the BEHAVIOUR you changed, not
+just for the version. On the retry it answered `ADMIN_ONLY`, correctly failing
+closed for a machine credential.
+
+**AND A LIVE PROBE THAT TESTED THE WRONG THING.** The first D-51 check on the
+deployed instance answered `EXISTS` rather than the expected refusal, because the
+member id it used already existed on the live roster from a previous session's
+probe rows, so the `EXISTS` check fired before the new one. The rule was working;
+the probe was not. Retried with a fresh id and it answered
+`EXPERTISE_IS_NOT_ASSIGNED`.
+
 v26, July 26, 2026. Current state, on top of v25 and the narratives below. The
 plane is **0.29.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
