@@ -1,5 +1,47 @@
 # BIO data plane: source state, migration plan, and build status
 
+v29, July 26, 2026. Current state, on top of v28 and the narratives below. The
+plane is **0.32.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`138c1c6a8be5e4401a5bcf432d082d26bdfad60ad349de42ef18f09b69582500`).
+Battery **1503 assertions across 32 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean.
+
+**S-11 STEP 4: BULK RETIREMENT OF INFORMATION, `op=retire`, weight `refuse`.**
+Heavier than step 3's disposition for one structural reason: `retired` is TERMINAL
+in the catalog's table, where every Problem disposition is reversible. A wrong
+disposition is corrected by disposing again; a wrong retirement cannot be undone
+through the state machine at all, so every refusal here is worth more than the
+equivalent refusal there.
+
+Only `verified` to `retired`, because that is the only legal edge. Retiring
+something merely `collected` would skip the step where a human looked at it, which
+is what the intake doctrine exists to protect.
+
+**AND THE DOCTRINAL GUARD: INFORMATION A PROJECT STILL CITES IS REFUSED.** Nothing
+in the catalog stops this, which is exactly why it matters. C-6.2 treats an
+unresolvable reference target as an ERROR whose remedies are restore from history,
+re-point to the successor, or sever the edge with a reason. A bulk retirement that
+silently stranded live citations would manufacture that error condition at
+whatever scale the operator selected. The citing Projects are NAMED, because an
+operator told only "refused" cannot act.
+
+A SEVERED edge does not count as a citation. Severing is the recorded decision to
+stop relying on something, so counting it as a live dependency would make the
+refusal unclearable by the very act doctrine prescribes for clearing it. Asserted
+end to end: refused while cited, proceeds once severed. This reads the citing
+DOCUMENT rather than the `refs` projection, because `refs` carries the edge but
+not its status.
+
+**THE BEFORE-CHECK CAUGHT MY OWN FIXTURE, TWICE IN TWO RELEASES.** The new
+Information fixture was missing two required headings, the C-13.2 Session Log
+entry, the `source_status` field, and used a `monitoring.frequency` outside the
+enum. Five findings that would have appeared identically in the after-check and
+proved nothing about retirement. Standing lesson 4 is not a formality; it has now
+paid twice in two consecutive releases, both times against fixtures I wrote
+believing they were fine.
+
 v28, July 26, 2026. Current state, on top of v27 and the narratives below. The
 plane is **0.31.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the

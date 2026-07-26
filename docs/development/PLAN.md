@@ -843,7 +843,7 @@ Proven by a test that repoints a live reference at nothing and asserts that the
 store's own view and the catalog name the same single finding, C-6.2.
 
 ### S-11 Selection-backed actions
-**Status: STARTED. Citing 0.18.0, severing and reinstating 0.19.0, disposition 0.31.0** · Depends: S-10 step 5
+**Status: STARTED. Citing 0.18.0, severing and reinstating 0.19.0, disposition 0.31.0, retirement 0.32.0** · Depends: S-10 step 5
 
 `selectionResolve` shipped in 0.17.0 with a weight parameter and no caller. This
 step is the set of actions that call it, built one at a time, lightest first.
@@ -897,7 +897,19 @@ first version missed. Probed to 4,000 in one call, linear at about 1ms each, no
 ceiling: D-36's limits do not apply because `dispose` issues one promote per
 member rather than one statement over all of them.
 
-**Step 4, next: an action that moves an OBJECT's state rather than an edge's.**
+**Step 4, done in 0.32.0: BULK RETIREMENT OF INFORMATION, `op=retire`, weight
+`refuse`.** `verified` to `retired`, the only legal edge, so verification is not
+skippable. `retired` is TERMINAL, unlike every Problem disposition, which is what
+makes this heavier than step 3.
+
+The doctrinal guard: Information a Project still CITES is refused, with the citing
+Projects named. Nothing in the catalog stops this, and C-6.2 treats an
+unresolvable target as an error whose remedy is to sever with a reason, so a bulk
+retirement that stranded live citations would manufacture that error at scale. A
+SEVERED edge does not count, or the refusal would be unclearable by the very act
+doctrine prescribes for clearing it.
+
+**Step 5, next, and it may be a decision not to build:**
 The remaining candidates in ascending doctrinal weight are bulk retirement of Information (`verified` to
 `retired`), and bulk release (`collected` to `verified`). Release is LAST and
 should probably never be a bulk action at all: C-18.1 makes it a named member's
