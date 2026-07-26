@@ -901,7 +901,7 @@ refuse-weight action stops and hands over nothing so it cannot half-run; and the
 bundle is conformant to the catalog after every one of them.
 
 ### S-12 Membership, the member half
-**Status: STARTED. Sections 1.3, 3, 4, 5 and 7 done except 7.13, 0.27.0** · Depends: nothing
+**Status: STARTED. Sections 1.3, 3, 4, 5 and 7 done except 7.13. Only section 8 remains, 0.28.0** · Depends: nothing
 
 `architecture/BIO_Membership_Architecture_v2.md` is the design and nothing in it
 is undecided. Do not re-derive it. **v1 is superseded and must not be worked
@@ -992,7 +992,7 @@ compilation point in `query.mjs` filters by position and D-15 is closed.
    cannot carry a confirmation state, a confirmer and a withdrawal per entry.
    Withdrawal supersedes rather than overwrites.
 
-6. **NEXT. Project name uniqueness (7.1), closing D-48.** The `title` field, unique across the
+6. **DONE in 0.28.0. Project name uniqueness (7.1), closing D-48.** The `title` field, unique across the
    instance, case-insensitive and whitespace-collapsed, holding across
    deactivated projects. Enforced in the check catalog and at the write path
    rather than in the interface. Checked against the working instance on
@@ -1001,7 +1001,7 @@ compilation point in `query.mjs` filters by position and D-15 is closed.
    constraint applied to a record that already violates it fails at the wrong
    moment.
 
-7. **Secure verified export (section 8)**, which is what makes every governance
+7. **NEXT. Secure verified export (section 8)**, which is what makes every governance
    rule enforceable, since a group that cannot leave can be held. Note that it
    requires the ROOT OF TRUST credential and not in-app administrator status: an
    export any administrator can run is the most efficient attack in the system.

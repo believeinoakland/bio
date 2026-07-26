@@ -1,5 +1,51 @@
 # BIO data plane: source state, migration plan, and build status
 
+v25, July 26, 2026. Current state, on top of v24 and the narratives below. The
+plane is **0.28.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`5e46ed380b73065fba843ae9ef3d6459cbf3476aca87d0bdd1ac24f81b8a492d`).
+Battery **1431 assertions across 31 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean.
+
+**PROJECT NAME UNIQUENESS AT THE WRITE PATH, CLOSING D-48.** 7.1 was enforced at
+fork since 0.26.0 and nowhere else, so two projects born the ordinary way could
+collide. Fork is one of several ways a project comes into being.
+
+Compared through the one `Store.projectNameKey` the fork check also uses, so the
+two cannot disagree about what a collision is. Case-insensitive with runs of
+whitespace collapsed: a plain unique index over the trimmed string is how HANDLES
+work and would let "Sewer Fund" and "Sewer fund" coexist, which is the collision
+the rule exists to stop. Held across every lifecycle state, deactivated projects
+included, because a deactivated project is still cited and its name must still
+resolve to what was cited. Excludes the bundle being written, so a project may be
+revised without colliding with itself.
+
+**A SEPARATE DEFECT, FOUND BY THAT ONE.** `members.test.mjs` failed on a cite,
+and the cause was not the new rule. `cite`, `sever` and `reinstate` rebuild
+`meta` from the document's frontmatter and re-promote, so a bundle whose
+frontmatter carries no title field was being re-promoted with `title: undefined`
+and SILENTLY BLANKED in the projection. The catalog requires a title on every
+bundle, so such a document is malformed, but a malformed document is exactly when
+a write path should preserve what it already knows rather than quietly discard
+it. An update that omits the title now carries the old one forward, asserted
+directly in `projects.test.mjs` rather than only through the suite that happened
+to catch it.
+
+**THE WRITE PATH WAS MEASURED, NOT ASSUMED.** Both new guards are narrowly
+conditioned, the name scan only for projects and the carry-forward only when a
+title is absent, so neither should touch ordinary writes. A single bench reading
+of 8.01ms against an earlier 6.46ms looked like a 24% regression. Benching this
+code against the PREVIOUS release, twice each, gave 7.91 to 8.05ms with the
+change and 7.63 to 7.94ms without: overlapping ranges, and the 6.46ms reading was
+a quieter container rather than faster code. A single sample is not a
+measurement.
+
+**A COMMIT MESSAGE RAN AS SHELL.** Backticks inside a double-quoted `-m` string
+were command-substituted, so the word inside them vanished from the 0.28.0
+message. Amended, retagged and force-pushed. Use `-F` with a file for anything
+containing backticks.
+
 v24, July 26, 2026. Current state, on top of v23 and the narratives below. The
 plane is **0.27.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
