@@ -1999,50 +1999,46 @@ export class Store extends DurableObject {
   /* Why is a register row unreferenced? (D-9)
    *
    * The register maps a capture's sha to the bundle and path it was intake for.
-   * 87 rows on the live instance, 67 of them referenced by a file in some
-   * revision, and the other 20 explained only by a plausible story: superseded
-   * bytes plus dropped transport twins. Nothing tested the story, because no op
-   * could read the register at all.
+   * Nothing could read it until 0.22.0, so the 30 unreferenced rows on the live
+   * record were explained only by a guess.
    *
-   * This classifies every row against what the store actually holds. It is a
-   * READ and it changes nothing: the point is to find out whether the 20 are
-   * accounted for or whether some of them are a leak nobody has named.
+   * THE FIRST VERSION OF THIS LOOKED IN TWO OF THE THREE PLACES BYTES CAN LIVE.
+   * It checked `files` and `history` and called everything else "dropped", which
+   * produced a confident and wrong finding: that the Apps Script migration could
+   * not be audited from the record it produced. The bytes were in R2 the whole
+   * time. `migrate.mjs` says so in its own header, carrying Drive provenance
+   * "verbatim as a registered drive-provenance capture, so the Drive era remains
+   * inspectable without polluting the live file image", which is precisely what
+   * the two-bucket design is for.
    *
-   * The classes are ordered from most to least explained:
+   * So this returns rows and their capture hashes, and the CONTROL PLANE probes
+   * `bio-captures` to finish the classification, exactly as the ratify path does
+   * with `hasCapture`. The Durable Object does not know its own store name and
+   * R2 keys are `<store>/captures/<sha>`, so the probe cannot honestly be done
+   * from in here.
+   *
    *   live        the capture's bytes are the current file at that path
-   *   superseded  the path is still there but carries different bytes now, so
-   *               this capture was replaced by a later revision
-   *   historical  the bytes are not live anywhere but ARE in history, so the
-   *               revision that used them is still readable
-   *   dropped     the bundle exists and the path does not, live or in history:
-   *               a transport twin that was never promoted, or a file removed
-   *   orphan      the bundle itself is not in the store, which is the only
-   *               class that would be a real defect
+   *   superseded  the path is still there carrying different bytes now
+   *   historical  not live anywhere, but present in history
+   *   unresolved  in neither, so the control plane must ask R2 before this row
+   *               can be called sound or broken
    */
   registerAudit() {
     const rows = this.#rows(`SELECT capture_sha, bundle_id, path, encoding, bytes, registered FROM register`);
-    const out = { total: rows.length, live: 0, superseded: 0, historical: 0, dropped: 0, orphan: 0,
-                  unreferenced: 0, offenders: [] };
+    const out = { total: rows.length, live: 0, superseded: 0, historical: 0, orphan: 0, unresolved: [] };
     for (const r of rows) {
-      const bundle = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.bundle_id);
-      if (!bundle) { out.orphan++; out.unreferenced++;
-        out.offenders.push({ ...r, class: "orphan" }); continue; }
-      const liveHere = this.#one(`SELECT sha256 FROM files WHERE bundle_id=? AND path=?`, r.bundle_id, r.path);
-      if (liveHere && liveHere.sha256 === r.capture_sha) { out.live++; continue; }
-      const inHistory = this.#one(
-        `SELECT sha256 FROM history WHERE bundle_id=? AND sha256=? LIMIT 1`, r.bundle_id, r.capture_sha);
-      out.unreferenced++;
-      if (liveHere) { out.superseded++;
-        out.offenders.push({ ...r, class: "superseded", liveSha: liveHere.sha256, inHistory: !!inHistory }); }
-      else if (inHistory) { out.historical++;
-        out.offenders.push({ ...r, class: "historical" }); }
-      else { out.dropped++; out.offenders.push({ ...r, class: "dropped" }); }
+      if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.bundle_id)) {
+        out.orphan++; out.unresolved.push({ ...r, class: "orphan" }); continue;
+      }
+      const here = this.#one(`SELECT sha256 FROM files WHERE bundle_id=? AND path=?`, r.bundle_id, r.path);
+      if (here && here.sha256 === r.capture_sha) { out.live++; continue; }
+      if (this.#one(`SELECT sha256 FROM history WHERE bundle_id=? AND sha256=? LIMIT 1`, r.bundle_id, r.capture_sha)) {
+        out.historical++; continue;
+      }
+      if (here) { out.superseded++; continue; }
+      out.unresolved.push({ ...r, class: "unresolved" });
     }
-    /* Bounded like every other offender list in this file. */
-    out.sample = out.offenders.slice(0, 40);
-    delete out.offenders;
-    out.accountedFor = out.orphan === 0;
-    return { ok: true, ...out };
+    return { ok: true, ...out, needsCaptureProbe: out.unresolved.length };
   }
 
   /* ---- the membership model's member half, Architecture sections 3 to 6 ----

@@ -430,6 +430,42 @@ export default {
     if (scope.error) return json({ ok: false, error: scope.error, tokenClass: cls }, 403);
     const storeName = scope.name;
 
+    /* D-9. The register audit finishes HERE and not in the Durable Object,
+       because classifying a register row needs R2, and the DO neither holds the
+       store name nor should guess it: capture keys are `<store>/captures/<sha>`.
+       This is the SAME probe the gate already uses on the ratify path, where
+       runGate enforces "bytes the register claims must exist" and refuses with
+       PLANE_MISSING_BYTES. Making the diagnostic ask the same question as the
+       enforcer, rather than inventing a second answer, is the whole point: the
+       first version of this audit looked only in `files` and `history`, called
+       everything else "dropped", and produced a confident wrong finding that
+       the Apps Script migration was unauditable. The bytes were in R2. */
+    if (op === "registeraudit") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const r = (await (await st.fetch("http://do/registeraudit")).json()).result;
+      const canProbe = typeof env.CAPTURES?.head === "function";
+      const captured = [], unbacked = [], mismatched = [];
+      for (const row of r.unresolved) {
+        if (row.class === "orphan") { unbacked.push({ ...row, why: "the bundle itself is absent" }); continue; }
+        if (!canProbe) { unbacked.push({ ...row, why: "no capture bucket is configured to check" }); continue; }
+        const h = await env.CAPTURES.head(`${storeName}/captures/${row.capture_sha}`);
+        if (!h) unbacked.push({ ...row, why: "no bytes in the working bucket" });
+        else if (typeof row.bytes === "number" && h.size !== row.bytes)
+          mismatched.push({ ...row, registered: row.bytes, stored: h.size });
+        else captured.push(row);
+      }
+      return json({ ok: true, result: {
+        total: r.total, live: r.live, superseded: r.superseded, historical: r.historical,
+        captured: captured.length, mismatched: mismatched.length, unbacked: unbacked.length,
+        sound: unbacked.length === 0 && mismatched.length === 0, probed: canProbe,
+        detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which "
+              + "is the deliberate pattern migrate.mjs uses and what the two-bucket design exists for. "
+              + "unbacked is the only broken state, and mismatched means the register and the stored object "
+              + "disagree about size.",
+        sample: [...unbacked, ...mismatched].slice(0, 40),
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+
     /* selftest reports deployment health as JSON, so "did the deploy work" is a
        link rather than a command. It asserts every binding is present and that
        the store answers, and it never returns a secret. */
