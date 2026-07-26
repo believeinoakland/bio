@@ -187,6 +187,32 @@ export class Store extends DurableObject {
                           administrators counting the target in the denominator
        Nothing is ever deleted from here, so an ejection can be audited after
        the fact by the people it was done to. */
+    /* Project participation, Membership Architecture section 7. Keyed on
+       member_id and not on handle: a handle is what the RECORD shows and is the
+       member's own, and keying participation on a display name would make the
+       graph depend on a field the member picked. Invitations arrive BY handle
+       (7.2) and are resolved here.
+         state   'invited'  invited, not joined: skeleton visibility, view only
+                 'joined'   full visibility, subject to capabilities
+                 'leaving'  a joined member unchecked the box (7.6). This is a
+                            REQUEST, not a removal: they keep their position
+                            until an administrator acts, because 7.7 gives
+                            removal to administrators alone.
+       `owner` is the creator (7.1). Owners invite; they do not remove. */
+    this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS project_participants (
+         project_id TEXT NOT NULL,
+         member_id  TEXT NOT NULL,
+         state      TEXT NOT NULL,
+         owner      INTEGER NOT NULL DEFAULT 0,
+         invited_by TEXT,
+         comment    TEXT,
+         created    TEXT NOT NULL,
+         updated    TEXT NOT NULL,
+         PRIMARY KEY (project_id, member_id)
+       )`);
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS pp_member ON project_participants(member_id)`);
+
     this.sql.exec(
       `CREATE TABLE IF NOT EXISTS admin_votes (
          kind      TEXT NOT NULL,
@@ -2041,6 +2067,122 @@ export class Store extends DurableObject {
     return { ok: true, ...out, needsCaptureProbe: out.unresolved.length };
   }
 
+  /* ---- project participation, Architecture section 7 ----
+   *
+   * The evidence corpus stays shared: Information and Problems remain visible to
+   * the group generally, because compartmenting evidence would fracture the
+   * thing the record exists to be. What participation scopes is the group's
+   * THINKING, which is the material with strategic value before publication.
+   */
+  #memberByHandle(handle) {
+    return this.#one(`SELECT member_id, handle, status FROM members WHERE handle=?`, handle);
+  }
+  #participation(projectId, memberId) {
+    return this.#one(`SELECT state, owner FROM project_participants WHERE project_id=? AND member_id=?`,
+      projectId, memberId);
+  }
+  #isAdminMember(memberId) {
+    if (memberId === Store.ROOT_ADMIN) return true;
+    const m = this.#one(`SELECT role, status FROM members WHERE member_id=?`, memberId);
+    return !!m && m.role === "admin" && m.status === "active";
+  }
+
+  /** 7.1: the creator is the owner. Called when a project bundle is promoted by
+   *  an identified member; a project created by a machine credential has no
+   *  owner row, which is honest rather than inventing one. */
+  projectClaimOwner({ projectId, memberId } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
+    if (this.#one(`SELECT member_id FROM project_participants WHERE project_id=? AND owner=1`, projectId))
+      return { ok: false, reason: "OWNED" };
+    const now = new Date().toISOString();
+    this.sql.exec(
+      `INSERT OR REPLACE INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
+       VALUES (?,?,'joined',1,NULL,?,?)`, projectId, memberId, now, now);
+    return { ok: true, projectId, owner: memberId };
+  }
+
+  /** 7.2: the owner invites by handle. Administrators may also invite, because
+   *  7.7 already gives them authority over participation. */
+  projectInvite({ projectId, handle, by } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
+    const mine = this.#participation(projectId, by);
+    if (!(mine && mine.owner) && !this.#isAdminMember(by))
+      return { ok: false, reason: "NOT_THE_OWNER",
+               detail: "the project's owner invites participants, and an administrator may. Nobody else." };
+    const target = this.#memberByHandle(handle);
+    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
+    if (this.#participation(projectId, target.member_id))
+      return { ok: false, reason: "ALREADY_A_PARTICIPANT", handle };
+    const now = new Date().toISOString();
+    this.sql.exec(
+      `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
+       VALUES (?,?,'invited',0,?,?,?)`, projectId, target.member_id, by, now, now);
+    return { ok: true, projectId, handle, state: "invited" };
+  }
+
+  /** 7.4: joining is selecting the checkbox. There is no acceptance ceremony. */
+  projectJoin({ projectId, by } = {}) {
+    const p = this.#participation(projectId, by);
+    if (!p) return { ok: false, reason: "NOT_INVITED",
+      detail: "a member joins a project they were invited to. Being uninvited is not a refusal you can see." };
+    this.sql.exec(`UPDATE project_participants SET state='joined', comment=NULL, updated=? WHERE project_id=? AND member_id=?`,
+      new Date().toISOString(), projectId, by);
+    return { ok: true, projectId, state: "joined" };
+  }
+
+  /** 7.6: unchecking the box is a REQUEST to leave. It greys the checkmark and
+   *  removes nobody, because 7.7 gives removal to administrators alone. */
+  projectLeave({ projectId, by, comment = null } = {}) {
+    const p = this.#participation(projectId, by);
+    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT" };
+    if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state };
+    const c = comment === null ? null : String(comment).slice(0, 280);
+    this.sql.exec(`UPDATE project_participants SET state='leaving', comment=?, updated=? WHERE project_id=? AND member_id=?`,
+      c, new Date().toISOString(), projectId, by);
+    return { ok: true, projectId, state: "leaving", comment: c,
+             detail: "recorded as a request to leave. An administrator removes participants; this does not." };
+  }
+
+  /** 7.7: only an administrator removes a participant, request outstanding or
+   *  not. Project owners invite; they do not remove. That keeps authority over
+   *  people with the custodial role rather than distributing it into content
+   *  work. */
+  projectRemove({ projectId, handle, by, comment = null } = {}) {
+    if (!this.#isAdminMember(by))
+      return { ok: false, reason: "ADMIN_ONLY",
+               detail: "only an administrator removes a participant from a project. Owners invite; they do "
+                     + "not remove, so authority over people stays with the custodial role." };
+    const target = this.#memberByHandle(handle);
+    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    const p = this.#participation(projectId, target.member_id);
+    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT", handle };
+    if (p.owner) return { ok: false, reason: "OWNER",
+      detail: "the project's owner cannot be removed from it by this action" };
+    this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
+    return { ok: true, projectId, handle, removed: true, comment: comment === null ? null : String(comment).slice(0, 280) };
+  }
+
+  /** 7.8: every participant sees the handles of all other participants, and an
+   *  administrator sees all of them. A non-participant sees nothing, and is told
+   *  the same thing whether the project exists or not, because 7.9 says an
+   *  uninvited member cannot see that a project EXISTS. */
+  projectParticipants({ projectId, by } = {}) {
+    const mine = this.#participation(projectId, by);
+    if (!mine && !this.#isAdminMember(by))
+      return { ok: false, reason: "NO_SUCH_PROJECT",
+               detail: "no project by that identifier is visible to you. An uninvited member cannot see "
+                     + "that a project exists, so this is the same answer as for one that does not." };
+    return { ok: true, projectId, participants: this.#rows(
+      `SELECT m.handle, p.state, p.owner, p.comment, p.created
+       FROM project_participants p JOIN members m ON m.member_id = p.member_id
+       WHERE p.project_id=? ORDER BY p.owner DESC, m.handle`, projectId) };
+  }
+
   /* ---- the membership model's member half, Architecture sections 3 to 6 ----
    *
    * The arithmetic of section 4.7 lives in ONE place, `adminArithmetic`, and
@@ -2668,6 +2810,18 @@ export class Store extends DurableObject {
         adminendorse: () => this.adminEndorse(body || {}),
         adminremove: () => this.adminRemove(body || {}),
         adminarith: () => this.adminArithmetic(),
+        projectclaimowner: () => this.projectClaimOwner(body || {}),
+        projectinvite: () => this.projectInvite({ projectId: url.searchParams.get("projectId"),
+          handle: url.searchParams.get("handle"), by: url.searchParams.get("by") }),
+        projectjoin: () => this.projectJoin({ projectId: url.searchParams.get("projectId"),
+          by: url.searchParams.get("by") }),
+        projectleave: () => this.projectLeave({ projectId: url.searchParams.get("projectId"),
+          by: url.searchParams.get("by"), comment: url.searchParams.get("comment") }),
+        projectremove: () => this.projectRemove({ projectId: url.searchParams.get("projectId"),
+          handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
+          comment: url.searchParams.get("comment") }),
+        projectparticipants: () => this.projectParticipants({ projectId: url.searchParams.get("projectId"),
+          by: url.searchParams.get("by") }),
         registeraudit: () => this.registerAudit(),
         signeradd: () => this.signerAdd(body || {}),
         signerlist: () => this.signerList(),

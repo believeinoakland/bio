@@ -34,7 +34,7 @@ const all = (p) => [p.statements.page(), p.statements.count(), p.statements.ids(
 console.log("\n--- the viewer gate is the single compilation point (D-15) ---");
 {
   t("a member compiles to a true predicate", viewerPredicate(M).scope, "member");
-  t("a session member compiles to a true predicate", viewerPredicate("member:M-0007").scope, "member");
+  t("a session member compiles to a true predicate", viewerPredicate("member:M-0007").scope, "participant");
   t("an admin credential compiles", viewerPredicate("class:admin").scope, "member");
   /* Fail closed. When the membership model lands the dangerous default is the
      permissive one, so a viewer the compiler does not recognise must see

@@ -121,11 +121,51 @@ export const GATE_MARK = "/*viewer-gate*/";
    compilation point because every statement below takes its WHERE from here. */
 export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
-  /* class:<token class> for a machine credential, member:<id> for a session.
-     Both are flat member scope today. */
-  const m = /^(class:(admin|member|probe)|member:[A-Za-z0-9._:-]{1,128}|admin)$/.exec(v);
+  const m = /^(class:(admin|member|probe)|member:([A-Za-z0-9._:-]{1,128})|admin)$/.exec(v);
   if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY" };
-  return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member" };
+
+  /* D-15 SATISFIED HERE, and nowhere else. Membership Architecture 7.9.
+   *
+   * THE EVIDENCE CORPUS STAYS SHARED. Information, Problems and Actions remain
+   * visible to the group generally, because compartmenting evidence would
+   * fracture the thing the record exists to be and would mean a member on one
+   * project could not see material another had already gathered. What
+   * participation scopes is the group's THINKING: where an argument has got to,
+   * what has been ruled out, what is being prepared.
+   *
+   * So the filter applies to PROJECT bundles and to nothing else. An uninvited
+   * member does not see a project at all: not its existence, not its name, not
+   * its references, not its participants. Invited-not-joined and joined differ
+   * in how much of the project they see, which is a per-FIELD distinction the
+   * reader applies; both can see that the project exists, so both pass here.
+   *
+   * This also closes the leak 7.9 names. `cites` lives on the citing object, so
+   * a Project's interest in a piece of Information is a property of the Project
+   * and the Information carries no record of who cites it. The one place the
+   * graph could escape is the derived reverse-edge index, and because every
+   * statement in this compiler takes its WHERE from this function, filtering
+   * the project rows out here filters them out of every shape that could
+   * reveal them.
+   *
+   * MACHINE CREDENTIALS ARE NOT FILTERED, deliberately. `class:member` is a
+   * shared instance-level token with no person behind it and therefore no
+   * participation to check; anyone holding one already has instance-level
+   * access to the record, so filtering it would buy nothing while breaking the
+   * operator path the token exists for. Only an identified session, which is
+   * the only thing that CAN be a participant, gets the participation filter. */
+  const memberId = m[3] || null;
+  if (!memberId) return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member" };
+
+  return {
+    sql: `${GATE_MARK} (b.object_type <> 'project' OR EXISTS (
+             SELECT 1 FROM project_participants pp
+             WHERE pp.project_id = b.bundle_id AND pp.member_id = ?)
+           OR EXISTS (
+             SELECT 1 FROM members am
+             WHERE am.member_id = ? AND am.role = 'admin' AND am.status = 'active'))`,
+    args: [memberId, memberId],
+    viewer: v, scope: "participant",
+  };
 }
 
 /* ---- S-10 step 2: the text surface ----

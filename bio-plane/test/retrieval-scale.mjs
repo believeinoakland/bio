@@ -109,7 +109,7 @@ const st = await call("/stats");
 console.log(`Loaded in ${loadSecs.toFixed(0)}s (${(loadSecs * 1000 / N).toFixed(2)}ms per promote, index written in the same transaction)`);
 console.log(`Store: ${st.bundles} bundles, ${st.indexed} indexed, ${(st.dbBytes / 1048576).toFixed(1)}MB\n`);
 
-const best = async (label, qs) => {
+const best = async (label, qs, viewer) => {
   let min = Infinity, total = null;
   for (let k = 0; k < 5; k++) {
     const a = Date.now();
@@ -143,6 +143,20 @@ rows.push(await best("ranked page with bm25 and snippets", "q=fund&limit=50&face
 rows.push(await best("facet sidebar over the whole corpus", "q="));
 rows.push(await best("facet sidebar after a broad text filter", "q=fund"));
 rows.push(await best("facet sidebar after a metadata filter", "q=criticality:notable"));
+/* D-15. Every shape above runs as `class:member`, a MACHINE credential, which
+   the viewer predicate deliberately does not filter: a shared instance token has
+   no participation to check. So none of them measure the participation filter at
+   all, and shipping it on those numbers would be measuring the wrong path. An
+   identified session compiles two EXISTS subqueries into every statement, and
+   this is what that costs. */
+{
+  const flat = await best("whole corpus as a machine credential", "q=&facets=none");
+  const held = await best("whole corpus as an identified member", "q=&facets=none",
+                          "member:bench-member");
+  console.log(`  participation filter: ${flat.ms}ms flat vs ${held.ms}ms filtered`
+    + ` (${(held.ms / Math.max(flat.ms, 1)).toFixed(2)}x)`);
+  rows.push(held);
+}
 rows.push(await best("select-all, every id", "q=&mode=ids&facets=none"));
 rows.push(await best("select-all after a filter", "q=type:problem&mode=ids&facets=none"));
 

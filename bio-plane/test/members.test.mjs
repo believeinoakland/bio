@@ -97,7 +97,11 @@ console.log("\n--- a session can work the retrieval surface it is given ---");
   t("session can search", sr.ok, true);
   t("and gets the record it just wrote", sr.result.hits.map((h) => h.bundle_id), [id]);
   /* The gate compiled for the SESSION's identity, not for a class. */
-  t("compiled against the member scope", sr.result.gate.scope, "member");
+  /* `participant` since D-15 landed: an identified session now compiles to a
+     real predicate over project participation rather than the flat `member`
+     scope search shipped at. A machine credential still compiles to `member`,
+     because it has no participation to check. */
+  t("compiled against the participation scope", sr.result.gate.scope, "participant");
   t("session can read the query vocabulary",
     typeof (await GET(`op=searchfields&${S}`)).result.fields.title, "object");
 }
