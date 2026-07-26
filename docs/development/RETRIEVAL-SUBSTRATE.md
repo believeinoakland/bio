@@ -315,3 +315,35 @@ Build order:
 4. `op=search`, returning ids plus full provenance, member class and above.
 5. Server-side selection snapshots, and the actions that refer to them.
 6. The real viewer predicate, when the membership and project model lands.
+
+## A selection is a lease, and its expiry is a term rather than a fault
+
+Settled 2026-07-25. Recorded here because the design is expressed in the API and
+in `#armSweep` rather than in prose, and reading `#sweepSelections` on its own
+led a session to conclude twice that reclamation was unscheduled and broken. It
+is not. This section exists to stop that being rediscovered wrongly a third time.
+
+A selection is held on a lease with a published term, exactly like an idle
+logout. Running out is a defined outcome and not an error.
+
+- **The term is published.** `op=select` returns the absolute `expires` and
+  `ttlSeconds`. A client therefore knows when its window closes and can warn a
+  user before it does.
+- **`op=selection` is the keep-alive.** It is non-mutating, defaults to weight
+  `report` so it never refuses, refreshes `expires`, and returns current drift.
+  A client polling to hold the lease learns what moved underneath it in the same
+  call, which is what a selection UI needs to display regardless. There is no
+  separate ping operation and there should not be one.
+- **`NO_SUCH_SELECTION` IS the timeout signal.** It does not distinguish expired
+  from never-existed, and it should not: a client knows when it created its own
+  selection and what the term was, so it can tell the two apart by arithmetic
+  without the server keeping a tombstone to answer a question already answerable.
+- **What to do about expiry belongs to the client.** Re-select, which may resolve
+  to a different record set and is a legitimate outcome; or tell the user the
+  window closed; or warn as expiry approaches and let them say they are still
+  there, which is a poll.
+- **Reclamation is scheduled.** `#armSweep` arms on creation and `alarm()` sweeps
+  and re-arms while any selection remains, stopping when the table empties.
+
+The 300-second term stands. It is a term to be honoured and published, not a
+number to be discovered from usage.
