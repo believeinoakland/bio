@@ -336,6 +336,87 @@ console.log("\n--- 7.12: fork, and the three things that keep it from being an e
   await call(`/projectremove?projectId=${P}&handle=dave&by=carol`);
 }
 
+console.log("\n--- 7.1: project names are unique across the instance, at the WRITE path ---");
+{
+  /* Enforced at fork since 0.26.0, and nowhere else, so two projects created by
+     the ORDINARY path could still collide. That was D-48. The write path is
+     where it has to live, because fork is one of several ways a project is
+     born. */
+  const mkNamed = (id, title) => {
+    const doc = `---\nid: ${id}\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+    return call("/promote", { bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
+      files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
+      meta: { object_type: "project", group: "believe-in-oakland", title,
+              current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+  };
+  t("a project with a fresh name is created", (await mkNamed("PROJ-2026-0100-a", "Sewer Fund Transfers")).ok, true);
+  t("an identical name is refused on the ORDINARY promote path",
+    (await mkNamed("PROJ-2026-0101-b", "Sewer Fund Transfers")).reason, "NAME_TAKEN");
+  t("case does not rescue it", (await mkNamed("PROJ-2026-0102-c", "SEWER FUND TRANSFERS")).reason, "NAME_TAKEN");
+  t("nor does whitespace", (await mkNamed("PROJ-2026-0103-d", "Sewer  Fund   Transfers ")).reason, "NAME_TAKEN");
+  t("and the refusal names the project already holding it",
+    (await mkNamed("PROJ-2026-0104-e", "sewer fund transfers")).bundleId, "PROJ-2026-0100-a");
+  t("a different name is fine", (await mkNamed("PROJ-2026-0105-f", "Franchise Fee Diversion")).ok, true);
+
+  /* Held across every lifecycle state. A deactivated project has not gone
+     anywhere: it is still cited, and its name must still resolve to what was
+     cited, or a later project silently inherits an earlier one's references. */
+  const cur = async (id) => (await call(`/projection`)).find((r) => r.bundle_id === id).bundle_sha;
+  const doc2 = `---\nid: PROJ-2026-0105-f\nobject_type: project\ncurrent_state: closed\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-03T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  await call("/promote", { bundleId: "PROJ-2026-0105-f", base: await cur("PROJ-2026-0105-f"),
+    snapKey: "f-closed", author: "suite",
+    files: [{ path: "bundle.md", text: doc2, bytes: doc2.length, sha256: sha(doc2) }],
+    meta: { object_type: "project", group: "believe-in-oakland", title: "Franchise Fee Diversion",
+            current_state: "closed", closed_reason: "abandoned",
+            created: "2026-07-01T00:00:00Z", last_updated: "2026-07-03T00:00:00Z" } });
+  t("a DEACTIVATED project still holds its name",
+    (await mkNamed("PROJ-2026-0106-g", "Franchise Fee Diversion")).reason, "NAME_TAKEN");
+
+  /* A project may still be revised without tripping over ITSELF, which is the
+     obvious way to get this wrong. */
+  const doc3 = `---\nid: PROJ-2026-0100-a\nobject_type: project\ncurrent_state: investigating\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-04T00:00:00Z"\n---\n\n## Summary\n\nY.\n`;
+  t("and a project keeps its own name across a revision",
+    (await call("/promote", { bundleId: "PROJ-2026-0100-a", base: await cur("PROJ-2026-0100-a"),
+      snapKey: "a-rev", author: "suite",
+      files: [{ path: "bundle.md", text: doc3, bytes: doc3.length, sha256: sha(doc3) }],
+      meta: { object_type: "project", group: "believe-in-oakland", title: "Sewer Fund Transfers",
+              current_state: "investigating", created: "2026-07-01T00:00:00Z",
+              last_updated: "2026-07-04T00:00:00Z" } })).ok, true);
+  /* NEGATIVE CONTROL: the rule is about PROJECTS. Two pieces of Information may
+     share a title, and always could. */
+  const info = (id) => {
+    const doc = `---\nid: ${id}\nobject_type: information\ncurrent_state: collected\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nZ.\n`;
+    return call("/promote", { bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
+      files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
+      meta: { object_type: "information", group: "believe-in-oakland", title: "Same Title",
+              current_state: "collected", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+  };
+  await info("INFO-2026-0100-a");
+  t("two pieces of Information may share a title, as they always could",
+    (await info("INFO-2026-0101-b")).ok, true);
+
+  /* A title is never LOST by a revision. Found by the uniqueness check refusing
+     a cite in members.test.mjs: cite, sever and reinstate rebuild meta from the
+     document's frontmatter, so a bundle whose frontmatter carries no `title` was
+     being re-promoted with title undefined and silently blanked in the
+     projection. An update that does not mention the title is not a request to
+     remove it. */
+  const untitled = `---\nid: PROJ-2026-0107-h\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  await call("/promote", { bundleId: "PROJ-2026-0107-h", base: null, snapKey: "h-new", author: "suite",
+    files: [{ path: "bundle.md", text: untitled, bytes: untitled.length, sha256: sha(untitled) }],
+    meta: { object_type: "project", group: "believe-in-oakland", title: "Kept Name",
+            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+  await call("/promote", { bundleId: "PROJ-2026-0107-h", base: await cur("PROJ-2026-0107-h"),
+    snapKey: "h-rev", author: "suite",
+    files: [{ path: "bundle.md", text: untitled, bytes: untitled.length, sha256: sha(untitled) }],
+    meta: { object_type: "project", group: "believe-in-oakland",
+            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-05T00:00:00Z" } });
+  t("a revision that omits the title carries the old one forward",
+    (await call(`/projection`)).find((r) => r.bundle_id === "PROJ-2026-0107-h").title, "Kept Name");
+  t("and the name is still held against a later collision",
+    (await mkNamed("PROJ-2026-0108-i", "kept name")).reason, "NAME_TAKEN");
+}
+
 console.log("\n--- 7.8: participants see each other, non-participants see nothing ---");
 {
   const p = await call(`/projectparticipants?projectId=PROJ-2026-0001-secret&by=carol`);

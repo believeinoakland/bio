@@ -6620,6 +6620,31 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
         return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+      if (cur && (meta.title === void 0 || meta.title === null || meta.title === "")) {
+        const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
+        if (prev && prev.title) meta.title = prev.title;
+      }
+      if (meta.object_type === "project") {
+        const key = _Store.projectNameKey(meta.title);
+        if (!key)
+          return {
+            ok: false,
+            reason: "NO_TITLE",
+            detail: "a project needs a name, and it must be unique across this instance"
+          };
+        const clash = this.#rows(
+          `SELECT bundle_id, title FROM bundles WHERE object_type='project' AND bundle_id<>?`,
+          bundleId
+        ).find((r) => _Store.projectNameKey(r.title) === key);
+        if (clash)
+          return {
+            ok: false,
+            reason: "NAME_TAKEN",
+            bundleId: clash.bundle_id,
+            title: clash.title,
+            detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited."
+          };
+      }
       if (cur && cur.object_type === "project") {
         const to = meta.current_state, from = cur.current_state;
         const deactivating = from !== "closed" && to === "closed" && meta.closed_reason === "abandoned";

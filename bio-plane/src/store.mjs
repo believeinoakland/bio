@@ -1717,6 +1717,65 @@ export class Store extends DurableObject {
       if (!cur && base !== null)
         return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
 
+      /* A title is never LOST by a revision.
+       *
+       * Found by the 7.1 check below refusing a cite. `cite`, `sever` and
+       * `reinstate` rebuild `meta` from the document's frontmatter and re-promote,
+       * so a bundle whose frontmatter carries no `title` was being re-promoted
+       * with `title: undefined`, silently blanking it in the projection. The
+       * catalog requires `title` on every bundle, so such a document is
+       * malformed, but a malformed document is exactly when a write path should
+       * preserve what it already knows rather than quietly discard it.
+       *
+       * Carrying forward is correct in general: an update that does not mention
+       * the title is not a request to remove it. */
+      if (cur && (meta.title === undefined || meta.title === null || meta.title === "")) {
+        const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
+        if (prev && prev.title) meta.title = prev.title;
+      }
+
+      /* 7.1: a project's name is unique across the instance.
+       *
+       * HERE, at the write path, and not only at fork. Enforcing it at fork
+       * alone left the ordinary creation path open, which was D-48: two projects
+       * born the normal way could collide, and fork is only one of several ways
+       * a project comes into being.
+       *
+       * Compared case-insensitively with runs of whitespace collapsed, via the
+       * one `projectNameKey` the fork check also uses, so the two cannot
+       * disagree about what a collision is. A plain unique index over the
+       * trimmed string is how HANDLES work and would let "Sewer Fund" and
+       * "Sewer fund" coexist, which is the collision the rule exists to stop:
+       * uniqueness a reader cannot see is not uniqueness.
+       *
+       * HELD ACROSS EVERY LIFECYCLE STATE, deactivated projects included. A
+       * deactivated project is `closed` with a reason of `abandoned` (7.11), not
+       * gone: it is still cited, and its name must still resolve to what was
+       * cited. Freeing the name on deactivation would let a later project
+       * silently inherit an earlier one's references.
+       *
+       * Excludes the bundle being written, so a project may be revised without
+       * colliding with itself, which is the obvious way to get this wrong.
+       *
+       * A SCAN, deliberately. The alternative is a maintained key column with a
+       * unique index, which needs a backfill and would not catch collisions
+       * against projects promoted before the column existed. Projects are few
+       * relative to Information and this runs only for them. */
+      if (meta.object_type === "project") {
+        const key = Store.projectNameKey(meta.title);
+        if (!key)
+          return { ok: false, reason: "NO_TITLE",
+                   detail: "a project needs a name, and it must be unique across this instance" };
+        const clash = this.#rows(
+          `SELECT bundle_id, title FROM bundles WHERE object_type='project' AND bundle_id<>?`, bundleId)
+          .find((r) => Store.projectNameKey(r.title) === key);
+        if (clash)
+          return { ok: false, reason: "NAME_TAKEN", bundleId: clash.bundle_id, title: clash.title,
+                   detail: "a project by that name already exists on this instance, compared without regard "
+                         + "to case or spacing. This holds for deactivated projects too, because their "
+                         + "names are still cited." };
+      }
+
       /* 7.11: only an OWNER deactivates or reactivates a project.
        *
        * NARROW ON PURPOSE. Section 7.11 is titled deactivation and reactivation
