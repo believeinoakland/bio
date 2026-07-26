@@ -6876,6 +6876,76 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
        hash is cleared on enrollment, so possession of an old invite buys
        nothing against an enrolled member. Passwords live only as PBKDF2
        hashes under credentials role 'member:<id>'. */
+  /* Why is a register row unreferenced? (D-9)
+   *
+   * The register maps a capture's sha to the bundle and path it was intake for.
+   * 87 rows on the live instance, 67 of them referenced by a file in some
+   * revision, and the other 20 explained only by a plausible story: superseded
+   * bytes plus dropped transport twins. Nothing tested the story, because no op
+   * could read the register at all.
+   *
+   * This classifies every row against what the store actually holds. It is a
+   * READ and it changes nothing: the point is to find out whether the 20 are
+   * accounted for or whether some of them are a leak nobody has named.
+   *
+   * The classes are ordered from most to least explained:
+   *   live        the capture's bytes are the current file at that path
+   *   superseded  the path is still there but carries different bytes now, so
+   *               this capture was replaced by a later revision
+   *   historical  the bytes are not live anywhere but ARE in history, so the
+   *               revision that used them is still readable
+   *   dropped     the bundle exists and the path does not, live or in history:
+   *               a transport twin that was never promoted, or a file removed
+   *   orphan      the bundle itself is not in the store, which is the only
+   *               class that would be a real defect
+   */
+  registerAudit() {
+    const rows = this.#rows(`SELECT capture_sha, bundle_id, path, encoding, bytes, registered FROM register`);
+    const out = {
+      total: rows.length,
+      live: 0,
+      superseded: 0,
+      historical: 0,
+      dropped: 0,
+      orphan: 0,
+      unreferenced: 0,
+      offenders: []
+    };
+    for (const r of rows) {
+      const bundle = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.bundle_id);
+      if (!bundle) {
+        out.orphan++;
+        out.unreferenced++;
+        out.offenders.push({ ...r, class: "orphan" });
+        continue;
+      }
+      const liveHere = this.#one(`SELECT sha256 FROM files WHERE bundle_id=? AND path=?`, r.bundle_id, r.path);
+      if (liveHere && liveHere.sha256 === r.capture_sha) {
+        out.live++;
+        continue;
+      }
+      const inHistory = this.#one(
+        `SELECT sha256 FROM history WHERE bundle_id=? AND sha256=? LIMIT 1`,
+        r.bundle_id,
+        r.capture_sha
+      );
+      out.unreferenced++;
+      if (liveHere) {
+        out.superseded++;
+        out.offenders.push({ ...r, class: "superseded", liveSha: liveHere.sha256, inHistory: !!inHistory });
+      } else if (inHistory) {
+        out.historical++;
+        out.offenders.push({ ...r, class: "historical" });
+      } else {
+        out.dropped++;
+        out.offenders.push({ ...r, class: "dropped" });
+      }
+    }
+    out.sample = out.offenders.slice(0, 40);
+    delete out.offenders;
+    out.accountedFor = out.orphan === 0;
+    return { ok: true, ...out };
+  }
   /* ---- the membership model's member half, Architecture sections 3 to 6 ----
    *
    * The arithmetic of section 4.7 lives in ONE place, `adminArithmetic`, and
@@ -7556,6 +7626,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         adminendorse: () => this.adminEndorse(body || {}),
         adminremove: () => this.adminRemove(body || {}),
         adminarith: () => this.adminArithmetic(),
+        registeraudit: () => this.registerAudit(),
         signeradd: () => this.signerAdd(body || {}),
         signerlist: () => this.signerList(),
         signerset: () => this.signerSet(body || {}),
@@ -7691,6 +7762,11 @@ var OPS = {
   adminendorse: { classes: ["admin", "probe"], mutating: true },
   adminremove: { classes: ["admin", "probe"], mutating: true },
   adminarith: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-9: why a register row is unreferenced. A read that classifies every row
+     against what the store actually holds, so the 20 unexplained rows on the
+     live instance stop being a plausible story and become a measured one.
+     Admin, because the register is intake provenance for the working corpus. */
+  registeraudit: { classes: ["admin", "probe"], mutating: false },
   signeradd: { classes: ["admin", "probe"], mutating: true },
   signerlist: { classes: ["admin", "member", "probe"], mutating: false },
   signerset: { classes: ["admin", "probe"], mutating: true },

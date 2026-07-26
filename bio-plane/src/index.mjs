@@ -154,6 +154,11 @@ const OPS = {
   adminendorse: { classes: ["admin", "probe"],                     mutating: true  },
   adminremove:  { classes: ["admin", "probe"],                     mutating: true  },
   adminarith:   { classes: ["admin", "member", "probe"],           mutating: false },
+  /* D-9: why a register row is unreferenced. A read that classifies every row
+     against what the store actually holds, so the 20 unexplained rows on the
+     live instance stop being a plausible story and become a measured one.
+     Admin, because the register is intake provenance for the working corpus. */
+  registeraudit:{ classes: ["admin", "probe"],                     mutating: false },
   signeradd:    { classes: ["admin", "probe"],                     mutating: true  },
   signerlist:   { classes: ["admin", "member", "probe"],           mutating: false },
   signerset:    { classes: ["admin", "probe"],                     mutating: true  },
