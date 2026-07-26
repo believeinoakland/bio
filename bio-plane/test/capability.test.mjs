@@ -52,6 +52,19 @@ const member = async (id, caps, role = "member") => {
 const RUTH = await member("ruth", ["contribute", "publish", "create_projects"], "admin");
 const GUS  = await member("gus",  ["contribute"], "admin");   // second admin, deliberately thin caps
 
+/* The FOUNDER's own session. They hold ADMIN_TOKEN and are the root of trust
+   (4.6), which makes them the sharpest test of 8.1: even their signed-in browser
+   is a password-derived credential and not the token itself. */
+/* op=claim is how a founder gets a password: setpassword is Durable-Object-only
+   and is not a control-plane op, so an earlier version of this line built the
+   string "token=undefined" and the founder assertion below tested an invalid
+   credential rather than the founder. */
+const claimed = await POST("op=claim", { bootstrapToken: "t-admin-1", password: "founder-passphrase-1" });
+if (!claimed.result?.ok) throw new Error("claim: " + JSON.stringify(claimed));
+const flog = await POST("op=login", { role: "admin", password: "founder-passphrase-1" });
+if (!flog.result?.token) throw new Error("founder login: " + JSON.stringify(flog));
+const FOUNDER = "token=" + flog.result.token;
+
 const SAM   = await member("sam",   ["contribute"]);                    // no publish, no projects
 const VERA  = await member("vera",  []);                                // view only
 const PIA   = await member("pia",   ["contribute", "create_projects"]); // may create projects
@@ -220,6 +233,52 @@ console.log("\n--- 1.3: declared by the member, confirmed by an administrator, g
     (await GET(`op=whoami&${SAM}`)).result?.capabilities, ["contribute"]);
   t("and he can still promote exactly as before",
     (await POST(`op=promote&${SAM}`, bundle("INFO-2026-9010-sam"))).result?.ok, true);
+}
+
+console.log("\n--- 8.1: full export needs the ROOT OF TRUST, not in-app administrator status ---");
+/* The whole difficulty section 8 names: a full working-corpus export is the
+   group's entire unpublished position, so if any administrator can take it, one
+   captured administrator exfiltrates everything and the export feature becomes
+   the most efficient attack in the system.
+   THE SHARP READING: "the ADMIN_TOKEN-class credential" is not satisfied by a
+   SESSION belonging to an administrator. A session is a password-derived
+   credential; the root of trust is the token set in the hosting dashboard. So a
+   stolen password must not reach this, and neither must the founder's own
+   signed-in browser. */
+t("an ordinary member session cannot export",
+  (await GET(`op=export&${SAM}`)).error !== undefined || (await GET(`op=export&${SAM}`)).reason !== undefined, true);
+t("an in-app ADMINISTRATOR session cannot export either",
+  (await GET(`op=export&${RUTH}`)).reason, "ROOT_OF_TRUST_REQUIRED");
+t("nor can the FOUNDER's session, which is above the membership model everywhere else",
+  (await GET(`op=export&${FOUNDER}`)).reason, "ROOT_OF_TRUST_REQUIRED");
+t("nor a member-class machine credential",
+  (await GET("op=export&token=t-member-1")).error, "forbidden for token class");
+const ex = await GET("op=export&token=t-admin-1");
+t("ADMIN_TOKEN itself can", ex.result?.ok, true);
+t("and the export carries a manifest of every bundle", Array.isArray(ex.result?.bundles), true);
+t("with a hash for every file", ex.result?.bundles?.every((b) => b.files.every((f) => typeof f.sha256 === "string")), true);
+
+console.log("\n--- 8.1: an export can never happen silently ---");
+{
+  const log = await GET("op=exportlog&token=t-admin-1");
+  t("the export is recorded", log.result?.exports?.length >= 1, true);
+  t("with what it covered", typeof log.result?.exports?.[0]?.bundles, "number");
+  /* Visible to in-app administrators, who cannot RUN it but must be able to SEE
+     that it happened. An export a captured root of trust could take unnoticed
+     would defeat the recording. */
+  t("and an in-app administrator can read the log even though they cannot export",
+    (await GET(`op=exportlog&${RUTH}`)).result?.exports?.length >= 1, true);
+}
+
+console.log("\n--- 8.2: published-record reconstruction requires nothing at all ---");
+{
+  const pub = await GET("op=publishedmanifest");
+  t("no credential is needed", pub.result?.ok, true);
+  t("it answers with content-addressed hashes", Array.isArray(pub.result?.published), true);
+  /* NOTHING UNPUBLISHED MAY APPEAR HERE. The whole safety of an open endpoint is
+     that it reads the published projection and never the working corpus. */
+  t("and nothing from the working corpus leaks into it",
+    pub.result?.published?.some((r) => String(r.bundle_id || "").includes("9001")), false);
 }
 
 console.log("\n--- structural: no mutating session op may go unmentioned ---");

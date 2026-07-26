@@ -5063,6 +5063,16 @@ var Store = class _Store extends DurableObject {
     );
     this.sql.exec(`CREATE INDEX IF NOT EXISTS mx_member ON member_expertise(member_id, label)`);
     this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS export_log (
+         seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+         at      TEXT NOT NULL,
+         scope   TEXT NOT NULL,
+         bundles INTEGER NOT NULL,
+         files   INTEGER NOT NULL,
+         note    TEXT
+       )`
+    );
+    this.sql.exec(
       `CREATE TABLE IF NOT EXISTS project_owner_votes (
          project_id TEXT NOT NULL,
          kind       TEXT NOT NULL,
@@ -7557,6 +7567,113 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   static projectNameKey(title) {
     return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   }
+  /* ---- section 8: secure verified export ----
+   *
+   * Export is the only real answer to a captured root of trust, because a group
+   * that cannot leave is a group that can be held. It is also exactly the
+   * capability an attacker wants most: a full working-corpus export is the
+   * group's entire unpublished position, so if ANY administrator could take it,
+   * one captured administrator exfiltrates everything and the feature becomes
+   * the most efficient attack in the system.
+   *
+   * WHO MAY RUN IT is enforced in the control plane, not here, because that is
+   * where the credential class is known. The rule is sharper than "an
+   * administrator": section 8.1 says the ADMIN_TOKEN-class credential, which a
+   * SESSION belonging to an administrator does not satisfy. A session is
+   * password-derived; the root of trust is the token set in the hosting
+   * dashboard. A stolen password must not reach this, and neither does the
+   * founder's own signed-in browser.
+   *
+   * WHAT "VERIFIED" MEANS: the export carries its own manifest, every file
+   * hashed on the way out, so the receiving side can re-derive everything and
+   * trust nothing the sender asserts. */
+  exportManifest({ note = null } = {}) {
+    const bundles = this.#rows(
+      `SELECT bundle_id, object_type, title, current_state, bundle_sha, row_version, created, last_updated
+       FROM bundles ORDER BY bundle_id`
+    );
+    let fileCount = 0;
+    const out = bundles.map((b) => {
+      const files = this.#rows(
+        `SELECT path, sha256, bytes, blob_sha, (content IS NOT NULL) AS inline
+         FROM files WHERE bundle_id=? ORDER BY path`,
+        b.bundle_id
+      );
+      fileCount += files.length;
+      return {
+        ...b,
+        files: files.map((f2) => ({
+          path: f2.path,
+          sha256: f2.sha256,
+          bytes: f2.bytes,
+          blobSha: f2.blob_sha ?? null,
+          inline: !!f2.inline
+        })),
+        /* The manifest chain and the base links, so the receiving side can
+           re-derive the chain rather than believe it. `history` holds the
+           snapshotted FILES; `manifest` holds the promotion records that link
+           them, which is what a chain check actually walks. */
+        promotions: this.#rows(
+          `SELECT snap_key, kind, base, author, created, writer, operation
+           FROM manifest WHERE bundle_id=? ORDER BY created`,
+          b.bundle_id
+        ),
+        snapshots: this.#rows(
+          `SELECT snap_key, path, sha256, created FROM history WHERE bundle_id=? ORDER BY snap_key, path`,
+          b.bundle_id
+        ),
+        refs: this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, b.bundle_id)
+      };
+    });
+    const at = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(
+      `INSERT INTO export_log (at,scope,bundles,files,note) VALUES (?,'working-corpus',?,?,?)`,
+      at,
+      bundles.length,
+      fileCount,
+      note ? String(note).slice(0, 280) : null
+    );
+    return {
+      ok: true,
+      at,
+      scope: "working-corpus",
+      bundles: out,
+      counts: { bundles: bundles.length, files: fileCount },
+      register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
+      recorded: "this export is in the append-only export log and is visible to every administrator",
+      verify: "every file carries its sha256 and every bundle its history chain and base links. Re-derive them on the way in and byte-compare every registered capture; trust nothing this manifest asserts about itself."
+    };
+  }
+  /** The log, readable by in-app administrators who cannot run an export. */
+  exportLog() {
+    return { ok: true, exports: this.#rows(
+      `SELECT seq, at, scope, bundles, files, note FROM export_log ORDER BY seq DESC LIMIT 200`
+    ) };
+  }
+  /** 8.2: published-record reconstruction, requiring NOTHING.
+   *
+   *  Published material is content-addressed and its hashes are public, so any
+   *  member or any stranger can rebuild and independently verify the published
+   *  record without the cooperation, permission, or continued existence of the
+   *  instance it came from. Nothing can be withheld here by construction.
+   *
+   *  READS THE PUBLISHED PROJECTION ONLY. That is the entire safety of an open
+   *  endpoint: working material is never consulted, so there is nothing to leak,
+   *  exactly as op=verify already works. */
+  publishedManifest() {
+    return {
+      ok: true,
+      scope: "published",
+      published: this.#rows(
+        `SELECT p.bundle_id, p.bundle_sha, p.ratified_at, p.attestor_key, p.gate_version
+         FROM published_bundles p ORDER BY p.bundle_id`
+      ),
+      shas: this.#rows(
+        `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`
+      ),
+      detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this instance's cooperation or continued existence. Nothing unpublished appears, by construction: this reads the published projection and never the working corpus."
+    };
+  }
   /* ---- section 1.3: declared expertise, confirmed licenses ----
    *
    * TWO CLAIMS BY TWO PEOPLE, kept apart for the same reason the intake doctrine
@@ -8452,6 +8569,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         expertisedeclare: () => this.expertiseDeclare(body || {}),
         expertiseconfirm: () => this.expertiseConfirm(body || {}),
         expertiselist: () => this.expertiseList({ memberId: url.searchParams.get("memberId") }),
+        export: () => this.exportManifest({ note: url.searchParams.get("note") }),
+        exportlog: () => this.exportLog(),
+        publishedmanifest: () => this.publishedManifest(),
         projectfork: () => this.forkProject({
           projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"),
@@ -8557,6 +8677,21 @@ var OPS = {
   expertisedeclare: { classes: ["admin", "member", "probe"], mutating: true },
   expertiseconfirm: { classes: ["admin", "member", "probe"], mutating: true },
   expertiselist: { classes: ["admin", "member", "probe"], mutating: false },
+  /* Section 8.1. Admin class ONLY, and additionally refused to a SESSION below:
+     "the ADMIN_TOKEN-class credential" is not satisfied by a session belonging
+     to an administrator, because a session is password-derived and the root of
+     trust is the token set in the hosting dashboard. Mutating, because it writes
+     the export log: an export that left no trace would defeat the recording. */
+  export: { classes: ["admin"], mutating: true },
+  /* The log is READ by in-app administrators who cannot run an export. They must
+     be able to see that one happened even though they cannot cause it. */
+  exportlog: { classes: ["admin", "member", "probe"], mutating: false },
+  /* Section 8.2. classes: null, because published-record reconstruction requires
+     NOTHING: the hashes are public and verifiable by any stranger without this
+     instance's cooperation or continued existence. It reads the published
+     projection and never the working corpus, which is the whole of its safety,
+     exactly as op=verify does. */
+  publishedmanifest: { classes: null, mutating: false },
   /* What the caller may DO, so an interface builds its controls from the plane
      rather than from a copy that drifts, exactly as op=searchfields does for the
      query language. Section 5's "absent from their interface" is implementable
@@ -8899,6 +9034,10 @@ var index_default = {
         const out2 = await r2.json();
         return json({ ok: true, ...out2.result }, 200);
       }
+      if (op === "publishedmanifest") {
+        const r2 = await stub2.fetch(new Request("http://do/publishedmanifest"));
+        return json({ ok: true, result: (await r2.json()).result }, 200);
+      }
       if (op === "knock") {
         if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
         const raw = await req.arrayBuffer();
@@ -8983,6 +9122,13 @@ var index_default = {
         const sess = r?.result?.session;
         if (sess) {
           const kind = sess.role === "admin" ? "admin" : "member";
+          if (op === "export")
+            return json({
+              ok: false,
+              reason: "ROOT_OF_TRUST_REQUIRED",
+              op,
+              detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a signed-in session, and not in-app administrator status. A session is derived from a password; the root of trust is the token held in the hosting account. This refuses the founder's own browser too, which is the one place in this system where being the founder is not enough. The published record needs no credential at all: see op=publishedmanifest."
+            }, 403);
           if (spec.mutating && !(op === "capture" && req.method === "GET") && !SESSION_OPS[kind].has(op))
             return json({ ok: false, error: "this operation requires a machine credential, not a signed-in session", op }, 403);
           cls = kind;
@@ -8994,6 +9140,13 @@ var index_default = {
     }
     if (!cls) return json({ ok: false, error: "unauthenticated" }, 401);
     if (!spec.classes.includes(cls)) return json({ ok: false, error: "forbidden for token class", op, cls }, 403);
+    if (op === "export" && viaSession)
+      return json({
+        ok: false,
+        reason: "ROOT_OF_TRUST_REQUIRED",
+        op,
+        detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a signed-in session, and not in-app administrator status. A session is derived from a password; the root of trust is the token held in the hosting account. The published record needs no credential at all and is available at op=publishedmanifest."
+      }, 403);
     if (viaSession) {
       sessCaps = new Set(sessRights.capabilities || []);
       const needs = NEEDS[op];

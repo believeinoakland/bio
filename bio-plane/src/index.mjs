@@ -95,6 +95,21 @@ const OPS = {
   expertisedeclare:    { classes: ["admin", "member", "probe"], mutating: true  },
   expertiseconfirm:    { classes: ["admin", "member", "probe"], mutating: true  },
   expertiselist:       { classes: ["admin", "member", "probe"], mutating: false },
+  /* Section 8.1. Admin class ONLY, and additionally refused to a SESSION below:
+     "the ADMIN_TOKEN-class credential" is not satisfied by a session belonging
+     to an administrator, because a session is password-derived and the root of
+     trust is the token set in the hosting dashboard. Mutating, because it writes
+     the export log: an export that left no trace would defeat the recording. */
+  export:              { classes: ["admin"],                    mutating: true  },
+  /* The log is READ by in-app administrators who cannot run an export. They must
+     be able to see that one happened even though they cannot cause it. */
+  exportlog:           { classes: ["admin", "member", "probe"], mutating: false },
+  /* Section 8.2. classes: null, because published-record reconstruction requires
+     NOTHING: the hashes are public and verifiable by any stranger without this
+     instance's cooperation or continued existence. It reads the published
+     projection and never the working corpus, which is the whole of its safety,
+     exactly as op=verify does. */
+  publishedmanifest:   { classes: null,                         mutating: false },
   /* What the caller may DO, so an interface builds its controls from the plane
      rather than from a copy that drifts, exactly as op=searchfields does for the
      query language. Section 5's "absent from their interface" is implementable
@@ -469,6 +484,17 @@ export default {
         const out = await r.json();
         return json({ ok: true, ...out.result }, 200);
       }
+      /* Section 8.2. Anyone, no token, no session, and nothing to withhold.
+         Published material is content-addressed and its hashes are public, so
+         any member or any stranger rebuilds and independently verifies the
+         published record without this instance's cooperation, permission, or
+         continued existence. Reads the published projection ONLY, exactly as
+         op=verify above does, which is the whole safety of an open endpoint:
+         working material is never consulted, so there is nothing to leak. */
+      if (op === "publishedmanifest") {
+        const r = await stub.fetch(new Request("http://do/publishedmanifest"));
+        return json({ ok: true, result: (await r.json()).result }, 200);
+      }
       /* 7b. Anyone, no token, no session. Size-capped, rate-limited, and
          confined to the inbox namespace: payload bytes land under
          bio/inbox/<sha256> in the working bucket and nowhere else, the way
@@ -538,6 +564,20 @@ export default {
         const sess = r?.result?.session;
         if (sess) {
           const kind = sess.role === "admin" ? "admin" : "member";
+          /* Section 8.1, checked BEFORE the generic session refusal so the
+             answer says the right thing. The generic message is "this operation
+             requires a machine credential", which is true and misleading: a
+             MEMBER_TOKEN machine credential cannot export either. What is
+             required is the ADMIN_TOKEN-class credential specifically, and for a
+             security-critical op the caller deserves the actual rule. */
+          if (op === "export")
+            return json({ ok: false, reason: "ROOT_OF_TRUST_REQUIRED", op,
+              detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a "
+                    + "signed-in session, and not in-app administrator status. A session is derived from a "
+                    + "password; the root of trust is the token held in the hosting account. This refuses "
+                    + "the founder's own browser too, which is the one place in this system where being "
+                    + "the founder is not enough. The published record needs no credential at all: see "
+                    + "op=publishedmanifest." }, 403);
           if (spec.mutating && !(op === "capture" && req.method === "GET")
               && !SESSION_OPS[kind].has(op))
             return json({ ok: false, error: "this operation requires a machine credential, not a signed-in session", op }, 403);
@@ -550,6 +590,25 @@ export default {
     }
     if (!cls) return json({ ok: false, error: "unauthenticated" }, 401);
     if (!spec.classes.includes(cls)) return json({ ok: false, error: "forbidden for token class", op, cls }, 403);
+
+    /* Section 8.1: the ROOT OF TRUST, and not in-app administrator status.
+     *
+     * A full working-corpus export is the group's entire unpublished position.
+     * If any administrator could take it, one captured administrator
+     * exfiltrates everything and the export becomes the most efficient attack
+     * in the system, which section 8 names as the whole difficulty.
+     *
+     * So the ADMIN_TOKEN-class credential itself, and NOT a session belonging to
+     * an administrator. A session is derived from a password; the root of trust
+     * is the token set in the hosting dashboard. This refuses a stolen admin
+     * password, and it refuses the founder's own signed-in browser, which is the
+     * one place in this system where being the founder is not enough. */
+    if (op === "export" && viaSession)
+      return json({ ok: false, reason: "ROOT_OF_TRUST_REQUIRED", op,
+        detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a "
+              + "signed-in session, and not in-app administrator status. A session is derived from a "
+              + "password; the root of trust is the token held in the hosting account. The published "
+              + "record needs no credential at all and is available at op=publishedmanifest." }, 403);
 
     /* Section 5 enforcement. Only a SESSION carries capabilities; a machine
        credential has no member behind it and stays bounded by the class ACL

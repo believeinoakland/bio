@@ -235,6 +235,19 @@ export class Store extends DurableObject {
          created   TEXT NOT NULL
        )`);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS mx_member ON member_expertise(member_id, label)`);
+    /* Section 8.1: an export is recorded so it can never happen SILENTLY.
+       Append-only, like everything else here. In-app administrators cannot RUN
+       an export and must be able to SEE that one happened, because an export a
+       captured root of trust could take unnoticed would defeat the recording. */
+    this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS export_log (
+         seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+         at      TEXT NOT NULL,
+         scope   TEXT NOT NULL,
+         bundles INTEGER NOT NULL,
+         files   INTEGER NOT NULL,
+         note    TEXT
+       )`);
     /* Section 7.10 owner governance, recorded the way section 4.7's admin votes
        are. Separate from admin_votes because the arithmetic differs at two and
        sharing the table would invite sharing the tally. */
@@ -2614,6 +2627,94 @@ export class Store extends DurableObject {
     return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   }
 
+  /* ---- section 8: secure verified export ----
+   *
+   * Export is the only real answer to a captured root of trust, because a group
+   * that cannot leave is a group that can be held. It is also exactly the
+   * capability an attacker wants most: a full working-corpus export is the
+   * group's entire unpublished position, so if ANY administrator could take it,
+   * one captured administrator exfiltrates everything and the feature becomes
+   * the most efficient attack in the system.
+   *
+   * WHO MAY RUN IT is enforced in the control plane, not here, because that is
+   * where the credential class is known. The rule is sharper than "an
+   * administrator": section 8.1 says the ADMIN_TOKEN-class credential, which a
+   * SESSION belonging to an administrator does not satisfy. A session is
+   * password-derived; the root of trust is the token set in the hosting
+   * dashboard. A stolen password must not reach this, and neither does the
+   * founder's own signed-in browser.
+   *
+   * WHAT "VERIFIED" MEANS: the export carries its own manifest, every file
+   * hashed on the way out, so the receiving side can re-derive everything and
+   * trust nothing the sender asserts. */
+  exportManifest({ note = null } = {}) {
+    const bundles = this.#rows(
+      `SELECT bundle_id, object_type, title, current_state, bundle_sha, row_version, created, last_updated
+       FROM bundles ORDER BY bundle_id`);
+    let fileCount = 0;
+    const out = bundles.map((b) => {
+      const files = this.#rows(
+        `SELECT path, sha256, bytes, blob_sha, (content IS NOT NULL) AS inline
+         FROM files WHERE bundle_id=? ORDER BY path`, b.bundle_id);
+      fileCount += files.length;
+      return { ...b,
+        files: files.map((f) => ({ path: f.path, sha256: f.sha256, bytes: f.bytes,
+                                   blobSha: f.blob_sha ?? null, inline: !!f.inline })),
+        /* The manifest chain and the base links, so the receiving side can
+           re-derive the chain rather than believe it. `history` holds the
+           snapshotted FILES; `manifest` holds the promotion records that link
+           them, which is what a chain check actually walks. */
+        promotions: this.#rows(
+          `SELECT snap_key, kind, base, author, created, writer, operation
+           FROM manifest WHERE bundle_id=? ORDER BY created`, b.bundle_id),
+        snapshots: this.#rows(
+          `SELECT snap_key, path, sha256, created FROM history WHERE bundle_id=? ORDER BY snap_key, path`,
+          b.bundle_id),
+        refs: this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, b.bundle_id),
+      };
+    });
+    const at = new Date().toISOString();
+    this.sql.exec(
+      `INSERT INTO export_log (at,scope,bundles,files,note) VALUES (?,'working-corpus',?,?,?)`,
+      at, bundles.length, fileCount, note ? String(note).slice(0, 280) : null);
+    return { ok: true, at, scope: "working-corpus",
+      bundles: out,
+      counts: { bundles: bundles.length, files: fileCount },
+      register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
+      recorded: "this export is in the append-only export log and is visible to every administrator",
+      verify: "every file carries its sha256 and every bundle its history chain and base links. Re-derive "
+            + "them on the way in and byte-compare every registered capture; trust nothing this manifest "
+            + "asserts about itself." };
+  }
+
+  /** The log, readable by in-app administrators who cannot run an export. */
+  exportLog() {
+    return { ok: true, exports: this.#rows(
+      `SELECT seq, at, scope, bundles, files, note FROM export_log ORDER BY seq DESC LIMIT 200`) };
+  }
+
+  /** 8.2: published-record reconstruction, requiring NOTHING.
+   *
+   *  Published material is content-addressed and its hashes are public, so any
+   *  member or any stranger can rebuild and independently verify the published
+   *  record without the cooperation, permission, or continued existence of the
+   *  instance it came from. Nothing can be withheld here by construction.
+   *
+   *  READS THE PUBLISHED PROJECTION ONLY. That is the entire safety of an open
+   *  endpoint: working material is never consulted, so there is nothing to leak,
+   *  exactly as op=verify already works. */
+  publishedManifest() {
+    return { ok: true, scope: "published",
+      published: this.#rows(
+        `SELECT p.bundle_id, p.bundle_sha, p.ratified_at, p.attestor_key, p.gate_version
+         FROM published_bundles p ORDER BY p.bundle_id`),
+      shas: this.#rows(
+        `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
+      detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this "
+            + "instance's cooperation or continued existence. Nothing unpublished appears, by construction: "
+            + "this reads the published projection and never the working corpus." };
+  }
+
   /* ---- section 1.3: declared expertise, confirmed licenses ----
    *
    * TWO CLAIMS BY TWO PEOPLE, kept apart for the same reason the intake doctrine
@@ -3424,6 +3525,9 @@ export class Store extends DurableObject {
         expertisedeclare: () => this.expertiseDeclare(body || {}),
         expertiseconfirm: () => this.expertiseConfirm(body || {}),
         expertiselist: () => this.expertiseList({ memberId: url.searchParams.get("memberId") }),
+        export: () => this.exportManifest({ note: url.searchParams.get("note") }),
+        exportlog: () => this.exportLog(),
+        publishedmanifest: () => this.publishedManifest(),
         projectfork: () => this.forkProject({ projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"), title: url.searchParams.get("title"),
           by: url.searchParams.get("by") }),
