@@ -79,7 +79,13 @@ const OPS = {
   projectjoin:         { classes: ["admin", "member", "probe"], mutating: true  },
   projectleave:        { classes: ["admin", "member", "probe"], mutating: true  },
   projectremove:       { classes: ["admin", "member", "probe"], mutating: true  },
+  projectowneradd:     { classes: ["admin", "member", "probe"], mutating: true  },
+  projectownerremove:  { classes: ["admin", "member", "probe"], mutating: true  },
   projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
+  /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
+     tell a group what a change would take BEFORE they start one. op=adminarith
+     is the same thing for section 4.7, and the two differ at n=2 on purpose. */
+  projectownerarith:   { classes: ["admin", "member", "probe"], mutating: false },
   /* What the caller may DO, so an interface builds its controls from the plane
      rather than from a copy that drifts, exactly as op=searchfields does for the
      query language. Section 5's "absent from their interface" is implementable
@@ -223,7 +229,8 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
    rather than listed twice, because the member and admin session lists drifting
    apart is exactly the class of defect this repository keeps finding. */
 const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
-const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove"];
+const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
+                         "projectowneradd", "projectownerremove"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
@@ -296,6 +303,8 @@ const NEEDS = {
   projectjoin:      null,
   projectleave:     null,
   projectremove:    null,
+  projectowneradd:  null,
+  projectownerremove: null,
   memberadd:        null,
   memberset:        null,
   signeradd:        null,
@@ -1247,7 +1256,7 @@ export default {
        nothing if the caller names who they are. A machine credential says
        plainly that it was a machine, which matches no participation row and no
        administrator, so it is refused by the store rather than let through. */
-    if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants")
+    if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
       inner.searchParams.set("by", viaSession ? sessMember : `class:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
     /* create_projects (section 5) and the 7.1 owner claim, in one place.

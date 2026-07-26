@@ -106,14 +106,104 @@ console.log("\n--- 7.6: unchecking the box is a REQUEST, and removes nobody ---"
   t("and they are still a participant", (await visible("member:dave")).includes("PROJ-2026-0001-secret"), true);
 }
 
-console.log("\n--- 7.7: only an administrator removes, and owners never do ---");
+console.log("\n--- 7.7 REVERSED in v2: only an OWNER removes, and administrators never do ---");
+/* These four assertions said the OPPOSITE until 2026-07-26, and said it
+   deliberately: v1.4 section 7.7 gave removal to administrators and denied it to
+   owners, reasoning that authority over people belongs to the custodial role.
+   Membership Architecture v2 reverses it. Corrected rather than exempted, per
+   standing lesson 3: a rule that breaks old tests is doing its job. */
 {
-  t("the owner cannot remove a participant",
-    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).reason, "ADMIN_ONLY");
-  const r = await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=alice`);
-  t("an administrator can", r.removed, true);
+  t("an administrator cannot remove a participant",
+    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
+  t("nor can the founder, who holds ADMIN_TOKEN and is above the membership model everywhere else",
+    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=admin`)).reason, "NOT_THE_OWNER");
+  const r = await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`);
+  t("the owner can", r.removed, true);
   t("and the project vanishes for him again", (await visible("member:dave")).includes("PROJ-2026-0001-secret"), false);
-  t("the owner cannot be removed", (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=carol&by=alice`)).reason, "OWNER");
+  t("an owner is not removed by this action; ownership moves by 7.10",
+    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=carol&by=carol`)).reason, "OWNER");
+}
+
+console.log("\n--- 7.2 in v2: only owners invite, administrators do not ---");
+/* The other half of the same reversal, and it had no assertion at all before:
+   projectInvite carried `|| this.#isAdminMember(by)` and nothing exercised it,
+   so the bypass could have been removed or kept without any test noticing. */
+{
+  t("an administrator cannot invite to a project",
+    (await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
+  t("the owner still can",
+    (await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).state, "invited");
+  /* Put the fixture back. The 7.8 assertions below need dave OUT of this
+     project, and the first version of this block left him in, which failed four
+     assertions two sections later rather than here. A suite that shares one
+     fixture across sections owes the next section the state it was handed. */
+  t("and the fixture is restored for what follows",
+    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).removed, true);
+}
+
+console.log("\n--- 7.10: ownership is a SET, and its arithmetic diverges from 4.7 at two ---");
+{
+  /* The table is computed, not transcribed, so the code and the document cannot
+     drift. Asserted row by row against Membership Architecture v2 section 7.10. */
+  const a = await call(`/projectownerarith`);
+  const row = (n) => a.table.find((r) => r.owners === n);
+  t("one owner: not removable, because one is the floor", [row(1).votesNeeded, row(1).possible], [0, false]);
+  t("TWO owners: both agree, and the target IS one of them",
+    [row(2).votesNeeded, row(2).eligibleVoters, row(2).targetMayVote], [2, 2, true]);
+  t("three: unanimity of the others, target does not vote",
+    [row(3).votesNeeded, row(3).eligibleVoters, row(3).targetMayVote], [2, 2, false]);
+  t("four: unanimity of the others", [row(4).votesNeeded, row(4).eligibleVoters], [3, 3]);
+  t("five: three of four", [row(5).votesNeeded, row(5).eligibleVoters], [3, 4]);
+  t("seven: four of six", [row(7).votesNeeded, row(7).eligibleVoters], [4, 6]);
+  /* NEGATIVE CONTROL on the divergence itself. If ownerMath were adminMath
+     reused, n=2 would report impossible and the target would not vote. That is
+     the single row a shared implementation gets wrong, so it is asserted
+     against the OTHER table directly rather than only in isolation. */
+  const adm = await call(`/adminarith`);
+  const admRow = adm.table.find((r) => r.administrators === 2);
+  t("and section 4.7 still says two administrators cannot remove one another", admRow.possible, false);
+  t("so the two tables genuinely differ at two, which is the point", row(2).possible !== admRow.possible, true);
+}
+
+console.log("\n--- 7.10: addition, and consensus past the second ---");
+{
+  t("a non-owner cannot propose an owner",
+    (await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=dave`)).reason, "NOT_THE_OWNER");
+  t("nor can an administrator, who holds no authority over projects",
+    (await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
+  t("someone who is not on the project cannot be made its owner",
+    (await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).reason, "NOT_A_PARTICIPANT");
+  await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`);
+  await call(`/projectjoin?projectId=PROJ-2026-0001-secret&by=dave`);
+  const add = await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`);
+  t("the SOLE owner adds a second unilaterally", add.owner, true);
+  t("and there are now two", add.owners, ["carol", "dave"]);
+  t("adding someone already an owner is refused",
+    (await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).reason, "ALREADY_AN_OWNER");
+}
+
+console.log("\n--- 7.10: removal at TWO takes both, the departing owner included ---");
+{
+  t("removals carry a reason",
+    (await call(`/projectownerremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).reason, "NO_REASON");
+  const one = await call(`/projectownerremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol&reason=${encodeURIComponent("moving on")}`);
+  t("one owner's vote is not enough", one.reason, "VOTES_SHORT");
+  t("and it says how far short", [one.have, one.need], [1, 2]);
+  /* The divergence, exercised rather than described: at three owners this call
+     would be TARGET_CANNOT_VOTE. At two it is exactly how the rule is carried,
+     because at two the act is a resignation with the other owner's assent. */
+  const two = await call(`/projectownerremove?projectId=PROJ-2026-0001-secret&handle=dave&by=dave&reason=${encodeURIComponent("agreed")}`);
+  t("the TARGET's own vote carries it at two", two.ok, true);
+  t("one owner remains", two.owners, ["carol"]);
+  t("and the former owner is STILL a participant, per 7.10", two.stillAParticipant, true);
+  t("confirmed on the participant list", (await call(`/projectparticipants?projectId=PROJ-2026-0001-secret&by=carol`))
+    .participants.filter((x) => x.handle === "dave").map((x) => x.owner), [0]);
+  t("the last owner is not removable, because one is the floor",
+    (await call(`/projectownerremove?projectId=PROJ-2026-0001-secret&handle=carol&by=carol&reason=${encodeURIComponent("x")}`)).reason,
+    "LAST_OWNER");
+  /* Put the fixture back for 7.8 below, which needs dave off the project. */
+  t("fixture restored",
+    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).removed, true);
 }
 
 console.log("\n--- 7.8: participants see each other, non-participants see nothing ---");

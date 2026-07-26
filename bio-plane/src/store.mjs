@@ -212,6 +212,19 @@ export class Store extends DurableObject {
          PRIMARY KEY (project_id, member_id)
        )`);
     this.sql.exec(`CREATE INDEX IF NOT EXISTS pp_member ON project_participants(member_id)`);
+    /* Section 7.10 owner governance, recorded the way section 4.7's admin votes
+       are. Separate from admin_votes because the arithmetic differs at two and
+       sharing the table would invite sharing the tally. */
+    this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS project_owner_votes (
+         project_id TEXT NOT NULL,
+         kind       TEXT NOT NULL,
+         target     TEXT NOT NULL,
+         voter      TEXT NOT NULL,
+         reason     TEXT,
+         created    TEXT NOT NULL,
+         PRIMARY KEY (project_id, kind, target, voter)
+       )`);
 
     this.sql.exec(
       `CREATE TABLE IF NOT EXISTS admin_votes (
@@ -2147,6 +2160,25 @@ export class Store extends DurableObject {
   #memberByHandle(handle) {
     return this.#one(`SELECT member_id, handle, status FROM members WHERE handle=?`, handle);
   }
+/* Membership Architecture v2 section 7: authority over a project belongs to its
+   OWNERS, and to nobody else. An administrator sees every project (7.3, 7.8) and
+   directs none of them (v2 4.9), the single exception being 7.13, which is not
+   built yet.
+
+   This REVERSES v1.4 7.7, which gave removal to administrators and denied it to
+   owners, in those words, reasoning from Design Requirement 1 that authority
+   over people belongs to the custodial role. v2 reasons instead that
+   participation in a project is a working relationship rather than a membership
+   one, and the people who can judge it are the people doing the work. Authority
+   over MEMBERSHIP itself is untouched and stays custodial.
+
+   In one helper so the two call sites cannot drift apart, which is how the
+   admin bypass came to sit on invite and remove with different shapes. */
+  #isProjectOwner(projectId, memberId) {
+    const p = this.#participation(projectId, memberId);
+    return !!(p && p.owner);
+  }
+
   #participation(projectId, memberId) {
     return this.#one(`SELECT state, owner FROM project_participants WHERE project_id=? AND member_id=?`,
       projectId, memberId);
@@ -2179,10 +2211,10 @@ export class Store extends DurableObject {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
-    const mine = this.#participation(projectId, by);
-    if (!(mine && mine.owner) && !this.#isAdminMember(by))
+    if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "the project's owner invites participants, and an administrator may. Nobody else." };
+               detail: "only an owner of this project invites participants to it. An administrator sees "
+                     + "every project and directs none of them." };
     const target = this.#memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
@@ -2223,18 +2255,123 @@ export class Store extends DurableObject {
    *  people with the custodial role rather than distributing it into content
    *  work. */
   projectRemove({ projectId, handle, by, comment = null } = {}) {
-    if (!this.#isAdminMember(by))
-      return { ok: false, reason: "ADMIN_ONLY",
-               detail: "only an administrator removes a participant from a project. Owners invite; they do "
-                     + "not remove, so authority over people stays with the custodial role." };
+    if (!this.#isProjectOwner(projectId, by))
+      return { ok: false, reason: "NOT_THE_OWNER",
+               detail: "only an owner of this project removes a participant from it. This REVERSES the "
+                     + "earlier rule, under which an administrator removed and an owner could not." };
     const target = this.#memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     const p = this.#participation(projectId, target.member_id);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT", handle };
     if (p.owner) return { ok: false, reason: "OWNER",
-      detail: "the project's owner cannot be removed from it by this action" };
+      detail: "an owner is not removed from a project by this action. Ownership changes by the section "
+            + "7.10 process, and removal from the project follows once they are no longer an owner." };
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     return { ok: true, projectId, handle, removed: true, comment: comment === null ? null : String(comment).slice(0, 280) };
+  }
+
+  /** 7.10 addition. The sole owner may add a second unilaterally; every addition
+   *  past that needs the consensus of ALL existing owners.
+   *
+   *  Consensus on addition is the load-bearing half, exactly as in 4.7. Without
+   *  it one owner recruits confederates and manufactures the majority that then
+   *  removes the others, and closing that door is what makes removal safe. */
+  projectOwnerAdd({ projectId, handle, by } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
+    if (!this.#isProjectOwner(projectId, by))
+      return { ok: false, reason: "NOT_THE_OWNER",
+               detail: "only an owner of this project may propose another owner of it" };
+    const target = this.#memberByHandle(handle);
+    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
+    const p = this.#participation(projectId, target.member_id);
+    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
+      detail: "an owner is a joined participant with the owner flag, so invite and admit them first" };
+    if (p.owner) return { ok: false, reason: "ALREADY_AN_OWNER", handle };
+
+    const owners = this.#owners(projectId);
+    const now = new Date().toISOString();
+    this.sql.exec(
+      `INSERT OR REPLACE INTO project_owner_votes (project_id,kind,target,voter,reason,created)
+       VALUES (?,'add',?,?,NULL,?)`, projectId, target.member_id, by, now);
+
+    /* The sole owner acts alone. Past that, every existing owner must have
+       voted, and votes from members who are no longer owners do not count. */
+    if (owners.length > 1) {
+      const have = this.#rows(
+        `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
+        projectId, target.member_id).map((r) => r.voter).filter((v) => owners.includes(v));
+      const awaiting = owners.filter((o) => !have.includes(o));
+      if (awaiting.length)
+        return { ok: false, reason: "CONSENSUS_REQUIRED", projectId, handle,
+                 have: have.sort(), awaiting: awaiting.sort(),
+                 detail: "every existing owner must agree to an addition beyond the second" };
+    }
+    this.sql.exec(
+      `UPDATE project_participants SET owner=1, state='joined', updated=? WHERE project_id=? AND member_id=?`,
+      now, projectId, target.member_id);
+    this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
+      projectId, target.member_id);
+    return { ok: true, projectId, handle, owner: true, owners: this.#owners(projectId) };
+  }
+
+  /** 7.10 removal. A majority of all owners, the target in the denominator and
+   *  not voting, EXCEPT at exactly two owners where both must agree and the
+   *  target is one of them. The floor is one owner. */
+  projectOwnerRemove({ projectId, handle, by, reason } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
+    if (!this.#isProjectOwner(projectId, by))
+      return { ok: false, reason: "NOT_THE_OWNER",
+               detail: "only an owner of this project votes on its ownership" };
+    const target = this.#memberByHandle(handle);
+    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (!this.#isProjectOwner(projectId, target.member_id))
+      return { ok: false, reason: "NOT_AN_OWNER", handle };
+    const why = String(reason ?? "").trim();
+    if (!why) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
+
+    const owners = this.#owners(projectId);
+    const math = Store.ownerMath(owners.length);
+    if (!math.possible)
+      return { ok: false, reason: "LAST_OWNER", ...math,
+               detail: "one owner is the floor, so the last owner of a project is not removable. Add "
+                     + "another owner first, or deactivate the project (7.11)." };
+    /* At three and above the target does not vote. At two they must, which is
+       the whole divergence from 4.7 and the reason ownerMath exists separately. */
+    if (!math.targetMayVote && by === target.member_id)
+      return { ok: false, reason: "TARGET_CANNOT_VOTE", ...math,
+               detail: "the target is counted in the denominator but does not vote" };
+
+    if (this.#one(
+      `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? AND voter=?`,
+      projectId, target.member_id, by))
+      return { ok: false, reason: "ALREADY_VOTED", by };
+    const now = new Date().toISOString();
+    this.sql.exec(
+      `INSERT INTO project_owner_votes (project_id,kind,target,voter,reason,created) VALUES (?,'remove',?,?,?,?)`,
+      projectId, target.member_id, by, why, now);
+
+    const votes = this.#rows(
+      `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=?`,
+      projectId, target.member_id)
+      .map((r) => r.voter)
+      .filter((v) => owners.includes(v) && (math.targetMayVote || v !== target.member_id));
+    if (votes.length < math.votesNeeded)
+      return { ok: false, reason: "VOTES_SHORT", projectId, handle,
+               have: votes.length, need: math.votesNeeded, ...math, deciders: votes.sort() };
+
+    /* Carried. They stay a PARTICIPANT: 7.10 says removing ownership leaves
+       them on the project, and removing them from it entirely is then 7.7. */
+    this.sql.exec(`UPDATE project_participants SET owner=0, updated=? WHERE project_id=? AND member_id=?`,
+      now, projectId, target.member_id);
+    this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=?`,
+      projectId, target.member_id);
+    return { ok: true, projectId, handle, owner: false, stillAParticipant: true,
+             owners: this.#owners(projectId), deciders: votes.sort() };
   }
 
   /** 7.8: every participant sees the handles of all other participants, and an
@@ -2275,6 +2412,49 @@ export class Store extends DurableObject {
     const votesNeeded = Math.floor(n / 2) + 1;
     const eligibleVoters = Math.max(0, n - 1);
     return { administrators: n, votesNeeded, eligibleVoters, possible: votesNeeded <= eligibleVoters };
+  }
+
+  /* Section 7.10. Ownership of a project is a SET, and it follows 4.7 with one
+     deliberate divergence and one relaxed floor.
+   *
+   * DO NOT REUSE adminMath HERE. It diverges at exactly one row, n=2, and that
+   * row is the one a shared implementation gets wrong by reuse.
+   *
+   * For administrators, removal at two is IMPOSSIBLE and the impossibility is
+   * the point: it stops a capture at the smallest size, and 4.2's floor of two
+   * means a group never has to go below it. Projects have a floor of ONE, so if
+   * removal at two were impossible the floor would be reachable only by never
+   * adding a second owner, and a second owner would be permanent.
+   *
+   * At two, the target MAY vote, so removal is unanimity including them. That
+   * describes what the act actually is at that size: one owner resigning with
+   * the other's assent. It opens nothing, because the only removal it permits is
+   * one the target has agreed to, and a hostile removal at two stays impossible
+   * exactly as in 4.7. */
+  static ownerMath(n) {
+    if (n <= 1)
+      return { owners: n, votesNeeded: 0, eligibleVoters: 0, targetMayVote: false, possible: false,
+               why: "one owner is the floor, so the last owner is not removable" };
+    if (n === 2)
+      return { owners: 2, votesNeeded: 2, eligibleVoters: 2, targetMayVote: true, possible: true,
+               why: "both owners must agree, the departing one included: resignation with the other's assent" };
+    const votesNeeded = Math.floor(n / 2) + 1;
+    const eligibleVoters = n - 1;
+    return { owners: n, votesNeeded, eligibleVoters, targetMayVote: false,
+             possible: votesNeeded <= eligibleVoters,
+             why: "a majority of all owners, the target counted in the denominator and not voting" };
+  }
+
+  projectOwnerArithmetic({ projectId } = {}) {
+    const table = [];
+    for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9]) table.push(Store.ownerMath(n));
+    const live = projectId ? Store.ownerMath(this.#owners(projectId).length) : null;
+    return { ok: true, table, live, projectId: projectId ?? null };
+  }
+
+  #owners(projectId) {
+    return this.#rows(`SELECT member_id FROM project_participants WHERE project_id=? AND owner=1`, projectId)
+      .map((r) => r.member_id).sort();
   }
 
   /** The table, computed rather than transcribed, so the code and the document
@@ -2881,6 +3061,12 @@ export class Store extends DurableObject {
         adminremove: () => this.adminRemove(body || {}),
         adminarith: () => this.adminArithmetic(),
         projectclaimowner: () => this.projectClaimOwner(body || {}),
+        projectowneradd: () => this.projectOwnerAdd({ projectId: url.searchParams.get("projectId"),
+          handle: url.searchParams.get("handle"), by: url.searchParams.get("by") }),
+        projectownerremove: () => this.projectOwnerRemove({ projectId: url.searchParams.get("projectId"),
+          handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
+          reason: url.searchParams.get("reason") }),
+        projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId") }),
         projectinvite: () => this.projectInvite({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by") }),
         projectjoin: () => this.projectJoin({ projectId: url.searchParams.get("projectId"),
