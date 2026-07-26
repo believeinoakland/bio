@@ -6224,6 +6224,179 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
       drift: sel.drift
     };
   }
+  /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
+   *
+   * Heavier than step 3's disposition for one structural reason: `retired` is
+   * TERMINAL in the catalog's table (collected -> verified -> retired, and
+   * retired -> nothing), where every Problem disposition is reversible. A wrong
+   * disposition is corrected by disposing again. A wrong retirement cannot be
+   * undone through the state machine at all, so every refusal here is worth more
+   * than the equivalent refusal there.
+   *
+   * TWO GUARDS, and the second is the doctrinal one.
+   *
+   * First, only `verified` -> `retired`, because that is the only legal edge.
+   * Retiring something merely `collected` would skip the step where a human
+   * looked at it, which is precisely what the intake doctrine exists to
+   * protect.
+   *
+   * Second, INFORMATION A PROJECT STILL CITES IS REFUSED. Nothing in the catalog
+   * stops this, and that is why it matters: C-6.2 treats an unresolvable
+   * reference target as an ERROR whose remediations are "restore target from
+   * history", "re-point to the successor", or "sever the edge with a reason
+   * note". A bulk retirement that silently stranded live citations would
+   * manufacture exactly that error condition at whatever scale the operator
+   * happened to select. The citing Projects are NAMED, because an operator told
+   * only "refused" cannot act, and severing is C-6.2's own remedy.
+   *
+   * A SEVERED edge does not count as a citation. Severing is the recorded
+   * decision to stop relying on something, so treating a severed edge as a live
+   * dependency would make the refusal unclearable by the very act doctrine
+   * prescribes for clearing it. */
+  retire({ handle, reason = "", viewer = null, owner = null, author = null } = {}) {
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return {
+        ok: false,
+        reason: "NO_REASON",
+        detail: "retirement is terminal in the state machine, so it records WHY. There is no move back out of retired, and an unexplained one-way change is not a record."
+      };
+    if (why.length > _Store.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
+      return {
+        ok: false,
+        reason: "BAD_REASON",
+        detail: `a reason is at most ${_Store.EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline`
+      };
+    const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
+    if (!sel.ok) return sel;
+    if (!sel.members.length)
+      return {
+        ok: false,
+        reason: "EMPTY_SELECTION",
+        handle,
+        drift: sel.drift,
+        detail: "this selection resolves to no members, so there is nothing to retire"
+      };
+    const notInfo = [], illegal = [], cited = [];
+    for (const id of sel.members) {
+      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+      if (!b || b.object_type !== "information") {
+        notInfo.push(id);
+        continue;
+      }
+      if (b.current_state !== "verified") {
+        illegal.push({ id, from: b.current_state });
+        continue;
+      }
+      const citedBy = [];
+      for (const r of this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, id)) {
+        const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
+        if (!md || md.content === null) {
+          citedBy.push(r.bundle_id);
+          continue;
+        }
+        const refs = parseFrontmatter(md.content).data?.references;
+        const entry = (Array.isArray(refs) ? refs : []).find((x) => x && x.rel === "cites" && x.target === id);
+        if (!entry || entry.status !== "severed") citedBy.push(r.bundle_id);
+      }
+      if (citedBy.length) cited.push({ id, citedBy: citedBy.sort() });
+    }
+    if (notInfo.length)
+      return {
+        ok: false,
+        reason: "NOT_INFORMATION",
+        offenders: notInfo.sort(),
+        detail: "retirement moves an Information state, and this selection carries something else. The set is refused whole rather than narrowed."
+      };
+    if (illegal.length)
+      return {
+        ok: false,
+        reason: "ILLEGAL_TRANSITION",
+        to: "retired",
+        offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
+        detail: "only verified Information may be retired. Something still collected has not been verified by anyone, and retiring it would skip that step; something already retired has nowhere further to go, because retired is terminal."
+      };
+    if (cited.length)
+      return {
+        ok: false,
+        reason: "CITED",
+        offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
+        detail: "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire."
+      };
+    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const retired = [];
+    for (const id of sel.members) {
+      const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+      const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
+      if (!liveMd || liveMd.content === null)
+        return { ok: false, reason: "NO_DOCUMENT", bundleId: id, retiredSoFar: retired };
+      let text = liveMd.content;
+      const withHistory = _Store.#appendStateHistory(text, {
+        timestamp: when,
+        from_state: cur.current_state,
+        to_state: "retired",
+        blurb: why,
+        author: author || "member"
+      });
+      if (!withHistory)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_STATE_HISTORY",
+          bundleId: id,
+          retiredSoFar: retired,
+          detail: "this document's state_history block cannot be extended in place, and a retirement recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
+        };
+      text = withHistory;
+      text = _Store.#setScalar(text, "prior_state", cur.current_state);
+      text = _Store.#setScalar(text, "current_state", "retired");
+      text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+      const entry = `### Session ${when} | Retired | ${author || "member"}
+Trigger: selection ${handle}
+Changes: state ${cur.current_state} to retired. Reason: ${why}.
+`;
+      const at = text.indexOf("## Session Log");
+      if (at < 0) text += "\n## Session Log\n\n" + entry;
+      else {
+        const nxt = text.indexOf("\n## ", at + 1);
+        const cutAt = nxt === -1 ? text.length : nxt + 1;
+        text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
+      }
+      const carried = [];
+      for (const r of this.sql.exec(
+        `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+        id
+      ))
+        carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+      const bytes = new TextEncoder().encode(text);
+      const fm = parseFrontmatter(text).data || {};
+      const promoted = this.promote({
+        bundleId: id,
+        base: cur.bundle_sha,
+        snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+        author: author || "member",
+        files: [{
+          path: "bundle.md",
+          text,
+          bytes: bytes.length,
+          sha256: createSha256().update(bytes).hex()
+        }, ...carried],
+        meta: {
+          object_type: "information",
+          group: fm.group || "believe-in-oakland",
+          title: fm.title,
+          current_state: "retired",
+          prior_state: cur.current_state,
+          created: fm.created,
+          last_updated: when,
+          criticality: fm.criticality ?? null,
+          classification: fm.classification ?? null
+        }
+      });
+      if (!promoted.ok) return { ...promoted, bundleId: id, retiredSoFar: retired };
+      retired.push(id);
+    }
+    return { ok: true, reason: why, handle, retired: retired.sort(), weight: "refuse", drift: sel.drift };
+  }
   /* Rewrite the `status` and `note` of specific `cites` entries in place,
      touching nothing else. Walks the references block entry by entry, tracking
      which target the current entry belongs to, and edits only the two lines of
@@ -8887,6 +9060,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           reason: url.searchParams.get("reason")
         }),
         projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId") }),
+        retire: () => this.retire({
+          handle: url.searchParams.get("handle"),
+          reason: url.searchParams.get("reason"),
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          author: url.searchParams.get("author")
+        }),
         dispose: () => this.dispose({
           handle: url.searchParams.get("handle"),
           to: url.searchParams.get("to"),
@@ -9068,6 +9248,11 @@ var OPS = {
   /* S-11 step 3: bulk disposition of Problems, weight `refuse`. Contribute-gated
      like every other corpus write. */
   dispose: { classes: ["admin", "member", "probe"], mutating: true },
+  /* S-11 step 4: bulk retirement of Information, weight `refuse`. Heavier than
+     dispose because `retired` is TERMINAL, and it additionally refuses anything
+     a live `cites` edge still points at: stranding citations manufactures the
+     C-6.2 error condition at whatever scale the operator selected. */
+  retire: { classes: ["admin", "member", "probe"], mutating: true },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -9153,7 +9338,7 @@ var OPS = {
 };
 var RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
 var EDGE_ACTIONS = ["cite", "sever", "reinstate"];
-var STATE_ACTIONS = ["dispose"];
+var STATE_ACTIONS = ["dispose", "retire"];
 var PROJECT_ACTIONS = [
   "projectinvite",
   "projectjoin",
@@ -9227,6 +9412,7 @@ var NEEDS = {
   sever: "contribute",
   reinstate: "contribute",
   dispose: "contribute",
+  retire: "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */

@@ -106,20 +106,28 @@ reeval_pending:
 visuals: []
 criticality: supporting
 classification: fact
+source_status: unchanged
 source:
   locator: "https://example.org"
   authority: "Example"
   retrieved: "2026-07-01"
-  status: unchanged
-monitor:
+monitoring:
   enabled: false
-  frequency: never
+  frequency: none
   last_checked: null
 ---
 
 ## Summary
 
+## Provenance Notes
+
 ## Session Log
+
+### Session 2026-07-02T00:00:00Z | Formation | assisted
+Trigger: intake
+Changes: created.
+
+## Review Notes
 `;
 
 const mk = (id, text, type) => call("/promote", {
@@ -265,6 +273,91 @@ console.log("\n--- scale: a pass on three Problems is not a pass ---");
   /* The conformance check is what makes the scale claim mean something: moving
      200 states is worthless if they are 200 documents the catalog rejects. */
   t("a sampled one is still conformant", await errorsOf(many[199]), []);
+}
+
+console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is heavier ---");
+/* Retirement differs from disposition in one structural way that decides the
+   whole design: `retired` is TERMINAL in the catalog's table
+   (collected -> verified -> retired, and retired -> nothing), where every
+   Problem disposition is reversible. A wrong disposition is corrected by
+   disposing again; a wrong retirement cannot be undone through the state
+   machine at all. */
+{
+  const infoIds = ["INFO-2026-0010-a", "INFO-2026-0011-b"];
+  for (const id of infoIds) await mk(id, infoMd(id), "information");
+  /* Standing lesson 4 again: check BEFORE. The first version of this Information
+     fixture was missing two required headings and the monitoring block, so the
+     after-check would have reported the same findings and proved nothing about
+     retirement. */
+  for (const id of infoIds) t(`${id} starts conformant`, await errorsOf(id), []);
+
+  /* collected -> retired is not an edge. Only verified -> retired is, so
+     retiring something never verified skips the step where a human looked at
+     it, which is exactly what the intake doctrine cares about. */
+  {
+    const h = await select(infoIds);
+    const r = await call(`/retire?handle=${h}&reason=${encodeURIComponent("stale")}&${STAMP}`);
+    t("collected Information cannot be retired: verification is not skippable",
+      r.reason, "ILLEGAL_TRANSITION");
+    t("with the offenders and where they actually are named",
+      r.offenders.map((o) => o.from), ["collected", "collected"]);
+  }
+
+  /* Verify them the ordinary way, then retire. */
+  for (const id of infoIds) {
+    const doc = (await docOf(id)).replace("current_state: collected", "current_state: verified");
+    await call("/promote", { bundleId: id, base: (await call(`/projection?id=${id}`)).bundle_sha,
+      snapKey: `${id}-verify`, author: "suite",
+      files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
+      meta: { object_type: "information", group: "believe-in-oakland", title: `Info ${id}`,
+              current_state: "verified", created: "2026-07-01T00:00:00Z",
+              last_updated: "2026-07-03T00:00:00Z" } });
+  }
+  t("a reason is required, as it is for disposition",
+    (await call(`/retire?handle=${await select(infoIds)}&${STAMP}`)).reason, "NO_REASON");
+
+  /* THE LOAD-BEARING REFUSAL, and the reason this step is heavier than step 3.
+     Nothing in the catalog stops Information being retired while a Project
+     still cites it, and C-6.2's remediations for an unresolvable target are
+     "restore from history", "re-point", or "sever with reason". A bulk
+     retirement that silently stranded live citations would manufacture exactly
+     the condition the catalog treats as an error, at whatever scale the
+     operator selected. So a cited piece is refused and the citing Projects are
+     named, because the operator needs to know who relies on it. */
+  const proj = "PROJ-2026-0300-cites";
+  const pdoc = `---\nid: ${proj}\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\nreferences:\n  - rel: cites\n    target: ${infoIds[0]}\n    status: confirmed\n    note: ""\n---\n\n## Summary\n\nX.\n`;
+  await call("/promote", { bundleId: proj, base: null, snapKey: `${proj}-new`, author: "suite",
+    files: [{ path: "bundle.md", text: pdoc, bytes: pdoc.length, sha256: sha(pdoc) }],
+    meta: { object_type: "project", group: "believe-in-oakland", title: "Citing Project",
+            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+  {
+    const h = await select(infoIds);
+    const r = await call(`/retire?handle=${h}&reason=${encodeURIComponent("superseded")}&${STAMP}`);
+    t("Information a Project still CITES is refused", r.reason, "CITED");
+    t("and the citing Project is named, because the operator needs to know who relies on it",
+      r.offenders[0].citedBy, [proj]);
+    t("the whole set is refused, not narrowed to the uncited members",
+      await stateOf(infoIds[1]), "verified");
+  }
+
+  /* Severing the edge is the doctrinal route, and it is C-6.2's own remedy. */
+  {
+    const h = await select([infoIds[0]]);
+    await call(`/sever?project=${proj}&handle=${h}&reason=${encodeURIComponent("no longer relied on")}&${STAMP}`);
+    const h2 = await select(infoIds);
+    const r = await call(`/retire?handle=${h2}&reason=${encodeURIComponent("superseded")}&${STAMP}`);
+    t("once the citation is SEVERED, retirement proceeds", r.ok, true);
+    t("both are retired", r.retired.sort(), infoIds);
+    t("and it landed", await stateOf(infoIds[0]), "retired");
+  }
+
+  /* TERMINAL means terminal. */
+  {
+    const h = await select(infoIds);
+    t("retired is terminal: it cannot be retired again",
+      (await call(`/retire?handle=${h}&reason=x&${STAMP}`)).reason, "ILLEGAL_TRANSITION");
+  }
+  t("and the retired document is still conformant", await errorsOf(infoIds[0]), []);
 }
 
 await mf.dispose();

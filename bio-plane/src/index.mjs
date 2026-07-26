@@ -157,6 +157,11 @@ const OPS = {
   /* S-11 step 3: bulk disposition of Problems, weight `refuse`. Contribute-gated
      like every other corpus write. */
   dispose:         { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* S-11 step 4: bulk retirement of Information, weight `refuse`. Heavier than
+     dispose because `retired` is TERMINAL, and it additionally refuses anything
+     a live `cites` edge still points at: stranding citations manufactures the
+     C-6.2 error condition at whatever scale the operator selected. */
+  retire:          { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -264,7 +269,7 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
    rather than an edge's, so it takes the same server-side viewer, owner and
    author stamps the edge actions take: a caller that could name the viewer
    could dispose Problems it cannot see. */
-const STATE_ACTIONS = ["dispose"];
+const STATE_ACTIONS = ["dispose", "retire"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue"];
@@ -318,6 +323,7 @@ const NEEDS = {
   sever:            "contribute",
   reinstate:        "contribute",
   dispose:          "contribute",
+  retire:           "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */
