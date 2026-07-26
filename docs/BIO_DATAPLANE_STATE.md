@@ -1,5 +1,79 @@
 # BIO data plane: source state, migration plan, and build status
 
+v21, July 26, 2026. Current state, on top of v20 and the narratives below. The
+plane is **0.24.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`707d2372640e4f25daff5523298a48a4aa8b44f373209347b62a4cc50638ba52`).
+Battery **1353 assertions across 31 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean, `op=registeraudit` sound (57 live, 30 captured, 0
+unbacked).
+
+**MEMBERSHIP ARCHITECTURE v2 SUPERSEDES v1.4.** Specified in session and
+approved 2026-07-26. Work from `docs/architecture/BIO_Membership_Architecture_v2.md`
+and not from v1. The document carries a change table at the top. The one that
+bites: **v1.4 section 7.7 said only an ADMINISTRATOR removes a project
+participant, and v2 says only an OWNER does.** The deployed instance still
+enforces the v1.4 rule, because reversing it is S-12 step 4b and this release is
+step 3.
+
+**CAPABILITY ENFORCEMENT AT THE OP LAYER (section 5), 0.24.0.** Capabilities
+were recorded and nothing consulted them. A member holding no `publish` reached
+`op=ratify` and was stopped only by the absence of a signing key, which was the
+key doing the capability's job.
+
+Capabilities are resolved when the SESSION IS READ, not when it is created, so an
+administrator revoking one takes effect on the next request rather than in eight
+hours. They gate a session and never a machine credential: a token class has no
+member behind it, and `op=whoami` reports its capabilities as `null` rather than
+as an empty list or a full one.
+
+`NEEDS` in `index.mjs` names a capability, or an explicit `null` with its reason,
+for every mutating op a session can reach. `test/capability.test.mjs` reads that
+table and `SESSION_OPS` out of the source and fails in EITHER direction: an op
+added later cannot pass by not being mentioned, and an entry cannot outlive the
+op it names.
+
+`create_projects` gates a SHAPE and not an op, because no op creates a project: a
+project is a promote with no base whose `object_type` is `project`.
+`ownerMemberId` is deleted unconditionally and then stamped from the session, as
+`author` is, and `promote` writes the 7.1 owner row inside the SAME transaction,
+so a project cannot exist unowned even briefly.
+
+**An in-app administrator holds every working capability**, read as a rule rather
+than from their row. `memberCaps` refuses to edit an administrator's row at all,
+to protect 4.4, so if the row were consulted an administrator's powers would be
+frozen forever at whatever their invitation set, and one invited with the default
+`["contribute"]` could never publish and could never be granted permission to.
+
+The interface half shipped with it, which is what section 5 actually asks for:
+`setup.mjs` builds its controls from `op=whoami` rather than from a second copy
+of the rules, and `CAPS` starts EMPTY so the window before whoami answers hides
+everything rather than showing controls that will refuse.
+
+**THE SECTION 7 PARTICIPATION OPS WERE UNREACHABLE AND NOW ARE NOT.** They
+existed in the Durable Object's route map and were absent from `OPS` in
+`index.mjs`, so every real caller got `unknown op`: 7.2, 7.4, 7.6, 7.7 and 7.8
+were shipped, tested at the DO, and reachable by nobody. Standing lesson 5 one
+level worse. Verified live at all five, each failing closed for a machine
+credential because `class:member` is not a member id: `NO_SUCH_PROJECT`,
+`NOT_THE_OWNER`, `NOT_INVITED`, `NOT_A_PARTICIPANT`, `ADMIN_ONLY`.
+
+**NOTHING IN THE OLD BATTERY BROKE, AND THAT IS NOT REASSURING.** Every session
+in the existing suites belongs to an administrator, because 4.2 and 4.3 force the
+second member of a group to be one and most suites create exactly one extra
+member. No old test ever held a limited capability set, so the new gate was
+unexercised by all 1321 prior assertions. This is standing lesson 6 again: the
+battery was measuring something adjacent to the thing.
+
+**TWO OF THE NEW SUITE'S OWN ASSERTIONS WERE VACUOUS AND WERE FIXED BEFORE IT WAS
+TRUSTED.** One asked `op=get`, which does not exist, so it passed for every input
+including the case where the bundle HAD been created; it now asks `op=image` and
+is paired with a positive control. The structural denominator was blind to
+`SESSION_OPS`'s spreads (`...EDGE_ACTIONS`, `...PROJECT_ACTIONS`,
+`...RETRIEVAL_READS`) and so checked fewer ops than it appeared to; it now
+resolves each spread against the const it names.
+
 v20, July 25, 2026. Current state, on top of v19 and the narratives below. The
 plane is **0.21.1**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the

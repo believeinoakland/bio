@@ -901,7 +901,7 @@ refuse-weight action stops and hands over nothing so it cannot half-run; and the
 bundle is conformant to the catalog after every one of them.
 
 ### S-12 Membership, the member half
-**Status: STARTED. Sections 3, 4, 5 and 7-participation done, 0.23.0** · Depends: nothing
+**Status: STARTED. Sections 3, 4, 5 (recorded AND enforced) and 7-participation done, 0.24.0** · Depends: nothing
 
 `architecture/BIO_Membership_Architecture_v2.md` is the design and nothing in it
 is undecided. Do not re-derive it. **v1 is superseded and must not be worked
@@ -932,7 +932,7 @@ compilation point in `query.mjs` filters by position and D-15 is closed.
 
 **Next, in order.**
 
-3. **Capability enforcement at the op layer (section 5).** Capabilities are
+3. **DONE in 0.24.0. Capability enforcement at the op layer (section 5).** Capabilities are
    recorded and nothing consults them: a member with no `publish` capability
    reaches `op=ratify` and is stopped only by the absence of a signing key,
    which is the key doing the capability's job. Section 5 says a capability a
@@ -960,7 +960,7 @@ compilation point in `query.mjs` filters by position and D-15 is closed.
 4. **The v2 project rules.** Four things, and the first is a prerequisite for
    the rest having any effect.
 
-   a. **The participation ops reach the control plane.** `projectinvite`,
+   a. **DONE in 0.24.0. The participation ops reach the control plane.** `projectinvite`,
       `projectjoin`, `projectleave`, `projectremove` and `projectparticipants`
       exist in the store's route map and are absent from `OPS` in `index.mjs`,
       so every real caller gets `unknown op`. Sections 7.2, 7.4, 7.6, 7.7 and
