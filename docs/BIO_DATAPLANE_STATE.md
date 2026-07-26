@@ -1,5 +1,58 @@
 # BIO data plane: source state, migration plan, and build status
 
+v23, July 26, 2026. Current state, on top of v22 and the narratives below. The
+plane is **0.26.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`568a4b782425b4f3584ddc79bacde548551a0c1f29c5601d41d0521722fd51ad`).
+Battery **1410 assertions across 31 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean.
+
+**S-12 STEP 4 IS COMPLETE.** All of Membership Architecture v2 section 7 is built
+except 7.13, which waits on member deactivation vacating nothing.
+
+**7.11 IS NARROW ON PURPOSE.** The section is titled deactivation and
+reactivation and says only owners may do THOSE. It does not say only owners may
+move a project's lifecycle, and reading it broadly would stop the accelerator
+advancing a project from `forming` to `investigating`, which is ordinary record
+work gated by `contribute` like every other write. Exactly two transitions are
+owner-only: entering `closed` with a `closed_reason` of `abandoned`, and `closed`
+back to `investigating`. Both were already legal in the check catalog and nothing
+was added to the state vocabulary.
+
+The suite SHOWS the scope rather than asserting about it: the same caller closing
+a project as `resolved` succeeds and closing it as `abandoned` is refused, one
+line apart.
+
+`actorMemberId` is stamped from the session and deleted first if a caller
+supplies it, like `author`. A machine credential carries none and therefore
+cannot deactivate a project: saying the group has stopped pursuing something is a
+statement by its members about their own intent, and no automation holds that.
+
+**7.12 FORK.** Joined participants only, because an invited member sees the
+skeleton alone (7.9) and a fork by them would copy material they cannot read.
+Requires `create_projects`, checked at the control plane where the session is, or
+any participant creates projects they were not trusted to create. Copies NO
+participants, or a forker manufactures visibility for people the origin's owners
+chose. Starts at `forming`, because inheriting `matured` would claim a readiness
+the clone has not earned.
+
+**FORK CLAIMED AN EDGE IT NEVER WROTE, AND THE SUITE ASSERTED THE CLAIM.** The
+first version returned `rel: "derived_from"` and set only `id`, `title`,
+`current_state` and `last_updated`; the references block was never touched, so
+every clone had no provenance. The assertion read `f.rel`, which is a literal the
+method returns, so it passed. This is the `op=get` failure again in a different
+costume: a test that reads the return value instead of the record proves nothing.
+The edge is now spliced into the clone's frontmatter, the assertions read the
+document and the refs projection count across a fork, and a fork whose origin
+cannot be recorded is refused outright rather than written without provenance.
+
+**7.1 NAME UNIQUENESS**, enforced at fork: case-insensitive, whitespace
+collapsed, holding across deactivated projects. `Store.projectNameKey` is the one
+comparison so a later write-path check cannot disagree with this one. A plain
+unique index over the trimmed string is how HANDLES work and would let "Fork one"
+and "FORK ONE" coexist, which is the collision the rule exists to stop.
+
 v22, July 26, 2026. Current state, on top of v21 and the narratives below. The
 plane is **0.25.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
