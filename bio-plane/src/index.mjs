@@ -81,6 +81,7 @@ const OPS = {
   projectremove:       { classes: ["admin", "member", "probe"], mutating: true  },
   projectowneradd:     { classes: ["admin", "member", "probe"], mutating: true  },
   projectownerremove:  { classes: ["admin", "member", "probe"], mutating: true  },
+  projectfork:         { classes: ["admin", "member", "probe"], mutating: true  },
   projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
   /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
      tell a group what a change would take BEFORE they start one. op=adminarith
@@ -230,7 +231,7 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
    apart is exactly the class of defect this repository keeps finding. */
 const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
-                         "projectowneradd", "projectownerremove"];
+                         "projectowneradd", "projectownerremove", "projectfork"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
@@ -305,6 +306,10 @@ const NEEDS = {
   projectremove:    null,
   projectowneradd:  null,
   projectownerremove: null,
+  /* The one participation op that DOES carry a capability, because a fork
+     creates a project. Without this any participant creates projects they were
+     not trusted to create, which is create_projects defeated by a button. */
+  projectfork:      "create_projects",
   memberadd:        null,
   memberset:        null,
   signeradd:        null,
@@ -1276,7 +1281,12 @@ export default {
       try {
         const b = JSON.parse(passBody);
         delete b.ownerMemberId;
-        if (viaSession) b.author = sessMember;
+        /* Who is ACTING, for the 7.11 owner check on deactivation and
+           reactivation. Deleted first and stamped only for a session, like every
+           other identity field here: a machine credential carries none and so
+           cannot deactivate a project, which is deliberate. */
+        delete b.actorMemberId;
+        if (viaSession) { b.author = sessMember; b.actorMemberId = sessMember; }
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({ ok: false, reason: "NOT_CAPABLE", op, needs: "create_projects",

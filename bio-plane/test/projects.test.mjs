@@ -206,6 +206,136 @@ console.log("\n--- 7.10: removal at TWO takes both, the departing owner included
     (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).removed, true);
 }
 
+console.log("\n--- 7.11: only an OWNER deactivates or reactivates, and the rule is NARROW ---");
+{
+  /* Deactivation is the lifecycle the project object already has, not a second
+     switch beside it: `closed` with a closed_reason of `abandoned`, which the
+     check catalog already permits, and `closed` back to `investigating`, which
+     is the one reverse transition it allows. Nothing is added to the state
+     vocabulary. */
+  const state = async (id) => (await call(`/projection`)).find((r) => r.bundle_id === id).current_state;
+  const cur = async (id) => (await call(`/projection`)).find((r) => r.bundle_id === id).bundle_sha;
+  const move = (id, to, reason, actor) => {
+    const body = `---\nid: ${id}\nobject_type: project\ncurrent_state: ${to}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-02T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
+    return { text: body, to, reason, actor };
+  };
+  const promoteState = async (id, to, closedReason, actor) => {
+    const m = move(id, to, closedReason, actor);
+    return call("/promote", {
+      bundleId: id, base: await cur(id), snapKey: `${id}-${to}-${closedReason ?? "x"}-${actor ?? "none"}`,
+      author: actor ?? "suite", actorMemberId: actor ?? undefined,
+      files: [{ path: "bundle.md", text: m.text, bytes: m.text.length, sha256: sha(m.text) }],
+      meta: { object_type: "project", group: "believe-in-oakland", title: id, current_state: to,
+              ...(closedReason ? { closed_reason: closedReason } : {}),
+              created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" } });
+  };
+  const P = "PROJ-2026-0001-secret";
+
+  t("a non-owner participant cannot deactivate",
+    (await promoteState(P, "closed", "abandoned", "dave")).reason, "NOT_THE_OWNER");
+  t("an administrator cannot either, holding no authority over projects",
+    (await promoteState(P, "closed", "abandoned", "alice")).reason, "NOT_THE_OWNER");
+  t("nor can a machine credential, which has no member behind it",
+    (await promoteState(P, "closed", "abandoned", null)).reason, "NOT_THE_OWNER");
+  t("and none of that moved the project", await state(P), "forming");
+
+  const off = await promoteState(P, "closed", "abandoned", "carol");
+  t("the OWNER deactivates it", off.ok, true);
+  t("and it is closed", await state(P), "closed");
+
+  t("a non-owner cannot reactivate",
+    (await promoteState(P, "investigating", null, "dave")).reason, "NOT_THE_OWNER");
+  const on = await promoteState(P, "investigating", null, "carol");
+  t("the owner reactivates it, by the one reverse transition the catalog allows", on.ok, true);
+  t("and it is investigating again", await state(P), "investigating");
+
+  /* THE CONTROL THAT MAKES THE RULE NARROW RATHER THAN SWEEPING. If 7.11 were
+     read as "only owners move a project's lifecycle", this would be refused and
+     the accelerator could never advance a project at all. Closing as RESOLVED is
+     finishing the work, not deactivating it, and is ordinary record work gated
+     by `contribute` like every other write. */
+  t("closing as RESOLVED is not owner-gated: it is finishing, not abandoning",
+    (await promoteState(P, "closed", "resolved", "dave")).ok, true);
+  await promoteState(P, "investigating", null, "carol");   // owner puts it back
+  t("and a MACHINE CREDENTIAL may close it as resolved too, carrying no member at all",
+    (await promoteState(P, "closed", "resolved", null)).ok, true);
+  /* The same caller, the same target state, refused one line later purely
+     because the reason is `abandoned`. That is the whole of 7.11's scope, shown
+     rather than asserted about. */
+  await promoteState(P, "investigating", null, "carol");
+  t("but the SAME caller closing it as ABANDONED is refused",
+    (await promoteState(P, "closed", "abandoned", null)).reason, "NOT_THE_OWNER");
+}
+
+console.log("\n--- 7.12: fork, and the three things that keep it from being an escalation route ---");
+{
+  const P = "PROJ-2026-0001-secret";
+  t("an uninvited member cannot fork what they cannot see",
+    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0002-fork&title=Fork+one&by=dave`)).reason,
+    "NOT_A_PARTICIPANT");
+  await call(`/projectinvite?projectId=${P}&handle=dave&by=carol`);
+  /* INVITED IS NOT ENOUGH. An invited member sees the skeleton only, so a fork
+     by them would copy material they cannot read. This is the assertion that
+     makes fork mean one thing. */
+  t("an INVITED member who has not joined cannot fork either",
+    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0002-fork&title=Fork+one&by=dave`)).reason,
+    "NOT_JOINED");
+  await call(`/projectjoin?projectId=${P}&by=dave`);
+
+  const f = await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0002-fork&title=Fork+one&by=dave`);
+  t("a JOINED participant forks it", f.ok, true);
+  /* THE RECORD, not the return value. The first version asserted `f.rel`, which
+     is a literal this method returns, and the method did not in fact write the
+     edge: a fork with no provenance passed the assertion. Read the document and
+     the projected refs instead. */
+  {
+    const doc = (await call(`/image?id=PROJ-2026-0002-fork`))["bundle.md"] || "";
+    t("the clone's frontmatter carries a references block", /references:/.test(doc), true);
+    t("with a derived_from edge, already in the closed vocabulary", /rel: derived_from/.test(doc), true);
+    t("pointing at the origin", new RegExp(`target: ${P}`).test(doc), true);
+    /* refs is a PROJECTION of the document, rewritten on every promotion (D-21),
+       so the edge sitting in frontmatter is not enough: it has to have landed in
+       the table the derived reverse view reads. No route exposes that table, so
+       measure the count it feeds, across a fork, which is the same evidence. */
+    const refsBefore = (await call(`/stats`)).refs;
+    const f2 = await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0004-fork&title=Fork+three&by=dave`);
+    t("a second fork lands", f2.ok, true);
+    t("and the refs PROJECTION grew by exactly one, so the edge is really there",
+      (await call(`/stats`)).refs - refsBefore, 1);
+  }
+  t("the forker is the clone's sole owner, whoever owned the origin", f.owner, "dave");
+  t("and NO participants were copied", f.participantsCopied, 0);
+  const parts = await call(`/projectparticipants?projectId=PROJ-2026-0002-fork&by=dave`);
+  t("confirmed on the clone's participant list: one person", parts.participants.length, 1);
+  t("who is the forker, as its owner", [parts.participants[0].handle, parts.participants[0].owner], ["dave", 1]);
+  t("carol, who owns the ORIGIN, is not on the clone",
+    parts.participants.some((x) => x.handle === "carol"), false);
+
+  /* 7.1 name uniqueness, case-insensitive and whitespace-collapsed. A plain
+     unique index over the trimmed string is how handles work and would let these
+     two coexist, which is the collision the rule exists to stop. */
+  t("a second fork cannot take the same name",
+    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0003-fork&title=Fork+one&by=dave`)).reason,
+    "NAME_TAKEN");
+  t("nor a differently-cased one",
+    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0003-fork&title=FORK+ONE&by=dave`)).reason,
+    "NAME_TAKEN");
+  t("nor one differing only in whitespace",
+    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0003-fork&title=Fork++one&by=dave`)).reason,
+    "NAME_TAKEN");
+  t("a genuinely different name is fine",
+    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0003-fork&title=Fork+two&by=dave`)).ok, true);
+
+  /* A fork starts at the beginning of the lifecycle. Inheriting `matured` would
+     claim a readiness the clone has not earned. */
+  const st = (await call(`/projection`)).find((r) => r.bundle_id === "PROJ-2026-0002-fork");
+  t("the clone starts at the beginning of the lifecycle", st.current_state, "forming");
+  t("and carries its own name", st.title, "Fork one");
+
+  /* Put the fixture back for 7.8 below. */
+  await call(`/projectremove?projectId=${P}&handle=dave&by=carol`);
+}
+
 console.log("\n--- 7.8: participants see each other, non-participants see nothing ---");
 {
   const p = await call(`/projectparticipants?projectId=PROJ-2026-0001-secret&by=carol`);

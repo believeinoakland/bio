@@ -1687,12 +1687,48 @@ export class Store extends DurableObject {
                detail: "references are read from bundle.md frontmatter, not from the promote payload; remove the refs field" };
     if (!bundleId || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
     return this.ctx.storage.transactionSync(() => {
-      const cur = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
+      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
 
       if (cur && base === null)
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
         return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+
+      /* 7.11: only an OWNER deactivates or reactivates a project.
+       *
+       * NARROW ON PURPOSE. Section 7.11 is titled deactivation and reactivation
+       * and says only owners may do those. It does NOT say only owners may move
+       * a project's lifecycle at all, and reading it that way would stop the
+       * accelerator advancing a project from forming to investigating, which is
+       * ordinary record work gated by `contribute` like every other write.
+       *
+       * So exactly two transitions are owner-only, and they are the two the
+       * section names. Deactivation is entering `closed` with a `closed_reason`
+       * of `abandoned`, which is what distinguishes "we stopped pursuing this"
+       * from `resolved` (finished) and `superseded` (overtaken). Reactivation is
+       * `closed` to `investigating`, the one reverse transition the check
+       * catalog allows, which is there for this.
+       *
+       * `actorMemberId` is stamped by the control plane from the SESSION and
+       * deleted first if a caller supplies it, exactly as `author` is. A machine
+       * credential therefore carries none and cannot deactivate: saying the
+       * group has stopped pursuing something is a statement by its members about
+       * their own intent, and no automation holds that. */
+      if (cur && cur.object_type === "project") {
+        const to = meta.current_state, from = cur.current_state;
+        const deactivating = from !== "closed" && to === "closed" && meta.closed_reason === "abandoned";
+        const reactivating = from === "closed" && to === "investigating";
+        if (deactivating || reactivating) {
+          const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
+          if (!actor || !this.#isProjectOwner(bundleId, actor))
+            return { ok: false, reason: "NOT_THE_OWNER",
+                     act: deactivating ? "deactivate" : "reactivate",
+                     detail: deactivating
+                       ? "only an owner of this project may deactivate it, which is what closing it as "
+                       + "abandoned means. Closing it as resolved or superseded is ordinary record work."
+                       : "only an owner of this project may reactivate it." };
+        }
+      }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
 
@@ -2372,6 +2408,128 @@ export class Store extends DurableObject {
       projectId, target.member_id);
     return { ok: true, projectId, handle, owner: false, stillAParticipant: true,
              owners: this.#owners(projectId), deciders: votes.sort() };
+  }
+
+  /** 7.12: any JOINED participant may fork a project, creating a clone.
+   *
+   *  JOINED and not merely invited. An invited participant sees the SKELETON
+   *  only (7.9): the Problems, the Information and the Actions, and none of the
+   *  project's content, analysis record, work product or evaluations. A fork by
+   *  such a member would either copy material they cannot read, which leaks it,
+   *  or copy only what they can see, which is a different and lesser operation
+   *  wearing the same name. Restricting it makes the leak impossible rather than
+   *  managed.
+   *
+   *  THE FORKER MUST HOLD create_projects. A fork creates a project, and without
+   *  this any participant creates projects they were not trusted to create,
+   *  which is the capability defeated by a button. The capability is checked at
+   *  the control plane, where the session is, and passed in here as a settled
+   *  fact rather than re-derived.
+   *
+   *  THE CLONE CARRIES NO OTHER PARTICIPANTS. Copying the roster would let a
+   *  forker manufacture visibility for people the original's owners chose, which
+   *  is 7.3 defeated the same way.
+   *
+   *  Origin is recorded as `derived_from`, already in the closed relationship
+   *  vocabulary of State Rules 5.1, so nothing is added to it. */
+  forkProject({ projectId, newId, title, by } = {}) {
+    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
+    const p = this.#participation(projectId, by);
+    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
+      detail: "a project is forked by someone working on it. An uninvited member cannot see that it exists." };
+    if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state,
+      detail: "an invited member who has not joined sees the project's skeleton only, so there is nothing "
+            + "for them to fork. Join it first." };
+    if (!newId || typeof newId !== "string") return { ok: false, reason: "MALFORMED", detail: "newId is required" };
+    if (this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, newId))
+      return { ok: false, reason: "EXISTS", bundleId: newId };
+
+    /* 7.1: a project's name is unique across the instance, compared
+       case-insensitively with runs of whitespace collapsed. A plain unique index
+       over the trimmed string is how HANDLES work and would let "Sewer Fund" and
+       "Sewer fund" coexist, which is the collision the rule exists to stop. Held
+       across every lifecycle state, deactivated projects included, because a
+       deactivated project is still cited and its name must still resolve to what
+       was cited. */
+    const want = Store.projectNameKey(title);
+    if (!want) return { ok: false, reason: "NO_TITLE", detail: "a fork needs a name of its own" };
+    const clash = this.#rows(`SELECT bundle_id, title FROM bundles WHERE object_type='project'`)
+      .find((r) => Store.projectNameKey(r.title) === want);
+    if (clash) return { ok: false, reason: "NAME_TAKEN", bundleId: clash.bundle_id, title: clash.title,
+      detail: "a project by that name already exists on this instance, and project names are unique. "
+            + "This holds for deactivated projects too, because their names are still cited." };
+    /* The clone is a real bundle, written through `promote` like every other
+       write, so it passes the same gate and lands in the same history. Composed
+       here rather than left to the caller: a fork the caller has to assemble is
+       a fork every caller assembles slightly differently. */
+    const liveMd = this.#one(
+      `SELECT content, bundle_sha FROM files f JOIN bundles b ON b.bundle_id=f.bundle_id
+       WHERE f.bundle_id=? AND f.path='bundle.md'`, projectId);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", detail: "the origin has no readable bundle.md to fork" };
+
+    const when = new Date().toISOString();
+    /* THE ORIGIN EDGE, written into the document and not merely reported.
+       The first version of this method returned `rel: "derived_from"` and never
+       wrote it, and the suite asserted the returned literal rather than the
+       record, so a fork with no provenance passed. `derived_from` is already in
+       the closed relationship vocabulary of State Rules 5.1, so nothing is added
+       to it, and refs projects the edge from frontmatter like any other. */
+    const withEdge = Store.#spliceReferences(liveMd.content,
+      [{ rel: "derived_from", target: projectId, status: "confirmed", note: `forked by ${by}` }]);
+    if (!withEdge)
+      return { ok: false, reason: "UNSPLICEABLE_REFERENCES", projectId,
+               detail: "the origin's references block is not in a shape this grammar can extend in place, "
+                     + "so the clone could not be given a recorded origin. A fork with no provenance is "
+                     + "not written." };
+    let text = withEdge;
+    text = Store.#setScalar(text, "id", newId);
+    text = Store.#setScalar(text, "title", JSON.stringify(title));
+    /* A fork starts at the beginning of the lifecycle regardless of where the
+       origin had got to. Inheriting `matured` would claim a readiness the clone
+       has not earned, and inheriting `closed` would create a project born
+       deactivated. */
+    text = Store.#setScalar(text, "current_state", "forming");
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    const entry = `### Session ${when} | forked from ${projectId} | ${by}\n`
+                + `Trigger: fork\n`
+                + `Changes: created as a clone of ${projectId}, recorded as a derived_from reference. `
+                + `Participants were NOT copied.\n`;
+    const at = text.indexOf("## Session Log");
+    if (at < 0) text += "\n## Session Log\n\n" + entry;
+    else {
+      const nxt = text.indexOf("\n## ", at + 1);
+      const cut = nxt === -1 ? text.length : nxt + 1;
+      text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
+    }
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, projectId))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const fbytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: newId, base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: by, ownerMemberId: by,
+      files: [{ path: "bundle.md", text, bytes: fbytes.length,
+                sha256: createSha256().update(fbytes).hex() }, ...carried],
+      meta: { object_type: "project", group: "believe-in-oakland", title,
+              current_state: "forming", created: when, last_updated: when },
+    });
+    if (!promoted.ok) return promoted;
+    return { ok: true, projectId, newId, title, origin: projectId, rel: "derived_from",
+             owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha };
+  }
+
+  /** The comparison key for 7.1 project name uniqueness, in one place so the
+   *  fork check and any later write-path check cannot disagree about it. */
+  static projectNameKey(title) {
+    return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   }
 
   /** 7.8: every participant sees the handles of all other participants, and an
@@ -3067,6 +3225,9 @@ export class Store extends DurableObject {
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
           reason: url.searchParams.get("reason") }),
         projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId") }),
+        projectfork: () => this.forkProject({ projectId: url.searchParams.get("projectId"),
+          newId: url.searchParams.get("newId"), title: url.searchParams.get("title"),
+          by: url.searchParams.get("by") }),
         projectinvite: () => this.projectInvite({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by") }),
         projectjoin: () => this.projectJoin({ projectId: url.searchParams.get("projectId"),

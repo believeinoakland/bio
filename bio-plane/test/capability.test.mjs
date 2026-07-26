@@ -102,6 +102,32 @@ t("the project has exactly one participant", parts.result?.participants?.length,
 t("who is the creator", parts.result?.participants?.[0]?.handle, "pia");
 t("and is its owner", parts.result?.participants?.[0]?.owner, 1);
 
+console.log("\n--- 7.12: fork requires create_projects, at the control plane ---");
+/* The escalation route this closes: without it, any joined participant creates
+   projects they were not trusted to create, simply by forking one they are on.
+   Asserted HERE and not only in projects.test.mjs, because the capability lives
+   on the session and the Durable Object never sees one. */
+t("a joined participant WITHOUT create_projects cannot fork",
+  (await POST(`op=projectfork&projectId=PROJ-2026-9002-pia&newId=PROJ-2026-9099-x&title=Anything&${SAM}`)).needs,
+  "create_projects");
+t("and is refused for the capability, not for anything about the project",
+  (await POST(`op=projectfork&projectId=PROJ-2026-9002-pia&newId=PROJ-2026-9099-x&title=Anything&${SAM}`)).reason,
+  "NOT_CAPABLE");
+/* NEGATIVE CONTROL: holding the capability is not on its own enough, and a gate
+   that refused everyone would pass the assertion above while saying nothing. pia
+   holds create_projects and owns the project, so she clears the capability gate
+   and is then judged on section 7 and on the document.
+
+   She is refused, and the refusal is the POINT: this fixture writes bundle.md
+   with no frontmatter at all, so there is no references block to extend and the
+   clone would have no recorded origin. A fork with no provenance is not written.
+   What matters here is that her refusal is not NOT_CAPABLE. */
+{
+  const r = await POST(`op=projectfork&projectId=PROJ-2026-9002-pia&newId=PROJ-2026-9098-y&title=Pia+fork&${PIA}`);
+  t("a member WITH create_projects is past the capability gate", r.reason === "NOT_CAPABLE", false);
+  t("and is judged on the record instead", r.result?.reason, "UNSPLICEABLE_REFERENCES");
+}
+
 console.log("\n--- capabilities gate a SESSION, never a machine credential ---");
 /* NEGATIVE CONTROL. A verifier that says no to everything says nothing: the
    machine credential must still get through, because a token class has no

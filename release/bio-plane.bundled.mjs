@@ -6604,11 +6604,26 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       };
     if (!bundleId || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
     return this.ctx.storage.transactionSync(() => {
-      const cur = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
+      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur && base === null)
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
         return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+      if (cur && cur.object_type === "project") {
+        const to = meta.current_state, from = cur.current_state;
+        const deactivating = from !== "closed" && to === "closed" && meta.closed_reason === "abandoned";
+        const reactivating = from === "closed" && to === "investigating";
+        if (deactivating || reactivating) {
+          const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
+          if (!actor || !this.#isProjectOwner(bundleId, actor))
+            return {
+              ok: false,
+              reason: "NOT_THE_OWNER",
+              act: deactivating ? "deactivate" : "reactivate",
+              detail: deactivating ? "only an owner of this project may deactivate it, which is what closing it as abandoned means. Closing it as resolved or superseded is ordinary record work." : "only an owner of this project may reactivate it."
+            };
+        }
+      }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
       for (const f2 of files) {
@@ -7373,6 +7388,138 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       owners: this.#owners(projectId),
       deciders: votes.sort()
     };
+  }
+  /** 7.12: any JOINED participant may fork a project, creating a clone.
+   *
+   *  JOINED and not merely invited. An invited participant sees the SKELETON
+   *  only (7.9): the Problems, the Information and the Actions, and none of the
+   *  project's content, analysis record, work product or evaluations. A fork by
+   *  such a member would either copy material they cannot read, which leaks it,
+   *  or copy only what they can see, which is a different and lesser operation
+   *  wearing the same name. Restricting it makes the leak impossible rather than
+   *  managed.
+   *
+   *  THE FORKER MUST HOLD create_projects. A fork creates a project, and without
+   *  this any participant creates projects they were not trusted to create,
+   *  which is the capability defeated by a button. The capability is checked at
+   *  the control plane, where the session is, and passed in here as a settled
+   *  fact rather than re-derived.
+   *
+   *  THE CLONE CARRIES NO OTHER PARTICIPANTS. Copying the roster would let a
+   *  forker manufacture visibility for people the original's owners chose, which
+   *  is 7.3 defeated the same way.
+   *
+   *  Origin is recorded as `derived_from`, already in the closed relationship
+   *  vocabulary of State Rules 5.1, so nothing is added to it. */
+  forkProject({ projectId, newId, title, by } = {}) {
+    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
+    const p = this.#participation(projectId, by);
+    if (!p) return {
+      ok: false,
+      reason: "NOT_A_PARTICIPANT",
+      detail: "a project is forked by someone working on it. An uninvited member cannot see that it exists."
+    };
+    if (p.state !== "joined") return {
+      ok: false,
+      reason: "NOT_JOINED",
+      state: p.state,
+      detail: "an invited member who has not joined sees the project's skeleton only, so there is nothing for them to fork. Join it first."
+    };
+    if (!newId || typeof newId !== "string") return { ok: false, reason: "MALFORMED", detail: "newId is required" };
+    if (this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, newId))
+      return { ok: false, reason: "EXISTS", bundleId: newId };
+    const want = _Store.projectNameKey(title);
+    if (!want) return { ok: false, reason: "NO_TITLE", detail: "a fork needs a name of its own" };
+    const clash = this.#rows(`SELECT bundle_id, title FROM bundles WHERE object_type='project'`).find((r) => _Store.projectNameKey(r.title) === want);
+    if (clash) return {
+      ok: false,
+      reason: "NAME_TAKEN",
+      bundleId: clash.bundle_id,
+      title: clash.title,
+      detail: "a project by that name already exists on this instance, and project names are unique. This holds for deactivated projects too, because their names are still cited."
+    };
+    const liveMd = this.#one(
+      `SELECT content, bundle_sha FROM files f JOIN bundles b ON b.bundle_id=f.bundle_id
+       WHERE f.bundle_id=? AND f.path='bundle.md'`,
+      projectId
+    );
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", detail: "the origin has no readable bundle.md to fork" };
+    const when = (/* @__PURE__ */ new Date()).toISOString();
+    const withEdge = _Store.#spliceReferences(
+      liveMd.content,
+      [{ rel: "derived_from", target: projectId, status: "confirmed", note: `forked by ${by}` }]
+    );
+    if (!withEdge)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_REFERENCES",
+        projectId,
+        detail: "the origin's references block is not in a shape this grammar can extend in place, so the clone could not be given a recorded origin. A fork with no provenance is not written."
+      };
+    let text = withEdge;
+    text = _Store.#setScalar(text, "id", newId);
+    text = _Store.#setScalar(text, "title", JSON.stringify(title));
+    text = _Store.#setScalar(text, "current_state", "forming");
+    text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+    const entry = `### Session ${when} | forked from ${projectId} | ${by}
+Trigger: fork
+Changes: created as a clone of ${projectId}, recorded as a derived_from reference. Participants were NOT copied.
+`;
+    const at = text.indexOf("## Session Log");
+    if (at < 0) text += "\n## Session Log\n\n" + entry;
+    else {
+      const nxt = text.indexOf("\n## ", at + 1);
+      const cut = nxt === -1 ? text.length : nxt + 1;
+      text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
+    }
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      projectId
+    ))
+      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const fbytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: newId,
+      base: null,
+      snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: by,
+      ownerMemberId: by,
+      files: [{
+        path: "bundle.md",
+        text,
+        bytes: fbytes.length,
+        sha256: createSha256().update(fbytes).hex()
+      }, ...carried],
+      meta: {
+        object_type: "project",
+        group: "believe-in-oakland",
+        title,
+        current_state: "forming",
+        created: when,
+        last_updated: when
+      }
+    });
+    if (!promoted.ok) return promoted;
+    return {
+      ok: true,
+      projectId,
+      newId,
+      title,
+      origin: projectId,
+      rel: "derived_from",
+      owner: by,
+      participantsCopied: 0,
+      bundleSha: promoted.bundleSha
+    };
+  }
+  /** The comparison key for 7.1 project name uniqueness, in one place so the
+   *  fork check and any later write-path check cannot disagree about it. */
+  static projectNameKey(title) {
+    return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   }
   /** 7.8: every participant sees the handles of all other participants, and an
    *  administrator sees all of them. A non-participant sees nothing, and is told
@@ -8142,6 +8289,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           reason: url.searchParams.get("reason")
         }),
         projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId") }),
+        projectfork: () => this.forkProject({
+          projectId: url.searchParams.get("projectId"),
+          newId: url.searchParams.get("newId"),
+          title: url.searchParams.get("title"),
+          by: url.searchParams.get("by")
+        }),
         projectinvite: () => this.projectInvite({
           projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"),
@@ -8227,6 +8380,7 @@ var OPS = {
   projectremove: { classes: ["admin", "member", "probe"], mutating: true },
   projectowneradd: { classes: ["admin", "member", "probe"], mutating: true },
   projectownerremove: { classes: ["admin", "member", "probe"], mutating: true },
+  projectfork: { classes: ["admin", "member", "probe"], mutating: true },
   projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
   /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
      tell a group what a change would take BEFORE they start one. op=adminarith
@@ -8363,7 +8517,8 @@ var PROJECT_ACTIONS = [
   "projectleave",
   "projectremove",
   "projectowneradd",
-  "projectownerremove"
+  "projectownerremove",
+  "projectfork"
 ];
 var SESSION_OPS = {
   member: /* @__PURE__ */ new Set([
@@ -8452,6 +8607,10 @@ var NEEDS = {
   projectremove: null,
   projectowneradd: null,
   projectownerremove: null,
+  /* The one participation op that DOES carry a capability, because a fork
+     creates a project. Without this any participant creates projects they were
+     not trusted to create, which is create_projects defeated by a button. */
+  projectfork: "create_projects",
   memberadd: null,
   memberset: null,
   signeradd: null,
@@ -9383,7 +9542,11 @@ var index_default = {
       try {
         const b = JSON.parse(passBody);
         delete b.ownerMemberId;
-        if (viaSession) b.author = sessMember;
+        delete b.actorMemberId;
+        if (viaSession) {
+          b.author = sessMember;
+          b.actorMemberId = sessMember;
+        }
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({
