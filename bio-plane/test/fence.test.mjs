@@ -130,6 +130,50 @@ console.log("\n--- the unauthenticated surface answers, and says nothing it shou
     JSON.stringify(look.result), JSON.stringify(bad.result));
 }
 
+console.log("\n--- D-43: every unauthenticated op must REACH its code, not just refuse ---");
+{
+  /* For a `classes: null` op the control plane is the ONLY route a real caller
+     has, because the caller holds no credential. A store-level test of one
+     therefore tests the half nobody uses, and this suite already asserted that
+     each REFUSES correctly without ever asserting that any of them WORKS.
+     op=invitelook shipped in 0.21.0 throwing a ReferenceError on every call,
+     behind 1276 green assertions, and was found on the deployed instance.
+     This is the class, not the instance: each op below is called with input
+     that should produce a structured BIO refusal, and the assertion is that a
+     BIO answer comes back at all rather than a worker exception or `unknown
+     op`. Reachability, not success. */
+  const src = readFileSync(SRC, "utf8");
+  const block = src.slice(src.indexOf("const OPS = {"), src.indexOf("\n};", src.indexOf("const OPS = {")));
+  const open = [...block.matchAll(/^\s*([a-z]+):\s*\{\s*classes:\s*null/gm)].map((m) => m[1]);
+  t("the module yielded the unauthenticated surface", open.length >= 5, true);
+
+  const probes = {
+    bootstrap: {}, claim: { bootstrapToken: "wrong", password: "x".repeat(12) },
+    login: { role: "admin", password: "wrong-but-long" },
+    enroll: { invite: "0".repeat(32), handle: "nobody", password: "x".repeat(12) },
+    invitelook: { invite: "0".repeat(32) },
+    verify: null, knock: { note: "hello" },
+  };
+  const unreachable = [];
+  for (const op of open) {
+    const body = probes[op];
+    /* A worker exception returns a non-JSON body, so parsing THROWS. Caught
+       and reported rather than allowed to crash the suite: a verifier that dies
+       on the failure it exists to detect reports nothing, and the 0.21.0 defect
+       was exactly a thrown ReferenceError. */
+    let r;
+    try {
+      r = body === undefined ? await j(`/api/?op=${op}`)
+        : body === null ? await j(`/api/?op=${op}&sha256=${"0".repeat(64)}`)
+        : await post(`/api/?op=${op}`, body);
+    } catch (err) { unreachable.push(`${op}: threw (${String(err.message).slice(0, 40)})`); continue; }
+    /* An unrouted op yields error "unknown op". Anything else means the op's
+       own code ran and answered for itself. */
+    if (!r || typeof r !== "object" || r.error === "unknown op") unreachable.push(`${op}:${r?.error ?? "no answer"}`);
+  }
+  t("every unauthenticated op answers for itself", unreachable, []);
+}
+
 console.log("\n--- an unauthenticated caller gets nothing from the working corpus ---");
 t("unauthenticated index is refused", (await j("/api/?op=index")).error, "unauthenticated");
 t("unauthenticated publishedlist is refused", (await j("/api/?op=publishedlist")).error, "unauthenticated");
