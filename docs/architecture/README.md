@@ -51,11 +51,17 @@ that answer the functional architecture's open questions. Note that
 Section 10's decision against per-member tokens is superseded by the
 membership architecture below; the rest stands.
 
-**BIO_Membership_Architecture_v1** — covers and handles, administrators and
+**BIO_Membership_Architecture_v2** — covers and handles, administrators and
 the two-administrator floor, capabilities, burner-URL invitations, project
-participation, and secure verified export. A first-class document rather
-than an addendum, and the specification the current build works from. Its
-Section 9 records the root of trust as architecture debt.
+participation and ownership, and secure verified export. A first-class
+document rather than an addendum, and the specification the current build
+works from. Its Section 9 records the root of trust as architecture debt.
+
+**BIO_Membership_Architecture_v1 — SUPERSEDED by v2, July 26, 2026.** Kept
+for the record and must not be worked from. Its Section 7.7 states the
+OPPOSITE of v2's on who removes a project participant: v1 gave that
+authority to administrators, v2 gives it to project owners. v2 carries a
+change table at the top listing every difference.
 
 ## Design and doctrine
 

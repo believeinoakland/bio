@@ -901,47 +901,117 @@ refuse-weight action stops and hands over nothing so it cannot half-run; and the
 bundle is conformant to the catalog after every one of them.
 
 ### S-12 Membership, the member half
-**Status: STARTED. Sections 3, 4 and 5 done, 0.20.0** · Depends: nothing
+**Status: STARTED. Sections 3, 4, 5 and 7-participation done, 0.23.0** · Depends: nothing
 
-`architecture/BIO_Membership_Architecture_v1.md` is the design and nothing in it
-is undecided. Do not re-derive it.
+`architecture/BIO_Membership_Architecture_v2.md` is the design and nothing in it
+is undecided. Do not re-derive it. **v1 is superseded and must not be worked
+from**: its Section 7.7 says the OPPOSITE of v2's on who removes a project
+participant, and code was written against the old rule.
 
 **Done in 0.20.0.** Cover and handle as two names assigned by two parties
 (section 3), with the handle unique across the instance and shown in the record.
-Capabilities (section 5), with `administer` deliberately excluded because it
-moves only by the Section 4 process. And the Section 4 arithmetic: the
-two-administrator floor, consensus on every addition past the second, and removal
-by a majority of all administrators counting the target in the denominator
-without letting them vote. The table is computed rather than transcribed and
-exposed as `op=adminarith`.
+Capabilities recorded (section 5), with `administer` deliberately excluded
+because it moves only by the Section 4 process. And the Section 4 arithmetic:
+the two-administrator floor, consensus on every addition past the second, and
+removal by a majority of all administrators counting the target in the
+denominator without letting them vote. The table is computed rather than
+transcribed and exposed as `op=adminarith`.
 
-The founding administrator has no roster row and is the root of trust (4.6). They
-count in the census and cannot be removed from inside the application. This was
-found by an EXISTING suite failing, not by the new one.
+The founding administrator has no roster row and is the root of trust (4.6).
+They count in the census and cannot be removed from inside the application. This
+was found by an EXISTING suite failing, not by the new one.
+
+**Done in 0.22.0.** Burner-URL invitations (section 6), D-42. The URL is the
+credential, it is spent on use, and afterwards it resolves to nothing and
+reveals neither the group nor the invitee.
+
+**Done in 0.23.0.** Project participation and the three visibility positions
+(section 7): uninvited, invited-not-joined (skeleton only), joined. The single
+compilation point in `query.mjs` filters by position and D-15 is closed.
+**Reachable at the Durable Object only**, which step 4 below fixes.
 
 **Next, in order.**
 
-1. **Burner-URL invitations (section 6), D-42.** The URL is the credential, it is
-   spent on use, and afterwards it resolves to nothing and reveals neither the
-   group nor the invitee. Half of this exists already.
-2. **Project participation and the three visibility positions (section 7).**
-   Uninvited (the project is invisible entirely), invited-not-joined (skeleton
-   only: Problems it stands above, Information it cites, Actions it initiates),
-   and joined (everything). DO NOT COLLAPSE THE FIRST TWO. This is what D-15
-   waits on, and the single compilation point in `query.mjs` is reserved for it.
-3. **Capability enforcement at the op layer.** Capabilities are recorded but
-   nothing consults them yet: a member with no `publish` capability can still
-   reach `op=ratify` and is stopped only by the signing key. Section 5 says a
-   capability a member does not hold is ABSENT from their interface rather than
-   present and refused, so this is a UI obligation as much as an ACL one.
-4. **Secure verified export (section 8)**, which is what makes every governance
+3. **Capability enforcement at the op layer (section 5).** Capabilities are
+   recorded and nothing consults them: a member with no `publish` capability
+   reaches `op=ratify` and is stopped only by the absence of a signing key,
+   which is the key doing the capability's job. Section 5 says a capability a
+   member does not hold is ABSENT from their interface rather than present and
+   refused, so this is a UI obligation as much as an ACL one, and BOTH halves
+   ship, because an interface is not a boundary.
+
+   Gates a SESSION and never a machine credential: a token class has no member
+   behind it and therefore holds no capabilities, and inventing some would put a
+   name on the record that nobody holds.
+
+   Structural rather than a hand list. Every mutating op a session can reach
+   names a capability or names `null` with its reason, and a suite reads the op
+   table and the capability table out of the module so an op added later cannot
+   pass by not being mentioned. Standing lesson 2.
+
+   `create_projects` has no op of its own, because a project is created by
+   promoting a bundle with no base whose `object_type` is `project`. It gates
+   that SHAPE, in one place, in the promote path.
+
+   **An administrator holds every working capability** (v2 section 5), so
+   `memberCaps` keeps refusing to edit an administrator's row and that refusal
+   is now coherent rather than a trap: there is nothing to edit.
+
+4. **The v2 project rules.** Four things, and the first is a prerequisite for
+   the rest having any effect.
+
+   a. **The participation ops reach the control plane.** `projectinvite`,
+      `projectjoin`, `projectleave`, `projectremove` and `projectparticipants`
+      exist in the store's route map and are absent from `OPS` in `index.mjs`,
+      so every real caller gets `unknown op`. Sections 7.2, 7.4, 7.6, 7.7 and
+      7.8 are shipped and unreachable. `by` is stamped server-side from the
+      session, exactly as `author` is.
+   b. **7.7 REVERSED.** Only an OWNER removes a project participant.
+      Administrators do not. `projectRemove` enforces administrator-only today
+      and `projects.test.mjs` asserts it. Correct both; do not exempt them.
+      Standing lesson 3.
+   c. **Owner governance (7.10).** Ownership is a set. Addition follows 4.7
+      unchanged. Removal follows 4.7 EXCEPT at exactly two owners, where both
+      must agree and the target is one of them. Do not reuse `adminMath`
+      unmodified: it diverges at exactly that row, and that row is the one a
+      shared implementation gets wrong by reuse.
+   d. **Lifecycle authority and fork (7.11, 7.12).** Deactivation is `closed`
+      with `closed_reason: abandoned` and reactivation is the `closed` to
+      `investigating` transition, both already legal in the check catalog, so
+      nothing is added to the state vocabulary. What is missing is the
+      authority check: `promote` does not care who moves a project's
+      `current_state`, and only owners may. Fork requires `create_projects`,
+      requires JOINED participation, copies no participants, and records its
+      origin as `derived_from`, which is already in the closed relationship
+      vocabulary.
+
+5. **Licenses (1.3, 4.9).** Expertise is declared by the member and confirmed by
+   an administrator, and the two are different claims by different people.
+   Confirmation GATES NOTHING and must not enter the enforcement path. Moves
+   `expertise` off the member row into its own table, because a list column
+   cannot carry a confirmation state, a confirmer and a withdrawal per entry.
+   Withdrawal supersedes rather than overwrites.
+
+6. **Project name uniqueness (7.1).** The `title` field, unique across the
+   instance, case-insensitive and whitespace-collapsed, holding across
+   deactivated projects. Enforced in the check catalog and at the write path
+   rather than in the interface. Checked against the working instance on
+   2026-07-26: 30 bundles, one project, no collisions, so it costs no migration
+   there. Recheck before enabling it anywhere else, because a uniqueness
+   constraint applied to a record that already violates it fails at the wrong
+   moment.
+
+7. **Secure verified export (section 8)**, which is what makes every governance
    rule enforceable, since a group that cannot leave can be held. Note that it
    requires the ROOT OF TRUST credential and not in-app administrator status: an
    export any administrator can run is the most efficient attack in the system.
 
 **Accepts when:** the arithmetic in 4.7 is computed in one place and asserted row
-by row; no interface implies the membership model bounds whoever holds
-ADMIN_TOKEN; and a leaked invitation URL reveals nothing.
+by row; the 7.10 arithmetic is asserted at two owners specifically; no interface
+implies the membership model bounds whoever holds ADMIN_TOKEN; a leaked
+invitation URL reveals nothing; a capability a member does not hold is absent
+from their interface AND refused by the op layer; and no participation op is
+reachable only at the Durable Object.
 
 ## Notes
 
