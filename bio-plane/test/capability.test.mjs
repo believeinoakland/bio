@@ -99,7 +99,7 @@ t("a member WITH create_projects creates one", proj.result?.ok, true);
 console.log("\n--- 7.1: the creator becomes the owner, in the same write ---");
 const parts = await GET(`op=projectparticipants&projectId=PROJ-2026-9002-pia&${PIA}`);
 t("the project has exactly one participant", parts.result?.participants?.length, 1);
-t("who is the creator", parts.result?.participants?.[0]?.member_id, "pia");
+t("who is the creator", parts.result?.participants?.[0]?.handle, "pia");
 t("and is its owner", parts.result?.participants?.[0]?.owner, 1);
 
 console.log("\n--- capabilities gate a SESSION, never a machine credential ---");
@@ -111,12 +111,24 @@ t("MEMBER_TOKEN promotes, uncapability-gated",
 t("and cannot forge a project owner",
   (await POST("op=promote&token=t-member-1",
      { ...bundle("PROJ-2026-9003-machine", "project"), ownerMemberId: "pia" })).result?.ok, true);
-const forged = await GET(`op=projectparticipants&projectId=PROJ-2026-9003-machine&token=t-admin-1`);
+/* Asked as an admin SESSION, not with ADMIN_TOKEN: `by` is stamped `class:admin`
+   for a machine credential, which is not a member id and matches no
+   administrator, so the store answers NO_SUCH_PROJECT. That is the fail-closed
+   behaviour the stamp exists for, and it is asserted just below. */
+const forged = await GET(`op=projectparticipants&projectId=PROJ-2026-9003-machine&${RUTH}`);
 t("the machine-created project has no owner at all", forged.result?.participants?.length, 0);
+t("and a machine credential cannot read a participant list, having no member behind it",
+  (await GET(`op=projectparticipants&projectId=PROJ-2026-9002-pia&token=t-admin-1`)).result?.reason,
+  "NO_SUCH_PROJECT");
 
 console.log("\n--- an administrator holds every working capability (v2 section 5) ---");
-t("an administrator ratifies without a capability grant saying so",
-  (await POST(`op=ratify&${RUTH}`, { bundleId: "INFO-2026-9001-sam" })).reason, undefined);
+/* Asserts the CAPABILITY gate specifically. The ratify path then refuses this
+   payload as MALFORMED for want of a signature, which is the key doing the
+   key's job and is what ratify.test.mjs covers. */
+t("an administrator is not stopped by the capability gate at ratify",
+  (await POST(`op=ratify&${RUTH}`, { bundleId: "INFO-2026-9001-sam" })).reason === "NOT_CAPABLE", false);
+t("and a member without publish IS, at the same payload",
+  (await POST(`op=ratify&${SAM}`, { bundleId: "INFO-2026-9001-sam" })).reason === "NOT_CAPABLE", true);
 t("and creates projects",
   (await POST(`op=promote&${RUTH}`, bundle("PROJ-2026-9004-ruth", "project"))).result?.ok, true);
 /* Gus was invited with contribute alone, and memberCaps refuses to edit an
@@ -154,11 +166,24 @@ t("the capability table exists", typeof needsBlock, "string");
    ACL or by being unauthenticated; capabilities never apply to them because
    there is no member behind the caller. */
 const mutating = new Set([...(opsBlock ?? "").matchAll(/^\s{2}([a-z]+):\s*\{[^}]*mutating:\s*true/gm)].map(m => m[1]));
-const reachable = [...new Set([...(sessBlock ?? "").matchAll(/"([a-z]+)"/g)].map(m => m[1]))].filter(o => mutating.has(o));
+/* SESSION_OPS builds its sets with spreads (...EDGE_ACTIONS, ...PROJECT_ACTIONS,
+   ...RETRIEVAL_READS), so reading quoted literals out of that block alone counts
+   LESS than the table actually contains and the check would silently pass for
+   ops it never looked at. Standing lesson 6. Resolve each spread against the
+   const it names. */
+const listOf = (name) => {
+  const m = src.match(new RegExp(`const ${name} = \\[([^\\]]*)\\]`));
+  return m ? [...m[1].matchAll(/"([a-z]+)"/g)].map(x => x[1]) : [];
+};
+const sessNames = new Set([...(sessBlock ?? "").matchAll(/"([a-z]+)"/g)].map(m => m[1]));
+for (const sp of [...(sessBlock ?? "").matchAll(/\.\.\.([A-Z_]+)/g)].map(m => m[1]))
+  for (const o of listOf(sp)) sessNames.add(o);
+const reachable = [...sessNames].filter(o => mutating.has(o));
 const named = new Set([...(needsBlock ?? "").matchAll(/^\s{2}([a-z]+):/gm)].map(m => m[1]));
 t("there are session-reachable mutating ops to check", reachable.length > 8, true);
 t("every one of them is named in the capability table", reachable.filter(o => !named.has(o)), []);
 t("and the table names nothing a session cannot reach", [...named].filter(o => !reachable.includes(o)), []);
 
+await mf.dispose();
 console.log(`\ncapability: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

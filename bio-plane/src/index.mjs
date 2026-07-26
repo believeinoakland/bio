@@ -13,7 +13,8 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256 } from "../checks/
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
-export { Store } from "./store.mjs";
+import { Store } from "./store.mjs";
+export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
 /* BIO plane, control plane entry.
@@ -64,6 +65,26 @@ const OPS = {
      same fence that governs op=index governs this. */
   projection: { classes: ["admin", "member", "probe"],           mutating: false },
   reproject:  { classes: ["admin", "probe"],                     mutating: true  },
+
+  /* Section 7 participation. These existed in the Durable Object's route map
+     and were absent HERE, so every real caller got "unknown op": 7.2, 7.4, 7.6,
+     7.7 and 7.8 were shipped and unreachable. Standing lesson 5 one level
+     worse, since they were not merely tested at the DO but reachable only
+     there. `by` is stamped server-side below from the session.
+
+     A machine credential reaches these and is refused by the store, because
+     `class:member` is not a member id and matches no participation row. Fail
+     closed rather than fail open. */
+  projectinvite:       { classes: ["admin", "member", "probe"], mutating: true  },
+  projectjoin:         { classes: ["admin", "member", "probe"], mutating: true  },
+  projectleave:        { classes: ["admin", "member", "probe"], mutating: true  },
+  projectremove:       { classes: ["admin", "member", "probe"], mutating: true  },
+  projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
+  /* What the caller may DO, so an interface builds its controls from the plane
+     rather than from a copy that drifts, exactly as op=searchfields does for the
+     query language. Section 5's "absent from their interface" is implementable
+     only if the interface can ask. */
+  whoami:              { classes: ["admin", "member", "probe"], mutating: false },
   /* S-10 steps 2 to 4: the retrieval surface. It reads the WORKING corpus, so it
      is member class and above and never public, exactly like op=index and
      op=projection. There is no public token class to grant it to and there must
@@ -202,17 +223,87 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
    rather than listed twice, because the member and admin session lists drifting
    apart is exactly the class of defect this repository keeps finding. */
 const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
+const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...EDGE_ACTIONS]),
+                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...PROJECT_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...EDGE_ACTIONS,
+                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...PROJECT_ACTIONS,
                    "memberadd", "memberset", "signeradd", "signerset"]),
 };
 
+/* ---- capabilities at the op layer. Membership Architecture v2 section 5 ----
+ *
+ * Capabilities gate a SESSION and nothing else. A token class has no member
+ * behind it and therefore holds no capabilities: a machine credential is bounded
+ * by OPS above and by scopeFor below, and asking a capability question about one
+ * would mean inventing a member who does not exist.
+ *
+ * Section 5 says a capability a member does not hold is ABSENT from their
+ * interface rather than present and refused. BOTH halves ship. setup.mjs builds
+ * its controls from op=whoami so the control is not there, and this table
+ * refuses the op anyway, because a hidden button is a courtesy and not a
+ * boundary.
+ *
+ * STRUCTURAL, not a hand list. Every mutating op a SESSION can reach appears
+ * here, including the ones that need no capability, written as an explicit null
+ * with the reason. test/capability.test.mjs reads SESSION_OPS and this table out
+ * of the source and fails on any session-reachable mutating op that is missing,
+ * AND on anything named here that no session can reach, so the table cannot rot
+ * in either direction. Standing lesson 2: a later addition must not pass by not
+ * being mentioned.
+ */
+const NEEDS = {
+  /* contribute: create and revise bundles in the working corpus (5). */
+  promote:          "contribute",
+  lease:            "contribute",
+  allocid:          "contribute",
+  capture:          "contribute",   // the PUT; its GET is a read and is exempted at the check
+  acquire:          "contribute",
+  attest:           "contribute",
+  monitor:          "contribute",
+  cite:             "contribute",
+  sever:            "contribute",
+  reinstate:        "contribute",
+  /* Dispositioning a knock decides what enters the working corpus, which is the
+     contribute surface even though the row it writes is an inbox row. Reading
+     the inbox is not gated; acting on it is. */
+  inboxresolve:     "contribute",
+  /* publish: ratify. The capability governs the SURFACE and the registered
+     signing key governs the authority (5). Both exist because before this the
+     key was doing the capability's job: a member with no publish reached
+     op=ratify and was stopped only by not having a key. */
+  ratify:           "publish",
+  /* create_projects is deliberately absent, because no op creates a project. A
+     project is created by promoting a bundle with no base whose object_type is
+     `project`, so the check lives at that SHAPE, once, in the promote branch. */
+
+  /* No capability, and the reason, so a later reader does not read the absence
+     as an oversight. A selection is a server-side snapshot of what the caller
+     themselves selected; it writes nothing about the corpus, and a member with
+     view rights only still needs to build one in order to read (7.5). */
+  select:           null,
+  selectionrelease: null,
+  /* The roster ops are governed by `administer`, which is not a working
+     capability and moves only by the Section 4 process. What bounds them is
+     SESSION_OPS.admin above, not section 5. */
+  /* Participation is governed by section 7, not section 5, and the store
+     enforces it: only an owner invites and removes (7.2, 7.7 as REVERSED in v2),
+     and `by` is stamped server-side so the store judges the real caller. */
+  projectinvite:    null,
+  projectjoin:      null,
+  projectleave:     null,
+  projectremove:    null,
+  memberadd:        null,
+  memberset:        null,
+  signeradd:        null,
+  signerset:        null,
+};
+
 const KNOCK = {
+
   windowMs: 10 * 60 * 1000,
   perIp: 12,          // knocks per source per window
   global: 300,        // knocks per instance per window; bounds hostile R2 writes
@@ -397,7 +488,7 @@ export default {
 
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;
-    let sessMember = null;
+    let sessMember = null, sessRights = null, sessCaps = null;
     /* A browser signed in with a password holds a session token, not a
        machine credential. The write arc opens INTAKE to sessions: promote,
        lease, allocid, capture, ratify, and inbox review run through the
@@ -419,12 +510,26 @@ export default {
             return json({ ok: false, error: "this operation requires a machine credential, not a signed-in session", op }, 403);
           cls = kind;
           sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
+          sessRights = sess;
           viaSession = true;
         }
       }
     }
     if (!cls) return json({ ok: false, error: "unauthenticated" }, 401);
     if (!spec.classes.includes(cls)) return json({ ok: false, error: "forbidden for token class", op, cls }, 403);
+
+    /* Section 5 enforcement. Only a SESSION carries capabilities; a machine
+       credential has no member behind it and stays bounded by the class ACL
+       above. capture's GET is a read and is treated as one here for the same
+       reason the session ACL treats it as one directly above. */
+    if (viaSession) {
+      sessCaps = new Set(sessRights.capabilities || []);
+      const needs = NEEDS[op];
+      if (needs && !(op === "capture" && req.method === "GET") && !sessCaps.has(needs))
+        return json({ ok: false, reason: "NOT_CAPABLE", op, needs, held: [...sessCaps].sort(),
+          detail: `this account does not hold the ${needs} capability. Capabilities are set by an `
+                + `administrator, so ask one to grant it rather than looking for another route.` }, 403);
+    }
 
     const scope = scopeFor(cls, url);
     if (scope.error) return json({ ok: false, error: scope.error, tokenClass: cls }, 403);
@@ -440,6 +545,35 @@ export default {
        first version of this audit looked only in `files` and `history`, called
        everything else "dropped", and produced a confident wrong finding that
        the Apps Script migration was unauditable. The bytes were in R2. */
+    /* op=whoami. What the caller is and what they may DO, so an interface can
+       satisfy section 5's "absent from their interface" without keeping its own
+       copy of the capability rules and letting it drift.
+
+       A machine credential holds NO capabilities and the honest answer is null
+       rather than an empty list or a full one: there is no member behind a token
+       class, so there is nothing to hold them. What bounds a machine caller is
+       the op table and the scratch confinement, and reporting it as though
+       section 5 applied would be inventing a member who does not exist.
+
+       `vocabulary` is the full set, so an interface can tell "not held" from
+       "not a capability at all" without hardcoding the list. */
+    if (op === "whoami") {
+      return json({ ok: true, result: {
+        tokenClass: cls,
+        session: viaSession,
+        member: viaSession ? sessMember : null,
+        handle: viaSession ? (sessRights.handle ?? null) : null,
+        administer: viaSession ? !!sessRights.administer : false,
+        rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
+        capabilities: viaSession ? [...sessCaps].sort() : null,
+        vocabulary: Store.CAPABILITIES,
+        detail: viaSession
+          ? "capabilities are set by an administrator and gate what this account may DO, not what it may see"
+          : "a machine credential has no member behind it and therefore holds no capabilities; it is bounded "
+          + "by the operation table and by namespace confinement instead",
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+
     if (op === "registeraudit") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const r = (await (await st.fetch("http://do/registeraudit")).json()).result;
@@ -1107,10 +1241,43 @@ export default {
        A caller-supplied `author` is overwritten, not honoured. */
     if (EDGE_ACTIONS.includes(op))
       inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
+    /* Who is acting on a project's roster is decided by the SERVER. Set after
+       the caller's parameters were copied, so a caller-supplied `by` is
+       overwritten rather than honoured: "only an owner may remove" is worth
+       nothing if the caller names who they are. A machine credential says
+       plainly that it was a machine, which matches no participation row and no
+       administrator, so it is refused by the store rather than let through. */
+    if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants")
+      inner.searchParams.set("by", viaSession ? sessMember : `class:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
-    if (viaSession && op === "promote" && passBody) {
-      try { const b = JSON.parse(passBody); b.author = sessMember; passBody = JSON.stringify(b); }
-      catch { /* the DO will refuse the malformed body with its own words */ }
+    /* create_projects (section 5) and the 7.1 owner claim, in one place.
+     *
+     * There is no op that creates a project: a project is created by promoting a
+     * bundle with no base whose object_type is `project`. So the capability
+     * gates that SHAPE, here, rather than appearing in NEEDS as an op name that
+     * does not exist.
+     *
+     * `ownerMemberId` is deleted UNCONDITIONALLY before anything else and is
+     * then set only for an identified session creating a project. It is the
+     * field the store uses to decide who owns a new project, so a caller
+     * supplying it would be a caller granting ownership to whomever they liked.
+     * Deleting first and stamping second is the same discipline `author`,
+     * `viewer`, `owner` and `by` follow in this file. */
+    if (op === "promote" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        delete b.ownerMemberId;
+        if (viaSession) b.author = sessMember;
+        if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
+          if (!sessCaps.has("create_projects"))
+            return json({ ok: false, reason: "NOT_CAPABLE", op, needs: "create_projects",
+              held: [...sessCaps].sort(),
+              detail: "creating a project needs the create-projects capability. This account may still "
+                    + "contribute to projects it has been invited to, if it holds contribute." }, 403);
+          b.ownerMemberId = sessMember;
+        }
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
     }
     /* Who dispositioned a knock is part of the record. A session signs its
        own name; a machine credential says so plainly rather than borrowing

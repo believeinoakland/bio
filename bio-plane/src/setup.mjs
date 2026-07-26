@@ -441,13 +441,39 @@ $("#do-login").addEventListener("click", async ()=>{
 });
 let SESSION = null;
 let WHO = "admin";
+/* Membership Architecture v2 section 5: a capability a member does not hold is
+   ABSENT from their interface, not present and refused. The plane refuses it
+   too, because a hidden control is a courtesy and not a boundary, but the
+   absence is the part section 5 actually asks for.
+
+   Read from op=whoami rather than kept as a second copy of the rules here. A
+   copy would drift, and the one that drifted would be this one. Starts EMPTY so
+   a failed or in-flight whoami hides everything rather than showing controls
+   that will refuse: fail closed. */
+let CAPS = new Set();
+const can = (c)=>CAPS.has(c);
 let INVITE = null;
+/* Everything section 5 hides, in ONE place, so a control cannot be added later
+   in a screen that forgot to ask. Called before whoami answers as well as after,
+   so the window between showing the panel and hearing back shows nothing the
+   member may not use. */
+function applyCaps(){
+  $("#go-new").hidden = !can("contribute");
+  const t = $("#n-type");
+  if (t) for (const o of t.options) if (o.value === "project") o.hidden = !can("create_projects");
+}
+
 function panel(login, claimedAt){
   if (login && login.token) {
     SESSION = login.token;
     try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
   }
   $("#go-members").hidden = WHO !== "admin";
+  applyCaps();
+  rec("whoami").then((r)=>{
+    CAPS = new Set(r && r.result && Array.isArray(r.result.capabilities) ? r.result.capabilities : []);
+    applyCaps();
+  }).catch(()=>{ CAPS = new Set(); applyCaps(); });
   $("#panel-lede").textContent = WHO === "admin"
     ? "Signed in as administrator." : "Signed in as " + WHO + ".";
   $("#p-version").textContent = window.__ver || "unknown";
@@ -591,6 +617,11 @@ $("#crumb-browse").addEventListener("click", openBrowse);
 async function ratifyPanel(id, liveText, historical){
   const box = $("#b-ratify");
   if (historical) { box.innerHTML = ""; return; }
+  /* No publish capability, no publish surface. Before this the panel was drawn
+     for everyone and the member was stopped at the end of it, by the absence of
+     a signing key rather than by the capability, which is the key doing the
+     capability's job. */
+  if (!can("publish")) { box.innerHTML = ""; return; }
   const sha = await sha256Text(liveText);
   box.innerHTML = "<h2>Publish this</h2>"
     + '<p class="small">Publishing puts this revision where the public can verify it by hash. '
@@ -918,9 +949,13 @@ async function openInbox(){
     + (k.note ? '<div class="kv"><span class="k">Note</span><span class="v">'+escH(k.note)+"</span></div>" : "")
     + (k.contact ? '<div class="kv"><span class="k">Contact</span><span class="v">'+escH(k.contact)+"</span></div>" : "")
     + (k.resolved_by ? '<div class="kv"><span class="k">Handled by</span><span class="v">'+escH(k.resolved_by)+"</span></div>" : "")
-    + '<div class="actions" style="margin-top:10px">'
-    + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
-    + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div></div>').join("");
+    /* Reading the inbox is not gated; ACTING on it is. A member with view
+       rights sees what arrived and cannot disposition it. */
+    + (can("contribute")
+      ? '<div class="actions" style="margin-top:10px">'
+        + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
+        + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div>'
+      : "") + "</div>").join("");
   document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", async ()=>{
     await post("inboxresolve", { knockId: b.dataset.id, status: b.dataset.to });
     openInbox();

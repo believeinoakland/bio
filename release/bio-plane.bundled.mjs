@@ -3418,13 +3418,39 @@ $("#do-login").addEventListener("click", async ()=>{
 });
 let SESSION = null;
 let WHO = "admin";
+/* Membership Architecture v2 section 5: a capability a member does not hold is
+   ABSENT from their interface, not present and refused. The plane refuses it
+   too, because a hidden control is a courtesy and not a boundary, but the
+   absence is the part section 5 actually asks for.
+
+   Read from op=whoami rather than kept as a second copy of the rules here. A
+   copy would drift, and the one that drifted would be this one. Starts EMPTY so
+   a failed or in-flight whoami hides everything rather than showing controls
+   that will refuse: fail closed. */
+let CAPS = new Set();
+const can = (c)=>CAPS.has(c);
 let INVITE = null;
+/* Everything section 5 hides, in ONE place, so a control cannot be added later
+   in a screen that forgot to ask. Called before whoami answers as well as after,
+   so the window between showing the panel and hearing back shows nothing the
+   member may not use. */
+function applyCaps(){
+  $("#go-new").hidden = !can("contribute");
+  const t = $("#n-type");
+  if (t) for (const o of t.options) if (o.value === "project") o.hidden = !can("create_projects");
+}
+
 function panel(login, claimedAt){
   if (login && login.token) {
     SESSION = login.token;
     try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
   }
   $("#go-members").hidden = WHO !== "admin";
+  applyCaps();
+  rec("whoami").then((r)=>{
+    CAPS = new Set(r && r.result && Array.isArray(r.result.capabilities) ? r.result.capabilities : []);
+    applyCaps();
+  }).catch(()=>{ CAPS = new Set(); applyCaps(); });
   $("#panel-lede").textContent = WHO === "admin"
     ? "Signed in as administrator." : "Signed in as " + WHO + ".";
   $("#p-version").textContent = window.__ver || "unknown";
@@ -3568,6 +3594,11 @@ $("#crumb-browse").addEventListener("click", openBrowse);
 async function ratifyPanel(id, liveText, historical){
   const box = $("#b-ratify");
   if (historical) { box.innerHTML = ""; return; }
+  /* No publish capability, no publish surface. Before this the panel was drawn
+     for everyone and the member was stopped at the end of it, by the absence of
+     a signing key rather than by the capability, which is the key doing the
+     capability's job. */
+  if (!can("publish")) { box.innerHTML = ""; return; }
   const sha = await sha256Text(liveText);
   box.innerHTML = "<h2>Publish this</h2>"
     + '<p class="small">Publishing puts this revision where the public can verify it by hash. '
@@ -3895,9 +3926,13 @@ async function openInbox(){
     + (k.note ? '<div class="kv"><span class="k">Note</span><span class="v">'+escH(k.note)+"</span></div>" : "")
     + (k.contact ? '<div class="kv"><span class="k">Contact</span><span class="v">'+escH(k.contact)+"</span></div>" : "")
     + (k.resolved_by ? '<div class="kv"><span class="k">Handled by</span><span class="v">'+escH(k.resolved_by)+"</span></div>" : "")
-    + '<div class="actions" style="margin-top:10px">'
-    + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
-    + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div></div>').join("");
+    /* Reading the inbox is not gated; ACTING on it is. A member with view
+       rights sees what arrived and cannot disposition it. */
+    + (can("contribute")
+      ? '<div class="actions" style="margin-top:10px">'
+        + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
+        + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div>'
+      : "") + "</div>").join("");
   document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", async ()=>{
     await post("inboxresolve", { knockId: b.dataset.id, status: b.dataset.to });
     openInbox();
@@ -6702,8 +6737,23 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       const bundleMd = files.find((f2) => f2.path === "bundle.md");
       this.#writeProjection(bundleId, bundleMd?.text ?? null);
       this.#writeText(bundleId, files);
+      const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
+      let owner = null;
+      if (!cur && ownerMemberId && meta.object_type === "project") {
+        const ts = (/* @__PURE__ */ new Date()).toISOString();
+        this.sql.exec(
+          `INSERT OR REPLACE INTO project_participants
+             (project_id, member_id, state, owner, invited_by, comment, created, updated)
+           VALUES (?,?,'joined',1,NULL,NULL,?,?)`,
+          bundleId,
+          ownerMemberId,
+          ts,
+          ts
+        );
+        owner = ownerMemberId;
+      }
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
-      return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version };
+      return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner };
     });
   }
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -6894,7 +6944,60 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       this.sql.exec(`DELETE FROM sessions WHERE token=?`, token);
       return null;
     }
-    return { role: s.role, expires: s.expires };
+    return { role: s.role, expires: s.expires, ...this.#sessionRights(s.role) };
+  }
+  /* What a session may DO. Membership Architecture v2 section 5.
+   *
+   * Resolved HERE, at the point the session is read, rather than cached on the
+   * session row: a capability change has to take effect on the next request and
+   * not on the next login, or an administrator revoking `publish` from someone
+   * mid-incident would be revoking it in eight hours' time.
+   *
+   * THE FOUNDER HOLDS EVERYTHING, and that is 4.6 rather than convenience. The
+   * holders of ADMIN_TOKEN are the root of trust and every rule in the
+   * membership model sits beneath them. 4.6 also forbids any interface implying
+   * otherwise, so reporting them as capability-bounded would be a lie in the
+   * one place it matters.
+   *
+   * AN IN-APP ADMINISTRATOR HOLDS EVERY WORKING CAPABILITY. v2 section 5,
+   * confirmed 2026-07-26. Not read from their row, and deliberately: `memberCaps`
+   * refuses to touch an administrator's row at all, to protect 4.4, so if the row
+   * were consulted an administrator's powers would be frozen forever at whatever
+   * their invitation happened to set, and an administrator invited with the
+   * default `["contribute"]` could never publish and could never be granted
+   * permission to. A field nobody can edit is not a variable. Reading it as not
+   * consulted is the only reading with no trap in it.
+   *
+   * FAIL CLOSED everywhere else. An unrecognised role, a member row that is
+   * gone, or a member whose status is not active resolves to NO capabilities
+   * rather than to the member default. Revocation already deletes sessions; this
+   * is what covers the race between the delete and an in-flight request.
+   */
+  #sessionRights(role) {
+    const none = { capabilities: [], administer: false, member: null, handle: null, rootOfTrust: false };
+    if (role === _Store.ROOT_ADMIN)
+      return {
+        capabilities: [..._Store.CAPABILITIES],
+        administer: true,
+        member: _Store.ROOT_ADMIN,
+        handle: null,
+        rootOfTrust: true
+      };
+    if (typeof role !== "string" || !role.startsWith("member:")) return none;
+    const id = role.slice(7);
+    const m = this.#one(
+      `SELECT member_id, handle, role, status, capabilities FROM members WHERE member_id=?`,
+      id
+    );
+    if (!m || m.status !== "active") return { ...none, member: id };
+    const admin = m.role === "admin";
+    return {
+      capabilities: admin ? [..._Store.CAPABILITIES] : this.#capsOf(m),
+      administer: admin,
+      member: id,
+      handle: m.handle ?? null,
+      rootOfTrust: false
+    };
   }
   /* ---- members: each person their own credential, admin-invited ----
   
@@ -7858,6 +7961,25 @@ var OPS = {
      same fence that governs op=index governs this. */
   projection: { classes: ["admin", "member", "probe"], mutating: false },
   reproject: { classes: ["admin", "probe"], mutating: true },
+  /* Section 7 participation. These existed in the Durable Object's route map
+       and were absent HERE, so every real caller got "unknown op": 7.2, 7.4, 7.6,
+       7.7 and 7.8 were shipped and unreachable. Standing lesson 5 one level
+       worse, since they were not merely tested at the DO but reachable only
+       there. `by` is stamped server-side below from the session.
+  
+       A machine credential reaches these and is refused by the store, because
+       `class:member` is not a member id and matches no participation row. Fail
+       closed rather than fail open. */
+  projectinvite: { classes: ["admin", "member", "probe"], mutating: true },
+  projectjoin: { classes: ["admin", "member", "probe"], mutating: true },
+  projectleave: { classes: ["admin", "member", "probe"], mutating: true },
+  projectremove: { classes: ["admin", "member", "probe"], mutating: true },
+  projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
+  /* What the caller may DO, so an interface builds its controls from the plane
+     rather than from a copy that drifts, exactly as op=searchfields does for the
+     query language. Section 5's "absent from their interface" is implementable
+     only if the interface can ask. */
+  whoami: { classes: ["admin", "member", "probe"], mutating: false },
   /* S-10 steps 2 to 4: the retrieval surface. It reads the WORKING corpus, so it
      is member class and above and never public, exactly like op=index and
      op=projection. There is no public token class to grant it to and there must
@@ -7978,6 +8100,7 @@ var OPS = {
 };
 var RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
 var EDGE_ACTIONS = ["cite", "sever", "reinstate"];
+var PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove"];
 var SESSION_OPS = {
   member: /* @__PURE__ */ new Set([
     "promote",
@@ -7995,7 +8118,8 @@ var SESSION_OPS = {
     "select",
     "selectionrelease",
     ...RETRIEVAL_READS,
-    ...EDGE_ACTIONS
+    ...EDGE_ACTIONS,
+    ...PROJECT_ACTIONS
   ]),
   admin: /* @__PURE__ */ new Set([
     "promote",
@@ -8014,11 +8138,58 @@ var SESSION_OPS = {
     "selectionrelease",
     ...RETRIEVAL_READS,
     ...EDGE_ACTIONS,
+    ...PROJECT_ACTIONS,
     "memberadd",
     "memberset",
     "signeradd",
     "signerset"
   ])
+};
+var NEEDS = {
+  /* contribute: create and revise bundles in the working corpus (5). */
+  promote: "contribute",
+  lease: "contribute",
+  allocid: "contribute",
+  capture: "contribute",
+  // the PUT; its GET is a read and is exempted at the check
+  acquire: "contribute",
+  attest: "contribute",
+  monitor: "contribute",
+  cite: "contribute",
+  sever: "contribute",
+  reinstate: "contribute",
+  /* Dispositioning a knock decides what enters the working corpus, which is the
+     contribute surface even though the row it writes is an inbox row. Reading
+     the inbox is not gated; acting on it is. */
+  inboxresolve: "contribute",
+  /* publish: ratify. The capability governs the SURFACE and the registered
+     signing key governs the authority (5). Both exist because before this the
+     key was doing the capability's job: a member with no publish reached
+     op=ratify and was stopped only by not having a key. */
+  ratify: "publish",
+  /* create_projects is deliberately absent, because no op creates a project. A
+     project is created by promoting a bundle with no base whose object_type is
+     `project`, so the check lives at that SHAPE, once, in the promote branch. */
+  /* No capability, and the reason, so a later reader does not read the absence
+     as an oversight. A selection is a server-side snapshot of what the caller
+     themselves selected; it writes nothing about the corpus, and a member with
+     view rights only still needs to build one in order to read (7.5). */
+  select: null,
+  selectionrelease: null,
+  /* The roster ops are governed by `administer`, which is not a working
+     capability and moves only by the Section 4 process. What bounds them is
+     SESSION_OPS.admin above, not section 5. */
+  /* Participation is governed by section 7, not section 5, and the store
+     enforces it: only an owner invites and removes (7.2, 7.7 as REVERSED in v2),
+     and `by` is stamped server-side so the store judges the real caller. */
+  projectinvite: null,
+  projectjoin: null,
+  projectleave: null,
+  projectremove: null,
+  memberadd: null,
+  memberset: null,
+  signeradd: null,
+  signerset: null
 };
 var KNOCK = {
   windowMs: 10 * 60 * 1e3,
@@ -8198,7 +8369,7 @@ var index_default = {
     }
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;
-    let sessMember = null;
+    let sessMember = null, sessRights = null, sessCaps = null;
     if (!cls) {
       const t = url.searchParams.get("token");
       if (t && /^[0-9a-f]{64}$/.test(t)) {
@@ -8211,15 +8382,42 @@ var index_default = {
             return json({ ok: false, error: "this operation requires a machine credential, not a signed-in session", op }, 403);
           cls = kind;
           sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
+          sessRights = sess;
           viaSession = true;
         }
       }
     }
     if (!cls) return json({ ok: false, error: "unauthenticated" }, 401);
     if (!spec.classes.includes(cls)) return json({ ok: false, error: "forbidden for token class", op, cls }, 403);
+    if (viaSession) {
+      sessCaps = new Set(sessRights.capabilities || []);
+      const needs = NEEDS[op];
+      if (needs && !(op === "capture" && req.method === "GET") && !sessCaps.has(needs))
+        return json({
+          ok: false,
+          reason: "NOT_CAPABLE",
+          op,
+          needs,
+          held: [...sessCaps].sort(),
+          detail: `this account does not hold the ${needs} capability. Capabilities are set by an administrator, so ask one to grant it rather than looking for another route.`
+        }, 403);
+    }
     const scope = scopeFor(cls, url);
     if (scope.error) return json({ ok: false, error: scope.error, tokenClass: cls }, 403);
     const storeName = scope.name;
+    if (op === "whoami") {
+      return json({ ok: true, result: {
+        tokenClass: cls,
+        session: viaSession,
+        member: viaSession ? sessMember : null,
+        handle: viaSession ? sessRights.handle ?? null : null,
+        administer: viaSession ? !!sessRights.administer : false,
+        rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
+        capabilities: viaSession ? [...sessCaps].sort() : null,
+        vocabulary: Store.CAPABILITIES,
+        detail: viaSession ? "capabilities are set by an administrator and gate what this account may DO, not what it may see" : "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead"
+      }, store: storeName, tokenClass: cls }, 200);
+    }
     if (op === "registeraudit") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const r = (await (await st.fetch("http://do/registeraudit")).json()).result;
@@ -8912,11 +9110,26 @@ var index_default = {
       inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `class:${cls}`);
     if (EDGE_ACTIONS.includes(op))
       inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
+    if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants")
+      inner.searchParams.set("by", viaSession ? sessMember : `class:${cls}`);
     let passBody = req.method === "POST" ? await req.text() : void 0;
-    if (viaSession && op === "promote" && passBody) {
+    if (op === "promote" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.author = sessMember;
+        delete b.ownerMemberId;
+        if (viaSession) b.author = sessMember;
+        if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
+          if (!sessCaps.has("create_projects"))
+            return json({
+              ok: false,
+              reason: "NOT_CAPABLE",
+              op,
+              needs: "create_projects",
+              held: [...sessCaps].sort(),
+              detail: "creating a project needs the create-projects capability. This account may still contribute to projects it has been invited to, if it holds contribute."
+            }, 403);
+          b.ownerMemberId = sessMember;
+        }
         passBody = JSON.stringify(b);
       } catch {
       }

@@ -1830,8 +1830,34 @@ export class Store extends DurableObject {
          index or nothing does. */
       this.#writeText(bundleId, files);
 
+      /* 7.1: the creator of a project is its sole initial owner, written in the
+         SAME transaction as the project itself so a project cannot exist
+         unowned even for an instant. Two round trips from the control plane
+         would leave an ownerless project whenever the second one failed.
+
+         `ownerMemberId` is stamped by the control plane from the authenticated
+         SESSION and any caller-supplied value is deleted there first, exactly as
+         `author` is: it is the field that decides who owns a project, so a
+         caller naming it would be a caller granting themselves, or someone else,
+         ownership of a project. A machine credential creates no owner at all,
+         because there is no member behind it and inventing one would put a name
+         on the record that nobody holds.
+
+         Creation only. A revision to an existing project must not silently
+         reassign it, which is why this hangs off `!cur`. */
+      const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
+      let owner = null;
+      if (!cur && ownerMemberId && meta.object_type === "project") {
+        const ts = new Date().toISOString();
+        this.sql.exec(
+          `INSERT OR REPLACE INTO project_participants
+             (project_id, member_id, state, owner, invited_by, comment, created, updated)
+           VALUES (?,?,'joined',1,NULL,NULL,?,?)`, bundleId, ownerMemberId, ts, ts);
+        owner = ownerMemberId;
+      }
+
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
-      return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version };
+      return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner };
     });
   }
 
@@ -2012,7 +2038,51 @@ export class Store extends DurableObject {
     const s = this.#one(`SELECT role, expires FROM sessions WHERE token=?`, token);
     if (!s) return null;
     if (s.expires < Date.now()) { this.sql.exec(`DELETE FROM sessions WHERE token=?`, token); return null; }
-    return { role: s.role, expires: s.expires };
+    return { role: s.role, expires: s.expires, ...this.#sessionRights(s.role) };
+  }
+
+  /* What a session may DO. Membership Architecture v2 section 5.
+   *
+   * Resolved HERE, at the point the session is read, rather than cached on the
+   * session row: a capability change has to take effect on the next request and
+   * not on the next login, or an administrator revoking `publish` from someone
+   * mid-incident would be revoking it in eight hours' time.
+   *
+   * THE FOUNDER HOLDS EVERYTHING, and that is 4.6 rather than convenience. The
+   * holders of ADMIN_TOKEN are the root of trust and every rule in the
+   * membership model sits beneath them. 4.6 also forbids any interface implying
+   * otherwise, so reporting them as capability-bounded would be a lie in the
+   * one place it matters.
+   *
+   * AN IN-APP ADMINISTRATOR HOLDS EVERY WORKING CAPABILITY. v2 section 5,
+   * confirmed 2026-07-26. Not read from their row, and deliberately: `memberCaps`
+   * refuses to touch an administrator's row at all, to protect 4.4, so if the row
+   * were consulted an administrator's powers would be frozen forever at whatever
+   * their invitation happened to set, and an administrator invited with the
+   * default `["contribute"]` could never publish and could never be granted
+   * permission to. A field nobody can edit is not a variable. Reading it as not
+   * consulted is the only reading with no trap in it.
+   *
+   * FAIL CLOSED everywhere else. An unrecognised role, a member row that is
+   * gone, or a member whose status is not active resolves to NO capabilities
+   * rather than to the member default. Revocation already deletes sessions; this
+   * is what covers the race between the delete and an in-flight request.
+   */
+  #sessionRights(role) {
+    const none = { capabilities: [], administer: false, member: null, handle: null, rootOfTrust: false };
+    if (role === Store.ROOT_ADMIN)
+      return { capabilities: [...Store.CAPABILITIES], administer: true,
+               member: Store.ROOT_ADMIN, handle: null, rootOfTrust: true };
+    if (typeof role !== "string" || !role.startsWith("member:")) return none;
+    const id = role.slice(7);
+    const m = this.#one(
+      `SELECT member_id, handle, role, status, capabilities FROM members WHERE member_id=?`, id);
+    if (!m || m.status !== "active") return { ...none, member: id };
+    const admin = m.role === "admin";
+    return {
+      capabilities: admin ? [...Store.CAPABILITIES] : this.#capsOf(m),
+      administer: admin, member: id, handle: m.handle ?? null, rootOfTrust: false,
+    };
   }
 
   /* ---- members: each person their own credential, admin-invited ----
