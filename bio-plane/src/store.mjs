@@ -1144,6 +1144,151 @@ export class Store extends DurableObject {
       from: ["severed"], to: "confirmed", verb: "Reinstated", resultKey: "reinstated" });
   }
 
+  /* S-11 step 3: bulk disposition of Problems, weight `refuse`.
+   *
+   * The first selection-backed action to move an OBJECT's state rather than an
+   * edge's. Steps 1 and 2 edited a Project's `references` block; this edits
+   * `current_state` on each selected Problem, which is heavier: an edge is a
+   * claim about a relationship, and a state is a claim about where the group's
+   * thinking has got to.
+   *
+   * WEIGHT `refuse`, hard-coded exactly as `cite` hard-codes `report`. The whole
+   * set moves or none of it does, because a half-run bulk state change leaves
+   * the operator unable to know which half ran.
+   *
+   * ONLY `deferred` AND `dismissed`. `elevated` is a legal Problem state and is
+   * deliberately not reachable here: elevating a Problem into a Project writes
+   * an `elevated_into` edge and a Project bundle, and doing it as a bulk state
+   * flip would produce Problems claiming to be elevated into nothing. Refused by
+   * name rather than by omission, so the operator learns why.
+   *
+   * THE REASON IS NOT POLITENESS. C-2.8 requires a non-empty
+   * `disposition_reason` for both target states, so a disposition without one
+   * produces a bundle the catalog rejects. Refusing here is the difference
+   * between refusing a write and writing something that fails its own checks. */
+  dispose({ handle, to, reason = "", viewer = null, owner = null, author = null } = {}) {
+    const DISPOSITIONS = ["deferred", "dismissed"];
+    const PROBLEM_STATES = ["surfaced", "elevated", "deferred", "dismissed"];
+    /* Legal transitions, from the catalog's own table rather than a second copy
+       of it. deferred->deferred is absent, which is what makes a stale view a
+       refusal rather than a silent no-op. */
+    const LEGAL = { surfaced: ["elevated", "deferred", "dismissed"],
+                    deferred: ["surfaced", "elevated", "dismissed"],
+                    dismissed: ["surfaced", "elevated", "deferred"],
+                    elevated: [] };
+
+    if (!PROBLEM_STATES.includes(to))
+      return { ok: false, reason: "BAD_TARGET_STATE", to, legal: PROBLEM_STATES,
+               detail: `a Problem's state is one of ${PROBLEM_STATES.join(", ")}` };
+    if (!DISPOSITIONS.includes(to))
+      return { ok: false, reason: "NOT_A_DISPOSITION", to, dispositions: DISPOSITIONS,
+               detail: "elevating a Problem writes an elevated_into edge and a Project bundle, so it is not "
+                     + "a bulk state flip. Only deferring and dismissing are dispositions." };
+
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON",
+               detail: "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a "
+                     + "disposition with no reason would produce a bundle the catalog rejects." };
+    if (why.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON",
+               detail: `a reason is at most ${Store.EDGE_REASON_MAX} characters and cannot contain a quote, `
+                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+
+    const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
+    if (!sel.ok) return sel;
+    if (!sel.members.length)
+      return { ok: false, reason: "EMPTY_SELECTION", handle, drift: sel.drift,
+               detail: "this selection resolves to no members, so there is nothing to dispose" };
+
+    /* Refused WHOLE, offenders named, never narrowed to the valid subset. The
+       operator picked a set; disposing part of it decides something they did
+       not. Same rule cite applies to a selection carrying a non-Information. */
+    const offenders = [], illegal = [];
+    for (const id of sel.members) {
+      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+      if (!b || b.object_type !== "problem") { offenders.push(id); continue; }
+      if (!(LEGAL[b.current_state] || []).includes(to)) illegal.push({ id, from: b.current_state });
+    }
+    if (offenders.length)
+      return { ok: false, reason: "NOT_PROBLEMS", offenders: offenders.sort(),
+               detail: "disposition moves a Problem's state, and this selection carries something else. "
+                     + "The set is refused whole rather than narrowed to the Problems in it." };
+    if (illegal.length)
+      return { ok: false, reason: "ILLEGAL_TRANSITION", to, offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
+               detail: "these are not legal moves in the catalog's state table. A move to the state "
+                     + "something is already in usually means the view was taken before someone else's "
+                     + "disposition, so it is refused rather than treated as a no-op." };
+
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const disposed = [];
+    for (const id of sel.members) {
+      const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+      const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
+      if (!liveMd || liveMd.content === null)
+        return { ok: false, reason: "NO_DOCUMENT", bundleId: id,
+                 detail: "this Problem has no readable bundle.md, so its state cannot be moved" };
+      let text = liveMd.content;
+      /* C-4.2: prior_state obliges a state_history ENTRY. Naming where a state
+         came from without recording the transition leaves the document asserting
+         a history it does not carry, which the catalog rejects and which is
+         worse than not naming it: the entry is the record, prior_state is only
+         a pointer at it. Five fields, per the catalog: timestamp, from_state,
+         to_state, blurb, author. */
+      const withHistory = Store.#appendStateHistory(text, {
+        timestamp: when, from_state: cur.current_state, to_state: to,
+        blurb: why, author: author || "member" });
+      if (!withHistory)
+        return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id, disposedSoFar: disposed,
+                 detail: "this document's state_history block is not in a shape this grammar can extend in "
+                       + "place, and a disposition that recorded no transition would leave prior_state "
+                       + "pointing at a history the document does not carry (C-4.2)" };
+      text = withHistory;
+      text = Store.#setScalar(text, "prior_state", cur.current_state);
+      text = Store.#setScalar(text, "current_state", to);
+      text = Store.#setScalar(text, "disposition_reason", `"${why}"`);
+      text = Store.#setScalar(text, "last_updated", `"${when}"`);
+      /* C-13.2: last_updated moving requires a Session Log entry. What the
+         record is FOR is saying who did what and why, and a state change
+         appearing with no account of it is an unaccountable change. */
+      const entry = `### Session ${when} | ${to === "deferred" ? "Deferred" : "Dismissed"} | ${author || "member"}\n`
+                  + `Trigger: selection ${handle}\n`
+                  + `Changes: state ${cur.current_state} to ${to}. Reason: ${why}.\n`;
+      const at = text.indexOf("## Session Log");
+      if (at < 0) text += "\n## Session Log\n\n" + entry;
+      else {
+        const nxt = text.indexOf("\n## ", at + 1);
+        const cutAt = nxt === -1 ? text.length : nxt + 1;
+        text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
+      }
+
+      const carried = [];
+      for (const r of this.sql.exec(
+        `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, id))
+        carried.push(r.content !== null
+          ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+          : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+      const bytes = new TextEncoder().encode(text);
+      const parsed = parseFrontmatter(text);
+      const fm = parsed.data || {};
+      const promoted = this.promote({
+        bundleId: id, base: cur.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+        author: author || "member",
+        files: [{ path: "bundle.md", text, bytes: bytes.length,
+                  sha256: createSha256().update(bytes).hex() }, ...carried],
+        meta: { object_type: "problem", group: fm.group || "believe-in-oakland", title: fm.title,
+                current_state: to, prior_state: cur.current_state,
+                created: fm.created, last_updated: when,
+                criticality: fm.criticality ?? null, classification: fm.classification ?? null },
+      });
+      if (!promoted.ok) return { ...promoted, bundleId: id, disposedSoFar: disposed };
+      disposed.push(id);
+    }
+    return { ok: true, to, reason: why, handle, disposed: disposed.sort(),
+             weight: "refuse", drift: sel.drift };
+  }
+
   /* Rewrite the `status` and `note` of specific `cites` entries in place,
      touching nothing else. Walks the references block entry by entry, tracking
      which target the current entry belongs to, and edits only the two lines of
@@ -1429,6 +1574,35 @@ export class Store extends DurableObject {
      and the reason is that this repo has no frontmatter SERIALIZER, only a
      parser. Re-emitting a parsed document would reorder keys, drop comments and
      renormalise quoting across the whole file to change one field. */
+  /* Append one entry to the `state_history` block, handling the inline-empty and
+     populated shapes the corpus actually contains, exactly as #spliceReferences
+     does for references. Returns null if the block is in a shape this restricted
+     grammar cannot extend, so the caller refuses rather than guesses. */
+  static #appendStateHistory(text, e) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const block = [`  - timestamp: "${e.timestamp}"`,
+                   `    from_state: ${e.from_state}`,
+                   `    to_state: ${e.to_state}`,
+                   `    blurb: "${e.blurb}"`,
+                   `    author: ${e.author}`];
+    let at = -1;
+    for (let i = 1; i < end; i++) if (/^state_history:/.test(lines[i])) { at = i; break; }
+    if (at === -1) return [...lines.slice(0, end), "state_history:", ...block, ...lines.slice(end)].join("\n");
+    const rest = lines[at].slice("state_history:".length).trim();
+    if (rest === "[]") return [...lines.slice(0, at), "state_history:", ...block, ...lines.slice(at + 1)].join("\n");
+    if (rest !== "") return null;
+    /* Populated block: find its end and append, so entries stay chronological. */
+    let last = at;
+    for (let i = at + 1; i < end; i++) {
+      if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
+      else break;
+    }
+    return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+  }
+
   static #setScalar(text, key, value) {
     const lines = text.split("\n");
     const end = lines.indexOf("---", 1);
@@ -3610,6 +3784,10 @@ export class Store extends DurableObject {
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
           reason: url.searchParams.get("reason") }),
         projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId") }),
+        dispose: () => this.dispose({ handle: url.searchParams.get("handle"),
+          to: url.searchParams.get("to"), reason: url.searchParams.get("reason"),
+          viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),
+          author: url.searchParams.get("author") }),
         expertisedeclare: () => this.expertiseDeclare(body || {}),
         expertiseconfirm: () => this.expertiseConfirm(body || {}),
         expertiselist: () => this.expertiseList({ memberId: url.searchParams.get("memberId") }),

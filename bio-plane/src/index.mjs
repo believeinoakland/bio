@@ -154,6 +154,9 @@ const OPS = {
      every other reader of the working corpus, and there is no public class to
      grant it to. */
   cite:            { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* S-11 step 3: bulk disposition of Problems, weight `refuse`. Contribute-gated
+     like every other corpus write. */
+  dispose:         { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -257,6 +260,11 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
    rather than listed twice, because the member and admin session lists drifting
    apart is exactly the class of defect this repository keeps finding. */
 const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
+/* S-11 step 3. The first selection-backed action to move an OBJECT's state
+   rather than an edge's, so it takes the same server-side viewer, owner and
+   author stamps the edge actions take: a caller that could name the viewer
+   could dispose Problems it cannot see. */
+const STATE_ACTIONS = ["dispose"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue"];
@@ -268,11 +276,12 @@ const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS]),
+                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
+                   ...EXPERTISE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS,
-                   "memberadd", "memberset", "signeradd", "signerset"]),
+                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
+                   ...EXPERTISE_ACTIONS, "memberadd", "memberset", "signeradd", "signerset"]),
 };
 
 /* ---- capabilities at the op layer. Membership Architecture v2 section 5 ----
@@ -308,6 +317,7 @@ const NEEDS = {
   cite:             "contribute",
   sever:            "contribute",
   reinstate:        "contribute",
+  dispose:          "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */
@@ -1323,21 +1333,22 @@ export default {
        the only place the identity comes from. A viewer the compiler does not
        recognise compiles to a deny predicate, so the failure mode of a missing
        stamp is an empty result rather than an unfiltered one. */
-    if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)) {
+    if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
+        || STATE_ACTIONS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
     /* Ownership of a selection is the same server-side stamp. A selection is
        readable only by the credential that made it, and "only by the credential"
        is worth nothing if the caller names the credential. */
     if (op === "select" || op === "selection" || op === "selectionlist" ||
-        op === "selectionrelease" || EDGE_ACTIONS.includes(op))
+        op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
       inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `class:${cls}`);
     /* Who cited is part of the record, and citing writes a Session Log entry
        carrying the name. Stamped like every other authorship in this file: a
        browser cannot write history as someone else, and a machine credential
        says plainly that it was a machine rather than borrowing a person's name.
        A caller-supplied `author` is overwritten, not honoured. */
-    if (EDGE_ACTIONS.includes(op))
+    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
       inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
