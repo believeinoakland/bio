@@ -175,6 +175,53 @@ t("a machine credential holds NO capabilities, reported as null rather than empt
   whoMachine.result?.capabilities, null);
 t("and is not a session", whoMachine.result?.session, false);
 
+console.log("\n--- 1.3: declared by the member, confirmed by an administrator, gating nothing ---");
+{
+  /* The member's own statement. Addressed to themselves and to nobody else,
+     because the control plane stamps memberId from the session. */
+  t("a member declares what they hold",
+    (await POST(`op=expertisedeclare&${SAM}`, { label: "CPA" })).result?.state, "declared");
+  t("and it starts unconfirmed",
+    (await GET(`op=expertiselist&memberId=sam&${SAM}`)).result?.expertise?.[0]?.confirmed, false);
+  t("a caller cannot declare on someone ELSE's behalf: the stamp overwrites it",
+    (await POST(`op=expertisedeclare&${SAM}`, { memberId: "vera", label: "Lawyer" })).result?.memberId, "sam");
+  t("so vera has none", (await GET(`op=expertiselist&memberId=vera&${SAM}`)).result?.expertise?.length, 0);
+
+  t("an ordinary member cannot confirm, not even their own",
+    (await POST(`op=expertiseconfirm&${SAM}`, { memberId: "sam", label: "CPA" })).result?.reason, "ADMIN_ONLY");
+  /* An administrator cannot INTRODUCE a label. Confirming something never
+     declared would make this an assignment rather than a confirmation, which is
+     the whole distinction 1.3 rests on. */
+  t("an administrator cannot confirm what was never declared",
+    (await POST(`op=expertiseconfirm&${RUTH}`, { memberId: "sam", label: "Neurosurgeon" })).result?.reason,
+    "NOT_DECLARED");
+  t("but can confirm what was", (await POST(`op=expertiseconfirm&${RUTH}`, { memberId: "sam", label: "CPA" })).result?.confirmed, true);
+  t("recorded against the administrator who vouched",
+    (await GET(`op=expertiselist&memberId=sam&${SAM}`)).result?.expertise?.[0]?.by, "ruth");
+
+  /* 4.9: an administrator may confirm for another administrator. Vouching for
+     someone is the same act whoever they are. */
+  await POST(`op=expertisedeclare&${GUS}`, { label: "Barber" });
+  t("an administrator confirms for another administrator",
+    (await POST(`op=expertiseconfirm&${RUTH}`, { memberId: "gus", label: "Barber" })).result?.confirmed, true);
+
+  /* Withdrawal SUPERSEDES rather than overwrites. */
+  t("withdrawal is recorded",
+    (await POST(`op=expertiseconfirm&${RUTH}`, { memberId: "sam", label: "CPA", withdraw: true })).result?.state,
+    "withdrawn");
+  const hist = (await GET(`op=expertiselist&memberId=sam&${SAM}`)).result?.expertise?.[0];
+  t("the current state is withdrawn", hist?.confirmed, false);
+  t("and the earlier confirmation is STILL READABLE, not overwritten",
+    hist?.history?.map((h) => h.event), ["declared", "confirmed", "withdrawn"]);
+
+  /* THE LOAD-BEARING NEGATIVE. An unconfirmed or withdrawn entry must cost its
+     holder nothing at all: 1.3 says it informs humans and gates nothing. */
+  t("sam's capabilities are untouched by any of that",
+    (await GET(`op=whoami&${SAM}`)).result?.capabilities, ["contribute"]);
+  t("and he can still promote exactly as before",
+    (await POST(`op=promote&${SAM}`, bundle("INFO-2026-9010-sam"))).result?.ok, true);
+}
+
 console.log("\n--- structural: no mutating session op may go unmentioned ---");
 /* Standing lesson 2. A later addition must not pass by not being named, so the
    table is read out of the source and every mutating op a session can reach

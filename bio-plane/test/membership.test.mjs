@@ -275,6 +275,46 @@ console.log("\n--- negative controls ---");
     (await call("/adminremove", { memberId: "admin", by: "second", reason: "x" })).reason, "ROOT_OF_TRUST");
 }
 
+console.log("\n--- 4.9: reactivation must not restore administrator status ---");
+/* A 4.7 removal sets status='revoked' and leaves role='admin' on the row, so
+   before this rule any administrator could call memberset(active) and put an
+   ejected administrator straight back, role intact. That undoes a group vote
+   with one call, which is exactly what 4.7's consensus-on-addition exists to
+   prevent. v2 4.9: reactivating someone as an ordinary MEMBER is a single
+   administrator's call; restoring their administrator status is not. */
+{
+  /* Discover the administrator set rather than guessing it. An earlier version
+     hardcoded the endorsers and silently built no administrator at all, so the
+     assertions ran against a member who did not exist. The rule was working; the
+     fixture was not, which is a note this suite already carries once. */
+  const admins = async () => ["admin", ...(await call("/memberlist")).members
+    .filter((m) => m.role === "admin" && m.status === "active").map((m) => m.member_id)];
+  for (const id of ["ax", "bx", "cx"]) {
+    const a = await call("/memberadd", { memberId: id, cover: `cover ${id}`, role: "admin" });
+    let invite = a.invite;
+    if (!invite) for (const v of await admins()) {
+      const e = await call("/adminendorse", { memberId: id, by: v });
+      if (e.invite) invite = e.invite;
+    }
+    t(`${id} received an invitation`, typeof invite, "string");
+    await call("/enroll", { invite, handle: id, password: `${id}-passphrase-1` });
+  }
+  const before = (await call("/memberlist")).members.find((m) => m.member_id === "cx");
+  t("cx is an active administrator", [before.role, before.status], ["admin", "active"]);
+  for (const v of (await admins()).filter((a) => a !== "cx"))
+    await call("/adminremove", { memberId: "cx", by: v, reason: "test" });
+  const gone = (await call("/memberlist")).members.find((m) => m.member_id === "cx");
+  t("the vote revokes them", gone.status, "revoked");
+  t("and the row still SAYS admin, which is the trap", gone.role, "admin");
+
+  const back = await call("/memberset", { memberId: "cx", status: "active" });
+  t("reactivation succeeds, because a person is not erased by a vote", back.ok, true);
+  const now = (await call("/memberlist")).members.find((m) => m.member_id === "cx");
+  t("they are active again", now.status, "active");
+  t("but as an ORDINARY MEMBER, not an administrator", now.role, "member");
+  t("and the response says so rather than leaving it to be discovered", back.demoted, true);
+}
+
 await mf.dispose();
 console.log(`\nmembership: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

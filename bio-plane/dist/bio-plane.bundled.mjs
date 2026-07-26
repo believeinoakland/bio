@@ -5052,6 +5052,17 @@ var Store = class _Store extends DurableObject {
     );
     this.sql.exec(`CREATE INDEX IF NOT EXISTS pp_member ON project_participants(member_id)`);
     this.sql.exec(
+      `CREATE TABLE IF NOT EXISTS member_expertise (
+         seq       INTEGER PRIMARY KEY AUTOINCREMENT,
+         member_id TEXT NOT NULL,
+         label     TEXT NOT NULL,
+         event     TEXT NOT NULL,
+         actor     TEXT NOT NULL,
+         created   TEXT NOT NULL
+       )`
+    );
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS mx_member ON member_expertise(member_id, label)`);
+    this.sql.exec(
       `CREATE TABLE IF NOT EXISTS project_owner_votes (
          project_id TEXT NOT NULL,
          kind       TEXT NOT NULL,
@@ -7521,6 +7532,122 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   static projectNameKey(title) {
     return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   }
+  /* ---- section 1.3: declared expertise, confirmed licenses ----
+   *
+   * TWO CLAIMS BY TWO PEOPLE, kept apart for the same reason the intake doctrine
+   * keeps who ISSUED a document separate from how faithfully it was CAPTURED.
+   * The member says what they hold. An administrator says whether the group has
+   * satisfied itself that they hold it. Neither stands in for the other.
+   *
+   * WRITE AUTHORITY IS SPLIT BY COLUMN. A member writes `label` and never the
+   * confirmation events; an administrator writes the confirmation events and can
+   * never introduce a label the member did not declare. That is what keeps
+   * confirmation a confirmation rather than an assignment.
+   *
+   * AND IT GATES NOTHING. An unconfirmed entry costs its holder no capability,
+   * no visibility and no access. It appears in no session, is consulted by no
+   * op, and must never enter the enforcement path. Section 5 in v2: it informs
+   * humans; it gates nothing, confirmed or not. */
+  static #normLabel(label) {
+    return String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
+  }
+  #expertiseState(memberId, label) {
+    const r = this.#one(
+      `SELECT event, actor, created FROM member_expertise WHERE member_id=? AND label=?
+       ORDER BY seq DESC LIMIT 1`,
+      memberId,
+      label
+    );
+    return r ? r.event : null;
+  }
+  /** The member's own statement about themselves. */
+  expertiseDeclare({ memberId, label } = {}) {
+    const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
+    const lab = _Store.#normLabel(label);
+    if (!lab) return { ok: false, reason: "NO_LABEL", detail: "a declaration needs a label, such as 'CPA'" };
+    const cur = this.#expertiseState(memberId, lab);
+    if (cur === "declared" || cur === "confirmed")
+      return { ok: false, reason: "ALREADY_DECLARED", label: lab, state: cur };
+    this.sql.exec(
+      `INSERT INTO member_expertise (member_id,label,event,actor,created) VALUES (?,?,'declared',?,?)`,
+      memberId,
+      lab,
+      memberId,
+      (/* @__PURE__ */ new Date()).toISOString()
+    );
+    return {
+      ok: true,
+      memberId,
+      label: lab,
+      state: "declared",
+      confirmed: false,
+      detail: "declared and unconfirmed, which costs nothing: an unconfirmed entry carries the same capabilities, visibility and access as a confirmed one"
+    };
+  }
+  /** An administrator vouching, INCLUDING for another administrator (4.9). */
+  expertiseConfirm({ memberId, label, by, withdraw = false } = {}) {
+    if (!this.#isAdminMember(by))
+      return {
+        ok: false,
+        reason: "ADMIN_ONLY",
+        detail: "an administrator confirms a declared license, and may do so for another administrator: vouching for someone is the same act whoever they are"
+      };
+    const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    const lab = _Store.#normLabel(label);
+    const cur = this.#expertiseState(memberId, lab);
+    if (cur === null)
+      return {
+        ok: false,
+        reason: "NOT_DECLARED",
+        label: lab,
+        detail: "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation."
+      };
+    if (!withdraw && cur === "confirmed") return { ok: false, reason: "ALREADY_CONFIRMED", label: lab };
+    if (withdraw && cur !== "confirmed") return { ok: false, reason: "NOT_CONFIRMED", label: lab, state: cur };
+    this.sql.exec(
+      `INSERT INTO member_expertise (member_id,label,event,actor,created) VALUES (?,?,?,?,?)`,
+      memberId,
+      lab,
+      withdraw ? "withdrawn" : "confirmed",
+      by,
+      (/* @__PURE__ */ new Date()).toISOString()
+    );
+    return {
+      ok: true,
+      memberId,
+      label: lab,
+      state: withdraw ? "withdrawn" : "confirmed",
+      confirmed: !withdraw,
+      by
+    };
+  }
+  /** The roster view: current state per label, with the history behind it. */
+  expertiseList({ memberId } = {}) {
+    const rows = this.#rows(
+      `SELECT seq, label, event, actor, created FROM member_expertise WHERE member_id=? ORDER BY seq`,
+      memberId
+    );
+    const cur = /* @__PURE__ */ new Map();
+    for (const r of rows) cur.set(r.label, r);
+    return {
+      ok: true,
+      memberId,
+      expertise: [...cur.values()].map((r) => ({
+        label: r.label,
+        state: r.event,
+        confirmed: r.event === "confirmed",
+        by: r.actor,
+        at: r.created,
+        /* Both are surfaced so an interface can show WHICH of the two claims it
+           is looking at, which is the entire function of the distinction. */
+        history: rows.filter((h) => h.label === r.label).map((h) => ({ event: h.event, actor: h.actor, at: h.created }))
+      })).sort((a, b) => a.label.localeCompare(b.label)),
+      gates: "nothing"
+    };
+  }
   /** 7.8: every participant sees the handles of all other participants, and an
    *  administrator sees all of them. A non-participant sees nothing, and is told
    *  the same thing whether the project exists or not, because 7.9 says an
@@ -7939,17 +8066,25 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         reason: "ADMIN_REQUIRES_VOTE",
         detail: "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally."
       };
-    this.sql.exec(
-      `UPDATE members SET status=?, updated=? WHERE member_id=?`,
-      status,
-      (/* @__PURE__ */ new Date()).toISOString(),
-      memberId
-    );
+    const demoted = status === "active" && m.role === "admin" && m.status !== "active";
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    if (demoted)
+      this.sql.exec(
+        `UPDATE members SET status=?, role='member', updated=? WHERE member_id=?`,
+        status,
+        now,
+        memberId
+      );
+    else
+      this.sql.exec(`UPDATE members SET status=?, updated=? WHERE member_id=?`, status, now, memberId);
     if (status === "revoked") {
       this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
       this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
     }
-    return { ok: true, memberId, status };
+    return { ok: true, memberId, status, ...demoted ? {
+      demoted: true,
+      detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: the group voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other."
+    } : {} };
   }
   /* ---- signers: the registered-key projection ---- */
   signerAdd({ keyB64, memberId, comment } = {}) {
@@ -8289,6 +8424,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           reason: url.searchParams.get("reason")
         }),
         projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId") }),
+        expertisedeclare: () => this.expertiseDeclare(body || {}),
+        expertiseconfirm: () => this.expertiseConfirm(body || {}),
+        expertiselist: () => this.expertiseList({ memberId: url.searchParams.get("memberId") }),
         projectfork: () => this.forkProject({
           projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"),
@@ -8386,6 +8524,14 @@ var OPS = {
      tell a group what a change would take BEFORE they start one. op=adminarith
      is the same thing for section 4.7, and the two differ at n=2 on purpose. */
   projectownerarith: { classes: ["admin", "member", "probe"], mutating: false },
+  /* Section 1.3. A member declares their own; an administrator confirms. Both
+     stamped server-side below, because a declaration a caller can address to
+     someone else is not a declaration, and a confirmation a caller can sign as
+     an administrator is not a confirmation. GATES NOTHING: these appear in no
+     capability check and no session. */
+  expertisedeclare: { classes: ["admin", "member", "probe"], mutating: true },
+  expertiseconfirm: { classes: ["admin", "member", "probe"], mutating: true },
+  expertiselist: { classes: ["admin", "member", "probe"], mutating: false },
   /* What the caller may DO, so an interface builds its controls from the plane
      rather than from a copy that drifts, exactly as op=searchfields does for the
      query language. Section 5's "absent from their interface" is implementable
@@ -8520,6 +8666,7 @@ var PROJECT_ACTIONS = [
   "projectownerremove",
   "projectfork"
 ];
+var EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
 var SESSION_OPS = {
   member: /* @__PURE__ */ new Set([
     "promote",
@@ -8538,7 +8685,8 @@ var SESSION_OPS = {
     "selectionrelease",
     ...RETRIEVAL_READS,
     ...EDGE_ACTIONS,
-    ...PROJECT_ACTIONS
+    ...PROJECT_ACTIONS,
+    ...EXPERTISE_ACTIONS
   ]),
   admin: /* @__PURE__ */ new Set([
     "promote",
@@ -8558,6 +8706,7 @@ var SESSION_OPS = {
     ...RETRIEVAL_READS,
     ...EDGE_ACTIONS,
     ...PROJECT_ACTIONS,
+    ...EXPERTISE_ACTIONS,
     "memberadd",
     "memberset",
     "signeradd",
@@ -8611,6 +8760,12 @@ var NEEDS = {
      creates a project. Without this any participant creates projects they were
      not trusted to create, which is create_projects defeated by a button. */
   projectfork: "create_projects",
+  /* No capability. Declaring what you hold is not a corpus write, and
+     confirming one is an administrator act governed by the class ACL. Neither
+     is section 5's business, and declared expertise gates nothing in the other
+     direction either. */
+  expertisedeclare: null,
+  expertiseconfirm: null,
   memberadd: null,
   memberset: null,
   signeradd: null,
@@ -9559,6 +9714,15 @@ var index_default = {
             }, 403);
           b.ownerMemberId = sessMember;
         }
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if ((op === "expertisedeclare" || op === "expertiseconfirm") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `class:${cls}`;
+        else b.by = viaSession ? sessMember : `class:${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }

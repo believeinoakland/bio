@@ -87,6 +87,14 @@ const OPS = {
      tell a group what a change would take BEFORE they start one. op=adminarith
      is the same thing for section 4.7, and the two differ at n=2 on purpose. */
   projectownerarith:   { classes: ["admin", "member", "probe"], mutating: false },
+  /* Section 1.3. A member declares their own; an administrator confirms. Both
+     stamped server-side below, because a declaration a caller can address to
+     someone else is not a declaration, and a confirmation a caller can sign as
+     an administrator is not a confirmation. GATES NOTHING: these appear in no
+     capability check and no session. */
+  expertisedeclare:    { classes: ["admin", "member", "probe"], mutating: true  },
+  expertiseconfirm:    { classes: ["admin", "member", "probe"], mutating: true  },
+  expertiselist:       { classes: ["admin", "member", "probe"], mutating: false },
   /* What the caller may DO, so an interface builds its controls from the plane
      rather than from a copy that drifts, exactly as op=searchfields does for the
      query language. Section 5's "absent from their interface" is implementable
@@ -232,13 +240,18 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
 const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork"];
+/* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
+   member reaching confirm is refused by the store with ADMIN_ONLY, which says
+   what is wrong. Putting confirm in the admin set alone would answer "requires a
+   machine credential", which is true of neither the caller nor the rule. */
+const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...PROJECT_ACTIONS]),
+                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...PROJECT_ACTIONS,
+                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS,
                    "memberadd", "memberset", "signeradd", "signerset"]),
 };
 
@@ -310,6 +323,12 @@ const NEEDS = {
      creates a project. Without this any participant creates projects they were
      not trusted to create, which is create_projects defeated by a button. */
   projectfork:      "create_projects",
+  /* No capability. Declaring what you hold is not a corpus write, and
+     confirming one is an administrator act governed by the class ACL. Neither
+     is section 5's business, and declared expertise gates nothing in the other
+     direction either. */
+  expertisedeclare: null,
+  expertiseconfirm: null,
   memberadd:        null,
   memberset:        null,
   signeradd:        null,
@@ -1301,6 +1320,19 @@ export default {
     /* Who dispositioned a knock is part of the record. A session signs its
        own name; a machine credential says so plainly rather than borrowing
        a person's. */
+    /* A member declares their OWN expertise and an administrator confirms as
+       THEMSELVES. Both stamped from the session and overwritten if supplied, on
+       the same reasoning as author and by: a declaration a caller can address to
+       someone else is not a declaration. Without a session there is no member to
+       be, so the store refuses on the identity it is handed. */
+    if ((op === "expertisedeclare" || op === "expertiseconfirm") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `class:${cls}`;
+        else b.by = viaSession ? sessMember : `class:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
     if (op === "inboxresolve" && passBody) {
       try {
         const b = JSON.parse(passBody);
