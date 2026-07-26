@@ -901,7 +901,7 @@ refuse-weight action stops and hands over nothing so it cannot half-run; and the
 bundle is conformant to the catalog after every one of them.
 
 ### S-12 Membership, the member half
-**Status: STARTED. Sections 3, 4, 5 and 7 done except 7.13, 0.26.0** · Depends: nothing
+**Status: STARTED. Sections 1.3, 3, 4, 5 and 7 done except 7.13, 0.27.0** · Depends: nothing
 
 `architecture/BIO_Membership_Architecture_v2.md` is the design and nothing in it
 is undecided. Do not re-derive it. **v1 is superseded and must not be worked
@@ -985,14 +985,14 @@ compilation point in `query.mjs` filters by position and D-15 is closed.
       origin as `derived_from`, which is already in the closed relationship
       vocabulary.
 
-5. **NEXT. Licenses (1.3, 4.9).** Expertise is declared by the member and confirmed by
+5. **DONE in 0.27.0. Licenses (1.3, 4.9).** Expertise is declared by the member and confirmed by
    an administrator, and the two are different claims by different people.
    Confirmation GATES NOTHING and must not enter the enforcement path. Moves
    `expertise` off the member row into its own table, because a list column
    cannot carry a confirmation state, a confirmer and a withdrawal per entry.
    Withdrawal supersedes rather than overwrites.
 
-6. **Project name uniqueness (7.1).** The `title` field, unique across the
+6. **NEXT. Project name uniqueness (7.1), closing D-48.** The `title` field, unique across the
    instance, case-insensitive and whitespace-collapsed, holding across
    deactivated projects. Enforced in the check catalog and at the write path
    rather than in the interface. Checked against the working instance on

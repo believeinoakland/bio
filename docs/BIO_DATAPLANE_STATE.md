@@ -1,5 +1,52 @@
 # BIO data plane: source state, migration plan, and build status
 
+v24, July 26, 2026. Current state, on top of v23 and the narratives below. The
+plane is **0.27.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
+signed release asset (`d0f378135ba5eacaf3116a9b83c503e07528907c72138013e223dc2e50a6993f`).
+Battery **1420 assertions across 31 suites**. Live record unchanged at 30
+bundles, 137 files, 239 history rows, 10 refs, 87 register rows, `op=audit` 30
+checked and 30 clean.
+
+**A 4.9 DEFECT, FOUND WHILE BUILDING SOMETHING ELSE.** A section 4.7 removal
+sets `status='revoked'` and leaves `role='admin'` on the row, because the vote
+ejects someone from the office rather than erasing the person. Any administrator
+could then call `memberset(active)` and put an ejected administrator straight
+back WITH THE OFFICE INTACT, undoing a group decision with one call. That defeats
+4.7's consensus-on-addition, which exists precisely so administrators cannot be
+manufactured unilaterally.
+
+They now return as an ordinary MEMBER and the response says so. Reactivating the
+person is a single administrator's call; restoring the office is an appointment
+and goes through 4.7 like any other. Written as a failing test first and
+confirmed failing for that reason before the fix.
+
+**SECTION 1.3 LICENSES.** `member_expertise` is an append-only EVENT LOG rather
+than a status column, because withdrawal supersedes rather than overwrites. A
+group that can see a confirmation was once given and later withdrawn is better
+informed than one that sees only today's answer; because confirmation gates
+nothing, the reason is honesty of the roster and not security. The v1.4 model was
+an `expertise` list on the member row, which cannot carry a confirmation state, a
+confirmer and a withdrawal PER ENTRY. The old column is left unused rather than
+dropped, since nothing here deletes.
+
+Write authority is split by column. A member writes the `label` and never the
+confirmation events; an administrator writes the confirmation events and can
+never introduce a label the member did not declare, which is what keeps a
+confirmation from being an assignment. Both actors are stamped server-side, so a
+declaration cannot be addressed to someone else. An administrator may confirm for
+another administrator (4.9).
+
+**AND IT GATES NOTHING, ASSERTED RATHER THAN INTENDED.** After declaring, being
+confirmed and being withdrawn, the test member's capabilities are unchanged and
+he promotes exactly as before.
+
+**THE TWO-WAY STRUCTURAL CHECK EARNED ITS PLACE.** `NEEDS` named both new ops
+while `SESSION_OPS` did not, so no session could reach them. The suite failed on
+the table naming something UNREACHABLE, which is the direction that exists only
+because the check runs both ways. Nobody would have hit it as a user; it would
+have shipped as two dead ops.
+
 v23, July 26, 2026. Current state, on top of v22 and the narratives below. The
 plane is **0.26.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
