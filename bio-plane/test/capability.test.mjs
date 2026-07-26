@@ -227,6 +227,20 @@ console.log("\n--- 1.3: declared by the member, confirmed by an administrator, g
   t("and the earlier confirmation is STILL READABLE, not overwritten",
     hist?.history?.map((h) => h.event), ["declared", "confirmed", "withdrawn"]);
 
+  /* D-51. v1.4 let an administrator ASSIGN expertise when creating the
+     invitation, which v2 1.3 forbids: an administrator who can introduce the
+     label is assigning rather than confirming. Refused, not ignored, because
+     silently dropping a caller's argument is how two copies of the same fact
+     drift apart. */
+  t("expertise cannot be assigned at invitation time any more",
+    (await POST("op=memberadd&token=t-admin-1",
+      { memberId: "zed", cover: "cover zed", expertise: ["CPA"] })).result?.reason,
+    "EXPERTISE_IS_NOT_ASSIGNED");
+  /* And the roster serves the live table rather than the dead column. */
+  t("the roster reports expertise from the table that is actually maintained",
+    (await GET("op=memberlist&token=t-admin-1")).result?.members
+      ?.find((m) => m.member_id === "gus")?.expertise?.[0]?.label, "Barber");
+
   /* THE LOAD-BEARING NEGATIVE. An unconfirmed or withdrawn entry must cost its
      holder nothing at all: 1.3 says it informs humans and gates nothing. */
   t("sam's capabilities are untouched by any of that",

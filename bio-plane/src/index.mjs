@@ -82,6 +82,10 @@ const OPS = {
   projectowneradd:     { classes: ["admin", "member", "probe"], mutating: true  },
   projectownerremove:  { classes: ["admin", "member", "probe"], mutating: true  },
   projectfork:         { classes: ["admin", "member", "probe"], mutating: true  },
+  /* 7.13. The single exception to administrators holding no authority over
+     projects, and only when EVERY owner of that project is inactive. The store
+     enforces both halves; `by` is stamped server-side below. */
+  projectownerrescue:  { classes: ["admin", "member", "probe"], mutating: true  },
   projectparticipants: { classes: ["admin", "member", "probe"], mutating: false },
   /* The 7.10 arithmetic, computed rather than transcribed, so an interface can
      tell a group what a change would take BEFORE they start one. op=adminarith
@@ -254,7 +258,8 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
    apart is exactly the class of defect this repository keeps finding. */
 const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
-                         "projectowneradd", "projectownerremove", "projectfork"];
+                         "projectowneradd", "projectownerremove", "projectfork",
+                         "projectownerrescue"];
 /* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
    member reaching confirm is refused by the store with ADMIN_ONLY, which says
    what is wrong. Putting confirm in the admin set alone would answer "requires a
@@ -334,6 +339,7 @@ const NEEDS = {
   projectremove:    null,
   projectowneradd:  null,
   projectownerremove: null,
+  projectownerrescue: null,
   /* The one participation op that DOES carry a capability, because a fork
      creates a project. Without this any participant creates projects they were
      not trusted to create, which is create_projects defeated by a button. */

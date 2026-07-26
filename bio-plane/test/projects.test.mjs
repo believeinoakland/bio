@@ -417,6 +417,52 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
     (await mkNamed("PROJ-2026-0108-i", "kept name")).reason, "NAME_TAKEN");
 }
 
+console.log("\n--- 7.13: the ONE participation power an administrator has, and its condition ---");
+{
+  /* The trap this closes: only owners manage participation and lifecycle, and
+     administrators may deactivate members. Those two rules together strand a
+     project. An administrator can end the access of a project's only owner and
+     then be unable to touch the project, which accepts no new participants,
+     cannot be reactivated, and cannot change hands. */
+  const P = "PROJ-2026-0200-stranded";
+  const doc = `---\nid: ${P}\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  await call("/promote", { bundleId: P, base: null, snapKey: `${P}-new`, author: "suite",
+    files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
+    meta: { object_type: "project", group: "believe-in-oakland", title: "Stranded Project",
+            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+  await call("/projectclaimowner", { projectId: P, memberId: "carol" });
+
+  t("while the owner is ACTIVE an administrator may not add an owner",
+    (await call(`/projectownerrescue?projectId=${P}&handle=dave&by=alice&reason=${encodeURIComponent("x")}`)).reason,
+    "OWNERS_ARE_ACTIVE");
+  await call("/memberset", { memberId: "carol", status: "revoked" });
+  t("a non-administrator may not use it even once the owner is inactive",
+    (await call(`/projectownerrescue?projectId=${P}&handle=dave&by=dave&reason=${encodeURIComponent("x")}`)).reason,
+    "ADMIN_ONLY");
+  t("and it is recorded with a reason like every other authority change",
+    (await call(`/projectownerrescue?projectId=${P}&handle=dave&by=alice`)).reason, "NO_REASON");
+
+  const r = await call(`/projectownerrescue?projectId=${P}&handle=dave&by=alice&reason=${encodeURIComponent("sole owner deactivated")}`);
+  t("an administrator adds ONE owner when every owner is inactive", r.ok, true);
+  /* ADDS rather than replaces. The inactive owners keep their rows, so nothing
+     about this exception strips anyone, which is what keeps it from becoming a
+     route around 7.10. */
+  t("and the inactive owner KEEPS their row, so nothing was stripped",
+    r.owners.sort(), ["carol", "dave"]);
+  t("the acting administrator is recorded", r.by, "alice");
+
+  /* Once someone active owns it, the condition no longer holds. */
+  t("a second use is refused, because an active owner now exists",
+    (await call(`/projectownerrescue?projectId=${P}&handle=carol&by=alice&reason=${encodeURIComponent("again")}`)).reason,
+    "OWNERS_ARE_ACTIVE");
+
+  /* Reactivating the original owner returns them alongside, not instead. */
+  await call("/memberset", { memberId: "carol", status: "active" });
+  const parts = await call(`/projectparticipants?projectId=${P}&by=dave`);
+  t("and a reactivated owner is an owner again, alongside the added one",
+    parts.participants.filter((x) => x.owner).map((x) => x.handle).sort(), ["carol", "dave"]);
+}
+
 console.log("\n--- 7.8: participants see each other, non-participants see nothing ---");
 {
   const p = await call(`/projectparticipants?projectId=PROJ-2026-0001-secret&by=carol`);

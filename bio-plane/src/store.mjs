@@ -2448,6 +2448,73 @@ export class Store extends DurableObject {
     return { ok: true, projectId, handle, owner: true, owners: this.#owners(projectId) };
   }
 
+  /** 7.13: the ONE participation power an administrator has, and its condition.
+   *
+   *  Only owners manage participation and lifecycle, and administrators may
+   *  deactivate members. Those two rules together strand a project: an
+   *  administrator can end the access of a project's only owner and then be
+   *  unable to touch the project, which accepts no new participants, cannot be
+   *  reactivated, and cannot change hands.
+   *
+   *  THE CONDITION IS EVERY OWNER, NOT ANY OWNER, and it cannot be manufactured
+   *  piecemeal: an administrator cannot reach a live project by deactivating one
+   *  inconvenient person. Reaching a project with an administrator among its
+   *  owners additionally requires the 4.7 vote, per 4.9.
+   *
+   *  IT ADDS RATHER THAN REPLACES. The inactive owners keep their rows, so if
+   *  one is later reactivated they are an owner again ALONGSIDE the added one,
+   *  and removing them is then the ordinary 7.10 process. Nothing about this
+   *  exception strips anyone, which is what keeps it from becoming a route
+   *  around 7.10. The narrower alternative, that deactivation vacates ownership
+   *  outright, was considered and rejected in v2: it makes a member's
+   *  deactivation silently destroy project state, and hands administrators a way
+   *  to empty a project's ownership one member at a time. */
+  projectOwnerRescue({ projectId, handle, by, reason } = {}) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
+    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
+    if (!this.#isAdminMember(by))
+      return { ok: false, reason: "ADMIN_ONLY",
+               detail: "this is the single exception to administrators holding no authority over projects, "
+                     + "and it is an administrator's to use" };
+    const owners = this.#owners(projectId);
+    if (!owners.length)
+      return { ok: false, reason: "NO_OWNERS",
+               detail: "this project has no owner rows at all, which is a project created by a machine "
+                     + "credential rather than a stranded one" };
+    /* EVERY owner, not any. */
+    const active = owners.filter((o) => {
+      const m = this.#one(`SELECT status FROM members WHERE member_id=?`, o);
+      return m && m.status === "active";
+    });
+    if (active.length)
+      return { ok: false, reason: "OWNERS_ARE_ACTIVE", active: active.sort(),
+               detail: "an administrator may add an owner only when EVERY owner of the project is inactive. "
+                     + "While one is active the project is theirs to run, and 7.10 is the route." };
+    const why = String(reason ?? "").trim();
+    if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
+    const target = this.#memberByHandle(handle);
+    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
+
+    const now = new Date().toISOString();
+    /* Recorded, and visible to every participant, like every other authority
+       change. Reuses the 7.10 vote log with its own kind so the project's
+       ownership history reads in one place. */
+    this.sql.exec(
+      `INSERT OR REPLACE INTO project_owner_votes (project_id,kind,target,voter,reason,created)
+       VALUES (?,'rescue',?,?,?,?)`, projectId, target.member_id, by, why, now);
+    this.sql.exec(
+      `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,comment,created,updated)
+       VALUES (?,?,'joined',1,?,?,?,?)
+       ON CONFLICT(project_id,member_id) DO UPDATE SET owner=1, state='joined', updated=excluded.updated`,
+      projectId, target.member_id, by, why, now, now);
+    return { ok: true, projectId, handle, by, reason: why, owner: true,
+             owners: this.#owners(projectId), addedNotReplaced: true,
+             detail: "the inactive owners keep their rows. If one is reactivated they are an owner again "
+                   + "alongside this one, and removing them is then the ordinary 7.10 process." };
+  }
+
   /** 7.10 removal. A majority of all owners, the target in the denominator and
    *  not voting, EXCEPT at exactly two owners where both must agree and the
    *  target is one of them. The floor is one owner. */
@@ -3044,6 +3111,20 @@ export class Store extends DurableObject {
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
       return { ok: false, reason: "EXISTS", memberId };
 
+    /* D-51. v1.4 let an administrator ASSIGN expertise when creating the
+       invitation, and v2 1.3 forbids exactly that: a member declares what they
+       hold and an administrator confirms it, and an administrator who could
+       introduce the label would be making an assignment wearing a
+       confirmation's name. Refused rather than ignored, because silently
+       dropping a caller's argument is how the two copies drifted apart in the
+       first place. */
+    if (expertise !== null && expertise !== undefined)
+      return { ok: false, reason: "EXPERTISE_IS_NOT_ASSIGNED",
+               detail: "expertise is declared by the member and then confirmed by an administrator "
+                     + "(section 1.3). It is not set when the invitation is created, because an "
+                     + "administrator who could introduce the label would be assigning it rather than "
+                     + "confirming it. Use op=expertisedeclare and op=expertiseconfirm." };
+
     const wantAdmin = role === "admin";
     const admins = this.#activeAdmins();
     /* 4.2 and 4.3. The FIRST invitation a group issues creates a second
@@ -3171,9 +3252,13 @@ export class Store extends DurableObject {
     /* Cover AND handle together, which only an administrator sees. Every op that
        reaches this is admin-only at the control plane. */
     return { members: this.#rows(
-      `SELECT member_id, cover, handle, role, status, capabilities, expertise, created, updated,
+      `SELECT member_id, cover, handle, role, status, capabilities, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
-       FROM members ORDER BY member_id`).map((r) => ({ ...r, capabilities: this.#capsOf(r) })) };
+       FROM members ORDER BY member_id`).map((r) => ({ ...r, capabilities: this.#capsOf(r),
+         /* D-51: served from `member_expertise`, not from the dead column on
+            this row. Two places answering the same question, one of them never
+            updated, is the shape that produces a roster nobody can trust. */
+         expertise: this.expertiseList({ memberId: r.member_id }).expertise })) };
   }
 
   memberSet({ memberId, status } = {}) {
@@ -3519,6 +3604,9 @@ export class Store extends DurableObject {
         projectowneradd: () => this.projectOwnerAdd({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by") }),
         projectownerremove: () => this.projectOwnerRemove({ projectId: url.searchParams.get("projectId"),
+          handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
+          reason: url.searchParams.get("reason") }),
+        projectownerrescue: () => this.projectOwnerRescue({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
           reason: url.searchParams.get("reason") }),
         projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId") }),
