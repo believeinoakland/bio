@@ -175,98 +175,49 @@ NOTIFIED. Section 8.1 asks for both. `export_log` and `op=exportlog` deliver the
 first half. There is no notification channel in this system at all, so closing
 this needs a channel decision rather than more code.
 
-## The trust, reputation and credence question, PARKED and unresolved
+## Trust, credence and the epistemics ladder: current state, 2026-07-27
 
-Raised by Bob at the end of the 2026-07-26 session and deliberately not built.
-Recorded here because it blocks S-11 step 5 and because the findings cost real
-reading to obtain.
+**The 2026-07-26 trust, reputation and credence brainstorm is VOID at Bob's
+direction, in full.** Its content is deliberately not summarised here and must
+not be recovered from history or memory as a basis for work. What stands is
+only what follows.
 
-Bob's earlier framing, SUPERSEDED BY BOB in the 2026-07-27 session ("forget
-what I said about reputation in the last session"): information from a credible
-source can be ratified with trust inherited from that source; ratification by a
-member adds that member's trust; trust never decreases, being the maximum over
-all vouchers. Do not build from this paragraph. The replacement framing is
-under discussion in that session (reputation, credentials, conventional wisdom
-and narrative as highly subjective, manipulable signals BIO exists to
-counterweight; bias discussion to follow) and will be recorded here when it
-settles. Credence is a
-listener's belief in the claims a document makes, determined by the source, the
-topic area, the type of claim, and the source's reputation generally and in that
-area. Claim types he named: law of nature; derivation by accepted formula; an
-entity's theory or thesis; legal instruments; consensus; accepted authority;
-unqualified or ambiguously sourced claims. BIO gives no credence to conventional
-wisdom or narrative. A source may be authoritative and self-interested on the
-same claim. Each Project may adjust credence within framework bounds with a
-documented justification.
+**Mechanical facts, still true and grepped, not assumed:** the code contains no
+credence, reputation, trust or confidence field, table or check anywhere in
+`checks/` or `src/`. **Ratified architecture, unaffected by the void:**
+`BIO_Technical_Architecture_Decisions_v10` carries No transitive trust (trust
+re-established locally at every hop; credibility demonstrated by the work,
+never the producer's reputation; scope is peer BIO groups and R13).
+`BIO_Design_Requirements_v2` section 4: reputation accrues through consistent
+quality with no authority managing the process, so anything built must be a
+group's own ledger, never a shared score.
 
-**What the code actually contains: NOTHING.** No credence, reputation, trust or
-confidence field, table or check exists anywhere in `checks/` or `src/`. This was
-grepped, not assumed.
+**Standing results of the 2026-07-27 session, all shipped or specified:**
+verification's meaning is doctrine (v1.2): a member's reassurance that a
+document APPEARS to be what it claims to be, never accuracy. Batch ratification
+is legitimized by volume plus homogeneity, not origin; crucial stays
+per-document (v1.2). Document-level classification is removed (0.33.0);
+fact/analysis/judgment is a stance a citing project takes toward a passage.
+Anchored citations (bundle, file, content hash, one or more selectors) are the
+working direction for claim-level work; a reference-grammar change, not an
+object-model change. A `rejected` Information state is tabled until the trust
+model settles. AI never authors release.
 
-**And one existing decision points the other way.**
-`BIO_Technical_Architecture_Decisions_v10` carries **No transitive trust**: trust
-is never inherited but re-established locally at every hop, and credibility is
-demonstrated by the work and never by the producer's reputation. Its scope is
-PEER BIO GROUPS and the R13 infiltration threat, not external primary sources, so
-it and Bob's framing can coexist. The boundary is that a peer's Work Product can
-be re-derived from the primary sources it carries, and a court judgment cannot,
-because the judgment IS the primary source. That boundary has to be drawn
-deliberately. `BIO_Design_Requirements_v2` section 4 also says reputation accrues
-through consistent quality with no authority managing the process, so whatever is
-built must be a group's own ledger and not a shared score.
-
-**Two corrections the session made to its own analysis, both worth inheriting.**
-
-Decisions from the 2026-07-27 session, on top of the corrections below:
-(a) **AI never authors release**, reaffirmed by Bob against the Grade A
-argument: Grade A collapses capture-fidelity risk only, and the release
-decision covers authenticity, lawfulness, redaction and accountability, none of
-which gets easier as the grade rises. AI does everything up to the decision;
-the member owns the click. (b) **classification is removed from the document
-catalog** (removed, not deprecated; shipped in 0.33.0): fact/analysis/judgment
-is a stance a citing project takes toward a passage, and the vocabulary moves
-to citations when they can address below a document. (c) **Anchored citations
-are the working direction for claim-level work**: a citation targeting bundle,
-file, content hash and one or more selectors (spans, quoted passages checked
-against the bytes, named points, and collections of them). BIO's immutability
-makes such anchors rot-proof, an anchor bound to a content hash can never
-break, and this is a change to the reference grammar and checks, NOT to the
-object model; documents do not change and claims never become objects. Not yet
-a build order. (d) **A `rejected` state for Information is tabled** until the
-trust model settles: the state machine has no disposition for collected
-material a member affirmatively disbelieves (retired requires verified, so it
-cannot be closed out without ratifying it first), and Bob's distinction is the
-right one, retired means once believed and now closed, rejected would mean
-examined and never believed. A rejection is itself a credence act, so the two
-models must agree.
-
-Provenance and credence were conflated. The first attempt gathered capture grades
-A/B/C, actor classes, origin kinds and C-18.1 as the existing vocabulary for
-credence. Every one of those is PROVENANCE: a grade-A capture is a faithful copy
-of what a source published and says nothing about whether the source is worth
-believing. The one genuinely claim-side field in the catalog is
-`classification: fact | analysis | judgment`, and it is per-document.
-
-Credence was proposed as a property of the `cites` edge, on the reasoning that
-reputation exists BETWEEN entities and that State Rules 5.2 already puts `cites`
-on the citing object so the interest graph cannot leak. Bob's response exposed the
-limit: **references target a bundle id and nothing finer.** `BUNDLE_ID_RE` is the
-whole grammar and there is no anchor, span or claim identifier anywhere in the
-catalog. So an edge-level credence is still document-granular, and a document
-carrying an authoritative table of figures alongside a self-interested assertion
-about their lawfulness would get one number for both. If reasoning about claims is
-the point, claims must be addressable below the document, which is a change to the
-object model rather than a refinement of credence.
-
-Also proposed and unresolved: replacing strict monotonicity with an append-only
-attestation ledger plus a computed current value, so a retraction or a withdrawn
-vouch can lower the number while no vouch is ever erased; treating interest as a
-per-claim relation rather than a source property, which is the
-admission-against-interest principle and the correct handling of the founding
-case, where Oakland's own reporting is the strongest evidence the transfers
-happened and the weakest that they were authorised; and splitting
-consensus-of-record from consensus-as-agreement, since counting agreement is how
-manufactured consensus passes.
+**Bob's framing in progress, 2026-07-27, discussion continuing (bias next):**
+credentials, reputation, conventional wisdom and narrative are highly
+subjective, manipulable compressions; BIO's raison d'etre is to counterweight
+them. Credentials are awarded yet socially assumed earned. Reputation is a
+frame held by others, commonly manipulated. Conventional wisdom is sometimes a
+good starting point, not always the best endpoint. Narrative sets artificial
+limits on the range of discussion. Against these, BIO rests on a FORMAL WEB OF
+TRUST in the internet-PKI sense: verified rests on the trust owned by the
+verifying member, granted at the discretion of the instance admin, and so on up
+a recorded, revocable, narrow chain. And verification is only ONE element of
+trust in the store. The intended ladder, partially evident in the current
+system: from Information documents the system identifies EVIDENCE; evidence is
+the substrate ANALYSIS is built from; CONCLUSIONS are graded on how they follow
+ONLY from evidence and analysis. Record further findings here as the discussion
+settles; do not re-derive the void material.
 
 ## Standing lessons, all learned the hard way here
 
