@@ -66,7 +66,6 @@ current_state: ${STATES[h % 4]}
 created: "2026-01-01T00:00:00Z"
 last_updated: "2026-07-${String(1 + (h % 28)).padStart(2, "0")}T00:00:00Z"
 criticality: ${h % 11 === 0 ? "crucial" : "notable"}
-classification: fact
 group: believe-in-oakland
 references: []
 produced_by:
@@ -89,7 +88,7 @@ ${body}
     object_type: type, group: "believe-in-oakland", title: `Record ${i} ${WORDS[i % 8]}`,
     current_state: STATES[h % 4], created: "2026-01-01T00:00:00Z",
     last_updated: `2026-07-${String(1 + (h % 28)).padStart(2, "0")}T00:00:00Z`,
-    criticality: h % 11 === 0 ? "crucial" : "notable", classification: "fact" } };
+    criticality: h % 11 === 0 ? "crucial" : "notable" } };
 };
 
 console.log(`\nLoading ${N} bundles through the real promote path...`);

@@ -48,7 +48,7 @@ const md = (rev) => [
   "group: believe-in-oakland", "references: []", "state_history: []",
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
   "  source: null", "visuals: []", "criticality: supporting",
-  "classification: fact", "source_status: unchanged", "source:",
+  "source_status: unchanged", "source:",
   "  locator: in hand", "  authority: test", `  retrieved: ${NOW}`,
   "monitoring:", "  enabled: false", "  frequency: none", "---", "",
   "## Summary", "", "Standing gathering intent.", "", "## Provenance Notes", "",

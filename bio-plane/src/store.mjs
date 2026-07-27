@@ -119,6 +119,19 @@ export class Store extends DurableObject {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
     }
+    /* classification was REMOVED from the Information catalog on 2026-07-27
+       (Bob's decision, recorded in the state doc v30 entry). fact/analysis/
+       judgment is a stance a citing project takes toward a passage, not a
+       property a document has, so the vocabulary moves to the citation model
+       when anchored citations land. Dropped rather than orphaned so a store
+       migrated forward and a fresh install present the same table; guarded on
+       PRAGMA because this must be idempotent across every boot, and DROP
+       COLUMN on a column already gone is an error. Bundle frontmatter still
+       carrying the field is inert and drains on each bundle's next promotion;
+       history is append-only and keeps it forever, which is correct. */
+    const bundleCols = [...this.sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name);
+    if (bundleCols.includes("classification"))
+      this.sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
     /* Indexed because probe 2 recorded the difference in the query PLAN, not
        only the latency: without an index a filter is a full table scan whose
        cost grows with the corpus, and at 20,000 rows a scan is still fast
@@ -442,7 +455,7 @@ export class Store extends DurableObject {
   projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = 200 } = {}) {
     const cols = ["bundle_id", "object_type", "group_id", "title", "current_state",
                   "prior_state", "created", "last_updated", "criticality",
-                  "classification", "bundle_sha", ...Store.PROJECTION_COLS].join(", ");
+                  "bundle_sha", ...Store.PROJECTION_COLS].join(", ");
     if (bundleId) return this.#one(`SELECT ${cols} FROM bundles WHERE bundle_id=?`, bundleId);
     if (jsonPath !== null && jsonEquals !== null)
       return this.#rows(
@@ -1120,7 +1133,7 @@ export class Store extends DurableObject {
         object_type: "project", group: fm.group || "believe-in-oakland", title: fm.title,
         current_state: fm.current_state, prior_state: fm.prior_state ?? null,
         created: fm.created, last_updated: when,
-        criticality: fm.criticality ?? null, classification: fm.classification ?? null,
+        criticality: fm.criticality ?? null,
       },
     });
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
@@ -1280,7 +1293,7 @@ export class Store extends DurableObject {
         meta: { object_type: "problem", group: fm.group || "believe-in-oakland", title: fm.title,
                 current_state: to, prior_state: cur.current_state,
                 created: fm.created, last_updated: when,
-                criticality: fm.criticality ?? null, classification: fm.classification ?? null },
+                criticality: fm.criticality ?? null },
       });
       if (!promoted.ok) return { ...promoted, bundleId: id, disposedSoFar: disposed };
       disposed.push(id);
@@ -1419,7 +1432,7 @@ export class Store extends DurableObject {
         meta: { object_type: "information", group: fm.group || "believe-in-oakland", title: fm.title,
                 current_state: "retired", prior_state: cur.current_state,
                 created: fm.created, last_updated: when,
-                criticality: fm.criticality ?? null, classification: fm.classification ?? null },
+                criticality: fm.criticality ?? null },
       });
       if (!promoted.ok) return { ...promoted, bundleId: id, retiredSoFar: retired };
       retired.push(id);
@@ -1696,7 +1709,7 @@ export class Store extends DurableObject {
         object_type: "project", group: fm.group || "believe-in-oakland", title: fm.title,
         current_state: fm.current_state, prior_state: fm.prior_state ?? null,
         created: fm.created, last_updated: when,
-        criticality: fm.criticality ?? null, classification: fm.classification ?? null,
+        criticality: fm.criticality ?? null,
       },
     });
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
@@ -2239,16 +2252,16 @@ export class Store extends DurableObject {
       if (!newSha) return { ok: false, reason: "NO_BUNDLE_MD" };
 
       this.sql.exec(
-        `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,classification,bundle_sha,row_version)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
+        `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
+         VALUES (?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
          ON CONFLICT(bundle_id) DO UPDATE SET
            object_type=excluded.object_type, title=excluded.title,
            current_state=excluded.current_state, prior_state=excluded.prior_state,
            last_updated=excluded.last_updated, criticality=excluded.criticality,
-           classification=excluded.classification, bundle_sha=excluded.bundle_sha,
+           bundle_sha=excluded.bundle_sha,
            row_version=bundles.row_version+1`,
         bundleId, meta.object_type, meta.group, meta.title, meta.current_state, meta.prior_state ?? null,
-        meta.created, meta.last_updated, meta.criticality ?? null, meta.classification ?? null, newSha, bundleId);
+        meta.created, meta.last_updated, meta.criticality ?? null, newSha, bundleId);
 
       /* Projected from the document, every promotion, so the table is a view of
          bundle.md rather than a second place to state the same thing. */

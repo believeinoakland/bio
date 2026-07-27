@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS bundles (
   created       TEXT NOT NULL,
   last_updated  TEXT NOT NULL,
   criticality   TEXT,
-  classification TEXT,
   bundle_sha    TEXT NOT NULL,
   row_version   INTEGER NOT NULL DEFAULT 1
 );
@@ -1038,7 +1037,6 @@ function canonicalJson(v) {
 }
 var INFO_ENUMS = {
   criticality: ["crucial", "supporting"],
-  classification: ["fact", "analysis", "judgment"],
   source_status: ["unchanged", "modified", "removed"]
 };
 var MONITOR_FREQ = ["hourly", "daily", "weekly", "monthly", "per_meeting", "none"];
@@ -3550,7 +3548,7 @@ function renderBundle(id, img, revisionKey){
   const facts = [["State", fm.current_state ? chip(fm.current_state) : ""],
     ["Last updated", fm.last_updated ? fmtWhen(fm.last_updated) : ""],
     ["Created", fm.created ? fmtWhen(fm.created) : ""],
-    ["Criticality", escH(fm.criticality||"")],["Classification", escH(fm.classification||"")]]
+    ["Criticality", escH(fm.criticality||"")]]
     .filter(([,v])=>v);
   $("#b-facts").innerHTML = facts.map(([k,v])=>'<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+"</span></div>").join("");
   $("#b-md").innerHTML =
@@ -3697,7 +3695,7 @@ const mdFor = (id, type, state, title, body, now, hasDoc)=>{
     "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
     "  source: null","visuals: []"];
   if (type === "information") fm.push(
-    "criticality: supporting","classification: fact","source_status: unchanged",
+    "criticality: supporting","source_status: unchanged",
     "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
     "monitoring:","  enabled: false","  frequency: none");
   if (type === "problem") fm.push(
@@ -4375,7 +4373,6 @@ var FIELDS = {
   created: { col: "created", type: "time" },
   updated: { col: "last_updated", type: "time" },
   criticality: { col: "criticality", type: "text", lower: true },
-  classification: { col: "classification", type: "text", lower: true },
   sha: { col: "bundle_sha", type: "text", lower: true },
   schema: { col: "schema_id", type: "text", lower: true },
   mode: { col: "produced_mode", type: "text", lower: true },
@@ -4397,7 +4394,7 @@ var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 var SORTABLE = { relevance: null, ...Object.fromEntries(
   Object.entries(FIELDS).map(([k, f2]) => [k, f2.col])
 ) };
-var DEFAULT_FACETS = ["type", "state", "criticality", "classification", "schema", "status"];
+var DEFAULT_FACETS = ["type", "state", "criticality", "schema", "status"];
 var GATE_MARK = "/*viewer-gate*/";
 function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
@@ -4794,7 +4791,6 @@ var PROVENANCE_COLS = [
   "created",
   "last_updated",
   "criticality",
-  "classification",
   "bundle_sha",
   "schema_id",
   "produced_mode",
@@ -5021,6 +5017,9 @@ var Store = class _Store extends DurableObject {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
     }
+    const bundleCols = [...this.sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name);
+    if (bundleCols.includes("classification"))
+      this.sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
     for (const c of [
       "schema_id",
       "produced_mode",
@@ -5291,7 +5290,6 @@ var Store = class _Store extends DurableObject {
       "created",
       "last_updated",
       "criticality",
-      "classification",
       "bundle_sha",
       ..._Store.PROJECTION_COLS
     ].join(", ");
@@ -5988,8 +5986,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         prior_state: fm.prior_state ?? null,
         created: fm.created,
         last_updated: when,
-        criticality: fm.criticality ?? null,
-        classification: fm.classification ?? null
+        criticality: fm.criticality ?? null
       }
     });
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
@@ -6207,8 +6204,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
           prior_state: cur.current_state,
           created: fm.created,
           last_updated: when,
-          criticality: fm.criticality ?? null,
-          classification: fm.classification ?? null
+          criticality: fm.criticality ?? null
         }
       });
       if (!promoted.ok) return { ...promoted, bundleId: id, disposedSoFar: disposed };
@@ -6388,8 +6384,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
           prior_state: cur.current_state,
           created: fm.created,
           last_updated: when,
-          criticality: fm.criticality ?? null,
-          classification: fm.classification ?? null
+          criticality: fm.criticality ?? null
         }
       });
       if (!promoted.ok) return { ...promoted, bundleId: id, retiredSoFar: retired };
@@ -6656,8 +6651,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         prior_state: fm.prior_state ?? null,
         created: fm.created,
         last_updated: when,
-        criticality: fm.criticality ?? null,
-        classification: fm.classification ?? null
+        criticality: fm.criticality ?? null
       }
     });
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
@@ -7151,13 +7145,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       const newSha = files.find((f2) => f2.path === "bundle.md")?.sha256;
       if (!newSha) return { ok: false, reason: "NO_BUNDLE_MD" };
       this.sql.exec(
-        `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,classification,bundle_sha,row_version)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
+        `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
+         VALUES (?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
          ON CONFLICT(bundle_id) DO UPDATE SET
            object_type=excluded.object_type, title=excluded.title,
            current_state=excluded.current_state, prior_state=excluded.prior_state,
            last_updated=excluded.last_updated, criticality=excluded.criticality,
-           classification=excluded.classification, bundle_sha=excluded.bundle_sha,
+           bundle_sha=excluded.bundle_sha,
            row_version=bundles.row_version+1`,
         bundleId,
         meta.object_type,
@@ -7168,7 +7162,6 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         meta.created,
         meta.last_updated,
         meta.criticality ?? null,
-        meta.classification ?? null,
         newSha,
         bundleId
       );

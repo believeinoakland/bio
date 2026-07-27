@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS bundles (
   created       TEXT NOT NULL,
   last_updated  TEXT NOT NULL,
   criticality   TEXT,
-  classification TEXT,
   bundle_sha    TEXT NOT NULL,
   row_version   INTEGER NOT NULL DEFAULT 1
 );

@@ -573,7 +573,7 @@ function renderBundle(id, img, revisionKey){
   const facts = [["State", fm.current_state ? chip(fm.current_state) : ""],
     ["Last updated", fm.last_updated ? fmtWhen(fm.last_updated) : ""],
     ["Created", fm.created ? fmtWhen(fm.created) : ""],
-    ["Criticality", escH(fm.criticality||"")],["Classification", escH(fm.classification||"")]]
+    ["Criticality", escH(fm.criticality||"")]]
     .filter(([,v])=>v);
   $("#b-facts").innerHTML = facts.map(([k,v])=>'<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+"</span></div>").join("");
   $("#b-md").innerHTML =
@@ -720,7 +720,7 @@ const mdFor = (id, type, state, title, body, now, hasDoc)=>{
     "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
     "  source: null","visuals: []"];
   if (type === "information") fm.push(
-    "criticality: supporting","classification: fact","source_status: unchanged",
+    "criticality: supporting","source_status: unchanged",
     "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
     "monitoring:","  enabled: false","  frequency: none");
   if (type === "problem") fm.push(

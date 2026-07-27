@@ -132,7 +132,7 @@ t("the method says it streamed", /streamed in \d+ parts/.test(huge.document.capt
     "group: believe-in-oakland", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
     "  source: null", "visuals: []", "criticality: supporting",
-    "classification: fact", "source_status: unchanged", "source:",
+    "source_status: unchanged", "source:",
     "  locator: https://www.oaklandca.gov/huge", "  authority: City Auditor",
     "  retrieved: 2026-07-24T00:00:00Z",
     "monitoring:", "  enabled: false", "  frequency: none", "---", "",

@@ -77,7 +77,6 @@ reeval_pending:
   source: null
 visuals: []
 criticality: supporting
-classification: fact
 source_status: unchanged
 source:
   locator: "https://example.org/${b.id}"
@@ -164,7 +163,7 @@ const infoMeta = (b) => ({
   object_type: "information", group: "believe-in-oakland", title: b.title,
   current_state: b.state || "collected", prior_state: null,
   created: "2026-07-01T00:00:00Z", last_updated: b.updated || "2026-07-02T00:00:00Z",
-  criticality: "supporting", classification: "fact",
+  criticality: "supporting",
 });
 const projMeta = (p) => ({
   object_type: "project", group: "believe-in-oakland", title: p.title,

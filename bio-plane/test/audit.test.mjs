@@ -50,7 +50,7 @@ const md = (id, i, broken) => [
     : ["references: []"]),
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false",
   "  since: null", "  source: null", "visuals: []", "criticality: supporting",
-  "classification: fact", "source_status: unchanged", "source:",
+  "source_status: unchanged", "source:",
   "  locator: in hand", "  authority: synthetic", `  retrieved: ${NOW}`,
   "monitoring:", "  enabled: false", "  frequency: none", "---", "",
   "## Summary", "", `Synthetic ${i}.`, "", "## Provenance Notes", "",

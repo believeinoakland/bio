@@ -368,7 +368,7 @@ export function buildPackages(bundleId, loaded, states, revisionFiles, provRegis
         object_type: fm.object_type, group: fm.group || "believe-in-oakland",
         title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
         created: fm.created, last_updated: fm.last_updated,
-        criticality: fm.criticality ?? null, classification: fm.classification ?? null,
+        criticality: fm.criticality ?? null,
       },
       files: revisionFiles[i],
       /* This is replay, not authorship. The store skips the gathering-queue

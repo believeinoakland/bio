@@ -43,7 +43,6 @@ produced_by:
 group: believe-in-oakland
 references: []
 criticality: supporting
-classification: fact
 source:
   locator: "https://x/${id}"
   authority: "portal"
@@ -124,7 +123,7 @@ const promoteRaw = (id, text, meta, base = null) => call("/promote", {
 });
 const infoMeta = { object_type: "information", group: "believe-in-oakland", title: "Bulk",
   current_state: "collected", prior_state: null, created: "2026-07-01T00:00:00Z",
-  last_updated: "2026-07-02T00:00:00Z", criticality: "notable", classification: "fact" };
+  last_updated: "2026-07-02T00:00:00Z", criticality: "notable" };
 const projMeta = { object_type: "project", group: "believe-in-oakland", title: "Scale",
   current_state: "forming", prior_state: null, created: "2026-07-01T00:00:00Z",
   last_updated: "2026-07-02T00:00:00Z" };

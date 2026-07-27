@@ -1,5 +1,52 @@
 # BIO data plane: source state, migration plan, and build status
 
+v30, July 27, 2026. Current state, on top of v29 and the narratives below. The
+plane is **0.33.0**, signed, tagged, deployed and verified on
+biosmoke7.believeinoakland.workers.dev, deployed module bytes hashing identically
+to the signed release asset
+(`f89a9c7ac37319bbdcb3681b3288f75b954a81fbd1d1d0d39cbfb0bfb62fe481`).
+Battery **1522 assertions green across 32 suites** plus the wizard's 90. Live
+record unchanged at 30 bundles, 137 files, 239 history rows, 10 refs, 87
+register rows, `op=audit` 30 checked and 30 clean after the deploy.
+
+**CLASSIFICATION IS REMOVED FROM THE INFORMATION CATALOG, by Bob's decision in
+the 2026-07-27 trust session: removed, not deprecated.** The finding that made
+it cheap: nothing consumed it. The field appeared in the INFO_ENUMS table and
+nowhere else; no check branched on it, no op read it, the doctrine's
+load-bearing quality field is criticality. The reasoning that made it right:
+fact/analysis/judgment is a stance a citing project takes toward a passage,
+not a property a document has. The city's financial report is fact when a
+project cites its table and judgment when it cites its characterisation of
+lawfulness. The vocabulary moves to the citation model when anchored citations
+land (see the kickoff's trust section for that direction).
+
+What removal touched: the enum left `checks/bio-checks.mjs`; the column left
+`src/schema.mjs` so a fresh install never has it; every projection write and
+the upsert left `src/store.mjs`; the filter key, the default facet and the
+provenance column left `src/query.mjs`; the instance page's facts card and the
+typed-intake template left `src/setup.mjs`; the migrate tool stopped writing
+it; and twenty-one suites and probes dropped it from fixtures and assertions.
+
+**THE FIRST DESTRUCTIVE COLUMN MIGRATION THIS STORE HAS EVER RUN.** Boot now
+drops `bundles.classification` if present, guarded on PRAGMA table_info so it
+is idempotent across every boot, mirroring the additive ensureColumn pattern in
+reverse. It ran live at deploy: the DO booted, `op=stats` answered the
+unchanged record, and `op=search` answered with the new default facet set,
+which is the BEHAVIOUR poll (standing lesson 9), not the version string.
+
+**ASSERTED BOTH WAYS (standing lesson 2).** Every fixture in the battery now
+omits the field and conformance-checks clean, which is the absent direction.
+The present direction is a new conformance case: a bundle still CARRYING
+`classification: fact` draws no finding of any severity, because history is
+append-only and the live corpus drains the field on each bundle's next
+promotion, not by decree. A catalog that errored on presence would have flagged
+all 30 live bundles for a field it no longer defines, and `op=audit` staying
+30/30 clean after the deploy is that assertion made against the real record.
+
+**Frontmatter residue is inert and expected.** The 30 live bundles keep the
+field until each is next promoted; nothing rewrites history and nothing needs
+to.
+
 v29, July 26, 2026. Current state, on top of v28 and the narratives below. The
 plane is **0.32.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the

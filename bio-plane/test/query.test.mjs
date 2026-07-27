@@ -258,7 +258,7 @@ console.log("\n--- workerd's compound SELECT limit, which is five and not five h
   };
   for (const [label, q] of [
     ["a seven-arm OR", "state:a OR state:b OR state:c OR state:d OR state:e OR state:f OR state:g"],
-    ["seven metadata filters", "type:a state:b criticality:c classification:d schema:e status:f mode:g"],
+    ["seven metadata filters", "type:a state:b criticality:c schema:d status:e mode:f tier:g"],
     ["a twelve-arm OR", Array.from({ length: 12 }, (_, i) => `state:s${i}`).join(" OR ")],
     ["seven negations", "type:a -state:b -state:c -state:d -state:e -state:f -state:g"],
   ]) {

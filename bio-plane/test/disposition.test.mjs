@@ -105,7 +105,6 @@ reeval_pending:
   source: null
 visuals: []
 criticality: supporting
-classification: fact
 source_status: unchanged
 source:
   locator: "https://example.org"

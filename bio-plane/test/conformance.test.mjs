@@ -53,7 +53,7 @@ const md = (state, rev) => [
   "group: believe-in-oakland", "references: []", "state_history: []",
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
   "  source: null", "visuals: []", "criticality: supporting",
-  "classification: fact", "source_status: unchanged", "source:",
+  "source_status: unchanged", "source:",
   "  locator: in hand", "  authority: test", "  retrieved: 2026-07-24T00:00:00Z",
   "monitoring:", "  enabled: false", "  frequency: none", "---", "",
   "## Summary", "", `revision ${rev}`, "", "## Provenance Notes", "",
@@ -277,6 +277,27 @@ console.log("\n--- references have one home ---");
     sha256: shaHex, sha512: sha512Hex, resolveTarget: (x) => x === RID || x === ID });
   t("and the catalog agrees, by name",
     rf2.filter((x) => x.severity === "error").map((x) => x.check), ["C-6.2"]);
+}
+
+/* classification was removed from the Information catalog on 2026-07-27.
+   Asserted BOTH ways (standing lesson 2): a bundle without the field is
+   conformant, which every fixture above now proves, and a bundle still
+   CARRYING the field is inert rather than refused, because history is
+   append-only and the live corpus drains the field on each bundle's next
+   promotion, not by decree. A catalog that errored on presence would flag
+   every existing bundle for a field it no longer defines. */
+{
+  console.log("\n--- the retired classification field is inert, not refused ---");
+  const carrying = md("collected", 1).replace(
+    "criticality: supporting", "criticality: supporting\nclassification: fact");
+  const data = dataFor(1);
+  const f5 = new Map([["bundle.md", carrying], ["data/dataset.json", data]]);
+  const { findings: cf } = await checkBundle({ folderName: ID, files: f5,
+    sha256: shaHex, sha512: sha512Hex, resolveTarget: (x) => x === ID });
+  t("a bundle still carrying classification: fact draws no finding for it",
+    cf.filter((x) => String(x.message).includes("classification")).length, 0);
+  t("and no finding of any severity beyond what the bare fixture draws",
+    cf.filter((x) => x.severity === "error").length, 0);
 }
 
 await mf.dispose();

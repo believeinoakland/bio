@@ -114,8 +114,9 @@ licences, project name uniqueness, secure verified export, and 7.13.
 
 **S-11 (selection-backed actions) is at step 4 of 5.** Citing, severing,
 reinstating, bulk disposition of Problems and bulk retirement of Information are
-all shipped. Step 5, bulk release, is BLOCKED ON A DECISION and is described
-below.
+all shipped. Step 5, bulk release, is DECIDED AND UNBUILT: Bob directed in the
+2026-07-27 session that it will be built, with the recorded-acknowledgement
+design and the scope question described below.
 
 ### Work from v2, not v1
 
@@ -127,12 +128,26 @@ at the top listing every difference.
 
 ## What is open, in the order it matters
 
-**1. Bulk release, S-11 step 5, and it may be a decision not to build.** Blocked
-on the trust and credence questions below, because release is the transition where
-inherited trust would apply if it applies anywhere. Three options were put to Bob
-and none was chosen: build nothing and leave release per-document; build it
-uniformly; or split it on `origin.kind`, permitting bulk release for
-`named_request` and `member` origin and refusing it for `sweep` origin.
+**1. Bulk release, S-11 step 5: BOB DECIDED IN THE 2026-07-27 SESSION THAT IT
+WILL BE BUILT.** His use case: a collection of 20 or 100 job applications of
+interest to a project, where per-document release is tedium without protection.
+His conditions: the UX must state the risks of releasing in bulk and require the
+member's explicit acknowledgement of their mitigation steps before proceeding.
+Design consequence agreed in the same session: the acknowledgement must land IN
+THE RECORD as part of the operation's payload, not only in a browser dialog, so
+a bulk release is permanently distinguishable from per-document releases and
+auditable as such. This design also DECOUPLES bulk release from the
+trust-inheritance question: nothing is inherited from the source; the member's
+recorded acknowledgement is the trust act, made fresh, consistent with the
+no-transitive-trust decision.
+
+Remaining scope question, Bob's alone because it is a doctrine amendment: the
+shape consistent with C-18.1 as written is the SPLIT, bulk for `named_request`
+and `member` origin (a human already chose each document once) and per-document
+for `sweep` origin, since the only per-document-ratification language in the
+architecture is C-18.1's sweep branch and a single acknowledgement over a
+selection is not per-document scrutiny. Including sweeps in bulk requires
+amending that rule. Until he says otherwise, the split stands.
 
 The relevant finding, which corrected an earlier overstatement in the same
 session: **C-18.1 constrains WHO authors the `collected` to `verified` transition,
@@ -191,6 +206,29 @@ through consistent quality with no authority managing the process, so whatever i
 built must be a group's own ledger and not a shared score.
 
 **Two corrections the session made to its own analysis, both worth inheriting.**
+
+Decisions from the 2026-07-27 session, on top of the corrections below:
+(a) **AI never authors release**, reaffirmed by Bob against the Grade A
+argument: Grade A collapses capture-fidelity risk only, and the release
+decision covers authenticity, lawfulness, redaction and accountability, none of
+which gets easier as the grade rises. AI does everything up to the decision;
+the member owns the click. (b) **classification is removed from the document
+catalog** (removed, not deprecated; shipped in 0.33.0): fact/analysis/judgment
+is a stance a citing project takes toward a passage, and the vocabulary moves
+to citations when they can address below a document. (c) **Anchored citations
+are the working direction for claim-level work**: a citation targeting bundle,
+file, content hash and one or more selectors (spans, quoted passages checked
+against the bytes, named points, and collections of them). BIO's immutability
+makes such anchors rot-proof, an anchor bound to a content hash can never
+break, and this is a change to the reference grammar and checks, NOT to the
+object model; documents do not change and claims never become objects. Not yet
+a build order. (d) **A `rejected` state for Information is tabled** until the
+trust model settles: the state machine has no disposition for collected
+material a member affirmatively disbelieves (retired requires verified, so it
+cannot be closed out without ratifying it first), and Bob's distinction is the
+right one, retired means once believed and now closed, rejected would mean
+examined and never believed. A rejection is itself a credence act, so the two
+models must agree.
 
 Provenance and credence were conflated. The first attempt gathered capture grades
 A/B/C, actor classes, origin kinds and C-18.1 as the existing vocabulary for

@@ -22,7 +22,7 @@ import { DurableObject } from "cloudflare:workers";
    frontmatter fields the real corpus carries that bundles does not project. */
 const WIDE_COLS = [
   "object_type", "schema_id", "current_state", "prior_state", "criticality",
-  "classification", "created", "last_updated", "produced_mode",
+  "created", "last_updated", "produced_mode",
   "capability_tier", "source_authority", "source_status", "monitor_freq",
   "annotations_open", "reeval_flag",
 ];
@@ -43,7 +43,7 @@ export class FacetProbe extends DurableObject {
          is a full table scan whose cost grows with the corpus; with them it is a
          seek whose cost tracks the result, which is the same property probe 1
          chose FTS5 for. The composite carries the common pair. */
-      for (const c of ["object_type", "current_state", "criticality", "classification",
+      for (const c of ["object_type", "current_state", "criticality",
                        "produced_mode", "source_status", "source_authority",
                        "reeval_flag", "last_updated", "created", "annotations_open"])
         this.sql.exec(`CREATE INDEX IF NOT EXISTS meta_${c} ON meta(${c})`);

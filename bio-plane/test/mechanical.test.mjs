@@ -61,7 +61,7 @@ const md = (id, opts) => {
     "group: believe-in-oakland", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", `  flag: ${o.reeval}`,
     `  since: ${o.reeval ? o.updated : "null"}`, `  source: ${o.reeval ? "source_status" : "null"}`,
-    "visuals: []", "criticality: supporting", "classification: fact",
+    "visuals: []", "criticality: supporting",
     `source_status: ${o.sourceStatus}`, "source:",
     "  locator: https://www.oaklandca.gov/report.pdf", "  authority: City Auditor",
     "  retrieved: 2026-07-24T00:00:00Z",

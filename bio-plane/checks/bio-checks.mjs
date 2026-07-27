@@ -658,7 +658,6 @@ export function canonicalJson(v) {
 
 const INFO_ENUMS = {
   criticality: ['crucial', 'supporting'],
-  classification: ['fact', 'analysis', 'judgment'],
   source_status: ['unchanged', 'modified', 'removed']
 };
 const MONITOR_FREQ = ['hourly', 'daily', 'weekly', 'monthly', 'per_meeting', 'none'];

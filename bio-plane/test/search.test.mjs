@@ -116,7 +116,6 @@ prior_state: null
 created: "${b.created}"
 last_updated: "${b.updated}"
 criticality: ${b.crit}
-classification: ${b.cls}
 group: believe-in-oakland
 references: []
 produced_by:
@@ -143,7 +142,7 @@ const promote = async (b, base = null, extra = null) => {
   return call("/promote", {
     bundleId: b.id, base, files, snapKey: `${b.id}-${base ? "rev" : "new"}`, author: "suite",
     meta: { object_type: b.type, group: "believe-in-oakland", title: b.title, current_state: b.state,
-            created: b.created, last_updated: b.updated, criticality: b.crit, classification: b.cls },
+            created: b.created, last_updated: b.updated, criticality: b.crit },
   });
 };
 
@@ -352,8 +351,8 @@ console.log("\n--- a hit carries full provenance and its context ---");
   t("the id is there", h.bundle_id, A.id);
   t("and the locator, which a citation needs", h.source_locator, "https://oaklandca.opengov.com/records");
   t("and the authority", h.source_authority, "Oakland OpenGov portal");
-  t("and the state, the criticality and the classification",
-    [h.current_state, h.criticality, h.classification], ["collected", "crucial", "fact"]);
+  t("and the state and the criticality",
+    [h.current_state, h.criticality], ["collected", "crucial"]);
   t("and the projected tail", [h.schema_id, h.source_status, h.annotations_open], ["information@2", "modified", 3]);
   t("and the sha, so a caller can fetch the image without a second lookup", typeof h.bundle_sha, "string");
   t("the match is marked in a snippet", h.snippet.includes("[transferred]"), true);
@@ -415,8 +414,8 @@ console.log("\n--- facet counts drive the filter sidebar ---");
      until 2026-07-25: workerd refuses a compound SELECT of more than five terms,
      so seven filters must nest rather than chain. */
   t("seven metadata filters execute rather than being refused by the engine",
-    (await S("q=type:information state:collected criticality:crucial classification:fact "
-           + "schema:information@2 status:modified monitored:true&facets=none".replace(/ /g, "+")))
+    (await S("q=type:information state:collected criticality:crucial schema:information@2 "
+           + "status:modified monitored:true frequency:monthly&facets=none".replace(/ /g, "+")))
       .total >= 0, true);
   t("a seven-arm OR executes too",
     (await S("q=state:collected+OR+state:reviewed+OR+state:surfaced+OR+state:retired+OR+state:a+OR+state:b+OR+state:c&facets=none")).total >= 0, true);
@@ -573,7 +572,7 @@ const door = new Miniflare({
   await j(`/api/?op=promote&token=${MEM}`, { method: "POST", body: JSON.stringify({
     bundleId: A.id, base: null, snapKey: "door", author: "seed",
     meta: { object_type: A.type, group: "g", title: A.title, current_state: A.state,
-            created: A.created, last_updated: A.updated, criticality: A.crit, classification: A.cls },
+            created: A.created, last_updated: A.updated, criticality: A.crit },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   }) });
 

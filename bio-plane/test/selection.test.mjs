@@ -59,7 +59,6 @@ current_state: ${b.state}
 created: "2026-07-01T00:00:00Z"
 last_updated: "${b.updated}"
 criticality: ${b.crit || "notable"}
-classification: fact
 group: believe-in-oakland
 references: []
 source:
@@ -78,7 +77,7 @@ const promote = async (b, base = null, writer = null, operation = null) => {
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     meta: { object_type: b.type || "information", group: "believe-in-oakland", title: b.title,
             current_state: b.state, created: "2026-07-01T00:00:00Z", last_updated: b.updated,
-            criticality: b.crit || "notable", classification: "fact" },
+            criticality: b.crit || "notable" },
   });
 };
 

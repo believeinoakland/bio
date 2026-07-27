@@ -27,7 +27,7 @@ const put = (rel, content) => {
   writeFileSync(p, content);
 };
 const md = (id, state, updated, n) =>
-  `---\nid: ${id}\nobject_type: information\nschema: information@1\ntitle: "Fixture ${id}"\ncurrent_state: ${state}\nprior_state: null\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "${updated}"\ngroup: believe-in-oakland\nreferences: []\ncriticality: crucial\nclassification: fact\n---\n\n## Summary\n\nrev ${n}\n`;
+  `---\nid: ${id}\nobject_type: information\nschema: information@1\ntitle: "Fixture ${id}"\ncurrent_state: ${state}\nprior_state: null\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "${updated}"\ngroup: believe-in-oakland\nreferences: []\ncriticality: crucial\n---\n\n## Summary\n\nrev ${n}\n`;
 const promo = (rel, target, base, files, created, author = "bob") =>
   put(rel, JSON.stringify({ target, base, files, created, author, skill_version: "0.12.10" }));
 

@@ -54,7 +54,6 @@ export const FIELDS = {
   created:        { col: "created",         type: "time" },
   updated:        { col: "last_updated",    type: "time" },
   criticality:    { col: "criticality",     type: "text", lower: true },
-  classification: { col: "classification",  type: "text", lower: true },
   sha:            { col: "bundle_sha",      type: "text", lower: true },
   schema:         { col: "schema_id",       type: "text", lower: true },
   mode:           { col: "produced_mode",   type: "text", lower: true },
@@ -88,7 +87,7 @@ export const SORTABLE = { relevance: null, ...Object.fromEntries(
 /* Facets the sidebar counts unless the caller names others. Every one is an
    indexed enumeration, which is why the count is an aggregate the measurements
    showed costs 5ms over 20,000 rows. */
-export const DEFAULT_FACETS = ["type", "state", "criticality", "classification", "schema", "status"];
+export const DEFAULT_FACETS = ["type", "state", "criticality", "schema", "status"];
 
 /* The marker every generated statement carries. The runtime test asserts that
    each statement the store executes contains it, so a query path that skipped
@@ -582,7 +581,7 @@ const operand = (s) => (s.compound ? { sql: `SELECT fid FROM (${s.sql})`, args: 
 
 export const PROVENANCE_COLS = [
   "bundle_id", "object_type", "group_id", "title", "current_state", "prior_state",
-  "created", "last_updated", "criticality", "classification", "bundle_sha",
+  "created", "last_updated", "criticality", "bundle_sha",
   "schema_id", "produced_mode", "capability_tier", "source_locator",
   "source_authority", "source_retrieved", "source_status", "content_hash",
   "monitor_enabled", "monitor_frequency", "monitor_last_checked",

@@ -909,7 +909,16 @@ retirement that stranded live citations would manufacture that error at scale. A
 SEVERED edge does not count, or the refusal would be unclearable by the very act
 doctrine prescribes for clearing it.
 
-**Step 5, BLOCKED ON A DECISION (D-53), and it may be a decision not to build:**
+**Step 5, DECIDED 2026-07-27, UNBUILT: Bob directed that bulk release WILL be
+built.** The operation requires the member's explicit acknowledgement of the
+risks and their mitigation steps as part of its payload, recorded in the
+release record, so bulk and per-document releases are permanently
+distinguishable in the record. This decouples the operation from trust
+inheritance entirely: nothing is inherited, the recorded acknowledgement is the
+trust act. Scope: the doctrine-consistent shape is the origin split (bulk for
+`named_request` and `member`, per-document for `sweep`, per C-18.1's sweep
+branch); including sweep origin requires a doctrine amendment only Bob can
+make, and until he makes it the split stands. The history of the decision:**
 
 Three options were put to Bob on 2026-07-26 and none was chosen: build nothing and
 leave release per-document; build it uniformly; or split it on `origin.kind`,

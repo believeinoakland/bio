@@ -65,7 +65,6 @@ reeval_pending:
   source: source_status
 visuals: []
 criticality: crucial
-classification: fact
 source:
   locator: "https://oaklandca.opengov.com"
   authority: "Oakland OpenGov portal, City Auditor"
@@ -143,7 +142,7 @@ await promote(INFO_ID, infoMd, {
   object_type: "information", group: "believe-in-oakland",
   title: "Sewer Service Fund transfer series", current_state: "collected",
   created: "2026-07-18T22:00:00Z", last_updated: "2026-07-20T18:58:01Z",
-  criticality: "crucial", classification: "fact",
+  criticality: "crucial",
 });
 await promote(PROB_ID, probMd, {
   object_type: "problem", group: "believe-in-oakland",
@@ -204,7 +203,7 @@ await call("/promote", {
   meta: { object_type: "information", group: "believe-in-oakland",
           title: "Sewer Service Fund transfer series", current_state: "collected",
           created: "2026-07-18T22:00:00Z", last_updated: "2026-07-20T19:00:00Z",
-          criticality: "crucial", classification: "fact" },
+          criticality: "crucial" },
   files: [{ path: "bundle.md", text: infoMd2, bytes: infoMd2.length, sha256: sha(infoMd2) }],
   refs: [], register: [],
 });
