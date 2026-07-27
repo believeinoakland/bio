@@ -92,6 +92,32 @@ it, they can build their project in another instance. Locks bind projects
 only; the instance may amend or retire its own locked statements through its
 documented adoption process.
 
+**The masking attack, and the safeguards against it.** The attack: a project
+does not nullify an instance statement, it ADDS a statement whose net effect
+limits or neutralizes one. Four safeguards, layered:
+
+1. **Override is defined by EFFECT, not by form.** Any project statement whose
+   effect LOOSENS an instance statement on the same subject (weakens its
+   scrutiny demand, licenses an inference it blocks, narrows its reach) IS an
+   override, whatever it calls itself, and must name the statement it loosens.
+   Loosening a locked statement is a conformance error regardless of framing:
+   locks protect the statement's effect, not its text.
+2. **Strictest wins in the effective set.** Where statements conflict and no
+   named override resolves them, evaluations apply the strictest applicable
+   statement. A semantic contradiction that slips past detection therefore
+   loosens nothing mechanically; it merely sits in the record looking evasive.
+3. **Subject collisions are loud.** Every statement declares its subject. A
+   project statement whose subject overlaps an instance statement's subject is
+   flagged as an INTERACTION, requires a justification that addresses the
+   interaction explicitly, and travels the same review path as an override:
+   diffed against the instance set and reviewed at ratification.
+4. **The group is the backstop.** Effect comparison is mechanical for
+   inference statements and largely mechanical for scrutiny statements;
+   pattern statements and artful language are not fully machine-judgeable, and
+   the design does not pretend otherwise. What the machine guarantees is that
+   nothing on a shared subject is QUIET; the ratification review is where
+   human judgment finishes the job.
+
 **Effective bias** for a piece of work = the adopted instance statements at
 pinned revisions, minus project nullifications of unlocked statements, plus
 project replacements and additions. Every work product cites its BIAS
@@ -112,6 +138,22 @@ Prerequisite: for bias to bind mechanically rather than remain guidance
 humans apply by hand, evidence items need source attribution the system can
 match, which anchored citations were already going to carry (an evidence item
 is an anchored selection within a document, attributed to a source).
+
+## Bias debt
+
+When a bias is added or changed, existing analysis is not silently stale and
+not retroactively invalidated: it is marked as carrying **bias debt**, meaning
+a re-run is owed. The old work remains honest as written, because it cites the
+bias manifest that was in force when it was made; the debt marker records the
+delta between that manifest and the current effective set, so the record
+always shows exactly which statement changes a piece of analysis has not yet
+been re-evaluated under. Debt is tracked per work product, is visible wherever
+the work is consulted, and is cleared by re-running the evaluation (or the
+analysis, where the change reaches it) under the current set. Tracking is
+continuous; settlement is BATCHABLE, so a group can accumulate changes and
+re-run in one pass rather than being stalled by every amendment. A work
+product carrying bias debt cannot advance its workproduct_state or be ratified
+for publication until the debt is settled.
 
 ## Differential traversal and the cross-group rerun
 
