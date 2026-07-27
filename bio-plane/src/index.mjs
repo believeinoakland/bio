@@ -162,6 +162,12 @@ const OPS = {
      a live `cites` edge still points at: stranding citations manufactures the
      C-6.2 error condition at whatever scale the operator selected. */
   retire:          { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* S-11 step 5, the last rung. A machine class REACHES it and is refused by
+     the store (MACHINE_CANNOT_RELEASE), fail closed like participation: the
+     collected-to-verified transition is a named member's decision (Intake
+     Doctrine section 4, C-18.1), and the author stamp below is `token:<class>`
+     for a machine, which the store refuses by shape. */
+  release:         { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -269,7 +275,7 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
    rather than an edge's, so it takes the same server-side viewer, owner and
    author stamps the edge actions take: a caller that could name the viewer
    could dispose Problems it cannot see. */
-const STATE_ACTIONS = ["dispose", "retire"];
+const STATE_ACTIONS = ["dispose", "retire", "release"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue"];
@@ -324,6 +330,12 @@ const NEEDS = {
   reinstate:        "contribute",
   dispose:          "contribute",
   retire:           "contribute",
+  /* Release authority is the member's decision (Intake Doctrine 4); the
+     SURFACE it rides is contribute, like its state-action siblings, and the
+     named-member requirement is enforced by the store on the author stamp,
+     not by a capability, because capabilities gate sessions and the rule here
+     is about who a session IS. */
+  release:          "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */

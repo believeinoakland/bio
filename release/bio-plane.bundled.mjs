@@ -5832,6 +5832,11 @@ var Store = class _Store extends DurableObject {
    * unexplained deletion wearing a status field.
    */
   static EDGE_REASON_MAX = 160;
+  /* Longer than a reason, because a release acknowledgment is a statement of
+     what was weighed and what was checked, not a label. Same forbidden
+     characters, because it is spliced into the Session Log and must stay one
+     line per field. */
+  static RELEASE_ACK_MAX = 500;
   static EDGE_NOTE_MAX = 480;
   /** Move `cites` edges between statuses for every member of a selection.
    *
@@ -6391,6 +6396,209 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
       retired.push(id);
     }
     return { ok: true, reason: why, handle, retired: retired.sort(), weight: "refuse", drift: sel.drift };
+  }
+  /* S-11 step 5, the last rung of the ladder: bulk RELEASE of Information,
+       collected -> verified over a selection, weight `refuse`, whole set or
+       nothing. Decided by Bob 2026-07-27 and specified in Intake Doctrine v1.2:
+       what legitimizes a bulk release is volume plus little-to-no variance in the
+       trustworthiness of the collection, whatever origin brought it in, because
+       verification asserts only that a document APPEARS to be what it claims to
+       be, never accuracy.
+  
+       Four properties carry the doctrine:
+       1. A NAMED MEMBER authors it. The author stamp arrives from the session;
+          a machine credential's stamp is `token:<class>` and is refused by
+          shape, because the collected-to-verified transition is a member's
+          decision (section 4, C-18.1), whatever else machines may prepare.
+       2. The ACKNOWLEDGMENT IS A RECORD, not a dialog. The member's explicit
+          acknowledgment of the batch's homogeneity and the mitigation steps
+          they actually took are required parameters, refused when absent, and
+          written into every released document's Session Log, so a batch release
+          is permanently distinguishable from a per-document one.
+       3. CRUCIAL NEVER RIDES A BATCH. Ratifying crucial-criticality material
+          requires verifying its co-attestations (doctrine section 3, F4), which
+          is per-document work, and a batch containing crucial material is by
+          definition not a low-variance collection.
+       4. NOTHING VERIFIED HERE AUDITS DIRTY. C-2.7's verified-state entry
+          requirements (well-formed content_hash, data/dataset.json, a file in
+          snapshots/) are checked per member BEFORE any state moves, offenders
+          named, set refused whole. */
+  release({ handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_RELEASE",
+        detail: "the collected-to-verified transition is a named member's decision (Intake Doctrine section 4, C-18.1). A machine credential may read and may prepare the review packet, and may not release. Sign in as a member."
+      };
+    const ack = String(acknowledgment ?? "").trim();
+    const mit = String(mitigation ?? "").trim();
+    if (!ack)
+      return {
+        ok: false,
+        reason: "NO_ACKNOWLEDGMENT",
+        detail: "a bulk release records the member's explicit acknowledgment that the batch is homogeneous and that the risks of releasing in bulk were weighed. Without it the record shows only that a button was pressed."
+      };
+    if (!mit)
+      return {
+        ok: false,
+        reason: "NO_MITIGATION",
+        detail: "a bulk release records what the member actually did: what was sampled, what was checked. 'Sender domains verified on a sample of twelve' can be audited later; silence cannot."
+      };
+    for (const [name, v] of [["acknowledgment", ack], ["mitigation", mit]])
+      if (v.length > _Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
+        return {
+          ok: false,
+          reason: `BAD_${name.toUpperCase()}`,
+          detail: `${name} is at most ${_Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline`
+        };
+    const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
+    if (!sel.ok) return sel;
+    if (!sel.members.length)
+      return {
+        ok: false,
+        reason: "EMPTY_SELECTION",
+        handle,
+        drift: sel.drift,
+        detail: "this selection resolves to no members, so there is nothing to release"
+      };
+    const notInfo = [], illegal = [], crucial = [], entry = [];
+    for (const id of sel.members) {
+      const b = this.#one(`SELECT object_type, current_state, criticality FROM bundles WHERE bundle_id=?`, id);
+      if (!b || b.object_type !== "information") {
+        notInfo.push(id);
+        continue;
+      }
+      if (b.current_state !== "collected") {
+        illegal.push({ id, from: b.current_state });
+        continue;
+      }
+      if (b.criticality === "crucial") {
+        crucial.push(id);
+        continue;
+      }
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+      const fm = md && md.content !== null ? parseFrontmatter(md.content).data || {} : {};
+      const missing = [];
+      const ch = fm.content_hash;
+      if (!(typeof ch === "string" && /^sha256:[0-9a-f]{64}$/.test(ch))) missing.push("well-formed content_hash");
+      if (!this.#one(`SELECT 1 AS x FROM files WHERE bundle_id=? AND path='data/dataset.json'`, id))
+        missing.push("data/dataset.json");
+      if (!this.#one(`SELECT 1 AS x FROM files WHERE bundle_id=? AND path LIKE 'snapshots/%' LIMIT 1`, id))
+        missing.push("a file in snapshots/");
+      if (missing.length) entry.push({ id, missing });
+    }
+    if (notInfo.length)
+      return {
+        ok: false,
+        reason: "NOT_INFORMATION",
+        offenders: notInfo.sort(),
+        detail: "release moves an Information state, and this selection carries something else. The set is refused whole rather than narrowed."
+      };
+    if (illegal.length)
+      return {
+        ok: false,
+        reason: "ILLEGAL_TRANSITION",
+        to: "verified",
+        offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
+        detail: "only collected Information may be released. Something already verified has been released once and release is not repeatable; something retired is terminal."
+      };
+    if (crucial.length)
+      return {
+        ok: false,
+        reason: "CRUCIAL_IN_BATCH",
+        offenders: crucial.sort(),
+        detail: "crucial-criticality material is never batch-released (Intake Doctrine v1.2): ratifying it requires verifying its co-attestations, which is per-document work, and a batch containing crucial material is not a low-variance collection. Release these individually, or re-select without them."
+      };
+    if (entry.length)
+      return {
+        ok: false,
+        reason: "ENTRY_REQUIREMENTS",
+        offenders: entry.sort((a, b) => a.id < b.id ? -1 : 1),
+        detail: "verified state has entry requirements (C-2.7): a well-formed content_hash, data/dataset.json, and at least one file in snapshots/. Releasing these as they stand would mint bundles the catalog immediately rejects."
+      };
+    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const released = [];
+    for (const id of sel.members) {
+      const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+      const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
+      if (!liveMd || liveMd.content === null)
+        return { ok: false, reason: "NO_DOCUMENT", bundleId: id, releasedSoFar: released };
+      let text = liveMd.content;
+      const withHistory = _Store.#appendStateHistory(text, {
+        timestamp: when,
+        from_state: cur.current_state,
+        to_state: "verified",
+        blurb: `batch release via selection ${handle}; acknowledgment and mitigation in Session Log`,
+        author: who
+      });
+      if (!withHistory)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_STATE_HISTORY",
+          bundleId: id,
+          releasedSoFar: released,
+          detail: "this document's state_history block cannot be extended in place, and a release recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
+        };
+      text = withHistory;
+      text = _Store.#setScalar(text, "prior_state", cur.current_state);
+      text = _Store.#setScalar(text, "current_state", "verified");
+      text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+      const entryLog = `### Session ${when} | Released (batch) | ${who}
+Trigger: selection ${handle}
+Changes: state ${cur.current_state} to verified.
+Acknowledgment: ${ack}
+Mitigation: ${mit}
+`;
+      const at = text.indexOf("## Session Log");
+      if (at < 0) text += "\n## Session Log\n\n" + entryLog;
+      else {
+        const nxt = text.indexOf("\n## ", at + 1);
+        const cutAt = nxt === -1 ? text.length : nxt + 1;
+        text = text.slice(0, cutAt) + entryLog + "\n" + text.slice(cutAt);
+      }
+      const carried = [];
+      for (const r of this.sql.exec(
+        `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+        id
+      ))
+        carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+      const bytes = new TextEncoder().encode(text);
+      const fm = parseFrontmatter(text).data || {};
+      const promoted = this.promote({
+        bundleId: id,
+        base: cur.bundle_sha,
+        snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+        author: who,
+        files: [{
+          path: "bundle.md",
+          text,
+          bytes: bytes.length,
+          sha256: createSha256().update(bytes).hex()
+        }, ...carried],
+        meta: {
+          object_type: "information",
+          group: fm.group || "believe-in-oakland",
+          title: fm.title,
+          current_state: "verified",
+          prior_state: cur.current_state,
+          created: fm.created,
+          last_updated: when,
+          criticality: fm.criticality ?? null
+        }
+      });
+      if (!promoted.ok) return { ...promoted, bundleId: id, releasedSoFar: released };
+      released.push(id);
+    }
+    return {
+      ok: true,
+      handle,
+      released: released.sort(),
+      acknowledgment: ack,
+      mitigation: mit,
+      weight: "refuse",
+      drift: sel.drift
+    };
   }
   /* Rewrite the `status` and `note` of specific `cites` entries in place,
      touching nothing else. Walks the references block entry by entry, tracking
@@ -9060,6 +9268,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           owner: url.searchParams.get("owner"),
           author: url.searchParams.get("author")
         }),
+        release: () => this.release({
+          handle: url.searchParams.get("handle"),
+          acknowledgment: url.searchParams.get("acknowledgment"),
+          mitigation: url.searchParams.get("mitigation"),
+          viewer: url.searchParams.get("viewer"),
+          owner: url.searchParams.get("owner"),
+          author: url.searchParams.get("author")
+        }),
         dispose: () => this.dispose({
           handle: url.searchParams.get("handle"),
           to: url.searchParams.get("to"),
@@ -9246,6 +9462,12 @@ var OPS = {
      a live `cites` edge still points at: stranding citations manufactures the
      C-6.2 error condition at whatever scale the operator selected. */
   retire: { classes: ["admin", "member", "probe"], mutating: true },
+  /* S-11 step 5, the last rung. A machine class REACHES it and is refused by
+     the store (MACHINE_CANNOT_RELEASE), fail closed like participation: the
+     collected-to-verified transition is a named member's decision (Intake
+     Doctrine section 4, C-18.1), and the author stamp below is `token:<class>`
+     for a machine, which the store refuses by shape. */
+  release: { classes: ["admin", "member", "probe"], mutating: true },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -9331,7 +9553,7 @@ var OPS = {
 };
 var RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
 var EDGE_ACTIONS = ["cite", "sever", "reinstate"];
-var STATE_ACTIONS = ["dispose", "retire"];
+var STATE_ACTIONS = ["dispose", "retire", "release"];
 var PROJECT_ACTIONS = [
   "projectinvite",
   "projectjoin",
@@ -9406,6 +9628,12 @@ var NEEDS = {
   reinstate: "contribute",
   dispose: "contribute",
   retire: "contribute",
+  /* Release authority is the member's decision (Intake Doctrine 4); the
+     SURFACE it rides is contribute, like its state-action siblings, and the
+     named-member requirement is enforced by the store on the author stamp,
+     not by a capability, because capabilities gate sessions and the rule here
+     is about who a session IS. */
+  release: "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */

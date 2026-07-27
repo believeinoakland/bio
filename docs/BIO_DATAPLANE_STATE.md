@@ -1,5 +1,38 @@
 # BIO data plane: source state, migration plan, and build status
 
+v31, July 27, 2026, later the same day as v30. The plane is **0.34.0**, signed,
+tagged, deployed and verified on biosmoke7, deployed module bytes hashing
+identically to the signed asset
+(`4318de910fdfe67c9d3fcc845d20d161315effe59dbcbe0133ffd6176ec41fe7`).
+Battery **1557 assertions green across 33 suites** plus the wizard's 90. Live
+record unchanged, `op=audit` 30 checked and 30 clean after the deploy.
+
+**S-11 IS COMPLETE. Step 5, bulk release, `op=release`, shipped in 0.34.0**
+exactly as specified by Bob's 2026-07-27 rulings and Intake Doctrine v1.2:
+collected -> verified over a selection at refuse weight, whole set or nothing.
+The four properties that carry the doctrine, all asserted in
+test/release.test.mjs (31 assertions): a NAMED MEMBER authors it, with the
+machine-shaped author stamp (`token:<class>`, the generic `member` default, or
+absence) refused as MACHINE_CANNOT_RELEASE; the ACKNOWLEDGMENT IS A RECORD,
+with the member's homogeneity acknowledgment and mitigation steps required
+parameters written into every released document's Session Log under a
+`Released (batch)` heading, so batch releases are permanently distinguishable;
+CRUCIAL NEVER RIDES A BATCH (CRUCIAL_IN_BATCH, offenders named, set refused
+whole); and NOTHING VERIFIED HERE AUDITS DIRTY, with C-2.7's verified-entry
+requirements (well-formed content_hash, data/dataset.json, a snapshots/ file)
+checked per member BEFORE any state moves (ENTRY_REQUIREMENTS, offenders and
+their exact lacks named). Release is not repeatable (ILLEGAL_TRANSITION from
+verified or retired), non-Information refuses the set whole, an empty
+selection is a refusal rather than a no-op, and the C-18.1 interplay is
+asserted both ways: the transition this op writes carries the member author
+and passes the check whose refusing direction the conformance suite already
+held. The live behavior poll after deploy: `op=release` reachable and a
+machine credential refused by name, which is the doctrine running in
+production. The op rides STATE_ACTIONS, so it takes the server-side viewer,
+owner and author stamps; capability is `contribute` like its siblings, with
+the named-member rule enforced by the store on the author's SHAPE, since the
+rule is about who a session IS, not what it may touch.
+
 v30, July 27, 2026. Current state, on top of v29 and the narratives below. The
 plane is **0.33.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed module bytes hashing identically

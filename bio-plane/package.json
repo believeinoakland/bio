@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node test/hygiene.test.mjs && node test/store.test.mjs && node test/projection.test.mjs && node test/query.test.mjs && node test/search.test.mjs && node test/selection.test.mjs && node test/cite.test.mjs && node test/edges.test.mjs && node test/disposition.test.mjs && node test/purge.test.mjs && node test/bootstrap.test.mjs && node test/livefire.test.mjs && node test/installer.test.mjs && node test/capture.test.mjs && node test/migrate.test.mjs && node test/browse.test.mjs && node test/fence.test.mjs && node test/sshsig.test.mjs && node test/members.test.mjs && node test/membership.test.mjs && node test/capability.test.mjs && node test/projects.test.mjs && node test/ratify.test.mjs && node test/doorbell.test.mjs && node test/signpage.test.mjs && node test/conformance.test.mjs && node test/gathering.test.mjs && node test/acquire.test.mjs && node test/attest.test.mjs && node test/mechanical.test.mjs && node test/audit.test.mjs",
+    "test": "node test/hygiene.test.mjs && node test/store.test.mjs && node test/projection.test.mjs && node test/query.test.mjs && node test/search.test.mjs && node test/selection.test.mjs && node test/cite.test.mjs && node test/edges.test.mjs && node test/disposition.test.mjs && node test/release.test.mjs && node test/purge.test.mjs && node test/bootstrap.test.mjs && node test/livefire.test.mjs && node test/installer.test.mjs && node test/capture.test.mjs && node test/migrate.test.mjs && node test/browse.test.mjs && node test/fence.test.mjs && node test/sshsig.test.mjs && node test/members.test.mjs && node test/membership.test.mjs && node test/capability.test.mjs && node test/projects.test.mjs && node test/ratify.test.mjs && node test/doorbell.test.mjs && node test/signpage.test.mjs && node test/conformance.test.mjs && node test/gathering.test.mjs && node test/acquire.test.mjs && node test/attest.test.mjs && node test/mechanical.test.mjs && node test/audit.test.mjs",
     "test:store": "node test/store.test.mjs",
     "test:livefire": "node test/livefire.test.mjs",
     "test:bundle": "node test/bundle.test.mjs",
@@ -63,5 +63,5 @@
       }
     }
   },
-  "version": "0.33.0"
+  "version": "0.34.0"
 }

@@ -112,11 +112,13 @@ built: capability enforcement at the op layer, the section 7 project rules
 including the 7.7 reversal and 7.10 owner governance, lifecycle authority, fork,
 licences, project name uniqueness, secure verified export, and 7.13.
 
-**S-11 (selection-backed actions) is at step 4 of 5.** Citing, severing,
+**S-11 (selection-backed actions) is COMPLETE, 5 of 5, as of 0.34.0.** Citing, severing,
 reinstating, bulk disposition of Focuses and bulk retirement of Information are
-all shipped. Step 5, bulk release, is DECIDED AND UNBUILT: Bob directed in the
-2026-07-27 session that it will be built, with the recorded-acknowledgement
-design and the scope question described below.
+all shipped. Step 5, bulk release, SHIPPED in 0.34.0 with the recorded-acknowledgement
+design: named-member authorship enforced on the author stamp's shape, the
+acknowledgment and mitigation written into every released document's Session
+Log, crucial refused from batches, and C-2.7 entry requirements checked before
+any state moves. The next queued arc is the Focus rename's CODE side.
 
 ### Work from v2, not v1
 
@@ -151,7 +153,7 @@ criticality: crucial or contested documents are refused from bulk, whole set
 refused with offenders named, because F4 co-attestation verification is
 per-document work. Each batched document still receives its own member-authored
 release transition, so C-18.1's mechanical rule is satisfied unchanged. Step 5
-is now fully specified and ready to build.
+shipped in 0.34.0.
 
 The relevant finding, which corrected an earlier overstatement in the same
 session: **C-18.1 constrains WHO authors the `collected` to `verified` transition,
