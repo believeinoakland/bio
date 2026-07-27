@@ -713,7 +713,7 @@ true for a member today and a real predicate when projects exist. A test asserts
 no query path reaches the store without passing through it. That makes the later
 change one function rather than an audit of every query.
 
-**Status: unblocked, not started** · Build order in `RETRIEVAL-SUBSTRATE.md`:
+**Status at design time, kept as history and superseded by the header: built exactly as ordered, complete 0.17.0.** Build order was `RETRIEVAL-SUBSTRATE.md`:
 extend the projection, maintain it transactionally in `promote`, then the parser
 and compiler, then `op=search`, then server-side selection, then the real viewer
 predicate when membership lands.
