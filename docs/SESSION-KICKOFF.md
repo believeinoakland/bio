@@ -181,9 +181,15 @@ Raised by Bob at the end of the 2026-07-26 session and deliberately not built.
 Recorded here because it blocks S-11 step 5 and because the findings cost real
 reading to obtain.
 
-Bob's framing: information from a credible source can be ratified with trust
-inherited from that source; ratification by a member adds that member's trust;
-trust never decreases, being the maximum over all vouchers. Credence is a
+Bob's earlier framing, SUPERSEDED BY BOB in the 2026-07-27 session ("forget
+what I said about reputation in the last session"): information from a credible
+source can be ratified with trust inherited from that source; ratification by a
+member adds that member's trust; trust never decreases, being the maximum over
+all vouchers. Do not build from this paragraph. The replacement framing is
+under discussion in that session (reputation, credentials, conventional wisdom
+and narrative as highly subjective, manipulable signals BIO exists to
+counterweight; bias discussion to follow) and will be recorded here when it
+settles. Credence is a
 listener's belief in the claims a document makes, determined by the source, the
 topic area, the type of claim, and the source's reputation generally and in that
 area. Claim types he named: law of nature; derivation by accepted formula; an
