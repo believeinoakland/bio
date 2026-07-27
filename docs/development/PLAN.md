@@ -586,7 +586,16 @@ to compare, so it ran as its own probe (`bio-plane/test/retrieval-probe.mjs`,
 `npm run probe:retrieval`).
 
 ### S-9 Retire the old plane
-**Status: todo** · Debt: D-11 · Depends: S-6
+**Status: NEARLY COMPLETE, 2026-07-27.** Done by Bob in the dashboards: all
+workers and R2 storage tokens under the original Cloudflare account deleted;
+the BIO-server-endpoints Apps Script project deleted (retiring the four bearer
+tokens); the CivicOS and CivicOS-keys Drive folders deleted (30-day Drive
+trash window applies if anything proves needed). Done in the repo:
+`promotion-service.gs` removed per its own expiry condition. REMAINING, two
+items: revoke the SPN2 pair in the Internet Archive account, and confirm
+whether any legacy bio R2 BUCKETS (not tokens) exist under the original
+account, deleting them there if so after confirming the migrated store's
+completeness. · Debt: D-11 · Depends: S-6
 
 Revoke the R2 key pair in Cloudflare and the SPN2 pair in the Internet Archive
 account, delete the Apps Script deployment (which retires the four bearer tokens

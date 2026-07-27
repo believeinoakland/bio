@@ -1,5 +1,16 @@
 # Apps Script promotion service, retired runtime
 
+**REMOVED July 27, 2026, per its own expiry condition.** The deployment was
+deleted by Bob the same day, retiring its four bearer tokens by removing what
+they opened; the workers and R2 storage tokens in the original Cloudflare
+account were deleted; and the CivicOS and CivicOS-keys Drive folders were
+deleted. The source had already given up the one thing it carried that
+mattered, the embedded check catalog, extracted hash-verified into
+`bio-plane/checks/bio-checks.mjs`. What it teaches lives in the plan's S-1
+through S-9 narratives; the bytes themselves are recoverable from git history
+if ever wanted, which is what made deleting them safe and keeping them noise.
+
+
 `promotion-service.gs`, 3,832 lines, the accelerator that ran the record on
 Google Apps Script and Drive before the Cloudflare plane replaced it.
 
