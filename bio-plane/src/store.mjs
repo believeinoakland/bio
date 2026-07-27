@@ -132,6 +132,11 @@ export class Store extends DurableObject {
     const bundleCols = [...this.sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name);
     if (bundleCols.includes("classification"))
       this.sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
+    /* The Focus rename (Bob's directive, 2026-07-27). The projection is
+       DERIVED, so it is the layer the design normalizes: frontmatter in
+       append-only history keeps whatever spelling it was written with, and
+       every projection row says `focus`. Idempotent by construction. */
+    this.sql.exec(`UPDATE bundles SET object_type='focus' WHERE object_type='problem'`);
     /* Indexed because probe 2 recorded the difference in the query PLAN, not
        only the latency: without an index a filter is a full table scan whose
        cost grows with the corpus, and at 20,000 rows a scan is still fast
@@ -1186,7 +1191,7 @@ export class Store extends DurableObject {
    * between refusing a write and writing something that fails its own checks. */
   dispose({ handle, to, reason = "", viewer = null, owner = null, author = null } = {}) {
     const DISPOSITIONS = ["deferred", "dismissed"];
-    const PROBLEM_STATES = ["surfaced", "elevated", "deferred", "dismissed"];
+    const FOCUS_STATES = ["surfaced", "elevated", "deferred", "dismissed"];
     /* Legal transitions, from the catalog's own table rather than a second copy
        of it. deferred->deferred is absent, which is what makes a stale view a
        refusal rather than a silent no-op. */
@@ -1195,9 +1200,9 @@ export class Store extends DurableObject {
                     dismissed: ["surfaced", "elevated", "deferred"],
                     elevated: [] };
 
-    if (!PROBLEM_STATES.includes(to))
-      return { ok: false, reason: "BAD_TARGET_STATE", to, legal: PROBLEM_STATES,
-               detail: `a Problem's state is one of ${PROBLEM_STATES.join(", ")}` };
+    if (!FOCUS_STATES.includes(to))
+      return { ok: false, reason: "BAD_TARGET_STATE", to, legal: FOCUS_STATES,
+               detail: `a Problem's state is one of ${FOCUS_STATES.join(", ")}` };
     if (!DISPOSITIONS.includes(to))
       return { ok: false, reason: "NOT_A_DISPOSITION", to, dispositions: DISPOSITIONS,
                detail: "elevating a Problem writes an elevated_into edge and a Project bundle, so it is not "
@@ -1225,7 +1230,7 @@ export class Store extends DurableObject {
     const offenders = [], illegal = [];
     for (const id of sel.members) {
       const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (!b || b.object_type !== "problem") { offenders.push(id); continue; }
+      if (!b || !["focus", "problem"].includes(b.object_type)) { offenders.push(id); continue; }
       if (!(LEGAL[b.current_state] || []).includes(to)) illegal.push({ id, from: b.current_state });
     }
     if (offenders.length)
@@ -1295,7 +1300,7 @@ export class Store extends DurableObject {
         author: author || "member",
         files: [{ path: "bundle.md", text, bytes: bytes.length,
                   sha256: createSha256().update(bytes).hex() }, ...carried],
-        meta: { object_type: "problem", group: fm.group || "believe-in-oakland", title: fm.title,
+        meta: { object_type: "focus", group: fm.group || "believe-in-oakland", title: fm.title,
                 current_state: to, prior_state: cur.current_state,
                 created: fm.created, last_updated: when,
                 criticality: fm.criticality ?? null },
@@ -2421,7 +2426,7 @@ export class Store extends DurableObject {
            last_updated=excluded.last_updated, criticality=excluded.criticality,
            bundle_sha=excluded.bundle_sha,
            row_version=bundles.row_version+1`,
-        bundleId, meta.object_type, meta.group, meta.title, meta.current_state, meta.prior_state ?? null,
+        bundleId, meta.object_type === "problem" ? "focus" : meta.object_type, meta.group, meta.title, meta.current_state, meta.prior_state ?? null,
         meta.created, meta.last_updated, meta.criticality ?? null, newSha, bundleId);
 
       /* Projected from the document, every promotion, so the table is a view of

@@ -405,6 +405,10 @@ function selector(tok, ctx) {
     return textAtom(null, `${tok.field} ${tok.value}`.trim(), true, ctx);
   }
   let raw = String(tok.value);
+  /* The Focus rename: the projection stores `focus` and only `focus`, so the
+     legacy spelling is honoured as a filter value rather than answered with an
+     empty page. Schema stamps are document truth and are NOT mapped. */
+  if (f.col === "object_type" && raw.toLowerCase() === "problem") raw = "focus";
   /* Comparisons and ranges are metadata predicates on every field, including the
      free-text ones: `created:>2026-01-01` is an ordering question and MATCH
      cannot answer it. */

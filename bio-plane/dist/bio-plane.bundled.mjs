@@ -414,11 +414,13 @@ rev ${rev}
 }
 
 // checks/bio-checks.mjs
-var BUNDLE_ID_RE = /^(INFO|PROB|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-var ANN_ID_RE = /^(INFO|PROB|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
+var BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+var ANN_ID_RE = /^(INFO|PROB|FOCUS|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
 var FILENAME_RE = /^[A-Za-z0-9._-]+$/;
 var ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-var OBJECT_TYPES = { INFO: "information", PROB: "problem", PROJ: "project", ACTN: "action" };
+var OBJECT_TYPES = { INFO: "information", PROB: "focus", FOCUS: "focus", PROJ: "project", ACTN: "action" };
+var LEGACY_TYPE_ALIASES = { problem: "focus" };
+var normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
 var CORE_FIELDS = [
   "id",
   "object_type",
@@ -447,6 +449,7 @@ var FORBIDDEN_ALIASES = {
 };
 var HEADINGS = {
   information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
+  focus: ["## Statement", "## Why It Matters", "## Open Questions", "## Session Log", "## Review Notes"],
   problem: ["## Statement", "## Why It Matters", "## Open Questions", "## Session Log", "## Review Notes"],
   project: ["## Thesis Summary", "## Open Questions", "## Ruled Out", "## Session Log", "## Review Notes"],
   action: ["## Plan", "## Status", "## Correspondence", "## Session Log", "## Review Notes"]
@@ -456,7 +459,7 @@ var STATES = {
     legal: ["collected", "verified", "retired"],
     edges: { collected: ["verified"], verified: ["retired"], retired: [] }
   },
-  problem: {
+  focus: {
     legal: ["surfaced", "elevated", "deferred", "dismissed"],
     edges: {
       surfaced: ["elevated", "deferred", "dismissed"],
@@ -485,6 +488,7 @@ var STATES = {
     }
   }
 };
+STATES.problem = STATES.focus;
 function f(check, severity, message, repairs) {
   const out = { check, severity, message };
   if (repairs) {
@@ -694,17 +698,17 @@ function checkFrontmatterContract(ctx, findings) {
     if (alias in fm) findings.push(f("C-2.3", "error", `forbidden alias '${alias}' present (canonical name is '${canonical}')`, [`rename '${alias}' to '${canonical}'`]));
   }
   const ot = fm.object_type;
-  if (!Object.values(OBJECT_TYPES).includes(ot)) {
+  if (!Object.values(OBJECT_TYPES).includes(normalizeType(ot))) {
     findings.push(f("C-2.5", "error", `object_type '${ot}' is not a known type`));
   } else {
-    const prefix = fm.id && String(fm.id).slice(0, 4);
+    const prefix = fm.id && String(fm.id).split("-")[0];
     const wantType = OBJECT_TYPES[prefix];
-    if (wantType && wantType !== ot) findings.push(f("C-2.5", "error", `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
+    if (wantType && wantType !== normalizeType(ot)) findings.push(f("C-2.5", "error", `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
     const schema = fm.schema;
     const sm = typeof schema === "string" && /^([a-z]+)@(\d+)$/.exec(schema);
     if (!sm) findings.push(f("C-2.5", "error", `schema stamp '${schema}' is not of the form <type>@<n>`));
     else {
-      if (sm[1] !== ot) findings.push(f("C-2.5", "error", `schema stamp '${schema}' does not match object_type '${ot}'`));
+      if (normalizeType(sm[1]) !== normalizeType(ot)) findings.push(f("C-2.5", "error", `schema stamp '${schema}' does not match object_type '${ot}'`));
       if (!ctx.knownSchemas.includes(schema)) findings.push(f("C-2.5", "error", `schema version '${schema}' is not known to this check catalog`));
     }
   }
@@ -1250,7 +1254,7 @@ function checkReferences(ctx, findings) {
       }
     }
   }
-  if (ctx.fm?.object_type === "problem" && ctx.fm.current_state === "elevated") {
+  if (normalizeType(ctx.fm?.object_type) === "focus" && ctx.fm.current_state === "elevated") {
     if (!refs.some((r) => r && r.rel === "elevated_into")) {
       findings.push(f("C-6.3", "error", "an elevated Problem must carry at least one 'elevated_into' reference"));
     }
@@ -1356,7 +1360,7 @@ function checkHistoryCoherence(ctx, findings) {
   }
 }
 function checkRecheckCoverage(ctx, findings) {
-  if (ctx.fm?.object_type !== "problem") return;
+  if (normalizeType(ctx.fm?.object_type) !== "focus") return;
   const rts = Array.isArray(ctx.fm.recheck_triggers) ? ctx.fm.recheck_triggers : [];
   if (rts.length === 0) {
     findings.push(f("C-15.1", "error", "every Problem, in every disposition including dismissed, carries at least one recheck trigger", ["author a trigger, dual-audience shape, dated when time-bound"]));
@@ -1372,8 +1376,8 @@ function checkRecheckCoverage(ctx, findings) {
   }
 }
 var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-function checkProblemExtension(ctx, findings) {
-  if (ctx.fm?.object_type !== "problem") return;
+function checkFocusExtension(ctx, findings) {
+  if (normalizeType(ctx.fm?.object_type) !== "focus") return;
   const fm = ctx.fm;
   if (!["agent", "human"].includes(fm.surfaced_by)) {
     findings.push(f("C-2.8", "error", `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
@@ -2949,7 +2953,7 @@ async function checkBundle(input, opts = {}) {
     nowMs: input.nowMs,
     maxPackageAgeDays: input.maxPackageAgeDays ?? 14,
     maxReevalAgeDays: input.maxReevalAgeDays ?? 30,
-    knownSchemas: opts.knownSchemas ?? ["information@1", "information@2", "problem@1", "project@1", "action@1"],
+    knownSchemas: opts.knownSchemas ?? ["information@1", "information@2", "focus@1", "problem@1", "project@1", "action@1"],
     resolveTarget: input.resolveTarget,
     // D2.3: the key registry, injected exactly like resolveTarget. Absent
     // is legal and means pre-migration behavior; absent WITH a
@@ -2980,7 +2984,7 @@ async function checkBundle(input, opts = {}) {
     await checkMechanicalConformance(ctx, findings);
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
-    checkProblemExtension(ctx, findings);
+    checkFocusExtension(ctx, findings);
     checkProjectExtension(ctx, findings);
     checkActionExtension(ctx, findings);
     checkCitationRegister(ctx, findings);
@@ -3192,7 +3196,7 @@ table.rec tr.row:hover td{background:#F6F7F2}
   <label for="n-type">What kind of thing is this?</label>
   <select id="n-type">
     <option value="information">Information</option>
-    <option value="problem">Problem</option>
+    <option value="focus">Focus</option>
     <option value="project">Project</option>
     <option value="action">Action</option>
   </select>
@@ -3466,7 +3470,7 @@ const rec = async (op, params={})=>{
   return r.json();
 };
 const escH = (x)=>String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-const TYPES = [["information","Information"],["problem","Problems"],["project","Projects"],["action","Actions"]];
+const TYPES = [["information","Information"],["focus","Focuses"],["project","Projects"],["action","Actions"]];
 const fmtWhen = (iso)=>{ const d=new Date(iso); return isNaN(d)?escH(iso):d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
 const chip = (st)=>'<span class="chip '+escH(st)+'">'+escH(st)+"</span>";
 
@@ -3646,7 +3650,7 @@ function ratifyWhy(r){
    Authorship is stamped by the server from the session, so nothing typed
    here can claim to be someone else. */
 const NL = String.fromCharCode(10);
-const PREFIX = { information:"INFO", problem:"PROB", project:"PROJ", action:"ACTN" };
+const PREFIX = { information:"INFO", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
 /* From the check catalog, not from memory. */
 const FIRST_STATE = ${FIRST_STATE_JSON};
 const HEADINGS = ${HEADINGS_JSON};
@@ -3661,7 +3665,7 @@ const HEADINGS = ${HEADINGS_JSON};
    describes captured DOCUMENTS. The moment a document IS captured the bundle is
    @2 and carries the register, which is the honest distinction rather than a
    version preference. */
-const SCHEMA_OF = { information:"information@1", problem:"problem@1", project:"project@1", action:"action@1" };
+const SCHEMA_OF = { information:"information@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
 const schemaFor = (type, hasDoc)=> type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
 const post = async (op, body)=>{
   const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
@@ -3698,7 +3702,7 @@ const mdFor = (id, type, state, title, body, now, hasDoc)=>{
     "criticality: supporting","source_status: unchanged",
     "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
     "monitoring:","  enabled: false","  frequency: none");
-  if (type === "problem") fm.push(
+  if (type === "focus" || type === "problem") fm.push(
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if (type === "project") fm.push("objective: "+JSON.stringify(title));
@@ -4642,6 +4646,7 @@ function selector(tok, ctx) {
     return textAtom(null, `${tok.field} ${tok.value}`.trim(), true, ctx);
   }
   let raw = String(tok.value);
+  if (f2.col === "object_type" && raw.toLowerCase() === "problem") raw = "focus";
   const range = raw.split("..");
   if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f2.type === "time" || f2.type === "number")) {
     return { op: "and", kids: [
@@ -5020,6 +5025,7 @@ var Store = class _Store extends DurableObject {
     const bundleCols = [...this.sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name);
     if (bundleCols.includes("classification"))
       this.sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
+    this.sql.exec(`UPDATE bundles SET object_type='focus' WHERE object_type='problem'`);
     for (const c of [
       "schema_id",
       "produced_mode",
@@ -6067,20 +6073,20 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
    * between refusing a write and writing something that fails its own checks. */
   dispose({ handle, to, reason = "", viewer = null, owner = null, author = null } = {}) {
     const DISPOSITIONS = ["deferred", "dismissed"];
-    const PROBLEM_STATES = ["surfaced", "elevated", "deferred", "dismissed"];
+    const FOCUS_STATES = ["surfaced", "elevated", "deferred", "dismissed"];
     const LEGAL = {
       surfaced: ["elevated", "deferred", "dismissed"],
       deferred: ["surfaced", "elevated", "dismissed"],
       dismissed: ["surfaced", "elevated", "deferred"],
       elevated: []
     };
-    if (!PROBLEM_STATES.includes(to))
+    if (!FOCUS_STATES.includes(to))
       return {
         ok: false,
         reason: "BAD_TARGET_STATE",
         to,
-        legal: PROBLEM_STATES,
-        detail: `a Problem's state is one of ${PROBLEM_STATES.join(", ")}`
+        legal: FOCUS_STATES,
+        detail: `a Problem's state is one of ${FOCUS_STATES.join(", ")}`
       };
     if (!DISPOSITIONS.includes(to))
       return {
@@ -6116,7 +6122,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
     const offenders = [], illegal = [];
     for (const id of sel.members) {
       const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (!b || b.object_type !== "problem") {
+      if (!b || !["focus", "problem"].includes(b.object_type)) {
         offenders.push(id);
         continue;
       }
@@ -6202,7 +6208,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
           sha256: createSha256().update(bytes).hex()
         }, ...carried],
         meta: {
-          object_type: "problem",
+          object_type: "focus",
           group: fm.group || "believe-in-oakland",
           title: fm.title,
           current_state: to,
@@ -7362,7 +7368,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
            bundle_sha=excluded.bundle_sha,
            row_version=bundles.row_version+1`,
         bundleId,
-        meta.object_type,
+        meta.object_type === "problem" ? "focus" : meta.object_type,
         meta.group,
         meta.title,
         meta.current_state,

@@ -1,5 +1,32 @@
 # BIO data plane: source state, migration plan, and build status
 
+v32, July 27, 2026, third entry of the day. The plane is **0.35.0**, signed,
+deployed and verified on biosmoke7, deployed bytes hash-identical to the
+signed asset
+(`3a028c8a97cb36a4633e56d5dbbed262ffa163f3448a780961c7ad0cb28640b3`).
+Battery **1573 assertions green across 34 suites** plus the wizard's 90.
+
+**THE FOCUS RENAME'S CODE SIDE IS DONE.** `focus` is the canonical
+object_type end to end: the check catalog (OBJECT_TYPES with a FOCUS prefix,
+`focus@1` schema, HEADINGS, the state machine with `STATES.problem` pointing
+at the SAME object as `STATES.focus` so the tables cannot drift), the intake
+form (Focus option, FOCUS- ids, focus@1 stamps), the browse surface
+("Focuses"), and dispose. `problem` is a LEGAL LEGACY ALIAS everywhere it
+already exists, judged by normalized type: a fully legacy `problem`/
+`problem@1` document is conformant, a PROB- id carrying modernized
+`focus` frontmatter is coherent (prefix and schema comparisons normalize),
+and no history row was rewritten. THE PROJECTION IS THE LAYER THAT
+NORMALIZES, as the decision doc promised: an idempotent boot UPDATE moved
+existing rows, the upsert maps `problem` to `focus` on every future write,
+`type:focus` and the legacy `type:problem` filter spelling both answer,
+schema stamps stay document truth, and the type facet answers with one
+spelling instead of a split count. The new focus suite (13 assertions) holds
+all three claims in the directions a rename silently breaks: canonical
+works, legacy keeps working, projection normalizes. Verified LIVE after
+deploy: the store's one legacy Problem bundle answers `type:focus`, facets
+as `focus`, still answers the legacy spelling, and `op=audit` stayed 30
+checked, 30 clean, which is the append-only promise kept.
+
 v31, July 27, 2026, later the same day as v30. The plane is **0.34.0**, signed,
 tagged, deployed and verified on biosmoke7, deployed module bytes hashing
 identically to the signed asset

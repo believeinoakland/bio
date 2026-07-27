@@ -217,7 +217,7 @@ table.rec tr.row:hover td{background:#F6F7F2}
   <label for="n-type">What kind of thing is this?</label>
   <select id="n-type">
     <option value="information">Information</option>
-    <option value="problem">Problem</option>
+    <option value="focus">Focus</option>
     <option value="project">Project</option>
     <option value="action">Action</option>
   </select>
@@ -491,7 +491,7 @@ const rec = async (op, params={})=>{
   return r.json();
 };
 const escH = (x)=>String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-const TYPES = [["information","Information"],["problem","Problems"],["project","Projects"],["action","Actions"]];
+const TYPES = [["information","Information"],["focus","Focuses"],["project","Projects"],["action","Actions"]];
 const fmtWhen = (iso)=>{ const d=new Date(iso); return isNaN(d)?escH(iso):d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
 const chip = (st)=>'<span class="chip '+escH(st)+'">'+escH(st)+"</span>";
 
@@ -671,7 +671,7 @@ function ratifyWhy(r){
    Authorship is stamped by the server from the session, so nothing typed
    here can claim to be someone else. */
 const NL = String.fromCharCode(10);
-const PREFIX = { information:"INFO", problem:"PROB", project:"PROJ", action:"ACTN" };
+const PREFIX = { information:"INFO", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
 /* From the check catalog, not from memory. */
 const FIRST_STATE = ${FIRST_STATE_JSON};
 const HEADINGS = ${HEADINGS_JSON};
@@ -686,7 +686,7 @@ const HEADINGS = ${HEADINGS_JSON};
    describes captured DOCUMENTS. The moment a document IS captured the bundle is
    @2 and carries the register, which is the honest distinction rather than a
    version preference. */
-const SCHEMA_OF = { information:"information@1", problem:"problem@1", project:"project@1", action:"action@1" };
+const SCHEMA_OF = { information:"information@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
 const schemaFor = (type, hasDoc)=> type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
 const post = async (op, body)=>{
   const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
@@ -723,7 +723,7 @@ const mdFor = (id, type, state, title, body, now, hasDoc)=>{
     "criticality: supporting","source_status: unchanged",
     "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
     "monitoring:","  enabled: false","  frequency: none");
-  if (type === "problem") fm.push(
+  if (type === "focus" || type === "problem") fm.push(
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if (type === "project") fm.push("objective: "+JSON.stringify(title));

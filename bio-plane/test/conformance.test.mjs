@@ -169,11 +169,11 @@ console.log("\n--- the intake form writes conformant bundles ---");
   const fn = new Function(...Object.keys(sandbox), script + "\n;return { mdFor, FIRST_STATE, PREFIX, reviseText };");
   const ui = fn(...Object.values(sandbox));
 
-  t("first states come from the catalog, not from memory", ui.FIRST_STATE,
-    { information: "collected", problem: "surfaced", project: "forming", action: "planned" });
+  t("first states come from the catalog, not from memory, both Focus spellings included", ui.FIRST_STATE,
+    { information: "collected", focus: "surfaced", project: "forming", action: "planned", problem: "surfaced" });
 
   const now = "2026-07-24T12:00:00Z";
-  for (const type of ["information", "problem", "project", "action"]) {
+  for (const type of ["information", "focus", "problem", "project", "action"]) {
     const id = `${ui.PREFIX[type]}-2026-0002-intake-check`;
     const text = ui.mdFor(id, type, ui.FIRST_STATE[type], "Intake check", "What the member wrote.", now);
     const f2 = new Map([["bundle.md", text]]);

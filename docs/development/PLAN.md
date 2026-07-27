@@ -54,11 +54,12 @@ object_type and vocabulary everywhere (catalog, checks, ops, docs, UI,
 templates); `problem` remains a LEGACY ALIAS accepted in existing history and
 normalized to focus in projections and display. No history row is rewritten.
 Op names carrying problem-vocabulary keep working alongside focus-vocabulary
-equivalents. DOCUMENT SET DONE 2026-07-27: the full architecture set, PLAN and kickoff now
-present Focus as the canonical vocabulary with per-doc editorial notes; the
-CODE arc (catalog, checks, ops, projections, UI, templates, with `problem`
-accepted as legacy alias) remains queued immediately after S-11 step 5 (bulk
-release) unless Bob reorders.
+equivalents. DONE IN FULL, 2026-07-27. Documents first (the architecture set, PLAN and
+kickoff present Focus with per-doc editorial notes), then the CODE side in
+0.35.0: catalog, state machine, intake, browse, dispose, projection
+normalization with an idempotent boot migration, and the legacy alias legal
+everywhere it already exists. test/focus.test.mjs holds canonical-works,
+legacy-keeps-working, and projection-normalizes.
 
 ## The three-layer workflow, and where development focus stays
 

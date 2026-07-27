@@ -402,8 +402,8 @@ console.log("\n--- facet counts drive the filter sidebar ---");
     truth[b.state] = (truth[b.state] || 0) + 1;
   t("state counts agree with ground truth",
     Object.fromEntries(r.facets.state.map((x) => [x.value, x.n])), truth);
-  t("the type facet counts both types",
-    Object.fromEntries(r.facets.type.map((x) => [x.value, x.n])), { information: 2, problem: 1 });
+  t("the type facet counts both types, the legacy one under its canonical name",
+    Object.fromEntries(Object.entries(Object.fromEntries(r.facets.type.map((x) => [x.value, x.n]))).sort()), { focus: 1, information: 2 });
   const filtered = await S("q=type:information");
   t("a facet counts the FILTERED set, not the corpus",
     Object.fromEntries(filtered.facets.type.map((x) => [x.value, x.n])), { information: 2 });

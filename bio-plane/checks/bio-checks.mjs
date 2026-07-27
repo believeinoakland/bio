@@ -10,12 +10,20 @@
 // Constants (spec v1.1)
 // ---------------------------------------------------------------------------
 
-export const BUNDLE_ID_RE = /^(INFO|PROB|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-export const ANN_ID_RE = /^(INFO|PROB|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
+export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+export const ANN_ID_RE = /^(INFO|PROB|FOCUS|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
 export const FILENAME_RE = /^[A-Za-z0-9._-]+$/;
 export const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 
-export const OBJECT_TYPES = { INFO: 'information', PROB: 'problem', PROJ: 'project', ACTN: 'action' };
+/* The construct formerly named Problem is FOCUS (Bob's directive,
+   2026-07-27). History is append-only and is not rewritten, so `problem` and
+   its literals remain LEGAL LEGACY ALIASES wherever they already exist, and
+   the catalog judges a document by its NORMALIZED type. PROB- ids may carry
+   either spelling, because a bundle's id is immutable while its frontmatter
+   modernizes on promotion. */
+export const OBJECT_TYPES = { INFO: 'information', PROB: 'focus', FOCUS: 'focus', PROJ: 'project', ACTN: 'action' };
+export const LEGACY_TYPE_ALIASES = { problem: 'focus' };
+export const normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
 
 /** Universal core fields (spec 3.1). */
 export const CORE_FIELDS = [
@@ -33,6 +41,7 @@ export const FORBIDDEN_ALIASES = {
 /** Literal heading constants per type (spec Section 4). */
 export const HEADINGS = {
   information: ['## Summary', '## Provenance Notes', '## Session Log', '## Review Notes'],
+  focus: ['## Statement', '## Why It Matters', '## Open Questions', '## Session Log', '## Review Notes'],
   problem: ['## Statement', '## Why It Matters', '## Open Questions', '## Session Log', '## Review Notes'],
   project: ['## Thesis Summary', '## Open Questions', '## Ruled Out', '## Session Log', '## Review Notes'],
   action: ['## Plan', '## Status', '## Correspondence', '## Session Log', '## Review Notes']
@@ -44,7 +53,7 @@ export const STATES = {
     legal: ['collected', 'verified', 'retired'],
     edges: { collected: ['verified'], verified: ['retired'], retired: [] }
   },
-  problem: {
+  focus: {
     legal: ['surfaced', 'elevated', 'deferred', 'dismissed'],
     edges: {
       surfaced: ['elevated', 'deferred', 'dismissed'],
@@ -72,6 +81,10 @@ export const STATES = {
     }
   }
 };
+/* One machine, two spellings: the legacy alias points at the SAME object, so
+   the tables cannot drift apart. */
+STATES.problem = STATES.focus;
+
 
 // ---------------------------------------------------------------------------
 // Finding helper
@@ -304,17 +317,17 @@ function checkFrontmatterContract(ctx, findings) {
     if (alias in fm) findings.push(f('C-2.3', 'error', `forbidden alias '${alias}' present (canonical name is '${canonical}')`, [`rename '${alias}' to '${canonical}'`]));
   }
   const ot = fm.object_type;
-  if (!Object.values(OBJECT_TYPES).includes(ot)) {
+  if (!Object.values(OBJECT_TYPES).includes(normalizeType(ot))) {
     findings.push(f('C-2.5', 'error', `object_type '${ot}' is not a known type`));
   } else {
-    const prefix = fm.id && String(fm.id).slice(0, 4);
+    const prefix = fm.id && String(fm.id).split('-')[0];
     const wantType = OBJECT_TYPES[prefix];
-    if (wantType && wantType !== ot) findings.push(f('C-2.5', 'error', `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
+    if (wantType && wantType !== normalizeType(ot)) findings.push(f('C-2.5', 'error', `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
     const schema = fm.schema;
     const sm = typeof schema === 'string' && /^([a-z]+)@(\d+)$/.exec(schema);
     if (!sm) findings.push(f('C-2.5', 'error', `schema stamp '${schema}' is not of the form <type>@<n>`));
     else {
-      if (sm[1] !== ot) findings.push(f('C-2.5', 'error', `schema stamp '${schema}' does not match object_type '${ot}'`));
+      if (normalizeType(sm[1]) !== normalizeType(ot)) findings.push(f('C-2.5', 'error', `schema stamp '${schema}' does not match object_type '${ot}'`));
       if (!ctx.knownSchemas.includes(schema)) findings.push(f('C-2.5', 'error', `schema version '${schema}' is not known to this check catalog`));
     }
   }
@@ -883,7 +896,7 @@ function checkReferences(ctx, findings) {
     }
   }
   // required edges (locally verifiable)
-  if (ctx.fm?.object_type === 'problem' && ctx.fm.current_state === 'elevated') {
+  if (normalizeType(ctx.fm?.object_type) === 'focus' && ctx.fm.current_state === 'elevated') {
     if (!refs.some(r => r && r.rel === 'elevated_into')) {
       findings.push(f('C-6.3', 'error', "an elevated Problem must carry at least one 'elevated_into' reference"));
     }
@@ -1028,9 +1041,9 @@ function checkHistoryCoherence(ctx, findings) {
   }
 }
 
-/** C-15: recheck coverage on Problems, all dispositions. */
+/** C-15: recheck coverage on Focuses, all dispositions. */
 function checkRecheckCoverage(ctx, findings) {
-  if (ctx.fm?.object_type !== 'problem') return;
+  if (normalizeType(ctx.fm?.object_type) !== 'focus') return;
   const rts = Array.isArray(ctx.fm.recheck_triggers) ? ctx.fm.recheck_triggers : [];
   if (rts.length === 0) {
     findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));
@@ -1053,8 +1066,8 @@ function checkRecheckCoverage(ctx, findings) {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-function checkProblemExtension(ctx, findings) {
-  if (ctx.fm?.object_type !== 'problem') return;
+function checkFocusExtension(ctx, findings) {
+  if (normalizeType(ctx.fm?.object_type) !== 'focus') return;
   const fm = ctx.fm;
   if (!['agent', 'human'].includes(fm.surfaced_by)) {
     findings.push(f('C-2.8', 'error', `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
@@ -2469,7 +2482,7 @@ export async function checkBundle(input, opts = {}) {
     nowMs: input.nowMs,
     maxPackageAgeDays: input.maxPackageAgeDays ?? 14,
     maxReevalAgeDays: input.maxReevalAgeDays ?? 30,
-    knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'problem@1', 'project@1', 'action@1'],
+    knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'focus@1', 'problem@1', 'project@1', 'action@1'],
     resolveTarget: input.resolveTarget,
     // D2.3: the key registry, injected exactly like resolveTarget. Absent
     // is legal and means pre-migration behavior; absent WITH a
@@ -2501,7 +2514,7 @@ export async function checkBundle(input, opts = {}) {
     await checkMechanicalConformance(ctx, findings);
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
-    checkProblemExtension(ctx, findings);
+    checkFocusExtension(ctx, findings);
     checkProjectExtension(ctx, findings);
     checkActionExtension(ctx, findings);
     checkCitationRegister(ctx, findings);

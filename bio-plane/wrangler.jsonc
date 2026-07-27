@@ -5,7 +5,7 @@
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
 
-  "vars": { "VERSION": "0.34.0" },
+  "vars": { "VERSION": "0.35.0" },
 
   // The store. new_sqlite_classes is required: SQLite-backed Durable Objects
   // are a different storage backend from the legacy key-value one and cannot
