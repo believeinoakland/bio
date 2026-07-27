@@ -591,11 +591,13 @@ workers and R2 storage tokens under the original Cloudflare account deleted;
 the BIO-server-endpoints Apps Script project deleted (retiring the four bearer
 tokens); the CivicOS and CivicOS-keys Drive folders deleted (30-day Drive
 trash window applies if anything proves needed). Done in the repo:
-`promotion-service.gs` removed per its own expiry condition. REMAINING, two
-items: revoke the SPN2 pair in the Internet Archive account, and confirm
-whether any legacy bio R2 BUCKETS (not tokens) exist under the original
-account, deleting them there if so after confirming the migrated store's
-completeness. · Debt: D-11 · Depends: S-6
+`promotion-service.gs` removed per its own expiry condition. Bob further confirmed the
+legacy bio R2 DATA under the original account is deleted along with the
+tokens, so the original Cloudflare account is fully clear of BIO. REMAINING,
+one item: invalidate the SPN2 pair in the Internet Archive account by
+generating new keys at archive.org/account/s3.php (an account holds one
+active pair, so generation replaces and kills the old one; the new pair is
+simply never recorded or deployed anywhere). · Debt: D-11 · Depends: S-6
 
 Revoke the R2 key pair in Cloudflare and the SPN2 pair in the Internet Archive
 account, delete the Apps Script deployment (which retires the four bearer tokens
