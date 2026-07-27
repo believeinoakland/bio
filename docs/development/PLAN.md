@@ -594,6 +594,24 @@ by removing what they open), and delete
 `docs/development/apps-script/promotion-service.gs` per its own expiry
 condition.
 
+ACCOUNT TOPOLOGY, recorded 2026-07-27 because the instructions above are
+ambiguous without it (account emails deliberately not published here; Bob
+holds them). There are TWO Cloudflare accounts: the ORIGINAL account, which
+owns the believeinoakland.org zone and carries unrelated projects, and the
+BIO-ONLY account, created at migration time precisely so BIO runs with
+nothing else in the blast radius, which hosts biosmoke7, newgroup, and the
+live bio-captures and bio-published buckets. The Apps Script era predates the
+split, so the R2 key pair to revoke was minted in the ORIGINAL account: look
+in its R2 token list for the pair from that era. While there, check the
+original account for LEGACY BIO BUCKETS: any capture bytes still sitting in
+the old account live outside the fence the worker enforces and outside the
+account the group actually operates, which is a privacy liability, not a
+backup. If any exist, confirm the migrated store's completeness first (the
+audit standard), archive offline if wanted, then delete them there. The
+BIO-only account should hold no standalone R2 keys at all, bindings and the
+deploy token only; a glance confirming that closes the loop. The zone stays
+on the original account until the registrar transfer unblocks moving it.
+
 Why each revocation is safe, recorded because the question will recur. The R2
 pair is the S3-style access key minted so the APPS SCRIPT plane could write
 captures into R2 from Google's servers; the live plane reaches R2 only through
