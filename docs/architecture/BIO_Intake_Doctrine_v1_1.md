@@ -6,6 +6,13 @@ Working Document, v1.1, July 2026
 
 # 0. Status and ratification
 
+> **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
+> named **Problem** is renamed **Focus** throughout, which conveys its purpose
+> non-judgmentally. Machine literals shown here use the target vocabulary
+> (`focus`, `focus@1`, `focuses/`, `focus.md`); the legacy literals (`problem`,
+> `problem@1`, `problems/`, `problem.md`) remain valid aliases in existing
+> append-only history and in code until the rename arc lands.
+
 Ratified July 18, 2026 on the operator's word, from draft 0.7 at
 bio-bundle rev 0.1.40, per decision-q1-intake-doctrine-home.md: a
 standalone governing document, versioned independently on its own
@@ -506,7 +513,7 @@ verifies against material the store does not carry.
 
 Production IDs follow the spec grammar with slugs naming the evidence,
 not the document (sewer-transfer-series, not auditor-report-2022).
-Crucial marks evidence a live Problem or Project cites as load-bearing;
+Crucial marks evidence a live Focus or Project cites as load-bearing;
 supporting marks everything else; the checker already enforces nothing
 here, and the doctrine deliberately keeps criticality as editorial
 judgment recorded, not computed.
@@ -582,9 +589,9 @@ of dispositioned material makes the answer real.
 Made concrete by the admission of creation-by-packaging (accelerator
 0.10.2). The daemon creates Information bundles from named standing
 intent only, always at collected, never anything else and never higher.
-Sessions create Problem and Project bundles through
+Sessions create Focus and Project bundles through
 creation-by-packaging, gated in the producing session, promoted like
-every write; the first production Problem and Project were created
+every write; the first production Focus and Project were created
 exactly this way. Elevation, release, disposition, and distribution are
 member acts under Sections 4a and 7, whatever surface records them. No
 actor class creates Actions mechanically; an Action is an act in the
@@ -616,3 +623,14 @@ posture makes this concrete; drafted when the first one arrives);
 extraction and normalization standards per document type (M2', with the
 Data Extraction skill); the acquisition doctrine's second draft shaped
 by the Cityside collaboration (original M4 exit).
+
+
+## Cross-reference: declared bias (July 27, 2026)
+
+Intake and release are lens-independent by design: verification asserts only
+that a document appears to be what it claims to be, and no bias statement
+changes what may be captured or verified. Declared bias
+(BIO_Declared_Bias_v0_1.md) binds ABOVE this doctrine, at evidence, analysis
+and conclusions; its one touch on this document's territory is at ratification
+for publication, where a work product must carry its bias manifest and no
+unsettled bias debt.

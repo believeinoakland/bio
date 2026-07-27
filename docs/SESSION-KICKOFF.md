@@ -113,7 +113,7 @@ including the 7.7 reversal and 7.10 owner governance, lifecycle authority, fork,
 licences, project name uniqueness, secure verified export, and 7.13.
 
 **S-11 (selection-backed actions) is at step 4 of 5.** Citing, severing,
-reinstating, bulk disposition of Problems and bulk retirement of Information are
+reinstating, bulk disposition of Focuses and bulk retirement of Information are
 all shipped. Step 5, bulk release, is DECIDED AND UNBUILT: Bob directed in the
 2026-07-27 session that it will be built, with the recorded-acknowledgement
 design and the scope question described below.
@@ -274,7 +274,7 @@ drawn after reading one file and before reading the next, then built upon.
   terms** in a compound SELECT, not 500. Both are D-36 and both were found by a
   harness, not the suite. Note that `op=dispose` and `op=retire` are NOT subject
   to either: they issue one promote per member rather than one statement over all
-  of them, so there is no list to chunk. Probed to 4,000 Problems in one call,
+  of them, so there is no list to chunk. Probed to 4,000 Focuses in one call,
   linear at about 1ms each, no ceiling found.
 - **`op=projection` caps at 200 rows.** A test helper that scans it silently stops
   finding things exactly when the corpus gets big enough for scale assertions to

@@ -1,5 +1,12 @@
 # BIO Membership Architecture
 
+> **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
+> named **Problem** is renamed **Focus** throughout, which conveys its purpose
+> non-judgmentally. Machine literals shown here use the target vocabulary
+> (`focus`, `focus@1`, `focuses/`, `focus.md`); the legacy literals (`problem`,
+> `problem@1`, `problems/`, `problem.md`) remain valid aliases in existing
+> append-only history and in code until the rename arc lands.
+
 **v2.0, July 26, 2026.** First-class architecture document, peer to
 BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and
 BIO_Functional_Architecture. Specified by Bob Krause in session, July 24 and
@@ -449,23 +456,23 @@ The containment hierarchy, expressed in the closed relationship
 vocabulary of BIO_State_Rules_Consistency Section 5.1:
 
 - Information is the raw material and refers to nothing above it.
-- A Problem `cites` zero or more pieces of Information, not necessarily
-  uniquely: the same Information may be cited by many Problems.
-- A Project stands above zero or more Problems (the Problem carries the
+- A Focus `cites` zero or more pieces of Information, not necessarily
+  uniquely: the same Information may be cited by many Focuses.
+- A Project stands above zero or more Focuses (the Focus carries the
   `elevated_into` edge; the reverse is derived by the index and never
   hand-maintained) and `cites` zero or more pieces of Information
   directly.
 - A Project `initiates` zero or more Actions.
 
 Nothing in this hierarchy is exclusive. An Information cited by one
-Project may be cited by another, and by Problems under neither.
+Project may be cited by another, and by Focuses under neither.
 
 **Three positions, not two.** Visibility depends on which of three
 positions a member occupies with respect to a project:
 
 - **Uninvited.** The project is not visible at all. Not its existence, not
   its name, not its references, not its participants.
-- **Invited, not joined.** The project's SKELETON is visible: the Problems
+- **Invited, not joined.** The project's SKELETON is visible: the Focuses
   it stands above, the Information it cites, and the Actions it initiates.
   View rights only.
 - **Joined.** Everything, subject to the member's capabilities.
@@ -492,7 +499,7 @@ implementation obligation, not a design tradeoff, and it costs nothing
 doctrinally. An unfiltered index would leak the interest graph to every
 member and would be a defect.
 
-**Why the evidence corpus stays shared.** Information and Problems remain
+**Why the evidence corpus stays shared.** Information and Focuses remain
 visible to the group's members generally. Compartmenting the evidence
 would fracture the thing the record exists to be, and would mean a member
 working on one project could not see material another project had already
@@ -572,7 +579,7 @@ opening of this section.
 Any JOINED participant of a project may fork it, creating a clone.
 
 **Joined, and not merely invited.** An invited participant who has not joined
-sees the skeleton only, per 7.9: the Problems, the Information and the Actions,
+sees the skeleton only, per 7.9: the Focuses, the Information and the Actions,
 and none of the project's content, analysis record, work product or evaluations.
 A fork by such a member would either copy material they cannot read, which
 leaks it, or copy only what they can see, which is a different and lesser

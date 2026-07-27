@@ -44,18 +44,21 @@ cost measurement.
 
 ---
 
-## Directed and queued: Problems become Focuses
+## Directed and queued: the Focus rename (formerly Problems)
 
-Bob's directive, 2026-07-27: the constructs called BIO Problems are RENAMED to
-FOCUSES, which conveys their purpose non-judgmentally. The analysis layer does
+Bob's directive, 2026-07-27: the constructs formerly called BIO Problems are
+RENAMED to FOCUSES, which conveys their purpose non-judgmentally. The analysis layer does
 its work "in the context of a Focus." Design settled by the append-only
 constraint, which forbids rewriting history: `focus` becomes the canonical
 object_type and vocabulary everywhere (catalog, checks, ops, docs, UI,
 templates); `problem` remains a LEGACY ALIAS accepted in existing history and
 normalized to focus in projections and display. No history row is rewritten.
 Op names carrying problem-vocabulary keep working alongside focus-vocabulary
-equivalents. Queued immediately after S-11 step 5 (bulk release) unless Bob
-reorders.
+equivalents. DOCUMENT SET DONE 2026-07-27: the full architecture set, PLAN and kickoff now
+present Focus as the canonical vocabulary with per-doc editorial notes; the
+CODE arc (catalog, checks, ops, projections, UI, templates, with `problem`
+accepted as legacy alias) remains queued immediately after S-11 step 5 (bulk
+release) unless Bob reorders.
 
 ## The three-layer workflow, and where development focus stays
 
@@ -193,7 +196,7 @@ entry, which C-13.2 requires of any bundle whose `last_updated` moves (D-22).
 ### S-3 Intake UI conformance
 **Status: done (0.5.1)** · Debt: D-6, D-7, D-14 · Depends: none, as it turned out
 
-The browser form stamps illegal first states for Problems and Actions, writes
+The browser form stamps illegal first states for Focuses and Actions, writes
 four of fifteen required core fields, and uses `## Summary` for every type where
 only Information takes it. Fix against the catalog's own `STATES`, `CORE_FIELDS`,
 and `HEADINGS` tables, imported rather than copied, so the UI cannot drift from
@@ -211,7 +214,7 @@ The form takes its tables from the catalog by import rather than by copy, so a
 catalog change moves the UI with it. It writes all fifteen core fields, the
 canonical heading set for the type, and the per-type extension fields each
 type's own check requires: source and monitoring blocks for Information,
-`surfaced_by` and a recheck trigger for a Problem, an `objective` for a Project,
+`surfaced_by` and a recheck trigger for a Focus, an `objective` for a Project,
 `action_kind`, `risk_tier`, and `counterparty` for an Action.
 
 One judgment inside it. Typed intake stamps `information@1`, not `@2`. The @2
@@ -919,7 +922,7 @@ half-run state change is what weight `refuse` exists to prevent.
 `refuse`.** `surfaced` to `deferred` or `dismissed`, which C-2.8 requires a
 non-empty `disposition_reason` for. `elevated` is refused by name, not omitted:
 elevating writes an `elevated_into` edge and a Project bundle, so as a bulk state
-flip it would produce Problems claiming to be elevated into nothing.
+flip it would produce Focuses claiming to be elevated into nothing.
 
 C-4.2 obliges a `state_history` entry wherever `prior_state` is set, which the
 first version missed. Probed to 4,000 in one call, linear at about 1ms each, no
@@ -928,7 +931,7 @@ member rather than one statement over all of them.
 
 **Step 4, done in 0.32.0: BULK RETIREMENT OF INFORMATION, `op=retire`, weight
 `refuse`.** `verified` to `retired`, the only legal edge, so verification is not
-skippable. `retired` is TERMINAL, unlike every Problem disposition, which is what
+skippable. `retired` is TERMINAL, unlike every Focus disposition, which is what
 makes this heavier than step 3.
 
 The doctrinal guard: Information a Project still CITES is refused, with the citing

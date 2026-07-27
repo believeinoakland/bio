@@ -400,3 +400,12 @@ inventory (see BIO_Functional_Architecture and BIO_Complete_Roadmap v3),
 the example tools in Requirement 12 now also mention a government
 compliance analysis skill. No requirement was added, removed, or
 substantively changed.*
+
+
+*Addendum, July 27, 2026 (Bob's direction, recorded as a requirement so no
+future revision treats it as optional): BIO legitimizes bias as a declared,
+justified, first-class construct. Any BIO work done with bias must include the
+fully declared bias as part of the evidentiary record of that work; work
+carrying unsettled bias debt cannot be ratified for publication; and no BIO
+process may consult an undeclared lens. The construct is defined in
+BIO_Declared_Bias_v0_1.md.*

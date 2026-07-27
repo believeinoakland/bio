@@ -94,7 +94,7 @@ documented adoption process.
 
 **The masking attack, and the safeguards against it.** The attack: a project
 does not nullify an instance statement, it ADDS a statement whose net effect
-limits or neutralizes one. Four safeguards, layered:
+limits or neutralizes one. Five safeguards, layered:
 
 1. **Override is defined by EFFECT, not by form.** Any project statement whose
    effect LOOSENS an instance statement on the same subject (weakens its
@@ -111,7 +111,25 @@ limits or neutralizes one. Four safeguards, layered:
    flagged as an INTERACTION, requires a justification that addresses the
    interaction explicitly, and travels the same review path as an override:
    diffed against the instance set and reviewed at ratification.
-4. **The group is the backstop.** Effect comparison is mechanical for
+4. **Subjects are registry entries, not free text.** Statements do not name
+   their subjects in prose; they reference a SUBJECT REGISTRY the instance
+   maintains as a bundle: entries for sources, institutions, offices and
+   movements, each with its aliases, plus DECLARED RELATIONS between entries
+   (proxy_for, member_of, overlaps), each relation justified and citable like
+   a pattern statement. Mechanical equivalence extends exactly as far as the
+   registry declares: if the registry relates MAGA to Trump, a project
+   statement on one collides with an instance statement on the other; if it
+   does not, no machine can honestly claim they are the same subject, and the
+   design does not pretend one can. What the registry guarantees instead is
+   that introducing a NEW subject is itself a loud, reviewed act: a project
+   statement referencing a subject the instance registry does not carry is
+   flagged for exactly the interaction review an override gets. Semantic
+   equivalence is finished where all semantics are finished here: at
+   evaluation time, where the evaluator (AI-assisted, member-owned) applies
+   statements by meaning rather than string match, and at the adversarial
+   backstop, since a rerun by an opposing group will name the dodge in
+   public.
+5. **The group is the backstop.** Effect comparison is mechanical for
    inference statements and largely mechanical for scrutiny statements;
    pattern statements and artful language are not fully machine-judgeable, and
    the design does not pretend otherwise. What the machine guarantees is that

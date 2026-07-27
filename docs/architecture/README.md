@@ -119,3 +119,11 @@ anymore: `bio-plane/checks/bio-checks.mjs` carries it, hash-verified, and
 outline only so a reader of an older revision can see the gap closed rather than
 wonder whether it was quietly dropped.
 
+
+
+**Added July 27, 2026:** `BIO_Declared_Bias_v0_1.md` joins the corpus as a
+first-class architecture document: bias as a declared, justified construct,
+with the subject registry, masking safeguards, bias debt, regrade and the
+cross-group rerun. In the same pass the construct formerly named Problem is
+renamed FOCUS throughout the corpus, with legacy literals remaining valid
+aliases in append-only history and in code until the rename arc lands.

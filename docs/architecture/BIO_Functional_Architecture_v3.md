@@ -1,5 +1,12 @@
 # Believe in Oakland
 
+> **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
+> named **Problem** is renamed **Focus** throughout, which conveys its purpose
+> non-judgmentally. Machine literals shown here use the target vocabulary
+> (`focus`, `focus@1`, `focuses/`, `focus.md`); the legacy literals (`problem`,
+> `problem@1`, `problems/`, `problem.md`) remain valid aliases in existing
+> append-only history and in code until the rename arc lands.
+
 # Three-Layer Functional Architecture
 
 Working Document --- April 2026 (v3, July 20, 2026: daemon realization
@@ -228,10 +235,10 @@ Compliance Analysis Skill (which can compare across sources). But the
 judgment about what discrepancies are significant is human work.
 
 **Resolution note (July 2026):** A surfaced discrepancy is persisted as
-a Problem object, dual-sourced (agent scan or human browsing), related
-to existing Problems in a graph with agent-proposed, human-decided
+a Focus object, dual-sourced (agent scan or human browsing), related
+to existing Focuses in a graph with agent-proposed, human-decided
 edges, and triaged elevate/defer/dismiss with recheck triggers. See
-BIO_Technical_Architecture_Decisions Section 7.5 and the Problem schema
+BIO_Technical_Architecture_Decisions Section 7.5 and the Focus schema
 in BIO_State_Rules_Consistency Section 4.2.
 
 ## Function 3: Classify findings
@@ -536,3 +543,26 @@ BIO_State_Rules_Consistency).
 
 **believeinoakland.org** \| Working Document \| April 2026, rev. July
 2026
+
+
+## The three-layer workflow (added July 27, 2026)
+
+Bob's framing, recorded as the shape of the whole system. **Layer 1, the
+foundation**, is the data plane and everything this corpus specifies for it:
+the store, states, checks, membership, intake, publication. **Layer 2, the
+analysis layer**, relies on the foundation for services. It articulates
+objectives that define what it wants to see in the data store: a specific
+document, a kind of document, a document set that could contain a piece of
+evidence it needs, with the requester indicating whether found documents
+should be kept up to date and when or how often the data layer should look for
+updates (served today by named requests, monitored gathering with frequency,
+and source-status tracking). It uses AI skills to define and achieve focused
+analytical objectives, done in the context of a FOCUS. And it carries the
+Project work, much of it also accomplished by AI skills, under the declared
+bias in force and graded by the epistemics ladder: evidence identified from
+Information, analysis built from evidence, conclusions graded on how they
+follow only from evidence and analysis. **Layer 3 is the UI surfaces** users
+interact through. Development focus remains on the foundation until it is
+complete enough; it then moves first to the UI, which still needs to be
+designed; once the UI is fleshed out enough, development fills in capabilities
+across all three layers.

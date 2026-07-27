@@ -1,5 +1,12 @@
 # Believe in Oakland
 
+> **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
+> named **Problem** is renamed **Focus** throughout, which conveys its purpose
+> non-judgmentally. Machine literals shown here use the target vocabulary
+> (`focus`, `focus@1`, `focuses/`, `focus.md`); the legacy literals (`problem`,
+> `problem@1`, `problems/`, `problem.md`) remain valid aliases in existing
+> append-only history and in code until the rename arc lands.
+
 # State Rules & Consistency Specification
 
 Working Document, v1.5, July 2026
@@ -160,7 +167,7 @@ INFO-2026-0001-sewer-acfr-fy24/
 
 INFO-2026-0002-opengov-transfers-fy20-25/
 
-problems/
+focuses/
 
 PROB-2026-0001-transfer-relabeling/
 
@@ -447,9 +454,9 @@ Every bundle.md frontmatter carries exactly these core fields, at column
 
 id: PROB-2026-0007-acfr-opengov-mismatch
 
-object_type: problem \# information \| problem \| project \| action
+object_type: focus \# information \| focus \| project \| action
 
-schema: problem@1 \# per-type schema version stamp
+schema: focus@1 \# per-type schema version stamp
 
 title: "ACFR transfers-out disagrees with OpenGov FY23-24"
 
@@ -497,7 +504,7 @@ frontmatter block.
 
 ### 3.2 The dual-audience encoding
 
-Every structured list item that humans read (problem statements,
+Every structured list item that humans read (focus statements,
 deadline entries, premise-like registers, visual descriptions) uses the
 {text, description} shape: text is the concise insider label,
 description is the verbose explanation a newcomer can follow. Adopted
@@ -539,7 +546,7 @@ state_history:
 
 -   to_state: elevated
 
--   blurb: "Cluster of three transfer-labeling problems elevated
+-   blurb: "Cluster of three transfer-labeling focuses elevated
     > together into PROJ-2026-0001."
 
 -   author: claude
@@ -642,9 +649,9 @@ covering every co-attestation attempt, success or failure. A failed
 attestation degrades the capture to plain Grade B with the gap named in
 the register, never blocks the capture, and never lies.
 
-### 4.2 Problem
+### 4.2 Focus
 
-Record file: problem.md (statement, evidence discussion, analysis).
+Record file: focus.md (statement, evidence discussion, analysis).
 
 Extension fields:
 
@@ -652,7 +659,7 @@ surfaced_by: agent \# agent \| human
 
 disposition_reason: "" \# required non-empty when deferred or dismissed
 
-recheck_triggers: \# required non-empty for every Problem, all
+recheck_triggers: \# required non-empty for every Focus, all
 dispositions
 
 -   text: "FY2025-26 ACFR publication"
@@ -664,10 +671,10 @@ dispositions
 
 Lifecycle (current_state): surfaced → elevated \| deferred \| dismissed.
 Dismissal and deferral are reversible: the object is greyed in the UX,
-never deleted, and its recheck triggers stay live. An elevated Problem
+never deleted, and its recheck triggers stay live. An elevated Focus
 must carry at least one elevated_into reference to a Project.
 
-Graph edges: Problem-to-Problem relationships are relates_to references
+Graph edges: Focus-to-Focus relationships are relates_to references
 with an edge status (proposed by the agent, confirmed or severed by a
 human). Cluster membership is expressed purely through confirmed
 relates_to edges; there is no separate cluster object.
@@ -701,7 +708,7 @@ evaluations: \# results of Compliance and Argument Evaluation runs
 
 -   findings_ref: "data/eval-0003.json"
 
-Lifecycle (current_state): forming (Problems aggregating, scope
+Lifecycle (current_state): forming (Focuses aggregating, scope
 settling) → investigating → matured (analysis supports a defensible
 position) → closed (with closed_reason: resolved, superseded, abandoned;
 preserved, reversible).
@@ -805,7 +812,7 @@ One JSON file per annotation in the target bundle's annotations/:
 
 { "id": "PROB-2026-0007.ann-20260709T191200Z-bob",
 
-"target_anchor": "problem.md#open-questions/OQ-3",
+"target_anchor": "focus.md#open-questions/OQ-3",
 
 "author": "bob",
 
@@ -852,8 +859,8 @@ references:
 -   note: ""
 
 Relationship vocabulary, closed until amended by this spec: cites
-(evidence dependency), relates_to (Problem graph edge), elevated_into
-(Problem to Project), initiates (Project to Action), derived_from
+(evidence dependency), relates_to (Focus graph edge), elevated_into
+(Focus to Project), initiates (Project to Action), derived_from
 (successor or reopened lineage), supersedes. New relationship kinds
 require a spec revision, not an inline invention; the checker rejects
 unknown values.
@@ -879,7 +886,7 @@ breaking records that use a value the checker has always accepted.
 Each edge is written on the object that depends on or points to the
 target, and the reverse direction is derived by the index, never
 hand-maintained. cites lives on the citing object. elevated_into lives
-on the Problem. initiates lives on the Project.
+on the Focus. initiates lives on the Project.
 
 ### 5.3 Substrate independence
 
@@ -1003,7 +1010,7 @@ append-only. Review Notes are verbatim-immutable.
 **I-6 Reference integrity.** Every reference target resolves to an
 existing canonical ID (or to a preserved retired object); rel values are
 from the vocabulary; no substrate locators in references; required edges
-exist (elevated Problem has elevated_into; distributed Work Product has
+exist (elevated Focus has elevated_into; distributed Work Product has
 a distribution record).
 
 **I-7 Accretive discipline.** No content removal outside the gated
@@ -1043,7 +1050,7 @@ entry accompanies every write-back.
 match the naming rule; JSON files parse; visuals in the visuals array
 exist on disk and vice versa.
 
-**I-15 Recheck coverage.** Every Problem, in every disposition including
+**I-15 Recheck coverage.** Every Focus, in every disposition including
 dismissed, carries at least one recheck trigger; time-bound triggers
 carry dates.
 
@@ -1261,7 +1268,7 @@ unreachable with no server policing them.
                                                   references; (c) restore
                                                   JSON from history
 
-  I-15                    Problem without recheck \(a\) author a trigger,
+  I-15                    Focus without recheck \(a\) author a trigger,
                           trigger                 dual-audience shape,
                                                   dated when time-bound
 
@@ -1468,3 +1475,13 @@ pre-delivery gate.
 *Spec version 1.3, July 11, 2026. Companion to
 BIO_Technical_Architecture_Decisions v8 and
 BIO_Bundle_Skill_Composite_Design v1.5. Supersedes v1.2.*
+
+
+## Cross-reference: declared bias and workproduct_state (July 27, 2026)
+
+When declared bias lands (BIO_Declared_Bias_v0_1.md), one rule joins this
+document's family: a work product carrying unsettled BIAS DEBT (its cited bias
+manifest differs from the current effective set) cannot advance
+workproduct_state and cannot be ratified for publication until the debt is
+settled by re-running its evaluations under the current set. Recorded here now
+so the state-rules corpus and the bias corpus cannot drift apart.

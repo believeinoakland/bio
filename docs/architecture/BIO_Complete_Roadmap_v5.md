@@ -1,5 +1,12 @@
 # Believe in Oakland
 
+> **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
+> named **Problem** is renamed **Focus** throughout, which conveys its purpose
+> non-judgmentally. Machine literals shown here use the target vocabulary
+> (`focus`, `focus@1`, `focuses/`, `focus.md`); the legacy literals (`problem`,
+> `problem@1`, `problems/`, `problem.md`) remain valid aliases in existing
+> append-only history and in code until the rename arc lands.
+
 # Civic Operating System
 
 ## Complete Roadmap and Architecture Document
@@ -41,7 +48,7 @@ invariant families under the Mechanical Verification Law; accelerator
 0.10.2 deployed with the M2' daemon live-fire verified; PWA client 0.7.0
 at milestone M6, Netlify deployment pending). The production store
 carries 25 information bundles (9 released to verified under I-18 member
-authority), the first elevated Problem, and the first forming Project,
+authority), the first elevated Focus, and the first forming Project,
 all on the sewer franchise pilot. The intake architecture is governed by
 BIO_Intake_Doctrine v1.0 (ratified July 18, 2026), which joined the
 document set after v4 and governs admission, capture grades,
@@ -95,7 +102,7 @@ source of the eight-skill inventory used in Section 9 of this document.
 
 **BIO_Technical_Architecture_Decisions** --- The authoritative record of
 technology and architecture decisions: the six-object data model
-(Information, Problem, Project, Action, Annotation, Work Product), the
+(Information, Focus, Project, Action, Annotation, Work Product), the
 bundle as the unit of persisted work, the composite bundle skill as the
 single write authority, Work Product source-grounding and the two
 evaluation functions, the no-transitive-trust integrity rule, the
@@ -779,11 +786,11 @@ governs Phase 1 data-layer work.
 
 -   Build a minimal React + Vite client shell that ingests Information
     > bundles into Context with criticality, trust, and provenance;
-    > surface a Problem against the Prop 218 / Municipal Code standard
-    > and relate it in the Problem graph.
+    > surface a Focus against the Prop 218 / Municipal Code standard
+    > and relate it in the Focus graph.
 
 -   Exercise triage (elevate/defer/dismiss with recheck triggers) and
-    > form one Project from an elevated Problem or cluster.
+    > form one Project from an elevated Focus or cluster.
 
 -   Build the Compliance Evaluation skill and the Argument Evaluation
     > function; focus the Project into a Work Product and run both

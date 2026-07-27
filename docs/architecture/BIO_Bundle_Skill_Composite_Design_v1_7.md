@@ -1,5 +1,12 @@
 # Believe in Oakland
 
+> **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
+> named **Problem** is renamed **Focus** throughout, which conveys its purpose
+> non-judgmentally. Machine literals shown here use the target vocabulary
+> (`focus`, `focus@1`, `focuses/`, `focus.md`); the legacy literals (`problem`,
+> `problem@1`, `problems/`, `problem.md`) remain valid aliases in existing
+> append-only history and in code until the rename arc lands.
+
 # Bundle Skill Composite Design
 
 Working Document, v1.7, July 2026
@@ -188,7 +195,7 @@ convergent promotion
 │ ├── INFORMATION.md Information schema: fields, states, snapshots,
 hashing rule
 
-│ ├── PROBLEM.md Problem schema: triage machine, graph edges, recheck
+│ ├── FOCUS.md Focus schema: triage machine, graph edges, recheck
 triggers
 
 │ ├── PROJECT.md Project schema: lifecycle, evaluations, workproduct
@@ -375,7 +382,7 @@ conforming example, the type's state machine with legal transitions, the
 type's record-file anatomy, its literal heading list, and the
 type-specific write rules (Information: the canonical data/dataset.json
 with the recomputed content-hash rule, snapshot obligations,
-source-status transitions, change records; Problem: recheck-trigger
+source-status transitions, change records; Focus: recheck-trigger
 mandate, disposition-reason gate, edge statuses, elevation's required
 edge; Project: the citation-register shape, the evaluation-gated
 workproduct ladder, closed_reason; Action: clock entries with basis and
@@ -417,7 +424,7 @@ loads the core plus exactly the listed components.
   Information                                     
 
   Create or update        core + PROBLEM          
-  Problem                                         
+  Focus                                         
 
   Create or update        core + PROJECT          includes focusing
   Project                                         (workproduct.md edits)

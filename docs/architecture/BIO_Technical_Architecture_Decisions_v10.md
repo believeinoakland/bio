@@ -1,5 +1,12 @@
 # Believe in Oakland
 
+> **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
+> named **Problem** is renamed **Focus** throughout, which conveys its purpose
+> non-judgmentally. Machine literals shown here use the target vocabulary
+> (`focus`, `focus@1`, `focuses/`, `focus.md`); the legacy literals (`problem`,
+> `problem@1`, `problems/`, `problem.md`) remain valid aliases in existing
+> append-only history and in code until the rename arc lands.
+
 # Technical Architecture Decisions
 
 *Working Document --- v10, July 2026 (M2' daemon ratified deployed;
@@ -175,7 +182,7 @@ consistency checker run the same check set (Section 10). The v3 revision
 history: v3 superseded v2, adding Work Product as the sixth first-class
 object type (Section 4), the evaluation-and-trust model (Section 5), the
 corrected source-grounding framing (Sections 4 and 5), the anchored
-annotation model (Section 6), the Problem relationship graph (Section
+annotation model (Section 6), the Focus relationship graph (Section
 7), the UX journeys model (Section 8), and the accretive-bundle,
 cascading-deletion, and no-transitive-trust rules (Section 10).
 
@@ -222,7 +229,7 @@ processing, and by volume may exceed the skills.
 # 2. The object model
 
 BIO's work is organized around six first-class object types. Four
-(Information, Problem, Project, Action) are persisted as independent
+(Information, Focus, Project, Action) are persisted as independent
 bundles (Section 3), each with its own per-type schema. Two are
 persisted within the bundles they belong to: the Work Product as a
 derived view of its Project or Action (Section 4), and the Annotation as
@@ -242,12 +249,12 @@ it).
                                                   carrying provenance and
                                                   change-detection state.
 
-  Problem                 Analysis                A conflict or
+  Focus                 Analysis                A conflict or
                                                   discrepancy, found by
                                                   an analysis agent or by
                                                   a person while
                                                   browsing, related to
-                                                  other Problems in a
+                                                  other Focuses in a
                                                   graph. Triage
                                                   lifecycle: surfaced,
                                                   then elevated /
@@ -255,7 +262,7 @@ it).
 
   Project                 Analysis to Action      An aggregation of one
                                                   or more elevated
-                                                  Problems plus other
+                                                  Focuses plus other
                                                   factors. Carries its
                                                   own analysis and
                                                   initiates Actions.
@@ -301,9 +308,9 @@ it).
   -----------------------------------------------------------------------
 
 **The flow.** Users define information of interest and mark what is
-crucial. Analysis agents, and people while browsing, surface Problems;
-each new Problem is related to existing ones in a graph. Users elevate,
-defer, or dismiss Problems; elevated ones (often as a related cluster)
+crucial. Analysis agents, and people while browsing, surface Focuses;
+each new Focus is related to existing ones in a graph. Users elevate,
+defer, or dismiss Focuses; elevated ones (often as a related cluster)
 seed Projects. A Project matures its analysis and produces a Work
 Product, which may be distributed internally or externally and may, in
 turn, initiate Actions. Annotations inject human judgment anywhere,
@@ -331,13 +338,13 @@ transfers.
     > BIO this doubles as evidence preservation.
 
 **Store layout (decided July 2026).** The store is flat: one root folder
-per independently persisted type (information/, problems/, projects/,
+per independently persisted type (information/, focuses/, projects/,
 actions/), each holding that type's bundles. Cross-object relationships
 are typed references in frontmatter, never containment nesting. Nesting
 was rejected on four independent grounds: the relationships are
 many-to-many while containment requires exclusive single-parent
 ownership; lifecycles are independent of any would-be parent (a surfaced
-Problem may never be elevated into any Project); atomic promotion and
+Focus may never be elevated into any Project); atomic promotion and
 the single write authority are per-bundle operations that nesting makes
 ambiguous; and the cascade requires a full reference graph in the
 derived index regardless, so containment adds no capability. Containment
@@ -403,7 +410,7 @@ file. The skill is composite and incrementally loaded: an always-on core
 carries the universal write protocol (bootstrap, continuous checkpoint,
 write-back with history and promotion, and the canonical-naming,
 drift-defense, and validation discipline), while per-type schemas
-(Information, Problem, Project, Action) load on demand for the one type
+(Information, Focus, Project, Action) load on demand for the one type
 being written. Annotation and Work Product writes are operations on
 their containing bundle, handled by the core protocol plus the
 containing type's schema. The skill's composite structure, products, and
@@ -736,27 +743,27 @@ every change. A detected change or removal sets the Information object's
 source status and propagates a re-evaluation flag to every citing object
 (the cascade of Section 3, specified in the State Rules spec).
 
-## 7.5 Problems as a graph
+## 7.5 Focuses as a graph
 
-Problems (contradictions and discrepancies) are dual-sourced: found by
+Focuses (contradictions and discrepancies) are dual-sourced: found by
 the analysis agent's scan and by people during browsing. Each new
-Problem carries its provenance and is cross-compared against all known
-Problems to find connections and relationships, forming a graph that the
+Focus carries its provenance and is cross-compared against all known
+Focuses to find connections and relationships, forming a graph that the
 UX must convey. Related clusters are analytically meaningful and are the
 natural unit that gets elevated into a Project. The
 relationship/clustering is agent-proposed and human-decided: the agent
 surfaces candidate connections; a human confirms, severs, or adds them.
 
 Triage dispositions are elevate, defer, or dismiss. Dismissal (often
-'outside our wheelhouse') greys or hides a Problem but does not delete
-it; it remains reversible and preserved. All Problems, dismissed or not,
+'outside our wheelhouse') greys or hides a Focus but does not delete
+it; it remains reversible and preserved. All Focuses, dismissed or not,
 receive recheck triggers, making the whole graph self-correcting over
 time.
 
-**Decision.** Problems are dual-sourced (agent + human), related into a
+**Decision.** Focuses are dual-sourced (agent + human), related into a
 graph the UX conveys, with clustering agent-proposed and human-decided.
 Dispositions are elevate/defer/dismiss; dismissal is reversible greying,
-not deletion; all Problems carry recheck triggers. Clusters are the
+not deletion; all Focuses carry recheck triggers. Clusters are the
 usual unit elevated into Projects.
 
 ## 7.6 The gathering contract (added v10)
@@ -857,11 +864,11 @@ far:
   browsing                            annotations &       
                                       requests)           
 
-  Conflict &        Analysis          Problems (+         New Developments +
+  Conflict &        Analysis          Focuses (+         New Developments +
   discrepancy                         issue-type config)  triage board
   filtering                                               
 
-  Problem browsing  Analysis          triaged Problems    Triage board +
+  Focus browsing  Analysis          triaged Focuses    Triage board +
   & routing                           routed to Projects  Projects
 
   Project setup &   Analysis          matured Project +   Projects
@@ -890,7 +897,7 @@ across surfaces, not a destination.
 ## 8.2 Key surface notes
 
 -   Overview is home: a curated inventory of everything --- information,
-    > problems, projects, actions, and work products (incoming,
+    > focuses, projects, actions, and work products (incoming,
     > internal, outgoing) --- and the user-facing view of the per-group
     > derived index.
 
@@ -899,7 +906,7 @@ across surfaces, not a destination.
     > or monitors.
 
 -   Conflict filtering is scope-greying, not a scan: the surface shows
-    > the full Problem list with out-of-scope or dismissed items greyed
+    > the full Focus list with out-of-scope or dismissed items greyed
     > or hidden, and conveys the relationship graph among them.
 
 -   Project processing includes focusing as a first-class act: turning a
@@ -928,7 +935,7 @@ skill), a client surface component, and a bundle artifact type. Surfaces
 come in three kinds: outbound/rendering (slide decks, spreadsheets,
 exports), inbound/response-generating (surveys, forms, email campaigns
 --- heavier, with a backend and an attack surface), and internal
-task-specific (a Problem-triage board, a Project workspace, a
+task-specific (a Focus-triage board, a Project workspace, a
 negotiation tracker). Per-layer extensibility: the Information layer is
 fully configurable in what it collects and monitors; the Analysis layer
 is intent-driven (a group expresses interests, objectives, and
@@ -1348,7 +1355,7 @@ sole writer of live state; the endpoint parses nothing and judges
 nothing, a byte pipe to a constrained path; amended at accelerator
 0.10.2 with member creation-by-packaging
 (endpoint-admission-m2b-member-creation.md, live-fire verified July 19,
-2026 through the first production Problem and Project bundles):
+2026 through the first production Focus and Project bundles):
 writePendingText creates an absent bundle folder under its type root for
 pending-path writes, with the id grammar holding at the POST boundary,
 nothing going live without gating and promotion, orphans remaining
@@ -1685,11 +1692,11 @@ public action.
 
 -   Build a minimal React + Vite client shell that ingests Information
     > bundles into Context with criticality, trust, and provenance, and
-    > runs analysis to surface a Problem against the Prop 218 /
+    > runs analysis to surface a Focus against the Prop 218 /
     > Municipal Code standard; relate it to any others in the graph.
 
 -   Exercise triage (elevate/defer/dismiss with recheck triggers) and
-    > form one Project from an elevated Problem or cluster.
+    > form one Project from an elevated Focus or cluster.
 
 -   Focus the Project into a Work Product; run Compliance and Argument
     > Evaluation in internal then external mode; confirm the
@@ -1771,3 +1778,33 @@ External sources consulted (June 2026):
 
 -   PDF data-extraction tools 2026:
     > <https://www.lido.app/blog/best-pdf-data-extraction-tools>
+
+
+## Declared bias (decision, July 27, 2026)
+
+Bias is legitimized as a visible, first-class construct rather than an
+undeclared lens. A bias is a set of statements in three kinds (scrutiny,
+inference, pattern) governed by the malformedness rule: declared bias may
+raise scrutiny, constrain inference, and assert evidenced patterns, and may
+never issue verdicts. Bias sets are bundles; instances adopt them by their own
+documented process; projects may override unlocked instance statements loudly,
+with override defined by EFFECT rather than form and strictest-wins as the
+default conflict rule; instance statements may be LOCKED against project
+override (the remedy for a project that objects is another instance). Every
+work product cites a bias manifest as part of its evidentiary record;
+publication carries it. Changing bias marks existing analysis with BIAS DEBT,
+batchable, and debt blocks workproduct_state advancement and ratification.
+Conclusions are graded on how they follow only from evidence and analysis
+UNDER THE DECLARED BIAS IN FORCE, consumed by the argument evaluations that
+already gate work products. The full construct definition, including the
+subject registry, the masking safeguards, regrade and the cross-group rerun,
+is `BIO_Declared_Bias_v0_1.md`, which is part of this corpus.
+
+## Focus, formerly Problem (decision, July 27, 2026)
+
+The construct is named FOCUS, conveying non-judgmentally that it is where the
+analysis layer defines and pursues focused analytical objectives. History is
+append-only and is not rewritten: `problem`, `problem@1`, `problems/` and
+`problem.md` remain valid legacy aliases wherever they already exist, and code
+normalizes them to focus vocabulary in projections and display when the rename
+arc lands. All documents in this corpus present the Focus vocabulary.
