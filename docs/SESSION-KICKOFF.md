@@ -118,7 +118,7 @@ all shipped. Step 5, bulk release, SHIPPED in 0.34.0 with the recorded-acknowled
 design: named-member authorship enforced on the author stamp's shape, the
 acknowledgment and mitigation written into every released document's Session
 Log, crucial refused from batches, and C-2.7 entry requirements checked before
-any state moves. The Focus rename's code side shipped in 0.35.0; the queue is empty and the next arc is Bob's to name (candidates: anchored citations, declared-bias bundles, UI design per the three-layer roadmap).
+any state moves. The Focus rename's code side shipped in 0.35.0. S-9 closed on 2026-07-27, so THE FOUNDATION LADDER S-1 THROUGH S-12 IS COMPLETE. Per Bob's three-layer roadmap, development focus moves next to UI DESIGN, with anchored citations and declared-bias bundles as the standing foundation arcs when called.
 
 ### Work from v2, not v1
 

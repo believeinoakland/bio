@@ -586,18 +586,18 @@ to compare, so it ran as its own probe (`bio-plane/test/retrieval-probe.mjs`,
 `npm run probe:retrieval`).
 
 ### S-9 Retire the old plane
-**Status: NEARLY COMPLETE, 2026-07-27.** Done by Bob in the dashboards: all
-workers and R2 storage tokens under the original Cloudflare account deleted;
-the BIO-server-endpoints Apps Script project deleted (retiring the four bearer
-tokens); the CivicOS and CivicOS-keys Drive folders deleted (30-day Drive
-trash window applies if anything proves needed). Done in the repo:
-`promotion-service.gs` removed per its own expiry condition. Bob further confirmed the
-legacy bio R2 DATA under the original account is deleted along with the
-tokens, so the original Cloudflare account is fully clear of BIO. REMAINING,
-one item: invalidate the SPN2 pair in the Internet Archive account by
-generating new keys at archive.org/account/s3.php (an account holds one
-active pair, so generation replaces and kills the old one; the new pair is
-simply never recorded or deployed anywhere). · Debt: D-11 · Depends: S-6
+**Status: COMPLETE, July 27, 2026.** Every credential of the Apps Script era
+is dead and every copy of its data is gone. Bob deleted all workers and R2
+storage tokens AND all legacy BIO R2 data in the original Cloudflare account;
+deleted the BIO-server-endpoints Apps Script project, retiring its four bearer
+tokens by removing what they opened; deleted the CivicOS and CivicOS-keys
+Drive folders; and invalidated the SPN2 pair by generating replacement keys at
+archive.org/account/s3.php (the replacements recorded nowhere, deployed
+nowhere; the live archive path is anonymous by design). Claude removed
+`promotion-service.gs` per its own expiry condition in a commit that says why.
+With this, the FOUNDATION LADDER S-1 THROUGH S-12 IS COMPLETE: every rung
+built, verified, and, where the rung was decommissioning, actually
+decommissioned. · Debt: D-11 · Depends: S-6
 
 Revoke the R2 key pair in Cloudflare and the SPN2 pair in the Internet Archive
 account, delete the Apps Script deployment (which retires the four bearer tokens
