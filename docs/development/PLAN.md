@@ -915,10 +915,17 @@ risks and their mitigation steps as part of its payload, recorded in the
 release record, so bulk and per-document releases are permanently
 distinguishable in the record. This decouples the operation from trust
 inheritance entirely: nothing is inherited, the recorded acknowledgement is the
-trust act. Scope: the doctrine-consistent shape is the origin split (bulk for
-`named_request` and `member`, per-document for `sweep`, per C-18.1's sweep
-branch); including sweep origin requires a doctrine amendment only Bob can
-make, and until he makes it the split stands. The history of the decision:**
+trust act. Scope, RESOLVED by Bob's 2026-07-27 ruling (intake doctrine v1.2): origin is
+NOT the discriminator. What legitimizes bulk is volume plus little-to-no
+variance in the trustworthiness of the collection's contents, whatever brought
+it in, because verification asserts only that a document appears to be what it
+claims to be, never accuracy. The discriminator that remains is CRITICALITY:
+crucial-criticality or contested documents are refused from any bulk release,
+whole set refused with offenders named, because F4 co-attestation verification
+at ratification is per-document work. Each batched document still gets its own
+member-authored release transition, so C-18.1 as coded is already satisfied;
+only the doctrine's former one-at-a-time reading changed. The history of the
+decision:**
 
 Three options were put to Bob on 2026-07-26 and none was chosen: build nothing and
 leave release per-document; build it uniformly; or split it on `origin.kind`,

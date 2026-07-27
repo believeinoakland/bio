@@ -27,6 +27,17 @@ follows the v1.0 record below.
 
 # Revision history
 
+**Revision note (v1.2), July 27, 2026.** One operator ruling, Section 4:
+what verification asserts (appears-to-be-what-it-claims, never accuracy),
+and batch ratification legitimized by volume plus homogeneity of the
+collection rather than by origin, with per-document transitions retained,
+the acknowledgement recorded in the release record, and
+crucial-criticality material excluded from batch release because F4's
+co-attestation verification is per-document work. The former reading that
+sweep origin alone forces per-document release is superseded: the
+mechanical rule (C-18.1) was always that every release transition is
+member-authored per document, and batch release satisfies it.
+
 **Revision note (v1.1), July 20, 2026, bio-bundle rev 0.1.48.** Five
 additions from production practice and operator rulings, no existing
 section's meaning changed. (a) New Section 6 states the escalation
@@ -388,7 +399,32 @@ fenced by the state machine itself. Human ratification is the
 collected-to-verified transition, made per-document after intake. What
 is ratified up front is the sweep's scope; what is ratified afterward is
 each document's standing. AI and broad discovery range wide; verified
-stays earned, one human decision at a time. Deferred until forced: the
+stays earned by human decision.
+
+**What verification asserts, and batch ratification (operator ruling,
+July 27, 2026).** Verification does not promise that anyone has
+confirmed the accuracy of anything stated in a document. It is the
+member's reassurance that the document APPEARS to be what it claims to
+be: not a spam advertisement, not a phishing artifact, but the kind of
+thing it presents itself as. Accuracy and credence are separate
+questions the catalog does not yet model. From that definition follows
+the batch rule: the factor legitimizing a bulk release is not how the
+cache of documents was found but the volume of the collection combined
+with little to no variance in the trustworthiness of its contents. A
+hundred postings from a public jobs board are one judgment made
+honestly once, whatever origin brought them in. Per-document remains
+the requirement where the definition demands it: each document in a
+batch still receives its own member-authored release transition in its
+own record, the member's explicit acknowledgement of the batch's
+homogeneity and of their mitigation steps (what they actually sampled
+and checked) is recorded as part of the operation, and
+crucial-criticality or contested material is NEVER batch-released,
+because ratifying it requires verifying its co-attestations (Section 3,
+F4), which is inherently per-document work. The security consequence is
+named honestly: under batch release, the member's recorded sampling
+honesty is the boundary against a poisoned document hiding in a
+homogeneous batch, which is why the acknowledgement is a record, not a
+dialog. Deferred until forced: the
 retention posture for collected material never ratified (an attention
 question, per Section 1a, not a legality question).
 

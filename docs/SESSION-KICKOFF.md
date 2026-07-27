@@ -141,13 +141,17 @@ trust-inheritance question: nothing is inherited from the source; the member's
 recorded acknowledgement is the trust act, made fresh, consistent with the
 no-transitive-trust decision.
 
-Remaining scope question, Bob's alone because it is a doctrine amendment: the
-shape consistent with C-18.1 as written is the SPLIT, bulk for `named_request`
-and `member` origin (a human already chose each document once) and per-document
-for `sweep` origin, since the only per-document-ratification language in the
-architecture is C-18.1's sweep branch and a single acknowledgement over a
-selection is not per-document scrutiny. Including sweeps in bulk requires
-amending that rule. Until he says otherwise, the split stands.
+Scope RESOLVED, 2026-07-27, and the doctrine amended to v1.2: origin is not
+the discriminator. Bob's ruling: bulk is legitimized by volume plus
+little-to-no variance in the trustworthiness of the collection, whatever
+brought it in (his example: applications found on a public jobs board), because
+verification asserts only that a document appears to be what it claims to be,
+not spam, not phishing, and never accuracy. The discriminator that remains is
+criticality: crucial or contested documents are refused from bulk, whole set
+refused with offenders named, because F4 co-attestation verification is
+per-document work. Each batched document still receives its own member-authored
+release transition, so C-18.1's mechanical rule is satisfied unchanged. Step 5
+is now fully specified and ready to build.
 
 The relevant finding, which corrected an earlier overstatement in the same
 session: **C-18.1 constrains WHO authors the `collected` to `verified` transition,
