@@ -216,8 +216,15 @@ a recorded, revocable, narrow chain. And verification is only ONE element of
 trust in the store. The intended ladder, partially evident in the current
 system: from Information documents the system identifies EVIDENCE; evidence is
 the substrate ANALYSIS is built from; CONCLUSIONS are graded on how they follow
-ONLY from evidence and analysis. Record further findings here as the discussion
-settles; do not re-derive the void material.
+ONLY from evidence and analysis. The bias discussion produced DECLARED BIAS,
+drafted in full at `docs/architecture/BIO_Declared_Bias_v0_1.md` (DRAFT, not
+ratified): bias as a first-class, declared, justified construct; three
+statement kinds (scrutiny, inference, pattern) with the malformedness rule (no
+verdicts); bias bundles adopted per the group's own documented process;
+project overrides structurally loud; instance locks non-overridable (Bob:
+build in another instance); bias manifests in the evidentiary record; regrade
+and cross-group rerun. Record further findings here as the discussion settles;
+do not re-derive the void material.
 
 ## Standing lessons, all learned the hard way here
 
