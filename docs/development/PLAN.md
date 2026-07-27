@@ -876,7 +876,7 @@ Proven by a test that repoints a live reference at nothing and asserts that the
 store's own view and the catalog name the same single finding, C-6.2.
 
 ### S-11 Selection-backed actions
-**Status: STARTED. Citing 0.18.0, severing and reinstating 0.19.0, disposition 0.31.0, retirement 0.32.0** · Depends: S-10 step 5
+**Status: COMPLETE, 0.34.0. Citing 0.18.0, severing and reinstating 0.19.0, disposition 0.31.0, retirement 0.32.0, release 0.34.0** · Depends: S-10 step 5
 
 `selectionResolve` shipped in 0.17.0 with a weight parameter and no caller. This
 step is the set of actions that call it, built one at a time, lightest first.
