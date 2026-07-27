@@ -909,7 +909,23 @@ retirement that stranded live citations would manufacture that error at scale. A
 SEVERED edge does not count, or the refusal would be unclearable by the very act
 doctrine prescribes for clearing it.
 
-**Step 5, next, and it may be a decision not to build:**
+**Step 5, BLOCKED ON A DECISION (D-53), and it may be a decision not to build:**
+
+Three options were put to Bob on 2026-07-26 and none was chosen: build nothing and
+leave release per-document; build it uniformly; or split it on `origin.kind`,
+permitting bulk release for `named_request` and `member` origin and refusing it for
+`sweep` origin, which is the only branch of C-18.1 carrying the words "verified
+requires per-document human ratification".
+
+The correction that matters, made in the same session against an earlier
+overstatement of the same analysis: **C-18.1 constrains WHO authors the transition,
+not how many documents move at once.** A signed-in member's session stamps the
+author as their member id, which passes its excluded-author list. C-18.7 is a
+warning staged until member keys are distributed and blocks nothing today.
+
+Blocked because release is the transition where inherited trust would apply if it
+applies anywhere, and whether trust is inherited at all is D-53.
+
 The remaining candidates in ascending doctrinal weight are bulk retirement of Information (`verified` to
 `retired`), and bulk release (`collected` to `verified`). Release is LAST and
 should probably never be a bulk action at all: C-18.1 makes it a named member's

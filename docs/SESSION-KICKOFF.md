@@ -96,288 +96,230 @@ before any real group installs.
 
 ## Current state and next task, as of 2026-07-26
 
-The plane is **0.23.0**, signed, tagged, deployed and verified on
+Plane **0.32.0**, signed, tagged, deployed and verified on
 biosmoke7.believeinoakland.workers.dev, deployed bytes hashing identically to the
-signed release asset. Battery **1321 assertions across 30 suites** (`npm test` in
-bio-plane); installer wizard 90. Live record unchanged throughout at 30 bundles,
-137 files, 239 history rows, `op=audit` 30 clean, `op=registeraudit` sound.
+signed release asset. Battery **1503 assertions across 32 suites** (`npm test` in
+bio-plane, about three minutes). Installer wizard 90 (`node test/wizard.test.mjs`
+in newgroup). Live record: 30 bundles, 137 files, 239 history rows, 10 refs, 87
+register rows, `op=audit` 30 checked and 30 clean, `op=registeraudit` sound.
 
-Eight releases shipped on 2026-07-25/26 after 0.17.0:
+Nine releases shipped on 2026-07-26, 0.24.0 through 0.32.0. `BIO_DATAPLANE_STATE.md`
+carries them as v21 through v29; the v29 block at the top is what is true now and
+everything below it is narrative.
 
-- **0.18.0** `op=cite`, the first action to refer to a selection, weight `report`.
-- **0.19.0** `op=sever` and `op=reinstate`, weight `refuse`, the first callers of
-  `selectionResolve`'s refusing arm. Five debt items, including D-32 by
-  measurement (facet counting as a single scan, 1.4x to 5x faster).
-- **0.20.0** the membership model's member half: cover and handle, capabilities,
-  and the Section 4 administrator arithmetic.
-- **0.21.0/0.21.1** burner-URL invitations. 0.21.0 shipped BROKEN at the control
-  plane; see the lessons below.
-- **0.21.2** invitation ops reach the store the invitation was created in (D-44).
-- **0.22.0/0.22.1** `op=registeraudit`, corrected to probe R2 (D-9).
-- **0.23.0** project participation and the three visibility positions (D-15).
+**S-12 (membership) is COMPLETE.** Every section of Membership Architecture v2 is
+built: capability enforcement at the op layer, the section 7 project rules
+including the 7.7 reversal and 7.10 owner governance, lifecycle authority, fork,
+licences, project name uniqueness, secure verified export, and 7.13.
 
-**NEXT: S-12 step 3, capability enforcement at the op layer.** Capabilities are
-recorded and nothing consults them. A member without `publish` can still reach
-`op=ratify` and is stopped only by the signing key. Section 5 says a capability a
-member does not hold is ABSENT from their interface rather than present and
-refused, so this is a UI obligation as much as an ACL one. After that, Section 8
-secure verified export, which requires the ROOT OF TRUST credential and not
-in-app administrator status, because an export any administrator can run is the
-most efficient attack in the system. `PLAN.md` S-12 has the ordered list.
+**S-11 (selection-backed actions) is at step 4 of 5.** Citing, severing,
+reinstating, bulk disposition of Problems and bulk retirement of Information are
+all shipped. Step 5, bulk release, is BLOCKED ON A DECISION and is described
+below.
 
-**Open and UNBLOCKED:** D-36's class (a probe exists, keep using it), D-40
-(three shared fixtures write an illegal `criticality` value as deliberate facet
-test data), D-45 (an unbacked register entry is refused at ratify, not at
-promote; the recorded default is to LEAVE IT).
+### Work from v2, not v1
 
-**Open and BLOCKED, blocker named:** D-9 is closed, D-15 is closed, D-37 is
-closed by decision, D-41 is closed, D-43 is closed. D-1 is closed by Bob's
-ruling of 2026-07-26: the root of trust is the administrator set and the
-Section 4 process, with the Cloudflare account credentials acknowledged as the
-layer beneath, left as discussed. Remaining: D-11 and S-9 need revocations in
-Bob's Cloudflare and Internet Archive accounts.
+`docs/architecture/BIO_Membership_Architecture_v2.md` is the design and nothing in
+it is undecided. **v1 is superseded and must not be worked from.** Its section 7.7
+says the OPPOSITE of v2's on who removes a project participant, and code was
+written against the old rule before it was corrected. v2 carries a change table
+at the top listing every difference.
 
-**FOUR harnesses, and they find what the suite cannot.** `bench:retrieval`,
-`bench`, `probe:cite`, `probe:limits`. Run the relevant one before signing
-anything that changes a statement shape or what a write emits.
+## What is open, in the order it matters
+
+**1. Bulk release, S-11 step 5, and it may be a decision not to build.** Blocked
+on the trust and credence questions below, because release is the transition where
+inherited trust would apply if it applies anywhere. Three options were put to Bob
+and none was chosen: build nothing and leave release per-document; build it
+uniformly; or split it on `origin.kind`, permitting bulk release for
+`named_request` and `member` origin and refusing it for `sweep` origin.
+
+The relevant finding, which corrected an earlier overstatement in the same
+session: **C-18.1 constrains WHO authors the `collected` to `verified` transition,
+not how many documents move at once.** Its excluded-author list is `claude`,
+`pwa-client`, `daemon`, `sweep`, `session`, `accelerator`, `apps-script`,
+`system`, `agent`, `ai`. A signed-in member's session stamps the author as their
+member id, which passes. The per-document requirement appears only in the
+sweep-origin branch, in the words "verified requires per-document human
+ratification". C-18.7, the detached release signature, is a WARNING staged until
+member keys are distributed and blocks nothing today. C-2.7 separately requires a
+well-formed `content_hash` for anything in the verified state, so a bulk release
+cannot be a blind state flip even at the schema level.
+
+**2. D-50**, project name uniqueness in the check catalog. The write path already
+refuses a collision, so nothing can be written wrong; the catalog cannot yet
+report the condition on a corpus handed in from elsewhere, which is what the
+conformance path is for.
+
+**3. D-52**, an export is recorded and discoverable but no administrator is
+NOTIFIED. Section 8.1 asks for both. `export_log` and `op=exportlog` deliver the
+first half. There is no notification channel in this system at all, so closing
+this needs a channel decision rather than more code.
+
+## The trust, reputation and credence question, PARKED and unresolved
+
+Raised by Bob at the end of the 2026-07-26 session and deliberately not built.
+Recorded here because it blocks S-11 step 5 and because the findings cost real
+reading to obtain.
+
+Bob's framing: information from a credible source can be ratified with trust
+inherited from that source; ratification by a member adds that member's trust;
+trust never decreases, being the maximum over all vouchers. Credence is a
+listener's belief in the claims a document makes, determined by the source, the
+topic area, the type of claim, and the source's reputation generally and in that
+area. Claim types he named: law of nature; derivation by accepted formula; an
+entity's theory or thesis; legal instruments; consensus; accepted authority;
+unqualified or ambiguously sourced claims. BIO gives no credence to conventional
+wisdom or narrative. A source may be authoritative and self-interested on the
+same claim. Each Project may adjust credence within framework bounds with a
+documented justification.
+
+**What the code actually contains: NOTHING.** No credence, reputation, trust or
+confidence field, table or check exists anywhere in `checks/` or `src/`. This was
+grepped, not assumed.
+
+**And one existing decision points the other way.**
+`BIO_Technical_Architecture_Decisions_v10` carries **No transitive trust**: trust
+is never inherited but re-established locally at every hop, and credibility is
+demonstrated by the work and never by the producer's reputation. Its scope is
+PEER BIO GROUPS and the R13 infiltration threat, not external primary sources, so
+it and Bob's framing can coexist. The boundary is that a peer's Work Product can
+be re-derived from the primary sources it carries, and a court judgment cannot,
+because the judgment IS the primary source. That boundary has to be drawn
+deliberately. `BIO_Design_Requirements_v2` section 4 also says reputation accrues
+through consistent quality with no authority managing the process, so whatever is
+built must be a group's own ledger and not a shared score.
+
+**Two corrections the session made to its own analysis, both worth inheriting.**
+
+Provenance and credence were conflated. The first attempt gathered capture grades
+A/B/C, actor classes, origin kinds and C-18.1 as the existing vocabulary for
+credence. Every one of those is PROVENANCE: a grade-A capture is a faithful copy
+of what a source published and says nothing about whether the source is worth
+believing. The one genuinely claim-side field in the catalog is
+`classification: fact | analysis | judgment`, and it is per-document.
+
+Credence was proposed as a property of the `cites` edge, on the reasoning that
+reputation exists BETWEEN entities and that State Rules 5.2 already puts `cites`
+on the citing object so the interest graph cannot leak. Bob's response exposed the
+limit: **references target a bundle id and nothing finer.** `BUNDLE_ID_RE` is the
+whole grammar and there is no anchor, span or claim identifier anywhere in the
+catalog. So an edge-level credence is still document-granular, and a document
+carrying an authoritative table of figures alongside a self-interested assertion
+about their lawfulness would get one number for both. If reasoning about claims is
+the point, claims must be addressable below the document, which is a change to the
+object model rather than a refinement of credence.
+
+Also proposed and unresolved: replacing strict monotonicity with an append-only
+attestation ledger plus a computed current value, so a retraction or a withdrawn
+vouch can lower the number while no vouch is ever erased; treating interest as a
+per-claim relation rather than a source property, which is the
+admission-against-interest principle and the correct handling of the founding
+case, where Oakland's own reporting is the strongest evidence the transfers
+happened and the weakest that they were authorised; and splitting
+consensus-of-record from consensus-as-agreement, since counting agreement is how
+manufactured consensus passes.
 
 ## Standing lessons, all learned the hard way here
 
-1. **A probe that never saw a failure has not found a ceiling**, it has found the
-   top of the range it was given. `probe:limits`' first draft reported four such
-   numbers as measurements.
-2. **Prefer structural assertions to fixed lists.** `fence.test.mjs` let a new
-   mutating op through untested because it enumerated ops by hand.
-3. **A rule that breaks old tests is doing its job.** 0.20.0's Section 4 rules
-   broke three suites that encoded older behaviour; the suites were corrected
-   rather than the rule exempted.
-4. **Conformance-check the fixture BEFORE the change as well as after**, or the
-   after-check measures nothing.
-5. **An unauthenticated op tested only at the Durable Object is untested.** For a
-   `classes: null` op the control plane is the only route a real caller has.
-   `op=invitelook` shipped throwing a ReferenceError behind 1276 green
-   assertions and was found on the deployed instance. Now closed as a class.
-6. **CHECK WHAT THE HARNESS IS ACTUALLY MEASURING.** The bench drives
-   `viewer=class:member`, which is the one path the D-15 participation filter
-   does not filter, so twenty green shapes exercised none of the new code. A
-   green harness is not evidence until you know which path it took.
-7. **READ THE ENFORCEMENT PATH BEFORE DECLARING SOMETHING UNENFORCED.** The
-   2026-07-26 session claimed four times that something was missing and was
-   wrong each time: the selection sweep already had an alarm, the migration
-   bytes were already in R2, `gate.mjs` already refused unbacked register
-   entries, and `op=selection` already was the keep-alive. Every claim was made
-   after reading one file and before reading the next.
+The 2026-07-26 session shipped nine releases and made an unusually high number of
+mistakes doing it. Every one was caught, most by a test or by checking the
+deployed instance rather than by reasoning. The pattern was always a conclusion
+drawn after reading one file and before reading the next, then built upon.
 
----
+1. A probe that never saw a failure has not found a ceiling, it has found the top
+   of the range it was given.
+2. Prefer structural assertions to fixed lists, so a later addition cannot pass by
+   not being mentioned. Make them run BOTH ways: the capability suite caught two
+   ops named in the capability table that no session could reach, which is a
+   direction that only exists because the check runs both ways.
+3. A rule that breaks old tests is doing its job. Correct the tests, do not exempt
+   the rule.
+4. Conformance-check the fixture BEFORE the change as well as after, or the
+   after-check measures nothing. This paid twice in two consecutive releases,
+   both times against fixtures written believing they were fine.
+5. An unauthenticated (`classes: null`) op tested only at the Durable Object is
+   untested, because the control plane is the only route a real caller has.
+6. Check what the harness is actually measuring.
+7. Read the enforcement path before declaring something unenforced. Name the file
+   that would contain it and say whether you read it.
+8. **A test that reads the RETURN VALUE instead of the RECORD proves nothing.**
+   Four assertions this session passed or failed for a reason other than the one
+   they named: one asked `op=get`, which does not exist, so it passed for every
+   input; one asserted `f.rel`, a literal the fork method returned while never
+   writing the edge; one built the string `token=undefined` because
+   `setpassword` is not a control-plane op; one answered `EXISTS` because the live
+   roster already held that member id from an earlier session.
+9. **Version convergence is not full convergence.** After a deploy, `op=selftest`
+   can report the new version on the first poll while another edge still answers
+   `unknown op` for an op that release added. Poll for the BEHAVIOUR that changed,
+   not the version string. This cost real time at 0.30.0 and was avoided at
+   0.31.0 by polling correctly.
+10. **A single sample is not a measurement.** A bench reading of 8.01ms against an
+    earlier 6.46ms looked like a 24% write regression. Benching the new code
+    against the previous release, twice each, gave overlapping ranges: the earlier
+    figure was a quieter container, not faster code.
 
-## Next session's task: implement the membership architecture
+## Gotchas that have cost real time
 
-`docs/architecture/BIO_Membership_Architecture_v1.md` is a first-class architecture
-document specifying covers and handles, administrators, capabilities,
-burner-URL invitations, and project participation. It was written on July
-24, 2026 from Bob's specification, checked against the existing
-architecture documents, and it supersedes one decision in
-BIO_Technical_Architecture_Decisions v10 Section 10 (per-member tokens
-deliberately not used).
+- workerd binds about **100 variables** per statement, not SQLite's documented
+  32,766. Chunk any `IN (...)` list; the selection code uses 64. A query dies at
+  **98 metadata filter terms** on the variable limit. workerd allows **five
+  terms** in a compound SELECT, not 500. Both are D-36 and both were found by a
+  harness, not the suite. Note that `op=dispose` and `op=retire` are NOT subject
+  to either: they issue one promote per member rather than one statement over all
+  of them, so there is no list to chunk. Probed to 4,000 Problems in one call,
+  linear at about 1ms each, no ceiling found.
+- **`op=projection` caps at 200 rows.** A test helper that scans it silently stops
+  finding things exactly when the corpus gets big enough for scale assertions to
+  matter, and reports it as a crash rather than a miss. Ask for the one bundle
+  with `?id=`, which returns a single row and not an array.
+- **Deploy update shape.** Mirror `uploadUpdate` in `newgroup/src/index.mjs`. Use
+  `keep_bindings: ["secret_text", "durable_object_namespace"]` or the PUT deletes
+  the instance's tokens. Send **no migrations field**.
+- **`ssh-keygen` will not load a raw `BIOKEY-RAW1` seed**, and the repo's own
+  signer is browser-only (`src/signpage.mjs`). To sign in-session, reconstruct the
+  SSHSIG path in Node from that page's algorithm, out of tree in `/tmp`, and
+  verify the output with stock `ssh-keygen -Y verify` plus negative controls for
+  altered bytes and a wrong namespace.
+- **Backticks in a `git commit -m` string are command-substituted** and silently
+  delete the word inside them. Use `-F` with a file or a heredoc.
+- **`git -c user.email=...` carries to commit but NOT to `git tag -a`.** Configure
+  the identity in the repo.
+- Cloudflare `/content` refuses an API token. To read back deployed bytes, GET the
+  script itself, which returns a multipart envelope containing `index.mjs`.
+- `python3` urllib gets 403 from Cloudflare's bot filter on instance URLs. curl
+  and node `fetch` work.
+- `ssh-keygen` may be missing. `apt-get update` FIRST, then
+  `apt-get install -y openssh-client`.
+- `npm install` in bio-plane before running anything. Miniflare suites must run
+  from inside bio-plane.
+- A promote payload with an empty POST body used to throw; fixed in 0.21.1, but
+  send `{}` rather than nothing.
+- **The second member of a group must be an administrator, and there are no
+  ordinary members until two exist** (4.2, 4.3). A test fixture that adds an
+  ordinary member first fails with `ADMINS_FIRST`, and one that hardcodes an
+  endorser list builds no administrator at all and then asserts against a member
+  who does not exist. Discover the administrator set rather than guessing it.
 
-Read it first. It is the design; do not re-derive it.
+## Verification discipline that has repeatedly paid off
 
-NOTHING IN THE DOCUMENT IS UNDECIDED. Every question was settled on July
-24, 2026 and the reasoning is recorded in place.
+Write the failing case first and confirm it fails for the reason you think. If it
+does not fail, say so and fix the claim rather than the comment.
 
-Four obligations that are easy to miss and expensive to retrofit:
+A pass at small scale is not a pass. Scale it until the assumption breaks.
 
-1. Project visibility has THREE positions: uninvited (the project is
-   invisible entirely), invited-not-joined (skeleton only: Problems it
-   stands above, Information it cites, Actions it initiates), and joined
-   (everything). Do not collapse the first two.
-2. The index derives reverse edges and MUST filter them by the viewer's
-   position. Unfiltered, it leaks which projects are interested in which
-   Information. The edge itself already lives on the citing object per
-   State Rules 5.2, so only the derived projection needs the filter.
-3. Administrator removal counts the TARGET in the denominator but does not
-   let them vote (Section 4.7). That is what makes removal impossible at
-   two administrators without a special case. Adding administrators past
-   the second requires consensus, which is what stops a captured admin
-   from manufacturing a majority.
-4. Full working-corpus export requires the ROOT OF TRUST credential, not
-   in-app administrator status (Section 8). An export any administrator
-   can run is the most efficient attack in the system.
+Verify against the deployed artifact and the live instance, not only the source
+and the suite. Compare the deployed bytes to the signed release asset.
 
-The member half below Section 7 is unblocked and can be built immediately:
-identity and handle with uniqueness enforcement, the required
-administrator-assigned identity label, capabilities, burner-URL
-invitations replacing the current invitation code, and the two-admin
-bootstrap rules in Section 4. Note that the enrolment screen shipped in
-0.4.0 is UNREACHABLE (nothing calls `show("#s-enroll")`); the burner URL
-is what should reach it.
+Include negative controls. A verifier that says yes to everything says nothing.
 
-ARCHITECTURE DEBT, recorded in Section 9: the root of trust is unmodelled.
-Three parts of the design lean on it, and the only thing implementing it is
-ADMIN_TOKEN, a bootstrap credential that became the root of trust by
-accident of being the only thing that can reclaim an instance. It is a
-proxy for hosting access, has no custody model, is not auditable, and
-cannot be rotated without returning the instance to unclaimed. Deciding
-what a root of trust should BE for a BIO group is a doctrine question of
-the same weight as the membership model and deserves its own session.
-
-Also scheduled: secure verified export (Section 8), which is what makes
-every governance rule enforceable, since a group that cannot leave can be
-held. The migration tooling already performs a verified transfer of the
-real record, so this is productization rather than new ground.
-
-THE CONFORMANCE AND ACQUISITION ARCS ARE DONE. PLAN.md steps S-1 through S-8
-are complete and recorded there with their outcomes. The battery is 592
-assertions across twenty-one suites in about 52 seconds; `npm test` in
-bio-plane runs all of it and `npm run bench 20000` runs the scale harness.
-The live record at biosmoke7 audits at 30 clean against the full catalog.
-
-S-9, retiring the old plane, is Bob's: revoke the R2 key pair in Cloudflare
-and the SPN2 pair in the Internet Archive account, delete the Apps Script
-deployment (which retires its four bearer tokens by removing what they open),
-then delete docs/development/apps-script/promotion-service.gs per its own
-expiry condition. The SPN2 pair only needs revoking, not replacing, because
-co-attestation went anonymous in 0.9.1.
-
-## THE NEXT ARC IS RETRIEVAL, AND IT NEEDS A DESIGN CONVERSATION FIRST
-
-Do not start implementing. The technical design does not exist yet, and this
-is the trap that cost the membership work a whole reconciliation:
-
-**Nothing in docs/architecture/ specifies retrieval.** The Roadmap has a
-Search UX category (user-initiated retrieval, persistent requests, results
-carrying provenance into Context) and that is all. FTS5, Vectorize and
-reciprocal rank fusion appear ONLY in docs/development/, which is to say they
-are prior sessions' intentions, not doctrine. Search the corpus and confirm
-this before believing it, then ask Bob rather than inferring, the way the
-membership model should have been asked about and was not.
-
-What IS settled and should shape the conversation:
-
-- Whole-store work inside the Durable Object costs about 0.2ms per bundle
-  (S-8). A brute-force scan of 20,000 bundles is under four seconds inside
-  the object and about eight on the deployed plane. Retrieval is therefore
-  not needed for correctness at any plausible group's scale, which makes it a
-  usability question rather than a feasibility one, and changes what a good
-  answer looks like.
-- `op=audit` already demonstrates the shape a whole-store operation takes:
-  cursor-paginated, run where the data is, agreeing exactly with the
-  equivalent pass from outside. Test/audit.test.mjs asserts that agreement,
-  and any index must be held to the same standard: an index that disagrees
-  with a scan is worse than no index.
-- The two-bucket fence is absolute. An index over the working corpus must not
-  be readable through any public surface, and the doorbell's `verify` answers
-  only from the published projection. Whatever is built, the fence is not
-  negotiable and no index may become a way around it.
-- Conversion Plan probe 1, FTS5 virtual tables versus an exported index, is
-  UNANSWERED. It was folded into S-8 optimistically and could not be measured
-  because FTS5 does not exist yet. It is a real question and it now has a
-  measurement harness (test/scale.mjs) to answer it in.
-
-The member half below Section 7 is unblocked and can be built immediately:
-identity and handle with uniqueness enforcement, the required
-administrator-assigned identity label, capabilities, burner-URL
-invitations replacing the current invitation code, and the two-admin
-bootstrap rules in Section 4. Note that the enrolment screen shipped in
-0.4.0 is UNREACHABLE (nothing calls `show("#s-enroll")`); the burner URL
-is what should reach it.
-
-ARCHITECTURE DEBT, recorded in Section 9: the root of trust is unmodelled.
-Three parts of the design lean on it, and the only thing implementing it is
-ADMIN_TOKEN, a bootstrap credential that became the root of trust by
-accident of being the only thing that can reclaim an instance. It is a
-proxy for hosting access, has no custody model, is not auditable, and
-cannot be rotated without returning the instance to unclaimed. Deciding
-what a root of trust should BE for a BIO group is a doctrine question of
-the same weight as the membership model and deserves its own session.
-
-Also scheduled: secure verified export (Section 8), which is what makes
-every governance rule enforceable, since a group that cannot leave can be
-held. The migration tooling already performs a verified transfer of the
-real record, so this is productization rather than new ground.
-
-THE NEXT ARC IS SPECIFIED. Read
-docs/development/CONFORMANCE-AND-INTAKE-ARC.md first. It is the work plan:
-make the plane conformant to the check catalog, then rebuild on it the
-acquisition tooling the Apps Script accelerator carried. Order of work is in
-its Section 5 and the first three steps are not optional.
-
-Bob's direction, July 24, 2026: do not spend effort preserving what exists.
-The corpus is development reference and no production system will use it
-without refetching from source. Spend effort on rigorously recreating the
-capture tooling on the new plane, conformant to the architecture, and on
-making the storage and transport plane complete and performant.
-
-The catalog is at bio-plane/checks/bio-checks.mjs, version 1.16.4,
-hash-verified, 49 checks, zero dependencies, filesystem injected at five
-seams. plane-gate/1.0 must RUN it, not reimplement it: a reimplementation is
-a fourth implementation pretending to be conformance.
-
-FOUR MEASURED DIVERGENCES, detail in the arc document Section 1: history
-paths are laid out wrongly so all 30 bundles fail C-12.2; promotion records
-are not projected at all so two more checks are unreachable; the manifest
-kind vocabulary differs, which is what hid the second divergence; and the
-gate implements four checks where the catalog has 49, which is how the
-intake UI's defects shipped invisibly.
-
-The member half below Section 7 is unblocked and can be built immediately:
-identity and handle with uniqueness enforcement, the required
-administrator-assigned identity label, capabilities, burner-URL
-invitations replacing the current invitation code, and the two-admin
-bootstrap rules in Section 4. Note that the enrolment screen shipped in
-0.4.0 is UNREACHABLE (nothing calls `show("#s-enroll")`); the burner URL
-is what should reach it.
-
-ARCHITECTURE DEBT, recorded in Section 9: the root of trust is unmodelled.
-Three parts of the design lean on it, and the only thing implementing it is
-ADMIN_TOKEN, a bootstrap credential that became the root of trust by
-accident of being the only thing that can reclaim an instance. It is a
-proxy for hosting access, has no custody model, is not auditable, and
-cannot be rotated without returning the instance to unclaimed. Deciding
-what a root of trust should BE for a BIO group is a doctrine question of
-the same weight as the membership model and deserves its own session.
-
-Also scheduled: secure verified export (Section 8), which is what makes
-every governance rule enforceable, since a group that cannot leave can be
-held. The migration tooling already performs a verified transfer of the
-real record, so this is productization rather than new ground.
-
-THE C-SERIES CATALOG IS NOW IN THE REPO, hash-verified, at
-bio-plane/checks/bio-checks.mjs (version 1.16.4, 49 checks, zero
-dependencies, injected filesystem). The gate port is no longer blocked on
-access. Read bio-plane/checks/README.md for the five injection seams that
-are the whole porting surface.
-
-THE MIGRATED RECORD IS CONFORMANT. The catalog was run against all 30
-bundles on biosmoke6 and found zero content findings. Do not re-migrate.
-
-THREE SHIPPED DEFECTS found by the July 24 consistency audit and recorded in
-BIO_DATAPLANE_STATE.md: the intake UI stamps illegal first states for
-Problems and Actions; it writes four frontmatter fields where the catalog
-requires fifteen; and readImage emits history as _history/<key>/<path> where
-the canonical layout is _history/bundle_<key>.md, which makes every bundle
-fail C-12.2 against the real checker. The third is the one to fix FIRST,
-because nothing else can be verified through a projection the checker cannot
-parse. schema.mjs line 3 settles which side changes: the bundle format is
-authoritative and the projection must never bend it.
-
-Fix the first two with the port, not before, so the gate proves the fix
-rather than the fix being asserted.
-
-Also outstanding: the C-series gate catalog port (the plane
-ships `plane-gate/0.1`, mechanical checks only), and the Conversion Plan
-step 6 benchmark at 5,000 and 20,000 bundles.
-
-Read docs/architecture/README.md before designing anything. This session's
-membership work was designed BEFORE the corpus was read and had to be
-reconciled afterward; that is avoidable now.
-
-Document layout is explained in docs/README.md. The two files at the top of
-docs/ are the entry points: this one and BIO_DATAPLANE_STATE.md. Doctrine
-lives in docs/architecture/, operational records in docs/development/.
-
-The state of the work lives in docs/BIO_DATAPLANE_STATE.md in this
-repository. Claude keeps it current with every release.
+**RUN THE RELEVANT HARNESS BEFORE SIGNING.** `npm run bench:retrieval` (the query
+path at 20,000, paging integrity, the facet head-to-head, and the participation
+filter), `npm run bench` (the store), `npm run probe:cite` (the citing write),
+`npm run probe:limits` (workerd's undocumented SQL ceilings). Run the relevant one
+before signing anything that changes a statement shape or what a write emits, and
+read its worst-shape line.
 
 ## What the session of 2026-07-24 knew that is not written elsewhere
 
