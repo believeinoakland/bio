@@ -594,6 +594,21 @@ by removing what they open), and delete
 `docs/development/apps-script/promotion-service.gs` per its own expiry
 condition.
 
+Why each revocation is safe, recorded because the question will recur. The R2
+pair is the S3-style access key minted so the APPS SCRIPT plane could write
+captures into R2 from Google's servers; the live plane reaches R2 only through
+Worker BINDINGS, which carry every fence the code enforces, while a raw storage
+key is a tunnel under all of them: direct reads of bio-captures across the
+privacy fence, direct overwrites against the append-only promise. Revoking it
+touches neither the bindings nor the deploy token. The SPN2 pair is NOT the
+group's use of the Internet Archive: the live archive path is deliberately
+anonymous (0.9.1, above), holds no credential, and keeps working after the
+revocation; the pair is a dead credential of the retired plane whose custody
+chapter (Apps Script properties) closed, and whose misuse would be attributable
+to the group's own IA account, which is exactly the attribution co-attestation
+leans on. Future authenticated IA use, if ever wanted, mints fresh keys under
+current custody.
+
 **Accepts when:** the deployment is gone, the four credentials are revoked in
 their own systems, and the source file is removed in a commit that says why.
 
