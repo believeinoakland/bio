@@ -44,6 +44,35 @@ cost measurement.
 
 ---
 
+## Directed and queued: Problems become Focuses
+
+Bob's directive, 2026-07-27: the constructs called BIO Problems are RENAMED to
+FOCUSES, which conveys their purpose non-judgmentally. The analysis layer does
+its work "in the context of a Focus." Design settled by the append-only
+constraint, which forbids rewriting history: `focus` becomes the canonical
+object_type and vocabulary everywhere (catalog, checks, ops, docs, UI,
+templates); `problem` remains a LEGACY ALIAS accepted in existing history and
+normalized to focus in projections and display. No history row is rewritten.
+Op names carrying problem-vocabulary keep working alongside focus-vocabulary
+equivalents. Queued immediately after S-11 step 5 (bulk release) unless Bob
+reorders.
+
+## The three-layer workflow, and where development focus stays
+
+Bob's framing, 2026-07-27, recorded as the roadmap's shape. Layer 1, the
+FOUNDATION, is what has been and is being built. Layer 2, the ANALYSIS layer,
+relies on the foundation for services: it articulates objectives defining what
+it wants to see in the data store (a specific document, a kind of document, a
+document set that could contain a needed piece of evidence), including whether
+found documents should be kept current and when or how often the data layer
+should look for updates; it uses AI skills to define and achieve focused
+analytical objectives in the context of a Focus; and it carries the Project
+work, much of it also accomplished by AI skills. Layer 3 is the UI surfaces
+users interact through. Development focus REMAINS ON THE FOUNDATION for the
+time being; once complete enough, focus moves FIRST TO THE UI, which still
+needs to be designed; once the UI is fleshed out enough, development will
+likely fill in capabilities across all three layers.
+
 ## Steps
 
 ### S-1 Canonical history projection
