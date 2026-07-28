@@ -117,3 +117,28 @@ files; deliver complete replacement files. Lead with the finding. If a
 GitHub token is attached, push the deliverable to the repo; if not, deliver
 the file and Bob will have it pushed. Record decisions in the repo the same
 session they are made.
+
+
+## Bob's UX principles (stated 2026-07-28, verbatim, standing)
+
+These govern every UX call from here on, alongside the constraints above.
+
+- Minimum visible complexity
+  - Simple interfaces even when the domain and implementation are complex
+  - Offer layered abstractions that enable simplicity at the top with
+    increasing detail as they drill down
+  - Don't be myopic. Allow users to see connections at the right meta-levels
+- A user experience from the user's perspective
+  - Present data, layouts, journeys that reflect how users think of the
+    problem/task/solution
+  - Provide all users the experience they need regardless of domain
+    experience/understanding
+  - Explain what it says/means from the user's perspective
+- Spacious, welcoming, alive, information-rich surfaces
+  - Maximize information density through appropriate use of color, typography
+    options, mouse-overs, context menus, collapsable dropdowns, and space
+  - Include meaningful, insightful, and relevant interactive visuals that
+    tell stories
+  - Consistent use of design language throughout
+- Know that the workflow will evolve as experience and requirements change
+  - Architecture and codebase designed for evolution
