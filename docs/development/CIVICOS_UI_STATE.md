@@ -1,5 +1,31 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v12, 2026-07-28 session, part ten: the missing tag was a stale tab, and the
+app now tells you.
+
+**Changelog v12.** Bob reported the type tag absent. Root cause: his open
+tab was running the app instance loaded before the v11 deploy; the SPA never
+reloads between deploys, so an old build keeps navigating live data.
+Definitive proof before any code was touched: the LIVE served page code was
+rendered against the LIVE data of the exact bundle in his screenshot and
+produced the pdf tag and the "Released by bob" fact. The recurrence gap is
+closed per the alive principle: the build step now injects a build id (12
+hex of the app source's sha256) into both the page and the worker, the
+worker serves it at /build (no-store), and an open tab checks every five
+minutes while visible; when a newer build is serving, a quiet "Updated \u00b7
+reload" button appears in the masthead. THE CANONICAL BUILD STEP CHANGED:
+compute the id, inject __BUILD_ID__ into app.html bytes AND the template,
+then base64-embed (see the build block in this session's transcript; the v1
+snippet's plain embed is superseded). Also: a piped test invocation let a
+shim-only failure slip past one deploy (exit status was grep's, not the
+suite's); run `node test/run.mjs` bare, never piped, before deploying.
+
+(v11 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v11, 2026-07-28 session, part nine: facts from the record's real shapes; the
 type tag.
 

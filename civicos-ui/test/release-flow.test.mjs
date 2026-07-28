@@ -35,7 +35,7 @@ const ctx = {
     return reply({ok:true, result:{}});
   },
 };
-ctx.addEventListener=()=>{}; ctx.history={pushState(){}}; ctx.localStorage={getItem:()=>null,setItem(){}}; ctx.IntersectionObserver=undefined; ctx.requestAnimationFrame=fn=>fn(); ctx.history={pushState(){},back(){}}; ctx.addEventListener=()=>{}; ctx.window = ctx; ctx.globalThis = ctx;
+ctx.addEventListener=()=>{}; ctx.history={pushState(){}}; ctx.localStorage={getItem:()=>null,setItem(){}}; ctx.IntersectionObserver=undefined; ctx.setInterval=()=>1; ctx.clearInterval=()=>{}; ctx.requestAnimationFrame=fn=>fn(); ctx.history={pushState(){},back(){}}; ctx.addEventListener=()=>{}; ctx.window = ctx; ctx.globalThis = ctx;
 vm.createContext(ctx);
 const code = appScript();
 vm.runInContext(code + `

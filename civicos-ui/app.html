@@ -385,7 +385,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
     <div class="brand"><button class="mback hidden" id="mback" onclick="navBack()" title="back to where you were, at the same place on the page">&larr;</button><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp">group</span></div>
     <div class="right">
       <div class="msearch"><svg width="14" height="14" style="color:var(--muted)"><use href="#i-search"/></svg><input id="m-search" placeholder="search the record" onkeydown="if(event.key==='Enter')quickSearch()"></div>
-      <div class="handle" id="m-handle">&mdash;</div>
+      <button class="btn hidden" id="m-fresh" style="padding:5px 12px;font-size:12.5px" onclick="location.reload()" title="a newer CivicOS build is live; reload to run it">Updated &middot; reload</button><div class="handle" id="m-handle">&mdash;</div>
     </div>
   </div>
 
@@ -436,6 +436,20 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
      GET  /api/?op=publishedmanifest         -> {result:{published:[...]}}  (public, no token)
    ============================================================ */
 const PLANE = { base:"", token:null, session:false, me:null, preview:false };
+const BUILD = "__BUILD_ID__";   // injected at build; "__BUILD" + "_ID__" means a raw file open
+/* The app itself stays alive: when a newer build is serving, an open tab
+   learns it and offers the reload, instead of quietly running stale code
+   against live data. */
+async function buildCheck(){
+  if(document.hidden || BUILD.startsWith("__")) return;
+  try{
+    const r = await fetch(PLANE.base + "/build", {cache:"no-store"});
+    if(!r.ok) return;
+    const live = (await r.text()).trim();
+    if(live && live !== BUILD && $("#m-fresh")) $("#m-fresh").classList.remove("hidden");
+  }catch(_){}
+}
+setInterval(buildCheck, 5*60*1000);
 const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B" };
 
 const $ = s => document.querySelector(s);

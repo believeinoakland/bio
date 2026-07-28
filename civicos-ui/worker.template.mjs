@@ -1,10 +1,14 @@
 const B64="__APP_HTML_BASE64__";  // injected at build from app.html
+const BUILD_ID="__BUILD_ID__";      // sha of app.html, injected at build
 const APP_HTML=new TextDecoder().decode(Uint8Array.from(atob(B64),c=>c.charCodeAt(0)));
 export default {
   async fetch(req, env){
     const url=new URL(req.url); const p=url.pathname;
     if(p==="/"||p==="/civicos"||p==="/civicos/"){
       return new Response(APP_HTML,{headers:{"content-type":"text/html; charset=utf-8","cache-control":"no-store"}});
+    }
+    if(p==="/build"){
+      return new Response(BUILD_ID,{headers:{"content-type":"text/plain","cache-control":"no-store"}});
     }
     if(p==="/api"||p.startsWith("/api/")){
       const target="https://biosmoke7.believeinoakland.workers.dev"+p+url.search;
