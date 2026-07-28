@@ -9,7 +9,7 @@ function el(){ return { classList:{add(){},remove(){},toggle(){},contains(){retu
 const CALLS = [];
 const ctx = {
   console, URL, URLSearchParams, JSON, TextEncoder, setTimeout, Array, Object, String, Number, Math, Date, RegExp, Promise,
-  document: { querySelector: s => { if(!els.has(s)) els.set(s, el()); return els.get(s); },
+  document: { querySelector: s => { if(s==="#docscroll") return null; if(!els.has(s)) els.set(s, el()); return els.get(s); },
               querySelectorAll: () => [], addEventListener(){}, documentElement:{setAttribute(){}} },
   location: { protocol: "https:" },
   fetch: async (url, init) => {

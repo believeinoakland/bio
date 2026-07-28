@@ -24,7 +24,7 @@ const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date
  }};
 ctx.URLo = URL; ctx.globalThis=ctx;
 vm.createContext(ctx);
-vm.runInContext(appScript()+`;globalThis.__X={fetchParts,artKind,renderSourceItem,VIEW_REG:()=>VIEW_REG};`,ctx);
+vm.runInContext(appScript()+`;globalThis.__X={fetchParts,artKind,renderSourceItem,sanitizeCapturedHtml,VIEW_REG:()=>VIEW_REG};`,ctx);
 const G=ctx.__X;
 
 // success: parts fetched in order, each verified, concatenated in order
@@ -47,4 +47,11 @@ if(miss.ok || miss.reason!=="NOT_FOUND") throw new Error("missing part reason wr
 if(G.artKind("snapshots/x.pdf").view!=="pdf") throw new Error("pdf kind");
 if(G.artKind("scan.JPG").type!=="image/jpeg") throw new Error("jpeg kind");
 if(G.artKind("t.tsr").view!==null) throw new Error("tsr kind");
+// captured html is defanged before it ever reaches a tab
+const dirty = '<html><head><script src="x.js"></scr'+'ipt><style>a{}</style></head><body onload="evil()"><a href="javascript:steal()">x</a><img src="pic.png" onerror=evil()><p>The finding stands.</p></body></html>';
+const clean = G.sanitizeCapturedHtml(dirty);
+if(/<script/i.test(clean)) throw new Error("script survived");
+if(/onload=|onerror=/i.test(clean)) throw new Error("handler survived");
+if(/javascript:/i.test(clean)) throw new Error("javascript: survived");
+if(!clean.includes("The finding stands.")||!clean.includes("<style>a{}</style>")||!clean.includes('src="pic.png"')) throw new Error("content harmed: "+clean);
 console.log("harness6: verified viewer checks pass");

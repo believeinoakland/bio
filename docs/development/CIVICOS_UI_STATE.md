@@ -1,5 +1,31 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v10, 2026-07-28 session, part eight: the two clarifications.
+
+**Changelog v10.** THE SCROLL WINDOW IS THE AREA BELOW THE TAB BAR, as Bob
+meant it. The document header (band, crumb, title, open control, tabs,
+seals) is no longer a sticky element inside the page's scroller; the page is
+now header plus its own scroll box (#docscroll) holding the strata. Nothing
+can appear above the band, ever, because the region above the band does not
+scroll; the sticky and negative-margin machinery is gone, the scrollspy
+watches the document's own box, and navigation remembers and restores
+whichever box scrolls on the current page (scrollBox()). CAPTURED HTML OPENS
+IN A REAL BROWSER TAB, as Bob meant it, like any link. Safety moved from
+the inline sandbox into the bytes: scripts, inline handlers, and
+javascript: references are stripped before the rendering blob is created
+(the RAW capture in the record stays untouched and is what the download
+gives), and the tab is severed from its opener before it loads. The
+document-page harness now asserts the structure (every stratum inside the
+scroll box, the band in the fixed header, none leaking above) and the
+artifact harness proves the sanitizer strips scripts, handlers, and
+javascript: while preserving content, styles, and image references.
+
+(v9 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v9, 2026-07-28 session, part seven: a production break, its root cause, and
 the durable fix.
 

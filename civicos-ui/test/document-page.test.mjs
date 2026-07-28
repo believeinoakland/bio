@@ -73,8 +73,13 @@ const must = [
   ["trust hash","abc123"],
   ["cited-by row","the budgeted transfers"],
   ["all four strata","id=\"s4\""],
+  ["own scroll box","id=\"docscroll\""],
 ];
 const misses = must.filter(([n,pat])=>!html.includes(pat));
 if(misses.length) throw new Error("document page missing: "+misses.map(m=>m[0]).join("; ")+"\n---\n"+html.slice(0,600));
 if(html.includes("Could not reach the plane")) throw new Error("errPane rendered");
+const headEnd = html.indexOf('id="docscroll"');
+if(html.slice(0,headEnd).includes('section class="stratum"')) throw new Error("a stratum leaked above the scroll box");
+if(!html.slice(headEnd).includes('id="s1"')||!html.slice(headEnd).includes('id="s4"')) throw new Error("strata not inside the scroll box");
+if(html.slice(0,headEnd).indexOf("docband")<0) throw new Error("band not in the fixed header");
 console.log("harness8: full document page renders with every element present");

@@ -4,7 +4,7 @@ const els=new Map();
 function el(){return{classList:{add(){},remove(){},toggle(){},contains(){return true}},style:{},dataset:{},value:"",innerHTML:"",textContent:"",scrollTop:0,addEventListener(){},querySelectorAll(){return[]},querySelector(){return el()},insertAdjacentHTML(){},focus(){}}};
 const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date,RegExp,Promise,Uint16Array,Map,Set,CSS:{escape:x=>x},
  setInterval:()=>1,clearInterval(){},setTimeout:(fn)=>{fn();return 1},requestAnimationFrame:fn=>fn(),
- document:{querySelector:s=>{if(!els.has(s))els.set(s,el());return els.get(s)},querySelectorAll:()=>[],addEventListener(){},documentElement:{setAttribute(){}},getElementById:()=>el(),hidden:false},
+ document:{querySelector:s=>{if(s==="#docscroll")return null;if(!els.has(s))els.set(s,el());return els.get(s)},querySelectorAll:()=>[],addEventListener(){},documentElement:{setAttribute(){}},getElementById:()=>el(),hidden:false},
  location:{protocol:"https:"},history:{pushState(){},back(){}},localStorage:{getItem:()=>null,setItem(){}},
  window:{addEventListener(){}},
  fetch:async(u)=>({ok:true,json:async()=>({ok:true,result: String(u).includes("op=list")?[]:{}})})};
