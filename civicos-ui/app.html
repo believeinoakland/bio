@@ -233,6 +233,9 @@ svg.ic{display:none}
 .strata a{font-family:var(--font-ui);font-size:13.5px;color:var(--ink-soft);padding:7px 14px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
 .strata a:hover{color:var(--verdigris-dk)}
 .strata a.on{color:var(--ink);font-weight:600;border-bottom-color:var(--verdigris)}
+.strata a.openlink{color:var(--verdigris-dk);font-weight:600;border-left:var(--hair);margin-left:8px;padding-left:16px;border-bottom-color:transparent!important}
+.strata a.openlink:hover{color:var(--verdigris);text-decoration:underline;text-underline-offset:3px}
+.strata a.openlink .arr{font-size:12px;margin-left:3px}
 .strata .sp{flex:1}
 .strata .seals{display:flex;gap:7px;align-items:center;padding:0 2px 5px 8px}
 .seal{width:23px;height:23px;border-radius:var(--r-seal);display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-record);font-size:12.5px;font-weight:600;border:1px solid var(--rule);color:var(--muted);background:#fff;cursor:help;flex:none}
@@ -1267,14 +1270,14 @@ async function openBundle(id, fromNav){
 
     const back = `<a onclick="go('record')">The record</a> &rsaquo; `;
     const tab = k => `<a${k==="s1"?' class="on"':""} data-s="${k}" onclick="strataGo(this,'${k}')" title="${esc(STRATA_INFO[k].tip)}">${esc(STRATA_INFO[k].label)}</a>`;
-    const openCtl = PRIMARY_K>=0 ? `<span style="flex:none"><button class="btn" onclick="openArtifact(${PRIMARY_K})" title="opens like any link: a tab for what the browser renders, a download otherwise; verified against the record underneath">Open the document</button></span>` : "";
+    const openTab = PRIMARY_K>=0 ? `<a class="openlink" onclick="openArtifact(${PRIMARY_K})" title="opens like any link: a tab for what the browser renders, a download otherwise; verified against the record underneath">Open the document<span class="arr" aria-hidden="true">\u2197</span></a>` : "";
     $("#content").classList.add("docmode");
     $("#content").innerHTML =
       `<div class="dochead">
          <div class="docband" title="a document in the working record"></div>
          <p class="crumb">${back}<span class="mono">${esc(id)}</span></p>
-         <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1>${openCtl}</div>
-         <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${seals}</div>
+         <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
+         <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${openTab}${seals}</div>
        </div>
        <div id="docscroll">${s1}${s2}${s3}${s4}${relBar}</div>`;
     strataSpy();

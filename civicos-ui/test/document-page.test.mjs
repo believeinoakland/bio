@@ -69,7 +69,8 @@ const html = els.get("#content")._html;
 const must = [
   ["dochead frozen header","class=\"dochead\""],
   ["title","FY2026-27 adopted budget"],
-  ["open control","Open the document"],
+  ["open control as link-tab","class=\"openlink\""],
+  ["open control text","Open the document"],
   ["verified seal fact","Released by georgia"],
   ["crucial seal fact","Load-bearing for: Sewer franchise diversion"],
   ["monitor last","Last re-checked"],

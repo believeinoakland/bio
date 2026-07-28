@@ -1,5 +1,21 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v13, 2026-07-28 session, part eleven. The Open-the-document control moved
+from a header button into the tab bar's final entry, after The record,
+dressed as a link so its nature is legible: verdigris semibold with an
+outward arrow, a hairline separating it from the strata tabs, hover
+underline, and no underline-tab behavior (the scrollspy never activates it).
+Same behavior as before: a browser tab for what renders, a native download
+otherwise, verification silent until it refuses. The title row simplifies to
+the title alone. Suite updated and green; the open tab now announces stale
+builds itself (v12), so this is the first change shipped under that regime.
+
+(v12 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v12, 2026-07-28 session, part ten: the missing tag was a stale tab, and the
 app now tells you.
 
