@@ -7,6 +7,12 @@ protocol in SESSION-KICKOFF.md (fetch the tree and docs/ from
 raw.githubusercontent.com, no credentials, nothing attached), and starts work
 without asking Bob to confirm anything this file already says.
 
+**Update, 2026-07-28.** The phase has moved past design: the foundation was
+adopted and a live runtime built and deployed. The current UI state, the op
+contracts it uses, and the deploy steps are in
+`docs/development/CIVICOS_UI_STATE.md`. Read that for where things actually
+stand; this file remains the standing brief for intent.
+
 ## Where the project stands
 
 The foundation is complete and live. The plane is 0.35.0 on

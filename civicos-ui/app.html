@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en" data-space="working">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>CivicOS</title>
+<!-- Dev convenience only. Production embeds the OFL faces under /fonts/ per tokens.css. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- ============================================================
+     tokens.css (verbatim, source of truth is /tokens.css).
+     Inlined here only so this file opens standalone in a browser.
+     When served by the worker, replace this block with:
+       <link rel="stylesheet" href="/tokens.css">
+     Do not edit values here; edit tokens.css and regenerate.
+     ============================================================ -->
+<style id="tokens">
+@font-face{font-family:"Source Serif 4";src:url("/fonts/source-serif-4-var.woff2") format("woff2");font-weight:300 700;font-style:normal;font-display:swap}
+@font-face{font-family:"Source Sans 3";src:url("/fonts/source-sans-3-var.woff2") format("woff2");font-weight:300 700;font-style:normal;font-display:swap}
+@font-face{font-family:"Source Code Pro";src:url("/fonts/source-code-pro-var.woff2") format("woff2");font-weight:400 600;font-style:normal;font-display:swap}
+:root{
+  --ink:#16232E; --ink-soft:#38474F; --muted:#5C6B66;
+  --paper:#EDEFE8; --paper-2:#E3E7DD; --card:#F6F7F2; --sheet:#FBFBF8;
+  --verdigris:#2F6F62; --verdigris-dk:#1F4F45; --verdigris-tint:#EDF3F0;
+  --signal:#B3441E; --signal-dk:#8E3416; --signal-tint:#F8EFE9;
+  --rule:#C6CBBF; --rule-strong:#A8AFA1;
+  --tint-ok:#EDF3F0; --tint-note:#F8EFE9; --tint-muted:#E9EBE4;
+  --font-record:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --font-ui:"Source Sans 3",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-fact:"Source Code Pro",ui-monospace,Menlo,Consolas,monospace;
+  --t-fact-xs:11px; --t-ui-xs:12px; --t-ui-sm:13px; --t-fact:13px; --t-ui:15px;
+  --t-fact-lg:14px; --t-ui-lg:17px; --t-rec-sm:19px; --t-rec:22px;
+  --t-pub-body:18px; --t-pub-lead:21px; --t-pub-h2:28px; --t-pub-h1:40px; --t-pub-display:56px;
+  --w-light:300; --w-reg:400; --w-med:500; --w-semi:600;
+  --lh-tight:1.05; --lh-title:1.22; --lh-ui:1.5; --lh-read:1.62;
+  --tr-caps:0.08em; --tr-display:-0.012em;
+  --measure-work:60ch; --measure-pub:62ch;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:22px; --sp-6:28px; --sp-7:40px; --sp-8:56px; --sp-9:80px;
+  --rail-w:220px; --masthead-h:48px; --fence-h:34px; --pub-margin:40px;
+  --r-0:0; --r-1:1px; --r-2:2px; --r-seal:50%;
+  --hair:1px solid var(--rule); --hair-strong:1px solid var(--rule-strong);
+  --e-0:none; --e-1:0 0 0 1px var(--rule); --e-2:0 1px 0 rgba(22,35,46,0.07); --e-3:0 6px 20px rgba(22,35,46,0.14);
+  --focus-ring:2px solid var(--verdigris); --focus-offset:2px;
+  --dur-1:120ms; --dur-2:200ms; --ease:cubic-bezier(0.2,0,0.2,1);
+}
+@media (prefers-reduced-motion:reduce){:root{--dur-1:0ms;--dur-2:0ms}}
+[data-space="working"]{background:var(--paper);color:var(--ink);font-family:var(--font-ui);font-size:var(--t-ui);line-height:var(--lh-ui)}
+[data-space="published"]{background:var(--sheet);color:var(--ink);font-family:var(--font-ui);font-size:var(--t-pub-body);line-height:var(--lh-read)}
+*,*::before,*::after{box-sizing:border-box}
+:focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-offset)}
+a{color:var(--verdigris);text-decoration:none}
+h1,h2,h3,h4{font-family:var(--font-record);font-weight:var(--w-semi);line-height:var(--lh-title);margin:0}
+code,kbd,samp,.fact{font-family:var(--font-fact)}
+</style>
+
+<!-- ============ component styles (built on the tokens above) ============ -->
+<style>
+html,body{margin:0;min-height:100vh}
+.mono{font-family:var(--font-fact)}
+.hidden{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ---- connect gate ---- */
+#gate{max-width:440px;margin:9vh auto;padding:0 24px}
+#gate .mark{font-family:var(--font-record);font-size:26px;font-weight:600;margin-bottom:6px}
+#gate .mark .os{color:var(--verdigris)}
+#gate .sub{color:var(--muted);font-size:14px;margin-bottom:26px}
+#gate .box{background:var(--card);border:var(--hair);padding:22px 22px 20px;box-shadow:var(--e-2)}
+label.fld{display:block;font-weight:500;font-size:13.5px;margin:14px 0 5px}
+label.fld:first-child{margin-top:0}
+input.txt,select.txt{width:100%;padding:9px 11px;font-family:var(--font-ui);font-size:14px;border:var(--hair);background:#fff;color:var(--ink);border-radius:var(--r-2)}
+input.mono{font-family:var(--font-fact);font-size:13px}
+.hint{font-size:12.5px;color:var(--muted);margin:5px 0 0}
+.btn{font-family:var(--font-ui);font-size:14px;font-weight:600;padding:9px 18px;border-radius:var(--r-2);cursor:pointer;border:1px solid var(--verdigris-dk);background:var(--verdigris);color:var(--sheet)}
+.btn:hover{background:var(--verdigris-dk)}
+.btn.ghost{background:transparent;color:var(--verdigris);border-color:var(--rule)}
+.btn.ghost:hover{background:var(--card)}
+.btn:disabled{opacity:.5;cursor:default}
+.teach{border-left:3px solid var(--signal);background:var(--tint-note);color:var(--signal-dk);padding:11px 14px;font-size:13px;margin:16px 0 0}
+.teach .mono{color:var(--ink)}
+
+/* ---- working shell ---- */
+#work{display:none;grid-template-rows:var(--masthead-h) 1fr auto;grid-template-columns:var(--rail-w) 1fr;min-height:100vh}
+#work.on{display:grid}
+.masthead{grid-column:1/3;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--paper-2);border-bottom:var(--hair)}
+.masthead .brand{display:flex;align-items:baseline;gap:10px}
+.masthead .brand .wm{font-family:var(--font-record);font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+.masthead .brand .os{color:var(--verdigris)}
+.masthead .brand .mid{color:var(--rule-strong)}
+.masthead .brand .grp{font-family:var(--font-ui);font-size:14px;color:var(--ink-soft);font-weight:400}
+.masthead .right{display:flex;align-items:center;gap:20px}
+.masthead .msearch{display:flex;align-items:center;gap:8px;font-family:var(--font-fact);font-size:12.5px;color:var(--muted);width:200px}
+.masthead .msearch input{border:none;outline:none;background:none;font-family:var(--font-fact);font-size:12.5px;color:var(--ink);width:100%}
+.masthead .msearch input::placeholder{color:var(--muted)}
+.masthead .handle{font-family:var(--font-fact);font-size:12.5px;color:var(--ink-soft);border-bottom:1px solid var(--rule);padding-bottom:1px}
+
+.rail{grid-row:2/4;background:var(--paper-2);border-right:var(--hair);padding:14px 8px;display:flex;flex-direction:column;gap:1px}
+.nav{display:flex;align-items:center;gap:11px;padding:8px 16px;font-size:14.5px;color:var(--ink-soft);cursor:pointer;user-select:none;box-shadow:inset 0 0 0 0 var(--verdigris)}
+.nav .g{width:16px;height:16px;flex:none;color:var(--muted)}
+.nav:hover{background:var(--card)}
+.nav.on{background:var(--card);box-shadow:inset 2px 0 0 0 var(--verdigris);font-weight:600;color:var(--ink)}
+.nav.on .g{color:var(--verdigris)}
+.nav .count{margin-left:auto;font-family:var(--font-fact);font-size:11px;color:var(--signal)}
+.rail .add{margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--verdigris);color:var(--sheet);font-size:14px;font-weight:600;padding:9px;border-radius:var(--r-2);cursor:pointer;border:none;font-family:inherit}
+.rail .add:hover{background:var(--verdigris-dk)}
+.rail .spacer{flex:1}
+.rail .pub-link{padding:8px 16px;font-size:13px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:9px;border-top:var(--hair);margin-top:8px}
+.rail .pub-link:hover{color:var(--verdigris-dk)}
+
+.content{grid-row:2/3;grid-column:2/3;padding:22px 24px 40px;overflow:auto;max-width:1100px}
+.crumb{font-size:13px;color:var(--muted);margin:0 0 10px}
+.crumb a{cursor:pointer;border:none}
+h1.rec{font-family:var(--font-record);font-size:34px;font-weight:600;line-height:1.15;margin:0 0 6px}
+.count-line{font-size:14px;color:var(--muted);margin:0 0 22px}
+.lede{font-size:14px;color:var(--muted);margin:0 0 16px;max-width:var(--measure-work)}
+
+/* records table */
+table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
+table.rec thead th{text-align:left;font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--muted);font-weight:500;padding:0 12px 8px 0;border-bottom:var(--hair-strong)}
+table.rec td{padding:14px 14px 14px 0;border-bottom:var(--hair);vertical-align:baseline}
+table.rec td.item{width:100%}
+table.rec tr.row{cursor:pointer}
+table.rec tr.row:hover td{background:var(--card)}
+.bid{font-family:var(--font-fact);font-size:12px;color:var(--verdigris-dk);white-space:nowrap}
+.ttl{font-weight:400;font-size:15.5px;color:var(--ink)}
+.ty{color:var(--muted);font-size:12px;margin-left:8px}
+td.st,td.upd{white-space:nowrap}
+td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
+.prov{font-family:var(--font-fact);font-size:11.5px;line-height:1.7;color:var(--muted);border-left:2px solid var(--rule);padding-left:12px;margin-top:6px}
+
+/* chips */
+.chip{font-family:var(--font-ui);font-size:12.5px;font-weight:500;padding:3px 10px;border-radius:var(--r-2);white-space:nowrap;display:inline-block;border:1px solid var(--rule);color:var(--muted);background:#fff;line-height:1.35}
+.chip.verified,.chip.ratified,.chip.distributed{color:var(--sheet);background:var(--verdigris);border-color:var(--verdigris-dk)}
+.chip.collected,.chip.forming,.chip.planned,.chip.surfaced,.chip.draft,.chip.matured{color:var(--muted);background:#fff;border-color:var(--rule)}
+.chip.elevated,.chip.active,.chip.modified,.chip.overdue,.chip.awaiting_response{color:var(--signal-dk);background:#fff;border-color:#d6a48c}
+.chip.deferred,.chip.dismissed,.chip.retired,.chip.closed,.chip.abandoned{color:#9aa09a;background:var(--tint-muted);border-color:var(--rule)}
+
+/* cards */
+.card{background:var(--sheet);border:var(--hair);padding:16px 18px;margin:0 0 16px;box-shadow:var(--e-2)}
+.kv{display:flex;gap:12px;align-items:baseline;padding:7px 0;border-top:var(--hair)}
+.kv:first-child{border-top:none}
+.kv .k{color:var(--muted);min-width:170px;font-size:13.5px}
+.kv .v{font-family:var(--font-fact);font-size:12.5px;word-break:break-all}
+.kv .v.plain{font-family:var(--font-ui);font-size:13.5px}
+.prose{font-family:var(--font-record);font-size:16px;line-height:var(--lh-read);color:var(--ink-soft);max-width:var(--measure-work)}
+.prose h2{font-size:19px;margin:22px 0 8px;color:var(--ink)}
+.prose h3{font-family:var(--font-ui);font-weight:600;font-size:15px;margin:18px 0 6px;color:var(--ink)}
+.prose p{margin:0 0 12px}
+.prose ul{margin:0 0 12px;padding-left:22px}
+h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px 0 12px;padding-bottom:7px;border-bottom:var(--hair)}
+.empty{color:var(--muted);font-size:14px;padding:24px 0}
+
+/* the fence band, with the printer's double rule */
+.fence{grid-row:3/4;grid-column:2/3;position:relative;height:var(--fence-h);background:var(--paper-2);border-top:1px solid var(--rule-strong);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.fence::before{content:"";position:absolute;top:-4px;left:0;right:0;border-top:1px solid var(--rule-strong)}
+.fence .fl{font-family:var(--font-fact);font-size:11.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--ink-soft)}
+.fence .idstr{font-size:12px;color:var(--muted)}
+
+/* ---- published shell ---- */
+#pub{display:none}
+#pub.on{display:block}
+.pub-mast{display:flex;align-items:center;justify-content:space-between;padding:16px var(--pub-margin);border-bottom:var(--hair)}
+.pub-mast .l{display:flex;align-items:center;gap:12px}
+.pub-mast .mono-square{width:30px;height:30px;border:1px solid var(--verdigris);display:flex;align-items:center;justify-content:center;font-family:var(--font-record);font-size:14px;font-weight:600;color:var(--verdigris-dk)}
+.pub-mast .gname{font-family:var(--font-record);font-size:16px;font-weight:600}
+.pub-mast .gid{font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--muted);margin-top:1px}
+.pub-mast .links{display:flex;gap:18px;font-size:13.5px}
+.pub-body{max-width:calc(62ch + var(--pub-margin)*2);margin:0 auto;padding:38px var(--pub-margin) 70px}
+.eyebrow{font-family:var(--font-fact);font-size:11.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.pub-body h1{font-family:var(--font-record);font-size:var(--t-pub-display);font-weight:600;line-height:var(--lh-tight);letter-spacing:var(--tr-display);max-width:24ch;margin:0 0 18px}
+.pub-lead{font-size:var(--t-pub-lead);line-height:1.5;color:var(--ink-soft);max-width:56ch;margin:0 0 30px}
+.pub-body h2{font-family:var(--font-record);font-size:var(--t-pub-h2);font-weight:600;margin:34px 0 16px}
+.metagrid{display:grid;grid-template-columns:130px 1fr;gap:8px 20px;border-top:var(--hair);padding-top:16px;margin-top:8px}
+.metagrid dt{font-family:var(--font-fact);font-size:11.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--muted)}
+.metagrid dd{margin:0;font-size:14px}
+.metagrid dd.mono{font-family:var(--font-fact);font-size:var(--t-fact)}
+.pub-verify{border-top:var(--hair);margin-top:30px;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.pub-verify p{font-size:13.5px;color:var(--muted);margin:0;max-width:52ch}
+.pub-list .pf{border-top:var(--hair);padding:16px 0;cursor:pointer}
+.pub-list .pf:hover{background:var(--card)}
+.pub-list .pf .t{font-family:var(--font-record);font-size:20px;font-weight:600}
+.pub-list .pf .m{font-family:var(--font-fact);font-size:12px;color:var(--muted);margin-top:4px}
+
+/* line icons */
+svg.ic{display:none}
+</style>
+</head>
+<body>
+
+<!-- rail icon sprite: light-stroke civic/archival line icons -->
+<svg class="ic" xmlns="http://www.w3.org/2000/svg"><defs>
+<g id="i-record" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="2.5" width="13" height="15"/><line x1="6" y1="6" x2="14" y2="6"/><line x1="6" y1="9" x2="14" y2="9"/><line x1="6" y1="12" x2="11" y2="12"/></g>
+<g id="i-search" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="5"/><line x1="12.8" y1="12.8" x2="17" y2="17"/></g>
+<g id="i-focus" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="1.8" fill="currentColor" stroke="none"/></g>
+<g id="i-projects" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 6.5 L8 6.5 L9.5 4.5 L17.5 4.5 L17.5 15.5 L2.5 15.5 Z"/></g>
+<g id="i-review" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="3.5" width="13" height="13"/><path d="M6.5 10 L9 12.5 L13.5 7"/></g>
+<g id="i-monitor" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 5.5 L10 10 L13 12"/></g>
+<g id="i-members" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="8" r="3"/><path d="M2.5 16.5 C2.5 13 5 12 7 12 C9 12 11.5 13 11.5 16.5"/><circle cx="14.5" cy="7" r="1.6"/></g>
+<g id="i-add" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/></g>
+<g id="i-external" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4 H16 V9"/><path d="M16 4 L9 11"/><path d="M14 11 V16 H4 V6 H9"/></g>
+</defs></svg>
+
+<!-- ============ CONNECT GATE ============ -->
+<div id="gate">
+  <div class="mark">Civic<span class="os">OS</span></div>
+  <div class="sub">Sign in to open this group's working record.</div>
+  <div class="box">
+    <label class="fld" for="g-base">Plane address</label>
+    <input class="txt mono" id="g-base" placeholder="leave blank if served by the worker">
+    <p class="hint">Blank means this page is served by the worker itself (same origin). To drive a remote plane from a local file, enter its address; that plane must allow cross-origin reads.</p>
+
+    <label class="fld" for="g-handle">Member handle</label>
+    <input class="txt" id="g-handle" placeholder="leave empty to sign in as administrator" autocomplete="username">
+    <label class="fld" for="g-pw">Password</label>
+    <input class="txt" id="g-pw" type="password" autocomplete="current-password">
+    <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+      <button class="btn" id="g-signin">Sign in</button>
+      <span style="font-size:12.5px;color:var(--muted)">or</span>
+      <button class="btn ghost" id="g-token-toggle">use a token</button>
+    </div>
+
+    <div id="g-token-wrap" class="hidden">
+      <label class="fld" for="g-token">MEMBER_TOKEN</label>
+      <input class="txt mono" id="g-token" placeholder="paste a throwaway MEMBER_TOKEN">
+      <p class="hint">A token gives read access to the working record. It carries no member identity, so capability-shaped controls stay minimal. Sign in for the full session.</p>
+      <div style="margin-top:12px"><button class="btn" id="g-token-go">Connect</button></div>
+    </div>
+
+    <div id="g-err" class="teach hidden"></div>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-top:14px">
+    The published record needs no sign-in.
+    <a id="g-pub" style="cursor:pointer">View the public record &rarr;</a>
+  </p>
+  <p style="font-size:12px;color:var(--muted);margin-top:8px">
+    Not connected yet? <a id="g-preview" style="cursor:pointer">Preview the design without loading data &rarr;</a>
+  </p>
+</div>
+
+<!-- ============ WORKING SPACE ============ -->
+<div id="work">
+  <div class="masthead">
+    <div class="brand"><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp">group</span></div>
+    <div class="right">
+      <div class="msearch"><svg width="14" height="14" style="color:var(--muted)"><use href="#i-search"/></svg><input id="m-search" placeholder="search the record" onkeydown="if(event.key==='Enter')quickSearch()"></div>
+      <div class="handle" id="m-handle">&mdash;</div>
+    </div>
+  </div>
+
+  <nav class="rail" id="rail"><!-- built from op=whoami --></nav>
+
+  <div class="content" id="content"><!-- screens render here --></div>
+
+  <div class="fence">
+    <div class="fl">Working record &middot; not public</div>
+    <div class="idstr" id="m-idstr">believeinoakland.org</div>
+  </div>
+</div>
+
+<!-- ============ PUBLISHED SPACE ============ -->
+<div id="pub" data-space="published">
+  <div class="pub-mast">
+    <div class="l">
+      <div class="mono-square" id="p-mono">B</div>
+      <div><div class="gname" id="p-gname">Believe in Oakland</div><div class="gid" id="p-gid">believeinoakland.org</div></div>
+    </div>
+    <div class="links"><a onclick="pubList()" style="cursor:pointer">Case files</a><a onclick="pubList()" style="cursor:pointer">Verify</a></div>
+  </div>
+  <div class="pub-body" id="pub-body"></div>
+</div>
+
+<script>
+/* ============================================================
+   CivicOS runtime. Wired to the live plane's ops.
+   Contracts (from bio-plane/src/index.mjs, setup.mjs):
+     POST /api/?op=login {role,password}     -> {ok, token}
+     GET  /api/?op=list&token=T              -> {result:[{bundle_id,object_type,title,current_state,last_updated}]}
+     GET  /api/?op=image&id=X&token=T        -> {result:{filename:content|{sha256,bytes,...}}}
+     GET  /api/?op=whoami&token=T            -> {result:{tokenClass,session,member,handle,administer,capabilities}}
+     GET  /api/?op=search&q=..&token=T       -> {result:{...}}  (tolerated)
+     GET  /api/?op=publishedmanifest         -> {result:{published:[...]}}  (public, no token)
+   ============================================================ */
+const PLANE = { base:"", token:null, session:false, me:null, preview:false };
+const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B" };
+
+const $ = s => document.querySelector(s);
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api = (op, body) => fetch(`${PLANE.base}/api/?op=${encodeURIComponent(op)}`,
+  body ? {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)} : undefined).then(r=>r.json());
+async function rec(op, params={}){
+  const q = new URLSearchParams({ op, ...(PLANE.token?{token:PLANE.token}:{}), ...params });
+  const r = await fetch(`${PLANE.base}/api/?${q}`);
+  const j = await r.json().catch(()=>({ok:false,error:"the plane did not return JSON"}));
+  if(!r.ok || j.ok===false) throw j;
+  return j;
+}
+function teach(el, err){
+  const msg = err && (err.error || err.reason || err.detail) ? [err.reason,err.error,err.detail].filter(Boolean).join(" · ") : "Could not reach the plane. If this is a local file against a remote plane, that plane must allow cross-origin reads (CORS).";
+  el.innerHTML = esc(msg); el.classList.remove("hidden");
+}
+
+/* ---------- connect ---------- */
+$("#g-token-toggle").onclick = () => $("#g-token-wrap").classList.toggle("hidden");
+$("#g-base").oninput = e => PLANE.base = e.target.value.trim().replace(/\/$/,"");
+$("#g-pub").onclick = () => { PLANE.base = $("#g-base").value.trim().replace(/\/$/,""); enterPublished(); };
+$("#g-signin").onclick = signIn;
+$("#g-token-go").onclick = tokenConnect;
+$("#g-preview").onclick = previewShell;
+
+/* Preview: show the real design applied to the real shell, with honest
+   "connect to load" states. No sample data is invented. */
+function previewShell(){
+  PLANE.preview = true;
+  buildRail({ administer:true });
+  $("#m-handle").innerHTML = '<span style="color:var(--signal-dk)">preview &middot; not connected</span>';
+  $("#m-grp").textContent = GROUP.name;
+  $("#m-idstr").textContent = GROUP.idstr.slice(0,32);
+  $("#gate").classList.add("hidden"); $("#pub").classList.remove("on");
+  $("#work").classList.add("on"); document.documentElement.setAttribute("data-space","working");
+  go("record");
+}
+function previewNote(){ return `<div class="teach" style="margin:8px 0">Preview mode. Connect a plane (sign in, or serve this from the worker) to load the real record from R2. Nothing shown here is invented.</div>`; }
+
+async function signIn(){
+  $("#g-err").classList.add("hidden"); $("#g-signin").disabled = true;
+  try{
+    const role = $("#g-handle").value.trim();
+    const l = await api("login", { role, password: $("#g-pw").value });
+    if(!l || l.ok===false || !l.token){ teach($("#g-err"), l||{}); return; }
+    PLANE.token = l.token; PLANE.session = true;
+    await boot();
+  }catch(e){ teach($("#g-err"), e); }
+  finally{ $("#g-signin").disabled = false; }
+}
+async function tokenConnect(){
+  $("#g-err").classList.add("hidden");
+  PLANE.token = $("#g-token").value.trim(); PLANE.session = false;
+  if(!PLANE.token){ teach($("#g-err"),{error:"paste a token first"}); return; }
+  try{ await boot(); }catch(e){ teach($("#g-err"), e); }
+}
+
+async function boot(){
+  PLANE.preview = false;
+  const w = (await rec("whoami")).result || {};
+  PLANE.me = w;
+  buildRail(w);
+  $("#m-handle").innerHTML = (w.session ? esc(w.handle || w.member || "member") : (w.tokenClass ? esc(w.tokenClass)+" token" : "connected")) + ' <span style="color:var(--muted)">&#9662;</span>';
+  $("#m-grp").textContent = GROUP.name;
+  $("#m-idstr").textContent = GROUP.idstr.slice(0,32);
+  $("#gate").classList.add("hidden");
+  $("#pub").classList.remove("on");
+  $("#work").classList.add("on");
+  document.documentElement.setAttribute("data-space","working");
+  go("record");
+}
+
+/* ---------- rail, shaped from whoami ---------- */
+const RAIL = [
+  {id:"record",   icon:"i-record",   label:"Record"},
+  {id:"search",   icon:"i-search",   label:"Search"},
+  {id:"focuses",  icon:"i-focus",    label:"Focuses"},
+  {id:"projects", icon:"i-projects", label:"Projects"},
+  {id:"review",   icon:"i-review",   label:"Review"},
+  {id:"monitoring",icon:"i-monitor", label:"Monitoring"},
+  {id:"members",  icon:"i-members",  label:"Members & keys", admin:true},
+];
+function buildRail(w){
+  const isAdmin = !!w.administer;
+  const items = RAIL.filter(r=>!r.admin || isAdmin);   // capability a member lacks is ABSENT, not greyed
+  $("#rail").innerHTML =
+    items.map(r=>`<div class="nav" data-go="${r.id}"><svg class="g" viewBox="0 0 20 20"><use href="#${r.icon}"/></svg>${r.label}<span class="count" id="cnt-${r.id}"></span></div>`).join("")
+    + `<button class="add" onclick="go('add')"><svg width="16" height="16"><use href="#i-add"/></svg>Add something new</button>`
+    + `<div class="spacer"></div>`
+    + `<div class="pub-link" onclick="enterPublished()"><svg width="16" height="16"><use href="#i-external"/></svg>View the public record</div>`;
+  $("#rail").querySelectorAll("[data-go]").forEach(n=>n.onclick=()=>go(n.dataset.go));
+}
+
+/* ---------- router ---------- */
+let RECORD_CACHE = null;
+function setActive(id){ document.querySelectorAll("#rail .nav").forEach(n=>n.classList.toggle("on", n.dataset.go===id)); }
+async function go(screen){
+  setActive(screen);
+  const c = $("#content");
+  c.scrollTop = 0;
+  if(PLANE.preview){
+    const titles={record:"The record",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
+      (["record","focuses","projects","review","members"].includes(screen)
+        ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
+    return;
+  }
+  const R = {
+    record: renderRecord, search: renderSearchScreen, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
+    projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
+    review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
+  };
+  if(R[screen]) await R[screen]();
+}
+
+/* ---------- Record (op=list) ---------- */
+async function loadRecord(force){
+  if(RECORD_CACHE && !force) return RECORD_CACHE;
+  RECORD_CACHE = (await rec("list")).result || [];
+  return RECORD_CACHE;
+}
+const TYPE_LABEL = {information:"Information", focus:"Focus", problem:"Focus", project:"Project", action:"Action", annotation:"Annotation", source:"Source"};
+const STATE_LABEL = {modified:"source changed", awaiting_response:"awaiting", problem:"surfaced"};
+function chip(state){ const label = STATE_LABEL[state] || state; return `<span class="chip ${esc(state)}">${esc(label)}</span>`; }
+function fmtWhen(t){ if(!t) return ""; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleDateString(undefined,{day:"numeric",month:"short"}); }
+
+function recordRows(list){
+  return list.map(b=>{
+    const ty = b.object_type && b.object_type!=="information" ? ` <span class="ty">${esc(TYPE_LABEL[b.object_type]||b.object_type)}</span>` : "";
+    return `<tr class="row" data-id="${esc(b.bundle_id)}">
+      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${ty}</td>
+      <td class="st">${chip(b.current_state)}</td>
+      <td class="upd">${fmtWhen(b.last_updated)}</td>
+    </tr>`;
+  }).join("");
+}
+function wireRows(){ $("#content").querySelectorAll("tr.row").forEach(r=>r.onclick=()=>openBundle(r.dataset.id)); }
+
+async function renderRecord(){
+  $("#content").innerHTML = `<h1 class="rec">Your accountability record</h1><p class="count-line" id="rc">Loading&hellip;</p>
+    <table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody id="recrows"></tbody></table>`;
+  try{
+    const list = await loadRecord();
+    const collected = list.filter(b=>b.current_state==="collected").length;
+    $("#rc").textContent = `${list.length} items · ${collected} awaiting review`;
+    $("#recrows").innerHTML = list.length ? recordRows(list) : `<tr><td colspan="3" class="empty">The record is empty.</td></tr>`;
+    wireRows();
+    // rail counts
+    const byType = {}; list.forEach(b=>byType[b.object_type]=(byType[b.object_type]||0)+1);
+    if($("#cnt-review")) $("#cnt-review").textContent = collected||"";
+    if($("#cnt-focuses")) $("#cnt-focuses").textContent = (byType.focus||byType.problem||0)||"";
+    if($("#cnt-projects")) $("#cnt-projects").textContent = (byType.project||0)||"";
+  }catch(e){ $("#content").innerHTML = errPane(e); }
+}
+
+async function renderFiltered(screen, type, title, lede){
+  $("#content").innerHTML = `<h1 class="rec">${esc(title)}</h1><p class="lede">${esc(lede)}</p><table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody id="recrows"></tbody></table>`;
+  try{
+    const list = (await loadRecord()).filter(b=>b.object_type===type || (type==="focus"&&b.object_type==="problem"));
+    $("#recrows").innerHTML = list.length ? recordRows(list) : `<tr><td colspan="3" class="empty">No ${esc(title.toLowerCase())} yet.</td></tr>`;
+    wireRows();
+  }catch(e){ $("#content").innerHTML = errPane(e); }
+}
+
+/* ---------- Bundle view (op=image) ---------- */
+function splitFm(text){
+  const m = /^---\n([\s\S]*?)\n---\n?/.exec(text||"");
+  if(!m) return { fm:{}, body:text||"" };
+  const fm = {}; let parent=null;
+  m[1].split("\n").forEach(line=>{
+    if(!line.trim() || /^\s*-\s/.test(line)) return;
+    const kv = /^(\s*)([A-Za-z0-9_.\-]+):\s?(.*)$/.exec(line);
+    if(!kv) return;
+    const indented = kv[1].length>0, key=kv[2], val=kv[3].replace(/^["']|["']$/g,"").trim();
+    if(!indented){ if(val===""){ parent=key; fm[key]=""; } else { parent=null; fm[key]=val; } }
+    else if(parent){ fm[parent+"."+key]=val; }
+  });
+  return { fm, body: text.slice(m[0].length) };
+}
+function mdLite(md){
+  const lines = (md||"").split("\n"); let out="", inList=false;
+  const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`(.+?)`/g,'<code>$1</code>');
+  const closeList=()=>{ if(inList){out+="</ul>";inList=false;} };
+  for(const l of lines){
+    if(/^##\s+/.test(l)){ closeList(); out+="<h2>"+inline(l.replace(/^##\s+/,""))+"</h2>"; }
+    else if(/^###\s+/.test(l)){ closeList(); out+="<h3>"+inline(l.replace(/^###\s+/,""))+"</h3>"; }
+    else if(/^[-*]\s+/.test(l)){ if(!inList){out+="<ul>";inList=true;} out+="<li>"+inline(l.replace(/^[-*]\s+/,""))+"</li>"; }
+    else if(l.trim()===""){ closeList(); }
+    else { closeList(); out+="<p>"+inline(l)+"</p>"; }
+  }
+  closeList(); return out;
+}
+async function openBundle(id){
+  setActive("");
+  $("#content").innerHTML = `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p><p class="count-line">Loading&hellip;</p>`;
+  try{
+    const img = (await rec("image",{id})).result;
+    if(!img){ $("#content").innerHTML = errPane({error:"This bundle was not found."}); return; }
+    const bundleMd = typeof img["bundle.md"]==="string" ? img["bundle.md"] : "";
+    const { fm, body } = splitFm(bundleMd);
+    const factKeys = [["current_state","State"],["object_type","Type"],["classification","Classification"],["criticality","Criticality"],["source.authority","Issued by"],["source.locator","Source"],["source.retrieved","Retrieved"],["source_status","Source status"],["content_hash","Content hash"]];
+    const facts = factKeys.filter(k=>fm[k[0]]).map(k=>{
+      const plain = !/hash|locator/.test(k[0]);
+      return `<div class="kv"><span class="k">${esc(k[1])}</span><span class="v ${plain?"plain":""}">${esc(fm[k[0]])}</span></div>`;
+    }).join("") || `<div class="kv"><span class="k">Bundle</span><span class="v">${esc(id)}</span></div>`;
+    const host = (fm["source.locator"]||"").replace(/^https?:\/\//,"").split("/")[0];
+    const shaGroups = (fm["content_hash"]||"").replace(/^sha256:/,"").replace(/(.{8})/g,"$1 ").trim().split(" ").slice(0,3).join(" ");
+    const prov = [];
+    if(host) prov.push("source: "+host);
+    if(fm["source.retrieved"]) prov.push("captured "+fm["source.retrieved"]);
+    if(shaGroups) prov.push("sha256 "+shaGroups+" \u2026");
+    const provLine = prov.length ? `<div class="prov" style="margin:14px 0 2px">${esc(prov.join("   \u00b7   "))}</div>` : "";
+    const files = Object.keys(img).filter(k=>!k.startsWith("_history/")&&k!=="bundle.md").sort();
+    const fileRows = files.length ? files.map(k=>{
+      const v = img[k];
+      const meta = typeof v==="string" ? v.length.toLocaleString()+" chars" : ((v.sha256||v.blobSha||"")+"").slice(0,12)+"… "+(v.bytes?v.bytes.toLocaleString()+" bytes":"");
+      return `<div class="kv"><span class="k mono" style="min-width:0;flex:1;color:var(--ink-soft)">${esc(k)}</span><span class="v">${esc(meta)}</span></div>`;
+    }).join("") : `<div class="empty">Only bundle.md.</div>`;
+    const hist = Object.keys(img).filter(k=>k.startsWith("_history/")).sort();
+    const histRows = hist.length ? hist.map(k=>{ const rev=k.replace(/^_history\/bundle_|\.md$/g,""); return `<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(rev)}</span><span class="v plain" style="color:var(--muted)">earlier revision, kept</span></div>`; }).join("") : `<div class="empty">This is the first revision.</div>`;
+    $("#content").innerHTML =
+      `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p>
+       <h1 class="rec" style="font-size:26px">${esc(fm.title||id)}</h1>
+       <div class="card">${facts}</div>${provLine}
+       <div class="prose">${mdLite(body)}</div>
+       <h2 class="sec">Files in this bundle</h2><div class="card">${fileRows}</div>
+       <h2 class="sec">History</h2>
+       <p class="lede">Every revision this bundle has ever had. Nothing here can be edited or removed.</p>
+       <div class="card">${histRows}</div>`;
+  }catch(e){ $("#content").innerHTML = errPane(e); }
+}
+
+/* ---------- Search (op=search) ---------- */
+function quickSearch(){ const q=$("#m-search").value.trim(); if(!q) return; go("search").then(()=>{ const i=$("#s-q"); if(i){i.value=q; runSearch();} }); }
+async function renderSearchScreen(){
+  $("#content").innerHTML = `<h1 class="rec">Search</h1><p class="lede">Find material across the record. What you pick becomes a selection, and later actions land on exactly what you selected.</p>
+    <div style="display:flex;gap:9px;margin-bottom:16px"><div class="msearch" style="flex:1;width:auto"><svg width="14" height="14"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund" onkeydown="if(event.key==='Enter')runSearch()"></div><button class="btn ghost" onclick="runSearch()">Run</button></div>
+    <div id="s-res"></div>`;
+}
+async function runSearch(){
+  const q = $("#s-q").value.trim(); if(!q) return;
+  $("#s-res").innerHTML = `<p class="count-line">Searching&hellip;</p>`;
+  try{
+    let rows;
+    try{ const r = await rec("search",{q}); rows = r.result && (r.result.hits||r.result.results||r.result.bundles||r.result.rows); }catch(_){ rows=null; }
+    if(!rows){ // fall back to a client filter over op=list so search always answers
+      const list = await loadRecord(); const ql=q.toLowerCase();
+      rows = list.filter(b=>(b.title||"").toLowerCase().includes(ql)||(b.bundle_id||"").toLowerCase().includes(ql));
+    }
+    $("#s-res").innerHTML = rows.length
+      ? `<p class="count-line">${rows.length} results</p><table class="rec"><tbody>${recordRows(rows.map(x=>({bundle_id:x.bundle_id||x.id,title:x.title,object_type:x.object_type||x.type,current_state:x.current_state||x.state,last_updated:x.last_updated})))}</tbody></table>`
+      : `<p class="empty">No results for “${esc(q)}”.</p>`;
+    wireRows();
+  }catch(e){ $("#s-res").innerHTML = errPane(e); }
+}
+
+/* ---------- Review, Monitoring, Members: real reads, actions are the next increment ---------- */
+async function renderReview(){
+  $("#content").innerHTML = `<h1 class="rec">Review</h1><p class="lede">The release moment. Releasing moves material from collected to verified. Verifying means a document appears to be what it claims to be, never that it is accurate.</p><div id="rv"></div>`;
+  try{
+    const collected = (await loadRecord()).filter(b=>b.object_type==="information"&&b.current_state==="collected");
+    $("#rv").innerHTML = `<h2 class="sec">Awaiting review (${collected.length})</h2>` +
+      (collected.length ? `<table class="rec"><tbody>${recordRows(collected)}</tbody></table>` : `<div class="empty">Nothing is waiting for review.</div>`) +
+      `<p class="lede" style="margin-top:16px">Per-document and batch release, with the recorded-acknowledgment flow, wire to <span class="mono">op=release</span> next.</p>`;
+    wireRows();
+  }catch(e){ $("#rv").innerHTML = errPane(e); }
+}
+async function renderMonitoring(){
+  $("#content").innerHTML = `<h1 class="rec">Monitoring &amp; developments</h1><p class="lede">Source changes and overdue clocks surface here. Reads <span class="mono">op=monitor</span> ticks and source status.</p>`;
+  try{
+    const changed = (await loadRecord()).filter(b=>b.current_state==="modified");
+    $("#content").innerHTML += changed.length ? `<table class="rec"><tbody>${recordRows(changed)}</tbody></table>` : `<div class="empty">No changes or overdue clocks right now.</div>`;
+    wireRows();
+  }catch(e){}
+}
+async function renderMembers(){
+  $("#content").innerHTML = `<h1 class="rec">Members &amp; keys</h1><p class="lede">Members sign in with a handle and password. A cover is a label, not a legal name. A password can never publish; only a registered key can.</p><div id="mm">Loading&hellip;</div>`;
+  try{
+    const r = await rec("memberlist"); const members = (r.result&&(r.result.members||r.result))||[];
+    $("#mm").innerHTML = members.length
+      ? `<table class="rec"><thead><tr><th>Handle</th><th>Cover</th><th>Can</th></tr></thead><tbody>${members.map(m=>`<tr><td class="ttl">${esc(m.handle||m.member||m.id||"")}</td><td style="color:var(--muted)">${esc(m.cover||m.name||"")}</td><td>${((m.capabilities||m.caps||[]).map(c=>`<span class="chip verified">${esc(c)}</span>`).join(" "))||'<span class="chip collected">contribute</span>'}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="empty">No members listed, or this token cannot read the roster.</div>`;
+  }catch(e){ $("#mm").innerHTML = errPane(e); }
+}
+async function renderAdd(){
+  setActive("");
+  $("#content").innerHTML = `<h1 class="rec">Add something new</h1><p class="lede">This creates a bundle in the working record. Nothing here is public. Capture, provenance, and the archive-mirror tell wire to <span class="mono">op=capture</span> / <span class="mono">op=promote</span> next.</p>
+    <label class="fld">What kind of thing is this?</label><select class="txt" style="max-width:260px"><option>Information</option><option>Focus</option><option>Project</option><option>Action</option></select>
+    <label class="fld">Title</label><input class="txt" placeholder="what this is about">
+    <label class="fld">What do you know?</label><textarea class="txt" style="min-height:120px"></textarea>`;
+}
+
+function errPane(e){
+  const msg = e && (e.error||e.reason||e.detail) ? [e.reason,e.error,e.detail].filter(Boolean).join(" · ") : "Could not reach the plane.";
+  return `<div class="teach" style="margin:8px 0">${esc(msg)}</div>`;
+}
+
+/* ---------- Published space (op=publishedmanifest, public) ---------- */
+function enterPublished(){ $("#work").classList.remove("on"); $("#gate").classList.add("hidden"); $("#pub").classList.add("on"); document.documentElement.setAttribute("data-space","published"); $("#p-gname").textContent=GROUP.name; $("#p-gid").textContent=GROUP.idstr.slice(0,32); $("#p-mono").textContent=GROUP.mono; pubList(); }
+async function pubList(){
+  const body = $("#pub-body");
+  body.innerHTML = `<div class="eyebrow">The published record</div><p class="pub-lead">Ratified case files, readable and verifiable by anyone.</p><div class="pub-list" id="pl">Loading&hellip;</div>`;
+  try{
+    const r = await api("publishedmanifest");
+    const pub = (r.result&&r.result.published)||[];
+    $("#pl").innerHTML = pub.length
+      ? pub.map(p=>`<div class="pf" onclick="pubOpen('${esc(p.bundle_id)}')"><div class="t">${esc(p.title||p.bundle_id)}</div><div class="m">${esc(p.bundle_id)} · ratified ${esc((p.ratified_at||"").slice(0,10))} · sha256:${esc((p.bundle_sha||"").slice(0,16))}…</div></div>`).join("")
+      : `<div class="empty">This group has not published any case files yet. When it ratifies one, it appears here, and anyone can verify it against its published hash without the group's cooperation.</div>`;
+  }catch(e){ $("#pl").innerHTML = errPane(e); }
+}
+function pubOpen(id){
+  $("#pub-body").innerHTML = `<div class="eyebrow">Case file · published</div><h1>${esc(id)}</h1>
+    <p class="pub-lead">The published case-file body is served from the published projection. Rendering the full public reading surface is gap G1 in the UI design; the manifest and per-hash verification are live now.</p>
+    <div class="pub-verify"><p>Anyone may confirm every document here against its published hash, without our cooperation.</p><button class="btn ghost">Verify</button></div>
+    <p style="margin-top:20px"><a onclick="pubList()" style="cursor:pointer">&larr; All case files</a></p>`;
+}
+
+/* prefill the plane address for convenience when opened locally */
+try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}
+</script>
+</body>
+</html>

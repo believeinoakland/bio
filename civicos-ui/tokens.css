@@ -1,0 +1,175 @@
+/* ============================================================
+   CivicOS · tokens.css
+   Design-language foundation, turn 1 (targets 1 and 3).
+   Source of truth: BIO_Design_Language_v0_2.md sections 6.1-6.3.
+   Values are starting tokens refined in the design session, not decrees.
+   ============================================================ */
+
+/* --- Faces -------------------------------------------------
+   Ship OFL faces subset to WOFF2 in-repo. Never fetch at runtime:
+   a sovereign install must work offline. System faces stay in the
+   stack as the fallback if an embedded face fails to load.
+   ---------------------------------------------------------- */
+@font-face {
+  font-family: "Source Serif 4";
+  src: url("/fonts/source-serif-4-var.woff2") format("woff2");
+  font-weight: 300 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  src: url("/fonts/source-serif-4-italic-var.woff2") format("woff2");
+  font-weight: 300 700; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: "Source Sans 3";
+  src: url("/fonts/source-sans-3-var.woff2") format("woff2");
+  font-weight: 300 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Source Code Pro";
+  src: url("/fonts/source-code-pro-var.woff2") format("woff2");
+  font-weight: 400 600; font-style: normal; font-display: swap;
+}
+
+:root {
+  /* --- Color · one palette, two weights -------------------- */
+  --ink: #16232E;            /* primary text; authority and legibility */
+  --ink-soft: #38474F;       /* body prose at reading length */
+  --muted: #5C6B66;          /* captions, deferred and retired rows */
+
+  --paper: #EDEFE8;          /* WORKING ground; rag paper, warm */
+  --paper-2: #E3E7DD;        /* rail, masthead, the fence band */
+  --card: #F6F7F2;           /* raised surface, row hover */
+  --sheet: #FBFBF8;          /* PUBLISHED ground; the clean sheet */
+
+  --verdigris: #2F6F62;      /* SIGNATURE. primary action, verified */
+  --verdigris-dk: #1F4F45;   /* hover and pressed */
+  --verdigris-tint: #EDF3F0;
+
+  --signal: #B3441E;         /* attention ONLY: clock, changed source, refusal */
+  --signal-dk: #8E3416;      /* signal text on tint, for AA contrast */
+  --signal-tint: #F8EFE9;
+
+  --rule: #C6CBBF;           /* hairlines; never a heavy frame */
+  --rule-strong: #A8AFA1;    /* the fence double rule, table heads */
+
+  --tint-ok: #EDF3F0;        /* verified and ratified grounds */
+  --tint-note: #F8EFE9;      /* notice ground under a teaching refusal */
+  --tint-muted: #E9EBE4;     /* greyed but present (deferred, dismissed) */
+
+  /* --- Type · serif = judgment, sans = plain speech,
+         mono = machine fact ---------------------------------- */
+  --font-record: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-ui: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-fact: "Source Code Pro", ui-monospace, Menlo, Consolas, monospace;
+
+  --t-fact-xs: 11px;
+  --t-ui-xs: 12px;
+  --t-ui-sm: 13px;
+  --t-fact: 13px;
+  --t-ui: 15px;              /* working default */
+  --t-fact-lg: 14px;
+  --t-ui-lg: 17px;
+  --t-rec-sm: 19px;
+  --t-rec: 22px;             /* working record title */
+  --t-pub-body: 18px;        /* published default */
+  --t-pub-lead: 21px;
+  --t-pub-h2: 28px;
+  --t-pub-h1: 40px;
+  --t-pub-display: 56px;
+
+  --w-light: 300; --w-reg: 400; --w-med: 500; --w-semi: 600;
+
+  --lh-tight: 1.05;          /* display */
+  --lh-title: 1.22;
+  --lh-ui: 1.5;
+  --lh-read: 1.62;
+
+  --tr-caps: 0.08em;         /* mono eyebrows, uppercase */
+  --tr-display: -0.012em;
+
+  --measure-work: 60ch;
+  --measure-pub: 62ch;
+
+  /* --- Space · 4px base, calm scale ------------------------ */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px; --sp-5: 22px;
+  --sp-6: 28px; --sp-7: 40px; --sp-8: 56px; --sp-9: 80px;
+
+  --rail-w: 220px;
+  --masthead-h: 48px;
+  --fence-h: 34px;
+  --pub-margin: 40px;
+
+  /* --- Radius · a printed form has corners ----------------- */
+  --r-0: 0;                  /* the default */
+  --r-1: 1px;
+  --r-2: 2px;                /* ceiling: chips, buttons */
+  --r-seal: 50%;             /* the mark only */
+  /* There is deliberately no pill token. */
+
+  /* --- Line and elevation · rules first, shadow last ------- */
+  --hair: 1px solid var(--rule);
+  --hair-strong: 1px solid var(--rule-strong);
+  --e-0: none;                                   /* flat, the default */
+  --e-1: 0 0 0 1px var(--rule);                  /* hairline only */
+  --e-2: 0 1px 0 rgba(22, 35, 46, 0.07);         /* seated card */
+  --e-3: 0 6px 20px rgba(22, 35, 46, 0.14);      /* dialog only */
+  /* No glow, no blur, no glass, no gradients. */
+
+  --focus-ring: 2px solid var(--verdigris);
+  --focus-offset: 2px;
+
+  /* --- Motion · calm, and optional ------------------------- */
+  --dur-1: 120ms;
+  --dur-2: 200ms;            /* ceiling; no bounce, ever */
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-1: 0ms; --dur-2: 0ms; }
+}
+
+/* --- The two spaces: same tokens, two registers -------------
+   Put data-space on the document root of each space. The fence
+   is structural: [data-space="working"] always renders the
+   standing band; [data-space="published"] never references it.
+   ---------------------------------------------------------- */
+[data-space="working"] {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--t-ui);
+  line-height: var(--lh-ui);
+}
+
+[data-space="published"] {
+  background: var(--sheet);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--t-pub-body);
+  line-height: var(--lh-read);
+}
+
+/* --- Baseline ---------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+a {
+  color: var(--verdigris);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--verdigris) 40%, var(--paper));
+}
+a:hover { color: var(--verdigris-dk); border-bottom-color: var(--verdigris-dk); }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-record);
+  font-weight: var(--w-semi);
+  line-height: var(--lh-title);
+  margin: 0;
+}
+
+code, kbd, samp, .fact { font-family: var(--font-fact); }
