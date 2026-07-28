@@ -24,7 +24,7 @@
   --paper:#EDEFE8; --paper-2:#E3E7DD; --card:#F6F7F2; --sheet:#FBFBF8;
   --verdigris:#2F6F62; --verdigris-dk:#1F4F45; --verdigris-tint:#EDF3F0;
   --signal:#B3441E; --signal-dk:#8E3416; --signal-tint:#F8EFE9;
-  --rule:#C6CBBF; --rule-strong:#A8AFA1;
+  --rule:#C6CBBF; --rule-strong:#A8AFA1; --band:#8A6E45;
   --tint-ok:#EDF3F0; --tint-note:#F8EFE9; --tint-muted:#E9EBE4;
   --font-record:"Source Serif 4",Georgia,"Times New Roman",serif;
   --font-ui:"Source Sans 3",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -96,6 +96,14 @@ input.mono{font-family:var(--font-fact);font-size:13px}
 .masthead .handle{font-family:var(--font-fact);font-size:12.5px;color:var(--ink-soft);border-bottom:1px solid var(--rule);padding-bottom:1px}
 
 .rail{grid-row:2/4;background:var(--paper-2);border-right:var(--hair);padding:14px 8px;display:flex;flex-direction:column;gap:1px}
+#work.railmin{grid-template-columns:56px 1fr}
+#work.railmin .rail{padding:14px 6px}
+#work.railmin .nav{justify-content:center;padding:9px 0}
+#work.railmin .nav .lbl,#work.railmin .nav .count,#work.railmin .add .lbl,#work.railmin .pub-link .lbl{display:none}
+#work.railmin .rail .add{padding:9px 0}
+#work.railmin .rail .pub-link{justify-content:center;padding:8px 0}
+.railtog{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 8px;font-family:var(--font-fact)}
+.railtog:hover{color:var(--verdigris-dk)}
 .nav{display:flex;align-items:center;gap:11px;padding:8px 16px;font-size:14.5px;color:var(--ink-soft);cursor:pointer;user-select:none;box-shadow:inset 0 0 0 0 var(--verdigris)}
 .nav .g{width:16px;height:16px;flex:none;color:var(--muted)}
 .nav:hover{background:var(--card)}
@@ -212,11 +220,17 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 svg.ic{display:none}
 
 /* ---- v3: the document page's strata ---- */
-.strata{display:flex;gap:2px;margin:14px 0 20px;border-bottom:var(--hair-strong);overflow-x:auto}
+.strata{display:flex;gap:2px;margin:14px 0 20px;border-bottom:var(--hair-strong);overflow-x:auto;overflow-y:hidden;position:sticky;top:0;background:var(--paper);z-index:5}
 .strata a{font-family:var(--font-ui);font-size:13.5px;color:var(--ink-soft);padding:7px 14px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
 .strata a:hover{color:var(--verdigris-dk)}
 .strata a.on{color:var(--ink);font-weight:600;border-bottom-color:var(--verdigris)}
 .chips-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 14px}
+.docband{height:5px;background:var(--band);margin:-22px -24px 16px}
+section.stratum{border-left:2px solid var(--rule);padding:2px 0 6px 18px;margin:0 0 26px;transition:border-color var(--dur-2) var(--ease)}
+section.stratum.on{border-left-color:var(--verdigris)}
+.eyebrow-s{font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--muted);margin:0 0 10px;cursor:help}
+.gl{border-bottom:1px dotted var(--rule-strong);cursor:help}
+.backlink{cursor:pointer}
 .chip{cursor:help}
 .chip.crucial{color:var(--signal-dk);background:var(--tint-note);border-color:#d6a48c;font-weight:600}
 .chip.flag{color:var(--muted);background:var(--tint-muted);border-color:var(--rule)}
@@ -274,6 +288,9 @@ details.src pre{margin:0;font-family:var(--font-fact);font-size:12px;line-height
   .rail .spacer{display:none}
   .rail .pub-link{border-top:none;margin:0;padding:7px 11px;white-space:nowrap}
   .content{grid-row:3/4;grid-column:1/-1;padding:16px 14px 32px}
+  .docband{margin:-16px -14px 14px}
+  .railtog{display:none}
+  section.stratum{padding-left:12px}
   .fence{grid-row:4/5;grid-column:1/-1;padding:0 14px}
   table.rec td{padding:10px 8px 10px 0}
   .kv{flex-direction:column;gap:2px}
@@ -339,7 +356,7 @@ details.src pre{margin:0;font-family:var(--font-fact);font-size:12px;line-height
 <!-- ============ WORKING SPACE ============ -->
 <div id="work">
   <div class="masthead">
-    <div class="brand"><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp">group</span></div>
+    <div class="brand"><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp">group</span></div>
     <div class="right">
       <div class="msearch"><svg width="14" height="14" style="color:var(--muted)"><use href="#i-search"/></svg><input id="m-search" placeholder="search the record" onkeydown="if(event.key==='Enter')quickSearch()"></div>
       <div class="handle" id="m-handle">&mdash;</div>
@@ -497,7 +514,7 @@ function previewShell(){
   $("#m-idstr").textContent = GROUP.idstr.slice(0,32);
   $("#gate").classList.add("hidden"); $("#pub").classList.remove("on");
   $("#work").classList.add("on"); document.documentElement.setAttribute("data-space","working");
-  go("record");
+  go("record", true);
 }
 function previewNote(){ return `<div class="teach" style="margin:8px 0">Preview mode. Connect a plane (sign in, or serve this from the worker) to load the real record from R2. Nothing shown here is invented.</div>`; }
 
@@ -531,7 +548,7 @@ async function boot(){
   $("#pub").classList.remove("on");
   $("#work").classList.add("on");
   document.documentElement.setAttribute("data-space","working");
-  go("record");
+  go("record", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -548,17 +565,48 @@ function buildRail(w){
   const isAdmin = !!w.administer;
   const items = RAIL.filter(r=>!r.admin || isAdmin);   // capability a member lacks is ABSENT, not greyed
   $("#rail").innerHTML =
-    items.map(r=>`<div class="nav" data-go="${r.id}"><svg class="g" viewBox="0 0 20 20"><use href="#${r.icon}"/></svg>${r.label}<span class="count" id="cnt-${r.id}"></span></div>`).join("")
-    + `<button class="add" onclick="go('add')"><svg width="16" height="16"><use href="#i-add"/></svg>Add something new</button>`
+    items.map(r=>`<div class="nav" data-go="${r.id}" title="${r.label}"><svg class="g" viewBox="0 0 20 20"><use href="#${r.icon}"/></svg><span class="lbl">${r.label}</span><span class="count" id="cnt-${r.id}"></span></div>`).join("")
+    + `<button class="add" onclick="go('add')" title="Add something new"><svg width="16" height="16"><use href="#i-add"/></svg><span class="lbl">Add something new</span></button>`
     + `<div class="spacer"></div>`
-    + `<div class="pub-link" onclick="enterPublished()"><svg width="16" height="16"><use href="#i-external"/></svg>View the public record</div>`;
+    + `<div class="pub-link" onclick="enterPublished()" title="View the public record"><svg width="16" height="16"><use href="#i-external"/></svg><span class="lbl">View the public record</span></div>`;
+  try{ if(localStorage.getItem("civicos.rail")==="min") $("#work").classList.add("railmin"); }catch(_){}
   $("#rail").querySelectorAll("[data-go]").forEach(n=>n.onclick=()=>go(n.dataset.go));
 }
+
+function railToggle(){
+  const min = $("#work").classList.toggle("railmin");
+  try{ localStorage.setItem("civicos.rail", min?"min":"full"); }catch(_){}
+}
+
+/* ---------- navigation history: back returns to the exact scroll ---------- */
+const NAVSTACK = [];
+let CUR = { type:"screen", key:"record" };
+function navRemember(){
+  const c = $("#content");
+  NAVSTACK.push({ ...CUR, scroll: c ? c.scrollTop : 0 });
+  if(NAVSTACK.length>60) NAVSTACK.shift();
+  try{ history.pushState({d:NAVSTACK.length}, ""); }catch(_){}
+}
+function navLabel(p){
+  if(!p) return "";
+  if(p.type==="bundle") return "the document";
+  const t = {record:"The record",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  return t[p.key]||p.key;
+}
+async function navBack(){
+  const p = NAVSTACK.pop();
+  if(!p){ await go("record", true); return; }
+  if(p.type==="bundle") await openBundle(p.key, true); else await go(p.key, true);
+  const c = $("#content"); if(c) c.scrollTop = p.scroll;
+}
+window.addEventListener("popstate", ()=>{ navBack(); });
 
 /* ---------- router ---------- */
 let RECORD_CACHE = null;
 function setActive(id){ document.querySelectorAll("#rail .nav").forEach(n=>n.classList.toggle("on", n.dataset.go===id)); }
-async function go(screen){
+async function go(screen, fromNav){
+  if(!fromNav && !PLANE.preview) navRemember();
+  CUR = { type:"screen", key:screen };
   setActive(screen);
   liveStop();
   $("#pop").classList.add("hidden");
@@ -640,6 +688,39 @@ const SEMANTICS = {
 };
 /*__SEMANTICS_END__*/
 SEMANTICS.types.problem = SEMANTICS.types.focus;   // the plane's older name for a focus
+
+/* The glossary: system terms and the civic-finance shorthand this record
+   swims in, disclosed on click wherever they appear in rendered prose.
+   Terms specific to a single document belong in that document's bundle
+   (a capture-time convention, not yet adopted); this table is the shared
+   floor. */
+const GLOSSARY = {
+  "ACFR":       "Annual Comprehensive Financial Report: a government's audited year-end financial statements.",
+  "GPF":        "General Purpose Fund: the city's main discretionary operating fund.",
+  "CAFR":      "The older name for the ACFR, the audited year-end financial statements.",
+  "FY":         "Fiscal year. Oakland's runs July 1 to June 30; FY23 ends June 30, 2023.",
+  "sha256":     "A cryptographic fingerprint of a file. If even one byte changes, the fingerprint changes, so matching fingerprints mean identical bytes.",
+  "RFC 3161":   "A trusted-timestamp standard: an independent authority attests that these exact bytes existed no later than a certain moment.",
+  "SSHSIG":     "OpenSSH's signature format. The plane's releases are signed with it, and anyone can check a signature with stock ssh-keygen.",
+  "manifest":   "The published list of everything in a ratified case file, with the hash of each item, so anyone can verify any part independently.",
+  "frontmatter":"The structured header a bundle.md carries: its state, hashes, and provenance, machine-readable and human-readable at once.",
+  "provenance": "Where a document came from: who issued it, where it was retrieved, when, and under what authority.",
+};
+const GL_RE = new RegExp("\\b(" + Object.keys(GLOSSARY).sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|") + ")(?![A-Za-z])","g");
+function glossWrap(html){
+  /* Applied to already-escaped prose HTML; wraps outside of tags. */
+  return html.split(/(<[^>]+>)/).map(part=>
+    part.startsWith("<") ? part : part.replace(GL_RE, m=>`<span class="gl" onclick="chipPop(event,this)" data-pop-gloss="${m}">${m}</span>`)
+  ).join("");
+}
+
+/* What each stratum is for, spoken on the tab and the eyebrow. */
+const STRATA_INFO = {
+  s1:{ label:"What it says",  tip:"The document's own content, and the captured source material itself." },
+  s2:{ label:"In the case",   tip:"What this supports and what cites it: its place in the group's work." },
+  s3:{ label:"Trust",         tip:"Where it came from and how anyone can verify it, without this group's cooperation." },
+  s4:{ label:"The record",    tip:"Everything that has ever happened to it. Append-only; nothing can be edited or removed." },
+};
 const TYPE_LABEL = {information:"Information", focus:"Focus", problem:"Focus", project:"Project", action:"Action", annotation:"Annotation", source:"Source"};
 function sem(type, state){
   const t = SEMANTICS.types[type];
@@ -675,13 +756,14 @@ function chipPop(e, c){
   if(c.dataset.popState){ const s = sem(c.dataset.popType, c.dataset.popState); html = popHtml(s.chip||c.dataset.popState, s.meaning, s.enables, s.forbids, s.next); }
   else if(c.dataset.popCrit){ const r = SEMANTICS.criticality[c.dataset.popCrit]; html = popHtml(r.chip||c.dataset.popCrit, r.meaning); }
   else if(c.dataset.popFlag){ const r = SEMANTICS.flags[c.dataset.popFlag]; html = popHtml(r.chip, r.meaning); }
+  else if(c.dataset.popGloss){ html = popHtml(c.dataset.popGloss, GLOSSARY[c.dataset.popGloss]||""); }
   pop.innerHTML = html; pop.classList.remove("hidden");
   const r = c.getBoundingClientRect();
   pop.style.left = Math.max(8, Math.min(window.scrollX + r.left, window.scrollX + window.innerWidth - 360)) + "px";
   pop.style.top  = (window.scrollY + r.bottom + 6) + "px";
 }
 document.addEventListener("click", e=>{
-  if(!e.target.closest("#pop") && !e.target.closest(".chip")) $("#pop").classList.add("hidden");
+  if(!e.target.closest("#pop") && !e.target.closest(".chip") && !e.target.closest(".gl")) $("#pop").classList.add("hidden");
 });
 function fmtWhen(t){ if(!t) return ""; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleDateString(undefined,{day:"numeric",month:"short"}); }
 
@@ -759,7 +841,7 @@ function mdLite(md){
     else if(l.trim()===""){ closeList(); }
     else { closeList(); out+="<p>"+inline(l)+"</p>"; }
   }
-  closeList(); return out;
+  closeList(); return glossWrap(out);
 }
 /* ============================================================
    THE DOCUMENT PAGE, content first, on four strata:
@@ -876,7 +958,9 @@ function toggleDiff(btn, revPath, bundleId){
     : `<div class="empty">Too large to diff in the browser.</div>`;
 }
 
-async function openBundle(id){
+async function openBundle(id, fromNav){
+  if(!fromNav) navRemember();
+  CUR = { type:"bundle", key:id };
   setActive(""); liveStop();
   $("#content").innerHTML = `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p><p class="count-line">Loading&hellip;</p>`;
   try{
@@ -891,9 +975,9 @@ async function openBundle(id){
     /* --- stratum 1: what it says --- */
     const chipsRow = `<div class="chips-row">${chip(fm.current_state||proj&&proj.current_state, otype)}${critChip(fm.criticality||(proj&&proj.criticality))}${(proj&&proj.monitor_enabled)?flagChip("monitored"):""}${(proj&&proj.reeval_flag)?flagChip("reeval"):""}${(proj&&proj.annotations_open)?flagChip("annotations"):""}</div>`;
     const sources = groupSources(img);
-    const s1 = `<div id="s1"></div>${chipsRow}
+    const s1 = stratum("s1", `${chipsRow}
       <div class="prose">${mdLite(body)}</div>
-      ${sources.length ? `<h2 class="sec">The source material</h2>${sources.map(renderSourceItem).join("")}` : ""}`;
+      ${sources.length ? `<h2 class="sec">The source material</h2>${sources.map(renderSourceItem).join("")}` : ""}`);
 
     /* --- stratum 2: in the case --- */
     const fwd = (fmj && fmj.references) || [];
@@ -902,10 +986,10 @@ async function openBundle(id){
     const fwdRows = fwd.length ? fwd.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.target)}')"><span class="lt">${esc(r.target)}</span><span class="ln">${esc(r.rel||"cites")}${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
     const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.fromTitle)}</span><span class="ln">${esc(TYPE_LABEL[r.fromType]||r.fromType)} · ${esc(r.rel||"cites")} this${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
     const groupLine = (proj&&proj.group_id) ? `<p class="lede" style="margin:0 0 12px">In the record of <span class="mono">${esc(proj.group_id)}</span>.</p>` : "";
-    const s2 = `<div id="s2"></div><h2 class="sec">In the case</h2>${groupLine}${objective}
+    const s2 = stratum("s2", `${groupLine}${objective}
       ${fwdRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">This ${esc(noun)} cites</h3><div class="card" style="padding:4px 18px">${fwdRows}</div>`:""}
       ${revRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">Cited by</h3><div class="card" style="padding:4px 18px">${revRows}</div>`:""}
-      ${!objective&&!fwdRows&&!revRows?`<div class="empty">Nothing cites this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.</div>`:""}`;
+      ${!objective&&!fwdRows&&!revRows?`<div class="empty">Nothing cites this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.</div>`:""}`);
 
     /* --- stratum 3: trust --- */
     const loc = fm["source.locator"]||"";
@@ -918,9 +1002,8 @@ async function openBundle(id){
       ["Bundle hash", (proj&&proj.bundle_sha) ? "sha256:"+esc(proj.bundle_sha)+copyBtn(proj.bundle_sha) : "", false, true],
       ["Monitor", (proj&&proj.monitor_enabled)?`re-checked ${esc(proj.monitor_frequency||"on schedule")}${proj.monitor_last_checked?`, last ${esc(proj.monitor_last_checked)}`:""}`:"", true],
     ].filter(r=>r[1]);
-    const s3 = trustRows.length ? `<div id="s3"></div><h2 class="sec">Trust</h2>
-      <div class="card">${trustRows.map(r=>`<div class="kv"><span class="k">${esc(r[0])}</span><span class="v ${r[2]?"plain":""}">${r[3]?r[1]:esc(r[1])}</span></div>`).join("")}</div>
-      <p class="lede" style="margin:6px 0 0">Anyone may confirm the captured material against these hashes, without this group's cooperation.</p>` : "";
+    const s3 = trustRows.length ? stratum("s3", `<div class="card">${trustRows.map(r=>`<div class="kv"><span class="k">${esc(r[0])}</span><span class="v ${r[2]?"plain":""}">${r[3]?r[1]:esc(r[1])}</span></div>`).join("")}</div>
+      <p class="lede" style="margin:6px 0 0">Anyone may confirm the captured material against these hashes, without this group's cooperation.</p>`) : "";
 
     /* --- stratum 4: the record --- */
     const log = parseLog(img);
@@ -929,10 +1012,9 @@ async function openBundle(id){
       const tag = k.replace(/^_history\/bundle_|\.md$/g,"");
       return `<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(tag)}</span><span class="v"><button class="copybtn" onclick="toggleDiff(this,'${esc(k)}','${esc(id)}')">compare to current</button></span></div>`;
     }).join("");
-    const s4 = `<div id="s4"></div><h2 class="sec">The record of this ${esc(noun)}</h2>
-      <p class="lede">Everything that has ever happened to it. Nothing here can be edited or removed.</p>
+    const s4 = stratum("s4", `<p class="lede" style="margin-top:0">Everything that has ever happened to this ${esc(noun)}. Nothing here can be edited or removed.</p>
       ${log.length?log.map(renderLogEntry).join(""):`<div class="empty">No promotions recorded yet.</div>`}
-      ${revs.length?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:16px 0 6px">Earlier revisions, kept</h3><div id="diff-holder" data-open=""></div><div class="card">${revRowsHtml}</div>`:""}`;
+      ${revs.length?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:16px 0 6px">Earlier revisions, kept</h3><div id="diff-holder" data-open=""></div><div class="card">${revRowsHtml}</div>`:""}`);
 
     /* --- release, after the reading --- */
     let relBar = "";
@@ -943,20 +1025,38 @@ async function openBundle(id){
         relBar = `<h2 class="sec">Release</h2><div class="rv-bar" style="margin:0"><button class="btn" onclick="openReleaseDialog('${esc(id)}')">Release this document</button><span class="n">Moves it from collected to verified, in your name, on the permanent record.</span></div>`;
     }
 
+    const back = NAVSTACK.length ? `<a class="backlink" onclick="navBack()" title="back to where you were, at the same place on the page">&larr; ${esc(navLabel(NAVSTACK[NAVSTACK.length-1]))}</a> &rsaquo; ` : `<a onclick="go('record')">The record</a> &rsaquo; `;
+    const tab = k => `<a${k==="s1"?' class="on"':""} data-s="${k}" onclick="strataGo(this,'${k}')" title="${esc(STRATA_INFO[k].tip)}">${esc(STRATA_INFO[k].label)}</a>`;
     $("#content").innerHTML =
-      `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p>
+      `<div class="docband" title="a document in the working record"></div>
+       <p class="crumb">${back}<span class="mono">${esc(id)}</span></p>
        <h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1>
-       <div class="strata">
-         <a class="on" data-s="s1" onclick="strataGo(this,'s1')">What it says</a>
-         <a data-s="s2" onclick="strataGo(this,'s2')">In the case</a>
-         ${s3?`<a data-s="s3" onclick="strataGo(this,'s3')">Trust</a>`:""}
-         <a data-s="s4" onclick="strataGo(this,'s4')">The record</a>
-       </div>
+       <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}</div>
        ${s1}${s2}${s3}${s4}${relBar}`;
+    strataSpy();
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
+function stratum(id, inner){
+  return `<section class="stratum" id="${id}"><div class="eyebrow-s" title="${esc(STRATA_INFO[id].tip)}">${esc(STRATA_INFO[id].label)}</div>${inner}</section>`;
+}
+let SPY = null;
+function strataSpy(){
+  if(SPY){ SPY.disconnect(); SPY=null; }
+  const root = $("#content");
+  const secs = [...root.querySelectorAll("section.stratum")];
+  if(!secs.length || typeof IntersectionObserver==="undefined") return;
+  const setOn = id => {
+    root.querySelectorAll(".strata a").forEach(a=>a.classList.toggle("on", a.dataset.s===id));
+    secs.forEach(x=>x.classList.toggle("on", x.id===id));
+  };
+  SPY = new IntersectionObserver(entries=>{
+    const vis = entries.filter(e=>e.isIntersecting).sort((a,b)=>a.target.offsetTop-b.target.offsetTop);
+    if(vis.length) setOn(vis[0].target.id);
+  }, { root, rootMargin:"-15% 0px -65% 0px", threshold:0 });
+  secs.forEach(x=>SPY.observe(x));
+  setOn(secs[0].id);
+}
 function strataGo(a, id){
-  document.querySelectorAll(".strata a").forEach(x=>x.classList.toggle("on", x===a));
   const el = document.getElementById(id);
   if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
 }

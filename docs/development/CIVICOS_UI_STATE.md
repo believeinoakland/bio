@@ -1,5 +1,33 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v5, 2026-07-28 session, part three: Bob's eight document-page refinements.
+
+**Changelog v5, all from Bob's review of the live page:** the strata tab bar's
+stray scrollbar is gone and the bar now sticks to the top of the page while
+content scrolls, with a scrollspy keeping the active tab true to the reader's
+position (tabs scroll to a stratum; nothing is hidden, and the banding makes
+that legible). Each stratum is a banded section: a left rule that turns
+verdigris as the reader enters it, under a mono eyebrow naming it, so the
+content belonging to each tab is visibly delimited without new colors. The
+Design page's warm band is captured as an ADDITIVE token (--band, umber) in
+tokens.css and tops every document page as its identity. The rail collapses
+to an icon-only 56px strip (toggle in the masthead, persisted, tooltips on
+icons; hidden on phones where the rail is already a top bar). Back returns
+the reader to the exact scroll position of the page they came from, via an
+in-app navigation stack wired to the browser's own back button; the crumb
+shows where back leads. Tabs, eyebrows, and the docband carry explanatory
+tooltips from STRATA_INFO. A GLOSSARY table (sibling of SEMANTICS: same
+one-source-of-truth idea) wraps system and civic-finance terms (ACFR, GPF,
+FY, sha256, RFC 3161, SSHSIG, manifest, provenance, frontmatter) in rendered
+prose with dotted-underline click-overs; the wrapper never touches tags or
+attributes and handles compounds like FY23. Document-SPECIFIC terminology is
+deliberately not in the UI table; if adopted, it belongs in the bundle at
+capture time (open decision below).
+
+(v4 text follows; all of it still holds.)
+
+---
+
 v4, 2026-07-28 session, part two: the record screen rebuilt on Bob's UX
 principles.
 
