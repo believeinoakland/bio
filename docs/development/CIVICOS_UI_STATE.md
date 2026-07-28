@@ -1,5 +1,16 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v20, 2026-07-28 session, part eighteen. Default collapse revised by Bob: In
+the case opens EXPANDED; only Trust and The record open collapsed (with
+Session Log, Review Notes, and Source Material still folded within the
+prose). Harness updated both ways.
+
+(v19 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v19, 2026-07-28 session, part seventeen. "Source Material" (title case), and
 its heading now matches Session Log and Review Notes exactly: those are the
 document's own ## headings styled by the prose rules (19px record serif),

@@ -1260,7 +1260,7 @@ async function openBundle(id, fromNav){
     const s2 = stratum("s2", `${groupLine}${objective}
       ${fwdRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">This ${esc(noun)} cites</h3><div class="card" style="padding:4px 18px">${fwdRows}</div>`:""}
       ${revRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">Cited by</h3><div class="card" style="padding:4px 18px">${revRows}</div>`:""}
-      ${!objective&&!fwdRows&&!revRows?`<div class="empty">Nothing cites this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.</div>`:""}`, true);
+      ${!objective&&!fwdRows&&!revRows?`<div class="empty">Nothing cites this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.</div>`:""}`);
 
     /* --- stratum 3: trust --- */
     const loc = fm["source.locator"]||"";

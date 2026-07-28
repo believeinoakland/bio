@@ -98,8 +98,8 @@ const must = [
   ["source material renamed, collapsed","Source Material</h2><div class=\"cbody\""],
 ];
 // default collapse: s2/s3/s4 closed, s1 open; Session Log closed, Summary open
-for(const sid of ["s2","s3","s4"]) if(!new RegExp('class="stratum closed" id="'+sid+'"').test(html)) throw new Error(sid+" not closed by default");
-if(!/class="stratum" id="s1"/.test(html)) throw new Error("s1 must open expanded");
+for(const sid of ["s3","s4"]) if(!new RegExp('class="stratum closed" id="'+sid+'"').test(html)) throw new Error(sid+" not closed by default");
+for(const sid of ["s1","s2"]) if(!new RegExp('class="stratum" id="'+sid+'"').test(html)) throw new Error(sid+" must open expanded");
 if(!html.includes('class="csec closed"')) throw new Error("Session Log csec not closed");
 const smIdx = html.indexOf("Source Material</h2>");
 if(smIdx<0 || !html.slice(Math.max(0,smIdx-120),smIdx).includes('csec closed')) throw new Error("Source material must open collapsed");
