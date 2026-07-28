@@ -1,5 +1,37 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v6, 2026-07-28 session, part four: Bob's five fixes from the live document
+page.
+
+**Changelog v6.** THE ROOT CAUSE FIRST: #work used min-height:100vh, so a
+tall page scrolled the whole body instead of the content pane. That single
+bug produced two of Bob's five reports: the rail and tab bar scrolling away
+(nothing could stick because the pane they stick within never scrolled), and
+the strata strips staying grey past the first (the scrollspy watches the
+content pane, which never moved). The grid is now height:100dvh with
+min-height:0 on the scroll children; the rail and tab bar hold, and the
+strips follow the reader. The rest: BACK moved to the masthead at top level,
+left of the wordmark, bigger (21px), appearing whenever there is somewhere
+to go back to; the crumb is a location line again. Back now restores the
+EXACT scroll position through a settle-proof restore (set, two animation
+frames, and a 120ms re-set, because web-font reflow was clamping the offset
+set at first paint), the browser back button and the in-app arrow converge
+on one stack without double-popping, and a Search screen on the way back
+re-runs its remembered query so the result list the reader was working
+through comes back scrolled to where they were. CHIPS became SEALS: the
+document's states now render as single-mark stamps (V verified, ! crucial,
+M monitored, and marks for every state in the semantics table) riding
+right-justified in the sticky tab bar, so load-bearing state never scrolls
+away; hover names them, click discloses the full semantics row, and the
+seal marks live in the SEMANTICS table like everything else. The chips row
+left the body of stratum one.
+
+(v5 and earlier follow; all still hold.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v5, 2026-07-28 session, part three: Bob's eight document-page refinements.
 
 **Changelog v5, all from Bob's review of the live page:** the strata tab bar's

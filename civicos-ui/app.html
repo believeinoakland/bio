@@ -81,7 +81,7 @@ input.mono{font-family:var(--font-fact);font-size:13px}
 .teach .mono{color:var(--ink)}
 
 /* ---- working shell ---- */
-#work{display:none;grid-template-rows:var(--masthead-h) 1fr auto;grid-template-columns:var(--rail-w) 1fr;min-height:100vh}
+#work{display:none;grid-template-rows:var(--masthead-h) 1fr auto;grid-template-columns:var(--rail-w) 1fr;height:100vh;height:100dvh}
 #work.on{display:grid}
 .masthead{grid-column:1/3;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--paper-2);border-bottom:var(--hair)}
 .masthead .brand{display:flex;align-items:baseline;gap:10px}
@@ -95,7 +95,7 @@ input.mono{font-family:var(--font-fact);font-size:13px}
 .masthead .msearch input::placeholder{color:var(--muted)}
 .masthead .handle{font-family:var(--font-fact);font-size:12.5px;color:var(--ink-soft);border-bottom:1px solid var(--rule);padding-bottom:1px}
 
-.rail{grid-row:2/4;background:var(--paper-2);border-right:var(--hair);padding:14px 8px;display:flex;flex-direction:column;gap:1px}
+.rail{grid-row:2/4;background:var(--paper-2);border-right:var(--hair);padding:14px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;min-height:0}
 #work.railmin{grid-template-columns:56px 1fr}
 #work.railmin .rail{padding:14px 6px}
 #work.railmin .nav{justify-content:center;padding:9px 0}
@@ -104,6 +104,8 @@ input.mono{font-family:var(--font-fact);font-size:13px}
 #work.railmin .rail .pub-link{justify-content:center;padding:8px 0}
 .railtog{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 8px;font-family:var(--font-fact)}
 .railtog:hover{color:var(--verdigris-dk)}
+.mback{background:none;border:none;cursor:pointer;color:var(--ink-soft);font-size:21px;line-height:1;padding:2px 10px 4px 2px;font-family:var(--font-ui)}
+.mback:hover{color:var(--verdigris-dk)}
 .nav{display:flex;align-items:center;gap:11px;padding:8px 16px;font-size:14.5px;color:var(--ink-soft);cursor:pointer;user-select:none;box-shadow:inset 0 0 0 0 var(--verdigris)}
 .nav .g{width:16px;height:16px;flex:none;color:var(--muted)}
 .nav:hover{background:var(--card)}
@@ -116,7 +118,7 @@ input.mono{font-family:var(--font-fact);font-size:13px}
 .rail .pub-link{padding:8px 16px;font-size:13px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:9px;border-top:var(--hair);margin-top:8px}
 .rail .pub-link:hover{color:var(--verdigris-dk)}
 
-.content{grid-row:2/3;grid-column:2/3;padding:22px 24px 40px;overflow:auto;max-width:1100px}
+.content{grid-row:2/3;grid-column:2/3;padding:22px 24px 40px;overflow:auto;min-height:0;max-width:1100px}
 .crumb{font-size:13px;color:var(--muted);margin:0 0 10px}
 .crumb a{cursor:pointer;border:none}
 h1.rec{font-family:var(--font-record);font-size:var(--t-rec);font-weight:600;line-height:1.2;margin:0 0 6px}
@@ -224,6 +226,12 @@ svg.ic{display:none}
 .strata a{font-family:var(--font-ui);font-size:13.5px;color:var(--ink-soft);padding:7px 14px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
 .strata a:hover{color:var(--verdigris-dk)}
 .strata a.on{color:var(--ink);font-weight:600;border-bottom-color:var(--verdigris)}
+.strata .sp{flex:1}
+.strata .seals{display:flex;gap:7px;align-items:center;padding:0 2px 5px 8px}
+.seal{width:23px;height:23px;border-radius:var(--r-seal);display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-record);font-size:12.5px;font-weight:600;border:1px solid var(--rule);color:var(--muted);background:#fff;cursor:help;flex:none}
+.seal.s-good{background:var(--verdigris);border-color:var(--verdigris-dk);color:var(--sheet)}
+.seal.s-attn{background:var(--tint-note);border-color:#d6a48c;color:var(--signal-dk)}
+.seal.s-quiet{background:var(--tint-muted)}
 .chips-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 14px}
 .docband{height:5px;background:var(--band);margin:-22px -24px 16px}
 section.stratum{border-left:2px solid var(--rule);padding:2px 0 6px 18px;margin:0 0 26px;transition:border-color var(--dur-2) var(--ease)}
@@ -356,7 +364,7 @@ details.src pre{margin:0;font-family:var(--font-fact);font-size:12px;line-height
 <!-- ============ WORKING SPACE ============ -->
 <div id="work">
   <div class="masthead">
-    <div class="brand"><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp">group</span></div>
+    <div class="brand"><button class="mback hidden" id="mback" onclick="navBack()" title="back to where you were, at the same place on the page">&larr;</button><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp">group</span></div>
     <div class="right">
       <div class="msearch"><svg width="14" height="14" style="color:var(--muted)"><use href="#i-search"/></svg><input id="m-search" placeholder="search the record" onkeydown="if(event.key==='Enter')quickSearch()"></div>
       <div class="handle" id="m-handle">&mdash;</div>
@@ -586,6 +594,7 @@ function navRemember(){
   NAVSTACK.push({ ...CUR, scroll: c ? c.scrollTop : 0 });
   if(NAVSTACK.length>60) NAVSTACK.shift();
   try{ history.pushState({d:NAVSTACK.length}, ""); }catch(_){}
+  navSync();
 }
 function navLabel(p){
   if(!p) return "";
@@ -593,13 +602,31 @@ function navLabel(p){
   const t = {record:"The record",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
-async function navBack(){
-  const p = NAVSTACK.pop();
-  if(!p){ await go("record", true); return; }
-  if(p.type==="bundle") await openBundle(p.key, true); else await go(p.key, true);
-  const c = $("#content"); if(c) c.scrollTop = p.scroll;
+function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
+function restoreScroll(v){
+  const c = $("#content"); if(!c) return;
+  const set = ()=>{ c.scrollTop = v; };
+  set();
+  requestAnimationFrame(()=>{ set(); requestAnimationFrame(set); });
+  setTimeout(set, 120);   // web-font reflow settles after first paint
 }
-window.addEventListener("popstate", ()=>{ navBack(); });
+let SKIP_POP = false;
+async function navBackDo(){
+  const p = NAVSTACK.pop();
+  navSync();
+  if(!p){ await go("record", true); return; }
+  if(p.type==="bundle") await openBundle(p.key, true);
+  else {
+    await go(p.key, true);
+    if(p.key==="search" && p.q){ const i=$("#s-q"); if(i){ i.value=p.q; await runSearch(true); } }
+  }
+  restoreScroll(p.scroll);
+}
+function navBack(){
+  if(NAVSTACK.length){ SKIP_POP = true; try{ history.back(); }catch(_){} }
+  navBackDo();
+}
+window.addEventListener("popstate", ()=>{ if(SKIP_POP){ SKIP_POP=false; return; } navBackDo(); });
 
 /* ---------- router ---------- */
 let RECORD_CACHE = null;
@@ -648,42 +675,42 @@ const SEMANTICS = {
   },
   types: {
     information: { noun:"document", states: {
-      collected: { chip:"collected", meaning:"Captured into the working record and awaiting a member's review.",
+      collected: { chip:"collected", mark:"C", meaning:"Captured into the working record and awaiting a member's review.",
         enables:["read it and its captured source material","release it to verified, a named member's judgment","revise it; every revision is kept"],
         forbids:[["publish","only ratified material crosses the fence"]], next:["verified"] },
-      verified:  { chip:"verified", meaning:"A member attested it appears to be what it claims to be, never that it is accurate.",
+      verified:  { chip:"verified", mark:"V", good:true, meaning:"A member attested it appears to be what it claims to be, never that it is accurate.",
         enables:["cite it from a project","retire it"],
         forbids:[["silent edits","revisions append; the history is permanent"]], next:["retired"] },
-      retired:   { chip:"retired", quiet:true, meaning:"Withdrawn from active use by a member. Kept forever; nothing leaves the record.",
+      retired:   { chip:"retired", mark:"R", quiet:true, meaning:"Withdrawn from active use by a member. Kept forever; nothing leaves the record.",
         enables:["read it and its history"],
         forbids:[["new citations","projects cite active material"]], next:[] },
     }},
     focus: { noun:"focus", states: {
-      surfaced:  { chip:"surfaced", meaning:"A question the record has raised, awaiting the group's triage.",
+      surfaced:  { chip:"surfaced", mark:"S", meaning:"A question the record has raised, awaiting the group's triage.",
         enables:["elevate it into a project","defer it with a reason","dismiss it with a reason"], forbids:[], next:["elevated","deferred","dismissed"] },
-      elevated:  { chip:"elevated", attention:true, meaning:"Triage judged it worth pursuing; a project carries it forward.",
+      elevated:  { chip:"elevated", mark:"E", attention:true, meaning:"Triage judged it worth pursuing; a project carries it forward.",
         enables:["follow it into its project"], forbids:[], next:[] },
-      deferred:  { chip:"deferred", quiet:true, meaning:"Parked by triage with a reason, kept, and returnable.",
+      deferred:  { chip:"deferred", mark:"D", quiet:true, meaning:"Parked by triage with a reason, kept, and returnable.",
         enables:["re-triage it later"], forbids:[], next:["elevated","dismissed"] },
-      dismissed: { chip:"dismissed", quiet:true, meaning:"Declined by triage with a reason. Kept, never deleted, so the decision itself stays accountable.",
+      dismissed: { chip:"dismissed", mark:"X", quiet:true, meaning:"Declined by triage with a reason. Kept, never deleted, so the decision itself stays accountable.",
         enables:["read the reason"], forbids:[], next:[] },
     }},
     project: { noun:"project", states: {
-      forming:       { chip:"forming", meaning:"Scope and objective being set; evidence gathering begins.",
+      forming:       { chip:"forming", mark:"F", meaning:"Scope and objective being set; evidence gathering begins.",
         enables:["cite verified documents","state the objective"], forbids:[], next:["investigating"] },
-      investigating: { chip:"investigating", meaning:"Active work: citations accumulate, work products draft toward ratification.",
+      investigating: { chip:"investigating", mark:"I", meaning:"Active work: citations accumulate, work products draft toward ratification.",
         enables:["cite","draft work products","initiate escalation"], forbids:[], next:[] },
     }},
   },
   criticality: {
     routine:    { chip:null, meaning:"Ordinary material." },
     supporting: { chip:null, meaning:"Context and corroboration for a case." },
-    crucial:    { chip:"crucial", attention:true, meaning:"Load-bearing for a case. Verified individually with its co-attestations checked; never released in bulk." },
+    crucial:    { chip:"crucial", mark:"!", attention:true, meaning:"Load-bearing for a case. Verified individually with its co-attestations checked; never released in bulk." },
   },
   flags: {
-    reeval:      { chip:"re-evaluate", meaning:"Something this depends on changed; a member should look again." },
-    annotations: { chip:"annotations", meaning:"Members have open annotations on this item." },
-    monitored:   { chip:"monitored",  meaning:"The plane re-checks the live source on a schedule and flags drift." },
+    reeval:      { chip:"re-evaluate", mark:"\u21BB", meaning:"Something this depends on changed; a member should look again." },
+    annotations: { chip:"annotations", mark:"A", meaning:"Members have open annotations on this item." },
+    monitored:   { chip:"monitored", mark:"M",  meaning:"The plane re-checks the live source on a schedule and flags drift." },
   },
 };
 /*__SEMANTICS_END__*/
@@ -742,6 +769,16 @@ function critChip(c){
 function flagChip(f){
   const row = SEMANTICS.flags[f];
   return row ? `<span class="chip flag" onclick="chipPop(event,this)" data-pop-flag="${esc(f)}">${esc(row.chip)}</span>` : "";
+}
+function sealFor(kind, key, type){
+  let row, data;
+  if(kind==="state"){ row = sem(type, key); data = `data-pop-state="${esc(key)}" data-pop-type="${esc(type||"")}"`; }
+  else if(kind==="crit"){ row = SEMANTICS.criticality[key]; data = `data-pop-crit="${esc(key)}"`; }
+  else { row = SEMANTICS.flags[key]; data = `data-pop-flag="${esc(key)}"`; }
+  if(!row) return "";
+  const cls = row.good ? "s-good" : (row.attention ? "s-attn" : (row.quiet ? "s-quiet" : ""));
+  const mark = row.mark || (row.chip||key).charAt(0).toUpperCase();
+  return `<span class="seal ${cls}" onclick="chipPop(event,this)" ${data} title="${esc(row.chip||key)}: ${esc(row.meaning||"")}">${esc(mark)}</span>`;
 }
 function popHtml(head, meaning, enables, forbids, next){
   const en = (enables&&enables.length) ? `<ul>${enables.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "";
@@ -973,10 +1010,9 @@ async function openBundle(id, fromNav){
     const noun = (SEMANTICS.types[otype]&&SEMANTICS.types[otype].noun) || "item";
 
     /* --- stratum 1: what it says --- */
-    const chipsRow = `<div class="chips-row">${chip(fm.current_state||proj&&proj.current_state, otype)}${critChip(fm.criticality||(proj&&proj.criticality))}${(proj&&proj.monitor_enabled)?flagChip("monitored"):""}${(proj&&proj.reeval_flag)?flagChip("reeval"):""}${(proj&&proj.annotations_open)?flagChip("annotations"):""}</div>`;
+    const seals = `<span class="sp"></span><span class="seals">${sealFor("state", fm.current_state||(proj&&proj.current_state)||"", otype)}${(fm.criticality||(proj&&proj.criticality))==="crucial"?sealFor("crit","crucial"):""}${(proj&&proj.monitor_enabled)?sealFor("flag","monitored"):""}${(proj&&proj.reeval_flag)?sealFor("flag","reeval"):""}${(proj&&proj.annotations_open)?sealFor("flag","annotations"):""}</span>`;
     const sources = groupSources(img);
-    const s1 = stratum("s1", `${chipsRow}
-      <div class="prose">${mdLite(body)}</div>
+    const s1 = stratum("s1", `<div class="prose">${mdLite(body)}</div>
       ${sources.length ? `<h2 class="sec">The source material</h2>${sources.map(renderSourceItem).join("")}` : ""}`);
 
     /* --- stratum 2: in the case --- */
@@ -1025,13 +1061,13 @@ async function openBundle(id, fromNav){
         relBar = `<h2 class="sec">Release</h2><div class="rv-bar" style="margin:0"><button class="btn" onclick="openReleaseDialog('${esc(id)}')">Release this document</button><span class="n">Moves it from collected to verified, in your name, on the permanent record.</span></div>`;
     }
 
-    const back = NAVSTACK.length ? `<a class="backlink" onclick="navBack()" title="back to where you were, at the same place on the page">&larr; ${esc(navLabel(NAVSTACK[NAVSTACK.length-1]))}</a> &rsaquo; ` : `<a onclick="go('record')">The record</a> &rsaquo; `;
+    const back = `<a onclick="go('record')">The record</a> &rsaquo; `;
     const tab = k => `<a${k==="s1"?' class="on"':""} data-s="${k}" onclick="strataGo(this,'${k}')" title="${esc(STRATA_INFO[k].tip)}">${esc(STRATA_INFO[k].label)}</a>`;
     $("#content").innerHTML =
       `<div class="docband" title="a document in the working record"></div>
        <p class="crumb">${back}<span class="mono">${esc(id)}</span></p>
        <h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1>
-       <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}</div>
+       <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${seals}</div>
        ${s1}${s2}${s3}${s4}${relBar}`;
     strataSpy();
   }catch(e){ $("#content").innerHTML = errPane(e); }
@@ -1068,8 +1104,9 @@ async function renderSearchScreen(){
     <div style="display:flex;gap:9px;margin-bottom:16px"><div class="msearch" style="flex:1;width:auto"><svg width="14" height="14"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund" onkeydown="if(event.key==='Enter')runSearch()"></div><button class="btn ghost" onclick="runSearch()">Run</button></div>
     <div id="s-res"></div>`;
 }
-async function runSearch(){
+async function runSearch(fromNav){
   const q = $("#s-q").value.trim(); if(!q) return;
+  if(CUR.type==="screen" && CUR.key==="search") CUR.q = q;
   $("#s-res").innerHTML = `<p class="count-line">Searching&hellip;</p>`;
   try{
     let rows;
