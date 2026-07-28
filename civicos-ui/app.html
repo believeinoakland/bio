@@ -93,6 +93,8 @@ input.mono{font-family:var(--font-fact);font-size:13px}
 .masthead .msearch{display:flex;align-items:center;gap:8px;font-family:var(--font-fact);font-size:12.5px;color:var(--muted);width:200px}
 .masthead .msearch input{border:none;outline:none;background:none;font-family:var(--font-fact);font-size:12.5px;color:var(--ink);width:100%}
 .masthead .msearch input::placeholder{color:var(--muted)}
+.sx{cursor:pointer;color:var(--muted);font-size:15px;line-height:1;padding:0 2px;flex:none;user-select:none}
+.sx:hover{color:var(--ink)}
 .masthead .handle{font-family:var(--font-fact);font-size:12.5px;color:var(--ink-soft);border-bottom:1px solid var(--rule);padding-bottom:1px}
 
 .rail{grid-row:2/4;background:var(--paper-2);border-right:var(--hair);padding:14px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;min-height:0}
@@ -395,7 +397,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
   <div class="masthead">
     <div class="brand"><button class="mback hidden" id="mback" onclick="navBack()" title="back to where you were, at the same place on the page">&larr;</button><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp">group</span></div>
     <div class="right">
-      <div class="msearch"><svg width="14" height="14" style="color:var(--muted)"><use href="#i-search"/></svg><input id="m-search" placeholder="search the record" onkeydown="if(event.key==='Enter')quickSearch()"></div>
+      <div class="msearch"><svg width="14" height="14" viewBox="0 0 20 20" style="color:var(--muted);flex:none"><use href="#i-search"/></svg><input id="m-search" placeholder="search the record" oninput="sxSync('m')" onkeydown="if(event.key==='Enter')quickSearch()"><span class="sx hidden" id="sx-m" onclick="sxClear('m')" title="clear">&times;</span></div>
       <button class="btn hidden" id="m-fresh" style="padding:5px 12px;font-size:12.5px" onclick="location.reload()" title="a newer CivicOS build is live; reload to run it">Updated &middot; reload</button><div class="handle" id="m-handle">&mdash;</div>
     </div>
   </div>
@@ -1329,14 +1331,34 @@ function strataGo(a, id){
 }
 
 /* ---------- Search (op=search) ---------- */
-function quickSearch(){ const q=$("#m-search").value.trim(); if(!q) return; go("search").then(()=>{ const i=$("#s-q"); if(i){i.value=q; runSearch();} }); }
+async function backFromEmptySearch(){
+  await go("record");
+  const m = $("#m-search"); if(m){ m.value=""; sxSync("m"); m.focus(); }
+}
+function quickSearch(){
+  const q=$("#m-search").value.trim();
+  if(!q){ if(CUR.type==="screen" && CUR.key==="search") backFromEmptySearch(); return; }
+  go("search").then(()=>{ const i=$("#s-q"); if(i){i.value=q; sxSync("s"); runSearch();} });
+}
 async function renderSearchScreen(){
-  $("#content").innerHTML = `<h1 class="rec">Search</h1><p class="lede">Find material across the record. What you pick becomes a selection, and later actions land on exactly what you selected.</p>
-    <div style="display:flex;gap:9px;margin-bottom:16px"><div class="msearch" style="flex:1;width:auto"><svg width="14" height="14"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund" onkeydown="if(event.key==='Enter')runSearch()"></div><button class="btn ghost" onclick="runSearch()">Run</button></div>
+  $("#content").innerHTML = `<h1 class="rec">Search</h1><p class="lede">Find material across the record. Enter runs the search; an empty search takes you back to the record.</p>
+    <div class="msearch" style="width:auto;max-width:520px;margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 20 20" style="flex:none;color:var(--muted)"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund" oninput="sxSync('s')" onkeydown="if(event.key==='Enter')runSearch()"><span class="sx hidden" id="sx-s" onclick="sxClear('s')" title="clear">&times;</span></div>
     <div id="s-res"></div>`;
+  const i=$("#s-q"); if(i) i.focus();
+}
+function sxSync(w){
+  const i = $(w==="m" ? "#m-search" : "#s-q"), x = $(w==="m" ? "#sx-m" : "#sx-s");
+  if(i && x) x.classList.toggle("hidden", !i.value);
+}
+function sxClear(w){
+  const i = $(w==="m" ? "#m-search" : "#s-q");
+  if(!i) return;
+  i.value = ""; sxSync(w); i.focus();
+  if(w==="s"){ const r=$("#s-res"); if(r) r.innerHTML=""; }
 }
 async function runSearch(fromNav){
-  const q = $("#s-q").value.trim(); if(!q) return;
+  const q = $("#s-q").value.trim();
+  if(!q){ backFromEmptySearch(); return; }
   if(CUR.type==="screen" && CUR.key==="search") CUR.q = q;
   $("#s-res").innerHTML = `<p class="count-line">Searching&hellip;</p>`;
   try{

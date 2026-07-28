@@ -1,5 +1,22 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v15, 2026-07-28 session, part thirteen: search, Bob's four. The mangled
+"running" indicator was the magnifier icon clipped: the sprite is drawn on
+a 20-unit grid and the inline viewports never declared a viewBox, so it
+truncated to a C in both the masthead and the search screen; viewBox added
+everywhere the icon renders small. The Run button is gone (Enter runs; the
+screen's box autofocuses). Both search boxes gain a clear \u00d7 inside
+their right edge, shown only when there is text, clearing and refocusing
+(and on the search screen, clearing the results). An EMPTY search (Enter on
+an empty box, from either box while on the Search screen) returns to the
+record with the cursor waiting in the masthead search box.
+
+(v14 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v14, 2026-07-28 session, part twelve. Disclosure triangles: every stratum
 title (the eyebrows) and every subsection title collapses and expands its
 own contents. Subsections come from two places and both get the gesture:
