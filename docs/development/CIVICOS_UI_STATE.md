@@ -1,5 +1,70 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v2, 2026-07-27 session (doc previously dated ahead; plane is 0.35.0 on biosmoke7,
+see BIO_DATAPLANE_STATE.md).
+
+**Changelog v2: the first write action is wired. Release runs end to end from
+the UI: per-document from the bundle page and batch from Review, through
+`op=select` (enumerated) then `op=release`, with the doctrine's recorded
+acknowledgment and mitigation.** Details below; v1 narrative follows unchanged.
+
+## New in v2: the release flow
+
+- **Review** now loads collected Information via `op=search`
+  (`type:information state:collected`, limit 500) because search's provenance
+  columns carry `criticality`, which `op=list` does not; the flow needs it to
+  keep crucial material out of `op=release` before the plane has to refuse it.
+  Fallback to `op=list` if search cannot answer (criticality then unknown; the
+  plane's refusal renders verbatim).
+- **Batch release from Review.** Checkbox selection (select-all included), one
+  verdigris primary that counts the set. The dialog states what a batch release
+  is, lists the set, and requires the member to type the homogeneity
+  acknowledgment and what they actually checked. Nothing is prefilled: the
+  doctrine's record is the member's own words. Client-side validation mirrors
+  the store exactly: each field <=500 chars, no quote, backslash, or newline.
+- **Per-document release from the bundle page**, placed at the BOTTOM, after
+  the prose and history, because the doctrine's reviewer must see the source
+  material before the judgment. Same dialog, per-document language.
+- **Crucial material never enters the flow.** Any selection containing
+  crucial-criticality material is refused whole by the store, so the UI gives
+  crucial rows no checkbox and says why: verifying crucial means checking its
+  co-attestations, per-document work, surface not built yet.
+- **Capability- and session-shaped.** The release affordance EXISTS only for a
+  member session holding `contribute` (`canRelease()`); a machine token sees
+  the read-only review with the doctrine's own sentence about why it cannot
+  release. Absent, not greyed.
+- **Refusals teach.** The plane's refusal JSON renders verbatim with offenders
+  named (`ENTRY_REQUIREMENTS` lists each document's exact lacks,
+  `ILLEGAL_TRANSITION` its current state). `SET_MOVED` refreshes the list and
+  says to look again; it is never auto-retried, because refuse-weight means
+  the operator looks again.
+- **After success** the UI lands on Review with a confirmation card naming the
+  released ids and the Session Log record each now carries, and the record
+  cache is invalidated so chips show verified.
+- The facts card no longer shows `classification` (removed from the catalog in
+  plane 0.33.0; frontmatter residue is inert and drains on promotion).
+- Flow verified against a stub plane implementing the store's exact contracts
+  (select POST shape, release params, refusal shapes, the 500-char rule). The
+  harness caught one real bug before it shipped: a local `const go` shadowing
+  the router's `go()` in the success path.
+
+### Op contracts added in v2 (verified against src/index.mjs, src/store.mjs)
+
+- `POST /api/?op=select&kind=enumerated&token=T` with body `{ids:[...]}` ->
+  `{ok, handle, kind, n, expires, ttlSeconds}`. Owner and viewer are stamped
+  server-side from the credential; a selection is readable only by the
+  credential that made it. TTL 300s, refreshed on resolve.
+- `GET /api/?op=release&handle=H&acknowledgment=A&mitigation=M&token=T` ->
+  `{ok, released:[ids], acknowledgment, mitigation, weight:"refuse", drift}`.
+  Requires a MEMBER SESSION holding `contribute`; a machine credential is
+  refused by the store on the author stamp's shape (MACHINE_CANNOT_RELEASE).
+  Only collected, non-crucial Information; refusals carry offenders. Both text
+  fields <=500 chars, no quote, backslash, or newline (RELEASE_ACK_MAX).
+
+---
+
+## v1 narrative (2026-07-27, first UI build session)
+
 v1, 2026-07-28. Follows plane **0.35.0** on biosmoke7 (see BIO_DATAPLANE_STATE.md).
 
 **The Layer 3 UI runtime exists and is live, reading the real record from R2.**
@@ -127,11 +192,10 @@ the storyboard.
 
 ## Next
 
-1. **Wire the write actions.** Release, cite, capture, and triage are laid out
-   but read-only. Start with Review -> `op=release` (per-document, plus the
-   batch flow that records the homogeneity acknowledgment and mitigation). Then
-   triage on Focuses (`op=dispose`), cite in Projects, capture in Add
-   (`op=capture` / `op=promote`).
+1. **Wire the write actions.** Release is DONE (v2 above): per-document and
+   batch, acknowledgment recorded. Next in the ladder: triage on Focuses
+   (`op=dispose`, to deferred or dismissed with a reason), cite in Projects,
+   capture in Add (`op=capture` / `op=promote`).
 2. **Keep refining the look** against the storyboard as Bob drives real data.
 3. **Production shape.** Decide whether to keep the dev proxy worker or fold the
    UI into the plane's own serving path for `believeinoakland.com/CivicOS`.

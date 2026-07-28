@@ -7,8 +7,11 @@ steps are in `docs/CIVICOS_UI_STATE.md`; read that first.
 ## Files
 
 - `app.html` — the runtime. Self-contained client for the working and published
-  spaces, wired to `op=list`, `op=image`, `op=whoami`, `op=search`, and
-  `op=publishedmanifest`. Inlines `tokens.css` for standalone opening.
+  spaces, wired to `op=list`, `op=image`, `op=whoami`, `op=search`,
+  `op=publishedmanifest`, and the first write action: `op=select` plus
+  `op=release` (per-document from the bundle page, batch from Review, with the
+  doctrine's recorded acknowledgment). Inlines `tokens.css` for standalone
+  opening.
 - `tokens.css` — the canonical design tokens (do not fork the values).
 - `worker.template.mjs` — the dev host: serves `app.html` and proxies `/api/*`
   to the plane via a `PLANE` service binding. `__APP_HTML_BASE64__` is filled at

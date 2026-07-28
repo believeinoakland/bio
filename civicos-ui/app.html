@@ -182,6 +182,32 @@ h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px
 .pub-list .pf .t{font-family:var(--font-record);font-size:20px;font-weight:600}
 .pub-list .pf .m{font-family:var(--font-fact);font-size:12px;color:var(--muted);margin-top:4px}
 
+/* review: selection and the release moment */
+.rv-bar{display:flex;align-items:center;gap:14px;margin:0 0 14px}
+.rv-bar .n{font-size:13.5px;color:var(--muted)}
+td.pick,th.pick{width:30px;padding-right:0!important}
+input.ck{appearance:none;width:16px;height:16px;border:var(--hair-strong);border-radius:var(--r-2);background:#fff;cursor:pointer;vertical-align:middle;position:relative}
+input.ck:checked{background:var(--verdigris);border-color:var(--verdigris-dk)}
+input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:4px;height:8px;border:solid var(--sheet);border-width:0 2px 2px 0;transform:rotate(42deg)}
+.crux{font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--signal-dk)}
+.rel-note{font-size:13px;color:var(--muted);margin:10px 0 0;max-width:var(--measure-work)}
+
+/* the release dialog */
+#dlg-wrap{position:fixed;inset:0;background:rgba(22,35,46,0.32);display:flex;align-items:flex-start;justify-content:center;padding:9vh 20px 20px;z-index:40}
+#dlg{background:var(--sheet);border:var(--hair-strong);box-shadow:var(--e-3);max-width:620px;width:100%;padding:24px 26px 22px;border-radius:var(--r-2);max-height:82vh;overflow:auto}
+#dlg h2{font-family:var(--font-record);font-size:22px;font-weight:600;margin:0 0 6px}
+#dlg .what{font-size:13.5px;color:var(--ink-soft);margin:0 0 14px;max-width:56ch}
+#dlg .set{border:var(--hair);background:var(--card);padding:10px 14px;margin:0 0 16px;max-height:150px;overflow:auto}
+#dlg .set .it{padding:4px 0;font-size:13.5px;border-top:var(--hair)}
+#dlg .set .it:first-child{border-top:none}
+#dlg .set .it .id{font-family:var(--font-fact);font-size:11px;color:var(--muted);margin-left:8px}
+#dlg textarea.txt{width:100%;padding:9px 11px;font-family:var(--font-ui);font-size:14px;border:var(--hair);background:#fff;color:var(--ink);border-radius:var(--r-2);min-height:56px;resize:vertical}
+#dlg .cc{font-family:var(--font-fact);font-size:11px;color:var(--muted);text-align:right;margin-top:3px}
+#dlg .cc.bad{color:var(--signal-dk)}
+#dlg .row-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;align-items:center}
+.offenders{margin:8px 0 0;padding:0;list-style:none;font-family:var(--font-fact);font-size:12px}
+.offenders li{padding:3px 0}
+
 /* line icons */
 svg.ic{display:none}
 </style>
@@ -270,6 +296,9 @@ svg.ic{display:none}
   <div class="pub-body" id="pub-body"></div>
 </div>
 
+<!-- ============ RELEASE DIALOG (mounted on demand) ============ -->
+<div id="dlg-wrap" class="hidden"><div id="dlg" role="dialog" aria-modal="true"></div></div>
+
 <script>
 /* ============================================================
    CivicOS runtime. Wired to the live plane's ops.
@@ -278,7 +307,16 @@ svg.ic{display:none}
      GET  /api/?op=list&token=T              -> {result:[{bundle_id,object_type,title,current_state,last_updated}]}
      GET  /api/?op=image&id=X&token=T        -> {result:{filename:content|{sha256,bytes,...}}}
      GET  /api/?op=whoami&token=T            -> {result:{tokenClass,session,member,handle,administer,capabilities}}
-     GET  /api/?op=search&q=..&token=T       -> {result:{...}}  (tolerated)
+     GET  /api/?op=search&q=..&token=T       -> {result:{hits:[provenance cols incl criticality],total,...}}
+     POST /api/?op=select&token=T {ids}      -> {result?} {ok,handle,kind,n,expires}   (enumerated selection)
+     GET  /api/?op=release&handle=H&acknowledgment=A&mitigation=M&token=T
+          -> {ok,released:[ids],acknowledgment,mitigation} on success; refusals carry
+             reason + detail + offenders, rendered verbatim (the plane's refusals teach).
+          Requires a MEMBER SESSION holding `contribute`; a machine token is refused
+          by the store as MACHINE_CANNOT_RELEASE. Acknowledgment and mitigation are
+          each <=500 chars, no quote, backslash, or newline. Crucial-criticality
+          material never rides op=release at all (any selection containing it is
+          refused whole), so the UI keeps it out of the flow and says why.
      GET  /api/?op=publishedmanifest         -> {result:{published:[...]}}  (public, no token)
    ============================================================ */
 const PLANE = { base:"", token:null, session:false, me:null, preview:false };
@@ -294,6 +332,22 @@ async function rec(op, params={}){
   const j = await r.json().catch(()=>({ok:false,error:"the plane did not return JSON"}));
   if(!r.ok || j.ok===false) throw j;
   return j;
+}
+async function recPost(op, body, params={}){
+  const q = new URLSearchParams({ op, ...(PLANE.token?{token:PLANE.token}:{}), ...params });
+  const r = await fetch(`${PLANE.base}/api/?${q}`,
+    {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body||{})});
+  const j = await r.json().catch(()=>({ok:false,error:"the plane did not return JSON"}));
+  if(!r.ok || j.ok===false) throw j;
+  return j;
+}
+/* The one place the UI decides whether the release affordance EXISTS.
+   Capability-shaped (a capability a session lacks is absent, not greyed), and
+   session-shaped, because the store refuses a machine credential's release by
+   the shape of its author stamp (MACHINE_CANNOT_RELEASE). */
+function canRelease(){
+  return !!(PLANE.session && PLANE.me && PLANE.me.session
+            && (PLANE.me.capabilities||[]).includes("contribute"));
 }
 function teach(el, err){
   const msg = err && (err.error || err.reason || err.detail) ? [err.reason,err.error,err.detail].filter(Boolean).join(" · ") : "Could not reach the plane. If this is a local file against a remote plane, that plane must allow cross-origin reads (CORS).";
@@ -483,7 +537,10 @@ async function openBundle(id){
     if(!img){ $("#content").innerHTML = errPane({error:"This bundle was not found."}); return; }
     const bundleMd = typeof img["bundle.md"]==="string" ? img["bundle.md"] : "";
     const { fm, body } = splitFm(bundleMd);
-    const factKeys = [["current_state","State"],["object_type","Type"],["classification","Classification"],["criticality","Criticality"],["source.authority","Issued by"],["source.locator","Source"],["source.retrieved","Retrieved"],["source_status","Source status"],["content_hash","Content hash"]];
+    /* `classification` left the catalog in 0.33.0 (removed, not deprecated);
+       residue in old frontmatter drains on each bundle's next promotion and is
+       not presented as a current fact of the record. */
+    const factKeys = [["current_state","State"],["object_type","Type"],["criticality","Criticality"],["source.authority","Issued by"],["source.locator","Source"],["source.retrieved","Retrieved"],["source_status","Source status"],["content_hash","Content hash"]];
     const facts = factKeys.filter(k=>fm[k[0]]).map(k=>{
       const plain = !/hash|locator/.test(k[0]);
       return `<div class="kv"><span class="k">${esc(k[1])}</span><span class="v ${plain?"plain":""}">${esc(fm[k[0]])}</span></div>`;
@@ -503,6 +560,17 @@ async function openBundle(id){
     }).join("") : `<div class="empty">Only bundle.md.</div>`;
     const hist = Object.keys(img).filter(k=>k.startsWith("_history/")).sort();
     const histRows = hist.length ? hist.map(k=>{ const rev=k.replace(/^_history\/bundle_|\.md$/g,""); return `<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(rev)}</span><span class="v plain" style="color:var(--muted)">earlier revision, kept</span></div>`; }).join("") : `<div class="empty">This is the first revision.</div>`;
+    /* The per-document release moment lives HERE, after the reading, because
+       the doctrine's reviewer must see the source material itself. Present
+       only for collected Information under a capable member session; crucial
+       material never rides op=release, so it gets the reason instead. */
+    let relBar = "";
+    if(fm.object_type==="information" && fm.current_state==="collected"){
+      if(fm.criticality==="crucial")
+        relBar = `<h2 class="sec">Release</h2><p class="rel-note" style="margin:0">This document is marked <span class="crux">crucial</span>. Verifying crucial material means checking its co-attestations, which is per-document work outside the release flow; that surface is not built yet.</p>`;
+      else if(canRelease())
+        relBar = `<h2 class="sec">Release</h2><div class="rv-bar" style="margin:0"><button class="btn" onclick="openReleaseDialog('${esc(id)}')">Release this document</button><span class="n">Moves it from collected to verified, in your name, on the permanent record.</span></div>`;
+    }
     $("#content").innerHTML =
       `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p>
        <h1 class="rec" style="font-size:26px">${esc(fm.title||id)}</h1>
@@ -511,7 +579,7 @@ async function openBundle(id){
        <h2 class="sec">Files in this bundle</h2><div class="card">${fileRows}</div>
        <h2 class="sec">History</h2>
        <p class="lede">Every revision this bundle has ever had. Nothing here can be edited or removed.</p>
-       <div class="card">${histRows}</div>`;
+       <div class="card">${histRows}</div>${relBar}`;
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
 
@@ -539,16 +607,147 @@ async function runSearch(){
   }catch(e){ $("#s-res").innerHTML = errPane(e); }
 }
 
-/* ---------- Review, Monitoring, Members: real reads, actions are the next increment ---------- */
-async function renderReview(){
-  $("#content").innerHTML = `<h1 class="rec">Review</h1><p class="lede">The release moment. Releasing moves material from collected to verified. Verifying means a document appears to be what it claims to be, never that it is accurate.</p><div id="rv"></div>`;
+/* ---------- Review: the release moment (op=search -> op=select -> op=release) ---------- */
+let REVIEW_ROWS = [];   // [{bundle_id,title,criticality,current_state,last_updated}]
+async function loadReviewRows(){
+  /* op=search carries criticality (op=list does not), which the flow needs to
+     keep crucial material out of op=release before the plane has to refuse it.
+     If search cannot answer, fall back to op=list with criticality unknown; the
+     plane still refuses a crucial selection and the refusal renders verbatim. */
   try{
-    const collected = (await loadRecord()).filter(b=>b.object_type==="information"&&b.current_state==="collected");
-    $("#rv").innerHTML = `<h2 class="sec">Awaiting review (${collected.length})</h2>` +
-      (collected.length ? `<table class="rec"><tbody>${recordRows(collected)}</tbody></table>` : `<div class="empty">Nothing is waiting for review.</div>`) +
-      `<p class="lede" style="margin-top:16px">Per-document and batch release, with the recorded-acknowledgment flow, wire to <span class="mono">op=release</span> next.</p>`;
+    const r = await rec("search",{q:"type:information state:collected", limit:"500", facets:"none"});
+    const hits = r.result && r.result.hits;
+    if(Array.isArray(hits)) return hits;
+  }catch(_){}
+  return (await loadRecord(true)).filter(b=>b.object_type==="information"&&b.current_state==="collected")
+                                 .map(b=>({...b, criticality:null}));
+}
+async function renderReview(){
+  $("#content").innerHTML = `<h1 class="rec">Review</h1><p class="lede">The release moment. Releasing moves material from collected to verified. Verifying means a document appears to be what it claims to be, never that it is accurate. Open a document to read it before releasing it; a release records your name.</p><div id="rv"><p class="count-line">Loading&hellip;</p></div>`;
+  try{
+    REVIEW_ROWS = await loadReviewRows();
+    const able = canRelease();
+    const rows = REVIEW_ROWS.map(b=>{
+      const crux = b.criticality==="crucial";
+      const pick = !able ? "" : `<td class="pick">${crux
+        ? `<span class="crux" title="crucial material never rides a batch or this flow at all">crucial</span>`
+        : `<input class="ck" type="checkbox" data-id="${esc(b.bundle_id)}" onclick="event.stopPropagation();rvCount()">`}</td>`;
+      return `<tr class="row" data-id="${esc(b.bundle_id)}">${pick}
+        <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span></td>
+        <td class="st">${chip(b.current_state)}</td>
+        <td class="upd">${fmtWhen(b.last_updated)}</td></tr>`;
+    }).join("");
+    const head = able ? `<th class="pick"><input class="ck" type="checkbox" id="rv-all" onclick="rvAll(this.checked)"></th>` : "";
+    const crucialN = REVIEW_ROWS.filter(b=>b.criticality==="crucial").length;
+    $("#rv").innerHTML =
+      `<h2 class="sec">Awaiting review (${REVIEW_ROWS.length})</h2>`
+      + (able ? `<div class="rv-bar"><button class="btn" id="rv-go" disabled onclick="openReleaseDialog()">Release</button><span class="n" id="rv-n">Nothing selected. Check documents to release them together, or open one and release it from its page.</span></div>` : "")
+      + (REVIEW_ROWS.length
+          ? `<table class="rec"><thead><tr>${head}<th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody>${rows}</tbody></table>`
+          : `<div class="empty">Nothing is waiting for review.</div>`)
+      + (!able && REVIEW_ROWS.length ? `<p class="rel-note">Releasing is a named member's decision. This credential can read and prepare the review, and cannot release. Sign in as a member holding <span class="mono">contribute</span> to release.</p>` : "")
+      + (able && crucialN ? `<p class="rel-note">${crucialN===1?"One document is":crucialN+" documents are"} marked crucial. Crucial material is never released in bulk, and never through this flow: verifying it means checking its co-attestations, which is per-document work. That surface is not built yet.</p>` : "");
     wireRows();
   }catch(e){ $("#rv").innerHTML = errPane(e); }
+}
+function rvPicked(){ return [...$("#content").querySelectorAll("input.ck[data-id]:checked")].map(c=>c.dataset.id); }
+function rvCount(){
+  const n = rvPicked().length, go = $("#rv-go"), lbl = $("#rv-n");
+  if(go) go.disabled = !n;
+  if(go) go.textContent = n>1 ? `Release ${n} documents` : "Release";
+  if(lbl) lbl.textContent = n ? (n===1 ? "One document selected." : `${n} documents selected. Releasing them together records one acknowledgment across the batch.`)
+                              : "Nothing selected. Check documents to release them together, or open one and release it from its page.";
+  const all = $("#rv-all");
+  if(all){ const boxes=[...$("#content").querySelectorAll("input.ck[data-id]")]; all.checked = boxes.length>0 && boxes.every(b=>b.checked); }
+}
+function rvAll(on){ $("#content").querySelectorAll("input.ck[data-id]").forEach(c=>c.checked=on); rvCount(); }
+
+/* ---- the release dialog. Acknowledgment and mitigation are the record the
+        doctrine requires: typed by the member, never prefilled, written into
+        every released document's Session Log by the plane. ---- */
+const REL_RULE = /["\\\r\n]/;
+function relField(id, label, hint){
+  return `<label class="fld" for="${id}">${label}</label>
+    <textarea class="txt" id="${id}" maxlength="500" placeholder="${esc(hint)}"
+      oninput="relValidate()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+    <div class="cc" id="${id}-cc">0 / 500</div>`;
+}
+function openReleaseDialog(fromBundle){
+  const ids = fromBundle ? [fromBundle] : rvPicked();
+  if(!ids.length) return;
+  const byId = {}; REVIEW_ROWS.forEach(b=>byId[b.bundle_id]=b); (RECORD_CACHE||[]).forEach(b=>{ if(!byId[b.bundle_id]) byId[b.bundle_id]=b; });
+  const one = ids.length===1;
+  const items = ids.map(id=>`<div class="it">${esc((byId[id]&&byId[id].title)||id)}<span class="id">${esc(id)}</span></div>`).join("");
+  $("#dlg").innerHTML =
+    `<h2>${one ? "Release this document" : `Release ${ids.length} documents`}</h2>
+     <p class="what">${one
+        ? "Releasing moves it from collected to verified: your statement that it appears to be what it claims to be, never that it is accurate. Your name, your acknowledgment, and what you checked are written into the document's permanent Session Log."
+        : "A batch release is one judgment applied to many documents. It is legitimate only when the batch is homogeneous, and it is recorded: your name, your acknowledgment of that homogeneity, and what you actually checked are written into every released document's permanent Session Log."}</p>
+     <div class="set">${items}</div>
+     ${relField("rel-ack","Acknowledgment", one
+        ? "e.g. Read the document against its source; it appears to be what it claims to be"
+        : "e.g. This batch is homogeneous: all from the same source and capture run, same shape and risk")}
+     ${relField("rel-mit","What you checked", one
+        ? "e.g. Compared the capture to the live source and confirmed the issuing authority"
+        : "e.g. Sampled five of the set against their sources; sender domains verified on all five")}
+     <div id="rel-err" class="teach hidden"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="rel-go" disabled onclick="doRelease(${esc(JSON.stringify(ids)).replace(/"/g,"&quot;")})">${one?"Release":"Release "+ids.length+" documents"}</button></div>`;
+  $("#dlg-wrap").classList.remove("hidden");
+  $("#rel-ack").focus();
+}
+function closeDialog(){ $("#dlg-wrap").classList.add("hidden"); $("#dlg").innerHTML=""; }
+$("#dlg-wrap").addEventListener("click", e=>{ if(e.target.id==="dlg-wrap") closeDialog(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#dlg-wrap").classList.contains("hidden")) closeDialog(); });
+function relValidate(){
+  let ok = true;
+  for(const id of ["rel-ack","rel-mit"]){
+    const el=$("#"+id), cc=$("#"+id+"-cc"); if(!el) return;
+    const v = el.value;
+    const bad = REL_RULE.test(v);
+    cc.textContent = bad ? "no quote, backslash, or newline; these are written verbatim into the record" : `${v.length} / 500`;
+    cc.classList.toggle("bad", bad);
+    if(bad || !v.trim()) ok = false;
+  }
+  const go=$("#rel-go"); if(go) go.disabled = !ok;
+}
+async function doRelease(ids){
+  const ack = $("#rel-ack").value.trim(), mit = $("#rel-mit").value.trim();
+  const btn = $("#rel-go"); btn.disabled = true; btn.textContent = "Releasing\u2026";
+  const err = $("#rel-err"); err.classList.add("hidden");
+  try{
+    const sel = await recPost("select", {ids}, {kind:"enumerated"});
+    const rel = await rec("release", {handle: sel.handle, acknowledgment: ack, mitigation: mit});
+    closeDialog();
+    RECORD_CACHE = null;                       // states moved; the cache is stale
+    await go("review");
+    const done = rel.released || ids;
+    $("#rv").insertAdjacentHTML("afterbegin",
+      `<div class="card" style="border-left:3px solid var(--verdigris)">
+         <div style="font-weight:600;margin-bottom:4px">${done.length===1?"Released.":`Released ${done.length} documents.`}</div>
+         <div style="font-size:13.5px;color:var(--ink-soft)">Each now carries a Session Log entry with your name, the acknowledgment, and what you checked. ${done.length===1?"It appears":"They appear"} in the record as <span class="chip verified">verified</span>.</div>
+         <div class="prov" style="margin-top:10px">${done.map(esc).join("   \u00b7   ")}</div>
+       </div>`);
+  }catch(e){ err.innerHTML = releaseRefusal(e); err.classList.remove("hidden");
+             btn.disabled = false; relValidate(); btn.textContent = ids.length===1?"Release":"Release "+ids.length+" documents"; }
+}
+/* The plane's refusals name offenders and reasons; carry that voice, never
+   translate it into "something went wrong". */
+function releaseRefusal(e){
+  const head = esc([e.reason, e.error].filter(Boolean).join(" \u00b7 ") || "The plane refused.");
+  const detail = e.detail ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
+  let off = "";
+  if(Array.isArray(e.offenders) && e.offenders.length){
+    off = `<ul class="offenders">` + e.offenders.map(o=>{
+      if(typeof o === "string") return `<li>${esc(o)}</li>`;
+      if(o.missing) return `<li>${esc(o.id)} \u2014 missing ${esc(o.missing.join(", "))}</li>`;
+      if(o.from)    return `<li>${esc(o.id)} \u2014 currently ${esc(o.from)}</li>`;
+      return `<li>${esc(JSON.stringify(o))}</li>`;
+    }).join("") + `</ul>`;
+  }
+  const again = e.reason==="SET_MOVED" ? `<div style="margin-top:6px">The list below has been refreshed; look again and re-select.</div>` : "";
+  if(e.reason==="SET_MOVED"){ RECORD_CACHE=null; renderReview(); }
+  return `<b>${head}</b>${detail}${off}${again}`;
 }
 async function renderMonitoring(){
   $("#content").innerHTML = `<h1 class="rec">Monitoring &amp; developments</h1><p class="lede">Source changes and overdue clocks surface here. Reads <span class="mono">op=monitor</span> ticks and source status.</p>`;
