@@ -1,5 +1,19 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v19, 2026-07-28 session, part seventeen. "Source Material" (title case), and
+its heading now matches Session Log and Review Notes exactly: those are the
+document's own ## headings styled by the prose rules (19px record serif),
+while the built heading had been the smaller structural h2.sec (17px). The
+built subsection heading gets its own ch2 class carrying the prose
+subsection treatment, so all subsection titles on the page read at one
+size. Harness asserts the class and the title.
+
+(v18 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v18, 2026-07-28 session, part sixteen. "The source material" renamed to
 "Source material", and it now opens collapsed like Session Log and Review
 Notes; the primary document remains one gesture away through the tab bar's
