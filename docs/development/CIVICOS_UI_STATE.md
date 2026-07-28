@@ -1,5 +1,22 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v23, 2026-07-28 session, part twenty-one, Bob's three. Focuses and Projects
+lists drop the Type column (single-type lists; the sortable table takes a
+showType flag). Review converts its collected chips and the crucial mark to
+the SAME seals as everywhere else (the crucial seal replaces both the crux
+text in the pick column and the word chip beside titles), and its Item,
+State, and Updated headers sort with the shared mechanism; a sort repaint
+preserves a selection in progress exactly like the liveness repaint does.
+Monitoring's two sections (Needs a second look, Watched sources) gain full
+sortable headed tables; one sort governs both, and the Type column stays
+there because those lists can mix types.
+
+(v22 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v22, 2026-07-28 session, part twenty. TYPE_LABEL for information shortened
 to "Info" everywhere the label renders (the Type column, filtered lists,
 the document page's cited-by rows). Harness updated.

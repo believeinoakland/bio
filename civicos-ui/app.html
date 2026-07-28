@@ -911,12 +911,13 @@ document.addEventListener("click", e=>{
 });
 function fmtWhen(t){ if(!t) return ""; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleDateString(undefined,{day:"numeric",month:"short"}); }
 
-function recordRows(list){
+function recordRows(list, showType){
+  if(showType===undefined) showType = true;
   return list.map(b=>{
     const crux = b.criticality==="crucial" ? " "+sealFor("crit","crucial") : "";
     return `<tr class="row" data-id="${esc(b.bundle_id)}">
       <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}</td>
-      <td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(TYPE_LABEL[b.object_type]||b.object_type||"")}</td>
+      ${showType?`<td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(TYPE_LABEL[b.object_type]||b.object_type||"")}</td>`:""}
       <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
       <td class="upd">${fmtWhen(b.last_updated)}</td>
     </tr>`;
@@ -927,7 +928,13 @@ function wireRows(){ $("#content").querySelectorAll("tr.row").forEach(r=>r.oncli
 /* Sortable list headers: click sorts ascending, click again flips. Plane
    order until the reader asks otherwise; state resets per screen. */
 let LIST_SORT = { col:null, dir:1 }, LIST_REPAINT = null;
-const LIST_COLS = [["title","Item"],["type","Type"],["state","State"],["updated","Updated"]];
+function listCols(showType){
+  return showType ? [["title","Item"],["type","Type"],["state","State"],["updated","Updated"]]
+                  : [["title","Item"],["state","State"],["updated","Updated"]];
+}
+function thSort(c, label){
+  return `<th class="sortable" onclick="listSortBy('${c}')">${label}${LIST_SORT.col===c?`<span class="sarr">${LIST_SORT.dir>0?"\u25B2":"\u25BC"}</span>`:""}</th>`;
+}
 function sortList(list){
   if(!LIST_SORT.col) return list;
   const c = LIST_SORT.col, d = LIST_SORT.dir;
@@ -937,12 +944,13 @@ function sortList(list){
              : (b.last_updated||"");
   return [...list].sort((a,b)=>{ const x=key(a), y=key(b); return x<y?-d:x>y?d:0; });
 }
-function listHead(){
-  return `<thead><tr>`+LIST_COLS.map(([c,label])=>
-    `<th class="sortable" onclick="listSortBy('${c}')">${label}${LIST_SORT.col===c?`<span class="sarr">${LIST_SORT.dir>0?"\u25B2":"\u25BC"}</span>`:""}</th>`).join("")+`</tr></thead>`;
+function listHead(showType){
+  return `<thead><tr>`+listCols(showType).map(([c,l])=>thSort(c,l)).join("")+`</tr></thead>`;
 }
-function listTable(list){
-  return `<table class="rec">${listHead()}<tbody id="recrows">${list.length?recordRows(sortList(list)):`<tr><td colspan="4" class="empty">Nothing here.</td></tr>`}</tbody></table>`;
+function listTable(list, showType){
+  if(showType===undefined) showType = true;
+  const span = showType?4:3;
+  return `<table class="rec">${listHead(showType)}<tbody id="recrows">${list.length?recordRows(sortList(list), showType):`<tr><td colspan="${span}" class="empty">Nothing here.</td></tr>`}</tbody></table>`;
 }
 function listSortBy(col){
   if(LIST_SORT.col===col) LIST_SORT.dir *= -1; else LIST_SORT = { col, dir:1 };
@@ -982,8 +990,8 @@ async function renderFiltered(screen, type, title, lede){
   $("#content").innerHTML = `<h1 class="rec">${esc(title)}</h1><p class="lede">${esc(lede)}</p><div id="recrows-holder"></div>`;
   try{
     const list = (await loadRecord()).filter(b=>b.object_type===type || (type==="focus"&&b.object_type==="problem"));
-    LIST_REPAINT = ()=>{ $("#recrows-holder").innerHTML = listTable(list); wireRows(); };
-    $("#recrows-holder").innerHTML = listTable(list);
+    LIST_REPAINT = ()=>{ $("#recrows-holder").innerHTML = listTable(list, false); wireRows(); };
+    $("#recrows-holder").innerHTML = listTable(list, false);
     wireRows();
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
@@ -1457,6 +1465,8 @@ async function renderReview(){
   try{
     REVIEW_ROWS = await loadReviewRows();
     paintReview();
+    LIST_REPAINT = ()=>{ const keep = new Set(rvPicked()); paintReview();
+      $("#content").querySelectorAll("input.ck[data-id]").forEach(c=>{ if(keep.has(c.dataset.id)) c.checked=true; }); rvCount(); };
     let sig = listSig(REVIEW_ROWS);
     liveStart(async ()=>{
       const fresh = await loadReviewRows();
@@ -1472,23 +1482,24 @@ async function renderReview(){
 }
 function paintReview(){
     const able = canRelease();
-    const rows = REVIEW_ROWS.map(b=>{
+    const rows = sortList(REVIEW_ROWS).map(b=>{
       const crux = b.criticality==="crucial";
       const pick = !able ? "" : `<td class="pick">${crux
-        ? `<span class="crux" title="crucial material never rides a batch or this flow at all">crucial</span>`
+        ? sealFor("crit","crucial")
         : `<input class="ck" type="checkbox" data-id="${esc(b.bundle_id)}" onclick="event.stopPropagation();rvCount()">`}</td>`;
       return `<tr class="row" data-id="${esc(b.bundle_id)}">${pick}
-        <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${!able&&crux?" "+critChip("crucial"):""}</td>
-        <td class="st">${chip(b.current_state, b.object_type||"information")}</td>
+        <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${!able&&crux?" "+sealFor("crit","crucial"):""}</td>
+        <td class="st">${sealFor("state", b.current_state, b.object_type||"information")}</td>
         <td class="upd">${fmtWhen(b.last_updated)}</td></tr>`;
     }).join("");
-    const head = able ? `<th class="pick"><input class="ck" type="checkbox" id="rv-all" onclick="rvAll(this.checked)"></th>` : "";
+    const head = (able ? `<th class="pick"><input class="ck" type="checkbox" id="rv-all" onclick="rvAll(this.checked)"></th>` : "")
+               + thSort("title","Item") + thSort("state","State") + thSort("updated","Updated");
     const crucialN = REVIEW_ROWS.filter(b=>b.criticality==="crucial").length;
     $("#rv").innerHTML =
       `<h2 class="sec">Awaiting review (${REVIEW_ROWS.length})</h2>`
       + (able ? `<div class="rv-bar"><button class="btn" id="rv-go" disabled onclick="openReleaseDialog()">Release</button><span class="n" id="rv-n">Nothing selected. Check documents to release them together, or open one and release it from its page.</span></div>` : "")
       + (REVIEW_ROWS.length
-          ? `<table class="rec"><thead><tr>${head}<th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody>${rows}</tbody></table>`
+          ? `<table class="rec"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`
           : `<div class="empty">Nothing is waiting for review.</div>`)
       + (!able && REVIEW_ROWS.length ? `<p class="rel-note">Releasing is a named member's decision. This credential can read and prepare the review, and cannot release. Sign in as a member holding <span class="mono">contribute</span> to release.</p>` : "")
       + (able && crucialN ? `<p class="rel-note">${crucialN===1?"One document is":crucialN+" documents are"} marked crucial. Crucial material is never released in bulk, and never through this flow: verifying it means checking its co-attestations, which is per-document work. That surface is not built yet.</p>` : "");
@@ -1601,11 +1612,15 @@ async function renderMonitoring(){
     if(!hits.length) hits = await loadRecord();
     const flagged = hits.filter(h=>h.reeval_flag);
     const watched = hits.filter(h=>h.monitor_enabled && !h.reeval_flag);
-    $("#mon").innerHTML =
-      (flagged.length ? `<h2 class="sec">Needs a second look (${flagged.length})</h2><table class="rec"><tbody>${recordRows(flagged)}</tbody></table>` : "")
-      + (watched.length ? `<h2 class="sec">Watched sources (${watched.length})</h2><table class="rec"><tbody>${recordRows(watched)}</tbody></table>` : "")
-      + (!flagged.length && !watched.length ? `<div class="empty">Nothing is flagged and nothing is being watched right now.</div>` : "");
-    wireRows();
+    const paintMon = ()=>{
+      $("#mon").innerHTML =
+        (flagged.length ? `<h2 class="sec">Needs a second look (${flagged.length})</h2>${listTable(flagged)}` : "")
+        + (watched.length ? `<h2 class="sec">Watched sources (${watched.length})</h2>${listTable(watched)}` : "")
+        + (!flagged.length && !watched.length ? `<div class="empty">Nothing is flagged and nothing is being watched right now.</div>` : "");
+      wireRows();
+    };
+    paintMon();
+    LIST_REPAINT = paintMon;
   }catch(e){ $("#mon").innerHTML = errPane(e); }
 }
 async function renderMembers(){
