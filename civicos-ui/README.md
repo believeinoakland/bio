@@ -28,3 +28,9 @@ then sign in with the administrator password, or paste a `MEMBER_TOKEN` under
 This is a separate worker so the signed plane and its record stay untouched.
 Production folds the UI into `believeinoakland.com/CivicOS` later; this dev
 worker is scaffolding.
+
+- `check-semantics.mjs` — build check: the runtime's SEMANTICS table (the one
+  source of truth for what every state means, enables, and forbids on screen)
+  must cover every state the plane's store gates on, and may invent none. Run
+  `node check-semantics.mjs` from this directory; it fails the build on any
+  gap in either direction.

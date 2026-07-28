@@ -210,6 +210,78 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 
 /* line icons */
 svg.ic{display:none}
+
+/* ---- v3: the document page's strata ---- */
+.strata{display:flex;gap:2px;margin:14px 0 20px;border-bottom:var(--hair-strong);overflow-x:auto}
+.strata a{font-family:var(--font-ui);font-size:13.5px;color:var(--ink-soft);padding:7px 14px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.strata a:hover{color:var(--verdigris-dk)}
+.strata a.on{color:var(--ink);font-weight:600;border-bottom-color:var(--verdigris)}
+.chips-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 14px}
+.chip{cursor:help}
+.chip.crucial{color:var(--signal-dk);background:var(--tint-note);border-color:#d6a48c;font-weight:600}
+.chip.flag{color:var(--muted);background:var(--tint-muted);border-color:var(--rule)}
+
+/* click-over popover: the semantics table speaking */
+#pop{position:absolute;z-index:50;max-width:340px;background:var(--sheet);border:var(--hair-strong);box-shadow:var(--e-3);border-radius:var(--r-2);padding:13px 15px;font-size:13px;line-height:1.5}
+#pop .ph{font-weight:600;margin-bottom:4px}
+#pop .pm{color:var(--ink-soft);margin-bottom:8px}
+#pop ul{margin:4px 0 0;padding-left:16px;color:var(--ink-soft)}
+#pop li{margin:2px 0}
+#pop .no{color:var(--signal-dk)}
+#pop .nx{font-family:var(--font-fact);font-size:11px;color:var(--muted);margin-top:8px}
+
+/* source material viewers */
+details.src{border:var(--hair);background:var(--sheet);margin:0 0 10px;box-shadow:var(--e-2)}
+details.src>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:12px;padding:11px 14px}
+details.src>summary::-webkit-details-marker{display:none}
+details.src>summary .fn{font-family:var(--font-fact);font-size:12.5px;color:var(--ink);flex:1;word-break:break-all}
+details.src>summary .fm{font-family:var(--font-fact);font-size:11px;color:var(--muted);white-space:nowrap}
+details.src>summary::before{content:"\25B8";color:var(--muted);font-size:11px}
+details.src[open]>summary::before{content:"\25BE"}
+details.src .body{border-top:var(--hair);padding:12px 14px;max-height:420px;overflow:auto}
+details.src pre{margin:0;font-family:var(--font-fact);font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.bincard{border:var(--hair);background:var(--sheet);box-shadow:var(--e-2);padding:12px 14px;margin:0 0 10px}
+.bincard .fn{font-family:var(--font-fact);font-size:12.5px;word-break:break-all}
+.bincard .why{font-size:12.5px;color:var(--muted);margin-top:6px;max-width:60ch}
+.copybtn{font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--verdigris-dk);background:none;border:1px solid var(--rule);border-radius:var(--r-2);padding:2px 8px;cursor:pointer;margin-left:8px}
+.copybtn:hover{background:var(--card)}
+
+/* the session log and revision compare */
+.log-entry{border-left:2px solid var(--rule-strong);padding:2px 0 2px 14px;margin:0 0 14px}
+.log-entry .when{font-family:var(--font-fact);font-size:11.5px;color:var(--muted)}
+.log-entry .what{font-size:13.5px;margin:3px 0}
+.log-entry .said{font-family:var(--font-record);font-size:14px;color:var(--ink-soft);font-style:italic;margin:4px 0 0}
+.diffpane{border:var(--hair);background:var(--sheet);margin:8px 0 14px;max-height:380px;overflow:auto;font-family:var(--font-fact);font-size:12px;line-height:1.5}
+.diffpane .dl{padding:1px 12px;white-space:pre-wrap;word-break:break-word}
+.diffpane .add{background:var(--verdigris-tint)}
+.diffpane .del{background:var(--signal-tint);color:var(--signal-dk);text-decoration:line-through;text-decoration-thickness:1px}
+.linkrow{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:var(--hair);cursor:pointer}
+.linkrow:first-child{border-top:none}
+.linkrow:hover .lt{color:var(--verdigris-dk)}
+.linkrow .lt{font-size:14px;color:var(--ink)}
+.linkrow .ln{font-size:12.5px;color:var(--muted)}
+
+/* ---- v3: phones. Single column, rail becomes a scrolling top bar. ---- */
+@media (max-width:680px){
+  #work{grid-template-columns:1fr;grid-template-rows:var(--masthead-h) auto 1fr auto}
+  .masthead{grid-column:1/-1}
+  .masthead .msearch{display:none}
+  .rail{grid-row:2/3;grid-column:1/-1;flex-direction:row;align-items:center;overflow-x:auto;padding:6px 10px;border-right:none;border-bottom:var(--hair);gap:2px}
+  .nav{padding:7px 11px;font-size:13px;white-space:nowrap}
+  .nav.on{box-shadow:inset 0 -2px 0 0 var(--verdigris)}
+  .nav .g{display:none}
+  .rail .add{margin:0 0 0 6px;padding:7px 11px;white-space:nowrap;font-size:13px}
+  .rail .spacer{display:none}
+  .rail .pub-link{border-top:none;margin:0;padding:7px 11px;white-space:nowrap}
+  .content{grid-row:3/4;grid-column:1/-1;padding:16px 14px 32px}
+  .fence{grid-row:4/5;grid-column:1/-1;padding:0 14px}
+  table.rec td{padding:10px 8px 10px 0}
+  .kv{flex-direction:column;gap:2px}
+  .kv .k{min-width:0}
+  #dlg-wrap{padding:4vh 10px 10px}
+  .pub-body{padding:26px 20px 50px}
+  .pub-body h1{font-size:34px}
+}
 </style>
 </head>
 <body>
@@ -298,6 +370,7 @@ svg.ic{display:none}
 
 <!-- ============ RELEASE DIALOG (mounted on demand) ============ -->
 <div id="dlg-wrap" class="hidden"><div id="dlg" role="dialog" aria-modal="true"></div></div>
+<div id="pop" class="hidden"></div>
 
 <script>
 /* ============================================================
@@ -349,6 +422,58 @@ function canRelease(){
   return !!(PLANE.session && PLANE.me && PLANE.me.session
             && (PLANE.me.capabilities||[]).includes("contribute"));
 }
+
+/* ============================================================
+   DATA: every op contract in one place, plus liveness.
+   ============================================================ */
+const IMG_CACHE = new Map();     // bundle_id -> op=image result
+const PROJ_CACHE = new Map();    // bundle_id -> op=projection result (or null)
+let REVREF_CACHE = null;         // target_id -> [{from, fromTitle, rel, status, note}]
+async function getImage(id, force){
+  if(!force && IMG_CACHE.has(id)) return IMG_CACHE.get(id);
+  const r = (await rec("image",{id})).result;
+  IMG_CACHE.set(id, r); return r;
+}
+async function getProjection(id){
+  if(PROJ_CACHE.has(id)) return PROJ_CACHE.get(id);
+  let p = null;
+  try{ p = (await rec("projection",{id})).result || null; }catch(_){ p = null; }
+  PROJ_CACHE.set(id, p); return p;
+}
+/* Reverse citations, computed client-side: walk the projections of every
+   focus and project (the citing kinds) and index their references by target.
+   At the record's scale this is a handful of reads, cached for the session. */
+async function reverseRefs(id){
+  if(!REVREF_CACHE){
+    REVREF_CACHE = {};
+    try{
+      const citers = (await loadRecord()).filter(b=>["focus","problem","project"].includes(b.object_type));
+      for(const c of citers){
+        const p = await getProjection(c.bundle_id);
+        let fm = null; try{ fm = p && p.fm_json ? JSON.parse(p.fm_json) : null; }catch(_){}
+        for(const ref of (fm && fm.references) || []){
+          (REVREF_CACHE[ref.target] = REVREF_CACHE[ref.target] || []).push(
+            { from:c.bundle_id, fromTitle:c.title||c.bundle_id, fromType:c.object_type, rel:ref.rel, status:ref.status, note:ref.note });
+        }
+      }
+    }catch(_){}
+  }
+  return REVREF_CACHE[id] || [];
+}
+/* Liveness: when the visible state of the record changes, an open list
+   reflects it promptly. Polite polling, paused when the tab is hidden or a
+   dialog is open, and it never disrupts a selection in progress. */
+const LIVE = { timer:null };
+function liveStop(){ if(LIVE.timer){ clearInterval(LIVE.timer); LIVE.timer=null; } }
+function liveStart(fn, ms){
+  liveStop();
+  LIVE.timer = setInterval(async ()=>{
+    if(document.hidden) return;
+    if(!$("#dlg-wrap").classList.contains("hidden")) return;
+    try{ await fn(); }catch(_){}
+  }, ms || 45000);
+}
+function listSig(list){ return list.map(b=>b.bundle_id+"|"+b.current_state+"|"+b.last_updated).join(";"); }
 function teach(el, err){
   const msg = err && (err.error || err.reason || err.detail) ? [err.reason,err.error,err.detail].filter(Boolean).join(" · ") : "Could not reach the plane. If this is a local file against a remote plane, that plane must allow cross-origin reads (CORS).";
   el.innerHTML = esc(msg); el.classList.remove("hidden");
@@ -435,6 +560,8 @@ let RECORD_CACHE = null;
 function setActive(id){ document.querySelectorAll("#rail .nav").forEach(n=>n.classList.toggle("on", n.dataset.go===id)); }
 async function go(screen){
   setActive(screen);
+  liveStop();
+  $("#pop").classList.add("hidden");
   const c = $("#content");
   c.scrollTop = 0;
   if(PLANE.preview){
@@ -458,17 +585,113 @@ async function loadRecord(force){
   RECORD_CACHE = (await rec("list")).result || [];
   return RECORD_CACHE;
 }
+/* ============================================================
+   SEMANTICS: one source of truth for what every state MEANS,
+   enables, and forbids, keyed to the plane's actual catalog.
+   Every chip, teach sentence, and affordance renders from here.
+   check-semantics.mjs verifies this table against the plane's
+   source; the block between the markers must stay extractable.
+   ============================================================ */
+/*__SEMANTICS_START__*/
+const SEMANTICS = {
+  spaces: {
+    working:   { label:"working record",   meaning:"Behind the fence. Material under the group's judgment; never public, never served to anyone without a credential." },
+    published: { label:"published record", meaning:"Across the fence. Ratified material anyone can read, and verify against its published hash without the group's cooperation." }
+  },
+  types: {
+    information: { noun:"document", states: {
+      collected: { chip:"collected", meaning:"Captured into the working record and awaiting a member's review.",
+        enables:["read it and its captured source material","release it to verified, a named member's judgment","revise it; every revision is kept"],
+        forbids:[["publish","only ratified material crosses the fence"]], next:["verified"] },
+      verified:  { chip:"verified", meaning:"A member attested it appears to be what it claims to be, never that it is accurate.",
+        enables:["cite it from a project","retire it"],
+        forbids:[["silent edits","revisions append; the history is permanent"]], next:["retired"] },
+      retired:   { chip:"retired", quiet:true, meaning:"Withdrawn from active use by a member. Kept forever; nothing leaves the record.",
+        enables:["read it and its history"],
+        forbids:[["new citations","projects cite active material"]], next:[] },
+    }},
+    focus: { noun:"focus", states: {
+      surfaced:  { chip:"surfaced", meaning:"A question the record has raised, awaiting the group's triage.",
+        enables:["elevate it into a project","defer it with a reason","dismiss it with a reason"], forbids:[], next:["elevated","deferred","dismissed"] },
+      elevated:  { chip:"elevated", attention:true, meaning:"Triage judged it worth pursuing; a project carries it forward.",
+        enables:["follow it into its project"], forbids:[], next:[] },
+      deferred:  { chip:"deferred", quiet:true, meaning:"Parked by triage with a reason, kept, and returnable.",
+        enables:["re-triage it later"], forbids:[], next:["elevated","dismissed"] },
+      dismissed: { chip:"dismissed", quiet:true, meaning:"Declined by triage with a reason. Kept, never deleted, so the decision itself stays accountable.",
+        enables:["read the reason"], forbids:[], next:[] },
+    }},
+    project: { noun:"project", states: {
+      forming:       { chip:"forming", meaning:"Scope and objective being set; evidence gathering begins.",
+        enables:["cite verified documents","state the objective"], forbids:[], next:["investigating"] },
+      investigating: { chip:"investigating", meaning:"Active work: citations accumulate, work products draft toward ratification.",
+        enables:["cite","draft work products","initiate escalation"], forbids:[], next:[] },
+    }},
+  },
+  criticality: {
+    routine:    { chip:null, meaning:"Ordinary material." },
+    supporting: { chip:null, meaning:"Context and corroboration for a case." },
+    crucial:    { chip:"crucial", attention:true, meaning:"Load-bearing for a case. Verified individually with its co-attestations checked; never released in bulk." },
+  },
+  flags: {
+    reeval:      { chip:"re-evaluate", meaning:"Something this depends on changed; a member should look again." },
+    annotations: { chip:"annotations", meaning:"Members have open annotations on this item." },
+    monitored:   { chip:"monitored",  meaning:"The plane re-checks the live source on a schedule and flags drift." },
+  },
+};
+/*__SEMANTICS_END__*/
+SEMANTICS.types.problem = SEMANTICS.types.focus;   // the plane's older name for a focus
 const TYPE_LABEL = {information:"Information", focus:"Focus", problem:"Focus", project:"Project", action:"Action", annotation:"Annotation", source:"Source"};
-const STATE_LABEL = {modified:"source changed", awaiting_response:"awaiting", problem:"surfaced"};
-function chip(state){ const label = STATE_LABEL[state] || state; return `<span class="chip ${esc(state)}">${esc(label)}</span>`; }
+function sem(type, state){
+  const t = SEMANTICS.types[type];
+  if(t && t.states[state]) return t.states[state];
+  for(const k in SEMANTICS.types){ if(SEMANTICS.types[k].states[state]) return SEMANTICS.types[k].states[state]; }
+  return { chip: state, meaning: "" };
+}
+/* A chip is the compact scale; the click-over is the disclosure. Chip clicks
+   stop propagation so a chip inside a clickable row discloses instead of
+   navigating. */
+function chip(state, type){
+  const s = sem(type, state);
+  return `<span class="chip ${esc(state)}" onclick="chipPop(event,this)" data-pop-state="${esc(state)}" data-pop-type="${esc(type||"")}">${esc(s.chip||state)}</span>`;
+}
+function critChip(c){
+  const row = SEMANTICS.criticality[c];
+  return row && row.chip ? `<span class="chip ${esc(c)}" onclick="chipPop(event,this)" data-pop-crit="${esc(c)}">${esc(row.chip)}</span>` : "";
+}
+function flagChip(f){
+  const row = SEMANTICS.flags[f];
+  return row ? `<span class="chip flag" onclick="chipPop(event,this)" data-pop-flag="${esc(f)}">${esc(row.chip)}</span>` : "";
+}
+function popHtml(head, meaning, enables, forbids, next){
+  const en = (enables&&enables.length) ? `<ul>${enables.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "";
+  const fo = (forbids&&forbids.length) ? `<ul>${forbids.map(x=>`<li class="no">${esc(x[0])}: ${esc(x[1])}</li>`).join("")}</ul>` : "";
+  const nx = (next&&next.length) ? `<div class="nx">can move to: ${esc(next.join(", "))}</div>` : "";
+  return `<div class="ph">${esc(head)}</div><div class="pm">${esc(meaning)}</div>${en}${fo}${nx}`;
+}
+function chipPop(e, c){
+  e.stopPropagation();
+  const pop = $("#pop");
+  let html = "";
+  if(c.dataset.popState){ const s = sem(c.dataset.popType, c.dataset.popState); html = popHtml(s.chip||c.dataset.popState, s.meaning, s.enables, s.forbids, s.next); }
+  else if(c.dataset.popCrit){ const r = SEMANTICS.criticality[c.dataset.popCrit]; html = popHtml(r.chip||c.dataset.popCrit, r.meaning); }
+  else if(c.dataset.popFlag){ const r = SEMANTICS.flags[c.dataset.popFlag]; html = popHtml(r.chip, r.meaning); }
+  pop.innerHTML = html; pop.classList.remove("hidden");
+  const r = c.getBoundingClientRect();
+  pop.style.left = Math.max(8, Math.min(window.scrollX + r.left, window.scrollX + window.innerWidth - 360)) + "px";
+  pop.style.top  = (window.scrollY + r.bottom + 6) + "px";
+}
+document.addEventListener("click", e=>{
+  if(!e.target.closest("#pop") && !e.target.closest(".chip")) $("#pop").classList.add("hidden");
+});
 function fmtWhen(t){ if(!t) return ""; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleDateString(undefined,{day:"numeric",month:"short"}); }
 
 function recordRows(list){
   return list.map(b=>{
     const ty = b.object_type && b.object_type!=="information" ? ` <span class="ty">${esc(TYPE_LABEL[b.object_type]||b.object_type)}</span>` : "";
+    const crux = b.criticality==="crucial" ? " "+critChip("crucial") : "";
     return `<tr class="row" data-id="${esc(b.bundle_id)}">
-      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${ty}</td>
-      <td class="st">${chip(b.current_state)}</td>
+      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${ty}${crux}</td>
+      <td class="st">${chip(b.current_state, b.object_type)}</td>
       <td class="upd">${fmtWhen(b.last_updated)}</td>
     </tr>`;
   }).join("");
@@ -478,17 +701,26 @@ function wireRows(){ $("#content").querySelectorAll("tr.row").forEach(r=>r.oncli
 async function renderRecord(){
   $("#content").innerHTML = `<h1 class="rec">Your accountability record</h1><p class="count-line" id="rc">Loading&hellip;</p>
     <table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody id="recrows"></tbody></table>`;
-  try{
-    const list = await loadRecord();
+  const paint = (list)=>{
     const collected = list.filter(b=>b.current_state==="collected").length;
+    if(!$("#rc")) return;
     $("#rc").textContent = `${list.length} items · ${collected} awaiting review`;
     $("#recrows").innerHTML = list.length ? recordRows(list) : `<tr><td colspan="3" class="empty">The record is empty.</td></tr>`;
     wireRows();
-    // rail counts
     const byType = {}; list.forEach(b=>byType[b.object_type]=(byType[b.object_type]||0)+1);
     if($("#cnt-review")) $("#cnt-review").textContent = collected||"";
     if($("#cnt-focuses")) $("#cnt-focuses").textContent = (byType.focus||byType.problem||0)||"";
     if($("#cnt-projects")) $("#cnt-projects").textContent = (byType.project||0)||"";
+  };
+  try{
+    let list = await loadRecord();
+    let sig = listSig(list);
+    paint(list);
+    liveStart(async ()=>{
+      const fresh = await loadRecord(true);
+      const s = listSig(fresh);
+      if(s!==sig && $("#recrows")){ sig = s; paint(fresh); }
+    });
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
 
@@ -529,58 +761,204 @@ function mdLite(md){
   }
   closeList(); return out;
 }
+/* ============================================================
+   THE DOCUMENT PAGE, content first, on four strata:
+     1 What it says   the prose and the captured source material itself
+     2 In the case    what surfaced it, what cites it, what it supports
+     3 Trust          provenance, hashes, monitor, one verify posture
+     4 The record     the session log and every revision, comparable
+   The reader's questions in the reader's order; provenance serves the
+   content instead of standing in front of it. Release stays at the end,
+   after the reading, because the judgment follows the evidence.
+   ============================================================ */
+function fmtBytes(n){ if(!n&&n!==0) return ""; if(n<1024) return n+" B"; if(n<1048576) return (n/1024).toFixed(1)+" KB"; return (n/1048576).toFixed(1)+" MB"; }
+function shaShort(s){ return (s||"").replace(/^sha256:/,"").slice(0,16); }
+function copyBtn(v){ return `<button class="copybtn" onclick="event.stopPropagation();navigator.clipboard&&navigator.clipboard.writeText('${esc(v)}');this.textContent='copied'">copy</button>`; }
+
+/* Group a bundle's working files for the source-material section: chunked
+   binaries (name.p000, .p001, ...) fold into one item with their .tsr
+   timestamp beside them; text files carry their content for in-place reading. */
+function groupSources(img){
+  const items = {};
+  for(const k of Object.keys(img)){
+    if(k.startsWith("_history/") || k==="bundle.md") continue;
+    const v = img[k];
+    const chunk = /^(.*)\.p(\d{3})$/.exec(k);
+    const tsr = /^(.*)\.tsr$/.exec(k);
+    const base = chunk ? chunk[1] : (tsr ? tsr[1] : k);
+    const it = items[base] = items[base] || { base, parts:[], tsr:null, text:null, meta:null };
+    if(chunk) it.parts.push({ path:k, bytes:v.bytes||0, sha:v.sha256||v.blobSha||"" });
+    else if(tsr) it.tsr = { path:k, bytes:v.bytes||0 };
+    else if(typeof v === "string") it.text = v;
+    else it.meta = { bytes:v.bytes||0, sha:v.sha256||v.blobSha||"" };
+  }
+  return Object.values(items);
+}
+function renderTextSource(name, text){
+  let pretty = text, kind = "text";
+  if(/\.json$/i.test(name)){ try{ pretty = JSON.stringify(JSON.parse(text), null, 2); kind="json"; }catch(_){}}
+  return `<details class="src"><summary><span class="fn">${esc(name)}</span><span class="fm">${esc(kind)} · ${text.length.toLocaleString()} chars</span></summary>
+    <div class="body"><pre>${esc(pretty)}</pre></div></details>`;
+}
+function renderSourceItem(it){
+  if(it.text !== null) return renderTextSource(it.base, it.text);
+  if(it.parts.length){
+    it.parts.sort((a,b)=>a.path<b.path?-1:1);
+    const total = it.parts.reduce((s,p)=>s+(p.bytes||0),0);
+    const shas = it.parts.map(p=>`<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(p.path.split("/").pop())}</span><span class="v">${esc(shaShort(p.sha))}\u2026 ${copyBtn(p.sha)} <span style="color:var(--muted)">${esc(fmtBytes(p.bytes))}</span></span></div>`).join("");
+    return `<div class="bincard"><div class="fn">${esc(it.base)} <span style="color:var(--muted)">· ${esc(fmtBytes(total))} in ${it.parts.length} parts${it.tsr?" · RFC 3161 timestamp attached":""}</span></div>
+      <div class="why">An archived snapshot, held by hash in the record. In-browser viewing of binary snapshots awaits the plane's blob-serving path; until then anyone can fetch the original from the source locator below and confirm it against these hashes.</div>
+      <details class="src" style="margin-top:8px;box-shadow:none"><summary><span class="fn">part hashes</span></summary><div class="body">${shas}</div></details></div>`;
+  }
+  return `<div class="bincard"><div class="fn">${esc(it.base)} <span style="color:var(--muted)">· ${esc(fmtBytes(it.meta&&it.meta.bytes))}</span></div>
+    <div class="why">Held by hash: ${esc(shaShort(it.meta&&it.meta.sha))}\u2026 ${it.meta&&it.meta.sha?copyBtn(it.meta.sha):""}</div></div>`;
+}
+
+/* The session log, read from the record itself: _history/promotion_*.json.
+   Fields render when present and are never invented; whatever else an entry
+   carries stays readable in the raw line. */
+function parseLog(img){
+  const entries = [];
+  for(const k of Object.keys(img)){
+    if(!/^_history\/promotion_.*\.json$/.test(k) || typeof img[k]!=="string") continue;
+    let j = null; try{ j = JSON.parse(img[k]); }catch(_){}
+    entries.push({ path:k, j, raw: img[k] });
+  }
+  entries.sort((a,b)=>a.path<b.path?-1:1);
+  return entries;
+}
+function renderLogEntry(e){
+  const j = e.j || {};
+  const when = j.timestamp || j.when || (e.path.match(/promotion_(\d{8}T\d{6}Z)/)||[])[1] || "";
+  const from = j.from_state || j.from, to = j.to_state || j.to;
+  const who = j.member || j.author || j.actor || j.by || "";
+  const move = from||to ? `${esc(from||"?")} \u2192 ${esc(to||"?")}` : "revision";
+  const said = [];
+  if(j.acknowledgment) said.push(`\u201C${esc(j.acknowledgment)}\u201D`);
+  if(j.mitigation) said.push(`checked: ${esc(j.mitigation)}`);
+  return `<div class="log-entry">
+    <div class="when">${esc(when)}${who?` · ${esc(who)}`:""}</div>
+    <div class="what">${move}</div>
+    ${said.length?`<div class="said">${said.join("<br>")}</div>`:""}
+    <details class="src" style="box-shadow:none;border:none;margin:4px 0 0"><summary style="padding:2px 0"><span class="fm">the raw entry</span></summary><div class="body" style="border-top:none;padding:6px 0 0"><pre>${esc(e.raw)}</pre></div></details>
+  </div>`;
+}
+
+/* Revisions of bundle.md, comparable in place: a small line diff, additions
+   tinted verdigris, removals struck in the signal tint. */
+function lineDiff(a, b){
+  const A=a.split("\n"), B=b.split("\n");
+  const m=A.length, n=B.length, MAX=4000;
+  if(m*n>MAX*MAX) return null;
+  const L=Array.from({length:m+1},()=>new Uint16Array(n+1));
+  for(let i=m-1;i>=0;i--) for(let j=n-1;j>=0;j--)
+    L[i][j] = A[i]===B[j] ? L[i+1][j+1]+1 : Math.max(L[i+1][j], L[i][j+1]);
+  const out=[]; let i=0,j=0;
+  while(i<m&&j<n){
+    if(A[i]===B[j]){ out.push({t:" ",l:A[i]}); i++; j++; }
+    else if(L[i+1][j]>=L[i][j+1]){ out.push({t:"-",l:A[i]}); i++; }
+    else { out.push({t:"+",l:B[j]}); j++; }
+  }
+  while(i<m) out.push({t:"-",l:A[i++]});
+  while(j<n) out.push({t:"+",l:B[j++]});
+  return out;
+}
+function toggleDiff(btn, revPath, bundleId){
+  const holder = $("#diff-holder");
+  if(holder.dataset.open===revPath){ holder.innerHTML=""; holder.dataset.open=""; return; }
+  const img = IMG_CACHE.get(bundleId);
+  const cur = img && img["bundle.md"], old = img && img[revPath];
+  if(typeof cur!=="string" || typeof old!=="string"){ holder.innerHTML = `<div class="empty">That revision's text is not readable here.</div>`; return; }
+  const d = lineDiff(old, cur);
+  holder.dataset.open = revPath;
+  holder.innerHTML = d ? `<div class="diffpane">${d.map(x=>`<div class="dl ${x.t==="+"?"add":x.t==="-"?"del":""}">${esc(x.l)||"&nbsp;"}</div>`).join("")}</div>
+      <p class="lede" style="margin:0 0 10px">What that revision said, against what the document says now. Struck lines were in the revision; tinted lines are current.</p>`
+    : `<div class="empty">Too large to diff in the browser.</div>`;
+}
+
 async function openBundle(id){
-  setActive("");
+  setActive(""); liveStop();
   $("#content").innerHTML = `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p><p class="count-line">Loading&hellip;</p>`;
   try{
-    const img = (await rec("image",{id})).result;
+    const [img, proj] = await Promise.all([getImage(id, true), getProjection(id)]);
     if(!img){ $("#content").innerHTML = errPane({error:"This bundle was not found."}); return; }
     const bundleMd = typeof img["bundle.md"]==="string" ? img["bundle.md"] : "";
     const { fm, body } = splitFm(bundleMd);
-    /* `classification` left the catalog in 0.33.0 (removed, not deprecated);
-       residue in old frontmatter drains on each bundle's next promotion and is
-       not presented as a current fact of the record. */
-    const factKeys = [["current_state","State"],["object_type","Type"],["criticality","Criticality"],["source.authority","Issued by"],["source.locator","Source"],["source.retrieved","Retrieved"],["source_status","Source status"],["content_hash","Content hash"]];
-    const facts = factKeys.filter(k=>fm[k[0]]).map(k=>{
-      const plain = !/hash|locator/.test(k[0]);
-      return `<div class="kv"><span class="k">${esc(k[1])}</span><span class="v ${plain?"plain":""}">${esc(fm[k[0]])}</span></div>`;
-    }).join("") || `<div class="kv"><span class="k">Bundle</span><span class="v">${esc(id)}</span></div>`;
-    const host = (fm["source.locator"]||"").replace(/^https?:\/\//,"").split("/")[0];
-    const shaGroups = (fm["content_hash"]||"").replace(/^sha256:/,"").replace(/(.{8})/g,"$1 ").trim().split(" ").slice(0,3).join(" ");
-    const prov = [];
-    if(host) prov.push("source: "+host);
-    if(fm["source.retrieved"]) prov.push("captured "+fm["source.retrieved"]);
-    if(shaGroups) prov.push("sha256 "+shaGroups+" \u2026");
-    const provLine = prov.length ? `<div class="prov" style="margin:14px 0 2px">${esc(prov.join("   \u00b7   "))}</div>` : "";
-    const files = Object.keys(img).filter(k=>!k.startsWith("_history/")&&k!=="bundle.md").sort();
-    const fileRows = files.length ? files.map(k=>{
-      const v = img[k];
-      const meta = typeof v==="string" ? v.length.toLocaleString()+" chars" : ((v.sha256||v.blobSha||"")+"").slice(0,12)+"… "+(v.bytes?v.bytes.toLocaleString()+" bytes":"");
-      return `<div class="kv"><span class="k mono" style="min-width:0;flex:1;color:var(--ink-soft)">${esc(k)}</span><span class="v">${esc(meta)}</span></div>`;
-    }).join("") : `<div class="empty">Only bundle.md.</div>`;
-    const hist = Object.keys(img).filter(k=>k.startsWith("_history/")).sort();
-    const histRows = hist.length ? hist.map(k=>{ const rev=k.replace(/^_history\/bundle_|\.md$/g,""); return `<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(rev)}</span><span class="v plain" style="color:var(--muted)">earlier revision, kept</span></div>`; }).join("") : `<div class="empty">This is the first revision.</div>`;
-    /* The per-document release moment lives HERE, after the reading, because
-       the doctrine's reviewer must see the source material itself. Present
-       only for collected Information under a capable member session; crucial
-       material never rides op=release, so it gets the reason instead. */
+    let fmj = null; try{ fmj = proj && proj.fm_json ? JSON.parse(proj.fm_json) : null; }catch(_){}
+    const otype = fm.object_type || (proj&&proj.object_type) || "information";
+    const noun = (SEMANTICS.types[otype]&&SEMANTICS.types[otype].noun) || "item";
+
+    /* --- stratum 1: what it says --- */
+    const chipsRow = `<div class="chips-row">${chip(fm.current_state||proj&&proj.current_state, otype)}${critChip(fm.criticality||(proj&&proj.criticality))}${(proj&&proj.monitor_enabled)?flagChip("monitored"):""}${(proj&&proj.reeval_flag)?flagChip("reeval"):""}${(proj&&proj.annotations_open)?flagChip("annotations"):""}</div>`;
+    const sources = groupSources(img);
+    const s1 = `<div id="s1"></div>${chipsRow}
+      <div class="prose">${mdLite(body)}</div>
+      ${sources.length ? `<h2 class="sec">The source material</h2>${sources.map(renderSourceItem).join("")}` : ""}`;
+
+    /* --- stratum 2: in the case --- */
+    const fwd = (fmj && fmj.references) || [];
+    const rev = await reverseRefs(id);
+    const objective = fmj && fmj.objective ? `<div class="card"><div class="kv"><span class="k">Objective</span><span class="v plain">${esc(fmj.objective)}</span></div>${fmj.workproduct_state?`<div class="kv"><span class="k">Work product</span><span class="v plain">${chip(fmj.workproduct_state, "workproduct")||esc(fmj.workproduct_state)}</span></div>`:""}</div>` : "";
+    const fwdRows = fwd.length ? fwd.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.target)}')"><span class="lt">${esc(r.target)}</span><span class="ln">${esc(r.rel||"cites")}${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
+    const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.fromTitle)}</span><span class="ln">${esc(TYPE_LABEL[r.fromType]||r.fromType)} · ${esc(r.rel||"cites")} this${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
+    const groupLine = (proj&&proj.group_id) ? `<p class="lede" style="margin:0 0 12px">In the record of <span class="mono">${esc(proj.group_id)}</span>.</p>` : "";
+    const s2 = `<div id="s2"></div><h2 class="sec">In the case</h2>${groupLine}${objective}
+      ${fwdRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">This ${esc(noun)} cites</h3><div class="card" style="padding:4px 18px">${fwdRows}</div>`:""}
+      ${revRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">Cited by</h3><div class="card" style="padding:4px 18px">${revRows}</div>`:""}
+      ${!objective&&!fwdRows&&!revRows?`<div class="empty">Nothing cites this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.</div>`:""}`;
+
+    /* --- stratum 3: trust --- */
+    const loc = fm["source.locator"]||"";
+    const trustRows = [
+      ["Issued by", fm["source.authority"], true],
+      ["Source", loc ? `<a href="${esc(loc)}" target="_blank" rel="noopener noreferrer">${esc(loc)}</a>` : "", false, true],
+      ["Retrieved", fm["source.retrieved"], true],
+      ["Source status", fm["source_status"], true],
+      ["Content hash", fm["content_hash"] ? esc(fm["content_hash"])+copyBtn(fm["content_hash"]) : "", false, true],
+      ["Bundle hash", (proj&&proj.bundle_sha) ? "sha256:"+esc(proj.bundle_sha)+copyBtn(proj.bundle_sha) : "", false, true],
+      ["Monitor", (proj&&proj.monitor_enabled)?`re-checked ${esc(proj.monitor_frequency||"on schedule")}${proj.monitor_last_checked?`, last ${esc(proj.monitor_last_checked)}`:""}`:"", true],
+    ].filter(r=>r[1]);
+    const s3 = trustRows.length ? `<div id="s3"></div><h2 class="sec">Trust</h2>
+      <div class="card">${trustRows.map(r=>`<div class="kv"><span class="k">${esc(r[0])}</span><span class="v ${r[2]?"plain":""}">${r[3]?r[1]:esc(r[1])}</span></div>`).join("")}</div>
+      <p class="lede" style="margin:6px 0 0">Anyone may confirm the captured material against these hashes, without this group's cooperation.</p>` : "";
+
+    /* --- stratum 4: the record --- */
+    const log = parseLog(img);
+    const revs = Object.keys(img).filter(k=>/^_history\/bundle_.*\.md$/.test(k)).sort();
+    const revRowsHtml = revs.map(k=>{
+      const tag = k.replace(/^_history\/bundle_|\.md$/g,"");
+      return `<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(tag)}</span><span class="v"><button class="copybtn" onclick="toggleDiff(this,'${esc(k)}','${esc(id)}')">compare to current</button></span></div>`;
+    }).join("");
+    const s4 = `<div id="s4"></div><h2 class="sec">The record of this ${esc(noun)}</h2>
+      <p class="lede">Everything that has ever happened to it. Nothing here can be edited or removed.</p>
+      ${log.length?log.map(renderLogEntry).join(""):`<div class="empty">No promotions recorded yet.</div>`}
+      ${revs.length?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:16px 0 6px">Earlier revisions, kept</h3><div id="diff-holder" data-open=""></div><div class="card">${revRowsHtml}</div>`:""}`;
+
+    /* --- release, after the reading --- */
     let relBar = "";
-    if(fm.object_type==="information" && fm.current_state==="collected"){
+    if(otype==="information" && fm.current_state==="collected"){
       if(fm.criticality==="crucial")
-        relBar = `<h2 class="sec">Release</h2><p class="rel-note" style="margin:0">This document is marked <span class="crux">crucial</span>. Verifying crucial material means checking its co-attestations, which is per-document work outside the release flow; that surface is not built yet.</p>`;
+        relBar = `<h2 class="sec">Release</h2><p class="rel-note" style="margin:0">This document is marked ${critChip("crucial")}. Verifying crucial material means checking its co-attestations, which is per-document work outside the release flow; that surface is not built yet.</p>`;
       else if(canRelease())
         relBar = `<h2 class="sec">Release</h2><div class="rv-bar" style="margin:0"><button class="btn" onclick="openReleaseDialog('${esc(id)}')">Release this document</button><span class="n">Moves it from collected to verified, in your name, on the permanent record.</span></div>`;
     }
+
     $("#content").innerHTML =
       `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p>
-       <h1 class="rec">${esc(fm.title||id)}</h1>
-       <div class="card">${facts}</div>${provLine}
-       <div class="prose">${mdLite(body)}</div>
-       <h2 class="sec">Files in this bundle</h2><div class="card">${fileRows}</div>
-       <h2 class="sec">History</h2>
-       <p class="lede">Every revision this bundle has ever had. Nothing here can be edited or removed.</p>
-       <div class="card">${histRows}</div>${relBar}`;
+       <h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1>
+       <div class="strata">
+         <a class="on" data-s="s1" onclick="strataGo(this,'s1')">What it says</a>
+         <a data-s="s2" onclick="strataGo(this,'s2')">In the case</a>
+         ${s3?`<a data-s="s3" onclick="strataGo(this,'s3')">Trust</a>`:""}
+         <a data-s="s4" onclick="strataGo(this,'s4')">The record</a>
+       </div>
+       ${s1}${s2}${s3}${s4}${relBar}`;
   }catch(e){ $("#content").innerHTML = errPane(e); }
+}
+function strataGo(a, id){
+  document.querySelectorAll(".strata a").forEach(x=>x.classList.toggle("on", x===a));
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 /* ---------- Search (op=search) ---------- */
@@ -626,6 +1004,21 @@ async function renderReview(){
   $("#content").innerHTML = `<h1 class="rec">Review</h1><p class="lede">The release moment. Releasing moves material from collected to verified. Verifying means a document appears to be what it claims to be, never that it is accurate. Open a document to read it before releasing it; a release records your name.</p><div id="rv"><p class="count-line">Loading&hellip;</p></div>`;
   try{
     REVIEW_ROWS = await loadReviewRows();
+    paintReview();
+    let sig = listSig(REVIEW_ROWS);
+    liveStart(async ()=>{
+      const fresh = await loadReviewRows();
+      const s = listSig(fresh);
+      if(s===sig || !$("#rv")) return;
+      sig = s;
+      const keep = new Set(rvPicked());                 // never yank a selection
+      REVIEW_ROWS = fresh; paintReview();
+      $("#content").querySelectorAll("input.ck[data-id]").forEach(c=>{ if(keep.has(c.dataset.id)) c.checked=true; });
+      rvCount();
+    });
+  }catch(e){ $("#rv").innerHTML = errPane(e); }
+}
+function paintReview(){
     const able = canRelease();
     const rows = REVIEW_ROWS.map(b=>{
       const crux = b.criticality==="crucial";
@@ -633,8 +1026,8 @@ async function renderReview(){
         ? `<span class="crux" title="crucial material never rides a batch or this flow at all">crucial</span>`
         : `<input class="ck" type="checkbox" data-id="${esc(b.bundle_id)}" onclick="event.stopPropagation();rvCount()">`}</td>`;
       return `<tr class="row" data-id="${esc(b.bundle_id)}">${pick}
-        <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span></td>
-        <td class="st">${chip(b.current_state)}</td>
+        <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${!able&&crux?" "+critChip("crucial"):""}</td>
+        <td class="st">${chip(b.current_state, b.object_type||"information")}</td>
         <td class="upd">${fmtWhen(b.last_updated)}</td></tr>`;
     }).join("");
     const head = able ? `<th class="pick"><input class="ck" type="checkbox" id="rv-all" onclick="rvAll(this.checked)"></th>` : "";
@@ -648,7 +1041,6 @@ async function renderReview(){
       + (!able && REVIEW_ROWS.length ? `<p class="rel-note">Releasing is a named member's decision. This credential can read and prepare the review, and cannot release. Sign in as a member holding <span class="mono">contribute</span> to release.</p>` : "")
       + (able && crucialN ? `<p class="rel-note">${crucialN===1?"One document is":crucialN+" documents are"} marked crucial. Crucial material is never released in bulk, and never through this flow: verifying it means checking its co-attestations, which is per-document work. That surface is not built yet.</p>` : "");
     wireRows();
-  }catch(e){ $("#rv").innerHTML = errPane(e); }
 }
 function rvPicked(){ return [...$("#content").querySelectorAll("input.ck[data-id]:checked")].map(c=>c.dataset.id); }
 function rvCount(){
@@ -750,12 +1142,19 @@ function releaseRefusal(e){
   return `<b>${head}</b>${detail}${off}${again}`;
 }
 async function renderMonitoring(){
-  $("#content").innerHTML = `<h1 class="rec">Monitoring &amp; developments</h1><p class="lede">Source changes and overdue clocks surface here. Reads <span class="mono">op=monitor</span> ticks and source status.</p>`;
+  $("#content").innerHTML = `<h1 class="rec">Monitoring &amp; developments</h1><p class="lede">What changed, or needs a second look. A re-evaluate flag means something a document depends on moved; a monitored document is re-checked against its live source on a schedule.</p><div id="mon"><p class="count-line">Loading&hellip;</p></div>`;
   try{
-    const changed = (await loadRecord()).filter(b=>b.current_state==="modified");
-    $("#content").innerHTML += changed.length ? `<table class="rec"><tbody>${recordRows(changed)}</tbody></table>` : `<div class="empty">No changes or overdue clocks right now.</div>`;
+    let hits = [];
+    try{ const r = await rec("search",{q:"", limit:"500", facets:"none"}); hits = (r.result&&r.result.hits)||[]; }catch(_){ hits = []; }
+    if(!hits.length) hits = await loadRecord();
+    const flagged = hits.filter(h=>h.reeval_flag);
+    const watched = hits.filter(h=>h.monitor_enabled && !h.reeval_flag);
+    $("#mon").innerHTML =
+      (flagged.length ? `<h2 class="sec">Needs a second look (${flagged.length})</h2><table class="rec"><tbody>${recordRows(flagged)}</tbody></table>` : "")
+      + (watched.length ? `<h2 class="sec">Watched sources (${watched.length})</h2><table class="rec"><tbody>${recordRows(watched)}</tbody></table>` : "")
+      + (!flagged.length && !watched.length ? `<div class="empty">Nothing is flagged and nothing is being watched right now.</div>` : "");
     wireRows();
-  }catch(e){}
+  }catch(e){ $("#mon").innerHTML = errPane(e); }
 }
 async function renderMembers(){
   $("#content").innerHTML = `<h1 class="rec">Members &amp; keys</h1><p class="lede">Members sign in with a handle and password. A cover is a label, not a legal name. A password can never publish; only a registered key can.</p><div id="mm">Loading&hellip;</div>`;

@@ -1,5 +1,62 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v4, 2026-07-28 session, part two: the record screen rebuilt on Bob's UX
+principles.
+
+**Changelog v4: the document page is content-first on four strata, the
+semantics table is live with its consistency check, lists are live-updating,
+and the working space lays out on phones.**
+
+## New in v4
+
+- **The document page** (openBundle) now answers the reader's questions in the
+  reader's order, four strata with an in-page nav: WHAT IT SAYS (state and
+  criticality chips, the prose, then the captured source material itself:
+  text files including JSON open and render in place; chunked binary
+  snapshots fold into one card per artifact with parts, sizes, RFC 3161
+  timestamp, and per-part hashes); IN THE CASE (a project's objective and
+  work-product state, forward references with their notes, and reverse
+  citations computed client-side by walking the projections of every focus
+  and project); TRUST (authority, source link, retrieved, source status,
+  content and bundle hashes with copy, monitor schedule, and the
+  anyone-may-verify sentence); THE RECORD (the session log parsed from the
+  bundle's own _history/promotion_*.json, each entry with its actor, its
+  move, and the member's recorded acknowledgment and mitigation rendered as
+  speech, plus every earlier revision with an in-place line diff against the
+  current text). Release stays at the end, after the reading.
+- **SEMANTICS** is the one source of truth for presentation: for every object
+  type and state in the plane's catalog, plus criticality and flags and the
+  two spaces, one row declares the chip, the reader-language meaning, what it
+  enables, what it forbids and why, and the legal next states. Every chip is
+  a click-over disclosing that row (tap works; nothing is hover-only). The
+  block is marker-extractable, and `check-semantics.mjs` fails the build if
+  any plane state lacks a row or the table invents a state. THE CHECK PAID
+  FOR ITSELF ON ITS FIRST RUN: it caught two invented states ("modified",
+  "deactivated") that existed in UI copy but nowhere in the plane; both are
+  gone, and Monitoring now reads the real drift signals (reeval_flag,
+  monitor_enabled) instead of a state that does not exist.
+- **Liveness**: polite 45s polling while the tab is visible; the Record and
+  Review lists reconcile in place when the record actually changed, never
+  while a dialog is open, and a review selection in progress is preserved
+  across an update.
+- **Phones**: below 680px the rail becomes a scrolling top bar and everything
+  lays out in one column; the strata nav scrolls horizontally. Viewing is
+  fully served; judgment surfaces remain best on larger screens, per the
+  agreed viewing-MVP posture.
+- **Gap G2, named**: the plane serves no binary blob bytes (`op=file` returns
+  text or hash metadata only), so archived binary snapshots (the captured
+  PDFs) cannot be viewed in the browser yet. The document page says so
+  honestly on each such artifact and shows the verify path. A blob-serving
+  op is plane-side work, and the public reading surface (G1) will want it
+  too.
+
+(For the v1-v3 narrative, op contracts, and deploy procedure, see the v3 text
+below; all of it still holds.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v3, 2026-07-28 session: record headings dropped to the canonical token
 (--t-rec 22px, inline sizes removed); Bob resolved the open heading decision in
 favor of the token/Design value. Bob's standing UX principles recorded verbatim

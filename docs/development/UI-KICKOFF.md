@@ -176,3 +176,16 @@ These govern every UX call from here on, alongside the constraints above.
   version of a publication is first-class and must carry the full narrative,
   progressively explained and documented, because print readers lose the
   interactive affordances.
+
+
+## The state-semantics table (agreed 2026-07-28, standing architecture)
+
+The plane's source is the sole authority on what states exist and what
+transitions are legal. The UI's SEMANTICS table (in app.html, marker-
+extractable) is the sole authority on what each state MEANS on screen: chip,
+reader-language meaning, enables, forbids-with-reasons, legal next states.
+Every chip, teach sentence, and affordance renders from it, and every chip is
+a click-over disclosing its row. `check-semantics.mjs` is the conformance
+check Bob proposed: it fails the build when the table misses a plane state or
+invents one. Space-level conditions (working behind the fence, published) sit
+in the same table as object states.
