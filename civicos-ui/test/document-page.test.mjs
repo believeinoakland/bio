@@ -94,12 +94,14 @@ const must = [
   ["stratum triangle + body","class=\"sbody\""],
   ["prose subsection collapsible","class=\"csec\""],
   ["session log is a csec heading","onclick=\"triToggle(this)\""],
-  ["source material collapsible","The source material</h2><div class=\"cbody\""],
+  ["source material renamed, collapsed","Source material</h2><div class=\"cbody\""],
 ];
 // default collapse: s2/s3/s4 closed, s1 open; Session Log closed, Summary open
 for(const sid of ["s2","s3","s4"]) if(!new RegExp('class="stratum closed" id="'+sid+'"').test(html)) throw new Error(sid+" not closed by default");
 if(!/class="stratum" id="s1"/.test(html)) throw new Error("s1 must open expanded");
 if(!html.includes('class="csec closed"')) throw new Error("Session Log csec not closed");
+const smIdx = html.indexOf("Source material</h2>");
+if(smIdx<0 || !html.slice(Math.max(0,smIdx-120),smIdx).includes('csec closed')) throw new Error("Source material must open collapsed");
 const sumIdx = html.indexOf(">Summary</h2>");
 if(sumIdx<0 || html.lastIndexOf('class="csec closed"', sumIdx) > html.lastIndexOf('class="csec"', sumIdx)) throw new Error("Summary must open expanded");
 const misses = must.filter(([n,pat])=>!html.includes(pat));

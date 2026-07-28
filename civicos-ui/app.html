@@ -1236,7 +1236,7 @@ async function openBundle(id, fromNav){
        control and the type tag can speak them. */
     const sources = groupSources(img);
     const s1 = stratum("s1", `<div class="prose">${mdLite(body)}</div>
-      ${sources.length ? sec2("The source material", sources.map(renderSourceItem).join("")) : ""}`);
+      ${sources.length ? sec2("Source material", sources.map(renderSourceItem).join(""), true) : ""}`);
     if(VIEW_REG.length){
       const rank = a => { const v = artKind(a.base).view; return v==="pdf"?4:v==="html"?3:v==="img"?2:1; };
       PRIMARY_K = VIEW_REG.map((a,i)=>[rank(a)*1e12+a.total,i]).sort((x,y)=>y[0]-x[0])[0][1];
@@ -1316,8 +1316,8 @@ function triToggle(t){
   if(box) box.classList.toggle("closed");
 }
 /* A collapsible subsection with a built heading. */
-function sec2(title, inner){
-  return `<div class="csec"><h2 class="sec"><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span>${esc(title)}</h2><div class="cbody">${inner}</div></div>`;
+function sec2(title, inner, closed){
+  return `<div class="csec${closed?" closed":""}"><h2 class="sec"><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span>${esc(title)}</h2><div class="cbody">${inner}</div></div>`;
 }
 let SPY = null;
 function strataSpy(){

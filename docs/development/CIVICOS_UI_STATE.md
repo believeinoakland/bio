@@ -1,5 +1,17 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v18, 2026-07-28 session, part sixteen. "The source material" renamed to
+"Source material", and it now opens collapsed like Session Log and Review
+Notes; the primary document remains one gesture away through the tab bar's
+Open-the-document link regardless. Harness asserts the rename and the
+default state.
+
+(v17 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v17, 2026-07-28 session, part fifteen. Default collapse states: a document
 page opens with What it says expanded and In the case, Trust, and The
 record collapsed; within the prose, Session Log and Review Notes open
