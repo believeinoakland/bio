@@ -1,5 +1,38 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v8, 2026-07-28 session, part six: Bob's five, round two.
+
+**Changelog v8.** THE FROZEN HEADER: the sticky region is now everything
+above the content, as Bob meant it: band, crumb, title, and the tab bar
+freeze as one unit while the strata scroll beneath; anchor scrolling and the
+scrollspy account for the header's measured height. SEALS SPEAK THE
+DOCUMENT'S FACTS: the verified seal names who released it and when (read
+from the bundle's own promotion log), the crucial seal names the cases it is
+load-bearing for (from reverse citations), and the monitored seal gives the
+last re-check and the approximate next one (computed from the monitor
+frequency); the general meaning from SEMANTICS and the instance fact appear
+together on hover and in the click-over. OPENING IS A LINK: one verdigris
+"Open the document" in the frozen header opens the primary artifact the way
+any link would: a new tab for what a browser renders (opened synchronously
+so popup blockers never bite), a native download for what it does not;
+verification runs underneath and speaks only on failure, when it REFUSES in
+the plane's voice. Artifact names in the source-material cards are now plain
+links to the same behavior; the fetch-and-verify button and the inline embed
+are gone; the hashes live under a quiet "integrity" disclosure. Captured
+HTML renders in a sandboxed, scriptless, unique-origin frame so a hostile
+capture can reach nothing. BUNDLE-CARRIED GLOSSARY ADOPTED (Bob, today):
+data/glossary.json in a bundle layers the document's own terms over the
+shared floor for every prose render on its page; the convention is part of
+capture from here on. CAPTURE FIDELITY for HTML sources (css and supporting
+files captured so the rendition is credible) is specified in
+CAPTURE-FIDELITY.md and is the next plane release (0.36.0).
+
+(v7 and earlier follow; all still hold.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v7, 2026-07-28 session, part five: THE DOCUMENT ITSELF OPENS ON THE DOCUMENT
 PAGE.
 

@@ -222,7 +222,11 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 svg.ic{display:none}
 
 /* ---- v3: the document page's strata ---- */
-.strata{display:flex;gap:2px;margin:14px 0 20px;border-bottom:var(--hair-strong);overflow-x:auto;overflow-y:hidden;position:sticky;top:0;background:var(--paper);z-index:5}
+.strata{display:flex;gap:2px;margin:14px 0 0;border-bottom:var(--hair-strong);overflow-x:auto;overflow-y:hidden}
+.dochead{position:sticky;top:0;z-index:6;background:var(--paper);margin:-22px -24px 18px;padding:0 24px}
+.dochead .trow{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.dochead .trow h1{flex:1;min-width:220px}
+.dochead .crumb{padding-top:10px}
 .strata a{font-family:var(--font-ui);font-size:13.5px;color:var(--ink-soft);padding:7px 14px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
 .strata a:hover{color:var(--verdigris-dk)}
 .strata a.on{color:var(--ink);font-weight:600;border-bottom-color:var(--verdigris)}
@@ -233,7 +237,7 @@ svg.ic{display:none}
 .seal.s-attn{background:var(--tint-note);border-color:#d6a48c;color:var(--signal-dk)}
 .seal.s-quiet{background:var(--tint-muted)}
 .chips-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 14px}
-.docband{height:5px;background:var(--band);margin:-22px -24px 16px}
+.docband{height:5px;background:var(--band);margin:0 -24px 10px}
 section.stratum{border-left:2px solid var(--rule);padding:2px 0 6px 18px;margin:0 0 26px;transition:border-color var(--dur-2) var(--ease)}
 section.stratum.on{border-left-color:var(--verdigris)}
 .eyebrow-s{font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--muted);margin:0 0 10px;cursor:help}
@@ -303,7 +307,8 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
   .rail .spacer{display:none}
   .rail .pub-link{border-top:none;margin:0;padding:7px 11px;white-space:nowrap}
   .content{grid-row:3/4;grid-column:1/-1;padding:16px 14px 32px}
-  .docband{margin:-16px -14px 14px}
+  .docband{margin:0 -14px 8px}
+  .dochead{margin:-16px -14px 14px;padding:0 14px}
   .railtog{display:none}
   section.stratum{padding-left:12px}
   .fence{grid-row:4/5;grid-column:1/-1;padding:0 14px}
@@ -641,6 +646,7 @@ function setActive(id){ document.querySelectorAll("#rail .nav").forEach(n=>n.cla
 async function go(screen, fromNav){
   if(!fromNav && !PLANE.preview) navRemember();
   CUR = { type:"screen", key:screen };
+  setGloss(null);
   setActive(screen);
   liveStop();
   $("#pop").classList.add("hidden");
@@ -740,11 +746,22 @@ const GLOSSARY = {
   "frontmatter":"The structured header a bundle.md carries: its state, hashes, and provenance, machine-readable and human-readable at once.",
   "provenance": "Where a document came from: who issued it, where it was retrieved, when, and under what authority.",
 };
-const GL_RE = new RegExp("\\b(" + Object.keys(GLOSSARY).sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|") + ")(?![A-Za-z])","g");
+let ACTIVE_GLOSS = GLOSSARY, ACTIVE_RE = null;
+function setGloss(extra){
+  /* The bundle's own data/glossary.json layers over the shared floor: the
+     capture-time convention adopted 2026-07-28. Document-specific terms live
+     in the record itself, so they survive to print, publication, and any
+     other client. */
+  ACTIVE_GLOSS = Object.assign({}, GLOSSARY, extra||{});
+  const keys = Object.keys(ACTIVE_GLOSS).sort((a,b)=>b.length-a.length)
+    .map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
+  ACTIVE_RE = keys.length ? new RegExp("\\b("+keys.join("|")+")(?![A-Za-z])","g") : null;
+}
+setGloss(null);
 function glossWrap(html){
-  /* Applied to already-escaped prose HTML; wraps outside of tags. */
+  if(!ACTIVE_RE) return html;
   return html.split(/(<[^>]+>)/).map(part=>
-    part.startsWith("<") ? part : part.replace(GL_RE, m=>`<span class="gl" onclick="chipPop(event,this)" data-pop-gloss="${m}">${m}</span>`)
+    part.startsWith("<") ? part : part.replace(ACTIVE_RE, m=>`<span class="gl" onclick="chipPop(event,this)" data-pop-gloss="${m}">${m}</span>`)
   ).join("");
 }
 
@@ -777,7 +794,7 @@ function flagChip(f){
   const row = SEMANTICS.flags[f];
   return row ? `<span class="chip flag" onclick="chipPop(event,this)" data-pop-flag="${esc(f)}">${esc(row.chip)}</span>` : "";
 }
-function sealFor(kind, key, type){
+function sealFor(kind, key, type, fact){
   let row, data;
   if(kind==="state"){ row = sem(type, key); data = `data-pop-state="${esc(key)}" data-pop-type="${esc(type||"")}"`; }
   else if(kind==="crit"){ row = SEMANTICS.criticality[key]; data = `data-pop-crit="${esc(key)}"`; }
@@ -785,7 +802,15 @@ function sealFor(kind, key, type){
   if(!row) return "";
   const cls = row.good ? "s-good" : (row.attention ? "s-attn" : (row.quiet ? "s-quiet" : ""));
   const mark = row.mark || (row.chip||key).charAt(0).toUpperCase();
-  return `<span class="seal ${cls}" onclick="chipPop(event,this)" ${data} title="${esc(row.chip||key)}: ${esc(row.meaning||"")}">${esc(mark)}</span>`;
+  const extra = fact ? ` data-pop-extra="${esc(fact)}"` : "";
+  return `<span class="seal ${cls}" onclick="chipPop(event,this)" ${data}${extra} title="${esc(row.chip||key)}: ${esc(row.meaning||"")}${fact?" "+esc(fact):""}">${esc(mark)}</span>`;
+}
+function fmtWhenFull(t){ if(!t) return ""; const d=new Date(t); return isNaN(d)?String(t):d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}); }
+function monitorNext(last, freq){
+  const ms = {hourly:36e5, daily:864e5, weekly:6048e5, monthly:2592e6}[String(freq||"").toLowerCase()];
+  if(!last || !ms) return null;
+  const d = new Date(last); if(isNaN(d)) return null;
+  return new Date(d.getTime()+ms);
 }
 function popHtml(head, meaning, enables, forbids, next){
   const en = (enables&&enables.length) ? `<ul>${enables.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "";
@@ -800,7 +825,8 @@ function chipPop(e, c){
   if(c.dataset.popState){ const s = sem(c.dataset.popType, c.dataset.popState); html = popHtml(s.chip||c.dataset.popState, s.meaning, s.enables, s.forbids, s.next); }
   else if(c.dataset.popCrit){ const r = SEMANTICS.criticality[c.dataset.popCrit]; html = popHtml(r.chip||c.dataset.popCrit, r.meaning); }
   else if(c.dataset.popFlag){ const r = SEMANTICS.flags[c.dataset.popFlag]; html = popHtml(r.chip, r.meaning); }
-  else if(c.dataset.popGloss){ html = popHtml(c.dataset.popGloss, GLOSSARY[c.dataset.popGloss]||""); }
+  else if(c.dataset.popGloss){ html = popHtml(c.dataset.popGloss, ACTIVE_GLOSS[c.dataset.popGloss]||""); }
+  if(c.dataset.popExtra) html += `<div class="pm" style="margin-top:6px;color:var(--ink)">${esc(c.dataset.popExtra)}</div>`;
   pop.innerHTML = html; pop.classList.remove("hidden");
   const r = c.getBoundingClientRect();
   pop.style.left = Math.max(8, Math.min(window.scrollX + r.left, window.scrollX + window.innerWidth - 360)) + "px";
@@ -926,9 +952,10 @@ function renderTextSource(name, text){
   return `<details class="src"><summary><span class="fn">${esc(name)}</span><span class="fm">${esc(kind)} · ${text.length.toLocaleString()} chars</span></summary>
     <div class="body"><pre>${esc(pretty)}</pre></div></details>`;
 }
-let VIEW_REG = [];
+let VIEW_REG = [], PRIMARY_K = -1;
 function artKind(name){
   if(/\.pdf$/i.test(name)) return {type:"application/pdf", view:"pdf"};
+  if(/\.html?$/i.test(name)) return {type:"text/html", view:"html"};
   if(/\.(png|jpe?g|gif|webp)$/i.test(name)) return {type:"image/"+name.split(".").pop().toLowerCase().replace("jpg","jpeg"), view:"img"};
   return {type:"application/octet-stream", view:null};
 }
@@ -939,12 +966,11 @@ function renderSourceItem(it){
   if(!parts.length) return "";
   const total = parts.reduce((s,p)=>s+(p.bytes||0),0);
   const k = VIEW_REG.push({ base:it.base, parts, total }) - 1;
-  const kind = artKind(it.base);
   const shas = parts.map(p=>`<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(p.path.split("/").pop())}</span><span class="v">${esc(shaShort(p.sha))}\u2026 ${copyBtn(p.sha)} <span style="color:var(--muted)">${esc(fmtBytes(p.bytes))}</span></span></div>`).join("");
-  return `<div class="bincard"><div class="fn">${esc(it.base)} <span style="color:var(--muted)">· ${esc(fmtBytes(total))}${parts.length>1?` in ${parts.length} parts`:""}${it.tsr?" · RFC 3161 timestamp attached":""}</span></div>
-    <div class="rv-bar" style="margin:10px 0 0"><button class="btn ghost" id="av-btn-${k}" onclick="openArtifact(${k})">${kind.view?"Open the document":"Fetch and verify"} (${esc(fmtBytes(total))})</button><span class="n">Fetched from the record and verified byte for byte against its hashes before anything is shown.</span></div>
+  const fname = it.base.split("/").pop();
+  return `<div class="bincard"><div class="fn"><a onclick="openArtifact(${k})" id="av-btn-${k}">${esc(fname)}</a> <span style="color:var(--muted)">· ${esc(fmtBytes(total))}${it.tsr?" · RFC 3161 timestamp attached":""}</span></div>
     <div class="avwrap" id="av-${k}"></div>
-    <details class="src" style="margin-top:8px;box-shadow:none"><summary><span class="fn">part hashes</span></summary><div class="body">${shas}</div></details></div>`;
+    <details class="src" style="margin-top:8px;box-shadow:none"><summary><span class="fn">integrity</span></summary><div class="body">${shas}</div></details></div>`;
 }
 /* Fetch every part of an artifact through op=capture and verify each against
    the sha the record carries. Bytes that do not match are never shown: the
@@ -970,100 +996,50 @@ async function fetchParts(parts, onProgress){
   return { ok:true, bytes:all, n:parts.length };
 }
 async function openArtifact(k){
+  /* Like following any link: a tab opens for what a browser renders, a
+     download starts for what it does not. Opened synchronously so popup
+     blocking never bites; verification runs underneath and only speaks when
+     the bytes fail the record. */
   const a = VIEW_REG[k]; if(!a) return;
+  const kind = artKind(a.base);
+  let win = null;
+  if(kind.view==="pdf" || kind.view==="img"){ try{ win = window.open("about:blank","_blank"); }catch(_){}}
   const box = $("#av-"+k), btn = $("#av-btn-"+k);
-  btn.disabled = true;
-  box.innerHTML = `<div class="avbar"><i id="av-i-${k}"></i></div><div class="avnote" id="av-n-${k}">Fetching from the record\u2026</div>`;
+  const note = t => { if(box) box.innerHTML = t; };
   const res = await fetchParts(a.parts, (i,n,got)=>{
-    const bar=$(`#av-i-${k}`), note=$(`#av-n-${k}`);
-    if(bar && a.total) bar.style.width = Math.min(100, Math.round(got/a.total*100))+"%";
-    if(note) note.textContent = `Fetching part ${i} of ${n} \u00b7 ${fmtBytes(got)}${a.total?" of "+fmtBytes(a.total):""}`;
+    note(`<div class="avbar"><i style="width:${a.total?Math.min(100,Math.round(got/a.total*100)):20}%"></i></div><div class="avnote">Opening \u00b7 ${fmtBytes(got)}${a.total?" of "+fmtBytes(a.total):""}</div>`);
   });
-  btn.disabled = false;
   if(!res.ok){
-    box.innerHTML = `<div class="teach"><b>REFUSING TO DISPLAY \u00b7 ${esc(res.reason)}</b><div style="margin-top:4px">${esc(res.part||"")}</div>${res.expected?`<div class="mono" style="margin-top:4px;font-size:11px">the record says ${esc(shaShort(res.expected))}\u2026 \u00b7 the bytes hash to ${esc(shaShort(res.got))}\u2026</div>`:""}</div>`;
+    if(win) try{ win.close(); }catch(_){}
+    note(`<div class="teach"><b>REFUSING TO OPEN \u00b7 ${esc(res.reason)}</b><div style="margin-top:4px">${esc(res.part||"")}</div>${res.expected?`<div class="mono" style="margin-top:4px;font-size:11px">the record says ${esc(shaShort(res.expected))}\u2026 \u00b7 the bytes hash to ${esc(shaShort(res.got))}\u2026</div>`:""}</div>`);
     return;
   }
-  const kind = artKind(a.base);
   const blob = new Blob([res.bytes], {type:kind.type});
   const u = URL.createObjectURL(blob);
   const fname = a.base.split("/").pop();
-  const okline = `<div class="avok">\u2713 every byte verified against the record \u00b7 ${res.n===1?"1 part":res.n+" parts"}, sha256 match</div>`;
-  const dl = `<a href="${u}" download="${esc(fname)}">Download ${esc(fname)}</a>`;
-  if(kind.view==="pdf") box.innerHTML = okline + `<embed class="avview" src="${u}" type="application/pdf">` + `<div class="avnote" style="margin-top:6px">${dl} \u00b7 if the viewer does not render here, the download is the same verified bytes</div>`;
-  else if(kind.view==="img") box.innerHTML = okline + `<img class="avview" src="${u}" alt="${esc(fname)}">` + `<div class="avnote" style="margin-top:6px">${dl}</div>`;
-  else box.innerHTML = okline + `<div class="avnote">${dl}</div>`;
-}
-
-/* The session log, read from the record itself: _history/promotion_*.json.
-   Fields render when present and are never invented; whatever else an entry
-   carries stays readable in the raw line. */
-function parseLog(img){
-  const entries = [];
-  for(const k of Object.keys(img)){
-    if(!/^_history\/promotion_.*\.json$/.test(k) || typeof img[k]!=="string") continue;
-    let j = null; try{ j = JSON.parse(img[k]); }catch(_){}
-    entries.push({ path:k, j, raw: img[k] });
+  if(kind.view==="pdf" || kind.view==="img"){
+    if(win) win.location = u;
+    else note(`<div class="avnote">The browser blocked the tab. <a href="${u}" target="_blank" rel="noopener">Open ${esc(fname)}</a></div>`);
+  } else if(kind.view==="html"){
+    /* A captured page never runs in this origin: it renders in a sandboxed
+       frame with a unique origin and no scripts, so a hostile capture can
+       reach nothing. Fidelity of what renders is the capture pipeline's
+       burden (see CAPTURE-FIDELITY.md). */
+    note(`<div class="avok">\u2713 verified against the record</div><iframe class="avview" sandbox="" src="${u}"></iframe><div class="avnote" style="margin-top:6px"><a href="${u}" download="${esc(fname)}">Download ${esc(fname)}</a> \u00b7 rendered without scripts, in isolation</div>`);
+    return;
+  } else {
+    const t = document.createElement("a"); t.href = u; t.download = fname;
+    document.body.appendChild(t); t.click(); t.remove();
   }
-  entries.sort((a,b)=>a.path<b.path?-1:1);
-  return entries;
+  note(`<div class="avok">\u2713 opened \u00b7 every byte verified against the record</div>`);
 }
-function renderLogEntry(e){
-  const j = e.j || {};
-  const when = j.timestamp || j.when || (e.path.match(/promotion_(\d{8}T\d{6}Z)/)||[])[1] || "";
-  const from = j.from_state || j.from, to = j.to_state || j.to;
-  const who = j.member || j.author || j.actor || j.by || "";
-  const move = from||to ? `${esc(from||"?")} \u2192 ${esc(to||"?")}` : "revision";
-  const said = [];
-  if(j.acknowledgment) said.push(`\u201C${esc(j.acknowledgment)}\u201D`);
-  if(j.mitigation) said.push(`checked: ${esc(j.mitigation)}`);
-  return `<div class="log-entry">
-    <div class="when">${esc(when)}${who?` · ${esc(who)}`:""}</div>
-    <div class="what">${move}</div>
-    ${said.length?`<div class="said">${said.join("<br>")}</div>`:""}
-    <details class="src" style="box-shadow:none;border:none;margin:4px 0 0"><summary style="padding:2px 0"><span class="fm">the raw entry</span></summary><div class="body" style="border-top:none;padding:6px 0 0"><pre>${esc(e.raw)}</pre></div></details>
-  </div>`;
-}
-
-/* Revisions of bundle.md, comparable in place: a small line diff, additions
-   tinted verdigris, removals struck in the signal tint. */
-function lineDiff(a, b){
-  const A=a.split("\n"), B=b.split("\n");
-  const m=A.length, n=B.length, MAX=4000;
-  if(m*n>MAX*MAX) return null;
-  const L=Array.from({length:m+1},()=>new Uint16Array(n+1));
-  for(let i=m-1;i>=0;i--) for(let j=n-1;j>=0;j--)
-    L[i][j] = A[i]===B[j] ? L[i+1][j+1]+1 : Math.max(L[i+1][j], L[i][j+1]);
-  const out=[]; let i=0,j=0;
-  while(i<m&&j<n){
-    if(A[i]===B[j]){ out.push({t:" ",l:A[i]}); i++; j++; }
-    else if(L[i+1][j]>=L[i][j+1]){ out.push({t:"-",l:A[i]}); i++; }
-    else { out.push({t:"+",l:B[j]}); j++; }
-  }
-  while(i<m) out.push({t:"-",l:A[i++]});
-  while(j<n) out.push({t:"+",l:B[j++]});
-  return out;
-}
-function toggleDiff(btn, revPath, bundleId){
-  const holder = $("#diff-holder");
-  if(holder.dataset.open===revPath){ holder.innerHTML=""; holder.dataset.open=""; return; }
-  const img = IMG_CACHE.get(bundleId);
-  const cur = img && img["bundle.md"], old = img && img[revPath];
-  if(typeof cur!=="string" || typeof old!=="string"){ holder.innerHTML = `<div class="empty">That revision's text is not readable here.</div>`; return; }
-  const d = lineDiff(old, cur);
-  holder.dataset.open = revPath;
-  holder.innerHTML = d ? `<div class="diffpane">${d.map(x=>`<div class="dl ${x.t==="+"?"add":x.t==="-"?"del":""}">${esc(x.l)||"&nbsp;"}</div>`).join("")}</div>
-      <p class="lede" style="margin:0 0 10px">What that revision said, against what the document says now. Struck lines were in the revision; tinted lines are current.</p>`
-    : `<div class="empty">Too large to diff in the browser.</div>`;
-}
-
 async function openBundle(id, fromNav){
   if(!fromNav) navRemember();
   CUR = { type:"bundle", key:id };
   setActive(""); liveStop();
   $("#content").innerHTML = `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p><p class="count-line">Loading&hellip;</p>`;
   try{
-    VIEW_REG = [];
+    VIEW_REG = []; PRIMARY_K = -1;
     const [img, proj] = await Promise.all([getImage(id, true), getProjection(id)]);
     if(!img){ $("#content").innerHTML = errPane({error:"This bundle was not found."}); return; }
     const bundleMd = typeof img["bundle.md"]==="string" ? img["bundle.md"] : "";
@@ -1072,15 +1048,44 @@ async function openBundle(id, fromNav){
     const otype = fm.object_type || (proj&&proj.object_type) || "information";
     const noun = (SEMANTICS.types[otype]&&SEMANTICS.types[otype].noun) || "item";
 
+    /* The bundle's own glossary layers over the shared floor (capture-time
+       convention, 2026-07-28): every prose render on this page knows the
+       document's own terms. */
+    let pageGloss = null;
+    try{ if(typeof img["data/glossary.json"]==="string") pageGloss = JSON.parse(img["data/glossary.json"]); }catch(_){}
+    setGloss(pageGloss);
+
+    /* The document's own facts, computed BEFORE the seals so the seals can
+       speak them: who released it, which cases lean on it, when the monitor
+       last looked and looks next. Information density in context. */
+    const log = parseLog(img);
+    const rev = await reverseRefs(id);
+    const vEntry = [...log].reverse().map(e=>e.j||{}).find(j=>(j.to_state||j.to)==="verified");
+    const relBy = vEntry && (vEntry.member||vEntry.author||vEntry.actor||vEntry.by);
+    const vFact = relBy ? `Released by ${relBy}${vEntry.timestamp?` on ${fmtWhenFull(vEntry.timestamp)}`:""}.` : null;
+    const leanTitles = rev.map(r=>r.fromTitle).filter(Boolean);
+    const cFact = leanTitles.length ? `Load-bearing for: ${leanTitles.join("; ")}.` : "No case cites it yet.";
+    let mFact = null;
+    if(proj && proj.monitor_enabled){
+      const nx = monitorNext(proj.monitor_last_checked, proj.monitor_frequency);
+      mFact = [proj.monitor_last_checked?`Last re-checked ${fmtWhenFull(proj.monitor_last_checked)}`:null,
+               nx?`next about ${fmtWhenFull(nx.toISOString())}`:(proj.monitor_frequency?`re-checked ${proj.monitor_frequency}`:null)]
+              .filter(Boolean).join("; ")+".";
+    }
+    const seals = `<span class="sp"></span><span class="seals">${sealFor("state", fm.current_state||(proj&&proj.current_state)||"", otype, (fm.current_state==="verified")?vFact:null)}${(fm.criticality||(proj&&proj.criticality))==="crucial"?sealFor("crit","crucial",null,cFact):""}${(proj&&proj.monitor_enabled)?sealFor("flag","monitored",null,mFact):""}${(proj&&proj.reeval_flag)?sealFor("flag","reeval"):""}${(proj&&proj.annotations_open)?sealFor("flag","annotations"):""}</span>`;
+
     /* --- stratum 1: what it says --- */
-    const seals = `<span class="sp"></span><span class="seals">${sealFor("state", fm.current_state||(proj&&proj.current_state)||"", otype)}${(fm.criticality||(proj&&proj.criticality))==="crucial"?sealFor("crit","crucial"):""}${(proj&&proj.monitor_enabled)?sealFor("flag","monitored"):""}${(proj&&proj.reeval_flag)?sealFor("flag","reeval"):""}${(proj&&proj.annotations_open)?sealFor("flag","annotations"):""}</span>`;
     const sources = groupSources(img);
     const s1 = stratum("s1", `<div class="prose">${mdLite(body)}</div>
       ${sources.length ? `<h2 class="sec">The source material</h2>${sources.map(renderSourceItem).join("")}` : ""}`);
+    /* The primary artifact: the thing a person means by "the document". */
+    if(VIEW_REG.length){
+      const rank = a => { const v = artKind(a.base).view; return v==="pdf"?4:v==="html"?3:v==="img"?2:1; };
+      PRIMARY_K = VIEW_REG.map((a,i)=>[rank(a)*1e12+a.total,i]).sort((x,y)=>y[0]-x[0])[0][1];
+    }
 
     /* --- stratum 2: in the case --- */
     const fwd = (fmj && fmj.references) || [];
-    const rev = await reverseRefs(id);
     const objective = fmj && fmj.objective ? `<div class="card"><div class="kv"><span class="k">Objective</span><span class="v plain">${esc(fmj.objective)}</span></div>${fmj.workproduct_state?`<div class="kv"><span class="k">Work product</span><span class="v plain">${chip(fmj.workproduct_state, "workproduct")||esc(fmj.workproduct_state)}</span></div>`:""}</div>` : "";
     const fwdRows = fwd.length ? fwd.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.target)}')"><span class="lt">${esc(r.target)}</span><span class="ln">${esc(r.rel||"cites")}${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
     const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.fromTitle)}</span><span class="ln">${esc(TYPE_LABEL[r.fromType]||r.fromType)} · ${esc(r.rel||"cites")} this${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
@@ -1105,7 +1110,6 @@ async function openBundle(id, fromNav){
       <p class="lede" style="margin:6px 0 0">Anyone may confirm the captured material against these hashes, without this group's cooperation.</p>`) : "";
 
     /* --- stratum 4: the record --- */
-    const log = parseLog(img);
     const revs = Object.keys(img).filter(k=>/^_history\/bundle_.*\.md$/.test(k)).sort();
     const revRowsHtml = revs.map(k=>{
       const tag = k.replace(/^_history\/bundle_|\.md$/g,"");
@@ -1126,20 +1130,25 @@ async function openBundle(id, fromNav){
 
     const back = `<a onclick="go('record')">The record</a> &rsaquo; `;
     const tab = k => `<a${k==="s1"?' class="on"':""} data-s="${k}" onclick="strataGo(this,'${k}')" title="${esc(STRATA_INFO[k].tip)}">${esc(STRATA_INFO[k].label)}</a>`;
+    const openCtl = PRIMARY_K>=0 ? `<span style="flex:none"><button class="btn" onclick="openArtifact(${PRIMARY_K})" title="opens like any link: a tab for what the browser renders, a download otherwise; verified against the record underneath">Open the document</button></span>` : "";
     $("#content").innerHTML =
-      `<div class="docband" title="a document in the working record"></div>
-       <p class="crumb">${back}<span class="mono">${esc(id)}</span></p>
-       <h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1>
-       <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${seals}</div>
+      `<div class="dochead">
+         <div class="docband" title="a document in the working record"></div>
+         <p class="crumb">${back}<span class="mono">${esc(id)}</span></p>
+         <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1>${openCtl}</div>
+         <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${seals}</div>
+       </div>
        ${s1}${s2}${s3}${s4}${relBar}`;
-    strataSpy();
+    const hh = ($(".dochead")&&$(".dochead").offsetHeight||120)+10;
+    document.querySelectorAll("section.stratum").forEach(x=>x.style.scrollMarginTop = hh+"px");
+    strataSpy(hh);
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
 function stratum(id, inner){
   return `<section class="stratum" id="${id}"><div class="eyebrow-s" title="${esc(STRATA_INFO[id].tip)}">${esc(STRATA_INFO[id].label)}</div>${inner}</section>`;
 }
 let SPY = null;
-function strataSpy(){
+function strataSpy(headH){
   if(SPY){ SPY.disconnect(); SPY=null; }
   const root = $("#content");
   const secs = [...root.querySelectorAll("section.stratum")];
@@ -1151,7 +1160,7 @@ function strataSpy(){
   SPY = new IntersectionObserver(entries=>{
     const vis = entries.filter(e=>e.isIntersecting).sort((a,b)=>a.target.offsetTop-b.target.offsetTop);
     if(vis.length) setOn(vis[0].target.id);
-  }, { root, rootMargin:"-15% 0px -65% 0px", threshold:0 });
+  }, { root, rootMargin:`-${Math.round(headH||120)}px 0px -55% 0px`, threshold:0 });
   secs.forEach(x=>SPY.observe(x));
   setOn(secs[0].id);
 }
