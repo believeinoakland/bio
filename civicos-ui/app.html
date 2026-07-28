@@ -248,7 +248,15 @@ svg.ic{display:none}
 .content.docmode .docband{margin:0 -24px 10px}
 section.stratum{border-left:2px solid var(--rule);padding:2px 0 6px 18px;margin:0 0 26px;transition:border-color var(--dur-2) var(--ease)}
 section.stratum.on{border-left-color:var(--verdigris)}
-.eyebrow-s{font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--muted);margin:0 0 10px;cursor:help}
+.eyebrow-s{font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.eyebrow-s .ebt{cursor:help}
+.tri{display:inline-block;width:16px;cursor:pointer;color:var(--muted);user-select:none;text-align:left}
+.tri::before{content:"\25BE";display:inline-block;transition:transform var(--dur-1) var(--ease)}
+.closed>.eyebrow-s .tri::before,.csec.closed>h2 .tri::before,.csec.closed>h2.sec .tri::before{transform:rotate(-90deg)}
+.tri:hover{color:var(--verdigris-dk)}
+section.stratum.closed>.sbody{display:none}
+.csec.closed>.cbody{display:none}
+.prose h2 .tri{font-size:13px;vertical-align:2px}
 .gl{border-bottom:1px dotted var(--rule-strong);cursor:help}
 .backlink{cursor:pointer}
 .chip{cursor:help}
@@ -945,17 +953,19 @@ function splitFm(text){
   return { fm, body: text.slice(m[0].length) };
 }
 function mdLite(md){
-  const lines = (md||"").split("\n"); let out="", inList=false;
+  const lines = (md||"").split("\n"); let out="", inList=false, inSec=false;
   const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`(.+?)`/g,'<code>$1</code>');
   const closeList=()=>{ if(inList){out+="</ul>";inList=false;} };
+  const closeSec=()=>{ closeList(); if(inSec){out+="</div></div>";inSec=false;} };
   for(const l of lines){
-    if(/^##\s+/.test(l)){ closeList(); out+="<h2>"+inline(l.replace(/^##\s+/,""))+"</h2>"; }
+    if(/^##\s+/.test(l)){ closeSec();
+      out+='<div class="csec"><h2><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span>'+inline(l.replace(/^##\s+/,""))+'</h2><div class="cbody">'; inSec=true; }
     else if(/^###\s+/.test(l)){ closeList(); out+="<h3>"+inline(l.replace(/^###\s+/,""))+"</h3>"; }
     else if(/^[-*]\s+/.test(l)){ if(!inList){out+="<ul>";inList=true;} out+="<li>"+inline(l.replace(/^[-*]\s+/,""))+"</li>"; }
     else if(l.trim()===""){ closeList(); }
     else { closeList(); out+="<p>"+inline(l)+"</p>"; }
   }
-  closeList(); return glossWrap(out);
+  closeSec(); return glossWrap(out);
 }
 /* ============================================================
    THE DOCUMENT PAGE, content first, on four strata:
@@ -1211,7 +1221,7 @@ async function openBundle(id, fromNav){
        control and the type tag can speak them. */
     const sources = groupSources(img);
     const s1 = stratum("s1", `<div class="prose">${mdLite(body)}</div>
-      ${sources.length ? `<h2 class="sec">The source material</h2>${sources.map(renderSourceItem).join("")}` : ""}`);
+      ${sources.length ? sec2("The source material", sources.map(renderSourceItem).join("")) : ""}`);
     if(VIEW_REG.length){
       const rank = a => { const v = artKind(a.base).view; return v==="pdf"?4:v==="html"?3:v==="img"?2:1; };
       PRIMARY_K = VIEW_REG.map((a,i)=>[rank(a)*1e12+a.total,i]).sort((x,y)=>y[0]-x[0])[0][1];
@@ -1284,7 +1294,15 @@ async function openBundle(id, fromNav){
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
 function stratum(id, inner){
-  return `<section class="stratum" id="${id}"><div class="eyebrow-s" title="${esc(STRATA_INFO[id].tip)}">${esc(STRATA_INFO[id].label)}</div>${inner}</section>`;
+  return `<section class="stratum" id="${id}"><div class="eyebrow-s"><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span><span class="ebt" title="${esc(STRATA_INFO[id].tip)}">${esc(STRATA_INFO[id].label)}</span></div><div class="sbody">${inner}</div></section>`;
+}
+function triToggle(t){
+  const box = t.closest(".csec") || t.closest("section.stratum");
+  if(box) box.classList.toggle("closed");
+}
+/* A collapsible subsection with a built heading. */
+function sec2(title, inner){
+  return `<div class="csec"><h2 class="sec"><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span>${esc(title)}</h2><div class="cbody">${inner}</div></div>`;
 }
 let SPY = null;
 function strataSpy(){
@@ -1305,7 +1323,9 @@ function strataSpy(){
 }
 function strataGo(a, id){
   const el = document.getElementById(id);
-  if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+  if(!el) return;
+  el.classList.remove("closed");
+  el.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 /* ---------- Search (op=search) ---------- */

@@ -1,5 +1,23 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v14, 2026-07-28 session, part twelve. Disclosure triangles: every stratum
+title (the eyebrows) and every subsection title collapses and expands its
+own contents. Subsections come from two places and both get the gesture:
+the document's own ## headings (Summary, Provenance Notes, Session Log,
+Review Notes) via mdLite, which now wraps each heading's run in a csec with
+a triangle, and the built headings (The source material) via the sec2
+helper. Built structurally in the templates, not DOM surgery, so the
+harness asserts the shapes. A tab click on a collapsed stratum reopens it
+before scrolling. The Release heading at the bottom deliberately keeps no
+triangle: an action area should not fold away. State per page, not
+persisted.
+
+(v13 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v13, 2026-07-28 session, part eleven. The Open-the-document control moved
 from a header button into the tab bar's final entry, after The record,
 dressed as a link so its nature is legible: verdigris semibold with an

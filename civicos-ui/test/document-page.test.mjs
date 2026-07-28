@@ -87,6 +87,10 @@ const must = [
   ["cited-by row","the budgeted transfers"],
   ["all four strata","id=\"s4\""],
   ["own scroll box","id=\"docscroll\""],
+  ["stratum triangle + body","class=\"sbody\""],
+  ["prose subsection collapsible","class=\"csec\""],
+  ["session log is a csec heading","onclick=\"triToggle(this)\""],
+  ["source material collapsible","The source material</h2><div class=\"cbody\""],
 ];
 const misses = must.filter(([n,pat])=>!html.includes(pat));
 if(misses.length) throw new Error("document page missing: "+misses.map(m=>m[0]).join("; ")+"\n---\n"+html.slice(0,600));
