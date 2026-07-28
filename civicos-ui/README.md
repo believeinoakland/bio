@@ -34,3 +34,9 @@ worker is scaffolding.
   must cover every state the plane's store gates on, and may invent none. Run
   `node check-semantics.mjs` from this directory; it fails the build on any
   gap in either direction.
+
+- `test/` — the harness suite. `node test/run.mjs` drives the release flow,
+  the full document page render, the artifact fetch-and-verify path, seals,
+  glossary, navigation restore, and the semantics check. Run it before every
+  deploy; the document-page harness exists because a refactor once deleted
+  four functions between two anchors and nothing caught it until production.

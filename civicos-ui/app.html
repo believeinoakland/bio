@@ -1033,6 +1033,68 @@ async function openArtifact(k){
   }
   note(`<div class="avok">\u2713 opened \u00b7 every byte verified against the record</div>`);
 }
+/* The session log, read from the record itself: _history/promotion_*.json.
+   Fields render when present and are never invented; whatever else an entry
+   carries stays readable in the raw line. */
+function parseLog(img){
+  const entries = [];
+  for(const k of Object.keys(img)){
+    if(!/^_history\/promotion_.*\.json$/.test(k) || typeof img[k]!=="string") continue;
+    let j = null; try{ j = JSON.parse(img[k]); }catch(_){}
+    entries.push({ path:k, j, raw: img[k] });
+  }
+  entries.sort((a,b)=>a.path<b.path?-1:1);
+  return entries;
+}
+function renderLogEntry(e){
+  const j = e.j || {};
+  const when = j.timestamp || j.when || (e.path.match(/promotion_(\d{8}T\d{6}Z)/)||[])[1] || "";
+  const from = j.from_state || j.from, to = j.to_state || j.to;
+  const who = j.member || j.author || j.actor || j.by || "";
+  const move = from||to ? `${esc(from||"?")} \u2192 ${esc(to||"?")}` : "revision";
+  const said = [];
+  if(j.acknowledgment) said.push(`\u201C${esc(j.acknowledgment)}\u201D`);
+  if(j.mitigation) said.push(`checked: ${esc(j.mitigation)}`);
+  return `<div class="log-entry">
+    <div class="when">${esc(when)}${who?` · ${esc(who)}`:""}</div>
+    <div class="what">${move}</div>
+    ${said.length?`<div class="said">${said.join("<br>")}</div>`:""}
+    <details class="src" style="box-shadow:none;border:none;margin:4px 0 0"><summary style="padding:2px 0"><span class="fm">the raw entry</span></summary><div class="body" style="border-top:none;padding:6px 0 0"><pre>${esc(e.raw)}</pre></div></details>
+  </div>`;
+}
+
+/* Revisions of bundle.md, comparable in place: a small line diff, additions
+   tinted verdigris, removals struck in the signal tint. */
+function lineDiff(a, b){
+  const A=a.split("\n"), B=b.split("\n");
+  const m=A.length, n=B.length, MAX=4000;
+  if(m*n>MAX*MAX) return null;
+  const L=Array.from({length:m+1},()=>new Uint16Array(n+1));
+  for(let i=m-1;i>=0;i--) for(let j=n-1;j>=0;j--)
+    L[i][j] = A[i]===B[j] ? L[i+1][j+1]+1 : Math.max(L[i+1][j], L[i][j+1]);
+  const out=[]; let i=0,j=0;
+  while(i<m&&j<n){
+    if(A[i]===B[j]){ out.push({t:" ",l:A[i]}); i++; j++; }
+    else if(L[i+1][j]>=L[i][j+1]){ out.push({t:"-",l:A[i]}); i++; }
+    else { out.push({t:"+",l:B[j]}); j++; }
+  }
+  while(i<m) out.push({t:"-",l:A[i++]});
+  while(j<n) out.push({t:"+",l:B[j++]});
+  return out;
+}
+function toggleDiff(btn, revPath, bundleId){
+  const holder = $("#diff-holder");
+  if(holder.dataset.open===revPath){ holder.innerHTML=""; holder.dataset.open=""; return; }
+  const img = IMG_CACHE.get(bundleId);
+  const cur = img && img["bundle.md"], old = img && img[revPath];
+  if(typeof cur!=="string" || typeof old!=="string"){ holder.innerHTML = `<div class="empty">That revision's text is not readable here.</div>`; return; }
+  const d = lineDiff(old, cur);
+  holder.dataset.open = revPath;
+  holder.innerHTML = d ? `<div class="diffpane">${d.map(x=>`<div class="dl ${x.t==="+"?"add":x.t==="-"?"del":""}">${esc(x.l)||"&nbsp;"}</div>`).join("")}</div>
+      <p class="lede" style="margin:0 0 10px">What that revision said, against what the document says now. Struck lines were in the revision; tinted lines are current.</p>`
+    : `<div class="empty">Too large to diff in the browser.</div>`;
+}
+
 async function openBundle(id, fromNav){
   if(!fromNav) navRemember();
   CUR = { type:"bundle", key:id };

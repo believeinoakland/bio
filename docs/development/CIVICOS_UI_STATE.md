@@ -1,5 +1,33 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v9, 2026-07-28 session, part seven: a production break, its root cause, and
+the durable fix.
+
+**Changelog v9.** The v8 deploy broke every document page ("Could not reach
+the plane", which is errPane dressing a ReferenceError). Root cause: the v8
+slice-replace that installed the link-style openArtifact was bounded "from
+openArtifact to openBundle", and parseLog, renderLogEntry, lineDiff, and
+toggleDiff sat between those anchors; the replacement deleted all four. The
+harnesses missed it because none drove openBundle end to end. Fix: the four
+functions are restored from the v3.3 commit, and the testing hole is closed
+for good: the harnesses moved from /tmp into the repo as civicos-ui/test/
+(six .test.mjs files, extract.mjs reading app.html directly, run.mjs running
+everything plus the semantics check), including a NEW document-page harness
+that renders the full page against a realistic stubbed plane (prose, bundle
+glossary, chunked pdf, promotion log, revision, projection with references)
+and asserts every element of the page: frozen header, open control, the
+three fact-carrying seals, both glossary layers, the session log with the
+member's acknowledgment as speech, revision compare, artifact links, trust
+hashes, cited-by rows, and all four strata. Run `node test/run.mjs` before
+every deploy. ALSO: per Bob, no more per-turn zip deliverables; the repo and
+the live deploy are the delivery.
+
+(v8 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v8, 2026-07-28 session, part six: Bob's five, round two.
 
 **Changelog v8.** THE FROZEN HEADER: the sticky region is now everything
