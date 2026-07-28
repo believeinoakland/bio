@@ -1,5 +1,15 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v22, 2026-07-28 session, part twenty. TYPE_LABEL for information shortened
+to "Info" everywhere the label renders (the Type column, filtered lists,
+the document page's cited-by rows). Harness updated.
+
+(v21 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v21, 2026-07-28 session, part nineteen: the record list, Bob's four. An
 identity band tops the list page (verdigris-dk from the palette; umber
 stays the document page's). A Type column joins Item, State, and Updated

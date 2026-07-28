@@ -845,7 +845,7 @@ const STRATA_INFO = {
   s3:{ label:"Trust",         tip:"Where it came from and how anyone can verify it, without this group's cooperation." },
   s4:{ label:"The record",    tip:"Everything that has ever happened to it. Append-only; nothing can be edited or removed." },
 };
-const TYPE_LABEL = {information:"Information", focus:"Focus", problem:"Focus", project:"Project", action:"Action", annotation:"Annotation", source:"Source"};
+const TYPE_LABEL = {information:"Info", focus:"Focus", problem:"Focus", project:"Project", action:"Action", annotation:"Annotation", source:"Source"};
 function sem(type, state){
   const t = SEMANTICS.types[type];
   if(t && t.states[state]) return t.states[state];

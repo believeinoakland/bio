@@ -21,7 +21,7 @@ await ctx.__r();
 const head = els.get("#content")._html, table = els.get("#rectable")._html;
 if(!head.includes('class="recband"')) throw new Error("record band missing");
 for(const c of ["Item","Type","State","Updated"]) if(!table.includes(">"+c)) throw new Error("column missing: "+c);
-if(!table.includes(">Information<")||!table.includes(">Focus<")||!table.includes(">Project<")) throw new Error("type cells wrong");
+if(!table.includes(">Info<")||!table.includes(">Focus<")||!table.includes(">Project<")) throw new Error("type cells wrong");
 if(!table.includes('data-pop-state="verified"')||!table.includes('class="seal')) throw new Error("state not seal-form");
 if(!table.includes('data-pop-crit="crucial"')) throw new Error("crucial seal missing");
 // sort by title ascending: Alpha, Bravo, Charlie
