@@ -1,5 +1,26 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v16, 2026-07-28 session, part fourteen: search, round two. The stepped-on
+icon and clear control were the input's own focus ring drawn inside the
+field row; the ring moved to the FIELD (focus-within on the .msearch
+wrapper, inner input outline suppressed), so it now wraps icon, text, and
+clear as one control. ONE SEARCH BOX EVER: the masthead's on desktop (the
+Search screen shows none), the screen's own on phones where the masthead
+search is hidden; searchEl() picks the visible one, values mirror on run,
+and the results line names the query ("2 results for \u201Csewer 2025\u201D").
+Long queries follow the researched standard for single-line inputs: the
+masthead field grows on focus (200 to 400px, quiet transition), text
+ellipsizes when blurred, and editing relies on the input's native
+horizontal scroll (browsers deliberately drop the ellipsis on focus so it
+never fights the caret; css-wg text-overflow discussion, Gecko/WebKit
+behavior).
+
+(v15 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v15, 2026-07-28 session, part thirteen: search, Bob's four. The mangled
 "running" indicator was the magnifier icon clipped: the sprite is drawn on
 a 20-unit grid and the inline viewports never declared a viewBox, so it

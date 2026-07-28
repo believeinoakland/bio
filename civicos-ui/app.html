@@ -95,6 +95,13 @@ input.mono{font-family:var(--font-fact);font-size:13px}
 .masthead .msearch input::placeholder{color:var(--muted)}
 .sx{cursor:pointer;color:var(--muted);font-size:15px;line-height:1;padding:0 2px;flex:none;user-select:none}
 .sx:hover{color:var(--ink)}
+.msearch input{min-width:0;text-overflow:ellipsis}
+.msearch input:focus-visible{outline:none}
+.msearch:focus-within{outline:var(--focus-ring);outline-offset:var(--focus-offset);border-radius:var(--r-2)}
+.masthead .msearch{transition:width var(--dur-2) var(--ease)}
+.masthead .msearch:focus-within{width:400px}
+.sm-only{display:none}
+@media (max-width:680px){ .sm-only{display:flex} }
 .masthead .handle{font-family:var(--font-fact);font-size:12.5px;color:var(--ink-soft);border-bottom:1px solid var(--rule);padding-bottom:1px}
 
 .rail{grid-row:2/4;background:var(--paper-2);border-right:var(--hair);padding:14px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;min-height:0}
@@ -664,7 +671,11 @@ async function navBackDo(){
   if(p.type==="bundle") await openBundle(p.key, true);
   else {
     await go(p.key, true);
-    if(p.key==="search" && p.q){ const i=$("#s-q"); if(i){ i.value=p.q; await runSearch(true); } }
+    if(p.key==="search" && p.q){
+      const m=$("#m-search"); if(m){ m.value=p.q; sxSync("m"); }
+      const i=$("#s-q"); if(i){ i.value=p.q; sxSync("s"); }
+      await runSearch(true);
+    }
   }
   restoreScroll(p.scroll);
 }
@@ -1338,13 +1349,19 @@ async function backFromEmptySearch(){
 function quickSearch(){
   const q=$("#m-search").value.trim();
   if(!q){ if(CUR.type==="screen" && CUR.key==="search") backFromEmptySearch(); return; }
-  go("search").then(()=>{ const i=$("#s-q"); if(i){i.value=q; sxSync("s"); runSearch();} });
+  go("search").then(()=>{ const i=$("#s-q"); if(i){ i.value=q; sxSync("s"); } runSearch(); });
 }
 async function renderSearchScreen(){
-  $("#content").innerHTML = `<h1 class="rec">Search</h1><p class="lede">Find material across the record. Enter runs the search; an empty search takes you back to the record.</p>
-    <div class="msearch" style="width:auto;max-width:520px;margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 20 20" style="flex:none;color:var(--muted)"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund" oninput="sxSync('s')" onkeydown="if(event.key==='Enter')runSearch()"><span class="sx hidden" id="sx-s" onclick="sxClear('s')" title="clear">&times;</span></div>
+  $("#content").innerHTML = `<h1 class="rec">Search</h1><p class="lede">Find material across the record. Type in the search box above, Enter runs it; an empty search takes you back to the record.</p>
+    <div class="msearch sm-only" style="width:auto;max-width:520px;margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 20 20" style="flex:none;color:var(--muted)"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund" oninput="sxSync('s')" onkeydown="if(event.key==='Enter')runSearch()"><span class="sx hidden" id="sx-s" onclick="sxClear('s')" title="clear">&times;</span></div>
     <div id="s-res"></div>`;
-  const i=$("#s-q"); if(i) i.focus();
+  const el = searchEl(); if(el) el.focus();
+}
+/* Exactly one search box is ever visible: the masthead's on desktop, the
+   screen's on phones (where the masthead search is hidden). */
+function searchEl(){
+  const mob = typeof matchMedia==="function" && matchMedia("(max-width:680px)").matches;
+  return (mob && $("#s-q")) || $("#m-search") || $("#s-q");
 }
 function sxSync(w){
   const i = $(w==="m" ? "#m-search" : "#s-q"), x = $(w==="m" ? "#sx-m" : "#sx-s");
@@ -1357,8 +1374,11 @@ function sxClear(w){
   if(w==="s"){ const r=$("#s-res"); if(r) r.innerHTML=""; }
 }
 async function runSearch(fromNav){
-  const q = $("#s-q").value.trim();
+  const el = searchEl();
+  const q = ((el && el.value) || "").trim();
   if(!q){ backFromEmptySearch(); return; }
+  const m=$("#m-search"), sq=$("#s-q");
+  if(m){ m.value=q; sxSync("m"); } if(sq){ sq.value=q; sxSync("s"); }
   if(CUR.type==="screen" && CUR.key==="search") CUR.q = q;
   $("#s-res").innerHTML = `<p class="count-line">Searching&hellip;</p>`;
   try{
@@ -1369,7 +1389,7 @@ async function runSearch(fromNav){
       rows = list.filter(b=>(b.title||"").toLowerCase().includes(ql)||(b.bundle_id||"").toLowerCase().includes(ql));
     }
     $("#s-res").innerHTML = rows.length
-      ? `<p class="count-line">${rows.length} results</p><table class="rec"><tbody>${recordRows(rows.map(x=>({bundle_id:x.bundle_id||x.id,title:x.title,object_type:x.object_type||x.type,current_state:x.current_state||x.state,last_updated:x.last_updated})))}</tbody></table>`
+      ? `<p class="count-line">${rows.length} ${rows.length===1?"result":"results"} for \u201C${esc(q)}\u201D</p><table class="rec"><tbody>${recordRows(rows.map(x=>({bundle_id:x.bundle_id||x.id,title:x.title,object_type:x.object_type||x.type,current_state:x.current_state||x.state,last_updated:x.last_updated})))}</tbody></table>`
       : `<p class="empty">No results for “${esc(q)}”.</p>`;
     wireRows();
   }catch(e){ $("#s-res").innerHTML = errPane(e); }
