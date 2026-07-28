@@ -1,5 +1,37 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v7, 2026-07-28 session, part five: THE DOCUMENT ITSELF OPENS ON THE DOCUMENT
+PAGE.
+
+**Changelog v7, and a correction that retires gap G2.** G2 ("the plane
+serves no binary blob bytes") was wrong: `op=capture`'s GET arm has served
+raw capture bytes by sha256 all along, content-addressed under
+`<store>/captures/<sha>`, Range-capable, and every snapshot part was written
+to exactly those keys at promotion. The gap was the UI's knowledge of the
+plane, not the plane; no plane release was needed and none was made. The
+document page now has the viewer: every binary artifact card carries "Open
+the document (size)". Opening fetches each part through `op=capture` with a
+live progress bar, hashes every part in the browser with WebCrypto, and
+compares against the sha the record carries. ONLY VERIFIED BYTES ARE EVER
+SHOWN: a mismatch renders a refusal in the plane's voice (REFUSING TO
+DISPLAY, expected vs got) instead of the document. On success: a verdigris
+"every byte verified against the record" line, the PDF inline in an embed
+(images inline as images; .tsr and unknown types verify-and-download), and a
+download of the same verified bytes under the original filename. Proven
+live end to end: both parts of the 41.5MB FY23-25 budget book fetched
+through the civicos proxy, both shas identical to the record, and the
+reassembled file is a well-formed PDF (%PDF header, %%EOF trailer). Harness
+covers part ordering, concatenation, the integrity refusal, and the
+missing-capture reason; all prior harnesses and the semantics check stay
+green.
+
+(v6 and earlier follow; all still hold, except G2 which is retired as
+mis-diagnosed.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v6, 2026-07-28 session, part four: Bob's five fixes from the live document
 page.
 

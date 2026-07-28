@@ -265,6 +265,13 @@ details.src pre{margin:0;font-family:var(--font-fact);font-size:12px;line-height
 .bincard{border:var(--hair);background:var(--sheet);box-shadow:var(--e-2);padding:12px 14px;margin:0 0 10px}
 .bincard .fn{font-family:var(--font-fact);font-size:12.5px;word-break:break-all}
 .bincard .why{font-size:12.5px;color:var(--muted);margin-top:6px;max-width:60ch}
+.avwrap{margin-top:10px}
+.avbar{height:4px;background:var(--tint-muted);border-radius:var(--r-1);overflow:hidden;margin:8px 0 6px}
+.avbar i{display:block;height:100%;background:var(--verdigris);width:0;transition:width var(--dur-1) linear}
+.avnote{font-family:var(--font-fact);font-size:11.5px;color:var(--muted)}
+.avok{font-family:var(--font-fact);font-size:11.5px;color:var(--verdigris-dk);margin:6px 0}
+.avview{width:100%;height:72vh;border:var(--hair-strong);background:#fff;margin-top:8px}
+img.avview{height:auto;max-height:72vh;object-fit:contain}
 .copybtn{font-family:var(--font-fact);font-size:10.5px;letter-spacing:var(--tr-caps);text-transform:uppercase;color:var(--verdigris-dk);background:none;border:1px solid var(--rule);border-radius:var(--r-2);padding:2px 8px;cursor:pointer;margin-left:8px}
 .copybtn:hover{background:var(--card)}
 
@@ -919,18 +926,73 @@ function renderTextSource(name, text){
   return `<details class="src"><summary><span class="fn">${esc(name)}</span><span class="fm">${esc(kind)} · ${text.length.toLocaleString()} chars</span></summary>
     <div class="body"><pre>${esc(pretty)}</pre></div></details>`;
 }
+let VIEW_REG = [];
+function artKind(name){
+  if(/\.pdf$/i.test(name)) return {type:"application/pdf", view:"pdf"};
+  if(/\.(png|jpe?g|gif|webp)$/i.test(name)) return {type:"image/"+name.split(".").pop().toLowerCase().replace("jpg","jpeg"), view:"img"};
+  return {type:"application/octet-stream", view:null};
+}
 function renderSourceItem(it){
   if(it.text !== null) return renderTextSource(it.base, it.text);
-  if(it.parts.length){
-    it.parts.sort((a,b)=>a.path<b.path?-1:1);
-    const total = it.parts.reduce((s,p)=>s+(p.bytes||0),0);
-    const shas = it.parts.map(p=>`<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(p.path.split("/").pop())}</span><span class="v">${esc(shaShort(p.sha))}\u2026 ${copyBtn(p.sha)} <span style="color:var(--muted)">${esc(fmtBytes(p.bytes))}</span></span></div>`).join("");
-    return `<div class="bincard"><div class="fn">${esc(it.base)} <span style="color:var(--muted)">· ${esc(fmtBytes(total))} in ${it.parts.length} parts${it.tsr?" · RFC 3161 timestamp attached":""}</span></div>
-      <div class="why">An archived snapshot, held by hash in the record. In-browser viewing of binary snapshots awaits the plane's blob-serving path; until then anyone can fetch the original from the source locator below and confirm it against these hashes.</div>
-      <details class="src" style="margin-top:8px;box-shadow:none"><summary><span class="fn">part hashes</span></summary><div class="body">${shas}</div></details></div>`;
+  const parts = it.parts.length ? it.parts.sort((a,b)=>a.path<b.path?-1:1)
+              : (it.meta && it.meta.sha ? [{path:it.base, bytes:it.meta.bytes||0, sha:it.meta.sha}] : []);
+  if(!parts.length) return "";
+  const total = parts.reduce((s,p)=>s+(p.bytes||0),0);
+  const k = VIEW_REG.push({ base:it.base, parts, total }) - 1;
+  const kind = artKind(it.base);
+  const shas = parts.map(p=>`<div class="kv"><span class="k mono" style="min-width:0;flex:1">${esc(p.path.split("/").pop())}</span><span class="v">${esc(shaShort(p.sha))}\u2026 ${copyBtn(p.sha)} <span style="color:var(--muted)">${esc(fmtBytes(p.bytes))}</span></span></div>`).join("");
+  return `<div class="bincard"><div class="fn">${esc(it.base)} <span style="color:var(--muted)">· ${esc(fmtBytes(total))}${parts.length>1?` in ${parts.length} parts`:""}${it.tsr?" · RFC 3161 timestamp attached":""}</span></div>
+    <div class="rv-bar" style="margin:10px 0 0"><button class="btn ghost" id="av-btn-${k}" onclick="openArtifact(${k})">${kind.view?"Open the document":"Fetch and verify"} (${esc(fmtBytes(total))})</button><span class="n">Fetched from the record and verified byte for byte against its hashes before anything is shown.</span></div>
+    <div class="avwrap" id="av-${k}"></div>
+    <details class="src" style="margin-top:8px;box-shadow:none"><summary><span class="fn">part hashes</span></summary><div class="body">${shas}</div></details></div>`;
+}
+/* Fetch every part of an artifact through op=capture and verify each against
+   the sha the record carries. Bytes that do not match are never shown: the
+   refusal is the point. */
+async function fetchParts(parts, onProgress){
+  const chunks = []; let got = 0;
+  for(let i=0;i<parts.length;i++){
+    const p = parts[i];
+    const r = await fetch(`${PLANE.base}/api/?` + new URLSearchParams({op:"capture", sha256:p.sha, ...(PLANE.token?{token:PLANE.token}:{})}));
+    if(!r.ok){ let j=null; try{ j=await r.json(); }catch(_){}
+      return { ok:false, reason:(j&&(j.reason||j.error))||("HTTP "+r.status), part:p.path }; }
+    const buf = new Uint8Array(await r.arrayBuffer());
+    got += buf.length;
+    if(onProgress) onProgress(i+1, parts.length, got);
+    const d = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x=>x.toString(16).padStart(2,"0")).join("");
+    if(d !== (p.sha||"").toLowerCase().replace(/^sha256:/,""))
+      return { ok:false, reason:"BYTES_DO_NOT_MATCH_THE_RECORD", part:p.path, expected:p.sha, got:d };
+    chunks.push(buf);
   }
-  return `<div class="bincard"><div class="fn">${esc(it.base)} <span style="color:var(--muted)">· ${esc(fmtBytes(it.meta&&it.meta.bytes))}</span></div>
-    <div class="why">Held by hash: ${esc(shaShort(it.meta&&it.meta.sha))}\u2026 ${it.meta&&it.meta.sha?copyBtn(it.meta.sha):""}</div></div>`;
+  const total = chunks.reduce((s,c)=>s+c.length,0);
+  const all = new Uint8Array(total); let off=0;
+  for(const c of chunks){ all.set(c, off); off += c.length; }
+  return { ok:true, bytes:all, n:parts.length };
+}
+async function openArtifact(k){
+  const a = VIEW_REG[k]; if(!a) return;
+  const box = $("#av-"+k), btn = $("#av-btn-"+k);
+  btn.disabled = true;
+  box.innerHTML = `<div class="avbar"><i id="av-i-${k}"></i></div><div class="avnote" id="av-n-${k}">Fetching from the record\u2026</div>`;
+  const res = await fetchParts(a.parts, (i,n,got)=>{
+    const bar=$(`#av-i-${k}`), note=$(`#av-n-${k}`);
+    if(bar && a.total) bar.style.width = Math.min(100, Math.round(got/a.total*100))+"%";
+    if(note) note.textContent = `Fetching part ${i} of ${n} \u00b7 ${fmtBytes(got)}${a.total?" of "+fmtBytes(a.total):""}`;
+  });
+  btn.disabled = false;
+  if(!res.ok){
+    box.innerHTML = `<div class="teach"><b>REFUSING TO DISPLAY \u00b7 ${esc(res.reason)}</b><div style="margin-top:4px">${esc(res.part||"")}</div>${res.expected?`<div class="mono" style="margin-top:4px;font-size:11px">the record says ${esc(shaShort(res.expected))}\u2026 \u00b7 the bytes hash to ${esc(shaShort(res.got))}\u2026</div>`:""}</div>`;
+    return;
+  }
+  const kind = artKind(a.base);
+  const blob = new Blob([res.bytes], {type:kind.type});
+  const u = URL.createObjectURL(blob);
+  const fname = a.base.split("/").pop();
+  const okline = `<div class="avok">\u2713 every byte verified against the record \u00b7 ${res.n===1?"1 part":res.n+" parts"}, sha256 match</div>`;
+  const dl = `<a href="${u}" download="${esc(fname)}">Download ${esc(fname)}</a>`;
+  if(kind.view==="pdf") box.innerHTML = okline + `<embed class="avview" src="${u}" type="application/pdf">` + `<div class="avnote" style="margin-top:6px">${dl} \u00b7 if the viewer does not render here, the download is the same verified bytes</div>`;
+  else if(kind.view==="img") box.innerHTML = okline + `<img class="avview" src="${u}" alt="${esc(fname)}">` + `<div class="avnote" style="margin-top:6px">${dl}</div>`;
+  else box.innerHTML = okline + `<div class="avnote">${dl}</div>`;
 }
 
 /* The session log, read from the record itself: _history/promotion_*.json.
@@ -1001,6 +1063,7 @@ async function openBundle(id, fromNav){
   setActive(""); liveStop();
   $("#content").innerHTML = `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p><p class="count-line">Loading&hellip;</p>`;
   try{
+    VIEW_REG = [];
     const [img, proj] = await Promise.all([getImage(id, true), getProjection(id)]);
     if(!img){ $("#content").innerHTML = errPane({error:"This bundle was not found."}); return; }
     const bundleMd = typeof img["bundle.md"]==="string" ? img["bundle.md"] : "";
