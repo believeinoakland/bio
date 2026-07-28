@@ -111,7 +111,7 @@ input.mono{font-family:var(--font-fact);font-size:13px}
 .content{grid-row:2/3;grid-column:2/3;padding:22px 24px 40px;overflow:auto;max-width:1100px}
 .crumb{font-size:13px;color:var(--muted);margin:0 0 10px}
 .crumb a{cursor:pointer;border:none}
-h1.rec{font-family:var(--font-record);font-size:34px;font-weight:600;line-height:1.15;margin:0 0 6px}
+h1.rec{font-family:var(--font-record);font-size:var(--t-rec);font-weight:600;line-height:1.2;margin:0 0 6px}
 .count-line{font-size:14px;color:var(--muted);margin:0 0 22px}
 .lede{font-size:14px;color:var(--muted);margin:0 0 16px;max-width:var(--measure-work)}
 
@@ -573,7 +573,7 @@ async function openBundle(id){
     }
     $("#content").innerHTML =
       `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span></p>
-       <h1 class="rec" style="font-size:26px">${esc(fm.title||id)}</h1>
+       <h1 class="rec">${esc(fm.title||id)}</h1>
        <div class="card">${facts}</div>${provLine}
        <div class="prose">${mdLite(body)}</div>
        <h2 class="sec">Files in this bundle</h2><div class="card">${fileRows}</div>

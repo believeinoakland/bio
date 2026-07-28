@@ -142,3 +142,37 @@ These govern every UX call from here on, alongside the constraints above.
   - Consistent use of design language throughout
 - Know that the workflow will evolve as experience and requirements change
   - Architecture and codebase designed for evolution
+
+
+## Refinements from Bob, 2026-07-28 (distilled from discussion, standing)
+
+- Load-bearing complexity is per-level: what is load-bearing at one level may
+  be irrelevant at another. The rule is that RELEVANT load-bearing state is
+  always shown, and shown appropriately for the level: named explicitly so a
+  newcomer can recognize it and learn its implications, signaled with color,
+  and with its consequences surfaced (what it enables and forbids).
+- The implications of each state should have ONE source of truth: a semantics
+  table keyed to the plane's actual catalog of object types, states, and legal
+  transitions. UX elements render from it, so presentation is consistent
+  everywhere a state appears, and a consistency check can verify the table
+  covers the catalog completely.
+- Change deserves weight equal to current state: what changed, is changing, or
+  is about to change. Motion in the interface is used sparingly and only when
+  user action is needed. Chips give the compact scale; mouse-overs and
+  click-overs give progressive disclosure.
+- Information density is not less whitespace; it is signals. The palette is
+  color, chips, checkboxes, typography, mouse and click overs, context menus,
+  collapsibles, and space. The discipline is knowing the full palette and
+  drawing from it to communicate clearly, progressively, cleanly.
+- Devices: phones, tablets, laptops, desktops each offer different
+  opportunities and limits; features may legitimately be absent on some. The
+  first CivicOS release supports phones, acceptably as a viewing MVP if that
+  is what time and resources fit.
+- Alive means live: when an object's visible state changes, the display
+  reflects it promptly (a list the user has open updates when an item is added
+  or removed), so long as the update does not inordinately disrupt.
+- Interactive story visuals DO extend to the published surface, where readers
+  know the least, so progressive disclosure matters most there. The PRINTED
+  version of a publication is first-class and must carry the full narrative,
+  progressively explained and documented, because print readers lose the
+  interactive affordances.

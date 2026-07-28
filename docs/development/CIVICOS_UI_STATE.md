@@ -1,7 +1,10 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
-v2, 2026-07-27 session (doc previously dated ahead; plane is 0.35.0 on biosmoke7,
-see BIO_DATAPLANE_STATE.md).
+v3, 2026-07-28 session: record headings dropped to the canonical token
+(--t-rec 22px, inline sizes removed); Bob resolved the open heading decision in
+favor of the token/Design value. Bob's standing UX principles recorded verbatim
+in UI-KICKOFF.md. (Previously: v2, 2026-07-27 session (doc previously dated ahead; plane is 0.35.0 on biosmoke7,
+see BIO_DATAPLANE_STATE.md).)
 
 **Changelog v2: the first write action is wired. Release runs end to end from
 the UI: per-document from the bundle page and batch from Review, through
@@ -205,9 +208,8 @@ the storyboard.
 
 ## Open decision for Bob
 
-The record heading is set to 34px to match the storyboard's inviting register,
-which is larger than `--t-rec` 22px in the token file. The token and the
-storyboard disagree here. Keep 34px, or drop to the strict token value.
+RESOLVED 2026-07-28: Bob chose the token value. Headings now ride `--t-rec`
+(22px) with inline sizes removed; the token file stays unforked.
 
 ## Grants (pasted per session, never committed)
 
