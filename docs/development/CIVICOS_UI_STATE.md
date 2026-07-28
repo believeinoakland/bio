@@ -1,5 +1,25 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v26, 2026-07-28 session, part twenty-four, closing the session. THE PLAN OF
+RECORD NOW EXISTS: docs/development/UI-PLAN.md lays out the full UI
+development arc as a ladder, U1-U6 DONE (foundation, record surfaces,
+document page, verified opening, release flow, liveness and the permanent
+test discipline) and U7-U14 REMAINING (capture-fidelity viewing, the Add
+surface, triage and cite, the crucial path, members, the published surface
+G1, phone parity, hardening), each remaining rung with an acceptance test
+and dependencies. SESSION-KICKOFF-UI.md beside it carries the paste-ready
+initial prompt for the next session (plane 0.36.0 then U7) including the
+grant slots; the kickoff file is rewritten at the end of every session so
+it is always current. Division of labor from here: UI-PLAN.md is what and
+why, this file is the session log of how, UI-KICKOFF.md is Bob's standing
+principles.
+
+(v25 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v25, 2026-07-28 session, part twenty-three. MONITORING COLUMNS: the two
 monitoring tables replace Updated with "Last checked" (monitor_last_checked
 from the search hit) and "Next check" (computed via monitorNext from the
