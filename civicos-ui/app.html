@@ -680,6 +680,7 @@ async function navBackDo(){
   else {
     await go(p.key, true);
     if(p.key==="search" && p.q){
+      SEARCH_SCOPE = p.sc && SEARCH_SCOPES[p.sc] ? { key:p.sc, ...SEARCH_SCOPES[p.sc] } : null;
       const m=$("#m-search"); if(m){ m.value=p.q; sxSync("m"); }
       const i=$("#s-q"); if(i){ i.value=p.q; sxSync("s"); }
       await runSearch(true);
@@ -1393,20 +1394,32 @@ function strataGo(a, id){
 
 /* ---------- Search (op=search) ---------- */
 async function backFromEmptySearch(){
-  await go("record");
+  await go(SEARCH_SCOPE ? SEARCH_SCOPE.key : "record");
   const m = $("#m-search"); if(m){ m.value=""; sxSync("m"); m.focus(); }
 }
 function quickSearch(){
   const q=$("#m-search").value.trim();
   if(!q){ if(CUR.type==="screen" && CUR.key==="search") backFromEmptySearch(); return; }
+  if(CUR.type==="screen" && SEARCH_SCOPES[CUR.key]) SEARCH_SCOPE = { key:CUR.key, ...SEARCH_SCOPES[CUR.key] };
+  else if(!(CUR.type==="screen" && CUR.key==="search")) SEARCH_SCOPE = null;
   go("search").then(()=>{ const i=$("#s-q"); if(i){ i.value=q; sxSync("s"); } runSearch(); });
 }
+function widenSearch(){ SEARCH_SCOPE = null; runSearch(); }
 async function renderSearchScreen(){
   $("#content").innerHTML = `<h1 class="rec">Search</h1><p class="lede">Find material across the record. Type in the search box above, Enter runs it; an empty search takes you back to the record.</p>
     <div class="msearch sm-only" style="width:auto;max-width:520px;margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 20 20" style="flex:none;color:var(--muted)"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund" oninput="sxSync('s')" onkeydown="if(event.key==='Enter')runSearch()"><span class="sx hidden" id="sx-s" onclick="sxClear('s')" title="clear">&times;</span></div>
     <div id="s-res"></div>`;
   const el = searchEl(); if(el) el.focus();
 }
+/* A search launched from a typed page stays in that page's world. */
+const SEARCH_SCOPES = {
+  focuses:    { q:"type:focus",      client:h=>["focus","problem"].includes(h.object_type||h.type), label:"Focuses" },
+  projects:   { q:"type:project",    client:h=>(h.object_type||h.type)==="project",                 label:"Projects" },
+  review:     { q:"state:collected", client:h=>(h.current_state||h.state)==="collected",            label:"items awaiting review" },
+  monitoring: { client:h=>!!(h.monitor_enabled||h.reeval_flag),                                     label:"monitored material" },
+};
+let SEARCH_SCOPE = null;   // {key,q?,client?,label} while scoped
+
 /* Exactly one search box is ever visible: the masthead's on desktop, the
    screen's on phones (where the masthead search is hidden). */
 function searchEl(){
@@ -1429,17 +1442,19 @@ async function runSearch(fromNav){
   if(!q){ backFromEmptySearch(); return; }
   const m=$("#m-search"), sq=$("#s-q");
   if(m){ m.value=q; sxSync("m"); } if(sq){ sq.value=q; sxSync("s"); }
-  if(CUR.type==="screen" && CUR.key==="search") CUR.q = q;
+  const fq = (SEARCH_SCOPE && SEARCH_SCOPE.q) ? SEARCH_SCOPE.q + " " + q : q;
+  if(CUR.type==="screen" && CUR.key==="search"){ CUR.q = q; CUR.sc = SEARCH_SCOPE ? SEARCH_SCOPE.key : null; }
   $("#s-res").innerHTML = `<p class="count-line">Searching&hellip;</p>`;
   try{
     let rows;
-    try{ const r = await rec("search",{q}); rows = r.result && (r.result.hits||r.result.results||r.result.bundles||r.result.rows); }catch(_){ rows=null; }
+    try{ const r = await rec("search",{q:fq}); rows = r.result && (r.result.hits||r.result.results||r.result.bundles||r.result.rows); }catch(_){ rows=null; }
     if(!rows){ // fall back to a client filter over op=list so search always answers
       const list = await loadRecord(); const ql=q.toLowerCase();
       rows = list.filter(b=>(b.title||"").toLowerCase().includes(ql)||(b.bundle_id||"").toLowerCase().includes(ql));
     }
+    if(SEARCH_SCOPE && SEARCH_SCOPE.client) rows = rows.filter(SEARCH_SCOPE.client);
     $("#s-res").innerHTML = rows.length
-      ? `<p class="count-line">${rows.length} ${rows.length===1?"result":"results"} for \u201C${esc(q)}\u201D</p><table class="rec"><tbody>${recordRows(rows.map(x=>({bundle_id:x.bundle_id||x.id,title:x.title,object_type:x.object_type||x.type,current_state:x.current_state||x.state,last_updated:x.last_updated})))}</tbody></table>`
+      ? `<p class="count-line">${rows.length} ${rows.length===1?"result":"results"} for \u201C${esc(q)}\u201D${SEARCH_SCOPE?` in ${esc(SEARCH_SCOPE.label)} \u00b7 <a onclick="widenSearch()">search everything</a>`:""}</p><table class="rec"><tbody>${recordRows(rows.map(x=>({bundle_id:x.bundle_id||x.id,title:x.title,object_type:x.object_type||x.type,current_state:x.current_state||x.state,last_updated:x.last_updated})))}</tbody></table>`
       : `<p class="empty">No results for “${esc(q)}”.</p>`;
     wireRows();
   }catch(e){ $("#s-res").innerHTML = errPane(e); }

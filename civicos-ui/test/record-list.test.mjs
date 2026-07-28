@@ -13,8 +13,10 @@ const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date
  setInterval:()=>1,clearInterval(){},setTimeout:fn=>{fn();return 1},requestAnimationFrame:fn=>fn(),
  document:{querySelector:s=>{if(s==="#docscroll")return null;if(!els.has(s))els.set(s,el());return els.get(s)},querySelectorAll:()=>[],addEventListener(){},documentElement:{setAttribute(){}},getElementById:()=>el(),hidden:false,createElement:()=>el(),body:{appendChild(){}}},
  location:{protocol:"https:"},history:{pushState(){},back(){}},localStorage:{getItem:()=>null,setItem(){}},window:{addEventListener(){},open:()=>null},
- fetch:async u=>{const op=new URL(u,"https://x.t").searchParams.get("op");const R=o=>({ok:true,json:async()=>o});
-   if(op==="list")return R({ok:true,result:LIST}); return R({ok:true,result:{}});}};
+ fetch:async u=>{const p=new URL(u,"https://x.t").searchParams; const op=p.get("op"); const R=o=>({ok:true,json:async()=>o});
+   if(op==="list")return R({ok:true,result:LIST});
+   if(op==="search"){ ctx.__LASTQ=p.get("q"); return R({ok:true,result:{hits:[{bundle_id:"FOC-1",object_type:"focus",title:"Alpha focus",current_state:"elevated",last_updated:"2026-07-19"}]}}); }
+   return R({ok:true,result:{}});}};
 ctx.globalThis=ctx; vm.createContext(ctx);
 vm.runInContext(appScript()+";globalThis.__r=renderRecord;globalThis.__s=listSortBy;",ctx);
 await ctx.__r();
@@ -36,4 +38,13 @@ const t2 = els.get("#rectable")._html;
 const order2 = ["Charlie project","Bravo doc","Alpha focus"].map(x=>t2.indexOf(x));
 if(!(order2[0]<order2[1]&&order2[1]<order2[2])) throw new Error("desc sort wrong");
 if(!t2.includes("\u25BC")) throw new Error("desc arrow missing");
-console.log("record-list: band, type column, sorting, seals all pass");
+// scoped search: launched from Focuses, the plane query carries the scope
+vm.runInContext("globalThis.__go=go;globalThis.__qs=quickSearch;",ctx);
+await ctx.__go("focuses");
+ctx.document.querySelector("#m-search").value="sewer";
+await ctx.__qs();
+await new Promise(r=>setTimeout(r,0));
+if(!/type:focus\s+sewer/.test(ctx.__LASTQ||"")) throw new Error("scope not in plane query: "+ctx.__LASTQ);
+const res = ctx.document.querySelector("#s-res")._html;
+if(!res.includes("in Focuses")||!res.includes("search everything")) throw new Error("scope not named in results: "+res.slice(0,200));
+console.log("record-list: band, type column, sorting, seals, scoped search all pass");

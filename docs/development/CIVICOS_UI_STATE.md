@@ -1,5 +1,27 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v24, 2026-07-28 session, part twenty-two: origin-scoped search. A search
+launched from a typed page stays in that page's world: Focuses searches
+type:focus, Projects type:project, Review state:collected (all as terms in
+the plane's own query language, confirmed against query.mjs's filter
+vocabulary), and Monitoring filters client-side on monitor_enabled or
+reeval_flag since it is an or-of-flags. Scope predicates ride along so the
+op=list fallback path honors the scope identically. The results line names
+the scope with a "search everything" widen link (also offered on empty
+scoped results); an empty search returns to the ORIGIN page, not always the
+record; the remembered-search nav restore carries the scope. LESSON PAID
+FOR A THIRD TIME and now a rule: every s.replace on app.html gets an
+assert; the scope initially never reached the plane because a patch
+targeted an api() call that is really rec() and no-opped silently. The
+record-list harness drives the scoped path end to end (from Focuses, the
+plane query carries type:focus and the results line names the scope).
+
+(v23 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v23, 2026-07-28 session, part twenty-one, Bob's three. Focuses and Projects
 lists drop the Type column (single-type lists; the sortable table takes a
 showType flag). Review converts its collected chips and the crucial mark to
