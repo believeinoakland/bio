@@ -1,5 +1,26 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v25, 2026-07-28 session, part twenty-three. MONITORING COLUMNS: the two
+monitoring tables replace Updated with "Last checked" (monitor_last_checked
+from the search hit) and "Next check" (computed via monitorNext from the
+frequency; the frequency word shows when the arithmetic cannot; reeval-only
+rows dash both). Both columns sort with the shared mechanism. CONFORMANCE
+ANSWER RECORDED (Bob asked whether crucial-while-collected is conformant):
+YES. From store.mjs: cite refuses only non-Information targets and never
+checks current_state, so collected Information is citable; criticality is a
+declared frontmatter stance at promotion, not derived from citations; the
+one hard crucial rule is CRUCIAL NEVER RIDES A BATCH. Declaring crucial
+before verification is the design working as intended: it forces the
+individually co-attested release path for the material that matters most.
+If Bob ever wants "citation targets must be verified" as policy, that is a
+new refusing arm in cite, a plane change to weigh deliberately.
+
+(v24 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v24, 2026-07-28 session, part twenty-two: origin-scoped search. A search
 launched from a typed page stays in that page's world: Focuses searches
 type:focus, Projects type:project, Review state:collected (all as terms in

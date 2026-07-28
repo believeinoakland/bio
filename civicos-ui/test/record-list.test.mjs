@@ -15,7 +15,11 @@ const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date
  location:{protocol:"https:"},history:{pushState(){},back(){}},localStorage:{getItem:()=>null,setItem(){}},window:{addEventListener(){},open:()=>null},
  fetch:async u=>{const p=new URL(u,"https://x.t").searchParams; const op=p.get("op"); const R=o=>({ok:true,json:async()=>o});
    if(op==="list")return R({ok:true,result:LIST});
-   if(op==="search"){ ctx.__LASTQ=p.get("q"); return R({ok:true,result:{hits:[{bundle_id:"FOC-1",object_type:"focus",title:"Alpha focus",current_state:"elevated",last_updated:"2026-07-19"}]}}); }
+   if(op==="search"){ ctx.__LASTQ=p.get("q");
+     if(p.get("q")==="") return R({ok:true,result:{hits:[
+       {bundle_id:"I1",object_type:"information",title:"Watched one",current_state:"verified",monitor_enabled:1,monitor_frequency:"daily",monitor_last_checked:"2026-07-27T12:00:00Z",last_updated:"2026-07-20"},
+       {bundle_id:"I2",object_type:"information",title:"Flagged one",current_state:"collected",criticality:"crucial",reeval_flag:1,last_updated:"2026-07-21"}]}});
+     return R({ok:true,result:{hits:[{bundle_id:"FOC-1",object_type:"focus",title:"Alpha focus",current_state:"elevated",last_updated:"2026-07-19"}]}}); }
    return R({ok:true,result:{}});}};
 ctx.globalThis=ctx; vm.createContext(ctx);
 vm.runInContext(appScript()+";globalThis.__r=renderRecord;globalThis.__s=listSortBy;",ctx);
@@ -47,4 +51,12 @@ await new Promise(r=>setTimeout(r,0));
 if(!/type:focus\s+sewer/.test(ctx.__LASTQ||"")) throw new Error("scope not in plane query: "+ctx.__LASTQ);
 const res = ctx.document.querySelector("#s-res")._html;
 if(!res.includes("in Focuses")||!res.includes("search everything")) throw new Error("scope not named in results: "+res.slice(0,200));
-console.log("record-list: band, type column, sorting, seals, scoped search all pass");
+// monitoring: last-checked and next-check columns, computed and sortable
+vm.runInContext("globalThis.__mon=renderMonitoring;",ctx);
+await ctx.__mon();
+const mon = ctx.document.querySelector("#mon")._html;
+for(const c of ["Last checked","Next check"]) if(!mon.includes(c)) throw new Error("monitoring column missing: "+c);
+if(!mon.includes("Jul 27")||!mon.includes("Jul 28")) throw new Error("checked/next dates wrong: "+mon.slice(0,300));
+if(!mon.includes("\u2014")) throw new Error("reeval-only row should dash its monitor cells");
+if(!mon.includes('data-pop-crit="crucial"')) throw new Error("crucial seal missing on monitoring row");
+console.log("record-list: band, type column, sorting, seals, scoped search, monitoring columns all pass");

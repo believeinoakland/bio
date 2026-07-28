@@ -953,6 +953,31 @@ function listTable(list, showType){
   const span = showType?4:3;
   return `<table class="rec">${listHead(showType)}<tbody id="recrows">${list.length?recordRows(sortList(list), showType):`<tr><td colspan="${span}" class="empty">Nothing here.</td></tr>`}</tbody></table>`;
 }
+const MON_COLS = [["title","Item"],["type","Type"],["state","State"],["checked","Last checked"],["next","Next check"]];
+function monKey(b, c){
+  if(c==="checked") return b.monitor_last_checked || "";
+  if(c==="next"){ const nx = monitorNext(b.monitor_last_checked, b.monitor_frequency); return nx ? nx.toISOString() : ""; }
+  return null;
+}
+function monRows(list){
+  return list.map(b=>{
+    const crux = b.criticality==="crucial" ? " "+sealFor("crit","crucial") : "";
+    const nx = monitorNext(b.monitor_last_checked, b.monitor_frequency);
+    return `<tr class="row" data-id="${esc(b.bundle_id)}">
+      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}</td>
+      <td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(TYPE_LABEL[b.object_type]||b.object_type||"")}</td>
+      <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
+      <td class="upd">${b.monitor_last_checked?fmtWhen(b.monitor_last_checked):"\u2014"}</td>
+      <td class="upd">${nx?fmtWhen(nx.toISOString()):(b.monitor_frequency?esc(b.monitor_frequency):"\u2014")}</td>
+    </tr>`;
+  }).join("");
+}
+function monTable(list){
+  const sorted = LIST_SORT.col && monKey(list[0]||{}, LIST_SORT.col)!==null
+    ? [...list].sort((a,b)=>{ const x=monKey(a,LIST_SORT.col), y=monKey(b,LIST_SORT.col); return x<y?-LIST_SORT.dir:x>y?LIST_SORT.dir:0; })
+    : sortList(list);
+  return `<table class="rec"><thead><tr>${MON_COLS.map(([c,l])=>thSort(c,l)).join("")}</tr></thead><tbody>${monRows(sorted)}</tbody></table>`;
+}
 function listSortBy(col){
   if(LIST_SORT.col===col) LIST_SORT.dir *= -1; else LIST_SORT = { col, dir:1 };
   if(LIST_REPAINT) LIST_REPAINT();
@@ -1629,8 +1654,8 @@ async function renderMonitoring(){
     const watched = hits.filter(h=>h.monitor_enabled && !h.reeval_flag);
     const paintMon = ()=>{
       $("#mon").innerHTML =
-        (flagged.length ? `<h2 class="sec">Needs a second look (${flagged.length})</h2>${listTable(flagged)}` : "")
-        + (watched.length ? `<h2 class="sec">Watched sources (${watched.length})</h2>${listTable(watched)}` : "")
+        (flagged.length ? `<h2 class="sec">Needs a second look (${flagged.length})</h2>${monTable(flagged)}` : "")
+        + (watched.length ? `<h2 class="sec">Watched sources (${watched.length})</h2>${monTable(watched)}` : "")
         + (!flagged.length && !watched.length ? `<div class="empty">Nothing is flagged and nothing is being watched right now.</div>` : "");
       wireRows();
     };
