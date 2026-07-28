@@ -23,6 +23,10 @@ source:
 ---
 The SSF transfers appear in the ACFR appendix.
 
+## Summary
+
+One bundle, one line of evidence.
+
 ## Session Log
 
 ### Session 2026-07-19 | First capture (daemon monitor-tick) | daemon
@@ -92,6 +96,12 @@ const must = [
   ["session log is a csec heading","onclick=\"triToggle(this)\""],
   ["source material collapsible","The source material</h2><div class=\"cbody\""],
 ];
+// default collapse: s2/s3/s4 closed, s1 open; Session Log closed, Summary open
+for(const sid of ["s2","s3","s4"]) if(!new RegExp('class="stratum closed" id="'+sid+'"').test(html)) throw new Error(sid+" not closed by default");
+if(!/class="stratum" id="s1"/.test(html)) throw new Error("s1 must open expanded");
+if(!html.includes('class="csec closed"')) throw new Error("Session Log csec not closed");
+const sumIdx = html.indexOf(">Summary</h2>");
+if(sumIdx<0 || html.lastIndexOf('class="csec closed"', sumIdx) > html.lastIndexOf('class="csec"', sumIdx)) throw new Error("Summary must open expanded");
 const misses = must.filter(([n,pat])=>!html.includes(pat));
 if(misses.length) throw new Error("document page missing: "+misses.map(m=>m[0]).join("; ")+"\n---\n"+html.slice(0,600));
 if(html.includes("Could not reach the plane")) throw new Error("errPane rendered");

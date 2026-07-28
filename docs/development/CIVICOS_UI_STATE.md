@@ -1,5 +1,22 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v17, 2026-07-28 session, part fifteen. Default collapse states: a document
+page opens with What it says expanded and In the case, Trust, and The
+record collapsed; within the prose, Session Log and Review Notes open
+collapsed (matched by heading title, so it applies to any bundle carrying
+them) while Summary, Provenance Notes, and other headings open expanded.
+Selecting a collapsed section's tab scrolls to it AND expands it in the
+same gesture, with the tab and the stratum's verdigris rule marked active
+immediately rather than waiting for the scrollspy to catch up. The
+document-page harness asserts the default states both ways (closed strata
+closed, s1 and Summary open, Session Log closed).
+
+(v16 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v16, 2026-07-28 session, part fourteen: search, round two. The stepped-on
 icon and clear control were the input's own focus ring drawn inside the
 field row; the ring moved to the FIELD (focus-within on the .msearch

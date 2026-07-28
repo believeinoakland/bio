@@ -972,7 +972,9 @@ function mdLite(md){
   const closeSec=()=>{ closeList(); if(inSec){out+="</div></div>";inSec=false;} };
   for(const l of lines){
     if(/^##\s+/.test(l)){ closeSec();
-      out+='<div class="csec"><h2><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span>'+inline(l.replace(/^##\s+/,""))+'</h2><div class="cbody">'; inSec=true; }
+      const t = l.replace(/^##\s+/,"").trim();
+      const shut = /^(session log|review notes)$/i.test(t) ? " closed" : "";
+      out+='<div class="csec'+shut+'"><h2><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span>'+inline(t)+'</h2><div class="cbody">'; inSec=true; }
     else if(/^###\s+/.test(l)){ closeList(); out+="<h3>"+inline(l.replace(/^###\s+/,""))+"</h3>"; }
     else if(/^[-*]\s+/.test(l)){ if(!inList){out+="<ul>";inList=true;} out+="<li>"+inline(l.replace(/^[-*]\s+/,""))+"</li>"; }
     else if(l.trim()===""){ closeList(); }
@@ -1256,7 +1258,7 @@ async function openBundle(id, fromNav){
     const s2 = stratum("s2", `${groupLine}${objective}
       ${fwdRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">This ${esc(noun)} cites</h3><div class="card" style="padding:4px 18px">${fwdRows}</div>`:""}
       ${revRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">Cited by</h3><div class="card" style="padding:4px 18px">${revRows}</div>`:""}
-      ${!objective&&!fwdRows&&!revRows?`<div class="empty">Nothing cites this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.</div>`:""}`);
+      ${!objective&&!fwdRows&&!revRows?`<div class="empty">Nothing cites this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.</div>`:""}`, true);
 
     /* --- stratum 3: trust --- */
     const loc = fm["source.locator"]||"";
@@ -1270,7 +1272,7 @@ async function openBundle(id, fromNav){
       ["Monitor", (proj&&proj.monitor_enabled)?`re-checked ${esc(proj.monitor_frequency||"on schedule")}${proj.monitor_last_checked?`, last ${esc(proj.monitor_last_checked)}`:""}`:"", true],
     ].filter(r=>r[1]);
     const s3 = trustRows.length ? stratum("s3", `<div class="card">${trustRows.map(r=>`<div class="kv"><span class="k">${esc(r[0])}</span><span class="v ${r[2]?"plain":""}">${r[3]?r[1]:esc(r[1])}</span></div>`).join("")}</div>
-      <p class="lede" style="margin:6px 0 0">Anyone may confirm the captured material against these hashes, without this group's cooperation.</p>`) : "";
+      <p class="lede" style="margin:6px 0 0">Anyone may confirm the captured material against these hashes, without this group's cooperation.</p>`, true) : "";
 
     /* --- stratum 4: the record --- */
     const revs = Object.keys(img).filter(k=>/^_history\/bundle_.*\.md$/.test(k)).sort();
@@ -1280,7 +1282,7 @@ async function openBundle(id, fromNav){
     }).join("");
     const s4 = stratum("s4", `<p class="lede" style="margin-top:0">Everything that has ever happened to this ${esc(noun)}. Nothing here can be edited or removed.</p>
       ${log.length?log.map(renderLogEntry).join(""):`<div class="empty">No promotions recorded yet.</div>`}
-      ${revs.length?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:16px 0 6px">Earlier revisions, kept</h3><div id="diff-holder" data-open=""></div><div class="card">${revRowsHtml}</div>`:""}`);
+      ${revs.length?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:16px 0 6px">Earlier revisions, kept</h3><div id="diff-holder" data-open=""></div><div class="card">${revRowsHtml}</div>`:""}`, true);
 
     /* --- release, after the reading --- */
     let relBar = "";
@@ -1306,8 +1308,8 @@ async function openBundle(id, fromNav){
     strataSpy();
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
-function stratum(id, inner){
-  return `<section class="stratum" id="${id}"><div class="eyebrow-s"><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span><span class="ebt" title="${esc(STRATA_INFO[id].tip)}">${esc(STRATA_INFO[id].label)}</span></div><div class="sbody">${inner}</div></section>`;
+function stratum(id, inner, closed){
+  return `<section class="stratum${closed?" closed":""}" id="${id}"><div class="eyebrow-s"><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span><span class="ebt" title="${esc(STRATA_INFO[id].tip)}">${esc(STRATA_INFO[id].label)}</span></div><div class="sbody">${inner}</div></section>`;
 }
 function triToggle(t){
   const box = t.closest(".csec") || t.closest("section.stratum");
@@ -1338,6 +1340,8 @@ function strataGo(a, id){
   const el = document.getElementById(id);
   if(!el) return;
   el.classList.remove("closed");
+  document.querySelectorAll(".strata a[data-s]").forEach(x=>x.classList.toggle("on", x===a));
+  document.querySelectorAll("section.stratum").forEach(x=>x.classList.toggle("on", x.id===id));
   el.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
