@@ -254,6 +254,11 @@ svg.ic{display:none}
 .ftag{font-family:var(--font-fact);font-size:11px;letter-spacing:0.02em;text-transform:lowercase;color:var(--ink-soft);border:1px solid var(--rule);border-radius:var(--r-2);padding:3px 8px;background:#fff;cursor:help;flex:none;align-self:center}
 .chips-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 14px}
 .docband{height:5px;background:var(--band);margin:0 -24px 10px}
+.recband{height:5px;background:var(--verdigris-dk);margin:-22px -24px 16px}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--ink)}
+th .sarr{font-size:9px;margin-left:4px}
+td.st .seal{vertical-align:middle}
 .content.docmode .docband{margin:0 -24px 10px}
 section.stratum{border-left:2px solid var(--rule);padding:2px 0 6px 18px;margin:0 0 26px;transition:border-color var(--dur-2) var(--ease)}
 section.stratum.on{border-left-color:var(--verdigris)}
@@ -335,6 +340,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
   .rail .pub-link{border-top:none;margin:0;padding:7px 11px;white-space:nowrap}
   .content{grid-row:3/4;grid-column:1/-1;padding:16px 14px 32px}
   .docband{margin:0 -14px 8px}
+  .recband{margin:-16px -14px 12px}
   .dochead{padding:0 14px}
   #docscroll{padding:8px 14px 32px}
   .railtog{display:none}
@@ -699,6 +705,7 @@ async function go(screen, fromNav){
   $("#pop").classList.add("hidden");
   const c = $("#content");
   c.classList.remove("docmode");
+  LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
     const titles={record:"The record",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
@@ -850,7 +857,7 @@ function sem(type, state){
    navigating. */
 function chip(state, type){
   const s = sem(type, state);
-  return `<span class="chip ${esc(state)}" onclick="chipPop(event,this)" data-pop-state="${esc(state)}" data-pop-type="${esc(type||"")}">${esc(s.chip||state)}</span>`;
+  return `<span class="chip ${esc(state)}" onclick="chipPop(event,this)" data-pop-state="${esc(state)}" data-pop-type="${esc(type||"")}" title="${esc(s.chip||state)}: ${esc(s.meaning||"")}">${esc(s.chip||state)}</span>`;
 }
 function critChip(c){
   const row = SEMANTICS.criticality[c];
@@ -906,31 +913,59 @@ function fmtWhen(t){ if(!t) return ""; const d=new Date(t); return isNaN(d)?esc(
 
 function recordRows(list){
   return list.map(b=>{
-    const ty = b.object_type && b.object_type!=="information" ? ` <span class="ty">${esc(TYPE_LABEL[b.object_type]||b.object_type)}</span>` : "";
-    const crux = b.criticality==="crucial" ? " "+critChip("crucial") : "";
+    const crux = b.criticality==="crucial" ? " "+sealFor("crit","crucial") : "";
     return `<tr class="row" data-id="${esc(b.bundle_id)}">
-      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${ty}${crux}</td>
-      <td class="st">${chip(b.current_state, b.object_type)}</td>
+      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}</td>
+      <td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(TYPE_LABEL[b.object_type]||b.object_type||"")}</td>
+      <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
       <td class="upd">${fmtWhen(b.last_updated)}</td>
     </tr>`;
   }).join("");
 }
 function wireRows(){ $("#content").querySelectorAll("tr.row").forEach(r=>r.onclick=()=>openBundle(r.dataset.id)); }
 
+/* Sortable list headers: click sorts ascending, click again flips. Plane
+   order until the reader asks otherwise; state resets per screen. */
+let LIST_SORT = { col:null, dir:1 }, LIST_REPAINT = null;
+const LIST_COLS = [["title","Item"],["type","Type"],["state","State"],["updated","Updated"]];
+function sortList(list){
+  if(!LIST_SORT.col) return list;
+  const c = LIST_SORT.col, d = LIST_SORT.dir;
+  const key = b => c==="title" ? (b.title||b.bundle_id||"").toLowerCase()
+             : c==="type"  ? (TYPE_LABEL[b.object_type]||b.object_type||"")
+             : c==="state" ? (b.current_state||"")
+             : (b.last_updated||"");
+  return [...list].sort((a,b)=>{ const x=key(a), y=key(b); return x<y?-d:x>y?d:0; });
+}
+function listHead(){
+  return `<thead><tr>`+LIST_COLS.map(([c,label])=>
+    `<th class="sortable" onclick="listSortBy('${c}')">${label}${LIST_SORT.col===c?`<span class="sarr">${LIST_SORT.dir>0?"\u25B2":"\u25BC"}</span>`:""}</th>`).join("")+`</tr></thead>`;
+}
+function listTable(list){
+  return `<table class="rec">${listHead()}<tbody id="recrows">${list.length?recordRows(sortList(list)):`<tr><td colspan="4" class="empty">Nothing here.</td></tr>`}</tbody></table>`;
+}
+function listSortBy(col){
+  if(LIST_SORT.col===col) LIST_SORT.dir *= -1; else LIST_SORT = { col, dir:1 };
+  if(LIST_REPAINT) LIST_REPAINT();
+}
+
 async function renderRecord(){
-  $("#content").innerHTML = `<h1 class="rec">Your accountability record</h1><p class="count-line" id="rc">Loading&hellip;</p>
-    <table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody id="recrows"></tbody></table>`;
+  $("#content").innerHTML = `<div class="recband" title="the record: everything this group holds"></div><h1 class="rec">Your accountability record</h1><p class="count-line" id="rc">Loading&hellip;</p>
+    <div id="rectable"></div>`;
+  let last = [];
   const paint = (list)=>{
+    last = list;
     const collected = list.filter(b=>b.current_state==="collected").length;
     if(!$("#rc")) return;
     $("#rc").textContent = `${list.length} items · ${collected} awaiting review`;
-    $("#recrows").innerHTML = list.length ? recordRows(list) : `<tr><td colspan="3" class="empty">The record is empty.</td></tr>`;
+    $("#rectable").innerHTML = listTable(list);
     wireRows();
     const byType = {}; list.forEach(b=>byType[b.object_type]=(byType[b.object_type]||0)+1);
     if($("#cnt-review")) $("#cnt-review").textContent = collected||"";
     if($("#cnt-focuses")) $("#cnt-focuses").textContent = (byType.focus||byType.problem||0)||"";
     if($("#cnt-projects")) $("#cnt-projects").textContent = (byType.project||0)||"";
   };
+  LIST_REPAINT = ()=>paint(last);
   try{
     let list = await loadRecord();
     let sig = listSig(list);
@@ -944,10 +979,11 @@ async function renderRecord(){
 }
 
 async function renderFiltered(screen, type, title, lede){
-  $("#content").innerHTML = `<h1 class="rec">${esc(title)}</h1><p class="lede">${esc(lede)}</p><table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody id="recrows"></tbody></table>`;
+  $("#content").innerHTML = `<h1 class="rec">${esc(title)}</h1><p class="lede">${esc(lede)}</p><div id="recrows-holder"></div>`;
   try{
     const list = (await loadRecord()).filter(b=>b.object_type===type || (type==="focus"&&b.object_type==="problem"));
-    $("#recrows").innerHTML = list.length ? recordRows(list) : `<tr><td colspan="3" class="empty">No ${esc(title.toLowerCase())} yet.</td></tr>`;
+    LIST_REPAINT = ()=>{ $("#recrows-holder").innerHTML = listTable(list); wireRows(); };
+    $("#recrows-holder").innerHTML = listTable(list);
     wireRows();
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }

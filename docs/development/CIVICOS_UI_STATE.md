@@ -1,5 +1,24 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v21, 2026-07-28 session, part nineteen: the record list, Bob's four. An
+identity band tops the list page (verdigris-dk from the palette; umber
+stays the document page's). A Type column joins Item, State, and Updated
+(the type label leaves the title cell). Every column header sorts:
+ascending on click, flipped on a second click of the current column, with
+an arrow on the active header; sorting is per-screen and resets on
+navigation; the filtered lists (Focuses, Projects) share the same sortable
+table. State indicators are now the SAME seals as the document page, with
+the same hover strings and click-over disclosure (word chips everywhere
+also gained hover titles); crucial shows as its seal beside the title. New
+record-list harness asserts the band, the Type column, both sort
+directions with arrows, and the seal indicators.
+
+(v20 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v20, 2026-07-28 session, part eighteen. Default collapse revised by Bob: In
 the case opens EXPANDED; only Trust and The record open collapsed (with
 Session Log, Review Notes, and Source Material still folded within the
