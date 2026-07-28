@@ -21,7 +21,17 @@ source:
   authority: City of Oakland
   retrieved: 2026-07-19
 ---
-The SSF transfers appear in the ACFR appendix.`;
+The SSF transfers appear in the ACFR appendix.
+
+## Session Log
+
+### Session 2026-07-19 | First capture (daemon monitor-tick) | daemon
+Trigger: named gathering request GATH-1
+Changes: Bundle created at collected.
+
+### Session 2026-07-21 | Ratification: collected to verified | georgia
+Trigger: second member ratification pass
+Changes: collected to verified released under I-18.`;
 const IMG = {
  "bundle.md": BUNDLE_MD,
  "data/provenance.json": '{"grade":"B"}',
@@ -30,7 +40,7 @@ const IMG = {
  "snapshots/budget.pdf.p001": {sha256:"b".repeat(64), bytes:50},
  "snapshots/budget.pdf.tsr": {sha256:"c".repeat(64), bytes:10},
  "_history/bundle_20260720T000000Z_aaaa.md": "old text",
- "_history/promotion_20260721T000000Z_bbbb.json": JSON.stringify({timestamp:"2026-07-21T00:00:00Z",from_state:"collected",to_state:"verified",member:"georgia",acknowledgment:"read against source",mitigation:"checked authority"}),
+ "_history/promotion_20260721T000000Z_bbbb.json": JSON.stringify({target:"INFO-X",base:"e3b0",files:[{name:"bundle.md",sha256:null}],created:"2026-07-21T00:11:22Z",author:"bob",skill_version:"bio-plane"}),
 };
 const PROJ = { bundle_id:"INFO-X", object_type:"information", group_id:"believe-in-oakland", title:"FY2026-27 adopted budget, Sewer Service Fund",
  current_state:"verified", criticality:"crucial", bundle_sha:"d".repeat(64), monitor_enabled:1, monitor_frequency:"daily",
@@ -66,8 +76,10 @@ const must = [
   ["monitor next","next about"],
   ["bundle glossary term wrapped","data-pop-gloss=\"SSF\""],
   ["shared glossary term wrapped","data-pop-gloss=\"ACFR\""],
-  ["session log entry","collected \u2192 verified"],
-  ["acknowledgment as speech","read against source"],
+  ["session log narrative","Ratification: collected to verified"],
+  ["promotion record mapped","revision recorded"],
+  ["promotion author","bob"],
+  ["type tag","data-ft=\"pdf\""],
   ["revision compare","compare to current"],
   ["artifact link","budget.pdf"],
   ["trust hash","abc123"],

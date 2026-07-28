@@ -239,6 +239,7 @@ svg.ic{display:none}
 .seal.s-good{background:var(--verdigris);border-color:var(--verdigris-dk);color:var(--sheet)}
 .seal.s-attn{background:var(--tint-note);border-color:#d6a48c;color:var(--signal-dk)}
 .seal.s-quiet{background:var(--tint-muted)}
+.ftag{font-family:var(--font-fact);font-size:11px;letter-spacing:0.02em;text-transform:lowercase;color:var(--ink-soft);border:1px solid var(--rule);border-radius:var(--r-2);padding:3px 8px;background:#fff;cursor:help;flex:none;align-self:center}
 .chips-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 14px}
 .docband{height:5px;background:var(--band);margin:0 -24px 10px}
 .content.docmode .docband{margin:0 -24px 10px}
@@ -772,6 +773,24 @@ function glossWrap(html){
   ).join("");
 }
 
+/* The primary artifact's file type, spoken like everything else. */
+const FILETYPES = {
+  pdf:  "Portable Document Format: fixed pages, opens in a browser tab exactly as archived.",
+  html: "A captured web page. Opens in its own tab, rendered without scripts; the raw bytes stay in the record.",
+  csv:  "Comma-separated data: rows and columns, machine-readable.",
+  json: "Structured data, machine-readable.",
+  txt:  "Plain text.",
+  md:   "Plain text with light structure.",
+  png:  "An image.", jpg: "An image.", jpeg: "An image.", gif: "An image.", webp: "An image.",
+  doc:  "A word-processor document.", docx: "A word-processor document.",
+  xls:  "A spreadsheet.", xlsx: "A spreadsheet.",
+};
+function fileExt(name){
+  const n = String(name||"").replace(/\.b64$/i,"");
+  const m = /\.([a-z0-9]+)$/i.exec(n);
+  return m ? m[1].toLowerCase() : null;
+}
+
 /* What each stratum is for, spoken on the tab and the eyebrow. */
 const STRATA_INFO = {
   s1:{ label:"What it says",  tip:"The document's own content, and the captured source material itself." },
@@ -832,6 +851,7 @@ function chipPop(e, c){
   if(c.dataset.popState){ const s = sem(c.dataset.popType, c.dataset.popState); html = popHtml(s.chip||c.dataset.popState, s.meaning, s.enables, s.forbids, s.next); }
   else if(c.dataset.popCrit){ const r = SEMANTICS.criticality[c.dataset.popCrit]; html = popHtml(r.chip||c.dataset.popCrit, r.meaning); }
   else if(c.dataset.popFlag){ const r = SEMANTICS.flags[c.dataset.popFlag]; html = popHtml(r.chip, r.meaning); }
+  else if(c.dataset.popGloss==="__ft"){ const x=c.dataset.ft; html = popHtml(x, FILETYPES[x]||"the primary artifact's file type"); }
   else if(c.dataset.popGloss){ html = popHtml(c.dataset.popGloss, ACTIVE_GLOSS[c.dataset.popGloss]||""); }
   if(c.dataset.popExtra) html += `<div class="pm" style="margin-top:6px;color:var(--ink)">${esc(c.dataset.popExtra)}</div>`;
   pop.innerHTML = html; pop.classList.remove("hidden");
@@ -1070,12 +1090,26 @@ function parseLog(img){
   entries.sort((a,b)=>a.path<b.path?-1:1);
   return entries;
 }
+function parseSessionLog(md){
+  /* bundle.md's own Session Log: "### Session DATE | TITLE | AUTHOR" headings.
+     This is the record's narrative of itself and the source of truth for who
+     did what. */
+  const out = [];
+  const re = /^###\s+Session\s+([0-9-]+)\s*\|\s*([^|]+?)\s*\|\s*(\S+)\s*$/gm;
+  let m; while((m = re.exec(md||""))) out.push({ date:m[1], title:m[2], author:m[3] });
+  return out;
+}
+function releaseFact(md){
+  const hit = parseSessionLog(md).find(e=>/released|collected to verified|ratif/i.test(e.title));
+  return hit ? `Released by ${hit.author}${hit.date?` on ${fmtWhenFull(hit.date)}`:""}.` : null;
+}
 function renderLogEntry(e){
   const j = e.j || {};
-  const when = j.timestamp || j.when || (e.path.match(/promotion_(\d{8}T\d{6}Z)/)||[])[1] || "";
+  const when = j.created || j.timestamp || j.when || (e.path.match(/promotion_(\d{8}T\d{6}Z)/)||[])[1] || "";
   const from = j.from_state || j.from, to = j.to_state || j.to;
-  const who = j.member || j.author || j.actor || j.by || "";
-  const move = from||to ? `${esc(from||"?")} \u2192 ${esc(to||"?")}` : "revision";
+  const who = j.author || j.member || j.actor || j.by || "";
+  const move = from||to ? `${esc(from||"?")} \u2192 ${esc(to||"?")}`
+             : `revision recorded${Array.isArray(j.files)?` \u00b7 ${j.files.length} files`:""}`;
   const said = [];
   if(j.acknowledgment) said.push(`\u201C${esc(j.acknowledgment)}\u201D`);
   if(j.mitigation) said.push(`checked: ${esc(j.mitigation)}`);
@@ -1146,9 +1180,7 @@ async function openBundle(id, fromNav){
        last looked and looks next. Information density in context. */
     const log = parseLog(img);
     const rev = await reverseRefs(id);
-    const vEntry = [...log].reverse().map(e=>e.j||{}).find(j=>(j.to_state||j.to)==="verified");
-    const relBy = vEntry && (vEntry.member||vEntry.author||vEntry.actor||vEntry.by);
-    const vFact = relBy ? `Released by ${relBy}${vEntry.timestamp?` on ${fmtWhenFull(vEntry.timestamp)}`:""}.` : null;
+    const vFact = releaseFact(bundleMd);
     const leanTitles = rev.map(r=>r.fromTitle).filter(Boolean);
     const cFact = leanTitles.length ? `Load-bearing for: ${leanTitles.join("; ")}.` : "No case cites it yet.";
     let mFact = null;
@@ -1158,17 +1190,22 @@ async function openBundle(id, fromNav){
                nx?`next about ${fmtWhenFull(nx.toISOString())}`:(proj.monitor_frequency?`re-checked ${proj.monitor_frequency}`:null)]
               .filter(Boolean).join("; ")+".";
     }
-    const seals = `<span class="sp"></span><span class="seals">${sealFor("state", fm.current_state||(proj&&proj.current_state)||"", otype, (fm.current_state==="verified")?vFact:null)}${(fm.criticality||(proj&&proj.criticality))==="crucial"?sealFor("crit","crucial",null,cFact):""}${(proj&&proj.monitor_enabled)?sealFor("flag","monitored",null,mFact):""}${(proj&&proj.reeval_flag)?sealFor("flag","reeval"):""}${(proj&&proj.annotations_open)?sealFor("flag","annotations"):""}</span>`;
-
-    /* --- stratum 1: what it says --- */
+    /* Sources and the primary artifact come FIRST so the header's open
+       control and the type tag can speak them. */
     const sources = groupSources(img);
     const s1 = stratum("s1", `<div class="prose">${mdLite(body)}</div>
       ${sources.length ? `<h2 class="sec">The source material</h2>${sources.map(renderSourceItem).join("")}` : ""}`);
-    /* The primary artifact: the thing a person means by "the document". */
     if(VIEW_REG.length){
       const rank = a => { const v = artKind(a.base).view; return v==="pdf"?4:v==="html"?3:v==="img"?2:1; };
       PRIMARY_K = VIEW_REG.map((a,i)=>[rank(a)*1e12+a.total,i]).sort((x,y)=>y[0]-x[0])[0][1];
     }
+    let ftag = "";
+    if(PRIMARY_K>=0){
+      const pa = VIEW_REG[PRIMARY_K], ext = fileExt(pa.base);
+      if(ext) ftag = `<span class="ftag" onclick="chipPop(event,this)" data-pop-gloss="__ft" data-pop-extra="${esc(`${pa.base.split("/").pop()}, ${fmtBytes(pa.total)}${pa.parts.length>1?` in ${pa.parts.length} parts`:""}.`)}" data-ft="${esc(ext)}" title="${esc(ext)}: ${esc(FILETYPES[ext]||"the primary artifact's file type")}">${esc(ext)}</span>`;
+    }
+    const seals = `<span class="sp"></span><span class="seals">${ftag}${sealFor("state", fm.current_state||(proj&&proj.current_state)||"", otype, (fm.current_state==="verified")?vFact:null)}${(fm.criticality||(proj&&proj.criticality))==="crucial"?sealFor("crit","crucial",null,cFact):""}${(proj&&proj.monitor_enabled)?sealFor("flag","monitored",null,mFact):""}${(proj&&proj.reeval_flag)?sealFor("flag","reeval"):""}${(proj&&proj.annotations_open)?sealFor("flag","annotations"):""}</span>`;
+
 
     /* --- stratum 2: in the case --- */
     const fwd = (fmj && fmj.references) || [];

@@ -1,5 +1,32 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v11, 2026-07-28 session, part nine: facts from the record's real shapes; the
+type tag.
+
+**Changelog v11.** The verified seal's document fact was silent because the
+fact parser was built on INVENTED promotion-record fields (to_state, member,
+acknowledgment); the real records carry target/base/files/created/author and
+nothing else, and the who-released-it narrative lives in bundle.md's own
+Session Log headings ("### Session DATE | TITLE | AUTHOR"). The fact now
+reads the Session Log (releaseFact: the entry whose title says released /
+collected to verified / ratification), verified live against the ACFR
+bundle ("Ratification: collected to verified | bob"). Promotion records in
+stratum four render their real fields (author, created, files count) as
+"revision recorded" entries. The document-page harness fixture now mirrors
+the record's REAL shapes so invented-field parsing can never pass again. NEW:
+a file-type tag (pdf, html, csv, ...) sits beside the seals, derived from
+the primary artifact (with .b64 wrappers stripped), speaking its filename,
+size, and parts on hover and click-over from a FILETYPES table. An ordering
+bug found on the way: PRIMARY_K was computed after the seals string was
+built, so the tag could never have rendered; sources and the primary
+artifact now precede the seals.
+
+(v10 and earlier follow.)
+
+---
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v10, 2026-07-28 session, part eight: the two clarifications.
 
 **Changelog v10.** THE SCROLL WINDOW IS THE AREA BELOW THE TAB BAR, as Bob
