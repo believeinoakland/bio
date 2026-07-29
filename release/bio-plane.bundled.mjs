@@ -219,6 +219,29 @@ CREATE TABLE IF NOT EXISTS knock_rate (
   bucket TEXT PRIMARY KEY,
   count  INTEGER NOT NULL
 );
+
+-- What this RUNTIME was observed to allow, as opposed to what we choose to
+-- spend. Cloudflare's per-invocation subrequest limit differs by account, can
+-- change on either plan without notice, and is not documented anywhere this
+-- code can read, so the only honest source for it is having been refused.
+--
+-- previous and moved_at exist because a ceiling that MOVES is itself a fact the
+-- instance should notice: an upgraded plan and a tightened platform look
+-- identical in a single scalar, and telling them apart needs the history.
+--
+-- samples drives re-probing. Once a value has been confirmed enough times the
+-- instance deliberately runs without a ceiling again, because a limit only ever
+-- learned downward would leave an upgraded account capped forever.
+CREATE TABLE IF NOT EXISTS capture_limits (
+  runtime     TEXT PRIMARY KEY,
+  observed    INTEGER NOT NULL,
+  observed_at TEXT NOT NULL,
+  first_seen  TEXT NOT NULL,
+  samples     INTEGER NOT NULL DEFAULT 1,
+  since_probe INTEGER NOT NULL DEFAULT 0,
+  previous    INTEGER,
+  moved_at    TEXT
+);
 `;
 
 // src/tokens.mjs
@@ -9851,6 +9874,47 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const b = await crypto.subtle.digest("SHA-256", _Store.#enc.encode(v));
     return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   }
+  /* ------------------------------------------------------------------ *
+   * Observed runtime limits
+   * ------------------------------------------------------------------ */
+  /** What we last saw this runtime allow, and whether it is time to look again.
+   *  `probeDue` is the part that matters: an instance that only ever learns a
+   *  ceiling downward would run a paid account at free-tier caps forever, so
+   *  after enough confirmations it deliberately goes back to running without
+   *  one and lets itself be refused. */
+  captureLimit(runtime) {
+    const r = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
+    const PROBE_EVERY = 25;
+    return r ? { ...r, probeDue: r.since_probe >= PROBE_EVERY, probeEvery: PROBE_EVERY } : { runtime, observed: null, probeDue: true, probeEvery: PROBE_EVERY };
+  }
+  /** Record an observation. Called with `observed: null` for a run that was
+   *  never refused, which is NOT evidence about where the ceiling is and only
+   *  advances the counter toward the next probe. */
+  recordCaptureLimit({ runtime = "subrequests", observed = null, at = null }) {
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const cur = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
+    if (observed == null) {
+      if (cur) this.sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
+      return {
+        runtime,
+        observed: cur ? cur.observed : null,
+        recorded: false,
+        note: "a run that was never refused says the ceiling is at least what it spent, and nothing about where it is"
+      };
+    }
+    if (!cur) {
+      this.sql.exec(`INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe)
+                     VALUES (?, ?, ?, ?, 1, 0)`, runtime, observed, now, now);
+      return { runtime, observed, recorded: true, moved: false, samples: 1 };
+    }
+    if (cur.observed === observed) {
+      this.sql.exec(`UPDATE capture_limits SET observed_at = ?, samples = samples + 1, since_probe = 0 WHERE runtime = ?`, now, runtime);
+      return { runtime, observed, recorded: true, moved: false, samples: cur.samples + 1 };
+    }
+    this.sql.exec(`UPDATE capture_limits SET previous = observed, moved_at = ?, observed = ?, observed_at = ?, samples = 1, since_probe = 0
+                   WHERE runtime = ?`, now, observed, now, runtime);
+    return { runtime, observed, previous: cur.observed, moved: true, moved_at: now, recorded: true, samples: 1 };
+  }
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -9884,6 +9948,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           limit: url.searchParams.get("limit")
         }),
         index: () => this.buildIndex(),
+        capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
+        recordcapturelimit: () => this.recordCaptureLimit(body || {}),
         projection: () => this.projection({
           bundleId: url.searchParams.get("id"),
           jsonPath: url.searchParams.get("jsonPath"),
@@ -10924,7 +10990,16 @@ var index_default = {
           else {
             const primaryBytes = new Uint8Array(await obj.arrayBuffer());
             const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+            const stLim = env.STORE.get(env.STORE.idFromName(storeName));
+            let limit = null;
+            try {
+              limit = (await (await stLim.fetch("http://x/capturelimit?runtime=subrequests")).json()).result;
+            } catch {
+              limit = null;
+            }
+            const useCeiling = limit && limit.observed && !limit.probeDue ? limit.observed : null;
             subs = await captureSubresources({
+              platformCeiling: useCeiling,
               html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
               base: res2.url || locator,
               primarySha: sha,
@@ -10948,6 +11023,14 @@ var index_default = {
                 };
               }
             });
+            try {
+              subs.limitRecord = (await (await stLim.fetch("http://x/recordcapturelimit", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ runtime: "subrequests", observed: subs.manifest.platform.observed_ceiling })
+              })).json()).result;
+            } catch {
+            }
           }
         }
       }
@@ -11002,7 +11085,11 @@ var index_default = {
             fetched: subs.manifest.counts.fetched,
             failed: subs.manifest.counts.failed,
             refused: subs.manifest.counts.refused,
-            scripts_held_unreferenced: subs.manifest.counts.scripts_held_unreferenced
+            scripts_held_unreferenced: subs.manifest.counts.scripts_held_unreferenced,
+            complete: subs.manifest.complete,
+            outstanding: subs.manifest.outstanding,
+            platform: subs.manifest.platform,
+            ...subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}
           },
           files: {
             [`snapshots/${name}.render.html`]: subs.companionSha,

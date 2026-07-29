@@ -983,7 +983,21 @@ export default {
           else {
             const primaryBytes = new Uint8Array(await obj.arrayBuffer());
             const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+            /* What this runtime was last OBSERVED to allow. Not a constant
+               anywhere in this codebase: the number belongs to the platform,
+               differs per account, and moves without notice, so it is read from
+               what an earlier run learned by being refused. probeDue
+               deliberately discards it every so often and runs to refusal
+               again, because a ceiling only ever learned downward would leave an
+               upgraded account at the old caps forever. */
+            const stLim = env.STORE.get(env.STORE.idFromName(storeName));
+            let limit = null;
+            try { limit = (await (await stLim.fetch("http://x/capturelimit?runtime=subrequests")).json()).result; }
+            catch { limit = null; }
+            const useCeiling = limit && limit.observed && !limit.probeDue ? limit.observed : null;
+
             subs = await captureSubresources({
+              platformCeiling: useCeiling,
               html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
               base: res.url || locator,
               primarySha: sha,
@@ -1004,6 +1018,15 @@ export default {
                          contentType: r.headers.get("content-type") || "" };
               },
             });
+            /* Report what the run learned, INCLUDING learning nothing. A run
+               never refused is filed as such: it advances the counter toward the
+               next probe and does not pretend its spend was the limit. */
+            try {
+              subs.limitRecord = (await (await stLim.fetch("http://x/recordcapturelimit", {
+                method: "POST", headers: { "content-type": "application/json" },
+                body: JSON.stringify({ runtime: "subrequests", observed: subs.manifest.platform.observed_ceiling }),
+              })).json()).result;
+            } catch { /* an observation that could not be filed is not a capture failure */ }
           }
         }
       }
@@ -1050,6 +1073,9 @@ export default {
             fetched: subs.manifest.counts.fetched, failed: subs.manifest.counts.failed,
             refused: subs.manifest.counts.refused,
             scripts_held_unreferenced: subs.manifest.counts.scripts_held_unreferenced,
+            complete: subs.manifest.complete, outstanding: subs.manifest.outstanding,
+            platform: subs.manifest.platform,
+            ...(subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}),
           },
           files: {
             [`snapshots/${name}.render.html`]: subs.companionSha,

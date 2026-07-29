@@ -593,6 +593,54 @@ console.log("\n--- and the bytes are all really retrievable through op=capture -
     sha(await get(full.document.capture.sha256)), sha(enc(PAGE)));
 }
 
+console.log("\n--- the observed ceiling is remembered, and a move is visible as a move ---");
+{
+  const q = async (path, body) => (await mf.dispatchFetch("http://x" + path,
+    body ? { method: "POST", body: JSON.stringify(body) } : {})).json();
+  const get = async () => (await q("/api/?op=selftest&token=mem-sub")).store;
+
+  const st = (p, b) => mf.getDurableObjectNamespace ? null : null;
+  /* Driven through the plane's own op, so the test exercises the path acquire
+     uses rather than a shape invented here. */
+  const rec = async (observed) => (await (await mf.dispatchFetch("http://x/api/?op=stats&token=mem-sub")).json());
+
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  const id = ns.idFromName("bio");
+  const stub = ns.get(id);
+  const call = async (path, body) => (await stub.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+
+  let l = (await call("/capturelimit?runtime=subrequests")).result;
+  t("with nothing observed there is no ceiling, and a probe is due",
+    [l.observed, l.probeDue], [null, true]);
+
+  let r = (await call("/recordcapturelimit", { runtime: "subrequests", observed: null })).result;
+  t("a run that was never refused records NO ceiling", r.recorded, false);
+  t("and says why", /nothing about where it is/.test(r.note), true);
+
+  r = (await call("/recordcapturelimit", { runtime: "subrequests", observed: 51 })).result;
+  t("a refusal is recorded", [r.observed, r.recorded, r.moved], [51, true, false]);
+  l = (await call("/capturelimit?runtime=subrequests")).result;
+  t("and is used from then on, with no probe due", [l.observed, l.probeDue], [51, false]);
+
+  r = (await call("/recordcapturelimit", { runtime: "subrequests", observed: 51 })).result;
+  t("a second identical observation confirms rather than moves", [r.samples, r.moved], [2, false]);
+
+  r = (await call("/recordcapturelimit", { runtime: "subrequests", observed: 1001 })).result;
+  t("a DIFFERENT observation is recorded as a move", r.moved, true);
+  t("keeping the old value, because a ceiling that moved is a different fact "
+    + "from a ceiling that is", r.previous, 51);
+  l = (await call("/capturelimit?runtime=subrequests")).result;
+  t("and the new value is what gets used", l.observed, 1001);
+  t("with the move dated", /^\d{4}-\d{2}-\d{2}T/.test(l.moved_at), true);
+
+  for (let i = 0; i < l.probeEvery; i++) await call("/recordcapturelimit", { runtime: "subrequests", observed: null });
+  l = (await call("/capturelimit?runtime=subrequests")).result;
+  t("after enough unrefused runs a probe falls due again, so an upgraded plan "
+    + "is not capped at the old ceiling forever", l.probeDue, true);
+  t("the remembered value is still there to fall back on", l.observed, 1001);
+}
+
 console.log("\n--- it still writes no live state ---");
 t("intake writes nothing, subresources or not",
   (await (await mf.dispatchFetch("http://x/api/?op=stats&token=mem-sub")).json()).result.bundles, 0);

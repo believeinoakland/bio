@@ -218,4 +218,27 @@ CREATE TABLE IF NOT EXISTS knock_rate (
   bucket TEXT PRIMARY KEY,
   count  INTEGER NOT NULL
 );
+
+-- What this RUNTIME was observed to allow, as opposed to what we choose to
+-- spend. Cloudflare's per-invocation subrequest limit differs by account, can
+-- change on either plan without notice, and is not documented anywhere this
+-- code can read, so the only honest source for it is having been refused.
+--
+-- previous and moved_at exist because a ceiling that MOVES is itself a fact the
+-- instance should notice: an upgraded plan and a tightened platform look
+-- identical in a single scalar, and telling them apart needs the history.
+--
+-- samples drives re-probing. Once a value has been confirmed enough times the
+-- instance deliberately runs without a ceiling again, because a limit only ever
+-- learned downward would leave an upgraded account capped forever.
+CREATE TABLE IF NOT EXISTS capture_limits (
+  runtime     TEXT PRIMARY KEY,
+  observed    INTEGER NOT NULL,
+  observed_at TEXT NOT NULL,
+  first_seen  TEXT NOT NULL,
+  samples     INTEGER NOT NULL DEFAULT 1,
+  since_probe INTEGER NOT NULL DEFAULT 0,
+  previous    INTEGER,
+  moved_at    TEXT
+);
 `;

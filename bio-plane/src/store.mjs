@@ -3947,6 +3947,50 @@ export class Store extends DurableObject {
     return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   }
 
+  /* ------------------------------------------------------------------ *
+   * Observed runtime limits
+   * ------------------------------------------------------------------ */
+
+  /** What we last saw this runtime allow, and whether it is time to look again.
+   *  `probeDue` is the part that matters: an instance that only ever learns a
+   *  ceiling downward would run a paid account at free-tier caps forever, so
+   *  after enough confirmations it deliberately goes back to running without
+   *  one and lets itself be refused. */
+  captureLimit(runtime) {
+    const r = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
+    const PROBE_EVERY = 25;
+    return r ? { ...r, probeDue: r.since_probe >= PROBE_EVERY, probeEvery: PROBE_EVERY }
+             : { runtime, observed: null, probeDue: true, probeEvery: PROBE_EVERY };
+  }
+
+  /** Record an observation. Called with `observed: null` for a run that was
+   *  never refused, which is NOT evidence about where the ceiling is and only
+   *  advances the counter toward the next probe. */
+  recordCaptureLimit({ runtime = "subrequests", observed = null, at = null }) {
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const cur = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
+    if (observed == null) {
+      if (cur) this.sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
+      return { runtime, observed: cur ? cur.observed : null, recorded: false,
+               note: "a run that was never refused says the ceiling is at least what it spent, and nothing about where it is" };
+    }
+    if (!cur) {
+      this.sql.exec(`INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe)
+                     VALUES (?, ?, ?, ?, 1, 0)`, runtime, observed, now, now);
+      return { runtime, observed, recorded: true, moved: false, samples: 1 };
+    }
+    if (cur.observed === observed) {
+      this.sql.exec(`UPDATE capture_limits SET observed_at = ?, samples = samples + 1, since_probe = 0 WHERE runtime = ?`, now, runtime);
+      return { runtime, observed, recorded: true, moved: false, samples: cur.samples + 1 };
+    }
+    /* It moved. Keep the old value and the date, because "the ceiling is 51"
+       and "the ceiling was 51 until Tuesday and is now 1000" are different
+       facts and only the second one is worth acting on. */
+    this.sql.exec(`UPDATE capture_limits SET previous = observed, moved_at = ?, observed = ?, observed_at = ?, samples = 1, since_probe = 0
+                   WHERE runtime = ?`, now, observed, now, runtime);
+    return { runtime, observed, previous: cur.observed, moved: true, moved_at: now, recorded: true, samples: 1 };
+  }
+
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -3979,6 +4023,8 @@ export class Store extends DurableObject {
                                        after: url.searchParams.get("after") || null,
                                        limit: url.searchParams.get("limit") }),
         index: () => this.buildIndex(),
+        capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
+        recordcapturelimit: () => this.recordCaptureLimit(body || {}),
         projection: () => this.projection({
           bundleId: url.searchParams.get("id"),
           jsonPath: url.searchParams.get("jsonPath"),
