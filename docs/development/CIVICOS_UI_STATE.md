@@ -1,5 +1,98 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v28, 2026-07-29 session, part twenty-six, closing the session. NINE PLANE
+RELEASES, 0.36.0 through 0.45.0, each signed, deployed byte-identical, audit
+30/30 clean. U7 done. v27 above covers 0.36.0 to 0.41.0; this covers the rest
+and the measurements, which mattered more than the code.
+
+0.42.0 LINK RESOLUTION AND THE THREE-VALUED VERDICT. captured_locators answers
+the question nothing could: does the store hold a capture of this address? The
+register is keyed by hash and carries no locator. One row per (address, DISTINCT
+BYTES) carrying the INTERVAL those bytes were seen served, because identical
+bytes observed on BOTH SIDES of another document's retrieval prove the target did
+not change across it, and that settles contemporaneity without leaning on any
+timestamp the source supplied. A first draft kept one date per sha and threw away
+exactly that evidence. links, address-keyed. link_verdicts, appended and dated.
+op=links computed at READ TIME, because which partition a link falls in depends
+on what the record holds today.
+
+0.43.0 ELEMENT REFERENCES. Bob ruled that scientific and legal practice cite
+ELEMENTS and BIO citations support element references, so an anchor is part of
+the citation. That exposed a defect shipped the day before: normalizeAddress
+drops the fragment, which is right for a RESOURCE and wrong for a CITATION, and
+keying links on the resource form made #findings and #methodology in one report
+indistinguishable. Two keys now. Live on a Legistar calendar: one resource cited
+28 different ways, which under the old key was one row.
+
+A LIVE-MIGRATION HAZARD caught before it shipped. CREATE TABLE IF NOT EXISTS
+cannot add a column, so the deployed links table would have kept its old shape
+while the code wrote the new one. Derived tables now get a reshape pass, correct
+there and only there because links is regenerable from the captures. The reshape
+must run BEFORE schema application: dropping afterwards meant the new CREATE
+INDEX hit the old table and threw inside blockConcurrencyWhile, which does not
+fail a test, it BRICKS THE DURABLE OBJECT.
+
+0.44.0 A WORKER CANNOT TIME ITSELF. Bob asked for CPU to be determined
+empirically as fetch limits are. The meter timed synchronous segments with
+Date.now() and reported ZERO for every segment of every real capture: Cloudflare
+FREEZES THE CLOCK during synchronous execution as a timing-attack defence, so
+nothing inside a Worker can measure its own compute and any millisecond figure
+reported from inside one is a fabrication. Consumption is now counted in WORK
+(calls, bytes) and the ceiling in REFERENCE ITERATIONS. The asymmetry with
+subrequests is the design constraint: a refused subrequest throws and is caught,
+while exceeding CPU TERMINATES the isolate, so the probe checkpoints durably
+after every step and the trail is the whole record.
+
+MEASURED on Workers Free: the probe completed 20 steps of 2,000,000 iterations,
+40,000,000 total, killed during step 21 with HTTP 503 error 1102, trail intact.
+The documented free figure is 10ms of CPU and 40 million modular multiplications
+is not 10ms of anything. Real captures are nowhere near it: the heaviest, a news
+front page, does 49 compute calls over 16.97MB. CPU is NOT a binding constraint.
+D-56 stays open as a watch item with no task, because a CPU overrun can never
+announce itself.
+
+0.45.0 links_to JOINS THE VOCABULARY. The only relation there that is not a
+member's act. C-6.1 requires asserted_by 'source', the address as a comment
+string, and a verdict, because undetermined must be STATED rather than omitted.
+projectLinks drops self-edges. A THIRD STATE inside 'linked', found by a test
+failing: a link can resolve fully and still not project because no bundle has
+registered the target's bytes, which is every acquired-but-unpromoted capture.
+Reported as skipped_unregistered rather than a silent zero.
+
+RULINGS SETTLED THIS SESSION, do not re-ask. Source addresses are NOT exempt from
+canonical identity; the address is a comment string on a canonical-ID citation.
+undetermined is first-class. A superseded link offers the capture the record does
+hold, labelled. Re-fetch at ratification is MANDATORY, meaning the attempt and
+its outcome are recorded, not that ratification requires a matching answer.
+Cascade may run unattended behind the ratification fence. The cascade objective
+is its own stored object. Chrome links are cascade-considered only when the
+objective judgement reaches for them. site_chrome is a derived table. Workers
+Paid is an optimisation and NEVER a requirement. JS-rendered content IS the
+content and must be captured as evidence, at the SAME GRADE as the rest of the
+document, because the JS render happened in the site's own execution environment
+at capture time while the HTML/CSS rendition is rendered later in the reader's.
+Third-party script output, if it is evidence, is evidence PRODUCED BY THAT THIRD
+PARTY. Element references are part of citations.
+
+A CORRECTION WORTH CARRYING. Browser Rendering is NOT paid-only: Workers Free
+gets 10 minutes a day, Paid 10 hours a month. A requirement was nearly written
+into the installer on the strength of my wrong claim. Bob is delaying the
+subscription; the free tier remains the supported configuration and the one he
+exercises daily, which is the right way to keep it from rotting.
+
+THE LESSON OF THE SESSION, twice over. A continuation suite drove
+captureSubresources DIRECTLY, 22 assertions green, while op=acquire threw 1101 on
+every page big enough to need a session. A unit test that never crosses the
+surface the caller uses is not testing the feature. The capability-table
+assertion also caught two separate attempts to put a non-session-reachable op
+into the table that must name only session-reachable mutating ops. Structural
+assertions earned their place this session more than any test written by hand.
+
+WHAT THE UI CANNOT SEE. The plane is six releases ahead of the viewer. A member
+sees no partitioned links, no verdicts, no warning before leaving audited
+content, no sign that a capture is incomplete or that parts were reused from an
+earlier fetch. That is the next session's work.
+
 v27, 2026-07-29 session, part twenty-five. SIX PLANE RELEASES AND U7. Plane
 0.36.0 through 0.41.0 shipped, each signed, deployed byte-identical, audit
 30/30 clean. U7 is DONE and marked in UI-PLAN.md.

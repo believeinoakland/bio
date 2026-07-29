@@ -11,7 +11,7 @@ reordered; the plan is only useful if it is true.
 
 Rungs U1 through U7 are DONE and live at
 https://civicos.believeinoakland.workers.dev against the signed plane on
-biosmoke7 (0.41.0, record of 30 bundles, audit clean). U8 onward is the
+biosmoke7 (0.45.0, record of 30 bundles, audit clean). U8 onward is the
 remaining work, in intended order, each with its acceptance test and its
 dependencies named. The plane and the UI ship separately: plane releases
 are signed and byte-verified; UI deploys carry a build id and open tabs
@@ -143,10 +143,27 @@ self-announce staleness.
   ceiling returns complete:false with a continuation session, and U8 must
   drive it to completion rather than presenting a half-captured page as a
   capture. See docs/development/CAPTURE-SCALING.md.
-- LINKS ARE PARTITIONED BUT NOT RESOLVED. A deferred link carries an
-  address and nothing yet turns it into a citation: no links_to relation,
-  no links table, no verdict. docs/development/LINK-FIDELITY.md has the
-  design and Bob's rulings; it is the largest outstanding piece.
+- LINKS ARE RESOLVED IN THE PLANE AND INVISIBLE IN THE UI. 0.42.0 through
+  0.45.0 built captured_locators, the links table with resolource and
+  citation keys, the three-valued contemporaneity verdict, links_to in
+  REL_VOCAB, and op=links / op=linkproject. A member sees none of it. This
+  is the largest gap between what the record knows and what it shows.
+- A CAPTURE MAY BE INCOMPLETE, AND THE VIEWER DOES NOT SAY SO. A page over
+  the runtime's subrequest ceiling returns complete:false with an
+  outstanding count and a continuation session. U7's resolver refuses a
+  render when a part is missing, which is right, but nothing tells a member
+  that the capture itself is unfinished or offers to continue it.
+- PARTS MAY BE REUSED FROM AN EARLIER FETCH. 0.40.0 reuses stylesheets,
+  fonts and icons a host served recently, recording fetched_this_capture:
+  false and when the source was last seen serving them. The viewer shows no
+  difference between a part fetched during this capture and one reused, and
+  it should, because ratification re-fetches them and a member may want to
+  know before then.
+- THE CITATION GRAPH IS MOSTLY POTENTIAL. skipped_unregistered means a link
+  can resolve fully and still not become an edge, because the target's bytes
+  are in the record while no bundle claims them. A document page reading
+  "126 links, 0 connections" is accurate and reads like a failure, so the
+  presentation needs deciding rather than defaulting.
 - The record is the source of truth for every parser the UI grows;
   fixtures mirror real shapes (the v11 lesson) and every app.html patch
   carries an assert (the v24 lesson).
