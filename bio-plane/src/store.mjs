@@ -4169,6 +4169,61 @@ export class Store extends DurableObject {
           + "record holding nothing and different again from holding a later version" };
   }
 
+  /** Project a capture's RESOLVED links into edges the record can traverse.
+   *
+   *  This is where a link becomes a citation. An unresolved link has no canonical
+   *  target and cannot be an edge at all, because C-6.1 rightly refuses a locator
+   *  as a references[].target; resolution is the act that supplies one. So only
+   *  the `linked` partition projects, and the address rides along as the comment
+   *  string Bob ruled it to be.
+   *
+   *  The edge kind is `links_to`, never `cites`. A member may promote it, and
+   *  that promotion is a member's act recorded as one. Projecting it as `cites`
+   *  would put words in the group's mouth that the source said.
+   *
+   *  A self-edge is dropped rather than recorded: a page linking to itself, which
+   *  every paginated Legistar calendar does, is not a connection between two
+   *  documents and would show up as a bundle citing itself. */
+  projectLinks({ sourceCapture, sourceBundle = null, at = null }) {
+    const res = this.resolveLinks({ sourceCapture, at });
+    if (!res.links || !res.links.length) return { projected: 0, edges: [] };
+    let bundle = sourceBundle;
+    if (!bundle) {
+      const reg = [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, sourceCapture)][0];
+      bundle = reg ? reg.bundle_id : null;
+    }
+    if (!bundle) return { projected: 0, edges: [],
+      note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on" };
+    const edges = [];
+    let unregistered = 0;
+    for (const l of res.links) {
+      if (l.resolution !== "linked") continue;
+      /* The record holds BYTES of the target but no bundle claims them yet. That
+         is the normal state of anything acquired and not promoted: acquire files
+         the locator, promote writes the register row. There is no canonical id to
+         point an edge at, and inventing one would be worse than waiting, so it is
+         counted and named rather than silently dropped. */
+      if (!l.target_bundle) { unregistered++; continue; }
+      if (l.target_bundle === bundle) continue;
+      this.sql.exec(
+        `INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'links_to')
+         ON CONFLICT(bundle_id, target_id, kind) DO NOTHING`, bundle, l.target_bundle);
+      edges.push({ from: bundle, to: l.target_bundle, rel: "links_to",
+                   asserted_by: "source", address: l.address, fragment: l.fragment,
+                   verdict: l.verdict, basis: l.basis,
+                   target_capture: l.target_capture, target_retrieved: l.target_retrieved });
+    }
+    return { projected: edges.length, source_bundle: bundle, edges,
+      skipped_self: res.links.filter((l) => l.resolution === "linked" && l.target_bundle === bundle).length,
+      skipped_unregistered: unregistered,
+      unresolved: res.tally.offsite,
+      note: "only resolved links project, and only to a target some bundle has registered. "
+          + "skipped_unregistered counts targets whose BYTES the record holds while no bundle claims "
+          + "them, which is every acquired-but-unpromoted capture: those become edges when the target "
+          + "is promoted, not before. The edge is links_to and never cites, because the source "
+          + "asserted it and not the group; a member promoting it to cites is a member's act." };
+  }
+
   /** Append a verdict. Never an update: a verdict that changed is a fact about
    *  the record, and the current answer is simply the newest row. */
   recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
@@ -4414,6 +4469,8 @@ export class Store extends DurableObject {
         resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
         linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),
         recordlinkverdict: () => this.recordLinkVerdict(body || {}),
+        projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
+                                                sourceBundle: url.searchParams.get("bundle") || null }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),

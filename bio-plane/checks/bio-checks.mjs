@@ -741,7 +741,26 @@ async function checkInformationExtension(ctx, findings) {
 // Step-4 families: C-5 append-only, C-6 references, C-12 history, C-15 recheck.
 // ---------------------------------------------------------------------------
 
-const REL_VOCAB = ['cites', 'relates_to', 'elevated_into', 'initiates', 'derived_from', 'supersedes', 'corroborates'];
+/* `links_to` joined the vocabulary with 0.45.0, and it is the only value here
+   that is NOT a member's act. Every other relation is something a member
+   decided: this document cites that one, supersedes it, was elevated into it.
+   `links_to` is something the SOURCE asserted and BIO observed, and in a system
+   whose subject is who claimed what, "we say these are connected" and "the
+   City's page carried an anchor tag" cannot be the same edge.
+   *
+   * It also differs in what it claims about VERSION. A member citing declares
+   which thing they mean. An observed link declares nothing: the page's author
+   did not say which edition of the target they intended and usually did not
+   think about it. So a links_to edge carries a contemporaneity verdict, and
+   `undetermined` is its resting state.
+   *
+   * A member may PROMOTE an observed links_to into a cites, which is a member's
+   act and is recorded as one. That promotion is the point of holding it. */
+const REL_VOCAB = ['cites', 'relates_to', 'elevated_into', 'initiates', 'derived_from', 'supersedes', 'corroborates', 'links_to'];
+/* Source-asserted relations. Not a member's claim, so surfaces that count what a
+   group has said about its material must exclude them, and a corroboration count
+   that included them would be counting the source agreeing with itself. */
+const SOURCE_ASSERTED_RELS = ['links_to'];
 const EDGE_STATUS = ['proposed', 'confirmed', 'severed'];
 
 function sectionText(body, heading) {
@@ -883,6 +902,21 @@ function checkReferences(ctx, findings) {
     const r = refs[i];
     if (typeof r !== 'object' || r === null) { findings.push(f('C-6.1', 'error', `references[${i}] is not an object`)); continue; }
     if (!REL_VOCAB.includes(r.rel)) findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' is not in the closed vocabulary`, ['map to the nearest vocabulary value', 'sever with reason']));
+    /* A source-asserted edge has to say so on its face and carry the two things
+       that distinguish it from a member's citation: the address the source
+       actually wrote, and a verdict about which version it pointed at. Without
+       the address it is unattributable; without the verdict it reads as a
+       settled connection when the usual answer is that nothing established it. */
+    if (SOURCE_ASSERTED_RELS.includes(r.rel)) {
+      if (r.asserted_by !== 'source')
+        findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim`));
+      if (typeof r.address !== 'string' || !r.address)
+        findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' must carry the address the source wrote, as a comment string beside the canonical target`));
+      if (!['contemporaneous', 'superseded', 'undetermined'].includes(r.verdict))
+        findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' must carry a contemporaneity verdict of contemporaneous, superseded or undetermined; undetermined is the resting state and must be stated rather than omitted`));
+    } else if (r.asserted_by === 'source') {
+      findings.push(f('C-6.1', 'error', `references[${i}].rel '${r.rel}' is a member's relation and cannot be asserted_by 'source'`));
+    }
     if (!EDGE_STATUS.includes(r.status)) findings.push(f('C-6.1', 'error', `references[${i}].status '${r.status}' is not one of: ${EDGE_STATUS.join(', ')}`));
     const t = r.target;
     if (typeof t !== 'string' || /:\/\/|[/\\]|drive\.google/i.test(t)) {

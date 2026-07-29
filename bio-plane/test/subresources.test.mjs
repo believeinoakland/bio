@@ -1133,6 +1133,97 @@ console.log("\n--- what a capture COSTS is measured, not assumed ---");
   t("a member cannot burn compute on the instance", denied.ok, false);
 }
 
+console.log("\n--- a resolved link becomes an edge, and says who asserted it ---");
+{
+  const ns6 = await mf.getDurableObjectNamespace("STORE");
+  const st6 = ns6.get(ns6.idFromName("bio"));
+  const call = async (path, body) => (await st6.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+  const N = normalizeAddress;
+  const A_SHA = "c1".repeat(32), B_SHA = "c2".repeat(32);
+  const A_URL = "https://www.oaklandca.gov/a.html", B_URL = "https://www.oaklandca.gov/b.html";
+
+  /* Two captures registered to two bundles, A linking to B twice by element. */
+  await call("/recordcapturedlocator", { address: A_URL, addressNorm: N(A_URL), captureSha: A_SHA, retrieved: "2026-05-01T00:00:00Z" });
+  await call("/recordcapturedlocator", { address: B_URL, addressNorm: N(B_URL), captureSha: B_SHA, retrieved: "2026-04-01T00:00:00Z" });
+  await call("/recordcapturedlocator", { address: B_URL, addressNorm: N(B_URL), captureSha: B_SHA, retrieved: "2026-06-01T00:00:00Z" });
+  await call("/register", { rows: [] }).catch(() => {});
+  st6.fetch;
+  await call("/recordlinks", { sourceCapture: A_SHA, capturedAt: "2026-05-01T00:00:00Z", links: [
+    { ref: "/b.html#s1", address: B_URL + "#s1", address_norm: N(B_URL), citation_norm: N(B_URL) + "#s1", fragment: "s1", type: "deferred" },
+    { ref: "/b.html#s2", address: B_URL + "#s2", address_norm: N(B_URL), citation_norm: N(B_URL) + "#s2", fragment: "s2", type: "deferred" },
+    { ref: "/a.html",    address: A_URL,         address_norm: N(A_URL),  citation_norm: N(A_URL),         fragment: null, type: "deferred" },
+    { ref: "/gone.html", address: "https://www.oaklandca.gov/gone.html",
+      address_norm: N("https://www.oaklandca.gov/gone.html"),
+      citation_norm: N("https://www.oaklandca.gov/gone.html"), fragment: null, type: "deferred" },
+  ]});
+
+  /* Without a registered bundle there is nothing canonical to hang an edge on,
+     and saying so beats inventing one. */
+  const orphan = (await call(`/projectlinks?capture=${A_SHA}`)).result;
+  t("an unregistered capture projects nothing, and says why",
+    [orphan.projected, /not registered to a bundle/.test(orphan.note || "")], [0, true]);
+
+  const proj = (await call(`/projectlinks?capture=${A_SHA}&bundle=INFO-2026-0001-a`)).result;
+  /* The link RESOLVES: the record holds the target's bytes and the verdict is
+     settled. It still does not project, because no bundle has registered those
+     bytes, which is the state of everything acquired and not yet promoted. A
+     zero here is correct and must be EXPLAINED rather than just returned. */
+  const rl = (await call(`/resolvelinks?capture=${A_SHA}`)).result;
+  const linked = rl.links.filter((l) => l.resolution === "linked" && l.fragment);
+  t("the link resolves and the verdict is settled by bytes bracketing the retrieval",
+    [linked.length, linked[0].verdict], [2, "contemporaneous"]);
+  t("but nothing projects, because no bundle has registered the target's bytes",
+    proj.projected, 0);
+  t("and that is counted and named, not a silent zero", proj.skipped_unregistered >= 2, true);
+  t("the note says when those become edges", /when the target is promoted, not before/.test(proj.note), true);
+  t("a page linking to ITSELF is still not an edge between two documents", proj.skipped_self, 0);
+  t("and an address the record holds nothing for stays unresolved", proj.unresolved, 1);
+
+  t("resolution is unchanged by projecting: it is still computed at read time",
+    (await call(`/resolvelinks?capture=${A_SHA}`)).result.links.length, 4);
+
+  /* The catalog's contract for the new relation. */
+  const { checkBundle } = await import("../checks/bio-checks.mjs");
+  const mkRefs = (extra) => {
+    const files = new Map();
+    files.set("bundle.md", [
+      "---", "id: INFO-2026-0001-a", "object_type: information", "schema: information@2",
+      'title: "A"', "current_state: collected", "prior_state: null",
+      "created: 2026-07-29T00:00:00Z", "last_updated: 2026-07-29T00:00:00Z",
+      "produced_by:", "  mode: assisted", "  capability_tier: session",
+      "group: believe-in-oakland", "references:", ...extra, "state_history: []",
+      "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+      "visuals: []", "criticality: supporting", "source_status: unchanged", "source:",
+      `  locator: ${A_URL}`, "  authority: City of Oakland", "  retrieved: 2026-07-29T00:00:00Z",
+      "monitoring:", "  enabled: false", "  frequency: none", "---", "",
+      "## Summary", "", "A.", "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", "",
+    ].join("\n"));
+    files.set("snapshots/a.html", "<html></html>");
+    return files;
+  };
+  const run = async (extra) => (await checkBundle({ folderName: "INFO-2026-0001-a", files: mkRefs(extra),
+    sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
+    sha512: async (b) => new Uint8Array(await webcrypto.subtle.digest("SHA-512", b)),
+    resolveTarget: () => true })).findings.filter((x) => x.severity === "error" && x.check === "C-6.1");
+
+  t("a links_to edge missing asserted_by is refused",
+    (await run(["  - rel: links_to", "    target: INFO-2026-0002-b", "    status: confirmed",
+                `    address: ${B_URL}`, "    verdict: undetermined"])).length, 1);
+  t("a links_to edge missing the address is refused",
+    (await run(["  - rel: links_to", "    target: INFO-2026-0002-b", "    status: confirmed",
+                "    asserted_by: source", "    verdict: undetermined"])).length, 1);
+  t("a links_to edge missing the verdict is refused, because undetermined must be STATED",
+    (await run(["  - rel: links_to", "    target: INFO-2026-0002-b", "    status: confirmed",
+                "    asserted_by: source", `    address: ${B_URL}`])).length, 1);
+  t("a complete one passes",
+    (await run(["  - rel: links_to", "    target: INFO-2026-0002-b", "    status: confirmed",
+                "    asserted_by: source", `    address: ${B_URL}`, "    verdict: undetermined"])).length, 0);
+  t("and a MEMBER's relation cannot claim the source asserted it",
+    (await run(["  - rel: cites", "    target: INFO-2026-0002-b", "    status: confirmed",
+                "    asserted_by: source"])).length, 1);
+}
+
 console.log("\n--- it still writes no live state ---");
 t("intake writes nothing, subresources or not",
   (await (await mf.dispatchFetch("http://x/api/?op=stats&token=mem-sub")).json()).result.bundles, 0);

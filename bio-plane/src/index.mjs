@@ -193,6 +193,10 @@ const OPS = {
      the document was captured. */
   links:      { classes: ["admin", "member", "probe"],           mutating: false },
   runtime:    { classes: ["admin", "member", "probe"],           mutating: false },
+  /* Turning resolved links into traversable edges WRITES, so it is its own op
+     rather than a flag on the read. A mutating arm hiding inside a
+     non-mutating op would pass the gate that exists to stop exactly that. */
+  linkproject:{ classes: ["admin", "member", "probe"],           mutating: true  },
   /* Burns compute deliberately to find where the runtime cuts it off. Probe and
      admin only: it belongs nowhere near a member's session. */
   cpuprobe:   { classes: ["admin", "probe"],                     mutating: true  },
@@ -280,7 +284,12 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
 /* The selection-backed actions on a Project's citation edges. Named as a set
    rather than listed twice, because the member and admin session lists drifting
    apart is exactly the class of defect this repository keeps finding. */
-const EDGE_ACTIONS = ["cite", "sever", "reinstate"];
+/* `linkproject` belongs here rather than beside acquire: it creates EDGES, which
+   is what these actions do, and it is a member's contribution even though the
+   edge it creates records the SOURCE's assertion rather than the member's. The
+   member's act is deciding to admit the observed connection into the graph; the
+   edge itself says asserted_by: source. */
+const EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
 /* S-11 step 3. The first selection-backed action to move an OBJECT's state
    rather than an edge's, so it takes the same server-side viewer, owner and
    author stamps the edge actions take: a caller that could name the viewer
@@ -332,6 +341,7 @@ const NEEDS = {
   lease:            "contribute",
   allocid:          "contribute",
   capture:          "contribute",   // the PUT; its GET is a read and is exempted at the check
+  linkproject:      "contribute",
   acquire:          "contribute",
   attest:           "contribute",
   monitor:          "contribute",
@@ -862,6 +872,19 @@ export default {
         note: "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not "
             + "return, the trail's highest step is the last one that fit and the ceiling lies just "
             + "above its elapsed_ms." });
+    }
+
+    /* Project a capture's resolved links into edges. Separate from op=links
+       because it writes, and the capability gate has to see that. */
+    if (op === "linkproject") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const capture = url.searchParams.get("capture");
+      if (!/^[0-9a-f]{64}$/.test(capture || ""))
+        return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
+      const bundle = url.searchParams.get("bundle");
+      const p = await (await st.fetch(`http://x/projectlinks?capture=${capture}`
+        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : ""))).json();
+      return json({ ok: true, ...p.result });
     }
 
     if (op === "links") {

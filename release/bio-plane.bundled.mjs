@@ -1318,7 +1318,8 @@ async function checkInformationExtension(ctx, findings) {
     }
   }
 }
-var REL_VOCAB = ["cites", "relates_to", "elevated_into", "initiates", "derived_from", "supersedes", "corroborates"];
+var REL_VOCAB = ["cites", "relates_to", "elevated_into", "initiates", "derived_from", "supersedes", "corroborates", "links_to"];
+var SOURCE_ASSERTED_RELS = ["links_to"];
 var EDGE_STATUS = ["proposed", "confirmed", "severed"];
 function sectionText(body, heading) {
   const idx = body.indexOf(heading);
@@ -1453,6 +1454,16 @@ function checkReferences(ctx, findings) {
       continue;
     }
     if (!REL_VOCAB.includes(r.rel)) findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' is not in the closed vocabulary`, ["map to the nearest vocabulary value", "sever with reason"]));
+    if (SOURCE_ASSERTED_RELS.includes(r.rel)) {
+      if (r.asserted_by !== "source")
+        findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim`));
+      if (typeof r.address !== "string" || !r.address)
+        findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' must carry the address the source wrote, as a comment string beside the canonical target`));
+      if (!["contemporaneous", "superseded", "undetermined"].includes(r.verdict))
+        findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' must carry a contemporaneity verdict of contemporaneous, superseded or undetermined; undetermined is the resting state and must be stated rather than omitted`));
+    } else if (r.asserted_by === "source") {
+      findings.push(f("C-6.1", "error", `references[${i}].rel '${r.rel}' is a member's relation and cannot be asserted_by 'source'`));
+    }
     if (!EDGE_STATUS.includes(r.status)) findings.push(f("C-6.1", "error", `references[${i}].status '${r.status}' is not one of: ${EDGE_STATUS.join(", ")}`));
     const t = r.target;
     if (typeof t !== "string" || /:\/\/|[/\\]|drive\.google/i.test(t)) {
@@ -10551,6 +10562,72 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       note: "undetermined is the resting state and the expected common case, not a failure: it means nothing established which version the source pointed at, which is different from the record holding nothing and different again from holding a later version"
     };
   }
+  /** Project a capture's RESOLVED links into edges the record can traverse.
+   *
+   *  This is where a link becomes a citation. An unresolved link has no canonical
+   *  target and cannot be an edge at all, because C-6.1 rightly refuses a locator
+   *  as a references[].target; resolution is the act that supplies one. So only
+   *  the `linked` partition projects, and the address rides along as the comment
+   *  string Bob ruled it to be.
+   *
+   *  The edge kind is `links_to`, never `cites`. A member may promote it, and
+   *  that promotion is a member's act recorded as one. Projecting it as `cites`
+   *  would put words in the group's mouth that the source said.
+   *
+   *  A self-edge is dropped rather than recorded: a page linking to itself, which
+   *  every paginated Legistar calendar does, is not a connection between two
+   *  documents and would show up as a bundle citing itself. */
+  projectLinks({ sourceCapture, sourceBundle = null, at = null }) {
+    const res = this.resolveLinks({ sourceCapture, at });
+    if (!res.links || !res.links.length) return { projected: 0, edges: [] };
+    let bundle = sourceBundle;
+    if (!bundle) {
+      const reg = [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, sourceCapture)][0];
+      bundle = reg ? reg.bundle_id : null;
+    }
+    if (!bundle) return {
+      projected: 0,
+      edges: [],
+      note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on"
+    };
+    const edges = [];
+    let unregistered = 0;
+    for (const l of res.links) {
+      if (l.resolution !== "linked") continue;
+      if (!l.target_bundle) {
+        unregistered++;
+        continue;
+      }
+      if (l.target_bundle === bundle) continue;
+      this.sql.exec(
+        `INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'links_to')
+         ON CONFLICT(bundle_id, target_id, kind) DO NOTHING`,
+        bundle,
+        l.target_bundle
+      );
+      edges.push({
+        from: bundle,
+        to: l.target_bundle,
+        rel: "links_to",
+        asserted_by: "source",
+        address: l.address,
+        fragment: l.fragment,
+        verdict: l.verdict,
+        basis: l.basis,
+        target_capture: l.target_capture,
+        target_retrieved: l.target_retrieved
+      });
+    }
+    return {
+      projected: edges.length,
+      source_bundle: bundle,
+      edges,
+      skipped_self: res.links.filter((l) => l.resolution === "linked" && l.target_bundle === bundle).length,
+      skipped_unregistered: unregistered,
+      unresolved: res.tally.offsite,
+      note: "only resolved links project, and only to a target some bundle has registered. skipped_unregistered counts targets whose BYTES the record holds while no bundle claims them, which is every acquired-but-unpromoted capture: those become edges when the target is promoted, not before. The edge is links_to and never cites, because the source asserted it and not the group; a member promoting it to cites is a member's act."
+    };
+  }
   /** Append a verdict. Never an update: a verdict that changed is a fact about
    *  the record, and the current answer is simply the newest row. */
   recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
@@ -10874,6 +10951,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
         linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),
         recordlinkverdict: () => this.recordLinkVerdict(body || {}),
+        projectlinks: () => this.projectLinks({
+          sourceCapture: url.searchParams.get("capture"),
+          sourceBundle: url.searchParams.get("bundle") || null
+        }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
@@ -11243,6 +11324,10 @@ var OPS = {
      the document was captured. */
   links: { classes: ["admin", "member", "probe"], mutating: false },
   runtime: { classes: ["admin", "member", "probe"], mutating: false },
+  /* Turning resolved links into traversable edges WRITES, so it is its own op
+     rather than a flag on the read. A mutating arm hiding inside a
+     non-mutating op would pass the gate that exists to stop exactly that. */
+  linkproject: { classes: ["admin", "member", "probe"], mutating: true },
   /* Burns compute deliberately to find where the runtime cuts it off. Probe and
      admin only: it belongs nowhere near a member's session. */
   cpuprobe: { classes: ["admin", "probe"], mutating: true },
@@ -11312,7 +11397,7 @@ var OPS = {
   knock: { classes: null, mutating: true }
 };
 var RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
-var EDGE_ACTIONS = ["cite", "sever", "reinstate"];
+var EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
 var STATE_ACTIONS = ["dispose", "retire", "release"];
 var PROJECT_ACTIONS = [
   "projectinvite",
@@ -11380,6 +11465,7 @@ var NEEDS = {
   allocid: "contribute",
   capture: "contribute",
   // the PUT; its GET is a read and is exempted at the check
+  linkproject: "contribute",
   acquire: "contribute",
   attest: "contribute",
   monitor: "contribute",
@@ -11820,6 +11906,15 @@ var index_default = {
         state: after,
         note: "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, the trail's highest step is the last one that fit and the ceiling lies just above its elapsed_ms."
       });
+    }
+    if (op === "linkproject") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const capture = url.searchParams.get("capture");
+      if (!/^[0-9a-f]{64}$/.test(capture || ""))
+        return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
+      const bundle = url.searchParams.get("bundle");
+      const p = await (await st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : ""))).json();
+      return json({ ok: true, ...p.result });
     }
     if (op === "links") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
