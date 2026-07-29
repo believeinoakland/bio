@@ -13,7 +13,7 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256 } from "../checks/
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
-import { captureSubresources, normalizeAddress } from "./subresources.mjs";
+import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 import { Store } from "./store.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
@@ -1119,8 +1119,15 @@ export default {
                 await stLim.fetch("http://x/recordlinks", {
                   method: "POST", headers: { "content-type": "application/json" },
                   body: JSON.stringify({ sourceCapture: sha, capturedAt: retrieved,
+                    /* Anchors are filed too. An in-page anchor is an element
+                       reference into this document, which makes it a component
+                       reference rather than noise; dropping it left the manifest
+                       counting 27 anchors while the links table held none. */
                     links: subs.links.filter((l) => l.address).map((l) => ({
-                      ref: l.ref, address: l.address, address_norm: normalizeAddress(l.address),
+                      ref: l.ref, address: l.address,
+                      address_norm: normalizeAddress(l.address),
+                      citation_norm: l.citation || normalizeCitation(l.address),
+                      fragment: l.fragment || null,
                       type: l.type, origin: l.origin })) }),
                 });
               }

@@ -338,14 +338,24 @@ CREATE TABLE IF NOT EXISTS links (
   source_capture TEXT NOT NULL,
   link_ref       TEXT NOT NULL,
   address        TEXT NOT NULL,
+  -- Two keys, deliberately. address_norm identifies the RESOURCE and is what
+  -- resolution matches against captured_locators; the server never sees a
+  -- fragment, so it has none. citation_norm identifies the CITATION and keeps
+  -- the fragment, because scientific and legal practice cite ELEMENTS and BIO
+  -- citations support element references: a link to #findings and a link to
+  -- #methodology in one report are two citations, and a single key made them
+  -- indistinguishable.
   address_norm   TEXT NOT NULL,
+  citation_norm  TEXT NOT NULL,
+  fragment       TEXT,
   partition      TEXT NOT NULL,
   origin         TEXT,
   chrome         INTEGER NOT NULL DEFAULT 0,
   captured_at    TEXT NOT NULL,
   first_seen     TEXT NOT NULL,
-  PRIMARY KEY (source_capture, link_ref, address_norm)
+  PRIMARY KEY (source_capture, link_ref, citation_norm)
 );
+CREATE INDEX IF NOT EXISTS links_citation ON links(citation_norm);
 CREATE INDEX IF NOT EXISTS links_target ON links(address_norm);
 CREATE INDEX IF NOT EXISTS links_source ON links(source_bundle);
 

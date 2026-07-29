@@ -539,6 +539,39 @@ export function normalizeAddress(url) {
  *  evidence of WHAT WAS SERVED that day, never to be run. Reusing an older copy
  *  would put a false statement about the source into the record, the same class
  *  of error as reporting a platform limit as a source failure. */
+/** The form a CITATION is compared in, which is not the form a RESOURCE is.
+ *
+ *  normalizeAddress above drops the fragment, and for its purpose that is
+ *  right: the server never sees a fragment, so two references differing only
+ *  after the # are one fetch and one stored object.
+ *
+ *  A citation is a different claim. Scientific and legal practice both cite
+ *  ELEMENTS, not just documents: a section, a page, a table. BIO citations
+ *  support element references, so the fragment is part of what was cited and
+ *  dropping it silently discards the most specific thing the citation said.
+ *  Two links into different sections of one report are two citations.
+ *
+ *  So both keys are kept on every link. The resource key resolves the link
+ *  against what the store has captured; the citation key is the identity of the
+ *  citation itself. Collapsing them, which the first cut did, made a link to
+ *  #findings and a link to #methodology indistinguishable. */
+export function normalizeCitation(url) {
+  const raw = String(url || "").trim();
+  const hash = raw.indexOf("#");
+  if (hash === -1) return normalizeAddress(raw);
+  const frag = raw.slice(hash + 1);
+  return normalizeAddress(raw.slice(0, hash)) + (frag ? "#" + frag : "");
+}
+
+/** The element a citation names, or null when it names the whole document. */
+export function fragmentOf(url) {
+  const raw = String(url || "").trim();
+  const hash = raw.indexOf("#");
+  if (hash === -1) return null;
+  const frag = raw.slice(hash + 1).trim();
+  return frag || null;
+}
+
 export const REUSABLE_KINDS = new Set(["stylesheet", "css-asset", "font", "icon"]);
 
 /** Whether an earlier capture's bytes may stand in for a fetch now.
@@ -988,11 +1021,13 @@ export async function captureSubresources({
   /* Seeded from whatever a previous tick already recorded, using the same key
      note() builds, so a resumed capture does not re-append every link each time
      it rebuilds the companion. */
-  const seenLink = new Map(links.map((l) => [`${l.type}\u0000${l.address || l.ref}`, true]));
+  const seenLink = new Map(links.map((l) => [`${l.type}\u0000${l.citation || l.address || l.ref}`, true]));
   const classifyLink = (ref) => {
     const raw = String(ref || "").trim();
     const note = (type, address, extra = {}) => {
-      const key = `${type}\u0000${address || raw}`;
+      /* Keyed on the CITATION, so a link to #findings and a link to
+         #methodology in the same report are two records rather than one. */
+      const key = `${type}\u0000${extra.citation || address || raw}`;
       if (!seenLink.has(key)) {
         seenLink.set(key, true);
         links.push({ ref: raw, type, address: address || null, as_of: when0,
@@ -1004,7 +1039,11 @@ export async function captureSubresources({
 
     /* An in-page anchor points at this very document and is decided forever. */
     if (raw.startsWith("#")) {
-      note("anchor", null);
+      /* An in-page anchor is an element reference into THIS document, which
+         Bob's ruling makes a component reference rather than noise. The
+         document it points into is the primary, so the address is the primary's
+         own locator and the element is the fragment. */
+      note("anchor", base, { fragment: fragmentOf(raw), citation: normalizeCitation(base + raw) });
       return { type: "anchor", wrapper: linkWrapper.anchor(raw), address: null };
     }
     const cls = classifyRef(raw, base, isPublic);
@@ -1017,12 +1056,14 @@ export async function captureSubresources({
        else. */
     const held = byUrl.get(cls.url);
     if (held && held.ok) {
-      note("intra", cls.url, { sha256: held.sha256 });
+      note("intra", cls.url, { sha256: held.sha256, fragment: fragmentOf(raw),
+                               citation: normalizeCitation(new URL(raw, base).toString()) });
       return { type: "intra", wrapper: linkWrapper.intra(held.sha256), address: cls.url };
     }
     /* Everything else is deferred: whether the store holds a capture of this
        address is a question about the store, and the store changes. */
-    note("deferred", cls.url, { held_at_capture: false });
+    note("deferred", cls.url, { held_at_capture: false, fragment: fragmentOf(raw),
+                                citation: normalizeCitation(new URL(raw, base).toString()) });
     return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
   };
 

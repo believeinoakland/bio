@@ -48,6 +48,31 @@ export class Store extends DurableObject {
 
   #migrate() {
     const bare = (this.env.SCHEMA || SCHEMA_TEXT || "").split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
+    /* Some tables are DERIVED: regenerable by scan, never authoritative, holding
+       nothing a member wrote. When one of those changes shape, recreating it is
+       correct and an additive ALTER would be the wrong answer, because the new
+       column's meaning is part of the KEY and old rows keyed the old way are not
+       merely missing a field, they are wrong.
+       *
+       * links gained citation_norm and fragment when element references became
+       * part of a citation rather than a comment on one. A link to #findings and
+       * a link to #methodology in one report are two citations, and rows keyed
+       * without the fragment had already collapsed them. Those rows cannot be
+       * repaired by adding a column; they can only be re-derived from the
+       * captures, which is exactly what a derived table is for.
+       *
+       * This list must never grow to include a table holding first-party
+       * material. The test suite asserts the distinction. */
+    for (const [table, needed] of [["links", "citation_norm"]]) {
+      const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
+      /* Dropped BEFORE the schema runs, so the CREATE TABLE and CREATE INDEX
+         statements below rebuild it in one pass. Dropping afterwards meant the
+         schema's CREATE INDEX on the new column hit the OLD table and threw
+         inside blockConcurrencyWhile, which does not fail a test, it bricks the
+         Durable Object. */
+      if (cols.length && !cols.includes(needed)) this.sql.exec(`DROP TABLE ${table}`);
+    }
+
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
        columns added after a store was first written need adding by hand. Done
@@ -3976,14 +4001,17 @@ export class Store extends DurableObject {
     this.sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
     let n = 0;
     for (const l of links) {
+      /* address_norm is required; citation_norm falls back to it for a link that
+         names no element. A link with neither is not a link. */
       if (!l || !l.address_norm) continue;
       this.sql.exec(
         `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
-           partition, origin, chrome, captured_at, first_seen)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(source_capture, link_ref, address_norm) DO NOTHING`,
+           citation_norm, fragment, partition, origin, chrome, captured_at, first_seen)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(source_capture, link_ref, citation_norm) DO NOTHING`,
         sourceBundle, sourceCapture, String(l.ref || l.address), l.address || l.address_norm,
-        l.address_norm, l.type || "deferred", l.origin || null, l.chrome ? 1 : 0,
+        l.address_norm, l.citation_norm || l.address_norm, l.fragment || null,
+        l.type || "deferred", l.origin || null, l.chrome ? 1 : 0,
         capturedAt || now, now);
       n++;
     }
@@ -3993,10 +4021,13 @@ export class Store extends DurableObject {
   /** Everything that points AT an address. The reverse index, which is the
    *  whole reason this is address-keyed. */
   linksTo({ address_norm }) {
+    /* Matched on the RESOURCE key, so asking what points at a report finds the
+       citations of its sections too, each still naming the element it cited. */
     const rows = [...this.sql.exec(
-      `SELECT source_capture, source_bundle, link_ref, partition, captured_at FROM links WHERE address_norm = ?`,
-      address_norm)];
-    return { address_norm, count: rows.length, sources: rows };
+      `SELECT source_capture, source_bundle, link_ref, partition, fragment, citation_norm, captured_at
+       FROM links WHERE address_norm = ?`, address_norm)];
+    return { address_norm, count: rows.length, sources: rows,
+      elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))] };
   }
 
   /** Resolve a capture's links against the store, with a contemporaneity

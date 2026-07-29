@@ -339,14 +339,24 @@ CREATE TABLE IF NOT EXISTS links (
   source_capture TEXT NOT NULL,
   link_ref       TEXT NOT NULL,
   address        TEXT NOT NULL,
+  -- Two keys, deliberately. address_norm identifies the RESOURCE and is what
+  -- resolution matches against captured_locators; the server never sees a
+  -- fragment, so it has none. citation_norm identifies the CITATION and keeps
+  -- the fragment, because scientific and legal practice cite ELEMENTS and BIO
+  -- citations support element references: a link to #findings and a link to
+  -- #methodology in one report are two citations, and a single key made them
+  -- indistinguishable.
   address_norm   TEXT NOT NULL,
+  citation_norm  TEXT NOT NULL,
+  fragment       TEXT,
   partition      TEXT NOT NULL,
   origin         TEXT,
   chrome         INTEGER NOT NULL DEFAULT 0,
   captured_at    TEXT NOT NULL,
   first_seen     TEXT NOT NULL,
-  PRIMARY KEY (source_capture, link_ref, address_norm)
+  PRIMARY KEY (source_capture, link_ref, citation_norm)
 );
+CREATE INDEX IF NOT EXISTS links_citation ON links(citation_norm);
 CREATE INDEX IF NOT EXISTS links_target ON links(address_norm);
 CREATE INDEX IF NOT EXISTS links_source ON links(source_bundle);
 
@@ -4883,6 +4893,20 @@ function normalizeAddress(url) {
   u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
   return u.toString();
 }
+function normalizeCitation(url) {
+  const raw = String(url || "").trim();
+  const hash = raw.indexOf("#");
+  if (hash === -1) return normalizeAddress(raw);
+  const frag = raw.slice(hash + 1);
+  return normalizeAddress(raw.slice(0, hash)) + (frag ? "#" + frag : "");
+}
+function fragmentOf(url) {
+  const raw = String(url || "").trim();
+  const hash = raw.indexOf("#");
+  if (hash === -1) return null;
+  const frag = raw.slice(hash + 1).trim();
+  return frag || null;
+}
 var REUSABLE_KINDS = /* @__PURE__ */ new Set(["stylesheet", "css-asset", "font", "icon"]);
 function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDocuments = 2 } = {}) {
   if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
@@ -5274,11 +5298,11 @@ async function captureSubresources({
     return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
   };
   const when0 = resume && resume.when0 ? resume.when0 : stamp();
-  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.address || l.ref}`, true]));
+  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.citation || l.address || l.ref}`, true]));
   const classifyLink = (ref) => {
     const raw = String(ref || "").trim();
     const note = (type, address, extra = {}) => {
-      const key = `${type}\0${address || raw}`;
+      const key = `${type}\0${extra.citation || address || raw}`;
       if (!seenLink.has(key)) {
         seenLink.set(key, true);
         links.push({
@@ -5294,7 +5318,7 @@ async function captureSubresources({
     };
     if (!raw) return { type: "refused", wrapper: linkWrapper.refused(), address: null };
     if (raw.startsWith("#")) {
-      note("anchor", null);
+      note("anchor", base, { fragment: fragmentOf(raw), citation: normalizeCitation(base + raw) });
       return { type: "anchor", wrapper: linkWrapper.anchor(raw), address: null };
     }
     const cls = classifyRef(raw, base, isPublic);
@@ -5304,10 +5328,18 @@ async function captureSubresources({
     }
     const held = byUrl.get(cls.url);
     if (held && held.ok) {
-      note("intra", cls.url, { sha256: held.sha256 });
+      note("intra", cls.url, {
+        sha256: held.sha256,
+        fragment: fragmentOf(raw),
+        citation: normalizeCitation(new URL(raw, base).toString())
+      });
       return { type: "intra", wrapper: linkWrapper.intra(held.sha256), address: cls.url };
     }
-    note("deferred", cls.url, { held_at_capture: false });
+    note("deferred", cls.url, {
+      held_at_capture: false,
+      fragment: fragmentOf(raw),
+      citation: normalizeCitation(new URL(raw, base).toString())
+    });
     return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
   };
   const when = when0;
@@ -6044,6 +6076,10 @@ var Store = class _Store extends DurableObject {
   }
   #migrate() {
     const bare = (this.env.SCHEMA || SCHEMA || "").split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const [table, needed] of [["links", "citation_norm"]]) {
+      const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
+      if (cols.length && !cols.includes(needed)) this.sql.exec(`DROP TABLE ${table}`);
+    }
     for (const s of bare.split(";")) {
       const t = s.trim();
       if (t) this.sql.exec(t);
@@ -10222,14 +10258,16 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       if (!l || !l.address_norm) continue;
       this.sql.exec(
         `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
-           partition, origin, chrome, captured_at, first_seen)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(source_capture, link_ref, address_norm) DO NOTHING`,
+           citation_norm, fragment, partition, origin, chrome, captured_at, first_seen)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(source_capture, link_ref, citation_norm) DO NOTHING`,
         sourceBundle,
         sourceCapture,
         String(l.ref || l.address),
         l.address || l.address_norm,
         l.address_norm,
+        l.citation_norm || l.address_norm,
+        l.fragment || null,
         l.type || "deferred",
         l.origin || null,
         l.chrome ? 1 : 0,
@@ -10244,10 +10282,16 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  whole reason this is address-keyed. */
   linksTo({ address_norm }) {
     const rows = [...this.sql.exec(
-      `SELECT source_capture, source_bundle, link_ref, partition, captured_at FROM links WHERE address_norm = ?`,
+      `SELECT source_capture, source_bundle, link_ref, partition, fragment, citation_norm, captured_at
+       FROM links WHERE address_norm = ?`,
       address_norm
     )];
-    return { address_norm, count: rows.length, sources: rows };
+    return {
+      address_norm,
+      count: rows.length,
+      sources: rows,
+      elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))]
+    };
   }
   /** Resolve a capture's links against the store, with a contemporaneity
    *  verdict for each that resolves.
@@ -11846,10 +11890,16 @@ var index_default = {
                   body: JSON.stringify({
                     sourceCapture: sha,
                     capturedAt: retrieved,
+                    /* Anchors are filed too. An in-page anchor is an element
+                       reference into this document, which makes it a component
+                       reference rather than noise; dropping it left the manifest
+                       counting 27 anchors while the links table held none. */
                     links: subs.links.filter((l) => l.address).map((l) => ({
                       ref: l.ref,
                       address: l.address,
                       address_norm: normalizeAddress(l.address),
+                      citation_norm: l.citation || normalizeCitation(l.address),
+                      fragment: l.fragment || null,
                       type: l.type,
                       origin: l.origin
                     }))

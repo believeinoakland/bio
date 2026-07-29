@@ -29,6 +29,7 @@ import {
   parseHtmlRefs, srcsetUrls, classifyRef, renderCompanion, captureSubresources,
   placeholderFor, PLACEHOLDER_MISSING, SUBRESOURCE_CAP, CSS_MAX_DEPTH,
   readLinkWrapper, LINK_TYPES, originOf, fetchPolicy, priorityOf, normalizeAddress, reuseDecision,
+  normalizeCitation, fragmentOf,
 } from "../src/subresources.mjs";
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
 
@@ -983,6 +984,79 @@ console.log("\n--- links resolve at read time, and the verdict has three values 
   const bad = await (await mf.dispatchFetch("http://x/api/?op=links&token=mem-sub")).json();
   t("with neither, it refuses by name rather than returning nothing",
     bad.reason, "NEED_CAPTURE_OR_ADDRESS");
+}
+
+console.log("\n--- an element reference is part of the citation, not a comment on it ---");
+{
+  const N = normalizeAddress, C = normalizeCitation;
+  t("the resource key drops the fragment, because the server never sees one",
+    N("https://x.gov/r.pdf#page=12"), "https://x.gov/r.pdf");
+  t("the citation key keeps it, because a citation names an ELEMENT",
+    C("https://x.gov/r.pdf#page=12"), "https://x.gov/r.pdf#page=12");
+  t("and still normalises everything before the fragment",
+    C("https://X.gov:443/r.pdf?b=2&a=1#sec-4"), "https://x.gov/r.pdf?a=1&b=2#sec-4");
+  t("two sections of one report are TWO citations of ONE resource",
+    [C("https://x.gov/r#a") === C("https://x.gov/r#b"), N("https://x.gov/r#a") === N("https://x.gov/r#b")],
+    [false, true]);
+  t("a link naming no element has no fragment", fragmentOf("https://x.gov/r"), null);
+
+  const PG = `<html><body>
+<a href="/report.pdf#page=12">page 12</a>
+<a href="/report.pdf#page=40">page 40</a>
+<a href="/report.pdf">the report</a>
+<a href="#findings">findings</a>
+</body></html>`;
+  const out2 = await captureSubresources({
+    html: PG, base: "https://www.oaklandca.gov/index.html", primarySha: "ab".repeat(32),
+    primaryFile: "snapshots/i.html",
+    fetchOne: async () => ({ ok: false, status: 404, reason: "SOURCE_REFUSED" }),
+    put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
+  });
+  const L = out2.links;
+  t("two citations of different pages of one report are both kept",
+    L.filter((l) => l.fragment && l.fragment.startsWith("page=")).map((l) => l.fragment).sort(),
+    ["page=12", "page=40"]);
+  t("as is the citation of the whole document, which is a third claim",
+    L.filter((l) => l.type === "deferred" && !l.fragment).length, 1);
+  t("and they share one resource key while having three citation keys",
+    [new Set(L.filter((l) => l.type === "deferred").map((l) => normalizeAddress(l.address))).size,
+     new Set(L.filter((l) => l.type === "deferred").map((l) => l.citation)).size], [1, 3]);
+  const anch = L.find((l) => l.type === "anchor");
+  t("an in-page anchor names an element of THIS document", anch.fragment, "findings");
+  t("and its citation key is this document plus that element",
+    anch.citation, "https://www.oaklandca.gov/index.html#findings");
+
+  /* Through the store, where the key change actually bites. */
+  const ns4 = await mf.getDurableObjectNamespace("STORE");
+  const st4 = ns4.get(ns4.idFromName("bio"));
+  const call = async (path, body) => (await st4.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+  const SRC2 = "bb".repeat(32);
+  await call("/recordlinks", { sourceCapture: SRC2, capturedAt: "2026-05-01T00:00:00Z",
+    links: L.filter((l) => l.address).map((l) => ({ ref: l.ref, address: l.address,
+      address_norm: normalizeAddress(l.address), citation_norm: l.citation,
+      fragment: l.fragment, type: l.type })) });
+  const rl = (await call(`/resolvelinks?capture=${SRC2}`)).result;
+  t("all four survive as distinct rows, where one key would have collapsed two",
+    rl.resolved, 4);
+  const rev = (await call(`/linksto?address=${encodeURIComponent("https://www.oaklandca.gov/report.pdf")}`)).result;
+  t("asking what points at the report finds the citations of its sections too", rev.count, 3);
+  t("and names which elements were cited", rev.elements.sort(), ["page=12", "page=40"]);
+}
+
+console.log("\n--- a derived table that changes shape is rebuilt, not patched ---");
+{
+  const src = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  const m = /for \(const \[table, needed\] of \[([\s\S]*?)\]\) \{/.exec(src);
+  const named = [...(m ? m[1] : "").matchAll(/\["([a-z_]+)"/g)].map((x) => x[1]);
+  t("only derived tables are on the reshape list", named, ["links"]);
+  /* The rule this asserts: a table holding first-party material must never be
+     dropped to change its shape, because there is nothing to re-derive it from.
+     links is regenerable from the captures; bundles and history are not. */
+  const forbidden = ["bundles", "history", "register", "members", "refs", "promotions"];
+  t("and nothing holding first-party material is", named.filter((x) => forbidden.includes(x)), []);
+  t("the reshape runs BEFORE the schema, or the new index hits the old table",
+    src.indexOf("Some tables are DERIVED") < src.indexOf('for (const s of bare.split(";"))'), true);
 }
 
 console.log("\n--- it still writes no live state ---");
