@@ -241,4 +241,52 @@ CREATE TABLE IF NOT EXISTS capture_limits (
   previous    INTEGER,
   moved_at    TEXT
 );
+-- What a HOST has served, across every document captured from it.
+--
+-- Bytes were always shared: captures are content-addressed, so one stylesheet
+-- occupies one R2 object however many documents reference it. FETCHES were not,
+-- and fetches are the scarce thing. On a Legistar page roughly forty of the
+-- forty-five available subrequests go to site-wide chrome that will be
+-- byte-identical on the next document captured from that host.
+--
+-- stable_since is the last time the sha CHANGED, not the last time it was seen,
+-- because "unchanged for three months" and "not looked at for three months" are
+-- different facts and only the first licenses reuse.
+--
+-- The same table answers chrome detection. An address referenced by fifteen of
+-- fifteen captured documents on a host is the site's; one referenced by a single
+-- document is that document's own. That works on sites that never write a <nav>
+-- element, which is most municipal sites.
+CREATE TABLE IF NOT EXISTS site_assets (
+  host         TEXT NOT NULL,
+  address_norm TEXT NOT NULL,
+  address      TEXT NOT NULL,
+  sha256       TEXT NOT NULL,
+  content_type TEXT,
+  bytes        INTEGER NOT NULL DEFAULT 0,
+  kind         TEXT,
+  first_seen   TEXT NOT NULL,
+  last_seen    TEXT NOT NULL,
+  last_fetched TEXT NOT NULL,
+  stable_since TEXT NOT NULL,
+  changes      INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (host, address_norm)
+);
+CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
+CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
+
+-- One row per (asset, document). Gives an exact distinct-document count rather
+-- than an incrementing counter that double-counts a re-capture, and it is what
+-- makes post-hoc verification possible: when an asset's sha later changes, the
+-- documents that REUSED the old bytes are exactly the rows here with reused=1.
+CREATE TABLE IF NOT EXISTS site_asset_refs (
+  host         TEXT NOT NULL,
+  address_norm TEXT NOT NULL,
+  primary_sha  TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  reused       INTEGER NOT NULL DEFAULT 0,
+  sha256       TEXT NOT NULL,
+  PRIMARY KEY (host, address_norm, primary_sha)
+);
+CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);
 `;

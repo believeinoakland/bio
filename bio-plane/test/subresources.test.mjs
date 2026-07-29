@@ -28,7 +28,7 @@ import { createHash, webcrypto } from "node:crypto";
 import {
   parseHtmlRefs, srcsetUrls, classifyRef, renderCompanion, captureSubresources,
   placeholderFor, PLACEHOLDER_MISSING, SUBRESOURCE_CAP, CSS_MAX_DEPTH,
-  readLinkWrapper, LINK_TYPES, originOf, fetchPolicy, priorityOf,
+  readLinkWrapper, LINK_TYPES, originOf, fetchPolicy, priorityOf, normalizeAddress, reuseDecision,
 } from "../src/subresources.mjs";
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
 
@@ -639,6 +639,105 @@ console.log("\n--- the observed ceiling is remembered, and a move is visible as 
   t("after enough unrefused runs a probe falls due again, so an upgraded plan "
     + "is not capped at the old ceiling forever", l.probeDue, true);
   t("the remembered value is still there to fall back on", l.observed, 1001);
+}
+
+console.log("\n--- what a host has served: reuse, honestly recorded ---");
+{
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  const stub = ns.get(ns.idFromName("bio"));
+  const call = async (path, body) => (await stub.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+
+  /* Its own host on purpose: the op=acquire tests above genuinely recorded
+     assets for www.oaklandca.gov, and recurrence counts would then depend on
+     what ran earlier in this file. */
+  const H = "assets.oaklandca.gov";
+  const A = "https://assets.oaklandca.gov/css/site.css";
+  const N = normalizeAddress(A);
+  const OLD = "a".repeat(64), NEW = "b".repeat(64);
+  const long_ago = "2026-01-01T00:00:00Z";
+
+  t("two differently written Legistar URLs normalise to one key",
+    normalizeAddress("HTTPS://Oakland.Legistar.com:443/View.ashx?GUID=b&M=F&ID=9#x"),
+    normalizeAddress("https://oakland.legistar.com/View.ashx?M=F&ID=9&GUID=b"));
+  t("but a trailing slash is NOT assumed away, since /a and /a/ can differ",
+    normalizeAddress("https://x.gov/a") === normalizeAddress("https://x.gov/a/"), false);
+
+  await call("/recordsiteassets", { host: H, primarySha: "d1".padEnd(64, "0"), at: long_ago,
+    observations: [{ address: A, address_norm: N, sha256: OLD, content_type: "text/css", bytes: 10, kind: "stylesheet" }] });
+  let k = (await call("/siteassets", { host: H })).result.assets[N];
+  t("one document is not yet a shared asset", k.documents, 1);
+  t("a fresh record is stable from when it was first seen", k.stable_since, long_ago);
+
+  const one = reuseDecision({ kind: "stylesheet" }, k, { now: Date.now() });
+  t("so it is not reused yet", [one.reuse, one.why], [false, "not_yet_shared_across_documents"]);
+
+  await call("/recordsiteassets", { host: H, primarySha: "d2".padEnd(64, "0"), at: long_ago,
+    observations: [{ address: A, address_norm: N, sha256: OLD, content_type: "text/css", bytes: 10, kind: "stylesheet" }] });
+  k = (await call("/siteassets", { host: H })).result.assets[N];
+  t("a second document makes it the SITE's, not one page's", k.documents, 2);
+  t("and now it may be reused, because the source was seen serving it recently",
+    reuseDecision({ kind: "stylesheet" }, { ...k, last_fetched: new Date().toISOString() }, { now: Date.now() }).reuse, true);
+  t("recency of the FETCH is the condition, not how long it has been stable: a "
+    + "fresh instance has no stability history and the ceiling hurts most then",
+    reuseDecision({ kind: "stylesheet" }, { ...k, last_fetched: new Date().toISOString(), stable_since: new Date().toISOString() },
+      { now: Date.now() }).reuse, true);
+
+  t("but an image inside the document never is, because that is evidence",
+    reuseDecision({ kind: "image" }, k, { now: Date.now() }).why, "evidence_is_always_fetched");
+  t("nor a script, which is held as evidence of what was SERVED that day",
+    reuseDecision({ kind: "script" }, k, { now: Date.now() }).why, "evidence_is_always_fetched");
+  t("and not one the source has not been seen serving recently, however stable it was",
+    reuseDecision({ kind: "stylesheet" }, { ...k, last_fetched: "2026-01-01T00:00:00Z" }, { now: Date.now() }).why,
+    "last_seen_served_too_long_ago");
+
+  /* Reuse in a real capture, and the honesty fields that must travel with it. */
+  const PAGE2 = `<html><head><link rel="stylesheet" href="/css/site.css"></head><body><p>x</p></body></html>`;
+  let fetches = 0;
+  const cap2 = await captureSubresources({
+    html: PAGE2, base: "https://assets.oaklandca.gov/report.html", primarySha: "e".repeat(64),
+    primaryFile: "snapshots/r.html",
+    siteLookup: async (n) => (n === N ? { ...k, last_fetched: new Date().toISOString() } : null),
+    readBack: async () => ".x{}",
+    fetchOne: async () => { fetches++; return { ok: true, status: 200, bytes: enc(".x{}"), contentType: "text/css" }; },
+    put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
+  });
+  const rr = cap2.subresources.find((r) => r.url.endsWith("/css/site.css"));
+  t("the stylesheet was NOT fetched", fetches, 0);
+  t("but it is present, with the bytes the record holds", [rr.ok, rr.sha256], [true, OLD]);
+  t("and it says plainly that this capture did not fetch it", rr.fetched_this_capture, false);
+  t("naming when the source WAS last seen serving those bytes",
+    /^\d{4}-\d{2}-\d{2}T/.test(rr.reused_from_fetched_at), true);
+  t("the manifest counts the reuse", cap2.manifest.reuse.reused, 1);
+  t("and says a ratified capture must re-fetch them",
+    /ratified as evidence must re-fetch/.test(cap2.manifest.reuse.note), true);
+
+  /* The change case: an asset comes back different, and everything that reused
+     the old bytes is named rather than left to be discovered. */
+  const chg = (await call("/recordsiteassets", { host: H, primarySha: "d3".padEnd(64, "0"),
+    observations: [{ address: A, address_norm: N, sha256: NEW, content_type: "text/css", bytes: 11, kind: "stylesheet" }] })).result;
+  t("a different sha is recorded as a change, not a new asset", chg.changed, 1);
+  t("keeping what it was", chg.changes[0].was, OLD);
+  k = (await call("/siteassets", { host: H })).result.assets[N];
+  t("stability restarts from the change, not from the last look", k.stable_since !== long_ago, true);
+  t("and the change is counted, so a churning asset is visible as one", k.changes, 1);
+
+  /* Chrome by recurrence, which is what works on sites with no <nav>. */
+  const own = "https://assets.oaklandca.gov/img/one-off.png";
+  await call("/recordsiteassets", { host: H, primarySha: "d3".padEnd(64, "0"),
+    observations: [{ address: own, address_norm: normalizeAddress(own), sha256: "c".repeat(64), kind: "image" }] });
+  const cr = (await call("/sitechrome?host=" + H)).result;
+  t("three documents is enough for recurrence to say something", cr.documents, 3);
+  const styleRow = cr.assets.find((a) => a.address_norm === N);
+  const oneOff = cr.assets.find((a) => a.address_norm === normalizeAddress(own));
+  t("an address in every document is the site's", styleRow.chrome, true);
+  t("an address in one is that document's own", oneOff.chrome, false);
+  t("and the share is reported, not just the verdict, because the threshold is a tuning decision",
+    [styleRow.share, oneOff.share], [1, 1 / 3]);
+
+  const thin = (await call("/sitechrome?host=nothing.example.com")).result;
+  t("with too few documents it says so rather than guessing",
+    /says nothing yet/.test(thin.note), true);
 }
 
 console.log("\n--- it still writes no live state ---");

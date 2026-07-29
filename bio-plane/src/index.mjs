@@ -996,8 +996,30 @@ export default {
             catch { limit = null; }
             const useCeiling = limit && limit.observed && !limit.probeDue ? limit.observed : null;
 
+            /* What this host has served before. Bytes were always shared by
+               content-addressing; FETCHES were not, and fetches are the scarce
+               thing. A stylesheet stable across the window and seen in more
+               than one document is reused at zero subrequest cost, and every
+               reuse is recorded as one. */
+            let baseHost = null;
+            try { baseHost = new URL(res.url || locator).hostname.toLowerCase(); } catch { baseHost = null; }
+            let siteKnown = {};
+            if (baseHost) {
+              try {
+                siteKnown = (await (await stLim.fetch("http://x/siteassets", {
+                  method: "POST", headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ host: baseHost }),
+                })).json()).result.assets || {};
+              } catch { siteKnown = {}; }
+            }
+
             subs = await captureSubresources({
               platformCeiling: useCeiling,
+              siteLookup: baseHost ? async (norm) => siteKnown[norm] || null : null,
+              readBack: async (sh) => {
+                const o = await env.CAPTURES.get(`${storeName}/captures/${sh}`);
+                return o ? new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(await o.arrayBuffer())) : null;
+              },
               html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
               base: res.url || locator,
               primarySha: sha,
@@ -1027,6 +1049,19 @@ export default {
                 body: JSON.stringify({ runtime: "subrequests", observed: subs.manifest.platform.observed_ceiling }),
               })).json()).result;
             } catch { /* an observation that could not be filed is not a capture failure */ }
+            /* File what this run saw of the host. The change case matters most:
+               an address returning different bytes is a dated fact about the
+               site AND retrospectively puts every document that reused the old
+               bytes into question, so both are recorded and the affected
+               documents are named. */
+            if (baseHost && subs.siteObservations && subs.siteObservations.length) {
+              try {
+                subs.siteRecord = (await (await stLim.fetch("http://x/recordsiteassets", {
+                  method: "POST", headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ host: baseHost, primarySha: sha, observations: subs.siteObservations }),
+                })).json()).result;
+              } catch { /* likewise */ }
+            }
           }
         }
       }
@@ -1075,6 +1110,8 @@ export default {
             scripts_held_unreferenced: subs.manifest.counts.scripts_held_unreferenced,
             complete: subs.manifest.complete, outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
+            reuse: subs.manifest.reuse,
+            ...(subs.siteRecord ? { site: subs.siteRecord } : {}),
             ...(subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}),
           },
           files: {

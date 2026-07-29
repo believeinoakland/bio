@@ -497,6 +497,81 @@ export const FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2,
 export const priorityOf = (ref) =>
   (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
 
+/** The form two references are compared in when deciding whether they name the
+ *  same resource. Stored ALONGSIDE the raw address and never instead of it, so
+ *  a rule that later proves wrong can be re-derived rather than having destroyed
+ *  its input.
+ *
+ *  What it does: lowercases scheme and host, drops the default port, drops the
+ *  fragment (which the server never sees), and sorts query parameters.
+ *
+ *  What it deliberately does NOT do: strip trailing slashes, since /a and /a/
+ *  are genuinely different resources on plenty of servers; drop cache-busting
+ *  parameters, since one server's v=3 is another's content selector; or touch
+ *  case in the path, since paths are case-sensitive outside Windows. Each would
+ *  be a guess, and a normalisation MISS looks exactly like "not captured",
+ *  which is the failure hardest to notice.
+ *
+ *  Sorting query parameters is the one liberty taken, because Legistar's
+ *  View.ashx?M=F&ID=..&GUID=.. is the shape most of this record's material
+ *  arrives in and parameter order there carries no meaning. */
+export function normalizeAddress(url) {
+  let u;
+  try { u = new URL(url); } catch { return String(url || "").trim(); }
+  u.hash = "";
+  u.protocol = u.protocol.toLowerCase();
+  u.hostname = u.hostname.toLowerCase();
+  if ((u.protocol === "https:" && u.port === "443") || (u.protocol === "http:" && u.port === "80")) u.port = "";
+  const ps = [...u.searchParams.entries()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : 1));
+  u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
+  return u.toString();
+}
+
+/** Kinds whose bytes may be reused from an earlier capture of the same host.
+ *
+ *  Furniture is reusable; evidence is not. A stylesheet is how the site looked
+ *  and is shared by every document on it. An image INSIDE the document is what
+ *  that document showed, and handing a reader a copy fetched last Tuesday while
+ *  they believe they are looking at this capture is exactly the confusion the
+ *  grading scheme exists to prevent.
+ *
+ *  Scripts are excluded for a reason easy to miss: a script is captured as
+ *  evidence of WHAT WAS SERVED that day, never to be run. Reusing an older copy
+ *  would put a false statement about the source into the record, the same class
+ *  of error as reporting a platform limit as a source failure. */
+export const REUSABLE_KINDS = new Set(["stylesheet", "css-asset", "font", "icon"]);
+
+/** Whether an earlier capture's bytes may stand in for a fetch now.
+ *
+ *  The first version of this gated on how long the asset had been STABLE, which
+ *  was backwards and measured live as reusing nothing at all: a fresh instance
+ *  has no stability history, so nothing could ever be reused until it had sat in
+ *  the record for a week, and the ceiling hurts most in exactly that first week.
+ *
+ *  The load-bearing question is not "has this been stable for a long time" but
+ *  "when did we last actually see the source serve these bytes". A stylesheet
+ *  fetched and verified twenty minutes ago is a far better bet than one that was
+ *  unchanged for three months and last looked at in April. Stability is a
+ *  secondary confidence signal; RECENCY OF FETCH is the condition.
+ *
+ *  Three requirements, each doing work. The kind must be furniture rather than
+ *  evidence. The bytes must have been seen served within the freshness window.
+ *  And it must appear across more than one document, because an asset referenced
+ *  by exactly one page is that page's own whatever directory it sits in. */
+export function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1000, minDocuments = 2 } = {}) {
+  if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
+  if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
+  if ((known.documents || 0) < minDocuments) return { reuse: false, why: "not_yet_shared_across_documents" };
+  const seen = Date.parse(known.last_fetched || "");
+  if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
+  const age = now - seen;
+  if (age > freshWindowMs) return { reuse: false, why: "last_seen_served_too_long_ago", age_ms: age };
+  const stable = Date.parse(known.stable_since || "");
+  return { reuse: true, fetched_age_ms: age,
+           stable_for_ms: Number.isFinite(stable) ? now - stable : null,
+           changes: known.changes || 0 };
+}
+
 export function fetchPolicy(ref, origin) {
   if (ref.collapsed)
     return { fetch: false, reason: "COLLAPSED_SRCSET_FAMILY",
@@ -593,7 +668,19 @@ export async function captureSubresources({
      without notice, and differs per account, so the only honest source for it
      is having hit it. */
   platformCeiling = null, platformMargin = 5, subrequestsAlreadySpent = 1,
+  /* What this host has served before. `siteLookup(addressNorm)` returns the
+     stored record or null; absent, nothing is ever reused and behaviour is
+     exactly what it was before reuse existed. */
+  siteLookup = null, reuseFreshWindowMs = 24 * 3600 * 1000, reuseMinDocuments = 2,
+  /* Reads a stored capture back as text, so a REUSED stylesheet can have its own
+     url() targets followed just as a freshly fetched one does. Without it a
+     reused stylesheet would render without its sprites. */
+  readBack = null,
 }) {
+  /* Why an asset the host has served before was fetched anyway. Recorded so a
+     reuse rate that quietly falls to zero is visible rather than mysterious. */
+  const noReuse = [];
+  const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
   const stamp = () => now().toISOString().split(".")[0] + "Z";
   const records = [];            // every reference, in the order discovered
   const bySha = new Map();       // sha -> record, for the manifest
@@ -603,7 +690,11 @@ export async function captureSubresources({
   /* Two different stopping conditions that must not be confused. `cap` is what
      we are willing to spend. `ceilingBudget` is what the runtime will let us
      spend, known only if a previous run hit it. */
-  let observedCeiling = null, deferred = 0;
+  let observedCeiling = null, deferred = 0, reused = 0;
+  /* Everything this run saw of this host, for the caller to file afterwards.
+     Written out here rather than inside the loop so that a capture which fails
+     partway still reports what it did learn. */
+  const siteObservations = [];
   const ceilingBudget = platformCeiling == null ? Infinity
     : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
 
@@ -706,6 +797,50 @@ export async function captureSubresources({
       settle(item, { ...stem, ok: false, status: null, reason: "BUDGET_EXHAUSTED", budgetBytes: budget });
       continue;
     }
+    /* Reuse, before spending a subrequest. The stored bytes are already in the
+       content-addressed store, so this costs nothing at all: no request, no
+       byte transfer, no draw on the ceiling. On a Legistar page roughly forty
+       of the forty-five available fetches are site-wide chrome, so this is the
+       difference between a second capture of a host completing and not. */
+    if (siteLookup) {
+      const known = await siteLookup(normalizeAddress(cls.url));
+      const dec = reuseDecision(item, known, { now: Date.now(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
+      if (dec.reuse) {
+        reused++;
+        const rec = { ...stem, ok: true, status: null, sha256: known.sha256, bytes: known.bytes,
+          ...(known.content_type ? { content_type: known.content_type } : {}),
+          existed: true,
+          /* The honesty fields. A reader must never be led to believe a byte was
+             verified against the source during THIS capture when it was not. */
+          fetched_this_capture: false,
+          reused_from_fetched_at: known.last_fetched,
+          reused_stable_since: known.stable_since,
+          reused_seen_in_documents: known.documents,
+          detail: `not fetched during this capture: the source was seen serving these exact bytes at `
+                + `${known.last_fetched}, across ${known.documents} documents on this host, and they are `
+                + `reused from the record rather than requested again` };
+        byUrl.set(cls.url, rec);
+        if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec);
+        siteObservations.push({ address: cls.url, address_norm: normalizeAddress(cls.url),
+                                sha256: known.sha256, kind: item.kind, reused: true });
+        /* A reused stylesheet still needs its own url() targets resolved, so the
+           bytes are read back and followed exactly as a fetched one would be. */
+        if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
+          const text = await readBack(known.sha256);
+          if (text != null) {
+            rec.css = true; rec.rewrite = [];
+            for (const u of cssRefs(text))
+              queue.push({ ref: u, kind: "css-asset", where: `url() in ${cls.url}`,
+                           depth: item.depth + 1, from: cls.url, against: cls.url, cssOwner: rec,
+                           region: rec.region, region_basis: rec.region_basis });
+          }
+        }
+        settle(item, rec);
+        continue;
+      }
+      if (known) rec_noreuse(stem, dec);
+    }
+
     attempted++;
 
     let r;
@@ -753,8 +888,12 @@ export async function captureSubresources({
     const ct = (r.contentType || "").split(";")[0].trim();
     const rec = { ...stem, ok: true, status: r.status ?? 200, sha256: sha, bytes: bytes.length,
                   ...(ct ? { content_type: ct } : {}), existed: !!existed };
+    rec.fetched_this_capture = true;
     byUrl.set(cls.url, rec);
     if (!bySha.has(sha)) bySha.set(sha, rec);
+    siteObservations.push({ address: cls.url, address_norm: normalizeAddress(cls.url),
+                            sha256: sha, kind: item.kind, bytes: bytes.length,
+                            content_type: ct || null, reused: false });
 
     /* One level of following, and only through stylesheets. A stylesheet's own
        references are how a page's background images and fonts arrive, so not
@@ -858,6 +997,11 @@ export async function captureSubresources({
     limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
     discovered, attempted, truncated, budget_exhausted: budgetHit,
     complete: !platformHit && !truncated && !budgetHit && deferred === 0,
+    reuse: { reused, fetched: fetched.length - reused, not_reused: noReuse,
+             fresh_window_ms: reuseFreshWindowMs, min_documents: reuseMinDocuments,
+             note: "entries with fetched_this_capture:false were NOT fetched during this capture; "
+                 + "their bytes come from an earlier fetch of the same address on this host, named in "
+                 + "reused_from_fetched_at. A capture ratified as evidence must re-fetch them." },
     outstanding: deferred,
     platform: {
       limited: platformHit,
@@ -923,7 +1067,7 @@ export async function captureSubresources({
 
   return {
     subresources: records,
-    links,
+    links, siteObservations, reused,
     manifest, manifestSha, manifestBytes,
     companionText, companionSha, companionBytes,
     truncated, discovered, attempted,

@@ -3948,6 +3948,107 @@ export class Store extends DurableObject {
   }
 
   /* ------------------------------------------------------------------ *
+   * What a host has served
+   * ------------------------------------------------------------------ */
+
+  /** Look up assets this host has served before, by normalised address.
+   *  `documents` is counted from the ref rows rather than kept as a counter, so
+   *  re-capturing the same document twice does not inflate it into looking like
+   *  a shared asset when it is one page's own. */
+  siteAssets({ host, addresses = [] }) {
+    if (!host) return { host: null, assets: {} };
+    const out = {};
+    const want = addresses.length ? new Set(addresses) : null;
+    for (const r of this.sql.exec(`SELECT * FROM site_assets WHERE host = ?`, host)) {
+      if (want && !want.has(r.address_norm)) continue;
+      const n = [...this.sql.exec(
+        `SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ?`,
+        host, r.address_norm)][0];
+      out[r.address_norm] = { ...r, documents: (n && n.n) || 0 };
+    }
+    return { host, assets: out, count: Object.keys(out).length };
+  }
+
+  /** File what a capture saw of a host.
+   *
+   *  The change case is the one that matters. When an address comes back with a
+   *  different sha than the record holds, that is a dated fact about the site,
+   *  AND it retrospectively puts every document that reused the old bytes into
+   *  question. Both are recorded: stable_since moves, changes increments, and
+   *  the affected documents are returned so the caller can act rather than
+   *  having to go looking. */
+  recordSiteAssets({ host, primarySha, observations = [], at = null }) {
+    if (!host || !primarySha) return { host: null, recorded: 0 };
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    let added = 0, changedCount = 0;
+    const changed = [];
+    for (const o of observations) {
+      if (!o || !o.address_norm || !o.sha256) continue;
+      const cur = [...this.sql.exec(
+        `SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`, host, o.address_norm)][0] || null;
+      if (!cur) {
+        this.sql.exec(
+          `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
+             first_seen, last_seen, last_fetched, stable_since, changes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+          host, o.address_norm, o.address || o.address_norm, o.sha256, o.content_type || null,
+          o.bytes || 0, o.kind || null, now, now, now, now);
+        added++;
+      } else if (!o.reused && cur.sha256 !== o.sha256) {
+        /* It changed. Everything that reused the OLD bytes is now unverified,
+           and those documents are named rather than left to be discovered. */
+        const affected = [...this.sql.exec(
+          `SELECT primary_sha, at FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+          host, o.address_norm)];
+        this.sql.exec(
+          `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
+             stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
+          o.sha256, o.content_type || cur.content_type, o.bytes || 0, now, now, now, host, o.address_norm);
+        changedCount++;
+        changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256,
+                       reused_by: affected.map((a) => a.primary_sha) });
+      } else if (!o.reused) {
+        this.sql.exec(
+          `UPDATE site_assets SET last_seen = ?, last_fetched = ? WHERE host = ? AND address_norm = ?`,
+          now, now, host, o.address_norm);
+      } else {
+        /* A reuse confirms nothing about the source, so last_fetched must not
+           move: it names the last time these bytes were actually seen served. */
+        this.sql.exec(`UPDATE site_assets SET last_seen = ? WHERE host = ? AND address_norm = ?`,
+          now, host, o.address_norm);
+      }
+      this.sql.exec(
+        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
+           reused = excluded.reused, sha256 = excluded.sha256`,
+        host, o.address_norm, primarySha, now, o.reused ? 1 : 0, o.sha256);
+    }
+    return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
+  }
+
+  /** Chrome by RECURRENCE, which works on sites that never write a <nav>.
+   *  A ratio, not a boolean: the threshold is a tuning decision and belongs to
+   *  the caller, so both numbers are returned and nothing is decided here. */
+  siteChrome({ host, threshold = 0.6 }) {
+    if (!host) return { host: null, documents: 0, assets: [] };
+    const d = [...this.sql.exec(`SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ?`, host)][0];
+    const documents = (d && d.n) || 0;
+    const assets = [];
+    for (const r of this.sql.exec(
+      `SELECT address_norm, COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? GROUP BY address_norm`, host)) {
+      const share = documents ? r.n / documents : 0;
+      assets.push({ address_norm: r.address_norm, documents: r.n, share,
+                    chrome: documents >= 3 && share >= threshold });
+    }
+    assets.sort((a, b) => b.share - a.share);
+    return { host, documents, threshold, assets,
+             note: documents < 3
+               ? "fewer than three documents captured from this host: recurrence says nothing yet"
+               : "chrome here means the address recurs across at least this share of the host's captured documents" };
+  }
+
+  /* ------------------------------------------------------------------ *
    * Observed runtime limits
    * ------------------------------------------------------------------ */
 
@@ -4024,6 +4125,10 @@ export class Store extends DurableObject {
                                        limit: url.searchParams.get("limit") }),
         index: () => this.buildIndex(),
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
+        siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
+        recordsiteassets: () => this.recordSiteAssets(body || {}),
+        sitechrome: () => this.siteChrome({ host: url.searchParams.get("host"),
+                                            threshold: Number(url.searchParams.get("threshold")) || 0.6 }),
         recordcapturelimit: () => this.recordCaptureLimit(body || {}),
         projection: () => this.projection({
           bundleId: url.searchParams.get("id"),

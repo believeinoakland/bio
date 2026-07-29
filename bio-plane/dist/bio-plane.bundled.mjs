@@ -242,6 +242,54 @@ CREATE TABLE IF NOT EXISTS capture_limits (
   previous    INTEGER,
   moved_at    TEXT
 );
+-- What a HOST has served, across every document captured from it.
+--
+-- Bytes were always shared: captures are content-addressed, so one stylesheet
+-- occupies one R2 object however many documents reference it. FETCHES were not,
+-- and fetches are the scarce thing. On a Legistar page roughly forty of the
+-- forty-five available subrequests go to site-wide chrome that will be
+-- byte-identical on the next document captured from that host.
+--
+-- stable_since is the last time the sha CHANGED, not the last time it was seen,
+-- because "unchanged for three months" and "not looked at for three months" are
+-- different facts and only the first licenses reuse.
+--
+-- The same table answers chrome detection. An address referenced by fifteen of
+-- fifteen captured documents on a host is the site's; one referenced by a single
+-- document is that document's own. That works on sites that never write a <nav>
+-- element, which is most municipal sites.
+CREATE TABLE IF NOT EXISTS site_assets (
+  host         TEXT NOT NULL,
+  address_norm TEXT NOT NULL,
+  address      TEXT NOT NULL,
+  sha256       TEXT NOT NULL,
+  content_type TEXT,
+  bytes        INTEGER NOT NULL DEFAULT 0,
+  kind         TEXT,
+  first_seen   TEXT NOT NULL,
+  last_seen    TEXT NOT NULL,
+  last_fetched TEXT NOT NULL,
+  stable_since TEXT NOT NULL,
+  changes      INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (host, address_norm)
+);
+CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
+CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
+
+-- One row per (asset, document). Gives an exact distinct-document count rather
+-- than an incrementing counter that double-counts a re-capture, and it is what
+-- makes post-hoc verification possible: when an asset's sha later changes, the
+-- documents that REUSED the old bytes are exactly the rows here with reused=1.
+CREATE TABLE IF NOT EXISTS site_asset_refs (
+  host         TEXT NOT NULL,
+  address_norm TEXT NOT NULL,
+  primary_sha  TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  reused       INTEGER NOT NULL DEFAULT 0,
+  sha256       TEXT NOT NULL,
+  PRIMARY KEY (host, address_norm, primary_sha)
+);
+CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);
 `;
 
 // src/tokens.mjs
@@ -4722,6 +4770,38 @@ function originOf(url, baseHost) {
 }
 var FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
 var priorityOf = (ref) => (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
+function normalizeAddress(url) {
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return String(url || "").trim();
+  }
+  u.hash = "";
+  u.protocol = u.protocol.toLowerCase();
+  u.hostname = u.hostname.toLowerCase();
+  if (u.protocol === "https:" && u.port === "443" || u.protocol === "http:" && u.port === "80") u.port = "";
+  const ps = [...u.searchParams.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : 1);
+  u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
+  return u.toString();
+}
+var REUSABLE_KINDS = /* @__PURE__ */ new Set(["stylesheet", "css-asset", "font", "icon"]);
+function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDocuments = 2 } = {}) {
+  if (!known || !known.sha256) return { reuse: false, why: "not_seen_before" };
+  if (!REUSABLE_KINDS.has(ref.kind)) return { reuse: false, why: "evidence_is_always_fetched" };
+  if ((known.documents || 0) < minDocuments) return { reuse: false, why: "not_yet_shared_across_documents" };
+  const seen = Date.parse(known.last_fetched || "");
+  if (!Number.isFinite(seen)) return { reuse: false, why: "no_fetch_record" };
+  const age = now - seen;
+  if (age > freshWindowMs) return { reuse: false, why: "last_seen_served_too_long_ago", age_ms: age };
+  const stable = Date.parse(known.stable_since || "");
+  return {
+    reuse: true,
+    fetched_age_ms: age,
+    stable_for_ms: Number.isFinite(stable) ? now - stable : null,
+    changes: known.changes || 0
+  };
+}
 function fetchPolicy(ref, origin) {
   if (ref.collapsed)
     return {
@@ -4772,15 +4852,28 @@ async function captureSubresources({
      is having hit it. */
   platformCeiling = null,
   platformMargin = 5,
-  subrequestsAlreadySpent = 1
+  subrequestsAlreadySpent = 1,
+  /* What this host has served before. `siteLookup(addressNorm)` returns the
+     stored record or null; absent, nothing is ever reused and behaviour is
+     exactly what it was before reuse existed. */
+  siteLookup = null,
+  reuseFreshWindowMs = 24 * 3600 * 1e3,
+  reuseMinDocuments = 2,
+  /* Reads a stored capture back as text, so a REUSED stylesheet can have its own
+     url() targets followed just as a freshly fetched one does. Without it a
+     reused stylesheet would render without its sprites. */
+  readBack = null
 }) {
+  const noReuse = [];
+  const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
   const stamp = () => now().toISOString().split(".")[0] + "Z";
   const records = [];
   const bySha = /* @__PURE__ */ new Map();
   const byUrl = /* @__PURE__ */ new Map();
   const refToUrl = /* @__PURE__ */ new Map();
   let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
-  let observedCeiling = null, deferred = 0;
+  let observedCeiling = null, deferred = 0, reused = 0;
+  const siteObservations = [];
   const ceilingBudget = platformCeiling == null ? Infinity : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
   let baseHost = null;
   try {
@@ -4879,6 +4972,60 @@ async function captureSubresources({
       settle(item, { ...stem, ok: false, status: null, reason: "BUDGET_EXHAUSTED", budgetBytes: budget });
       continue;
     }
+    if (siteLookup) {
+      const known = await siteLookup(normalizeAddress(cls.url));
+      const dec = reuseDecision(item, known, { now: Date.now(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
+      if (dec.reuse) {
+        reused++;
+        const rec2 = {
+          ...stem,
+          ok: true,
+          status: null,
+          sha256: known.sha256,
+          bytes: known.bytes,
+          ...known.content_type ? { content_type: known.content_type } : {},
+          existed: true,
+          /* The honesty fields. A reader must never be led to believe a byte was
+             verified against the source during THIS capture when it was not. */
+          fetched_this_capture: false,
+          reused_from_fetched_at: known.last_fetched,
+          reused_stable_since: known.stable_since,
+          reused_seen_in_documents: known.documents,
+          detail: `not fetched during this capture: the source was seen serving these exact bytes at ${known.last_fetched}, across ${known.documents} documents on this host, and they are reused from the record rather than requested again`
+        };
+        byUrl.set(cls.url, rec2);
+        if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec2);
+        siteObservations.push({
+          address: cls.url,
+          address_norm: normalizeAddress(cls.url),
+          sha256: known.sha256,
+          kind: item.kind,
+          reused: true
+        });
+        if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
+          const text = await readBack(known.sha256);
+          if (text != null) {
+            rec2.css = true;
+            rec2.rewrite = [];
+            for (const u of cssRefs(text))
+              queue.push({
+                ref: u,
+                kind: "css-asset",
+                where: `url() in ${cls.url}`,
+                depth: item.depth + 1,
+                from: cls.url,
+                against: cls.url,
+                cssOwner: rec2,
+                region: rec2.region,
+                region_basis: rec2.region_basis
+              });
+          }
+        }
+        settle(item, rec2);
+        continue;
+      }
+      if (known) rec_noreuse(stem, dec);
+    }
     attempted++;
     let r;
     try {
@@ -4936,8 +5083,18 @@ async function captureSubresources({
       ...ct ? { content_type: ct } : {},
       existed: !!existed
     };
+    rec.fetched_this_capture = true;
     byUrl.set(cls.url, rec);
     if (!bySha.has(sha)) bySha.set(sha, rec);
+    siteObservations.push({
+      address: cls.url,
+      address_norm: normalizeAddress(cls.url),
+      sha256: sha,
+      kind: item.kind,
+      bytes: bytes.length,
+      content_type: ct || null,
+      reused: false
+    });
     const isCss = item.kind === "stylesheet" || ct === "text/css";
     if (isCss && item.depth < CSS_MAX_DEPTH) {
       let text = "";
@@ -5040,6 +5197,14 @@ async function captureSubresources({
     truncated,
     budget_exhausted: budgetHit,
     complete: !platformHit && !truncated && !budgetHit && deferred === 0,
+    reuse: {
+      reused,
+      fetched: fetched.length - reused,
+      not_reused: noReuse,
+      fresh_window_ms: reuseFreshWindowMs,
+      min_documents: reuseMinDocuments,
+      note: "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, named in reused_from_fetched_at. A capture ratified as evidence must re-fetch them."
+    },
     outstanding: deferred,
     platform: {
       limited: platformHit,
@@ -5092,6 +5257,8 @@ async function captureSubresources({
   return {
     subresources: records,
     links,
+    siteObservations,
+    reused,
     manifest,
     manifestSha,
     manifestBytes,
@@ -9875,6 +10042,151 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   }
   /* ------------------------------------------------------------------ *
+   * What a host has served
+   * ------------------------------------------------------------------ */
+  /** Look up assets this host has served before, by normalised address.
+   *  `documents` is counted from the ref rows rather than kept as a counter, so
+   *  re-capturing the same document twice does not inflate it into looking like
+   *  a shared asset when it is one page's own. */
+  siteAssets({ host, addresses = [] }) {
+    if (!host) return { host: null, assets: {} };
+    const out = {};
+    const want = addresses.length ? new Set(addresses) : null;
+    for (const r of this.sql.exec(`SELECT * FROM site_assets WHERE host = ?`, host)) {
+      if (want && !want.has(r.address_norm)) continue;
+      const n = [...this.sql.exec(
+        `SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ?`,
+        host,
+        r.address_norm
+      )][0];
+      out[r.address_norm] = { ...r, documents: n && n.n || 0 };
+    }
+    return { host, assets: out, count: Object.keys(out).length };
+  }
+  /** File what a capture saw of a host.
+   *
+   *  The change case is the one that matters. When an address comes back with a
+   *  different sha than the record holds, that is a dated fact about the site,
+   *  AND it retrospectively puts every document that reused the old bytes into
+   *  question. Both are recorded: stable_since moves, changes increments, and
+   *  the affected documents are returned so the caller can act rather than
+   *  having to go looking. */
+  recordSiteAssets({ host, primarySha, observations = [], at = null }) {
+    if (!host || !primarySha) return { host: null, recorded: 0 };
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    let added = 0, changedCount = 0;
+    const changed = [];
+    for (const o of observations) {
+      if (!o || !o.address_norm || !o.sha256) continue;
+      const cur = [...this.sql.exec(
+        `SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`,
+        host,
+        o.address_norm
+      )][0] || null;
+      if (!cur) {
+        this.sql.exec(
+          `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
+             first_seen, last_seen, last_fetched, stable_since, changes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+          host,
+          o.address_norm,
+          o.address || o.address_norm,
+          o.sha256,
+          o.content_type || null,
+          o.bytes || 0,
+          o.kind || null,
+          now,
+          now,
+          now,
+          now
+        );
+        added++;
+      } else if (!o.reused && cur.sha256 !== o.sha256) {
+        const affected = [...this.sql.exec(
+          `SELECT primary_sha, at FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+          host,
+          o.address_norm
+        )];
+        this.sql.exec(
+          `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
+             stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
+          o.sha256,
+          o.content_type || cur.content_type,
+          o.bytes || 0,
+          now,
+          now,
+          now,
+          host,
+          o.address_norm
+        );
+        changedCount++;
+        changed.push({
+          address_norm: o.address_norm,
+          was: cur.sha256,
+          now: o.sha256,
+          reused_by: affected.map((a) => a.primary_sha)
+        });
+      } else if (!o.reused) {
+        this.sql.exec(
+          `UPDATE site_assets SET last_seen = ?, last_fetched = ? WHERE host = ? AND address_norm = ?`,
+          now,
+          now,
+          host,
+          o.address_norm
+        );
+      } else {
+        this.sql.exec(
+          `UPDATE site_assets SET last_seen = ? WHERE host = ? AND address_norm = ?`,
+          now,
+          host,
+          o.address_norm
+        );
+      }
+      this.sql.exec(
+        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
+           reused = excluded.reused, sha256 = excluded.sha256`,
+        host,
+        o.address_norm,
+        primarySha,
+        now,
+        o.reused ? 1 : 0,
+        o.sha256
+      );
+    }
+    return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
+  }
+  /** Chrome by RECURRENCE, which works on sites that never write a <nav>.
+   *  A ratio, not a boolean: the threshold is a tuning decision and belongs to
+   *  the caller, so both numbers are returned and nothing is decided here. */
+  siteChrome({ host, threshold = 0.6 }) {
+    if (!host) return { host: null, documents: 0, assets: [] };
+    const d = [...this.sql.exec(`SELECT COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ?`, host)][0];
+    const documents = d && d.n || 0;
+    const assets = [];
+    for (const r of this.sql.exec(
+      `SELECT address_norm, COUNT(DISTINCT primary_sha) AS n FROM site_asset_refs WHERE host = ? GROUP BY address_norm`,
+      host
+    )) {
+      const share = documents ? r.n / documents : 0;
+      assets.push({
+        address_norm: r.address_norm,
+        documents: r.n,
+        share,
+        chrome: documents >= 3 && share >= threshold
+      });
+    }
+    assets.sort((a, b) => b.share - a.share);
+    return {
+      host,
+      documents,
+      threshold,
+      assets,
+      note: documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet" : "chrome here means the address recurs across at least this share of the host's captured documents"
+    };
+  }
+  /* ------------------------------------------------------------------ *
    * Observed runtime limits
    * ------------------------------------------------------------------ */
   /** What we last saw this runtime allow, and whether it is time to look again.
@@ -9949,6 +10261,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         }),
         index: () => this.buildIndex(),
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
+        siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
+        recordsiteassets: () => this.recordSiteAssets(body || {}),
+        sitechrome: () => this.siteChrome({
+          host: url.searchParams.get("host"),
+          threshold: Number(url.searchParams.get("threshold")) || 0.6
+        }),
         recordcapturelimit: () => this.recordCaptureLimit(body || {}),
         projection: () => this.projection({
           bundleId: url.searchParams.get("id"),
@@ -10998,8 +11316,31 @@ var index_default = {
               limit = null;
             }
             const useCeiling = limit && limit.observed && !limit.probeDue ? limit.observed : null;
+            let baseHost = null;
+            try {
+              baseHost = new URL(res2.url || locator).hostname.toLowerCase();
+            } catch {
+              baseHost = null;
+            }
+            let siteKnown = {};
+            if (baseHost) {
+              try {
+                siteKnown = (await (await stLim.fetch("http://x/siteassets", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ host: baseHost })
+                })).json()).result.assets || {};
+              } catch {
+                siteKnown = {};
+              }
+            }
             subs = await captureSubresources({
               platformCeiling: useCeiling,
+              siteLookup: baseHost ? async (norm) => siteKnown[norm] || null : null,
+              readBack: async (sh) => {
+                const o = await env.CAPTURES.get(`${storeName}/captures/${sh}`);
+                return o ? new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(await o.arrayBuffer())) : null;
+              },
               html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
               base: res2.url || locator,
               primarySha: sha,
@@ -11030,6 +11371,16 @@ var index_default = {
                 body: JSON.stringify({ runtime: "subrequests", observed: subs.manifest.platform.observed_ceiling })
               })).json()).result;
             } catch {
+            }
+            if (baseHost && subs.siteObservations && subs.siteObservations.length) {
+              try {
+                subs.siteRecord = (await (await stLim.fetch("http://x/recordsiteassets", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ host: baseHost, primarySha: sha, observations: subs.siteObservations })
+                })).json()).result;
+              } catch {
+              }
             }
           }
         }
@@ -11089,6 +11440,8 @@ var index_default = {
             complete: subs.manifest.complete,
             outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
+            reuse: subs.manifest.reuse,
+            ...subs.siteRecord ? { site: subs.siteRecord } : {},
             ...subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}
           },
           files: {
