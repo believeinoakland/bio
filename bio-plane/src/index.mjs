@@ -13,7 +13,7 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256 } from "../checks/
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
-import { captureSubresources } from "./subresources.mjs";
+import { captureSubresources, normalizeAddress } from "./subresources.mjs";
 import { Store } from "./store.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
@@ -187,6 +187,10 @@ const OPS = {
   lease:      { classes: ["admin", "member", "probe"],           mutating: true  },
   purge:      { classes: ["admin", "probe"],                     mutating: true  },
   capture:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* A pure read, and computed at read time on purpose: which partition a link
+     falls in depends on what the record holds today, not on what it held when
+     the document was captured. */
+  links:      { classes: ["admin", "member", "probe"],           mutating: false },
   /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
      and no bundle state, because the doctrine is explicit that no intake path
      writes live state and the daemon and the member are writers like any other. */
@@ -809,6 +813,26 @@ export default {
        store confines its captures mechanically, the same way as everything
        else. Publishing to the PUBLISHED bucket is the publisher's act during
        ratification and deliberately has no op here. */
+    /* What a captured document pointed at, resolved against the store as it
+       stands NOW rather than as it stood at capture. That is deliberate: which
+       partition a link falls in depends on what the record holds, and the
+       record changes, so the answer is computed at read time and never frozen
+       into the capture. */
+    if (op === "links") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const capture = url.searchParams.get("capture");
+      const address = url.searchParams.get("address");
+      if (address) {
+        const r = await (await st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`)).json();
+        return json({ ok: true, ...r.result });
+      }
+      if (!/^[0-9a-f]{64}$/.test(capture || ""))
+        return json({ ok: false, reason: "NEED_CAPTURE_OR_ADDRESS",
+          detail: "pass capture=<sha256> for a document's outbound links, or address=<url> for what points at it" }, 400);
+      const r = await (await st.fetch(`http://x/resolvelinks?capture=${capture}`)).json();
+      return json({ ok: true, ...r.result });
+    }
+
     if (op === "capture") {
       if (typeof env.CAPTURES?.get !== "function")
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
@@ -1080,6 +1104,27 @@ export default {
             } else if (sessionId) {
               try { await stLim.fetch(`http://x/dropcapturesession?session=${encodeURIComponent(sessionId)}`); } catch {}
             }
+            /* File the address this capture holds, so a later document linking
+               to it can be resolved. Without this nothing can answer "does the
+               store hold a capture of https://..." at all: the register is
+               keyed by hash and carries no locator. */
+            try {
+              await stLim.fetch("http://x/recordcapturedlocator", {
+                method: "POST", headers: { "content-type": "application/json" },
+                body: JSON.stringify({ address: res.url || locator,
+                  addressNorm: normalizeAddress(res.url || locator),
+                  captureSha: sha, retrieved }),
+              });
+              if (subs.links && subs.links.length) {
+                await stLim.fetch("http://x/recordlinks", {
+                  method: "POST", headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ sourceCapture: sha, capturedAt: retrieved,
+                    links: subs.links.filter((l) => l.address).map((l) => ({
+                      ref: l.ref, address: l.address, address_norm: normalizeAddress(l.address),
+                      type: l.type, origin: l.origin })) }),
+                });
+              }
+            } catch { /* an unfiled link is not a failed capture */ }
             /* File what this run saw of the host. The change case matters most:
                an address returning different bytes is a dated fact about the
                site AND retrospectively puts every document that reused the old

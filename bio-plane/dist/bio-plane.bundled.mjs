@@ -314,6 +314,80 @@ CREATE TABLE IF NOT EXISTS capture_sessions (
   state       TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS capture_sessions_expires ON capture_sessions(expires);
+-- Links a captured document made, and what they resolve to.
+--
+-- Address-keyed, which refs is not: refs is bundle-to-bundle and answers a
+-- different question. An UNRESOLVED link has no canonical target and cannot be
+-- a citation at all, because C-6.1 rightly refuses a locator as a
+-- references[].target. Resolution is the act that makes a link expressible as
+-- an edge: once the store holds a capture of the address, there is a canonical
+-- ID to point at, and the address rides along as a comment string.
+--
+-- address_norm is stored ALONGSIDE address, never instead of it, because a
+-- normalisation rule that later proves wrong must be re-derivable and a
+-- normalisation MISS looks exactly like "not captured".
+--
+-- The verdict is about CONTEMPORANEITY: whether the capture the store holds of
+-- the target is the version the source was pointing at on the day this document
+-- was captured. It is three-valued on purpose. undetermined is the resting
+-- state and the expected common case, because Last-Modified is absent from most
+-- dynamic pages, wrong on many others, and reset by deployments that changed
+-- nothing. A binary design silently sorts every undetermined link into one
+-- bucket or the other and both errors are bad.
+CREATE TABLE IF NOT EXISTS links (
+  source_bundle  TEXT,
+  source_capture TEXT NOT NULL,
+  link_ref       TEXT NOT NULL,
+  address        TEXT NOT NULL,
+  address_norm   TEXT NOT NULL,
+  partition      TEXT NOT NULL,
+  origin         TEXT,
+  chrome         INTEGER NOT NULL DEFAULT 0,
+  captured_at    TEXT NOT NULL,
+  first_seen     TEXT NOT NULL,
+  PRIMARY KEY (source_capture, link_ref, address_norm)
+);
+CREATE INDEX IF NOT EXISTS links_target ON links(address_norm);
+CREATE INDEX IF NOT EXISTS links_source ON links(source_bundle);
+
+-- The verdict, APPENDED and dated, never overwritten. A verdict that changed is
+-- itself a fact about the record, for the same reason state history is
+-- append-only: the current answer is the newest row, and the older rows are how
+-- anyone can tell whether it was always this answer.
+CREATE TABLE IF NOT EXISTS link_verdicts (
+  source_capture TEXT NOT NULL,
+  address_norm   TEXT NOT NULL,
+  verdict        TEXT NOT NULL,
+  basis          TEXT NOT NULL,
+  target_bundle  TEXT,
+  target_capture TEXT,
+  at             TEXT NOT NULL,
+  detail         TEXT,
+  PRIMARY KEY (source_capture, address_norm, at)
+);
+CREATE INDEX IF NOT EXISTS link_verdicts_pair ON link_verdicts(source_capture, address_norm);
+-- Which ADDRESSES the record has captured, and when. The register is keyed by
+-- capture hash and carries no locator, so nothing could answer "does the store
+-- hold a capture of https://..." without this. One row per (address, capture),
+-- because the point is precisely that an address is captured repeatedly over
+-- time and the versions are what a contemporaneity verdict compares.
+-- One row per (address, DISTINCT BYTES), carrying the INTERVAL over which those
+-- bytes were seen served rather than a single date. That interval is the whole
+-- point: identical bytes observed on both sides of another document's retrieval
+-- prove the target did not change across it, which settles contemporaneity
+-- outright and needs no timestamp from the source that anyone has to trust. A
+-- first draft keyed rows by (address, sha) and kept only the earliest date,
+-- which threw away exactly the evidence the verdict is built on.
+CREATE TABLE IF NOT EXISTS captured_locators (
+  address_norm    TEXT NOT NULL,
+  address         TEXT NOT NULL,
+  capture_sha     TEXT NOT NULL,
+  first_retrieved TEXT NOT NULL,
+  last_retrieved  TEXT NOT NULL,
+  observations    INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (address_norm, capture_sha)
+);
+CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
 `;
 
 // src/tokens.mjs
@@ -10117,6 +10191,179 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   }
   /* ------------------------------------------------------------------ *
+   * Links: what a document pointed at, and whether we hold that version
+   * ------------------------------------------------------------------ */
+  recordCapturedLocator({ address, addressNorm, captureSha, retrieved }) {
+    if (!addressNorm || !captureSha) return { recorded: false };
+    this.sql.exec(
+      `INSERT INTO captured_locators (address_norm, address, capture_sha, first_retrieved, last_retrieved, observations)
+       VALUES (?, ?, ?, ?, ?, 1)
+       ON CONFLICT(address_norm, capture_sha) DO UPDATE SET
+         first_retrieved = MIN(first_retrieved, excluded.first_retrieved),
+         last_retrieved  = MAX(last_retrieved,  excluded.last_retrieved),
+         observations    = observations + 1`,
+      addressNorm,
+      address || addressNorm,
+      captureSha,
+      retrieved,
+      retrieved
+    );
+    return { recorded: true, address_norm: addressNorm };
+  }
+  /** File the links a captured document made. Replaces this capture's rows
+   *  rather than appending, because a capture's own links are a property of its
+   *  bytes and do not change; a second filing is a re-run, not new information. */
+  recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] }) {
+    if (!sourceCapture) return { recorded: 0 };
+    const now = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    this.sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
+    let n = 0;
+    for (const l of links) {
+      if (!l || !l.address_norm) continue;
+      this.sql.exec(
+        `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
+           partition, origin, chrome, captured_at, first_seen)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(source_capture, link_ref, address_norm) DO NOTHING`,
+        sourceBundle,
+        sourceCapture,
+        String(l.ref || l.address),
+        l.address || l.address_norm,
+        l.address_norm,
+        l.type || "deferred",
+        l.origin || null,
+        l.chrome ? 1 : 0,
+        capturedAt || now,
+        now
+      );
+      n++;
+    }
+    return { recorded: n, source_capture: sourceCapture };
+  }
+  /** Everything that points AT an address. The reverse index, which is the
+   *  whole reason this is address-keyed. */
+  linksTo({ address_norm }) {
+    const rows = [...this.sql.exec(
+      `SELECT source_capture, source_bundle, link_ref, partition, captured_at FROM links WHERE address_norm = ?`,
+      address_norm
+    )];
+    return { address_norm, count: rows.length, sources: rows };
+  }
+  /** Resolve a capture's links against the store, with a contemporaneity
+   *  verdict for each that resolves.
+   *
+   *  The verdict answers one question: is the capture the store holds of the
+   *  target the version the source was pointing at on the day the source was
+   *  captured? Three values, because that question is usually unanswerable and a
+   *  binary scheme would sort every unanswerable case into one bucket or the
+   *  other, either asserting connections nobody established or discarding real
+   *  ones wholesale.
+   *
+   *  The strongest evidence available here is two captures of the target
+   *  BRACKETING the source's retrieval whose bytes hash equal: identical bytes
+   *  across the interval settles it outright and needs no timestamp anyone has
+   *  to trust. Everything weaker is named rather than leaned on. */
+  resolveLinks({ sourceCapture, at = null }) {
+    const rows = [...this.sql.exec(`SELECT * FROM links WHERE source_capture = ?`, sourceCapture)];
+    if (!rows.length) return { sourceCapture, resolved: 0, links: [] };
+    const T = Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now();
+    const out = [];
+    const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
+    const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
+    for (const r of rows) {
+      if (r.partition !== "deferred") {
+        tally[r.partition] = (tally[r.partition] || 0) + 1;
+        out.push({ ...r, resolution: r.partition, verdict: null });
+        continue;
+      }
+      const caps = [...this.sql.exec(
+        `SELECT capture_sha, first_retrieved, last_retrieved, observations FROM captured_locators
+         WHERE address_norm = ? ORDER BY first_retrieved`,
+        r.address_norm
+      )];
+      if (!caps.length) {
+        tally.offsite++;
+        out.push({
+          ...r,
+          resolution: "offsite",
+          verdict: null,
+          basis: "the record holds no capture of this address"
+        });
+        continue;
+      }
+      tally.linked++;
+      const bracket = caps.find((c) => Date.parse(c.first_retrieved) <= T && Date.parse(c.last_retrieved) >= T && c.observations > 1) || null;
+      const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
+      const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
+      let verdict, basis, detail = null, pick = null;
+      if (bracket) {
+        verdict = "contemporaneous";
+        pick = bracket;
+        basis = "the same bytes were seen served on both sides of this document's retrieval and hash equal, so the target did not change across the interval";
+        detail = `observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
+      } else if (before && after) {
+        verdict = "undetermined";
+        pick = before;
+        basis = "the target changed somewhere between the captures bracketing this document's retrieval, so which version it pointed at is not established";
+        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, ${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
+      } else if (!before && after) {
+        verdict = "superseded";
+        pick = after;
+        basis = "every capture of the target postdates this document's retrieval, so the record holds a later version than the one pointed at";
+      } else {
+        verdict = "undetermined";
+        pick = before;
+        basis = "the record's captures of the target all predate this document's retrieval, and nothing establishes that it was unchanged in between";
+      }
+      verdicts[verdict]++;
+      const reg = pick ? [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, pick.capture_sha)][0] : null;
+      out.push({
+        ...r,
+        resolution: "linked",
+        verdict,
+        basis,
+        detail,
+        target_capture: pick ? pick.capture_sha : null,
+        target_bundle: reg ? reg.bundle_id : null,
+        target_retrieved: pick ? pick.first_retrieved : null,
+        target_last_seen: pick ? pick.last_retrieved : null,
+        target_captures: caps.length
+      });
+    }
+    return {
+      sourceCapture,
+      resolved: out.length,
+      at: rows[0].captured_at,
+      tally,
+      verdicts,
+      links: out,
+      note: "undetermined is the resting state and the expected common case, not a failure: it means nothing established which version the source pointed at, which is different from the record holding nothing and different again from holding a later version"
+    };
+  }
+  /** Append a verdict. Never an update: a verdict that changed is a fact about
+   *  the record, and the current answer is simply the newest row. */
+  recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    this.sql.exec(
+      `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
+      sourceCapture,
+      addressNorm,
+      verdict,
+      basis,
+      targetBundle,
+      targetCapture,
+      now,
+      detail
+    );
+    const all = [...this.sql.exec(
+      `SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at`,
+      sourceCapture,
+      addressNorm
+    )];
+    return { current: all[all.length - 1] || null, history: all, changed: all.length > 1 };
+  }
+  /* ------------------------------------------------------------------ *
    * Capture sessions: a capture that needs another tick
    * ------------------------------------------------------------------ */
   /** Park what is left of a capture. Expired rows are pruned on the way past,
@@ -10408,6 +10655,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
         siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
         recordsiteassets: () => this.recordSiteAssets(body || {}),
+        recordlinks: () => this.recordLinks(body || {}),
+        resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
+        linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),
+        recordlinkverdict: () => this.recordLinkVerdict(body || {}),
+        recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),
@@ -10771,6 +11023,10 @@ var OPS = {
   lease: { classes: ["admin", "member", "probe"], mutating: true },
   purge: { classes: ["admin", "probe"], mutating: true },
   capture: { classes: ["admin", "member", "probe"], mutating: true },
+  /* A pure read, and computed at read time on purpose: which partition a link
+     falls in depends on what the record holds today, not on what it held when
+     the document was captured. */
+  links: { classes: ["admin", "member", "probe"], mutating: false },
   /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
      and no bundle state, because the doctrine is explicit that no intake path
      writes live state and the daemon and the member are writers like any other. */
@@ -11308,6 +11564,23 @@ var index_default = {
       const out = await livefire(env, storeName);
       return json(out, out.ok ? 200 : 500);
     }
+    if (op === "links") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const capture = url.searchParams.get("capture");
+      const address = url.searchParams.get("address");
+      if (address) {
+        const r2 = await (await st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`)).json();
+        return json({ ok: true, ...r2.result });
+      }
+      if (!/^[0-9a-f]{64}$/.test(capture || ""))
+        return json({
+          ok: false,
+          reason: "NEED_CAPTURE_OR_ADDRESS",
+          detail: "pass capture=<sha256> for a document's outbound links, or address=<url> for what points at it"
+        }, 400);
+      const r = await (await st.fetch(`http://x/resolvelinks?capture=${capture}`)).json();
+      return json({ ok: true, ...r.result });
+    }
     if (op === "capture") {
       if (typeof env.CAPTURES?.get !== "function")
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
@@ -11554,6 +11827,36 @@ var index_default = {
                 await stLim.fetch(`http://x/dropcapturesession?session=${encodeURIComponent(sessionId)}`);
               } catch {
               }
+            }
+            try {
+              await stLim.fetch("http://x/recordcapturedlocator", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                  address: res2.url || locator,
+                  addressNorm: normalizeAddress(res2.url || locator),
+                  captureSha: sha,
+                  retrieved
+                })
+              });
+              if (subs.links && subs.links.length) {
+                await stLim.fetch("http://x/recordlinks", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({
+                    sourceCapture: sha,
+                    capturedAt: retrieved,
+                    links: subs.links.filter((l) => l.address).map((l) => ({
+                      ref: l.ref,
+                      address: l.address,
+                      address_norm: normalizeAddress(l.address),
+                      type: l.type,
+                      origin: l.origin
+                    }))
+                  })
+                });
+              }
+            } catch {
             }
             if (baseHost && subs.siteObservations && subs.siteObservations.length) {
               try {

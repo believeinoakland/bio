@@ -3948,6 +3948,154 @@ export class Store extends DurableObject {
   }
 
   /* ------------------------------------------------------------------ *
+   * Links: what a document pointed at, and whether we hold that version
+   * ------------------------------------------------------------------ */
+
+  recordCapturedLocator({ address, addressNorm, captureSha, retrieved }) {
+    if (!addressNorm || !captureSha) return { recorded: false };
+    /* Widen the interval rather than replacing a date. Seeing the same bytes
+       again later is not a duplicate, it is the observation that proves the
+       target held still in between. */
+    this.sql.exec(
+      `INSERT INTO captured_locators (address_norm, address, capture_sha, first_retrieved, last_retrieved, observations)
+       VALUES (?, ?, ?, ?, ?, 1)
+       ON CONFLICT(address_norm, capture_sha) DO UPDATE SET
+         first_retrieved = MIN(first_retrieved, excluded.first_retrieved),
+         last_retrieved  = MAX(last_retrieved,  excluded.last_retrieved),
+         observations    = observations + 1`,
+      addressNorm, address || addressNorm, captureSha, retrieved, retrieved);
+    return { recorded: true, address_norm: addressNorm };
+  }
+
+  /** File the links a captured document made. Replaces this capture's rows
+   *  rather than appending, because a capture's own links are a property of its
+   *  bytes and do not change; a second filing is a re-run, not new information. */
+  recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] }) {
+    if (!sourceCapture) return { recorded: 0 };
+    const now = new Date().toISOString().split(".")[0] + "Z";
+    this.sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
+    let n = 0;
+    for (const l of links) {
+      if (!l || !l.address_norm) continue;
+      this.sql.exec(
+        `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
+           partition, origin, chrome, captured_at, first_seen)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(source_capture, link_ref, address_norm) DO NOTHING`,
+        sourceBundle, sourceCapture, String(l.ref || l.address), l.address || l.address_norm,
+        l.address_norm, l.type || "deferred", l.origin || null, l.chrome ? 1 : 0,
+        capturedAt || now, now);
+      n++;
+    }
+    return { recorded: n, source_capture: sourceCapture };
+  }
+
+  /** Everything that points AT an address. The reverse index, which is the
+   *  whole reason this is address-keyed. */
+  linksTo({ address_norm }) {
+    const rows = [...this.sql.exec(
+      `SELECT source_capture, source_bundle, link_ref, partition, captured_at FROM links WHERE address_norm = ?`,
+      address_norm)];
+    return { address_norm, count: rows.length, sources: rows };
+  }
+
+  /** Resolve a capture's links against the store, with a contemporaneity
+   *  verdict for each that resolves.
+   *
+   *  The verdict answers one question: is the capture the store holds of the
+   *  target the version the source was pointing at on the day the source was
+   *  captured? Three values, because that question is usually unanswerable and a
+   *  binary scheme would sort every unanswerable case into one bucket or the
+   *  other, either asserting connections nobody established or discarding real
+   *  ones wholesale.
+   *
+   *  The strongest evidence available here is two captures of the target
+   *  BRACKETING the source's retrieval whose bytes hash equal: identical bytes
+   *  across the interval settles it outright and needs no timestamp anyone has
+   *  to trust. Everything weaker is named rather than leaned on. */
+  resolveLinks({ sourceCapture, at = null }) {
+    const rows = [...this.sql.exec(`SELECT * FROM links WHERE source_capture = ?`, sourceCapture)];
+    if (!rows.length) return { sourceCapture, resolved: 0, links: [] };
+    const T = Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now();
+    const out = [];
+    const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
+    const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
+
+    for (const r of rows) {
+      if (r.partition !== "deferred") {
+        tally[r.partition] = (tally[r.partition] || 0) + 1;
+        out.push({ ...r, resolution: r.partition, verdict: null });
+        continue;
+      }
+      const caps = [...this.sql.exec(
+        `SELECT capture_sha, first_retrieved, last_retrieved, observations FROM captured_locators
+         WHERE address_norm = ? ORDER BY first_retrieved`, r.address_norm)];
+      if (!caps.length) {
+        tally.offsite++;
+        out.push({ ...r, resolution: "offsite", verdict: null,
+          basis: "the record holds no capture of this address" });
+        continue;
+      }
+      tally.linked++;
+      /* The strongest case first: one set of bytes observed on BOTH sides of
+         this document's retrieval. Identical bytes across the interval settle
+         it, and nothing here depends on a date the source supplied. */
+      const bracket = caps.find((c) => Date.parse(c.first_retrieved) <= T && Date.parse(c.last_retrieved) >= T
+                                       && c.observations > 1) || null;
+      const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
+      const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
+      let verdict, basis, detail = null, pick = null;
+
+      if (bracket) {
+        verdict = "contemporaneous"; pick = bracket;
+        basis = "the same bytes were seen served on both sides of this document's retrieval and "
+              + "hash equal, so the target did not change across the interval";
+        detail = `observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
+      } else if (before && after) {
+        verdict = "undetermined"; pick = before;
+        basis = "the target changed somewhere between the captures bracketing this document's "
+              + "retrieval, so which version it pointed at is not established";
+        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, `
+               + `${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
+      } else if (!before && after) {
+        verdict = "superseded"; pick = after;
+        basis = "every capture of the target postdates this document's retrieval, so the record "
+              + "holds a later version than the one pointed at";
+      } else {
+        verdict = "undetermined"; pick = before;
+        basis = "the record's captures of the target all predate this document's retrieval, and "
+              + "nothing establishes that it was unchanged in between";
+      }
+      verdicts[verdict]++;
+      const reg = pick ? [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, pick.capture_sha)][0] : null;
+      out.push({ ...r, resolution: "linked", verdict, basis, detail,
+                 target_capture: pick ? pick.capture_sha : null,
+                 target_bundle: reg ? reg.bundle_id : null,
+                 target_retrieved: pick ? pick.first_retrieved : null,
+                 target_last_seen: pick ? pick.last_retrieved : null,
+                 target_captures: caps.length });
+    }
+    return { sourceCapture, resolved: out.length, at: rows[0].captured_at, tally, verdicts, links: out,
+      note: "undetermined is the resting state and the expected common case, not a failure: it means "
+          + "nothing established which version the source pointed at, which is different from the "
+          + "record holding nothing and different again from holding a later version" };
+  }
+
+  /** Append a verdict. Never an update: a verdict that changed is a fact about
+   *  the record, and the current answer is simply the newest row. */
+  recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    this.sql.exec(
+      `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
+      sourceCapture, addressNorm, verdict, basis, targetBundle, targetCapture, now, detail);
+    const all = [...this.sql.exec(
+      `SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at`,
+      sourceCapture, addressNorm)];
+    return { current: all[all.length - 1] || null, history: all, changed: all.length > 1 };
+  }
+
+  /* ------------------------------------------------------------------ *
    * Capture sessions: a capture that needs another tick
    * ------------------------------------------------------------------ */
 
@@ -4170,6 +4318,11 @@ export class Store extends DurableObject {
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
         siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
         recordsiteassets: () => this.recordSiteAssets(body || {}),
+        recordlinks: () => this.recordLinks(body || {}),
+        resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
+        linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),
+        recordlinkverdict: () => this.recordLinkVerdict(body || {}),
+        recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),

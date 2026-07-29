@@ -886,6 +886,105 @@ console.log("\n--- and the whole thing through op=acquire, which is where it bro
     gone.subresources_skipped.reason, "NO_SUCH_SESSION");
 }
 
+console.log("\n--- links resolve at read time, and the verdict has three values ---");
+{
+  const ns3 = await mf.getDurableObjectNamespace("STORE");
+  const st3 = ns3.get(ns3.idFromName("bio"));
+  const call = async (path, body) => (await st3.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+  const N = normalizeAddress;
+
+  const SRC = "aa".repeat(32);
+  const T = "2026-05-15T12:00:00Z";
+  const tgt = (p) => `https://www.oaklandca.gov/${p}`;
+
+  await call("/recordlinks", { sourceCapture: SRC, capturedAt: T, links: [
+    { ref: "/steady",   address: tgt("steady"),   address_norm: N(tgt("steady")),   type: "deferred" },
+    { ref: "/churned",  address: tgt("churned"),  address_norm: N(tgt("churned")),  type: "deferred" },
+    { ref: "/latercap", address: tgt("latercap"), address_norm: N(tgt("latercap")), type: "deferred" },
+    { ref: "/onlyold",  address: tgt("onlyold"),  address_norm: N(tgt("onlyold")),  type: "deferred" },
+    { ref: "/nowhere",  address: tgt("nowhere"),  address_norm: N(tgt("nowhere")),  type: "deferred" },
+    { ref: "#top",      address: null,            address_norm: "#top",             type: "anchor"   },
+  ]});
+
+  /* Identical bytes on both sides of the source's retrieval: settled outright,
+     and it needs no timestamp anyone has to trust. */
+  await call("/recordcapturedlocator", { address: tgt("steady"), addressNorm: N(tgt("steady")),
+    captureSha: "11".repeat(32), retrieved: "2026-04-01T00:00:00Z" });
+  await call("/recordcapturedlocator", { address: tgt("steady"), addressNorm: N(tgt("steady")),
+    captureSha: "11".repeat(32), retrieved: "2026-06-01T00:00:00Z" });
+  /* Different bytes on either side: it changed in the interval, so which one
+     the source saw is NOT established. */
+  await call("/recordcapturedlocator", { address: tgt("churned"), addressNorm: N(tgt("churned")),
+    captureSha: "22".repeat(32), retrieved: "2026-04-01T00:00:00Z" });
+  await call("/recordcapturedlocator", { address: tgt("churned"), addressNorm: N(tgt("churned")),
+    captureSha: "33".repeat(32), retrieved: "2026-06-01T00:00:00Z" });
+  /* Only captured afterwards: the record holds a LATER version. */
+  await call("/recordcapturedlocator", { address: tgt("latercap"), addressNorm: N(tgt("latercap")),
+    captureSha: "44".repeat(32), retrieved: "2026-06-01T00:00:00Z" });
+  /* Only captured before: it may have changed in between and nothing says. */
+  await call("/recordcapturedlocator", { address: tgt("onlyold"), addressNorm: N(tgt("onlyold")),
+    captureSha: "55".repeat(32), retrieved: "2026-04-01T00:00:00Z" });
+
+  const r = (await call(`/resolvelinks?capture=${SRC}`)).result;
+  const by = Object.fromEntries(r.links.map((l) => [l.link_ref, l]));
+
+  t("identical bytes bracketing the retrieval settle it outright",
+    by["/steady"].verdict, "contemporaneous");
+  t("and say so without leaning on any timestamp the source supplied",
+    /hash equal/.test(by["/steady"].basis), true);
+
+  t("a target that changed across the interval is UNDETERMINED, not assumed",
+    by["/churned"].verdict, "undetermined");
+  t("naming both bracketing captures so the gap is legible",
+    /bracketing captures differ/.test(by["/churned"].detail), true);
+
+  t("a target captured only afterwards is superseded", by["/latercap"].verdict, "superseded");
+  t("and the capture the record DOES hold is offered, labelled as the later one",
+    by["/latercap"].target_capture, "44".repeat(32));
+
+  t("a target captured only before is undetermined, since nothing says it held still",
+    by["/onlyold"].verdict, "undetermined");
+
+  t("an address the record holds nothing for is offsite, not a failed link",
+    [by["/nowhere"].resolution, by["/nowhere"].verdict], ["offsite", null]);
+  t("an in-page anchor is not resolved against the store at all",
+    by["#top"].resolution, "anchor");
+
+  t("the tally separates what is linked from what is merely pointed at",
+    [r.tally.linked, r.tally.offsite, r.tally.anchor], [4, 1, 1]);
+  t("and undetermined is the largest bucket, which is the expected shape",
+    r.verdicts, { contemporaneous: 1, superseded: 1, undetermined: 2 });
+  t("the note says undetermined is a resting state rather than a failure",
+    /resting state and the expected common case/.test(r.note), true);
+
+  /* The reverse index: what points AT an address. */
+  const rev = (await call(`/linksto?address=${encodeURIComponent(N(tgt("steady")))}`)).result;
+  t("the reverse index finds what points at an address", rev.count, 1);
+  t("naming the capture that does", rev.sources[0].source_capture, SRC);
+
+  /* Verdicts are appended, never overwritten. */
+  await call("/recordlinkverdict", { sourceCapture: SRC, addressNorm: N(tgt("onlyold")),
+    verdict: "undetermined", basis: "nothing established it", at: "2026-05-16T00:00:00Z" });
+  const v2 = (await call("/recordlinkverdict", { sourceCapture: SRC, addressNorm: N(tgt("onlyold")),
+    verdict: "contemporaneous", basis: "a bracketing capture arrived later", at: "2026-07-01T00:00:00Z" })).result;
+  t("a verdict that changed keeps the one it replaced", v2.history.length, 2);
+  t("the current answer is simply the newest row", v2.current.verdict, "contemporaneous");
+  t("and the change is visible as a change", v2.changed, true);
+
+  /* And through the op the caller actually uses. */
+  const opres = await (await mf.dispatchFetch(`http://x/api/?op=links&token=mem-sub&capture=${SRC}`)).json();
+  t("op=links resolves through the surface a caller reaches", opres.ok, true);
+  t("with the same verdicts", opres.verdicts.undetermined, 2);
+  const oprev = await (await mf.dispatchFetch(
+    `http://x/api/?op=links&token=mem-sub&address=${encodeURIComponent(tgt("steady"))}`)).json();
+  t("and answers the reverse question from a raw address, normalising it on the way",
+    oprev.count, 1);
+  const bad = await (await mf.dispatchFetch("http://x/api/?op=links&token=mem-sub")).json();
+  t("with neither, it refuses by name rather than returning nothing",
+    bad.reason, "NEED_CAPTURE_OR_ADDRESS");
+}
+
 console.log("\n--- it still writes no live state ---");
 t("intake writes nothing, subresources or not",
   (await (await mf.dispatchFetch("http://x/api/?op=stats&token=mem-sub")).json()).result.bundles, 0);

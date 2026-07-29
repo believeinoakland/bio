@@ -313,4 +313,78 @@ CREATE TABLE IF NOT EXISTS capture_sessions (
   state       TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS capture_sessions_expires ON capture_sessions(expires);
+-- Links a captured document made, and what they resolve to.
+--
+-- Address-keyed, which refs is not: refs is bundle-to-bundle and answers a
+-- different question. An UNRESOLVED link has no canonical target and cannot be
+-- a citation at all, because C-6.1 rightly refuses a locator as a
+-- references[].target. Resolution is the act that makes a link expressible as
+-- an edge: once the store holds a capture of the address, there is a canonical
+-- ID to point at, and the address rides along as a comment string.
+--
+-- address_norm is stored ALONGSIDE address, never instead of it, because a
+-- normalisation rule that later proves wrong must be re-derivable and a
+-- normalisation MISS looks exactly like "not captured".
+--
+-- The verdict is about CONTEMPORANEITY: whether the capture the store holds of
+-- the target is the version the source was pointing at on the day this document
+-- was captured. It is three-valued on purpose. undetermined is the resting
+-- state and the expected common case, because Last-Modified is absent from most
+-- dynamic pages, wrong on many others, and reset by deployments that changed
+-- nothing. A binary design silently sorts every undetermined link into one
+-- bucket or the other and both errors are bad.
+CREATE TABLE IF NOT EXISTS links (
+  source_bundle  TEXT,
+  source_capture TEXT NOT NULL,
+  link_ref       TEXT NOT NULL,
+  address        TEXT NOT NULL,
+  address_norm   TEXT NOT NULL,
+  partition      TEXT NOT NULL,
+  origin         TEXT,
+  chrome         INTEGER NOT NULL DEFAULT 0,
+  captured_at    TEXT NOT NULL,
+  first_seen     TEXT NOT NULL,
+  PRIMARY KEY (source_capture, link_ref, address_norm)
+);
+CREATE INDEX IF NOT EXISTS links_target ON links(address_norm);
+CREATE INDEX IF NOT EXISTS links_source ON links(source_bundle);
+
+-- The verdict, APPENDED and dated, never overwritten. A verdict that changed is
+-- itself a fact about the record, for the same reason state history is
+-- append-only: the current answer is the newest row, and the older rows are how
+-- anyone can tell whether it was always this answer.
+CREATE TABLE IF NOT EXISTS link_verdicts (
+  source_capture TEXT NOT NULL,
+  address_norm   TEXT NOT NULL,
+  verdict        TEXT NOT NULL,
+  basis          TEXT NOT NULL,
+  target_bundle  TEXT,
+  target_capture TEXT,
+  at             TEXT NOT NULL,
+  detail         TEXT,
+  PRIMARY KEY (source_capture, address_norm, at)
+);
+CREATE INDEX IF NOT EXISTS link_verdicts_pair ON link_verdicts(source_capture, address_norm);
+-- Which ADDRESSES the record has captured, and when. The register is keyed by
+-- capture hash and carries no locator, so nothing could answer "does the store
+-- hold a capture of https://..." without this. One row per (address, capture),
+-- because the point is precisely that an address is captured repeatedly over
+-- time and the versions are what a contemporaneity verdict compares.
+-- One row per (address, DISTINCT BYTES), carrying the INTERVAL over which those
+-- bytes were seen served rather than a single date. That interval is the whole
+-- point: identical bytes observed on both sides of another document's retrieval
+-- prove the target did not change across it, which settles contemporaneity
+-- outright and needs no timestamp from the source that anyone has to trust. A
+-- first draft keyed rows by (address, sha) and kept only the earliest date,
+-- which threw away exactly the evidence the verdict is built on.
+CREATE TABLE IF NOT EXISTS captured_locators (
+  address_norm    TEXT NOT NULL,
+  address         TEXT NOT NULL,
+  capture_sha     TEXT NOT NULL,
+  first_retrieved TEXT NOT NULL,
+  last_retrieved  TEXT NOT NULL,
+  observations    INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (address_norm, capture_sha)
+);
+CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
 `;
