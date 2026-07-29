@@ -676,6 +676,13 @@ export async function captureSubresources({
      url() targets followed just as a freshly fetched one does. Without it a
      reused stylesheet would render without its sprites. */
   readBack = null,
+  /* Resuming a capture that ran out of budget. `resume` carries what an earlier
+     tick accumulated and what it had left to do. Nothing is re-fetched and
+     nothing is re-parsed: the queue is restored rather than rediscovered,
+     because rediscovering it means reading every stylesheet back out of R2 to
+     re-derive its url() targets, and on a Legistar page that is thirty storage
+     reads spent to learn what one row already knew. */
+  resume = null,
 }) {
   /* Why an asset the host has served before was fetched anyway. Recorded so a
      reuse rate that quietly falls to zero is visible rather than mysterious. */
@@ -695,6 +702,15 @@ export async function captureSubresources({
      Written out here rather than inside the loop so that a capture which fails
      partway still reports what it did learn. */
   const siteObservations = [];
+  /* Declared HERE, beside the other accumulators, rather than down with the
+     link classifier that fills it. It was declared there, and the resume block
+     above restores into it, which put it in a temporal dead zone that only
+     fired on a page that actually has <a> elements. A fixture without links
+     never evaluated the loop body and the suite stayed green. */
+  const links = [];
+  /* What the next tick has to do. Built as the deferrals happen so it is
+     correct even if this tick ends unexpectedly. */
+  const outstanding = [];
   const ceilingBudget = platformCeiling == null ? Infinity
     : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
 
@@ -706,7 +722,36 @@ export async function captureSubresources({
      file, or nothing, while every count still looks right. */
   let baseHost = null;
   try { baseHost = new URL(base).hostname; } catch { baseHost = null; }
-  const queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+  let queue;
+  if (resume) {
+    /* cssOwner is a live reference into `records`, so it travels as an INDEX
+       and is reattached here. Serialising the object itself would duplicate the
+       record and the rewrite list would then be built on a copy nobody reads. */
+    for (const r of resume.records || []) {
+      records.push(r);
+      if (r.url) byUrl.set(r.url, r);
+      if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
+    }
+    for (const l of resume.links || []) links.push(l);
+    for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
+    for (const o of resume.siteObservations || []) siteObservations.push(o);
+    discovered = resume.discovered || records.length;
+    spent = resume.spent || 0;
+    queue = (resume.queue || []).map((q) => ({
+      ...q, cssOwner: q.cssOwnerIdx == null ? undefined : records[q.cssOwnerIdx] }));
+    /* A resumed item was DEFERRED last tick and is being tried again, so its
+       earlier row goes: leaving it would double-count and would leave a
+       "deferred" row beside the real outcome. */
+    const retry = new Set(queue.map((q) => q.retryUrl).filter(Boolean));
+    for (let i = records.length - 1; i >= 0; i--)
+      if (records[i].reason === "DEFERRED" && retry.has(records[i].url)) {
+        byUrl.delete(records[i].url);
+        records.splice(i, 1);
+        discovered--;
+      }
+  } else {
+    queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+  }
 
   /* Every path out of the loop lands here, so a reference is recorded once and
      its owning stylesheet's rewrite list is updated once, whatever happened to
@@ -780,6 +825,9 @@ export async function captureSubresources({
        outstanding rather than failed. */
     if (platformHit || attempted >= ceilingBudget) {
       deferred++;
+      outstanding.push({ ...({ ...item, cssOwner: undefined }),
+        cssOwnerIdx: item.cssOwner ? records.indexOf(item.cssOwner) : null,
+        retryUrl: cls.url });
       settle(item, { ...stem, ok: false, status: null, reason: "DEFERRED",
         detail: platformHit
           ? "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it"
@@ -933,12 +981,14 @@ export async function captureSubresources({
     return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
   };
 
-  const when0 = stamp();
+  const when0 = resume && resume.when0 ? resume.when0 : stamp();
   /* Links. Every <a href> the page carries is characterised into a partition
      and recorded, because a connection the source itself asserted is material
      the record wants, not noise to be stripped. */
-  const links = [];
-  const seenLink = new Map();
+  /* Seeded from whatever a previous tick already recorded, using the same key
+     note() builds, so a resumed capture does not re-append every link each time
+     it rebuilds the companion. */
+  const seenLink = new Map(links.map((l) => [`${l.type}\u0000${l.address || l.ref}`, true]));
   const classifyLink = (ref) => {
     const raw = String(ref || "").trim();
     const note = (type, address, extra = {}) => {
@@ -1068,6 +1118,14 @@ export async function captureSubresources({
   return {
     subresources: records,
     links, siteObservations, reused,
+    /* Everything the next tick needs, and nothing it does not. The primary HTML
+       is NOT in here: it is already in the store under primarySha, and carrying
+       a copy in session state would be a second, unverified copy of evidence. */
+    resumeState: outstanding.length ? {
+      when0, discovered, spent, queue: outstanding,
+      records, links, siteObservations,
+      refToUrl: Object.fromEntries(refToUrl),
+    } : null,
     manifest, manifestSha, manifestBytes,
     companionText, companionSha, companionBytes,
     truncated, discovered, attempted,

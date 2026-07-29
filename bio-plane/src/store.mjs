@@ -3948,6 +3948,49 @@ export class Store extends DurableObject {
   }
 
   /* ------------------------------------------------------------------ *
+   * Capture sessions: a capture that needs another tick
+   * ------------------------------------------------------------------ */
+
+  /** Park what is left of a capture. Expired rows are pruned on the way past,
+   *  which is cheap and means an abandoned session cannot accumulate: a caller
+   *  that walks away costs one row until its hour is up. */
+  saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 3600000, at = null }) {
+    const now = at ? new Date(at) : new Date();
+    const iso = (d) => d.toISOString().split(".")[0] + "Z";
+    this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
+    if (!session || !state) return { session: null, saved: false };
+    const cur = [...this.sql.exec(`SELECT ticks FROM capture_sessions WHERE session = ?`, session)][0];
+    const body = JSON.stringify(state);
+    if (cur) {
+      this.sql.exec(`UPDATE capture_sessions SET updated = ?, expires = ?, ticks = ticks + 1, state = ? WHERE session = ?`,
+        iso(now), iso(new Date(now.getTime() + ttlMs)), body, session);
+      return { session, saved: true, ticks: cur.ticks + 1, bytes: body.length };
+    }
+    this.sql.exec(`INSERT INTO capture_sessions (session, locator, primary_sha, primary_file, base, created, updated, expires, ticks, state)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+      session, locator, primarySha, primaryFile, base, iso(now), iso(now), iso(new Date(now.getTime() + ttlMs)), body);
+    return { session, saved: true, ticks: 1, bytes: body.length };
+  }
+
+  loadCaptureSession({ session, at = null }) {
+    const now = at ? new Date(at) : new Date();
+    const iso = now.toISOString().split(".")[0] + "Z";
+    this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso);
+    const r = [...this.sql.exec(`SELECT * FROM capture_sessions WHERE session = ?`, session)][0] || null;
+    if (!r) return { session, found: false,
+      note: "no such capture session: it either never existed, was already finished, or expired" };
+    let state = null;
+    try { state = JSON.parse(r.state); } catch { return { session, found: false, note: "session state did not parse" }; }
+    return { session, found: true, locator: r.locator, primarySha: r.primary_sha,
+             primaryFile: r.primary_file, base: r.base, ticks: r.ticks, created: r.created, state };
+  }
+
+  dropCaptureSession({ session }) {
+    this.sql.exec(`DELETE FROM capture_sessions WHERE session = ?`, session);
+    return { session, dropped: true };
+  }
+
+  /* ------------------------------------------------------------------ *
    * What a host has served
    * ------------------------------------------------------------------ */
 
@@ -4127,6 +4170,9 @@ export class Store extends DurableObject {
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
         siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
         recordsiteassets: () => this.recordSiteAssets(body || {}),
+        savecapturesession: () => this.saveCaptureSession(body || {}),
+        loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
+        dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),
         sitechrome: () => this.siteChrome({ host: url.searchParams.get("host"),
                                             threshold: Number(url.searchParams.get("threshold")) || 0.6 }),
         recordcapturelimit: () => this.recordCaptureLimit(body || {}),

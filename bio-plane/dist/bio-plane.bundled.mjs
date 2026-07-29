@@ -290,6 +290,30 @@ CREATE TABLE IF NOT EXISTS site_asset_refs (
   PRIMARY KEY (host, address_norm, primary_sha)
 );
 CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);
+-- A capture that ran out of subrequest budget, waiting for another tick.
+--
+-- SCRATCH, not record. The intake doctrine says no intake path writes live
+-- state, and that keeps holding: this is a work list with an expiry, it names
+-- no bundle, and acquire still returns a provenance document and promotes
+-- nothing. The primary capture is complete from the first tick and its bytes
+-- are already in the store; what is outstanding here is only support material.
+--
+-- The primary HTML is deliberately NOT stored here. It is in the store under
+-- primary_sha, and a copy in session state would be a second, unverified copy
+-- of evidence sitting somewhere nothing checks.
+CREATE TABLE IF NOT EXISTS capture_sessions (
+  session     TEXT PRIMARY KEY,
+  locator     TEXT NOT NULL,
+  primary_sha TEXT NOT NULL,
+  primary_file TEXT NOT NULL,
+  base        TEXT NOT NULL,
+  created     TEXT NOT NULL,
+  updated     TEXT NOT NULL,
+  expires     TEXT NOT NULL,
+  ticks       INTEGER NOT NULL DEFAULT 1,
+  state       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS capture_sessions_expires ON capture_sessions(expires);
 `;
 
 // src/tokens.mjs
@@ -4862,7 +4886,14 @@ async function captureSubresources({
   /* Reads a stored capture back as text, so a REUSED stylesheet can have its own
      url() targets followed just as a freshly fetched one does. Without it a
      reused stylesheet would render without its sprites. */
-  readBack = null
+  readBack = null,
+  /* Resuming a capture that ran out of budget. `resume` carries what an earlier
+     tick accumulated and what it had left to do. Nothing is re-fetched and
+     nothing is re-parsed: the queue is restored rather than rediscovered,
+     because rediscovering it means reading every stylesheet back out of R2 to
+     re-derive its url() targets, and on a Legistar page that is thirty storage
+     reads spent to learn what one row already knew. */
+  resume = null
 }) {
   const noReuse = [];
   const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
@@ -4874,6 +4905,8 @@ async function captureSubresources({
   let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
   let observedCeiling = null, deferred = 0, reused = 0;
   const siteObservations = [];
+  const links = [];
+  const outstanding = [];
   const ceilingBudget = platformCeiling == null ? Infinity : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
   let baseHost = null;
   try {
@@ -4881,7 +4914,32 @@ async function captureSubresources({
   } catch {
     baseHost = null;
   }
-  const queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+  let queue;
+  if (resume) {
+    for (const r of resume.records || []) {
+      records.push(r);
+      if (r.url) byUrl.set(r.url, r);
+      if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
+    }
+    for (const l of resume.links || []) links.push(l);
+    for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
+    for (const o of resume.siteObservations || []) siteObservations.push(o);
+    discovered = resume.discovered || records.length;
+    spent = resume.spent || 0;
+    queue = (resume.queue || []).map((q) => ({
+      ...q,
+      cssOwner: q.cssOwnerIdx == null ? void 0 : records[q.cssOwnerIdx]
+    }));
+    const retry = new Set(queue.map((q) => q.retryUrl).filter(Boolean));
+    for (let i = records.length - 1; i >= 0; i--)
+      if (records[i].reason === "DEFERRED" && retry.has(records[i].url)) {
+        byUrl.delete(records[i].url);
+        records.splice(i, 1);
+        discovered--;
+      }
+  } else {
+    queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+  }
   const settle = (item, rec) => {
     if (rec) records.push(rec);
     if (item.cssOwner)
@@ -4946,6 +5004,11 @@ async function captureSubresources({
     }
     if (platformHit || attempted >= ceilingBudget) {
       deferred++;
+      outstanding.push({
+        ...{ ...item, cssOwner: void 0 },
+        cssOwnerIdx: item.cssOwner ? records.indexOf(item.cssOwner) : null,
+        retryUrl: cls.url
+      });
       settle(item, {
         ...stem,
         ok: false,
@@ -5136,9 +5199,8 @@ async function captureSubresources({
     if (rec.kind === "script") return PLACEHOLDER_MISSING;
     return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
   };
-  const when0 = stamp();
-  const links = [];
-  const seenLink = /* @__PURE__ */ new Map();
+  const when0 = resume && resume.when0 ? resume.when0 : stamp();
+  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.address || l.ref}`, true]));
   const classifyLink = (ref) => {
     const raw = String(ref || "").trim();
     const note = (type, address, extra = {}) => {
@@ -5259,6 +5321,19 @@ async function captureSubresources({
     links,
     siteObservations,
     reused,
+    /* Everything the next tick needs, and nothing it does not. The primary HTML
+       is NOT in here: it is already in the store under primarySha, and carrying
+       a copy in session state would be a second, unverified copy of evidence. */
+    resumeState: outstanding.length ? {
+      when0,
+      discovered,
+      spent,
+      queue: outstanding,
+      records,
+      links,
+      siteObservations,
+      refToUrl: Object.fromEntries(refToUrl)
+    } : null,
     manifest,
     manifestSha,
     manifestBytes,
@@ -10042,6 +10117,76 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   }
   /* ------------------------------------------------------------------ *
+   * Capture sessions: a capture that needs another tick
+   * ------------------------------------------------------------------ */
+  /** Park what is left of a capture. Expired rows are pruned on the way past,
+   *  which is cheap and means an abandoned session cannot accumulate: a caller
+   *  that walks away costs one row until its hour is up. */
+  saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 36e5, at = null }) {
+    const now = at ? new Date(at) : /* @__PURE__ */ new Date();
+    const iso = (d) => d.toISOString().split(".")[0] + "Z";
+    this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
+    if (!session || !state) return { session: null, saved: false };
+    const cur = [...this.sql.exec(`SELECT ticks FROM capture_sessions WHERE session = ?`, session)][0];
+    const body = JSON.stringify(state);
+    if (cur) {
+      this.sql.exec(
+        `UPDATE capture_sessions SET updated = ?, expires = ?, ticks = ticks + 1, state = ? WHERE session = ?`,
+        iso(now),
+        iso(new Date(now.getTime() + ttlMs)),
+        body,
+        session
+      );
+      return { session, saved: true, ticks: cur.ticks + 1, bytes: body.length };
+    }
+    this.sql.exec(
+      `INSERT INTO capture_sessions (session, locator, primary_sha, primary_file, base, created, updated, expires, ticks, state)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+      session,
+      locator,
+      primarySha,
+      primaryFile,
+      base,
+      iso(now),
+      iso(now),
+      iso(new Date(now.getTime() + ttlMs)),
+      body
+    );
+    return { session, saved: true, ticks: 1, bytes: body.length };
+  }
+  loadCaptureSession({ session, at = null }) {
+    const now = at ? new Date(at) : /* @__PURE__ */ new Date();
+    const iso = now.toISOString().split(".")[0] + "Z";
+    this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso);
+    const r = [...this.sql.exec(`SELECT * FROM capture_sessions WHERE session = ?`, session)][0] || null;
+    if (!r) return {
+      session,
+      found: false,
+      note: "no such capture session: it either never existed, was already finished, or expired"
+    };
+    let state = null;
+    try {
+      state = JSON.parse(r.state);
+    } catch {
+      return { session, found: false, note: "session state did not parse" };
+    }
+    return {
+      session,
+      found: true,
+      locator: r.locator,
+      primarySha: r.primary_sha,
+      primaryFile: r.primary_file,
+      base: r.base,
+      ticks: r.ticks,
+      created: r.created,
+      state
+    };
+  }
+  dropCaptureSession({ session }) {
+    this.sql.exec(`DELETE FROM capture_sessions WHERE session = ?`, session);
+    return { session, dropped: true };
+  }
+  /* ------------------------------------------------------------------ *
    * What a host has served
    * ------------------------------------------------------------------ */
   /** Look up assets this host has served before, by normalised address.
@@ -10263,6 +10408,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
         siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
         recordsiteassets: () => this.recordSiteAssets(body || {}),
+        savecapturesession: () => this.saveCaptureSession(body || {}),
+        loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
+        dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),
         sitechrome: () => this.siteChrome({
           host: url.searchParams.get("host"),
           threshold: Number(url.searchParams.get("threshold")) || 0.6
@@ -11296,7 +11444,7 @@ var index_default = {
       const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
       const HTML_CT = ["text/html", "application/xhtml+xml"];
       const SUB_PARSE_MAX = 8 * 1024 * 1024;
-      let subs = null, subsSkipped = null;
+      let subs = null, subsSkipped = null, sessionId = null;
       if (body2.subresources === true) {
         if (multipart || total > SUB_PARSE_MAX)
           subsSkipped = { reason: "TOO_LARGE_TO_PARSE", detail: `subresource capture reads the primary back into memory to parse it, so it is bounded to ${SUB_PARSE_MAX} bytes; this document is ${total}` };
@@ -11309,6 +11457,17 @@ var index_default = {
             const primaryBytes = new Uint8Array(await obj.arrayBuffer());
             const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
             const stLim = env.STORE.get(env.STORE.idFromName(storeName));
+            let resumeState = null;
+            sessionId = body2.continue || null;
+            if (sessionId) {
+              try {
+                const ld = (await (await stLim.fetch(`http://x/loadcapturesession?session=${encodeURIComponent(sessionId)}`)).json()).result;
+                if (ld && ld.found) resumeState = ld.state;
+                else subsSkipped = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
+              } catch {
+                subsSkipped = { reason: "SESSION_UNREADABLE" };
+              }
+            }
             let limit = null;
             try {
               limit = (await (await stLim.fetch("http://x/capturelimit?runtime=subrequests")).json()).result;
@@ -11336,6 +11495,7 @@ var index_default = {
             }
             subs = await captureSubresources({
               platformCeiling: useCeiling,
+              resume: resumeState,
               siteLookup: baseHost ? async (norm) => siteKnown[norm] || null : null,
               readBack: async (sh) => {
                 const o = await env.CAPTURES.get(`${storeName}/captures/${sh}`);
@@ -11371,6 +11531,29 @@ var index_default = {
                 body: JSON.stringify({ runtime: "subrequests", observed: subs.manifest.platform.observed_ceiling })
               })).json()).result;
             } catch {
+            }
+            if (subs.resumeState) {
+              sessionId = sessionId || `cs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
+              try {
+                subs.session = (await (await stLim.fetch("http://x/savecapturesession", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({
+                    session: sessionId,
+                    locator,
+                    primarySha: sha,
+                    primaryFile: `snapshots/${name}`,
+                    base: res2.url || locator,
+                    state: subs.resumeState
+                  })
+                })).json()).result;
+              } catch {
+              }
+            } else if (sessionId) {
+              try {
+                await stLim.fetch(`http://x/dropcapturesession?session=${encodeURIComponent(sessionId)}`);
+              } catch {
+              }
             }
             if (baseHost && subs.siteObservations && subs.siteObservations.length) {
               try {
@@ -11441,6 +11624,12 @@ var index_default = {
             outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
             reuse: subs.manifest.reuse,
+            ...subs.resumeState ? { continuation: {
+              session: sessionId,
+              outstanding: subs.manifest.outstanding,
+              ticks: subs.session ? subs.session.ticks : 1,
+              how: 'call op=acquire again with {continue: "<session>"} to pick up the outstanding parts; the primary is already complete and is never re-fetched'
+            } } : {},
             ...subs.siteRecord ? { site: subs.siteRecord } : {},
             ...subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}
           },

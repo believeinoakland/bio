@@ -968,7 +968,10 @@ export default {
          * If those two ever differed, parsing the copy would hide it. */
       const HTML_CT = ["text/html", "application/xhtml+xml"];
       const SUB_PARSE_MAX = 8 * 1024 * 1024;
-      let subs = null, subsSkipped = null;
+      /* Declared out here with subs, because the response literal below reads
+         it and the capture branch is a nested block. It was declared inside
+         that block, which threw only on a page big enough to need a session. */
+      let subs = null, subsSkipped = null, sessionId = null;
       if (body.subresources === true) {
         if (multipart || total > SUB_PARSE_MAX)
           subsSkipped = { reason: "TOO_LARGE_TO_PARSE", detail:
@@ -991,6 +994,18 @@ export default {
                again, because a ceiling only ever learned downward would leave an
                upgraded account at the old caps forever. */
             const stLim = env.STORE.get(env.STORE.idFromName(storeName));
+            /* Continuing a capture that ran out of budget. The primary is
+               complete from tick one, so nothing here re-fetches it: only the
+               outstanding support material is picked up. */
+            let resumeState = null;
+            sessionId = body.continue || null;
+            if (sessionId) {
+              try {
+                const ld = (await (await stLim.fetch(`http://x/loadcapturesession?session=${encodeURIComponent(sessionId)}`)).json()).result;
+                if (ld && ld.found) resumeState = ld.state;
+                else subsSkipped = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
+              } catch { subsSkipped = { reason: "SESSION_UNREADABLE" }; }
+            }
             let limit = null;
             try { limit = (await (await stLim.fetch("http://x/capturelimit?runtime=subrequests")).json()).result; }
             catch { limit = null; }
@@ -1015,6 +1030,7 @@ export default {
 
             subs = await captureSubresources({
               platformCeiling: useCeiling,
+              resume: resumeState,
               siteLookup: baseHost ? async (norm) => siteKnown[norm] || null : null,
               readBack: async (sh) => {
                 const o = await env.CAPTURES.get(`${storeName}/captures/${sh}`);
@@ -1049,6 +1065,21 @@ export default {
                 body: JSON.stringify({ runtime: "subrequests", observed: subs.manifest.platform.observed_ceiling }),
               })).json()).result;
             } catch { /* an observation that could not be filed is not a capture failure */ }
+            /* Park what is left, or clear the session when there is nothing
+               left. A capture that finished must not leave a row behind saying
+               it has work outstanding. */
+            if (subs.resumeState) {
+              sessionId = sessionId || `cs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
+              try {
+                subs.session = (await (await stLim.fetch("http://x/savecapturesession", {
+                  method: "POST", headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ session: sessionId, locator, primarySha: sha,
+                    primaryFile: `snapshots/${name}`, base: res.url || locator, state: subs.resumeState }),
+                })).json()).result;
+              } catch { /* an unparked session means the caller starts over, not that the capture failed */ }
+            } else if (sessionId) {
+              try { await stLim.fetch(`http://x/dropcapturesession?session=${encodeURIComponent(sessionId)}`); } catch {}
+            }
             /* File what this run saw of the host. The change case matters most:
                an address returning different bytes is a dated fact about the
                site AND retrospectively puts every document that reused the old
@@ -1111,6 +1142,12 @@ export default {
             complete: subs.manifest.complete, outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
             reuse: subs.manifest.reuse,
+            ...(subs.resumeState ? { continuation: {
+              session: sessionId, outstanding: subs.manifest.outstanding,
+              ticks: subs.session ? subs.session.ticks : 1,
+              how: "call op=acquire again with {continue: \"<session>\"} to pick up the outstanding parts; "
+                 + "the primary is already complete and is never re-fetched",
+            } } : {}),
             ...(subs.siteRecord ? { site: subs.siteRecord } : {}),
             ...(subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}),
           },

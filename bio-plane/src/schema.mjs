@@ -289,4 +289,28 @@ CREATE TABLE IF NOT EXISTS site_asset_refs (
   PRIMARY KEY (host, address_norm, primary_sha)
 );
 CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);
+-- A capture that ran out of subrequest budget, waiting for another tick.
+--
+-- SCRATCH, not record. The intake doctrine says no intake path writes live
+-- state, and that keeps holding: this is a work list with an expiry, it names
+-- no bundle, and acquire still returns a provenance document and promotes
+-- nothing. The primary capture is complete from the first tick and its bytes
+-- are already in the store; what is outstanding here is only support material.
+--
+-- The primary HTML is deliberately NOT stored here. It is in the store under
+-- primary_sha, and a copy in session state would be a second, unverified copy
+-- of evidence sitting somewhere nothing checks.
+CREATE TABLE IF NOT EXISTS capture_sessions (
+  session     TEXT PRIMARY KEY,
+  locator     TEXT NOT NULL,
+  primary_sha TEXT NOT NULL,
+  primary_file TEXT NOT NULL,
+  base        TEXT NOT NULL,
+  created     TEXT NOT NULL,
+  updated     TEXT NOT NULL,
+  expires     TEXT NOT NULL,
+  ticks       INTEGER NOT NULL DEFAULT 1,
+  state       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS capture_sessions_expires ON capture_sessions(expires);
 `;

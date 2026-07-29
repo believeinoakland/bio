@@ -740,6 +740,152 @@ console.log("\n--- what a host has served: reuse, honestly recorded ---");
     /says nothing yet/.test(thin.note), true);
 }
 
+console.log("\n--- a capture that ran out of budget finishes across ticks ---");
+{
+  /* Twelve images and room for five fetches a tick. The point is not that it
+     eventually finishes: it is that nothing is fetched twice, nothing is lost,
+     and the parts already captured are not disturbed by the ones still to come. */
+  const many = ["<html><head><link rel=stylesheet href=/a.css></head><body>"];
+  for (let i = 0; i < 12; i++) many.push(`<img src="/img/t${i}.png">`);
+  /* Links in the fixture on purpose. Without them the resume path never
+     restores a link record, and a temporal-dead-zone reference in that restore
+     shipped green and blew up on the first real page, which has links. */
+  many.push('<a href="/next.html">next</a><a href="#f">jump</a><a href="javascript:x()">no</a>');
+  many.push("</body></html>");
+  const HTML = many.join("");
+  const seen = [];
+  const store = new Map();
+  const run = (resume) => captureSubresources({
+    html: HTML, base: BASE, primarySha: "9".repeat(64), primaryFile: "snapshots/t.html",
+    resume, platformCeiling: 7, platformMargin: 1, subrequestsAlreadySpent: 1,
+    fetchOne: async (u) => { seen.push(new URL(u).pathname);
+      return { ok: true, status: 200, bytes: /\.css$/.test(u) ? enc(".a{}") : PNG,
+               contentType: /\.css$/.test(u) ? "text/css" : "image/png" }; },
+    put: async (sh, b) => { const had = store.has(sh); store.set(sh, b); return { existed: had }; },
+    sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
+  });
+
+  let r = await run(null);
+  t("the first tick does not finish", r.manifest.complete, false);
+  t("and hands back what is left to do", !!r.resumeState, true);
+  const firstOutstanding = r.manifest.outstanding;
+  t("with an outstanding count", firstOutstanding > 0, true);
+  t("the state serialises, since it has to cross a tick boundary as JSON",
+    typeof JSON.parse(JSON.stringify(r.resumeState)), "object");
+  t("and does NOT carry a copy of the primary, which is already in the store",
+    JSON.stringify(r.resumeState).includes("<html>"), false);
+
+  let ticks = 1;
+  while (r.resumeState && ticks < 10) {
+    r = await run(JSON.parse(JSON.stringify(r.resumeState)));
+    ticks++;
+  }
+  t("it finishes across several ticks", r.manifest.complete, true);
+  t("taking more than one", ticks > 1, true);
+  t("with nothing outstanding at the end", r.manifest.outstanding, 0);
+
+  t("every reference is accounted for exactly once",
+    new Set(r.subresources.map((x) => x.url)).size, r.subresources.length);
+  t("and every one of them succeeded", r.subresources.filter((x) => x.ok).length, 13);
+  t("the links survive the tick boundary and are not duplicated by it",
+    [r.links.length, new Set(r.links.map((l) => l.type + l.ref)).size], [3, 3]);
+  t("no reference is left recorded as deferred once the capture completed",
+    r.subresources.some((x) => x.reason === "DEFERRED"), false);
+  t("NOTHING was fetched twice, which is the whole point of parking the queue",
+    seen.length, new Set(seen).size);
+  t("the stylesheet was fetched in the first tick and not again",
+    seen.filter((p) => p === "/a.css").length, 1);
+
+  const c = r.companionText;
+  t("the finished companion resolves every image to captured bytes",
+    (c.match(/about:capture#[0-9a-f]{64}/g) || []).length >= 12, true);
+  t("and leaves nothing unavailable", c.includes("about:capture#unavailable"), false);
+}
+
+console.log("\n--- and the session is scratch, with an expiry, naming no bundle ---");
+{
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  const stub = ns.get(ns.idFromName("bio"));
+  const call = async (path, body) => (await stub.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+
+  const S = "cs_test_1";
+  let sv = (await call("/savecapturesession", { session: S, locator: BASE, primarySha: "f".repeat(64),
+    primaryFile: "snapshots/x.html", base: BASE, state: { queue: [1, 2], records: [] } })).result;
+  t("a session parks", [sv.saved, sv.ticks], [true, 1]);
+  let ld = (await call(`/loadcapturesession?session=${S}`)).result;
+  t("and loads back", [ld.found, ld.state.queue.length], [true, 2]);
+
+  sv = (await call("/savecapturesession", { session: S, locator: BASE, primarySha: "f".repeat(64),
+    primaryFile: "snapshots/x.html", base: BASE, state: { queue: [3], records: [] } })).result;
+  t("a second tick counts as a tick, not a new session", sv.ticks, 2);
+
+  await call(`/dropcapturesession?session=${S}`);
+  ld = (await call(`/loadcapturesession?session=${S}`)).result;
+  t("a finished capture leaves no session behind", ld.found, false);
+  t("and says so plainly rather than returning an empty one", /no such capture session/.test(ld.note), true);
+
+  await call("/savecapturesession", { session: "cs_old", locator: BASE, primarySha: "f".repeat(64),
+    primaryFile: "snapshots/x.html", base: BASE, state: { queue: [] }, ttlMs: -1000 });
+  ld = (await call(`/loadcapturesession?session=cs_old`)).result;
+  t("an abandoned session expires rather than accumulating", ld.found, false);
+
+  t("and the record itself is untouched by any of it",
+    (await (await mf.dispatchFetch("http://x/api/?op=stats&token=mem-sub")).json()).result.bundles, 0);
+}
+
+console.log("\n--- and the whole thing through op=acquire, which is where it broke ---");
+{
+  /* The continuation block above drives captureSubresources directly and stayed
+     green while op=acquire threw on any page big enough to need a session: the
+     response literal read a variable scoped inside the capture branch. So this
+     runs the OP, end to end, ticking until done. A unit test that never crosses
+     the surface the caller uses is not testing the feature. */
+  const big = ["<html><head><link rel=stylesheet href=/css/main.css></head><body>"];
+  for (let i = 0; i < 40; i++) big.push(`<img src="/img/b${i}.png">`);
+  for (let i = 0; i < 10; i++) big.push(`<a href="/page${i}.html">p${i}</a>`);
+  big.push("</body></html>");
+  BODIES.set("/big.html", [big.join(""), "text/html"]);
+  for (let i = 0; i < 40; i++) BODIES.set(`/img/b${i}.png`, [PNG, "image/png"]);
+
+  const ns2 = await mf.getDurableObjectNamespace("STORE");
+  const st2 = ns2.get(ns2.idFromName("bio"));
+  /* Two identical observations, because one is recorded and the second is what
+     makes it stick as the working ceiling. */
+  for (let i = 0; i < 2; i++)
+    await st2.fetch("http://x/recordcapturelimit", { method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ runtime: "subrequests", observed: 18 }) });
+
+  let res = await acquire({ locator: "https://www.oaklandca.gov/big.html", authority: "City", subresources: true });
+  t("the op survives a page that needs a session", res.ok, true);
+  t("it does not finish in one tick", res.snapshot.complete, false);
+  t("and hands back a session to continue with", !!res.snapshot.continuation.session, true);
+  t("saying how, rather than leaving the caller to infer it",
+    /call op=acquire again with/.test(res.snapshot.continuation.how), true);
+
+  const first = res.document.capture.sha256;
+  let ticks = 1, session = res.snapshot.continuation.session;
+  while (session && ticks < 25) {
+    res = await acquire({ locator: "https://www.oaklandca.gov/big.html", authority: "City",
+                          subresources: true, continue: session });
+    if (!res.ok) break;
+    ticks++;
+    session = (res.snapshot.continuation || {}).session || null;
+  }
+  t("it completes across ticks through the op", res.snapshot.complete, true);
+  t("taking more than one", ticks > 1, true);
+  t("the primary capture is the SAME bytes throughout: it is complete from tick one "
+    + "and is never re-fetched", res.document.capture.sha256, first);
+  t("nothing is left outstanding", res.snapshot.outstanding, 0);
+  t("and no session is left behind once it finished", session, null);
+
+  const gone = await acquire({ locator: "https://www.oaklandca.gov/big.html", authority: "City",
+                               subresources: true, continue: "cs_does_not_exist" });
+  t("continuing a session that does not exist is refused by name, not ignored",
+    gone.subresources_skipped.reason, "NO_SUCH_SESSION");
+}
+
 console.log("\n--- it still writes no live state ---");
 t("intake writes nothing, subresources or not",
   (await (await mf.dispatchFetch("http://x/api/?op=stats&token=mem-sub")).json()).result.bundles, 0);
