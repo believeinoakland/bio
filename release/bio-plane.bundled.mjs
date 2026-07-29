@@ -398,6 +398,38 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   PRIMARY KEY (address_norm, capture_sha)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
+-- What the runtime was observed to COST and to ALLOW, measured rather than
+-- assumed. capture_limits holds ceilings found by being refused; this holds
+-- consumption found by measuring, which is a different kind of fact and the only
+-- kind available for CPU.
+--
+-- Exceeding the CPU limit TERMINATES the isolate: there is no catchable error,
+-- so no invocation can ever record its own death. Consumption is therefore
+-- measured on every real run and the ceiling is found by a stepped probe whose
+-- checkpoints survive the kill. peak_ms is the worst single run seen, which is
+-- the number that matters for headroom; a mean would hide the run that dies.
+CREATE TABLE IF NOT EXISTS runtime_observations (
+  metric     TEXT PRIMARY KEY,
+  peak_ms    REAL NOT NULL,
+  peak_at    TEXT NOT NULL,
+  peak_detail TEXT,
+  last_ms    REAL NOT NULL,
+  last_at    TEXT NOT NULL,
+  samples    INTEGER NOT NULL DEFAULT 1,
+  total_ms   REAL NOT NULL DEFAULT 0
+);
+
+-- The stepped CPU probe's durable trail. One row per step COMPLETED, so if the
+-- isolate is killed during step N the table shows N-1 and the next probe knows
+-- the ceiling lies between them. Nothing here is buffered until the end of the
+-- request, on purpose: a buffered checkpoint is exactly the record that would be
+-- lost at the moment it became interesting.
+CREATE TABLE IF NOT EXISTS cpu_probe (
+  step        INTEGER PRIMARY KEY,
+  elapsed_ms  REAL NOT NULL,
+  iterations  INTEGER NOT NULL,
+  at          TEXT NOT NULL
+);
 `;
 
 // src/tokens.mjs
@@ -4563,6 +4595,64 @@ function archiveLocatorFrom(res, requested) {
   return null;
 }
 
+// src/cpu.mjs
+function makeMeter() {
+  const seg = /* @__PURE__ */ Object.create(null);
+  const bump = (label, bytes) => {
+    const e = seg[label] || (seg[label] = { calls: 0, bytes: 0 });
+    e.calls++;
+    if (typeof bytes === "number" && Number.isFinite(bytes)) e.bytes += bytes;
+  };
+  return {
+    /** Run a synchronous block, counting it. `bytes` is the size of what it
+     *  worked on, when that is known and meaningful. */
+    sync(label, fn, bytes) {
+      bump(label, bytes);
+      return fn();
+    },
+    /** Same, for an await that is compute rather than I/O: a crypto digest is
+     *  async in the Workers API and is not a network wait. */
+    async cpuAwait(label, fn, bytes) {
+      bump(label, bytes);
+      return await fn();
+    },
+    report() {
+      const calls = Object.values(seg).reduce((a, e) => a + e.calls, 0);
+      const bytes = Object.values(seg).reduce((a, e) => a + e.bytes, 0);
+      return {
+        work_calls: calls,
+        work_bytes: bytes,
+        segments: { ...seg },
+        measured_ms: null,
+        note: "COUNTS, not times. Cloudflare freezes Date.now() during synchronous execution as a timing-attack defence, so a Worker cannot measure its own compute and any millisecond figure reported from inside one is meaningless. These are the quantities that DRIVE the cost and that would explain a kill afterwards. The ceiling is measured separately, in reference iterations, by op=cpuprobe."
+      };
+    }
+  };
+}
+function burn(iterations) {
+  let x = 1;
+  for (let i = 0; i < iterations; i++) x = (x * 1103515245 + 12345) % 2147483647;
+  return x;
+}
+async function cpuProbe({
+  checkpoint,
+  startStep = 0,
+  maxStep = 40,
+  iterationsPerStep = 2e6,
+  budgetMs = 2e4,
+  now = () => Date.now()
+}) {
+  const t0 = now();
+  let step = startStep;
+  for (; step < maxStep; step++) {
+    burn(iterationsPerStep);
+    const elapsed = now() - t0;
+    await checkpoint(step + 1, elapsed);
+    if (elapsed >= budgetMs) return { completed: step + 1, elapsed_ms: elapsed, reason: "BUDGET_REACHED" };
+  }
+  return { completed: step, elapsed_ms: now() - t0, reason: "MAX_STEP_REACHED" };
+}
+
 // src/subresources.mjs
 var SUBRESOURCE_CAP = 400;
 var SUBRESOURCE_MAX = 8 * 1024 * 1024;
@@ -4991,7 +5081,11 @@ async function captureSubresources({
      because rediscovering it means reading every stylesheet back out of R2 to
      re-derive its url() targets, and on a Legistar page that is thirty storage
      reads spent to learn what one row already knew. */
-  resume = null
+  resume = null,
+  /* Measured, not assumed. Every synchronous compute segment in here is timed so
+     the record can say what a capture actually costs against whatever ceiling
+     the runtime has. Network waits are never inside a segment. */
+  meter = makeMeter()
 }) {
   const noReuse = [];
   const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
@@ -5036,7 +5130,7 @@ async function captureSubresources({
         discovered--;
       }
   } else {
-    queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+    queue = meter.sync("parse_html", () => parseHtmlRefs(html), html.length).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
   }
   const settle = (item, rec) => {
     if (rec) records.push(rec);
@@ -5232,7 +5326,7 @@ async function captureSubresources({
       continue;
     }
     spent += bytes.length;
-    const sha = await sha2562(bytes);
+    const sha = await meter.cpuAwait("hash_subresource", () => sha2562(bytes), bytes.length);
     const { existed } = await put(sha, bytes);
     const ct = (r.contentType || "").split(";")[0].trim();
     const rec = {
@@ -5260,13 +5354,13 @@ async function captureSubresources({
     if (isCss && item.depth < CSS_MAX_DEPTH) {
       let text = "";
       try {
-        text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+        text = meter.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes), bytes.length);
       } catch {
         text = "";
       }
       rec.css = true;
       rec.rewrite = [];
-      for (const u of cssRefs(text))
+      for (const u of meter.sync("parse_css", () => cssRefs(text)))
         queue.push({
           ref: u,
           kind: "css-asset",
@@ -5343,9 +5437,9 @@ async function captureSubresources({
     return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
   };
   const when = when0;
-  const companionText = renderCompanion(html, { resolve, classifyLink, primarySha, when });
-  const companionBytes = new TextEncoder().encode(companionText);
-  const companionSha = await sha2562(companionBytes);
+  const companionText = meter.sync("render_companion", () => renderCompanion(html, { resolve, classifyLink, primarySha, when }), html.length);
+  const companionBytes = meter.sync("encode_companion", () => new TextEncoder().encode(companionText), companionText.length);
+  const companionSha = await meter.cpuAwait("hash_companion", () => sha2562(companionBytes));
   await put(companionSha, companionBytes);
   const fetched = records.filter((r) => r.ok);
   const manifest = {
@@ -5365,6 +5459,7 @@ async function captureSubresources({
     truncated,
     budget_exhausted: budgetHit,
     complete: !platformHit && !truncated && !budgetHit && deferred === 0,
+    compute: meter.report(),
     reuse: {
       reused,
       fetched: fetched.length - reused,
@@ -5419,14 +5514,15 @@ async function captureSubresources({
     link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another bundle is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
     note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."
   };
-  const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
-  const manifestSha = await sha2562(manifestBytes);
+  const manifestBytes = meter.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
+  const manifestSha = await meter.cpuAwait("hash_manifest", () => sha2562(manifestBytes));
   await put(manifestSha, manifestBytes);
   return {
     subresources: records,
     links,
     siteObservations,
     reused,
+    meter,
     /* Everything the next tick needs, and nothing it does not. The primary HTML
        is NOT in here: it is already in the store under primarySha, and carrying
        a copy in session state would be a second, unverified copy of evidence. */
@@ -10227,6 +10323,77 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
   }
   /* ------------------------------------------------------------------ *
+   * Measured runtime cost
+   * ------------------------------------------------------------------ */
+  /** Record what a run cost. peak is kept alongside last because the peak is the
+   *  run that will die first and a mean would hide it. */
+  recordRuntimeObservation({ metric, ms, detail = null, at = null }) {
+    if (!metric || typeof ms !== "number" || !Number.isFinite(ms)) return { recorded: false };
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const cur = [...this.sql.exec(`SELECT * FROM runtime_observations WHERE metric = ?`, metric)][0] || null;
+    if (!cur) {
+      this.sql.exec(
+        `INSERT INTO runtime_observations (metric, peak_ms, peak_at, peak_detail, last_ms, last_at, samples, total_ms)
+         VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
+        metric,
+        ms,
+        now,
+        detail,
+        ms,
+        now,
+        ms
+      );
+      return { metric, peak_ms: ms, last_ms: ms, samples: 1, new_peak: true };
+    }
+    const isPeak = ms > cur.peak_ms;
+    this.sql.exec(
+      `UPDATE runtime_observations SET last_ms = ?, last_at = ?, samples = samples + 1, total_ms = total_ms + ?
+       ${isPeak ? ", peak_ms = ?, peak_at = ?, peak_detail = ?" : ""} WHERE metric = ?`,
+      ...isPeak ? [ms, now, ms, ms, now, detail, metric] : [ms, now, ms, metric]
+    );
+    return {
+      metric,
+      peak_ms: isPeak ? ms : cur.peak_ms,
+      last_ms: ms,
+      samples: cur.samples + 1,
+      new_peak: isPeak
+    };
+  }
+  runtimeObservations() {
+    const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
+    return {
+      metrics: rows.map((r) => ({ ...r, mean_ms: r.samples ? r.total_ms / r.samples : null })),
+      note: "measured wall time across synchronous compute segments, not billed CPU time. peak_ms is the run that would die first if a ceiling were near; a mean would hide it."
+    };
+  }
+  /** Where the stepped probe got to, and therefore what is known about the
+   *  ceiling. A gap between the highest completed step and the next one is the
+   *  interval the ceiling lies in; no gap means the probe has never been cut off
+   *  and the ceiling is above everything tried. */
+  cpuProbeState() {
+    const rows = [...this.sql.exec(`SELECT * FROM cpu_probe ORDER BY step`)];
+    const top = rows[rows.length - 1] || null;
+    return {
+      steps: rows.length,
+      highest_completed: top ? top.step : 0,
+      elapsed_at_highest_ms: top ? top.elapsed_ms : 0,
+      rows,
+      note: rows.length ? "the isolate completed every step listed. If a later probe was killed, the ceiling lies above elapsed_at_highest_ms and below whatever the next step would have cost." : "the probe has never run, so nothing is known about the ceiling by measurement"
+    };
+  }
+  recordCpuProbeStep({ step, elapsedMs, iterations, at = null }) {
+    const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    this.sql.exec(
+      `INSERT INTO cpu_probe (step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?)
+       ON CONFLICT(step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
+      step,
+      elapsedMs,
+      iterations,
+      now
+    );
+    return { step, elapsed_ms: elapsedMs };
+  }
+  /* ------------------------------------------------------------------ *
    * Links: what a document pointed at, and whether we hold that version
    * ------------------------------------------------------------------ */
   recordCapturedLocator({ address, addressNorm, captureSha, retrieved }) {
@@ -10699,6 +10866,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
         siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
         recordsiteassets: () => this.recordSiteAssets(body || {}),
+        recordruntime: () => this.recordRuntimeObservation(body || {}),
+        runtimeobservations: () => this.runtimeObservations(),
+        cpuprobestate: () => this.cpuProbeState(),
+        recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
         recordlinks: () => this.recordLinks(body || {}),
         resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
         linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),
@@ -11071,6 +11242,10 @@ var OPS = {
      falls in depends on what the record holds today, not on what it held when
      the document was captured. */
   links: { classes: ["admin", "member", "probe"], mutating: false },
+  runtime: { classes: ["admin", "member", "probe"], mutating: false },
+  /* Burns compute deliberately to find where the runtime cuts it off. Probe and
+     admin only: it belongs nowhere near a member's session. */
+  cpuprobe: { classes: ["admin", "probe"], mutating: true },
   /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
      and no bundle state, because the doctrine is explicit that no intake path
      writes live state and the daemon and the member are writers like any other. */
@@ -11608,6 +11783,44 @@ var index_default = {
       const out = await livefire(env, storeName);
       return json(out, out.ok ? 200 : 500);
     }
+    if (op === "runtime") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const obs = (await (await st.fetch("http://x/runtimeobservations")).json()).result;
+      const probe = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      const lim = (await (await st.fetch("http://x/capturelimit?runtime=subrequests")).json()).result;
+      return json({
+        ok: true,
+        measured: obs,
+        cpu_probe: probe,
+        subrequests: lim,
+        asymmetry: "a refused subrequest throws and is caught, so the subrequest ceiling is known by having hit it. Exceeding the CPU limit TERMINATES the isolate, so no run can report its own death: consumption is measured on every run and the ceiling is found by op=cpuprobe, whose checkpoints survive the kill."
+      });
+    }
+    if (op === "cpuprobe") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const before = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      const iters = Math.max(1e5, Number(url.searchParams.get("iterations")) || 2e6);
+      const budget = Math.max(50, Number(url.searchParams.get("budget_ms")) || 2e4);
+      const r = await cpuProbe({
+        startStep: before.highest_completed,
+        iterationsPerStep: iters,
+        budgetMs: budget,
+        checkpoint: async (step, elapsed) => {
+          await st.fetch("http://x/recordcpuprobestep", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ step, elapsedMs: elapsed, iterations: iters })
+          });
+        }
+      });
+      const after = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      return json({
+        ok: true,
+        run: r,
+        state: after,
+        note: "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, the trail's highest step is the last one that fit and the ceiling lies just above its elapsed_ms."
+      });
+    }
     if (op === "links") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const capture = url.searchParams.get("capture");
@@ -11873,6 +12086,18 @@ var index_default = {
               }
             }
             try {
+              subs.computeRecord = (await (await stLim.fetch("http://x/recordruntime", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                  metric: "capture_work_bytes",
+                  ms: subs.manifest.compute.work_bytes,
+                  detail: `${subs.manifest.compute.work_calls} compute calls over ${subs.manifest.compute.work_bytes} bytes; ${subs.manifest.counts.fetched} fetched, ${subs.manifest.discovered} discovered`
+                })
+              })).json()).result;
+            } catch {
+            }
+            try {
               await stLim.fetch("http://x/recordcapturedlocator", {
                 method: "POST",
                 headers: { "content-type": "application/json" },
@@ -11977,6 +12202,8 @@ var index_default = {
             outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
             reuse: subs.manifest.reuse,
+            compute: subs.manifest.compute,
+            ...subs.computeRecord ? { compute_recorded: subs.computeRecord } : {},
             ...subs.resumeState ? { continuation: {
               session: sessionId,
               outstanding: subs.manifest.outstanding,

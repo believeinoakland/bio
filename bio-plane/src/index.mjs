@@ -14,6 +14,7 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
+import { cpuProbe } from "./cpu.mjs";
 import { Store } from "./store.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
@@ -191,6 +192,10 @@ const OPS = {
      falls in depends on what the record holds today, not on what it held when
      the document was captured. */
   links:      { classes: ["admin", "member", "probe"],           mutating: false },
+  runtime:    { classes: ["admin", "member", "probe"],           mutating: false },
+  /* Burns compute deliberately to find where the runtime cuts it off. Probe and
+     admin only: it belongs nowhere near a member's session. */
+  cpuprobe:   { classes: ["admin", "probe"],                     mutating: true  },
   /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
      and no bundle state, because the doctrine is explicit that no intake path
      writes live state and the daemon and the member are writers like any other. */
@@ -818,6 +823,47 @@ export default {
        partition a link falls in depends on what the record holds, and the
        record changes, so the answer is computed at read time and never frozen
        into the capture. */
+    /* What runs here have COST, measured. A read, and the honest counterpart to
+       op=capturelimit: that one reports a ceiling found by being refused, this
+       one reports consumption found by measuring, because CPU has no catchable
+       refusal to find a ceiling with. */
+    if (op === "runtime") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const obs = (await (await st.fetch("http://x/runtimeobservations")).json()).result;
+      const probe = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      const lim = (await (await st.fetch("http://x/capturelimit?runtime=subrequests")).json()).result;
+      return json({ ok: true, measured: obs, cpu_probe: probe, subrequests: lim,
+        asymmetry: "a refused subrequest throws and is caught, so the subrequest ceiling is known by "
+                 + "having hit it. Exceeding the CPU limit TERMINATES the isolate, so no run can "
+                 + "report its own death: consumption is measured on every run and the ceiling is "
+                 + "found by op=cpuprobe, whose checkpoints survive the kill." });
+    }
+
+    /* Find the CPU ceiling by walking into it. Each completed step is
+       checkpointed durably BEFORE the next begins, so when the isolate is killed
+       the trail shows the last step that finished and the ceiling is bracketed.
+       Probe class only: it burns compute on purpose and belongs nowhere near a
+       member's session. */
+    if (op === "cpuprobe") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const before = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      const iters = Math.max(100000, Number(url.searchParams.get("iterations")) || 2000000);
+      const budget = Math.max(50, Number(url.searchParams.get("budget_ms")) || 20000);
+      const r = await cpuProbe({
+        startStep: before.highest_completed, iterationsPerStep: iters, budgetMs: budget,
+        checkpoint: async (step, elapsed) => {
+          await st.fetch("http://x/recordcpuprobestep", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ step, elapsedMs: elapsed, iterations: iters }) });
+        },
+      });
+      const after = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      return json({ ok: true, run: r, state: after,
+        note: "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not "
+            + "return, the trail's highest step is the last one that fit and the ceiling lies just "
+            + "above its elapsed_ms." });
+    }
+
     if (op === "links") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const capture = url.searchParams.get("capture");
@@ -1104,6 +1150,19 @@ export default {
             } else if (sessionId) {
               try { await stLim.fetch(`http://x/dropcapturesession?session=${encodeURIComponent(sessionId)}`); } catch {}
             }
+            /* File what this capture COST. Measured every run, because a CPU
+               overrun terminates the isolate and can never report itself: the
+               only way to know the headroom is to know the consumption. */
+            try {
+              subs.computeRecord = (await (await stLim.fetch("http://x/recordruntime", {
+                method: "POST", headers: { "content-type": "application/json" },
+                body: JSON.stringify({ metric: "capture_work_bytes",
+                  ms: subs.manifest.compute.work_bytes,
+                  detail: `${subs.manifest.compute.work_calls} compute calls over `
+                        + `${subs.manifest.compute.work_bytes} bytes; ${subs.manifest.counts.fetched} fetched, `
+                        + `${subs.manifest.discovered} discovered` }),
+              })).json()).result;
+            } catch { /* an unfiled measurement is not a failed capture */ }
             /* File the address this capture holds, so a later document linking
                to it can be resolved. Without this nothing can answer "does the
                store hold a capture of https://..." at all: the register is
@@ -1194,6 +1253,8 @@ export default {
             complete: subs.manifest.complete, outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
             reuse: subs.manifest.reuse,
+            compute: subs.manifest.compute,
+            ...(subs.computeRecord ? { compute_recorded: subs.computeRecord } : {}),
             ...(subs.resumeState ? { continuation: {
               session: sessionId, outstanding: subs.manifest.outstanding,
               ticks: subs.session ? subs.session.ticks : 1,

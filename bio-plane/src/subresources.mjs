@@ -32,6 +32,8 @@
  * when they bite.
  */
 
+import { makeMeter } from "./cpu.mjs";
+
 /** OUR policy ceiling: how many fetches this instance is willing to spend on a
  *  single document. This is a choice about appetite, and it exists because an
  *  adversary-chosen page can name ten thousand addresses.
@@ -716,6 +718,10 @@ export async function captureSubresources({
      re-derive its url() targets, and on a Legistar page that is thirty storage
      reads spent to learn what one row already knew. */
   resume = null,
+  /* Measured, not assumed. Every synchronous compute segment in here is timed so
+     the record can say what a capture actually costs against whatever ceiling
+     the runtime has. Network waits are never inside a segment. */
+  meter = makeMeter(),
 }) {
   /* Why an asset the host has served before was fetched anyway. Recorded so a
      reuse rate that quietly falls to zero is visible rather than mysterious. */
@@ -783,7 +789,7 @@ export async function captureSubresources({
         discovered--;
       }
   } else {
-    queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+    queue = meter.sync("parse_html", () => parseHtmlRefs(html), html.length).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
   }
 
   /* Every path out of the loop lands here, so a reference is recorded once and
@@ -964,7 +970,7 @@ export async function captureSubresources({
       continue;
     }
     spent += bytes.length;
-    const sha = await sha256(bytes);
+    const sha = await meter.cpuAwait("hash_subresource", () => sha256(bytes), bytes.length);
     const { existed } = await put(sha, bytes);
     const ct = (r.contentType || "").split(";")[0].trim();
     const rec = { ...stem, ok: true, status: r.status ?? 200, sha256: sha, bytes: bytes.length,
@@ -982,10 +988,10 @@ export async function captureSubresources({
     const isCss = item.kind === "stylesheet" || ct === "text/css";
     if (isCss && item.depth < CSS_MAX_DEPTH) {
       let text = "";
-      try { text = new TextDecoder("utf-8", { fatal: false }).decode(bytes); } catch { text = ""; }
+      try { text = meter.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes), bytes.length); } catch { text = ""; }
       rec.css = true;
       rec.rewrite = [];
-      for (const u of cssRefs(text))
+      for (const u of meter.sync("parse_css", () => cssRefs(text)))
         queue.push({ ref: u, kind: "css-asset", where: `url() in ${cls.url}`,
                      depth: item.depth + 1, from: cls.url, against: cls.url, cssOwner: rec,
                      /* A stylesheet's own assets carry the stylesheet's region,
@@ -1068,9 +1074,9 @@ export async function captureSubresources({
   };
 
   const when = when0;
-  const companionText = renderCompanion(html, { resolve, classifyLink, primarySha, when });
-  const companionBytes = new TextEncoder().encode(companionText);
-  const companionSha = await sha256(companionBytes);
+  const companionText = meter.sync("render_companion", () => renderCompanion(html, { resolve, classifyLink, primarySha, when }), html.length);
+  const companionBytes = meter.sync("encode_companion", () => new TextEncoder().encode(companionText), companionText.length);
+  const companionSha = await meter.cpuAwait("hash_companion", () => sha256(companionBytes));
   await put(companionSha, companionBytes);
 
   const fetched = records.filter((r) => r.ok);
@@ -1088,6 +1094,7 @@ export async function captureSubresources({
     limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
     discovered, attempted, truncated, budget_exhausted: budgetHit,
     complete: !platformHit && !truncated && !budgetHit && deferred === 0,
+    compute: meter.report(),
     reuse: { reused, fetched: fetched.length - reused, not_reused: noReuse,
              fresh_window_ms: reuseFreshWindowMs, min_documents: reuseMinDocuments,
              note: "entries with fetched_this_capture:false were NOT fetched during this capture; "
@@ -1152,13 +1159,13 @@ export async function captureSubresources({
         + "source failed to serve is part of what the source served that day. Script entries hold "
         + "bytes and are never referenced by the render companion.",
   };
-  const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
-  const manifestSha = await sha256(manifestBytes);
+  const manifestBytes = meter.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
+  const manifestSha = await meter.cpuAwait("hash_manifest", () => sha256(manifestBytes));
   await put(manifestSha, manifestBytes);
 
   return {
     subresources: records,
-    links, siteObservations, reused,
+    links, siteObservations, reused, meter,
     /* Everything the next tick needs, and nothing it does not. The primary HTML
        is NOT in here: it is already in the store under primarySha, and carrying
        a copy in session state would be a second, unverified copy of evidence. */

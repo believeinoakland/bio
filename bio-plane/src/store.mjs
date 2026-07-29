@@ -3973,6 +3973,63 @@ export class Store extends DurableObject {
   }
 
   /* ------------------------------------------------------------------ *
+   * Measured runtime cost
+   * ------------------------------------------------------------------ */
+
+  /** Record what a run cost. peak is kept alongside last because the peak is the
+   *  run that will die first and a mean would hide it. */
+  recordRuntimeObservation({ metric, ms, detail = null, at = null }) {
+    if (!metric || typeof ms !== "number" || !Number.isFinite(ms)) return { recorded: false };
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const cur = [...this.sql.exec(`SELECT * FROM runtime_observations WHERE metric = ?`, metric)][0] || null;
+    if (!cur) {
+      this.sql.exec(
+        `INSERT INTO runtime_observations (metric, peak_ms, peak_at, peak_detail, last_ms, last_at, samples, total_ms)
+         VALUES (?, ?, ?, ?, ?, ?, 1, ?)`, metric, ms, now, detail, ms, now, ms);
+      return { metric, peak_ms: ms, last_ms: ms, samples: 1, new_peak: true };
+    }
+    const isPeak = ms > cur.peak_ms;
+    this.sql.exec(
+      `UPDATE runtime_observations SET last_ms = ?, last_at = ?, samples = samples + 1, total_ms = total_ms + ?
+       ${isPeak ? ", peak_ms = ?, peak_at = ?, peak_detail = ?" : ""} WHERE metric = ?`,
+      ...(isPeak ? [ms, now, ms, ms, now, detail, metric] : [ms, now, ms, metric]));
+    return { metric, peak_ms: isPeak ? ms : cur.peak_ms, last_ms: ms,
+             samples: cur.samples + 1, new_peak: isPeak };
+  }
+
+  runtimeObservations() {
+    const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
+    return { metrics: rows.map((r) => ({ ...r, mean_ms: r.samples ? r.total_ms / r.samples : null })),
+      note: "measured wall time across synchronous compute segments, not billed CPU time. peak_ms is "
+          + "the run that would die first if a ceiling were near; a mean would hide it." };
+  }
+
+  /** Where the stepped probe got to, and therefore what is known about the
+   *  ceiling. A gap between the highest completed step and the next one is the
+   *  interval the ceiling lies in; no gap means the probe has never been cut off
+   *  and the ceiling is above everything tried. */
+  cpuProbeState() {
+    const rows = [...this.sql.exec(`SELECT * FROM cpu_probe ORDER BY step`)];
+    const top = rows[rows.length - 1] || null;
+    return { steps: rows.length, highest_completed: top ? top.step : 0,
+      elapsed_at_highest_ms: top ? top.elapsed_ms : 0,
+      rows,
+      note: rows.length
+        ? "the isolate completed every step listed. If a later probe was killed, the ceiling lies "
+        + "above elapsed_at_highest_ms and below whatever the next step would have cost."
+        : "the probe has never run, so nothing is known about the ceiling by measurement" };
+  }
+
+  recordCpuProbeStep({ step, elapsedMs, iterations, at = null }) {
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    this.sql.exec(
+      `INSERT INTO cpu_probe (step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?)
+       ON CONFLICT(step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
+      step, elapsedMs, iterations, now);
+    return { step, elapsed_ms: elapsedMs };
+  }
+
+  /* ------------------------------------------------------------------ *
    * Links: what a document pointed at, and whether we hold that version
    * ------------------------------------------------------------------ */
 
@@ -4349,6 +4406,10 @@ export class Store extends DurableObject {
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
         siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
         recordsiteassets: () => this.recordSiteAssets(body || {}),
+        recordruntime: () => this.recordRuntimeObservation(body || {}),
+        runtimeobservations: () => this.runtimeObservations(),
+        cpuprobestate: () => this.cpuProbeState(),
+        recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
         recordlinks: () => this.recordLinks(body || {}),
         resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
         linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),

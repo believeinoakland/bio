@@ -32,6 +32,7 @@ import {
   normalizeCitation, fragmentOf,
 } from "../src/subresources.mjs";
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
+import { cpuProbe, makeMeter } from "../src/cpu.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const sha = (b) => createHash("sha256").update(Buffer.from(b)).digest("hex");
@@ -1057,6 +1058,79 @@ console.log("\n--- a derived table that changes shape is rebuilt, not patched --
   t("and nothing holding first-party material is", named.filter((x) => forbidden.includes(x)), []);
   t("the reshape runs BEFORE the schema, or the new index hits the old table",
     src.indexOf("Some tables are DERIVED") < src.indexOf('for (const s of bare.split(";"))'), true);
+}
+
+console.log("\n--- what a capture COSTS is measured, not assumed ---");
+{
+  const c = full.snapshot.compute;
+  /* Times are NOT reported, and that is the point. Cloudflare freezes the clock
+     during synchronous execution, so the first version of this reported zero for
+     every segment of every real capture. Counting work is honest; reporting a
+     millisecond from inside a Worker is a fabrication. */
+  t("no millisecond figure is claimed, because a Worker cannot time itself", c.measured_ms, null);
+  t("work is counted instead", [typeof c.work_calls, typeof c.work_bytes], ["number", "number"]);
+  t("and it is real work, not zero", [c.work_calls > 0, c.work_bytes > 0], [true, true]);
+  t("broken down by segment, so the expensive part is named rather than guessed",
+    Object.keys(c.segments).length > 2, true);
+  t("each segment carrying calls and the bytes it worked on",
+    ["calls", "bytes"].every((k) => k in c.segments.parse_html), true);
+  t("the note says plainly why there are no times",
+    /freezes Date.now\(\) during synchronous execution/.test(c.note), true);
+  t("network waits are never counted: no segment is named for a fetch",
+    Object.keys(c.segments).some((k) => /fetch|network|r2/i.test(k)), false);
+  t("hashing and parsing are, since those are the compute",
+    Object.keys(c.segments).some((k) => k.startsWith("hash_")), true);
+  t("and the measurement reached the store", !!full.snapshot.compute_recorded, true);
+
+  const ns5 = await mf.getDurableObjectNamespace("STORE");
+  const st5 = ns5.get(ns5.idFromName("bio"));
+  const call = async (path, body) => (await st5.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+
+  /* The peak is kept because the peak is the run that dies first. A mean would
+     average away the one capture that matters. */
+  await call("/recordruntime", { metric: "t_metric", ms: 4, detail: "small" });
+  await call("/recordruntime", { metric: "t_metric", ms: 40, detail: "the big one" });
+  let r = (await call("/recordruntime", { metric: "t_metric", ms: 5, detail: "small again" })).result;
+  t("a later smaller run does not lower the peak", r.peak_ms, 40);
+  t("but is still the last observation", r.last_ms, 5);
+  const obs = (await call("/runtimeobservations")).result;
+  const tm = obs.metrics.find((m) => m.metric === "t_metric");
+  t("the peak keeps the detail of the run that set it", tm.peak_detail, "the big one");
+  t("and the mean is offered beside it rather than instead of it",
+    Math.abs(tm.mean_ms - 49 / 3) < 0.001, true);
+
+  /* The probe: checkpoints must be durable BEFORE the next step, because the
+     record of the last completed step is all that survives an isolate kill. */
+  const ps0 = (await call("/cpuprobestate")).result;
+  t("with no probe run, nothing is claimed about the ceiling",
+    [ps0.highest_completed, /nothing is known/.test(ps0.note)], [0, true]);
+
+  const seen = [];
+  const pr = await cpuProbe({ startStep: 0, maxStep: 4, iterationsPerStep: 50000, budgetMs: 1e9,
+    checkpoint: async (step, ms) => { seen.push(step);
+      await call("/recordcpuprobestep", { step, elapsedMs: ms, iterations: 50000 }); } });
+  t("it checkpoints after every step, not once at the end", seen, [1, 2, 3, 4]);
+  t("and reports where it stopped", pr.completed, 4);
+  const ps1 = (await call("/cpuprobestate")).result;
+  t("the trail is durable and readable", ps1.highest_completed, 4);
+  t("elapsed time rises with the steps", ps1.rows[3].elapsed_ms >= ps1.rows[0].elapsed_ms, true);
+  t("and the note says what a surviving trail means",
+    /completed every step listed/.test(ps1.note), true);
+
+  const pr2 = await cpuProbe({ startStep: ps1.highest_completed, maxStep: 6, iterationsPerStep: 50000,
+    budgetMs: 1e9, checkpoint: async (step, ms) => call("/recordcpuprobestep", { step, elapsedMs: ms, iterations: 50000 }) });
+  t("a second probe RESUMES rather than restarting, so the walk converges", pr2.completed, 6);
+
+  const rt = await (await mf.dispatchFetch("http://x/api/?op=runtime&token=mem-sub")).json();
+  t("op=runtime serves it all through one surface", rt.ok, true);
+  t("naming the asymmetry, so nobody reads the CPU number as a ceiling",
+    /TERMINATES the isolate/.test(rt.asymmetry), true);
+  t("and reporting the subrequest ceiling beside it, which IS known by refusal",
+    "subrequests" in rt, true);
+
+  const denied = await (await mf.dispatchFetch("http://x/api/?op=cpuprobe&token=mem-sub&iterations=100000&budget_ms=50")).json();
+  t("a member cannot burn compute on the instance", denied.ok, false);
 }
 
 console.log("\n--- it still writes no live state ---");

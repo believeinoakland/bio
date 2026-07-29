@@ -397,4 +397,36 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   PRIMARY KEY (address_norm, capture_sha)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
+-- What the runtime was observed to COST and to ALLOW, measured rather than
+-- assumed. capture_limits holds ceilings found by being refused; this holds
+-- consumption found by measuring, which is a different kind of fact and the only
+-- kind available for CPU.
+--
+-- Exceeding the CPU limit TERMINATES the isolate: there is no catchable error,
+-- so no invocation can ever record its own death. Consumption is therefore
+-- measured on every real run and the ceiling is found by a stepped probe whose
+-- checkpoints survive the kill. peak_ms is the worst single run seen, which is
+-- the number that matters for headroom; a mean would hide the run that dies.
+CREATE TABLE IF NOT EXISTS runtime_observations (
+  metric     TEXT PRIMARY KEY,
+  peak_ms    REAL NOT NULL,
+  peak_at    TEXT NOT NULL,
+  peak_detail TEXT,
+  last_ms    REAL NOT NULL,
+  last_at    TEXT NOT NULL,
+  samples    INTEGER NOT NULL DEFAULT 1,
+  total_ms   REAL NOT NULL DEFAULT 0
+);
+
+-- The stepped CPU probe's durable trail. One row per step COMPLETED, so if the
+-- isolate is killed during step N the table shows N-1 and the next probe knows
+-- the ceiling lies between them. Nothing here is buffered until the end of the
+-- request, on purpose: a buffered checkpoint is exactly the record that would be
+-- lost at the moment it became interesting.
+CREATE TABLE IF NOT EXISTS cpu_probe (
+  step        INTEGER PRIMARY KEY,
+  elapsed_ms  REAL NOT NULL,
+  iterations  INTEGER NOT NULL,
+  at          TEXT NOT NULL
+);
 `;
