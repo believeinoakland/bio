@@ -28,7 +28,7 @@ import { createHash, webcrypto } from "node:crypto";
 import {
   parseHtmlRefs, srcsetUrls, classifyRef, renderCompanion, captureSubresources,
   placeholderFor, PLACEHOLDER_MISSING, SUBRESOURCE_CAP, CSS_MAX_DEPTH,
-  readLinkWrapper, LINK_TYPES,
+  readLinkWrapper, LINK_TYPES, originOf, fetchPolicy, priorityOf,
 } from "../src/subresources.mjs";
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
 
@@ -114,8 +114,12 @@ console.log("\n--- the parser sees what a browser would go and get ---");
     ["/css/main.css", "http://www.oaklandca.gov/css/insecure.css", "https://localhost/css/internal.css", "https://198.51.100.7/css/internal.css"]);
   t("the favicon", got("icon"), ["favicon.ico"]);
   t("the script, seen and labelled as a script", got("script"), ["/js/analytics.js"]);
-  t("images including both srcset candidates", got("image"),
-    ["/img/chart.png", "/img/1x.png", "/img/1x.png", "/img/2x.png", "data:image/gif;base64,R0lGOD", "/img/gone.png", "/img/huge.png", "/img/poster.png"]);
+  t("images, with the srcset family collapsed to its largest candidate first", got("image"),
+    ["/img/chart.png", "/img/2x.png", "/img/1x.png", "data:image/gif;base64,R0lGOD", "/img/gone.png", "/img/huge.png", "/img/poster.png"]);
+  t("the src fallback is a MEMBER of the family, not a reference of its own",
+    refs.filter(r => r.collapsed).map(r => [r.ref, r.family, r.family_size]), [["/img/1x.png", "srcset", 2]]);
+  t("and the family is a weak signal against evidentiary value",
+    refs.find(r => r.family === "srcset").evidentiary_prior, "weak_against");
   t("css assets from the inline style element and the style attribute",
     got("css-asset").sort(), ["/img/head.png", "/img/inline.png"]);
   t("a commented-out reference is not a request the reader ever made",
@@ -181,8 +185,10 @@ t("and the inline style element's", rec("/img/inline.png").ok, true);
 t("the poster and the media source both", [rec("/img/poster.png").ok, rec("/media/clip.mp4").ok], [true, true]);
 t("identical bytes at two addresses are one stored object",
   stored.get(sha(PNG)).length, PNG.length);
-t("a repeated reference is fetched once",
-  fetched.filter((u) => u.endsWith("/img/1x.png")).length, 1);
+t("a collapsed candidate is never fetched at all",
+  fetched.filter((u) => u.endsWith("/img/1x.png")).length, 0);
+t("and the family's largest is fetched exactly once",
+  fetched.filter((u) => u.endsWith("/img/2x.png")).length, 1);
 
 console.log("\n--- css url() is followed exactly one level, and then stops ---");
 t("the stylesheet's own background image is captured, resolved against the STYLESHEET and not the page",
@@ -235,8 +241,11 @@ console.log("\n--- the render companion is derived, inert, and says so ---");
     /default-src 'none'/.test(c) && /script-src 'none'/.test(c), true);
   t("the stylesheet is a placeholder", c.includes(`href="${placeholderFor(sha(enc(CSS_MAIN)))}"`), true);
   t("the chart image is a placeholder", c.includes(placeholderFor(sha(PNG))), true);
-  t("both srcset candidates are rewritten in place",
-    /srcset="about:capture#[0-9a-f]{64} 1x, about:capture#[0-9a-f]{64} 2x"/.test(c), true);
+  t("the collapsed srcset renders as the ONE candidate whose bytes are held, "
+    + "with its descriptor dropped so the browser cannot choose a dead one",
+    /srcset="about:capture#[0-9a-f]{64}"/.test(c), true);
+  t("and no dead placeholder is left inside a srcset",
+    /srcset="[^"]*about:capture#unavailable[^"]*[ ,]/.test(c), false);
   t("the style attribute's url() is rewritten", /style="background:url\("about:capture#[0-9a-f]{64}"\)"/.test(c), true);
   t("the inline style element's url() is rewritten too",
     /\.inline \{ background: url\("about:capture#[0-9a-f]{64}"\); \}/.test(c), true);
@@ -313,15 +322,96 @@ console.log("\n--- the manifest is what the viewer resolves against ---");
     m.subresources.filter((r) => r.ok).every((r) => /^[0-9a-f]{64}$/.test(r.sha256)), true);
   t("every entry carries the address it came from and when", 
     m.subresources.every((r) => r.url && r.fetched_at), true);
-  t("the counts add up to the records",
-    m.counts.fetched + m.counts.failed + m.counts.refused, m.subresources.length);
+  t("every record lands in exactly one bucket",
+    m.counts.fetched + m.counts.failed + m.counts.refused + m.counts.skipped, m.subresources.length);
   t("it round-trips as JSON", typeof JSON.parse(JSON.stringify(m)), "object");
+}
+
+console.log("\n--- the document boundary: what is the document, and what surrounds it ---");
+{
+  const DOC = `<html><body>
+<header><img src="/chrome/logo.png"><a href="/home">home</a></header>
+<nav><img src="/chrome/menu.png"><a href="/dept">departments</a></nav>
+<div role="navigation"><img src="/chrome/aria.png"></div>
+<article>
+  <img src="/img/evidence-scan.png">
+  <img srcset="/img/photo-400.jpg 400w, /img/photo-1600.jpg 1600w" src="/img/photo-400.jpg">
+  <footer><img src="/img/article-credit.png"></footer>
+</article>
+<aside><img src="/chrome/related.png"></aside>
+<img src="https://adnetwork.example.com/px.gif">
+<script src="https://analytics.example.com/t.js"></script>
+<script src="/js/local.js"></script>
+<link rel="stylesheet" href="/css/site.css">
+<footer><img src="/chrome/foot.png"></footer>
+</body></html>`;
+  const CSSB = `.n{background:url(/chrome/sprite.png)}`;
+  const seen = [];
+  const b = await captureSubresources({
+    html: DOC, base: "https://www.oaklandca.gov/report.html", primarySha: "2".repeat(64),
+    primaryFile: "snapshots/doc.html",
+    fetchOne: async (u) => { seen.push(new URL(u).pathname);
+      return { ok: true, status: 200, bytes: /\.css$/.test(u) ? enc(CSSB) : PNG,
+               contentType: /\.css$/.test(u) ? "text/css" : "image/png" }; },
+    put: async () => ({ existed: false }), sha256: async (x) => sha(x), isPublic: isPublicHttpsLocator,
+  });
+  const R = (p) => b.subresources.find((r) => r.url.endsWith(p));
+
+  t("an image inside <article> is part of the document and is fetched", R("/img/evidence-scan.png").ok, true);
+  t("a <footer> INSIDE the article is still the article's",
+    [R("/img/article-credit.png").region, R("/img/article-credit.png").ok], ["body", true]);
+  t("a logo in the page <header> is outside the document",
+    R("/chrome/logo.png").reason, "OUTSIDE_THE_DOCUMENT");
+  t("and says which region put it there", R("/chrome/logo.png").region_basis, "<header>");
+  t("a declared ARIA landmark counts the same as the element",
+    [R("/chrome/aria.png").reason, R("/chrome/aria.png").region_basis],
+    ["OUTSIDE_THE_DOCUMENT", "role=navigation"]);
+  t("nav, aside, and the page footer likewise",
+    ["/chrome/menu.png", "/chrome/related.png", "/chrome/foot.png"].every(p => R(p).reason === "OUTSIDE_THE_DOCUMENT"), true);
+  t("none of the furniture was ever fetched",
+    seen.some(p => p.startsWith("/chrome/") && p !== "/chrome/sprite.png"), false);
+
+  t("a stylesheet is kept whatever region named it", R("/css/site.css").ok, true);
+  t("and an asset the STYLESHEET names is kept even though it is plainly chrome, because "
+    + "deciding which rules serve which region needs a layout engine",
+    R("/chrome/sprite.png").ok, true);
+
+  t("a third-party tracking pixel is not part of the document",
+    R("adnetwork.example.com/px.gif").reason, "THIRD_PARTY");
+  t("nor is a third-party analytics script",
+    R("analytics.example.com/t.js").reason, "THIRD_PARTY");
+  t("but the page's own script is still held as served",
+    R("/js/local.js").ok, true);
+
+  t("the responsive family collapsed to its largest candidate",
+    [R("/img/photo-1600.jpg").ok, R("/img/photo-400.jpg").reason],
+    [true, "COLLAPSED_SRCSET_FAMILY"]);
+  t("and the collapse is recorded with the family size, not silently dropped",
+    R("/img/photo-400.jpg").family_size, 2);
+
+  t("origin is recorded on every reference",
+    [R("/css/site.css").origin, R("adnetwork.example.com/px.gif").origin], ["same_host", "third_party"]);
+  t("same_site is marked approximate, since it is a guess without a suffix list",
+    originOfCheck(), true);
+
+  t("the manifest tallies what was deliberately not fetched", b.manifest.counts.not_fetched,
+    { outside_the_document: 5, third_party: 2, collapsed_srcset: 1 });
+  t("and every record still lands in exactly one bucket",
+    b.manifest.counts.fetched + b.manifest.counts.failed + b.manifest.counts.refused + b.manifest.counts.skipped,
+    b.subresources.length);
+
+  t("links carry origin too, so a citation across sites is visible as one",
+    b.links.find(l => l.address && l.address.endsWith("/dept")).origin, "same_host");
+}
+function originOfCheck(){
+  const o = originOf("https://data.oaklandca.gov/x", "www.oaklandca.gov");
+  return o.origin === "same_site" && o.approximate === true;
 }
 
 console.log("\n--- the fanout cap truncates visibly ---");
 {
   const many = ["<html><body>"];
-  for (let i = 0; i < 60; i++) many.push(`<img src="/img/n${i}.png">`);
+  for (let i = 0; i < 320; i++) many.push(`<img src="/img/n${i}.png">`);
   many.push("</body></html>");
   const bulk = await captureSubresources({
     html: many.join("\n"), base: BASE, primarySha: "0".repeat(64), primaryFile: "snapshots/bulk.html",
@@ -330,10 +420,55 @@ console.log("\n--- the fanout cap truncates visibly ---");
   });
   t("it stops at the cap", bulk.attempted, SUBRESOURCE_CAP);
   t("it says it truncated rather than pretending it saw everything", bulk.truncated, true);
-  t("it reports how many it actually found", bulk.discovered, 60);
+  t("it reports how many it actually found", bulk.discovered, 320);
   t("and the references past the cap are recorded, not dropped",
-    bulk.subresources.filter((r) => r.reason === "CAP_REACHED").length, 60 - SUBRESOURCE_CAP);
+    bulk.subresources.filter((r) => r.reason === "CAP_REACHED").length, 320 - SUBRESOURCE_CAP);
   t("the truncation reaches the manifest", bulk.manifest.truncated, true);
+}
+
+console.log("\n--- the platform ceiling, and spending it on what renders ---");
+{
+  /* The cap is set below the runtime's own subrequest limit on purpose, so
+     truncation arrives in our vocabulary instead of as a runtime error partway
+     through. This asserts both halves: the order the budget is spent in, and
+     that a platform refusal is never reported as the source failing. */
+  t("the cap sits below the platform's 50-subrequest ceiling", SUBRESOURCE_CAP < 50, true);
+  t("stylesheets outrank everything", priorityOf({ kind: "stylesheet" }) < priorityOf({ kind: "image" }), true);
+  t("a stylesheet's own assets outrank the document's images",
+    priorityOf({ kind: "css-asset" }) < priorityOf({ kind: "image" }), true);
+  t("scripts come last, since they are held and never rendered",
+    priorityOf({ kind: "script" }) > priorityOf({ kind: "image" }), true);
+  t("and furniture yields to the document at the same kind",
+    priorityOf({ kind: "image", region: "furniture" }) > priorityOf({ kind: "image", region: "body" }), true);
+
+  const order = [];
+  const PRI = `<html><body>
+<script src="/a.js"></script><img src="/a.png">
+<link rel="stylesheet" href="/a.css"><link rel="stylesheet" href="/b.css">
+</body></html>`;
+  await captureSubresources({
+    html: PRI, base: BASE, primarySha: "3".repeat(64), primaryFile: "snapshots/p.html",
+    fetchOne: async (u) => { order.push(new URL(u).pathname);
+      return { ok: true, status: 200, bytes: /\.css$/.test(u) ? enc(".a{}") : PNG,
+               contentType: /\.css$/.test(u) ? "text/css" : "image/png" }; },
+    put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
+  });
+  t("so the budget is spent stylesheets, then images, then scripts, whatever the document order was",
+    order, ["/a.css", "/b.css", "/a.png", "/a.js"]);
+
+  const limited = await captureSubresources({
+    html: `<html><body><img src="/x.png"><img src="/y.png"></body></html>`,
+    base: BASE, primarySha: "4".repeat(64), primaryFile: "snapshots/l.html",
+    fetchOne: async () => { throw new Error("Too many subrequests by single Worker invocation."); },
+    put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
+  });
+  t("a runtime subrequest refusal is NOT recorded as the source failing",
+    limited.subresources.every((r) => r.reason === "PLATFORM_LIMIT"), true);
+  t("and says plainly that the source was never asked",
+    /never asked/.test(limited.subresources[0].detail), true);
+  t("the manifest counts it apart from real failures",
+    [limited.manifest.counts.platform_limited, limited.manifest.counts.failed], [2, 0]);
+  t("and flags the whole capture as platform limited", limited.manifest.platform_limited, true);
 }
 
 console.log("\n--- a page with nothing to fetch still produces a usable companion ---");

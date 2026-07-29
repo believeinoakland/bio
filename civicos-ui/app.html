@@ -302,6 +302,12 @@ details.src pre{margin:0;font-family:var(--font-fact);font-size:12px;line-height
 .bincard .fn{font-family:var(--font-fact);font-size:12.5px;word-break:break-all}
 .bincard .why{font-size:12.5px;color:var(--muted);margin-top:6px;max-width:60ch}
 .avwrap{margin-top:10px}
+/* The captured page, shown in place. Bordered and labelled because it is a
+   rendition of somebody else's page sitting inside ours, and the boundary
+   between the record's own voice and a captured artifact should never be
+   ambiguous. Resizable because a captured page has its own idea of height. */
+.capbox{margin-top:10px;border:var(--hair);border-radius:var(--r-1);overflow:hidden;background:#fff;resize:vertical;height:520px;min-height:180px}
+.capframe{border:0;width:100%;height:100%;display:block;background:#fff}
 .avbar{height:4px;background:var(--tint-muted);border-radius:var(--r-1);overflow:hidden;margin:8px 0 6px}
 .avbar i{display:block;height:100%;background:var(--verdigris);width:0;transition:width var(--dur-1) linear}
 .avnote{font-family:var(--font-fact);font-size:11.5px;color:var(--muted)}
@@ -1094,6 +1100,10 @@ function renderTextSource(name, text){
     <div class="body"><pre>${esc(pretty)}</pre></div></details>`;
 }
 let VIEW_REG = [], PRIMARY_K = -1;
+/* The bundle's snapshot manifest, when it carries one: the index the render
+   companion's placeholders resolve against (U7). Set per bundle beside the
+   glossary, cleared with it, so a page without one behaves exactly as before. */
+let SNAP = null;
 function artKind(name){
   if(/\.pdf$/i.test(name)) return {type:"application/pdf", view:"pdf"};
   if(/\.html?$/i.test(name)) return {type:"text/html", view:"html"};
@@ -1136,6 +1146,17 @@ async function fetchParts(parts, onProgress){
   for(const c of chunks){ all.set(c, off); off += c.length; }
   return { ok:true, bytes:all, n:parts.length };
 }
+/* One capture, by hash, hashed again on arrival. The resolver needs the hash
+   back rather than a boolean so a mismatch can be REPORTED with both values,
+   which is what makes a refusal legible instead of merely firm. */
+async function fetchCapture(sha256){
+  const r = await fetch(`${PLANE.base}/api/?` + new URLSearchParams({op:"capture", sha256, ...(PLANE.token?{token:PLANE.token}:{})}));
+  if(!r.ok){ let j=null; try{ j=await r.json(); }catch(_){}
+    return { ok:false, reason:(j&&(j.reason||j.error))||("HTTP "+r.status) }; }
+  const bytes = new Uint8Array(await r.arrayBuffer());
+  const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(x=>x.toString(16).padStart(2,"0")).join("");
+  return { ok:true, bytes, sha };
+}
 function sanitizeCapturedHtml(html){
   return String(html)
     .replace(/<script\b[\s\S]*?<\/script\s*>/gi, "")
@@ -1145,6 +1166,112 @@ function sanitizeCapturedHtml(html){
     .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, "")
     .replace(/(href|src|action|formaction)\s*=\s*(["']?)\s*javascript:[^"'>\s]*\2/gi, '$1=$2#$2');
 }
+/* U7. Resolving a snapshot manifest into a page that renders faithfully and
+   cannot reach the network.
+
+   Every part is fetched through op=capture BY HASH and verified against that
+   hash before anything touches the screen, exactly as the primary artifact is.
+   A part that fails is not silently dropped: the whole render refuses, because
+   a page missing its stylesheet renders as a DIFFERENT page and a viewer that
+   quietly showed it would be misrepresenting what the source served.
+
+   Subresources are inlined as data: URIs rather than blob: URLs. That is
+   forced, not stylistic. The frame is sandboxed with neither allow-scripts nor
+   allow-same-origin, which gives it an opaque origin, and a blob: URL minted by
+   this document cannot be read from an opaque origin. data: works there, costs
+   about a third in base64, and keeps the frame's isolation absolute rather than
+   traded away for convenience.
+
+   Order matters and is the whole reason this is two passes. A stylesheet's own
+   url() targets must already have their data: URIs before the stylesheet itself
+   is encoded, or the CSS gets inlined still pointing at placeholders. */
+const B64 = (bytes) => { let s=""; for(const b of bytes) s += String.fromCharCode(b); return btoa(s); };
+const dataUri = (ct, bytes) => `data:${ct||"application/octet-stream"};base64,${B64(bytes)}`;
+
+/* Substitute in CSS text using the manifest's own rewrite list, which maps the
+   reference as the stylesheet WROTE it to the capture it resolved to. The
+   stylesheet's stored bytes are never modified: this runs on a verified copy at
+   render time, which is what lets the raw capture stay raw. */
+function rewriteCssRefs(css, rewrite, uriBySha){
+  let out = String(css);
+  for(const w of (rewrite||[])){
+    const to = w.sha256 && uriBySha[w.sha256] ? uriBySha[w.sha256] : "about:capture#unavailable";
+    const lit = String(w.ref).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    out = out.replace(new RegExp(`url\\(\\s*(['"]?)${lit}\\1\\s*\\)`, "g"), `url("${to}")`);
+    out = out.replace(new RegExp(`@import\\s+(['"])${lit}\\1`, "g"), `@import url("${to}")`);
+  }
+  return out;
+}
+
+/* The four link partitions, rendered so a reader can tell them apart and none
+   of them can navigate out of the record without saying so. `intra` resolves
+   to bytes already on screen; `deferred` carries an address the record may or
+   may not hold and is marked as leaving audited content; `refused` is dead. */
+function markLinks(html, uriBySha){
+  return String(html).replace(/<a\b([^>]*)>/gi, (whole, attrs) => {
+    /* The boundary matters: the companion writes data-bio-href BEFORE href, and
+       a naive /href=/ matches the data attribute first, reading the address
+       instead of the wrapper and leaving the real href untouched. */
+    const m = /(?<![-\w])href\s*=\s*(["'])(.*?)\1/i.exec(attrs);
+    if(!m) return whole;
+    const href = m[2];
+    if(href.startsWith("about:capture#")){
+      const u = uriBySha[href.slice(14)];
+      return whole.replace(m[0], `href="${u||"about:capture#unavailable"}"`);
+    }
+    if(href.startsWith("about:link#")){
+      const dead = whole.replace(m[0], `href="about:blank"`);
+      return href === "about:link#refused"
+        ? dead.replace(/<a\b/i, `<a data-bio-state="refused" title="This link was refused at capture: it was not an address the record will carry."`)
+        : dead.replace(/<a\b/i, `<a data-bio-state="offrecord" title="Following this leaves audited content. The record cannot vouch for what is at this address now."`);
+    }
+    return whole;
+  });
+}
+
+async function resolveSnapshot(man, fetchCapture, onProgress){
+  const parts = (man.subresources||[]).filter(s => s.ok && s.sha256 && s.kind !== "script");
+  const uriBySha = Object.create(null);
+  const cssParts = [];
+  let done = 0;
+  const step = () => { if(onProgress) onProgress(++done, parts.length + 1); };
+
+  /* Pass one: everything that is not a stylesheet. */
+  for(const s of parts){
+    const r = await fetchCapture(s.sha256);
+    if(!r.ok) return { ok:false, reason:r.reason||"PART_UNAVAILABLE", part:s.url, sha:s.sha256 };
+    if(r.sha !== s.sha256)
+      return { ok:false, reason:"BYTES_DO_NOT_MATCH_THE_RECORD", part:s.url, expected:s.sha256, got:r.sha };
+    if(s.css){ cssParts.push([s, r.bytes]); step(); continue; }
+    uriBySha[s.sha256] = dataUri(s.content_type, r.bytes);
+    step();
+  }
+  /* Pass two: stylesheets, once their own targets have addresses. */
+  for(const [s, bytes] of cssParts){
+    const css = rewriteCssRefs(new TextDecoder().decode(bytes), s.rewrite, uriBySha);
+    uriBySha[s.sha256] = dataUri("text/css", new TextEncoder().encode(css));
+  }
+
+  /* The companion itself, verified like everything else. */
+  const c = await fetchCapture(man.render_sha256);
+  if(!c.ok) return { ok:false, reason:c.reason||"COMPANION_UNAVAILABLE", part:man.render, sha:man.render_sha256 };
+  if(c.sha !== man.render_sha256)
+    return { ok:false, reason:"BYTES_DO_NOT_MATCH_THE_RECORD", part:man.render, expected:man.render_sha256, got:c.sha };
+  step();
+
+  let html = new TextDecoder().decode(c.bytes);
+  html = html.replace(/about:capture#([0-9a-f]{64})/g, (whole, sha) => uriBySha[sha] || whole);
+  html = markLinks(html, uriBySha);
+  /* The companion's own policy names blob:; the inlining above makes the bytes
+     data:. Widening it here rather than loosening it in the stored artifact
+     keeps the file's own guarantee intact for anyone reading it directly. */
+  html = html.replace(/(content=")([^"]*default-src 'none'[^"]*)(")/i,
+    (w, a, policy, z) => a + policy.replace(/blob:/g, "blob: data:") + z);
+  return { ok:true, html, resolved:parts.length,
+           unresolved:(man.subresources||[]).filter(s => !s.ok).length,
+           scripts:(man.counts && man.counts.scripts_held_unreferenced) || 0 };
+}
+
 async function openArtifact(k){
   /* Like following any link: a tab opens for what a browser renders, a
      download starts for what it does not. Opened synchronously so popup
@@ -1178,12 +1305,42 @@ async function openArtifact(k){
        before the bytes leave this function, and the tab is severed from its
        opener. The RAW capture stays untouched in the record; this is a
        display rendering, and the download below is the raw verified bytes.
-       Fidelity of what renders is the capture pipeline's burden
-       (CAPTURE-FIDELITY.md). */
-    const shown = new Blob([sanitizeCapturedHtml(new TextDecoder().decode(res.bytes))], {type:"text/html"});
-    const su = URL.createObjectURL(shown);
-    if(win) win.location = su;
-    note(`<div class="avok">\u2713 verified against the record \u00b7 rendered without scripts</div><div class="avnote"><a href="${u}" download="${esc(fname)}">Download the raw capture</a></div>`);
+
+       U7: when the bundle carries a snapshot manifest for THIS artifact, the
+       page is rendered from its render companion with every stylesheet and
+       image resolved through op=capture and verified, so what shows is the
+       page as the source served it rather than bare markup. Without a
+       manifest the old defanged path still applies, which is what a capture
+       taken before 0.36.0 gets. */
+    const man = SNAP && SNAP.of === a.base ? SNAP : null;
+    let shownHtml = null, badge = "\u2713 verified against the record \u00b7 rendered without scripts";
+    if(man){
+      const res = await resolveSnapshot(man, fetchCapture, (i,n)=>{
+        note(`<div class="avbar"><i style="width:${Math.round(i/n*100)}%"></i></div><div class="avnote">Resolving the capture \u00b7 part ${i} of ${n}, each verified</div>`);
+      });
+      if(!res.ok){
+        if(win) try{ win.close(); }catch(_){}
+        note(`<div class="teach"><b>REFUSING TO RENDER \u00b7 ${esc(res.reason)}</b><div style="margin-top:4px">${esc(res.part||"")}</div>${res.expected?`<div class="mono" style="margin-top:4px;font-size:11px">the record says ${esc(shaShort(res.expected))}\u2026 \u00b7 the bytes hash to ${esc(shaShort(res.got))}\u2026</div>`:""}<div style="margin-top:6px">A page missing a part it was captured with renders as a different page, so it is not shown at all. <a href="${u}" download="${esc(fname)}">Download the raw capture</a>.</div></div>`);
+        return;
+      }
+      shownHtml = res.html;
+      badge = `\u2713 ${res.resolved} supporting file${res.resolved===1?"":"s"} verified against the record`
+            + (res.scripts?` \u00b7 ${res.scripts} script${res.scripts===1?"":"s"} held but not run`:"")
+            + (res.unresolved?` \u00b7 ${res.unresolved} the source did not serve`:"");
+    } else {
+      shownHtml = sanitizeCapturedHtml(new TextDecoder().decode(res.bytes));
+    }
+    /* Sandboxed with neither allow-scripts nor allow-same-origin, so the frame
+       has an opaque origin and can neither run code nor read anything of this
+       document's. srcdoc rather than a URL because an opaque origin cannot
+       fetch a blob: this document minted. */
+    const frame = `<iframe class="capframe" sandbox="" referrerpolicy="no-referrer" srcdoc="${esc(shownHtml)}"></iframe>`;
+    if(win){
+      win.document.open();
+      win.document.write(`<!doctype html><meta charset="utf-8"><title>${esc(fname)}</title><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style>${frame}`);
+      win.document.close();
+    }
+    note(`<div class="avok">${esc(badge)}</div><div class="capbox">${frame}</div><div class="avnote"><a href="${u}" download="${esc(fname)}">Download the raw capture</a></div>`);
     return;
   } else {
     const t = document.createElement("a"); t.href = u; t.download = fname;
@@ -1288,6 +1445,12 @@ async function openBundle(id, fromNav){
     let pageGloss = null;
     try{ if(typeof img["data/glossary.json"]==="string") pageGloss = JSON.parse(img["data/glossary.json"]); }catch(_){}
     setGloss(pageGloss);
+
+    SNAP = null;
+    try{ if(typeof img["data/snapshot-manifest.json"]==="string"){
+      const m = JSON.parse(img["data/snapshot-manifest.json"]);
+      if(m && m.render_sha256 && Array.isArray(m.subresources)) SNAP = m;
+    } }catch(_){ SNAP = null; }
 
     /* The document's own facts, computed BEFORE the seals so the seals can
        speak them: who released it, which cases lean on it, when the monitor

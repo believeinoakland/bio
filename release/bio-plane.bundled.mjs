@@ -4385,13 +4385,13 @@ function archiveLocatorFrom(res, requested) {
 }
 
 // src/subresources.mjs
-var SUBRESOURCE_CAP = 40;
+var SUBRESOURCE_CAP = 45;
 var SUBRESOURCE_MAX = 8 * 1024 * 1024;
-var SUBRESOURCE_BUDGET = 32 * 1024 * 1024;
+var SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
 var CSS_MAX_DEPTH = 2;
 var STRIPPED_ELEMENTS = ["script", "iframe", "object", "embed", "applet", "frame", "frameset", "noembed"];
 var REFUSED_SCHEMES = ["javascript:", "data:", "blob:", "about:", "mailto:", "tel:", "file:", "ftp:", "ws:", "wss:", "chrome:", "chrome-extension:", "view-source:"];
-var TAG_RE = /<([a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+var TAG_RE = /<(\/?[a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
 var ATTR_RE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 var CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/gi;
 var CSS_IMPORT_RE = /@import\s+(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)|"([^"]*)"|'([^']*)')/gi;
@@ -4466,17 +4466,57 @@ function cssRefs(css) {
   }
   return out;
 }
+var FURNITURE_TAGS = /* @__PURE__ */ new Set(["nav", "footer", "header", "aside"]);
+var FURNITURE_ROLES = /* @__PURE__ */ new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
+var BODY_TAGS = /* @__PURE__ */ new Set(["article", "main"]);
+function pickSrcsetCandidate(cands) {
+  const score = (raw) => {
+    const d = /\s(\d+(?:\.\d+)?)([wx])\s*$/.exec(raw || "");
+    if (!d) return 1;
+    return d[2] === "w" ? Number(d[1]) : Number(d[1]) * 1e3;
+  };
+  const sorted = [...cands].sort((a, b) => score(b.raw) - score(a.raw));
+  return { pick: sorted[0], rest: sorted.slice(1) };
+}
 function parseHtmlRefs(html) {
   const src = String(html).replace(COMMENT_RE, "");
   const refs = [];
-  const add = (ref, kind, where) => {
-    if (ref && ref.trim()) refs.push({ ref: ref.trim(), kind, where });
+  const region = [];
+  const here = () => {
+    const body = region.find((r) => r.region === "body");
+    if (body) return body;
+    const furn = region[region.length - 1];
+    return furn || { region: "body", basis: "default" };
+  };
+  const add = (ref, kind, where, extra) => {
+    if (!ref || !ref.trim()) return;
+    const r = here();
+    refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...extra || {} });
   };
   TAG_RE.lastIndex = 0;
   let m;
   while (m = TAG_RE.exec(src)) {
-    const tag = m[1].toLowerCase();
+    const raw = m[1];
+    const closing = raw.startsWith("/");
+    const tag = (closing ? raw.slice(1) : raw).toLowerCase();
+    if (closing) {
+      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
+        for (let i = region.length - 1; i >= 0; i--)
+          if (region[i].tag === tag) {
+            region.splice(i, 1);
+            break;
+          }
+      }
+      continue;
+    }
     const as = attrsOf(m[2] || "");
+    {
+      const role = (attr(as, "role") || "").toLowerCase().trim();
+      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
+      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
+      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
+      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
+    }
     const inlineStyle = attr(as, "style");
     if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
     if (tag === "link") {
@@ -4497,12 +4537,24 @@ function parseHtmlRefs(html) {
     if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
       if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
       const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
+      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
+      if (ss) {
+        const rawCands = ss.split(",").map((x) => x.trim()).filter(Boolean);
+        const cands = srcsetUrls(ss).map((u, i) => ({ url: u, raw: rawCands[i] || u }));
+        const fb = attr(as, "src");
+        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, raw: fb });
+        const { pick, rest } = pickSrcsetCandidate(cands);
+        const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
+        if (pick) add(pick.url, kind, `${tag}[srcset]`, meta);
+        for (const r of rest) add(r.url, kind, `${tag}[srcset]`, { ...meta, collapsed: true });
+        const po = attr(as, "poster");
+        if (po) add(po, "image", `${tag}[poster]`);
+        continue;
+      }
       for (const n of ["src", "poster", "href", "xlink:href"]) {
         const v = attr(as, n);
         if (v) add(v, n === "poster" ? "image" : kind, `${tag}[${n}]`);
       }
-      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
-      if (ss) for (const u of srcsetUrls(ss)) add(u, kind, `${tag}[srcset]`);
       continue;
     }
     if (tag === "script") {
@@ -4586,16 +4638,25 @@ function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
         continue;
       }
       if (a.name === "srcset" || a.name === "imagesrcset") {
-        const parts = [];
+        const live = [];
+        let anyDead = false;
         for (const cand of a.value.split(",")) {
           const trimmed = cand.trim();
           if (!trimmed) continue;
           const bits = trimmed.split(/\s+/);
           const t = resolve(bits[0], "image");
+          if (t === PLACEHOLDER_MISSING) {
+            anyDead = true;
+            continue;
+          }
           bits[0] = t === null ? bits[0] : t;
-          parts.push(bits.join(" "));
+          live.push(bits.join(" "));
         }
-        put(parts.join(", "));
+        if (!live.length) {
+          put(PLACEHOLDER_MISSING);
+          continue;
+        }
+        put(live.length === 1 && anyDead ? live[0].split(/\s+/)[0] : live.join(", "));
         continue;
       }
       if (a.name === "href" || a.name === "src" || a.name === "poster" || a.name === "xlink:href" || a.name === "data") {
@@ -4623,6 +4684,45 @@ function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
   }
   return head + src;
 }
+function originOf(url, baseHost) {
+  let h;
+  try {
+    h = new URL(url).hostname.toLowerCase();
+  } catch {
+    return { origin: "unknown", host: null };
+  }
+  const b = String(baseHost || "").toLowerCase();
+  if (h === b) return { origin: "same_host", host: h };
+  const tail = (x) => x.split(".").slice(-2).join(".");
+  if (b && tail(h) === tail(b)) return { origin: "same_site", host: h, approximate: true };
+  return { origin: "third_party", host: h };
+}
+var FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
+var priorityOf = (ref) => (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
+function fetchPolicy(ref, origin) {
+  if (ref.collapsed)
+    return {
+      fetch: false,
+      reason: "COLLAPSED_SRCSET_FAMILY",
+      detail: `one of ${ref.family_size} responsive candidates for one picture; the largest is captured`
+    };
+  if (ref.kind === "stylesheet" || ref.kind === "css-asset" || ref.kind === "font" || ref.kind === "icon")
+    return { fetch: true, why: "layout" };
+  if (origin === "third_party" && (ref.kind === "script" || ref.kind === "image" || ref.kind === "media"))
+    return {
+      fetch: false,
+      reason: "THIRD_PARTY",
+      detail: "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document"
+    };
+  if (ref.kind === "script") return { fetch: true, why: "served_with_the_page" };
+  if (ref.region === "furniture")
+    return {
+      fetch: false,
+      reason: "OUTSIDE_THE_DOCUMENT",
+      detail: `found in ${ref.region_basis}, which belongs to the site rather than to this document`
+    };
+  return { fetch: true, why: "in_the_document" };
+}
 var linkWrapper = {
   anchor: (frag) => frag,
   intra: (sha) => `about:capture#${sha}`,
@@ -4648,7 +4748,13 @@ async function captureSubresources({
   const bySha = /* @__PURE__ */ new Map();
   const byUrl = /* @__PURE__ */ new Map();
   const refToUrl = /* @__PURE__ */ new Map();
-  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false;
+  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
+  let baseHost = null;
+  try {
+    baseHost = new URL(base).hostname;
+  } catch {
+    baseHost = null;
+  }
   const queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
   const settle = (item, rec) => {
     if (rec) records.push(rec);
@@ -4656,17 +4762,31 @@ async function captureSubresources({
       item.cssOwner.rewrite.push({ ref: item.ref, sha256: rec && rec.ok ? rec.sha256 : null });
   };
   while (queue.length) {
-    const item = queue.shift();
+    let at_ = 0, best = priorityOf(queue[0]);
+    for (let i = 1; i < queue.length; i++) {
+      const p = priorityOf(queue[i]);
+      if (p < best) {
+        best = p;
+        at_ = i;
+      }
+    }
+    const item = queue.splice(at_, 1)[0];
     discovered++;
     const cls = classifyRef(item.ref, item.against, isPublic);
     if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
     const at = stamp();
+    const org = cls.ok ? originOf(cls.url, baseHost) : { origin: "unknown", host: null };
     const stem = {
       url: cls.ok ? cls.url : item.ref,
       kind: item.kind,
       via: item.where,
       from: item.from,
       depth: item.depth,
+      region: item.region || "body",
+      region_basis: item.region_basis || "default",
+      ...org,
+      ...item.family ? { family: item.family, family_size: item.family_size } : {},
+      ...item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {},
       fetched_at: at
     };
     if (!cls.ok) {
@@ -4677,6 +4797,18 @@ async function captureSubresources({
         reason: cls.reason,
         ...cls.scheme ? { scheme: cls.scheme } : {},
         detail: cls.reason === "REFUSED_SCHEME" ? `a ${cls.scheme} reference is not something this surface fetches` : "the address is not public https, and the fence that guards the primary locator guards this one"
+      });
+      continue;
+    }
+    const pol = fetchPolicy(item, org.origin);
+    if (!pol.fetch) {
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        fetched: false,
+        reason: pol.reason,
+        detail: pol.detail
       });
       continue;
     }
@@ -4708,7 +4840,15 @@ async function captureSubresources({
     try {
       r = await fetchOne(cls.url);
     } catch (e) {
-      r = { ok: false, status: 0, reason: "FETCH_FAILED", detail: String(e && e.message || e) };
+      const msg = String(e && e.message || e);
+      const platform = /too many subrequests|subrequest limit|exceeded.*limit/i.test(msg);
+      r = {
+        ok: false,
+        status: 0,
+        reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
+        detail: platform ? "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered" : msg
+      };
+      if (platform) platformHit = true;
     }
     if (!r || !r.ok) {
       const rec2 = {
@@ -4769,7 +4909,11 @@ async function captureSubresources({
           depth: item.depth + 1,
           from: cls.url,
           against: cls.url,
-          cssOwner: rec
+          cssOwner: rec,
+          /* A stylesheet's own assets carry the stylesheet's region,
+             not the region of whatever tag happened to be open. */
+          region: rec.region,
+          region_basis: rec.region_basis
         });
     }
     settle(item, rec);
@@ -4797,7 +4941,14 @@ async function captureSubresources({
       const key = `${type}\0${address || raw}`;
       if (!seenLink.has(key)) {
         seenLink.set(key, true);
-        links.push({ ref: raw, type, address: address || null, as_of: when0, ...extra });
+        links.push({
+          ref: raw,
+          type,
+          address: address || null,
+          as_of: when0,
+          ...address ? originOf(address, baseHost) : {},
+          ...extra
+        });
       }
       return { type, address, ...extra };
     };
@@ -4841,12 +4992,29 @@ async function captureSubresources({
     attempted,
     truncated,
     budget_exhausted: budgetHit,
+    platform_limited: platformHit,
     counts: {
       fetched: fetched.length,
       failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
+      platform_limited: records.filter((r) => r.reason === "PLATFORM_LIMIT").length,
       refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
+      /* Deliberately not fetched: policy skips, plus the two bounds. Every
+         record lands in exactly one of fetched/failed/refused/skipped, and the
+         subresources test asserts that identity, so a new reason that forgets
+         to name a bucket fails rather than quietly vanishing from the totals. */
+      skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY" || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED" || r.reason === "PLATFORM_LIMIT")).length,
       scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
       bytes: spent,
+      not_fetched: {
+        outside_the_document: records.filter((r) => r.reason === "OUTSIDE_THE_DOCUMENT").length,
+        third_party: records.filter((r) => r.reason === "THIRD_PARTY").length,
+        collapsed_srcset: records.filter((r) => r.reason === "COLLAPSED_SRCSET_FAMILY").length
+      },
+      by_origin: {
+        same_host: records.filter((r) => r.origin === "same_host").length,
+        same_site: records.filter((r) => r.origin === "same_site").length,
+        third_party: records.filter((r) => r.origin === "third_party").length
+      },
       links: {
         anchor: links.filter((l) => l.type === "anchor").length,
         intra: links.filter((l) => l.type === "intra").length,

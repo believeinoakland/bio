@@ -32,12 +32,25 @@
  * when they bite.
  */
 
-/** Attempted fetches per capture. Refusals are free and are not counted. */
-export const SUBRESOURCE_CAP = 40;
+/** Attempted fetches per capture. Refusals and policy skips are free and are
+ *  not counted.
+ *
+ *  This number is NOT ours to choose. A Worker invocation has a hard subrequest
+ *  limit imposed by the platform, and on this account it is 50. Measured
+ *  2026-07-28: a Legistar calendar page discovered 309 subresources, and the
+ *  fetches died at exactly 50 with "Too many subrequests by single Worker
+ *  invocation". Raising this constant to 300 changed nothing at all, because
+ *  the ceiling was never here.
+ *
+ *  45 leaves headroom for the primary fetch and any redirect, and it is set
+ *  DELIBERATELY BELOW the platform limit so that truncation is ours, reported
+ *  in our own vocabulary, rather than arriving as a runtime error partway
+ *  through with half the page captured. */
+export const SUBRESOURCE_CAP = 45;
 /** Bytes for any one subresource. A stylesheet or an image, not a video. */
 export const SUBRESOURCE_MAX = 8 * 1024 * 1024;
 /** Bytes across all subresources of one capture. */
-export const SUBRESOURCE_BUDGET = 32 * 1024 * 1024;
+export const SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
 
 /* Depth: the primary HTML is depth 0. Everything it names directly is depth 1.
  * A stylesheet at depth 1 has its own url() and @import targets followed once,
@@ -57,7 +70,7 @@ const STRIPPED_ELEMENTS = ["script", "iframe", "object", "embed", "applet", "fra
 /** Schemes that are not fetched, recorded by name so the refusal is legible. */
 const REFUSED_SCHEMES = ["javascript:", "data:", "blob:", "about:", "mailto:", "tel:", "file:", "ftp:", "ws:", "wss:", "chrome:", "chrome-extension:", "view-source:"];
 
-const TAG_RE = /<([a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+const TAG_RE = /<(\/?[a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
 const ATTR_RE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 const CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/gi;
 const CSS_IMPORT_RE = /@import\s+(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)|"([^"]*)"|'([^']*)')/gi;
@@ -141,6 +154,40 @@ function cssRefs(css) {
   return out;
 }
 
+/* Where in the page a reference was found. This is the mechanical half of the
+ * document-boundary question: which elements TOGETHER make up the document, and
+ * which sit outside it belonging to the site rather than to this document.
+ *
+ *   body      inside <article>/<main>, or in no furniture region at all
+ *   furniture inside <nav>/<footer>/<header>/<aside>, or an ARIA landmark
+ *             saying the same thing: the site's, not this document's
+ *
+ * Declared beats inferred, so an explicit role= is trusted over element name,
+ * and the basis is recorded rather than only the conclusion. */
+const FURNITURE_TAGS = new Set(["nav", "footer", "header", "aside"]);
+const FURNITURE_ROLES = new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
+const BODY_TAGS = new Set(["article", "main"]);
+
+/** srcset families: one picture served at eight widths is ONE reference to the
+ *  record, not eight. The largest candidate is kept, because a capture should
+ *  hold the best rendition the source offered; the rest are recorded as seen
+ *  and not fetched, so the page's own responsive set is still described and
+ *  nothing is silently dropped.
+ *
+ *  A responsive family is also a WEAK SIGNAL AGAINST evidentiary value. A
+ *  scanned document or a photograph entered as evidence is served at one size;
+ *  a CMS generating eight widths is managing presentation. Recorded as a prior
+ *  on the reference, never as a verdict about it. */
+function pickSrcsetCandidate(cands) {
+  const score = (raw) => {
+    const d = /\s(\d+(?:\.\d+)?)([wx])\s*$/.exec(raw || "");
+    if (!d) return 1;
+    return d[2] === "w" ? Number(d[1]) : Number(d[1]) * 1000;
+  };
+  const sorted = [...cands].sort((a, b) => score(b.raw) - score(a.raw));
+  return { pick: sorted[0], rest: sorted.slice(1) };
+}
+
 /** Every reference an HTML document makes to something it needs in order to
  *  look like itself, in document order, each carrying what kind of thing it is
  *  and where in the source it was found. Comments are stripped first: a
@@ -149,13 +196,46 @@ function cssRefs(css) {
 export function parseHtmlRefs(html) {
   const src = String(html).replace(COMMENT_RE, "");
   const refs = [];
-  const add = (ref, kind, where) => { if (ref && ref.trim()) refs.push({ ref: ref.trim(), kind, where }); };
+  /* A stack, not a flag, and body WINS OVER furniture anywhere on it.
+     <footer> inside <article> is the article's byline, not the site's footer:
+     HTML scopes <footer> to its nearest sectioning ancestor, so once inside
+     <article> or <main> everything is the document's. Erring toward inclusion
+     is also the safe direction, since the cost of keeping a logo is bytes and
+     the cost of dropping a figure is evidence. */
+  const region = [];
+  const here = () => {
+    const body = region.find((r) => r.region === "body");
+    if (body) return body;
+    const furn = region[region.length - 1];
+    return furn || { region: "body", basis: "default" };
+  };
+  const add = (ref, kind, where, extra) => {
+    if (!ref || !ref.trim()) return;
+    const r = here();
+    refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...(extra || {}) });
+  };
 
   TAG_RE.lastIndex = 0;
   let m;
   while ((m = TAG_RE.exec(src))) {
-    const tag = m[1].toLowerCase();
+    const raw = m[1];
+    const closing = raw.startsWith("/");
+    const tag = (closing ? raw.slice(1) : raw).toLowerCase();
+    if (closing) {
+      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
+        for (let i = region.length - 1; i >= 0; i--)
+          if (region[i].tag === tag) { region.splice(i, 1); break; }
+      }
+      continue;
+    }
     const as = attrsOf(m[2] || "");
+    {
+      const role = (attr(as, "role") || "").toLowerCase().trim();
+      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
+      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
+      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
+      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
+    }
     const inlineStyle = attr(as, "style");
     if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
 
@@ -177,12 +257,28 @@ export function parseHtmlRefs(html) {
     if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
       if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
       const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
+      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
+      /* src is a MEMBER of the family when srcset is present: it is the
+         fallback rendition of the same picture, and treating it separately
+         fetches the small one alongside the large one, which is the exact
+         duplication collapsing exists to prevent. */
+      if (ss) {
+        const rawCands = ss.split(",").map((x) => x.trim()).filter(Boolean);
+        const cands = srcsetUrls(ss).map((u, i) => ({ url: u, raw: rawCands[i] || u }));
+        const fb = attr(as, "src");
+        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, raw: fb });
+        const { pick, rest } = pickSrcsetCandidate(cands);
+        const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
+        if (pick) add(pick.url, kind, `${tag}[srcset]`, meta);
+        for (const r of rest) add(r.url, kind, `${tag}[srcset]`, { ...meta, collapsed: true });
+        const po = attr(as, "poster");
+        if (po) add(po, "image", `${tag}[poster]`);
+        continue;
+      }
       for (const n of ["src", "poster", "href", "xlink:href"]) {
         const v = attr(as, n);
         if (v) add(v, n === "poster" ? "image" : kind, `${tag}[${n}]`);
       }
-      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
-      if (ss) for (const u of srcsetUrls(ss)) add(u, kind, `${tag}[srcset]`);
       continue;
     }
     if (tag === "script") {
@@ -295,16 +391,25 @@ export function renderCompanion(html, { resolve, classifyLink, primarySha, when 
       if (a.name === "style") { put(rewriteCssText(a.value, (u) => resolve(u, "css-asset"))); continue; }
 
       if (a.name === "srcset" || a.name === "imagesrcset") {
-        const parts = [];
+        /* Collapsing a responsive family leaves the other candidates without
+           bytes. Leaving them in the srcset as dead placeholders is worse than
+           useless: the browser picks by viewport and pixel density, so at 1x it
+           would choose the candidate we deliberately did NOT capture and render
+           nothing. So the survivors are the ones we hold, and if exactly one
+           survives its descriptor goes too, making it unconditional. */
+        const live = [];
+        let anyDead = false;
         for (const cand of a.value.split(",")) {
           const trimmed = cand.trim();
           if (!trimmed) continue;
           const bits = trimmed.split(/\s+/);
           const t = resolve(bits[0], "image");
+          if (t === PLACEHOLDER_MISSING) { anyDead = true; continue; }
           bits[0] = t === null ? bits[0] : t;
-          parts.push(bits.join(" "));
+          live.push(bits.join(" "));
         }
-        put(parts.join(", "));
+        if (!live.length) { put(PLACEHOLDER_MISSING); continue; }
+        put(live.length === 1 && anyDead ? live[0].split(/\s+/)[0] : live.join(", "));
         continue;
       }
 
@@ -334,6 +439,79 @@ export function renderCompanion(html, { resolve, classifyLink, primarySha, when 
     return src.slice(0, end) + "\n" + head + src.slice(end);
   }
   return head + src;
+}
+
+/* ------------------------------------------------------------------ *
+ * What the document needs, and what merely surrounds it
+ * ------------------------------------------------------------------ */
+
+/** same_host / same_site / third_party, recorded on every reference and every
+ *  link. Cheap, mechanical, and the first useful cut at advertising, analytics,
+ *  and social widgets, which are overwhelmingly cross-origin.
+ *
+ *  same_site is approximate: with no public suffix list it compares the last
+ *  two labels, so it is right for oaklandca.gov and wrong for a .co.uk. It is
+ *  recorded AS an approximation, and the host is kept beside it, so a better
+ *  rule can be applied later without the input having been destroyed. */
+export function originOf(url, baseHost) {
+  let h;
+  try { h = new URL(url).hostname.toLowerCase(); } catch { return { origin: "unknown", host: null }; }
+  const b = String(baseHost || "").toLowerCase();
+  if (h === b) return { origin: "same_host", host: h };
+  const tail = (x) => x.split(".").slice(-2).join(".");
+  if (b && tail(h) === tail(b)) return { origin: "same_site", host: h, approximate: true };
+  return { origin: "third_party", host: h };
+}
+
+/** Whether a reference is fetched, and why not when it is not.
+ *
+ *  The rule: support content is limited to what a faithful RENDITION of the
+ *  document needs. That is not the same as everything the page requested.
+ *
+ *  Stylesheets and anything a stylesheet names are kept unconditionally, and
+ *  this is the one place the region test is deliberately NOT applied. One
+ *  stylesheet lays out the navigation and the article together, and deciding
+ *  which rules serve which region needs a layout engine rather than a parser.
+ *  Dropping a sprite for being "only" chrome collapses the article's layout with
+ *  it. They are also cheap: on the pages measured, CSS assets are icons and
+ *  backgrounds while the megabytes are content images.
+ *
+ *  Images are where the region test earns its place. An image inside the
+ *  document is explanatory or evidentiary and is kept. An image in the site's
+ *  navigation or footer is a logo or a social icon, and its absence costs
+ *  nothing a reader of THIS DOCUMENT would notice.
+ *
+ *  Third-party scripts, images, and media go. That is the advertising and
+ *  analytics cut, and it is the same test rather than a special case: an ad is
+ *  by definition not part of the document. */
+/* When the ceiling is 45 and the page wants 300, WHICH 45 decides whether the
+ * capture renders as the page or as a pile of unstyled text. Measured on a
+ * Legistar calendar: document order spent nine of the fifty on scripts that are
+ * never rendered, and then ran out before the stylesheets' own sprites.
+ *
+ * So the work is taken in rendering-necessity order, not document order.
+ * Stylesheets first because nothing else matters without them, then the assets
+ * those stylesheets name, then the document's own images, and scripts last
+ * because they are held as evidence and never rendered at all. Truncation then
+ * costs the least important thing rather than an arbitrary one. */
+export const FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
+export const priorityOf = (ref) =>
+  (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
+
+export function fetchPolicy(ref, origin) {
+  if (ref.collapsed)
+    return { fetch: false, reason: "COLLAPSED_SRCSET_FAMILY",
+             detail: `one of ${ref.family_size} responsive candidates for one picture; the largest is captured` };
+  if (ref.kind === "stylesheet" || ref.kind === "css-asset" || ref.kind === "font" || ref.kind === "icon")
+    return { fetch: true, why: "layout" };
+  if (origin === "third_party" && (ref.kind === "script" || ref.kind === "image" || ref.kind === "media"))
+    return { fetch: false, reason: "THIRD_PARTY",
+             detail: "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document" };
+  if (ref.kind === "script") return { fetch: true, why: "served_with_the_page" };
+  if (ref.region === "furniture")
+    return { fetch: false, reason: "OUTSIDE_THE_DOCUMENT",
+             detail: `found in ${ref.region_basis}, which belongs to the site rather than to this document` };
+  return { fetch: true, why: "in_the_document" };
 }
 
 /* ------------------------------------------------------------------ *
@@ -416,7 +594,7 @@ export async function captureSubresources({
   const bySha = new Map();       // sha -> record, for the manifest
   const byUrl = new Map();       // absolute url -> record, for dedup
   const refToUrl = new Map();    // raw ref text -> absolute url or null
-  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false;
+  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
 
   /* A work list rather than recursion: depth is data, so the bound is visible
      and a cycle in an @import graph cannot become a stack. */
@@ -424,6 +602,8 @@ export async function captureSubresources({
      stylesheet at /css/main.css writing `url(img/bg.png)` means /css/img/bg.png,
      and resolving it against the PAGE instead silently captures a different
      file, or nothing, while every count still looks right. */
+  let baseHost = null;
+  try { baseHost = new URL(base).hostname; } catch { baseHost = null; }
   const queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
 
   /* Every path out of the loop lands here, so a reference is recorded once and
@@ -437,7 +617,14 @@ export async function captureSubresources({
   };
 
   while (queue.length) {
-    const item = queue.shift();
+    /* Lowest priority value first, ties by discovery order, which keeps the
+       result deterministic for a given page. */
+    let at_ = 0, best = priorityOf(queue[0]);
+    for (let i = 1; i < queue.length; i++) {
+      const p = priorityOf(queue[i]);
+      if (p < best) { best = p; at_ = i; }
+    }
+    const item = queue.splice(at_, 1)[0];
     discovered++;
     const cls = classifyRef(item.ref, item.against, isPublic);
     /* Only the page's OWN references go in this map. A relative ref inside a
@@ -446,8 +633,14 @@ export async function captureSubresources({
     if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
 
     const at = stamp();
+    const org = cls.ok ? originOf(cls.url, baseHost) : { origin: "unknown", host: null };
     const stem = { url: cls.ok ? cls.url : item.ref, kind: item.kind, via: item.where,
-                   from: item.from, depth: item.depth, fetched_at: at };
+                   from: item.from, depth: item.depth,
+                   region: item.region || "body", region_basis: item.region_basis || "default",
+                   ...org,
+                   ...(item.family ? { family: item.family, family_size: item.family_size } : {}),
+                   ...(item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {}),
+                   fetched_at: at };
 
     if (!cls.ok) {
       settle(item, { ...stem, ok: false, status: null, reason: cls.reason,
@@ -455,6 +648,17 @@ export async function captureSubresources({
         detail: cls.reason === "REFUSED_SCHEME"
           ? `a ${cls.scheme} reference is not something this surface fetches`
           : "the address is not public https, and the fence that guards the primary locator guards this one" });
+      continue;
+    }
+
+    /* The document boundary, applied. A reference the document does not need is
+       RECORDED and not fetched: the record still says the page asked for it and
+       why this capture did not, which is the difference between a bounded
+       capture and a lossy one. */
+    const pol = fetchPolicy(item, org.origin);
+    if (!pol.fetch) {
+      settle(item, { ...stem, ok: false, status: null, fetched: false,
+                     reason: pol.reason, detail: pol.detail });
       continue;
     }
 
@@ -482,7 +686,21 @@ export async function captureSubresources({
 
     let r;
     try { r = await fetchOne(cls.url); }
-    catch (e) { r = { ok: false, status: 0, reason: "FETCH_FAILED", detail: String((e && e.message) || e) }; }
+    catch (e) {
+      const msg = String((e && e.message) || e);
+      /* "we ran out of budget" and "the source did not serve it" are different
+         facts and the record must not confuse them. Reporting a platform
+         subrequest limit as FETCH_FAILED would put a false statement about the
+         SOURCE into the manifest, which is the one kind of error this system
+         exists to prevent. */
+      const platform = /too many subrequests|subrequest limit|exceeded.*limit/i.test(msg);
+      r = { ok: false, status: 0, reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
+            detail: platform
+              ? "the runtime refused another outbound request in this invocation; the source was never asked, "
+                + "and this says nothing about whether it would have answered"
+              : msg };
+      if (platform) platformHit = true;
+    }
 
     if (!r || !r.ok) {
       const rec = { ...stem, ok: false, status: r ? (r.status ?? null) : null,
@@ -518,7 +736,10 @@ export async function captureSubresources({
       rec.rewrite = [];
       for (const u of cssRefs(text))
         queue.push({ ref: u, kind: "css-asset", where: `url() in ${cls.url}`,
-                     depth: item.depth + 1, from: cls.url, against: cls.url, cssOwner: rec });
+                     depth: item.depth + 1, from: cls.url, against: cls.url, cssOwner: rec,
+                     /* A stylesheet's own assets carry the stylesheet's region,
+                        not the region of whatever tag happened to be open. */
+                     region: rec.region, region_basis: rec.region_basis });
     }
     settle(item, rec);
   }
@@ -554,7 +775,8 @@ export async function captureSubresources({
       const key = `${type}\u0000${address || raw}`;
       if (!seenLink.has(key)) {
         seenLink.set(key, true);
-        links.push({ ref: raw, type, address: address || null, as_of: when0, ...extra });
+        links.push({ ref: raw, type, address: address || null, as_of: when0,
+                     ...(address ? originOf(address, baseHost) : {}), ...extra });
       }
       return { type, address, ...extra };
     };
@@ -603,13 +825,31 @@ export async function captureSubresources({
     placeholder_scheme: "about:capture#<sha256>",
     unavailable: PLACEHOLDER_MISSING,
     limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
-    discovered, attempted, truncated, budget_exhausted: budgetHit,
+    discovered, attempted, truncated, budget_exhausted: budgetHit, platform_limited: platformHit,
     counts: {
       fetched: fetched.length,
       failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
+      platform_limited: records.filter((r) => r.reason === "PLATFORM_LIMIT").length,
       refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
+      /* Deliberately not fetched: policy skips, plus the two bounds. Every
+         record lands in exactly one of fetched/failed/refused/skipped, and the
+         subresources test asserts that identity, so a new reason that forgets
+         to name a bucket fails rather than quietly vanishing from the totals. */
+      skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY"
+                || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED"
+                || r.reason === "PLATFORM_LIMIT")).length,
       scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
       bytes: spent,
+      not_fetched: {
+        outside_the_document: records.filter((r) => r.reason === "OUTSIDE_THE_DOCUMENT").length,
+        third_party: records.filter((r) => r.reason === "THIRD_PARTY").length,
+        collapsed_srcset: records.filter((r) => r.reason === "COLLAPSED_SRCSET_FAMILY").length,
+      },
+      by_origin: {
+        same_host: records.filter((r) => r.origin === "same_host").length,
+        same_site: records.filter((r) => r.origin === "same_site").length,
+        third_party: records.filter((r) => r.origin === "third_party").length,
+      },
       links: {
         anchor: links.filter((l) => l.type === "anchor").length,
         intra: links.filter((l) => l.type === "intra").length,
