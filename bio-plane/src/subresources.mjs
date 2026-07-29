@@ -32,21 +32,20 @@
  * when they bite.
  */
 
-/** Attempted fetches per capture. Refusals and policy skips are free and are
- *  not counted.
+/** OUR policy ceiling: how many fetches this instance is willing to spend on a
+ *  single document. This is a choice about appetite, and it exists because an
+ *  adversary-chosen page can name ten thousand addresses.
  *
- *  This number is NOT ours to choose. A Worker invocation has a hard subrequest
- *  limit imposed by the platform, and on this account it is 50. Measured
- *  2026-07-28: a Legistar calendar page discovered 309 subresources, and the
- *  fetches died at exactly 50 with "Too many subrequests by single Worker
- *  invocation". Raising this constant to 300 changed nothing at all, because
- *  the ceiling was never here.
+ *  It is NOT the platform's limit and must never be set from one. An earlier
+ *  version of this file carried 45 with a comment reading "50 on this account",
+ *  which is a hardcoded guess about somebody else's infrastructure dressed up
+ *  as a constant: Cloudflare can change that number on either plan tomorrow,
+ *  every instance runs on a different account, and a number baked in here would
+ *  then be silently wrong everywhere at once.
  *
- *  45 leaves headroom for the primary fetch and any redirect, and it is set
- *  DELIBERATELY BELOW the platform limit so that truncation is ours, reported
- *  in our own vocabulary, rather than arriving as a runtime error partway
- *  through with half the page captured. */
-export const SUBRESOURCE_CAP = 45;
+ *  The platform's limit is DISCOVERED, recorded, and acted on. See
+ *  `platformCeiling` below and docs/development/CAPTURE-SCALING.md. */
+export const SUBRESOURCE_CAP = 400;
 /** Bytes for any one subresource. A stylesheet or an image, not a video. */
 export const SUBRESOURCE_MAX = 8 * 1024 * 1024;
 /** Bytes across all subresources of one capture. */
@@ -588,6 +587,12 @@ export function readLinkWrapper(v) {
 export async function captureSubresources({
   html, base, primarySha, primaryFile, fetchOne, put, sha256, isPublic,
   cap = SUBRESOURCE_CAP, perMax = SUBRESOURCE_MAX, budget = SUBRESOURCE_BUDGET, now = () => new Date(),
+  /* What this runtime was last OBSERVED to allow, passed in by the caller from
+     whatever it recorded last time, or null the first time anything runs here.
+     Never a constant in this file: the number belongs to the platform, changes
+     without notice, and differs per account, so the only honest source for it
+     is having hit it. */
+  platformCeiling = null, platformMargin = 5, subrequestsAlreadySpent = 1,
 }) {
   const stamp = () => now().toISOString().split(".")[0] + "Z";
   const records = [];            // every reference, in the order discovered
@@ -595,6 +600,12 @@ export async function captureSubresources({
   const byUrl = new Map();       // absolute url -> record, for dedup
   const refToUrl = new Map();    // raw ref text -> absolute url or null
   let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
+  /* Two different stopping conditions that must not be confused. `cap` is what
+     we are willing to spend. `ceilingBudget` is what the runtime will let us
+     spend, known only if a previous run hit it. */
+  let observedCeiling = null, deferred = 0;
+  const ceilingBudget = platformCeiling == null ? Infinity
+    : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
 
   /* A work list rather than recursion: depth is data, so the bound is visible
      and a cycle in an @import graph cannot become a stack. */
@@ -671,6 +682,19 @@ export async function captureSubresources({
         item.cssOwner.rewrite.push({ ref: item.ref, sha256: already.ok ? already.sha256 : null });
       continue;
     }
+    /* Once the runtime has refused, every further attempt is another refusal.
+       0.37.0 kept trying and wrote 85 identical PLATFORM_LIMIT rows, which
+       spends time to record the same fact repeatedly and buries the one row
+       that actually discovered the ceiling. Stop, and say the rest is
+       outstanding rather than failed. */
+    if (platformHit || attempted >= ceilingBudget) {
+      deferred++;
+      settle(item, { ...stem, ok: false, status: null, reason: "DEFERRED",
+        detail: platformHit
+          ? "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it"
+          : "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch" });
+      continue;
+    }
     if (attempted >= cap) {
       truncated = true;
       settle(item, { ...stem, ok: false, status: null, reason: "CAP_REACHED", cap,
@@ -699,7 +723,14 @@ export async function captureSubresources({
               ? "the runtime refused another outbound request in this invocation; the source was never asked, "
                 + "and this says nothing about whether it would have answered"
               : msg };
-      if (platform) platformHit = true;
+      if (platform && !platformHit) {
+        platformHit = true;
+        /* The count reached WHEN THE RUNTIME SAID NO. This is the observation,
+           and it is worth more than any documented figure because it came from
+           this account, on this plan, at this moment. The caller records it and
+           passes it back next time. */
+        observedCeiling = attempted + subrequestsAlreadySpent;
+      }
     }
 
     if (!r || !r.ok) {
@@ -825,11 +856,26 @@ export async function captureSubresources({
     placeholder_scheme: "about:capture#<sha256>",
     unavailable: PLACEHOLDER_MISSING,
     limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
-    discovered, attempted, truncated, budget_exhausted: budgetHit, platform_limited: platformHit,
+    discovered, attempted, truncated, budget_exhausted: budgetHit,
+    complete: !platformHit && !truncated && !budgetHit && deferred === 0,
+    outstanding: deferred,
+    platform: {
+      limited: platformHit,
+      /* Discovered, never declared. null means this run never found the edge,
+         which tells the caller only that the ceiling is AT LEAST what was spent,
+         not what it is. */
+      observed_ceiling: observedCeiling,
+      ceiling_used: platformCeiling,
+      spent_this_invocation: attempted + subrequestsAlreadySpent,
+      note: observedCeiling
+        ? "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling"
+        : "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown",
+    },
     counts: {
       fetched: fetched.length,
       failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
       platform_limited: records.filter((r) => r.reason === "PLATFORM_LIMIT").length,
+      deferred: records.filter((r) => r.reason === "DEFERRED").length,
       refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
       /* Deliberately not fetched: policy skips, plus the two bounds. Every
          record lands in exactly one of fetched/failed/refused/skipped, and the
@@ -837,7 +883,7 @@ export async function captureSubresources({
          to name a bucket fails rather than quietly vanishing from the totals. */
       skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY"
                 || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED"
-                || r.reason === "PLATFORM_LIMIT")).length,
+                || r.reason === "PLATFORM_LIMIT" || r.reason === "DEFERRED")).length,
       scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
       bytes: spent,
       not_fetched: {

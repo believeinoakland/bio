@@ -182,6 +182,31 @@ and keeps the plane stateless-ish. The daemon's existing `tick_budget` already
 exists for exactly this shape of work and would let a capture finish unattended.
 Both, probably, with the daemon as the backstop for sessions a caller abandoned.
 
+## Re-fetch at ratification is mandatory
+
+RULED by Bob. When a bundle is promoted to evidence, every reused part is
+re-fetched and compared. Not advisory, not conditional.
+
+The case for advisory was that a source can go dark between capture and
+ratification, which oaklandca.gov is demonstrating right now, and a mandatory
+rule would refuse to ratify exactly the captures whose value comes from the
+source no longer answering. That case does not survive contact with what the
+rule is FOR: mandatory means the re-fetch is attempted and its OUTCOME recorded,
+not that ratification requires a matching answer.
+
+So the three outcomes are all valid ratifications and all say different things:
+
+- **confirmed**: the re-fetch matched the reused bytes. The strongest claim.
+- **changed**: the source now serves something else. The document is still
+  ratified with the bytes captured on the day, and the divergence is recorded
+  as the dated fact it is.
+- **unavailable**: the source no longer answers. Ratified with the bytes
+  captured, and the record now holds something nobody can re-fetch, which is the
+  circumstance the project exists for.
+
+What is forbidden is ratifying with a reused part and saying nothing. The
+mandatory part is the attempt and the record, not the agreement.
+
 ## Sensing the ceiling
 
 Bob asked the plane to sense whether the account has Workers Paid and configure
@@ -196,6 +221,21 @@ account-scoped API token so it can look up its own billing plan would hand a
 much larger blast radius to the most exposed component in the system, to answer
 a question it can determine for itself.
 
+**And it must not be hardcoded either.** Cloudflare can change the figure on
+free or paid tomorrow, every instance runs on a different account, and a
+constant in our source would be silently wrong everywhere at once the day it
+moved. 0.37.0 shipped exactly that mistake: `SUBRESOURCE_CAP = 45` with a
+comment reading "50 on this account" is a guess about somebody else's
+infrastructure wearing the clothes of a constant.
+
+0.38.0 separates the two numbers that were being conflated:
+
+- **Our appetite** is a policy choice about how much this instance will spend on
+  one document, and it exists because an adversary-chosen page can name ten
+  thousand addresses. It is a constant because it is ours.
+- **The runtime's capacity** is an observation. It is discovered by being
+  refused, recorded, and passed back in on the next run.
+
 **So the plane calibrates empirically, by probing to failure.** It already has
 the signal: a refused subrequest raises a distinguishable error, which 0.37.0
 records as `PLATFORM_LIMIT`. Calibration is therefore not new machinery, it is
@@ -205,12 +245,19 @@ remembering what already happens:
 capture_limits(observed_ceiling, observed_at, invocations_sampled, confidence)
 ```
 
-- On any capture that hits `PLATFORM_LIMIT`, record the count reached. That is
-  a hard observation of the ceiling and it is worth more than any API answer.
-- Set the working cap a margin below the observed ceiling.
+- On the FIRST `PLATFORM_LIMIT` in a run, record the count reached and stop
+  attempting. 0.37.0 kept going and wrote 85 identical refusal rows, which
+  spends time restating one fact and buries the row that discovered it. The rest
+  become `DEFERRED`: outstanding, not failed, because nobody asked the source.
+- Given that number back, the next run stops a margin short of it, on its own
+  terms, and the runtime is never made to refuse anything.
+- A run that never hit the limit reports `observed_ceiling: null`, and says so:
+  the ceiling is AT LEAST what was spent and its true value is unknown. It must
+  not report the spend as though it were the limit.
 - Re-probe occasionally upward, because a plan can be upgraded and a ceiling
-  that only ever ratchets down would leave a paid account running at free-tier
-  caps forever.
+  that only ratchets down would leave a paid account at free-tier caps forever.
+- Nothing recorded here is trusted permanently. The observation is dated, and a
+  ceiling that moves is itself a fact the instance should notice.
 
 The standing lesson applies and points the right way here: a probe that never
 saw a failure has found the top of its range, not a ceiling. Calibration is the

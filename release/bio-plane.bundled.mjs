@@ -4385,7 +4385,7 @@ function archiveLocatorFrom(res, requested) {
 }
 
 // src/subresources.mjs
-var SUBRESOURCE_CAP = 45;
+var SUBRESOURCE_CAP = 400;
 var SUBRESOURCE_MAX = 8 * 1024 * 1024;
 var SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
 var CSS_MAX_DEPTH = 2;
@@ -4741,7 +4741,15 @@ async function captureSubresources({
   cap = SUBRESOURCE_CAP,
   perMax = SUBRESOURCE_MAX,
   budget = SUBRESOURCE_BUDGET,
-  now = () => /* @__PURE__ */ new Date()
+  now = () => /* @__PURE__ */ new Date(),
+  /* What this runtime was last OBSERVED to allow, passed in by the caller from
+     whatever it recorded last time, or null the first time anything runs here.
+     Never a constant in this file: the number belongs to the platform, changes
+     without notice, and differs per account, so the only honest source for it
+     is having hit it. */
+  platformCeiling = null,
+  platformMargin = 5,
+  subrequestsAlreadySpent = 1
 }) {
   const stamp = () => now().toISOString().split(".")[0] + "Z";
   const records = [];
@@ -4749,6 +4757,8 @@ async function captureSubresources({
   const byUrl = /* @__PURE__ */ new Map();
   const refToUrl = /* @__PURE__ */ new Map();
   let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false, platformHit = false;
+  let observedCeiling = null, deferred = 0;
+  const ceilingBudget = platformCeiling == null ? Infinity : Math.max(0, platformCeiling - platformMargin - subrequestsAlreadySpent);
   let baseHost = null;
   try {
     baseHost = new URL(base).hostname;
@@ -4818,6 +4828,17 @@ async function captureSubresources({
         item.cssOwner.rewrite.push({ ref: item.ref, sha256: already.ok ? already.sha256 : null });
       continue;
     }
+    if (platformHit || attempted >= ceilingBudget) {
+      deferred++;
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: "DEFERRED",
+        detail: platformHit ? "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it" : "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch"
+      });
+      continue;
+    }
     if (attempted >= cap) {
       truncated = true;
       settle(item, {
@@ -4848,7 +4869,10 @@ async function captureSubresources({
         reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
         detail: platform ? "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered" : msg
       };
-      if (platform) platformHit = true;
+      if (platform && !platformHit) {
+        platformHit = true;
+        observedCeiling = attempted + subrequestsAlreadySpent;
+      }
     }
     if (!r || !r.ok) {
       const rec2 = {
@@ -4992,17 +5016,29 @@ async function captureSubresources({
     attempted,
     truncated,
     budget_exhausted: budgetHit,
-    platform_limited: platformHit,
+    complete: !platformHit && !truncated && !budgetHit && deferred === 0,
+    outstanding: deferred,
+    platform: {
+      limited: platformHit,
+      /* Discovered, never declared. null means this run never found the edge,
+         which tells the caller only that the ceiling is AT LEAST what was spent,
+         not what it is. */
+      observed_ceiling: observedCeiling,
+      ceiling_used: platformCeiling,
+      spent_this_invocation: attempted + subrequestsAlreadySpent,
+      note: observedCeiling ? "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling" : "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown"
+    },
     counts: {
       fetched: fetched.length,
       failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
       platform_limited: records.filter((r) => r.reason === "PLATFORM_LIMIT").length,
+      deferred: records.filter((r) => r.reason === "DEFERRED").length,
       refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
       /* Deliberately not fetched: policy skips, plus the two bounds. Every
          record lands in exactly one of fetched/failed/refused/skipped, and the
          subresources test asserts that identity, so a new reason that forgets
          to name a bucket fails rather than quietly vanishing from the totals. */
-      skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY" || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED" || r.reason === "PLATFORM_LIMIT")).length,
+      skipped: records.filter((r) => !r.ok && (r.reason === "OUTSIDE_THE_DOCUMENT" || r.reason === "THIRD_PARTY" || r.reason === "COLLAPSED_SRCSET_FAMILY" || r.reason === "CAP_REACHED" || r.reason === "BUDGET_EXHAUSTED" || r.reason === "PLATFORM_LIMIT" || r.reason === "DEFERRED")).length,
       scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
       bytes: spent,
       not_fetched: {

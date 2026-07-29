@@ -408,10 +408,10 @@ function originOfCheck(){
   return o.origin === "same_site" && o.approximate === true;
 }
 
-console.log("\n--- the fanout cap truncates visibly ---");
+console.log("\n--- our own appetite cap truncates visibly, separately from the platform ---");
 {
   const many = ["<html><body>"];
-  for (let i = 0; i < 320; i++) many.push(`<img src="/img/n${i}.png">`);
+  for (let i = 0; i < 430; i++) many.push(`<img src="/img/n${i}.png">`);
   many.push("</body></html>");
   const bulk = await captureSubresources({
     html: many.join("\n"), base: BASE, primarySha: "0".repeat(64), primaryFile: "snapshots/bulk.html",
@@ -420,19 +420,19 @@ console.log("\n--- the fanout cap truncates visibly ---");
   });
   t("it stops at the cap", bulk.attempted, SUBRESOURCE_CAP);
   t("it says it truncated rather than pretending it saw everything", bulk.truncated, true);
-  t("it reports how many it actually found", bulk.discovered, 320);
+  t("it reports how many it actually found", bulk.discovered, 430);
   t("and the references past the cap are recorded, not dropped",
-    bulk.subresources.filter((r) => r.reason === "CAP_REACHED").length, 320 - SUBRESOURCE_CAP);
+    bulk.subresources.filter((r) => r.reason === "CAP_REACHED").length, 430 - SUBRESOURCE_CAP);
   t("the truncation reaches the manifest", bulk.manifest.truncated, true);
 }
 
-console.log("\n--- the platform ceiling, and spending it on what renders ---");
+console.log("\n--- the ceiling is discovered, never declared ---");
 {
-  /* The cap is set below the runtime's own subrequest limit on purpose, so
-     truncation arrives in our vocabulary instead of as a runtime error partway
-     through. This asserts both halves: the order the budget is spent in, and
-     that a platform refusal is never reported as the source failing. */
-  t("the cap sits below the platform's 50-subrequest ceiling", SUBRESOURCE_CAP < 50, true);
+  /* The number belongs to the platform. It differs per account, it can change
+     on either plan without notice, and a constant in our source would be
+     silently wrong everywhere at once. So: our cap is appetite, the runtime's
+     limit is an observation, and they are separate values. */
+  t("our cap is policy, and is not set anywhere near a platform figure", SUBRESOURCE_CAP, 400);
   t("stylesheets outrank everything", priorityOf({ kind: "stylesheet" }) < priorityOf({ kind: "image" }), true);
   t("a stylesheet's own assets outrank the document's images",
     priorityOf({ kind: "css-asset" }) < priorityOf({ kind: "image" }), true);
@@ -453,22 +453,66 @@ console.log("\n--- the platform ceiling, and spending it on what renders ---");
                contentType: /\.css$/.test(u) ? "text/css" : "image/png" }; },
     put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
   });
-  t("so the budget is spent stylesheets, then images, then scripts, whatever the document order was",
+  t("the budget is spent stylesheets, then images, then scripts, whatever the document order was",
     order, ["/a.css", "/b.css", "/a.png", "/a.js"]);
 
-  const limited = await captureSubresources({
-    html: `<html><body><img src="/x.png"><img src="/y.png"></body></html>`,
-    base: BASE, primarySha: "4".repeat(64), primaryFile: "snapshots/l.html",
-    fetchOne: async () => { throw new Error("Too many subrequests by single Worker invocation."); },
+  /* Hitting the limit: the run must LEARN the number and then stop, rather than
+     re-discovering the same refusal once per remaining reference. */
+  let calls = 0;
+  const many = ["<html><body>"];
+  for (let i = 0; i < 30; i++) many.push(`<img src="/img/n${i}.png">`);
+  many.push("</body></html>");
+  const hit = await captureSubresources({
+    html: many.join(""), base: BASE, primarySha: "5".repeat(64), primaryFile: "snapshots/h.html",
+    fetchOne: async () => {
+      if (++calls > 8) throw new Error("Too many subrequests by single Worker invocation.");
+      return { ok: true, status: 200, bytes: PNG, contentType: "image/png" };
+    },
     put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
   });
-  t("a runtime subrequest refusal is NOT recorded as the source failing",
-    limited.subresources.every((r) => r.reason === "PLATFORM_LIMIT"), true);
-  t("and says plainly that the source was never asked",
-    /never asked/.test(limited.subresources[0].detail), true);
-  t("the manifest counts it apart from real failures",
-    [limited.manifest.counts.platform_limited, limited.manifest.counts.failed], [2, 0]);
-  t("and flags the whole capture as platform limited", limited.manifest.platform_limited, true);
+  t("it records where the runtime actually said no", hit.manifest.platform.observed_ceiling, 10);
+  t("counting the primary fetch, since that spent a subrequest too",
+    hit.manifest.platform.spent_this_invocation >= hit.manifest.platform.observed_ceiling, true);
+  t("it stops after ONE refusal instead of rediscovering it per reference",
+    hit.manifest.counts.platform_limited, 1);
+  t("and the rest are outstanding, not failed: nobody asked the source about them",
+    hit.manifest.counts.deferred, 21);
+  t("no reference is recorded as the SOURCE failing", hit.manifest.counts.failed, 0);
+  t("the capture says it is incomplete", hit.manifest.complete, false);
+  t("and how much is outstanding", hit.manifest.outstanding, 21);
+  t("the refusal says the source was never asked", /never asked/.test(
+    hit.subresources.find(r => r.reason === "PLATFORM_LIMIT").detail), true);
+
+  /* Given the number back, the next run stops on ITS OWN terms, before the
+     runtime has to refuse anything at all. */
+  let calls2 = 0;
+  const known = await captureSubresources({
+    html: many.join(""), base: BASE, primarySha: "6".repeat(64), primaryFile: "snapshots/k.html",
+    platformCeiling: 10, platformMargin: 2,
+    fetchOne: async () => {
+      if (++calls2 > 8) throw new Error("Too many subrequests by single Worker invocation.");
+      return { ok: true, status: 200, bytes: PNG, contentType: "image/png" };
+    },
+    put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
+  });
+  t("with the observed ceiling in hand, the runtime is never made to refuse",
+    known.manifest.platform.limited, false);
+  t("we stop ourselves, a margin short of it", known.manifest.counts.fetched, 7);
+  t("and everything else is outstanding rather than lost", known.manifest.counts.deferred, 23);
+  t("it still knows it is incomplete", known.manifest.complete, false);
+
+  /* A run that never hits the limit has learned nothing about where it is. */
+  const clean = await captureSubresources({
+    html: `<html><body><img src="/one.png"></body></html>`, base: BASE,
+    primarySha: "7".repeat(64), primaryFile: "snapshots/c.html",
+    fetchOne: async () => ({ ok: true, status: 200, bytes: PNG, contentType: "image/png" }),
+    put: async () => ({ existed: false }), sha256: async (b) => sha(b), isPublic: isPublicHttpsLocator,
+  });
+  t("a run that never saw a refusal reports no ceiling, rather than guessing one",
+    clean.manifest.platform.observed_ceiling, null);
+  t("and says so plainly: the ceiling is at least what was spent, value unknown",
+    /at least/.test(clean.manifest.platform.note), true);
+  t("that run is complete", clean.manifest.complete, true);
 }
 
 console.log("\n--- a page with nothing to fetch still produces a usable companion ---");
