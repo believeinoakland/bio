@@ -1,5 +1,84 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v27, 2026-07-29 session, part twenty-five. SIX PLANE RELEASES AND U7. Plane
+0.36.0 through 0.41.0 shipped, each signed, deployed byte-identical, audit
+30/30 clean. U7 is DONE and marked in UI-PLAN.md.
+
+0.36.0 CAPTURE FIDELITY. op=acquire gains subresources:true. Every
+stylesheet, image, srcset candidate, favicon, media source and script the
+page names is fetched over the same public-https fence that guards the
+primary locator, hashed, stored as its own content-addressed capture. RAW
+bytes are never rewritten: a SEPARATE derived render companion carries its
+own hash, has scripts and frames removed, and replaces every subresource
+reference with about:capture#<sha256> resolved through
+data/snapshot-manifest.json. A content security policy travels inside the
+companion, so a copy that escapes a resolving viewer renders blank rather
+than reaching the network. Links are characterised into partitions rather
+than blanked or left live. C-18.1 gains a renditions arm; `derived` was
+already spent on the opposite claim.
+
+U7 VIEWING SIDE. resolveSnapshot verifies every part by hash before it
+reaches the screen and refuses the whole render on one bad byte. data: URIs
+not blob:, because the sandboxed frame has an opaque origin and cannot read
+a blob this document minted.
+
+0.37.0 THE DOCUMENT BOUNDARY. Refs carry body or furniture from
+<article>/<main> vs <nav>/<footer>/<header>/<aside> and ARIA landmarks;
+body wins anywhere on the stack because <footer> inside <article> is the
+article's byline. Stylesheets and anything a stylesheet names are kept
+regardless of region: splitting them needs a layout engine, not a parser.
+srcset collapses to its largest candidate with src as a family member.
+Third-party scripts, images and media are not fetched, which is the
+advertising cut and the same test rather than a special case.
+
+0.38.0 THE CEILING IS DISCOVERED, NEVER DECLARED. 0.37.0 shipped
+SUBRESOURCE_CAP = 45 with a comment reading "50 on this account", which is
+a guess about somebody else's infrastructure wearing the clothes of a
+constant. Our appetite and the runtime's capacity are now separate values.
+On the first refusal the run records the count and stops; the rest become
+DEFERRED, outstanding rather than failed, because nobody asked the source.
+
+0.39.0 THE CEILING IS REMEMBERED. capture_limits, with previous and moved_at
+because a ceiling that MOVED is a different fact from a ceiling that IS.
+scripts/deploy.mjs believes only the bytes: it reports what the API said and
+reads the module back to compare against the signed asset.
+
+0.40.0 PER-SITE SHARED ASSETS. site_assets and site_asset_refs. Bytes were
+always shared by content-addressing; FETCHES were not, and fetches are the
+scarce thing. Reuse is furniture only, never an image inside the document
+and never a script, and every reused part carries fetched_this_capture:false
+and names when the source was last seen serving those bytes. Recurrence
+chrome detection falls out of the same table and works on the municipal
+sites that never write a <nav>.
+
+0.41.0 RESUMABLE CAPTURE. capture_sessions, scratch with an expiry, naming
+no bundle. The queue is parked rather than rediscovered. A heavy first
+capture of a news front page now completes in three ticks.
+
+MEASURED, and the measurements changed the design three times. www
+.oaklandca.gov returns 403 to the plane on every path including robots.txt,
+while data.oaklandca.gov and oaklandca.opengov.com still answer: the record
+holds captures nobody can re-fetch, which is the circumstance the project
+exists for. USER-AGENT POLICY IS DEFERRED pending Bob's counsel; disguising
+the fetch is refused. The 40-subresource cap truncated every real page. 383
+of 566 references on a news front page were duplicate srcset renditions.
+Reuse gated on stability reused NOTHING, because a fresh instance has no
+stability history; the condition is recency of FETCH.
+
+THE LESSON WORTH KEEPING. The continuation suite drove captureSubresources
+DIRECTLY, 22 assertions green, while op=acquire threw 1101 on every page big
+enough to need a session: sessionId was block-scoped inside the capture
+branch and the response literal reading it sits outside. A unit test that
+never crosses the surface the caller uses is not testing the feature. Two
+sibling defects the same day: a temporal dead zone that only fired on pages
+with <a> elements (the fixture had none), and link dedup rebuilt empty each
+tick. All three are now covered end to end through the op.
+
+STILL OPEN, and it is the last of Bob's five: links are partitioned,
+wrapped and inert, but nothing resolves a deferred address into a citation.
+No links_to in REL_VOCAB, no links table, no reverse index, no three-valued
+verdict. LINK-FIDELITY.md carries the design and Bob's rulings.
+
 v26, 2026-07-28 session, part twenty-four, closing the session. THE PLAN OF
 RECORD NOW EXISTS: docs/development/UI-PLAN.md lays out the full UI
 development arc as a ladder, U1-U6 DONE (foundation, record surfaces,

@@ -9,9 +9,9 @@ reordered; the plan is only useful if it is true.
 
 ## How to read this
 
-Rungs U1 through U6 are DONE and live at
+Rungs U1 through U7 are DONE and live at
 https://civicos.believeinoakland.workers.dev against the signed plane on
-biosmoke7 (0.35.0, record of 30 bundles, audit clean). U7 onward is the
+biosmoke7 (0.41.0, record of 30 bundles, audit clean). U8 onward is the
 remaining work, in intended order, each with its acceptance test and its
 dependencies named. The plane and the UI ship separately: plane releases
 are signed and byte-verified; UI deploys carry a build id and open tabs
@@ -67,14 +67,23 @@ self-announce staleness.
 
 ### REMAINING
 
-- **U7. Capture fidelity, viewing side.** Depends on plane release 0.36.0
-  implementing CAPTURE-FIDELITY.md (op=acquire subresources, the derived
-  script-stripped render companion, data/snapshot-manifest.json). The UI
-  resolves manifest placeholders through op=capture with per-part
-  verification and renders the whole page in the sandboxed frame.
-  ACCEPTANCE: a captured HTML page with stylesheets and images renders in
-  the viewer visually faithful to its point of capture, every byte
-  verified, scripts absent.
+- **U7. Capture fidelity, viewing side. DONE, 2026-07-29.** resolveSnapshot
+  fetches every manifest part through op=capture BY HASH and verifies it
+  before anything reaches the screen; one altered byte refuses the whole
+  render, because a page missing a part renders as a different page.
+  Subresources inline as data: URIs rather than blob: URLs, which is forced
+  rather than stylistic: the frame is sandboxed with neither allow-scripts
+  nor allow-same-origin, so it has an opaque origin, and an opaque origin
+  cannot read a blob this document minted. Two passes, because a
+  stylesheet's own url() targets need addresses before the stylesheet is
+  encoded; the CSS rewrite runs on a verified copy at render time so the
+  stored stylesheet stays raw. All four link partitions render
+  distinguishably and a deferred link warns that following it leaves
+  audited content. Harness: test/snapshot-render.test.mjs, 30 assertions,
+  building its fixture by running the shipped plane's own
+  captureSubresources so it resolves the manifest the plane actually emits.
+  Defect it caught: markLinks matched data-bio-href before href, reading the
+  address instead of the wrapper.
 
 - **U8. The Add surface.** "Add something new" becomes real: acquire by
   locator (authority named, grade shown honestly), review the returned
@@ -122,9 +131,22 @@ self-announce staleness.
 
 ## Standing dependencies and risks
 
-- Plane releases gate U7 (0.36.0) and inform U10 (attest surface). Plane
-  release discipline: full 33-test suite, signed, tagged, deployed
-  byte-identical, audit clean after.
+- Plane releases inform U8 (the Add surface) and U10 (attest surface).
+  Plane release discipline: full suite (34 files as of 0.41.0), signed,
+  tagged, deployed byte-identical, audit clean after. Deploys go through
+  bio-plane/scripts/deploy.mjs, which reports what the API said and
+  believes none of it: it reads the module back, hashes it, and compares
+  against the signed asset, because a success response can precede a
+  rollout that has not happened and a gateway error can sit in front of an
+  upload that landed.
+- CAPTURE IS NOW MULTI-TICK. A page that exceeds the runtime's subrequest
+  ceiling returns complete:false with a continuation session, and U8 must
+  drive it to completion rather than presenting a half-captured page as a
+  capture. See docs/development/CAPTURE-SCALING.md.
+- LINKS ARE PARTITIONED BUT NOT RESOLVED. A deferred link carries an
+  address and nothing yet turns it into a citation: no links_to relation,
+  no links table, no verdict. docs/development/LINK-FIDELITY.md has the
+  design and Bob's rulings; it is the largest outstanding piece.
 - The record is the source of truth for every parser the UI grows;
   fixtures mirror real shapes (the v11 lesson) and every app.html patch
   carries an assert (the v24 lesson).
@@ -133,6 +155,10 @@ self-announce staleness.
 
 ## Next session kickoff
 
-The next session is plane release 0.36.0 (CAPTURE-FIDELITY.md) followed by
-U7. The initial prompt for Bob to paste is kept in SESSION-KICKOFF-UI.md
-beside this file, so the session starts with zero reconstruction.
+The next session is the link and citation work in LINK-FIDELITY.md: the
+links table with address normalisation, read-time resolution, the
+three-valued contemporaneity verdict, and links_to in REL_VOCAB. U8 follows
+it, because the Add surface needs continuation handling and would otherwise
+be built twice. The initial prompt for Bob to paste is kept in
+SESSION-KICKOFF-UI.md beside this file, so the session starts with zero
+reconstruction.
