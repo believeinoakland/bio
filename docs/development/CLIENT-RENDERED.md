@@ -27,22 +27,44 @@ citations to resolve, no evidentiary images to keep.
 This is not a rare shape. Modern government transparency portals are routinely
 built this way, and the ones that are not yet will be.
 
-## Why the rendered DOM cannot simply be graded B
+## The grade: RULED, and the argument is Bob's
 
-Grade B currently means: the bytes as the source served them, hashed at receipt.
-A rendered DOM is not that. It is bytes our renderer produced by executing the
-source's code in an environment we chose. Three properties follow, and each has
-to be recorded rather than papered over.
+RULED by Bob: **a captured rendering that ran at the time the document was
+captured takes the SAME grade as the rest of the document.**
+
+His argument, which is correct and which I had backwards: the HTML/CSS rendering
+is performed LATER, in the rendition's environment, by whatever viewer a reader
+happens to open it in. The JS-driven rendering was performed WHILE the document
+was being captured, in the original site's own execution environment. So the
+rendered content is temporally and environmentally CLOSER to the source than the
+thing this system already puts in front of readers, and it has at least as much
+fidelity as text that survives an HTML/CSS rendering.
+
+I had reached for a lower grade on the strength of non-reproducibility: nobody,
+including us, can re-derive the rendered bytes by hash. That property is real,
+but it is a property of the METHOD and belongs in `capture.method`, not in the
+grade. The grade describes the strength of the chain from source to record, and
+that chain is the same: fetched first-party, executed first-party, hashed at
+receipt. Downgrading it would have said the record trusts the render less than
+it trusts the reading experience it already ships, which is not true.
+
+What follows from non-reproducibility instead is narrower and already settled:
+re-fetch at ratification cannot mean hash equality here, and Bob's earlier
+ruling already generalises correctly, since mandatory means the attempt and its
+outcome are recorded rather than that ratification requires a matching answer. A
+re-render that differs is `changed`, and that is a valid ratification saying
+something true.
+
+## Why the rendered DOM still needs its own method and environment recorded
+
+Same grade does not mean same method. A rendered DOM is bytes produced by
+executing the source's code in an environment we chose, and three properties
+follow that have to be recorded rather than papered over.
 
 **It is not reproducible by hash.** Two renders of the same shell will differ:
 timestamps, A/B assignments, lazy-loaded ordering, advertising, personalisation,
-race conditions between scripts. This breaks two things already built. The
-three-implementation conformance requirement cannot mean byte agreement for this
-path. And re-fetch at ratification cannot mean hash equality, though Bob's
-ruling already generalises correctly here: mandatory means the attempt and its
-outcome are recorded, not that ratification requires a matching answer. A
-re-render that differs is `changed`, and that is a valid ratification saying
-something true.
+race conditions between scripts. The three-implementation conformance
+requirement therefore cannot mean byte agreement for this path.
 
 **It is a joint product of the source and us.** The environment is part of the
 evidence: engine and version, viewport, device pixel ratio, locale and timezone,
@@ -72,13 +94,8 @@ A client-rendered capture produces TWO artifacts, and both are kept.
 The rendered document is NOT a `rendition` in the 0.36.0 sense. A rendition is
 derived mechanically and losslessly from bytes we hold, and anyone can
 regenerate it. A rendered document cannot be regenerated: re-running the
-renderer produces a different artifact. That is why it needs a grade rather
-than a transform note.
-
-Naming matters here and should be settled before it is built. `grade: B` is
-taken and means something stronger. A rendered capture is closer to a
-photograph of a screen than to a copy of a file, and the honest reading is that
-it is first-party observation of a third-party presentation.
+renderer produces a different artifact. It is a capture in its own right,
+carrying the document's grade, with the render recorded as its method.
 
 ## What must be recorded on a rendered capture
 
@@ -94,38 +111,85 @@ it is first-party observation of a third-party presentation.
   advertising or analytics script running during capture puts a third party's
   content into the record, dated and hashed, looking exactly like the source's
   own material.
+
+### RULED: third-party output is attributed to the third party
+
+Bob's ruling puts the question the right way round. It is not whether
+third-party script output should be ALLOWED, it is whether it will ever be
+evidence. If it will, then it is evidence PRODUCED BY THAT THIRD PARTY and must
+be recorded as such, not as the hosting site's.
+
+That is a harder requirement than it looks, and it is a precondition rather than
+a follow-on. `capture.authority` holds exactly one value. A rendered document
+carrying an advertiser's, an analytics vendor's, or a CDN-hosted widget's output
+has more than one author, and the register cannot currently say so. Attribution
+has to be per-origin and sub-document, which is a granularity the record has
+never held: `references[]` targets a bundle and nothing finer, which is the same
+wall D-53 is blocked against.
+
+Recorded as D-55. Nothing may be treated as evidence out of a render until it is
+settled, because the alternative is a record that silently credits a city with
+an advertiser's copy.
 - `render.of`: the sha256 of the served shell, so the pair is inseparable
 
-## The blocking tension: this needs Workers Paid
+## There is no collision: rendering is available on the free tier
 
-Cloudflare Browser Rendering is not on the free tier. Bob has already ruled that
-**Workers Paid is an optimisation, never a requirement**, because BIO installs
-into other groups' Cloudflare accounts and sovereign must not mean sovereign if
-you can expense it.
+An earlier version of this document said Browser Rendering is paid-only and that
+this collided with the ruling that **Workers Paid is an optimisation, never a
+requirement**. That was wrong, and the correction matters because a requirement
+was nearly written into the installer on the strength of it.
 
-Those two rulings collide, and the collision is real rather than resolvable by
-cleverness. Client-rendered sources are increasingly common; capturing them
-needs a browser; a browser needs the paid tier. So one of these has to give, and
-the honest options are:
+Checked against Cloudflare's own limits and pricing documentation on 2026-07-29:
+Workers Free accounts get **10 minutes of Browser Run usage per day**, returning
+429 until the next UTC day beyond that. Workers Paid includes **10 hours of
+browser usage per month with 10 concurrent browsers** at no additional charge,
+then $0.09 per browser hour and $2.00 per concurrent browser.
 
-- **Rendered capture is a paid-tier capability, declared as such.** A free-tier
-  instance captures the shell, records honestly that the content is
-  client-rendered and was not captured, and says so on the document page. The
-  record remains truthful; it is just thinner. This keeps the free tier
-  supported and admits it is not equal.
-- **A member-driven render path.** The member's own browser has already rendered
-  the page. A browser-side capture that serialises the live DOM and uploads it
-  needs no paid tier at all, and the grade honestly reflects that the capture
-  chain ran through a member's machine. This is the same shape as the
-  human-driven path for sources that refuse the plane, which oaklandca.gov
-  already forces, so it may be one mechanism rather than two.
-- **Render off-platform.** A separate service. New vendor, new secret, new
-  failure mode, and the isolation argument above gets weaker.
+So a free-tier instance CAN capture client-rendered sources. It can do perhaps a
+few dozen renders a day rather than hundreds, which is a real difference in
+throughput and no difference at all in capability. The sovereignty ruling
+survives untouched: Paid remains an optimisation.
 
-The second option is the interesting one, because it costs nothing, works
-everywhere, and solves a problem the project already has for a different reason.
-Its weakness is that it depends on a member being present, which rules out
-unattended sweeps of client-rendered sources.
+The member-driven render path is still worth building, but for a different
+reason than the one first given here. It costs no browser time at all, and it is
+the same mechanism a source refusing the plane already forces, which
+oaklandca.gov is currently demonstrating. One path, two problems.
+
+## What Workers Paid actually buys, for this project
+
+Recorded because the decision was nearly made on a wrong premise, and because
+the installer has to be able to explain it (D-54).
+
+| | Free | Paid |
+| --- | --- | --- |
+| External subrequests per invocation | 50 | 10,000, settable to 10,000,000 |
+| Cloudflare-service subrequests (R2, DO) | 1,000 | not separately capped |
+| CPU time per invocation | 10 ms | 30 s default, 5 min maximum |
+| Requests | 100,000/day | no daily cap |
+| Browser Run | 10 min/day | 10 hr/month, 10 concurrent |
+| Cron Triggers per account | 5 | 250 |
+| Worker size | 3 MB | 10 MB |
+
+The subrequest line is the one that matters most and it resolves an accounting
+puzzle from 0.38.0. The free ceiling is FIFTY EXTERNAL subrequests plus a
+separate thousand for Cloudflare services, which is why the calibration measured
+51 while the code had only counted 42 fetches: R2 and Durable Object calls were
+never competing with the page's own subresources. The calibration is measuring
+the external limit precisely, which is the right thing to measure.
+
+The CPU line is the underexamined one, recorded as D-56. Capture hashes every
+subresource with SHA-256 in the Worker and serialises manifests of hundreds of
+entries. Cloudflare reports the average Worker uses about 2.2 ms; ours does real
+work and nobody has looked. Unlike the subrequest limit, a CPU overrun has no
+distinguishable error to calibrate against.
+
+Costs beyond the $5 monthly minimum: 10 million requests and 30 million CPU-ms
+are included, then $0.30 per additional million requests and $0.02 per additional
+million CPU-ms. R2 is billed separately from the Workers plan and has its own
+free allowance, which matters here because captures live in R2 and a growing
+record is a growing R2 bill rather than a growing Workers bill. Workers Paid is
+also independent of the zone plan: it is not unlocked by Cloudflare Pro and does
+not require it.
 
 ## What this changes in what is already built
 
