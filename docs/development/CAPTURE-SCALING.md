@@ -69,6 +69,53 @@ than the window by a good margin, and only for kinds the document does not
 depend on for meaning (stylesheets, fonts, icons, CSS assets), never for images
 inside the document. Evidence gets fetched. Furniture gets reused.
 
+### Checking that a reused asset is still the same
+
+RULED by Bob: a reused asset IS allowed in a capture that will be ratified as
+evidence. He asked whether a quick byte-count comparison should confirm it is
+unchanged, falling back to a fetch if not.
+
+**A HEAD request costs one subrequest, which is the entire scarce resource.**
+The ceiling is 50 outbound requests per invocation; it is not bandwidth and it
+is not wall clock. So byte-count checking spends exactly what reuse was meant to
+save. Blind reuse costs 0. A plain re-fetch costs 1. HEAD-then-maybe-GET costs 1
+when unchanged and 2 when changed. It is strictly worse than either thing it
+sits between.
+
+`Content-Length` is also a weak equality test even where it is free. A
+stylesheet edited to change one hex colour is the same length, so a matching
+byte count is a hint that nothing changed and never a demonstration of it.
+
+Three options that do work, in increasing order of strength.
+
+**Conditional GET dominates HEAD on every axis.** `If-None-Match` with the
+stored ETag costs the same one subrequest, and a 304 returns almost no bytes
+while a 200 returns the new bytes immediately, so the changed case costs one
+request rather than two. It buys nothing against the ceiling, but it is the
+right shape for the byte and time budgets, and it turns "is it the same" into an
+answer from the origin instead of an inference from a length. If a request is
+being spent per asset at all, this is what to spend it on.
+
+**Verification at ratification, which is where the claim changes.** Reuse freely
+during working capture at zero cost, and when a bundle is promoted to evidence,
+re-fetch its reused parts and compare. Ratification is rare and deliberate, so
+the budget is available exactly when the stakes rise. This is the natural shape
+of Bob's ruling: reuse is permitted in evidence, and the check happens at the
+moment it becomes evidence rather than on every working capture that will never
+be published.
+
+**Post-hoc detection, which is free.** When a later capture of the same host
+does fetch an asset and its sha256 differs from the stored one, every earlier
+capture that reused the old bytes is identifiable from `site_assets` and can be
+flagged. No extra request is made at any point. This is detection rather than
+prevention, and it fits the pattern already chosen for link soundness: a reused
+part is unverified-at-reuse until some later fetch confirms or contradicts it,
+and that verdict is appended and dated rather than overwritten.
+
+The three compose. Post-hoc detection should exist regardless, because it is
+free. Verification at ratification is what makes reuse safe in evidence.
+Conditional GET is worth having wherever a request is being spent anyway.
+
 The payoff is large and specific. On the Legistar page, 42 of the 45 fetches are
 site-wide chrome. If those come from the site record on the second and later
 captures of that host, the whole budget is free for the document's own content,
@@ -171,6 +218,40 @@ legitimate form of that, because it probes deliberately TO failure and records
 the failure rather than inferring a limit from its absence. A run that completes
 without hitting the limit tells us only that the ceiling is at least this high.
 
+## Workers Paid is an optimisation, never a requirement
+
+RULED by Bob: he is willing to put his own account on Workers Paid, and is
+cautious about making it a requirement for production instances.
+
+That caution is correct and it is load-bearing for the whole project. BIO
+installs into other groups' Cloudflare accounts, and the point of the sovereign
+installer is that a community organisation can run its own instance. If capture
+requires a paid plan, every group that wants a record has to pay for one, and
+"sovereign" quietly means "sovereign if you can expense it". **The free tier is
+a supported configuration, not a degraded one.**
+
+Two consequences that change the plan above.
+
+**Resumable sessions move back up the order.** They were placed last on the
+reasoning that reuse dissolves the common case, and that holds for repeat
+captures of a host. It does not hold for the FIRST capture of any host, or for
+an unusually heavy page, and every instance begins with nothing but first
+captures. On the free tier, sessions are the only way a heavy first capture ever
+completes. They are required for free-tier viability rather than an optimisation
+of it.
+
+**Developing on Paid will rot the free-tier path.** If biosmoke7 moves to Paid,
+the 50-request ceiling stops being exercised, and the path that every unfunded
+community instance depends on becomes the least-tested code in the system. The
+mitigation is not discipline, it is a test: the suite must force a low ceiling
+regardless of what the account actually allows, so the truncation, session, and
+reuse paths are exercised on every run. A capability that only the developer's
+account has is a capability the tests must pretend not to have.
+
+The installer should also report the ceiling it detected and say plainly what it
+means for capture, so a group setting up an instance knows what they have rather
+than discovering it when a page comes back half-captured.
+
 ## Order of work
 
 1. `site_assets` table and its maintenance on capture. Costs nothing on its own
@@ -180,21 +261,23 @@ without hitting the limit tells us only that the ceiling is at least this high.
 3. Asset reuse with the freshness window, with `fetched_this_capture: false`
    recorded on every reused part.
 4. `capture_limits` calibration from the `PLATFORM_LIMIT` signal already emitted.
-5. Resumable sessions, once 3 has shown how much of the ceiling problem simply
-   disappears. It may be much less urgent afterwards.
+5. Resumable sessions. NOT optional: they are what makes the free tier a
+   supported configuration, since first captures and heavy pages exceed the
+   ceiling no matter how good reuse gets.
+6. Post-hoc reuse verification from `site_assets`, which is free, and re-fetch
+   of reused parts at ratification, which is where the claim changes.
 
-Step 5 last on purpose. If reuse frees 42 of 45 fetches on repeat captures of a
-host, resumability stops being about the common case and becomes the answer for
-first captures and unusually heavy pages only, which is a smaller and easier
-thing to build.
+Reuse still comes before sessions, because it determines how much work sessions
+have to do and shrinks them considerably. But it does not remove the need.
 
 ## Open questions
 
 - The freshness window, and whether it differs by kind. Stylesheets and images
   inside the document are not the same risk.
-- Whether reuse is allowed at all for a capture that will be ratified as
-  evidence, or only for working captures. A ratified document whose stylesheet
-  was reused from a fetch three days earlier is still honest if it says so, but
-  it is a different claim from one fetched whole.
+- Whether re-fetch at ratification is mandatory or advisory. Mandatory is
+  cleaner to reason about; advisory matters if a source has gone dark between
+  capture and ratification, which is exactly the case oaklandca.gov is currently
+  demonstrating, and where refusing to ratify would destroy the record's value
+  at the moment it was most needed.
 - The recurrence threshold, which should come from measurement across fifteen
   or more captures per host rather than from a guess.
