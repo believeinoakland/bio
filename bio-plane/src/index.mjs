@@ -13,6 +13,7 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256 } from "../checks/
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
+import { captureSubresources } from "./subresources.mjs";
 import { Store } from "./store.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
@@ -950,6 +951,63 @@ export default {
       const name = (body.file || locator.split("/").pop() || "capture")
         .replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
 
+      /* Capture fidelity. A captured page whose stylesheets were never fetched
+         renders bare, which makes the capture a poor rendition of what the
+         source served even though its bytes are perfect. So on request the
+         page's supporting files are fetched too, each one its own
+         content-addressed capture holding exactly what the source sent, and a
+         DERIVED companion is built that can be shown without any of them being
+         re-fetched from the live web at viewing time.
+         *
+         * Opt-in, because it turns one fetch into up to forty-one and a caller
+         * capturing a PDF should not pay for a parser it does not need.
+         *
+         * The primary is read BACK OUT of the store rather than held from the
+         * stream. It costs one R2 read and it means the parser sees the bytes
+         * the record actually holds, not a copy that was in flight beside them.
+         * If those two ever differed, parsing the copy would hide it. */
+      const HTML_CT = ["text/html", "application/xhtml+xml"];
+      const SUB_PARSE_MAX = 8 * 1024 * 1024;
+      let subs = null, subsSkipped = null;
+      if (body.subresources === true) {
+        if (multipart || total > SUB_PARSE_MAX)
+          subsSkipped = { reason: "TOO_LARGE_TO_PARSE", detail:
+            "subresource capture reads the primary back into memory to parse it, so it is bounded to "
+            + `${SUB_PARSE_MAX} bytes; this document is ${total}` };
+        else if (!HTML_CT.includes(ct))
+          subsSkipped = { reason: "NOT_HTML", content_type: ct || null, detail:
+            "only an HTML page has subresources; the capture is unaffected and complete" };
+        else {
+          const obj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+          if (!obj) subsSkipped = { reason: "PRIMARY_UNREADABLE", detail: "the primary capture did not read back" };
+          else {
+            const primaryBytes = new Uint8Array(await obj.arrayBuffer());
+            const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+            subs = await captureSubresources({
+              html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
+              base: res.url || locator,
+              primarySha: sha,
+              primaryFile: `snapshots/${name}`,
+              isPublic: isPublicHttpsLocator,
+              sha256: async (b) => hex(await crypto.subtle.digest("SHA-256", b)),
+              put: async (s, b) => {
+                const k = `${storeName}/captures/${s}`;
+                if (await env.CAPTURES.head(k)) return { existed: true };
+                await env.CAPTURES.put(k, b, { sha256: await crypto.subtle.digest("SHA-256", b) });
+                return { existed: false };
+              },
+              fetchOne: async (u) => {
+                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+                if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };
+                return { ok: true, status: r.status,
+                         bytes: new Uint8Array(await r.arrayBuffer()),
+                         contentType: r.headers.get("content-type") || "" };
+              },
+            });
+          }
+        }
+      }
+
       /* The shape C-18.1 requires, assembled here so the caller does not have to
          know it and cannot get it subtly wrong. */
       return json({
@@ -971,11 +1029,34 @@ export default {
           ...(multipart ? { parts: parts.map((p, i) => ({
             file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
             sha256: p.sha256, bytes: p.bytes })) } : {}),
+          /* Named on the SAME register document rather than as documents of
+             their own. C-18.3 treats one capture hash appearing under two
+             register entries as a missed corroboration, and beyond that a
+             derived artifact is not an independent acquisition: it has no
+             locator, no authority, and no grade of its own. It is a rendering
+             of this document and it says so here. */
+          ...(subs ? { renditions: subs.renditions } : {}),
           origin: { kind: body.matchedSweep ? "sweep" : "named_request",
                     ...(body.matchedSweep ? { matched_sweep: body.matchedSweep, deeming_actor: sessMember || cls } : {}) },
           attestation_attempts: [],
         },
         ...(multipart ? { parts: parts.length } : {}),
+        ...(subs ? {
+          subresources: subs.subresources,
+          snapshot: {
+            manifest_file: "data/snapshot-manifest.json", manifest_sha256: subs.manifestSha,
+            render_file: `snapshots/${name}.render.html`, render_sha256: subs.companionSha,
+            discovered: subs.discovered, attempted: subs.attempted, truncated: subs.truncated,
+            fetched: subs.manifest.counts.fetched, failed: subs.manifest.counts.failed,
+            refused: subs.manifest.counts.refused,
+            scripts_held_unreferenced: subs.manifest.counts.scripts_held_unreferenced,
+          },
+          files: {
+            [`snapshots/${name}.render.html`]: subs.companionSha,
+            "data/snapshot-manifest.json": subs.manifestSha,
+          },
+        } : {}),
+        ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
         note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
         store: storeName, tokenClass: cls,
       }, 200);

@@ -1868,6 +1868,27 @@ async function checkInfo2Contract(ctx, findings) {
         findings.push(f("C-18.1", "error", `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the bundle (@2)`));
       }
     }
+    if (d.renditions !== void 0) {
+      if (!Array.isArray(d.renditions)) {
+        findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions must be an array (@2)`));
+      } else {
+        d.renditions.forEach((r, j) => {
+          if (!r || typeof r !== "object" || !r.file || !RAW_SHA_RE.test(r.sha256 || "") || !r.transform || !r.reason || !r.from_file) {
+            findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions[${j}] lacks the {file, sha256, transform, reason, from_file} shape: a derived artifact must say what was done to it, why, and what it was made from (@2)`));
+            return;
+          }
+          if (!hasFile_(ctx, String(r.file))) {
+            findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the bundle (@2)`));
+          }
+          if (!hasFile_(ctx, String(r.from_file)) && !Array.isArray(d.parts)) {
+            findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the bundle (@2)`));
+          }
+          if (r.sha256 === cap?.sha256) {
+            findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions[${j}] has the same hash as the capture it claims to be derived from, so one of the two is mislabelled (@2)`));
+          }
+        });
+      }
+    }
   }
   if (reg.releases !== void 0) {
     if (!Array.isArray(reg.releases)) {
@@ -2021,7 +2042,7 @@ var MECHANICAL_FIELD_SETS = {
   "deadline-recheck": ["clock[].status", "last_updated"],
   "member-attest": ["last_updated"]
 };
-var MECHANICAL_APPEND_FILES = ["data/changes.json", "data/provenance.json"];
+var MECHANICAL_APPEND_FILES = ["data/changes.json", "data/provenance.json", "data/snapshot-manifest.json"];
 function flattenFm(fm) {
   const out = {};
   if (!fm || typeof fm !== "object") return out;
@@ -4361,6 +4382,528 @@ function archiveLocatorFrom(res, requested) {
   if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
   if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(res.url || "")) return res.url;
   return null;
+}
+
+// src/subresources.mjs
+var SUBRESOURCE_CAP = 40;
+var SUBRESOURCE_MAX = 8 * 1024 * 1024;
+var SUBRESOURCE_BUDGET = 32 * 1024 * 1024;
+var CSS_MAX_DEPTH = 2;
+var STRIPPED_ELEMENTS = ["script", "iframe", "object", "embed", "applet", "frame", "frameset", "noembed"];
+var REFUSED_SCHEMES = ["javascript:", "data:", "blob:", "about:", "mailto:", "tel:", "file:", "ftp:", "ws:", "wss:", "chrome:", "chrome-extension:", "view-source:"];
+var TAG_RE = /<([a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+var ATTR_RE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+var CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/gi;
+var CSS_IMPORT_RE = /@import\s+(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)|"([^"]*)"|'([^']*)')/gi;
+var STYLE_EL_RE = /<style\b([^>]*)>([\s\S]*?)<\/style\s*>/gi;
+var COMMENT_RE = /<!--[\s\S]*?-->/g;
+var placeholderFor = (sha) => `about:capture#${sha}`;
+var PLACEHOLDER_MISSING = "about:capture#unavailable";
+function attrsOf(blob) {
+  const out = [];
+  ATTR_RE.lastIndex = 0;
+  let m;
+  while (m = ATTR_RE.exec(blob)) {
+    if (!m[0].trim()) {
+      if (ATTR_RE.lastIndex <= m.index) ATTR_RE.lastIndex = m.index + 1;
+      continue;
+    }
+    out.push({
+      name: m[1].toLowerCase(),
+      raw: m[0],
+      value: m[3] !== void 0 ? m[3] : m[4] !== void 0 ? m[4] : m[5] !== void 0 ? m[5] : null,
+      quote: m[3] !== void 0 ? '"' : m[4] !== void 0 ? "'" : "",
+      present: m[2] !== void 0
+    });
+  }
+  return out;
+}
+var attr = (as, n) => {
+  const a = as.find((x) => x.name === n);
+  return a ? a.value : null;
+};
+function srcsetUrls(v) {
+  const out = [];
+  const s = String(v);
+  let i = 0;
+  const isWs = (c) => c === " " || c === "	" || c === "\n" || c === "\r" || c === "\f";
+  while (i < s.length) {
+    while (i < s.length && (isWs(s[i]) || s[i] === ",")) i++;
+    if (i >= s.length) break;
+    const start = i;
+    while (i < s.length && !isWs(s[i])) i++;
+    let url = s.slice(start, i);
+    if (url.endsWith(",")) {
+      out.push(url.replace(/,+$/, ""));
+      continue;
+    }
+    out.push(url);
+    let depth = 0;
+    while (i < s.length) {
+      if (s[i] === "(") depth++;
+      else if (s[i] === ")" && depth) depth--;
+      else if (s[i] === "," && !depth) {
+        i++;
+        break;
+      }
+      i++;
+    }
+  }
+  return out.filter(Boolean);
+}
+function cssRefs(css) {
+  const out = [];
+  CSS_URL_RE.lastIndex = 0;
+  let m;
+  while (m = CSS_URL_RE.exec(css)) {
+    const u = m[1] ?? m[2] ?? m[3] ?? "";
+    if (u.trim()) out.push(u.trim());
+  }
+  CSS_IMPORT_RE.lastIndex = 0;
+  while (m = CSS_IMPORT_RE.exec(css)) {
+    const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
+    if (u.trim()) out.push(u.trim());
+  }
+  return out;
+}
+function parseHtmlRefs(html) {
+  const src = String(html).replace(COMMENT_RE, "");
+  const refs = [];
+  const add = (ref, kind, where) => {
+    if (ref && ref.trim()) refs.push({ ref: ref.trim(), kind, where });
+  };
+  TAG_RE.lastIndex = 0;
+  let m;
+  while (m = TAG_RE.exec(src)) {
+    const tag = m[1].toLowerCase();
+    const as = attrsOf(m[2] || "");
+    const inlineStyle = attr(as, "style");
+    if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
+    if (tag === "link") {
+      const rel = (attr(as, "rel") || "").toLowerCase().split(/\s+/).filter(Boolean);
+      const href = attr(as, "href");
+      if (!href) continue;
+      if (rel.includes("stylesheet")) add(href, "stylesheet", "link[rel=stylesheet]");
+      else if (rel.some((r) => r === "icon" || r === "shortcut" || r === "apple-touch-icon" || r === "mask-icon" || r === "apple-touch-icon-precomposed"))
+        add(href, "icon", `link[rel=${rel.join(" ")}]`);
+      else if (rel.includes("preload")) {
+        const as_ = (attr(as, "as") || "").toLowerCase();
+        if (as_ === "style") add(href, "stylesheet", "link[rel=preload][as=style]");
+        else if (as_ === "image") add(href, "image", "link[rel=preload][as=image]");
+        else if (as_ === "font") add(href, "font", "link[rel=preload][as=font]");
+      }
+      continue;
+    }
+    if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
+      if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
+      const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
+      for (const n of ["src", "poster", "href", "xlink:href"]) {
+        const v = attr(as, n);
+        if (v) add(v, n === "poster" ? "image" : kind, `${tag}[${n}]`);
+      }
+      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
+      if (ss) for (const u of srcsetUrls(ss)) add(u, kind, `${tag}[srcset]`);
+      continue;
+    }
+    if (tag === "script") {
+      const s = attr(as, "src");
+      if (s) add(s, "script", "script[src]");
+      continue;
+    }
+  }
+  STYLE_EL_RE.lastIndex = 0;
+  while (m = STYLE_EL_RE.exec(src))
+    for (const u of cssRefs(m[2] || "")) add(u, "css-asset", "style");
+  return refs;
+}
+function classifyRef(ref, base, isPublic) {
+  const lower = ref.toLowerCase();
+  for (const s of REFUSED_SCHEMES) {
+    if (lower.startsWith(s)) return { ok: false, reason: "REFUSED_SCHEME", scheme: s, url: ref };
+  }
+  let abs;
+  try {
+    abs = new URL(ref, base).toString();
+  } catch {
+    return { ok: false, reason: "UNRESOLVABLE", url: ref };
+  }
+  const clean = abs.split("#")[0];
+  if (!isPublic(clean)) return { ok: false, reason: "REFUSED_LOCATOR", url: clean };
+  return { ok: true, url: clean };
+}
+var CSP = "default-src 'none'; img-src blob: about:; style-src blob: about: 'unsafe-inline'; font-src blob: about:; media-src blob: about:; script-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'";
+var BANNER = (primarySha, when) => `<!-- DERIVED ARTIFACT, not evidence. Generated by bio-plane from the capture
+     ${primarySha}
+     at ${when}. The raw bytes as served are the evidence and are stored
+     separately, unmodified. This file has had scripts and frames removed and
+     every subresource reference replaced with an about:capture#<sha256>
+     placeholder resolved from data/snapshot-manifest.json. Opened without a
+     resolving viewer it renders blank, on purpose. -->
+`;
+function stripElements(html) {
+  let out = html;
+  for (const el of STRIPPED_ELEMENTS) {
+    out = out.replace(new RegExp(`<${el}\\b[^>]*>[\\s\\S]*?<\\/${el}\\s*>`, "gi"), "");
+    out = out.replace(new RegExp(`<${el}\\b[^>]*\\/?>`, "gi"), "");
+    out = out.replace(new RegExp(`<\\/${el}\\s*>`, "gi"), "");
+  }
+  out = out.replace(/<base\b[^>]*>/gi, "");
+  out = out.replace(/<meta\b[^>]*http-equiv\s*=\s*["']?\s*refresh[^>]*>/gi, "");
+  return out;
+}
+function rewriteCssText(css, resolve) {
+  const one = (whole, u) => {
+    const t = resolve(u);
+    return t === null ? whole : whole.replace(/url\(\s*(?:"[^"]*"|'[^']*'|[^)'"\s]*)\s*\)/i, `url("${t}")`);
+  };
+  let out = css.replace(CSS_URL_RE, (whole, a, b, c) => one(whole, (a ?? b ?? c ?? "").trim()));
+  out = out.replace(CSS_IMPORT_RE, (whole, a, b, c, d, e) => {
+    const u = (a ?? b ?? c ?? d ?? e ?? "").trim();
+    const t = resolve(u);
+    return t === null ? whole : `@import url("${t}")`;
+  });
+  return out;
+}
+function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
+  let src = stripElements(String(html));
+  src = src.replace(STYLE_EL_RE, (whole, attrsBlob, body) => `<style${attrsBlob}>${rewriteCssText(body, (u) => resolve(u, "css-asset"))}</style>`);
+  src = src.replace(TAG_RE, (whole, name, blob, selfClose) => {
+    const tag = name.toLowerCase();
+    const as = attrsOf(blob || "");
+    if (!as.length) return whole;
+    const kept = [];
+    for (const a of as) {
+      if (/^on[a-z]+$/.test(a.name)) continue;
+      if (a.name === "integrity" || a.name === "nonce") continue;
+      if (!a.present || a.value === null) {
+        kept.push(a.raw);
+        continue;
+      }
+      const q = a.quote || '"';
+      const put = (v) => kept.push(`${a.name}=${q}${v}${q}`);
+      if (a.name === "style") {
+        put(rewriteCssText(a.value, (u) => resolve(u, "css-asset")));
+        continue;
+      }
+      if (a.name === "srcset" || a.name === "imagesrcset") {
+        const parts = [];
+        for (const cand of a.value.split(",")) {
+          const trimmed = cand.trim();
+          if (!trimmed) continue;
+          const bits = trimmed.split(/\s+/);
+          const t = resolve(bits[0], "image");
+          bits[0] = t === null ? bits[0] : t;
+          parts.push(bits.join(" "));
+        }
+        put(parts.join(", "));
+        continue;
+      }
+      if (a.name === "href" || a.name === "src" || a.name === "poster" || a.name === "xlink:href" || a.name === "data") {
+        if (tag === "a" || tag === "area") {
+          const L = classifyLink(a.value);
+          kept.push(`data-bio-link="${L.type}"`);
+          if (L.address) kept.push(`data-bio-href="${L.address.replace(/"/g, "&quot;")}"`);
+          put(L.wrapper);
+          continue;
+        }
+        const t = resolve(a.value, tag === "script" ? "script" : "asset");
+        put(t === null ? a.value : t);
+        continue;
+      }
+      kept.push(a.raw);
+    }
+    return `<${name}${kept.length ? " " + kept.join(" ") : ""}${selfClose}>`;
+  });
+  const head = BANNER(primarySha, when) + `<meta http-equiv="Content-Security-Policy" content="${CSP}">
+`;
+  const at = src.search(/<head\b[^>]*>/i);
+  if (at !== -1) {
+    const end = src.indexOf(">", at) + 1;
+    return src.slice(0, end) + "\n" + head + src.slice(end);
+  }
+  return head + src;
+}
+var linkWrapper = {
+  anchor: (frag) => frag,
+  intra: (sha) => `about:capture#${sha}`,
+  deferred: (url) => `about:link#${encodeURIComponent(url)}`,
+  refused: () => "about:link#refused"
+};
+async function captureSubresources({
+  html,
+  base,
+  primarySha,
+  primaryFile,
+  fetchOne,
+  put,
+  sha256: sha2562,
+  isPublic,
+  cap = SUBRESOURCE_CAP,
+  perMax = SUBRESOURCE_MAX,
+  budget = SUBRESOURCE_BUDGET,
+  now = () => /* @__PURE__ */ new Date()
+}) {
+  const stamp = () => now().toISOString().split(".")[0] + "Z";
+  const records = [];
+  const bySha = /* @__PURE__ */ new Map();
+  const byUrl = /* @__PURE__ */ new Map();
+  const refToUrl = /* @__PURE__ */ new Map();
+  let attempted = 0, discovered = 0, spent = 0, truncated = false, budgetHit = false;
+  const queue = parseHtmlRefs(html).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+  const settle = (item, rec) => {
+    if (rec) records.push(rec);
+    if (item.cssOwner)
+      item.cssOwner.rewrite.push({ ref: item.ref, sha256: rec && rec.ok ? rec.sha256 : null });
+  };
+  while (queue.length) {
+    const item = queue.shift();
+    discovered++;
+    const cls = classifyRef(item.ref, item.against, isPublic);
+    if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
+    const at = stamp();
+    const stem = {
+      url: cls.ok ? cls.url : item.ref,
+      kind: item.kind,
+      via: item.where,
+      from: item.from,
+      depth: item.depth,
+      fetched_at: at
+    };
+    if (!cls.ok) {
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: cls.reason,
+        ...cls.scheme ? { scheme: cls.scheme } : {},
+        detail: cls.reason === "REFUSED_SCHEME" ? `a ${cls.scheme} reference is not something this surface fetches` : "the address is not public https, and the fence that guards the primary locator guards this one"
+      });
+      continue;
+    }
+    const already = byUrl.get(cls.url);
+    if (already) {
+      if (item.cssOwner)
+        item.cssOwner.rewrite.push({ ref: item.ref, sha256: already.ok ? already.sha256 : null });
+      continue;
+    }
+    if (attempted >= cap) {
+      truncated = true;
+      settle(item, {
+        ...stem,
+        ok: false,
+        status: null,
+        reason: "CAP_REACHED",
+        cap,
+        detail: "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible"
+      });
+      continue;
+    }
+    if (spent >= budget) {
+      budgetHit = true;
+      settle(item, { ...stem, ok: false, status: null, reason: "BUDGET_EXHAUSTED", budgetBytes: budget });
+      continue;
+    }
+    attempted++;
+    let r;
+    try {
+      r = await fetchOne(cls.url);
+    } catch (e) {
+      r = { ok: false, status: 0, reason: "FETCH_FAILED", detail: String(e && e.message || e) };
+    }
+    if (!r || !r.ok) {
+      const rec2 = {
+        ...stem,
+        ok: false,
+        status: r ? r.status ?? null : null,
+        reason: r?.reason || "SOURCE_REFUSED",
+        ...r?.detail ? { detail: r.detail } : {}
+      };
+      byUrl.set(cls.url, rec2);
+      settle(item, rec2);
+      continue;
+    }
+    const bytes = r.bytes || new Uint8Array(0);
+    if (bytes.length > perMax) {
+      const rec2 = {
+        ...stem,
+        ok: false,
+        status: r.status ?? 200,
+        reason: "TOO_LARGE",
+        bytes: bytes.length,
+        maxBytes: perMax
+      };
+      byUrl.set(cls.url, rec2);
+      settle(item, rec2);
+      continue;
+    }
+    spent += bytes.length;
+    const sha = await sha2562(bytes);
+    const { existed } = await put(sha, bytes);
+    const ct = (r.contentType || "").split(";")[0].trim();
+    const rec = {
+      ...stem,
+      ok: true,
+      status: r.status ?? 200,
+      sha256: sha,
+      bytes: bytes.length,
+      ...ct ? { content_type: ct } : {},
+      existed: !!existed
+    };
+    byUrl.set(cls.url, rec);
+    if (!bySha.has(sha)) bySha.set(sha, rec);
+    const isCss = item.kind === "stylesheet" || ct === "text/css";
+    if (isCss && item.depth < CSS_MAX_DEPTH) {
+      let text = "";
+      try {
+        text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+      } catch {
+        text = "";
+      }
+      rec.css = true;
+      rec.rewrite = [];
+      for (const u of cssRefs(text))
+        queue.push({
+          ref: u,
+          kind: "css-asset",
+          where: `url() in ${cls.url}`,
+          depth: item.depth + 1,
+          from: cls.url,
+          against: cls.url,
+          cssOwner: rec
+        });
+    }
+    settle(item, rec);
+  }
+  const resolve = (ref, kind) => {
+    const trimmed = String(ref || "").trim();
+    if (!trimmed) return null;
+    if (kind === "script") return PLACEHOLDER_MISSING;
+    const abs = refToUrl.has(trimmed) ? refToUrl.get(trimmed) : (() => {
+      const c = classifyRef(trimmed, base, isPublic);
+      return c.ok ? c.url : null;
+    })();
+    if (abs === null) return PLACEHOLDER_MISSING;
+    const rec = byUrl.get(abs);
+    if (!rec) return PLACEHOLDER_MISSING;
+    if (rec.kind === "script") return PLACEHOLDER_MISSING;
+    return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
+  };
+  const when0 = stamp();
+  const links = [];
+  const seenLink = /* @__PURE__ */ new Map();
+  const classifyLink = (ref) => {
+    const raw = String(ref || "").trim();
+    const note = (type, address, extra = {}) => {
+      const key = `${type}\0${address || raw}`;
+      if (!seenLink.has(key)) {
+        seenLink.set(key, true);
+        links.push({ ref: raw, type, address: address || null, as_of: when0, ...extra });
+      }
+      return { type, address, ...extra };
+    };
+    if (!raw) return { type: "refused", wrapper: linkWrapper.refused(), address: null };
+    if (raw.startsWith("#")) {
+      note("anchor", null);
+      return { type: "anchor", wrapper: linkWrapper.anchor(raw), address: null };
+    }
+    const cls = classifyRef(raw, base, isPublic);
+    if (!cls.ok) {
+      note("refused", cls.url, { reason: cls.reason, ...cls.scheme ? { scheme: cls.scheme } : {} });
+      return { type: "refused", wrapper: linkWrapper.refused(), address: null };
+    }
+    const held = byUrl.get(cls.url);
+    if (held && held.ok) {
+      note("intra", cls.url, { sha256: held.sha256 });
+      return { type: "intra", wrapper: linkWrapper.intra(held.sha256), address: cls.url };
+    }
+    note("deferred", cls.url, { held_at_capture: false });
+    return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
+  };
+  const when = when0;
+  const companionText = renderCompanion(html, { resolve, classifyLink, primarySha, when });
+  const companionBytes = new TextEncoder().encode(companionText);
+  const companionSha = await sha2562(companionBytes);
+  await put(companionSha, companionBytes);
+  const fetched = records.filter((r) => r.ok);
+  const manifest = {
+    version: 1,
+    derived: true,
+    of: primaryFile,
+    of_sha256: primarySha,
+    base,
+    generated: when,
+    render: `${primaryFile}.render.html`,
+    render_sha256: companionSha,
+    placeholder_scheme: "about:capture#<sha256>",
+    unavailable: PLACEHOLDER_MISSING,
+    limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
+    discovered,
+    attempted,
+    truncated,
+    budget_exhausted: budgetHit,
+    counts: {
+      fetched: fetched.length,
+      failed: records.filter((r) => !r.ok && (r.reason === "SOURCE_REFUSED" || r.reason === "FETCH_FAILED" || r.reason === "TOO_LARGE")).length,
+      refused: records.filter((r) => !r.ok && (r.reason === "REFUSED_SCHEME" || r.reason === "REFUSED_LOCATOR" || r.reason === "UNRESOLVABLE")).length,
+      scripts_held_unreferenced: fetched.filter((r) => r.kind === "script").length,
+      bytes: spent,
+      links: {
+        anchor: links.filter((l) => l.type === "anchor").length,
+        intra: links.filter((l) => l.type === "intra").length,
+        deferred: links.filter((l) => l.type === "deferred").length,
+        refused: links.filter((l) => l.type === "refused").length
+      }
+    },
+    subresources: records,
+    links,
+    link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another bundle is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
+    note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."
+  };
+  const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
+  const manifestSha = await sha2562(manifestBytes);
+  await put(manifestSha, manifestBytes);
+  return {
+    subresources: records,
+    links,
+    manifest,
+    manifestSha,
+    manifestBytes,
+    companionText,
+    companionSha,
+    companionBytes,
+    truncated,
+    discovered,
+    attempted,
+    /* `renditions`, not `derived`. C-18.1 already spends `derived` on a
+       different claim: that THIS document is itself a derivation of something
+       else, with a transform and a reason. What is being named here is the
+       opposite direction, artifacts derived FROM this document, so it needs its
+       own key. It borrows the transform/reason vocabulary because the honesty
+       requirement is identical: a rendering that does not say what was done to
+       it and why is indistinguishable from evidence. */
+    renditions: [
+      {
+        file: `${primaryFile}.render.html`,
+        kind: "render_companion",
+        from_file: primaryFile,
+        sha256: companionSha,
+        bytes: companionBytes.length,
+        content_type: "text/html",
+        transform: "scripts and frames removed; subresource references replaced with about:capture#<sha256> placeholders; a content security policy added",
+        reason: "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one"
+      },
+      {
+        file: "data/snapshot-manifest.json",
+        kind: "snapshot_manifest",
+        from_file: primaryFile,
+        sha256: manifestSha,
+        bytes: manifestBytes.length,
+        content_type: "application/json",
+        transform: "index of the render companion's placeholders to the content-addressed captures they resolve to",
+        reason: "a viewer must be able to verify every byte it substitutes against the record before showing it"
+      }
+    ]
+  };
 }
 
 // src/store.mjs
@@ -10163,6 +10706,47 @@ var index_default = {
       }
       const ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
       const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
+      const HTML_CT = ["text/html", "application/xhtml+xml"];
+      const SUB_PARSE_MAX = 8 * 1024 * 1024;
+      let subs = null, subsSkipped = null;
+      if (body2.subresources === true) {
+        if (multipart || total > SUB_PARSE_MAX)
+          subsSkipped = { reason: "TOO_LARGE_TO_PARSE", detail: `subresource capture reads the primary back into memory to parse it, so it is bounded to ${SUB_PARSE_MAX} bytes; this document is ${total}` };
+        else if (!HTML_CT.includes(ct))
+          subsSkipped = { reason: "NOT_HTML", content_type: ct || null, detail: "only an HTML page has subresources; the capture is unaffected and complete" };
+        else {
+          const obj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+          if (!obj) subsSkipped = { reason: "PRIMARY_UNREADABLE", detail: "the primary capture did not read back" };
+          else {
+            const primaryBytes = new Uint8Array(await obj.arrayBuffer());
+            const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+            subs = await captureSubresources({
+              html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
+              base: res2.url || locator,
+              primarySha: sha,
+              primaryFile: `snapshots/${name}`,
+              isPublic: isPublicHttpsLocator,
+              sha256: async (b) => hex2(await crypto.subtle.digest("SHA-256", b)),
+              put: async (s, b) => {
+                const k = `${storeName}/captures/${s}`;
+                if (await env.CAPTURES.head(k)) return { existed: true };
+                await env.CAPTURES.put(k, b, { sha256: await crypto.subtle.digest("SHA-256", b) });
+                return { existed: false };
+              },
+              fetchOne: async (u) => {
+                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+                if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };
+                return {
+                  ok: true,
+                  status: r.status,
+                  bytes: new Uint8Array(await r.arrayBuffer()),
+                  contentType: r.headers.get("content-type") || ""
+                };
+              }
+            });
+          }
+        }
+      }
       return json({
         ok: true,
         existed,
@@ -10187,6 +10771,13 @@ var index_default = {
             sha256: p.sha256,
             bytes: p.bytes
           })) } : {},
+          /* Named on the SAME register document rather than as documents of
+             their own. C-18.3 treats one capture hash appearing under two
+             register entries as a missed corroboration, and beyond that a
+             derived artifact is not an independent acquisition: it has no
+             locator, no authority, and no grade of its own. It is a rendering
+             of this document and it says so here. */
+          ...subs ? { renditions: subs.renditions } : {},
           origin: {
             kind: body2.matchedSweep ? "sweep" : "named_request",
             ...body2.matchedSweep ? { matched_sweep: body2.matchedSweep, deeming_actor: sessMember || cls } : {}
@@ -10194,6 +10785,27 @@ var index_default = {
           attestation_attempts: []
         },
         ...multipart ? { parts: parts.length } : {},
+        ...subs ? {
+          subresources: subs.subresources,
+          snapshot: {
+            manifest_file: "data/snapshot-manifest.json",
+            manifest_sha256: subs.manifestSha,
+            render_file: `snapshots/${name}.render.html`,
+            render_sha256: subs.companionSha,
+            discovered: subs.discovered,
+            attempted: subs.attempted,
+            truncated: subs.truncated,
+            fetched: subs.manifest.counts.fetched,
+            failed: subs.manifest.counts.failed,
+            refused: subs.manifest.counts.refused,
+            scripts_held_unreferenced: subs.manifest.counts.scripts_held_unreferenced
+          },
+          files: {
+            [`snapshots/${name}.render.html`]: subs.companionSha,
+            "data/snapshot-manifest.json": subs.manifestSha
+          }
+        } : {},
+        ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
         note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
         store: storeName,
         tokenClass: cls
