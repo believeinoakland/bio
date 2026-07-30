@@ -22,7 +22,7 @@ WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
 **This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_7.md`, written 2026-07-30 after Bob corrected the framing
+`BIO_Content_Framework_v0_8.md`, written 2026-07-30 after Bob corrected the framing
 of this one: it is not that discovery has finished, but that discovery will continue
 for a long time and the framework's job is to make each new surprise cheap. That
 document's section 9 states the cost of absorbing each kind of new thing, and that
@@ -214,7 +214,11 @@ the quiet blocker on everything Bob's purpose statement asks for: entities canno
 resolved across documents if no document's entities are stored. Persist readings and
 index them by entity reference. Consumer: Step 4.
 
-**Step 4. The ENTITY axis.** The third registry, and the first real test of whether
+**Step 4. The ENTITY axis, which must also be the bias doctrine's SUBJECT REGISTRY**
+(D-83). Aliases and member-declared relations are first-class, justified and citable,
+because safeguard 4 of `BIO_Declared_Bias_v0_1.md` depends on them and an entity model
+that only derives identity from source identifiers cannot express them. A declared
+relation is constitutive rather than evidentiary and sits outside the connection grade. The third registry, and the first real test of whether
 §4's claim is true. Entity recognisers resolve a reference in a reading to an entity
 and declare how: by a source-assigned identifier, by an exact identifier match, or by
 correspondence such as a name. That method IS the connection grade (framework §8.1).

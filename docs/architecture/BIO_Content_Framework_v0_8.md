@@ -1,6 +1,6 @@
 # BIO Content Framework
 
-**Version 0.7 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
+**Version 0.8 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -14,6 +14,13 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.8, 2026-07-30. Bob observed that the declared bias construct was missing from this
+  framework. It was, and worse: v0.6 and v0.7 cited it twice in support of a claim that
+  reading it does not sustain. §12.1 is CORRECTED — a member-scoped aspiration is not a
+  declared bias — and §13 integrates the doctrine properly. The load-bearing finding is
+  that the doctrine's SUBJECT REGISTRY and this framework's entity axis are the same
+  construct arriving from two directions, and building them separately would repeat
+  exactly the error CONSTRUCTS.md exists to prevent.
 - v0.7, 2026-07-30. Bob ruled that contradicting aspirations are WELCOMED, for two
   reasons that change the design rather than soften it: we may not realise that they
   contradict, and we learn from trying to achieve aspirations whether they are achieved
@@ -975,13 +982,29 @@ Contact is detectable and is worth surfacing. Whether the contact is a contradic
 a tension worth living with, or a misunderstanding is a human judgment, and the system
 presents the evidence for it in the same terms as any other finding.
 
-**A member-scoped aspiration is a declared lens.** This is the same construct
-`BIO_Declared_Bias_v0_1.md` describes: bias is real and the most dangerous bias is the
-denied one, so the honest system makes the lens part of the record. A member
-declaring "I am pursuing the sewer fund because I believe the transfers were
-improper" has done exactly what that doctrine asks, and the declaration travels with
-the work done under it. Scoping aspirations to members is therefore not a convenience
-feature; it is where declared bias gets a home in the architecture.
+**A member-scoped aspiration is NOT a declared bias.** v0.6 and v0.7 of this document
+said it was, twice, and that was wrong. The claim was made from the first paragraph of
+`BIO_Declared_Bias_v0_1.md` without reading the rest, and the rest does not sustain
+it. The two constructs differ in every particular that matters:
+
+| | aspiration | declared bias |
+| --- | --- | --- |
+| says | what someone wants to be true | how evidence must be TREATED |
+| form | prose | a set of statements, closed at three kinds: scrutiny, inference, pattern |
+| discipline | none needed | the malformedness rule: it may never issue a verdict on a source |
+| scopes | group, project, member | instance and project. No member scope |
+| effect | sets priority | binds evaluations, and travels as a manifest with published work |
+
+An aspiration expresses intent and orders attention. A bias statement constrains what
+may be concluded and from whom. "I believe the transfers were improper" is an
+aspiration or a hypothesis; "anything from this office needs cross-checking before it
+bears load, because it has misstated three times" is a bias statement, and it is
+useless as an aspiration and unacceptable as one without its justification and its
+evidence.
+
+The relationship is real but it is adjacency, not identity: a member pursuing an
+aspiration is a good moment to ASK whether they hold a declared bias about the sources
+that pursuit will lean on. §13 says what actually follows.
 
 ## 12.2 The pursuit record
 
@@ -1034,6 +1057,103 @@ the thing the objectives were in service of. §11 has listed it as unmodelled si
 v0.1 and it stays unmodelled here, because a claim needs a standard of proof attached
 and that is doctrine rather than architecture. It is the next design conversation, not
 this one.
+
+## 13. Declared bias, and where it meets this framework
+
+`BIO_Declared_Bias_v0_1.md` predates this document by three days and is more finished
+than anything here. It defines a bias as a set of statements of three kinds —
+**scrutiny** (a source's claims need corroboration before they bear load),
+**inference** (a specific inference pattern is licensed or blocked), and **pattern**
+(an evidenced empirical claim about a source's behaviour, which must cite the record)
+— governed by a **malformedness rule** that refuses any statement pre-assigning a
+truth value to a source. Bias sets are bundles, scoped at instance and project, with
+override-by-effect, locks, and five layered safeguards against masking. Every work
+product cites a **bias manifest**; a changed manifest leaves **bias debt** on prior
+analysis; and **regrade** and **rerun** let one group's conclusions be re-derived
+under another group's lens.
+
+None of that is restated here. What follows is only the places the two constructs
+touch, and the first one changes a plan.
+
+### The subject registry and the entity axis are the same construct
+
+The doctrine's fourth safeguard requires that statements reference a **subject
+registry**: a bundle of entries for sources, institutions, offices and movements, each
+with its aliases, plus declared relations between them (`proxy_for`, `member_of`,
+`overlaps`), each relation justified and citable.
+
+That is an entity registry. Restricted to sources rather than covering ordinances and
+parcels, and carrying member-declared relations rather than derived ones, but the same
+object: a stable identity, its aliases, and its relationships, maintained as a bundle.
+
+Building it twice would be precisely the failure `CONSTRUCTS.md` was written to stop.
+**Step 4, the entity axis, must produce the registry the bias doctrine needs**, and the
+requirement flows both ways:
+
+- **the bias doctrine constrains the entity axis.** Aliases and declared relations must
+  be first-class, editable by members, justified, and citable. An entity model that
+  only ever derives identity from source identifiers cannot express "the registry
+  relates MAGA to Trump" and would leave safeguard 4 unbuildable.
+- **the entity axis serves the bias doctrine's prerequisite.** The doctrine names one:
+  "for bias to bind mechanically rather than remain guidance humans apply by hand,
+  evidence items need source attribution the system can match". Resolving a reference
+  in a reading to a registered entity IS that attribution. The entity axis is therefore
+  not merely adjacent to mechanical bias binding, it is the thing that unblocks it.
+
+One caution on grade. A declared relation in the registry is not a Grade D testimonial
+connection, and grading it that way would be a category error. The group declaring that
+two subjects are related is **constitutive** rather than evidentiary: it is not a claim
+about the world that could be checked, it is the group fixing what its own statements
+mean. Constitutive acts carry an author and a justification like everything else, and
+they sit outside the A-to-D scale.
+
+### An assistant working unattended works under a lens
+
+Bob ruled this session that an assistant may open a focus without a member. The
+doctrine says any BIO work done under bias carries the fully declared bias as part of
+that work's evidentiary record. Put together, a consequence follows that the doctrine
+predates and did not anticipate:
+
+**An assistant-surfaced focus must carry the bias manifest in force when it was
+surfaced.** The assistant is doing BIO work; the effective statement set shaped what it
+scrutinised and what inferences it was permitted to draw; and unlike a member it will
+not remember. Without the manifest, a focus surfaced under one lens is indistinguishable
+later from one surfaced under another, and bias debt cannot be computed against it.
+
+This also gives the honest answer to a question the doctrine leaves open. An
+assistant has no bias of its own to declare; what it has is the effective set it was
+run under, plus the objective it was pursuing. Both are recordable, and recording them
+is the whole of the assistant's obligation.
+
+### Bias debt and the ageing machinery are the same shape
+
+Bias debt says: the lens changed, so this analysis owes a re-run, and it may not
+advance or be ratified until the debt is settled. §8.2's temporal expectations say: this
+stage is due and has not arrived. Both are an obligation with a clock, attached to an
+object, blocking a state transition, and settleable in batches. They should share
+mechanism rather than growing two schedulers, and Step 7 of the plan is where that is
+decided.
+
+### Where bias enters this framework's own judgments
+
+The doctrine governs analysis and conclusions. This framework produces judgments of a
+different kind — that a page is WordPress, that a difference is mechanical, that two
+references resolve to one entity — and those are not bias-bearing in the doctrine's
+sense. They carry their own provenance under §10 and are revised by improving a
+recogniser rather than by declaring a lens.
+
+The boundary is worth stating exactly, because blurring it in either direction is
+costly. A recogniser's judgment is about how a document was made. A bias statement is
+about how a source's claims should be weighed. A pattern statement such as "this office
+publishes minutes late" looks like it lives on the boundary and does not: the framework
+can supply the evidence for it from monitoring, and the statement itself remains a
+member's analysis, cited to that evidence, subject to the malformedness rule.
+
+### What is missing
+
+`object_type: bias` does not exist in the check catalogue. The catalogue carries
+information, focus, problem, project and action; a bias bundle is designed and cannot
+be written. That is the first concrete gap, and it is small.
 
 ## 10. Provenance of judgments, so learning can revise
 
