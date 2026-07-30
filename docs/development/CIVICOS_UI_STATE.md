@@ -141,6 +141,55 @@ cannot write the completed manifest back. The repair went through promote's CAS
 on base instead, which is the actual integrity mechanism, the lease being a
 courtesy lock against two members editing at once.
 
+BOB'S CORRECTION, AND IT REACHED BACK THROUGH EVERYTHING BUILT TODAY. The primary
+audience is NON-TECHNICAL, and the purpose of the workflow is to remove members
+from logistics and nuance so they work at a higher level. The complications found
+this session are technical complications and do not require human confirmation.
+Recognise the patterns for what they are: mechanical artifacts of the host's tech
+stack, ads, and other elements that vary every time a document is rendered.
+
+That condemned three surfaces built earlier the same session, each of which had
+turned a mechanical problem into a member-facing question, and each of which felt
+like honesty at the time. The unfinished-capture dialog asked a member to choose
+between recording an unfinished capture and writing nothing, which is asking
+somebody researching a sewer fund to arbitrate a subrequest ceiling. The
+already-held dialog asked whether to add a second copy. The address-match dialog
+said "nothing here can tell those two cases apart, so nothing here will claim
+to", which is abdication wearing honesty's clothes: the system CAN tell them
+apart, and saying it cannot while handing the member the decision is worse than
+either.
+
+ALL THREE ARE GONE. The classifier decides and the surface reports. An unfinished
+capture is recorded, labelled on its own page, and picked up later. A document
+already in the record produces one sentence and then opens it. A genuinely changed
+document is added, and its own text says which earlier capture it follows.
+
+WHAT WAS BUILT INSTEAD: civicos-ui/volatile.mjs, five families of per-render
+mechanism, each entry either measured in a real capture or a documented
+per-response mechanism of a stack municipal publishing runs on. Server page state,
+security tokens, visit identifiers, version stamps on design files, advertising
+and analytics slots. Normalisation runs on a COPY so identity stays raw and a
+misclassification can never destroy evidence; what was normalised is recorded with
+its family, count and byte volume, because a difference that is not a change is
+still an observation and a page whose page state stopped moving would be worth
+knowing. A family is only added on measurement, since a careless family HIDES A
+REAL CHANGE, which is the only failure here that matters.
+
+VALIDATED BOTH DIRECTIONS, on the live record rather than a fixture. Two captures
+of the same Legistar calendar held in the store: 368,904 bytes each, different
+hashes, and the classifier calls them the same document, normalising 115,980 bytes
+of page state and reporting one artifact family in plain words. One altered word in
+the same document still comes back changed. The test asserts both, because a check
+that only ever says "same" passes by being useless.
+
+AND A VOCABULARY GUARD, which is how the ruling survives the next session. The
+harnesses scan every member-facing string, the unfinished banner, the reuse
+disclosure, the still-to-collect list and the Add form, for a list of words a
+reader should never meet: subrequest, runtime, manifest, register entry,
+corroboration, sha256, viewstate, content_hash, content-addressed, op=, ceiling.
+Plain language erodes one helpful clarification at a time, and an assertion is the
+only thing that holds it.
+
 THE LESSON OF THE SESSION. Reading the plane's SOURCE rather than the docs'
 description of it caught four things before they shipped, and running against the
 LIVE plane caught three more that no fixture would have. An anchor's recorded

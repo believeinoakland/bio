@@ -1316,19 +1316,19 @@ async function resolveSnapshot(man, fetchCapture, onProgress){
    Each reason is the plane's, distinguishing what nobody asked for from what a
    source refused, because they are different facts about the same absence. */
 const PART_REASON = {
-  DEFERRED: "outstanding: this capture ran out of its allowance before asking, so the source refused nothing",
-  PLATFORM_LIMIT: "outstanding: the runtime would not make another outbound request",
-  CAP_REACHED: "outstanding: the capture reached its own limit on how much support material it will gather",
-  BUDGET_EXHAUSTED: "outstanding: the capture reached its byte budget",
-  SOURCE_REFUSED: "the source refused to serve it",
-  FETCH_FAILED: "the source could not be reached",
-  TOO_LARGE: "larger than this surface will hold",
-  REFUSED_SCHEME: "the record will not carry this kind of address",
+  DEFERRED: "not collected yet: there was no time left to ask for it, and the source refused nothing",
+  PLATFORM_LIMIT: "not collected yet: no more requests could be made on this pass",
+  CAP_REACHED: "not collected yet: this pass had gathered as much as it gathers at once",
+  BUDGET_EXHAUSTED: "not collected yet: this pass had gathered as much as it holds at once",
+  SOURCE_REFUSED: "the site would not serve it",
+  FETCH_FAILED: "the site could not be reached",
+  TOO_LARGE: "too large to keep",
+  REFUSED_SCHEME: "not a kind of address the record will follow",
   REFUSED_LOCATOR: "not an address the record will fetch",
-  UNRESOLVABLE: "the address could not be resolved against the page",
-  THIRD_PARTY: "not part of the document: a third party's script, image or media",
-  OUTSIDE_THE_DOCUMENT: "outside the document's own boundary",
-  COLLAPSED_SRCSET_FAMILY: "one of several sizes of the same picture; the largest was captured",
+  UNRESOLVABLE: "the address on the page could not be worked out",
+  THIRD_PARTY: "someone else's advertising or tracking, not part of the document",
+  OUTSIDE_THE_DOCUMENT: "outside the document itself",
+  COLLAPSED_SRCSET_FAMILY: "one of several sizes of the same picture; the largest was kept",
 };
 function outstandingList(man){
   const miss = (man && man.subresources || []).filter(s => !s.ok
@@ -1338,9 +1338,9 @@ function outstandingList(man){
   const show = miss.slice(0, 20);
   const rows = show.map(s=>`<div class="lkrow"><span class="lkaddr">${esc(s.url||"")}</span>
     <div class="lkmeta">${esc(s.kind||"part")} &middot; ${esc(PART_REASON[s.reason] || String(s.reason||"not fetched"))}${s.status?` (${esc(String(s.status))})`:""}</div></div>`).join("");
-  return `<div style="margin-top:10px"><b>What this capture never got (${miss.length})</b>
+  return `<div style="margin-top:10px"><b>Still to be collected (${miss.length})</b>
     <div class="card" style="padding:4px 14px;margin-top:6px">${rows}</div>
-    ${miss.length>show.length?`<div class="lkmeta" style="margin-top:6px">and ${miss.length-show.length} more, all listed in the capture's manifest</div>`:""}</div>`;
+    ${miss.length>show.length?`<div class="lkmeta" style="margin-top:6px">and ${miss.length-show.length} more</div>`:""}</div>`;
 }
 
 async function openArtifact(k){
@@ -1654,6 +1654,175 @@ function acquireWhy(a){
   return "The document could not be captured: " + why;
 }
 
+/*__VOLATILE_START__*/
+/* volatile.mjs — telling a mechanical artifact apart from a change.
+ *
+ * WHY THIS EXISTS. A member's question is "did this document change?". The
+ * machine's answer, until now, was the hash of the bytes, and that answer is
+ * wrong often enough to be useless: measured on oakland.legistar.com, two
+ * fetches three seconds apart differed by 114,177 bytes, 31% of the document,
+ * every differing byte inside two ASP.NET hidden fields, with the other 68.6%
+ * byte-identical. Nothing had changed. A system that reports that as a change
+ * has handed its own plumbing to somebody who was asking about a sewer fund.
+ *
+ * So the difference is CLASSIFIED here rather than surfaced. Each family below
+ * is a known mechanism that varies on every render: server page state, security
+ * tokens, session identifiers, cache-busting fingerprints, ad and analytics
+ * slots. When every difference between two captures falls inside these families,
+ * the document did not change, and nothing needs to be said to anybody.
+ *
+ * THREE RULES THIS FILE OBEYS.
+ *
+ * Raw bytes are never rewritten. Normalisation happens on a COPY to compute a
+ * comparison digest. The record keeps exactly what the source served, so a
+ * misclassification here can never destroy evidence and is always reversible.
+ *
+ * What was normalised is RECORDED, with the family, the count and the byte
+ * volume. A difference that is not a change is still an observation, and a page
+ * whose page-state suddenly stopped moving would be worth knowing about.
+ *
+ * Nothing here is ever treated as evidence. Nobody's case turns on a viewstate
+ * blob, and these regions are excluded from comparison rather than from the
+ * record.
+ *
+ * A family is only added on MEASUREMENT. The list is not a guess about what web
+ * pages contain; every entry below is either observed in a real capture or is a
+ * documented per-response mechanism of a stack that municipal publishing runs
+ * on. Anything uncertain is left out, because a family added carelessly hides a
+ * real change, which is the one failure mode that matters here.
+ */
+
+const VOLATILE_FAMILIES = [
+  {
+    key: "aspnet_page_state",
+    /* What a member would be told, if anyone ever needed to tell them. */
+    label: "page state the server rebuilds on every visit",
+    /* MEASURED on oakland.legistar.com/Calendar.aspx, 2026-07-30: __VIEWSTATE
+       115,096 bytes and __EVENTVALIDATION 876 bytes accounted for 100% of the
+       difference between two fetches three seconds apart. */
+    patterns: [
+      /(<input[^>]*\bname="(?:__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY)"[^>]*\bvalue=")([^"]*)(")/gi,
+    ],
+  },
+  {
+    key: "security_token",
+    label: "a one-time security token",
+    /* Anti-forgery tokens are per-response BY DESIGN: a token that repeated
+       would not be doing its job. ASP.NET MVC, Rails, Django, Laravel. */
+    patterns: [
+      /(<input[^>]*\bname="(?:__RequestVerificationToken|authenticity_token|csrfmiddlewaretoken|_token|_csrf)"[^>]*\bvalue=")([^"]*)(")/gi,
+      /(<meta[^>]*\bname="(?:csrf-token|csrf-param|_csrf)"[^>]*\bcontent=")([^"]*)(")/gi,
+      /(\bnonce=")([^"]*)(")/gi,
+    ],
+  },
+  {
+    key: "session_id",
+    label: "a visit identifier",
+    /* A session id names THIS visit and says nothing about the document. */
+    patterns: [
+      /(;jsessionid=)([A-Za-z0-9._-]+)()/gi,
+      /(\b(?:ASP\.NET_SessionId|PHPSESSID|JSESSIONID|SESSID|sid)=)([A-Za-z0-9._%-]+)()/gi,
+    ],
+  },
+  {
+    key: "cache_buster",
+    label: "a version stamp on a design file",
+    /* A query string whose only job is to defeat caching. The FILE is captured
+       and hashed on its own; the stamp is addressing, not content. Deliberately
+       narrow: only ?v=, ?ver=, ?_= and ?t= with a numeric or hex value, because
+       a query parameter is content often enough that a broad rule here would
+       hide real change. */
+    patterns: [
+      /([?&](?:v|ver|_|t|rev|cb)=)([0-9a-f]{4,}|[0-9]{6,})(?=["'&\s>])()/gi,
+    ],
+  },
+  {
+    key: "ad_and_analytics",
+    label: "an advertising or analytics slot",
+    /* Ad slots and beacons are regenerated per impression and belong to a third
+       party. Per the standing ruling, third-party script output is that third
+       party's, not the publisher's, so it is never this document's content. */
+    patterns: [
+      /(\bdata-google-query-id=")([^"]*)(")/gi,
+      /(\bid="(?:div-gpt-ad|google_ads_iframe)[^"]*?)([0-9]{6,})([^"]*")/gi,
+      /(["'&](?:correlator|cachebuster|ord|gclid|_ga|_gid|utm_[a-z]+)=)([^"'&\s]+)()/gi,
+      /(<!-- google_ad_section[^>]*?)([0-9]{6,})(-->)/gi,
+    ],
+  },
+];
+
+const PLACEHOLDER = "\u0000VOLATILE\u0000";
+
+/** Replace every known-volatile region with a fixed placeholder, on a COPY, and
+ *  report what was replaced. Text in, text out; callers hand this the decoded
+ *  document and keep the original bytes untouched. */
+function normaliseVolatile(text) {
+  let out = String(text);
+  const found = [];
+  for (const fam of VOLATILE_FAMILIES) {
+    let count = 0, bytes = 0;
+    for (const re of fam.patterns) {
+      out = out.replace(re, (whole, pre, mid, post) => {
+        /* A pattern that matched nothing worth replacing is not an observation.
+           Guarding on length keeps an empty value="" from counting. */
+        if (!mid || !mid.length) return whole;
+        count++; bytes += mid.length;
+        return (pre || "") + PLACEHOLDER + (post || "");
+      });
+    }
+    if (count) found.push({ family: fam.key, label: fam.label, count, bytes });
+  }
+  return { text: out, found, normalised_bytes: found.reduce((n, f) => n + f.bytes, 0) };
+}
+
+/** Is this something normalisation applies to at all? Only markup. A PDF's bytes
+ *  are its content and a stray match inside a compressed stream would be
+ *  meaningless, so anything not obviously text/html is compared raw. */
+function isNormalisable(contentType, name) {
+  const ct = String(contentType || "").toLowerCase();
+  if (ct.includes("html") || ct.includes("xml") || ct.includes("xhtml")) return true;
+  if (ct) return false;
+  return /\.(html?|xhtml|aspx?|php|jsp)$/i.test(String(name || ""));
+}
+
+/** The comparison digest: the hash of the document with its volatile regions
+ *  flattened. Identity stays the raw hash; this is only ever for comparing.
+ *  `sha256` is injected so this file runs in a browser, a Worker, or a test. */
+async function stableDigest(bytes, { contentType, name, sha256 }) {
+  if (!isNormalisable(contentType, name))
+    return { digest: await sha256(bytes), normalised: false, found: [] };
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  const n = normaliseVolatile(text);
+  return { digest: await sha256(new TextEncoder().encode(n.text)),
+           normalised: true, found: n.found, normalised_bytes: n.normalised_bytes };
+}
+
+/** The question a member is actually asking, answered without asking them
+ *  anything: are these two captures the same document?
+ *
+ *  Returns `same` true when the raw bytes differ but every difference sits
+ *  inside a known mechanism. `artifacts` names those mechanisms in plain words,
+ *  for the record rather than for the screen. `changed` true means the document
+ *  itself differs and somebody may care. */
+async function compareCaptures(a, b, { contentType, name, sha256 }) {
+  const ra = await sha256(a.bytes !== undefined ? a.bytes : a);
+  const rb = await sha256(b.bytes !== undefined ? b.bytes : b);
+  if (ra === rb)
+    return { same: true, identical: true, changed: false, artifacts: [],
+             why: "the source served exactly the same bytes" };
+  const da = await stableDigest(a.bytes !== undefined ? a.bytes : a, { contentType, name, sha256 });
+  const db = await stableDigest(b.bytes !== undefined ? b.bytes : b, { contentType, name, sha256 });
+  const artifacts = [...new Set([...da.found, ...db.found].map((f) => f.label))];
+  if (da.digest === db.digest)
+    return { same: true, identical: false, changed: false, artifacts,
+             families: da.found, normalised_bytes: da.normalised_bytes,
+             why: "the bytes differ only where this site rebuilds them on every visit" };
+  return { same: false, identical: false, changed: true, artifacts,
+           families: da.found,
+           why: "the document itself differs, beyond anything the site rebuilds automatically" };
+}
+/*__VOLATILE_END__*/
+
 /* ============================================================
    THE LINK SURFACE. What a captured page pointed at.
 
@@ -1838,52 +2007,43 @@ function leaveGo(addr){
 function unfinishedBanner(snap, id, canFix){
   if(!snap || snap.complete !== false) return "";
   const n = Number(snap.outstanding||0);
-  const p = snap.platform || {};
-  /* Which bound stopped it, in the plane's own terms. Being REFUSED by the
-     runtime and stopping short of a ceiling this instance already learned are
-     different facts, and the manifest keeps them apart: platform.limited means a
-     request was actually refused, while a run that halts at ceiling_used without
-     being refused stopped on what an earlier run discovered. Collapsing the two
-     would report a ceiling as though it had just been found again. */
-  const why = p.limited
-    ? "the runtime refused a further outbound request during the capture"
-    : snap.truncated ? "the capture reached its own appetite for support material, which is a number this project sets and not one the platform imposes"
-    : snap.budget_exhausted ? "the capture reached its byte budget"
-    : (p.ceiling_used && Number(p.spent_this_invocation) >= Number(p.ceiling_used))
-      ? `the capture stopped at ${p.ceiling_used} outbound requests, which is the ceiling this instance learned by being refused at it before, so it deferred the rest rather than being refused again`
-      : "the capture did not finish its support material";
-  return `<div class="unfin"><h4>This capture is unfinished</h4>
-    <p>${n===1?"One supporting file was":`${n} supporting files were`} never fetched, because ${esc(why)}.
-      ${n?"They are outstanding, not failed: nobody asked the source for them and the source refused nothing.":""}
-      The document's own bytes are complete and hashed. What is missing is material the page needs to
-      render as the source served it, so opening it may refuse rather than show a page with pieces absent.</p>
-    ${canFix?`<div class="rv-bar" style="margin:0"><button class="btn" id="cont-go" onclick="continueCapture('${esc(id)}')">Continue this capture</button><span class="n">Fetches what is outstanding and records the completed capture as a revision, in your name.</span></div>`
-            :`<p style="margin:0">Continuing it needs a member holding <span class="mono">contribute</span>.</p>`}
+  /* Which bound stopped it is recorded in the manifest and belongs in the
+     record, not on screen. A member needs to know two things: the document
+     itself is sound, and the page may not display until the rest arrives. The
+     mechanism is the system's problem. */
+  return `<div class="unfin"><h4>Some of this page is still to be collected</h4>
+    <p>The document itself is complete and every byte has been checked against the record.
+      ${n===1?"One of the files":`${n} of the files`} that make the page look the way the
+      source published it ${n===1?"has":"have"} not been collected yet, so opening the page may
+      show nothing rather than show it wrong.</p>
+    ${canFix?`<div class="rv-bar" style="margin:0"><button class="btn" id="cont-go" onclick="continueCapture('${esc(id)}')">Finish collecting it</button><span class="n">Collects what is missing and records it, in your name.</span></div>`
+            :`<p style="margin:0">Finishing it needs a member who can add to the record.</p>`}
     <div id="cont-out"></div></div>`;
 }
 
-/* Parts the source was not asked for during this capture. 0.40.0 reuses
-   stylesheets, fonts and icons a host served recently and records
-   fetched_this_capture:false with the date the source was last seen serving
-   those exact bytes. A reader must never believe a byte was checked against the
-   source during this capture when it was not, and ratification re-fetches them,
-   so a member may want to know before then. */
+/* Files that came from an earlier visit rather than this one.
+   0.40.0 reuses design files a host served recently and records
+   fetched_this_capture:false with the date the source was last seen serving those
+   exact bytes. Bob asked for this to be visible, and it is: what a member needs
+   is that these bytes were not asked for again today, which is worth knowing
+   before anything is ratified. What they do not need is the vocabulary. */
 function reuseTag(s){
   if(!s || s.fetched_this_capture !== false) return "";
   const when = s.reused_from_fetched_at ? fmtWhenFull(s.reused_from_fetched_at) : null;
-  return `<span class="reused" title="${esc(`Not fetched during this capture. The source was last seen serving these exact bytes${when?` on ${when}`:" earlier"}${s.reused_seen_in_documents?`, across ${s.reused_seen_in_documents} documents on this host`:""}. The bytes are content-addressed and verified against the record like every other part; what was not repeated is the request to the source. Ratification re-fetches them.`)}">reused${when?`, last served ${esc(when)}`:""}</span>`;
+  return `<span class="reused" title="${esc(`Already saved from a visit to this site${when?` on ${when}`:" earlier"}, so it was not requested again today. The bytes are checked against the record like every other file; what was skipped is the request. Before this document is relied on as evidence, they are fetched again.`)}">from an earlier visit${when?`, ${esc(when)}`:""}</span>`;
 }
 function reuseSummary(snap){
   const parts = (snap && snap.subresources || []).filter(s=>s.ok && s.fetched_this_capture === false);
   if(!parts.length) return "";
   const dates = parts.map(s=>s.reused_from_fetched_at).filter(Boolean).sort();
   const rows = parts.map(s=>`<div class="lkrow"><span class="lkaddr">${esc(s.url||"")}</span>
-    <div class="lkmeta">${esc(s.kind||"part")}${s.reused_from_fetched_at?` &middot; source last seen serving these bytes ${esc(fmtWhenFull(s.reused_from_fetched_at))}`:""}${s.reused_seen_in_documents?` &middot; in ${s.reused_seen_in_documents} documents on this host`:""}</div></div>`).join("");
-  return sec2(`Reused from an earlier fetch (${parts.length})`,
-    `<p class="lede" style="margin:0 0 8px">These bytes were not requested from the source during this
-      capture. They were already held from an earlier fetch of the same address on this host${dates.length?`, the most recent on ${esc(fmtWhenFull(dates[dates.length-1]))}`:""}.
-      They are verified against the record's hashes exactly like every fetched part; what was not
-      repeated is the request. A capture ratified as evidence re-fetches them.</p>
+    <div class="lkmeta">${esc(s.kind||"file")}${s.reused_from_fetched_at?` &middot; already saved on ${esc(fmtWhenFull(s.reused_from_fetched_at))}`:""}</div></div>`).join("");
+  return sec2(`Files kept from an earlier visit to this site (${parts.length})`,
+    `<p class="lede" style="margin:0 0 8px">These are the design files the page needs, and this site had
+      already served the very same ones${dates.length?`, most recently on ${esc(fmtWhenFull(dates[dates.length-1]))}`:""}.
+      They were taken from the record instead of being asked for again. They are checked against the
+      record's own fingerprints exactly like every file that was fetched today, and they are collected
+      fresh before this document is relied on as evidence.</p>
      <div class="card" style="padding:4px 18px">${rows}</div>`, true);
 }
 
@@ -2547,6 +2707,9 @@ async function renderMembers(){
 const ADD_TYPES = [["information","Something the record should hold"],["focus","A question worth pursuing"],
                    ["project","A line of work"],["action","Something to do"]];
 let ADD_BUSY = false;
+/* When the source has published a CHANGED version of something the record already
+   holds, both belong in the record and the new one should say which it follows. */
+let CHANGED_FROM = null;
 
 function canContribute(){
   return !!(PLANE.session && PLANE.me && PLANE.me.session
@@ -2646,20 +2809,26 @@ async function addGo(){
   const wantSubs = !!(($("#a-subs")||{}).checked);
   const wantArch = !!(($("#a-arch")||{}).checked);
   try{
-    let doc = null, snap = null;
+    let doc = null, snap = null, partial = null;
     if(loc){
       const r = await addCapture(loc, auth, wantSubs);
       if(!r.ok){ addSay(""); addErr(esc(r.why)); return; }
-      doc = r.doc; snap = r.snap;
-      /* Before anything is written: does the record already hold these exact
-         bytes under a bundle? The common case once monitoring is on. */
-      addSay(`<p class="count-line">Checking whether the record already holds these bytes&hellip;</p>`);
-      const held = await alreadyHeld(doc.capture && doc.capture.sha256, loc);
-      if(held){
+      doc = r.doc; snap = r.snap; partial = r.partial || null;
+      /* Before anything is written: is this document already in the record? The
+         answer is the classifier's, not the member's. */
+      addSay(`<p class="count-line">Checking the record for this document&hellip;</p>`);
+      const held = await heldMatch(doc.capture && doc.capture.sha256, loc,
+        doc.capture && doc.capture.content_type, doc.file);
+      if(held && !held.proceed){
+        /* Already held, and the source is still serving the same document. Not an
+           error, not a question, and not a lecture about why the bytes differed:
+           one sentence, then the document it is already in. */
         addSay("");
-        const what = await heldDialog(held, doc.capture.sha256, doc.retrieved, !!snap);
-        if(!what.proceed){ if(what.open) openBundle(what.open); return; }
+        addErr(`This is already in the record${held.bundle.title?` as <b>${esc(held.bundle.title)}</b>`:""}, and the source is still publishing the same document. Nothing was added. Opening it now&hellip;`);
+        setTimeout(()=>openBundle(held.bundle.bundle_id), 1400);
+        return;
       }
+      CHANGED_FROM = held && held.proceed ? held.bundle : null;
       if(wantArch || doc){
         addSay(`<p class="count-line">Asking for a timestamp over the capture&hellip;</p>`);
         try{
@@ -2675,7 +2844,12 @@ async function addGo(){
     const a = await rec("allocid", { prefix: PREFIX[type], year: String(new Date().getFullYear()) });
     const stem = (a.result && a.result.id) || a.id;
     const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
-    const text = mdFor(id, type, FIRST_STATE[type], title, body, now, !!doc,
+    const bodyText = CHANGED_FROM
+      ? body + NL + NL + "The record already holds an earlier capture of this same address ("
+             + CHANGED_FROM.bundle_id + "). The source has since published a changed document, so "
+             + "this is a second capture rather than a repeat of the first."
+      : body;
+    const text = mdFor(id, type, FIRST_STATE[type], title, bodyText, now, !!doc,
       doc ? { locator: loc, authority: auth, retrieved: doc.retrieved || now,
               content_hash: doc.capture && doc.capture.sha256 } : null);
     const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
@@ -2710,32 +2884,36 @@ async function addGo(){
       return;
     }
     IMG_CACHE.delete(id); PROJ_CACHE.delete(id); RECORD_CACHE = null;
+    if(partial)
+      addErr(`Saved. The document itself is complete and checked. A few of the files that make the `
+        + `page look right have not arrived yet, so its page says so and offers to finish the job.`);
     openBundle(id);
   }catch(e){ addSay(""); addErr(esc((e && (e.reason||e.error||e.message)) || "That did not go through.")); }
   finally{ ADD_BUSY = false; const g = $("#a-go"); if(g) g.disabled = false; addValidate(); }
 }
 
-/* ---- the bytes may already be in the record, and usually will be ----
+/* ---- the document may already be in the record, and usually will be ----
 
-   RULED by Bob: a re-capture producing bytes a bundle already claims is a
-   REGULAR OCCURRENCE, not an exception. Monitoring exists to look at a document
-   again, so the common outcome of looking is "unchanged", which means identical
-   bytes and therefore the same content-addressed capture.
+   RULED by Bob: a re-capture producing a document the record already holds is the
+   REGULAR case, not an exception. Monitoring exists to look at a document again,
+   so the ordinary result of looking is "unchanged".
 
-   Handled correctly means: do not write a second bundle. C-18.3's ring-once rule
-   says identical content is corroboration on ONE register entry and never two,
-   and it compares hashes within a single bundle's register, so it cannot see a
-   second bundle holding the same capture hash. Nothing else can either, until
-   op=audit sweeps. A surface that promoted every re-capture would manufacture
-   exactly the false corroboration that rule exists to prevent, and it would do
-   it by default rather than by accident.
+   Nothing below asks the member anything. Whether two captures are the same
+   document is a technical question with a technical answer, and a member came
+   here to put a document into a case, not to adjudicate ASP.NET page state. The
+   classifier decides and the surface reports the outcome in one plain sentence.
 
-   What a confirmation IS worth is real and is not a new bundle: it advances the
-   observation interval on the address, which is what lets a later document's
-   link to it be resolved, and it is a first-party dated statement that the source
-   was still serving these bytes at this instant. */
-async function alreadyHeld(sha256, locator){
-  const out = { byHash: null, byAddress: [] };
+   Handled correctly also means not writing a second bundle for one document.
+   C-18.3's ring-once rule says identical content is corroboration on ONE register
+   entry and never two, and it compares hashes within a single bundle, so nothing
+   stops the duplicate at write time except the writer declining to make it. What
+   a confirmation IS worth is not a bundle: it advances the observed interval on
+   the address, which is the evidence the contemporaneity machinery consumes. */
+const digestOf = async (b) => {
+  const d = await crypto.subtle.digest("SHA-256", b);
+  return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");
+};
+async function heldMatch(sha256, locator, contentType, name){
   const search = async (q) => {
     try{
       const r = await rec("search", { q });
@@ -2743,59 +2921,35 @@ async function alreadyHeld(sha256, locator){
       return Array.isArray(hits) ? hits : [];
     }catch(_){ return []; }
   };
-  if(sha256) out.byHash = (await search(`hash:sha256:${sha256}`))[0] || null;
-  /* The address, ALWAYS, and not only when the hash misses.
-     MEASURED 2026-07-30: two fetches of a Legistar calendar three seconds apart
-     produced different hashes, all 114,177 differing bytes inside __VIEWSTATE and
-     __EVENTVALIDATION, with the other 68.6% of the document identical. So a
-     hash-only check does not fire on re-captures of exactly the pages that get
-     re-captured most, and the record would grow a second bundle for one document
-     while every duplicate defence stayed silent. The address is the coarser signal
-     and it is the one that works: what it cannot do is say whether the difference
-     is a change or merely page state, and it must not pretend otherwise. */
-  if(locator) out.byAddress = (await search(`locator:"${String(locator).replace(/"/g,"")}"`))
-    .filter(h => !out.byHash || h.bundle_id !== out.byHash.bundle_id);
-  return (out.byHash || out.byAddress.length) ? out : null;
-}
-function heldDialog(held, sha256, retrieved, hasSnapshot){
-  const hit = held.byHash;
-  const others = held.byAddress || [];
-  return new Promise(resolve=>{
-    $("#dlg").innerHTML = hit
-      ? `<h2>The record already holds this document</h2>
-       <p class="what">The bytes just fetched are identical to a capture
-         <span class="mono">${esc(hit.bundle_id)}</span> already claims, so nothing new was captured:
-         the source is still serving what the record already has. That is the ordinary result of looking
-         at a document again, and it is worth recording as a confirmation rather than as a second copy.</p>
-       <div class="addr">${esc(sha256)}</div>
-       <p class="what">Writing a second bundle for the same bytes would put one capture hash under two
-         register entries, and every count that treats register entries as independent would then read
-         two corroborations of a thing captured once. So that is not offered.</p>
-       ${hasSnapshot?`<p class="what">This fetch also gathered the page's supporting files. If that
-         bundle's capture was unfinished, those can be merged into it as a refill, which preserves
-         everything it already recorded.</p>`:""}
-       <div class="row-btns"><button class="btn ghost" id="hd-no">Nothing further</button>
-         <button class="btn" id="hd-open">Open <span class="mono">${esc(hit.bundle_id)}</span></button></div>`
-      : `<h2>The record already holds this address</h2>
-       <p class="what">${others.length===1?"A bundle":`${others.length} bundles`} in the record
-         ${others.length===1?"was":"were"} captured from this same address, and the bytes just fetched
-         are NOT identical to ${others.length===1?"it":"any of them"}.</p>
-       <div class="card" style="padding:4px 18px">${others.map(o=>
-         `<div class="linkrow" onclick="closeDialog();openBundle('${esc(o.bundle_id)}')"><span class="lt">${esc(o.title||o.bundle_id)}</span><span class="ln">${esc(o.bundle_id)}${o.source_retrieved?` \u00b7 retrieved ${esc(fmtWhenFull(o.source_retrieved))}`:""}</span></div>`).join("")}</div>
-       <p class="what">Different bytes are not the same as a changed document. A page built on ASP.NET
-         reissues its own hidden state on every response, so two fetches seconds apart differ by tens
-         of thousands of bytes while the content is word for word the same. Nothing here can yet tell
-         those two cases apart, so nothing here will claim to.</p>
-       <p class="what">Adding this as a new bundle records a second document from one address. That is
-         right when the source really did publish something new and wrong when it did not, and it is
-         your call rather than this surface's.</p>
-       <div class="row-btns"><button class="btn ghost" id="hd-no">Write nothing</button>
-         <button class="btn" id="hd-add">Add it anyway</button></div>`;
-    $("#dlg-wrap").classList.remove("hidden");
-    if(hit) $("#hd-open").addEventListener("click", ()=>{ closeDialog(); resolve({ open: hit.bundle_id }); });
-    else $("#hd-add").addEventListener("click", ()=>{ closeDialog(); resolve({ proceed: true }); });
-    $("#hd-no").addEventListener("click", ()=>{ closeDialog(); resolve({ open: null }); });
-  });
+  /* The cheap key first: identical bytes are a question the store already
+     answers, and no comparison is needed to know the answer. */
+  if(sha256){
+    const exact = (await search(`hash:sha256:${sha256}`))[0];
+    if(exact) return { bundle: exact, identical: true, changed: false, artifacts: [] };
+  }
+  if(!locator) return null;
+  /* Then the address, because the hash MISSES on any page that rebuilds part of
+     itself. Measured: two fetches of a Legistar calendar three seconds apart
+     share no hash and differ only in page state, so a hash-only check lets the
+     record grow a second bundle for one document with nothing complaining. */
+  for(const o of await search(`locator:"${String(locator).replace(/"/g,"")}"`)){
+    const p = await getProjection(o.bundle_id).catch(()=>null);
+    const heldSha = String((p && p.content_hash) || "").replace(/^sha256:/, "");
+    if(!/^[0-9a-f]{64}$/.test(heldSha)) continue;
+    if(heldSha === sha256) return { bundle: o, identical: true, changed: false, artifacts: [] };
+    const held = await fetchCapture(heldSha), fresh = await fetchCapture(sha256);
+    if(!held.ok || held.sha !== heldSha || !fresh.ok) continue;
+    const v = await compareCaptures(held.bytes, fresh.bytes,
+      { contentType, name, sha256: digestOf });
+    /* Same document: the differences are all mechanism. Not a duplicate to
+       refuse loudly, just a document the record already has. */
+    if(v.same) return { bundle: o, identical: false, changed: false,
+                        artifacts: v.artifacts, families: v.families };
+    /* Genuinely different: the record SHOULD hold both. Carried forward so the
+       new document can say which one it now sits beside. */
+    return { bundle: o, identical: false, changed: true, artifacts: v.artifacts, proceed: true };
+  }
+  return null;
 }
 async function addCapture(locator, authority, wantSubs){
   let session = null, acq = null, ticks = 0;
@@ -2803,7 +2957,7 @@ async function addCapture(locator, authority, wantSubs){
     ticks++;
     addSay(ticks === 1
       ? `<p class="count-line">Fetching the document from the source&hellip;</p>`
-      : `<p class="count-line">Pass ${ticks}: fetching the supporting files the last pass could not reach&hellip;</p>`);
+      : `<p class="count-line">Collecting the rest of the page&hellip;</p>`);
     try{
       acq = await recPost("acquire", { locator, authority, ...(wantSubs?{subresources:true}:{}), ...(session?{continue:session}:{}) });
     }catch(e){ return { ok:false, why: acquireWhy(e) }; }
@@ -2818,27 +2972,102 @@ async function addCapture(locator, authority, wantSubs){
          offer is calling it complete. */
       return await addIncomplete(acq, out, ticks);
     }
-    addSay(`<p class="count-line">${out} supporting ${out===1?"file is":"files are"} outstanding after ${ticks} ${ticks===1?"pass":"passes"}. Continuing&hellip;</p>`);
+    addSay(`<p class="count-line">Collecting the rest of the page &middot; ${out} to go&hellip;</p>`);
   }
 }
-/* The unfinished-capture decision, put to the member rather than taken for them. */
+/* An unfinished capture is NOT a question for the member.
+   The document itself is captured whole and hashed; what is missing is some of
+   the design files the page needs to look the way the source served it, and the
+   reason is that this runtime will not make more outbound requests right now.
+   That is a logistics problem, and putting it to a member as a choice between
+   "record it as unfinished" and "write nothing" asks them to arbitrate a
+   subrequest ceiling. So it is recorded, honestly labelled, and picked up later:
+   the bundle says on its own page that it is unfinished and offers to continue,
+   and nothing is lost either way because the bytes already fetched are in the
+   store under their hashes. */
 function addIncomplete(acq, outstanding, ticks){
-  return new Promise(resolve=>{
-    $("#dlg").innerHTML =
-      `<h2>The capture is not finished</h2>
-       <p class="what">The document itself is captured whole and hashed. ${outstanding===1?"One supporting file":`${outstanding} supporting files`}
-         could not be fetched after ${ticks} ${ticks===1?"pass":"passes"}, because the runtime refuses
-         more outbound requests than it has already made. They are outstanding, not failed: the source
-         refused nothing and was never asked.</p>
-       <p class="what">Recorded as it stands, the bundle says so on its own page and carries the
-         outstanding count, and the capture can be continued from there later. The alternative is to
-         write nothing now. What is not on offer is recording it as a complete capture.</p>
-       <div class="row-btns"><button class="btn ghost" id="ai-no">Write nothing</button>
-         <button class="btn" id="ai-yes">Record it as unfinished</button></div>`;
-    $("#dlg-wrap").classList.remove("hidden");
-    $("#ai-yes").addEventListener("click", ()=>{ closeDialog(); resolve({ ok:true, doc: acq.document, snap: acq.snapshot||null }); });
-    $("#ai-no").addEventListener("click", ()=>{ closeDialog(); resolve({ ok:false, why:"Nothing was written. The document's bytes are in the store and a later capture of the same address will reuse them rather than re-fetching." }); });
-  });
+  return Promise.resolve({ ok: true, doc: acq.document, snap: acq.snapshot || null,
+    partial: { outstanding, ticks } });
+}
+
+/* ---- the document may already be in the record, and usually will be ----
+
+   RULED by Bob: a re-capture producing a document the record already holds is the
+   REGULAR case, not an exception. Monitoring exists to look at a document again,
+   so the ordinary result of looking is "unchanged".
+
+   Nothing below asks the member anything. Whether two captures are the same
+   document is a technical question with a technical answer, and a member came
+   here to put a document into a case, not to adjudicate ASP.NET page state. The
+   classifier decides and the surface reports the outcome in one plain sentence.
+
+   Handled correctly also means not writing a second bundle for one document.
+   C-18.3's ring-once rule says identical content is corroboration on ONE register
+   entry and never two, and it compares hashes within a single bundle, so nothing
+   stops the duplicate at write time except the writer declining to make it. What
+   a confirmation IS worth is not a bundle: it advances the observed interval on
+   the address, which is the evidence the contemporaneity machinery consumes. */
+async function heldMatch(sha256, locator, contentType, name){
+  const search = async (q) => {
+    try{
+      const r = await rec("search", { q });
+      const hits = (r.result && (r.result.hits || r.result)) || r.hits || [];
+      return Array.isArray(hits) ? hits : [];
+    }catch(_){ return []; }
+  };
+  /* The cheap key first: identical bytes are a question the store already
+     answers, and no comparison is needed to know the answer. */
+  if(sha256){
+    const exact = (await search(`hash:sha256:${sha256}`))[0];
+    if(exact) return { bundle: exact, identical: true, changed: false, artifacts: [] };
+  }
+  if(!locator) return null;
+  /* Then the address, because the hash MISSES on any page that rebuilds part of
+     itself. Measured: two fetches of a Legistar calendar three seconds apart
+     share no hash and differ only in page state, so a hash-only check lets the
+     record grow a second bundle for one document with nothing complaining. */
+  for(const o of await search(`locator:"${String(locator).replace(/"/g,"")}"`)){
+    const p = await getProjection(o.bundle_id).catch(()=>null);
+    const heldSha = String((p && p.content_hash) || "").replace(/^sha256:/, "");
+    if(!/^[0-9a-f]{64}$/.test(heldSha)) continue;
+    if(heldSha === sha256) return { bundle: o, identical: true, changed: false, artifacts: [] };
+    const held = await fetchCapture(heldSha), fresh = await fetchCapture(sha256);
+    if(!held.ok || held.sha !== heldSha || !fresh.ok) continue;
+    const v = await compareCaptures(held.bytes, fresh.bytes,
+      { contentType, name, sha256: digestOf });
+    /* Same document: the differences are all mechanism. Not a duplicate to
+       refuse loudly, just a document the record already has. */
+    if(v.same) return { bundle: o, identical: false, changed: false,
+                        artifacts: v.artifacts, families: v.families };
+    /* Genuinely different: the record SHOULD hold both. Carried forward so the
+       new document can say which one it now sits beside. */
+    return { bundle: o, identical: false, changed: true, artifacts: v.artifacts, proceed: true };
+  }
+  return null;
+}
+async function addCapture(locator, authority, wantSubs){
+  let session = null, acq = null, ticks = 0;
+  for(;;){
+    ticks++;
+    addSay(ticks === 1
+      ? `<p class="count-line">Fetching the document from the source&hellip;</p>`
+      : `<p class="count-line">Collecting the rest of the page&hellip;</p>`);
+    try{
+      acq = await recPost("acquire", { locator, authority, ...(wantSubs?{subresources:true}:{}), ...(session?{continue:session}:{}) });
+    }catch(e){ return { ok:false, why: acquireWhy(e) }; }
+    if(!acq.document) return { ok:false, why: acquireWhy(acq) };
+    const snap = acq.snapshot || null;
+    if(!wantSubs || !snap || snap.complete) return { ok:true, doc: acq.document, snap };
+    session = snap.continuation && snap.continuation.session;
+    const out = Number(snap.outstanding||0);
+    if(!session || ticks >= ADD_TICKS){
+      /* The capture cannot be finished under this runtime's ceiling right now.
+         The choice is the member's and both options are honest; what is not on
+         offer is calling it complete. */
+      return await addIncomplete(acq, out, ticks);
+    }
+    addSay(`<p class="count-line">Collecting the rest of the page &middot; ${out} to go&hellip;</p>`);
+  }
 }
 
 function errPane(e){

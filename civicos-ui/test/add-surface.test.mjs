@@ -67,7 +67,7 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
 ctx.globalThis = ctx;
 vm.createContext(ctx);
 vm.runInContext(appScript() + `;globalThis.__X={mdFor,docFiles,registerFor,schemaFor,reviseText,acquireWhy,
-  FIRST_STATE,HEADINGS,SCHEMA_OF,renderAdd,addValidate,addIncomplete,canContribute,heldDialog,PLANE};`, ctx);
+  FIRST_STATE,HEADINGS,SCHEMA_OF,renderAdd,addValidate,addIncomplete,canContribute,heldMatch,PLANE};`, ctx);
 const G = ctx.__X;
 
 /* ---- 2. the tables are the catalog's ---- */
@@ -168,18 +168,18 @@ const twice = G.reviseText(revised, "ruth", "2026-07-31T09:00:00Z", "Again");
 ok("a second revision does not remove the first's entry",
    /Continued an unfinished capture by bob/.test(twice) && /Again by ruth/.test(twice));
 
-/* ---- 3. an unfinished capture is never presented as a capture ---- */
-const p = G.addIncomplete({ document: document_, snapshot: { outstanding: 4, complete: false } }, 4, 8);
-const dlg = els.get("#dlg").innerHTML;
-ok("the member is asked rather than told", /not finished/i.test(dlg));
-ok("naming the outstanding count and the passes", dlg.includes("4 supporting files") && dlg.includes("8 passes"));
-ok("saying the document itself is whole", /captured whole and hashed/i.test(dlg));
-ok("and that the outstanding files were never asked for", /never asked/i.test(dlg));
-ok("recording it complete is explicitly NOT on offer", /not on offer/i.test(dlg));
-ok("the two options are recording it as unfinished, or writing nothing",
-   /Record it as unfinished/.test(dlg) && /Write nothing/.test(dlg));
-ok("and continuing later from the document's own page is named as the path",
-   /continued from there later/i.test(dlg));
+/* ---- 3. an unfinished capture is not a question ----
+   RULED by Bob: these are technical complications and the workflow exists to keep
+   members out of them. An earlier version of this surface put the subrequest
+   ceiling to the member as a choice between recording an unfinished capture and
+   writing nothing. That asked somebody researching a sewer fund to arbitrate a
+   platform limit, so it is gone: the capture is recorded, honestly labelled on its
+   own page, and finished later. */
+const inc = await G.addIncomplete({ document: document_, snapshot: { outstanding: 4, complete: false } }, 4, 8);
+ok("an unfinished capture proceeds without asking", inc.ok === true);
+ok("carrying the document that WAS captured whole", inc.doc === document_);
+ok("and what is still missing, so the page can say so", inc.partial.outstanding === 4);
+ok("no dialog was raised at all", !els.has("#dlg") || !/not finished/i.test(els.get("#dlg").innerHTML));
 
 /* ---- 4. writing is capability-shaped ---- */
 G.PLANE.session = null; G.PLANE.me = { session: false, capabilities: [] };
@@ -215,42 +215,11 @@ ok("so the release flow's entry requirement can be met",
 ok("typed intake with no document carries none, rather than inventing one",
    !/content_hash:/.test(typed.files[0].text));
 
-/* A re-capture of bytes a bundle already claims is the ORDINARY monitoring
-   outcome. It must never become a second bundle: one capture hash under two
-   register entries reads as two corroborations of a thing captured once. */
-const heldP = G.heldDialog({ byHash: { bundle_id: "INFO-2026-0042-acfr" }, byAddress: [] }, DOC_SHA, NOW, true);
-/* Collapsed, because the dialog's prose is wrapped in the source and a test that
-   pins line breaks tests the formatting rather than the words. */
-const hd = els.get("#dlg").innerHTML.replace(/\s+/g, " ");
-ok("the surface says the record already holds it", /already holds this document/i.test(hd));
-ok("naming the bundle that claims the bytes", hd.includes("INFO-2026-0042-acfr"));
-ok("and framing it as the ordinary result of looking again",
-   /ordinary result of looking at a document again/i.test(hd));
-ok("writing a second bundle is explicitly NOT offered",
-   !/Add it to the record/.test(hd) && /that is not offered/i.test(hd));
-ok("with the reason given in terms of the corroboration count, not tidiness",
-   /two corroborations of a thing captured once/i.test(hd));
-ok("and a refill is named when the fetch gathered supporting files", /merged into it as a refill/i.test(hd));
-els.get("#hd-open").click();
-ok("choosing to open resolves with that bundle, and nothing was written",
-   (await heldP).open === "INFO-2026-0042-acfr");
-
-/* The address check, because a hash check alone does not fire on the pages that
-   get re-captured most: MEASURED, two fetches of a Legistar calendar seconds
-   apart differ by 31% of their bytes and none of the difference is content. */
-const addrP = G.heldDialog({ byHash: null, byAddress: [
-  { bundle_id: "INFO-2026-0002-legistar-calendar", title: "Legistar calendar",
-    source_retrieved: "2026-07-30T00:19:55Z" }] }, DOC_SHA, NOW, false);
-const ad = els.get("#dlg").innerHTML.replace(/\s+/g, " ");
-ok("a second capture of a known address is flagged even when the bytes differ",
-   /already holds this address/i.test(ad) && ad.includes("INFO-2026-0002-legistar-calendar"));
-ok("and differing bytes are NOT presented as a changed document",
-   /Different bytes are not the same as a changed document/i.test(ad));
-ok("naming the mechanism, so the member can judge it", /reissues its own hidden state on every response/i.test(ad));
-ok("the surface refuses to claim it can tell the two cases apart",
-   /nothing here will claim to/i.test(ad));
-ok("and the decision is the member's, not the surface's", /your call rather than this surface/i.test(ad));
-els.get("#hd-add").click();
-ok("proceeding is possible but deliberate", (await addrP).proceed === true);
+/* The vocabulary guard on the writing surface itself. */
+await G.renderAdd();
+const formHtml = els.get("#content").innerHTML;
+for(const word of ["subrequest", "runtime", "manifest", "register", "corroboration", "sha256",
+                   "content_hash", "content-addressed", "op=", "C-18", "Durable", "ceiling"])
+  ok(`the Add form does not say "${word}"`, !formHtml.includes(word));
 
 console.log(`add-surface: ${n} assertions, all green`);

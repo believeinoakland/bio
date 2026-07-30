@@ -21,16 +21,20 @@ bio-plane/scripts/deploy.mjs (the plane's release path), civicos-ui/test/run.mjs
 
 This session, in order:
 
-(1) Fix D-60 in the plane and release it: the STABLE DIGEST. This is the one that
-unblocks three mechanisms at once and it is measured, not theorised. Beside a
-capture's raw identity hash, compute a digest with known-volatile regions
-normalised to a placeholder; record the regions with their field names and
-extents; make monitoring, duplicate detection and the contemporaneity comparison
-all read the digest while identity stays raw and raw bytes are never rewritten.
-Start from the ASP.NET family (`__VIEWSTATE`, `__EVENTVALIDATION`,
-`__VIEWSTATEGENERATOR`, CSRF tokens) and discover the rest by measuring more
-hosts rather than declaring a list. The design and the measurement are in
-LINK-FIDELITY.md under "Volatile regions".
+(0) Read this first: UI-PLAN.md's "Who this is for". The audience is non-technical
+and the workflow exists to keep members out of logistics. Technical complications
+get classified by the system, never surfaced as choices. The suite carries a
+vocabulary guard over member-facing strings; if you add a surface, add it there.
+
+(1) Adopt the stable digest IN THE PLANE and release it (D-60). The classifier
+already exists and is validated: `civicos-ui/volatile.mjs`, five families of
+per-render mechanism, tested both directions against two live captures of one
+Legistar page. Import that module rather than writing a second one, then make
+three things read the digest instead of the raw hash: monitoring's
+changed-or-not decision, `op=audit`'s duplicate sweep, and `resolveLinks`' bracket
+arm. Identity stays the raw hash and raw bytes are never rewritten. Record what
+was normalised on the capture. Then measure more hosts and add families only on
+evidence, because a careless family hides a real change.
 
 (2) Fix D-62 in `bio-plane/src/setup.mjs`: its `mdFor` omits `content_hash` even
 with a document attached, so every bundle the installer wizard writes with a

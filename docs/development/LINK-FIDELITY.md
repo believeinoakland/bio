@@ -492,40 +492,60 @@ So the order:
   when offered, never build on the expectation of it.
 - `Last-Modified` or a stable `ETag`. Recorded, never sufficient alone.
 
-### Volatile regions: noted, never mistaken for change
+### Volatile regions: classified, and never put to a member
 
-The measurement above forces a distinction the design did not have. A capture's
-identity is the hash of its raw bytes and that does not change: the raw bytes are
-never rewritten, which is doctrine everywhere else here. But CHANGE DETECTION
+RULED by Bob, 2026-07-30, and it is a ruling about who the system is FOR. The
+primary audience is non-technical, and the purpose of the workflow is to remove
+members from logistics and nuance so they work at a higher level. Everything in
+this section is a technical complication. None of it is a question for a member,
+and a surface that asks one has failed rather than been honest.
+
+A capture's identity is the hash of its raw bytes and that never changes; raw
+bytes are never rewritten, which is doctrine everywhere else here. But COMPARISON
 cannot run on that hash, because it reports change on every fetch of any ASP.NET
-page and therefore reports nothing at all.
+page and therefore reports nothing.
 
 So a capture carries a second, DERIVED digest beside its identity: the hash of the
-document with known-volatile regions normalised to a fixed placeholder. Identity
-stays raw; comparison uses the stable digest.
+document with known-volatile regions normalised to a placeholder. Identity stays
+raw; comparison uses the digest. The families are mechanisms that vary on every
+render, and the list is discovered by measurement rather than declared:
 
-- The volatile regions are RECORDED, with their field names, offsets and lengths,
-  and the fact that they differed between two fetches is itself noted and dated.
-  A difference that is not a change is still an observation, and a page whose
-  viewstate stopped moving would be worth knowing about.
-- Classification is per-family and heuristic, so it is reclassifiable, never a
-  deletion, exactly as chrome detection is. `__VIEWSTATE`, `__EVENTVALIDATION`,
-  `__VIEWSTATEGENERATOR` and CSRF tokens are the ASP.NET family; other stacks will
-  have their own and the list is discovered by measurement rather than declared.
-- **The stable digest is what monitoring compares and what the bracket arm should
-  compare.** Two captures whose stable digests match across an interval establish
-  that the document did not change across it, which is the claim contemporaneity
-  actually needs. Requiring raw-byte equality asks for something stronger than the
-  question and gets nothing.
-- A volatile region is never treated as evidence. Nobody's case turns on a
-  viewstate blob, and it must not be paraphrased as content.
+- **Server page state.** `__VIEWSTATE`, `__VIEWSTATEGENERATOR`,
+  `__EVENTVALIDATION`, `__PREVIOUSPAGE`, scroll position. MEASURED: 100% of the
+  difference between two Legistar fetches three seconds apart, 115,980 bytes,
+  31.4% of the document, with the other 68.6% byte-identical.
+- **Security tokens.** Anti-forgery fields and CSP nonces are per-response BY
+  DESIGN; a token that repeated would not be doing its job.
+- **Visit identifiers.** A session id names this visit and says nothing about the
+  document.
+- **Version stamps on design files.** A query string whose only job is defeating
+  a cache. Deliberately narrow, because a query parameter is content often enough
+  that a broad rule here would hide a real change.
+- **Advertising and analytics slots.** Regenerated per impression and belonging
+  to a third party, which the standing ruling already says is never the
+  publisher's content.
 
-This is what "innocuous differences are noted but do not cause a refetch" means
-mechanically: the refetch decision, the change verdict, and the contemporaneity
-verdict all read the stable digest, while the record keeps every raw byte it was
-served and says which parts of it were volatile.
+The rules the classifier obeys, and they are what make it safe:
 
-### A re-capture of bytes the record already holds is the NORMAL case
+- Normalisation happens on a COPY. A misclassification can never destroy
+  evidence and is always reversible, because the record still holds every byte
+  the source served.
+- What was normalised is RECORDED, with the family, the count and the byte
+  volume. A difference that is not a change is still an observation, and a page
+  whose page-state suddenly stopped moving would be worth knowing about.
+- A volatile region is never treated as evidence and is excluded from comparison
+  rather than from the record.
+- A family is only added on measurement. A family added carelessly hides a real
+  change, which is the one failure mode here that matters, so the test asserts
+  both directions: the classifier must call two ASP.NET fetches the same document
+  AND must still see a single altered word.
+
+Implemented as `civicos-ui/volatile.mjs`, which the plane should import directly
+when monitoring adopts this rather than growing a second copy. The UI carries an
+inlined copy because its runtime is one self-contained file, and the build refuses
+any difference between the two.
+
+### A re-capture of a document the record already holds is the NORMAL case
 
 RULED by Bob, 2026-07-30. Once monitoring is enabled, the system looks at a
 document again on a schedule, and the ordinary outcome of looking is "unchanged",
@@ -544,9 +564,15 @@ and never two.
 - C-18.3 compares hashes WITHIN one bundle's register and cannot see a second
   bundle holding the same capture hash, so nothing prevents the duplicate at write
   time except the writer declining to make it. Conformance prevents, audit
-  detects, and the surfaces must not manufacture the thing by default: a member
-  re-capturing a monitored page is shown the bundle that already claims the bytes
-  and is not offered a second copy.
+  detects, and the surfaces must not manufacture the thing by default.
+- **Duplicate detection must use the stable digest, not the raw hash.** A raw-hash
+  check does not fire on re-captures of exactly the pages that get re-captured
+  most: proven live, two captures of one Legistar calendar share no hash, so the
+  record would grow a second bundle for one document while C-18.3 and `op=audit`
+  both stayed silent because the hashes genuinely differ.
+- The member is TOLD, in one sentence, that the document is already in the record
+  and the source is still publishing the same thing. They are not asked to
+  adjudicate it, shown the two hashes, or told which fields differed.
 
 ## The work, in order
 

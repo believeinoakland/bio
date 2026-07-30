@@ -99,43 +99,54 @@ vm.createContext(ctx);
 vm.runInContext(appScript() + `;globalThis.__X={unfinishedBanner,reuseSummary,reuseTag,mergeManifest,outstandingList,PART_REASON};`, ctx);
 const G = ctx.__X;
 
-/* ---- 1. the unfinished capture is SAID ---- */
+/* ---- 1. the unfinished capture is SAID, in a member's language ----
+   RULED by Bob: the audience is non-technical and the point of the workflow is to
+   keep them out of logistics. Which platform bound stopped a capture is a
+   mechanical detail; it belongs in the manifest and the debt log, not on a page
+   somebody is reading about a sewer fund. */
 const B = G.unfinishedBanner(short.manifest, "INFO-X", true);
-ok("an unfinished capture says so", /capture is unfinished/i.test(B));
-ok("naming the outstanding count", B.includes(String(short.manifest.outstanding)));
-ok("as outstanding rather than failed", /outstanding, not failed/i.test(B));
-ok("saying the source was never asked", /was never asked|refused nothing/i.test(B));
-ok("naming the ceiling this instance had already learned, rather than claiming it was refused again",
-   /ceiling this instance learned by being refused at it before/i.test(B));
-ok("and a run that WAS refused says that instead",
-   /runtime refused a further outbound request/i.test(
-     G.unfinishedBanner({ ...short.manifest, platform:{ ...short.manifest.platform, limited:true } }, "X", true)));
-ok("and saying the document's own bytes are complete", /own bytes are complete/i.test(B));
-ok("it explains why OPENING it may refuse, which is what a member actually sees",
-   /may refuse rather than show a page with pieces absent/i.test(B));
+const b1 = B.replace(/\s+/g, " ");
+ok("an unfinished capture says so", /still to be collected/i.test(b1));
+ok("and says the document itself is sound, which is the part that matters",
+   /document itself is complete/i.test(b1) && /checked against the record/i.test(b1));
+ok("naming how many files are missing", b1.includes(String(short.manifest.outstanding)));
+ok("it explains the consequence a member will actually meet",
+   /opening the page may show nothing rather than show it wrong/i.test(b1));
 ok("a complete capture says nothing at all", G.unfinishedBanner(reused.manifest, "INFO-X", true) === "");
 ok("and a bundle with no manifest says nothing", G.unfinishedBanner(null, "INFO-X", true) === "");
 
-/* Continuing is capability-shaped: absent, not offered and then refused. */
-ok("a member holding contribute is offered the continuation", /Continue this capture/.test(B));
+/* Finishing it is capability-shaped: absent, not offered and then refused. */
+ok("a member who can add to the record is offered the finish", /Finish collecting it/.test(B));
 const B2 = G.unfinishedBanner(short.manifest, "INFO-X", false);
-ok("a credential that cannot write is not offered it", !/Continue this capture/.test(B2));
-ok("and is told what it would need", /contribute/.test(B2));
+ok("one who cannot is not offered it", !/Finish collecting it/.test(B2));
 
-/* ---- 2. reused parts are distinguishable ---- */
-const R = G.reuseSummary(reused.manifest);
-ok("reused parts get their own disclosure", /Reused from an earlier fetch \(1\)/.test(R));
-ok("naming the address", R.includes("/css/site.css"));
-ok("and when the source was last seen serving those bytes", /source last seen serving these bytes/i.test(R));
-ok("it says the request was what was skipped, not the verification",
-   /verified against the record's hashes exactly like every fetched part/i.test(R));
-ok("and that ratification re-fetches them", /re-fetches them/i.test(R));
+/* ---- 2. reused files are distinguishable, without the vocabulary ---- */
+const R = G.reuseSummary(reused.manifest).replace(/\s+/g, " ");
+ok("files kept from an earlier visit get their own disclosure",
+   /Files kept from an earlier visit to this site \(1\)/.test(R));
+ok("naming the file", R.includes("/css/site.css"));
+ok("and when this site had already served it", /already saved on/i.test(R));
+ok("it says the request was skipped, not the checking",
+   /checked against the record's own fingerprints/i.test(R));
+ok("and that they are collected fresh before the document is relied on",
+   /collected fresh before this document is relied on as evidence/i.test(R));
 ok("a capture that reused nothing shows no disclosure", G.reuseSummary(short.manifest) === "");
 const tag = G.reuseTag(reusedParts[0]);
-ok("an individual part carries the marker", /class="reused"/.test(tag));
-ok("with the date in the visible text, not only the tooltip", /last served/i.test(tag));
-ok("a fetched part carries none",
+ok("an individual file carries the marker", /class="reused"/.test(tag));
+ok("saying where it came from in three words", /from an earlier visit/i.test(tag));
+ok("a file fetched today carries none",
    G.reuseTag(reused.manifest.subresources.find(s => s.fetched_this_capture === true)) === "");
+
+/* THE VOCABULARY GUARD. Every string above is read by somebody who does not know
+   what a subrequest is and should never need to. This is the assertion that keeps
+   the plain-language ruling from eroding one helpful clarification at a time. */
+const JARGON = ["subrequest", "runtime", "manifest", "register entry", "corroboration",
+  "DEFERRED", "sha256", "viewstate", "VIEWSTATE", "Durable", "op=", "C-18", "content_hash",
+  "content-addressed", "outstanding, not failed", "byte budget", "ceiling"];
+for(const surface of [["the unfinished banner", B], ["the reuse disclosure", G.reuseSummary(reused.manifest)],
+                      ["the reuse marker", tag], ["the still-to-collect list", G.outstandingList(short.manifest)]])
+  for(const word of JARGON)
+    ok(`${surface[0]} does not say "${word}"`, !surface[1].includes(word));
 
 /* ---- 3. the merge: refill, never rewrite ---- */
 const prior = JSON.parse(JSON.stringify(short.manifest));
@@ -183,9 +194,9 @@ ok("nothing merges from a run with no manifest", G.mergeManifest(prior, null).ok
 
 /* ---- the refusal path names WHICH references are missing ---- */
 const L = G.outstandingList(short.manifest);
-ok("the refusal lists what the capture never got", /What this capture never got \(3\)/.test(L));
+ok("the refusal names which files are missing", /Still to be collected \(3\)/.test(L));
 ok("naming each address", /a\.png/.test(L) && /b\.png/.test(L) && /c\.png/.test(L));
-ok("with the reason in plain words", /source refused nothing/.test(L));
+ok("with the reason in plain words", /the source refused nothing/.test(L));
 ok("the count agrees with the banner's, because both read one manifest",
    L.includes("(" + short.manifest.outstanding + ")"));
 ok("a complete capture lists nothing", G.outstandingList(reused.manifest) === "");
@@ -195,8 +206,8 @@ const policy = { subresources: [
   { url:"https://a.example/big.png", ok:false, reason:"TOO_LARGE", kind:"image" }] };
 const PL = G.outstandingList(policy);
 ok("a third party's script is not reported as something the capture missed", !/ads\.example/.test(PL));
-ok("but a source failure is", /big\.png/.test(PL) && /larger than this surface/.test(PL));
-ok("outstanding and refused are told apart, not merged",
-   /ran out of its allowance/.test(G.PART_REASON.DEFERRED) && /source refused to serve/.test(G.PART_REASON.SOURCE_REFUSED));
+ok("but a source failure is", /big\.png/.test(PL) && /too large to keep/.test(PL));
+ok("not-yet-collected and refused are told apart, not merged",
+   /not collected yet/.test(G.PART_REASON.DEFERRED) && /would not serve it/.test(G.PART_REASON.SOURCE_REFUSED));
 
 console.log(`capture-honesty: ${n} assertions, all green`);

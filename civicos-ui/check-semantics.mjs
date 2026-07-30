@@ -58,5 +58,19 @@ let fail = false;
 if (missingInUi.length) { fail = true; console.error("FAIL: plane states with no semantics row:", missingInUi.join(", ")); }
 if (inventedByUi.length) { fail = true; console.error("FAIL: ui states not found anywhere in the plane source:", inventedByUi.join(", ")); }
 if (critMissing.length) { fail = true; console.error("FAIL: plane criticality values with no semantics row:", critMissing.join(", ")); }
+/* The volatile-region classifier is shared: volatile.mjs is the canonical module
+   (the plane imports it directly when monitoring adopts this) and app.html
+   carries an inlined copy because the runtime is a single self-contained file.
+   Two copies drift, so the build refuses any difference between them. */
+const vmod = fs.readFileSync(new URL("./volatile.mjs", import.meta.url).pathname, "utf8");
+const want = vmod.replace(/export const/g, "const").replace(/export async function/g, "async function")
+                 .replace(/export function/g, "function").trimEnd();
+const vm2 = /\/\*__VOLATILE_START__\*\/\n([\s\S]*?)\n\/\*__VOLATILE_END__\*\//.exec(app);
+if (!vm2) { fail = true; console.error("FAIL: the inlined volatile classifier is missing from app.html"); }
+else if (vm2[1].trimEnd() !== want) {
+  fail = true;
+  console.error("FAIL: app.html's volatile classifier has drifted from volatile.mjs");
+} else console.log("OK: the volatile classifier in app.html matches volatile.mjs exactly.");
+
 if (!fail) console.log("OK: the semantics table covers the plane's catalog, and invents nothing.");
 process.exit(fail ? 1 : 0);

@@ -137,6 +137,18 @@ self-announce staleness.
   audit added, the 500-bundle scratch store scrolls smoothly, the old
   token is dead.
 
+## Who this is for
+
+RULED by Bob, 2026-07-30, and it governs every rung. The primary audience is
+NON-TECHNICAL. The purpose of the workflow is to improve a member's productivity
+by removing them from logistics and nuance so they interact with the system at a
+higher level. Technical complications are recognised and classified by the system,
+not surfaced as choices: a per-render artifact of a host's tech stack, an ad slot,
+a subrequest ceiling, a hash that moved for mechanical reasons are all the
+system's problems. A surface that asks a member to adjudicate one has failed, and
+it will feel like honesty while it does. The test suite carries a vocabulary guard
+over every member-facing string for this reason.
+
 ## Standing dependencies and risks
 
 - Plane releases inform U8 (the Add surface) and U10 (attest surface).
@@ -184,7 +196,12 @@ self-announce staleness.
   bracketing cannot fire for such a page whatever happened to its content, so
   monitoring across the interval, timestamp tokens and archives are load-bearing
   and byte equality is taken when offered rather than built on.
-- NO CAPTURE HAS A STABLE DIGEST (D-60), and the same measurement breaks three
+- THE STABLE DIGEST EXISTS IN THE UI AND NOT YET IN THE PLANE (D-60).
+  `civicos-ui/volatile.mjs` classifies five families of per-render mechanism and is
+  validated both directions against live captures; the plane should import it
+  rather than grow a second copy, and monitoring, duplicate detection and the
+  contemporaneity comparison should all read the digest it produces.
+- BEFORE THAT LANDED, NO CAPTURE HAD ONE (D-60), and the same measurement breaks three
   things: monitoring reports change every tick, contemporaneity's strongest arm
   never fires, and duplicate detection misses re-captures of exactly the pages
   that get re-captured most. Any further work on monitoring, link verdicts or
