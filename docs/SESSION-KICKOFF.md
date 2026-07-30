@@ -1,5 +1,14 @@
 # Starting a BIO session
 
+**Kickoffs are per THREAD (2026-07-30).** More than one session may be running
+at once, and they must not overwrite each other's handoffs. Each line of work has
+its own file under `docs/development/kickoffs/`, the first line of a session's
+prompt names which thread it belongs to, and a session rewrites only its own
+kickoff at the close. `docs/development/kickoffs/README.md` is the register: it
+lists the active threads, the paths each owns, the append-only rules for shared
+files like `DEBT.md` and the state doc, and the rule that a rejected push means
+another thread landed work and must be rebased onto, never forced over.
+
 Claude reads everything it needs from this public repository at the start
 of a session, with no credentials: the full source tree and the documents
 in docs/. Attach nothing. As of July 24, 2026 that includes the whole
