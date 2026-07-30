@@ -22,7 +22,7 @@ WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
 **This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_6.md`, written 2026-07-30 after Bob corrected the framing
+`BIO_Content_Framework_v0_7.md`, written 2026-07-30 after Bob corrected the framing
 of this one: it is not that discovery has finished, but that discovery will continue
 for a long time and the framework's job is to make each new surprise cheap. That
 document's section 9 states the cost of absorbing each kind of new thing, and that
@@ -264,7 +264,9 @@ advisory and commit nobody; elevation, adoption and dismissal stay member acts. 
 claims a human author is a false attribution in a system built on claims carrying
 their author. Then the two disciplines unattended surfacing needs: aggregation, so one
 check across 58 contracts is one focus with 58 instances, and ageing, so an unactioned
-machine finding moves to `deferred` with its reason rather than vanishing. A finding becomes a PROPOSAL with its grade and
+machine finding moves to `deferred` with its reason rather than vanishing. And the
+display half (D-82): an assistant-surfaced focus must LOOK like one, not to discount
+it but because a member needs to know nobody has yet judged it worth asking. A finding becomes a PROPOSAL with its grade and
 basis; a member adopts it into an objective, files it as a focus or a problem, or
 defers it with a recorded reason. Nothing is adopted automatically and nothing
 disappears silently, because a finding that vanishes is indistinguishable from one

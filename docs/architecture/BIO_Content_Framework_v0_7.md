@@ -1,6 +1,6 @@
 # BIO Content Framework
 
-**Version 0.6 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
+**Version 0.7 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -14,6 +14,15 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.7, 2026-07-30. Bob ruled that contradicting aspirations are WELCOMED, for two
+  reasons that change the design rather than soften it: we may not realise that they
+  contradict, and we learn from trying to achieve aspirations whether they are achieved
+  or not. §12.1 is rewritten accordingly — the absence of an arbiter is now a
+  deliberate position rather than an unfinished mechanism, what the system looks for is
+  CONTACT between aspirations rather than semantic contradiction it cannot establish,
+  and §12.2 adds the pursuit record, since learning that survives an unachieved
+  aspiration has to live somewhere. Also ruled: an assistant-surfaced focus must LOOK
+  like one.
 - v0.6, 2026-07-30. Two rulings from Bob. An ASSISTANT MAY OPEN A FOCUS unattended,
   because that level of support is central to what BIO should offer and because a focus
   is informative and advisory rather than committing; §12 now says so, with the volume
@@ -906,6 +915,15 @@ machine can produce hundreds where a person produces one:
   disappears is indistinguishable from one that was never made, and that rule does not
   relax because the finder was a machine.
 
+**An assistant-surfaced focus must LOOK like one.** RULED by Bob, 2026-07-30. The
+record carries `surfaced_by: agent` either way; the ruling is that the surface has to
+communicate it too. This is not a discount applied to the question. A good question
+stands on its merits whoever asked it, and a member weighing one needs to know that
+nobody has yet judged it worth asking — which is precisely the difference between a
+machine noticing a pattern and a member deciding it matters. Marking it is what lets a
+member give it the reading it deserves rather than assuming a colleague already
+thought it through.
+
 Invariant 7 binds harder here, not less. An assistant that can surface unattended must
 surface the findings that cut against the goal on exactly the same terms as the ones
 that support it, and being unattended is what removes the human who would otherwise
@@ -929,12 +947,33 @@ declaring otherwise is notable.** A project that departs from a group commitment
 making a statement about the work, and it should read as one rather than as
 configuration.
 
-**Conflicts between scopes are information, not errors.** A member whose aspiration
-pulls against the group's is a fact about the group, and the system should surface the
-tension rather than resolve it by precedence. Narrower scope does NOT override wider:
-they coexist, and where they disagree the disagreement is recorded and shown. A system
-that silently let the narrower win would let one member quietly redirect a group's
-work by writing a preference.
+**Contradicting aspirations are WELCOMED.** RULED by Bob, 2026-07-30, and for two
+reasons that are stronger than tolerance:
+
+- **We may not realise that they contradict.** The contradiction is the discovery. A
+  group that finds two of its own commitments pulling apart has learned something
+  about itself that no amount of planning would have produced, and the system's job is
+  to make that visible rather than to prevent it.
+- **We learn from trying to achieve aspirations whether they are achieved or not.**
+  An aspiration is not a task that succeeds or fails. Pursuing one produces knowledge
+  regardless of the outcome, which means an aspiration that is never achieved can
+  still have been worth holding, and §12.2 gives that knowledge somewhere to live.
+
+So there is **no arbiter and no precedence, by design rather than by omission**.
+Narrower scope does not override wider; aspirations coexist; a member whose aspiration
+pulls against the group's is a fact about the group and not a configuration error. A
+system that silently let the narrower win would let one member quietly redirect a
+group's work by writing a preference, and one that forced resolution would suppress
+exactly the discovery Bob is pointing at.
+
+**What the system looks for is CONTACT, not contradiction.** Judging whether two
+prose commitments contradict each other is not something this framework can establish,
+and inventing a verdict it cannot support would violate invariant 5. What it can
+establish is that two aspirations are in contact: they direct work at the same
+entities, they touch the same progressions, or they order the same queue differently.
+Contact is detectable and is worth surfacing. Whether the contact is a contradiction,
+a tension worth living with, or a misunderstanding is a human judgment, and the system
+presents the evidence for it in the same terms as any other finding.
 
 **A member-scoped aspiration is a declared lens.** This is the same construct
 `BIO_Declared_Bias_v0_1.md` describes: bias is real and the most dangerous bias is the
@@ -943,6 +982,28 @@ declaring "I am pursuing the sewer fund because I believe the transfers were
 improper" has done exactly what that doctrine asks, and the declaration travels with
 the work done under it. Scoping aspirations to members is therefore not a convenience
 feature; it is where declared bias gets a home in the architecture.
+
+## 12.2 The pursuit record
+
+Follows directly from Bob's second reason. If we learn from trying to achieve an
+aspiration whether or not it is achieved, the learning has to survive somewhere, and
+an object that never closes has no natural moment at which anyone writes down what it
+taught.
+
+So an aspiration accumulates a **pursuit record**: the objectives opened under it, the
+findings adopted and deferred, the records requests made and what came back, the
+measurements taken, and the dead ends. Three properties matter:
+
+- **A dead end is kept.** "We assumed the fund code would appear in the procurement
+  portal and it does not" is the kind of thing every member relearns individually and
+  nobody writes down. It is also exactly the kind of thing that makes the next
+  member's work cheaper.
+- **It is not a progress bar.** An aspiration has no completion, so the record shows
+  what was attempted and learned rather than how far along it is. Objectives beneath
+  it have satisfaction conditions and derived progress; the aspiration itself does not.
+- **It survives abandonment.** An aspiration set down after two years of work leaves
+  its pursuit record behind, and the record is the point. Retiring an aspiration should
+  therefore be an act that captures what it taught, not one that archives a folder.
 
 Aspirations set PRIORITY and never filter evidence. Invariant 7 applies to them with
 full force: an aspiration may shape which questions get asked first, and it may not
@@ -1018,10 +1079,10 @@ Stated so the bend is recognised as a bend and not as a bug:
   documents. Nothing here models a claim as an object, and §12 explains why it is
   being left alone: a claim needs a standard of proof attached, which is doctrine
   rather than architecture.
-- **Goals that conflict.** §12.1 now scopes aspirations and rules that a conflict
-  between scopes is recorded rather than resolved, which is the honest answer and not
-  yet a mechanism. What a member SEES when their aspiration pulls against the group's
-  is undesigned.
+- **Detecting CONTACT between aspirations.** §12.1 rules that contradiction is
+  welcomed and that the system should surface contact rather than judge contradiction.
+  What counts as contact — shared entities, shared progressions, competing order on one
+  queue — is named and not specified, and the surface that shows it is undesigned.
 
 None of these needs solving now. They need to be visible so that the day one arrives,
 the response is a registry entry and not a rewrite.
