@@ -1550,6 +1550,14 @@ function mdFor(id, type, state, title, body, now, hasDoc, src){
     "  source: null","visuals: []"];
   if(type === "information") fm.push(
     "criticality: supporting","source_status: unchanged",
+    /* The captured document's own hash, in the frontmatter, because C-2.7 makes a
+       well-formed content_hash an ENTRY REQUIREMENT for verified and the release
+       flow reads the frontmatter and nothing else. Found live: the installer's
+       mdFor omits it even when a document is attached, so the first bundle U8
+       wrote could never have been released, and its bytes were unfindable through
+       the search layer's hash facet, which reads this field. Absent for typed
+       intake, where there is no document and inventing one would be a lie. */
+    ...(src && src.content_hash ? ["content_hash: sha256:"+src.content_hash] : []),
     "source:","  locator: "+((src&&src.locator)||"in hand"),
     "  authority: "+JSON.stringify((src&&src.authority)||"member-entered"),
     "  retrieved: "+((src&&src.retrieved)||now),
@@ -1674,7 +1682,15 @@ const LINK_PARTS = [
 const VERDICTS = {
   contemporaneous: "Established: the capture the record holds is the version this page pointed at.",
   superseded: "Established otherwise: the record holds a different version than the one this page pointed at. It is offered as that, labelled.",
-  undetermined: "Not established either way. The resting state of every connection in the system and the expected common case, not a failure.",
+  /* Measured rather than asserted: two fetches of a Legistar page three seconds
+     apart differ by 31% of their bytes, every differing byte inside __VIEWSTATE
+     and __EVENTVALIDATION, with the remaining 68.6% identical. A page whose
+     bytes change on every response can never produce the two equal-hash captures
+     the strongest arm looks for, so undetermined is not a shortfall in the
+     record's diligence for a large class of municipal sources. It is the only
+     answer byte comparison can give, and establishing more takes monitoring
+     across the interval, a timestamp token, or an archive. */
+  undetermined: "Not established either way. The resting state of every connection in the system and the expected common case, not a failure: for a source that reissues page state on every response, byte comparison alone can never say more.",
 };
 const LINK_SHOW = 12;
 let LINKS = null;      // the last op=links result, for the disclosure toggles
@@ -2635,6 +2651,15 @@ async function addGo(){
       const r = await addCapture(loc, auth, wantSubs);
       if(!r.ok){ addSay(""); addErr(esc(r.why)); return; }
       doc = r.doc; snap = r.snap;
+      /* Before anything is written: does the record already hold these exact
+         bytes under a bundle? The common case once monitoring is on. */
+      addSay(`<p class="count-line">Checking whether the record already holds these bytes&hellip;</p>`);
+      const held = await alreadyHeld(doc.capture && doc.capture.sha256, loc);
+      if(held){
+        addSay("");
+        const what = await heldDialog(held, doc.capture.sha256, doc.retrieved, !!snap);
+        if(!what.proceed){ if(what.open) openBundle(what.open); return; }
+      }
       if(wantArch || doc){
         addSay(`<p class="count-line">Asking for a timestamp over the capture&hellip;</p>`);
         try{
@@ -2651,7 +2676,8 @@ async function addGo(){
     const stem = (a.result && a.result.id) || a.id;
     const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const text = mdFor(id, type, FIRST_STATE[type], title, body, now, !!doc,
-      doc ? { locator: loc, authority: auth, retrieved: doc.retrieved || now } : null);
+      doc ? { locator: loc, authority: auth, retrieved: doc.retrieved || now,
+              content_hash: doc.capture && doc.capture.sha256 } : null);
     const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
     const files = await docFiles(text, doc, await sha256Text(text),
       snap && snap.render_file && snap.render_sha256 ? { [snap.render_file]: snap.render_sha256 } : null);
@@ -2689,7 +2715,88 @@ async function addGo(){
   finally{ ADD_BUSY = false; const g = $("#a-go"); if(g) g.disabled = false; addValidate(); }
 }
 
-const ADD_TICKS = 8;
+/* ---- the bytes may already be in the record, and usually will be ----
+
+   RULED by Bob: a re-capture producing bytes a bundle already claims is a
+   REGULAR OCCURRENCE, not an exception. Monitoring exists to look at a document
+   again, so the common outcome of looking is "unchanged", which means identical
+   bytes and therefore the same content-addressed capture.
+
+   Handled correctly means: do not write a second bundle. C-18.3's ring-once rule
+   says identical content is corroboration on ONE register entry and never two,
+   and it compares hashes within a single bundle's register, so it cannot see a
+   second bundle holding the same capture hash. Nothing else can either, until
+   op=audit sweeps. A surface that promoted every re-capture would manufacture
+   exactly the false corroboration that rule exists to prevent, and it would do
+   it by default rather than by accident.
+
+   What a confirmation IS worth is real and is not a new bundle: it advances the
+   observation interval on the address, which is what lets a later document's
+   link to it be resolved, and it is a first-party dated statement that the source
+   was still serving these bytes at this instant. */
+async function alreadyHeld(sha256, locator){
+  const out = { byHash: null, byAddress: [] };
+  const search = async (q) => {
+    try{
+      const r = await rec("search", { q });
+      const hits = (r.result && (r.result.hits || r.result)) || r.hits || [];
+      return Array.isArray(hits) ? hits : [];
+    }catch(_){ return []; }
+  };
+  if(sha256) out.byHash = (await search(`hash:sha256:${sha256}`))[0] || null;
+  /* The address, ALWAYS, and not only when the hash misses.
+     MEASURED 2026-07-30: two fetches of a Legistar calendar three seconds apart
+     produced different hashes, all 114,177 differing bytes inside __VIEWSTATE and
+     __EVENTVALIDATION, with the other 68.6% of the document identical. So a
+     hash-only check does not fire on re-captures of exactly the pages that get
+     re-captured most, and the record would grow a second bundle for one document
+     while every duplicate defence stayed silent. The address is the coarser signal
+     and it is the one that works: what it cannot do is say whether the difference
+     is a change or merely page state, and it must not pretend otherwise. */
+  if(locator) out.byAddress = (await search(`locator:"${String(locator).replace(/"/g,"")}"`))
+    .filter(h => !out.byHash || h.bundle_id !== out.byHash.bundle_id);
+  return (out.byHash || out.byAddress.length) ? out : null;
+}
+function heldDialog(held, sha256, retrieved, hasSnapshot){
+  const hit = held.byHash;
+  const others = held.byAddress || [];
+  return new Promise(resolve=>{
+    $("#dlg").innerHTML = hit
+      ? `<h2>The record already holds this document</h2>
+       <p class="what">The bytes just fetched are identical to a capture
+         <span class="mono">${esc(hit.bundle_id)}</span> already claims, so nothing new was captured:
+         the source is still serving what the record already has. That is the ordinary result of looking
+         at a document again, and it is worth recording as a confirmation rather than as a second copy.</p>
+       <div class="addr">${esc(sha256)}</div>
+       <p class="what">Writing a second bundle for the same bytes would put one capture hash under two
+         register entries, and every count that treats register entries as independent would then read
+         two corroborations of a thing captured once. So that is not offered.</p>
+       ${hasSnapshot?`<p class="what">This fetch also gathered the page's supporting files. If that
+         bundle's capture was unfinished, those can be merged into it as a refill, which preserves
+         everything it already recorded.</p>`:""}
+       <div class="row-btns"><button class="btn ghost" id="hd-no">Nothing further</button>
+         <button class="btn" id="hd-open">Open <span class="mono">${esc(hit.bundle_id)}</span></button></div>`
+      : `<h2>The record already holds this address</h2>
+       <p class="what">${others.length===1?"A bundle":`${others.length} bundles`} in the record
+         ${others.length===1?"was":"were"} captured from this same address, and the bytes just fetched
+         are NOT identical to ${others.length===1?"it":"any of them"}.</p>
+       <div class="card" style="padding:4px 18px">${others.map(o=>
+         `<div class="linkrow" onclick="closeDialog();openBundle('${esc(o.bundle_id)}')"><span class="lt">${esc(o.title||o.bundle_id)}</span><span class="ln">${esc(o.bundle_id)}${o.source_retrieved?` \u00b7 retrieved ${esc(fmtWhenFull(o.source_retrieved))}`:""}</span></div>`).join("")}</div>
+       <p class="what">Different bytes are not the same as a changed document. A page built on ASP.NET
+         reissues its own hidden state on every response, so two fetches seconds apart differ by tens
+         of thousands of bytes while the content is word for word the same. Nothing here can yet tell
+         those two cases apart, so nothing here will claim to.</p>
+       <p class="what">Adding this as a new bundle records a second document from one address. That is
+         right when the source really did publish something new and wrong when it did not, and it is
+         your call rather than this surface's.</p>
+       <div class="row-btns"><button class="btn ghost" id="hd-no">Write nothing</button>
+         <button class="btn" id="hd-add">Add it anyway</button></div>`;
+    $("#dlg-wrap").classList.remove("hidden");
+    if(hit) $("#hd-open").addEventListener("click", ()=>{ closeDialog(); resolve({ open: hit.bundle_id }); });
+    else $("#hd-add").addEventListener("click", ()=>{ closeDialog(); resolve({ proceed: true }); });
+    $("#hd-no").addEventListener("click", ()=>{ closeDialog(); resolve({ open: null }); });
+  });
+}
 async function addCapture(locator, authority, wantSubs){
   let session = null, acq = null, ticks = 0;
   for(;;){

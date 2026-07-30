@@ -86,6 +86,61 @@ apart hash differently on viewstate alone; identical-byte bracketing cannot fire
 for such a page whatever happened to its content, which makes the timestamp,
 archive and monitoring routes load-bearing rather than fallbacks.
 
+BOB'S THREE RULINGS AT THE END OF THE SESSION, AND THE MEASUREMENT THAT SETTLED
+THEM. A re-capture of bytes a bundle already claims is the REGULAR case, not an
+exception, because monitoring exists to look again and the ordinary result of
+looking is unchanged. Dig into WHY a source's bytes differ so innocuous
+differences are noted without forcing a refetch. And promote monitoring across
+the interval to the PRIMARY contemporaneity route, demoting identical-byte
+bracketing to an opportunistic bonus.
+
+THE MEASUREMENT. Two fetches of oakland.legistar.com/Calendar.aspx three seconds
+apart: identical length, 114,177 DIFFERING BYTES, 31% of the document. Every
+differing byte lay inside exactly two hidden fields, __VIEWSTATE (115,096 bytes)
+and __EVENTVALIDATION (876 bytes). Normalise those two and the remaining 252,948
+bytes, 68.6% of the document, are BYTE-IDENTICAL. Nothing had changed. ASP.NET
+reserialises its control tree and reissues its anti-forgery list on every
+response, and municipal publishing runs on that class of software.
+
+That one measurement breaks three mechanisms at once, which is why it earns a
+debt row of its own (D-60). Monitoring reports a change on every tick and
+therefore reports nothing. Contemporaneity's strongest arm can never fire.
+And duplicate detection does not fire on re-captures of exactly the pages that
+get re-captured most: proven live, a second capture of the same calendar produced
+a different hash, so the record would have grown a second bundle for one document
+while C-18.3 and op=audit both stayed silent, because the hashes genuinely differ.
+The answer is one thing rather than three: a capture carries a STABLE DIGEST
+beside its raw identity, computed with known-volatile regions normalised. Identity
+stays raw and raw bytes are never rewritten; comparison uses the digest; the
+volatile regions are recorded with their names and extents, and two fetches
+differing only there is itself a dated observation worth keeping.
+
+WHAT SHIPPED FOR THE REGULAR CASE. The Add surface checks before it writes
+anything, on BOTH keys. On a hash match it says the record already holds this
+document, names the bundle, and does not offer a second copy, with the reason given
+in terms of the corroboration count rather than tidiness: one capture hash under
+two register entries makes every count that treats register entries as independent
+read two corroborations of a thing captured once. On an ADDRESS match with
+different bytes it says so and refuses to guess, because it cannot yet tell a
+changed document from reissued page state, and adding it anyway is the member's
+call rather than the surface's.
+
+AND A THIRD DEFECT THE EXERCISE FOUND, worse than the first two. The installer's
+mdFor omits content_hash even when a document is attached (D-62). C-2.7 makes a
+well-formed content_hash an entry requirement for verified, so the first bundle U8
+wrote COULD NEVER HAVE BEEN RELEASED, and it was invisible to the search layer's
+hash facet, which is what the duplicate check above reads. Fixed in the UI's
+ported copy and repaired live by revision. NOT fixed in setup.mjs, which is the
+copy a new group gets.
+
+D-61, found while repairing that: op=lease stamps leases.actor from the session
+and the column is NOT NULL, so a machine credential cannot take a lease and no
+unattended writer can revise a bundle. That collides directly with captures being
+autonomous jobs a member can walk away from: a daemon that finishes a capture
+cannot write the completed manifest back. The repair went through promote's CAS
+on base instead, which is the actual integrity mechanism, the lease being a
+courtesy lock against two members editing at once.
+
 THE LESSON OF THE SESSION. Reading the plane's SOURCE rather than the docs'
 description of it caught four things before they shipped, and running against the
 LIVE plane caught three more that no fixture would have. An anchor's recorded

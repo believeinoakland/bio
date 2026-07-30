@@ -26,13 +26,22 @@ import { createHash, webcrypto } from "crypto";
 import { STATES, HEADINGS } from "../../bio-plane/checks/bio-checks.mjs";
 import { checkBundle } from "../../bio-plane/checks/bio-checks.mjs";
 
+/* The render companion's bytes, so the rendition can be read back and verified. */
+const COMPANION = new TextEncoder().encode("<!doctype html><html><body>companion</body></html>");
+const SERVE = new Map();
+
 let n = 0;
 const ok = (label, cond) => { if (!cond) { console.error("FAIL " + label); process.exit(1); } n++; };
 
 /* ---- load the UI runtime ---- */
 const els = new Map();
+/* Listeners are RECORDED rather than dropped, because the dialog that asks the
+   member what to do resolves on a click and a stub that swallows the handler
+   turns the assertion into a hang. */
 const el = () => ({ classList:{add(){},remove(){},toggle(){},contains(){return false}}, style:{}, dataset:{},
-  value:"", innerHTML:"", textContent:"", disabled:false, checked:false, addEventListener(){},
+  value:"", innerHTML:"", textContent:"", disabled:false, checked:false, _on:{},
+  addEventListener(ev, fn){ this._on[ev] = fn; },
+  click(){ if(this._on.click) this._on.click(); },
   querySelectorAll(){return[]}, querySelector(){return el()}, insertAdjacentHTML(){}, focus(){} });
 const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp,
   Promise, Uint8Array, Map, Set, TextEncoder, TextDecoder, crypto: webcrypto,
@@ -43,11 +52,22 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
     getElementById:()=>el(), hidden:false, createElement:()=>el(), body:{appendChild(){},removeChild(){}} },
   location:{protocol:"https:"}, history:{pushState(){},back(){}},
   localStorage:{getItem:()=>null,setItem(){}}, window:{addEventListener(){},open:()=>null},
-  fetch: async () => ({ ok:true, json: async () => ({ ok:true, result:{} }) }) };
+  /* op=capture must serve real bytes: blobEntry reads a rendition back and
+     verifies it against its hash before the bundle names it, so a stub that
+     returns no body is a stub that cannot exercise the write path. */
+  fetch: async (u) => {
+    const q = new URL(String(u), "https://x.test").searchParams;
+    if(q.get("op") === "capture"){
+      const b = SERVE.get(q.get("sha256"));
+      if(!b) return { ok:false, json: async () => ({ ok:false, reason:"NOT_FOUND" }) };
+      return { ok:true, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) };
+    }
+    return { ok:true, json: async () => ({ ok:true, result:{} }) };
+  } };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
 vm.runInContext(appScript() + `;globalThis.__X={mdFor,docFiles,registerFor,schemaFor,reviseText,acquireWhy,
-  FIRST_STATE,HEADINGS,SCHEMA_OF,renderAdd,addValidate,addIncomplete,canContribute,PLANE};`, ctx);
+  FIRST_STATE,HEADINGS,SCHEMA_OF,renderAdd,addValidate,addIncomplete,canContribute,heldDialog,PLANE};`, ctx);
 const G = ctx.__X;
 
 /* ---- 2. the tables are the catalog's ---- */
@@ -83,7 +103,8 @@ const document_ = {
 async function gate(id, type, hasDoc, extra) {
   const body = G.mdFor(id, type, G.FIRST_STATE[type], "Sewer fund transfers",
     "What the report shows about the transfers.", NOW, hasDoc,
-    hasDoc ? { locator: document_.locator, authority: document_.authority, retrieved: NOW } : null);
+    hasDoc ? { locator: document_.locator, authority: document_.authority, retrieved: NOW,
+               content_hash: DOC_SHA } : null);
   const files = await G.docFiles(body, hasDoc ? document_ : null, await sha256(body), extra || null);
   const map = new Map();
   for (const f of files) map.set(f.path, f.text !== undefined ? f.text : DOC);
@@ -114,8 +135,20 @@ ok("a Focus passes too", focus.errs.length === 0);
 /* The rendition files ride on the same register document rather than becoming
    acquisitions of their own, which is what keeps one capture hash out of two
    register entries. */
+const COMPANION_SHA = await sha256(COMPANION);
+SERVE.set(COMPANION_SHA, COMPANION);
 const withSnap = await gate("INFO-2026-0703-with-snapshot", "information", true,
-  { "snapshots/report.pdf.render.html": "a".repeat(64) });
+  { "snapshots/report.pdf.render.html": COMPANION_SHA });
+ok("a rendition's bytes are read back and verified before the bundle names them",
+   withSnap.files.find(f => /\.render\.html$/.test(f.path)).bytes === COMPANION.length);
+ok("and its hash is what the capture reported",
+   withSnap.files.find(f => /\.render\.html$/.test(f.path)).sha256 === COMPANION_SHA);
+let refused = null;
+try { await gate("INFO-2026-0704-bad-rendition", "information", true,
+  { "snapshots/report.pdf.render.html": "b".repeat(64) }); }
+catch(e){ refused = String(e.message); }
+ok("a rendition the record does not hold refuses the write rather than naming absent bytes",
+   refused !== null && /does not hold the bytes/.test(refused));
 ok("a render companion travels as a bundle file", withSnap.files.some(f => /\.render\.html$/.test(f.path)));
 ok("and is not registered as an acquisition of its own",
    G.registerFor(document_).every(r => !/\.render\.html$/.test(r.path)));
@@ -171,5 +204,53 @@ ok("a source refusal says the site refused, not that the record failed",
 ok("and names the status the host gave", G.acquireWhy({ reason: "SOURCE_REFUSED", status: 403 }).includes("403"));
 ok("a missing authority explains why both claims are named",
    /separate claims/i.test(G.acquireWhy({ reason: "NO_AUTHORITY" })));
+
+/* content_hash: an ENTRY REQUIREMENT for verified (C-2.7), so a bundle written
+   without one can never be released. Found live: the first bundle U8 wrote had
+   none, because the installer's mdFor omits it even with a document attached. */
+ok("a captured document carries its own hash in the frontmatter",
+   new RegExp("content_hash: sha256:" + DOC_SHA).test(withDoc.files[0].text));
+ok("so the release flow's entry requirement can be met",
+   /^content_hash: sha256:[0-9a-f]{64}$/m.test(withDoc.files[0].text));
+ok("typed intake with no document carries none, rather than inventing one",
+   !/content_hash:/.test(typed.files[0].text));
+
+/* A re-capture of bytes a bundle already claims is the ORDINARY monitoring
+   outcome. It must never become a second bundle: one capture hash under two
+   register entries reads as two corroborations of a thing captured once. */
+const heldP = G.heldDialog({ byHash: { bundle_id: "INFO-2026-0042-acfr" }, byAddress: [] }, DOC_SHA, NOW, true);
+/* Collapsed, because the dialog's prose is wrapped in the source and a test that
+   pins line breaks tests the formatting rather than the words. */
+const hd = els.get("#dlg").innerHTML.replace(/\s+/g, " ");
+ok("the surface says the record already holds it", /already holds this document/i.test(hd));
+ok("naming the bundle that claims the bytes", hd.includes("INFO-2026-0042-acfr"));
+ok("and framing it as the ordinary result of looking again",
+   /ordinary result of looking at a document again/i.test(hd));
+ok("writing a second bundle is explicitly NOT offered",
+   !/Add it to the record/.test(hd) && /that is not offered/i.test(hd));
+ok("with the reason given in terms of the corroboration count, not tidiness",
+   /two corroborations of a thing captured once/i.test(hd));
+ok("and a refill is named when the fetch gathered supporting files", /merged into it as a refill/i.test(hd));
+els.get("#hd-open").click();
+ok("choosing to open resolves with that bundle, and nothing was written",
+   (await heldP).open === "INFO-2026-0042-acfr");
+
+/* The address check, because a hash check alone does not fire on the pages that
+   get re-captured most: MEASURED, two fetches of a Legistar calendar seconds
+   apart differ by 31% of their bytes and none of the difference is content. */
+const addrP = G.heldDialog({ byHash: null, byAddress: [
+  { bundle_id: "INFO-2026-0002-legistar-calendar", title: "Legistar calendar",
+    source_retrieved: "2026-07-30T00:19:55Z" }] }, DOC_SHA, NOW, false);
+const ad = els.get("#dlg").innerHTML.replace(/\s+/g, " ");
+ok("a second capture of a known address is flagged even when the bytes differ",
+   /already holds this address/i.test(ad) && ad.includes("INFO-2026-0002-legistar-calendar"));
+ok("and differing bytes are NOT presented as a changed document",
+   /Different bytes are not the same as a changed document/i.test(ad));
+ok("naming the mechanism, so the member can judge it", /reissues its own hidden state on every response/i.test(ad));
+ok("the surface refuses to claim it can tell the two cases apart",
+   /nothing here will claim to/i.test(ad));
+ok("and the decision is the member's, not the surface's", /your call rather than this surface/i.test(ad));
+els.get("#hd-add").click();
+ok("proceeding is possible but deliberate", (await addrP).proceed === true);
 
 console.log(`add-surface: ${n} assertions, all green`);

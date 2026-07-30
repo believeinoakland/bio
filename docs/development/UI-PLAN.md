@@ -177,12 +177,26 @@ self-announce staleness.
   captured document is not a resolvable link target and no verdict about it can
   ever be established. Any further link work rests on this being fixed in the
   plane first.
-- `contemporaneous` MAY BE UNREACHABLE FOR MUNICIPAL SOURCES (D-59). Measured:
-  two captures of a Legistar page twelve minutes apart hash differently, because
-  ASP.NET viewstate changes per response. Identical-byte bracketing cannot fire
-  for such a page whatever happened to its content, so the timestamp-token,
-  archive and monitoring routes are the load-bearing ones rather than the
-  fallbacks.
+- MONITORING IS NOW THE PRIMARY CONTEMPORANEITY ROUTE, byte-bracketing an
+  opportunistic bonus. RULED by Bob 2026-07-30 on the measurement in D-60: two
+  fetches of a Legistar page three seconds apart differ by 31% of their bytes,
+  all of it ASP.NET postback state, with the other 68.6% identical. Identical-byte
+  bracketing cannot fire for such a page whatever happened to its content, so
+  monitoring across the interval, timestamp tokens and archives are load-bearing
+  and byte equality is taken when offered rather than built on.
+- NO CAPTURE HAS A STABLE DIGEST (D-60), and the same measurement breaks three
+  things: monitoring reports change every tick, contemporaneity's strongest arm
+  never fires, and duplicate detection misses re-captures of exactly the pages
+  that get re-captured most. Any further work on monitoring, link verdicts or
+  duplicate suppression rests on this landing in the plane first.
+- A RE-CAPTURE OF ALREADY-HELD BYTES IS THE REGULAR CASE (Bob, 2026-07-30), since
+  monitoring exists to look again and the ordinary result of looking is unchanged.
+  A confirmation creates an OBSERVATION and never a bundle: `captured_locators`
+  advances its interval, which is the evidence the primary route above consumes.
+  The Add surface checks both the hash and the address before writing anything.
+- AN UNATTENDED WRITER CANNOT REVISE (D-61). `op=lease` stamps `leases.actor` from
+  the session and the column is NOT NULL, so the capture-refill path is
+  session-only and a daemon cannot complete work a member walked away from.
 - The record is the source of truth for every parser the UI grows;
   fixtures mirror real shapes (the v11 lesson) and every app.html patch
   carries an assert (the v24 lesson).

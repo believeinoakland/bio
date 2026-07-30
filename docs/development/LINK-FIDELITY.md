@@ -457,18 +457,96 @@ established, calling them broken discards real connections in bulk.
 
 ### What can establish contemporaneity, strongest first
 
-- Two captures of B bracketing A's retrieval date whose bytes hash equal.
-  Identical bytes across the interval settles it outright.
-- A timestamp token over B's capture hash predating A's retrieval. The existing
-  co-attestation machinery, and the only leg here an attacker holding a write
-  token cannot forge.
-- A third-party archive holding B at the relevant date.
+RULED by Bob, 2026-07-30, REORDERED against the earlier draft. Monitoring across
+the interval is the PRIMARY route and identical-byte bracketing is an
+opportunistic bonus. The earlier order had it the other way round, on the
+reasoning that identical bytes settle the question outright and depend on no
+timestamp anyone has to trust. Both halves of that are still true. What was wrong
+was the assumption that identical bytes are OBTAINABLE for the sources BIO
+captures.
+
+Measured 2026-07-30 on `oakland.legistar.com/Calendar.aspx`, two fetches three
+seconds apart: same length, 114,177 differing bytes, 31% of the document. Every
+one of those bytes lay inside two hidden fields, `__VIEWSTATE` (115,096 bytes) and
+`__EVENTVALIDATION` (876 bytes). With those two normalised, the remaining 252,948
+bytes, 68.6% of the document, were BYTE-IDENTICAL. Nothing about the calendar had
+changed. ASP.NET reserialises its control tree and reissues its anti-forgery list
+on every response, so a page like this can never produce two captures with equal
+hashes, and the bracket arm can never fire for it however static its content is.
+Municipal publishing runs on exactly this class of software.
+
+So the order:
+
 - **Monitoring across the interval with no change detected.** A first-party,
-  dated claim the system generated itself. Probably the strongest routinely
-  available signal, and it means link soundness and source-change monitoring
-  are the same problem seen from two directions; they should share machinery
-  rather than each grow their own.
+  dated claim the system generated itself, which does not depend on byte identity
+  and therefore works on the sources that actually matter here. This makes link
+  soundness and source-change monitoring one problem seen from two directions, and
+  they share machinery rather than each growing their own. PRIMARY.
+- A timestamp token over B's capture hash predating A's retrieval. The existing
+  co-attestation machinery, and the only leg an attacker holding a write token
+  cannot forge.
+- A third-party archive holding B at the relevant date.
+- **Two captures of B bracketing A's retrieval whose bytes hash equal.** Settles
+  it outright when it happens, and on measured evidence it will happen for static
+  assets and almost never for a dynamic municipal page. Opportunistic: take it
+  when offered, never build on the expectation of it.
 - `Last-Modified` or a stable `ETag`. Recorded, never sufficient alone.
+
+### Volatile regions: noted, never mistaken for change
+
+The measurement above forces a distinction the design did not have. A capture's
+identity is the hash of its raw bytes and that does not change: the raw bytes are
+never rewritten, which is doctrine everywhere else here. But CHANGE DETECTION
+cannot run on that hash, because it reports change on every fetch of any ASP.NET
+page and therefore reports nothing at all.
+
+So a capture carries a second, DERIVED digest beside its identity: the hash of the
+document with known-volatile regions normalised to a fixed placeholder. Identity
+stays raw; comparison uses the stable digest.
+
+- The volatile regions are RECORDED, with their field names, offsets and lengths,
+  and the fact that they differed between two fetches is itself noted and dated.
+  A difference that is not a change is still an observation, and a page whose
+  viewstate stopped moving would be worth knowing about.
+- Classification is per-family and heuristic, so it is reclassifiable, never a
+  deletion, exactly as chrome detection is. `__VIEWSTATE`, `__EVENTVALIDATION`,
+  `__VIEWSTATEGENERATOR` and CSRF tokens are the ASP.NET family; other stacks will
+  have their own and the list is discovered by measurement rather than declared.
+- **The stable digest is what monitoring compares and what the bracket arm should
+  compare.** Two captures whose stable digests match across an interval establish
+  that the document did not change across it, which is the claim contemporaneity
+  actually needs. Requiring raw-byte equality asks for something stronger than the
+  question and gets nothing.
+- A volatile region is never treated as evidence. Nobody's case turns on a
+  viewstate blob, and it must not be paraphrased as content.
+
+This is what "innocuous differences are noted but do not cause a refetch" means
+mechanically: the refetch decision, the change verdict, and the contemporaneity
+verdict all read the stable digest, while the record keeps every raw byte it was
+served and says which parts of it were volatile.
+
+### A re-capture of bytes the record already holds is the NORMAL case
+
+RULED by Bob, 2026-07-30. Once monitoring is enabled, the system looks at a
+document again on a schedule, and the ordinary outcome of looking is "unchanged",
+which means identical bytes and therefore the same content-addressed capture. This
+is a regular occurrence and not an exception, and the correct handling follows from
+C-18.3's ring-once rule: identical content is corroboration on ONE register entry
+and never two.
+
+- A confirmation does not create a bundle, a register entry, or a second
+  provenance document. What it creates is an OBSERVATION: `captured_locators`
+  advances `last_retrieved` and increments `observations` on the existing row,
+  which is precisely the evidence the contemporaneity machinery consumes.
+- That is not a small thing. A confirmation is a first-party dated statement that
+  the source was still serving these exact bytes at this instant, and a run of
+  them across an interval is the primary route above.
+- C-18.3 compares hashes WITHIN one bundle's register and cannot see a second
+  bundle holding the same capture hash, so nothing prevents the duplicate at write
+  time except the writer declining to make it. Conformance prevents, audit
+  detects, and the surfaces must not manufacture the thing by default: a member
+  re-capturing a monitored page is shown the bundle that already claims the bytes
+  and is not offered a second copy.
 
 ## The work, in order
 
