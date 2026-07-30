@@ -157,7 +157,7 @@ architecture with zero consumers, a third of all open debt opened in one day, se
 vocabularies of which six overlap, and two same-day reworks where the evening
 invalidated part of the afternoon.
 
-`docs/architecture/BIO_Content_Framework_v0_3.md` is the framework those constructs
+`docs/architecture/BIO_Content_Framework_v0_4.md` is the framework those constructs
 should collapse into, written after Bob corrected the framing: discovery is not
 finished and will not be for a long time, so the framework's measure is the cost of
 absorbing the next surprise rather than coverage of what is already known.

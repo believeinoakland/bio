@@ -22,7 +22,7 @@ WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
 **This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_3.md`, written 2026-07-30 after Bob corrected the framing
+`BIO_Content_Framework_v0_4.md`, written 2026-07-30 after Bob corrected the framing
 of this one: it is not that discovery has finished, but that discovery will continue
 for a long time and the framework's job is to make each new surprise cheap. That
 document's section 9 states the cost of absorbing each kind of new thing, and that
@@ -221,9 +221,21 @@ correspondence such as a name. That method IS the connection grade (framework §
 Consumers: the reverse index, "every document that concerns this ordinance", which is
 the single largest piece of manual work the framework can remove.
 
-**Step 5. The connection table lands as data,** with the three-valued `asserted_by`,
-the rule and instance split, and a grade on every connection. Consumers: a task that
-walks the table looking for connections, and a UI surface that shows and edits it.
+**Step 5. The PROGRESSION table lands as data,** of which the connection table is the
+two-stage case. Stages with `after`, cardinality, interval and required-ness; exception
+documents that discharge a legitimate skip; junction checks as rules; the three-valued
+`asserted_by`; and a grade on every connection, with a progression instance inheriting
+the weakest grade along its chain. Consumers: a task that walks the table looking for
+connections, and a UI surface that shows and edits it. Meeting-to-minutes and
+need-to-signed-contract must both be expressible as rows, or the generalisation has
+not been made.
+
+**Step 5a. Measure Oakland's shared identifiers.** Empirical work, exactly like
+measuring a host stack, and cheap: which identifiers does the city reuse across
+Legistar, its procurement portal and its finance system? A contract number, a project
+number, a resolution number, an APN, a fund code. Each one found in two systems
+converts a whole progression from Grade C to Grade B, which makes this the highest
+value-per-hour measurement available. Consumer: Step 4's entity recognisers.
 
 **Step 6. Monitoring adopts the contracts,** with frequency by document kind, and
 stores confirmations. Consumer: the daemon. This is where the negative result finally

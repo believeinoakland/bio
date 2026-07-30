@@ -1,6 +1,6 @@
 # BIO Content Framework
 
-**Version 0.3 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
+**Version 0.4 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -14,6 +14,15 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.4, 2026-07-30. Bob generalised the meeting chain: scheduled meeting to agenda to
+  minutes is ONE form of connected data, and the system must be ready for many types
+  of happenings and progressions, his example being need, budget request, budget
+  approval, RFP, responses, award, signed contract. Adds §8.2, progressions as data,
+  which generalises the connection table rather than sitting beside it; introduces the
+  MISSING PREDECESSOR as a finding distinct from and often sharper than a missing
+  successor; adds cardinality, exception documents, and junction checks; and adds §8.3
+  on identifier spaces, since a progression that crosses source systems is where
+  connection grade collapses and where the framework has to work hardest.
 - v0.3, 2026-07-30. Bob approved the architecture and restated BIO's purpose:
   supporting members in ALL aspects of case development. That exposed a gap, since
   every object in v0.2 was about documents and none was about cases. Adds §1.1 stating
@@ -542,6 +551,151 @@ itself.
 The last two rows are the ones history says will actually be exercised. Six axes
 appeared in a few days. The seventh should cost a registry, not a rewrite.
 
+## 8.2 Progressions: the many shapes a happening takes
+
+RULED by Bob, 2026-07-30. The meeting chain — scheduled meeting, agenda, attendance,
+minutes — is ONE form of connected data and not the general case. His example of
+another: a mention of a need, a budget request, a budget approval, an RFP, responses
+to it, a contract award, a signed contract with terms, and onward through amendments
+and payments. The system must be ready for many types of happenings and progressions.
+
+The two differ in almost every dimension, which is what makes the generalisation
+worth making rather than assuming:
+
+| | meeting chain | procurement chain |
+| --- | --- | --- |
+| span | days | months to years |
+| bodies | one | department, council, contractor |
+| source systems | one | often three or four |
+| stages | 3 to 4 | 8 to 12 |
+| shape | linear | branching, with one-to-many and legitimate skips |
+| what is usually missing | the SUCCESSOR: minutes not yet posted | the PREDECESSOR: an award with no solicitation |
+
+That last row is the important one and it is a new construct.
+
+### The missing predecessor
+
+A temporal connection so far has meant an expected successor: minutes are due after a
+meeting. Bob's example inverts it. A signed contract implies an award; an award
+implies a solicitation or a documented reason there was none; a budget approval
+implies a request. **When a later stage exists and an earlier one does not, that is a
+finding, and it is usually sharper than a missing successor**, because late minutes
+are an administrative lapse while an award with no solicitation is a question about
+how public money was committed.
+
+It is also epistemically stronger. A missing successor might simply not have happened
+yet; the absence is provisional. A missing predecessor is an absence in the past,
+where the document either exists somewhere or does not exist at all, and either answer
+is worth having. The first is a records request; the second is the case.
+
+### The progression table
+
+A generalisation of the connection table in §8.3, not a second table beside it. A
+connection row is a progression of two stages; nothing needs both.
+
+    progression: procurement
+    stage  key            typical content        after      cardinality  within    required
+    1      need           staff report           —          0..n         —         sometimes
+    2      budget_request budget document        need        0..n         —         usually
+    3      budget_approval council action        request     1            1 year    always
+    4      solicitation   RFP / RFQ / IFB        approval    0..1         —         unless exception
+    5      responses      bid list / proposals   solicitation 0..n        by due date usually
+    6      recommendation staff report           responses   0..1         —         usually
+    7      award          council resolution     recommendation 1         —         always
+    8      contract       signed agreement       award        1           90 days   always
+    9      amendment      change order           contract     0..n        —         never
+
+Each row carries what the rules need and nothing more:
+
+- **after** — the stage this one presupposes. Read forwards it predicts; read
+  backwards it accuses.
+- **cardinality** — `1`, `0..1`, `0..n`. An RFP has many responses; an award has one
+  contract. Cardinality is where several of the sharpest questions live.
+- **within** — the interval that makes an absence overdue rather than pending.
+- **required** — `always`, `usually`, `sometimes`, `never`, and the crucial
+  `unless exception`.
+
+### Legitimate skips need an exception document
+
+A sole-source award skips the solicitation stage lawfully, and the thing that makes it
+lawful is a justification the institution is supposed to publish. So a skipped stage
+is not automatically a finding: **a skipped stage with no exception document is.** The
+table records which document discharges which skip, and the framework's question
+becomes not "why is this missing" but "where is the document that says it may be
+missing", which is a question with a records-request answer.
+
+### Junction checks
+
+A progression's value is concentrated at its junctions, and these are the questions a
+member is trying to answer anyway:
+
+- an **award with no solicitation** and no exception document
+- a solicitation with **exactly one response**, which is lawful and interesting
+- a **signed amount that differs from the awarded amount**
+- **amendments accumulating** past a threshold of the original
+- **payments past the contract term**
+- a **budget approval with no traceable request**
+
+Junction checks are rules over a progression instance, they are DATA like the table,
+and they are the point at which this framework stops describing documents and starts
+supporting a case.
+
+### Progressions are threaded by entities
+
+An instance of a progression is assembled by following an entity: a contract number, a
+project identifier, a parcel, a fund. That is why the entity axis is Step 4 and the
+progression table is Step 5 and not the other way round. It also means a progression
+instance inherits the WEAKEST connection grade along its chain, and a case built on it
+should say so, because a nine-stage chain assembled by name correspondence is not
+evidence of anything.
+
+```mermaid
+flowchart LR
+    subgraph short["Meeting chain: days, one system, linear"]
+        M1["meeting"] --> M2["agenda"] --> M3["minutes"]
+    end
+    subgraph long["Procurement chain: years, several systems, branching"]
+        P1["need"] --> P2["budget<br/>request"] --> P3["budget<br/>approval"]
+        P3 --> P4["solicitation"]
+        P4 --> P5["responses<br/><i>0..n</i>"]
+        P5 --> P6["recommendation"] --> P7["award"] --> P8["contract"]
+        P8 --> P9["amendments<br/><i>0..n</i>"]
+        P3 -.->|"sole source:<br/>needs an exception<br/>document"| P7
+    end
+    M3 -.->|"missing SUCCESSOR:<br/>provisional, may<br/>simply not exist yet"| Q1(["records request"])
+    P7 -.->|"missing PREDECESSOR:<br/>an absence in the past.<br/>Either it exists somewhere<br/>or it never existed"| Q2(["the case"])
+    classDef ok fill:#e8ede8,stroke:#3d4a3d,color:#1c2320
+    classDef ask fill:#fff,stroke:#b08968,stroke-dasharray:4 3,color:#6b4a32
+    class M1,M2,M3,P1,P2,P3,P4,P5,P6,P7,P8,P9 ok
+    class Q1,Q2 ask
+```
+
+## 8.3 Identifier spaces, and where grade collapses
+
+A progression that stays inside one system can reach Grade A, because that system
+assigns identifiers and links its own stages: Legistar does this for legislation. A
+progression that crosses systems usually cannot, because a procurement portal, a
+finance system and a legislative record each maintain their own identifier space and
+none of them links to the others.
+
+This is where connection grade collapses to C, and it is where the framework has to
+work hardest, because it is also where the most consequential progressions live.
+
+The lever is that institutions DO reuse certain identifiers across their systems, and
+finding which ones is empirical work exactly like measuring a stack:
+
+- a contract or purchase order number
+- a project or capital improvement number
+- a resolution or ordinance number
+- an APN for a parcel
+- a fund or account code
+
+Each such identifier, once found in two systems, converts an entire progression from
+Grade C to Grade B. **Discovering an institution's shared identifiers is therefore one
+of the highest-value pieces of measurement this project can do**, and it should be
+recorded per institution the way stack measurements are recorded per host. Oakland's
+shared identifiers have not been measured.
+
 ## 9.1 The workload this is meant to remove
 
 Stated concretely, because a framework that cannot name the work it removes cannot be
@@ -551,6 +705,8 @@ usually incompletely.
 | Work a member does by hand | What the framework does instead | Status |
 | --- | --- | --- |
 | finding the other documents that concern this person, body, ordinance or fund | resolve references to entities and hold the reverse index | needs the entity axis |
+| assembling a procurement or legislative chain from end to end | progression instances threaded by an entity | needs the entity axis and the progression table |
+| noticing that a stage of such a chain was skipped without justification | missing-predecessor findings and exception documents | designed, not built |
 | noticing that a document which should exist does not | temporal connections with a due date | emitted, nothing ages them |
 | keeping a timeline of what happened when | observations are dated by construction | partly; nothing assembles them |
 | re-checking whether a source still says what it said | layered change assessment plus stored confirmations | built, plane has not adopted it |
@@ -598,6 +754,10 @@ Stated so the bend is recognised as a bend and not as a bug:
 - **Change that is not between two captures of one address.** A regulation superseded
   by one at a different URL; a department renamed. Temporal connections gesture at
   this and do not yet model it.
+- **Progressions that fork or merge.** One budget approval covering many contracts,
+  one contract amended into a different scope, a project split between two funds.
+  §8.2 models a chain and not a graph, and the first real procurement case will
+  probably need the graph.
 - **Aggregate claims.** "The city moved $2.1m from the sewer fund" is a claim across
   documents. Nothing here models a claim as an object, and the case-building work
   will need one.
