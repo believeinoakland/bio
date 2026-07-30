@@ -157,7 +157,12 @@ architecture with zero consumers, a third of all open debt opened in one day, se
 vocabularies of which six overlap, and two same-day reworks where the evening
 invalidated part of the afternoon.
 
-No new capability until Step 0 of that document is done: reconcile the overlapping
+`docs/architecture/BIO_Content_Framework_v0_1.md` is the framework those constructs
+should collapse into, written after Bob corrected the framing: discovery is not
+finished and will not be for a long time, so the framework's measure is the cost of
+absorbing the next surprise rather than coverage of what is already known.
+
+No new capability until Step 0 of the CONSTRUCTS plan is done: reconcile the overlapping
 constructs, which is the only step that deletes more than it adds. Then Steps 1
 through 7, each of which is finished only when something CONSUMES its output. That
 rule is the discipline whose absence produced the 1,463 unconsumed lines.

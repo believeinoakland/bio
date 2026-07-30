@@ -21,6 +21,13 @@ produced knowledge nothing else would have: the Legistar viewstate measurement, 
 WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
+**This document is the inventory and the evidence. The FRAMEWORK it argues for is
+`BIO_Content_Framework_v0_1.md`, written 2026-07-30 after Bob corrected the framing
+of this one: it is not that discovery has finished, but that discovery will continue
+for a long time and the framework's job is to make each new surprise cheap. That
+document's section 9 states the cost of absorbing each kind of new thing, and that
+table is its actual specification.**
+
 ## Purpose of this document
 
 To name every construct now in play, say where it lives, say whether anything
@@ -176,6 +183,10 @@ Shape sketch only, to be settled in the architecture pass:
 
 The rule for the plan is that no step is done until something CONSUMES its output.
 That is the discipline whose absence produced 1,463 unconsumed lines.
+
+The plan below predates the framework document and its Step 0 is unchanged: the
+reconciliation is exactly what §4 of the framework requires, since one recogniser
+shape and one confidence ladder is what removes the duplication.
 
 **Step 0. Reconcile the seven overlaps above.** No new capability. One confidence
 ladder, one diff, one entry point, contracts declared by content types, an event

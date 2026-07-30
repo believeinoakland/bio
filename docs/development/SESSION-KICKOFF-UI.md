@@ -21,7 +21,14 @@ bio-plane/scripts/deploy.mjs (the plane's release path), civicos-ui/test/run.mjs
 
 This session, in order:
 
-(0) Read `docs/architecture/CONSTRUCTS.md` before anything else. Development is
+(0) Read `docs/architecture/BIO_Content_Framework_v0_1.md` before anything else, then
+`docs/architecture/CONSTRUCTS.md` for the evidence behind it. The framework is the
+shape the code should take; the inventory is why. Note §2, the invariants, and §9,
+the cost of absorbing a new stack, content type, connection rule or AXIS: that table
+is the specification, and a change that raises one of those numbers needs to justify
+itself. Bob's framing, which corrected mine: we have NOT discovered enough and will
+keep discovering for a long time, so the framework exists to make the next surprise
+cheap rather than to be complete. Development is
 paused for consolidation and that document says why, with the measurements. Also
 read UI-PLAN.md's "Who this is for": the audience is non-technical and the workflow
 exists to keep members out of logistics, so technical complications get classified by
