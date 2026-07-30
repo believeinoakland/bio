@@ -22,7 +22,7 @@ WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
 **This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_2.md`, written 2026-07-30 after Bob corrected the framing
+`BIO_Content_Framework_v0_3.md`, written 2026-07-30 after Bob corrected the framing
 of this one: it is not that discovery has finished, but that discovery will continue
 for a long time and the framework's job is to make each new surprise cheap. That
 document's section 9 states the cost of absorbing each kind of new thing, and that
@@ -188,35 +188,57 @@ The plan below predates the framework document and its Step 0 is unchanged: the
 reconciliation is exactly what §4 of the framework requires, since one recogniser
 shape and one confidence ladder is what removes the duplication.
 
-**Step 0. Reconcile the seven overlaps above.** No new capability. One confidence
-ladder, one diff, one entry point, contracts declared by content types, an event
-catalogue, significance derived once. This is the only step that deletes more than it
-adds and it must come first, because every later step would otherwise be built twice.
+**Step 0. Implement §4 of the framework, not merely deduplicate.** RULED by Bob,
+2026-07-30: "we must do the work upfront in order to end up with the results we
+need." So this is the full version, not the narrow one. One recogniser interface and
+one registry helper, with both existing axes rewritten onto them; one confidence
+ladder; one entity diff; `assess()` the only public entry point; `CONTRACT` declared
+by the content type; a shared event catalogue; significance graded once and the
+boolean derived. This step should shrink the codebase, and the test of whether it
+worked is that Step 4 costs a registry.
 
 **Step 1. The plane records the profile.** `op=acquire` calls `identify()` and
-`doctypeFor()` and writes the profile record onto the capture: handler, content type,
-both confidences, signals, and what was normalised. Consumer: the document page,
-which can then say what kind of document the record thinks it holds. Nothing above
-this step is trustworthy without it.
+`doctypeFor()` and writes the profile onto the capture: handler, content type, both
+confidences, signals, versions, and what was normalised. Roughly twenty lines.
+Consumer: the document page says what kind of document the record thinks it holds.
+Nothing above this is trustworthy without it, because a judgment whose author and
+version are unrecorded cannot be revised when the author turns out to be wrong.
 
 **Step 2. The plane computes and stores the three digests.** Consumers: `op=audit`'s
-duplicate sweep, which today cannot see a duplicate whose viewstate differs, and the
+duplicate sweep, which today cannot see a duplicate whose viewstate differs; and the
 Add surface's already-held check, which currently fetches both captures and compares
-them client-side.
+them in the browser.
 
-**Step 3. Monitoring adopts the contracts.** Substance for a record, membership for an
-index, unmonitorable for a shell, and frequency by kind. Consumer: the daemon.
-Confirmations get stored here, which gives the contemporaneity work its raw material.
+**Step 3. Readings are PERSISTED.** Today `parse()` output is transient, which is
+the quiet blocker on everything Bob's purpose statement asks for: entities cannot be
+resolved across documents if no document's entities are stored. Persist readings and
+index them by entity reference. Consumer: Step 4.
 
-**Step 4. The connection table lands as data,** with the three-valued `asserted_by`
-and the rule/instance split. Consumers: a task that walks the table looking for
-connections, and a UI surface that shows and edits it.
+**Step 4. The ENTITY axis.** The third registry, and the first real test of whether
+§4's claim is true. Entity recognisers resolve a reference in a reading to an entity
+and declare how: by a source-assigned identifier, by an exact identifier match, or by
+correspondence such as a name. That method IS the connection grade (framework §8.1).
+Consumers: the reverse index, "every document that concerns this ordinance", which is
+the single largest piece of manual work the framework can remove.
 
-**Step 5. Ageing.** Something notices when a temporal expectation comes due.
-Consumer: the review queue, or a Focus, which is a decision Bob has not made.
+**Step 5. The connection table lands as data,** with the three-valued `asserted_by`,
+the rule and instance split, and a grade on every connection. Consumers: a task that
+walks the table looking for connections, and a UI surface that shows and edits it.
 
-**Step 6. Presentation.** The document page shows referential and temporal
-connections apart, because they are understood differently.
+**Step 6. Monitoring adopts the contracts,** with frequency by document kind, and
+stores confirmations. Consumer: the daemon. This is where the negative result finally
+lands somewhere.
 
-**Step 7. Then, and only then, more content types.** Each one measured first, and
-each one now cheap because steps 0 through 6 gave it somewhere to land.
+**Step 7. Ageing.** Something notices when a temporal expectation comes due.
+Consumer: the review queue, or a Focus, which Bob has not ruled on.
+
+**Step 8. Presentation.** The document page and the case file show referential and
+temporal connections apart, each with its grade, and show which links in a case are
+the weak ones.
+
+**Step 9. Then more content types and more stacks,** each measured first, and each
+now cheap because Steps 0 through 8 gave it somewhere to land.
+
+Steps 3 and 4 moved up from the tail of the v1 plan. They were sequenced late because
+they looked like new capability; Bob's restatement of BIO's purpose makes them the
+capability the rest exists to serve.

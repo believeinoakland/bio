@@ -21,7 +21,7 @@ bio-plane/scripts/deploy.mjs (the plane's release path), civicos-ui/test/run.mjs
 
 This session, in order:
 
-(0) Read `docs/architecture/BIO_Content_Framework_v0_2.md` before anything else, then
+(0) Read `docs/architecture/BIO_Content_Framework_v0_3.md` before anything else, then
 `docs/architecture/CONSTRUCTS.md` for the evidence behind it. The framework is the
 shape the code should take; the inventory is why. Note §2, the invariants, and §9,
 the cost of absorbing a new stack, content type, connection rule or AXIS: that table
@@ -35,8 +35,12 @@ exists to keep members out of logistics, so technical complications get classifi
 the system and never surfaced as choices. The suite carries a vocabulary guard over
 member-facing strings.
 
-(1) STEP 0 of the plan in CONSTRUCTS.md, and nothing else until it is done.
-Reconcile the seven overlapping constructs: one confidence ladder rather than
+(1) STEP 0 of the plan in CONSTRUCTS.md, and nothing else until it is done. Bob
+ruled that this is the FULL version and not a deduplication: "we must do the work
+upfront in order to end up with the results we need." So implement framework §4, one
+recogniser interface and one registry helper, with both existing axes rewritten onto
+them. The test of whether it worked is that Step 4, the entity axis, costs a
+registry. Concretely: one confidence ladder rather than
 `CONFIDENCE` and `TYPE_CONFIDENCE`; one entry point, `assess()`, with `monitor()` and
 `compare()` made internal; one diff, `diffEntities`, with `diffMembers` deleted;
 `CONTRACT` declared by the content type rather than derived from the stack handler; a
