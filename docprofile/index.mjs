@@ -64,6 +64,13 @@
  * Handlers earn the right to narrow that, per stack, on measurement.
  */
 
+/** Entity-decode enough to make an href comparable. Deliberately minimal: this is
+ *  used to READ keys out of markup, never to rewrite anything the record holds. */
+export function unescapeHtml(s) {
+  return String(s).replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+                  .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ");
+}
+
 export const REGION = { EVIDENTIARY: "evidentiary", PRESENTATIONAL: "presentational", MECHANICAL: "mechanical" };
 
 /* Confidence in a detection, because a handler applied to the wrong document is

@@ -26,6 +26,7 @@ import fs from "fs";
 import {
   identify, compare, digests, fidelity, profileRecord, handlers,
   aspnetWebforms, wordpress, clientRendered, conservative, CONFIDENCE, REGION,
+  monitor, contract, diffMembers, CONTRACT, SIGNIFICANCE,
 } from "../../docprofile/registry.mjs";
 
 const sha = async (b) => [...new Uint8Array(await webcrypto.subtle.digest("SHA-256", b))]
@@ -195,5 +196,88 @@ const keys = handlers().map((h) => h.key);
 ok("the shell handler is asked FIRST, since any stack can serve a shell",
    keys.indexOf("client_rendered") === 0);
 ok("and the conservative handler is asked last", keys[keys.length - 1] === "conservative");
+
+/* ---- 5. monitoring, by document kind ----
+   RULED by Bob: index versus record changes monitoring's BEHAVIOUR. A Legistar
+   calendar changing is the calendar working; a detail page changing is an event.
+   One contract cannot serve both, and applying the record's contract to an index
+   is what turns monitoring into noise on exactly the pages BIO watches most. */
+const idxCtx = ctxFor(LEGISTAR("<p>x</p>", VS, "Home"), LOC, H);
+ok("an index is watched for its MEMBERSHIP",
+   contract(aspnetWebforms, "index").mode === CONTRACT.MEMBERSHIP);
+ok("a record is watched for its SUBSTANCE",
+   contract(aspnetWebforms, "record").mode === CONTRACT.SUBSTANCE);
+ok("and a shell is not watchable at all, rather than reported unchanged forever",
+   contract(clientRendered, "shell").mode === CONTRACT.UNMONITORABLE);
+ok("which is said in terms of what would go wrong",
+   /report nothing changing while the figures behind it move/.test(contract(clientRendered, "shell").why));
+/* An index whose entries cannot be read must not pretend a substance check is
+   equivalent; it says it is degraded so the gap is visible. */
+ok("an index with no member reader falls back and SAYS it is degraded",
+   contract(conservative, "index").degraded === true);
+
+/* Real rows, keyed by the stable id, digested by their own visible text. */
+const ROW = (id, title, doc) =>
+  `<tr><td><a href="MeetingDetail.aspx?ID=${id}&amp;GUID=G${id}">${title}</a>` +
+  `<a href="View.ashx?M=A&amp;ID=${doc}">Agenda</a></td></tr>`;
+const CAL = (rows) => LEGISTAR(`<table>${rows.join("")}</table>`, VS, "Home");
+const three = [ROW(1, "Rules Committee 7/30 10:30 AM", 900),
+               ROW(2, "Public Safety 7/28 6:00 PM", 901),
+               ROW(3, "Life Enrichment 7/28 4:00 PM", 902)];
+const mon = (a, b) => monitor(enc(a), enc(b), aspnetWebforms,
+  { ...ctxFor(b, LOC, H), confidence: CONFIDENCE.CERTAIN });
+
+let m = await mon(CAL(three), CAL(three));
+ok("an unchanged list reports no change", m.changed === false);
+/* The negative case, which Bob named as equally important. On an index this is a
+   STRONGER claim than on a record, because an index is expected to move. */
+ok("and CONFIRMS positively what it checked and found intact",
+   m.confirmed.entries === 3 && m.confirmed.intact === 3);
+ok("saying so in terms a member can rely on", /all 3 entries on this list are still present and unchanged/.test(m.why));
+
+m = await mon(CAL(three), CAL([three[0], three[2]]));
+ok("an entry that vanished is a CHANGE", m.changed === true);
+ok("and is an event rather than a notice", m.significance === SIGNIFICANCE.EVENT);
+ok("named as no longer listed, which is the point of watching a public list",
+   m.events[0].type === "removed" && /no longer on it/.test(m.events[0].why));
+ok("carrying what it used to say, since the entry is gone from the new capture",
+   /Public Safety/.test(m.events[0].label));
+
+m = await mon(CAL(three), CAL([ROW(1, "Rules Committee 7/30 - CANCELLED", 900), three[1], three[2]]));
+ok("an entry that changed what it says is an event", m.changed === true && m.significance === SIGNIFICANCE.EVENT);
+ok("reported as altered, not as removed and added",
+   m.events[0].type === "altered" && m.events.length === 1);
+ok("with both what it said and what it says now", /CANCELLED/.test(m.events[0].now) && !/CANCELLED/.test(m.events[0].was));
+
+/* The quiet substitution: a document swapped under a heading that did not move. */
+m = await mon(CAL(three), CAL([ROW(1, "Rules Committee 7/30 10:30 AM", 9999), three[1], three[2]]));
+ok("a document swapped under an unchanged heading is caught",
+   m.changed === true && m.events[0].type === "altered");
+
+m = await mon(CAL(three), CAL([...three, ROW(4, "Special Meeting 8/15", 903)]));
+ok("a new entry is ROUTINE, because that is the list doing its job",
+   m.changed === true && m.significance === SIGNIFICANCE.ROUTINE);
+ok("and the worst thing is reported first when several happen at once",
+   (await mon(CAL(three), CAL([three[0], ROW(4, "New", 903)]))).events[0].type === "removed");
+
+/* Extraction failure must never read as every entry being removed. */
+m = await mon(CAL(three), LEGISTAR("<p>the grid failed to render</p>", VS, "Home"));
+ok("a list whose entries cannot be read claims NOTHING either way",
+   m.changed === null && m.degraded === true);
+ok("rather than reporting a mass removal", !m.events.length);
+
+/* A record still gets substance monitoring, with the furniture discounted. */
+const RLOC = "https://oakland.legistar.com/LegislationDetail.aspx?ID=7";
+const rmon = (a, b) => monitor(enc(a), enc(b), aspnetWebforms,
+  { ...ctxFor(b, RLOC, H), confidence: CONFIDENCE.CERTAIN });
+const rec1 = LEGISTAR("<p>Ordinance 13579, adopted</p>", VS, "Home");
+m = await rmon(rec1, LEGISTAR("<p>Ordinance 13579, adopted</p>", "ZZ" + "q".repeat(600), "Home"));
+ok("a record whose page state moved is unchanged", m.changed === false && m.contract === CONTRACT.SUBSTANCE);
+ok("and confirms its substance", m.confirmed.substance === true);
+m = await rmon(rec1, LEGISTAR("<p>Ordinance 13579, rescinded</p>", VS, "Home"));
+ok("a record whose substance moved is an event", m.changed === true && m.significance === SIGNIFICANCE.EVENT);
+m = await rmon(rec1, LEGISTAR("<p>Ordinance 13579, adopted</p>", VS, "Home Contact"));
+ok("a record whose furniture moved is a notice, not a change",
+   m.changed === false && m.significance === SIGNIFICANCE.NOTICE);
 
 console.log(`docprofile: ${n} assertions, all green`);

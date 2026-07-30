@@ -256,6 +256,50 @@ refused on any missing part, which is right for a stylesheet and wrong for a foo
 icon. Under the conservative handler every missing part is still critical, which is
 correct in ignorance.
 
+MONITORING IS NOW A DIFFERENT CONTRACT PER DOCUMENT KIND, at Bob's ruling. A
+Legistar calendar changing is the calendar working; a detail page changing is an
+event. Applying the record's contract to an index is what turns monitoring into
+noise on exactly the pages BIO watches most: an index moves whenever the body it
+indexes does anything, so a substance check fires constantly, gets ignored, and the
+one change that mattered arrives in the same stream as the rest.
+
+Three contracts. SUBSTANCE for a record, an article or a page: the evidentiary
+digest, any change an event, furniture a notice. MEMBERSHIP for an index whose
+handler can read its entries: which entries are present, and whether each entry's
+line still says what it said. UNMONITORABLE for a shell, which says so rather than
+reporting unchanged forever while the figures behind it move.
+
+MEMBERSHIP EVENTS, ordered so a report leads with the worst thing. REMOVED is an
+event and is close to the reason this system exists: a public record that was on a
+public list and is no longer on it, which NO substance check anywhere would surface,
+not on the index where it is one row among dozens and not on the record's own page
+which may still serve perfectly. ALTERED is an event: a meeting cancelled, a status
+moved, or a document swapped under a heading that did not move. ADDED is routine.
+
+MEASURED, and the measurement is the argument. Calendar.aspx carries 41 rows inside
+<main>, 18 with a stable MeetingDetail ID, and FIVE OF THOSE EIGHTEEN READ
+CANCELLED. A member watching the Rules and Legislation Committee needs that
+cancellation, and it was invisible to both checks that existed before: a substance
+check on the page reports it in the same breath as a meeting scheduled three weeks
+out, and a substance check on the committee's own page does not see it at all. All
+five outcomes were then verified against the real bytes, including the quiet
+substitution: swapping one View.ashx agenda id under an unchanged title is caught,
+because a row's digest folds in its document links.
+
+BOTH SAFEGUARDS ARE ABOUT THE NEGATIVE CASE, which Bob named as equally important.
+Confirmation is reported POSITIVELY: "all 18 entries are still present and
+unchanged" is a stronger claim on an index than the same words about a record,
+because an index is expected to move, and it is a dated first-party statement that
+nothing was quietly withdrawn. And extraction failure claims NOTHING: a reader that
+finds no entries has failed rather than discovered an empty list, and reporting a
+mass removal there would be catastrophic and confident.
+
+FLATTENING CAUGHT A BUG THE MODULE SYSTEM WAS HIDING. index.mjs and monitoring.mjs
+both declared a top-level RANK, which is legal in modules and fatal once bundled
+into one scope: the whole runtime and all twelve harnesses failed at once while each
+module tested green alone. The bundler now refuses any duplicate top-level name,
+which is cheaper than debugging it downstream.
+
 THE LESSON OF THE SESSION. Reading the plane's SOURCE rather than the docs'
 description of it caught four things before they shipped, and running against the
 LIVE plane caught three more that no fixture would have. An anchor's recorded

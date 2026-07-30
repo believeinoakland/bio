@@ -36,6 +36,13 @@ should write the profile record onto the capture so a later session can see whic
 handler spoke and how sure it was. Identity stays the raw hash and raw bytes are
 never rewritten.
 
+(1b) Wire the monitoring contracts into the plane's watcher when you do. An index
+gets membership monitoring, a record gets substance, a shell gets told it cannot be
+watched. The daemon's per-bundle monitor frequency should also follow the kind: an
+index is worth checking often because a delisting is time-sensitive, a record
+rarely. The contracts and the membership diff are in docprofile/monitoring.mjs and
+are validated against real Legistar rows.
+
 (1a) Then measure a fourth stack and write its handler (D-63). Drupal or plain
 static HTML is the obvious next one. The method is in the design doc and it is
 short: fetch the same page twice, diff, attribute every difference, decide whether

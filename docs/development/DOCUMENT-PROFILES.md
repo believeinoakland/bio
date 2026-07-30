@@ -139,6 +139,63 @@ every missing part is critical, which is correct in ignorance.
 Adding a stack means adding a file and a line in `registry.mjs`. That is the point
 of the exercise; the alternative was another branch inside the capture path.
 
+## Monitoring is a different contract per kind
+
+RULED by Bob, 2026-07-30: `index` versus `record` changes monitoring's BEHAVIOUR,
+not just which normalisation rules apply.
+
+A Legistar calendar changing is the calendar working. A `LegislationDetail.aspx`
+page changing is an event somebody should look at. Applying the record's contract
+to an index is what turns monitoring into noise on exactly the pages BIO watches
+most closely: an index moves whenever the body it indexes does anything, so a
+substance check on it fires constantly, gets ignored, and then the one change that
+mattered arrives in the same undifferentiated stream as the rest.
+
+The inversion is the point. On a record, the question is "did the substance
+change", and the answer is normally no. On an index, the substance IS a list, and
+the question is not whether the list changed but what happened to its members.
+
+| Contract | Applies to | What it watches |
+| --- | --- | --- |
+| `substance` | a record, an article, a page | the evidentiary digest. Any change is an event; furniture moving is a notice. |
+| `membership` | an index whose handler can read its entries | which entries are present, and whether each entry's own line still says what it said |
+| `unmonitorable` | a client-rendered shell | nothing, and it says so. A substance check here reports "unchanged" forever while the figures behind it move freely, which is the system lying quietly. |
+
+Membership events, ordered so a report leads with the worst thing rather than the
+first thing:
+
+- **removed**, an EVENT. A public record that was on a public list and is no longer
+  on it. This is close to the reason this system exists, and no substance check
+  anywhere would surface it: not on the index, where it is one row among dozens,
+  and not on the record's own page, which may still serve perfectly.
+- **altered**, an EVENT. A meeting cancelled, an item's status moved, or a document
+  swapped under a heading that did not move. The last is the quiet substitution, and
+  it is caught because a Legistar row's digest folds in its `View.ashx` document
+  links: an agenda replaced under an unchanged title changes nothing else on the
+  page.
+- **added**, ROUTINE. The list doing its job.
+
+MEASURED on `oakland.legistar.com/Calendar.aspx`: 41 table rows inside `<main>`, 18
+carrying a stable `MeetingDetail.aspx?ID=`, and five of those eighteen reading
+CANCELLED. A member watching the Rules and Legislation Committee needs that
+cancellation. It is an alteration to one row of an index, and it is invisible to
+both of the checks that existed before this.
+
+Two safeguards, both of them about the negative case:
+
+- **Confirmation is reported positively.** On an index, "all 18 entries are still
+  present and unchanged" is a STRONGER claim than the same words about a record,
+  precisely because an index is expected to move, and it is a dated first-party
+  statement that nothing was quietly withdrawn. A diff normally throws that half
+  away; this does not.
+- **Extraction failure claims nothing.** A member reader that finds no entries has
+  failed; it has not discovered an empty list. Reporting a mass removal there would
+  be catastrophic and confident, so a failed read returns `null` for changed and
+  says it is degraded.
+
+An index whose handler cannot read entries falls back to a substance check and
+declares itself `degraded`, so the gap is visible rather than passing as coverage.
+
 ## Where this runs
 
 `docprofile/` is the canonical package and the plane should import it directly when

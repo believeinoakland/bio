@@ -20,3 +20,4 @@ register(conservative);
 
 export { aspnetWebforms, wordpress, clientRendered, conservative };
 export * from "./index.mjs";
+export * from "./monitoring.mjs";

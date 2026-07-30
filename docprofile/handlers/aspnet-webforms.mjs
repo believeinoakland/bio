@@ -20,7 +20,7 @@
  * shows. That is a real change in the document and this handler must not hide it,
  * so nothing about calendar rows is normalised. Only the two hidden fields are.
  */
-import { REGION, CONFIDENCE } from "../index.mjs";
+import { REGION, CONFIDENCE, unescapeHtml } from "../index.mjs";
 
 const VIEWSTATE_FIELDS = "__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION"
                        + "|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY|__LASTFOCUS";
@@ -109,6 +109,33 @@ export default {
      one stroke, and a theme change cannot quietly reclassify substance. */
   boundary() {
     return /<main\b[^>]*>([\s\S]*)<\/main>/i;
+  },
+
+  /* The entries on an index, keyed so one can be told from another across fetches.
+     MEASURED on Calendar.aspx: 41 table rows inside <main>, of which 18 carry a
+     MeetingDetail link with a stable numeric ID, and five of those eighteen read
+     CANCELLED. The ID is the key because it survives the row moving, the title
+     being edited and the grid being re-sorted; the row's own visible text is the
+     digest, so a cancellation is an ALTERED entry rather than a page that differs.
+
+     Legistar's document links (View.ashx?M=A for an agenda, M=IC for minutes) are
+     folded into the digest deliberately: an agenda being swapped under an unchanged
+     heading is exactly the kind of quiet substitution a member would want flagged,
+     and it changes no other part of the row. */
+  members(ctx) {
+    const text = String(ctx.text || "");
+    const main = /<main\b[^>]*>([\s\S]*)<\/main>/i.exec(text);
+    const scope = main ? main[1] : text;
+    const out = [];
+    for (const row of scope.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || []) {
+      const raw = unescapeHtml(row);
+      const id = /(?:Meeting|Legislation|MatterFile|Person)Detail\.aspx\?ID=(\d+)/i.exec(raw);
+      if (!id) continue;
+      const label = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      const docs = (raw.match(/View\.ashx\?[^"'\s]*/gi) || []).sort().join(" ");
+      out.push({ key: id[1], label: label.slice(0, 160), digest: label + " || " + docs });
+    }
+    return out;
   },
 
   /* Stylesheets decide whether the page reads as the source published it, so a

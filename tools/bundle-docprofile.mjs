@@ -10,6 +10,7 @@
 import fs from "fs";
 export const ORDER = [
   "docprofile/index.mjs",
+  "docprofile/monitoring.mjs",
   "docprofile/handlers/client-rendered.mjs",
   "docprofile/handlers/aspnet-webforms.mjs",
   "docprofile/handlers/wordpress.mjs",
@@ -31,6 +32,19 @@ export function bundle(root) {
              .replace(/^export (const|function|async function|class)/gm, "$1");
     out.push(`/* ---- ${rel} ---- */\n` + src.trim());
   }
-  return out.join("\n\n");
+  const flat = out.join("\n\n");
+  /* Flattening puts every module in one scope, so two files may declare the same
+     top-level name and the module system will have hidden it. Caught this way once
+     already: index.mjs and monitoring.mjs both declared RANK, which broke the
+     entire runtime and every harness with it while each module tested green on its
+     own. Cheaper to check here than to debug there. */
+  const names = {};
+  for (const m of flat.matchAll(/^(?:const|let|function|async function|class)\s+([A-Za-z_$][\w$]*)/gm)) {
+    names[m[1]] = (names[m[1]] || 0) + 1;
+  }
+  const dup = Object.entries(names).filter(([, n]) => n > 1).map(([k]) => k);
+  if (dup.length) throw new Error("docprofile: these top-level names are declared twice and would "
+    + "collide once flattened into one scope: " + dup.join(", "));
+  return flat;
 }
 if (import.meta.url === `file://${process.argv[1]}`) process.stdout.write(bundle(new URL("../", import.meta.url)));
