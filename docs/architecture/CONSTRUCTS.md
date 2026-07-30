@@ -22,7 +22,7 @@ WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
 **This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_4.md`, written 2026-07-30 after Bob corrected the framing
+`BIO_Content_Framework_v0_5.md`, written 2026-07-30 after Bob corrected the framing
 of this one: it is not that discovery has finished, but that discovery will continue
 for a long time and the framework's job is to make each new surprise cheap. That
 document's section 9 states the cost of absorbing each kind of new thing, and that
@@ -247,6 +247,22 @@ Consumer: the review queue, or a Focus, which Bob has not ruled on.
 **Step 8. Presentation.** The document page and the case file show referential and
 temporal connections apart, each with its grade, and show which links in a case are
 the weak ones.
+
+**Step 8a. Satisfaction conditions on projects.** An objective states what would
+satisfy it in the framework's own vocabulary, so progress is computed from the record
+rather than reported by whoever is doing the work. Smaller than it sounds: the
+catalogue already gives a `project` an `objective` field, and this adds a machine-
+readable condition beside it plus the evaluator that measures the record against it.
+Consumers: the project page, which shows derived progress and the gap list; and the
+review queue, which gets its work from the gaps. Aspiration and goal, the two object
+types §12 says do not exist yet, come with it.
+
+**Step 8b. The discovery loop.** A finding becomes a PROPOSAL with its grade and
+basis; a member adopts it into an objective, files it as a focus or a problem, or
+defers it with a recorded reason. Nothing is adopted automatically and nothing
+disappears silently, because a finding that vanishes is indistinguishable from one
+that was never made. This is where invariant 7 is enforced in practice: a finding that
+cuts against the goal takes exactly the same path as one that supports it.
 
 **Step 9. Then more content types and more stacks,** each measured first, and each
 now cheap because Steps 0 through 8 gave it somewhere to land.

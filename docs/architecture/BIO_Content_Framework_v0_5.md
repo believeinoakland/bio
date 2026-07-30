@@ -1,6 +1,6 @@
 # BIO Content Framework
 
-**Version 0.4 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
+**Version 0.5 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -14,6 +14,17 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.5, 2026-07-30. Bob added the top of the model: the system must support humans and
+  their AI assistants defining goals at a high level, turning them into objectives and
+  aspirations, and working to achieve them AND everything discovered along the way.
+  Adds §1.2, the two directions that must meet; §12, intent, which deliberately maps
+  onto the existing focus / problem / project / action catalogue rather than inventing
+  a parallel hierarchy, and which makes an objective's SATISFACTION CONDITION
+  expressible in this framework's own vocabulary so that progress is computed from the
+  record instead of asserted by whoever is doing the work; the discovery loop, by
+  which a finding becomes a proposal and a member's adoption makes it an objective;
+  and invariant 8, which is the guard against goal-directed work quietly becoming
+  goal-directed collection.
 - v0.4, 2026-07-30. Bob generalised the meeting chain: scheduled meeting to agenda to
   minutes is ONE form of connected data, and the system must be ready for many types
   of happenings and progressions, his example being need, budget request, budget
@@ -98,6 +109,25 @@ purpose, which is why entities and claims kept appearing in §11 as things that 
 one day strain it. They are not strains. They are the top of the model and it was
 missing.
 
+### Two directions, and where they must meet
+
+Everything from §2 to §11 runs BOTTOM UP: bytes become a capture, a capture gets a
+profile, a profile permits a reading, readings resolve to entities, entities thread
+progressions, and junctions produce findings. That direction is driven by what the
+sources happen to publish.
+
+A member does not work that way. A member starts from something they want to be true
+about their city and works DOWN: a goal becomes objectives, objectives become
+collection and analysis, and the analysis is supposed to answer the question they
+started with.
+
+Both are necessary and neither subsumes the other. A purely bottom-up system produces
+a beautifully graded pile nobody asked for. A purely top-down system collects only
+what confirms the plan, which is worse. **§12 is about where they meet**, and the
+meeting point is specific rather than philosophical: an objective states what would
+satisfy it IN THIS FRAMEWORK'S OWN TERMS, so progress is computed from the record
+rather than asserted by whoever is doing the work.
+
 ### The two success measures
 
 Also Bob's, and they are measurable rather than aspirational:
@@ -142,7 +172,15 @@ change in the next six. A proposal that violates one of these is wrong, not nove
    non-technical and the workflow exists to remove them from logistics. A surface
    that asks a member to arbitrate a subrequest ceiling or a viewstate diff has
    failed, and it will feel like honesty while doing so.
-7. **The negative result is a finding.** "Nothing changed" is dated first-party
+7. **Goal-directed work must not become goal-directed collection.** A goal may
+   direct what is SOUGHT. It must never filter what is recorded, retained, or shown
+   about what was found, and a finding that cuts against a goal is surfaced at least
+   as prominently as one that supports it. This is the invariant that keeps a case
+   from becoming a brief, and it is the one most likely to be violated by accident,
+   because helpfulness looks exactly like it from the inside. See
+   `BIO_Declared_Bias_v0_1.md`: the honest system makes the lens part of the record
+   rather than pretending to be lensless.
+8. **The negative result is a finding.** "Nothing changed" is dated first-party
    evidence, not the absence of news, and it must be stored rather than discarded.
 
 ## 3. The core objects
@@ -718,6 +756,121 @@ Read down the status column and the priority is not a matter of taste: almost
 everything is built and unadopted, and the one genuinely missing capability is the
 entity axis, which is also the one carrying both success measures.
 
+## 12. Intent: goals, objectives, aspirations, and the discovery loop
+
+RULED by Bob, 2026-07-30. The system must support humans and their AI assistants
+defining goals at a high level, turning them into objectives and aspirations, and
+working to achieve the goals **and everything discovered along the way**.
+
+### Three things, and they behave differently
+
+| | closes? | what it does | example |
+| --- | --- | --- | --- |
+| **Aspiration** | never | sets standing priority and shapes judgment | "Oakland's procurement should be traceable end to end" |
+| **Goal** | eventually, maybe in years | bounds a pursuit | "Account for the sewer fund transfers, FY2019 to FY2026" |
+| **Objective** | yes, checkably | states a condition the record can be measured against | "Hold a Grade B or better progression instance for every contract over $250k drawn on fund 3100 since FY2019" |
+
+Conflating these is the ordinary failure. An aspiration written as an objective is
+never finished and demoralises; an objective written as an aspiration is never
+checked and quietly abandons itself.
+
+### This is not a new hierarchy
+
+The record already has the object types this needs, and the framework's job is to
+CONNECT to them rather than to invent a parallel set:
+
+- an **objective** is what a `project` carries; the catalogue already gives a project
+  an `objective` field and the states `forming → investigating → matured → closed`
+- an open question is a `focus`, with `surfaced → elevated → deferred → dismissed`
+- a discovered obstacle is a `problem`, with the same states
+- a step someone takes is an `action`, with `planned → active → awaiting_response →
+  resolved → abandoned`
+
+**Aspiration and goal are the two that do not exist yet.** Everything below them does.
+That is the honest summary of the gap: this framework was written for six sections
+without ever touching the catalogue that already models intent, and the connection has
+to be made in both directions.
+
+### Satisfaction conditions: the meeting point
+
+This is the load-bearing idea of the section. **An objective states what would satisfy
+it in the vocabulary of this framework**, which makes progress computable:
+
+    objective: every contract over $250k on fund 3100 since FY2019
+               is held as a progression instance at Grade B or better
+    expressed as:
+      entity        fund 3100
+      progression   procurement
+      filter        award amount > 250000, award date >= 2019-07-01
+      required      instance grade >= B, stages 3..8 present
+      satisfied     when 100% of matched instances meet it
+
+Three consequences, all of them the point:
+
+1. **Progress is derived, not reported.** "41 of 58 contracts are at Grade B; 12 are
+   Grade C for want of a shared identifier; 5 have no solicitation and no exception
+   document" is computed from the record. Nobody has to be trusted to say how it is
+   going.
+2. **The gaps are the work list.** The 12 Grade C instances name exactly what
+   measurement would raise them, and the 5 missing solicitations are records requests
+   with the request already specified.
+3. **An AI assistant can be checked.** An assistant working an objective produces
+   captures, resolutions and proposals, all of which carry provenance and grade, so
+   its contribution is auditable in the same terms as anyone's.
+
+### The discovery loop: "everything discovered along the way"
+
+The framework generates findings that nobody asked for: a delisted meeting, an award
+with no solicitation, a contract amended past its original value. Bob's phrase makes
+these first-class rather than noise, and the loop has to be explicit or they are lost:
+
+```mermaid
+flowchart TD
+    ASP["ASPIRATION<br/><i>standing, never closes</i>"] --> GOAL["GOAL<br/><i>bounded pursuit</i>"]
+    GOAL -->|"decomposition:<br/>a member's claim,<br/>authored and dated"| OBJ["OBJECTIVE<br/><i>a project, with a<br/>satisfaction condition</i>"]
+    OBJ -->|"generates"| WORK["collection, resolution,<br/>records requests"]
+    WORK --> REC[("THE RECORD<br/>captures, entities,<br/>progressions")]
+    REC -->|"junction checks,<br/>monitoring, ageing"| FIND["FINDING<br/><i>unasked for</i>"]
+    FIND -->|"proposal:<br/>never an assertion"| TRIAGE{"a member<br/>decides"}
+    TRIAGE -->|"adopt"| OBJ
+    TRIAGE -->|"it is a question,<br/>not yet work"| FOC["FOCUS"]
+    TRIAGE -->|"it is an obstacle"| PRB["PROBLEM"]
+    TRIAGE -->|"defer, with a reason<br/>that is recorded"| DEF["deferred"]
+    REC -->|"measured against the<br/>satisfaction condition"| PROG["PROGRESS<br/><i>computed, not reported</i>"]
+    PROG --> OBJ
+    classDef intent fill:#e8ede8,stroke:#3d4a3d,color:#1c2320
+    classDef rec fill:#f4f2ed,stroke:#5b6b5b,color:#1c2320
+    classDef found fill:#fff,stroke:#b08968,color:#6b4a32
+    class ASP,GOAL,OBJ intent
+    class REC,WORK,PROG rec
+    class FIND,TRIAGE,FOC,PRB,DEF found
+```
+
+The rules that make the loop safe:
+
+- **A finding is a PROPOSAL, never an assertion.** It arrives with its grade and its
+  basis, and it becomes part of the plan only when a member adopts it. Adoption is an
+  authored, dated act like any other claim.
+- **A deferral is recorded with its reason.** "Not now" is a decision about the case
+  and belongs in the record; a finding that silently disappears is indistinguishable
+  from one that was never made.
+- **A finding that contradicts the goal takes the same path.** Invariant 7 exists
+  because this is the step where a case turns into a brief, and it turns by omission
+  rather than by decision.
+- **An assistant may propose at any point in the loop and adopt at none of them.**
+  It can draft the decomposition, run the junction checks, assemble the progression
+  and write the records request. The member's adoption is what makes any of it the
+  group's position.
+
+### What is deliberately not modelled yet
+
+A **claim** — "the city moved $2.1m from the sewer fund without authorisation" — is
+what a case ultimately asserts, and it is neither an objective nor a finding. It is
+the thing the objectives were in service of. §11 has listed it as unmodelled since
+v0.1 and it stays unmodelled here, because a claim needs a standard of proof attached
+and that is doctrine rather than architecture. It is the next design conversation, not
+this one.
+
 ## 10. Provenance of judgments, so learning can revise
 
 Every classification records: which recogniser, which version, what confidence, on
@@ -759,8 +912,12 @@ Stated so the bend is recognised as a bend and not as a bug:
   §8.2 models a chain and not a graph, and the first real procurement case will
   probably need the graph.
 - **Aggregate claims.** "The city moved $2.1m from the sewer fund" is a claim across
-  documents. Nothing here models a claim as an object, and the case-building work
-  will need one.
+  documents. Nothing here models a claim as an object, and §12 explains why it is
+  being left alone: a claim needs a standard of proof attached, which is doctrine
+  rather than architecture.
+- **Goals that conflict.** Two members with different aspirations working the same
+  entity. §12 gives priority no arbiter, and declared bias is the doctrine that
+  probably has to settle it.
 
 None of these needs solving now. They need to be visible so that the day one arrives,
 the response is a registry entry and not a rewrite.
