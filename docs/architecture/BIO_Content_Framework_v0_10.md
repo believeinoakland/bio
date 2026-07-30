@@ -1,6 +1,6 @@
 # BIO Content Framework
 
-**Version 0.9 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
+**Version 0.10 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -14,6 +14,12 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.10, 2026-07-30. Bob settled the open question by pointing at the principle already
+  written: the measure never edits the statement. A measure that may not edit a
+  statement certainly may not BLOCK work resting on it, so decay is loud and never
+  blocking. Generalised into invariant 9, since the same line runs through assistant
+  proposals, connection grades and recogniser confidence: derived things inform,
+  authored acts bind.
 - v0.9, 2026-07-30. Bob reframed an open question into a better one: a side-effect of
   this framework's work should be that evidentiary comments accrue to bias records,
   measuring the extent to which a bias is JUSTIFIED. §13.1 works that through. It is the
@@ -212,7 +218,13 @@ change in the next six. A proposal that violates one of these is wrong, not nove
    because helpfulness looks exactly like it from the inside. See
    `BIO_Declared_Bias_v0_1.md`: the honest system makes the lens part of the record
    rather than pretending to be lensless.
-8. **The negative result is a finding.** "Nothing changed" is dated first-party
+8. **Derived things inform; authored acts bind.** A measure, a grade, a confidence, an
+   assistant's proposal: all of these report and none of them decides. What blocks a
+   state transition, commits the group, or changes doctrine is always a member's
+   authored act. The rule is not deference for its own sake — it is that a derived
+   value is a description of the world, and the world does not get a vote on what a
+   group is willing to assert.
+9. **The negative result is a finding.** "Nothing changed" is dated first-party
    evidence, not the absence of news, and it must be stored rather than discarded.
 
 ## 3. The core objects
@@ -1200,6 +1212,36 @@ Three properties keep it honest:
 - **It is reported whichever way it cuts.** Invariant 7, and this is the case where it
   costs something: a group will welcome the measures confirming its statements, and the
   value of the feature is entirely in the ones refuting them.
+
+### Decay is loud and never blocking
+
+The question this raised: bias debt BLOCKS, since a work product carrying it cannot
+advance its state or be ratified until settled. Should a statement whose measure has
+collapsed block the analysis resting on it?
+
+No, and the principle two paragraphs up already decided it. **The measure never edits
+the statement**, and a measure that may not edit a statement certainly may not block
+work resting on one. Invariant 8 is the general form.
+
+The asymmetry with bias debt is exact and worth seeing clearly, because it looks
+arbitrary until it does not:
+
+| | what changed | who changed it | blocks? |
+| --- | --- | --- | --- |
+| **bias debt** | the lens | the group, by an authored act | yes: the block enforces the group's own decision |
+| **measure decay** | the world | nobody | no: nothing has been decided |
+
+Bias debt blocks because a member amended the lens and the block is what makes that
+amendment mean something. Nothing has been decided when a measure decays. An
+institution improving its behaviour is not an act by the group and must not be able to
+freeze the group's in-flight work.
+
+The path from decay to a block therefore runs THROUGH a person, which is exactly right:
+the measure reports; a member reads it and amends or retires the statement; that
+amendment is an authored act; and it generates bias debt in the ordinary way, which
+blocks. The machine never blocks on its own, and a group that looks at a collapsed
+measure and decides to keep the statement anyway has done something legitimate and
+recorded, not something it needs permission for.
 
 ### This is the legitimate form of what a verdict would be
 
