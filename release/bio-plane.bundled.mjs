@@ -11182,6 +11182,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
 };
 
 // src/index.mjs
+function userAgent(env, purpose = "acquire") {
+  const version = env && env.VERSION || "0.0.0";
+  const instance = env && env.INSTANCE_NAME || "unnamed";
+  return `CivicOS/${version} (+https://github.com/believeinoakland/bio; instance ${instance}; ${purpose})`;
+}
 var OPS = {
   //  op          class allowed              mutating
   selftest: { classes: ["admin", "member", "probe"], mutating: false },
@@ -11995,7 +12000,7 @@ var index_default = {
       const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       let res2;
       try {
-        res2 = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+        res2 = await fetch(locator, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
       } catch (e) {
         return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
       }
@@ -12066,7 +12071,38 @@ var index_default = {
         existed = !!await env.CAPTURES.head(`${storeName}/captures/${sha}`);
       }
       const ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
+      const responseHeaders = [];
+      for (const [k, v] of res2.headers) responseHeaders.push([k, v]);
+      const transport = {
+        requested: locator,
+        resolved: res2.url || locator,
+        redirected: !!(res2.url && res2.url !== locator),
+        status: res2.status,
+        http_headers: responseHeaders,
+        /* WARC records WARC-IP-Address: the address that actually answered.
+           The Workers runtime does not expose the peer address of an outbound
+           fetch, so we do not have it and this says so rather than leaving a
+           field a reader would take as absence of a redirect or of an address.
+           Recorded as a named limitation because a silently missing field and
+           an unobtainable one are different facts about the record. */
+        peer_address: null,
+        peer_address_unavailable: "the Workers runtime does not expose the peer address of an outbound fetch"
+      };
       const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
+      const stLim = env.STORE.get(env.STORE.idFromName(storeName));
+      try {
+        await stLim.fetch("http://x/recordcapturedlocator", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            address: res2.url || locator,
+            addressNorm: normalizeAddress(res2.url || locator),
+            captureSha: sha,
+            retrieved
+          })
+        });
+      } catch {
+      }
       const HTML_CT = ["text/html", "application/xhtml+xml"];
       const SUB_PARSE_MAX = 8 * 1024 * 1024;
       let subs = null, subsSkipped = null, sessionId = null;
@@ -12081,7 +12117,6 @@ var index_default = {
           else {
             const primaryBytes = new Uint8Array(await obj.arrayBuffer());
             const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-            const stLim = env.STORE.get(env.STORE.idFromName(storeName));
             let resumeState = null;
             sessionId = body2.continue || null;
             if (sessionId) {
@@ -12139,7 +12174,7 @@ var index_default = {
                 return { existed: false };
               },
               fetchOne: async (u) => {
-                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
                 if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };
                 return {
                   ok: true,
@@ -12193,16 +12228,6 @@ var index_default = {
             } catch {
             }
             try {
-              await stLim.fetch("http://x/recordcapturedlocator", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                  address: res2.url || locator,
-                  addressNorm: normalizeAddress(res2.url || locator),
-                  captureSha: sha,
-                  retrieved
-                })
-              });
               if (subs.links && subs.links.length) {
                 await stLim.fetch("http://x/recordlinks", {
                   method: "POST",
@@ -12258,7 +12283,8 @@ var index_default = {
             sha256: sha,
             encoding: "binary",
             bytes: total,
-            ...ct ? { content_type: ct } : {}
+            ...ct ? { content_type: ct } : {},
+            transport
           },
           ...multipart ? { parts: parts.map((p, i) => ({
             file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
@@ -12470,7 +12496,7 @@ var index_default = {
       const checked = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       let status = null, note = null, seen = null;
       try {
-        const res2 = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-monitor" } });
+        const res2 = await fetch(locator, { redirect: "follow", headers: { "user-agent": userAgent(env, "monitor") } });
         if (res2.status === 404 || res2.status === 410) {
           status = "removed";
           note = `the source answered ${res2.status}`;
@@ -12797,5 +12823,6 @@ export {
   PUBLISHED_TOKEN_HASHES,
   Store,
   index_default as default,
-  liveToken
+  liveToken,
+  userAgent
 };
