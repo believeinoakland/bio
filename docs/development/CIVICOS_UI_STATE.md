@@ -190,6 +190,72 @@ corroboration, sha256, viewstate, content_hash, content-addressed, op=, ceiling.
 Plain language erodes one helpful clarification at a time, and an assertion is the
 only thing that holds it.
 
+ARCHITECTURE, AT BOB'S DIRECTION, BECAUSE THE INCREMENTAL FIXES HAD SPREAD. Each
+newly-discovered rendering variation had been getting another special case bolted
+onto the capture path, and Bob called it: time for a structured, efficient,
+extendable design that recognises what KIND of document this is, probably by
+determining the host's tech stack, with a handler per type. Two requirements drive
+it. A rendition must be perceived as rendering MEANINGFULLY THE SAME as the
+document does on its host, because members present portions as evidence and the
+system must be believed when it says the evidentiary portions match. And the system
+must recognise when something meaningful in the evidentiary portions has changed,
+and equally when it has NOT.
+
+docs/development/DOCUMENT-PROFILES.md is the design of record; docprofile/ is the
+implementation; civicos-ui/test/docprofile.test.mjs is the harness at 52
+assertions. The flat volatile classifier built earlier the same day is DELETED and
+superseded by it.
+
+THREE REGIONS, which is the correction over the single stable digest. EVIDENTIARY,
+the substance a member would quote. PRESENTATIONAL, furniture that is really on the
+page and is not the document's claim about its own subject. MECHANICAL, per-render
+machinery. Three digests follow: identity (raw bytes, the capture's name),
+rendition (mechanical normalised, "would it look the same"), evidentiary (furniture
+normalised too, "has the substance changed"). Five verdicts fall out and the
+harness asserts every one on real bytes: identical, unchanged, restyled, changed,
+undetermined.
+
+MEASURED, THREE SOURCES, THREE DIFFERENT SITUATIONS. Legistar on ASP.NET WebForms:
+31.4% of the document differs on every fetch, all of it viewstate, so byte
+comparison reports change constantly and therefore reports nothing. Oaklandside on
+WordPress behind nginx: two fetches BYTE-IDENTICAL, which corrects an assumption
+this codebase was drifting toward, that churn is a property of the web rather than
+of the stack. OpenGov: stable bytes, zero anchors, no prose, a technically perfect
+capture that is evidentially worthless and the only failure here that is silent.
+
+THE BOUNDARY BEAT THE FURNITURE LIST, and measurement is why. Legistar emits no
+<nav>, no <header>, no <footer> at all; its furniture is ASP.NET control divs with
+generated ids, and the rule that guessed at those ids normalised 303 BYTES OF A
+369KB PAGE while looking like it worked. What the page carries is one <main
+role="main">. So a handler may declare the document's BOUNDARY and everything
+outside it becomes furniture in one stroke, which is both simpler and safer:
+listing furniture means anything unlisted silently counts as substance, while
+naming the boundary means anything outside counts as furniture. A boundary that
+misses normalises NOTHING and records that it missed.
+
+A MISCLASSIFICATION CAUGHT BY THE MEASUREMENT, and it is the dangerous kind. The
+WordPress handler first tested content markers before the address and classified
+oaklandside.org's FRONT PAGE as an article, on markup the theme puts on every page.
+On a listing the articles ARE the substance, so the furniture rules would have
+normalised the entire document and reported every front page as unchanged forever.
+The address is now asked first. The harness pins it open.
+
+THE FAILURE ASYMMETRY IS WRITTEN DOWN AND GOVERNS EVERY DEFAULT. Reporting a change
+that did not happen costs attention; failing to report one that did puts a false
+claim in the record, discovered if ever by the party it is aimed at. So an
+unrecognised document gets the conservative handler, whose only rules are
+DEFINITIONAL rather than observed (a nonce that repeated would not be a nonce); a
+handler applied without CERTAINTY returns undetermined rather than claiming the
+substance is unchanged, since ASP.NET also serves pages with no viewstate; and the
+noise the conservative handler makes is the SIGNAL that a source needs measuring.
+
+FIDELITY NOW HAS LEVELS, which is what "meaningfully the same" means in code.
+Faithful, degraded (only decoration missing, named on screen and not hidden), and
+insufficient (something render-critical missing, render refused). The predecessor
+refused on any missing part, which is right for a stylesheet and wrong for a footer
+icon. Under the conservative handler every missing part is still critical, which is
+correct in ignorance.
+
 THE LESSON OF THE SESSION. Reading the plane's SOURCE rather than the docs'
 description of it caught four things before they shipped, and running against the
 LIVE plane caught three more that no fixture would have. An anchor's recorded

@@ -149,6 +149,18 @@ system's problems. A surface that asks a member to adjudicate one has failed, an
 it will feel like honesty while it does. The test suite carries a vocabulary guard
 over every member-facing string for this reason.
 
+## The capture architecture
+
+Bob, 2026-07-30: the incremental handling of each newly-discovered rendering
+variation had spread through the capture path in an unstructured way, and the fix
+is structure. `docs/development/DOCUMENT-PROFILES.md` is the design of record and
+`docprofile/` is the implementation: detect the document's stack and kind, then let
+a per-stack HANDLER decide what is evidentiary, what is furniture, and what is
+per-render machinery. Three digests rather than one, because "would it look the
+same" and "has the substance changed" are different questions. Adding a stack means
+adding a file and a line, which is the whole point; the alternative was another
+branch inside the capture path.
+
 ## Standing dependencies and risks
 
 - Plane releases inform U8 (the Add surface) and U10 (attest surface).
@@ -196,11 +208,12 @@ over every member-facing string for this reason.
   bracketing cannot fire for such a page whatever happened to its content, so
   monitoring across the interval, timestamp tokens and archives are load-bearing
   and byte equality is taken when offered rather than built on.
-- THE STABLE DIGEST EXISTS IN THE UI AND NOT YET IN THE PLANE (D-60).
-  `civicos-ui/volatile.mjs` classifies five families of per-render mechanism and is
-  validated both directions against live captures; the plane should import it
-  rather than grow a second copy, and monitoring, duplicate detection and the
-  contemporaneity comparison should all read the digest it produces.
+- THE PROFILE ARCHITECTURE EXISTS IN THE UI AND NOT YET IN THE PLANE (D-60, D-63).
+  `docprofile/` supersedes the flat volatile classifier: four handlers, three
+  digests, five verdicts, fidelity levels, all validated both directions against
+  real captured pages. The plane should IMPORT the package when monitoring,
+  `op=audit`'s duplicate sweep and `resolveLinks`' bracket arm adopt it, rather than
+  growing a second copy.
 - BEFORE THAT LANDED, NO CAPTURE HAD ONE (D-60), and the same measurement breaks three
   things: monitoring reports change every tick, contemporaneity's strongest arm
   never fires, and duplicate detection misses re-captures of exactly the pages

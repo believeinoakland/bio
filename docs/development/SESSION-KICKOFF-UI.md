@@ -26,15 +26,21 @@ and the workflow exists to keep members out of logistics. Technical complication
 get classified by the system, never surfaced as choices. The suite carries a
 vocabulary guard over member-facing strings; if you add a surface, add it there.
 
-(1) Adopt the stable digest IN THE PLANE and release it (D-60). The classifier
-already exists and is validated: `civicos-ui/volatile.mjs`, five families of
-per-render mechanism, tested both directions against two live captures of one
-Legistar page. Import that module rather than writing a second one, then make
-three things read the digest instead of the raw hash: monitoring's
-changed-or-not decision, `op=audit`'s duplicate sweep, and `resolveLinks`' bracket
-arm. Identity stays the raw hash and raw bytes are never rewritten. Record what
-was normalised on the capture. Then measure more hosts and add families only on
-evidence, because a careless family hides a real change.
+(1) Adopt `docprofile/` IN THE PLANE and release it (D-60). Read
+docs/development/DOCUMENT-PROFILES.md first; it is the design of record. The
+package exists, is validated both directions against real captured pages, and the
+plane should IMPORT it rather than write a second copy. Then make four things ask
+the profile instead of comparing raw hashes: monitoring's changed-or-not decision,
+`op=audit`'s duplicate sweep, `resolveLinks`' bracket arm, and `op=acquire`, which
+should write the profile record onto the capture so a later session can see which
+handler spoke and how sure it was. Identity stays the raw hash and raw bytes are
+never rewritten.
+
+(1a) Then measure a fourth stack and write its handler (D-63). Drupal or plain
+static HTML is the obvious next one. The method is in the design doc and it is
+short: fetch the same page twice, diff, attribute every difference, decide whether
+the document has an identifiable boundary, write the handler with the measurement
+in its comments. Do not add a rule without a measurement.
 
 (2) Fix D-62 in `bio-plane/src/setup.mjs`: its `mdFor` omits `content_hash` even
 with a document attached, so every bundle the installer wizard writes with a

@@ -1654,174 +1654,692 @@ function acquireWhy(a){
   return "The document could not be captured: " + why;
 }
 
-/*__VOLATILE_START__*/
-/* volatile.mjs — telling a mechanical artifact apart from a change.
+/*__DOCPROFILE_START__*/
+/* Flattened from docprofile/ by tools/bundle-docprofile.mjs. The package is the
+   canonical source and the plane imports it as modules; this runtime is one
+   self-contained file, so it carries a copy and the build refuses any drift.
+   Do not edit here. Edit docprofile/ and rebuild. */
+/* ---- docprofile/index.mjs ---- */
+/* docprofile — recognising what kind of document this is, and what follows.
  *
- * WHY THIS EXISTS. A member's question is "did this document change?". The
- * machine's answer, until now, was the hash of the bytes, and that answer is
- * wrong often enough to be useless: measured on oakland.legistar.com, two
- * fetches three seconds apart differed by 114,177 bytes, 31% of the document,
- * every differing byte inside two ASP.NET hidden fields, with the other 68.6%
- * byte-identical. Nothing had changed. A system that reports that as a change
- * has handed its own plumbing to somebody who was asking about a sewer fund.
+ * WHY THIS PACKAGE EXISTS. Two requirements drive it, both of them Bob's and both
+ * about credibility rather than tidiness.
  *
- * So the difference is CLASSIFIED here rather than surfaced. Each family below
- * is a known mechanism that varies on every render: server page state, security
- * tokens, session identifiers, cache-busting fingerprints, ad and analytics
- * slots. When every difference between two captures falls inside these families,
- * the document did not change, and nothing needs to be said to anybody.
+ *   A rendition must be perceived as rendering MEANINGFULLY THE SAME as the
+ *   document does on its host, because a member will present portions of it as
+ *   evidence, and the system has to be able to say those portions are the same as
+ *   the original and be believed.
  *
- * THREE RULES THIS FILE OBEYS.
+ *   The system must recognise when something meaningful in the EVIDENTIARY
+ *   portions has changed since the last fetch, and equally, must recognise when it
+ *   has NOT. Both directions matter. A checker that only ever says "changed"
+ *   is as useless as one that only ever says "unchanged".
  *
- * Raw bytes are never rewritten. Normalisation happens on a COPY to compute a
- * comparison digest. The record keeps exactly what the source served, so a
- * misclassification here can never destroy evidence and is always reversible.
+ * Neither requirement can be met by looking at a document's bytes. Measured on
+ * real municipal sources:
  *
- * What was normalised is RECORDED, with the family, the count and the byte
- * volume. A difference that is not a change is still an observation, and a page
- * whose page-state suddenly stopped moving would be worth knowing about.
+ *   oakland.legistar.com (ASP.NET WebForms on IIS): two fetches three seconds
+ *   apart differ by 115,980 bytes, 31.4% of the document, every differing byte
+ *   inside __VIEWSTATE and __EVENTVALIDATION. Content identical.
  *
- * Nothing here is ever treated as evidence. Nobody's case turns on a viewstate
- * blob, and these regions are excluded from comparison rather than from the
- * record.
+ *   oaklandside.org (WordPress behind nginx): two fetches BYTE-IDENTICAL. No
+ *   per-render mechanism at all.
  *
- * A family is only added on MEASUREMENT. The list is not a guess about what web
- * pages contain; every entry below is either observed in a real capture or is a
- * documented per-response mechanism of a stack that municipal publishing runs
- * on. Anything uncertain is left out, because a family added carelessly hides a
- * real change, which is the one failure mode that matters here.
+ *   oaklandca.opengov.com (client-rendered app): the served HTML is a shell. It
+ *   carries no anchors and no evidentiary content whatsoever. Its bytes are
+ *   perfectly capturable and perfectly worthless as evidence.
+ *
+ * One comparison rule cannot serve those three. Before this package, each was
+ * handled by another special case bolted onto the capture path, which is how a
+ * codebase stops being reasoned about.
+ *
+ * THE MODEL. A document has three kinds of region, and everything else follows
+ * from separating them:
+ *
+ *   EVIDENTIARY   the substance. What a member would quote, cite, or put in front
+ *                 of a council. Change here is meaningful and must be reported.
+ *   PRESENTATIONAL  furniture: navigation, headers, footers, related-links rails.
+ *                 Real, captured, rendered, and NOT the document's claim about its
+ *                 own subject. Change here is recorded and is not a change to the
+ *                 evidence.
+ *   MECHANICAL    per-render machinery: page state, security tokens, session ids,
+ *                 cache stamps, ad and analytics slots. Varies on every fetch by
+ *                 design. Never evidence, never a change, and never shown.
+ *
+ * THREE DIGESTS, not one. This is the core correction over the single "stable
+ * digest" that preceded it, which conflated presentational with mechanical and so
+ * could not answer the question a member actually asks.
+ *
+ *   identity     sha256 of the raw bytes. The capture's name. Never changes,
+ *                never recomputed, and raw bytes are never rewritten.
+ *   rendition    mechanical regions normalised. Answers "would this look the
+ *                same?", which is the question the fidelity claim rests on.
+ *   evidentiary  presentational AND mechanical regions normalised. Answers "has
+ *                the substance changed?", which is the question monitoring asks.
+ *
+ * THE FAILURE ASYMMETRY, and it governs every default in this package. Reporting
+ * a change that did not happen costs a member some attention. Failing to report a
+ * change that DID happen puts a false claim in the record and is discovered, if
+ * ever, by the party the claim is aimed at. So an unrecognised document gets the
+ * conservative handler, where nothing is presumed presentational and almost
+ * nothing mechanical, and the system over-reports rather than under-reports.
+ * Handlers earn the right to narrow that, per stack, on measurement.
  */
 
-const VOLATILE_FAMILIES = [
-  {
-    key: "aspnet_page_state",
-    /* What a member would be told, if anyone ever needed to tell them. */
-    label: "page state the server rebuilds on every visit",
-    /* MEASURED on oakland.legistar.com/Calendar.aspx, 2026-07-30: __VIEWSTATE
-       115,096 bytes and __EVENTVALIDATION 876 bytes accounted for 100% of the
-       difference between two fetches three seconds apart. */
-    patterns: [
-      /(<input[^>]*\bname="(?:__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY)"[^>]*\bvalue=")([^"]*)(")/gi,
-    ],
-  },
-  {
-    key: "security_token",
-    label: "a one-time security token",
-    /* Anti-forgery tokens are per-response BY DESIGN: a token that repeated
-       would not be doing its job. ASP.NET MVC, Rails, Django, Laravel. */
-    patterns: [
-      /(<input[^>]*\bname="(?:__RequestVerificationToken|authenticity_token|csrfmiddlewaretoken|_token|_csrf)"[^>]*\bvalue=")([^"]*)(")/gi,
-      /(<meta[^>]*\bname="(?:csrf-token|csrf-param|_csrf)"[^>]*\bcontent=")([^"]*)(")/gi,
-      /(\bnonce=")([^"]*)(")/gi,
-    ],
-  },
-  {
-    key: "session_id",
-    label: "a visit identifier",
-    /* A session id names THIS visit and says nothing about the document. */
-    patterns: [
-      /(;jsessionid=)([A-Za-z0-9._-]+)()/gi,
-      /(\b(?:ASP\.NET_SessionId|PHPSESSID|JSESSIONID|SESSID|sid)=)([A-Za-z0-9._%-]+)()/gi,
-    ],
-  },
-  {
-    key: "cache_buster",
-    label: "a version stamp on a design file",
-    /* A query string whose only job is to defeat caching. The FILE is captured
-       and hashed on its own; the stamp is addressing, not content. Deliberately
-       narrow: only ?v=, ?ver=, ?_= and ?t= with a numeric or hex value, because
-       a query parameter is content often enough that a broad rule here would
-       hide real change. */
-    patterns: [
-      /([?&](?:v|ver|_|t|rev|cb)=)([0-9a-f]{4,}|[0-9]{6,})(?=["'&\s>])()/gi,
-    ],
-  },
-  {
-    key: "ad_and_analytics",
-    label: "an advertising or analytics slot",
-    /* Ad slots and beacons are regenerated per impression and belong to a third
-       party. Per the standing ruling, third-party script output is that third
-       party's, not the publisher's, so it is never this document's content. */
-    patterns: [
-      /(\bdata-google-query-id=")([^"]*)(")/gi,
-      /(\bid="(?:div-gpt-ad|google_ads_iframe)[^"]*?)([0-9]{6,})([^"]*")/gi,
-      /(["'&](?:correlator|cachebuster|ord|gclid|_ga|_gid|utm_[a-z]+)=)([^"'&\s]+)()/gi,
-      /(<!-- google_ad_section[^>]*?)([0-9]{6,})(-->)/gi,
-    ],
-  },
-];
+const REGION = { EVIDENTIARY: "evidentiary", PRESENTATIONAL: "presentational", MECHANICAL: "mechanical" };
 
-const PLACEHOLDER = "\u0000VOLATILE\u0000";
+/* Confidence in a detection, because a handler applied to the wrong document is
+   how a real change gets hidden. Only `certain` licenses a handler's narrowing
+   rules; anything weaker falls back to conservative treatment and says so. */
+const CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", POSSIBLE: "possible", NONE: "none" };
 
-/** Replace every known-volatile region with a fixed placeholder, on a COPY, and
- *  report what was replaced. Text in, text out; callers hand this the decoded
- *  document and keep the original bytes untouched. */
-function normaliseVolatile(text) {
+const PLACEHOLDER = "\u0000BIO-NORMALISED\u0000";
+
+/** Apply a handler's rule set to a copy of the text, reporting what it touched.
+ *  Never mutates anything the record holds: normalisation is always on a copy,
+ *  so a misclassification is recoverable and can never destroy evidence. */
+function applyRules(text, rules) {
   let out = String(text);
   const found = [];
-  for (const fam of VOLATILE_FAMILIES) {
+  for (const rule of rules || []) {
     let count = 0, bytes = 0;
-    for (const re of fam.patterns) {
+    for (const re of rule.patterns) {
       out = out.replace(re, (whole, pre, mid, post) => {
-        /* A pattern that matched nothing worth replacing is not an observation.
-           Guarding on length keeps an empty value="" from counting. */
         if (!mid || !mid.length) return whole;
         count++; bytes += mid.length;
         return (pre || "") + PLACEHOLDER + (post || "");
       });
     }
-    if (count) found.push({ family: fam.key, label: fam.label, count, bytes });
+    if (count) found.push({ rule: rule.key, region: rule.region, label: rule.label, count, bytes });
   }
-  return { text: out, found, normalised_bytes: found.reduce((n, f) => n + f.bytes, 0) };
+  return { text: out, found, bytes: found.reduce((n, f) => n + f.bytes, 0) };
 }
 
-/** Is this something normalisation applies to at all? Only markup. A PDF's bytes
- *  are its content and a stray match inside a compressed stream would be
- *  meaningless, so anything not obviously text/html is compared raw. */
-function isNormalisable(contentType, name) {
-  const ct = String(contentType || "").toLowerCase();
-  if (ct.includes("html") || ct.includes("xml") || ct.includes("xhtml")) return true;
-  if (ct) return false;
-  return /\.(html?|xhtml|aspx?|php|jsp)$/i.test(String(name || ""));
-}
-
-/** The comparison digest: the hash of the document with its volatile regions
- *  flattened. Identity stays the raw hash; this is only ever for comparing.
- *  `sha256` is injected so this file runs in a browser, a Worker, or a test. */
-async function stableDigest(bytes, { contentType, name, sha256 }) {
-  if (!isNormalisable(contentType, name))
-    return { digest: await sha256(bytes), normalised: false, found: [] };
-  const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-  const n = normaliseVolatile(text);
-  return { digest: await sha256(new TextEncoder().encode(n.text)),
-           normalised: true, found: n.found, normalised_bytes: n.normalised_bytes };
-}
-
-/** The question a member is actually asking, answered without asking them
- *  anything: are these two captures the same document?
+/** Normalise everything OUTSIDE the document's own boundary.
  *
- *  Returns `same` true when the raw bytes differ but every difference sits
- *  inside a known mechanism. `artifacts` names those mechanisms in plain words,
- *  for the record rather than for the screen. `changed` true means the document
- *  itself differs and somebody may care. */
-async function compareCaptures(a, b, { contentType, name, sha256 }) {
-  const ra = await sha256(a.bytes !== undefined ? a.bytes : a);
-  const rb = await sha256(b.bytes !== undefined ? b.bytes : b);
-  if (ra === rb)
-    return { same: true, identical: true, changed: false, artifacts: [],
-             why: "the source served exactly the same bytes" };
-  const da = await stableDigest(a.bytes !== undefined ? a.bytes : a, { contentType, name, sha256 });
-  const db = await stableDigest(b.bytes !== undefined ? b.bytes : b, { contentType, name, sha256 });
-  const artifacts = [...new Set([...da.found, ...db.found].map((f) => f.label))];
-  if (da.digest === db.digest)
-    return { same: true, identical: false, changed: false, artifacts,
-             families: da.found, normalised_bytes: da.normalised_bytes,
-             why: "the bytes differ only where this site rebuilds them on every visit" };
-  return { same: false, identical: false, changed: true, artifacts,
-           families: da.found,
-           why: "the document itself differs, beyond anything the site rebuilds automatically" };
+ *  A second rule shape, and the measurements forced it. Legistar carries no
+ *  <nav>, no <header> and no <footer> at all: its furniture is ASP.NET control
+ *  divs with generated ids, and an earlier rule that guessed at those ids matched
+ *  303 bytes on a 369KB page, which is to say it did nothing while appearing to
+ *  work. What Legistar DOES carry is one <main role="main">, and that is the
+ *  document. So a handler may declare a BOUNDARY instead of listing furniture,
+ *  and everything outside it becomes presentational in one stroke.
+ *
+ *  This is also the more conservative shape. Listing furniture means anything not
+ *  listed silently counts as substance; naming the boundary means anything outside
+ *  it counts as furniture, and the boundary is a single structural fact that is
+ *  either there or not, rather than a growing catalogue of theme-specific guesses.
+ *
+ *  If the boundary does not match, NOTHING is normalised and the handler falls
+ *  back to treating the whole document as substance, because a boundary that
+ *  missed must never be read as a document with no content. */
+function applyBoundary(text, boundary) {
+  if (!boundary) return { text, found: [], bytes: 0 };
+  const m = boundary.exec(String(text));
+  if (!m || !m[1]) return { text, found: [], bytes: 0, missed: true };
+  const inner = m[1];
+  const outside = String(text).length - inner.length;
+  return { text: PLACEHOLDER + inner + PLACEHOLDER,
+           found: [{ rule: "outside_the_document", region: REGION.PRESENTATIONAL,
+                     label: "everything around the document itself, such as navigation and footers",
+                     count: 1, bytes: outside }],
+           bytes: outside };
 }
-/*__VOLATILE_END__*/
+
+/** The three digests for one document, under one handler. */
+async function digests(bytes, handler, ctx) {
+  const sha256 = ctx.sha256;
+  const identity = await sha256(bytes);
+  if (!handler.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  const rules = handler.rules(ctx) || [];
+  const mech = rules.filter((r) => r.region === REGION.MECHANICAL);
+  const pres = rules.filter((r) => r.region === REGION.PRESENTATIONAL);
+  const r1 = applyRules(text, mech);
+  /* Mechanical first, always: a security token can sit inside the document's own
+     boundary as easily as outside it, and normalising the boundary first would
+     hide the token rather than classify it. */
+  const b = applyBoundary(r1.text, handler.boundary ? handler.boundary(ctx) : null);
+  const r2 = b.found.length ? b : applyRules(r1.text, pres);
+  const enc = new TextEncoder();
+  return {
+    identity,
+    rendition: await sha256(enc.encode(r1.text)),
+    evidentiary: await sha256(enc.encode(r2.text)),
+    applied: [...r1.found, ...r2.found],
+    boundary_missed: !!b.missed,
+    mechanical_bytes: r1.bytes, presentational_bytes: r2.bytes,
+    textual: true,
+  };
+}
+
+/** Has this document changed, and in what sense? The answer a member is owed is
+ *  the `evidentiary` line; everything else is for the record.
+ *
+ *  `verdict` is one of:
+ *    identical      the source served the same bytes
+ *    unchanged      substance and appearance both the same; only machinery moved
+ *    restyled       substance the same, appearance differs (furniture moved)
+ *    changed        the substance itself differs
+ *    undetermined   no handler could speak with enough confidence to say  */
+async function compare(before, after, handler, ctx) {
+  const a = await digests(before, handler, ctx);
+  const b = await digests(after, handler, ctx);
+  const base = { handler: handler.key, confidence: ctx.confidence || CONFIDENCE.NONE,
+                 artifacts: [...new Set(a.applied.concat(b.applied).map((x) => x.label))],
+                 applied: a.applied, digests: { before: a, after: b } };
+  if (a.identity === b.identity)
+    return { ...base, verdict: "identical", evidentiary_change: false,
+             why: "the source served exactly the same document" };
+  /* Without a confident handler, the narrowing rules are not trusted and the
+     honest answer is that the bytes differ and nobody can yet say what that
+     means. Silence here is safer than a wrong "unchanged". */
+  if (base.confidence !== CONFIDENCE.CERTAIN && !handler.conservative)
+    return { ...base, verdict: "undetermined", evidentiary_change: null,
+             why: "the document differs and this kind of document is not recognised well enough to say whether the difference matters" };
+  if (a.evidentiary !== b.evidentiary)
+    return { ...base, verdict: "changed", evidentiary_change: true,
+             why: "the substance of the document differs" };
+  if (a.rendition !== b.rendition)
+    return { ...base, verdict: "restyled", evidentiary_change: false,
+             why: "the substance is the same; something around it changed, such as navigation or related links" };
+  return { ...base, verdict: "unchanged", evidentiary_change: false,
+           why: "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs" };
+}
+
+/** Can this capture be shown as a faithful rendition, and if not, what is the
+ *  honest claim?
+ *
+ *  The predecessor to this was all-or-nothing: one missing part refused the whole
+ *  render, on the reasoning that a page missing a piece is a different page. That
+ *  is right for a stylesheet and wrong for a footer icon, and the requirement is
+ *  that the rendition be perceived as MEANINGFULLY the same, which is a claim
+ *  about the evidentiary portion and not about every byte of furniture.
+ *
+ *    faithful      everything render-critical is held
+ *    degraded      only non-critical parts are missing; the evidence renders and
+ *                  the shortfall is NAMED on screen rather than hidden
+ *    insufficient  something render-critical is missing; the render is refused,
+ *                  because showing it would misrepresent the source  */
+function fidelity(manifest, handler, ctx) {
+  const parts = (manifest && manifest.subresources) || [];
+  const missing = parts.filter((p) => !p.ok && !handler.ignorable(p));
+  if (!missing.length) return { level: "faithful", missing: [], critical: [] };
+  const critical = missing.filter((p) => handler.renderCritical(p, ctx));
+  if (critical.length)
+    return { level: "insufficient", missing, critical,
+             why: "a file the page needs in order to look the way the source published it has not been collected" };
+  return { level: "degraded", missing, critical: [],
+           why: "everything the page needs to read correctly is held; some decoration is not" };
+}
+
+/* ---- the registry ---- */
+
+const HANDLERS = [];
+/** Handlers are ordered most specific first and the first CERTAIN detection wins;
+   registration order is the tie-break, so a stack handler must be registered
+   ahead of the generic ones. */
+function register(handler) { HANDLERS.push(handler); return handler; }
+function handlers() { return HANDLERS.slice(); }
+
+/** Identify the document. `ctx` carries whatever the caller knows: the response
+ *  headers, the locator, the content type, and the decoded text.
+ *
+ *  Returns the chosen handler and the confidence, and ALWAYS returns something:
+ *  an unrecognised document gets the conservative handler rather than an error,
+ *  because refusing to profile a document would just move the special case back
+ *  out into the caller. */
+function identify(ctx) {
+  const considered = [];
+  let best = null;
+  for (const h of HANDLERS) {
+    const d = h.detect(ctx) || { match: false };
+    if (d.match) considered.push({ handler: h.key, confidence: d.confidence, signals: d.signals || [] });
+    if (!d.match) continue;
+    if (!best || RANK[d.confidence] > RANK[best.confidence]) best = { handler: h, ...d };
+    if (d.confidence === CONFIDENCE.CERTAIN) break;
+  }
+  if (!best) {
+    const fb = HANDLERS.find((h) => h.conservative);
+    return { handler: fb, confidence: CONFIDENCE.NONE, signals: [], considered,
+             why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported" };
+  }
+  return { handler: best.handler, confidence: best.confidence, signals: best.signals || [], considered,
+           kind: best.handler.kind ? best.handler.kind(ctx) : "unknown" };
+}
+const RANK = { none: 0, possible: 1, likely: 2, certain: 3 };
+
+/** Everything the record should keep about how a document was profiled. Written
+ *  onto the capture, because a later session must be able to see WHICH handler
+ *  spoke and how sure it was: a verdict whose author is unnamed cannot be
+ *  re-evaluated when the author turns out to have been wrong. */
+function profileRecord(id, ctx) {
+  return {
+    handler: id.handler.key, handler_label: id.handler.label,
+    handler_version: id.handler.version,
+    confidence: id.confidence, signals: id.signals,
+    document_kind: id.kind || "unknown",
+    considered: id.considered,
+    at: (ctx && ctx.now) || new Date().toISOString().split(".")[0] + "Z",
+    note: id.why || null,
+  };
+}
+
+/* ---- docprofile/handlers/client-rendered.mjs ---- */
+/* A client-rendered application, where the served HTML is a shell.
+ *
+ * MEASURED, oaklandca.opengov.com/transparency, 2026-07-30: the capture succeeded,
+ * the bytes hashed clean, and the document carried ZERO anchors and no evidentiary
+ * content of any kind. Everything a member would have wanted to cite is assembled
+ * by script in a browser after the bytes arrive.
+ *
+ * This handler exists to say so, loudly, at capture time. It is the one case where
+ * a technically perfect capture is evidentially worthless, and the danger is
+ * specific: the bytes are stable, they hash consistently, monitoring will report
+ * "unchanged" forever, and the record will look diligent while holding nothing.
+ * Silence here is worse than any of the other failures in this package, because
+ * every other one is noisy.
+ *
+ * Per the standing ruling, JS-rendered content IS the content and must be captured
+ * as evidence at the SAME GRADE as the rest of the document, because the render
+ * happened in the site's own execution environment at capture time. That needs the
+ * browser-rendering path, and until a capture takes that path on this kind of
+ * document, this handler's job is to report that what was captured is a shell.
+ */
+
+const clientRendered = {
+  key: "client_rendered",
+  label: "an application that builds its pages in the browser",
+  version: 1,
+  textual: true,
+  /* The flag a capture path reads to decide whether the served bytes are worth
+     treating as the document at all. */
+  shell: true,
+
+  detect(ctx) {
+    const text = ctx.text || "";
+    const signals = [];
+    if (/<div[^>]+\bid="(?:root|app|__next|ember-basic-dropdown-wormhole)"[^>]*>\s*<\/div>/i.test(text))
+      signals.push("an empty mount point");
+    if (/__NEXT_DATA__/.test(text)) signals.push("Next.js data island");
+    if (/\bng-version=/.test(text)) signals.push("Angular");
+    if (/\bdata-reactroot\b/.test(text)) signals.push("React root");
+    if (/\/reporting-classic-app\//.test(text)) signals.push("OpenGov reporting app");
+    if (/window\.__(?:NUXT|INITIAL_STATE|PRELOADED_STATE)__/.test(text)) signals.push("a hydration payload");
+
+    /* The structural test, and the one that actually matters: a document of any
+       size with no anchors and no paragraphs is not a document, whatever framework
+       built it. Measured on the OpenGov portal, which matched no framework marker
+       this list had. */
+    const anchors = (text.match(/<a\b[^>]*\bhref=/gi) || []).length;
+    const paras = (text.match(/<p\b/gi) || []).length;
+    const body = /<body\b[\s\S]*<\/body>/i.exec(text);
+    const bodyLen = body ? body[0].length : text.length;
+    if (bodyLen > 2000 && anchors === 0 && paras <= 1) signals.push("no links and no prose in the body");
+
+    if (signals.includes("no links and no prose in the body") && signals.length >= 2)
+      return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    if (signals.length >= 2) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    if (signals.length) return { match: true, confidence: CONFIDENCE.POSSIBLE, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
+  },
+
+  kind() { return "shell"; },
+
+  /* Nothing is normalised. There is no evidentiary region to protect and no
+     furniture to discount: the whole point is that the substance is ABSENT, and a
+     digest of a shell should move whenever the shell moves so nobody mistakes a
+     stable hash for a stable document. */
+  rules() { return []; },
+
+  /* Every part is critical, because in a shell the script IS the document, and a
+     shell rendered without its script shows a blank page that would be presented
+     as the source's own. */
+  renderCritical() { return true; },
+  ignorable() { return false; },
+
+  /* What a member is told, and it is the only handler that speaks up on its own. */
+  warning: "This address builds its page in the browser, so what was collected is the "
+         + "empty frame and not the figures. It cannot be relied on as evidence of what "
+         + "the page shows. Collecting it properly needs the page to be rendered first.",
+};
+
+/* ---- docprofile/handlers/aspnet-webforms.mjs ---- */
+/* ASP.NET WebForms, which is what Oakland's legislative record runs on.
+ *
+ * MEASURED, oakland.legistar.com/Calendar.aspx, 2026-07-30, two fetches three
+ * seconds apart: identical length, 114,177 differing bytes, 31.4% of the
+ * document, and every differing byte inside two hidden fields, __VIEWSTATE
+ * (115,096 bytes) and __EVENTVALIDATION (876 bytes). With those normalised the
+ * remaining 252,948 bytes were byte-identical. Nothing about the calendar had
+ * changed.
+ *
+ * WebForms serialises its entire control tree into __VIEWSTATE on every response
+ * and reissues __EVENTVALIDATION as an anti-forgery list of legal postback
+ * targets. Both are mechanism for interacting with the page and neither is
+ * content. The implication runs one way only: if the content changed the viewstate
+ * would change too, but the converse is false, which is exactly why byte
+ * comparison cannot answer a question about content on this stack.
+ *
+ * A NOTE ON WHAT IS *NOT* CLAIMED HERE. Two fetches of this calendar minutes apart
+ * also differed in total LENGTH (364,941 against 368,904 bytes), which viewstate
+ * alone does not explain: the page's own content varies with the date window it
+ * shows. That is a real change in the document and this handler must not hide it,
+ * so nothing about calendar rows is normalised. Only the two hidden fields are.
+ */
+
+const VIEWSTATE_FIELDS = "__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION"
+                       + "|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY|__LASTFOCUS";
+
+const aspnetWebforms = {
+  key: "aspnet_webforms",
+  label: "a page built with ASP.NET WebForms",
+  version: 1,
+  textual: true,
+
+  detect(ctx) {
+    const h = ctx.headers || {};
+    const text = ctx.text || "";
+    const signals = [];
+    /* The hidden field is the definitive signal: nothing but WebForms emits it,
+       and it is present on every WebForms page by construction. */
+    if (/<input[^>]*\bname="__VIEWSTATE"/i.test(text)) signals.push("__VIEWSTATE field");
+    if (/<input[^>]*\bname="__EVENTVALIDATION"/i.test(text)) signals.push("__EVENTVALIDATION field");
+    if (/\bid="aspnetForm"/i.test(text)) signals.push("aspnetForm");
+    const powered = String(h["x-powered-by"] || "");
+    if (/asp\.net/i.test(powered)) signals.push("x-powered-by: " + powered);
+    if (h["x-aspnet-version"]) signals.push("x-aspnet-version: " + h["x-aspnet-version"]);
+    if (/microsoft-iis/i.test(String(h.server || ""))) signals.push("server: " + h.server);
+
+    /* A header alone is LIKELY and not certain: ASP.NET also serves MVC and Core
+       pages that have no viewstate, and applying viewstate rules to those would
+       normalise nothing and mislead nobody, but claiming certainty about the wrong
+       framework is how a handler starts hiding things it should not. Certainty
+       requires the field itself. */
+    if (signals.some((s) => s.startsWith("__VIEWSTATE")))
+      return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    if (signals.length) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
+  },
+
+  /* An index or a record. A WebForms index page (Calendar.aspx, Legislation.aspx)
+     lists items and its content legitimately changes as the underlying data does;
+     a detail page (LegislationDetail.aspx, MeetingDetail.aspx) is a record of one
+     thing and should be stable. The distinction matters for update management: a
+     changed index is expected and a changed record is worth a member's attention. */
+  kind(ctx) {
+    const p = String(ctx.locator || "").toLowerCase();
+    if (/detail\.aspx/.test(p)) return "record";
+    if (/(calendar|legislation|meeting|people|departments)\.aspx/.test(p)) return "index";
+    if (/\.aspx/.test(p)) return "page";
+    return "unknown";
+  },
+
+  rules() {
+    return [
+      { key: "webforms_page_state", region: REGION.MECHANICAL,
+        label: "page state this site rebuilds on every visit",
+        patterns: [
+          new RegExp(`(<input[^>]*\\bname="(?:${VIEWSTATE_FIELDS})"[^>]*\\bvalue=")([^"]*)(")`, "gi"),
+          /* Some skins emit the field with value= before name=. Measured absent on
+             Legistar, included because the attribute order is the page author's
+             choice and a rule that depends on it is a rule that breaks quietly. */
+          new RegExp(`(<input[^>]*\\bvalue=")([^"]*)("[^>]*\\bname="(?:${VIEWSTATE_FIELDS})")`, "gi"),
+        ] },
+      { key: "webforms_antiforgery", region: REGION.MECHANICAL,
+        label: "a one-time security token",
+        patterns: [
+          /(<input[^>]*\bname="__RequestVerificationToken"[^>]*\bvalue=")([^"]*)(")/gi,
+          /(\bnonce=")([^"]*)(")/gi,
+        ] },
+      { key: "aspnet_session", region: REGION.MECHANICAL, label: "a visit identifier",
+        patterns: [/(\bASP\.NET_SessionId=)([A-Za-z0-9._%-]+)()/gi] },
+      /* Ad and analytics slots. Legistar carries GPT and Google Analytics, and per
+         the standing ruling a third party's script output is that third party's,
+         never the publisher's, so it is machinery here and not decoration. */
+      { key: "ad_slots", region: REGION.MECHANICAL, label: "an advertising or analytics slot",
+        patterns: [
+          /(\bdata-google-query-id=")([^"]*)(")/gi,
+          /(["'&](?:correlator|cachebuster|ord|gclid|_ga|_gid)=)([^"'&\s]+)()/gi,
+        ] },
+    ];
+  },
+
+  /* MEASURED, and it replaced a rule that did nothing. Legistar emits no <nav>,
+     no <header> and no <footer>: its furniture is ASP.NET control divs with
+     generated ids (ctl00_divTop, ctl00_tabTop, ctl00_divHeader), and a rule that
+     guessed at those ids normalised 303 bytes of a 369KB page while looking like
+     it worked. What the page does carry is exactly one <main id="mainContent"
+     role="main">, which is the document. Naming the boundary is both simpler and
+     safer than cataloguing the furniture: everything outside it is furniture in
+     one stroke, and a theme change cannot quietly reclassify substance. */
+  boundary() {
+    return /<main\b[^>]*>([\s\S]*)<\/main>/i;
+  },
+
+  /* Stylesheets decide whether the page reads as the source published it, so a
+     missing one makes the rendition unfaithful. An icon or a background image does
+     not. Fonts sit on the line and are treated as non-critical: a page in a
+     fallback face is still, in Bob's terms, meaningfully the same document. */
+  renderCritical(part) {
+    return part.kind === "stylesheet" || part.kind === "css-asset" && /\.css($|\?)/i.test(part.url || "");
+  },
+  ignorable(part) {
+    return part.reason === "THIRD_PARTY" || part.reason === "OUTSIDE_THE_DOCUMENT"
+        || part.reason === "COLLAPSED_SRCSET_FAMILY";
+  },
+};
+
+/* ---- docprofile/handlers/wordpress.mjs ---- */
+/* WordPress, which is what local news and many small agencies publish on.
+ *
+ * MEASURED, oaklandside.org, 2026-07-30: two fetches were BYTE-IDENTICAL, 871,068
+ * bytes each, served by nginx. That is worth stating plainly because it is the
+ * opposite of the ASP.NET case and it corrects an assumption this codebase was
+ * drifting toward: churn is not a property of the web, it is a property of the
+ * stack. A cached WordPress page has no per-render mechanism to normalise, and a
+ * handler that went looking for some would find nothing and should say nothing.
+ *
+ * What WordPress DOES have, in quantity, is furniture. The same fetch carried 59
+ * <article> elements, 10 <nav> elements and 2 <footer> elements on one page. On a
+ * news front page most of those articles are OTHER articles: teasers, related
+ * links, "more from this section" rails. Those change every few hours as the site
+ * publishes, and none of it is a change to the document a member captured.
+ *
+ * This is the case that forced PRESENTATIONAL to exist as a category separate from
+ * MECHANICAL. A teaser rail is not machinery: it is really on the page, it is
+ * captured, it renders, and it is not the article's claim about its subject.
+ */
+
+const wordpress = {
+  key: "wordpress",
+  label: "a page published with WordPress",
+  version: 1,
+  textual: true,
+
+  detect(ctx) {
+    const text = ctx.text || "";
+    const signals = [];
+    /* wp-content and wp-includes are the theme and core asset paths and appear on
+       essentially every WordPress page. Two of them together is conclusive; one
+       could in principle be a copied asset path on some other site. */
+    if (/\/wp-content\//i.test(text)) signals.push("wp-content asset paths");
+    if (/\/wp-includes\//i.test(text)) signals.push("wp-includes asset paths");
+    if (/\/wp-json\//i.test(text)) signals.push("wp-json API link");
+    const gen = /<meta[^>]+name="generator"[^>]+content="([^"]*WordPress[^"]*)"/i.exec(text);
+    if (gen) signals.push("generator: " + gen[1]);
+    if (/\bid="wp-block-|\bclass="[^"]*wp-block-/i.test(text)) signals.push("block editor markup");
+
+    if (gen || signals.length >= 2) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    if (signals.length) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
+  },
+
+  /* An article is a record of one thing and its substance should be stable. A
+     front page or a section index is a LISTING whose content is supposed to
+     change, and treating a new headline appearing there as a change to captured
+     evidence would bury every real change under the news cycle. */
+  /* THE ADDRESS DECIDES FIRST, and this ordering is a correction rather than a
+     preference. An earlier version tested content markers first and classified
+     oaklandside.org's FRONT PAGE as an article, on the strength of markup a theme
+     puts on every page. That is the dangerous misclassification: on a listing the
+     articles ARE the substance, so the furniture rules below would have normalised
+     the entire document and reported every front page as unchanged forever. A
+     listing is recognisable from its address with no ambiguity, so the address is
+     asked first and the markup only gets a say when the address is silent. */
+  kind(ctx) {
+    const text = ctx.text || "";
+    const p = String(ctx.locator || "");
+    if (/^https?:\/\/[^/]+\/?(?:\?|#|$)/.test(p)) return "index";
+    if (/\/(?:category|tag|author|page|section|topics?)\//i.test(p)) return "index";
+    if (/\/(?:feed|search)\/?$/i.test(p) || /[?&]s=/.test(p)) return "index";
+    if (/\/\d{4}\/\d{2}\//.test(p)) return "article";
+    if (/<meta[^>]+property="og:type"[^>]+content="article"/i.test(text)
+        && !/<meta[^>]+property="og:type"[^>]+content="website"/i.test(text)) return "article";
+    if (/\bclass="[^"]*\bsingle(?:-post)?\b/i.test(text)) return "article";
+    return "page";
+  },
+
+  rules(ctx) {
+    const kind = this.kind(ctx);
+    const rules = [
+      { key: "wp_nonce", region: REGION.MECHANICAL, label: "a one-time security token",
+        patterns: [
+          /(\bname="_wpnonce"[^>]*\bvalue=")([^"]*)(")/gi,
+          /(["'&](?:_wpnonce|_ajax_nonce|nonce)["']?\s*[:=]\s*["'])([A-Za-z0-9]+)(["'])/gi,
+          /(\bnonce=")([^"]*)(")/gi,
+        ] },
+      /* Asset version stamps. WordPress appends ?ver= to enqueued styles and
+         scripts, and the value moves whenever a theme or plugin updates. The FILE
+         is captured and hashed on its own, so the stamp is addressing rather than
+         content. Kept narrow deliberately: only ?ver= and only on an asset-looking
+         path, because a bare ?v= elsewhere is content often enough to matter. */
+      { key: "wp_asset_version", region: REGION.MECHANICAL, label: "a version stamp on a design file",
+        patterns: [/((?:\/wp-content\/|\/wp-includes\/)[^"'\s>]*[?&]ver=)([^"'&\s>]+)()/gi] },
+      { key: "wp_ads", region: REGION.MECHANICAL, label: "an advertising or analytics slot",
+        patterns: [
+          /(\bdata-google-query-id=")([^"]*)(")/gi,
+          /(\bid="div-gpt-ad-)([0-9]{6,}[^"]*)(")/gi,
+          /(["'&](?:correlator|cachebuster|ord|gclid|_ga|_gid|utm_[a-z]+)=)([^"'&\s]+)()/gi,
+        ] },
+    ];
+    /* Furniture, and ONLY on a document whose substance is one article. On a
+       listing page the articles ARE the substance, so normalising <article>
+       elements there would erase the entire document and report every front page
+       as unchanged forever, which is the exact failure this package exists to
+       prevent. */
+    if (kind === "article") rules.push(
+      { key: "wp_chrome", region: REGION.PRESENTATIONAL, label: "site navigation and footer",
+        patterns: [
+          /(<nav\b[^>]*>)([\s\S]*?)(<\/nav>)/gi,
+          /(<footer\b[^>]*>)([\s\S]*?)(<\/footer>)/gi,
+        ] },
+      { key: "wp_related", region: REGION.PRESENTATIONAL, label: "related and recommended stories",
+        patterns: [
+          /(<aside\b[^>]*>)([\s\S]*?)(<\/aside>)/gi,
+          /(<(?:div|section)[^>]*\bclass="[^"]*(?:related|recirc|more-from|trending|newsletter)[^"]*"[^>]*>)([\s\S]{0,20000}?)(<\/(?:div|section)>)/gi,
+        ] },
+    );
+    return rules;
+  },
+
+  /* An article's own boundary, when the theme marks one. Preferred over the
+     furniture patterns above for the same reason it is on the WebForms handler:
+     naming the document is one structural fact, while naming its surroundings is
+     an open-ended list of theme guesses. Only ever applied to an article, because
+     on a listing the <article> elements are the substance. */
+  boundary(ctx) {
+    if (this.kind(ctx) !== "article") return null;
+    return /<article\b[^>]*>([\s\S]*)<\/article>/i;
+  },
+
+  renderCritical(part) { return part.kind === "stylesheet"; },
+  ignorable(part) {
+    return part.reason === "THIRD_PARTY" || part.reason === "OUTSIDE_THE_DOCUMENT"
+        || part.reason === "COLLAPSED_SRCSET_FAMILY";
+  },
+};
+
+/* ---- docprofile/handlers/conservative.mjs ---- */
+/* The handler for a document nothing recognises.
+ *
+ * This is the most important handler in the package, because it is the one that
+ * runs when we are wrong about everything else. Its job is to be USELESS in the
+ * safe direction: it claims almost nothing is machinery, nothing at all is
+ * decoration, and therefore any difference in the bytes is reported as a possible
+ * change to the substance.
+ *
+ * The consequence is deliberate. An unrecognised source will report change on
+ * every fetch if it happens to churn, and a member will see noise. That is the
+ * cost of not silently telling somebody their evidence is unchanged when it is
+ * not, and it is the right way round: noise is annoying and a false "unchanged"
+ * is a false claim in the record, discovered by the party the claim is aimed at.
+ *
+ * The noise is also a SIGNAL, and it is how this package grows. A source that
+ * reports change constantly under this handler is a source that needs measuring
+ * and a handler writing, and the pattern is visible rather than buried.
+ */
+
+const conservative = {
+  key: "conservative",
+  label: "an unrecognised document",
+  version: 1,
+  conservative: true,
+  textual: true,
+
+  /* Never claims a match: the registry reaches this handler by falling through,
+     not by detection, so a stack handler can never lose to it. */
+  detect() { return { match: false, confidence: CONFIDENCE.NONE }; },
+  kind() { return "unknown"; },
+
+  /* The ONLY rules here are ones that are true of the HTTP and HTML machinery
+     itself rather than of any particular stack, and every one is per-response by
+     definition rather than by observation. Nothing else is assumed. */
+  rules() {
+    return [
+      { key: "csp_nonce", region: REGION.MECHANICAL, label: "a one-time security token",
+        /* A nonce that repeated would not be a nonce. This is definitional, not
+           a guess about a framework. */
+        patterns: [/(\bnonce=")([^"]*)(")/gi] },
+    ];
+  },
+
+  /* With no idea what this document is, every part it names might be load-bearing
+     for how it reads. So a missing part refuses the render, which is where the
+     viewer started before fidelity had levels, and is correct in ignorance. */
+  renderCritical() { return true; },
+  /* Deliberate non-fetches are still not absences: a third party's advertising
+     was never part of the document under any handler. */
+  ignorable(part) {
+    return part.reason === "THIRD_PARTY" || part.reason === "OUTSIDE_THE_DOCUMENT"
+        || part.reason === "COLLAPSED_SRCSET_FAMILY";
+  },
+};
+
+/* ---- docprofile/registry.mjs ---- */
+/* The registry, in priority order. Most specific first; the first CERTAIN
+   detection wins and the conservative handler is last because it never matches
+   and is only ever reached by falling through.
+
+   Adding a stack means adding a file and a line here, which is the whole point of
+   the exercise: the alternative was another branch inside the capture path. */
+
+
+
+
+
+/* client_rendered goes FIRST. A shell can also be served by ASP.NET or WordPress,
+   and if either of those matched first the document would be profiled as a page
+   with content when it has none, which is the one failure that is silent. */
+register(clientRendered);
+register(aspnetWebforms);
+register(wordpress);
+register(conservative);
+/* The registry is built by calling register() at load, exactly as the module
+   does, because the order is load-bearing: a client-rendered shell can be served
+   by any stack and must be recognised before the stack is. */
+register(clientRendered); register(aspnetWebforms); register(wordpress); register(conservative);
+/*__DOCPROFILE_END__*/
 
 /* ============================================================
    THE LINK SURFACE. What a captured page pointed at.
@@ -2007,6 +2525,24 @@ function leaveGo(addr){
 function unfinishedBanner(snap, id, canFix){
   if(!snap || snap.complete !== false) return "";
   const n = Number(snap.outstanding||0);
+  /* Is what is missing load-bearing for how the document READS, or is it
+     decoration? The requirement is that a rendition be perceived as meaningfully
+     the same as the source's, which is a claim about the document rather than
+     about every byte of furniture, so the handler for this kind of page decides
+     and the banner states the claim it can actually support. */
+  let fid = null;
+  try{
+    const h = handlers().find(x=>x.key === (snap.profile && snap.profile.handler)) 
+              || handlers().find(x=>x.conservative);
+    fid = fidelity(snap, h, {});
+  }catch(_){ fid = null; }
+  if(fid && fid.level === "degraded")
+    return `<div class="unfin"><h4>This page is missing some decoration</h4>
+      <p>The document itself is complete, every byte has been checked against the record, and it
+        reads the way the source published it. ${n===1?"One file":`${n} files`} that only affect
+        appearance ${n===1?"has":"have"} not been collected.</p>
+      ${canFix?`<div class="rv-bar" style="margin:0"><button class="btn" id="cont-go" onclick="continueCapture('${esc(id)}')">Collect the rest</button><span class="n">Optional. What is here can already be relied on.</span></div>`:""}
+      <div id="cont-out"></div></div>`;
   /* Which bound stopped it is recorded in the manifest and belongs in the
      record, not on screen. A member needs to know two things: the document
      itself is sound, and the page may not display until the rest arrives. The
@@ -2939,15 +3475,21 @@ async function heldMatch(sha256, locator, contentType, name){
     if(heldSha === sha256) return { bundle: o, identical: true, changed: false, artifacts: [] };
     const held = await fetchCapture(heldSha), fresh = await fetchCapture(sha256);
     if(!held.ok || held.sha !== heldSha || !fresh.ok) continue;
-    const v = await compareCaptures(held.bytes, fresh.bytes,
-      { contentType, name, sha256: digestOf });
-    /* Same document: the differences are all mechanism. Not a duplicate to
-       refuse loudly, just a document the record already has. */
-    if(v.same) return { bundle: o, identical: false, changed: false,
-                        artifacts: v.artifacts, families: v.families };
-    /* Genuinely different: the record SHOULD hold both. Carried forward so the
-       new document can say which one it now sits beside. */
-    return { bundle: o, identical: false, changed: true, artifacts: v.artifacts, proceed: true };
+    /* Profile the document, then ask the profile. Which kind of page this is
+       decides what counts as a change: page state on a WebForms page is not one,
+       a new headline on a listing is, and a new item in a nav bar is not. */
+    const text = new TextDecoder("utf-8", { fatal:false }).decode(fresh.bytes);
+    const id = identify({ text, locator, headers: {}, sha256: digestOf });
+    const v = await compare(held.bytes, fresh.bytes, id.handler,
+      { text, locator, headers: {}, sha256: digestOf, confidence: id.confidence });
+    /* changed and undetermined both mean the record should hold this too: an
+       undetermined verdict is the system declining to claim the substance is the
+       same, and declining is not the same as saying it is. */
+    if(v.evidentiary_change === false)
+      return { bundle: o, identical: false, changed: false, verdict: v.verdict,
+               artifacts: v.artifacts, profile: id.handler.key };
+    return { bundle: o, identical: false, changed: true, verdict: v.verdict,
+             artifacts: v.artifacts, profile: id.handler.key, proceed: true };
   }
   return null;
 }
@@ -3033,15 +3575,21 @@ async function heldMatch(sha256, locator, contentType, name){
     if(heldSha === sha256) return { bundle: o, identical: true, changed: false, artifacts: [] };
     const held = await fetchCapture(heldSha), fresh = await fetchCapture(sha256);
     if(!held.ok || held.sha !== heldSha || !fresh.ok) continue;
-    const v = await compareCaptures(held.bytes, fresh.bytes,
-      { contentType, name, sha256: digestOf });
-    /* Same document: the differences are all mechanism. Not a duplicate to
-       refuse loudly, just a document the record already has. */
-    if(v.same) return { bundle: o, identical: false, changed: false,
-                        artifacts: v.artifacts, families: v.families };
-    /* Genuinely different: the record SHOULD hold both. Carried forward so the
-       new document can say which one it now sits beside. */
-    return { bundle: o, identical: false, changed: true, artifacts: v.artifacts, proceed: true };
+    /* Profile the document, then ask the profile. Which kind of page this is
+       decides what counts as a change: page state on a WebForms page is not one,
+       a new headline on a listing is, and a new item in a nav bar is not. */
+    const text = new TextDecoder("utf-8", { fatal:false }).decode(fresh.bytes);
+    const id = identify({ text, locator, headers: {}, sha256: digestOf });
+    const v = await compare(held.bytes, fresh.bytes, id.handler,
+      { text, locator, headers: {}, sha256: digestOf, confidence: id.confidence });
+    /* changed and undetermined both mean the record should hold this too: an
+       undetermined verdict is the system declining to claim the substance is the
+       same, and declining is not the same as saying it is. */
+    if(v.evidentiary_change === false)
+      return { bundle: o, identical: false, changed: false, verdict: v.verdict,
+               artifacts: v.artifacts, profile: id.handler.key };
+    return { bundle: o, identical: false, changed: true, verdict: v.verdict,
+             artifacts: v.artifacts, profile: id.handler.key, proceed: true };
   }
   return null;
 }
