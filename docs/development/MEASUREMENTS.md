@@ -122,3 +122,78 @@ returns 403 to the plane on every path including `robots.txt`, while
 - `op=cpuprobe` — walks into the CPU ceiling, checkpointing durably per step
 - `op=acquire` with `subresources: true` — every per-page figure above
 - `op=links&capture=<sha>` — link partitions and verdicts
+
+## User-agent admission at www.oaklandca.gov
+
+Measured **2026-07-30**, thread CAPTURE. Instrument: `curl` from Anthropic
+container egress against
+`/Government/Finance-Budget/Financial-Reporting/Annual-Comprehensive-Financial-Reports`,
+varying ONLY the `User-Agent` header. Eight consecutive requests per string, all
+eight identical every time. Verdicts re-confirmed on a second unrelated path, so
+the result follows the agent and not the URL.
+
+| User-agent | Result |
+| --- | --- |
+| `CivicOS/0.46.0 (+https://…; instance biosmoke7; acquire)` | **200** |
+| `Mozilla/5.0 (compatible; Google-Apps-Script; beanserver; …)` | 200 |
+| `curl/8.x`, `Wget/1.21.4`, `python-requests/2.31.0` | 200 |
+| `bio-acquire`, `bio-monitor` (what the plane sent) | **403** |
+| no user-agent header at all | 403 |
+| `archive.org_bot`, `ia_archiver` | 403 |
+| `Googlebot`, `Bingbot`, `GPTBot` | 403 |
+
+**The discriminator is the user-agent, not the source address.** One network
+produced both outcomes. The `server-timing: ak_p` header identifies Akamai, so
+this is Akamai Bot Manager. Some unrecognised tokens pass (`xyzzy-fetch`,
+`biofetch`) and others do not (`foobarbaz`, `wombat`); that is Akamai's internal
+scoring and **no rule for it was established**.
+
+Full narrative, including the robots.txt findings, in `SOURCE-ACCESS.md`.
+
+### Documents reachable with the honest agent, same date
+
+| Path | Status | Bytes |
+| --- | --- | --- |
+| `/Government/Finance-Budget/Financial-Reporting/Annual-Comprehensive-Financial-Reports` | 200 | 213,375 |
+| `/Government/Finance-Budget/Budget/Fiscal-Year-2025-2027-Budget` | 200 | 207,476 |
+| `/Government/Finance-Budget/Financial-Reporting/Revenue-Expenditure-Reports` | 200 | 208,172 |
+| `/files/…/2024-city-of-oakland-acfr_final-121324.pdf` | 200 | 5,995,747 |
+| `/files/…/fy25-27-adopted-budget-book-full-10.10.25-reduced-size.pdf` | 200 | 32,521,404 |
+| `/robots.txt` | 200 | 11,687 |
+
+## Live instance census, biosmoke7
+
+Read **2026-07-30** via `op=list` and `op=file` with a read-only member token.
+
+**31 bundles**, not 30: 8 `verified`, 1 `elevated` (`PROB-2026-0001`), 1
+`forming` (`PROJ-2026-0001`), the rest `collected`.
+
+Primary source hosts across 28 readable provenance documents (archive.org
+locators excluded):
+
+| Count | Host |
+| --- | --- |
+| 6 | `www.oaklandca.gov` |
+| 5 | `oakland.legistar1.com` |
+| 4 | `webapi.legistar.com` |
+| 2 | `oaklandca.opengov.com` |
+| 2 | `cao-94612.s3.us-west-2.amazonaws.com` |
+| 1 each | `oakland.legistar.com`, `www.oaklandauditor.com`, `data.oaklandca.gov`, `scocal.stanford.edu` |
+
+The six `www.oaklandca.gov` bundles were all retrieved **2026-07-19** by the
+Apps Script data plane, method `daemon-fetch`, each carrying an RFC3161 timestamp
+token from `freetsa.org`. Every one also carries a `save-page-now` attestation
+attempt and **all of those failed** (four HTTP 302, one 520).
+
+## Chosen constants, ours and not measured
+
+Recorded here so they are visibly chosen and revisable rather than mistaken for
+findings.
+
+| Value | Setting | Why |
+| --- | --- | --- |
+| Archive fallback threshold | 3 consecutive direct failures, or 14 days | see `AUTHORITY-AND-TRUST.md` |
+| Archive request appetite | 24/min | matches the stricter of two third-party figures; ours because it is our appetite |
+
+Third-party rate-limit figures for archive.org, with their sources, are in
+`ARCHIVE-FALLBACK.md`. They are **not** measurements of ours.

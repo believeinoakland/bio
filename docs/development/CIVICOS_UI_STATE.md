@@ -1,5 +1,60 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v30, 2026-07-30 session, thread CAPTURE. THE SOURCE-ACCESS FAILURE WAS OURS, AND
+THREE SESSIONS OF REASONING ABOUT IT WERE WRONG. `www.oaklandca.gov` was never
+refusing the record on policy. It was refusing an illegible user-agent. Measured
+by varying the agent alone from one network, eight repeats per string: the bare
+`bio-acquire` token returns 403, an honest `CivicOS/<version> (+url; instance;
+purpose)` string returns 200, and all six previously-frozen documents are
+reachable again, including the 32.5MB budget book and robots.txt. The standing
+position that BIO does not disguise its requests is vindicated rather than merely
+asserted: legibility was the fix, and an authorised one-off impersonation test
+proved unnecessary because the honest string works identically.
+
+WHY IT TOOK THREE SESSIONS. Every client that succeeded (Bob's browser, the
+deleted Apps Script plane on 2026-07-19, the Internet Archive) had BOTH a
+reputable network AND a legible agent, while the plane had neither, so the two
+variables were perfectly confounded and both competing theories fit all the
+evidence. Nothing settles that except varying one alone. Recorded as D-100: two
+clients differing in two variables is not evidence about either one.
+
+SHIPPED, SUITE GREEN AT 1,914 ASSERTIONS, ZERO FAILURES, NOT YET RELEASED OR
+DEPLOYED. D-58 fixed: `recordcapturedlocator` is unconditional, so PDFs and
+plainly-captured pages file addresses and can be link targets, tested through
+`op=acquire` with a negative control. Transport recording: every response header
+in order, requested and resolved locators, redirect flag, status, and
+`peer_address` null with a named reason because the runtime will not supply it.
+`userAgent()` centralised. And a test that had begun failing on the calendar,
+pinned to a `2026-07-2x` date prefix, which meant the whole suite had stopped
+running past `members` on this and every later day.
+
+TWO FINDINGS ABOUT THE CITY, recorded as dated facts and not as claims. Oakland's
+CDN (Akamai) denies `archive.org_bot`, `ia_archiver`, `Googlebot`, `Bingbot` and
+`GPTBot` by name, and IA's own index shows a twice-daily scheduled crawl
+collapsing after 2026-02-04 with the first archived 403 on 02-14. And robots.txt,
+readable for the first time, carries 82 Disallow rules of which 63 are Public
+Ethics Commission publications, including the City's own report on meaningful
+transparency. Whether that is deliberate or a CMS artifact is UNKNOWN and is not
+assumed. None of the material this project needs was ever excluded by robots.txt.
+
+BOB'S RULINGS, all new and all recorded in AUTHORITY-AND-TRUST.md. The renderer
+is immaterial; authority follows the DATA, not the code, which killed a proposal
+to block third-party origins that would have destroyed exactly the GIS, CAD and
+hosted-document captures the project needs. Authority is three-valued, with
+undetermined becoming a task rather than a blocker, which decouples D-55 from
+D-53's granularity wall and unblocks rendered capture. An
+authority-undetermined capture cannot be PUBLISHED. Transitive trust is accepted
+where disclosed in the provenance chain with grade and confidence adjusted, which
+revises the no-transitive-trust rule and gives D-53 its first worked example.
+Authority tasks go to the project manager, falling back to a group admin, on a
+per-user inbox whose transport might one day be email. An alternative source
+counts as a re-fetch for monitoring after three failures or fourteen days.
+Content must be identified in PDFs as it is in HTML.
+
+NOT DONE. No release was cut and biosmoke7 still runs the old agent, so the
+deployed instance still cannot reach oaklandca.gov. Ten debt items filed, D-91
+through D-100, and the next session works through them from a clean context.
+
 v29, 2026-07-30 session, part twenty-seven. THE UI CAUGHT UP TO THE PLANE, AND
 THE LIVE EXERCISE TAUGHT MORE THAN THE CODE. Two deploys of the civicos worker
 (builds cbbade6bbd93 then 9a34a82fd0c8), suite green at 10 harnesses with 150 new

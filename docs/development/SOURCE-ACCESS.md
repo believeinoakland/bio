@@ -1,151 +1,141 @@
-# Source access: when a public body refuses the record
+# Source access: why oaklandca.gov refused us, measured
 
-Written 2026-07-29. The evidence is measured and current; the practice and legal
-sections are research compiled for Bob to take to journalists and lawyers, not
-advice. Nothing here is settled and no user-agent change has been made.
+Rewritten 2026-07-30. **The previous version of this document was wrong in its
+central claim**, and it is replaced rather than amended so that nobody reads the
+old framing and acts on it. It recorded that `www.oaklandca.gov` refuses the
+record, which read as a public body taking a position on archiving. The refusal
+was ours. We were sending an illegible user-agent and a commercial bot manager
+was declining it.
 
-**Standing position while this is open: BIO does not disguise its requests.** A
-system whose entire subject is provenance does not lie about who is asking. That
-is not a policy waiting on counsel; it is the reason the project exists.
+**The standing position survives and is now vindicated rather than asserted:
+BIO does not disguise its requests.** Legibility was the fix. The agent that
+works is the honest one.
 
-## What was measured
+## The measurement
 
-Every result below is from the deployed plane on 2026-07-29, not from a browser
-and not from a developer machine.
+2026-07-30, from Anthropic egress, `curl`, one URL
+(`/Government/Finance-Budget/Financial-Reporting/Annual-Comprehensive-Financial-Reports`),
+varying ONLY the user-agent. Eight consecutive requests per string; every string
+returned the same status all eight times. Verdicts confirmed identical on a
+second, unrelated path, so the result follows the agent and not the URL.
+
+| User-agent | Result |
+| --- | --- |
+| `CivicOS/0.46.0 (+https://…; instance biosmoke7; acquire)` | **200** |
+| `Mozilla/5.0 (compatible; Google-Apps-Script; beanserver; +https://script.google.com)` | 200 |
+| `curl/8.x` | 200 |
+| `Wget/1.21.4` | 200 |
+| `python-requests/2.31.0` | 200 |
+| `bio-acquire` (what the plane sent) | **403** |
+| `bio-monitor` (what monitoring sent) | **403** |
+| no user-agent header at all | 403 |
+| `archive.org_bot` | 403 |
+| `ia_archiver` | 403 |
+| `Googlebot` | 403 |
+| `Bingbot` | 403 |
+| `GPTBot` | 403 |
+
+**The discriminator is the user-agent. It is not the source address.** One
+network produced both outcomes. Three sessions of reasoning about Cloudflare
+Workers egress reputation were wrong, and the reasoning was wrong because every
+client we had compared shared BOTH a reputable network and a legible agent, so
+the two variables were perfectly confounded until one was varied alone.
+
+## Corroborating evidence from before the measurement
+
+Three independent clients reached the same host while the plane could not, and
+all three were dismissed as network effects at the time:
+
+- **Bob's browser**, 2026-07-30, residential address, 200.
+- **The Apps Script data plane**, 2026-07-19, Google egress, retrieved five
+  documents including deep PDF paths. Its agent is a self-declared bot with a
+  version and a contact URL, structurally the same shape as ours now.
+- **The Internet Archive**, per its own CDX index, 200s across the host
+  throughout 2026.
+
+The Apps Script row is the one that should have broken the network theory
+earlier: `UrlFetchApp` is not a browser by any measure and it was admitted.
+
+## What is in front of the site
+
+The `server-timing: ak_p` response header identifies **Akamai**, so this is
+Akamai Bot Manager. That accounts for the shape of the results: agents in its
+categorised bot directory are denied by category, while unrecognised agents are
+scored heuristically. It also accounts for what could NOT be derived: some
+unknown tokens pass (`xyzzy-fetch`, `biofetch`) and others do not (`foobarbaz`,
+`wombat`), which is Akamai's internal scoring. **No rule for that was
+established and none should be invented.**
+
+## Two findings about the City, recorded as facts and not as claims
+
+**Oakland's CDN denies archival and search crawlers by name.** `archive.org_bot`,
+`ia_archiver`, `Googlebot`, `Bingbot` and `GPTBot` are all refused. Whoever
+configured this denied whole bot categories. IA's own index shows the
+consequence: a twice-daily scheduled crawl of the root running on a clock through
+2026-02-04, then collapsing to scattered singletons, with the first archived 403
+on 2026-02-14.
+
+**`robots.txt` disallows the City's own transparency publications.** Retrieved
+for the first time on 2026-07-30, 85 lines, a single `User-agent: *` stanza, 82
+`Disallow` rules. **63 of the 82 are Public Ethics Commission publications**,
+including sixteen years of annual reports and
+`/Government/Boards-Commissions/Public-Ethics-Commission/Publications/Open-by-Default-A-Best-Practices-Analysis-for-Meaningful-Transparency-in-the-City-of-Oakland`.
+
+Whether that is deliberate or a CMS artifact is UNKNOWN and should not be
+assumed. It is recorded because it is true and dated, not because it is
+explained.
+
+**None of the material this project needs was ever excluded by robots.txt.** The
+finance and budget paths and `/files/assets/` carry no `Disallow`. The 403 was
+never a statement about crawling.
+
+## What is reachable now
+
+All six previously-frozen documents, verified 2026-07-30 with the honest agent:
+
+| Path | Status | Bytes |
+| --- | --- | --- |
+| `/Government/Finance-Budget/Financial-Reporting/Annual-Comprehensive-Financial-Reports` | 200 | 213,375 |
+| `/Government/Finance-Budget/Budget/Fiscal-Year-2025-2027-Budget` | 200 | 207,476 |
+| `/Government/Finance-Budget/Financial-Reporting/Revenue-Expenditure-Reports` | 200 | 208,172 |
+| `/files/…/2024-city-of-oakland-acfr_final-121324.pdf` | 200 | 5,995,747 |
+| `/files/…/fy25-27-adopted-budget-book-full-10.10.25-reduced-size.pdf` | 200 | 32,521,404 |
+| `/robots.txt` | 200 | 11,687 |
+
+The budget book at 32.5 MB will capture multipart and skip subresource parsing,
+which is correct behaviour and should not be read as a failure.
+
+**The archive fallback is not needed for these documents.** It remains worth
+building for historical depth, which nothing else supplies.
+
+## The fix, and why it is not durable
+
+`bio-plane/src/userAgent()` now produces one legible string for every outbound
+fetch, replacing two bare tokens that were spread across three call sites and did
+not agree with each other:
 
 ```
-https://www.oaklandca.gov/                                    403
-https://www.oaklandca.gov/robots.txt                          403
-https://www.oaklandca.gov/sitemap.xml                         403
-https://www.oaklandca.gov/Government/Finance-Budget/...       403
-https://www.oaklandca.gov/files/assets/.../acfr-fy-2023-24.pdf 403
-
-https://data.oaklandca.gov/api/views/vmzx-e5fe/rows.csv       200   5,519,343 bytes
-https://oaklandca.opengov.com/                                200      79,971 bytes
-https://oakland.legistar.com/Calendar.aspx                    200     368,904 bytes
-https://oaklandside.org/                                      200     596,282 bytes
-https://www.acgov.org/                                        200      67,568 bytes
+CivicOS/<version> (+<contact URL>; instance <name>; <purpose>)
 ```
 
-Four things follow, and each matters separately.
+Product and version, a contact URL, the instance name so a third party can
+throttle one operator instead of a provider, and the purpose so a source can
+tell a capture from a monitoring re-check. It does not impersonate a browser and
+the suite asserts that it never starts to.
 
-**It is not path-specific.** A static PDF asset and an HTML page refuse
-identically, so this is not a rule about document types or directories.
+**We currently pass because Akamai does not recognise CivicOS.** If the project
+succeeds and the string enters the bot directory it will be categorised, and the
+same denial that catches `archive.org_bot` will catch us. Passing by being
+unknown is not a position. The durable answer is an allowlist entry, which
+requires asking. See D-94.
 
-**It is not "Oakland".** `data.oaklandca.gov` (Socrata) and
-`oaklandca.opengov.com` (OpenGov) answer normally. Those are third-party
-platforms on different infrastructure. It is specifically the city's own web
-host.
+## Open
 
-**It changed.** The record holds ten bundles sourced from `www.oaklandca.gov`,
-retrieved around 2026-07-1x. Re-running those exact locators today returns 403.
-Something moved between mid-July and now.
-
-**No crawl policy is being violated, because none can be read.** `robots.txt`
-itself returns 403. The city is not publishing a rule BIO is failing to honour;
-it is refusing at the edge before any rule could be consulted. That distinction
-is worth putting in front of a lawyer, because "we declined to follow a published
-policy" and "we were refused before a policy could be consulted" are different
-postures with different answers.
-
-The shape of it (a blanket edge refusal including `robots.txt`, on a site whose
-sibling platforms are unaffected) is consistent with a managed WAF product
-running default rules rather than a deliberate anti-archival decision by anyone
-at the city. If that is right, somebody can simply add an exception, and the
-first move is a named human rather than a technical one.
-
-## The thing this demonstrates
-
-The record currently holds captures of city pages that **can no longer be
-re-fetched by anyone**. That is the circumstance the project exists for,
-demonstrated by accident rather than by argument, and it is the strongest single
-piece of evidence for why an accountability record needs to hold bytes rather
-than links.
-
-It also sharpens a ruling already made. Re-fetch at ratification is mandatory,
-meaning the attempt and its outcome are recorded rather than that ratification
-requires a matching answer. A mandatory-agreement rule would refuse to ratify
-exactly these captures, at the moment their value is highest.
-
-## Practice: what archival crawlers do
-
-Identifying yourself is the norm rather than a concession. Bots conventionally
-carry a contact URL or address in the user-agent so an operator can reach the
-people running them, and the UK Web Archive's crawler identifies plainly as
-`bl.uk_lddc_bot`.
-
-Archive-It, the institutional web-archiving service, ships a custom user-agent
-feature for this exact failure. Their documentation notes that sites will
-sometimes return an error to a crawler where a browser would be served normally,
-and that archivists set a custom agent per account or per collection to resolve
-it. So a named, contactable agent is the standard archival move, and it is also
-the one that gives a sympathetic administrator something concrete to allowlist.
-
-## Legal ground, and where it stops
-
-Compiled for counsel. Not advice, and deliberately including the parts that cut
-against the project.
-
-The Ninth Circuit in **hiQ Labs v. LinkedIn**, decided after the Supreme Court's
-**Van Buren** ruling, held that accessing a public website cannot be "without
-authorization" under the Computer Fraud and Abuse Act. The Reporters Committee
-for Freedom of the Press described the decision as carrying major implications
-for data journalists, who scrape routinely to build datasets. Fenwick read it as
-a win for archivists, academics, researchers and journalists collecting publicly
-accessible information not behind a login, while explicitly not a green light on
-all data harvesting.
-
-Three cautions a lawyer will care about more than the headline.
-
-**hiQ settled in 2022**, so there is no Supreme Court ruling squarely on
-scraping, and the Ninth Circuit's holding is not universal.
-
-**The CFAA is not the only theory.** Breach of contract, trespass to chattels,
-and copyright are separate, and companies do sue over publicly available data;
-defence costs alone can exceed six figures regardless of outcome.
-
-**Technical circumvention is the line nobody has disclaimed.** EFF's long-running
-position is that CFAA liability should require circumventing an effective
-technical barrier. A WAF returning 403 is arguably such a barrier. Defeating it
-by disguising the client walks toward the one theory the case law has left open,
-and it contradicts what BIO is for. This is the strongest reason the standing
-position at the top of this document is what it is.
-
-## Questions the research does not answer, for Bob's counsel
-
-**Does a public agency blocking anonymous archival collection of public records
-raise a state public-records question distinct from the CFAA?** A city refusing
-programmatic access to documents it is obligated to publish is a different animal
-from a company protecting a commercial asset, and California's public records
-framework may matter here far more than federal computer-crime law. None of the
-research above touches this, and it looks like the most promising angle.
-
-**Is there a named contact at the city, or at its vendor, who can allowlist an
-identified agent?** The `robots.txt` 403 suggests default WAF rules rather than
-policy, which usually means somebody can add an exception. This is a phone call
-before it is a legal question.
-
-**What do reporters who hit this actually do?** That is knowledge Bob's
-journalists have and the published literature mostly does not.
-
-## The options, if identifying does not resolve it
-
-- **A named agent with a contact URL**, e.g. `bio-acquire
-  (+https://believeinoakland.org/crawler)`. The archival norm, and the only
-  option that makes an allowlist request possible.
-- **A member-driven capture path.** The member's own browser reaches the site
-  normally. A browser-side capture that serialises what was served and uploads
-  it needs no change to the plane's posture at all, and the grade honestly
-  reflects that the capture chain ran through a person's machine. This is the
-  SAME mechanism client-rendered sources need (see CLIENT-RENDERED.md), so it is
-  one path solving two problems and is probably the right investment regardless
-  of how the user-agent question resolves.
-- **Accept the gap and record it.** The city's own host is uncapturable; its data
-  platforms are not. The record says so. Thinner, and truthful.
-
-## Related
-
-- `CLIENT-RENDERED.md`: the member-driven path, and why it is the same mechanism.
-- `CAPTURE-SCALING.md`: what capture costs and where the platform stops it.
-- `MEASUREMENTS.md`: the numbers behind every figure quoted here.
-- `UI-PLAN.md`: standing dependencies, including this one.
+- Whether to tell the City. We now have something specific and checkable to say.
+  A request to allowlist a named civic agent is one a public body has little
+  reason to refuse, and a refusal would itself be a finding.
+- What the contact URL resolves to. It currently names a path that does not
+  exist on a domain whose registrar transfer is pending, and a user-agent
+  advertising a contact address that 404s is worse than one with none.
+- What a sovereign instance run by another group puts there, since it should
+  name that group and not Believe in Oakland.

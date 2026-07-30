@@ -127,9 +127,20 @@ has to be per-origin and sub-document, which is a granularity the record has
 never held: `references[]` targets a bundle and nothing finer, which is the same
 wall D-53 is blocked against.
 
-Recorded as D-55. Nothing may be treated as evidence out of a render until it is
-settled, because the alternative is a record that silently credits a city with
-an advertiser's copy.
+Recorded as D-55. **SUPERSEDED 2026-07-30 by Bob's authority rulings; see
+`AUTHORITY-AND-TRUST.md`.** Two things changed. The renderer is immaterial and
+authority follows the DATA rather than the code, which means a viewer origin
+rendering the host's payload is a tool and not an author, and an earlier proposal
+here to block third-party origins is withdrawn: it would have destroyed exactly
+the GIS, CAD and hosted-document captures this project needs. And authority is
+now three-valued, so a rendered capture whose authorship cannot be determined
+mechanically is recorded as `authority_state: undetermined` with a followup task,
+which is a TRUTHFUL record at document granularity and needs no per-origin
+attribution to be honest. That decouples D-55 from D-53's granularity wall.
+Rendered capture is unblocked. What survives of D-55 is the narrower case where a
+third party's script output is itself the evidence, which still needs per-origin
+sub-document attribution. An authority-undetermined capture may be held and may
+not be PUBLISHED.
 - `render.of`: the sha256 of the served shell, so the pair is inseparable
 
 ## There is no collision: rendering is available on the free tier

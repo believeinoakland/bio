@@ -14,6 +14,29 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
+
+/* The plane's identity to a source, in one place because it was in three and
+   they had drifted: `bio-acquire` on capture, `bio-monitor` on monitoring, both
+   bare tokens with no version, no contact and no product form.
+   *
+   * BIO does not disguise its requests, which is a standing position and is not
+   * what this changes. What it changes is that a bare token matches no browser
+   * and no known-good crawler pattern, and a great many WAF rulesets refuse on
+   * exactly that shape. The clients that DO reach the sources refusing us
+   * (Google Apps Script, archive.org_bot) are both openly self-declared bots
+   * with a version and a URL, so honesty is evidently not what is being
+   * punished; illegibility might be.
+   *
+   * Whether this is the cause of the oaklandca.gov refusal is UNDECIDED, and it
+   * is confounded with source-network reputation because every client that
+   * succeeds has both a reputable network and a legible agent while we have
+   * neither. This makes the variable we control testable. It does not settle
+   * anything by itself, and a failure after this lands is a real result. */
+export function userAgent(env, purpose = "acquire") {
+  const version = (env && env.VERSION) || "0.0.0";
+  const instance = (env && env.INSTANCE_NAME) || "unnamed";
+  return `CivicOS/${version} (+https://believeinoakland.org/civicos; instance ${instance}; ${purpose})`;
+}
 import { cpuProbe } from "./cpu.mjs";
 import { Store } from "./store.mjs";
 export { Store };
@@ -965,7 +988,7 @@ export default {
       const retrieved = new Date().toISOString().split(".")[0] + "Z";
       let res;
       try {
-        res = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+        res = await fetch(locator, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
       } catch (e) {
         return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
       }
@@ -1041,8 +1064,72 @@ export default {
       }
 
       const ct = (res.headers.get("content-type") || "").split(";")[0].trim();
+
+      /* WARC keeps the whole response. We kept content-type and threw the rest
+         away, which meant Last-Modified and ETag were discarded at the only
+         moment they existed, despite LINK-FIDELITY naming both as recordable
+         evidence. Headers cost nothing to keep and cannot be recovered later:
+         a capture taken without them is permanently poorer than one taken with.
+         *
+         * Every header the source sent, in the order it sent them, with
+         * duplicates preserved. No allowlist: a header nobody thought to name
+         * is exactly the one a later question turns out to need, and the volume
+         * is a few hundred bytes against captures measured in megabytes. */
+      const responseHeaders = [];
+      for (const [k, v] of res.headers) responseHeaders.push([k, v]);
+
+      /* Where the request actually landed. `res.url` is the post-redirect URL,
+         so a locator that redirected records both ends. WARC would carry each
+         hop as its own record; the runtime follows redirects internally and
+         does not expose the chain, so we record the endpoints and say so
+         rather than implying we watched every hop. */
+      const transport = {
+        requested: locator,
+        resolved: res.url || locator,
+        redirected: !!(res.url && res.url !== locator),
+        status: res.status,
+        http_headers: responseHeaders,
+        /* WARC records WARC-IP-Address: the address that actually answered.
+           The Workers runtime does not expose the peer address of an outbound
+           fetch, so we do not have it and this says so rather than leaving a
+           field a reader would take as absence of a redirect or of an address.
+           Recorded as a named limitation because a silently missing field and
+           an unobtainable one are different facts about the record. */
+        peer_address: null,
+        peer_address_unavailable: "the Workers runtime does not expose the peer address of an outbound fetch",
+      };
       const name = (body.file || locator.split("/").pop() || "capture")
         .replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
+
+      const stLim = env.STORE.get(env.STORE.idFromName(storeName));
+
+      /* D-58. File the address this capture holds, UNCONDITIONALLY, beside the
+         capture itself. This used to sit inside the subresource branch, behind
+         three further guards (HTML content type, under the parse ceiling, the
+         primary reading back out), so a capture that took any other path filed
+         no address at all and could never be a link target however plainly the
+         record held it.
+         *
+         * That was not a partial gap. It was worst on the document class this
+         * project exists for: a council agenda PDF failed the content-type
+         * guard, so every link pointing at it resolved `offsite` while its bytes
+         * sat in the store. The reverse re-resolution loop is driven from this
+         * index, so an index that reflects only HTML captured with subresources
+         * on would have made the loop fire correctly and under-report silently,
+         * which is worse than not running it: an `offsite` verdict that has been
+         * re-checked looks settled.
+         *
+         * Nothing here needs the parser. The address, its normalised form, the
+         * hash and the retrieval instant are all known the moment the bytes are.
+         * The LINKS write legitimately needs the parse and stays where it is. */
+      try {
+        await stLim.fetch("http://x/recordcapturedlocator", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ address: res.url || locator,
+            addressNorm: normalizeAddress(res.url || locator),
+            captureSha: sha, retrieved }),
+        });
+      } catch { /* an unfiled address is not a failed capture */ }
 
       /* Capture fidelity. A captured page whose stylesheets were never fetched
          renders bare, which makes the capture a poor rendition of what the
@@ -1086,7 +1173,8 @@ export default {
                deliberately discards it every so often and runs to refusal
                again, because a ceiling only ever learned downward would leave an
                upgraded account at the old caps forever. */
-            const stLim = env.STORE.get(env.STORE.idFromName(storeName));
+            /* stLim is hoisted to the capture body above, where the
+               unconditional locator write needs it. */
             /* Continuing a capture that ran out of budget. The primary is
                complete from tick one, so nothing here re-fetches it: only the
                outstanding support material is picked up. */
@@ -1142,7 +1230,7 @@ export default {
                 return { existed: false };
               },
               fetchOne: async (u) => {
-                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
                 if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };
                 return { ok: true, status: r.status,
                          bytes: new Uint8Array(await r.arrayBuffer()),
@@ -1186,17 +1274,10 @@ export default {
                         + `${subs.manifest.discovered} discovered` }),
               })).json()).result;
             } catch { /* an unfiled measurement is not a failed capture */ }
-            /* File the address this capture holds, so a later document linking
-               to it can be resolved. Without this nothing can answer "does the
-               store hold a capture of https://..." at all: the register is
-               keyed by hash and carries no locator. */
+            /* The address is filed above, unconditionally, for every capture.
+               What is left here is the LINKS write, which genuinely needs the
+               parse and therefore genuinely belongs inside this branch. */
             try {
-              await stLim.fetch("http://x/recordcapturedlocator", {
-                method: "POST", headers: { "content-type": "application/json" },
-                body: JSON.stringify({ address: res.url || locator,
-                  addressNorm: normalizeAddress(res.url || locator),
-                  captureSha: sha, retrieved }),
-              });
               if (subs.links && subs.links.length) {
                 await stLim.fetch("http://x/recordlinks", {
                   method: "POST", headers: { "content-type": "application/json" },
@@ -1248,6 +1329,7 @@ export default {
                parted document and what C-18.6 checks by streaming the parts. */
             sha256: sha, encoding: "binary", bytes: total,
             ...(ct ? { content_type: ct } : {}),
+            transport,
           },
           ...(multipart ? { parts: parts.map((p, i) => ({
             file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
@@ -1451,7 +1533,7 @@ export default {
       const checked = new Date().toISOString().split(".")[0] + "Z";
       let status = null, note = null, seen = null;
       try {
-        const res = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-monitor" } });
+        const res = await fetch(locator, { redirect: "follow", headers: { "user-agent": userAgent(env, "monitor") } });
         if (res.status === 404 || res.status === 410) { status = "removed"; note = `the source answered ${res.status}`; }
         else if (!res.ok) { note = `the source answered ${res.status}`; }
         else {

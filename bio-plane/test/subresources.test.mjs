@@ -90,6 +90,7 @@ const PAGE = `<!doctype html>
 </body></html>`;
 
 /* Deterministic bodies for the scripted source. */
+const SEEN_UA = [];
 const BODIES = new Map([
   ["/page.html", [PAGE, "text/html; charset=utf-8"]],
   ["/css/main.css", [CSS_MAIN, "text/css"]],
@@ -543,6 +544,7 @@ const mf = new Miniflare({
   bindings: { ADMIN_TOKEN: "adm-sub", MEMBER_TOKEN: "mem-sub", PROBE_TOKEN: "prb-sub", VERSION: "test" },
   outboundService(request) {
     const u = new URL(request.url);
+    SEEN_UA.push([u.pathname, request.headers.get("user-agent")]);
     if (u.hostname !== "www.oaklandca.gov") return new Response("off-limits", { status: 500 });
     const b = BODIES.get(u.pathname);
     if (!b) return new Response("nope", { status: 404 });
@@ -1274,6 +1276,126 @@ console.log("\n--- the mechanical envelope admits the manifest, and nothing else
   const m = /const MECHANICAL_APPEND_FILES = \[([^\]]*)\]/.exec(src);
   t("the envelope is exactly these three files", m[1].replace(/['\s]/g, "").split(","),
     ["data/changes.json", "data/provenance.json", "data/snapshot-manifest.json"]);
+}
+
+console.log("\n--- D-58: an ordinary capture files its address, so it can be a link target ---");
+{
+  /* The defect this asserts: recordcapturedlocator sat inside the subresource
+     branch, behind an HTML content-type guard, a parse ceiling and a readback.
+     So a plainly-captured document, and EVERY PDF however captured, filed no
+     address and could never resolve as a link target however plainly the record
+     held its bytes. The reverse re-resolution loop is driven from this index,
+     so an index that reflected only HTML-with-subresources would have made the
+     loop fire correctly and under-report in silence.
+
+     Driven through op=acquire rather than against the function, per the
+     standing lesson: a unit test that never crosses the caller's surface is not
+     testing the feature. And it runs BOTH WAYS, because an index that filed
+     everything indiscriminately would pass a one-way check by being useless. */
+  BODIES.set("/staff-report.pdf", ["%PDF-1.4 pretend report", "application/pdf"]);
+  BODIES.set("/plain.html", ["<html><body><p>no support material requested</p></body></html>", "text/html"]);
+
+  const PDF_URL = "https://www.oaklandca.gov/staff-report.pdf";
+  const PLAIN_URL = "https://www.oaklandca.gov/plain.html";
+
+  /* A PDF, captured with the flag ON. It skips as NOT_HTML, which is exactly
+     the path that used to file nothing. */
+  const pdf = await acquire({ locator: PDF_URL, authority: "City of Oakland", subresources: true });
+  t("a PDF capture succeeds and is honest that it parsed nothing", 
+    [pdf.ok, pdf.subresources_skipped.reason], [true, "NOT_HTML"]);
+
+  /* An HTML page captured WITHOUT the flag: the other path that filed nothing. */
+  const plain2 = await acquire({ locator: PLAIN_URL, authority: "City of Oakland" });
+  t("a plain capture succeeds", plain2.ok, true);
+
+  const nsD = await mf.getDurableObjectNamespace("STORE");
+  const stD = nsD.get(nsD.idFromName("bio"));
+  const callD = async (path, body) => (await stD.fetch("http://x" + path, body
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
+
+  /* A third document links at both, plus one address nothing holds. */
+  const SRC58 = "58".repeat(32);
+  await callD("/recordlinks", { sourceCapture: SRC58, capturedAt: "2026-07-30T12:00:00Z",
+    links: [
+      { ref: "/staff-report.pdf", address: PDF_URL, address_norm: normalizeAddress(PDF_URL),
+        citation_norm: PDF_URL, fragment: null, type: "deferred" },
+      { ref: "/plain.html", address: PLAIN_URL, address_norm: normalizeAddress(PLAIN_URL),
+        citation_norm: PLAIN_URL, fragment: null, type: "deferred" },
+      { ref: "/never.html", address: "https://www.oaklandca.gov/never.html",
+        address_norm: normalizeAddress("https://www.oaklandca.gov/never.html"),
+        citation_norm: "https://www.oaklandca.gov/never.html", fragment: null, type: "deferred" },
+    ] });
+  const r58 = (await callD(`/resolvelinks?capture=${SRC58}`)).result;
+  const by58 = Object.fromEntries(r58.links.map((l) => [l.link_ref, l]));
+
+  t("a link to a PDF the record holds resolves as linked, not offsite",
+    by58["/staff-report.pdf"].resolution, "linked");
+  t("naming the capture the record actually holds",
+    by58["/staff-report.pdf"].target_capture, pdf.document.capture.sha256);
+  t("a link to a plainly-captured page resolves too",
+    by58["/plain.html"].resolution, "linked");
+  t("naming its capture as well",
+    by58["/plain.html"].target_capture, plain2.document.capture.sha256);
+
+  /* The other direction. A filing that said yes to everything would pass the
+     four assertions above and mean nothing. */
+  t("an address the record genuinely holds nothing for is still offsite",
+    [by58["/never.html"].resolution, by58["/never.html"].target_capture],
+    ["offsite", undefined]);
+  t("so the tally separates what is held from what is not",
+    [r58.tally.linked, r58.tally.offsite], [2, 1]);
+
+  /* And the reverse index, which is what the re-resolution loop will drive. */
+  const rev58 = (await callD(`/linksto?address=${encodeURIComponent(PDF_URL)}`)).result;
+  t("the reverse index finds what points at the PDF", rev58.count, 1);
+  t("naming the document that does", rev58.sources[0].source_capture, SRC58);
+}
+
+console.log("\n--- the whole response is recorded, because headers cannot be recovered later ---");
+{
+  /* We kept content-type and discarded everything else the source sent, at the
+     only moment it existed. Last-Modified and ETag are both named in
+     LINK-FIDELITY as recordable evidence and neither was being recorded. */
+  const tr = (await acquire({ locator: BASE, authority: "City of Oakland" })).document.capture.transport;
+  const names = tr.http_headers.map((h) => h[0]);
+  t("every header the source sent is kept, not a chosen few", names.includes("content-type"), true);
+  t("more than the one header we used to keep", names.length > 1, true);
+  t("the requested and resolved locators are both recorded", 
+    [typeof tr.requested, typeof tr.resolved], ["string", "string"]);
+  t("and whether it redirected is stated rather than inferred", typeof tr.redirected, "boolean");
+  t("the status is recorded, not just implied by success", tr.status, 200);
+  /* The honest field. An unobtainable value and a missing one are different
+     facts, and a reader must not read null as \"no address involved\". */
+  t("the peer address is null because the runtime will not give it", tr.peer_address, null);
+  t("and the record says WHY rather than leaving a bare null",
+    /does not expose the peer address/.test(tr.peer_address_unavailable), true);
+}
+
+
+console.log("\n--- the plane identifies itself legibly to the source ---");
+{
+  /* Through the op, and read off what the SOURCE actually received, because
+     that is the only thing a WAF ever sees. Asserting the constant would test
+     our intention rather than the request. */
+  SEEN_UA.length = 0;
+  await acquire({ locator: BASE, authority: "City of Oakland" });
+  const ua = (SEEN_UA.find(([p]) => p === "/page.html") || [])[1];
+  t("the source receives a user-agent at all", typeof ua, "string");
+  t("naming the product and its version", /^CivicOS\/\S+ /.test(ua), true);
+  t("carrying a contact URL, which the bare token never did", /\+https:\/\//.test(ua), true);
+  t("naming the instance, so a third party throttles one operator not a provider",
+    /instance \S+/.test(ua), true);
+  t("and the purpose, so a source can tell a capture from a monitoring re-check",
+    /acquire/.test(ua), true);
+  /* BIO does not disguise its requests. Asserted, because the temptation to fix
+     a 403 by impersonating Chrome will present itself the moment this fails. */
+  t("it does not impersonate a browser", /Mozilla|Chrome|Safari|Gecko/.test(ua), false);
+  /* One place, not three. What this replaces was two different bare tokens
+     across three call sites, none of which agreed with each other. */
+  const src = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
+  t("every outbound fetch takes its agent from the one function",
+    (src.match(/"user-agent":/g) || []).length === (src.match(/userAgent\(env, "/g) || []).length, true);
+  t("and no bare token survives", /"user-agent":\s*"bio-/.test(src), false);
 }
 
 console.log(`\nsubresources: ${pass} pass, ${fail} fail`);

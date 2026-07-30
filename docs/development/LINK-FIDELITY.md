@@ -610,6 +610,19 @@ This is the same requirement the `deferred` wrapper already enforces
 mechanically: no live href in a companion, so no reader leaves the record
 without passing through a surface that can say so.
 
+## Later rulings that bear on this document
+
+2026-07-30. Transitive trust is ACCEPTED where disclosed in the provenance chain
+with grade and confidence adjusted, which revises the no-transitive-trust rule
+and makes the third establishing route below (a third-party archive holding B at
+the relevant date) buildable rather than aspirational. A web archive's
+`warc/revisit` record is a dated third-party identical-bytes observation across
+an interval, which is the PRIMARY route above, produced by somebody else, on
+sources where our own bracket arm can never fire. See `ARCHIVE-FALLBACK.md` and
+`AUTHORITY-AND-TRUST.md`. Note the `via` requirement in D-96: once observations
+arrive from more than one source, the bracket arm must know which is which or it
+will report a provenance difference as a change.
+
 ## Open questions
 - Whether C-18.3 should be widened to a cross-bundle check, or whether
   store-level idempotence at plant and promote time is the whole answer. A

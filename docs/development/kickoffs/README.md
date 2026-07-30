@@ -37,6 +37,13 @@ other threads may not read them, and it does not make ownership permanent. A
 thread that needs to change another thread's files should say so in its decision
 items rather than doing it quietly, because the other thread will not know.
 
+**Two paths were added to CAPTURE on 2026-07-30**, both previously unowned rather
+than another thread's: the link and capture functions in `store.mjs`, and the
+capture and authority checks in `bio-checks`. Unowned is not the same as
+somebody else's, but it is the same collision risk, and `store.mjs` is the
+largest file in the repo. If a thread finds itself needing an unowned path twice,
+that is the signal to name an owner rather than to keep editing quietly.
+
 ## Shared files, and the rule for them
 
 These are written by more than one thread and are the collision risk:

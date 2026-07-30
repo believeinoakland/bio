@@ -137,7 +137,7 @@ console.log("\n--- a session cites, and the record says who did it ---");
 
   const doc = (await GET(`op=file&id=${pid}&path=bundle.md&token=t-admin-1`)).result.text;
   t("the edge is in the document", /rel: cites/.test(doc), true);
-  t("the Session Log names the session's member", /\| ruth$/m.test(doc.split("\n").find((l) => l.startsWith("### Session 2026-07-2") && l.includes("Cited")) ?? ""), true);
+  t("the Session Log names the session's member", /\| ruth$/m.test(doc.split("\n").find((l) => l.startsWith("### Session ") && l.includes("Cited")) ?? ""), true);
   t("and not the claimed author", doc.includes("IMPOSTOR"), false);
 }
 
