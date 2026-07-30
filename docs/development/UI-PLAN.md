@@ -149,6 +149,19 @@ system's problems. A surface that asks a member to adjudicate one has failed, an
 it will feel like honesty while it does. The test suite carries a vocabulary guard
 over every member-facing string for this reason.
 
+## Development is PAUSED for consolidation
+
+Bob asked, 2026-07-30, whether the work had become too diffused. It had, and the
+measurement is in `docs/architecture/CONSTRUCTS.md`: 1,463 lines of validated
+architecture with zero consumers, a third of all open debt opened in one day, seven
+vocabularies of which six overlap, and two same-day reworks where the evening
+invalidated part of the afternoon.
+
+No new capability until Step 0 of that document is done: reconcile the overlapping
+constructs, which is the only step that deletes more than it adds. Then Steps 1
+through 7, each of which is finished only when something CONSUMES its output. That
+rule is the discipline whose absence produced the 1,463 unconsumed lines.
+
 ## The capture architecture
 
 Bob, 2026-07-30: the incremental handling of each newly-discovered rendering
