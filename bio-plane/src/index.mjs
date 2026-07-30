@@ -35,7 +35,14 @@ import { captureSubresources, normalizeAddress, normalizeCitation } from "./subr
 export function userAgent(env, purpose = "acquire") {
   const version = (env && env.VERSION) || "0.0.0";
   const instance = (env && env.INSTANCE_NAME) || "unnamed";
-  return `CivicOS/${version} (+https://believeinoakland.org/civicos; instance ${instance}; ${purpose})`;
+  /* The contact URL must RESOLVE. believeinoakland.org/civicos does not exist
+   * yet (the registrar transfer is pending), and SOURCE-ACCESS.md records that
+   * a contact address that 404s is worse than none. The repo URL resolves
+   * today and names the project. MEASURED 2026-07-30 before shipping: this
+   * exact string, 8/8 200 on the ACFR path and 4/4 on a second path, same
+   * instrument as the SOURCE-ACCESS table. Revert to the domain URL when the
+   * zone moves and the path exists. */
+  return `CivicOS/${version} (+https://github.com/believeinoakland/bio; instance ${instance}; ${purpose})`;
 }
 import { cpuProbe } from "./cpu.mjs";
 import { Store } from "./store.mjs";
