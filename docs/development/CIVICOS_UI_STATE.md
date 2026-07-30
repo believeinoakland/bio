@@ -300,6 +300,61 @@ into one scope: the whole runtime and all twelve harnesses failed at once while 
 module tested green alone. The bundler now refuses any duplicate top-level name,
 which is cheaper than debugging it downstream.
 
+RECOGNISING CHANGE IS NOW LAYERED, at Bob's ruling, and the layering is not
+tidying: it exists because a false positive was living in the seam. Six layers,
+each cheap relative to the next, each able to settle the question, with a trail
+recording where reasoning stopped because a verdict whose depth is invisible cannot
+be audited. Which stack. Whether anything differs at the byte level, and if not
+that is NOTED. Whether the difference is noteworthy. What TYPE of content changed.
+Whether the change is meaningful for that type. What connections it implies.
+
+CONTENT TYPE IS A SEPARATE AXIS FROM STACK, and the earlier version had them fused.
+A meeting calendar served by Legistar on ASP.NET and one served by Granicus are the
+same kind of thing built two ways: "what counts as a meaningful change" has one
+answer for both while "which bytes are machinery" has two. Hanging kind() off the
+stack handler meant every new stack re-answered every content question.
+
+THE FALSE POSITIVE THAT FORCED IT. MEASURED: the Legistar calendar's visible range
+is "This Month", read from the control's own value, spanning 6/29 to 7/31. THE
+WINDOW IS RELATIVE TO NOW. So a check a week later sees a different set of meetings
+because some have scrolled out, and the membership diff built earlier the same day
+reports those as REMOVED, which is the heaviest signal this system has and is
+reserved for a public record being delisted. A meeting leaving the visible window is
+not that, and no amount of care about bytes or furniture could tell them apart,
+because the distinction is about what a calendar IS. Absence is now a delisting only
+when the meeting's own date falls inside the range the new capture shows; outside it
+absence is silent; and when the window cannot be read the verdict is
+possibly_delisted, because neither claim is established.
+
+THE CALENDAR TYPE, written from that page and nothing else. 18 meetings keyed by
+stable MeetingDetail ids, 8 CANCELLED, 11 agendas and 10 minutes carrying View.ashx
+type codes with AADA and MADA as accessible variants of the same document rather
+than separate documents. Events are graded: delisted, cancelled, rescheduled, moved
+and a document REPLACED or WITHDRAWN are events; a body being renamed is a notice; a
+document ARRIVING and a meeting being scheduled are routine, because those are the
+normal course of business. Two safeguards on the negative case: a read that finds no
+meetings is a failed reader and never an emptied calendar, and the status word is
+stripped out of the body name because Legistar writes it into the title, so leaving
+it in makes a cancellation move two facts and report a spurious rename beside the
+real event.
+
+REFERENTIAL AND TEMPORAL CONNECTIONS ARE DIFFERENT THINGS and are emitted as
+different kinds. Referential says two documents are ABOUT each other and is followed
+to understand scope. Temporal says one thing happened after another, is strictly
+directional, and is followed to understand a story; its most valuable form is an
+ABSENCE WITH A DUE DATE, because minutes that have not appeared three weeks after a
+meeting are a fact about the body rather than a gap in the record. Measured on the
+real page: 39 referential and 11 temporal from one calendar. Nothing is owed for a
+meeting that did not happen, so a cancelled meeting emits no missing-minutes fact,
+and an upcoming meeting with no agenda emits a different absence dated to the
+meeting itself.
+
+THE BUNDLER CAUGHT TWO MORE BUGS THE MODULE SYSTEM HIDES, having caught one already.
+A second duplicate top-level name (RANK again, in the doctype registry), and a
+re-export form the stripper did not handle, which is not a subtle bug but a
+SyntaxError in the runtime and all thirteen harnesses at once. It now refuses
+duplicate names AND refuses any module syntax surviving the flattening.
+
 THE LESSON OF THE SESSION. Reading the plane's SOURCE rather than the docs'
 description of it caught four things before they shipped, and running against the
 LIVE plane caught three more that no fixture would have. An anchor's recorded

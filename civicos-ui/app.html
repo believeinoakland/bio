@@ -2545,6 +2545,567 @@ const conservative = {
   },
 };
 
+/* ---- docprofile/doctypes/index.mjs ---- */
+/* Content types: WHAT a document is, as distinct from HOW it was built.
+ *
+ * A separate axis from the stack handler, and the separation is load-bearing. A
+ * meeting calendar served by Legistar on ASP.NET and one served by Granicus on
+ * something else are the SAME KIND OF THING built two ways: the questions "what
+ * counts as a meaningful change here" and "what connections does this imply" have
+ * one answer for both, while "which bytes are per-render machinery" has two. The
+ * earlier version hung a kind() off the stack handler, which meant every new stack
+ * re-answered every content question from scratch.
+ *
+ * A content type answers four things and nothing else:
+ *
+ *   detect   is this that kind of document?
+ *   parse    what is IN it? entities, with stable keys and their own facts.
+ *   assess   given two parses, did anything MEANINGFUL change, and how badly?
+ *   connections  what referential and temporal links does this imply?
+ *
+ * THE STANDING RULE, inherited and it applies harder here than anywhere. A content
+ * type that reports change when nothing meaningful happened costs a member some
+ * attention. One that stays quiet when something did puts a false reassurance in
+ * the record. So an unmeasured content type is NOT written: the generic type below
+ * reports any substantive difference without describing it, which is noisy and
+ * honest, and the noise is the signal that the type is worth measuring.
+ */
+
+/** How sure we are that this is that kind of document. */
+const TYPE_CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", NONE: "none" };
+
+/** An entity a content type found in a document. `key` must be stable across
+ *  fetches: a position in a list is not a key, an id in a URL is. `facts` are the
+ *  fields whose change might mean something, named so assess() can say WHICH
+ *  moved rather than that the entity differs. */
+function entity(key, kind, label, facts) {
+  return { key: String(key), kind, label, facts: facts || {} };
+}
+
+/** Referential and temporal connections are different things and must not be
+ *  collapsed into one edge type.
+ *
+ *  REFERENTIAL says two documents are ABOUT each other: this agenda item cites that
+ *  ordinance; these minutes belong to that meeting; this staff member sits in that
+ *  department. It is a claim about meaning, it is symmetric in interest if not in
+ *  direction, and a reader follows it to understand SCOPE.
+ *
+ *  TEMPORAL says one thing happened AFTER another and the sequence matters: minutes
+ *  were published after the meeting they record; a title changed on a date; an item
+ *  was withdrawn before it was heard. It is a claim about a sequence, it is
+ *  strictly directional, and a reader follows it to understand a STORY. Its most
+ *  valuable form is often an ABSENCE with a due date attached: minutes that have not
+ *  appeared three weeks after a meeting are a fact about the body, not a gap in the
+ *  record.
+ *
+ *  People reason about these differently and so do their assistants, so they are
+ *  emitted as different kinds and the UI shows them apart. */
+const CONNECTION = { REFERENTIAL: "referential", TEMPORAL: "temporal" };
+
+function referential(from, to, relation, why) {
+  return { connection: CONNECTION.REFERENTIAL, from, to, relation, why };
+}
+/** `expected_by` turns an absence into a fact with a date on it. */
+function temporal(from, to, relation, { at, expected_by, why } = {}) {
+  return { connection: CONNECTION.TEMPORAL, from, to, relation, at: at || null,
+           expected_by: expected_by || null, why };
+}
+
+/** Diff two entity sets by key, reporting which FACTS moved rather than that the
+ *  entity differs. A content type decides what each moved fact means; this only
+ *  finds them. */
+function diffEntities(before, after) {
+  const b = new Map(before.map((e) => [e.key, e]));
+  const a = new Map(after.map((e) => [e.key, e]));
+  const gone = [], appeared = [], altered = [];
+  for (const [k, was] of b) {
+    const now = a.get(k);
+    if (!now) { gone.push(was); continue; }
+    const moved = [];
+    for (const f of new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
+      if (String(was.facts[f]) !== String(now.facts[f]))
+        moved.push({ fact: f, was: was.facts[f], now: now.facts[f] });
+    if (moved.length) altered.push({ entity: now, was, moved });
+  }
+  for (const [k, now] of a) if (!b.has(k)) appeared.push(now);
+  return { gone, appeared, altered, before_count: b.size, after_count: a.size };
+}
+
+/* ---- docprofile/doctypes/meeting-calendar.mjs ---- */
+/* A meeting calendar: a list of meetings, each with a date, a body, a status, and
+ * documents that arrive at different times relative to the meeting itself.
+ *
+ * MEASURED on oakland.legistar.com/Calendar.aspx, 2026-07-30. This type is written
+ * from that page and nothing else, and every rule below points at something in it.
+ *
+ *   The visible range is "This Month", read from the range control's own value.
+ *   Dates on the page span 6/29/2026 to 7/31/2026. THE WINDOW IS RELATIVE TO NOW.
+ *   18 meetings, each keyed by a stable MeetingDetail.aspx?ID=.
+ *   FIVE of the eighteen read CANCELLED.
+ *   Document links carry a type code: M=A is an Agenda (11 present), M=M is Minutes
+ *   (10 present), with AADA and MADA the accessible versions of each.
+ *
+ * THE FALSE POSITIVE THIS TYPE EXISTS TO KILL. Because the window is relative, a
+ * check a week later sees a different set of meetings: some have scrolled out of
+ * range. The membership diff underneath reports those as REMOVED, which is the
+ * heaviest signal the system has and which is reserved for a public record being
+ * delisted. A meeting leaving the visible window is not that. No amount of care
+ * about bytes or furniture could tell the two apart, because the distinction is
+ * about what a calendar IS: it shows a moving window onto a longer series.
+ *
+ * So absence is only a delisting when the meeting's own date is INSIDE the window
+ * the new capture shows. Outside it, absence is expected and silent.
+ *
+ * THE TEMPORAL STRUCTURE, which is the other half. A meeting has a scheduled date
+ * and documents that are due at knowable times relative to it: an agenda BEFORE,
+ * minutes AFTER. That makes some absences into facts with dates attached, which is
+ * the most valuable thing this type produces. Minutes that have not appeared three
+ * weeks after a meeting are a fact about the body, not a gap in the record.
+ */
+
+
+/* How long after a meeting minutes stop being merely late. Not a guess dressed as
+   a rule: Oakland's own practice is the thing to measure, and until it is measured
+   this is a threshold for RAISING A QUESTION, never for asserting a violation. */
+const MINUTES_DUE_DAYS = 21;
+const DAY = 86400000;
+
+const parseDate = (s) => {
+  const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(s || ""));
+  if (!m) return null;
+  return Date.UTC(+m[3], +m[1] - 1, +m[2]);
+};
+const iso = (t) => (t == null ? null : new Date(t).toISOString().slice(0, 10));
+
+const meetingCalendar = {
+  key: "meeting_calendar",
+  label: "a meeting calendar",
+  version: 1,
+
+  detect(ctx) {
+    const t = String(ctx.text || "");
+    const signals = [];
+    if (/MeetingDetail\.aspx\?ID=/i.test(unescapeHtml(t))) signals.push("meeting detail links");
+    if (/\bCalendar\.aspx/i.test(String(ctx.locator || "")) || /\bcalendar\b/i.test(String(ctx.locator || "")))
+      signals.push("calendar address");
+    if (/Date Range Dropdown|lstYears_Input/i.test(t)) signals.push("a date-range control");
+    if (/>\s*(?:Agenda|Minutes)\s*</i.test(t)) signals.push("agenda and minutes columns");
+    /* The detail links are the definitive signal: a page listing meetings by id IS
+       a meeting calendar whatever it is called. */
+    if (signals.includes("meeting detail links") && signals.length >= 2)
+      return { match: true, confidence: TYPE_CONFIDENCE.CERTAIN, signals };
+    if (signals.length >= 2) return { match: true, confidence: TYPE_CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: TYPE_CONFIDENCE.NONE };
+  },
+
+  /** What is in it: the window it shows, and one entity per meeting. */
+  parse(ctx) {
+    const raw = unescapeHtml(String(ctx.text || ""));
+    const main = /<main\b[^>]*>([\s\S]*)<\/main>/i.exec(raw);
+    const scope = main ? main[1] : raw;
+
+    /* The window. Read from the control's own value where the page states it, and
+       from the dates present as a fallback, because an inferred window is still far
+       better than treating every absence as a delisting. `relative` is the fact
+       that matters: a named range like "This Month" means the window MOVES. */
+    const named = /lstYears_Input"[^>]*\bvalue="([^"]*)"/i.exec(raw);
+    const dates = (scope.match(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g) || []).map(parseDate).filter((x) => x != null);
+    const window = {
+      named: named ? named[1].trim() : null,
+      relative: named ? /this|next|last|current|upcoming|past|month|year|week/i.test(named[1]) : true,
+      from: dates.length ? Math.min(...dates) : null,
+      to: dates.length ? Math.max(...dates) : null,
+    };
+
+    const entities = [];
+    for (const row of scope.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || []) {
+      const id = /MeetingDetail\.aspx\?ID=(\d+)/i.exec(row);
+      if (!id) continue;
+      const flat = row.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      const docs = {};
+      for (const d of row.match(/View\.ashx\?M=([A-Za-z]+)&ID=(\d+)[^"'\s]*/gi) || []) {
+        const c = /M=([A-Za-z]+)&ID=(\d+)/i.exec(d);
+        /* The ADA variants are the same document in an accessible form, so they are
+           not separate documents and their presence is not a separate event. */
+        const kind = { A: "agenda", M: "minutes", AADA: "agenda", MADA: "minutes", IC: "packet" }[c[1].toUpperCase()];
+        if (kind && !docs[kind]) docs[kind] = c[2];
+      }
+      const when = parseDate(flat);
+      /* The body is the text before the date, which is how Legistar lays a row out.
+         Kept as a fact rather than a key: a committee being renamed is a change
+         worth seeing, and it must not silently become a different meeting. */
+      /* The status word is stripped OUT of the body name. Legistar writes the
+         status into the title text ("Rules and Legislation Committee - CANCELLED"),
+         so leaving it in means a cancellation moves two facts at once and reports a
+         spurious rename beside the real event. Caught on the real page. */
+      const body = flat.split(/\d{1,2}\/\d{1,2}\/\d{4}/)[0]
+        .replace(/^[*\s]+/, "").replace(/[\s-]*\b(?:CANCELL?ED|RESCHEDULED)\b[\s-]*/gi, " ").trim();
+      entities.push(entity(id[1], "meeting", flat.slice(0, 160), {
+        body, date: iso(when),
+        status: /\bCANCELL?ED\b/i.test(flat) ? "cancelled"
+              : /\bRESCHEDULED\b/i.test(flat) ? "rescheduled" : "scheduled",
+        agenda: docs.agenda || null, minutes: docs.minutes || null,
+      }));
+    }
+    return { entities, window, at: ctx.at || null };
+  },
+
+  /** Given two parses, what actually happened. */
+  assess(a, b, ctx) {
+    /* A read that found nothing is a failed reader, never an emptied calendar. */
+    if (!a.entities.length || !b.entities.length)
+      return { meaningful: null, significance: null, events: [], confirmed: null,
+               why: "the meetings on this calendar could not be read this time, so nothing is "
+                  + "claimed about them either way" };
+
+    const d = diffEntities(a.entities, b.entities);
+    const events = [];
+    const w = b.window;
+    const inWindow = (dateIso) => {
+      if (!dateIso || w.from == null || w.to == null) return null;
+      const t = Date.parse(dateIso + "T00:00:00Z");
+      return t >= w.from && t <= w.to;
+    };
+
+    /* GONE: only a delisting if the meeting's date is inside the range the new
+       capture actually shows. This is the whole reason this type exists. */
+    let scrolled = 0;
+    for (const e of d.gone) {
+      const within = inWindow(e.facts.date);
+      if (within === false) { scrolled++; continue; }
+      events.push({ type: within === null ? "possibly_delisted" : "delisted",
+                    significance: "event", key: e.key, label: e.label,
+                    why: within === null
+                      ? "a meeting is no longer listed, and this calendar's date range could not be "
+                      + "read, so whether it simply moved out of view is not established"
+                      : "a meeting dated inside the range this calendar shows is no longer listed" });
+    }
+
+    for (const alt of d.altered) {
+      const f = new Map(alt.moved.map((m) => [m.fact, m]));
+      if (f.has("status")) {
+        const now = f.get("status").now;
+        events.push({ type: now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
+                      significance: "event", key: alt.entity.key, label: alt.entity.label,
+                      was: f.get("status").was, now,
+                      why: `a meeting's status changed from ${f.get("status").was} to ${now}` });
+      }
+      if (f.has("date"))
+        events.push({ type: "moved", significance: "event", key: alt.entity.key,
+                      label: alt.entity.label, was: f.get("date").was, now: f.get("date").now,
+                      why: "a meeting's date changed" });
+      if (f.has("body"))
+        events.push({ type: "renamed", significance: "notice", key: alt.entity.key,
+                      was: f.get("body").was, now: f.get("body").now,
+                      why: "the body holding a meeting is named differently" });
+      /* A document APPEARING is the normal course of business and is a routine
+         event with a temporal connection attached. A document DISAPPEARING or being
+         SWAPPED is not: a published agenda or set of minutes that stops being the
+         one it was is the quiet substitution, and it is an event. */
+      for (const kind of ["agenda", "minutes"]) {
+        if (!f.has(kind)) continue;
+        const { was, now } = f.get(kind);
+        if (!was && now)
+          events.push({ type: `${kind}_published`, significance: "routine", key: alt.entity.key,
+                        label: alt.entity.label, document: now,
+                        why: `${kind} were published for a meeting that had none` });
+        else if (was && !now)
+          events.push({ type: `${kind}_withdrawn`, significance: "event", key: alt.entity.key,
+                        label: alt.entity.label,
+                        why: `${kind} that this calendar previously offered are no longer offered` });
+        else
+          events.push({ type: `${kind}_replaced`, significance: "event", key: alt.entity.key,
+                        label: alt.entity.label, was, now,
+                        why: `the ${kind} document for this meeting is a different document than before` });
+      }
+    }
+
+    /* A meeting appearing is the calendar doing its job. */
+    for (const e of d.appeared)
+      events.push({ type: "scheduled", significance: "routine", key: e.key, label: e.label,
+                    why: "a meeting was added to the calendar" });
+
+    const RANKS = { routine: 0, notice: 1, event: 2 };
+    events.sort((x, y) => RANKS[y.significance] - RANKS[x.significance]);
+    const worst = events.length ? events[0].significance : null;
+    const meaningful = events.some((e) => e.significance === "event");
+
+    /* The confirmation half, kept even when something did change, because on a
+       calendar most of it did not and that is worth saying. */
+    const intact = a.entities.filter((e) =>
+      b.entities.some((x) => x.key === e.key && JSON.stringify(x.facts) === JSON.stringify(e.facts))).length;
+
+    const parts = [];
+    if (events.some((e) => e.significance === "event"))
+      parts.push(events.filter((e) => e.significance === "event").length + " needing attention");
+    if (scrolled) parts.push(`${scrolled} no longer in the range shown, which is this calendar moving its window`);
+    if (d.appeared.length) parts.push(`${d.appeared.length} newly listed`);
+
+    return {
+      meaningful, significance: worst, events,
+      confirmed: { entries: b.entities.length, intact, window: w.named || null,
+                   scrolled_out: scrolled },
+      why: events.length || scrolled
+        ? `${intact} of ${a.entities.length} meetings unchanged` + (parts.length ? "; " + parts.join(", ") : "")
+        : `all ${b.entities.length} meetings on this calendar are unchanged`,
+    };
+  },
+
+  /** What this calendar implies about relationships and about time. */
+  connections(a, b, ctx) {
+    const out = [];
+    const now = ctx.now ? Date.parse(ctx.now) : Date.now();
+    for (const m of b.entities) {
+      const self = `meeting:${m.key}`;
+      /* REFERENTIAL: a document belongs to a meeting, and a meeting belongs to a
+         body. Claims about scope, followed to understand what a thing is part of. */
+      if (m.facts.agenda)
+        out.push(referential(`document:${m.facts.agenda}`, self, "is_the_agenda_for",
+          "this document is the agenda for that meeting"));
+      if (m.facts.minutes)
+        out.push(referential(`document:${m.facts.minutes}`, self, "is_the_minutes_of",
+          "this document records what happened at that meeting"));
+      if (m.facts.body)
+        out.push(referential(self, `body:${m.facts.body}`, "held_by",
+          "this meeting was held by that body"));
+
+      /* TEMPORAL: a sequence, and its most useful form is an expected thing that
+         has not arrived. A meeting whose date has passed with no minutes is a fact
+         about the body rather than a hole in the record, and it carries a date. */
+      const when = m.facts.date ? Date.parse(m.facts.date + "T00:00:00Z") : null;
+      if (when == null) continue;
+      if (m.facts.status === "cancelled") continue;   // nothing is owed for a meeting that did not happen
+      if (m.facts.minutes)
+        out.push(temporal(self, `document:${m.facts.minutes}`, "minutes_published_after",
+          { at: m.facts.date, why: "minutes for this meeting exist, so the meeting was recorded" }));
+      else if (when < now)
+        out.push(temporal(self, null, "minutes_not_yet_published",
+          { at: m.facts.date, expected_by: iso(when + MINUTES_DUE_DAYS * DAY),
+            why: now - when > MINUTES_DUE_DAYS * DAY
+              ? "this meeting was scheduled more than three weeks ago and this calendar still offers no minutes"
+              : "this meeting has taken place and no minutes are offered yet" }));
+      if (!m.facts.agenda && when > now)
+        out.push(temporal(self, null, "agenda_not_yet_published",
+          { at: m.facts.date, expected_by: m.facts.date,
+            why: "this meeting is upcoming and no agenda is offered yet" }));
+    }
+    return out;
+  },
+};
+
+/* ---- docprofile/doctypes/generic.mjs ---- */
+/* The content type for a document whose type is not recognised.
+ *
+ * Reports any substantive difference and declines to describe it. That is the safe
+ * direction and it is deliberately unsatisfying: a member sees "this changed" with
+ * no account of what, which is annoying, honest, and a standing prompt to measure
+ * the type and write it. The alternative, guessing at what a document means, is how
+ * a system starts reassuring people about things it has not understood.
+ */
+
+const generic = {
+  key: "generic", label: "a document of no recognised type", version: 1, fallback: true,
+  detect() { return { match: false, confidence: TYPE_CONFIDENCE.NONE }; },
+  parse() { return { entities: [], facts: {} }; },
+  assess() {
+    return { meaningful: true, significance: "notice", events: [], confirmed: null,
+             why: "the substance of this document changed; what kind of document it is has not "
+                + "been worked out, so what changed is not described" };
+  },
+};
+
+/* ---- docprofile/doctypes/registry.mjs ---- */
+/* Content types, in priority order. Same discipline as the stack registry: the
+   most specific first, the first CERTAIN detection wins, and the fallback never
+   matches and is only ever reached by falling through.
+
+   Only ONE real type is registered today, and that is deliberate rather than
+   unfinished. meeting_calendar is written from a page that was fetched, diffed and
+   read. A regulation, a staff directory, a set of meeting minutes and an agenda are
+   all named in the design doc as types worth having and none has been measured, so
+   none is written: a content type invented from what a document probably looks like
+   is a type that reassures people about things it has not understood. The generic
+   type reports change without describing it, which is noisy and honest, and the
+   noise is the prompt to go and measure. */
+
+
+
+
+const TYPES = [meetingCalendar, generic];
+function doctypes() { return TYPES.slice(); }
+
+const TYPE_RANK = { none: 0, likely: 1, certain: 2 };
+
+/** Identify what KIND of content this is, independently of the stack that served
+ *  it. Always returns something; an unrecognised type gets `generic`. */
+function doctypeFor(ctx) {
+  let best = null;
+  const considered = [];
+  for (const t of TYPES) {
+    const d = t.detect(ctx) || { match: false };
+    if (d.match) considered.push({ type: t.key, confidence: d.confidence });
+    if (!d.match) continue;
+    if (!best || TYPE_RANK[d.confidence] > TYPE_RANK[best.confidence]) best = { type: t, ...d };
+    if (d.confidence === TYPE_CONFIDENCE.CERTAIN) break;
+  }
+  if (!best) return { type: TYPES[TYPES.length - 1], confidence: TYPE_CONFIDENCE.NONE,
+                      signals: [], considered };
+  return { type: best.type, confidence: best.confidence, signals: best.signals || [], considered };
+}
+
+/* ---- docprofile/pipeline.mjs ---- */
+/* The change pipeline: recognising change in LAYERS.
+ *
+ * RULED by Bob, 2026-07-30. Recognising change is layered, and the layers run in
+ * this order because each one is cheap relative to the next and each one can
+ * settle the question outright:
+ *
+ *   L1  WHICH STACK is this? Without that, nothing below can be trusted, because
+ *       the same bytes mean different things on different stacks.
+ *   L2  Is anything different AT THE BYTE LEVEL? If not, that is NOTED, not
+ *       discarded: a dated first-party statement that the source is still serving
+ *       what the record holds is evidence, and it is the primary contemporaneity
+ *       route's raw material.
+ *   L3  Is the difference NOTEWORTHY? Page state, security tokens and ad slots
+ *       differ on every fetch by design. Furniture differs when the site changes,
+ *       not when the document does.
+ *   L4  WHAT TYPE OF CONTENT changed? A calendar is not an article is not a
+ *       regulation is not a staff directory is not an agenda. This is a SEPARATE
+ *       axis from the stack: a calendar served by Legistar and one served by
+ *       Granicus are the same kind of thing built two ways.
+ *   L5  Is the change MEANINGFUL for that type? A calendar whose window has moved
+ *       a week is not a changed calendar. A staff member's title is another matter.
+ *       Minutes appearing after a meeting was scheduled to occur is another again.
+ *   L6  What CONNECTIONS does it imply? Referential, between related content, and
+ *       temporal, across time. Different meanings, understood differently by people
+ *       and their assistants, and presented differently.
+ *
+ * WHY LAYERS AND NOT ONE FUNCTION. The previous version conflated L1 through L4
+ * inside a single monitor() and inherited a false positive from doing so: the
+ * Legistar calendar's visible range is "This Month", MEASURED, so a week later
+ * meetings have scrolled out of the window and a membership diff reports them as
+ * REMOVED, which is the heaviest signal this system has. A meeting leaving the
+ * visible window is not a public record being delisted, and no amount of care at
+ * L3 could tell the difference, because the distinction is not about bytes or
+ * furniture. It is about what a calendar IS.
+ *
+ * Each layer returns a verdict and may STOP. Nothing below runs speculatively,
+ * which keeps the expensive parsing off the overwhelming majority of checks where
+ * the bytes are identical or the difference is machinery.
+ */
+
+
+const LAYER = {
+  STACK: "L1_stack", BYTES: "L2_bytes", NOTEWORTHY: "L3_noteworthy",
+  CONTENT_TYPE: "L4_content_type", MEANING: "L5_meaning", CONNECTIONS: "L6_connections",
+};
+
+/** Run the layers over two captures of one address.
+ *
+ *  `before` and `after` are byte arrays; `ctx` carries the locator, the response
+ *  headers, a sha256, and optionally `now` and `before_at` / `after_at` so L5 can
+ *  reason about time, which a calendar and an agenda both need.
+ *
+ *  Always returns a result with `stopped_at`, so a reader can see how far the
+ *  reasoning got and why. A verdict whose depth is invisible cannot be audited. */
+async function assess(before, after, ctx) {
+  const trail = [];
+  const note = (layer, said, detail) => { trail.push({ layer, said, ...(detail || {}) }); };
+
+  /* ---- L1: which stack ---- */
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(after);
+  const id = identify({ ...ctx, text });
+  note(LAYER.STACK, `${id.handler.label} (${id.confidence})`,
+       { handler: id.handler.key, confidence: id.confidence, signals: id.signals });
+  const profile = profileRecord(id, ctx);
+  const out = (v) => ({ ...v, trail, profile, stopped_at: trail[trail.length - 1].layer });
+
+  /* A shell is settled here and nothing below applies: its bytes are stable and
+     its substance is absent, so every layer beneath would answer a question about
+     a document that was never captured. */
+  if (id.handler.shell)
+    return out({ verdict: "unwatchable", meaningful: null, events: [], connections: [],
+                 why: id.handler.warning });
+
+  /* ---- L2: anything different at all ---- */
+  const sha = ctx.sha256;
+  const [ha, hb] = [await sha(before), await sha(after)];
+  if (ha === hb) {
+    note(LAYER.BYTES, "identical bytes");
+    /* NOTED, per Bob, not discarded. This is the confirmation half and on a
+       frequently-checked source it is the majority of all observations. */
+    return out({ verdict: "identical", meaningful: false, events: [], connections: [],
+                 confirmation: { kind: "identical_bytes", hash: ha, at: ctx.after_at || null,
+                   why: "the source served exactly the bytes the record holds" },
+                 why: "the source is still serving exactly what the record holds" });
+  }
+  note(LAYER.BYTES, "the bytes differ", { before: ha.slice(0, 12), after: hb.slice(0, 12) });
+
+  /* ---- L3: is the difference noteworthy ---- */
+  const dctx = { ...ctx, text, confidence: id.confidence };
+  const [da, db] = [await digests(before, id.handler, dctx), await digests(after, id.handler, dctx)];
+  if (id.confidence !== CONFIDENCE.CERTAIN && !id.handler.conservative) {
+    note(LAYER.NOTEWORTHY, "cannot say: the stack is not recognised confidently enough");
+    return out({ verdict: "undetermined", meaningful: null, events: [], connections: [],
+                 why: "the document differs and this kind of document is not recognised well "
+                    + "enough to say whether the difference matters" });
+  }
+  if (da.evidentiary === db.evidentiary && da.rendition === db.rendition) {
+    note(LAYER.NOTEWORTHY, "only per-render machinery differs",
+         { normalised: da.mechanical_bytes });
+    /* Still a confirmation, and a slightly weaker one than identical bytes: the
+       substance is the same and the machinery moved, which is what this stack does
+       on every response. */
+    return out({ verdict: "unchanged", meaningful: false, events: [], connections: [],
+                 confirmation: { kind: "same_substance", digest: db.evidentiary,
+                   at: ctx.after_at || null,
+                   why: "the substance is the same; only machinery this site rebuilds on every visit differs" },
+                 why: "the document is unchanged; only machinery this site rebuilds differs" });
+  }
+  if (da.evidentiary === db.evidentiary) {
+    note(LAYER.NOTEWORTHY, "only the surroundings differ",
+         { normalised: da.presentational_bytes });
+    return out({ verdict: "restyled", meaningful: false, events: [], connections: [],
+                 confirmation: { kind: "same_substance", digest: db.evidentiary, at: ctx.after_at || null,
+                   why: "the document itself is unchanged; the site around it changed" },
+                 why: "the document itself is unchanged; something around it moved, such as navigation" });
+  }
+  note(LAYER.NOTEWORTHY, "the substance differs");
+
+  /* ---- L4: what type of content ---- */
+  const dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind });
+  note(LAYER.CONTENT_TYPE, dt.type.label,
+       { type: dt.type.key, confidence: dt.confidence, signals: dt.signals });
+
+  /* ---- L5: is the change meaningful FOR THAT TYPE ---- */
+  const textBefore = new TextDecoder("utf-8", { fatal: false }).decode(before);
+  const read = (t, at) => dt.type.parse({ ...ctx, text: t, handler: id.handler, at });
+  let a, b;
+  try {
+    a = read(textBefore, ctx.before_at); b = read(text, ctx.after_at);
+  } catch (e) {
+    note(LAYER.MEANING, "the content could not be parsed, so nothing is claimed about it");
+    return out({ verdict: "changed", meaningful: null, events: [], connections: [],
+                 why: "the substance differs and its contents could not be read this time, so "
+                    + "what changed is not described" });
+  }
+  const m = dt.type.assess(a, b, { ...ctx, handler: id.handler });
+  note(LAYER.MEANING, m.why, { events: m.events.length, meaningful: m.meaningful });
+
+  /* ---- L6: connections ---- */
+  const connections = dt.type.connections ? dt.type.connections(a, b, { ...ctx, events: m.events }) : [];
+  if (connections.length) note(LAYER.CONNECTIONS, `${connections.length} implied`);
+
+  return out({ verdict: m.meaningful ? "changed" : "routine",
+               meaningful: m.meaningful, significance: m.significance,
+               events: m.events, connections, content_type: dt.type.key,
+               why: m.why,
+               /* Even a changed document confirms whatever DIDN'T change, and on a
+                  list that is most of it. Discarding the confirmation because
+                  something else moved is how the negative case gets lost. */
+               confirmation: m.confirmed || null });
+}
+
 /* ---- docprofile/registry.mjs ---- */
 /* The registry, in priority order. Most specific first; the first CERTAIN
    detection wins and the conservative handler is last because it never matches

@@ -21,3 +21,6 @@ register(conservative);
 export { aspnetWebforms, wordpress, clientRendered, conservative };
 export * from "./index.mjs";
 export * from "./monitoring.mjs";
+export * from "./pipeline.mjs";
+export * from "./doctypes/registry.mjs";
+export { default as meetingCalendarType } from "./doctypes/meeting-calendar.mjs";

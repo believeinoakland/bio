@@ -196,6 +196,106 @@ Two safeguards, both of them about the negative case:
 An index whose handler cannot read entries falls back to a substance check and
 declares itself `degraded`, so the gap is visible rather than passing as coverage.
 
+## Recognising change happens in LAYERS
+
+RULED by Bob, 2026-07-30. The layers run in this order because each is cheap
+relative to the next and each can settle the question outright. `docprofile/pipeline.mjs`
+is the driver and every result carries a `trail` recording where the reasoning
+stopped, because a verdict whose depth is invisible cannot be audited.
+
+| Layer | Question | Settles it when |
+| --- | --- | --- |
+| L1 stack | which tech stack is this? | never; nothing below can be trusted without it |
+| L2 bytes | is anything different at all? | identical bytes. NOTED, not discarded. |
+| L3 noteworthy | is the difference noteworthy? | only machinery, or only furniture, moved |
+| L4 content type | what TYPE of content is this? | never; it selects who answers L5 |
+| L5 meaning | is the change meaningful for that type? | usually |
+| L6 connections | what does it imply? | terminal |
+
+**L2 is not a fast path, it is a finding.** If nothing is different, that is recorded
+as a confirmation: a dated first-party statement that the source is still serving
+what the record holds. On a frequently-checked source it is the majority of all
+observations and it is the primary contemporaneity route's raw material. A
+confirmation survives even a change, because on a list most of the list did not
+change and discarding that is how the negative case gets lost.
+
+## Content type is a SEPARATE axis from the stack
+
+A meeting calendar served by Legistar on ASP.NET and one served by Granicus on
+something else are the same kind of thing built two ways. "What counts as a
+meaningful change here" has one answer for both; "which bytes are per-render
+machinery" has two. An earlier version hung a `kind()` off the stack handler, which
+meant every new stack re-answered every content question from scratch.
+
+A content type answers four things: `detect`, `parse` (what is IN it, as entities
+with stable keys and named facts), `assess` (given two parses, did anything
+meaningful change), and `connections`.
+
+## The calendar, and the false positive that forced all of this
+
+MEASURED on `oakland.legistar.com/Calendar.aspx`, 2026-07-30:
+
+- the visible range is **"This Month"**, read from the range control's own value,
+  spanning 6/29/2026 to 7/31/2026. **The window is relative to now.**
+- 18 meetings, each keyed by a stable `MeetingDetail.aspx?ID=`
+- 8 of the 18 read CANCELLED
+- documents carry a type code: `M=A` agenda (11 present), `M=M` minutes (10),
+  with `AADA` and `MADA` the accessible versions of each
+
+Because the window is relative, a check a week later sees a different set: some
+meetings have scrolled out. The membership diff underneath reports those as
+**removed**, which is the heaviest signal this system has and is reserved for a
+public record being delisted. A meeting leaving the visible window is not that, and
+no amount of care at L3 could tell the difference, because the distinction is not
+about bytes or furniture. It is about what a calendar IS.
+
+So absence is a delisting only when the meeting's own date falls INSIDE the range
+the new capture shows. Outside it, absence is expected and silent. When the window
+cannot be read at all, the verdict is `possibly_delisted` and says so, because
+neither claim is established.
+
+Events this type distinguishes, and the significance is the point:
+
+| Event | Significance | Why |
+| --- | --- | --- |
+| `delisted` | event | a meeting dated inside the shown range is gone |
+| `cancelled`, `rescheduled`, `moved` | event | the meeting itself changed |
+| `minutes_replaced`, `agenda_replaced` | event | a different document under an unchanged heading: the quiet substitution |
+| `minutes_withdrawn`, `agenda_withdrawn` | event | a document the calendar offered is no longer offered |
+| `renamed` | notice | the body holding the meeting is named differently |
+| `minutes_published`, `agenda_published` | routine | a document arriving is the normal course of business |
+| `scheduled` | routine | the calendar doing its job |
+
+Two safeguards, both about the negative case. A read that finds no meetings is a
+FAILED READER, never an emptied calendar, and reporting a mass delisting there would
+be catastrophic and confident. And the status word is stripped out of the body's
+name, because Legistar writes it into the title text, so leaving it in makes a
+cancellation move two facts at once and report a spurious rename beside the real
+event.
+
+## Referential and temporal connections are different things
+
+They must not be collapsed into one edge type. People reason about them differently
+and so do their assistants, so they are emitted as different kinds and shown apart.
+
+**Referential** says two documents are ABOUT each other: this agenda belongs to that
+meeting, these minutes record it, that meeting was held by this body. A claim about
+meaning, followed to understand SCOPE.
+
+**Temporal** says one thing happened after another and the sequence matters. Strictly
+directional, followed to understand a STORY. Its most valuable form is an ABSENCE
+WITH A DUE DATE: minutes that have not appeared three weeks after a meeting are a
+fact about the body, not a gap in the record. Measured on the real calendar: 39
+referential and 11 temporal connections from one page.
+
+Nothing is owed for a meeting that did not happen, so a cancelled meeting emits no
+missing-minutes fact. An upcoming meeting with no agenda emits a different absence
+with its own due date, the meeting date itself.
+
+The three-week minutes threshold is a threshold for RAISING A QUESTION and never for
+asserting a violation. Oakland's own practice is the thing to measure and it has not
+been measured.
+
 ## Where this runs
 
 `docprofile/` is the canonical package and the plane should import it directly when

@@ -43,6 +43,19 @@ index is worth checking often because a delisting is time-sensitive, a record
 rarely. The contracts and the membership diff are in docprofile/monitoring.mjs and
 are validated against real Legistar rows.
 
+(1c) Then measure a second CONTENT TYPE and write it (D-66). An agenda or a staff
+directory is the obvious next one, and the method is the same as for a stack: fetch,
+diff, read what is actually in it, decide what a meaningful change is for that kind
+of thing, and write the type with the measurement in its comments. Do not write a
+type from what a document probably looks like.
+
+(1d) And give connections somewhere to live (D-67). They are emitted and nothing
+stores, ages or shows them. Storage needs a vocabulary for SYSTEM-asserted
+inferences, distinct from the source-asserted `links_to`. Ageing needs monitoring to
+notice when a temporal `expected_by` passes. Presentation needs the document page to
+show the two kinds APART, since Bob was explicit that they are understood
+differently and must be presented differently.
+
 (1a) Then measure a fourth stack and write its handler (D-63). Drupal or plain
 static HTML is the obvious next one. The method is in the design doc and it is
 short: fetch the same page twice, diff, attribute every difference, decide whether
