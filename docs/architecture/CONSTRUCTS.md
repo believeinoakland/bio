@@ -22,7 +22,7 @@ WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
 **This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_8.md`, written 2026-07-30 after Bob corrected the framing
+`BIO_Content_Framework_v0_9.md`, written 2026-07-30 after Bob corrected the framing
 of this one: it is not that discovery has finished, but that discovery will continue
 for a long time and the framework's job is to make each new surprise cheap. That
 document's section 9 states the cost of absorbing each kind of new thing, and that
@@ -252,7 +252,12 @@ Consumer: the review queue, or a Focus, which Bob has not ruled on.
 temporal connections apart, each with its grade, and show which links in a case are
 the weak ones.
 
-**Step 8a. Satisfaction conditions on projects.** An objective states what would
+**Step 8a. Satisfaction conditions, on projects AND on bias statements.** One
+evaluator, two consumers (D-88). On a project it derives progress against an objective;
+on a `pattern` bias statement it derives a standing measure of how far the evidence
+still bears the statement out, which is the inverse of bias debt and the thing that
+stops a bias outliving its justification unremarked (D-87). The measure never edits the
+statement and its scope is registry-defined rather than hand-picked. An objective states what would
 satisfy it in the framework's own vocabulary, so progress is computed from the record
 rather than reported by whoever is doing the work. Smaller than it sounds: the
 catalogue already gives a `project` an `objective` field, and this adds a machine-

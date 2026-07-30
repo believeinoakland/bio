@@ -1,6 +1,6 @@
 # BIO Content Framework
 
-**Version 0.8 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
+**Version 0.9 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -14,6 +14,13 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.9, 2026-07-30. Bob reframed an open question into a better one: a side-effect of
+  this framework's work should be that evidentiary comments accrue to bias records,
+  measuring the extent to which a bias is JUSTIFIED. §13.1 works that through. It is the
+  inverse of bias debt, it makes a `pattern` statement a standing claim the record
+  continuously tests, it reuses §12's satisfaction condition as the statement's
+  measurable form, and it resolves v0.8's open question about monitoring and bias by
+  removing the coupling rather than documenting it.
 - v0.8, 2026-07-30. Bob observed that the declared bias construct was missing from this
   framework. It was, and worse: v0.6 and v0.7 cited it twice in support of a claim that
   reading it does not sustain. §12.1 is CORRECTED — a member-scoped aspiration is not a
@@ -1133,6 +1140,87 @@ stage is due and has not arrived. Both are an obligation with a clock, attached 
 object, blocking a state transition, and settleable in batches. They should share
 mechanism rather than growing two schedulers, and Step 7 of the plan is where that is
 decided.
+
+## 13.1 Evidence accrues to bias statements
+
+Bob's reframing, 2026-07-30, of a question v0.8 had asked badly: a side-effect of the
+work this framework does should be that **evidentiary comments accrue to bias records,
+measuring the extent to which the bias is justified.**
+
+The doctrine already requires a `pattern` statement to cite evidence and refuses to let
+one leave draft without a citation. What it does not yet have is TIME. A pattern
+statement declared in March, cited to three instances, is a different object by August:
+either those three have become forty, or they have stayed three while sixty instances
+went the other way. Nothing today notices either.
+
+This framework notices things like that continuously. It is what monitoring, temporal
+expectations and junction checks produce. So the connection is not a new capability but
+a routing decision: **the observations the record generates should attach to the bias
+statements they bear on.**
+
+### The inverse of bias debt
+
+Bias debt says: the LENS changed, so this analysis owes a re-run. This says: the
+EVIDENCE changed, so this lens owes a re-examination. Same shape, opposite direction,
+and the second is the one nobody builds because it is uncomfortable.
+
+A scrutiny statement resting on three misstatements in 2024, against an office that has
+since been accurate in sixty observed instances, is a bias that has outlived its
+justification. The group may keep it anyway and say why — that is their prerogative and
+the justification field exists for it — but the system should not let the decay go
+unremarked, because an undeclared bias is what this whole doctrine exists to prevent
+and a bias whose grounds have quietly evaporated is undeclared in the way that matters.
+
+### A statement may carry a measurable form
+
+Most pattern statements are not mechanically measurable, and pretending otherwise would
+be the same error as claiming to detect contradiction between aspirations. "The Oakland
+Auditor uses its discretion to control the narrative" is analysis and stays analysis.
+
+But some are, and those should say so. A statement may optionally carry a **measurable
+form** expressed in this framework's vocabulary — exactly the construct §12 gives an
+objective as its satisfaction condition, and the symmetry is not decoration: both are a
+prose commitment paired with a machine-checkable rendering of what would bear it out.
+
+    statement   this office publishes minutes late
+    subject     Public Works and Transportation Committee (registry entry)
+    measurable  over the `procurement`... no: over meetings of this body since 2024-01,
+                the proportion whose minutes appeared later than 21 days after the meeting
+    standing    38 of 41 (93%), last computed 2026-07-30
+
+Three properties keep it honest:
+
+- **The measure never edits the statement.** Text and justification remain a member's
+  authored act; the standing measure is a derived, dated attachment. A machine that
+  could rewrite doctrine would be a worse problem than the one this solves.
+- **The scope is registry-defined, never hand-picked.** The measure runs over an entity
+  or a progression named in the subject registry, not over a set someone chose. A
+  cherry-picked denominator would let a group manufacture authority for a bias, which is
+  precisely the distortion the malformedness rule fights, arriving by the back door.
+- **It is reported whichever way it cuts.** Invariant 7, and this is the case where it
+  costs something: a group will welcome the measures confirming its statements, and the
+  value of the feature is entirely in the ones refuting them.
+
+### This is the legitimate form of what a verdict would be
+
+The malformedness rule refuses "this office lies". A measured pattern statement is what
+that impulse looks like when it is made accountable: "minutes appeared later than 21
+days in 38 of 41 meetings since 2024" is checkable, is bounded, decays if the behaviour
+changes, and survives being read aloud by an adversary. The doctrine's two-audience
+choice gets easier, not harder, when a statement carries its own current measure.
+
+### And it settles the monitoring question
+
+v0.8 asked whether monitoring configuration should carry a bias manifest, since a
+pattern statement's evidence comes from monitoring and monitoring might itself have been
+configured under a lens. The right answer is not to document the coupling but to forbid
+it: **bias never shapes what is captured or monitored, only how conclusions are
+weighed.** A scrutiny statement must not cause the system to collect less from that
+source, or more.
+
+That is invariant 7 applied to the doctrine itself, and it is what keeps §13.1 from
+being circular. A measure computed over collection that the bias itself shaped would
+prove only that the bias had been thorough.
 
 ### Where bias enters this framework's own judgments
 
