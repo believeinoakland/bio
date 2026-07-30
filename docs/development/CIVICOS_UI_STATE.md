@@ -1,5 +1,113 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v29, 2026-07-30 session, part twenty-seven. THE UI CAUGHT UP TO THE PLANE, AND
+THE LIVE EXERCISE TAUGHT MORE THAN THE CODE. Two deploys of the civicos worker
+(builds cbbade6bbd93 then 9a34a82fd0c8), suite green at 10 harnesses with 150 new
+assertions, and the record grew its first bundle carrying links, a snapshot
+manifest and reuse facts. Audit 31/31 clean. No plane release: every defect the
+exercise found in the plane is written down rather than patched, because the plane
+ships signed and this session had no release grant.
+
+WHAT THE UI NOW SHOWS. All four of the gaps UI-PLAN named. The five link
+partitions with the element cited, the verdict, and the plane's own basis printed
+verbatim rather than paraphrased. The unfinished-capture banner with the
+outstanding count, naming WHICH bound stopped it. The reuse disclosure naming
+when the source was last seen serving each reused part. And, per Bob's ruling,
+the per-reference list of what a capture never got, on the render refusal a
+member actually hits, reading the same manifest as the banner so the two cannot
+disagree about the number.
+
+COUNTS ARE NAMED, NEVER A RATIO. "126 links, 0 connections" reads as failure
+because it collapses the middle case, so there are six counts: connection,
+held-unclaimed, self-reference, outside the record, inside the capture, refused.
+The self-reference count is a CORRECTNESS requirement rather than a nicety, and
+live data proved it: the first render said one connection where op=linkproject
+projected none, because a paginated Legistar calendar links to itself and
+projectLinks drops a self-edge. A surface that counts one as a connection claims
+an edge the plane refuses to make.
+
+CONTINUATION IS A CACHE REFILL. Bob's ruling reshaped the whole of item 2. The
+primary is never re-recorded; the re-fetch that op=acquire performs on every tick
+serves only as a FENCE, and a changed primary hash refuses the continuation
+outright because that is a source change and belongs to monitoring. Prior part
+records are preserved with their original fetch dates and their
+fetched_this_capture flags, so the merge takes from the fresh run only what was
+outstanding, and a recorded part whose bytes now differ REFUSES the merge rather
+than picking between two sets of bytes for one address. A first draft of the
+counter read zero on exactly the run that did the work, because it counted by
+absence from the prior manifest and a DEFERRED part is present there.
+
+A LIVE SEAM NOTHING HAD CROSSED. op=image returns a blob-registered file as an
+object while the viewer reads the manifest with typeof === "string". A manifest
+promoted as a blob reference is one the viewer NEVER SEES, which would have put
+the links, the outstanding count and the reuse facts all in the record and none of
+them on screen. U7 had never met this because no bundle in the record carried a
+manifest: 0 of 30 before this session. Both write paths now promote it as text,
+read back out of the store and verified against its own hash.
+
+AND A DEFECT THE LIVE PROMOTE FOUND IN ONE SHOT. docFiles pushed renditions with
+no `bytes` and the store refused with NOT NULL on files.bytes. The fix closes a
+real hole rather than adding a field: blobEntry reads the bytes back, verifies
+them against the hash, and takes the length from what it verified, because naming
+bytes in a bundle without having checked them is the move this system refuses
+everywhere else.
+
+MEASURED ON LIVE INFRASTRUCTURE, and the numbers are the session's real product.
+A Legistar calendar: 368,904 bytes, 309 references discovered, 127 held, and 115
+of those 127 REUSED from an earlier fetch of the same host, so a capture that
+would have cost 127 subrequests completed in 20. Every reused part carries
+fetched_this_capture:false with reused_from_fetched_at and a count of the
+documents on that host it appears in. The 12 not reused are all
+evidence_is_always_fetched: reuse is furniture only, exactly as designed. Its
+links: 116 resolved, 27 anchors, 2 linked, 81 offsite, 6 refused, and 89 DISTINCT
+RESOURCES AGAINST 115 DISTINCT CITATIONS, which is 0.43.0's second key earning its
+place on the first real page it met. op=linkproject: 0 projected, 1 skipped_self,
+1 skipped_unregistered, 81 unresolved. That is the "0 connections" case in the
+wild with every reason named.
+
+AN SPA CAPTURES AS A SHELL. The first target, oaklandca.opengov.com/transparency,
+produced a perfectly good capture with ZERO links, because the served HTML names
+no anchors and the content is assembled by script. It also hashed IDENTICAL to a
+capture an existing bundle already claims, which is the cross-bundle duplication
+hazard C-18.3 cannot see: promoting a second bundle for it would have written a
+second register entry for one capture hash, so it was deliberately not promoted.
+Both facts argue the same thing, which the JS-rendered ruling already says: for
+these sources the served HTML is not the document.
+
+THREE PLANE DEFECTS WRITTEN DOWN, NOT PATCHED. D-57: resolveLinks reports a
+self-reference as a target that CHANGED, naming one capture hash twice as the two
+sides of its own bracket, and the UI prints that false sentence verbatim because
+it shows the plane's basis in the plane's words. D-58: captured_locators and links
+are written ONLY inside the subresource branch, so a plainly captured document is
+not a resolvable link target and no verdict about it can ever be established.
+D-59: contemporaneous has never been observed on real data and may be unreachable
+for municipal sources, because two captures of a Legistar page twelve minutes
+apart hash differently on viewstate alone; identical-byte bracketing cannot fire
+for such a page whatever happened to its content, which makes the timestamp,
+archive and monitoring routes load-bearing rather than fallbacks.
+
+THE LESSON OF THE SESSION. Reading the plane's SOURCE rather than the docs'
+description of it caught four things before they shipped, and running against the
+LIVE plane caught three more that no fixture would have. An anchor's recorded
+address is the document's own with the element split off, so the row was about to
+print the page's own URL on every in-page reference. platform.limited is FALSE on
+a run that stops at a ceiling it already learned, and being refused is a
+different fact from deferring in advance of a remembered refusal. The suite is
+where both kinds of knowledge now live: link-surface.test.mjs holds the fields the
+UI reads against the plane's own resolveLinks source, so a rename there fails
+here, and add-surface.test.mjs runs what the surface assembles through the plane's
+own checkBundle.
+
+WHAT IS STILL NOT EXERCISED. Nobody has driven the Add surface from a BROWSER: the
+live promote went through the UI's own assembly helpers called from Node against
+the live plane, which proves the code and not the form. The member token is a
+machine credential (session:false, capabilities:null), so canContribute() is false
+for it and the surface correctly renders no form, which is the capability shaping
+working rather than a defect, and it also means the browser half of U8's
+acceptance needs a member or administrator session.
+
+# CivicOS Layer 3 UI: state and next-session kickoff
+
 v28, 2026-07-29 session, part twenty-six, closing the session. NINE PLANE
 RELEASES, 0.36.0 through 0.45.0, each signed, deployed byte-identical, audit
 30/30 clean. U7 done. v27 above covers 0.36.0 to 0.41.0; this covers the rest

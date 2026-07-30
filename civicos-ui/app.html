@@ -331,6 +331,42 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 .linkrow:hover .lt{color:var(--verdigris-dk)}
 .linkrow .lt{font-size:14px;color:var(--ink)}
 .linkrow .ln{font-size:12.5px;color:var(--muted)}
+/* ---- the link surface: what a captured page pointed at ---- */
+.lktally{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.lkcount{font-family:var(--font-ui);font-size:12.5px;color:var(--muted);border:1px solid var(--rule);
+  background:#fff;border-radius:var(--r-2);padding:3px 10px;cursor:help;line-height:1.35}
+.lkcount b{color:var(--ink);font-weight:600}
+.lkgrp{margin:14px 0 0}
+.lkgrp>h4{font-family:var(--font-ui);font-size:13px;font-weight:600;margin:0 0 2px;color:var(--ink)}
+.lkgrp>p.why{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+.lkrow{padding:9px 0;border-top:var(--hair)}
+.lkrow:first-child{border-top:none}
+.lkaddr{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);word-break:break-all}
+.lkrow.out .lkaddr{color:var(--verdigris-dk);cursor:pointer;text-decoration:underline;
+  text-decoration-style:dotted;text-underline-offset:2px}
+.lkmeta{font-size:12.5px;color:var(--muted);margin-top:3px}
+.lkel{font-family:var(--font-mono);font-size:12px;color:var(--signal-dk);background:var(--tint-note);
+  border-radius:var(--r-2);padding:1px 6px;margin-left:6px}
+.vd{font-family:var(--font-ui);font-size:11.5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;
+  border:1px solid var(--rule);border-radius:var(--r-2);padding:1px 7px;margin-right:6px;white-space:nowrap;cursor:help}
+.vd.contemporaneous{color:var(--sheet);background:var(--verdigris);border-color:var(--verdigris-dk)}
+.vd.superseded{color:var(--signal-dk);background:#fff;border-color:#d6a48c}
+.vd.undetermined{color:var(--muted);background:var(--tint-muted);border-color:var(--rule)}
+.lkbasis{font-size:12.5px;color:var(--muted);margin-top:3px}
+.lkmore{font-size:12.5px;color:var(--verdigris-dk);cursor:pointer;padding:8px 0 0}
+/* A part the source was not asked for during this capture. */
+.reused{font-family:var(--font-ui);font-size:11.5px;color:var(--muted);background:var(--tint-muted);
+  border:1px solid var(--rule);border-radius:var(--r-2);padding:1px 7px;margin-left:6px;cursor:help}
+/* The capture is unfinished. Stated in the plane's voice, never softened. */
+.unfin{border-left:3px solid var(--signal);background:var(--tint-note);padding:12px 14px;margin:0 0 14px}
+.unfin h4{font-family:var(--font-ui);font-size:13.5px;font-weight:600;margin:0 0 4px;color:var(--signal-dk)}
+.unfin p{font-size:13px;color:var(--ink);margin:0 0 8px}
+.unfin .mono{font-family:var(--font-mono)}
+.ckline{display:flex;gap:9px;align-items:flex-start;font-size:14px;color:var(--ink);margin:10px 0 0;cursor:pointer}
+.ckline input{margin-top:4px;flex:0 0 auto}
+/* Leaving the record: shown BEFORE anything opens. */
+#leave .addr{font-family:var(--font-mono);font-size:12.5px;word-break:break-all;color:var(--ink);
+  background:var(--tint-muted);border:1px solid var(--rule);border-radius:var(--r-2);padding:9px 11px;margin:10px 0}
 
 /* ---- v3: phones. Single column, rail becomes a scrolling top bar. ---- */
 @media (max-width:680px){
@@ -1272,6 +1308,41 @@ async function resolveSnapshot(man, fetchCapture, onProgress){
            scripts:(man.counts && man.counts.scripts_held_unreferenced) || 0 };
 }
 
+/* Which references the capture never got, named one by one, on the refusal that
+   a member actually runs into. The banner higher up the page says a capture is
+   unfinished and counts what is outstanding; this says WHICH, at the moment the
+   count stops being abstract. Both read the same manifest, so they cannot
+   disagree about the number: there is one source and two views of it.
+   Each reason is the plane's, distinguishing what nobody asked for from what a
+   source refused, because they are different facts about the same absence. */
+const PART_REASON = {
+  DEFERRED: "outstanding: this capture ran out of its allowance before asking, so the source refused nothing",
+  PLATFORM_LIMIT: "outstanding: the runtime would not make another outbound request",
+  CAP_REACHED: "outstanding: the capture reached its own limit on how much support material it will gather",
+  BUDGET_EXHAUSTED: "outstanding: the capture reached its byte budget",
+  SOURCE_REFUSED: "the source refused to serve it",
+  FETCH_FAILED: "the source could not be reached",
+  TOO_LARGE: "larger than this surface will hold",
+  REFUSED_SCHEME: "the record will not carry this kind of address",
+  REFUSED_LOCATOR: "not an address the record will fetch",
+  UNRESOLVABLE: "the address could not be resolved against the page",
+  THIRD_PARTY: "not part of the document: a third party's script, image or media",
+  OUTSIDE_THE_DOCUMENT: "outside the document's own boundary",
+  COLLAPSED_SRCSET_FAMILY: "one of several sizes of the same picture; the largest was captured",
+};
+function outstandingList(man){
+  const miss = (man && man.subresources || []).filter(s => !s.ok
+    && s.reason !== "THIRD_PARTY" && s.reason !== "OUTSIDE_THE_DOCUMENT"
+    && s.reason !== "COLLAPSED_SRCSET_FAMILY");
+  if(!miss.length) return "";
+  const show = miss.slice(0, 20);
+  const rows = show.map(s=>`<div class="lkrow"><span class="lkaddr">${esc(s.url||"")}</span>
+    <div class="lkmeta">${esc(s.kind||"part")} &middot; ${esc(PART_REASON[s.reason] || String(s.reason||"not fetched"))}${s.status?` (${esc(String(s.status))})`:""}</div></div>`).join("");
+  return `<div style="margin-top:10px"><b>What this capture never got (${miss.length})</b>
+    <div class="card" style="padding:4px 14px;margin-top:6px">${rows}</div>
+    ${miss.length>show.length?`<div class="lkmeta" style="margin-top:6px">and ${miss.length-show.length} more, all listed in the capture's manifest</div>`:""}</div>`;
+}
+
 async function openArtifact(k){
   /* Like following any link: a tab opens for what a browser renders, a
      download starts for what it does not. Opened synchronously so popup
@@ -1320,7 +1391,7 @@ async function openArtifact(k){
       });
       if(!res.ok){
         if(win) try{ win.close(); }catch(_){}
-        note(`<div class="teach"><b>REFUSING TO RENDER \u00b7 ${esc(res.reason)}</b><div style="margin-top:4px">${esc(res.part||"")}</div>${res.expected?`<div class="mono" style="margin-top:4px;font-size:11px">the record says ${esc(shaShort(res.expected))}\u2026 \u00b7 the bytes hash to ${esc(shaShort(res.got))}\u2026</div>`:""}<div style="margin-top:6px">A page missing a part it was captured with renders as a different page, so it is not shown at all. <a href="${u}" download="${esc(fname)}">Download the raw capture</a>.</div></div>`);
+        note(`<div class="teach"><b>REFUSING TO RENDER \u00b7 ${esc(res.reason)}</b><div style="margin-top:4px">${esc(res.part||"")}</div>${res.expected?`<div class="mono" style="margin-top:4px;font-size:11px">the record says ${esc(shaShort(res.expected))}\u2026 \u00b7 the bytes hash to ${esc(shaShort(res.got))}\u2026</div>`:""}<div style="margin-top:6px">A page missing a part it was captured with renders as a different page, so it is not shown at all. <a href="${u}" download="${esc(fname)}">Download the raw capture</a>.</div>${outstandingList(man)}</div>`);
         return;
       }
       shownHtml = res.html;
@@ -1424,6 +1495,593 @@ function toggleDiff(btn, revPath, bundleId){
     : `<div class="empty">Too large to diff in the browser.</div>`;
 }
 
+/* ============================================================
+   WRITING A BUNDLE. The promoter helpers.
+
+   These are the installer's own, ported rather than reinvented: src/setup.mjs
+   assembles a conformant bundle this way and the acquire test drives that
+   assembly against the check catalog. A second, differently-shaped assembly
+   here would be a fourth writer in a system whose three-implementation
+   conformance requirement exists to keep the writers in agreement.
+
+   The two tables below are the catalog's, and check-semantics.mjs fails the
+   build if they drift from checks/bio-checks.mjs. The installer injects them at
+   module load and cannot drift; this file is static, so the assertion is how it
+   earns the same guarantee.
+   ============================================================ */
+const NL = String.fromCharCode(10);
+const PREFIX = { information:"INFO", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
+const FIRST_STATE = { information:"collected", focus:"surfaced", problem:"surfaced", project:"forming", action:"planned" };
+const HEADINGS = {
+  information:["## Summary","## Provenance Notes","## Session Log","## Review Notes"],
+  focus:["## Statement","## Why It Matters","## Open Questions","## Session Log","## Review Notes"],
+  problem:["## Statement","## Why It Matters","## Open Questions","## Session Log","## Review Notes"],
+  project:["## Thesis Summary","## Open Questions","## Ruled Out","## Session Log","## Review Notes"],
+  action:["## Plan","## Status","## Correspondence","## Session Log","## Review Notes"],
+};
+/* information@1 for a member writing down what they know, @2 the moment a
+   document IS captured, because the @2 contract makes the provenance register
+   mandatory (C-18.1) and a register describes captured documents: locator,
+   authority, method, grade, hash. Typed intake has no document, so @2 would
+   demand a register with nothing honest to put in it. */
+const SCHEMA_OF = { information:"information@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
+const schemaFor = (type, hasDoc) => type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
+
+async function sha256Text(text){
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+function stamp(){
+  const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+  let r = ""; const h = "0123456789abcdef";
+  for(const x of crypto.getRandomValues(new Uint8Array(4))) r += h[x>>4] + h[x&15];
+  return d + "_" + r;
+}
+/* Fifteen core fields, because C-2.2 fires once per missing one; the canonical
+   heading set for the type, because C-3.1 refuses both a missing heading and an
+   unexpected one; the per-type extension fields each type's own check requires. */
+function mdFor(id, type, state, title, body, now, hasDoc, src){
+  const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
+    "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
+    "created: "+now,"last_updated: "+now,
+    "produced_by:","  mode: assisted","  capability_tier: session",
+    "group: believe-in-oakland","references: []","state_history: []",
+    "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
+    "  source: null","visuals: []"];
+  if(type === "information") fm.push(
+    "criticality: supporting","source_status: unchanged",
+    "source:","  locator: "+((src&&src.locator)||"in hand"),
+    "  authority: "+JSON.stringify((src&&src.authority)||"member-entered"),
+    "  retrieved: "+((src&&src.retrieved)||now),
+    "monitoring:","  enabled: false","  frequency: none");
+  if(type === "focus" || type === "problem") fm.push(
+    "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
+    "    description: A member set no specific trigger at creation; replace this with a real one.");
+  if(type === "project") fm.push("objective: "+JSON.stringify(title));
+  if(type === "action") fm.push("action_kind: other","risk_tier: 1","counterparty: to be named");
+  fm.push("---","");
+  const out = fm.slice();
+  (HEADINGS[type]||["## Summary"]).forEach((h,i)=>{ out.push(h,""); if(i===0) out.push(body,""); });
+  return out.join(NL);
+}
+/* C-18.1 wants the register to point at a file the bundle holds, so the document
+   is a blob reference and the register entry names the same path. A parted
+   document has no single file: each part is registered separately and the
+   catalog verifies the whole by streaming them. */
+/* A derived artifact the bundle carries by reference. Its bytes are READ BACK and
+   verified against the hash before the bundle names them, for two reasons: the
+   store requires a size and the manifest does not carry one, and naming bytes in
+   a bundle without having checked them is the move this system refuses
+   everywhere else. Found live: docFiles pushed renditions with no bytes at all
+   and promote refused with a NOT NULL constraint on files.bytes. */
+async function blobEntry(path, sha256){
+  const c = await fetchCapture(sha256);
+  if(!c.ok) return { ok:false, why:`The record does not hold the bytes for ${path}.` };
+  if(c.sha !== sha256) return { ok:false, why:`The bytes for ${path} do not match the hash the capture reported.` };
+  return { ok:true, file:{ path, blobSha: sha256, sha256, bytes: c.bytes.length } };
+}
+async function docFiles(text, doc, textSha, extra){
+  const files = [{ path:"bundle.md", text, bytes:text.length, sha256:textSha }];
+  if(!doc) return files;
+  const prov = JSON.stringify({ documents: [doc] }, null, 1);
+  files.push({ path:"data/provenance.json", text: prov, bytes: prov.length, sha256: await sha256Text(prov) });
+  if(Array.isArray(doc.parts) && doc.parts.length){
+    for(const p of doc.parts) files.push({ path:p.file, blobSha:p.sha256, sha256:p.sha256, bytes:p.bytes });
+  } else {
+    files.push({ path:doc.file, blobSha:doc.capture.sha256, sha256:doc.capture.sha256, bytes:doc.capture.bytes });
+  }
+  for(const a of (doc.attestations||[]))
+    files.push({ path:a.file, blobSha:a.sha256, sha256:a.sha256, bytes:a.bytes });
+  /* The render companion, named on the same register document rather than as an
+     acquisition of its own, which is what C-18.1's renditions arm expects. */
+  for(const [path, sha] of Object.entries(extra||{})){
+    const e = await blobEntry(path, sha);
+    if(!e.ok) throw new Error(e.why);
+    files.push(e.file);
+  }
+  return files;
+}
+function registerFor(doc){
+  if(!doc) return [];
+  const body = (Array.isArray(doc.parts) && doc.parts.length)
+    ? doc.parts.map(p=>({ sha256:p.sha256, path:p.file, encoding:"binary", bytes:p.bytes }))
+    : [{ sha256:doc.capture.sha256, path:doc.file, encoding:doc.capture.encoding, bytes:doc.capture.bytes }];
+  return [...body, ...(doc.attestations||[]).map(a=>({ sha256:a.sha256, path:a.file, encoding:"binary", bytes:a.bytes }))];
+}
+/* A revision the catalog accepts: last_updated moves in the DOCUMENT, created
+   is preserved, and the Session Log gains an entry rather than losing its
+   earlier ones. */
+function reviseText(text, who, now, note){
+  const prior = splitFm(text).fm;
+  let out = [], seenFence = 0, wroteUpdated = false;
+  for(const line of String(text).split(NL)){
+    if(line === "---" && seenFence < 2){ seenFence++; out.push(line); continue; }
+    if(seenFence === 1 && /^last_updated:/.test(line)){ out.push("last_updated: " + now); wroteUpdated = true; continue; }
+    if(seenFence === 1 && /^created:/.test(line) && prior.created){ out.push("created: " + prior.created); continue; }
+    out.push(line);
+  }
+  if(!wroteUpdated){
+    const at = out.lastIndexOf("---");
+    if(at > 0) out.splice(at, 0, "last_updated: " + now);
+  }
+  let body = out.join(NL);
+  const entry = ["### Session " + now, "", (note || "Revised") + " by " + who + ".", ""].join(NL);
+  const i = body.indexOf("## Session Log");
+  if(i < 0) return body + NL + "## Session Log" + NL + NL + entry;
+  const rest = body.indexOf(NL + "## ", i + 1);
+  const cut = rest === -1 ? body.length : rest + 1;
+  return body.slice(0, cut) + entry + body.slice(cut);
+}
+/* The source's own words about why a fetch did not happen, in plain English.
+   A refusal by the host is the host's act and is named as one. */
+function acquireWhy(a){
+  const why = (a && (a.reason || a.error)) || "unknown";
+  if(why === "BAD_LOCATOR") return "That address cannot be fetched. It must be an https address on a public site: not plain http, not an address on this machine, and not one carrying a username or password.";
+  if(why === "NO_AUTHORITY") return "Say who issued the document. Who published it and who captured it are separate claims and the record names both.";
+  if(why === "SOURCE_REFUSED") return `The site refused the request (${(a&&a.status)||"error"}). That is the site's act, not a fault in the record: the address may be wrong, the document may no longer be published there, or the host may refuse this fetcher. Nothing was written.`;
+  if(why === "FETCH_FAILED") return "The site could not be reached just now. Nothing was written.";
+  if(why === "EMPTY") return "The site returned an empty document, so there was nothing to keep.";
+  if(why === "TOO_LARGE") return `That document is larger than this surface will capture, even in parts (${(a&&a.bytes)||"?"} bytes).`;
+  if(why === "NOT_CAPABLE") return "This credential cannot write to the record. Capturing needs a member holding contribute.";
+  return "The document could not be captured: " + why;
+}
+
+/* ============================================================
+   THE LINK SURFACE. What a captured page pointed at.
+
+   The plane has resolved this since 0.42.0 and nothing showed it. Everything
+   below is READ from op=links: the partition, the element cited, the verdict
+   and its basis. None of it is computed here, because which partition a link
+   falls in depends on what the record holds TODAY and only the store knows
+   that. The UI's whole job is to say it without softening it.
+   ============================================================ */
+
+/* Order is deliberate: inside the document, inside the bundle, inside the
+   record, outside the record, refused. A reader travelling down the list is
+   travelling outward from the evidence. */
+const LINK_PARTS = [
+  ["anchor",  "Into this document",
+   "A reference to an element of this very document. Decided at capture and final."],
+  ["intra",   "To a file captured beside it",
+   "Another file in this bundle, whose bytes are held here and verified on screen."],
+  ["linked",  "To a capture the record holds",
+   "The record holds a capture of this address. Whether it holds the version this page pointed at is the verdict."],
+  ["offsite", "Outside the record",
+   "The record holds no capture of this address. Following it leaves audited content."],
+  ["refused", "Refused at capture",
+   "Not an address the record will carry. This is a refusal, not a gap in coverage."],
+];
+const VERDICTS = {
+  contemporaneous: "Established: the capture the record holds is the version this page pointed at.",
+  superseded: "Established otherwise: the record holds a different version than the one this page pointed at. It is offered as that, labelled.",
+  undetermined: "Not established either way. The resting state of every connection in the system and the expected common case, not a failure.",
+};
+const LINK_SHOW = 12;
+let LINKS = null;      // the last op=links result, for the disclosure toggles
+let LINKS_ID = null;   // the bundle it belongs to, so a self-edge is not called a connection
+let LINKS_OPEN = {};   // partition -> showing all
+
+/* op=links, by the source capture's hash. Never fatal: a plane that cannot
+   answer leaves the section absent rather than the page broken. */
+async function linksFor(captureSha){
+  if(!captureSha) return null;
+  try{
+    const r = await rec("links", { capture: captureSha });
+    return (r && Array.isArray(r.links)) ? r : null;
+  }catch(_){ return null; }
+}
+
+/* The primary capture's hash: the key the links table is written under. Read
+   from the provenance register first, because that is where the plane put it,
+   and from content_hash only as a fallback for bundles predating the register. */
+function primaryCaptureSha(img, fm){
+  try{
+    const p = JSON.parse(img["data/provenance.json"]||"{}");
+    const d = (p.documents||[])[0];
+    if(d && d.capture && /^[0-9a-f]{64}$/.test(d.capture.sha256||"")) return d.capture.sha256;
+  }catch(_){}
+  const h = String(fm&&fm.content_hash||"").replace(/^sha256:/,"").trim();
+  return /^[0-9a-f]{64}$/.test(h) ? h : null;
+}
+
+function verdictChip(v){
+  if(!v) return "";
+  return `<span class="vd ${esc(v)}" title="${esc(VERDICTS[v]||v)}">${esc(v)}</span>`;
+}
+
+/* Named counts, never a ratio, and never a count the plane would refuse to stand
+   behind. "126 links, 0 connections" is accurate and reads as failure because it
+   collapses the middle case: bytes the record holds that no bundle has claimed.
+   The self-reference count exists because projectLinks DROPS a self-edge, so
+   counting one as a connection would have this surface claim an edge the plane
+   refuses to make. Found on live data: a paginated Legistar calendar links to
+   itself and the count read one connection where op=linkproject projected none. */
+function linkTally(res, selfBundle){
+  const t = res.tally||{};
+  const held = (res.links||[]).filter(l=>l.resolution==="linked");
+  const selfRef = held.filter(l=>l.target_bundle && selfBundle && l.target_bundle === selfBundle).length;
+  const claimed = held.filter(l=>l.target_bundle && l.target_bundle !== selfBundle).length;
+  const unclaimed = held.filter(l=>!l.target_bundle).length;
+  const inside = (t.anchor||0) + (t.intra||0);
+  const cells = [
+    [claimed, "connection", "The record holds a capture of the target AND another bundle claims it, so this is an edge the case can traverse."],
+    [unclaimed, "held, unclaimed", "The record holds the target's bytes while no bundle claims them yet. Not a missing link and not an edge: it becomes one when the target is promoted."],
+    [selfRef, "self-reference", "This page links to itself, which every paginated index does. The record holds the target because the target IS this document, so there is no connection between two documents and no edge is made."],
+    [t.offsite||0, "outside the record", "No capture of the target is held. Following one of these leaves audited content."],
+    [inside, "inside the capture", "References into this document or into a file captured beside it. Decided at capture and final."],
+    [t.refused||0, "refused", "Addresses the record would not carry. A refusal, not a coverage gap."],
+  ].filter(c=>c[0]>0);
+  if(!cells.length) return "";
+  return `<div class="lktally">${cells.map(c=>
+    `<span class="lkcount" title="${esc(c[2])}"><b>${c[0]}</b> ${esc(c[1])}</span>`).join("")}</div>`;
+}
+
+function linkRow(l){
+  const out = l.resolution === "offsite";
+  /* The element, shown as the element. An anchor's recorded address is THIS
+     document's own address with the fragment split off, so printing the address
+     would print the page's own URL on every in-page reference and bury the one
+     thing the reference actually names. */
+  const anch = l.resolution === "anchor" && l.fragment;
+  const el = (l.fragment && !anch)
+    ? `<span class="lkel" title="The element cited, not merely the resource. A citation names the part it means, and two citations of one document that name different parts are two citations.">#${esc(l.fragment)}</span>` : "";
+  const addr = anch
+    ? `<span class="lkaddr" title="A reference to an element of this very document. A citation names the part it means.">#${esc(l.fragment)}</span>`
+    : out
+    ? `<span class="lkaddr" onclick="leaveTheRecord(this.dataset.a)" data-a="${esc(l.address||"")}"
+         title="Opens the warning first. Nothing here navigates without saying so.">${esc(l.address||"")}</span>`
+    : `<span class="lkaddr">${esc(l.address||"")}</span>`;
+  const bits = [];
+  if(l.chrome) bits.push(`<span title="Site furniture: navigation, header or footer. A classification with a basis and a date, never a deletion, and always reclassifiable.">site navigation</span>`);
+  if(l.resolution === "linked" && l.target_bundle)
+    bits.push(`<a onclick="openBundle('${esc(l.target_bundle)}')">${esc(l.target_bundle)}</a>`);
+  if(l.resolution === "linked" && !l.target_bundle)
+    bits.push(`<span title="The bytes are in the record; no bundle has registered them, so there is no canonical id to point an edge at. Promoting the target makes this an edge.">bytes held, no bundle claims them</span>`);
+  if(l.resolution === "linked" && l.target_last_seen)
+    bits.push(`last seen served ${esc(fmtWhenFull(l.target_last_seen))}`);
+  return `<div class="lkrow${out?" out":""}">${addr}${el}
+    ${l.verdict||bits.length?`<div class="lkmeta">${verdictChip(l.verdict)}${bits.join(" &middot; ")}</div>`:""}
+    ${l.basis?`<div class="lkbasis">${esc(l.basis)}${l.detail?` (${esc(l.detail)})`:""}</div>`:""}</div>`;
+}
+
+function linkGroup(key, label, why, rows){
+  if(!rows.length) return "";
+  const all = !!LINKS_OPEN[key], shown = all ? rows : rows.slice(0, LINK_SHOW);
+  const more = rows.length - shown.length;
+  return `<div class="lkgrp"><h4>${esc(label)} (${rows.length})</h4><p class="why">${esc(why)}</p>
+    <div class="card" style="padding:4px 18px">${shown.map(linkRow).join("")}
+    ${more>0?`<div class="lkmore" onclick="linksMore('${esc(key)}')">Show the remaining ${more}</div>`:""}
+    ${all&&rows.length>LINK_SHOW?`<div class="lkmore" onclick="linksMore('${esc(key)}')">Show fewer</div>`:""}</div></div>`;
+}
+function linksMore(key){
+  LINKS_OPEN[key] = !LINKS_OPEN[key];
+  const host = $("#lksurface");
+  if(host && LINKS) host.innerHTML = linkSurfaceHtml(LINKS, LINKS_ID);
+}
+
+function linkSurfaceHtml(res, selfBundle){
+  const by = {};
+  for(const l of (res.links||[])) (by[l.resolution] = by[l.resolution] || []).push(l);
+  const groups = LINK_PARTS.map(([k,label,why])=>linkGroup(k, label, why, by[k]||[])).join("");
+  if(!groups) return `<div class="empty">This capture carried no links.</div>`;
+  return linkTally(res, selfBundle === undefined ? LINKS_ID : selfBundle) + groups;
+}
+
+/* Leaving the record. The warning comes BEFORE anything opens, which is why the
+   address is not an <a> at all: an anchor with a real href can be opened by
+   middle click, by the context menu, by a keyboard activation the page never
+   sees, and each of those would walk a reader out of audited content with no
+   warning at all. So the address is inert text and this dialog is the only door. */
+function leaveTheRecord(addr){
+  if(!addr) return;
+  $("#dlg").innerHTML =
+    `<h2 id="leave">You are about to leave the record</h2>
+     <p class="what">This page carried this address, and that is a fact the record holds. What is at
+       the address NOW is not: the record holds no capture of it, nothing here has been verified
+       against a hash, and it may have changed or vanished since this page was captured.</p>
+     <div class="addr">${esc(addr)}</div>
+     <p class="what">Opening it leaves audited content. Nothing you see there is part of this
+       group's record or vouched for by it.</p>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Stay in the record</button>
+       <button class="btn" onclick="leaveGo(this.dataset.a)" data-a="${esc(addr)}">Open it anyway</button></div>`;
+  $("#dlg-wrap").classList.remove("hidden");
+}
+function leaveGo(addr){
+  closeDialog();
+  try{ const w = window.open(addr, "_blank", "noopener,noreferrer"); if(w) w.opener = null; }catch(_){}
+}
+
+/* ============================================================
+   HONESTY ABOUT THE CAPTURE ITSELF: unfinished, and reused.
+   ============================================================ */
+
+/* A capture over the runtime's subrequest ceiling returns complete:false with
+   an outstanding count. U7's resolver refuses to render a page missing a part,
+   which is right and reads to a member as a broken document rather than an
+   unfinished one. This says which it is. */
+function unfinishedBanner(snap, id, canFix){
+  if(!snap || snap.complete !== false) return "";
+  const n = Number(snap.outstanding||0);
+  const p = snap.platform || {};
+  /* Which bound stopped it, in the plane's own terms. Being REFUSED by the
+     runtime and stopping short of a ceiling this instance already learned are
+     different facts, and the manifest keeps them apart: platform.limited means a
+     request was actually refused, while a run that halts at ceiling_used without
+     being refused stopped on what an earlier run discovered. Collapsing the two
+     would report a ceiling as though it had just been found again. */
+  const why = p.limited
+    ? "the runtime refused a further outbound request during the capture"
+    : snap.truncated ? "the capture reached its own appetite for support material, which is a number this project sets and not one the platform imposes"
+    : snap.budget_exhausted ? "the capture reached its byte budget"
+    : (p.ceiling_used && Number(p.spent_this_invocation) >= Number(p.ceiling_used))
+      ? `the capture stopped at ${p.ceiling_used} outbound requests, which is the ceiling this instance learned by being refused at it before, so it deferred the rest rather than being refused again`
+      : "the capture did not finish its support material";
+  return `<div class="unfin"><h4>This capture is unfinished</h4>
+    <p>${n===1?"One supporting file was":`${n} supporting files were`} never fetched, because ${esc(why)}.
+      ${n?"They are outstanding, not failed: nobody asked the source for them and the source refused nothing.":""}
+      The document's own bytes are complete and hashed. What is missing is material the page needs to
+      render as the source served it, so opening it may refuse rather than show a page with pieces absent.</p>
+    ${canFix?`<div class="rv-bar" style="margin:0"><button class="btn" id="cont-go" onclick="continueCapture('${esc(id)}')">Continue this capture</button><span class="n">Fetches what is outstanding and records the completed capture as a revision, in your name.</span></div>`
+            :`<p style="margin:0">Continuing it needs a member holding <span class="mono">contribute</span>.</p>`}
+    <div id="cont-out"></div></div>`;
+}
+
+/* Parts the source was not asked for during this capture. 0.40.0 reuses
+   stylesheets, fonts and icons a host served recently and records
+   fetched_this_capture:false with the date the source was last seen serving
+   those exact bytes. A reader must never believe a byte was checked against the
+   source during this capture when it was not, and ratification re-fetches them,
+   so a member may want to know before then. */
+function reuseTag(s){
+  if(!s || s.fetched_this_capture !== false) return "";
+  const when = s.reused_from_fetched_at ? fmtWhenFull(s.reused_from_fetched_at) : null;
+  return `<span class="reused" title="${esc(`Not fetched during this capture. The source was last seen serving these exact bytes${when?` on ${when}`:" earlier"}${s.reused_seen_in_documents?`, across ${s.reused_seen_in_documents} documents on this host`:""}. The bytes are content-addressed and verified against the record like every other part; what was not repeated is the request to the source. Ratification re-fetches them.`)}">reused${when?`, last served ${esc(when)}`:""}</span>`;
+}
+function reuseSummary(snap){
+  const parts = (snap && snap.subresources || []).filter(s=>s.ok && s.fetched_this_capture === false);
+  if(!parts.length) return "";
+  const dates = parts.map(s=>s.reused_from_fetched_at).filter(Boolean).sort();
+  const rows = parts.map(s=>`<div class="lkrow"><span class="lkaddr">${esc(s.url||"")}</span>
+    <div class="lkmeta">${esc(s.kind||"part")}${s.reused_from_fetched_at?` &middot; source last seen serving these bytes ${esc(fmtWhenFull(s.reused_from_fetched_at))}`:""}${s.reused_seen_in_documents?` &middot; in ${s.reused_seen_in_documents} documents on this host`:""}</div></div>`).join("");
+  return sec2(`Reused from an earlier fetch (${parts.length})`,
+    `<p class="lede" style="margin:0 0 8px">These bytes were not requested from the source during this
+      capture. They were already held from an earlier fetch of the same address on this host${dates.length?`, the most recent on ${esc(fmtWhenFull(dates[dates.length-1]))}`:""}.
+      They are verified against the record's hashes exactly like every fetched part; what was not
+      repeated is the request. A capture ratified as evidence re-fetches them.</p>
+     <div class="card" style="padding:4px 18px">${rows}</div>`, true);
+}
+
+/* ---- continuation is a CACHE REFILL, not a rewrite ----
+
+   RULED by Bob: continuing a capture must know what has already been captured,
+   and while some parts may have to be obtained from the host again, that is
+   refilling the cache and NOT rewriting what the record already recorded.
+
+   Three consequences, and they are the whole design of what follows.
+
+   The primary document is never re-recorded. Its bytes are already in the store
+   under their hash and its register entry is already written. A continuation
+   pass re-fetches it because op=acquire fetches the locator on every tick, and
+   the only thing that fetch is used for here is the FENCE: if the primary now
+   hashes differently, the source changed, this is not the same document, and
+   nothing is folded in. That is a monitoring finding, not a capture to merge.
+
+   Already-recorded parts keep their recorded facts. The fresh run writes its own
+   record for every part including ones captured a week ago, and taking that
+   wholesale would overwrite the original fetch dates and erase the
+   fetched_this_capture:false honesty on parts that were reused rather than
+   requested. So the merge takes prior entries for anything already recorded and
+   takes from the fresh run ONLY what was outstanding.
+
+   A previously recorded part whose bytes have CHANGED is a refusal, not a
+   reconciliation. The record holds one set of bytes for that address and the
+   host now serves another; picking either silently would be the record deciding
+   a question it should be reporting. */
+async function continueCapture(id){
+  const out = $("#cont-out"), go = $("#cont-go");
+  if(go) go.disabled = true;
+  const say = h => { if(out) out.innerHTML = h; };
+  const stop = h => { say(`<div class="teach" style="margin:8px 0">${h}</div>`); };
+  try{
+    const img = await getImage(id, true);
+    const { fm } = splitFm(typeof img["bundle.md"]==="string"?img["bundle.md"]:"");
+    let prov = null; try{ prov = JSON.parse(img["data/provenance.json"]||"{}"); }catch(_){}
+    const doc0 = (prov && prov.documents || [])[0] || null;
+    const locator = (doc0 && doc0.locator) || fm["source.locator"] || "";
+    const authority = (doc0 && doc0.authority) || fm["source.authority"] || "";
+    const priorSha = primaryCaptureSha(img, fm);
+    const prior = SNAP;
+    if(!locator || !/^https:\/\//i.test(locator))
+      return stop("This bundle names no https address to fetch from, so the capture cannot be continued here.");
+    if(!prior)
+      return stop("This bundle carries no snapshot manifest, so there is nothing recorded to continue from.");
+
+    let ticks = 0, session = null, acq = null;
+    for(;;){
+      ticks++;
+      say(`<p style="margin:0">Pass ${ticks}: fetching what is outstanding&hellip;</p>`);
+      acq = await recPost("acquire", { locator, authority, subresources: true, ...(session?{continue:session}:{}) });
+      if(!acq.document) return stop(esc(acquireWhy(acq)));
+
+      /* THE FENCE, checked on the first pass and every pass after. The primary
+         is re-fetched by the op whether or not this asked for it, so the honest
+         use of that fetch is to verify the document is still the one the record
+         holds. If it is not, nothing is folded in: a changed source is a fact
+         about the source, and the surface for it is monitoring. */
+      const nowSha = acq.document.capture && acq.document.capture.sha256;
+      if(priorSha && nowSha && nowSha !== priorSha)
+        return stop(`The source is no longer serving the document this bundle recorded. The record holds
+          <span class="mono">${esc(priorSha.slice(0,16))}</span> and the address now serves
+          <span class="mono">${esc(String(nowSha).slice(0,16))}</span>. Nothing was written, and nothing
+          about this bundle changed. This is a source change rather than an unfinished capture, and the
+          new bytes are a capture of their own to be judged on their own: folding them in here would
+          rewrite what the record already recorded.`);
+
+      const snap = acq.snapshot || {};
+      if(snap.complete) break;
+      session = snap.continuation && snap.continuation.session;
+      const left = Number(snap.outstanding||0);
+      if(!session || ticks >= 8)
+        return stop(`${left} ${left===1?"file is":"files are"} still outstanding after ${ticks}
+          ${ticks===1?"pass":"passes"}, because the runtime will not make more outbound requests than it
+          already has. Nothing was written and nothing was lost: whatever this run did fetch is in the
+          store under its hash, so continuing again later starts from further along.`);
+      say(`<p style="margin:0">${left} outstanding after ${ticks} ${ticks===1?"pass":"passes"}. Continuing&hellip;</p>`);
+    }
+
+    say(`<p style="margin:0">Complete. Merging it into what was already recorded&hellip;</p>`);
+    const merged = mergeManifest(prior, acq.snapshot);
+    if(!merged.ok) return stop(merged.why);
+    const r = await reviseWithCapture(id, img, acq, merged.manifest);
+    if(r && r.ok){ IMG_CACHE.delete(id); PROJ_CACHE.delete(id); openBundle(id, true); return; }
+    stop(esc((r&&r.why)||"The revision was refused."));
+  }catch(e){
+    say(errPane(e));
+  }finally{ if(go) go.disabled = false; }
+}
+
+/* Merge a completed run into the recorded manifest. Prior entries win wherever
+   the record already has one; the fresh run supplies only what was outstanding.
+   Divergence in an already-recorded part refuses the whole merge rather than
+   choosing between two sets of bytes for the same address. */
+function mergeManifest(prior, fresh){
+  if(!fresh || !fresh.subresources) return { ok:false, why:"The completed capture returned no manifest to merge." };
+  const priorBy = new Map();
+  for(const s of (prior.subresources||[])) if(s.url) priorBy.set(s.url, s);
+  const out = [];
+  for(const f of fresh.subresources){
+    const p = f.url ? priorBy.get(f.url) : null;
+    if(!p || !p.ok){ out.push(f); continue; }          // outstanding before: the fresh record stands
+    if(f.ok && f.sha256 && p.sha256 && f.sha256 !== p.sha256)
+      return { ok:false, why:`The host is serving different bytes for a file this capture already
+        recorded (<span class="mono">${esc(String(f.url).slice(0,90))}</span>). The record holds
+        <span class="mono">${esc(p.sha256.slice(0,12))}</span> and the host now serves
+        <span class="mono">${esc(f.sha256.slice(0,12))}</span>. Nothing was written. Reconciling that
+        silently would rewrite a recorded fact; which set of bytes belongs in the record is a judgment,
+        and a changed supporting file is something to look at rather than something to absorb.` };
+    out.push(p);                                        // already recorded: its facts are preserved
+  }
+  /* Anything the record holds that the fresh run never saw at all stays. A page
+     that stopped naming a stylesheet does not un-capture the one already held. */
+  const freshUrls = new Set(fresh.subresources.map(s=>s.url));
+  for(const [url, p] of priorBy) if(!freshUrls.has(url)) out.push(p);
+  const outstanding = out.filter(s=>!s.ok && s.reason === "DEFERRED").length;
+  const m = { ...fresh, subresources: out, outstanding,
+    complete: outstanding === 0 && !fresh.truncated && !fresh.budget_exhausted
+              && !(fresh.platform && fresh.platform.limited),
+    /* What the merge did, in the artifact itself, because the manifest is the
+       thing a later reader has and the reasoning has to travel with it. */
+    continued: [...(prior.continued||[]), {
+      at: new Date().toISOString().split(".")[0] + "Z",
+      recorded_before: (prior.subresources||[]).filter(s=>s.ok).length,
+      outstanding_before: Number(prior.outstanding||0),
+      /* What this run ADDED: entries the record did not already hold. A part the
+         prior manifest listed as DEFERRED is present there and was never
+         fetched, so counting by presence alone would report zero on exactly the
+         run that did the work. */
+      fetched_now: fresh.subresources.filter(s=>{
+        const p = s.url ? priorBy.get(s.url) : null;
+        return s.ok && (!p || !p.ok);
+      }).length,
+      note: "prior entries were preserved with their original fetch facts; only material that was "
+          + "outstanding was taken from this run. The primary document was verified unchanged and "
+          + "was not re-recorded." }] };
+  return { ok:true, manifest:m };
+}
+
+/* Write a completed capture over an unfinished one, as a revision.
+   Everything the catalog requires of a revision and nothing more: last_updated
+   moves in the DOCUMENT (C-12.1, C-13.1 read the frontmatter and nothing else),
+   created is preserved, a Session Log entry is appended rather than replacing
+   the earlier ones (C-13.2, C-5.1), and every file the bundle already held is
+   carried forward, because promote writes a whole image and a save naming only
+   the changed files deletes the rest. */
+async function reviseWithCapture(id, img, acq, mergedManifest){
+  const snap = acq.snapshot || {};
+  const doc = acq.document;
+  if(!doc || !snap.manifest_sha256) return { ok:false, why:"The plane returned no manifest for the completed capture." };
+  const lease = await rec("lease", { id });
+  const base = lease && lease.result ? lease.result.base : (lease && lease.base);
+  const now = new Date().toISOString().split(".")[0] + "Z";
+  const text = typeof img["bundle.md"]==="string" ? img["bundle.md"] : "";
+  const { fm } = splitFm(text);
+  const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
+  const cont = (mergedManifest.continued||[]).slice(-1)[0] || {};
+  const note = `Continued an unfinished capture: ${cont.fetched_now||0} outstanding supporting `
+    + `${(cont.fetched_now||0)===1?"file was":"files were"} fetched and the manifest refilled. The `
+    + `document's own bytes were verified unchanged and were not re-recorded, and the `
+    + `${cont.recorded_before||0} parts already recorded keep their original fetch facts`;
+  const revised = reviseText(text, who, now, note);
+
+  /* Carry every file forward, because promote writes a whole image and a save
+     naming only what changed deletes the rest. The manifest and the companion
+     are the two the refill replaces: both are DERIVED, regenerable from the
+     parts, and named as renditions rather than acquisitions, which is why
+     replacing them is a refill and replacing a captured document would not be. */
+  const manText = JSON.stringify(mergedManifest, null, 1);
+  const files = [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) },
+    /* TEXT, not a blob reference. op=image returns a blob-registered file as
+       {blobSha,...} and the viewer reads the manifest with typeof === "string",
+       so a manifest promoted as a blob is a manifest the viewer never sees and
+       a snapshot that never renders. */
+    { path:"data/snapshot-manifest.json", text: manText, bytes: manText.length, sha256: await sha256Text(manText) }];
+  for(const [path, v] of Object.entries(img)){
+    if(path === "bundle.md" || path === "data/snapshot-manifest.json") continue;
+    if(path.indexOf("_history/") === 0) continue;
+    if(/\.render\.html$/.test(path)) continue;                    // superseded below
+    if(typeof v === "string") files.push({ path, text: v, bytes: v.length, sha256: await sha256Text(v) });
+    else files.push({ path, blobSha: v.blobSha||v.sha256, sha256: v.sha256, bytes: v.bytes });
+  }
+  if(snap.render_file && snap.render_sha256){
+    const e = await blobEntry(snap.render_file, snap.render_sha256);
+    if(!e.ok) return { ok:false, why: e.why };
+    files.push(e.file);
+  }
+
+  /* Nothing is registered. The register names ACQUISITIONS: the document and its
+     parts, each with a locator, an authority and a grade, and the primary's
+     entry is already written and must not be restated as though the acquisition
+     happened again today. Supporting files are not acquisitions of their own and
+     never were: they are named on the same register document as renditions,
+     which is what C-18.1's renditions arm expects and what keeps one capture
+     hash from appearing under two register entries (C-18.3). */
+  const r = await recPost("promote", {
+    bundleId: id, base, snapKey: stamp(), author: who,
+    meta: { object_type: fm.object_type||"information", group:"believe-in-oakland",
+            title: fm.title||id, current_state: fm.current_state,
+            created: fm.created||now, last_updated: now },
+    files, register: [],
+  });
+  const res = r.result || r;
+  if(res && res.ok) return { ok:true };
+  const why = (res && res.reason) || r.error || "unknown";
+  if(why === "FILES_DROPPED")
+    return { ok:false, why:`Recording it would have removed files this bundle holds (${(res.paths||[]).join(", ")}). Nothing was written.` };
+  if(why === "CAS_STALE" || why === "STALE")
+    return { ok:false, why:"Someone changed this bundle while the capture was running. Open it again and continue from there." };
+  return { ok:false, why:`The revision was refused: ${why}.` };
+}
+
 async function openBundle(id, fromNav){
   if(!fromNav) navRemember();
   CUR = { type:"bundle", key:id };
@@ -1457,6 +2115,11 @@ async function openBundle(id, fromNav){
        last looked and looks next. Information density in context. */
     const log = parseLog(img);
     const rev = await reverseRefs(id);
+    /* The links the captured page itself made. Read from the plane, never
+       computed here: which partition an address falls in depends on what the
+       record holds today. */
+    const capSha = primaryCaptureSha(img, fm);
+    LINKS = await linksFor(capSha); LINKS_ID = id; LINKS_OPEN = {};
     const vFact = releaseFact(bundleMd);
     const leanTitles = rev.map(r=>r.fromTitle).filter(Boolean);
     const cFact = leanTitles.length ? `Load-bearing for: ${leanTitles.join("; ")}.` : "No case cites it yet.";
@@ -1470,8 +2133,9 @@ async function openBundle(id, fromNav){
     /* Sources and the primary artifact come FIRST so the header's open
        control and the type tag can speak them. */
     const sources = groupSources(img);
-    const s1 = stratum("s1", `<div class="prose">${mdLite(body)}</div>
-      ${sources.length ? sec2("Source Material", sources.map(renderSourceItem).join(""), true) : ""}`);
+    const s1 = stratum("s1", `${unfinishedBanner(SNAP, id, canRelease())}<div class="prose">${mdLite(body)}</div>
+      ${sources.length ? sec2("Source Material", sources.map(renderSourceItem).join(""), true) : ""}
+      ${reuseSummary(SNAP)}`);
     if(VIEW_REG.length){
       const rank = a => { const v = artKind(a.base).view; return v==="pdf"?4:v==="html"?3:v==="img"?2:1; };
       PRIMARY_K = VIEW_REG.map((a,i)=>[rank(a)*1e12+a.total,i]).sort((x,y)=>y[0]-x[0])[0][1];
@@ -1490,10 +2154,24 @@ async function openBundle(id, fromNav){
     const fwdRows = fwd.length ? fwd.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.target)}')"><span class="lt">${esc(r.target)}</span><span class="ln">${esc(r.rel||"cites")}${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
     const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.fromTitle)}</span><span class="ln">${esc(TYPE_LABEL[r.fromType]||r.fromType)} · ${esc(r.rel||"cites")} this${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
     const groupLine = (proj&&proj.group_id) ? `<p class="lede" style="margin:0 0 12px">In the record of <span class="mono">${esc(proj.group_id)}</span>.</p>` : "";
+    /* The source's own assertions, beside the group's. A member citation is the
+       group saying two things are connected; a captured link is the SOURCE
+       saying so, which BIO observed. In a record whose subject is who claimed
+       what, those cannot be the same surface, so they sit apart and are
+       labelled by who asserted them. */
+    const linkSec = LINKS ? sec2(
+      `Links this page carried (${(LINKS.links||[]).length})`,
+      `<p class="lede" style="margin:0 0 10px">The source asserted these, not this group. A page that
+        links to a document is claiming the document is relevant, and that claim is evidence in the
+        same way the page's text is. Which of them the record can follow depends on what the record
+        holds today, so this is resolved fresh every time the page is opened.</p>
+       <div id="lksurface">${linkSurfaceHtml(LINKS, id)}</div>`,
+      (LINKS.links||[]).length > 40) : "";
     const s2 = stratum("s2", `${groupLine}${objective}
       ${fwdRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">This ${esc(noun)} cites</h3><div class="card" style="padding:4px 18px">${fwdRows}</div>`:""}
       ${revRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">Cited by</h3><div class="card" style="padding:4px 18px">${revRows}</div>`:""}
-      ${!objective&&!fwdRows&&!revRows?`<div class="empty">Nothing cites this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.</div>`:""}`);
+      ${!objective&&!fwdRows&&!revRows?`<div class="empty">No member of this group has cited this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.${LINKS&&(LINKS.links||[]).length?" The links below are the source's own and are a different kind of claim.":""}</div>`:""}
+      ${linkSec}`);
 
     /* --- stratum 3: trust --- */
     const loc = fm["source.locator"]||"";
@@ -1835,12 +2513,225 @@ async function renderMembers(){
       : `<div class="empty">No members listed, or this token cannot read the roster.</div>`;
   }catch(e){ $("#mm").innerHTML = errPane(e); }
 }
+/* ============================================================
+   U8: THE ADD SURFACE.
+
+   Capability-shaped like the release flow: writing to the record needs a
+   session holding contribute, and a capability a credential lacks is ABSENT
+   rather than greyed, because an affordance that cannot work is a lie about
+   what this credential is. A machine class can capture and cannot release, and
+   the surface says which is which rather than leaving a member to discover it.
+
+   The grade is stated before anything is written, in the plane's own terms.
+   Grade B is what a Worker can honestly produce: the bytes as fetched, hashed
+   at receipt, with the locator and the instant. Grade A needs a chain-of-custody
+   web archive this surface cannot make, and claiming it would be the one thing
+   the grading scheme exists to prevent.
+   ============================================================ */
+const ADD_TYPES = [["information","Something the record should hold"],["focus","A question worth pursuing"],
+                   ["project","A line of work"],["action","Something to do"]];
+let ADD_BUSY = false;
+
+function canContribute(){
+  return !!(PLANE.session && PLANE.me && PLANE.me.session
+            && (PLANE.me.capabilities||[]).includes("contribute"));
+}
+
 async function renderAdd(){
   setActive("");
-  $("#content").innerHTML = `<h1 class="rec">Add something new</h1><p class="lede">This creates a bundle in the working record. Nothing here is public. Capture, provenance, and the archive-mirror tell wire to <span class="mono">op=capture</span> / <span class="mono">op=promote</span> next.</p>
-    <label class="fld">What kind of thing is this?</label><select class="txt" style="max-width:260px"><option>Information</option><option>Focus</option><option>Project</option><option>Action</option></select>
-    <label class="fld">Title</label><input class="txt" placeholder="what this is about">
-    <label class="fld">What do you know?</label><textarea class="txt" style="min-height:120px"></textarea>`;
+  if(!canContribute()){
+    $("#content").innerHTML = `<h1 class="rec">Add something new</h1>
+      <p class="lede">Writing into the record is a named member's act. This credential can read the
+      record and cannot write to it, so there is nothing here to fill in. Sign in as a member holding
+      <span class="mono">contribute</span> to capture a document or write down what you know.</p>`;
+    return;
+  }
+  $("#content").innerHTML = `<h1 class="rec">Add something new</h1>
+    <p class="lede">This writes a bundle into the working record, in your name, at its first state.
+      Nothing here is public: publishing is a separate act with its own signature.</p>
+    <label class="fld" for="a-type">What kind of thing is this?</label>
+    <select class="txt" id="a-type" style="max-width:320px" onchange="addTypeSync()">
+      ${ADD_TYPES.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("")}</select>
+    <label class="fld" for="a-title">Title</label>
+    <input class="txt" id="a-title" placeholder="what this is about" oninput="addValidate()">
+    <label class="fld" for="a-body">What do you know?</label>
+    <textarea class="txt" id="a-body" style="min-height:120px" placeholder="in your own words; this becomes the first section of the record" oninput="addValidate()"></textarea>
+    <div id="a-doc">
+      <h2 class="sec" style="margin-top:26px">The document, if there is one</h2>
+      <p class="lede" style="margin-top:0">Leave this empty for something you know rather than
+        something you hold. Give an address and the plane fetches it, hashes it at receipt, and
+        records who published it and when it was retrieved as separate claims from the capture itself.</p>
+      <label class="fld" for="a-loc">Address of the document</label>
+      <input class="txt" id="a-loc" placeholder="https://&hellip;" oninput="addValidate()">
+      <label class="fld" for="a-auth">Who issued it</label>
+      <input class="txt" id="a-auth" placeholder="e.g. City of Oakland, Public Works Department" oninput="addValidate()">
+      <label class="ckline"><input type="checkbox" id="a-subs" checked> Fetch the page's stylesheets and images too, so it can be shown as the source served it</label>
+      <label class="ckline"><input type="checkbox" id="a-arch"> Ask a public archive to mirror it as well</label>
+      <div class="teach" style="margin-top:14px"><b>Grade B.</b> The bytes as the plane fetched them,
+        hashed at receipt, with the address and the instant recorded. That is what this surface can
+        honestly claim. Grade A needs a chain-of-custody web archive, which a Worker cannot produce,
+        and co-attestation is what raises B toward evidentiary weight.</div>
+    </div>
+    <div id="a-err" class="teach hidden"></div>
+    <div id="a-prog"></div>
+    <div class="rv-bar" style="margin:18px 0 0"><button class="btn" id="a-go" disabled onclick="addGo()">Add it to the record</button>
+      <span class="n" id="a-n">A title and a body are the minimum.</span></div>`;
+  addTypeSync(); addValidate();
+}
+function addTypeSync(){
+  const t = ($("#a-type")||{}).value || "information";
+  /* Only Information carries a captured document: the @2 contract's register
+     describes a captured document, and a Focus or a Project has none. */
+  const box = $("#a-doc"); if(box) box.classList.toggle("hidden", t !== "information");
+  addValidate();
+}
+function addValidate(){
+  const t = ($("#a-type")||{}).value || "information";
+  const title = (($("#a-title")||{}).value||"").trim();
+  const body = (($("#a-body")||{}).value||"").trim();
+  const loc = (($("#a-loc")||{}).value||"").trim();
+  const auth = (($("#a-auth")||{}).value||"").trim();
+  let why = "";
+  if(!title) why = "A title and a body are the minimum.";
+  else if(!body) why = "Write something in the body: an empty record says nothing.";
+  else if(t === "information" && loc && !/^https:\/\//i.test(loc)) why = "The address must be https on a public site.";
+  else if(t === "information" && loc && !auth) why = "Say who issued the document as well as where it lives.";
+  else why = loc ? `It will be captured at ${FIRST_STATE[t]}, Grade B, and appear in the record for review.`
+                 : `It will be written at ${FIRST_STATE[t]}, with no document attached.`;
+  const go = $("#a-go"), n = $("#a-n");
+  const ready = !!(title && body && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
+  if(go) go.disabled = !ready || ADD_BUSY;
+  if(n) n.textContent = why;
+}
+function addSay(html){ const p = $("#a-prog"); if(p) p.innerHTML = html; }
+function addErr(html){
+  const e = $("#a-err"); if(!e) return;
+  e.classList.toggle("hidden", !html); e.innerHTML = html || "";
+}
+
+/* Capture, then promote. In that order and never the reverse: a fetch that
+   fails must not leave a half-made bundle in the record.
+   The continuation is DRIVEN. A page over the runtime's subrequest ceiling comes
+   back complete:false with an outstanding count and a session, and passing that
+   straight into the record as a capture would present a half-fetched page as a
+   whole one. So the passes run until the manifest says complete, and when the
+   ceiling will not let them finish, the member is told exactly what is
+   outstanding and chooses: record it as the unfinished capture it is, and finish
+   it later from the document's own page, or write nothing. */
+async function addGo(){
+  if(ADD_BUSY) return;
+  ADD_BUSY = true; addErr(""); addSay("");
+  const go = $("#a-go"); if(go) go.disabled = true;
+  const type = ($("#a-type")||{}).value || "information";
+  const title = (($("#a-title")||{}).value||"").trim();
+  const body = (($("#a-body")||{}).value||"").trim();
+  const loc = type === "information" ? (($("#a-loc")||{}).value||"").trim() : "";
+  const auth = (($("#a-auth")||{}).value||"").trim();
+  const wantSubs = !!(($("#a-subs")||{}).checked);
+  const wantArch = !!(($("#a-arch")||{}).checked);
+  try{
+    let doc = null, snap = null;
+    if(loc){
+      const r = await addCapture(loc, auth, wantSubs);
+      if(!r.ok){ addSay(""); addErr(esc(r.why)); return; }
+      doc = r.doc; snap = r.snap;
+      if(wantArch || doc){
+        addSay(`<p class="count-line">Asking for a timestamp over the capture&hellip;</p>`);
+        try{
+          const att = await recPost("attest", { sha256: doc.capture.sha256, locator: loc, archive: wantArch });
+          doc.attestation_attempts = att.attempts || [];
+          if(att.attestation) doc.attestations = [att.attestation];
+          if(att.archive) doc.co_archive = att.archive;
+        }catch(_){ /* a failed attempt is recorded as one; it does not stop the bundle */ }
+      }
+    }
+    addSay(`<p class="count-line">Writing it into the record&hellip;</p>`);
+    const now = new Date().toISOString().split(".")[0] + "Z";
+    const a = await rec("allocid", { prefix: PREFIX[type], year: String(new Date().getFullYear()) });
+    const stem = (a.result && a.result.id) || a.id;
+    const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    const text = mdFor(id, type, FIRST_STATE[type], title, body, now, !!doc,
+      doc ? { locator: loc, authority: auth, retrieved: doc.retrieved || now } : null);
+    const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
+    const files = await docFiles(text, doc, await sha256Text(text),
+      snap && snap.render_file && snap.render_sha256 ? { [snap.render_file]: snap.render_sha256 } : null);
+    /* The manifest goes in as TEXT, read back out of the store and verified
+       against its own hash. op=image returns a blob-registered file as an object
+       and the viewer reads the manifest with typeof === "string", so a manifest
+       promoted as a blob reference is one the viewer never sees: the links, the
+       outstanding count and the reuse facts would all be in the record and none
+       of them on screen. */
+    if(snap && snap.manifest_sha256){
+      const c = await fetchCapture(snap.manifest_sha256);
+      if(c.ok && c.sha === snap.manifest_sha256){
+        const t = new TextDecoder().decode(c.bytes);
+        files.push({ path:"data/snapshot-manifest.json", text:t, bytes:t.length, sha256: await sha256Text(t) });
+      }
+    }
+    const r = await recPost("promote", {
+      bundleId: id, base: null, snapKey: stamp(), author: who,
+      meta: { object_type: type, group:"believe-in-oakland", title,
+              current_state: FIRST_STATE[type], created: now, last_updated: now },
+      files, register: registerFor(doc),
+    });
+    const res = r.result || r;
+    if(!res || res.ok === false){
+      const why = (res && res.reason) || r.error || "unknown";
+      addSay("");
+      addErr(why === "GATE_REFUSED"
+        ? `The checks refused this bundle: ${esc((res.findings||[]).map(f=>f.check).join(", "))}. Nothing was written.`
+        : `Refused: ${esc(why)}. Nothing was written.`);
+      return;
+    }
+    IMG_CACHE.delete(id); PROJ_CACHE.delete(id); RECORD_CACHE = null;
+    openBundle(id);
+  }catch(e){ addSay(""); addErr(esc((e && (e.reason||e.error||e.message)) || "That did not go through.")); }
+  finally{ ADD_BUSY = false; const g = $("#a-go"); if(g) g.disabled = false; addValidate(); }
+}
+
+const ADD_TICKS = 8;
+async function addCapture(locator, authority, wantSubs){
+  let session = null, acq = null, ticks = 0;
+  for(;;){
+    ticks++;
+    addSay(ticks === 1
+      ? `<p class="count-line">Fetching the document from the source&hellip;</p>`
+      : `<p class="count-line">Pass ${ticks}: fetching the supporting files the last pass could not reach&hellip;</p>`);
+    try{
+      acq = await recPost("acquire", { locator, authority, ...(wantSubs?{subresources:true}:{}), ...(session?{continue:session}:{}) });
+    }catch(e){ return { ok:false, why: acquireWhy(e) }; }
+    if(!acq.document) return { ok:false, why: acquireWhy(acq) };
+    const snap = acq.snapshot || null;
+    if(!wantSubs || !snap || snap.complete) return { ok:true, doc: acq.document, snap };
+    session = snap.continuation && snap.continuation.session;
+    const out = Number(snap.outstanding||0);
+    if(!session || ticks >= ADD_TICKS){
+      /* The capture cannot be finished under this runtime's ceiling right now.
+         The choice is the member's and both options are honest; what is not on
+         offer is calling it complete. */
+      return await addIncomplete(acq, out, ticks);
+    }
+    addSay(`<p class="count-line">${out} supporting ${out===1?"file is":"files are"} outstanding after ${ticks} ${ticks===1?"pass":"passes"}. Continuing&hellip;</p>`);
+  }
+}
+/* The unfinished-capture decision, put to the member rather than taken for them. */
+function addIncomplete(acq, outstanding, ticks){
+  return new Promise(resolve=>{
+    $("#dlg").innerHTML =
+      `<h2>The capture is not finished</h2>
+       <p class="what">The document itself is captured whole and hashed. ${outstanding===1?"One supporting file":`${outstanding} supporting files`}
+         could not be fetched after ${ticks} ${ticks===1?"pass":"passes"}, because the runtime refuses
+         more outbound requests than it has already made. They are outstanding, not failed: the source
+         refused nothing and was never asked.</p>
+       <p class="what">Recorded as it stands, the bundle says so on its own page and carries the
+         outstanding count, and the capture can be continued from there later. The alternative is to
+         write nothing now. What is not on offer is recording it as a complete capture.</p>
+       <div class="row-btns"><button class="btn ghost" id="ai-no">Write nothing</button>
+         <button class="btn" id="ai-yes">Record it as unfinished</button></div>`;
+    $("#dlg-wrap").classList.remove("hidden");
+    $("#ai-yes").addEventListener("click", ()=>{ closeDialog(); resolve({ ok:true, doc: acq.document, snap: acq.snapshot||null }); });
+    $("#ai-no").addEventListener("click", ()=>{ closeDialog(); resolve({ ok:false, why:"Nothing was written. The document's bytes are in the store and a later capture of the same address will reuse them rather than re-fetching." }); });
+  });
 }
 
 function errPane(e){

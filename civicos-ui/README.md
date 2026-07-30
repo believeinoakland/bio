@@ -35,7 +35,12 @@ worker is scaffolding.
   `node check-semantics.mjs` from this directory; it fails the build on any
   gap in either direction.
 
-- `test/` — the harness suite. `node test/run.mjs` drives the release flow,
+- `test/` — the harness suite. `link-surface.test.mjs` holds the fields the UI
+  reads against the plane's own `resolveLinks` source, so a rename in the plane
+  fails here; `capture-honesty.test.mjs` drives real manifests produced by the
+  shipped `captureSubresources`; `add-surface.test.mjs` runs what the Add surface
+  assembles through the plane's own `checkBundle`, because the UI is now a writer
+  and the three-implementation conformance requirement applies to it. `node test/run.mjs` drives the release flow,
   the full document page render, the artifact fetch-and-verify path, seals,
   glossary, navigation restore, and the semantics check. Run it before every
   deploy; the document-page harness exists because a refactor once deleted

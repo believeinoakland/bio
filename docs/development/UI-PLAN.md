@@ -85,12 +85,20 @@ self-announce staleness.
   Defect it caught: markLinks matched data-bio-href before href, reading the
   address instead of the wrapper.
 
-- **U8. The Add surface.** "Add something new" becomes real: acquire by
-  locator (authority named, grade shown honestly), review the returned
-  provenance, promote into the record as collected. Machine classes
-  cannot release; the surface says so. ACCEPTANCE: a member captures a
-  live URL end to end from the UI and the new bundle appears collected
-  with provenance intact.
+- **U8. The Add surface. DONE, 2026-07-30.** Acquire by locator with the
+  authority named and Grade B stated in the plane's own terms before anything is
+  written; the document block appears only for Information, because the @2
+  contract's register describes a captured document and a Focus has none.
+  Capability-shaped absent-not-greyed: a credential that cannot write gets no
+  form rather than one that fails on submit. The continuation is DRIVEN, and when
+  the runtime's ceiling will not let it finish, the member chooses between
+  recording it as the unfinished capture it is and writing nothing; recording it
+  as complete is not on offer. The promoter helpers are the installer's, ported
+  rather than reinvented, so the UI is not a fourth differently-shaped writer,
+  and test/add-surface.test.mjs runs what it assembles through the plane's own
+  checkBundle. ACCEPTANCE MET on live infrastructure: `INFO-2026-0002-legistar-
+  calendar`, a 368KB Legistar calendar with 127 supporting files, promoted
+  collected with provenance intact, `op=audit` 31/31 clean afterwards.
 
 - **U9. Triage and case-building.** Dispose on Focuses (surface, elevate,
   defer, dismiss with reasons); cite from a search selection into a
@@ -143,27 +151,38 @@ self-announce staleness.
   ceiling returns complete:false with a continuation session, and U8 must
   drive it to completion rather than presenting a half-captured page as a
   capture. See docs/development/CAPTURE-SCALING.md.
-- LINKS ARE RESOLVED IN THE PLANE AND INVISIBLE IN THE UI. 0.42.0 through
-  0.45.0 built captured_locators, the links table with resolource and
-  citation keys, the three-valued contemporaneity verdict, links_to in
-  REL_VOCAB, and op=links / op=linkproject. A member sees none of it. This
-  is the largest gap between what the record knows and what it shows.
-- A CAPTURE MAY BE INCOMPLETE, AND THE VIEWER DOES NOT SAY SO. A page over
-  the runtime's subrequest ceiling returns complete:false with an
-  outstanding count and a continuation session. U7's resolver refuses a
-  render when a part is missing, which is right, but nothing tells a member
-  that the capture itself is unfinished or offers to continue it.
-- PARTS MAY BE REUSED FROM AN EARLIER FETCH. 0.40.0 reuses stylesheets,
-  fonts and icons a host served recently, recording fetched_this_capture:
-  false and when the source was last seen serving them. The viewer shows no
-  difference between a part fetched during this capture and one reused, and
-  it should, because ratification re-fetches them and a member may want to
-  know before then.
-- THE CITATION GRAPH IS MOSTLY POTENTIAL. skipped_unregistered means a link
-  can resolve fully and still not become an edge, because the target's bytes
-  are in the record while no bundle claims them. A document page reading
-  "126 links, 0 connections" is accurate and reads like a failure, so the
-  presentation needs deciding rather than defaulting.
+- LINKS, COMPLETENESS AND REUSE ARE NOW SHOWN. Closed 2026-07-30. The document
+  page carries the five partitions with the element cited, the verdict and the
+  plane's own basis; the unfinished-capture banner with its outstanding count and
+  a continuation; the reuse disclosure naming when the source was last seen
+  serving each reused part; and the per-reference list of what a capture never
+  got, on the refusal a member actually hits. Counts are NAMED, never a ratio:
+  connection, held-unclaimed, self-reference, outside the record, inside the
+  capture, refused. The self-reference count is not cosmetic, it is a
+  correctness requirement, because projectLinks drops a self-edge and a surface
+  counting one as a connection claims an edge the plane refuses to make.
+- CONTINUATION IS A CACHE REFILL, NOT A REWRITE. RULED by Bob, 2026-07-29.
+  Continuing a capture must know what has already been captured; parts may have
+  to be obtained from the host again, and that is refilling the cache rather than
+  rewriting the record. Three consequences, all implemented and all load-bearing:
+  the primary is never re-recorded and the re-fetch serves only as a FENCE (a
+  changed primary hash refuses the whole continuation, because that is a source
+  change and a monitoring finding); already-recorded parts keep their own records
+  with their original fetch dates and their fetched_this_capture flags, so the
+  merge takes from the fresh run only what was outstanding; and a recorded part
+  whose bytes have changed REFUSES the merge rather than choosing between two
+  sets of bytes for one address.
+- THE ADDRESS INDEX IS INCOMPLETE BY CONSTRUCTION (D-58). `captured_locators` is
+  written only inside the subresource branch of `op=acquire`, so a plainly
+  captured document is not a resolvable link target and no verdict about it can
+  ever be established. Any further link work rests on this being fixed in the
+  plane first.
+- `contemporaneous` MAY BE UNREACHABLE FOR MUNICIPAL SOURCES (D-59). Measured:
+  two captures of a Legistar page twelve minutes apart hash differently, because
+  ASP.NET viewstate changes per response. Identical-byte bracketing cannot fire
+  for such a page whatever happened to its content, so the timestamp-token,
+  archive and monitoring routes are the load-bearing ones rather than the
+  fallbacks.
 - The record is the source of truth for every parser the UI grows;
   fixtures mirror real shapes (the v11 lesson) and every app.html patch
   carries an assert (the v24 lesson).
@@ -172,10 +191,12 @@ self-announce staleness.
 
 ## Next session kickoff
 
-The next session is the link and citation work in LINK-FIDELITY.md: the
-links table with address normalisation, read-time resolution, the
-three-valued contemporaneity verdict, and links_to in REL_VOCAB. U8 follows
-it, because the Add surface needs continuation handling and would otherwise
-be built twice. The initial prompt for Bob to paste is kept in
-SESSION-KICKOFF-UI.md beside this file, so the session starts with zero
-reconstruction.
+U9, triage and case-building, is next: dispose on Focuses with reasons, and cite
+from a search selection into a Project with the note grammar's constraints
+surfaced before refusal. It is the rung that turns a record into a case, and the
+link surface now gives it something to cite FROM. Two plane defects found by the
+U8 exercise (D-57, D-58) should be fixed in the same session or the one before
+it, because both make the link surface tell a member something untrue or
+incomplete and neither is fixable in the viewer. The initial prompt for Bob to
+paste is kept in SESSION-KICKOFF-UI.md beside this file, so the session starts
+with zero reconstruction.
