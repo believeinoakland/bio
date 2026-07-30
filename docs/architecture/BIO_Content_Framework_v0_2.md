@@ -1,13 +1,24 @@
 # BIO Content Framework
 
-**Version 0.1 — 2026-07-30 — DRAFT, for review before Step 0 begins**
+**Version 0.2 — 2026-07-30 — DRAFT, for review before Step 0 begins**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
 yet; `docs/architecture/CONSTRUCTS.md` is the inventory and the evidence behind it,
 and this is the shape those constructs should take.
 
+Diagrams are Mermaid, which renders in GitHub and most Markdown viewers, and which
+stays as text so it diffs like the rest of the document. All six were validated
+against the Mermaid parser itself rather than eyeballed, since a diagram that fails
+to render is worse than no diagram: it leaves a block of syntax where an explanation
+should be.
+
 Changelog:
+- v0.2, 2026-07-30. Six diagrams added where a diagram carries what prose was
+  labouring at: the evolution of the goal, the four core objects, the recogniser and
+  registry shape that is the extensibility claim, regions against digests, the change
+  cascade and its exits, and the two connection kinds over Bob's own meeting example.
+  No change to the framework itself.
 - v0.1, 2026-07-30. First draft. Pulls together the constructs discovered between
   0.36.0 and the 2026-07-30 UI sessions: document regions, three digests, host-stack
   handlers, content types, the layered change pipeline, monitoring contracts, and
@@ -29,6 +40,21 @@ real page did rather than by a decision anyone made:
 | write a handler per host stack | the stack tells you how a page is BUILT, not what it IS. Change management needs to know it is looking at a calendar and not an article |
 | write a handler per content type | what counts as a change depends on the type, and a calendar's window moves on its own |
 | recognise change | change is only useful when connected: to related content, and to other moments in time |
+
+```mermaid
+flowchart TD
+    A["Capture raw documents"] -->|"a document is not its HTML"| B["Capture the document AND its parts"]
+    B -->|"the parts are not equal"| C["Separate meaningful / necessary / noise"]
+    C -->|"which is which depends on the stack:<br/>ASP.NET churns 31% per request,<br/>cached WordPress churns none"| D["A handler per host stack"]
+    D -->|"the stack says how a page was BUILT,<br/>not what it IS"| E["A handler per content type"]
+    E -->|"what counts as a change<br/>depends on the type"| F["Change semantics per type"]
+    F -->|"a change is only useful<br/>once connected"| G["Referential and temporal connections"]
+    G -.->|"and the next one,<br/>from a page not yet visited"| H["?"]
+    classDef known fill:#e8ede8,stroke:#5b6b5b,color:#1c2320
+    classDef unknown fill:#fff,stroke:#b08968,stroke-dasharray:4 3,color:#6b4a32
+    class A,B,C,D,E,F,G known
+    class H unknown
+```
 
 That is not a story about six mistakes. It is a story about a domain that reveals
 itself only on contact, and it is nowhere near finished. Sites yet unvisited will
@@ -88,7 +114,26 @@ content type. Derived, cheap to recompute, never authoritative over the bytes.
 change, a confirmation, or a connection. Always dated, always attributed to the
 recogniser and reading that produced it.
 
-The pipeline is just: capture → profile → reading → observation.
+```mermaid
+flowchart LR
+    subgraph immutable["Immutable: what the source served"]
+        CAP["CAPTURE<br/><i>bytes, hash, locator,<br/>authority, instant, grade</i>"]
+    end
+    subgraph derived["Derived: dated opinions, revisable"]
+        PRO["PROFILE<br/><i>what we believe it IS</i><br/>recogniser + version + confidence"]
+        REA["READING<br/><i>what we believe it CONTAINS</i><br/>entities with keys and named facts"]
+        OBS["OBSERVATION<br/><i>what we believe HAPPENED</i><br/>change, confirmation, connection"]
+    end
+    CAP --> PRO --> REA --> OBS
+    OBS -.->|"a better recogniser<br/>revises everything downstream"| PRO
+    classDef imm fill:#e8ede8,stroke:#3d4a3d,color:#1c2320
+    classDef der fill:#fff,stroke:#8a9a8a,color:#1c2320
+    class CAP imm
+    class PRO,REA,OBS der
+```
+
+The pipeline is just: capture → profile → reading → observation. The dashed edge is
+section 10 and it is what makes the framework safe to be wrong.
 
 ## 4. One extension shape: the RECOGNISER
 
@@ -114,6 +159,35 @@ by falling through. The fallback is always the conservative one.
 That is the whole extension mechanism. Adding a handler, a content type, or a member
 of an axis nobody has thought of yet is the same act: write a recogniser, register
 it.
+
+```mermaid
+flowchart TD
+    CAP["capture + context"] --> AX1 & AX2 & AX3
+    subgraph AX1["Axis: host stack"]
+        direction TB
+        S1["client-rendered"] --> S2["ASP.NET WebForms"] --> S3["WordPress"] --> S4["conservative<br/><i>never matches</i>"]
+    end
+    subgraph AX2["Axis: content type"]
+        direction TB
+        T1["meeting calendar"] --> T2["generic<br/><i>never matches</i>"]
+    end
+    subgraph AX3["Axis: not yet needed"]
+        direction TB
+        U1["authority class?<br/>access mode?<br/>format?<br/>entity identity?"] --> U2["conservative<br/><i>never matches</i>"]
+    end
+    AX1 --> P["PROFILE<br/>one judgment per axis,<br/>each with its own confidence"]
+    AX2 --> P
+    AX3 -.-> P
+    classDef reg fill:#f4f2ed,stroke:#8a9a8a,color:#1c2320
+    classDef fall fill:#fff,stroke:#b08968,color:#6b4a32
+    classDef future fill:#fff,stroke:#b0a898,stroke-dasharray:4 3,color:#6b6255
+    class S1,S2,S3,T1 reg
+    class S4,T2,U2 fall
+    class U1 future
+```
+
+Every box in every registry has the same interface. That is the whole claim: a third
+axis is a third column, not a rewrite.
 
 ### The axes we know about
 
@@ -157,6 +231,34 @@ are different questions and one hash cannot answer both:
 | rendition | mechanical | would it look the same? |
 | evidentiary | mechanical + presentational | has the substance changed? |
 
+```mermaid
+flowchart LR
+    subgraph doc["One captured document"]
+        direction TB
+        EV["EVIDENTIARY<br/><i>the substance a member<br/>would quote</i>"]
+        PR["PRESENTATIONAL<br/><i>furniture: nav, footer,<br/>related-story rails</i>"]
+        ME["MECHANICAL<br/><i>page state, tokens,<br/>session ids, ad slots</i>"]
+    end
+    EV --> D1 & D2 & D3
+    PR --> D1 & D2
+    ME --> D1
+    D1["IDENTITY digest<br/><i>which capture is this?</i>"]
+    D2["RENDITION digest<br/><i>would it look the same?</i>"]
+    D3["EVIDENTIARY digest<br/><i>has the substance changed?</i>"]
+    classDef ev fill:#e8ede8,stroke:#3d4a3d,color:#1c2320
+    classDef pr fill:#f4f2ed,stroke:#8a9a8a,color:#1c2320
+    classDef me fill:#fff,stroke:#b08968,color:#6b4a32
+    classDef dig fill:#fff,stroke:#5b6b5b,color:#1c2320
+    class EV ev
+    class PR pr
+    class ME me
+    class D1,D2,D3 dig
+```
+
+Measured: on `oakland.legistar.com/Calendar.aspx` the mechanical region is 115,980
+bytes, 31.4% of the document, and the identity digest moves on every single fetch
+because of it while the evidentiary digest does not move at all.
+
 **Fidelity** is the claim the record can make about showing a capture: `faithful`,
 `degraded` (only decoration missing, named on screen not hidden), `insufficient`
 (render-critical missing, render refused). Which parts are render-critical is the
@@ -177,6 +279,32 @@ whose depth is invisible cannot be audited.
 | L4 | what type of content? | never; selects who answers L5 |
 | L5 | is the change meaningful for that type? | usually |
 | L6 | what does it connect to? | terminal |
+
+```mermaid
+flowchart TD
+    START(["two captures of one address"]) --> L1{"L1<br/>which stack?"}
+    L1 -->|"a shell: bytes stable,<br/>substance absent"| X0(["UNWATCHABLE<br/><i>and say so</i>"])
+    L1 --> L2{"L2<br/>any byte different?"}
+    L2 -->|"no"| X1(["IDENTICAL<br/><i>a CONFIRMATION,<br/>stored as evidence</i>"])
+    L2 -->|"yes"| L3{"L3<br/>noteworthy?"}
+    L3 -->|"only mechanical moved"| X2(["UNCHANGED<br/><i>confirmation</i>"])
+    L3 -->|"only furniture moved"| X3(["RESTYLED<br/><i>confirmation</i>"])
+    L3 -->|"stack merely 'likely'"| X4(["UNDETERMINED<br/><i>declines to claim</i>"])
+    L3 -->|"the substance moved"| L4{"L4<br/>what type of content?"}
+    L4 --> L5{"L5<br/>meaningful<br/>for that type?"}
+    L5 -->|"e.g. the calendar's<br/>window moved"| X5(["ROUTINE<br/><i>plus confirmation<br/>of what did not move</i>"])
+    L5 -->|"e.g. a meeting inside<br/>the window is gone"| L6["L6<br/>what does it connect to?"]
+    L6 --> X6(["CHANGED · graded<br/>event / notice / routine"])
+    classDef exit fill:#f4f2ed,stroke:#5b6b5b,color:#1c2320
+    classDef alarm fill:#fff,stroke:#b08968,color:#6b4a32
+    classDef gate fill:#fff,stroke:#8a9a8a,color:#1c2320
+    class X1,X2,X3,X5 exit
+    class X0,X4,X6 alarm
+    class L1,L2,L3,L4,L5,L6 gate
+```
+
+Most checks on a monitored source exit at L2 or L3, and every one of those exits
+produces a confirmation rather than a shrug.
 
 L2 is not a fast path. It is the layer that produces most of the system's evidence,
 because on a monitored source most checks find nothing and invariant 7 says that is
@@ -231,6 +359,31 @@ differently and the UI must show them apart:
 directional, followed to understand a STORY. Its most valuable form is an **absence
 with a due date**: minutes that have not appeared three weeks after a meeting are a
 fact about the body, not a gap in the record.
+
+Bob's own example, drawn. Solid edges are referential and answer "what is this part
+of"; dashed edges are temporal and answer "what should have happened by now".
+
+```mermaid
+flowchart LR
+    BODY["Public Safety<br/>Committee"]
+    MTG["Meeting 1428382<br/>28 July 2026"]
+    AG["Agenda<br/><i>doc 901</i>"]
+    ATT["Attendance"]
+    MIN["Minutes"]
+    TR["Transcript"]
+    MTG ---|"held_by"| BODY
+    AG ---|"has_agenda"| MTG
+    ATT ---|"has_attendance"| MTG
+    MTG -.->|"has_minutes<br/><b>due 18 Aug</b>"| MIN
+    MTG -.->|"has_transcript<br/><b>due 18 Aug</b>"| TR
+    classDef held fill:#e8ede8,stroke:#3d4a3d,color:#1c2320
+    classDef owed fill:#fff,stroke:#b08968,stroke-dasharray:4 3,color:#6b4a32
+    class BODY,MTG,AG held
+    class ATT,MIN,TR owed
+```
+
+The two dashed edges pointing at documents the record does not hold are the framework
+at its most useful: not a gap in the record, but a dated fact about the body.
 
 ### The connection table
 

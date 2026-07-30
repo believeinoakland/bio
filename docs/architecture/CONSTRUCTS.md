@@ -22,7 +22,7 @@ WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
 **This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_1.md`, written 2026-07-30 after Bob corrected the framing
+`BIO_Content_Framework_v0_2.md`, written 2026-07-30 after Bob corrected the framing
 of this one: it is not that discovery has finished, but that discovery will continue
 for a long time and the framework's job is to make each new surprise cheap. That
 document's section 9 states the cost of absorbing each kind of new thing, and that
