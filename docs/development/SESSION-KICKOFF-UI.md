@@ -73,3 +73,25 @@ verification: [PASTE]. Deploy target account id
 20b533579290b9b93168345edd3b7f72 (biocloudflare), plane worker biosmoke7, UI
 worker civicos. Work without asking me to confirm anything determinable from the
 repo; decision items at the end only.
+
+**Numbers come from MEASUREMENTS.md, never from memory or a vendor docs table.**
+It records the subrequest ceiling (51 including the primary), the CPU probe
+result (40,000,000 reference iterations fit; killed on the next 2,000,000,
+against a documented 10ms that is plainly not what is enforced), what real pages
+cost, and how reuse and continuation converge. If a figure looks stale, re-run
+the instrument named beside it. A number in the source that nobody measured is a
+guess wearing a constant's clothes, and that has already cost this project two
+wrong constants.
+
+**A Worker cannot time itself.** Cloudflare freezes `Date.now()` during
+synchronous execution as a timing-attack defence, so any millisecond figure
+measured inside a Worker is a fabrication. Count work, not time. See
+`bio-plane/src/cpu.mjs`.
+
+**Source access: BIO does not disguise its requests.** `www.oaklandca.gov`
+returns 403 to the plane on every path including `robots.txt`, while its Socrata
+and OpenGov properties answer normally. The user-agent question is deferred
+pending Bob's counsel; the refusal to impersonate a browser is not, because a
+system whose entire subject is provenance does not lie about who is asking.
+SOURCE-ACCESS.md has the evidence, the practice, the law and the open questions.
+

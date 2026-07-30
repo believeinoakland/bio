@@ -245,6 +245,26 @@ branch inside the capture path.
 - AN UNATTENDED WRITER CANNOT REVISE (D-61). `op=lease` stamps `leases.actor` from
   the session and the column is NOT NULL, so the capture-refill path is
   session-only and a daemon cannot complete work a member walked away from.
+- SOURCE ACCESS IS OPEN, WITH A STANDING POSITION. www.oaklandca.gov refuses
+  the plane on every path including robots.txt and sitemap.xml, while
+  data.oaklandca.gov, oaklandca.opengov.com, oakland.legistar.com,
+  oaklandside.org and www.acgov.org all answer. It changed in mid-July: the
+  record holds ten bundles from that host whose exact locators no longer
+  resolve, which is the circumstance the project exists for, arrived at by
+  accident. BIO DOES NOT DISGUISE ITS REQUESTS and that is not waiting on
+  counsel. SOURCE-ACCESS.md carries the measured evidence, the archival
+  practice on identifying a crawler, the legal research including the parts
+  that cut against the project, and the questions Bob is taking to journalists
+  and lawyers.
+- EVERY LIMIT IS MEASURED AND RECORDED, NEVER READ FROM A DOCS TABLE.
+  MEASUREMENTS.md holds the subrequest ceiling, the CPU probe result, what real
+  pages cost, what the fetch policy removes, and how reuse and continuation
+  converge, each with its date and the op that produced it. It exists because
+  the alternative happened twice in one session: a subresource cap of 40 written
+  from a guess that truncated every real page, and a source comment reading "50
+  on this account" that was a guess about somebody else's infrastructure. A
+  number in the source that nobody measured is a guess wearing a constant's
+  clothes; re-run the instrument rather than reasoning about it.
 - The record is the source of truth for every parser the UI grows;
   fixtures mirror real shapes (the v11 lesson) and every app.html patch
   carries an assert (the v24 lesson).
