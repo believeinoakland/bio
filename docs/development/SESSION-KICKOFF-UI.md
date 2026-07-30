@@ -21,7 +21,7 @@ bio-plane/scripts/deploy.mjs (the plane's release path), civicos-ui/test/run.mjs
 
 This session, in order:
 
-(0) Read `docs/architecture/BIO_Content_Framework_v0_5.md` before anything else, then
+(0) Read `docs/architecture/BIO_Content_Framework_v0_6.md` before anything else, then
 `docs/architecture/CONSTRUCTS.md` for the evidence behind it. The framework is the
 shape the code should take; the inventory is why. Note §2, the invariants, and §9,
 the cost of absorbing a new stack, content type, connection rule or AXIS: that table

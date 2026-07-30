@@ -1,6 +1,6 @@
 # BIO Content Framework
 
-**Version 0.5 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
+**Version 0.6 — 2026-07-30 — ARCHITECTURE APPROVED by Bob; Step 0 may begin**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -14,6 +14,15 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.6, 2026-07-30. Two rulings from Bob. An ASSISTANT MAY OPEN A FOCUS unattended,
+  because that level of support is central to what BIO should offer and because a focus
+  is informative and advisory rather than committing; §12 now says so, with the volume
+  and ageing rules that unattended surfacing requires, and records that the check
+  catalogue already permits `surfaced_by: agent` while both writers hardcode `human`.
+  And an ASPIRATION IS SCOPED to the group, a project, or a member; §12.1 works through
+  what each scope means, why conflicts between scopes are information rather than
+  errors, and why a member-scoped aspiration is a declared lens in the sense
+  `BIO_Declared_Bias_v0_1.md` already means.
 - v0.5, 2026-07-30. Bob added the top of the model: the system must support humans and
   their AI assistants defining goals at a high level, turning them into objectives and
   aspirations, and working to achieve them AND everything discovered along the way.
@@ -862,6 +871,100 @@ The rules that make the loop safe:
   and write the records request. The member's adoption is what makes any of it the
   group's position.
 
+### An assistant may open a focus unattended
+
+RULED by Bob, 2026-07-30. This level of support is central to what a member should
+expect from BIO, and it is safe for a specific structural reason: **a focus is
+informative, advisory and supportive of a project's development. It commits nobody.**
+Its states are `surfaced → elevated → deferred → dismissed`, and `surfaced` means
+precisely "noticed, not yet judged".
+
+The catalogue anticipated this. C-2.8 already permits `surfaced_by` to be `agent` or
+`human`, and both writers in the codebase hardcode `human`, so the doctrine was
+allowed for at the check level years before any surface could express it.
+
+What stays a member's act, and the line is exactly where advisory ends:
+
+| act | who | why |
+| --- | --- | --- |
+| open a focus at `surfaced` | assistant or member | advisory; commits nobody |
+| **elevate** a focus | member only | elevation is the group taking a question seriously |
+| open a `problem` | assistant or member | also advisory: an obstacle noticed is not an obstacle accepted |
+| **adopt into an objective** | member only | this makes it the group's work |
+| dismiss | member only | dismissal is a judgment about the question |
+
+Unattended surfacing needs two disciplines it would not need from a human, because a
+machine can produce hundreds where a person produces one:
+
+- **Aggregate, do not multiply.** One junction check firing across 58 contracts is ONE
+  focus with 58 instances, not 58 focuses. A focus is a question, and "why do these 58
+  awards have no solicitation" is one question. Getting this wrong does not corrupt the
+  record; it drowns it, which for an advisory object is the same failure.
+- **Age rather than vanish.** A machine-surfaced focus nobody has acted on after some
+  interval moves to `deferred` with the reason recorded — "surfaced by assistant, no
+  member acted within N days" — and never silently disappears. A finding that
+  disappears is indistinguishable from one that was never made, and that rule does not
+  relax because the finder was a machine.
+
+Invariant 7 binds harder here, not less. An assistant that can surface unattended must
+surface the findings that cut against the goal on exactly the same terms as the ones
+that support it, and being unattended is what removes the human who would otherwise
+have noticed the omission.
+
+## 12.1 Aspirations are scoped
+
+RULED by Bob, 2026-07-30: an aspiration may be scoped at the group, the project, or
+the member level.
+
+| scope | whose commitment | what it shapes | changing it |
+| --- | --- | --- | --- |
+| **group** | the collective's standing position | the default backdrop for all work | a group act, with the weight that implies |
+| **project** | this line of work | priority within the project, for everyone working it | the project's own record |
+| **member** | this person's lens | that member's queue and attention | theirs alone, and visible |
+
+Three consequences worth stating because each could be got wrong quietly.
+
+**A project inherits the group's aspirations unless it declares otherwise, and
+declaring otherwise is notable.** A project that departs from a group commitment is
+making a statement about the work, and it should read as one rather than as
+configuration.
+
+**Conflicts between scopes are information, not errors.** A member whose aspiration
+pulls against the group's is a fact about the group, and the system should surface the
+tension rather than resolve it by precedence. Narrower scope does NOT override wider:
+they coexist, and where they disagree the disagreement is recorded and shown. A system
+that silently let the narrower win would let one member quietly redirect a group's
+work by writing a preference.
+
+**A member-scoped aspiration is a declared lens.** This is the same construct
+`BIO_Declared_Bias_v0_1.md` describes: bias is real and the most dangerous bias is the
+denied one, so the honest system makes the lens part of the record. A member
+declaring "I am pursuing the sewer fund because I believe the transfers were
+improper" has done exactly what that doctrine asks, and the declaration travels with
+the work done under it. Scoping aspirations to members is therefore not a convenience
+feature; it is where declared bias gets a home in the architecture.
+
+Aspirations set PRIORITY and never filter evidence. Invariant 7 applies to them with
+full force: an aspiration may shape which questions get asked first, and it may not
+shape which answers get recorded or shown.
+
+```mermaid
+flowchart TD
+    GA["GROUP aspiration<br/><i>the standing backdrop</i>"] -->|"inherited unless<br/>a project departs,<br/>and departure is notable"| PA["PROJECT aspiration<br/><i>priority within this work</i>"]
+    MA["MEMBER aspiration<br/><i>a declared lens</i>"] -.->|"may disagree with either.<br/>The disagreement is<br/>RECORDED, not resolved"| PA
+    MA -.-> GA
+    GA --> PR["what gets asked FIRST"]
+    PA --> PR
+    MA --> PR
+    PR -.->|"never"| EV["what gets RECORDED<br/>or SHOWN"]
+    classDef asp fill:#e8ede8,stroke:#3d4a3d,color:#1c2320
+    classDef ok fill:#f4f2ed,stroke:#5b6b5b,color:#1c2320
+    classDef never fill:#fff,stroke:#b08968,stroke-dasharray:4 3,color:#6b4a32
+    class GA,PA,MA asp
+    class PR ok
+    class EV never
+```
+
 ### What is deliberately not modelled yet
 
 A **claim** — "the city moved $2.1m from the sewer fund without authorisation" — is
@@ -915,9 +1018,10 @@ Stated so the bend is recognised as a bend and not as a bug:
   documents. Nothing here models a claim as an object, and §12 explains why it is
   being left alone: a claim needs a standard of proof attached, which is doctrine
   rather than architecture.
-- **Goals that conflict.** Two members with different aspirations working the same
-  entity. §12 gives priority no arbiter, and declared bias is the doctrine that
-  probably has to settle it.
+- **Goals that conflict.** §12.1 now scopes aspirations and rules that a conflict
+  between scopes is recorded rather than resolved, which is the honest answer and not
+  yet a mechanism. What a member SEES when their aspiration pulls against the group's
+  is undesigned.
 
 None of these needs solving now. They need to be visible so that the day one arrives,
 the response is a registry entry and not a rewrite.

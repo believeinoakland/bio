@@ -22,7 +22,7 @@ WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
 **This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_5.md`, written 2026-07-30 after Bob corrected the framing
+`BIO_Content_Framework_v0_6.md`, written 2026-07-30 after Bob corrected the framing
 of this one: it is not that discovery has finished, but that discovery will continue
 for a long time and the framework's job is to make each new surprise cheap. That
 document's section 9 states the cost of absorbing each kind of new thing, and that
@@ -257,7 +257,14 @@ Consumers: the project page, which shows derived progress and the gap list; and 
 review queue, which gets its work from the gaps. Aspiration and goal, the two object
 types §12 says do not exist yet, come with it.
 
-**Step 8b. The discovery loop.** A finding becomes a PROPOSAL with its grade and
+**Step 8b. The discovery loop, with unattended surfacing.** An assistant may open a
+focus or a problem at `surfaced` without a member, per Bob's ruling, because those are
+advisory and commit nobody; elevation, adoption and dismissal stay member acts. Fix
+`surfaced_by` in both writers first (D-78), since an assistant-surfaced focus that
+claims a human author is a false attribution in a system built on claims carrying
+their author. Then the two disciplines unattended surfacing needs: aggregation, so one
+check across 58 contracts is one focus with 58 instances, and ageing, so an unactioned
+machine finding moves to `deferred` with its reason rather than vanishing. A finding becomes a PROPOSAL with its grade and
 basis; a member adopts it into an objective, files it as a focus or a problem, or
 defers it with a recorded reason. Nothing is adopted automatically and nothing
 disappears silently, because a finding that vanishes is indistinguishable from one
