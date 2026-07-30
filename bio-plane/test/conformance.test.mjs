@@ -300,6 +300,40 @@ console.log("\n--- references have one home ---");
     cf.filter((x) => x.severity === "error").length, 0);
 }
 
+console.log("\n--- C-18.9: authority-undetermined material cannot cross the publication fence ---");
+{
+  /* Deliberately minimal fixtures: other families will find plenty here, and
+     only C-18.9 is asserted, so what is measured is the fence and nothing
+     else. Both ways: undetermined in the WORKING corpus is legitimate and
+     draws nothing; the same document at verified is refused; a determined one
+     at verified passes the fence. */
+  const prov = (det) => JSON.stringify({ documents: [{
+    file: "snapshots/doc.pdf", locator: "https://example.gov/doc.pdf",
+    retrieved: "2026-07-30T00:00:00Z",
+    authority_state: det ? "determined" : "undetermined",
+    ...(det ? { authority: "Example City" } : {}),
+    authority_basis: det
+      ? "asserted by the capturing member at intake, 2026-07-30T00:00:00Z"
+      : "no assertion was supplied and no mechanical determination is implemented; recorded 2026-07-30T00:00:00Z",
+    capture: { method: "test", grade: "B", actor_class: "daemon", sha256: "0".repeat(64) },
+    origin: { kind: "named_request" },
+  }] });
+  const md = (state) => `---\nid: INFO-2026-0009-fence\nobject_type: information\ncurrent_state: ${state}\n---\n\n# Fence\n`;
+  const run = async (state, det) => {
+    const files = new Map([["bundle.md", md(state)], ["data/provenance.json", prov(det)]]);
+    const { findings } = await checkBundle({ folderName: "INFO-2026-0009-fence", files,
+      sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+    return findings.filter((x) => x.check === "C-18.9");
+  };
+  t("undetermined in the working corpus asserts nothing false and draws nothing",
+    (await run("collected", false)).length, 0);
+  const fenced = await run("verified", false);
+  t("the same document at verified is refused", fenced.length, 1);
+  t("naming what the group must not do",
+    /must not publish what it cannot attribute/.test(fenced[0].message), true);
+  t("a determined authority passes the fence", (await run("verified", true)).length, 0);
+}
+
 await mf.dispose();
 console.log(`\nconformance: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

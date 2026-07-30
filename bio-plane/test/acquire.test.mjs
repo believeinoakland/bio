@@ -28,7 +28,11 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-acq", MEMBER_TOKEN: "mem-acq", PROBE_TOKEN: "prb-acq", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-acq", MEMBER_TOKEN: "mem-acq", PROBE_TOKEN: "prb-acq", VERSION: "test",
+              /* D-95: this suite is about acquisition, not pacing; a huge appetite
+                 keeps the governor in the path while never gating a fake host.
+                 The governor has its own suite driving REAL pacing. */
+              GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
   outboundService(request) {
     const u = new URL(request.url);
     if (u.pathname === "/report.pdf")
@@ -93,9 +97,31 @@ for (const [locator, why] of [
   ["", "empty"],
 ]) t(`refused: ${why}`, (await acquire({ ...GOOD, locator })).reason, "BAD_LOCATOR");
 
-console.log("\n--- the source axis is named, or nothing is recorded ---");
-t("no authority is refused", (await acquire({ locator: GOOD.locator })).reason, "NO_AUTHORITY");
-t("blank authority is refused", (await acquire({ ...GOOD, authority: "   " })).reason, "NO_AUTHORITY");
+console.log("\n--- D-97: authority is three-valued, and undetermined is a task, not a refusal ---");
+/* The rule this replaces refused a capture that named no authority, which
+   forced callers to invent one to get past the gate: exactly the false
+   assertion the ruling exists to prevent. The old assertions encoded the
+   superseded rule and are CORRECTED rather than exempted, per standing
+   lesson 3. */
+const noauth = await acquire({ locator: GOOD.locator });
+t("a capture with no assertion succeeds", noauth.ok, true);
+t("and is honestly undetermined", noauth.document.authority_state, "undetermined");
+t("with a dated basis saying why", /no assertion was supplied/.test(noauth.document.authority_basis || ""), true);
+t("and no invented authority field", "authority" in noauth.document, false);
+const blank = await acquire({ ...GOOD, authority: "   " });
+t("a blank assertion is no assertion", blank.document.authority_state, "undetermined");
+const asserted = await acquire(GOOD);
+t("an asserted authority is recorded", asserted.document.authority, GOOD.authority);
+t("as determined", asserted.document.authority_state, "determined");
+t("with the assertion named as the basis", /asserted by the capturing/.test(asserted.document.authority_basis || ""), true);
+t("and the basis is dated", asserted.document.authority_basis.includes(asserted.document.retrieved), true);
+console.log("\n--- D-97: a direct fetch is one provenance hop ---");
+t("the chain exists", Array.isArray(asserted.document.provenance_chain), true);
+t("with exactly one hop", asserted.document.provenance_chain.length, 1);
+t("naming who fetched", /^instance /.test(asserted.document.provenance_chain[0].who), true);
+t("what is asserted", asserted.document.provenance_chain[0].asserts.includes(GOOD.locator), true);
+t("that the assertion is stated, not cryptographically bound", asserted.document.provenance_chain[0].bound, false);
+t("and the source it came via", asserted.document.provenance_chain[0].via, "direct");
 
 console.log("\n--- what the source does wrong is reported, not swallowed ---");
 t("a 404 is named with its status",

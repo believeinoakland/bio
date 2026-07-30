@@ -63,7 +63,12 @@ export class Store extends DurableObject {
        *
        * This list must never grow to include a table holding first-party
        * material. The test suite asserts the distinction. */
-    for (const [table, needed] of [["links", "citation_norm"]]) {
+    /* captured_locators gained `via` (D-96) when observation SOURCE became part
+       * of the key: an archive observation of the same bytes at the same address
+       * is a different fact from a direct one, and rows keyed without via had
+       * already merged them. Like links, it is derived: re-derivable from the
+       * captures and the provenance documents, holding nothing a member wrote. */
+    for (const [table, needed] of [["links", "citation_norm"], ["captured_locators", "via"]]) {
       const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
       /* Dropped BEFORE the schema runs, so the CREATE TABLE and CREATE INDEX
          statements below rebuild it in one pass. Dropping afterwards meant the
@@ -4030,23 +4035,161 @@ export class Store extends DurableObject {
   }
 
   /* ------------------------------------------------------------------ *
+   * D-95: the per-host request governor
+   *
+   * Our APPETITE is a configured constant because it is ours. Their CAPACITY
+   * is discovered by being refused and recorded, the pattern capture_limits
+   * proved. This lives here because the Durable Object serialises, so one
+   * token bucket is globally correct for the instance for free; a bucket in
+   * Worker memory governs nothing, since every invocation is independent.
+   *
+   * Pacing resembles a person rather than a loop: grants to one host are
+   * separated by a JITTERED gap around the appetite's base interval, never a
+   * metronome. The chosen constants are recorded in MEASUREMENTS.md as chosen,
+   * not measured. A 429 overrides the bucket entirely: cooloff_until in the
+   * future refuses admission regardless of token balance, honouring
+   * Retry-After when the counterparty names one and escalating with
+   * consecutive refusals when it does not, mirroring their own escalation.
+   * Success decays the escalation to zero. This governs OUR instance only and
+   * cannot solve the shared-egress problem; that is D-95's recorded limit.
+   * ------------------------------------------------------------------ */
+
+  static GOVERNOR = {
+    defaultAppetitePerMin: 12,   /* chosen: one document fetch every ~5s on average */
+    jitterLow: 0.6, jitterHigh: 1.5,
+    burstTokens: 3,              /* a person opens a few tabs; a loop opens forty */
+    cooloff429BaseMs: 60_000,  cooloff429CapMs: 3_600_000,
+    cooloffRefusedBaseMs: 30_000, cooloffRefusedCapMs: 1_800_000,
+  };
+
+  #governorRow(host, now) {
+    let r = [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)][0];
+    if (!r) {
+      this.sql.exec(
+        `INSERT INTO host_governor (host, tokens, refilled_at, updated_at) VALUES (?, ?, ?, ?)`,
+        host, Store.GOVERNOR.burstTokens, now, new Date(now).toISOString());
+      r = [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)][0];
+    }
+    return r;
+  }
+
+  governorAdmit({ host }) {
+    if (!host) return { admitted: false, reason: "no host named" };
+    const G = Store.GOVERNOR;
+    const now = Date.now();
+    const r = this.#governorRow(host, now);
+    /* Precedence: the host's own configured row, then the instance's
+       GOVERNOR_APPETITE_PER_MIN binding (an operator knob, and what lets a
+       test suite drive the real path without pacing a fake host), then the
+       chosen default recorded in MEASUREMENTS.md. */
+    const appetite = r.appetite_per_min
+      || Number(this.env && this.env.GOVERNOR_APPETITE_PER_MIN)
+      || G.defaultAppetitePerMin;
+    const baseGapMs = 60_000 / appetite;
+
+    /* A cool-off overrides the bucket entirely. */
+    if (r.cooloff_until > now) {
+      this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
+        new Date(now).toISOString(), host);
+      return { admitted: false, reason: "cooling_off", retry_in_ms: r.cooloff_until - now,
+               refusals: r.refusals, last_refusal_status: r.last_refusal_status };
+    }
+
+    /* Refill, capped at a small burst: a person opens a few tabs at once and
+       then reads; a loop opens forty and keeps going. */
+    const tokens = Math.min(G.burstTokens, r.tokens + ((now - r.refilled_at) / 60_000) * appetite);
+    if (tokens < 1) {
+      const retryIn = Math.ceil(((1 - tokens) / appetite) * 60_000);
+      this.sql.exec(`UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
+        tokens, now, new Date(now).toISOString(), host);
+      return { admitted: false, reason: "appetite", retry_in_ms: retryIn };
+    }
+
+    /* Admitted. The caller waits wait_ms before fetching, which is where the
+       human-shaped gap comes from: jittered around the base interval, and only
+       when this grant follows the last one closely enough to need spacing. */
+    const jitter = G.jitterLow + Math.random() * (G.jitterHigh - G.jitterLow);
+    const gapWanted = baseGapMs * jitter;
+    const sinceLast = now - (r.last_grant_at || 0);
+    const wait = sinceLast >= gapWanted ? 0 : Math.round(gapWanted - sinceLast);
+    this.sql.exec(
+      `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
+      tokens - 1, now, now + wait, new Date(now).toISOString(), host);
+    return { admitted: true, wait_ms: wait, appetite_per_min: appetite };
+  }
+
+  governorReport({ host, status, retry_after_ms = null }) {
+    if (!host) return { recorded: false };
+    const G = Store.GOVERNOR;
+    const now = Date.now();
+    const r = this.#governorRow(host, now);
+    const s = Number(status) || 0;
+    if (s >= 200 && s < 400) {
+      /* They relented, or never objected; the escalation resets. */
+      this.sql.exec(`UPDATE host_governor SET refusals = 0, updated_at = ? WHERE host = ?`,
+        new Date(now).toISOString(), host);
+      return { recorded: true, refusals: 0 };
+    }
+    if (s === 429 || s === 403 || s === 503) {
+      const refusals = (r.refusals || 0) + 1;
+      const base = s === 429 ? G.cooloff429BaseMs : G.cooloffRefusedBaseMs;
+      const cap  = s === 429 ? G.cooloff429CapMs  : G.cooloffRefusedCapMs;
+      const escalated = Math.min(cap, base * Math.pow(2, refusals - 1));
+      /* Retry-After is the counterparty naming their own capacity; honour it
+         when it is longer than our escalation, never shorter. */
+      const cooloff = now + Math.max(escalated, Number(retry_after_ms) || 0);
+      this.sql.exec(
+        `UPDATE host_governor SET refusals = ?, last_refusal_at = ?, last_refusal_status = ?, cooloff_until = ?, updated_at = ? WHERE host = ?`,
+        refusals, now, s, cooloff, new Date(now).toISOString(), host);
+      return { recorded: true, refusals, cooloff_until: cooloff, cooloff_ms: cooloff - now };
+    }
+    /* Other statuses (404, 500, network shapes reported as 0) are outcomes for
+       monitoring, not capacity signals; the governor records nothing. */
+    return { recorded: true, ignored: s };
+  }
+
+  governorConfig({ host, appetite_per_min = null }) {
+    if (!host) return { configured: false };
+    const now = Date.now();
+    this.#governorRow(host, now);
+    this.sql.exec(`UPDATE host_governor SET appetite_per_min = ?, updated_at = ? WHERE host = ?`,
+      appetite_per_min ? Number(appetite_per_min) : null, new Date(now).toISOString(), host);
+    return { configured: true, host, appetite_per_min: appetite_per_min ? Number(appetite_per_min) : null };
+  }
+
+  governorState({ host = null }) {
+    const rows = host
+      ? [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)]
+      : [...this.sql.exec(`SELECT * FROM host_governor ORDER BY host`)];
+    return { hosts: rows.map((r) => ({ ...r })) };
+  }
+
+  /* ------------------------------------------------------------------ *
    * Links: what a document pointed at, and whether we hold that version
    * ------------------------------------------------------------------ */
 
-  recordCapturedLocator({ address, addressNorm, captureSha, retrieved }) {
+  recordCapturedLocator({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null }) {
     if (!addressNorm || !captureSha) return { recorded: false };
     /* Widen the interval rather than replacing a date. Seeing the same bytes
        again later is not a duplicate, it is the observation that proves the
-       target held still in between. */
+       target held still in between.
+       *
+       * The interval widens PER SOURCE (D-96): via is part of the key, so a
+       * direct observation and an archive observation of the same bytes are two
+       * rows. The bracket arm reads them apart, because two sources agreeing is
+       * stronger evidence than one source repeating, and two sources
+       * disagreeing is a provenance difference rather than a change. */
     this.sql.exec(
-      `INSERT INTO captured_locators (address_norm, address, capture_sha, first_retrieved, last_retrieved, observations)
-       VALUES (?, ?, ?, ?, ?, 1)
-       ON CONFLICT(address_norm, capture_sha) DO UPDATE SET
-         first_retrieved = MIN(first_retrieved, excluded.first_retrieved),
-         last_retrieved  = MAX(last_retrieved,  excluded.last_retrieved),
-         observations    = observations + 1`,
-      addressNorm, address || addressNorm, captureSha, retrieved, retrieved);
-    return { recorded: true, address_norm: addressNorm };
+      `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+       ON CONFLICT(address_norm, capture_sha, via) DO UPDATE SET
+         first_retrieved   = MIN(first_retrieved, excluded.first_retrieved),
+         last_retrieved    = MAX(last_retrieved,  excluded.last_retrieved),
+         retrieval_locator = COALESCE(excluded.retrieval_locator, retrieval_locator),
+         observations      = observations + 1`,
+      addressNorm, address || addressNorm, captureSha, String(via || "direct"),
+      retrievalLocator, retrieved, retrieved);
+    return { recorded: true, address_norm: addressNorm, via: String(via || "direct") };
   }
 
   /** File the links a captured document made. Replaces this capture's rows
@@ -4115,9 +4258,15 @@ export class Store extends DurableObject {
         out.push({ ...r, resolution: r.partition, verdict: null });
         continue;
       }
+      /* D-96: the bracket arms read DIRECT observations only. An archive row
+         for the same address is a different observation stream: comparing
+         archive bytes against live bytes as one stream reports a change that is
+         a provenance difference. Cross-source agreement is stronger evidence
+         and gets its own treatment when the provenance chain grades it; until
+         then it must not leak into the identity bracket. */
       const caps = [...this.sql.exec(
         `SELECT capture_sha, first_retrieved, last_retrieved, observations FROM captured_locators
-         WHERE address_norm = ? ORDER BY first_retrieved`, r.address_norm)];
+         WHERE address_norm = ? AND via = 'direct' ORDER BY first_retrieved`, r.address_norm)];
       if (!caps.length) {
         tally.offsite++;
         out.push({ ...r, resolution: "offsite", verdict: null,
@@ -4472,6 +4621,10 @@ export class Store extends DurableObject {
         projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
                                                 sourceBundle: url.searchParams.get("bundle") || null }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
+        governoradmit: () => this.governorAdmit(body || { host: url.searchParams.get("host") }),
+        governorreport: () => this.governorReport(body || {}),
+        governorconfig: () => this.governorConfig(body || {}),
+        governorstate: () => this.governorState(body || { host: url.searchParams.get("host") }),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),

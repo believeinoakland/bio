@@ -44,6 +44,51 @@ export function userAgent(env, purpose = "acquire") {
    * zone moves and the path exists. */
   return `CivicOS/${version} (+https://github.com/believeinoakland/bio; instance ${instance}; ${purpose})`;
 }
+
+/* D-95: every governed outbound fetch asks the Durable Object for admission
+ * first, waits the jittered gap the governor names, fetches with the legible
+ * agent, and reports the outcome back so the host's discovered capacity is
+ * learned rather than guessed. Refusal by the governor is a named answer, not
+ * an exception. An UNREACHABLE governor never blocks the fetch: this is
+ * politeness, not coordination, and if the store is down the op fails by
+ * itself anyway. MEASURED case in point, 2026-07-30 on the deployed 0.46.0:
+ * eleven captures of www.oaklandca.gov from Workers egress, one 403 on the
+ * only cold back-to-back pair, ten paced or warmed requests admitted. */
+async function governedFetch(env, stub, target, purpose) {
+  let host = null;
+  try { host = new URL(target).host; } catch { /* isPublicHttpsLocator refuses these shapes upstream */ }
+  let waitMs = 0;
+  if (host && stub) {
+    try {
+      const a = await (await stub.fetch("http://x/governoradmit", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ host }),
+      })).json();
+      const g = (a && a.result) || null;
+      if (g && g.admitted === false)
+        return { refusedByGovernor: true, reason: g.reason || "governed",
+                 retry_in_ms: g.retry_in_ms || 0, last_refusal_status: g.last_refusal_status || null };
+      waitMs = (g && g.wait_ms) || 0;
+    } catch { /* ungoverned is better than unfetched; see above */ }
+  }
+  if (waitMs) await new Promise((s) => setTimeout(s, waitMs));
+  const res = await fetch(target, { redirect: "follow", headers: { "user-agent": userAgent(env, purpose) } });
+  if (host && stub) {
+    const ra = res.headers.get("retry-after");
+    let raMs = null;
+    if (ra) {
+      const n = Number(ra);
+      raMs = Number.isFinite(n) ? n * 1000 : Math.max(0, Date.parse(ra) - Date.now() || 0);
+    }
+    try {
+      await stub.fetch("http://x/governorreport", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ host, status: res.status, retry_after_ms: raMs }),
+      });
+    } catch { /* an unrecorded outcome is not a failed fetch */ }
+  }
+  return { res };
+}
 import { cpuProbe } from "./cpu.mjs";
 import { Store } from "./store.mjs";
 export { Store };
@@ -988,14 +1033,29 @@ export default {
       if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
         return json({ ok: false, reason: "BAD_LOCATOR",
                       detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address" }, 400);
-      if (typeof body?.authority !== "string" || !body.authority.trim())
-        return json({ ok: false, reason: "NO_AUTHORITY",
-                      detail: "record who issued the document; the capture chain and the source are separate claims and both are named" }, 400);
+      /* D-97: authority is THREE-VALUED and undetermined is a task, not a
+         blocker (RULED, AUTHORITY-AND-TRUST.md). A caller who names the
+         issuing party makes a member assertion, recorded as such; a caller who
+         cannot leaves the capture honestly undetermined, to be resolved
+         through the task list rather than refused at the door. What was here
+         before, a hard refusal on a missing string, forced callers to invent
+         an authority to get past the gate, which is exactly the false
+         assertion the ruling exists to prevent. Both states record HOW they
+         were reached, because "we could not establish this" is as much a
+         dated fact as "the member asserted it". */
+      const authorityAsserted = typeof body?.authority === "string" && body.authority.trim()
+        ? body.authority.trim() : null;
 
       const retrieved = new Date().toISOString().split(".")[0] + "Z";
+      const stGov = env.STORE.get(env.STORE.idFromName(storeName));
       let res;
       try {
-        res = await fetch(locator, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
+        const g = await governedFetch(env, stGov, locator, "acquire");
+        if (g.refusedByGovernor)
+          return json({ ok: false, reason: "HOST_COOLING_OFF",
+                        detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
+                        retry_in_ms: g.retry_in_ms || 0, locator }, 429);
+        res = g.res;
       } catch (e) {
         return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
       }
@@ -1108,7 +1168,7 @@ export default {
       const name = (body.file || locator.split("/").pop() || "capture")
         .replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
 
-      const stLim = env.STORE.get(env.STORE.idFromName(storeName));
+      const stLim = stGov;
 
       /* D-58. File the address this capture holds, UNCONDITIONALLY, beside the
          capture itself. This used to sit inside the subresource branch, behind
@@ -1134,7 +1194,11 @@ export default {
           method: "POST", headers: { "content-type": "application/json" },
           body: JSON.stringify({ address: res.url || locator,
             addressNorm: normalizeAddress(res.url || locator),
-            captureSha: sha, retrieved }),
+            captureSha: sha, retrieved,
+            /* D-96: a direct fetch is its own source, and the document address
+               and the retrieval locator are the same string. An archive-sourced
+               capture will name via 'archive.org' and split the two. */
+            via: "direct", retrievalLocator: locator }),
         });
       } catch { /* an unfiled address is not a failed capture */ }
 
@@ -1237,7 +1301,40 @@ export default {
                 return { existed: false };
               },
               fetchOne: async (u) => {
+                /* D-95, the subresource case. A PERSON'S browser bursts a
+                   page's assets; it is document loads that a person paces. So
+                   subresources ride the primary fetch's admission rather than
+                   consuming a token apiece (forty tokens for one page would
+                   pace like nothing human), take a small jittered stagger the
+                   way a browser's connection pool does, and REPORT every
+                   outcome so a refusal mid-page still teaches the governor.
+                   A host that has entered cool-off since the primary was
+                   admitted stops the remaining assets. */
+                let subHost = null;
+                try { subHost = new URL(u).host; } catch { /* refused below by the fetch itself */ }
+                if (subHost) {
+                  try {
+                    const st = await (await stGov.fetch(`http://x/governorstate?host=${encodeURIComponent(subHost)}`)).json();
+                    const row = st?.result?.hosts?.[0];
+                    if (row && row.cooloff_until > Date.now())
+                      return { ok: false, status: 0, reason: "HOST_COOLING_OFF" };
+                  } catch { /* an unreadable governor never blocks; politeness, not coordination */ }
+                }
+                const stagger = env.GOVERNOR_SUBRESOURCE_STAGGER_MS !== undefined
+                  ? Number(env.GOVERNOR_SUBRESOURCE_STAGGER_MS) || 0
+                  : 50 + Math.floor(Math.random() * 200);
+                if (stagger) await new Promise((s) => setTimeout(s, stagger));
                 const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
+                if (subHost) {
+                  try {
+                    await stGov.fetch("http://x/governorreport", {
+                      method: "POST", headers: { "content-type": "application/json" },
+                      body: JSON.stringify({ host: subHost, status: r.status,
+                        retry_after_ms: (() => { const ra = r.headers.get("retry-after"); if (!ra) return null;
+                          const n = Number(ra); return Number.isFinite(n) ? n * 1000 : Math.max(0, Date.parse(ra) - Date.now() || 0); })() }),
+                    });
+                  } catch { /* an unrecorded outcome is not a failed fetch */ }
+                }
                 if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };
                 return { ok: true, status: r.status,
                          bytes: new Uint8Array(await r.arrayBuffer()),
@@ -1325,7 +1422,32 @@ export default {
         ok: true, existed,
         document: {
           file: `snapshots/${name}`,
-          locator, authority: body.authority.trim(), retrieved,
+          locator, retrieved,
+          /* D-97: authority mirrors verdict / verdict_basis / verdict_at
+             rather than inventing a shape. The determination when one was
+             made; the STATE always; the basis in BOTH cases, dated, because
+             "the member asserted it" and "nothing could establish it" are
+             both facts about how the record got here. An undetermined
+             capture is held and barred from publication, never refused at
+             intake (RULED, AUTHORITY-AND-TRUST.md). */
+          ...(authorityAsserted ? { authority: authorityAsserted } : {}),
+          authority_state: authorityAsserted ? "determined" : "undetermined",
+          authority_basis: authorityAsserted
+            ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}`
+            : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`,
+          /* The chain of custody as ordered hops from us back to the origin,
+             each naming who, what they assert, the evidence, and whether the
+             assertion is cryptographically bound or merely stated (RULED). A
+             direct fetch is ONE hop, which is what grades it above an
+             archive-sourced capture of the same document: grade tracks
+             directness, never technique. */
+          provenance_chain: [{
+            who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
+            asserts: `these bytes were served for ${locator} at ${retrieved}`,
+            evidence: "first-party https fetch, hashed at receipt, transport record on this document",
+            bound: false,
+            via: "direct",
+          }],
           capture: {
             method: multipart
               ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt`
@@ -1540,7 +1662,15 @@ export default {
       const checked = new Date().toISOString().split(".")[0] + "Z";
       let status = null, note = null, seen = null;
       try {
-        const res = await fetch(locator, { redirect: "follow", headers: { "user-agent": userAgent(env, "monitor") } });
+        /* D-95: a monitor tick is a document fetch and paces like one. A
+           governed refusal is a tick outcome with a name, not an error: the
+           check simply did not run, and saying so beats a fabricated status. */
+        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), locator, "monitor");
+        if (g.refusedByGovernor)
+          return json({ ok: false, reason: "HOST_COOLING_OFF",
+                        detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
+                        retry_in_ms: g.retry_in_ms || 0, locator }, 429);
+        const res = g.res;
         if (res.status === 404 || res.status === 410) { status = "removed"; note = `the source answered ${res.status}`; }
         else if (!res.ok) { note = `the source answered ${res.status}`; }
         else {

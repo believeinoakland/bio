@@ -387,14 +387,31 @@ CREATE INDEX IF NOT EXISTS link_verdicts_pair ON link_verdicts(source_capture, a
 -- outright and needs no timestamp from the source that anyone has to trust. A
 -- first draft keyed rows by (address, sha) and kept only the earliest date,
 -- which threw away exactly the evidence the verdict is built on.
+-- D-96: via names the SOURCE of an observation, because once an alternative
+-- source counts as a re-fetch for monitoring (RULED, AUTHORITY-AND-TRUST.md),
+-- archive bytes and live bytes must never be compared as one observation
+-- stream. Two sources agreeing is STRONGER evidence than one source repeating;
+-- two sources disagreeing is not evidence of change at all. The bracket arm
+-- cannot tell those apart without knowing which is which, so via is part of
+-- the KEY: an archive observation of the same bytes is a different fact from a
+-- direct one, not a repeat of it.
+--
+-- The address columns carry the DOCUMENT ADDRESS, the address the record
+-- reasons about; retrieval_locator carries what was actually fetched. For a
+-- direct capture they are the same string. For an archive capture the document
+-- address is the CDX original field through our own normaliser and the
+-- retrieval locator is the archive's replay address, and conflating them is
+-- how a provenance difference gets reported as a change.
 CREATE TABLE IF NOT EXISTS captured_locators (
-  address_norm    TEXT NOT NULL,
-  address         TEXT NOT NULL,
-  capture_sha     TEXT NOT NULL,
-  first_retrieved TEXT NOT NULL,
-  last_retrieved  TEXT NOT NULL,
-  observations    INTEGER NOT NULL DEFAULT 1,
-  PRIMARY KEY (address_norm, capture_sha)
+  address_norm      TEXT NOT NULL,
+  address           TEXT NOT NULL,
+  capture_sha       TEXT NOT NULL,
+  via               TEXT NOT NULL DEFAULT 'direct',
+  retrieval_locator TEXT,
+  first_retrieved   TEXT NOT NULL,
+  last_retrieved    TEXT NOT NULL,
+  observations      INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
 -- What the runtime was observed to COST and to ALLOW, measured rather than
@@ -428,5 +445,32 @@ CREATE TABLE IF NOT EXISTS cpu_probe (
   elapsed_ms  REAL NOT NULL,
   iterations  INTEGER NOT NULL,
   at          TEXT NOT NULL
+);
+
+-- D-95: the per-host request governor. Our APPETITE is a configured constant
+-- because it is ours; their CAPACITY is discovered by being refused and
+-- recorded, following the pattern capture_limits proved for the subrequest
+-- ceiling. It lives in the Durable Object because the object serialises, which
+-- makes one token bucket globally correct for the instance for free; a bucket
+-- in Worker memory governs nothing because every invocation is independent.
+-- appetite_per_min NULL means the configured default (a CHOSEN constant,
+-- recorded in MEASUREMENTS.md, never a finding). cooloff_until is how a 429 or
+-- a refusal overrides the bucket entirely: while it is in the future, no token
+-- balance admits anything to that host. refusals counts CONSECUTIVE refusals
+-- and decays to zero on success, so the cool-off escalates the way the
+-- counterparty's own escalation does and resets when they relent.
+CREATE TABLE IF NOT EXISTS host_governor (
+  host                TEXT PRIMARY KEY,
+  appetite_per_min    REAL,
+  tokens              REAL    NOT NULL DEFAULT 0,
+  refilled_at         INTEGER NOT NULL DEFAULT 0,
+  last_grant_at       INTEGER NOT NULL DEFAULT 0,
+  cooloff_until       INTEGER NOT NULL DEFAULT 0,
+  refusals            INTEGER NOT NULL DEFAULT 0,
+  last_refusal_at     INTEGER,
+  last_refusal_status INTEGER,
+  granted             INTEGER NOT NULL DEFAULT 0,
+  refused_total       INTEGER NOT NULL DEFAULT 0,
+  updated_at          TEXT
 );
 `;

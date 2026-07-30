@@ -541,7 +541,9 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-sub", MEMBER_TOKEN: "mem-sub", PROBE_TOKEN: "prb-sub", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-sub", MEMBER_TOKEN: "mem-sub", PROBE_TOKEN: "prb-sub", VERSION: "test",
+              /* D-95: see acquire.test.mjs; pacing has its own suite. */
+              GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
   outboundService(request) {
     const u = new URL(request.url);
     SEEN_UA.push([u.pathname, request.headers.get("user-agent")]);
@@ -1052,10 +1054,11 @@ console.log("\n--- a derived table that changes shape is rebuilt, not patched --
   const src = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
   const m = /for \(const \[table, needed\] of \[([\s\S]*?)\]\) \{/.exec(src);
   const named = [...(m ? m[1] : "").matchAll(/\["([a-z_]+)"/g)].map((x) => x[1]);
-  t("only derived tables are on the reshape list", named, ["links"]);
+  t("only derived tables are on the reshape list", named, ["links", "captured_locators"]);
   /* The rule this asserts: a table holding first-party material must never be
      dropped to change its shape, because there is nothing to re-derive it from.
-     links is regenerable from the captures; bundles and history are not. */
+     links is regenerable from the captures; captured_locators (D-96) from the
+     captures and the provenance documents; bundles and history are not. */
   const forbidden = ["bundles", "history", "register", "members", "refs", "promotions"];
   t("and nothing holding first-party material is", named.filter((x) => forbidden.includes(x)), []);
   t("the reshape runs BEFORE the schema, or the new index hits the old table",
@@ -1394,7 +1397,8 @@ console.log("\n--- the plane identifies itself legibly to the source ---");
      across three call sites, none of which agreed with each other. */
   const src = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
   t("every outbound fetch takes its agent from the one function",
-    (src.match(/"user-agent":/g) || []).length === (src.match(/userAgent\(env, "/g) || []).length, true);
+    (src.match(/"user-agent":\s*userAgent\(env,/g) || []).length === (src.match(/"user-agent":/g) || []).length
+      && (src.match(/"user-agent":/g) || []).length > 0, true);
   t("and no bare token survives", /"user-agent":\s*"bio-/.test(src), false);
 }
 

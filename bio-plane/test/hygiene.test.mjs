@@ -92,5 +92,33 @@ console.log("\n--- the served page template is intact ---");
   }
 }
 
+/* schema.mjs is the same shape and met the same fate on 2026-07-30: a comment
+ * quoting a column name in backticks terminated the SCHEMA literal, node
+ * --check still passed because the stray pair happened to re-balance, and only
+ * miniflare's parser refused it. Same class, third strike, so the guard covers
+ * it now. SQL comments quote nothing in backticks. */
+console.log("\n--- the schema template is intact ---");
+{
+  const src = readFileSync(join(DIR, "..", "src", "schema.mjs"), "utf8");
+  const open = src.indexOf("export const SCHEMA = `");
+  t("schema.mjs still exports one template literal", open > -1, true);
+  const body = src.slice(open + "export const SCHEMA = `".length, src.lastIndexOf("`;"));
+  let ticks = 0, interps = 0, i = 0;
+  while (i < body.length) {
+    if (body[i] === "\\") { i += 2; continue; }
+    if (body[i] === "`") ticks++;
+    if (body[i] === "$" && body[i + 1] === "{") interps++;
+    i += 1;
+  }
+  t("no unescaped backtick inside it", ticks, 0);
+  t("and no interpolation at all: the schema is static text", interps, 0);
+  let loaded = null;
+  try { loaded = (await import("../src/schema.mjs")).SCHEMA; } catch (e) {
+    console.log("    load error:", e.message);
+  }
+  t("the module loads", typeof loaded, "string");
+  t("and the literal ends where the file says it does", typeof loaded === "string" && loaded.trimEnd().endsWith(");"), true);
+}
+
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

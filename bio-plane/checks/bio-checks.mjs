@@ -790,6 +790,32 @@ const ORIGIN_KINDS = ['named_request', 'sweep', 'member'];
 
 /** C-18.1: intake provenance register shape, release authority, and the
  *  ratification fence (sweep intake lands at collected, never higher). */
+/** C-18.9: an authority-undetermined capture cannot be PUBLISHED (RULED,
+ * AUTHORITY-AND-TRUST.md, 2026-07-30). The published bucket is the group
+ * speaking in public, and it must not publish material it cannot attribute.
+ * An undetermined capture is legitimate in the WORKING corpus: it asserts
+ * nothing false, is held, and is resolved through the task list. What it may
+ * not do is cross the fence. Implemented here rather than only as a
+ * write-path refusal, per the D-50 lesson: the write path prevents the
+ * damage, the catalog makes the condition reportable on a corpus handed in
+ * from elsewhere. The gate runs at ratify, which is the two-bucket fence, so
+ * this firing IS the refusal. */
+function checkAuthorityPublishable(ctx, findings) {
+  const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
+  const atFence = ctx.fm?.current_state === 'verified' || hist.some(e => e && e.to_state === 'verified');
+  if (!atFence) return;
+  const raw = ctx.files.get('data/provenance.json');
+  if (!raw) return; // pre-contract bundle; C-18.1 governs register presence
+  let reg; try { reg = JSON.parse(asText(raw)); } catch { return; /* C-14.3 reports unparsable JSON */ }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
+  docs.forEach((d, i) => {
+    if (d && d.authority_state === 'undetermined') {
+      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is authority-undetermined and this bundle is at or past verified: the record has not established who authored this material, and the group must not publish what it cannot attribute`,
+        ['determine the authority through the task list and record the determination with its basis', 'or return the bundle to collected until the determination is made']));
+    }
+  });
+}
+
 function checkReleaseAuthority(ctx, findings) {
   if (ctx.fm?.object_type !== 'information') return;
   const raw = ctx.files.get('data/provenance.json');
@@ -804,8 +830,28 @@ function checkReleaseAuthority(ctx, findings) {
   let sweepOrigin = false;
   docs.forEach((d, i) => {
     if (!d || typeof d !== 'object') { findings.push(f('C-18.1', 'error', `provenance documents[${i}] is not an object`)); return; }
-    for (const k of ['file', 'locator', 'authority', 'retrieved']) {
+    /* D-97: authority is THREE-VALUED (RULED, AUTHORITY-AND-TRUST.md). A
+       document either carries an authority, or carries
+       authority_state 'undetermined' with a basis saying why the
+       determination could not be made. Undetermined must be STATED, never
+       inferred from absence; a document with neither is missing its source
+       axis, exactly as before the ruling. Documents from before the ruling
+       carry authority with no authority_state and remain conformant: the
+       corpus is non-uniform by design and provenance is never reshaped. */
+    for (const k of ['file', 'locator', 'retrieved']) {
       if (!d[k]) findings.push(f('C-18.1', 'error', `provenance documents[${i}] missing '${k}'`));
+    }
+    const aState = d.authority_state;
+    if (aState !== undefined && !['determined', 'undetermined'].includes(aState)) {
+      findings.push(f('C-18.1', 'error', `provenance documents[${i}].authority_state '${aState}' is not 'determined' or 'undetermined'`));
+    }
+    if (aState === 'undetermined') {
+      if (!d.authority_basis) findings.push(f('C-18.1', 'error', `provenance documents[${i}] is authority-undetermined but names no authority_basis: why it could not be established is itself a recorded fact`));
+    } else if (!d.authority) {
+      findings.push(f('C-18.1', 'error', `provenance documents[${i}] missing 'authority' and does not state authority_state 'undetermined': the source axis is named or its absence is declared, never left blank`));
+    }
+    if (aState === 'determined' && !d.authority_basis) {
+      findings.push(f('C-18.1', 'error', `provenance documents[${i}] is authority-determined but names no authority_basis: how it was reached is recorded in BOTH cases`));
     }
     if (d.file && !hasFile_(ctx, String(d.file)) && !Array.isArray(d.parts)) {
       findings.push(f('C-18.1', 'error', `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
@@ -2581,6 +2627,7 @@ export async function checkBundle(input, opts = {}) {
     checkWriteCompleteness(ctx, findings);
     await checkInformationExtension(ctx, findings);
     checkReleaseAuthority(ctx, findings);
+    checkAuthorityPublishable(ctx, findings);
     checkRegisterIntegrity(ctx, findings);
     await checkInfo2Contract(ctx, findings);
     await checkReleaseSignature(ctx, findings);
