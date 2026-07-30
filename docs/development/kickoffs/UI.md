@@ -101,3 +101,9 @@ pending Bob's counsel; the refusal to impersonate a browser is not, because a
 system whose entire subject is provenance does not lie about who is asking.
 SOURCE-ACCESS.md has the evidence, the practice, the law and the open questions.
 
+**This thread does NOT hold the release baton** (`kickoffs/BATON.md`, held by
+CAPTURE as of 2026-07-30). Deploying `civicos` is unaffected and needs no baton,
+because the UI worker carries no version number in the shared repo. Cutting a
+PLANE release does: `deploy.mjs` refuses without `--thread UI` matching the
+remote baton. If this thread needs to ship a plane change, say so in the decision
+items and let Bob pass the baton.

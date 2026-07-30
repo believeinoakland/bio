@@ -43,8 +43,9 @@ sites that matter and the recurrence data has been accumulating unused. (3)
 Whatever D-55 needs to stop blocking CLIENT-RENDERED.md, or a clear statement of
 why it cannot be unblocked without a ruling from me. (4) Release discipline in
 full: npm run build, the whole suite, sign with the bio-release key,
-release/RELEASE.json, tag, deploy via bio-plane/scripts/deploy.mjs, op=audit
-clean. (5) Push, appending to DEBT.md and MEASUREMENTS.md rather than rewriting
+release/RELEASE.json, tag, deploy via bio-plane/scripts/deploy.mjs --thread CAPTURE (this thread holds
+the release baton; the script reads it from the remote and refuses without it),
+op=audit clean. (5) Push, appending to DEBT.md and MEASUREMENTS.md rather than rewriting
 them, prepending a state doc entry naming this thread, and rewriting ONLY
 docs/development/kickoffs/CAPTURE.md for the session after.
 
@@ -101,6 +102,11 @@ BIOKEY-RAW1 seed and the repo's signer is browser-only (`src/signpage.mjs`).
 Rebuild the SSHSIG path in Node from the sign page's own algorithm, verify every
 signature against stock `ssh-keygen -Y verify` with negative controls, and check
 the derived public key matches the recorded release key character for character.
+
+**This thread holds the release baton** (`kickoffs/BATON.md`), so it may cut
+plane releases. Pass `--thread CAPTURE` to `deploy.mjs`. If the baton has moved,
+the script refuses and says who holds it; ask Bob rather than forcing, because a
+release race produces two tags claiming one version and git reports success.
 
 **Deploy believes only the bytes.** `bio-plane/scripts/deploy.mjs` reports what
 the Cloudflare API said and trusts none of it: it reads the module back, hashes

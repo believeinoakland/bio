@@ -50,3 +50,7 @@ check the other thread's work survived.
 rulings, already made". Several are cross-cutting and bind this thread too,
 particularly that `undetermined` is first-class and must be stated, and that
 third-party content is attributed to the third party.
+
+**This thread does NOT hold the release baton** (`kickoffs/BATON.md`). If its
+work needs a plane release, raise it in the decision items rather than deploying:
+`deploy.mjs` reads the baton from the remote and refuses.

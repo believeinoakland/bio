@@ -28,7 +28,7 @@ guessing wrong means rewriting another thread's handoff at the end.
 
 | Thread | Owns | Kickoff |
 | --- | --- | --- |
-| `CAPTURE` | `bio-plane/src/subresources.mjs`, `src/cpu.mjs`, capture and link tables in `src/schema.mjs`, capture ops in `src/index.mjs`, `test/subresources.test.mjs` | `kickoffs/CAPTURE.md` |
+| `CAPTURE` | **holds the release baton** · `bio-plane/src/subresources.mjs`, `src/cpu.mjs`, capture and link tables in `src/schema.mjs`, capture ops in `src/index.mjs`, `test/subresources.test.mjs` | `kickoffs/CAPTURE.md` |
 | `UI` | `civicos-ui/**`, `docs/development/UI-PLAN.md` | `kickoffs/UI.md` |
 | `FRAMEWORK` | `docprofile/**`, `docs/architecture/BIO_Content_Framework_*`, `docs/architecture/CONSTRUCTS.md`, `docs/development/DOCUMENT-PROFILES.md` | `kickoffs/FRAMEWORK.md` |
 
@@ -64,12 +64,36 @@ cleanly is a decision item for Bob, not something to resolve by overwriting.
 If your work is additive (new files, appended sections) this costs minutes. If it
 is not, that is a signal the thread boundaries above need redrawing.
 
-## Releases
+## Releases: one baton, and it is enforced
 
-Only one thread should cut a plane release at a time, because a release is a
-version bump, a signature, a tag and a deploy, and two of those racing produces
-two tags claiming the same version. A thread about to release should push its
-code first, so a concurrent thread's rejected push tells it to wait.
+**`kickoffs/BATON.md` names the single thread that may cut a plane release.**
+Bob grants it; a thread does not take it because it wants to ship.
+
+This is the one coordination rule that could not be left as a convention.
+Fetch-and-rebase catches ordinary collisions because they are conflicts. A
+release race is not a conflict: two threads can each bump the version, sign, tag
+and push CLEANLY, and the result is two tags claiming one version and a
+`RELEASE.json` whose signature matches neither deployed artifact. Git sees
+additions and reports success.
+
+So `bio-plane/scripts/deploy.mjs` takes `--thread <NAME>` and refuses unless the
+baton on the REMOTE names that thread. The remote copy is what counts: a thread
+could edit its local copy to grant itself the baton, and the point is what the
+other threads can see. It fails CLOSED, refusing when the baton cannot be read,
+because proceeding blind is the failure it exists to prevent.
+
+There is an override, `--force-without-baton "<reason>"`, which prints the reason
+loudly and must be logged in `BATON.md`. It exists because a hard block with no
+exit invites bypassing `deploy.mjs` entirely, and a deploy that skips that script
+also skips the byte verification, which is far worse than an unauthorised
+release.
+
+Deploying `civicos`, the UI worker, is NOT gated: it carries no version number in
+the shared repo and contends for nothing.
+
+A baton older than fourteen days with no release under it is stale and may be
+taken, with a note in the log. A session that dies mid-flight must not block
+releases forever.
 
 ## Cross-cutting documents
 

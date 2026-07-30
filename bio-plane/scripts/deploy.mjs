@@ -19,16 +19,96 @@
  * idempotent, and the verification runs regardless of how many attempts it took
  * or what any of them claimed.
  *
+ * It also refuses to deploy unless the calling thread HOLDS THE RELEASE BATON.
+ * Two threads cutting a plane release at once produces two tags claiming one
+ * version and a RELEASE.json whose signature matches neither deployed artifact,
+ * and that failure is invisible to git: both threads can push cleanly and still
+ * have raced, because a tag and a version bump are additions rather than
+ * conflicts. A rejected push does not catch it, so something else has to.
+ *
+ * The baton is read from the REMOTE, never the working tree. A thread could edit
+ * its local copy to grant itself the baton; what matters is what the other
+ * threads can see. It fails CLOSED: if the baton cannot be fetched the deploy is
+ * refused, because proceeding blind is precisely the coordination failure this
+ * exists to prevent.
+ *
  * usage: CF_TOKEN=... CF_ACCT=... node deploy.mjs <slug> <version> <asset>
+ *          --thread <NAME>
+ *          [--force-without-baton "<reason>"]
  */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 
-const [slug, version, assetPath] = process.argv.slice(2);
+const argv = process.argv.slice(2);
+const flag = (name) => { const i = argv.indexOf(name); return i === -1 ? null : (argv[i + 1] ?? ""); };
+const positional = argv.filter((a, i) => !a.startsWith("--") && !(i > 0 && argv[i - 1].startsWith("--")));
+const [slug, version, assetPath] = positional;
+const thread = flag("--thread");
+const forced = argv.includes("--force-without-baton") ? flag("--force-without-baton") : null;
 const TOKEN = process.env.CF_TOKEN, ACCT = process.env.CF_ACCT;
 if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
-  console.error("usage: CF_TOKEN=... CF_ACCT=... node deploy.mjs <slug> <version> <asset>");
+  console.error("usage: CF_TOKEN=... CF_ACCT=... node deploy.mjs <slug> <version> <asset> --thread <NAME>");
+  console.error("       [--force-without-baton \"<reason>\"]");
   process.exit(2);
+}
+
+const BATON_URL = "https://raw.githubusercontent.com/believeinoakland/bio/main/docs/development/kickoffs/BATON.md";
+
+/** Read the holder off the remote. Returns null when it cannot be determined,
+ *  which is treated as a refusal rather than as permission. */
+async function batonHolder() {
+  const r = await fetch(BATON_URL, { cache: "no-store" });
+  if (!r.ok) return { error: `baton unreadable: HTTP ${r.status}` };
+  const text = await r.text();
+  const block = /BATON-STATE([\s\S]*?)END-BATON-STATE/.exec(text);
+  if (!block) return { error: "baton file has no BATON-STATE block" };
+  const holder = /^\s*holder:\s*(\S+)/m.exec(block[1]);
+  const since = /^\s*since:\s*(\S+)/m.exec(block[1]);
+  if (!holder) return { error: "baton block names no holder" };
+  return { holder: holder[1], since: since ? since[1] : null };
+}
+
+/* The UI worker carries no version number in the shared repo and contends for
+   nothing, so it is not gated. Only a plane release is indivisible. */
+const GATED = slug !== "civicos";
+
+if (GATED) {
+  if (forced !== null) {
+    if (!forced.trim()) {
+      console.error("--force-without-baton requires a reason, in quotes, and it will be printed.");
+      process.exit(2);
+    }
+    console.error("");
+    console.error("  !! DEPLOYING WITHOUT THE BATON");
+    console.error(`  !! reason: ${forced}`);
+    console.error("  !! Record this in docs/development/kickoffs/BATON.md under Log,");
+    console.error("  !! with the date, the thread and this reason.");
+    console.error("");
+  } else {
+    if (!thread) {
+      console.error("REFUSING: --thread <NAME> is required for a plane release.");
+      console.error("The baton names one thread at a time; see docs/development/kickoffs/BATON.md");
+      process.exit(3);
+    }
+    let b;
+    try { b = await batonHolder(); }
+    catch (e) { b = { error: `baton unreachable: ${(e && e.message) || e}` }; }
+    if (b.error) {
+      console.error(`REFUSING: ${b.error}`);
+      console.error("The baton is read from the remote and this check fails CLOSED: proceeding blind");
+      console.error("is the coordination failure the baton exists to prevent. Use");
+      console.error('--force-without-baton "<reason>" if you are certain, and log it.');
+      process.exit(3);
+    }
+    if (b.holder !== thread) {
+      console.error(`REFUSING: the release baton is held by ${b.holder}${b.since ? ` since ${b.since}` : ""}, not by ${thread}.`);
+      console.error("Two threads cutting a plane release at once produces two tags claiming one");
+      console.error("version and a RELEASE.json matching neither artifact, and git will not catch it.");
+      console.error("Ask Bob to pass the baton, or wait. See docs/development/kickoffs/BATON.md");
+      process.exit(3);
+    }
+    console.log(`baton: held by ${thread}${b.since ? ` since ${b.since}` : ""}`);
+  }
 }
 
 const source = readFileSync(assetPath, "utf8");
