@@ -280,7 +280,7 @@ accepts-when: a time-pinned suite drives three consecutive source failures and s
 added: 2026-07-31 · CONDUCT
 landed:
 
-### CAP-4 · queued
+### CAP-4 · active
 milestone: M2
 scope: `CAPTURE-SCALING.md` item 6, DECIDED 2026-07-31 under Bob's delegation — read that item before building, it carries four specifics. (a) Post-hoc reuse verification from `site_assets`, unconditional, costs zero requests, verdicts appended and dated. (b) At ratification, re-fetch every reused part: MANDATORY as an attempt and a record, never as agreement — `confirmed` / `changed` / `unavailable` all ratify, and ratifying with a reused part while saying nothing is what is forbidden. (c) A PLAIN GET, not `If-None-Match`: both cost one subrequest, and a 304 is the origin's assertion where a hash is our own evidence. This deliberately reverses the conditional-GET suggestion elsewhere in that document, which is right for working capture and wrong here. (d) A fourth outcome `not_attempted`, recorded with its reason, for parts the invocation's budget could not reach — bounded by the calibrated ceiling in `capture_limits`, never silently omitted.
 behind-interface: none
