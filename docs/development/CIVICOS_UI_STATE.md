@@ -1,5 +1,76 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v32, 2026-07-30 session, thread CAPTURE, continuation. A THIRD RELEASE AND FOUR
+RULINGS. 0.48.0 cut, signed, deployed byte-identical, tagged, op=audit 31/31
+clean. It carries D-103, the governor's operator surface: op=governorstate
+(admin/member/probe, read) reports which hosts are held and why, because a
+member watching a capture stall deserves to see the governor is the reason
+rather than a broken source; op=governorconfig (admin/probe, mutating) sets a
+host's appetite, REQUIRES a host so no fat-fingered global change is possible,
+and resets to the instance default when the appetite is omitted. Verified on the
+LIVE instance, not only in the suite: config wrote web.archive.org at 24/min,
+state read it back, a member token was refused config BY CLASS, and the refused
+write left the value unchanged.
+
+BOB'S RULINGS THIS TURN, all recorded where the next session will hit them.
+(1) D-98 is settled and improved: an undetermined capture creates an inbox task
+AUTOMATICALLY AT CAPTURE, through a PRODUCER/CONSUMER QUEUE. The capture path
+only enqueues; a separate consumer holds the sole inbox write path, applies
+routing and the C-19.1 grammar, and dedups idempotently on (refers_to, kind).
+This is the safety property, not a transport detail: the daemon credential's
+blast radius stops at the queue boundary, so a leaked capture token can enqueue
+noise but can never write a task, set an assignee, or forge history. Bob's queue
+instinct made this safer than either option originally posed.
+(2) D-102: the installer wizard must PROMPT each new group for an installation
+name, which becomes the INSTANCE_NAME UA component, so a third party can
+throttle one operator by name. Interim: this instance is bound as 'development',
+done live and verified in the provenance chain.
+(3) Browser-UA delegation is LEGITIMATE but HELD IN RESERVE. Delegating the
+operator's OWN browser user-agent to their OWN instance is speaking as
+themselves through a tool they run, not inventing a client that does not exist.
+It is not adopted while the honest CivicOS agent gains admission; the trigger is
+measurement showing admission has stopped, and the veto is outside counsel (Bob
+is consulting journalists and lawyers). Do not build it pre-emptively, and do
+not read the no-disguise line as forbidding it.
+(4) THE CITY IS NON-SUPPORTIVE. This inverts the D-94 plan. Akamai is Oakland's
+CDN and sits in front of every request to their site; we pass only because its
+bot filter does not recognise CivicOS, which is incidental and not granted. An
+allowlist request to a hostile City may simply hand them the string to block,
+and they already denylist archive.org_bot and GPTBot BY NAME. The strategic
+consequence: the ARCHIVE path and egress diversity become the priority, not the
+allowlist ask. Bob has not yet ruled on writing this into doctrine; the
+reframing is offered and awaiting his read.
+
+ALSO THIS TURN. D-98's grammar and routing were fixed as a CONTRACT
+(INBOX-GRAMMAR.md) derived field-for-field from C-18.5, the exported
+checkGatheringGrammar reuse path, BUNDLE_ID_RE, member_expertise's real columns,
+and the RULED routing order, with every cited precedent verified present before
+the claim was written; D-98 is now a build task. D-60's row was WRONG about its
+own dependency (there is no civicos-ui/volatile.mjs; the machinery is
+docprofile/index.mjs's digests and compare, with handlers in
+docprofile/handlers/), corrected, and its one feasibility question measured:
+docprofile is 37KB of dependency-free JS that tree-shakes to 5.3KB against 2.4MB
+of headroom, imported as ../../docprofile/ and inlined by build, so the
+installer is unaffected. D-104 and D-105 were filed as traps for the archive
+session: a governor-refused monitor tick must NOT count toward the
+source-failure threshold that triggers the fallback (our own politeness is not
+the source being unreachable), and every CDX claim remains unverified because
+web.archive.org is blocked from this egress.
+
+ONE LIVE CONFIG STANDS AND IS NOT A FINDING. web.archive.org is set to 24/min on
+the live instance, the LOW end of the archive's own published figures, chosen as
+a conservative placeholder so that if the archive session fetches before
+re-measuring it does so under the gentlest available number. Re-set it from our
+own measurement once D-105 is discharged.
+
+WHAT THE NEXT CAPTURE SESSION INHERITS. The archive fallback with its two traps
+marked and its schema groundwork shipped; D-98 as a build task with the queue
+ruling; D-102's wizard half; D-60 as a confirmed-feasible build task; D-91 and
+D-65 untouched. The plane is at 0.48.0 live.
+
+---
+
+
 v31, 2026-07-30 session, thread CAPTURE. THE RELEASE THAT DID NOT HAPPEN LAST
 SESSION HAPPENED, AND THEN A SECOND ONE. 0.46.0 (the legible agent, deployed
 byte-verified over 0.45.0) and 0.47.0 (the governor, three-valued authority, and
