@@ -35,7 +35,8 @@ responsibility that a session picks up by claiming it.
 
 | Area | Owns | Produces / consumes |
 | --- | --- | --- |
-| `ARCH` | no code. `docs/architecture/**`, this file, the interface registry | Works with Bob. Turns an architectural decision into per-area work and communicates it |
+| `CONDUCT` | no code. `QUEUE.md`, the interface registry, this file (renamed from `ARCH` 2026-07-31) | Orchestration + integration: drains `QUEUE.md` via ephemeral workers, verifies and lands on `main`. See `ORCHESTRATION.md` |
+| `BOB` | no code. Decisions and their decomposition | Requirements / UX / architecture with Bob; hands decompositions to CONDUCT to enqueue. See `ORCHESTRATION.md` |
 | `CAPTURE` | acquisition mechanics: fetch, governor, subresources, links, reachability, archive fallback | PRODUCES bytes and provenance |
 | `CONTENT-HTML` | identifying content inside HTML: recognizers, client-rendered documents (D-64) | CONSUMES bytes, PRODUCES structure |
 | `CONTENT-PDF` | identifying content inside PDFs, structure extraction (D-91) | CONSUMES bytes, PRODUCES structure |

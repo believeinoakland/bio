@@ -24,6 +24,14 @@ what order, the grant slots, and the standing knowledge for that line of work.
 A session that has not been told its thread should ask rather than guess, because
 guessing wrong means rewriting another thread's handoff at the end.
 
+## The operating model (2026-07-31)
+
+This project now runs as **CONDUCT** (orchestration/integration, formerly `ARCH`)
+and **BOB** (requirements/UX/architecture with Bob) draining a shared work queue
+via ephemeral workers. The model is in `docs/development/ORCHESTRATION.md`; the
+live queue is `docs/development/QUEUE.md`. The area table below is the roster
+those workers are drawn from — an area is a queue, not a standing agent.
+
 ## Active threads
 
 | Thread | Owns | Kickoff |
