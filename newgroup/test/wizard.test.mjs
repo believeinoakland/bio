@@ -168,6 +168,12 @@ console.log("\n--- install: the whole conversation ---");
     { new_tag: "v1", new_sqlite_classes: ["Store"] });
   t("Durable Object bound", meta.bindings.some((b) => b.type === "durable_object_namespace" && b.class_name === "Store"), true);
   t("VERSION is the embedded release", meta.bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+  /* D-102: the instance name IS the worker name, so the slug the group already
+     chose is what the agent advertises. Bound here rather than asked for
+     separately; a second name would be a second source of truth that drifts.
+     Before this, every wizard-installed instance said "instance unnamed". */
+  t("INSTANCE_NAME is bound from the slug",
+    meta.bindings.find((b) => b.name === "INSTANCE_NAME")?.text, "oak-watch");
   const secrets = meta.bindings.filter((b) => b.type === "secret_text");
   t("three secrets set", secrets.map((s) => s.name).sort(), ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
   t("secrets are long", secrets.every((s) => s.text.length >= 40), true);
@@ -349,6 +355,12 @@ console.log("\n--- update: keeps everything, carries no migration ---");
     meta.bindings.filter((b) => b.type === "r2_bucket").map((b) => b.name).sort(), ["CAPTURES", "PUBLISHED"]);
   t("no migrations on update", "migrations" in meta, false);
   t("VERSION supplied fresh", meta.bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+  /* D-102: the update retro-names copies installed before INSTANCE_NAME
+     existed, which are advertising "instance unnamed" right now. Same shape as
+     the storage healing above: an update quietly completes what an older
+     install left out, with no action from the operator. */
+  t("INSTANCE_NAME bound on update too, healing unnamed copies",
+    meta.bindings.find((b) => b.name === "INSTANCE_NAME")?.text, "oak-watch");
   t("no new secrets generated", meta.bindings.some((b) => b.type === "secret_text"), false);
   t("the page says passwords and record are untouched", body.includes("exactly as they were"), true);
   t("with the repository unreachable, the update says the built-in was used", body.includes("was not reachable"), true);

@@ -229,6 +229,12 @@ async function uploadInstall(token, acct, slug, secrets, release) {
     bindings: [
       { type: "durable_object_namespace", name: "STORE", class_name: "Store" },
       { type: "plain_text", name: "VERSION", text: release.version },
+      /* D-102: the instance name IS the worker name. The group already chose it
+         here as `slug`, so there is nothing further to ask them; binding it is
+         what puts a real name in the user-agent instead of "unnamed", and it
+         means the name a third party sees is the same one the operator types
+         into a URL. One source of truth, no second name to drift out of sync. */
+      { type: "plain_text", name: "INSTANCE_NAME", text: slug },
       { type: "secret_text", name: "ADMIN_TOKEN", text: secrets.boot },
       { type: "secret_text", name: "MEMBER_TOKEN", text: secrets.member },
       { type: "secret_text", name: "PROBE_TOKEN", text: secrets.probe },
@@ -259,6 +265,12 @@ async function uploadUpdate(token, acct, slug, withR2, release) {
     compatibility_flags: ["nodejs_compat"],
     bindings: [
       { type: "plain_text", name: "VERSION", text: release.version },
+      /* D-102: bound on UPDATE as well as install, which is what retro-names
+         every copy installed before this existed. Those instances advertise
+         "unnamed" today; their next update fixes it with no action from the
+         operator. Same reasoning as the R2 binding below: an update quietly
+         completes what an older install left out. */
+      { type: "plain_text", name: "INSTANCE_NAME", text: slug },
       ...(withR2 ? [
         { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
         { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
