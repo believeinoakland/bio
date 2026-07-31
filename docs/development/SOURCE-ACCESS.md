@@ -139,3 +139,27 @@ requires asking. See D-94.
   advertising a contact address that 404s is worse than one with none.
 - What a sovereign instance run by another group puts there, since it should
   name that group and not Believe in Oakland.
+
+## Update, 2026-07-30, same day: the component that matters, measured
+
+The note above that Akamai's unknown-token scoring follows no rule we
+established stands, and is now refined by D-94's mechanical probe
+(`scripts/ua-probe.mjs`, built and validated this session): within OUR
+component space the rule is measurable. A nine-rung ladder removing one
+component per rung, second-path confirmed: purpose and instance are droppable,
+and **removing the contact URL flips admission 200 to 403 uniformly**, all the
+way down to the bare token. `curl/8.x` still passes with no contact at all, so
+the crawler-shaped `(+url)` heuristic applies to strings scored as bots, not to
+strings recognised as tools. Full table in `MEASUREMENTS.md`.
+
+Two of the three open items above moved the same day. **The contact URL now
+resolves**: the agent advertises `https://github.com/believeinoakland/bio` in
+place of the pending-domain path, measured before shipping (8/8 and 4/4 on two
+paths) and shipped in 0.46.0; given the ladder, that fix was load-bearing
+rather than cosmetic, and the sovereign-instance question (what another group's
+agent should advertise) inherits the same answer shape: a URL that resolves and
+names THAT group. **The plane can now reach the City from its own egress**:
+eleven captures through the deployed 0.46.0, ten admitted, one 403 on a cold
+back-to-back pair, which is burst-shaped rather than categorical; the per-host
+governor shipped in 0.47.0 in response. What remains open is the first item,
+telling the City, and it now carries a measured, specific ask.

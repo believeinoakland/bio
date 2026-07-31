@@ -197,3 +197,67 @@ findings.
 
 Third-party rate-limit figures for archive.org, with their sources, are in
 `ARCHIVE-FALLBACK.md`. They are **not** measurements of ours.
+
+## User-agent component ladder at www.oaklandca.gov: the discriminator is the CONTACT URL
+
+Measured **2026-07-30**, thread CAPTURE. Instrument: `scripts/ua-probe.mjs`
+(built this session as D-94's mechanical probe), Anthropic container egress,
+against the ACFR path, two requests per rung, human-paced, agent varied alone,
+ONE component removed per rung so a transition names the component that
+mattered. Boundary re-confirmed on a second unrelated path (2/2 each side), so
+the result follows the component and not the URL.
+
+| Rung | User-agent | Results |
+| --- | --- | --- |
+| full | `CivicOS/0.46.0 (+https://github.com/believeinoakland/bio; instance biosmoke7; acquire)` | 200, 200 |
+| no purpose | `CivicOS/0.46.0 (+…/bio; instance biosmoke7)` | 200, 200 |
+| no instance | `CivicOS/0.46.0 (+…/bio; acquire)` | 200, 200 |
+| **no contact** | `CivicOS/0.46.0 (instance biosmoke7; acquire)` | **403, 403** |
+| bare comment | `CivicOS/0.46.0 (acquire)` | 403, 403 |
+| product+version | `CivicOS/0.46.0` | 403, 403 |
+| product only | `CivicOS` | 403, 403 |
+| historic token | `bio-acquire` | 403, 403 |
+| no header | (none) | 403, 403 |
+
+Purpose and instance are droppable; **removing the contact URL flips admission
+uniformly and everything below stays refused.** Within OUR component space the
+contact URL is the admission key, which makes the resolvable-URL fix shipped in
+0.46.0 load-bearing rather than cosmetic. This refines, and does not overturn,
+the earlier note that Akamai's unknown-token scoring follows no rule we
+established: `curl/8.x` still passes with no contact URL at all, so the
+crawler-shaped `(+url)` heuristic applies to strings scored as bots, not to
+strings recognised as tools.
+
+### Contact-URL variant, measured before it shipped
+
+Same date, same instrument as the SOURCE-ACCESS table: the agent string with
+`+https://github.com/believeinoakland/bio` (which resolves) in place of
+`+https://believeinoakland.org/civicos` (which 404s while the registrar
+transfer is pending), 8/8 200 on the ACFR path and 4/4 on a second path.
+Shipped in 0.46.0.
+
+## Workers-egress admission at www.oaklandca.gov, deployed 0.46.0
+
+Measured **2026-07-30**, the first runs of the honest agent from Cloudflare
+egress rather than a test container, through `op=acquire` on the deployed
+plane, scratch store. **Eleven captures: ten admitted, one `SOURCE_REFUSED`
+403** on the second of the only cold back-to-back pair; six paced (2 to 5s
+gaps) and three warmed burst requests thereafter all 200. Intermittent and
+burst-shaped, not categorical. Pre-governor: 0.46.0 carried no pacing, which
+is D-95's case observed live; the governor shipped in 0.47.0 the same day.
+
+## Chosen constants: the per-host governor (D-95, 0.47.0)
+
+Ours, not measured, recorded so they are visibly chosen and revisable. In
+`Store.GOVERNOR`, overridable per host via `governorconfig` and per instance
+via the `GOVERNOR_APPETITE_PER_MIN` binding.
+
+| Value | Setting | Why |
+| --- | --- | --- |
+| Default appetite | 12/min per host | one document fetch every ~5s on average; half the archive appetite, cautious for municipal hosts |
+| Burst allowance | 3 tokens | a person opens a few tabs; a loop opens forty |
+| Grant jitter | 0.6 to 1.5 × base gap | a person is not a metronome |
+| 429 cool-off | max(Retry-After, 60s × 2^n), cap 1h | the counterparty names its capacity; we never undercut it |
+| 403/503 cool-off | 30s × 2^n, cap 30min | refusal is discovered capacity |
+| Escalation reset | one success zeroes n | mirrors the counterparty relenting |
+| Subresource stagger | 50 to 250ms jittered | a browser's connection pool, riding the primary admission |

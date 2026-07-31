@@ -125,6 +125,11 @@ const meta = {
   compatibility_flags: ["nodejs_compat"],
   bindings: [
     { type: "plain_text", name: "VERSION", text: version },
+    /* The agent's instance component, so a third party can throttle one
+       operator instead of a provider. Bound at deploy from the slug because a
+       worker cannot learn its own name; found live on 2026-07-30 advertising
+       "instance unnamed" through two releases. */
+    { type: "plain_text", name: "INSTANCE_NAME", text: slug },
     { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
     { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
   ],

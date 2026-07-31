@@ -1,5 +1,66 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v31, 2026-07-30 session, thread CAPTURE. THE RELEASE THAT DID NOT HAPPEN LAST
+SESSION HAPPENED, AND THEN A SECOND ONE. 0.46.0 (the legible agent, deployed
+byte-verified over 0.45.0) and 0.47.0 (the governor, three-valued authority, and
+the observation-source split), both signed, tagged, deployed to biosmoke7 with
+the baton held by CAPTURE, op=audit 31 checked 31 clean after each. The
+five-month capability gap D-100 recorded is CLOSED ON THE LIVE INSTANCE: the
+deployed plane captures www.oaklandca.gov from Cloudflare egress, full transport
+record, ak_p confirming Akamai in the path.
+
+THE LIVE-EGRESS VERIFICATION PRODUCED A MEASUREMENT. Eleven captures through the
+deployed 0.46.0: ten admitted, one SOURCE_REFUSED 403 on the second of the only
+cold back-to-back pair, then six paced and three warmed burst requests all 200.
+Intermittent and burst-shaped, not categorical, which is D-95's case made live,
+and D-95 shipped in the next release the same day.
+
+THE UA PROBE'S VALIDATION RUN FOUND THE DISCRIMINATOR. scripts/ua-probe.mjs
+(D-94's instrument: a nine-rung ladder, one component removed per rung) against
+the ACFR path, second-path confirmed: purpose and instance are droppable, and
+REMOVING THE CONTACT URL flips admission 200 to 403 uniformly, all the way down.
+The contact URL is the admission key within our component space, which also
+means the resolvable-URL fix shipped in 0.46.0 (the agent now advertises the
+GitHub repo, which resolves, instead of a path on a domain mid-transfer) was
+load-bearing rather than cosmetic. Full table in MEASUREMENTS.md.
+
+SHIPPED IN 0.47.0, all suites green (34 files, exit 0). D-95: per-host governor
+in the Durable Object; appetite configured (12/min default, per-host override,
+instance binding for suites), capacity discovered by refusal, 429 overrides the
+bucket honouring Retry-After, escalation doubles per consecutive refusal and
+resets on success, jittered human gaps with a three-token burst; all three
+outbound sites wired; refusal is a named HOST_COOLING_OFF; a governed monitor
+tick that never ran never stamps last_checked. D-96: captured_locators carries
+via IN ITS KEY plus the document-address/retrieval-locator split; derived, so
+reshaped per the links precedent; the bracket arm reads direct observations
+only. D-97: authority three-valued at acquire; assertion recorded with a dated
+basis, absence honestly undetermined instead of refused, single-hop
+provenance_chain; C-18.1 learned the contract (legacy documents stay
+conformant); C-18.9 implements the RULED publication fence and refused an
+undetermined document at verified in a both-ways test. Verified live: an
+assertion-free capture from Cloudflare egress lands authority_state
+undetermined with its basis, and the chain names instance biosmoke7.
+
+TWO CATCHES WORTH THE RECORD. The template-literal class (D-24) nearly shipped a
+third time: a D-96 schema comment put backticks inside schema.mjs's SCHEMA
+literal, node --check passed because the stray pair re-balanced, and only
+miniflare refused it. Guarded now: hygiene.test.mjs covers schema.mjs. And
+INSTANCE_NAME was never bound, so the live agent had said "instance unnamed"
+through two releases; deploy.mjs now binds it from the slug, pushed to
+biosmoke7, verified live. The installer wizard path is NOT fixed (D-102).
+
+WHAT THE NEXT CAPTURE SESSION INHERITS. The archive fallback (ARCHIVE-FALLBACK
+design, now with the via column and locator split it needed), the tasks table
+D-98 so undetermined authority has somewhere to land, D-91 PDF structure
+extraction, plane adoption of the volatile digest (D-60) and monitoring
+contracts (D-65), and D-94's clock: we pass because Akamai does not recognise
+CivicOS, and the durable fix is the allowlist request to the City, which is
+Bob's to make and now has a measured, specific ask attached.
+
+
+---
+
+
 v30, 2026-07-30 session, thread CAPTURE. THE SOURCE-ACCESS FAILURE WAS OURS, AND
 THREE SESSIONS OF REASONING ABOUT IT WERE WRONG. `www.oaklandca.gov` was never
 refusing the record on policy. It was refusing an illegible user-agent. Measured
