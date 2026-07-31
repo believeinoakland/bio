@@ -287,14 +287,14 @@ landed:
 
 ## FRAMEWORK — ACTIVE (it BLOCKS two milestones)
 
-### FW-2 · queued
+### FW-2 · done
 milestone: M3
 scope: **D-68, CONSTRUCTS Step 0 — the full version, not a deduplication.** Bob ruled: "we must do the work upfront in order to end up with the results we need." One recogniser interface and one registry helper with both existing axes rewritten onto them; one confidence ladder (`CONFIDENCE` and `TYPE_CONFIDENCE` are one idea); `assess()` the only public entry point with `monitor()` and `compare()` internal; `diffMembers` deleted in favour of `diffEntities`; `CONTRACT` declared by the content type; a shared event catalogue instead of ad hoc strings; `meaningful` derived from `SIGNIFICANCE`. **This step should SHRINK the codebase.** Add no capability while doing it. It blocks M3 and M4.
 behind-interface: I2
 depends-on: none
 accepts-when: `civicos-ui/test/run.mjs` green with one ladder and one entry point; the test of whether it worked is that the entity axis later costs a registry.
 added: 2026-07-31 · BOB
-landed:
+landed: 6f1a70f — seven vocabularies reconciled: one confidence ladder, one recogniser/registry engine, assess() sole public entry, monitoring.mjs + diffMembers + duplicate loops deleted. docprofile net -27 lines. civicos-ui/test/run.mjs + full battery green; negative controls (single ladder / sole entry) recorded. I2 unchanged (Step 0 internal). Unblocks M3/M4.
 
 ### FW-1 · queued
 milestone: M3
