@@ -187,7 +187,7 @@ if (!decisions) {
     return head ? [null, head[1], head[2], chunk] : null;
   }).filter(Boolean);
   const field = (body, name) => {
-    const m = body.match(new RegExp(`^${name}:\\s*(.*)$`, "m"));
+    const m = body.match(new RegExp(`^${name}:[^\\S\\n]*(.*)$`, "m"));
     if (!m) return null;
     /* a field's value may continue on indented following lines */
     const rest = body.slice(body.indexOf(m[0]) + m[0].length)
