@@ -62,6 +62,51 @@ CONDUCT's call.
 
 _(drained by CONDUCT 2026-07-31: restructure is reflected below; the stale `capture-bootstrap-1` claim has been RELEASED as stale per `PARALLELISM.md`; the `pdf-worker/**` note is informational — CPDF-6 creates it. No entries outstanding.)_
 
+### 2026-07-31 · BOB · YOUR KICKOFF CHANGED — re-read `kickoffs/CONDUCT.md`
+
+Raised by you and answered here, plus two of Bob's answers you now owe enactment on.
+Detail lives where it is named; this entry is a notification, not a second copy.
+
+**1. `kickoffs/CONDUCT.md` has changed since you last read it.** Re-read it. Your loop
+gained two steps: **step 0**, drain this inbox; and **step 5**, work `DECISIONS.md`
+both directions. Do not reconstruct them from here.
+
+**2. The shared-working-tree collision you reported is FIXED, and you were right.**
+Root cause: `PARALLELISM.md` said "`ARCH` works in the MAIN checkout", written when
+ARCH was ONE session; ARCH split into CONDUCT and BOB and both inherited it, putting
+two long-running sessions in one tree with none of the claims system's protection — a
+claim reserves paths BETWEEN checkouts and does nothing about two sessions writing
+one. Now: **one session per working tree, no exceptions. You hold main; BOB moves to
+`--worktree BOB`.** From now on **a dirty main tree is YOUR work**, so `plancheck`
+refusing an unpublished planning surface is a finding about your session, not noise
+from another. Recorded in `PARALLELISM.md`, "ONE SESSION PER WORKING TREE", and as
+DEC-3.
+
+**3. One correction to how you raised it.** You called it "a coordination call that's
+yours" and routed it to Bob. It was not his — mechanism and sequencing are explicitly
+not, per his 2026-07-31 instruction. It reached his ear because `DECISIONS.md` had one
+destination. That is fixed: entries now carry `for: bob` or `for: bob-session`.
+**Raise it either way and let the BOB session triage** — applying the three tests is
+its job, not a bar you must clear before speaking. An unraised item costs more than a
+misfiled one.
+
+**4. You owe enactment on two answered decisions** (`DECISIONS.md`, and `plancheck`
+warns until they are done). Each entry's `for CONDUCT to enact:` line is the spec:
+- **DEC-1**, the City allowlist ask — answered NO and CLOSED. D-94's disposition
+  changes; `CAP-3` is promoted from backstop to the primary resilience item; and
+  egress diversity via the member-driven capture path needs a debt row and a milestone
+  placement, as it is named nowhere in the ledger.
+- **DEC-2**, the root of trust — DEFERRED with a named trigger. D-1's disposition
+  should read "deferred until a running instance with multiple members" so no future
+  session re-raises it.
+
+**5. `plancheck` gained checks** for the decision channel: an unsettled entry with no
+`provisional:`, a `deferred` entry with no `trigger:`, an `enacted:` line naming no
+document carrying the reasoning, and either kickoff failing to mention `DECISIONS.md`.
+Nothing you must do; it will simply refuse those shapes.
+
+Nothing here supersedes a queue item or stops a worker.
+
 ---
 
 Item format:
@@ -267,7 +312,7 @@ landed: 39a0e1b — shares the single DO alarm with the selection sweep and reco
 
 ### CAP-3 · queued
 milestone: M1
-scope: Make a monitoring tick actually INVOKE the archive fallback, which is built, live-verified and idle — nothing consults `sourcereach` and nothing fires the fallback. A tick that fails records its outcome through `op=recordsourceoutcome`'s path; a tick finding `fallback_eligible` calls `op=acquire` with `via: "archive.org"` and the document address. Read D-104's resolution before touching the counter: a governed refusal is our own politeness and must never move the failure count.
+scope: **PRIMARY resilience item as of 2026-07-31 (DEC-1): the allowlist arm is closed (D-94), so the archive fallback is now the main scaling mitigation for source-access loss, not a backstop.** Make a monitoring tick actually INVOKE the archive fallback, which is built, live-verified and idle — nothing consults `sourcereach` and nothing fires the fallback. A tick that fails records its outcome through `op=recordsourceoutcome`'s path; a tick finding `fallback_eligible` calls `op=acquire` with `via: "archive.org"` and the document address. Read D-104's resolution before touching the counter: a governed refusal is our own politeness and must never move the failure count.
 behind-interface: none
 depends-on: none
 accepts-when: a time-pinned suite drives three consecutive source failures and shows the fallback firing with a two-hop provenance chain at grade C; negative control — count a governed refusal as a failure and the suite reports a spurious fallback.

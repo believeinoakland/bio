@@ -343,6 +343,7 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-63 unmeasured stacks | FRAMEWORK | M2 |
 | D-64 client-rendered capture | CAPTURE | M2 · blocked on D-55 |
 | D-65 monitoring contracts unconsumed | FRAMEWORK → CAPTURE | M1 · M3 |
+| D-120 member-driven egress diversity (DEC-1) | CAPTURE | M1 |
 | D-66 unmeasured content types | FRAMEWORK | M2 |
 | D-67 connections discarded | FRAMEWORK | M4 |
 | D-68 seven vocabularies | FRAMEWORK | M3 · **blocks M3, M4** |

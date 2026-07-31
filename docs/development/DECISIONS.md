@@ -126,7 +126,7 @@ for CONDUCT to enact: (1) D-94's status changes from "the allowlist request, Bob
   the archive fallback) becomes the primary resilience item rather than a backstop, and
   the member-driven capture path for egress diversity needs a debt row and a milestone
   placement — it is named nowhere in the ledger today.
-enacted:
+enacted: 2026-07-31 · CONDUCT — D-94's allowlist arm marked CLOSED and D-120 (member-driven egress diversity) added and placed in MILESTONES; CAP-3 promoted to primary resilience in QUEUE.md. Reasoning in SOURCE-ACCESS.md (per Bob's response).
 
 ### DEC-2 · deferred
 raised: 2026-07-31 · BOB (seeded from DEBT D-1)
@@ -164,7 +164,7 @@ decided: 2026-07-31 · Bob
 reasoning recorded in: DEBT D-1, whose disposition becomes DEFERRED with this trigger.
 for CONDUCT to enact: update D-1's disposition to name the trigger, so a future session
   reads "deferred until X" rather than "open doctrine" and does not re-raise it.
-enacted:
+enacted: 2026-07-31 · CONDUCT — D-1's disposition set to DEFERRED with the named trigger (a BIO instance running with multiple members) in DEBT.md.
 
 ### DEC-3 · answered
 raised: 2026-07-31 · CONDUCT (relayed by Bob; it belongs in this file, which is why
@@ -204,7 +204,7 @@ reasoning recorded in: docs/development/PARALLELISM.md, "ONE SESSION PER WORKING
 for CONDUCT to enact: nothing in the queue. This turn is the last BOB turn in the main
   checkout; the next one starts in `--worktree BOB`. If you see the main tree dirty
   from now on, it is YOURS.
-enacted:
+enacted: 2026-07-31 · CONDUCT — nothing in the queue; the enactment is operational (BOB moves to --worktree BOB; CONDUCT owns the main checkout). Reasoning in PARALLELISM.md "ONE SESSION PER WORKING TREE". Acknowledged: the main tree is CONDUCT's from here.
 
 ## Answered, awaiting enactment
 
