@@ -37,87 +37,108 @@ verify` before trusting it. Leave it blank when no release will be cut.
 
 ---
 
-Kickoff: thread CAPTURE. Fetch these from
-raw.githubusercontent.com/believeinoakland/bio/main and read them before anything
-else: docs/development/kickoffs/README.md (the thread register and the
-never-force-push rule), docs/development/kickoffs/BATON.md (who may cut a plane
-release), docs/development/DEBT.md (D-106, D-98, D-91, D-60 and D-65 are
-this thread's open work; take the next free D-number at the moment you write),
-docs/development/SOURCE-ACCESS.md (the contact URL is the measured admission
-key; the allowlist ask is Bob's and pending),
-docs/development/AUTHORITY-AND-TRUST.md (RULED sections are settled; D-97's
-fields shipped in 0.47.0, the task list has not),
-docs/development/ARCHIVE-FALLBACK.md (unblocked: the via column and the
-address/retrieval split it needed shipped in 0.47.0),
-docs/development/MEASUREMENTS.md (every number, including the governor's chosen
-constants and the UA component ladder), docs/development/LINK-FIDELITY.md,
-docs/development/CAPTURE-SCALING.md, docs/development/CLIENT-RENDERED.md,
-docs/development/CIVICOS_UI_STATE.md (newest two entries only),
-bio-plane/package.json and bio-plane/scripts/deploy.mjs (the release path; it
-checks the baton on the REMOTE and now binds INSTANCE_NAME from the slug).
+Kickoff: thread CAPTURE.
 
-This session, in order. Stop and tell me if any item changes the ones after it.
-(1) The archive fallback, per ARCHIVE-FALLBACK.md and the monitoring re-fetch
-ruling. TWO THINGS FIRST, both recorded as debt this session: MEASURE the CDX
-claims through the plane's own egress before building on them (D-105: the
-Anthropic container cannot reach web.archive.org, so the record shape and rate
-figures in ARCHIVE-FALLBACK.md are still vendor description, not measurement),
-and build the failure counter to EXCLUDE governed refusals from the first line
-(D-104: our own governor declining is not the source being unreachable, and
-counting it would trip the fallback on our own politeness). Then: an
-archive-sourced observation files via 'archive.org' with the CDX original as
-the document address and the replay address as the retrieval locator; the
-provenance_chain grows the second hop, unsigned, and the grade sits below a
-direct capture of the same document; the three-failures-or-fourteen-days
-threshold triggers it for monitoring only. Respect the archive's third-party
-rate figures (theirs, not ours) through the governor's config table. (2) D-98,
-the tasks table. THE GRAMMAR AND ROUTING ARE ALREADY FIXED as a contract in
-docs/development/INBOX-GRAMMAR.md, derived field-for-field from C-18.5 and the
-RULED routing order, so this is a BUILD task: persist the tasks array in the
-DO, copy the C-18.5 validator with TASK fixtures both ways, export
-checkInboxGrammar for the write path exactly as checkGatheringGrammar is
-exported, so authority-undetermined captures land in a project manager's inbox
-instead of a count nobody reads. RULED and no longer open: an undetermined
-capture creates a task automatically at capture through a PRODUCER/CONSUMER
-QUEUE. The capture path only ENQUEUES (refers_to, F5-bounded subject,
-timestamp); a separate consumer holds the sole inbox write path, applies
-routing and the grammar, and dedups on (refers_to, kind) so a re-capture loop
-cannot flood it. This is the safety property, not a detail: the daemon
-credential cannot write a task. Transport is table-as-queue in the DO unless a
-Cloudflare Queue buys something specific.
-(3) D-106, the urgent small one, which replaces the old item 3 because D-102 and
-D-103 are both DONE and DEPLOYED in 0.48.0. The INSTALLER ships 0.35.0 while the
-plane runs 0.48.0, so a group installing today gets a plane that cannot reach
-oaklandca.gov at all and identifies as bio-acquire: every fix of the 2026-07-30
-session is absent from a fresh install. Two separable halves, and the SECOND
-matters more: (a) cut an installer release embedding the current plane, and
-(b) make the embed step REFUSE when the embedded version does not match
-bio-plane/package.json, because a silently stale installer is what let this
-drift thirteen releases unnoticed. Sovereign instances are the distribution
-model. (4) If time remains, plane
-adoption of the volatile digest (D-60) is the cheaper win: feasibility is
-ALREADY MEASURED (docprofile tree-shakes to 5.3KB, zero deps, import path
-`../../docprofile/index.mjs` from src/, build inlines it so the installer is
-unaffected), so it is a build task, not an investigation. Import digests/compare
-into monitoring, op=audit's duplicate sweep, and resolveLinks' bracket arm; do
-not grow a second copy. D-91 (PDF link annotations first, unpdf second) is the
-larger alternative and DOES still need the bundle-size and CPU measurement
-before believing unpdf fits. (5) Push, appending to DEBT.md and MEASUREMENTS.md,
-prepending a state doc entry naming this thread, and rewriting ONLY
-docs/development/kickoffs/CAPTURE.md for the session after.
+Read `docs/development/kickoffs/CAPTURE.md` from
+raw.githubusercontent.com/believeinoakland/bio/main first. It names what to read
+and in what order, the session plan, the rulings that are settled, and the
+standing knowledge this thread does not re-derive. Follow it.
 
-Grants for this session (sessions carry no secrets; paste all four even if
-unchanged): Cloudflare deploy token: [PASTE]. GitHub fine-grained token for
-believeinoakland/bio, Contents read/write: [PASTE]. Member token, read-only,
-for post-deploy verification: [PASTE]. Release signing key
-(BIOKEY-RAW1.bio-release.<seed>), only if a release may be cut this session;
-otherwise leave blank and the session hands you the exact bytes to sign in
-tools/sign-release.html: [PASTE]. Deploy target account id
-20b533579290b9b93168345edd3b7f72 (biocloudflare), plane worker biosmoke7. Work
-without asking me to confirm anything determinable from the repo; decision
-items at the end only.
+Grants (sessions carry no secrets; paste all four even if unchanged):
+  Cloudflare deploy token: [PASTE]
+  GitHub token, believeinoakland/bio, Contents read/write: [PASTE]
+  Member token, read-only, for post-deploy verification: [PASTE]
+  Release signing seed (BIOKEY-RAW1.bio-release.<seed>), only if a release may
+    be cut; blank means hand me the bytes to sign in tools/sign-release.html: [PASTE]
+
+Deploy target: account 20b533579290b9b93168345edd3b7f72 (biocloudflare), plane
+worker biosmoke7.
+
+Work without asking me to confirm anything determinable from the repo. Stop and
+tell me if any item in the plan changes the ones after it. Decision items at the
+end only.
 
 ---
+
+## Reading order
+
+Fetch from raw.githubusercontent.com/believeinoakland/bio/main. The parenthetical
+is why, not a summary; read the document.
+
+1. `docs/development/kickoffs/README.md` — the thread register, the
+   never-force-push rule.
+2. `docs/development/kickoffs/BATON.md` — who may cut a plane release. CAPTURE
+   holds it.
+3. `docs/development/DEBT.md` — 59 items open. Take the next free D-number at
+   the moment you write, not at the moment you plan.
+4. `docs/development/SOURCE-ACCESS.md` — the contact URL is the measured
+   admission key; the City is non-supportive and the allowlist ask is HELD.
+5. `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled.
+   D-97's fields shipped in 0.47.0; the task list they route to has not.
+6. `docs/development/INBOX-GRAMMAR.md` — D-98's grammar and routing, fixed as a
+   contract. Build against it; do not redesign it.
+7. `docs/development/ARCHIVE-FALLBACK.md` — unblocked by the via column and the
+   address/retrieval split, but every CDX claim in it is UNVERIFIED (D-105).
+8. `docs/development/MEASUREMENTS.md` — every number the limits rest on, with
+   its date and instrument, and what could not be measured.
+9. `docs/development/LINK-FIDELITY.md`, `CAPTURE-SCALING.md`,
+   `CLIENT-RENDERED.md` — the citation, scaling and rendering designs.
+10. `docs/development/CIVICOS_UI_STATE.md` — NEWEST TWO ENTRIES ONLY.
+11. `bio-plane/package.json` and `bio-plane/scripts/deploy.mjs` — the release
+    path. It takes `--thread` and checks the baton on the REMOTE, and binds
+    INSTANCE_NAME from the slug.
+
+## The session plan
+
+In order. Stop and say so if any item changes the ones after it.
+
+**(1) D-106, the installer ships a plane thirteen releases old.** First because
+its cost is being paid by anyone who installs today: `newgroup/src/release.mjs`
+embeds 0.35.0 while the plane runs 0.48.0, so a new group gets an instance that
+cannot reach oaklandca.gov at all and identifies as `bio-acquire`. Two halves,
+and the second matters more: cut an installer release embedding the current
+plane, AND make the embed step REFUSE when the embedded version does not match
+`bio-plane/package.json`. A silently stale installer is what let this drift
+thirteen releases unnoticed. This is the one sanctioned reason to touch
+`newgroup/**`.
+
+**(2) D-98, the task inbox. A BUILD task, not a design task.** The grammar and
+routing are fixed in `INBOX-GRAMMAR.md`, derived field-for-field from C-18.5.
+Persist the tasks array in the Durable Object, copy the C-18.5 validator with
+TASK fixtures both ways, and export `checkInboxGrammar` for the write path
+exactly as `checkGatheringGrammar` is exported. RULED: an undetermined capture
+creates a task automatically AT CAPTURE, through a producer/consumer queue. The
+capture path only ENQUEUES; a separate consumer holds the sole inbox write path
+and dedups on `(refers_to, kind)`. That split is the safety property, not a
+transport detail: a leaked daemon token can add noise to the queue and can
+never write a task, assign one, or forge history. Table-as-queue in the DO
+unless a Cloudflare Queue buys something specific.
+
+**(3) The archive fallback.** TWO THINGS BEFORE BUILDING. Measure the CDX
+claims through the plane's own egress (D-105: the container cannot reach
+web.archive.org, so the record shape and the rate figures are vendor
+description, not measurement). And build the failure counter to EXCLUDE
+governed refusals from the first line (D-104: our own governor declining is not
+the source being unreachable, and counting it would trip the fallback on our
+own politeness and load IA for nothing). Then: an archive-sourced observation
+files `via: 'archive.org'` with the CDX `original` as the document address and
+the replay address as the retrieval locator; the provenance chain grows a
+second, unsigned hop; grade sits below a direct capture of the same document
+because grade tracks directness, never technique; the
+three-failures-or-fourteen-days threshold triggers it for MONITORING only.
+Respect the archive's own rate figures through the governor's config table.
+
+**(4) If time remains, D-60. Confirmed feasible; build it.** docprofile
+tree-shakes to 5.3KB, zero dependencies, imported as
+`../../docprofile/index.mjs` from `src/`, and `build` inlines it so the
+deployed artifact and the installer are unaffected. Import `digests`/`compare`
+into monitoring, `op=audit`'s duplicate sweep, and `resolveLinks`' bracket arm.
+Do not grow a second copy. Read docprofile; do not change it.
+
+**(5) Close out.** Push, APPENDING to DEBT.md and MEASUREMENTS.md rather than
+rewriting them, prepend a state doc entry naming this thread, and rewrite ONLY
+`docs/development/kickoffs/CAPTURE.md` for the session after.
+
 
 ## What this thread should know without being told
 
