@@ -150,14 +150,14 @@ Owns the store core and retrieval (`PARALLELISM.md`). Claim it in `CLAIMS.md` be
 editing; `store.mjs` is ~4,900 lines and CAPTURE holds its link/capture/task/
 reachability functions, so name paths precisely.
 
-### REC-1 · queued
+### REC-1 · done
 milestone: M1
 scope: **Decide and build the scheduler, once.** Nothing in the plane runs on a schedule: `wrangler.jsonc` declares no cron trigger and the only Durable Object alarms are the selection sweep and the task drain that just landed. Monitoring, the archive fallback's eligibility clock, per-document cadence and M4's ageing each presuppose a periodic actor, and each is on course to grow its own trigger. Decide the shape ONCE — one reconciling alarm inside the DO (the `#armSweep` pattern, which CAP-2 has now extended to a second consumer and which already reconciles to the earliest wake) versus a cron trigger at the Worker — and write down why, because the second and third consumers will inherit it. Do NOT build the consumers here; build the mechanism and move ONE existing consumer onto it.
 behind-interface: I5
 depends-on: none
 accepts-when: a time-pinned suite shows two independent consumers scheduled through one mechanism, each firing at its own interval, neither starving the other, and the alarm self-terminating when both are idle; negative control — remove the reconciliation and the suite reports the starved consumer by name.
 added: 2026-07-31 · BOB
-landed:
+landed: da73f02 — ONE reconciling DO alarm (not cron: sub-second granularity, self-termination on idle Free-tier instances, state locality), a consumer registry (#schedConsumers: due/wake/tick). Both existing consumers moved onto it, bodies unchanged. scheduler.test.mjs 18 + starvation negative control; battery 43/43. Shape + rationale in SCHEDULER.md. I5 unchanged; future consumers register + arm, no second alarm.
 
 ### REC-2 · queued
 milestone: M1
@@ -208,7 +208,7 @@ accepts-when: recorded in `MEASUREMENTS.md` with date and instrument, stating wh
 added: 2026-07-31 · BOB
 landed: 5e24fd9 — MEASURED: account is Workers Free; Free DOES allow a second Worker + service bindings (cross-Worker call ~1ms, negligible subrequest). pdf-worker path VIABLE — D-118's "Tier-1 becomes the floor" conditional does NOT fire, CPDF-6 stays central. D-118 closed; the residual 10ms Worker-CPU ceiling is narrowed onto CPDF-1's gated follow-on.
 
-### CPDF-4 · queued
+### CPDF-4 · active
 milestone: M2
 scope: **Tier 1 text extraction, in the plane, pure JS, no dependency.** Content-stream text operators plus the font `ToUnicode` CMap, reusing the PDF object parser `src/pdfstructure.mjs` already has (classic objects, FlateDecode, object streams) and honouring I1 range reads. Extend the I2 output with text; do not fork it. `undetermined` is first-class and per-region: a glyph that cannot be decoded is SAID, never silently dropped and never guessed.
 behind-interface: I2
