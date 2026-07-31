@@ -42,6 +42,10 @@ const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2
    before it is stored rather than after it is read. Anything a member sees on
    a task passed through boundedSubject on its way in. */
 const TASK_KINDS = ["authority-undetermined"];
+/* D-104. Closed on purpose: the value of the reachability table is that it tells
+   kinds of not-getting-the-bytes apart, and a free string would let a caller
+   collapse that distinction by accident. */
+const SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 /* Single line, length-capped, control characters stripped. Newlines go first
    because a multi-line subject is how a plausible-looking instruction gets
@@ -4848,6 +4852,138 @@ export class Store extends DurableObject {
     return { ok: true, id, status: "resolved", resolved_at: at };
   }
 
+  /* ---- D-104: source reachability ----
+   *
+   * The archive fallback fires after THREE CONSECUTIVE FAILURES OR FOURTEEN
+   * DAYS (RULED, AUTHORITY-AND-TRUST.md). This is the counter it will read, and
+   * the whole reason it exists before the fallback does is so the exclusion
+   * below is designed in rather than discovered afterwards.
+   *
+   * A GOVERNED REFUSAL IS NOT A FAILURE. When the per-host governor holds a
+   * request, the source was never asked, so nothing was learned about it. If a
+   * governed refusal counted, sustained self-throttling would trip the fallback:
+   * we would fetch from the Internet Archive because WE paced ourselves, which
+   * is backwards, and it would load somebody else's infrastructure to solve a
+   * problem we created. Bob, 2026-07-31: the governor keeps traffic low enough
+   * that being banned is not a concern, which is exactly why its refusals will
+   * be COMMON and must never be mistaken for the source being unreachable.
+   *
+   * The same shape of mistake the 2026-07-31 CDX measurement found in a
+   * different mechanism: an empty-body digest matching another empty-body digest
+   * looks like "unchanged" and means nothing. Equality that costs nothing to
+   * produce is not evidence.
+   */
+
+  /* CHOSEN, not measured, and recorded as such in MEASUREMENTS.md. Three is the
+     RULED threshold; fourteen days is the RULED staleness bound. */
+  static FALLBACK_CONSECUTIVE_FAILURES = 3;
+  static FALLBACK_STALE_DAYS = 14;
+
+  /** Record the outcome of one attempt on one document address.
+   *
+   *  `outcome` is deliberately a closed set, because the entire value of this
+   *  table is that it distinguishes kinds of not-getting-the-bytes, and a free
+   *  string would let a caller collapse the distinction by accident.
+   *    success         the source served us the document
+   *    source_refused  the ORIGIN answered 4xx/5xx: evidence about the source
+   *    fetch_failed    the network failed reaching it: also evidence
+   *    governed        OUR governor declined to ask: evidence about US
+   */
+  recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
+    if (typeof addressNorm !== "string" || addressNorm === "")
+      return { ok: false, reason: "NO_ADDRESS" };
+    if (!SOURCE_OUTCOMES.includes(outcome))
+      return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
+    const now = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
+    const st = Number.isInteger(status) ? status : null;
+    this.sql.exec(
+      `INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?)
+       ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
+
+    if (outcome === "governed") {
+      /* Counted, and counted SEPARATELY. consecutive_failures is untouched, and
+         so is first_failure_since: a document we chose not to ask about has not
+         started being unreachable. last_outcome records it so an operator can
+         see that the silence is ours. */
+      this.sql.exec(
+        `UPDATE source_reachability
+            SET governed_refusals = governed_refusals + 1, last_outcome = ?, updated_at = ?
+          WHERE address_norm = ?`, outcome, now, addressNorm);
+      return { ok: true, counted: false, ...this.sourceReachability({ addressNorm, now }) };
+    }
+
+    if (outcome === "success") {
+      this.sql.exec(
+        `UPDATE source_reachability
+            SET attempts = attempts + 1, consecutive_failures = 0, first_failure_since = NULL,
+                last_success = ?, last_outcome = ?, last_status = ?, updated_at = ?
+          WHERE address_norm = ?`, now, outcome, st, now, addressNorm);
+      return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
+    }
+
+    /* A real failure, produced by the source or by the network reaching it. */
+    this.sql.exec(
+      `UPDATE source_reachability
+          SET attempts = attempts + 1, failures_total = failures_total + 1,
+              consecutive_failures = consecutive_failures + 1,
+              first_failure_since = COALESCE(first_failure_since, ?),
+              last_failure = ?, last_outcome = ?, last_status = ?, updated_at = ?
+        WHERE address_norm = ?`, now, now, outcome, st, now, addressNorm);
+    return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
+  }
+
+  /** The reachability of one document address, and whether the RULED fallback
+   *  threshold is met. Returns the verdict AND the two facts it is computed
+   *  from, so a caller never has to re-derive it and a reader can see why. */
+  sourceReachability({ addressNorm = null, now = null } = {}) {
+    const row = this.#one(`SELECT * FROM source_reachability WHERE address_norm=?`, addressNorm);
+    if (!row) {
+      return { address_norm: addressNorm, known: false, consecutive_failures: 0,
+               governed_refusals: 0, fallback_eligible: false,
+               basis: "no attempt on this address has ever been recorded" };
+    }
+    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const byCount = row.consecutive_failures >= Store.FALLBACK_CONSECUTIVE_FAILURES;
+    /* Staleness runs from the FIRST failure in the current run, not from the
+       last success: a document that has been failing for fourteen days is the
+       case the ruling names, and a document nobody has asked about in fourteen
+       days has not failed at all. */
+    const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
+    const staleDays = since === null ? 0 : (Date.parse(at) - since) / 86400000;
+    /* The age arm means THE CURRENT FAILING RUN HAS LASTED fourteen days, not
+       "we last succeeded fourteen days ago". A document nobody has asked about
+       in a fortnight has not failed; a document that has been failing since a
+       fortnight ago has. One failure is enough to start that clock, because the
+       clock is measuring how long the record has been without the document, and
+       a single unretried failure that old is itself a monitoring problem the
+       fallback is entitled to route around. */
+    const byAge = row.consecutive_failures > 0 && staleDays >= Store.FALLBACK_STALE_DAYS;
+    return {
+      address_norm: row.address_norm,
+      known: true,
+      consecutive_failures: row.consecutive_failures,
+      attempts: row.attempts,
+      failures_total: row.failures_total,
+      /* Reported beside the verdict on purpose. A number excluded from a
+         decision must stay visible or the exclusion cannot be audited. */
+      governed_refusals: row.governed_refusals,
+      last_success: row.last_success || null,
+      last_failure: row.last_failure || null,
+      last_outcome: row.last_outcome || null,
+      last_status: row.last_status === null ? null : row.last_status,
+      first_failure_since: row.first_failure_since || null,
+      failing_days: since === null ? 0 : Math.floor(staleDays),
+      fallback_eligible: byCount || byAge,
+      basis: byCount
+        ? `${row.consecutive_failures} consecutive failures produced by the source, threshold ${Store.FALLBACK_CONSECUTIVE_FAILURES}`
+        : byAge
+          ? `failing since ${row.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${Store.FALLBACK_STALE_DAYS}`
+          : row.governed_refusals > 0 && row.consecutive_failures === 0
+            ? `not eligible: ${row.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed`
+            : "not eligible: the threshold is not met",
+    };
+  }
+
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -4898,6 +5034,12 @@ export class Store extends DurableObject {
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are
            member actions. */
+        recordsourceoutcome: () => this.recordSourceOutcome(body || {}),
+        /* `now` is readable so a suite can pin the instant. A verdict with a
+           time arm that can only be evaluated against the wall clock is a
+           verdict no test can assert without being about the day it runs. */
+        sourcereach: () => this.sourceReachability({ addressNorm: url.searchParams.get("address"),
+                                                     now: url.searchParams.get("now") }),
         taskenqueue: () => this.taskEnqueue(body || {}),
         taskdrain: () => this.taskDrain(body || {}),
         tasks: () => this.taskList({ assignee: url.searchParams.get("assignee"),

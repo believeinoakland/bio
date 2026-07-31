@@ -182,6 +182,10 @@ const OPS = {
      in the queue on its own account. The consumer, `taskdrain`, is the sole
      writer of tasks, and `actor` on every one of these is stamped server-side
      below: a forward a caller can sign as someone else is not a forward. */
+  /* D-104. The counter the archive fallback will read, exposed so an operator can
+     see WHY a document is or is not eligible, including the governed refusals
+     that are deliberately excluded from the verdict. */
+  sourcereach:         { classes: ["admin", "member", "probe"], mutating: false },
   tasks:               { classes: ["admin", "member", "probe"], mutating: false },
   taskdrain:           { classes: ["admin", "member", "probe"], mutating: true  },
   taskforward:         { classes: ["admin", "member", "probe"], mutating: true  },
@@ -1106,19 +1110,50 @@ export default {
 
       const retrieved = new Date().toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
+      /* D-104. Every way this fetch can end is recorded against the DOCUMENT
+         address, and exactly one of them is not a failure of the source.
+         *
+         * The archive fallback will read this counter to decide whether to go to
+         * the Internet Archive. If a governed refusal counted, sustained
+         * self-throttling would trip that fallback: we would fetch from IA
+         * because WE paced ourselves, and load somebody else's infrastructure to
+         * solve a problem we made. Bob, 2026-07-31: the governor keeps traffic
+         * low enough that being banned is not a concern, which is precisely why
+         * its refusals are COMMON and must never read as the source failing.
+         *
+         * Recorded here rather than in governedFetch because this is where the
+         * document address is known; the governor knows only a host. */
+      const addrNorm = normalizeAddress(locator);
+      const noteOutcome = async (outcome, status) => {
+        try {
+          await stGov.fetch("http://x/recordsourceoutcome", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ addressNorm: addrNorm, outcome, status: status ?? null, at: retrieved }),
+          });
+        } catch { /* an unrecorded outcome must not turn a fetch into an error */ }
+      };
       let res;
       try {
         const g = await governedFetch(env, stGov, locator, "acquire");
-        if (g.refusedByGovernor)
+        if (g.refusedByGovernor) {
+          /* Counted in its own column, excluded from the threshold. Visible so
+             an operator can tell a source nobody could reach from a source
+             nobody asked. */
+          await noteOutcome("governed", null);
           return json({ ok: false, reason: "HOST_COOLING_OFF",
                         detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
                         retry_in_ms: g.retry_in_ms || 0, locator }, 429);
+        }
         res = g.res;
       } catch (e) {
+        await noteOutcome("fetch_failed", null);
         return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
       }
-      if (!res.ok)
+      if (!res.ok) {
+        await noteOutcome("source_refused", res.status);
         return json({ ok: false, reason: "SOURCE_REFUSED", status: res.status, locator }, 502);
+      }
+      await noteOutcome("success", res.status);
 
       /* Streamed in parts, so peak residency is one part rather than the whole
          document. The 39.6MB budget book in the real record is the case that

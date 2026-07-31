@@ -514,6 +514,42 @@ CREATE INDEX IF NOT EXISTS tasks_refers ON tasks(refers_to);
 -- is genuinely new and not a duplicate of a closed one.
 CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique ON tasks(refers_to, kind) WHERE status IN ('open', 'forwarded');
 
+-- ---- D-104: source reachability, and what may NOT count as a failure ----
+
+-- The counter the archive fallback will consume. Built BEFORE the fallback
+-- exists, and built to exclude governed refusals from the first line, because
+-- discovering the exclusion after a spurious fallback would mean we had already
+-- fetched from the Internet Archive because WE paced ourselves.
+--
+-- The distinction this table exists to hold: an outcome the SOURCE produced (a
+-- real 4xx or 5xx from the origin, a network failure reaching it) is evidence
+-- about the source. Our own governor declining to ask is not evidence about
+-- anything except our politeness. Only the first kind moves
+-- consecutive_failures.
+--
+-- governed_refusals is counted anyway, in its own column, rather than dropped.
+-- A number that is deliberately excluded from a decision should still be
+-- visible, or the exclusion cannot be audited and a future reader cannot tell a
+-- source nobody could reach from a source nobody asked.
+--
+-- Keyed on address_norm, the same normalised document address captured_locators
+-- keys on, so reachability is a property of the DOCUMENT rather than of a host:
+-- one page can be gone while the rest of a site answers.
+CREATE TABLE IF NOT EXISTS source_reachability (
+  address_norm         TEXT PRIMARY KEY,
+  consecutive_failures INTEGER NOT NULL DEFAULT 0,
+  attempts             INTEGER NOT NULL DEFAULT 0,
+  failures_total       INTEGER NOT NULL DEFAULT 0,
+  governed_refusals    INTEGER NOT NULL DEFAULT 0,
+  last_success         TEXT,
+  last_failure         TEXT,
+  last_outcome         TEXT,
+  last_status          INTEGER,
+  first_failure_since  TEXT,
+  updated_at           TEXT
+);
+CREATE INDEX IF NOT EXISTS source_reach_failing ON source_reachability(consecutive_failures);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

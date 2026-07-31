@@ -515,6 +515,42 @@ CREATE INDEX IF NOT EXISTS tasks_refers ON tasks(refers_to);
 -- is genuinely new and not a duplicate of a closed one.
 CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique ON tasks(refers_to, kind) WHERE status IN ('open', 'forwarded');
 
+-- ---- D-104: source reachability, and what may NOT count as a failure ----
+
+-- The counter the archive fallback will consume. Built BEFORE the fallback
+-- exists, and built to exclude governed refusals from the first line, because
+-- discovering the exclusion after a spurious fallback would mean we had already
+-- fetched from the Internet Archive because WE paced ourselves.
+--
+-- The distinction this table exists to hold: an outcome the SOURCE produced (a
+-- real 4xx or 5xx from the origin, a network failure reaching it) is evidence
+-- about the source. Our own governor declining to ask is not evidence about
+-- anything except our politeness. Only the first kind moves
+-- consecutive_failures.
+--
+-- governed_refusals is counted anyway, in its own column, rather than dropped.
+-- A number that is deliberately excluded from a decision should still be
+-- visible, or the exclusion cannot be audited and a future reader cannot tell a
+-- source nobody could reach from a source nobody asked.
+--
+-- Keyed on address_norm, the same normalised document address captured_locators
+-- keys on, so reachability is a property of the DOCUMENT rather than of a host:
+-- one page can be gone while the rest of a site answers.
+CREATE TABLE IF NOT EXISTS source_reachability (
+  address_norm         TEXT PRIMARY KEY,
+  consecutive_failures INTEGER NOT NULL DEFAULT 0,
+  attempts             INTEGER NOT NULL DEFAULT 0,
+  failures_total       INTEGER NOT NULL DEFAULT 0,
+  governed_refusals    INTEGER NOT NULL DEFAULT 0,
+  last_success         TEXT,
+  last_failure         TEXT,
+  last_outcome         TEXT,
+  last_status          INTEGER,
+  first_failure_since  TEXT,
+  updated_at           TEXT
+);
+CREATE INDEX IF NOT EXISTS source_reach_failing ON source_reachability(consecutive_failures);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -6423,6 +6459,7 @@ WHERE ${gate.sql}`,
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
+var SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 var taskSlug = (subject) => {
@@ -11612,6 +11649,134 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     );
     return { ok: true, id, status: "resolved", resolved_at: at };
   }
+  /* ---- D-104: source reachability ----
+   *
+   * The archive fallback fires after THREE CONSECUTIVE FAILURES OR FOURTEEN
+   * DAYS (RULED, AUTHORITY-AND-TRUST.md). This is the counter it will read, and
+   * the whole reason it exists before the fallback does is so the exclusion
+   * below is designed in rather than discovered afterwards.
+   *
+   * A GOVERNED REFUSAL IS NOT A FAILURE. When the per-host governor holds a
+   * request, the source was never asked, so nothing was learned about it. If a
+   * governed refusal counted, sustained self-throttling would trip the fallback:
+   * we would fetch from the Internet Archive because WE paced ourselves, which
+   * is backwards, and it would load somebody else's infrastructure to solve a
+   * problem we created. Bob, 2026-07-31: the governor keeps traffic low enough
+   * that being banned is not a concern, which is exactly why its refusals will
+   * be COMMON and must never be mistaken for the source being unreachable.
+   *
+   * The same shape of mistake the 2026-07-31 CDX measurement found in a
+   * different mechanism: an empty-body digest matching another empty-body digest
+   * looks like "unchanged" and means nothing. Equality that costs nothing to
+   * produce is not evidence.
+   */
+  /* CHOSEN, not measured, and recorded as such in MEASUREMENTS.md. Three is the
+     RULED threshold; fourteen days is the RULED staleness bound. */
+  static FALLBACK_CONSECUTIVE_FAILURES = 3;
+  static FALLBACK_STALE_DAYS = 14;
+  /** Record the outcome of one attempt on one document address.
+   *
+   *  `outcome` is deliberately a closed set, because the entire value of this
+   *  table is that it distinguishes kinds of not-getting-the-bytes, and a free
+   *  string would let a caller collapse the distinction by accident.
+   *    success         the source served us the document
+   *    source_refused  the ORIGIN answered 4xx/5xx: evidence about the source
+   *    fetch_failed    the network failed reaching it: also evidence
+   *    governed        OUR governor declined to ask: evidence about US
+   */
+  recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
+    if (typeof addressNorm !== "string" || addressNorm === "")
+      return { ok: false, reason: "NO_ADDRESS" };
+    if (!SOURCE_OUTCOMES.includes(outcome))
+      return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
+    const now = at && ISO_INSTANT.test(at) ? at : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const st = Number.isInteger(status) ? status : null;
+    this.sql.exec(
+      `INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?)
+       ON CONFLICT(address_norm) DO NOTHING`,
+      addressNorm,
+      now
+    );
+    if (outcome === "governed") {
+      this.sql.exec(
+        `UPDATE source_reachability
+            SET governed_refusals = governed_refusals + 1, last_outcome = ?, updated_at = ?
+          WHERE address_norm = ?`,
+        outcome,
+        now,
+        addressNorm
+      );
+      return { ok: true, counted: false, ...this.sourceReachability({ addressNorm, now }) };
+    }
+    if (outcome === "success") {
+      this.sql.exec(
+        `UPDATE source_reachability
+            SET attempts = attempts + 1, consecutive_failures = 0, first_failure_since = NULL,
+                last_success = ?, last_outcome = ?, last_status = ?, updated_at = ?
+          WHERE address_norm = ?`,
+        now,
+        outcome,
+        st,
+        now,
+        addressNorm
+      );
+      return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
+    }
+    this.sql.exec(
+      `UPDATE source_reachability
+          SET attempts = attempts + 1, failures_total = failures_total + 1,
+              consecutive_failures = consecutive_failures + 1,
+              first_failure_since = COALESCE(first_failure_since, ?),
+              last_failure = ?, last_outcome = ?, last_status = ?, updated_at = ?
+        WHERE address_norm = ?`,
+      now,
+      now,
+      outcome,
+      st,
+      now,
+      addressNorm
+    );
+    return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
+  }
+  /** The reachability of one document address, and whether the RULED fallback
+   *  threshold is met. Returns the verdict AND the two facts it is computed
+   *  from, so a caller never has to re-derive it and a reader can see why. */
+  sourceReachability({ addressNorm = null, now = null } = {}) {
+    const row = this.#one(`SELECT * FROM source_reachability WHERE address_norm=?`, addressNorm);
+    if (!row) {
+      return {
+        address_norm: addressNorm,
+        known: false,
+        consecutive_failures: 0,
+        governed_refusals: 0,
+        fallback_eligible: false,
+        basis: "no attempt on this address has ever been recorded"
+      };
+    }
+    const at = now && ISO_INSTANT.test(now) ? now : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const byCount = row.consecutive_failures >= _Store.FALLBACK_CONSECUTIVE_FAILURES;
+    const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
+    const staleDays = since === null ? 0 : (Date.parse(at) - since) / 864e5;
+    const byAge = row.consecutive_failures > 0 && staleDays >= _Store.FALLBACK_STALE_DAYS;
+    return {
+      address_norm: row.address_norm,
+      known: true,
+      consecutive_failures: row.consecutive_failures,
+      attempts: row.attempts,
+      failures_total: row.failures_total,
+      /* Reported beside the verdict on purpose. A number excluded from a
+         decision must stay visible or the exclusion cannot be audited. */
+      governed_refusals: row.governed_refusals,
+      last_success: row.last_success || null,
+      last_failure: row.last_failure || null,
+      last_outcome: row.last_outcome || null,
+      last_status: row.last_status === null ? null : row.last_status,
+      first_failure_since: row.first_failure_since || null,
+      failing_days: since === null ? 0 : Math.floor(staleDays),
+      fallback_eligible: byCount || byAge,
+      basis: byCount ? `${row.consecutive_failures} consecutive failures produced by the source, threshold ${_Store.FALLBACK_CONSECUTIVE_FAILURES}` : byAge ? `failing since ${row.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${_Store.FALLBACK_STALE_DAYS}` : row.governed_refusals > 0 && row.consecutive_failures === 0 ? `not eligible: ${row.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed` : "not eligible: the threshold is not met"
+    };
+  }
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -11665,6 +11830,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are
            member actions. */
+        recordsourceoutcome: () => this.recordSourceOutcome(body || {}),
+        /* `now` is readable so a suite can pin the instant. A verdict with a
+           time arm that can only be evaluated against the wall clock is a
+           verdict no test can assert without being about the day it runs. */
+        sourcereach: () => this.sourceReachability({
+          addressNorm: url.searchParams.get("address"),
+          now: url.searchParams.get("now")
+        }),
         taskenqueue: () => this.taskEnqueue(body || {}),
         taskdrain: () => this.taskDrain(body || {}),
         tasks: () => this.taskList({
@@ -12012,6 +12185,10 @@ var OPS = {
      in the queue on its own account. The consumer, `taskdrain`, is the sole
      writer of tasks, and `actor` on every one of these is stamped server-side
      below: a forward a caller can sign as someone else is not a forward. */
+  /* D-104. The counter the archive fallback will read, exposed so an operator can
+     see WHY a document is or is not eligible, including the governed refusals
+     that are deliberately excluded from the verdict. */
+  sourcereach: { classes: ["admin", "member", "probe"], mutating: false },
   tasks: { classes: ["admin", "member", "probe"], mutating: false },
   taskdrain: { classes: ["admin", "member", "probe"], mutating: true },
   taskforward: { classes: ["admin", "member", "probe"], mutating: true },
@@ -12815,10 +12992,22 @@ var index_default = {
       const authorityAsserted = typeof body2?.authority === "string" && body2.authority.trim() ? body2.authority.trim() : null;
       const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
+      const addrNorm = normalizeAddress(locator);
+      const noteOutcome = async (outcome, status) => {
+        try {
+          await stGov.fetch("http://x/recordsourceoutcome", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ addressNorm: addrNorm, outcome, status: status ?? null, at: retrieved })
+          });
+        } catch {
+        }
+      };
       let res2;
       try {
         const g = await governedFetch(env, stGov, locator, "acquire");
-        if (g.refusedByGovernor)
+        if (g.refusedByGovernor) {
+          await noteOutcome("governed", null);
           return json({
             ok: false,
             reason: "HOST_COOLING_OFF",
@@ -12826,12 +13015,17 @@ var index_default = {
             retry_in_ms: g.retry_in_ms || 0,
             locator
           }, 429);
+        }
         res2 = g.res;
       } catch (e) {
+        await noteOutcome("fetch_failed", null);
         return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
       }
-      if (!res2.ok)
+      if (!res2.ok) {
+        await noteOutcome("source_refused", res2.status);
         return json({ ok: false, reason: "SOURCE_REFUSED", status: res2.status, locator }, 502);
+      }
+      await noteOutcome("success", res2.status);
       const PART = 8 * 1024 * 1024;
       const MAX = 256 * 1024 * 1024;
       const whole = createSha256();

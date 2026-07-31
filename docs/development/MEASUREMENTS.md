@@ -443,3 +443,30 @@ That is not a cost this project gets to impose to satisfy its own curiosity. The
 figures stay flagged as theirs, our appetite stays the conservative 24/min, and
 their capacity is discovered the way D-95 already discovers capacity: by being
 refused in the ordinary course of polite use, and recording it.
+
+## 2026-07-31, thread CAPTURE: the fallback thresholds are CHOSEN (D-104)
+
+`Store.FALLBACK_CONSECUTIVE_FAILURES = 3` and `Store.FALLBACK_STALE_DAYS = 14`
+are the RULED numbers from `AUTHORITY-AND-TRUST.md`, recorded here so they have
+one home and are not restated inline. They are a DECISION about when the record
+is entitled to go elsewhere, not an observation of anything, and nothing should
+present them as measured.
+
+What IS measured, live on biosmoke7 0.50.0 in `store=scratch`:
+
+| Attempt | Outcome recorded | consecutive_failures | eligible |
+| --- | --- | --- | --- |
+| `raw.githubusercontent.com/.../README.md` → 200 | `success` | 0 | false |
+| `raw.githubusercontent.com/.../no-such-file-d104.txt` → 404 | `source_refused`, status 404 | 1 | false |
+
+Both through the real `op=acquire` path, so what is verified is the wiring and
+not a unit fixture. The counter keys on the FULL normalised address
+(`normalizeAddress`, an absolute URL), not a host-and-path abbreviation; a read
+using the abbreviated form answers `known: false`, which is correct and worth
+knowing before someone reads it as a missing record.
+
+The exclusion itself is asserted in `test/reachability.test.mjs` rather than
+live, because provoking a governed refusal against a real host means driving
+that host to its cool-off, which is the opposite of the point. Negative control:
+letting a governed refusal fall through to the failure path breaks 17 of the 34
+assertions.
