@@ -51,9 +51,16 @@ the document address and the replay address as the retrieval locator; the
 provenance_chain grows the second hop, unsigned, and the grade sits below a
 direct capture of the same document; the three-failures-or-fourteen-days
 threshold triggers it for monitoring only. Respect the archive's third-party
-rate figures (theirs, not ours) through the governor's config table. (2) D-98, the tasks table on the gathering queue's shape, C-18.5's
-grammar bounds and the quoted-data exporter, so authority-undetermined
-captures land in a project manager's inbox instead of a count nobody reads.
+rate figures (theirs, not ours) through the governor's config table. (2) D-98,
+the tasks table. THE GRAMMAR AND ROUTING ARE ALREADY FIXED as a contract in
+docs/development/INBOX-GRAMMAR.md, derived field-for-field from C-18.5 and the
+RULED routing order, so this is a BUILD task: persist the tasks array in the
+DO, copy the C-18.5 validator with TASK fixtures both ways, export
+checkInboxGrammar for the write path exactly as checkGatheringGrammar is
+exported, so authority-undetermined captures land in a project manager's inbox
+instead of a count nobody reads. ONE question the contract leaves for Bob and
+you must not guess: does an undetermined capture create a task automatically at
+intake or only when a member acts on the working set. Ask; do not decide.
 (3) D-102 and D-103, the small ones: the wizard binds INSTANCE_NAME, and
 governorstate/governorconfig get control-plane ops. (4) If time remains, start
 D-91 (PDF link annotations first, unpdf second) or plane adoption of the
