@@ -73,6 +73,11 @@ nothing I would have to read a diff to act on. An empty list is a real answer.
 
 ---
 
+**Coordination:** before making a change another session must know about, read
+`docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — the channels, which
+carries what, and the receipts for every way a correct change reached nobody. Claim
+in `CLAIMS.md` before editing; publish before you call anything done.
+
 ## Reading order
 
 Fetch from raw.githubusercontent.com/believeinoakland/bio/main. The parenthetical

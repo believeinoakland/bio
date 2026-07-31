@@ -3,6 +3,11 @@
 Created 2026-07-31 as part of the move to parallel development. DIST exists to
 take the release out of every other area's critical path.
 
+**Coordination:** before making a change another session must know about, read
+`docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — the channels, which
+carries what, and the receipts for every way a correct change reached nobody. Claim
+in `CLAIMS.md` before editing; publish before you call anything done.
+
 ## Why this area exists
 
 Cutting a plane release is five indivisible acts on GLOBAL state: bump the

@@ -197,6 +197,9 @@ Some findings belong to no thread and to all of them. File them as their own
 document and cross-reference from the threads that care, rather than burying them
 in a kickoff only one thread reads:
 
+- `ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — the coordination skill: the channels,
+  which carries what, and the receipts for every way a correct change reached nobody.
+  Read it before making a change another session must know about
 - `MILESTONES.md` — the capability ladder and where every open piece of work sits.
   Read it before deciding what an area does next; `QUEUE.md` is what is runnable
 - `VERIFICATION.md` — what "tested" means here, the coverage instruments, and the

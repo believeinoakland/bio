@@ -12,6 +12,11 @@ milestones and is the constraint on the whole board.
 This file is a stand-up, not this area's own account of itself. **The first RECORD
 session rewrites it at its close**, with what it actually learned.
 
+**Coordination:** before making a change another session must know about, read
+`docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — the channels, which
+carries what, and the receipts for every way a correct change reached nobody. Claim
+in `CLAIMS.md` before editing; publish before you call anything done.
+
 ## What this area owns
 
 - `bio-plane/src/schema.mjs` — the schema core. CAPTURE owns the capture, link, task

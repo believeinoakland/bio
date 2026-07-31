@@ -11,6 +11,11 @@ and test without a design turn, because the boundary was measured this turn rath
 than assumed. The session rewrites this file at its close with CONTENT-PDF's own
 account of its work.
 
+**Coordination:** before making a change another session must know about, read
+`docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — the channels, which
+carries what, and the receipts for every way a correct change reached nobody. Claim
+in `CLAIMS.md` before editing; publish before you call anything done.
+
 ## What this area owns
 
 Identifying content inside PDFs — structure extraction (D-91). CONTENT-PDF

@@ -31,6 +31,10 @@ real answer.
 
 ---
 
+**The coordination skill is `ORCHESTRATION.md`, "COMMUNICATING A CHANGE" —
+the channels, the rules that make them work, and the receipts. Read it before
+making a change another session must know about.**
+
 ## Where this session runs
 
 **In its own worktree — `claude --worktree BOB` — and NOT in the main checkout.**

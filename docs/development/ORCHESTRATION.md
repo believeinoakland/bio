@@ -16,8 +16,8 @@ limits are.
   the evolution of `ARCH`. Owns the queue, spawns workers, verifies and
   integrates their output on `main`, records claims/delegations/interfaces, and
   escalates ONLY genuine decisions to BOB. Writes no area code itself.
-- **Areas** — CAPTURE, CONTENT-PDF, DIST, and dormant CONTENT-HTML / FRAMEWORK /
-  UI. Each is a body of work with a queue, not a standing agent.
+- **Areas** — RECORD, CAPTURE, CONTENT-PDF, DIST, and dormant CONTENT-HTML /
+  FRAMEWORK / UI. Each is a body of work with a queue, not a standing agent.
 
 ## Workers are ephemeral; the queue persists
 
@@ -63,46 +63,100 @@ Three files, split by LIFECYCLE, and an item exists in exactly one of them at a 
 5. Cross-area needs are DELEGATIONS (`CLAIMS.md`); CONDUCT routes them into the
    owning area's queue.
 
-## How an architectural change lands mid-flight, without stopping CONDUCT
+## COMMUNICATING A CHANGE: the channels, and how to choose one
 
-Established 2026-07-31, after a BOB session made structural changes (a new area, a new
-interface, a superseded queue item) that required CONDUCT to be PAUSED by hand. That
-worked once and does not scale: architecture will keep changing, because discovery is
-the premise, and a model where every change stops the machine is a model that
-discourages the change.
+**This is the skill this ecosystem runs on, and it is the one that has failed most
+often.** Established 2026-07-31 after a single session produced four coordination
+failures in an afternoon, every one of them a change that was CORRECT and did not
+reach the party who needed it. Read this before making a change that another session
+must know about.
 
-**The mechanism is one this codebase already proved: a producer/consumer split.** D-98
-stopped the daemon credential causing an inbox write by giving it a queue boundary and
-one consumer. Same shape here.
+### The principle everything below derives from
 
-- **`QUEUE.md` gains a `BOB INBOX` section at the top.** BOB APPENDS to it. CONDUCT is
-  the sole writer of everything below it and DRAINS the inbox into the queue proper as
-  part of its ordinary loop. No pause, no second file, no collision — the two parties
-  write to disjoint regions.
-- **What BOB may write directly:** `MILESTONES.md`, the design documents, new or
-  PROVISIONAL entries in `INTERFACES.md`, appends to `DEBT.md` and `MEASUREMENTS.md`,
-  and the inbox. **What it may not:** the queue body, any area's code.
-- **A change that supersedes queued or in-flight work SAYS SO IN THE INBOX, naming the
-  item id.** Whether to stop a running worker or let it land is worker lifecycle, and
-  that is CONDUCT's call, not BOB's. BOB's duty is to make the supersession visible;
-  CONDUCT's is to decide what happens to the work.
-- **Superseded is never silent.** The item keeps its id, takes status `superseded`,
-  and names what replaced it and where any branch work goes. `CPDF-2` is the worked
-  example: superseded by the Worker topology, its branch becoming `CPDF-6`'s Tier 2
-  core. An item that vanishes is indistinguishable from one nobody did, which is the
-  same rule the record applies to findings.
+**The repository is the channel. A change is not made when it is written; it is made
+when it is COMMITTED AND PUSHED.** Sessions do not share a working tree — one session
+per tree, `CONDUCT` holds main, everything else works in a worktree
+(`PARALLELISM.md`). A worktree is a checkout of a COMMIT, so an uncommitted file
+reaches nobody and an UNTRACKED one cannot even be found.
 
-Two obligations fall on whoever makes the change, and both were learned by getting
-them wrong in the same session:
+Two corollaries that are not obvious and have each cost a session:
 
-1. **An area may not be ACTIVE without a kickoff naming its paths.** `RECORD` was
-   activated with no `kickoffs/RECORD.md`, so a worker spawned for it would have had
-   nothing to read. Activating an area and writing its kickoff are one act.
-2. **A kickoff your change supersedes is corrected in the SAME turn, by you.** This is
-   the one licensed exception to "do not write another area's kickoff", and the reason
-   is that the area's next session is precisely who the stale text misleads.
-   `kickoffs/CONTENT-PDF.md` told its next worker to bundle `unpdf` into the plane for
-   several hours after that approach had been overturned.
+- **A mechanism that is not in the loop the reader actually runs is not a mechanism.**
+  Documenting it is necessary and never sufficient. If you add a step, add it to the
+  file whose owner performs it.
+- **Verify from the REMOTE, not from your own tree.** "Written" is not "committed" and
+  "committed" is not "pushed" — the same discipline `deploy.mjs` applies to bytes.
+
+### The channels
+
+| you need to… | use | shape |
+| --- | --- | --- |
+| hand a change from BOB to CONDUCT | **`BOB INBOX`**, top of `QUEUE.md` | BOB appends; CONDUCT is sole writer below it and drains as loop step 0 |
+| raise a question to the architecture side | **`DECISIONS.md`** | CONDUCT is sole writer of entries; `for: bob` or `for: bob-session`; the BOB session triages |
+| tell the NEXT session in your area what you learned | **that area's kickoff** | rewritten at the close of your turn, by you |
+| need work inside another area's paths | **DELEGATION in `CLAIMS.md`** | append the need; continue with your own work; never edit their paths |
+| change a shape another area builds against | **`INTERFACE-CHANGES.md`** protocol | PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED |
+| record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only; knowledge, and an INPUT to the queue, never a rival |
+| wake a session that is already mid-run | **a short nudge, pointing at what to re-read** | the ONLY legitimate use of a pasted prompt |
+
+**Choosing badly has a cost in one direction only.** A misfiled entry costs one
+reclassification. An unraised one costs the thing going unrecorded. So when in doubt,
+raise it — and raise it in a FILE, not in a session window.
+
+### The rules that make the channels work
+
+1. **Disjoint regions, sole writers.** Two parties never write the same region of a
+   file. The `BOB INBOX` is BOB's; everything below it is CONDUCT's. This is the
+   producer/consumer split D-98 already proved for the task inbox.
+2. **A notification, not a second copy.** An entry says what changed, points at where
+   the detail lives, and names the items it affects. Restating the content creates a
+   copy that immediately starts rotting.
+3. **Supersession is never silent.** A superseded item keeps its id, takes status
+   `superseded`, and names what replaced it and where any branch work goes. An item
+   that vanishes is indistinguishable from one nobody did.
+4. **Announce the change; do not reach into the running turn.** Whether to stop a
+   worker is CONDUCT's call. The raiser's duty is visibility, not lifecycle.
+5. **Never block on an answer.** Every unsettled decision carries a `provisional:`
+   saying what runs meanwhile; a deferral carries a `trigger:` that reopens it.
+   Bob, 2026-07-31: "never block on getting my answer when you can figure it out
+   yourself… productivity is a top priority."
+6. **Correct what your change superseded, in the SAME turn, yourself.** This is the
+   one licensed exception to "do not write another area's kickoff", because that
+   area's next session is precisely who the stale text misleads.
+7. **An area may not be ACTIVE without a kickoff naming its paths.** Activating an
+   area and writing its kickoff are one act.
+
+### The failure modes, with their receipts
+
+Kept because this project learns from evidence, and every one of these looked like
+diligence at the time:
+
+| what happened | why it reached nobody |
+| --- | --- |
+| a required kickoff was written and left UNTRACKED while three workers ran | a worktree is a checkout of a commit; untracked files are unreachable, permanently |
+| the `BOB INBOX` was documented in two places | it was never added to `kickoffs/CONDUCT.md`, so nothing drained it |
+| BOB and CONDUCT shared the main checkout | a rule written for ONE coordinating session was inherited by two when `ARCH` split; a claim reserves paths BETWEEN checkouts and does nothing about two sessions in one |
+| `kickoffs/CONTENT-PDF.md` told its next worker to bundle `unpdf` into the plane | the queue was updated and the kickoff was not |
+| a coordination question reached Bob's ear instead of the record | `DECISIONS.md` had one destination, so there was nowhere to put something that was not his |
+| a debt row named its milestone in PROSE | the token is the sortable part; a check that only says "wrong" makes the reader guess |
+| a memory holding a standing instruction never loaded | it existed, correctly written, with no line in the index that loads it |
+
+### Before you end a turn
+
+```
+node tools/plancheck.mjs
+```
+
+It refuses an unpublished or unpushed planning surface, an ACTIVE area with no
+kickoff or no register row, an item behind an unregistered interface, an unknown
+milestone, an open debt row with no disposition token, an unsettled decision with no
+provisional, a deferral with no trigger, an enacted decision naming no document that
+carries the reasoning, and a channel that exists while a kickoff never mentions it.
+
+**What it cannot check, and is therefore yours:** whether an entry describes the
+change ACCURATELY, whether a kickoff correction is COMPLETE, and whether a
+supersession names every affected item. The instrument proves the structure holds; it
+cannot prove the prose is true.
 
 ## Concurrency: sized to CONDUCT, not to the subscription
 

@@ -3,6 +3,10 @@
 This session runs the work. Renamed from `ARCH` on 2026-07-31. Read
 `ORCHESTRATION.md` for the model. The loop:
 
+**The coordination skill is `ORCHESTRATION.md`, "COMMUNICATING A CHANGE" —
+the channels, the rules that make them work, and the receipts. Read it before
+making a change another session must know about.**
+
 0. **Drain the `BOB INBOX` at the top of `QUEUE.md` FIRST.** It is append-only and BOB
    is its producer; you are the sole writer of everything below it. Enact each entry
    into the queue proper, then delete it. This is what lets an architectural change

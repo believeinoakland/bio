@@ -7,6 +7,11 @@ kickoffs were split, so it is not FRAMEWORK's own account of itself, and the
 first FRAMEWORK session should replace it wholesale at its close. Nothing here
 sets this area's plan — deciding that is the first thing a session does, with Bob.
 
+**Coordination:** before making a change another session must know about, read
+`docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — the channels, which
+carries what, and the receipts for every way a correct change reached nobody. Claim
+in `CLAIMS.md` before editing; publish before you call anything done.
+
 ## What this area owns
 
 `docprofile/**`, `docs/architecture/BIO_Content_Framework_*`,

@@ -77,6 +77,11 @@ It fails on an unpublished or unpushed planning surface, an ACTIVE area with no
 kickoff, an item behind an unregistered interface, a milestone that does not exist,
 and an open debt row with no disposition.
 
+**Before making a change another session must know about, read
+`docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE".** It is the skill this
+ecosystem runs on: which channel carries what, the rules that make each work, and the
+receipts for every way a correct change has failed to reach anybody.
+
 **A mechanism that is not in the loop the reader actually runs is not a mechanism.**
 Documenting it is necessary and never sufficient. If you add a step, add it to the
 file whose owner must perform it — `kickoffs/CONDUCT.md` for CONDUCT, the area's

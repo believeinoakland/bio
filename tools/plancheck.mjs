@@ -148,6 +148,24 @@ if (debt) {
   }
 }
 
+/* A kickoff is what a worker reads INSTEAD of this document, so a thin one
+   reintroduces the collisions the claims system exists to prevent. Every registered
+   area's kickoff must at minimum tell its session to claim before editing and where
+   the coordination skill lives. Checked for every kickoff, not only ACTIVE ones,
+   because an area is promoted at a moment when nobody is re-reading it. */
+if (register) {
+  for (const m of register.matchAll(/^\|\s*`([A-Z][A-Z-]+)`\s*\|/gm)) {
+    const area = m[1], f = `docs/development/kickoffs/${area}.md`;
+    const k = read(f);
+    if (!k) { fail(`NO KICKOFF — ${area} is in the thread register and ${f} does not exist.`); continue; }
+    if (!/CLAIMS\.md/.test(k))
+      fail(`THIN KICKOFF — ${f} never mentions CLAIMS.md, so its session is not told to\n`
+         + `        claim before editing. Unclaimed paths are a collision risk, not a licence.`);
+    if (!/ORCHESTRATION\.md/.test(k))
+      warn(`${f} does not point at ORCHESTRATION.md, where the coordination skill lives.`);
+  }
+}
+
 /* ------------------------------------------- 3. THE DECISION CHANNEL */
 
 const decisions = read("docs/development/DECISIONS.md");

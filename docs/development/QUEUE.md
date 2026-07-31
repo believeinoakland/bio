@@ -161,7 +161,7 @@ accepts-when: a time-pinned suite shows two independent consumers scheduled thro
 added: 2026-07-31 · BOB
 landed: da73f02 — ONE reconciling DO alarm (not cron: sub-second granularity, self-termination on idle Free-tier instances, state locality), a consumer registry (#schedConsumers: due/wake/tick). Both existing consumers moved onto it, bodies unchanged. scheduler.test.mjs 18 + starvation negative control; battery 43/43. Shape + rationale in SCHEDULER.md. I5 unchanged; future consumers register + arm, no second alarm.
 
-### REC-2 · queued
+### REC-2 · done
 milestone: M1
 scope: D-61 — an unattended writer cannot take a lease, because `leases.actor` is NOT NULL and stamped from the session, so a daemon cannot complete a capture a member walked away from. Decide between a machine actor identity on the lease and letting the refill path rely on `promote`'s CAS on `base` (which is the real integrity mechanism; the lease is a courtesy lock). Whichever way, the daemon must be able to finish work it was asked to do, and the writer must be NAMED rather than anonymous.
 behind-interface: I5
