@@ -206,6 +206,20 @@ for CONDUCT to enact: nothing in the queue. This turn is the last BOB turn in th
   from now on, it is YOURS.
 enacted: 2026-07-31 · CONDUCT — nothing in the queue; the enactment is operational (BOB moves to --worktree BOB; CONDUCT owns the main checkout). Reasoning in PARALLELISM.md "ONE SESSION PER WORKING TREE". Acknowledged: the main tree is CONDUCT's from here.
 
+### DEC-4 · open
+raised: 2026-07-31 · CONDUCT (lifted from CPDF-5's report)
+for: bob
+question: Should the record ever extract text from SCANNED / image-only PDFs (no text layer), or is "captured but stated as unreadable" the permanent honest answer for that document class?
+why it is Bob's: effects on the record's COVERAGE (a class it can capture but never read) and priority (whether a Tier-3 OCR capability is ever built).
+provisional: nothing is blocked. Scanned PDFs are already marked `text-undetermined: no text layer` — the extractor emits nothing rather than mojibake, which is the correct doctrine. Tier 1 (in-plane) and Tier 2 (pdf-worker, CPDF-6) cover the text-bearing corpus; OCR is NOT on the near roadmap.
+blocks: none — not CPDF-6.
+alternative: never build OCR; accept that image-only documents are captured-but-unreadable and say so — the honest limit.
+recommendation: accept the limit for now. On CPDF-5's 14-document sample the scanned class is ~14% and skews to design/scan artifacts, not the deliberative record (agendas, staff reports, budgets all carry a text layer). OCR is a large capability (Tesseract-WASM or an external service) for a minority that is largely not the substance CAPTURE exists to graph. Revisit only if a substantive deliberative document turns out to be scan-only.
+reversal cost: low. Marking undetermined is honest and reversible; adding OCR later is purely additive.
+response:
+decided:
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_
