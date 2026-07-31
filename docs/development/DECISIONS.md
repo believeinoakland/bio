@@ -166,6 +166,46 @@ for CONDUCT to enact: update D-1's disposition to name the trigger, so a future 
   reads "deferred until X" rather than "open doctrine" and does not re-raise it.
 enacted:
 
+### DEC-3 · answered
+raised: 2026-07-31 · CONDUCT (relayed by Bob; it belongs in this file, which is why
+  `for:` now exists)
+for: bob-session
+question: BOB and CONDUCT are editing the same working tree live, so CONDUCT's
+  integrations keep meeting a BOB session's half-finished work and its plancheck gate
+  fires on a mess it did not make. What is the durable separation?
+why it is this session's: coordination mechanism. Not doctrine, not risk carrying
+  Bob's name, not an outside effect. Bob's standing instruction is explicit that
+  sequencing and mechanism are not his.
+provisional: BOB published immediately on hearing this, so CONDUCT's tree is clean now.
+  That is a mitigation, not a fix — it shortens the dirty window rather than removing
+  it, and a BOB turn is long.
+blocks: nothing. CONDUCT reported it works around the collision.
+alternative: leave both in the main checkout and rely on BOB committing more often.
+  Rejected: it makes correctness depend on how often a long turn remembers to commit,
+  which is the class of discipline this repository has watched fail four times today.
+recommendation: ONE SESSION PER WORKING TREE, no exceptions. CONDUCT keeps main
+  because it integrates and pushes continuously; BOB moves to `--worktree BOB`.
+reversal cost: none. It is where a session runs.
+response: ADOPTED, decided by this session. The root cause is locatable: PARALLELISM.md
+  said "`ARCH` works in the MAIN checkout", written when ARCH was ONE session. ARCH
+  split into CONDUCT and BOB on 2026-07-31 and BOTH inherited the main checkout, which
+  put two long-running sessions in one tree with none of the claims system's
+  protection — a claim reserves PATHS BETWEEN checkouts and does nothing about two
+  sessions writing one tree. The rule's stated reason has also inverted: it avoided a
+  worktree "that would have to push them back", and pushing is now understood to be
+  the very act that makes a change reach anyone. So the same misunderstanding produced
+  BOTH of today's coordination failures — an untracked kickoff that reached no worker,
+  and two sessions in one tree. Both treated the main checkout as a shared surface
+  rather than the repository as the channel.
+decided: 2026-07-31 · session BOB
+reasoning recorded in: docs/development/PARALLELISM.md, "ONE SESSION PER WORKING TREE",
+  which carries the correction and why the original was right for a premise that
+  stopped holding.
+for CONDUCT to enact: nothing in the queue. This turn is the last BOB turn in the main
+  checkout; the next one starts in `--worktree BOB`. If you see the main tree dirty
+  from now on, it is YOURS.
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_

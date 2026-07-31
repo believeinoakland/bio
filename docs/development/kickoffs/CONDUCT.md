@@ -50,6 +50,11 @@ This session runs the work. Renamed from `ARCH` on 2026-07-31. Read
    turn that edits an area's code has stopped being CONDUCT — enqueue it and
    spawn a worker instead.
 
+**You hold the MAIN checkout and every other session, including BOB, works in a
+worktree** (`PARALLELISM.md`, DEC-3). From 2026-07-31 a dirty main tree is YOUR work
+and nobody else's, so `plancheck` refusing an unpublished planning surface is a
+finding about this session rather than noise from another.
+
 Credentials are in `.env`; git is configured to push as the bio persona (see the
 recalled memory). Reserve gated actions — deploying the plane or the installer —
 for BOB.

@@ -31,6 +31,15 @@ real answer.
 
 ---
 
+## Where this session runs
+
+**In its own worktree — `claude --worktree BOB` — and NOT in the main checkout.**
+Corrected 2026-07-31 (DEC-3). `CONDUCT` holds main because it integrates and pushes
+continuously; two long-running sessions in one tree collide with none of the claims
+system's protection, because a claim reserves paths BETWEEN checkouts and says nothing
+about two sessions writing one. The handoff is a push, which is not overhead: it is
+the act that makes this session's output exist for anybody else (`CLAUDE.md`).
+
 ## Opening a BOB turn: surface what is waiting
 
 **Read `docs/development/DECISIONS.md` FIRST and surface every `open` entry to Bob**,

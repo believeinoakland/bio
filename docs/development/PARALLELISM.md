@@ -217,17 +217,41 @@ dormant areas.
 `ARCH` writing code would defeat the point, because the areas would then be
 receiving decisions from a party that is also a competitor for the same files.
 
-**`ARCH` works in the MAIN checkout; area sessions work in worktrees.** This was
-not designed — it fell out of standing this scaffolding up on 2026-07-31 — but it
-is the right shape and is written down so it is kept rather than rediscovered.
-The reason it is right: an area session is confined to its own paths and a
-worktree makes that confinement physical, one session per worktree, `.env`
-carried in by `.worktreeinclude`. `ARCH` owns no code and edits the cross-cutting
-registry — `CLAIMS.md`, `INTERFACES.md`, this file, the kickoffs — which every
-worktree must see, so it belongs in the main checkout where those files are the
-canonical copy, not in a worktree that would have to push them back. An `ARCH`
-turn that finds itself editing an area's code is a turn that has stopped being
-`ARCH`; claim the area and move to its worktree.
+**ONE SESSION PER WORKING TREE. No exceptions.** `CONDUCT` holds the main checkout,
+because it integrates and pushes continuously; **every other session, including
+`BOB`, works in a worktree.** An `ARCH`/`CONDUCT` turn that finds itself editing an
+area's code is a turn that has stopped being `CONDUCT`; claim the area and move to
+its worktree.
+
+**CORRECTED 2026-07-31, and the correction is worth reading because the original
+was right for a premise that stopped holding.** The rule said "`ARCH` works in the
+MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH`
+edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this file, the
+kickoffs — "which every worktree must see, so it belongs in the main checkout where
+those files are the canonical copy, **not in a worktree that would have to push them
+back**".
+
+That was written when `ARCH` was ONE session. On 2026-07-31 `ARCH` split into
+`CONDUCT` and `BOB` (`ORCHESTRATION.md`) and **both inherited "the main checkout"**,
+which put two long-running sessions in one tree — precisely the collision the claims
+system exists to prevent, and with none of its protection, because a claim reserves
+PATHS between checkouts and does nothing about two sessions writing one tree. It
+produced exactly what you would predict: CONDUCT's integrations kept meeting a BOB
+session's half-finished work, and a gate designed to refuse an unpublished planning
+surface fired on a mess CONDUCT had not made and could not fix.
+
+**The stated reason has also inverted.** "A worktree that would have to push them
+back" was written as the cost. It is the POINT: sessions do not share a working tree,
+so a change reaches another session only when it is committed and pushed
+(`CLAUDE.md`). Pushing is not the overhead of putting BOB in a worktree — it is the
+act that makes BOB's output exist for anybody else. The same misunderstanding
+produced both of this day's coordination failures: an untracked kickoff that reached
+no worker, and two sessions in one tree. Both came from treating the main checkout as
+a shared surface instead of treating the REPOSITORY as the channel.
+
+Consequence for `BOB`: it works in `--worktree BOB`, and its handoff is a push, which
+`plancheck` already refuses to let it skip. Consequence for `CONDUCT`: it integrates
+only from a clean main, and a dirty tree is now its OWN work and nobody else's.
 
 ## Concurrency safeguards
 
