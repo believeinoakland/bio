@@ -63,7 +63,10 @@ worker biosmoke7. The plane is at 0.53.0, op=audit 31/31 clean.
 
 Work without asking me to confirm anything determinable from the repo. Stop and
 tell me if any item in the plan changes the ones after it. Decision items at the
-end only.
+end only, in the shape kickoffs/README.md defines: what is running provisionally,
+why it was ambiguous, the alternative, your recommendation, and what reversing it
+costs. Nothing the repo already answers, nothing you are better placed to decide,
+nothing I would have to read a diff to act on. An empty list is a real answer.
 
 ---
 
@@ -73,7 +76,9 @@ Fetch from raw.githubusercontent.com/believeinoakland/bio/main. The parenthetica
 is why, not a summary; read the document.
 
 1. `docs/development/kickoffs/README.md` — the thread register, the
-   never-force-push rule.
+   never-force-push rule, and HOW TO CLOSE A TURN. The decision-item practice is
+   reinstated as of 2026-07-31 and is not optional; read its three tests before
+   writing a single item.
 2. `docs/development/kickoffs/BATON.md` — who may cut a plane release. CAPTURE
    holds it.
 3. `docs/development/DEBT.md` — 68 items open. Take the next free D-number at

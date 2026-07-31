@@ -44,6 +44,55 @@ somebody else's, but it is the same collision risk, and `store.mjs` is the
 largest file in the repo. If a thread finds itself needing an unowned path twice,
 that is the signal to name an owner rather than to keep editing quietly.
 
+## Closing a turn: DECISION ITEMS
+
+**Every turn ends with the decisions that are BOB'S, and with nothing else.**
+Reinstated 2026-07-31, after the practice quietly lapsed across the 0.49.0 to
+0.53.0 sessions: those turns ended with status and with scattered asides of the
+"say the word if you'd read that differently" kind, which is not the same thing
+and does not work. A decision buried in a paragraph of results is a decision
+nobody makes.
+
+It lapsed the first time because it had gone bad in three specific ways. Each
+one now has a test the session applies BEFORE writing an item down.
+
+1. **It is not a decision if the answer already exists.** If the repository, a
+   standing ruling, or a measurement settles it, it is not Bob's to settle.
+   Resolve it, and record WHERE the answer came from so the resolution can be
+   checked. Asking about something already ruled is worse than not asking,
+   because it invites re-litigating settled doctrine.
+
+2. **It is not a decision if the session is better placed to make it.** Naming,
+   file structure, test shape, algorithm, schema layout, which of two equivalent
+   mechanisms: decide these, and do not narrate the deliberation. Bob's judgement
+   is for what his judgement actually changes — DOCTRINE (what the record means
+   and what it may claim), PRIORITY (what gets built and in what order), RISK HE
+   CARRIES (legal exposure, relations with the City, anything with his name on
+   it), and EFFECTS ON PEOPLE OUTSIDE THIS PROJECT (load or blocks landing on
+   third parties, anything a member or a source experiences).
+
+3. **It is not a decision item if it cannot be acted on without reading the
+   diff.** State the choice in the terms of the RECORD, not the code. A reader
+   who has not seen the session's work should be able to decide from the item
+   alone.
+
+**The shape of an item.** Enough to decide, and no more:
+
+- what is running NOW, stated as a provisional decision rather than a fact
+- why it was genuinely ambiguous, in one line
+- the alternative, stated fairly enough that choosing it is easy
+- a RECOMMENDATION, because a session that has done the work owes a view
+- what reversing it costs, and specifically whether it gets more expensive once
+  data exists under the current choice
+
+**Ship provisional decisions only when they are cheap to reverse.** If a
+provisional choice would be expensive to undo, it is not a decision item at the
+end of a turn; it is a reason to stop before shipping and ask.
+
+**An empty list is a real answer.** A turn with nothing genuinely Bob's says so
+in one line and stops. The list is not a quota, and padding it re-creates
+failure mode 1.
+
 ## Shared files, and the rule for them
 
 These are written by more than one thread and are the collision risk:
