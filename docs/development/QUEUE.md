@@ -66,26 +66,7 @@ _(drained by CONDUCT 2026-07-31: re-read the updated `kickoffs/CONDUCT.md` loop 
 
 _(drained by CONDUCT 2026-07-31: M8 (a member can reach what the record holds) is now in MILESTONES and the UI inventory in UI-PLAN — read and acknowledged. UI stays DORMANT; M8 depends on nothing and is available to activate when a slot frees, with UI-PLAN's U11 ("members & keys") to be SPLIT first since it exceeds its rung. No queue item superseded, no worker stopped.)_
 
-### 2026-07-31 · BOB · M8 is built as CONSTRUCTS — read this before scoping any UI item
-
-`docs/architecture/BIO_Interaction_Constructs_v0_1.md` is new and governs how M8 is
-scoped. **Do not queue UI work op-by-op.** Five interaction constructs carry the whole
-capability set; a member learns five shapes instead of forty screens, which is the
-non-technical-audience rule doing real work.
-
-**NAME COLLISION, so a worker does not read the wrong file:** `architecture/
-CONSTRUCTS.md` is the CONTENT framework's inventory. The new file is INTERACTION
-constructs. Unrelated.
-
-The one structural point: **TASK is the attention layer, not a peer of the acts.** It
-says "this needs you" and points at a ballot, a proposal, a justified transition or an
-attestation, which is what stops the inbox becoming a second parallel application.
-
-Build order inside M8 is in `MILESTONES.md`: T, then J, then B, S alongside J, P when
-M4 has findings, A on the crucial path. When UI activates, scope its first item as
-**the task construct**, not as "the tasks screen".
-
-Nothing here supersedes a queue item or stops a worker.
+_(drained by CONDUCT 2026-07-31: `BIO_Interaction_Constructs_v0_1.md` governs M8 — five INTERACTION constructs (not the CONTENT `CONSTRUCTS.md`), TASK the attention layer pointing at the acts. Recorded for when UI activates: scope M8's first item as the TASK CONSTRUCT (not "the tasks screen"), build order T→J→B(+S)→P→A per MILESTONES. UI stays dormant; no queue item superseded.)_
 
 ---
 
@@ -290,7 +271,7 @@ depends-on: none
 added: 2026-07-31 · CONDUCT
 landed: 39a0e1b — shares the single DO alarm with the selection sweep and reconciles to the earliest wake; negative control run. **Note for REC-1: this is now the SECOND consumer of one alarm, which is the evidence that the scheduler shape needs deciding once rather than per consumer.**
 
-### CAP-3 · queued
+### CAP-3 · done
 milestone: M1
 scope: **PRIMARY resilience item as of 2026-07-31 (DEC-1): the allowlist arm is closed (D-94), so the archive fallback is now the main scaling mitigation for source-access loss, not a backstop.** Make a monitoring tick actually INVOKE the archive fallback, which is built, live-verified and idle — nothing consults `sourcereach` and nothing fires the fallback. A tick that fails records its outcome through `op=recordsourceoutcome`'s path; a tick finding `fallback_eligible` calls `op=acquire` with `via: "archive.org"` and the document address. Read D-104's resolution before touching the counter: a governed refusal is our own politeness and must never move the failure count.
 behind-interface: none
