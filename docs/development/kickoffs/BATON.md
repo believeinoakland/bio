@@ -5,7 +5,7 @@ holder: CAPTURE
 since: 2026-07-30
 granted_by: bob
 scope: plane
-note: closed the nine-release capture session 0.36.0 through 0.45.0
+note: cut 0.46.0, 0.47.0 and 0.48.0; all three deployed byte-identical and live-verified
 END-BATON-STATE -->
 
 **Holder: `CAPTURE`, since 2026-07-30, granted by Bob.**
