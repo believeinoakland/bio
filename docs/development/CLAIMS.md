@@ -103,3 +103,12 @@ interfaces consumed: none
 interfaces owned: registers I3, I4, I5 from the code as it stands (I3 owner moved CAPTURE -> RECORD)
 expected: the planning-infrastructure cleanup Bob directed — place every open construct architecturally, refactor the plan into milestones and pipelines CONDUCT can orchestrate, and stand up a verification process with a measured floor. NO area code touched: the two new scripts are instruments, and bundle.test.mjs was REPAIRED (it read an absolute container path, was absent from the npm test chain, and failed on an 11-character token fixture against livefire's 16-character floor). QUEUE.md deliberately NOT edited — it is CONDUCT's sole-writer file and CONDUCT was landing CAP-2 concurrently; the M0 items are handed over as a decomposition instead.
 released: 2026-07-31 — docs only; nothing deployed, nothing pushed.
+
+## CLAIM 2026-07-31 CONTENT-PDF
+session: content-pdf-agent-4
+opened: 2026-07-31T00:00:00Z
+paths: the CPDF-7 measurement section in docs/development/MEASUREMENTS.md (append-only), the D-118 row in docs/development/DEBT.md (Status column only), bio-plane/test/free-tier-fleet-probe.mjs (new probe, not in the battery)
+interfaces consumed: none (a measurement)
+interfaces owned: none
+expected: QUEUE.md CPDF-7 / D-118 — MEASURE whether Workers Free permits a second Worker script and service bindings, and what a cross-Worker call costs, through the project's own Cloudflare account and egress. Deploys THROWAWAY Workers (cpdf7-probe-*) and TEARS THEM DOWN, never touching biosmoke7/civicos/newgroup, the record or the installer; attaches no R2 binding. Commits no shipped code and changes no dependency. Findings: the account is on Workers FREE (the API refused limits.cpu_ms with "not supported for the Free plan"); on Free a second script deploys, a service binding deploys and RESOLVES, and a cross-Worker call runs end-to-end for ~1 ms wall-clock / one subrequest (25 binding calls in one Free invocation succeeded; teardown re-confirmed, back to three scripts). So D-118's conditional does NOT fire: pdf-worker (CPDF-6) is viable on Free and central; Tier 1 (CPDF-4) is not forced to be the floor by any binding limitation. D-118 CLOSED; the residual 10 ms Worker-CPU-ceiling question is narrowed onto CPDF-1's existing gated follow-on. No deploy of the plane; CONDUCT integrates.
+released: 2026-07-31 — measurement landed on branch content-pdf/cpdf7-fleet-measure; CONDUCT integrates. Not pushed.

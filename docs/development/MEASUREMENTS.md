@@ -726,3 +726,127 @@ removes all three at once.
 script and service bindings at all, and what they cost against the request and CPU
 budgets. See D-118. Do not build the Tier 2 path on an assumption here — this is the
 same category as the subrequest ceiling before calibration.
+
+## 2026-07-31, thread CONTENT-PDF: Workers Free — a second script, a service binding, and what a cross-Worker call costs (D-118, CPDF-7)
+
+The go/no-go measurement for the whole `pdf-worker` fleet path (I6). D-118 named
+three assumptions the tiering rests on and asked them to be MEASURED, not believed:
+whether a Free account may run a SECOND Worker script, whether SERVICE BINDINGS
+between Workers are available on Free, and what a cross-Worker call costs against
+the request / CPU / subrequest budgets. Measured through this project's OWN
+Cloudflare account and its own egress, as D-105 was measured rather than believed —
+not read out of a pricing page. It commits no shipped code and changes no
+dependency. Reproduce with `bio-plane/test/free-tier-fleet-probe.mjs` (a probe, NOT
+in the battery: it deploys two throwaway Workers, invokes across the binding, and
+tears them down; it reads the token from `.env` and never prints it).
+
+**Instrument.** The Cloudflare REST API (`api.cloudflare.com/client/v4`),
+authenticated with the project token from `.env` (`CLOUDFLARE_API_TOKEN`), against
+account `20b533579290b9b93168345edd3b7f72` (subdomain `believeinoakland`), on this
+machine (node v26.5.0, darwin/arm64). Throwaway script names `cpdf7-probe-callee` /
+`cpdf7-probe-caller` / `cpdf7-cpu-probe`, guarded against the three real script
+names (`biosmoke7`, `civicos`, `newgroup`) and DELETED after; teardown confirmed by
+re-listing scripts (back to exactly those three). No R2 binding was attached to
+either throwaway and the real plane, the record and the installer were never
+touched.
+
+### The account plan — MEASURED as Workers FREE (not merely assumed)
+
+The token cannot read billing (`/accounts/{a}/subscriptions` and
+`/user/subscriptions` both answer HTTP 403 — scope, not plan). So the plan was
+established the way a limit is: by provoking the platform. Deploying a throwaway
+Worker with `limits.cpu_ms: 50000` in its metadata was **rejected by the vendor's
+own API** for THIS account:
+
+> HTTP 400, code 100328 — "CPU limits are not supported for the Free plan. Switch
+> to a paid plan … to set CPU limits." (Cloudflare API, verbatim)
+
+That is the platform stating the account's plan against the account itself, which is
+a measurement of the plan and not a vendor doc. **This account is on Workers Free.**
+It corroborates the vendor's "Free = 10 ms CPU/invocation, not raisable" claim
+below: the 10 ms ceiling is real here and cannot be lifted without changing plan.
+(The account nonetheless already runs three scripts, a SQLite Durable Object and two
+R2 buckets — so all of those are within Free today.)
+
+### What a Free account CAN do — MEASURED on this Free account
+
+| Question (D-118) | Measured result |
+| --- | --- |
+| Run a SECOND Worker script? | **YES.** `cpdf7-probe-callee` deployed alongside the three existing scripts (four coexisted momentarily; teardown returned to three). |
+| A SERVICE BINDING between two Workers? | **YES.** `cpdf7-probe-caller` deployed carrying `{ type: "service", name: "CALLEE", service: "cpdf7-probe-callee" }` and the binding resolved. |
+| Does a cross-Worker call actually execute? | **YES.** The caller invoked `env.CALLEE.fetch(...)` and received the callee's JSON marker back, verified end-to-end through the account's own `*.workers.dev` egress. |
+| 25 service-binding calls in ONE invocation? | **Succeeded** — a single Free-plan invocation made 25 binding calls without hitting a subrequest wall (Free's per-invocation Cloudflare-service subrequest budget is 1,000; see vendor claims). |
+
+**Cross-Worker call cost (MEASURED, wall-clock, caller-side).** 25 sequential
+service-binding calls in one caller invocation: **total 46 ms; median 1 ms; min
+1 ms; max 13 ms per call** (the max is the first warm-up call). Measured as the
+`Date.now()` delta across each awaited `env.CALLEE.fetch()` — i.e. wall clock across
+the binding, NOT Worker CPU. A Worker cannot time its own synchronous CPU
+(`Date.now()` is frozen during sync execution, the rule already established for
+`cpu.mjs`), so no CPU figure is claimed here; what this establishes is that the
+binding hop itself is ~1 ms and not pathological, consistent with the vendor's
+"zero added latency" claim. The first call after deploy returned HTTP 500 once
+(cold rollout / D-108's per-isolate rollout window); it succeeded on the next
+attempt and every attempt after.
+
+### Vendor CLAIMS (Cloudflare docs — THEIRS, labelled, retrieved 2026-07-31)
+
+Not measured except where the row says so. Sources: developers.cloudflare.com
+`/workers/platform/limits/`, the service-bindings runtime doc, and the 2026-02-11
+subrequests-limit changelog.
+
+| Budget | Free (vendor claim) | Paid (vendor claim) |
+| --- | --- | --- |
+| Worker scripts / account | 100 | 500 |
+| Requests / day | 100,000 | no limit |
+| CPU time / invocation | 10 ms, not raisable | 30 s default, up to 5 min |
+| Subrequests / invocation | 50 external + 1,000 to Cloudflare services | 10,000 default, configurable to 10M |
+
+- **Service bindings, per Cloudflare:** "there is zero overhead or added latency"
+  when calling over a binding — BUT "Each request to a Worker via a Service binding
+  counts toward your subrequest limit." So a plane→`pdf-worker` call spends ONE of
+  the plane invocation's Cloudflare-service subrequests (budget 1,000 on Free);
+  one PDF call per capture is negligible against that.
+- **Availability of service bindings on Free** is NOT stated plan-restricted in the
+  docs we read; rather than rest on the omission, we MEASURED it works (above).
+- The **10 ms CPU / invocation** Free claim is the one corroborated by our own plan
+  probe: the API refused to raise it on this account.
+
+### What a Free account CANNOT do (re: this path), and the one thing still open
+
+- **CANNOT raise the per-invocation CPU ceiling above 10 ms** on Free (measured —
+  the API said so). This is NOT a binding or second-script limitation; both of
+  those work. It is a separate axis, and it is the real remaining Free-plan risk to
+  `pdf-worker`, because each Worker — the plane AND `pdf-worker` — independently
+  gets only 10 ms CPU. The topology split actually HELPS here (the pdf-worker gets
+  its OWN fresh 10 ms rather than sharing the plane's), but whether pdf.js text
+  extraction FITS in 10 ms of Worker CPU is UNMEASURED: CPDF-1 timed extraction at
+  tens of ms on a warm NODE proxy (43 ms for a 60-page agenda) and explicitly did
+  not establish Worker CPU. That question is CPDF-1's already-recorded gated
+  follow-on (a deployed CPU-vs-ceiling probe walked in reference iterations, like
+  `op=cpuprobe`), and it is out of D-118's scope. It applies to BOTH tiers, so it
+  does not favour one over the other.
+
+### Recommendation — the pdf-worker path IS viable on Free; D-118's conditional does NOT fire
+
+D-118 framed the priority hinge conditionally: *if a Free instance cannot reach a
+second Worker, Tier 1 (CPDF-4) is not an optimisation but the FLOOR, which raises
+CPDF-4 over CPDF-6.* **A Free instance CAN reach a second Worker over a service
+binding, cheaply (one subrequest, ~1 ms), and the call executes end-to-end
+(measured).** So that conditional does not fire:
+
+- **`pdf-worker` (CPDF-6) is architecturally viable on Free**, which is where most
+  installer instances land. It is central, not marginal, on these grounds.
+- **Tier 1 (CPDF-4) is NOT forced to be the floor by any binding or second-script
+  limitation.** CONDUCT need not re-prioritise CPDF-4 above CPDF-6 on D-118's
+  grounds. CPDF-4 retains independent value (a pure-JS in-plane path that needs no
+  second Worker at all), but the reason to keep it is now the shared 10 ms CPU
+  ceiling, not a broken binding — and that ceiling constrains an in-plane Tier 1
+  just as much, so it is not a differentiator.
+
+**D-118 is CLOSED on its own terms** (second script: yes; service bindings: yes;
+cost against request/subrequest budgets: one subrequest, ~1 ms, ample headroom).
+The residual Free-plan concern — pdf.js against the 10 ms Worker-CPU ceiling — is a
+DIFFERENT question that already lives as CPDF-1's gated Worker-CPU follow-on; D-118
+does not need to carry it, and narrowing it there avoids a second home for one
+number (D-106's class).
