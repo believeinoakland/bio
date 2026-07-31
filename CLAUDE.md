@@ -59,6 +59,29 @@ a group's own Cloudflare account — that is the distribution model, not a demo.
 
 **Never force-push.** Fetch and rebase.
 
+**THE REPOSITORY IS THE CHANNEL. A change is not made when it is written; it is
+made when it is COMMITTED AND PUSHED.** Sessions do not share a working tree: an
+area session works in a git worktree, and a worktree is a checkout of a COMMIT, so
+an uncommitted file reaches nobody and an UNTRACKED one cannot even be found. On
+2026-07-31 a session wrote the rule "an area may not be ACTIVE without a kickoff",
+created the missing kickoff, and left it untracked while three workers were already
+running — so both the rule and its fix reached no one. Verify from the REMOTE, not
+from your own tree, the same way `deploy.mjs` reads the bytes back from the account
+rather than trusting the upload.
+
+Before you hand off, run it — this is not advisory:
+
+    node tools/plancheck.mjs
+
+It fails on an unpublished or unpushed planning surface, an ACTIVE area with no
+kickoff, an item behind an unregistered interface, a milestone that does not exist,
+and an open debt row with no disposition.
+
+**A mechanism that is not in the loop the reader actually runs is not a mechanism.**
+Documenting it is necessary and never sufficient. If you add a step, add it to the
+file whose owner must perform it — `kickoffs/CONDUCT.md` for CONDUCT, the area's
+kickoff for an area — not only to the document that explains it.
+
 **Measure, do not assume.** Numbers come from `docs/development/MEASUREMENTS.md`
 and go into it with their date and instrument. A vendor's documentation is a
 claim, not a measurement, and gets labelled as theirs. On 2026-07-31 three

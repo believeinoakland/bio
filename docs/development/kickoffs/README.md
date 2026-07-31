@@ -61,6 +61,29 @@ somebody else's, but it is the same collision risk, and `store.mjs` is the
 largest file in the repo. If a thread finds itself needing an unowned path twice,
 that is the signal to name an owner rather than to keep editing quietly.
 
+## Closing a turn: PUBLISH FIRST
+
+**Before the decision items, before the summary, run `node tools/plancheck.mjs` and
+get it green.** Added 2026-07-31 after a session left a new kickoff UNTRACKED while
+three workers were already running from an earlier commit; both the rule it enforced
+and the file that fixed it reached nobody. A worktree is a checkout of a commit, so
+unpublished work is not "nearly landed" — it is invisible.
+
+The check refuses an unpublished or unpushed planning surface, an ACTIVE area with no
+kickoff, an item behind an unregistered interface, an unknown milestone, and an open
+debt row with no disposition. Every one of those is a way a session's work fails to
+reach the next session, and every one has happened here.
+
+Three obligations it cannot check, which are yours:
+
+- **A change that supersedes queued or in-flight work goes in the `BOB INBOX`** at the
+  top of `QUEUE.md`, naming the item id (`ORCHESTRATION.md`). Whether to stop a
+  running worker is CONDUCT's call; making the supersession visible is yours.
+- **A kickoff your change supersedes is corrected in the SAME turn, by you** — the one
+  licensed exception to "do not write another area's kickoff", because that area's
+  next session is precisely who the stale text misleads.
+- **Report from the remote.** "Committed" is not "pushed", and neither is "written".
+
 ## Closing a turn: DECISION ITEMS
 
 **Every turn ends with the decisions that are BOB'S, and with nothing else.**

@@ -23,7 +23,13 @@ This session runs the work. Renamed from `ARCH` on 2026-07-31. Read
    piece is genuinely independent before it becomes runnable.
 4. **Keep two development areas busy;** promote a dormant area when a queue
    empties.
-5. **Escalate to Bob ONLY genuine decisions** (doctrine, priority, risk he
+5. **Run `node tools/plancheck.mjs` before you push, and get it green.** It is the
+   integration-side half of the same discipline: an ACTIVE area with no kickoff, an
+   item behind an unregistered interface, an unknown milestone, an open debt row with
+   no disposition, or a planning surface you have not published. It catches a BOB
+   session's handoff mistakes as well as your own, which is the point — the check is
+   on the repository's state, not on who last touched it.
+6. **Escalate to Bob ONLY genuine decisions** (doctrine, priority, risk he
    carries, effects on people outside the project). You write no area code; a
    turn that edits an area's code has stopped being CONDUCT — enqueue it and
    spawn a worker instead.
