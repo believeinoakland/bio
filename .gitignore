@@ -1,0 +1,6 @@
+# Claude Code worktrees: isolated checkouts, never part of the tree
+.claude/worktrees/
+
+# Credentials. Carried into worktrees by .worktreeinclude, never committed.
+.env
+.env.local

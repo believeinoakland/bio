@@ -1,0 +1,119 @@
+# BIO / CivicOS — standing instructions for every session
+
+Loaded automatically. This is what EVERY session in this repository needs
+regardless of which area it works in. Your area's own plan is in
+`docs/development/kickoffs/<AREA>.md`; read it after this.
+
+## What this is
+
+A civic accountability record. Groups capture what a public body published,
+prove later that it said what they claim, and build cases on it. The whole
+product is TRUSTWORTHINESS OF THE RECORD, so a defect that makes the record
+claim more than it can support is worse than a missing feature, and much worse
+than an ugly one.
+
+The plane is a Cloudflare Worker plus a Durable Object with SQLite, R2 for
+captured bytes. `newgroup` is the installer that puts a sovereign instance into
+a group's own Cloudflare account — that is the distribution model, not a demo.
+
+## The rules that are not negotiable
+
+**Never force-push.** Fetch and rebase.
+
+**Measure, do not assume.** Numbers come from `docs/development/MEASUREMENTS.md`
+and go into it with their date and instrument. A vendor's documentation is a
+claim, not a measurement, and gets labelled as theirs. On 2026-07-31 three
+claims the archive design rested on turned out to be wrong when finally
+measured; every one had been in the design document for weeks.
+
+**Run the negative control.** Break the thing you just tested and confirm the
+suite fails. Neutering the inbox write-path grammar check left all 67 assertions
+passing, because every input the code generated was well-formed by construction:
+the suite was testing something else and nobody could have known without the
+control. A suite that does not fail when you break its subject is not a suite.
+
+**Correct superseded tests, never exempt them.** If a rule changed, change the
+assertion and say in a comment why the old one was wrong. An exempted test is a
+rule nobody is enforcing and nobody remembers deleting.
+
+**Test through the op, and verify live.** A store-level test and a passing
+battery are not evidence that a caller can reach the feature. `op=invitelook`
+shipped with a ReferenceError while 1276 assertions passed.
+
+**A deploy verified is not a build serving.** `deploy.mjs` proves the bytes
+landed. Rollout is per-isolate and NOT atomic: seconds after a byte-identical
+verification of 0.52.0, `/version` answered 0.51.0 and a probe answered by the
+old build looked exactly like a security defect in the new one. `deploy.mjs` now
+waits for the version to serve. Durable-Object-routed ops can still lag after
+that. **If a live probe contradicts the suite, establish which build answered
+before believing either.**
+
+**An equality or an outcome that costs nothing to produce is not evidence.** Our
+governor refusing is not the source failing. Two empty-body digests agreeing
+agree on nothing. A provenance hop a caller can hand us is one a caller can
+invent. All three are enforced structurally, not by convention.
+
+**Undetermined is first-class and must be STATED.** Never invent an attribution
+to get past a gate. A gate that pressures someone into inventing one is a bug in
+the gate: that is why the publication fence moved off the content axis onto the
+provenance chain.
+
+**Do not create debt that can be avoided.** When you must, write it in
+`DEBT.md` with what it costs and what closing it takes.
+
+## Working in an area
+
+Areas, claims, interfaces and the change protocol are in
+`docs/development/PARALLELISM.md`. The short version:
+
+- **Claim your area in `docs/development/CLAIMS.md` before editing**, and say
+  which paths. A claim keeps other sessions out.
+- **Do not edit another area's paths.** Append a DELEGATION entry saying what
+  you need and continue with your own work.
+- **Interfaces are stable by default.** To change one, use the protocol in
+  `INTERFACE-CHANGES.md`. Do not change a shape another area builds against
+  just because you can reach the file.
+- **Use a worktree**: `claude --worktree <area>`. One session per worktree.
+
+## Cutting a release
+
+**Only the `DIST` area cuts plane releases**, and only from a green `main`. If
+you are not DIST, do not bump a version, sign, tag or deploy the plane. Land
+tested code and ask DIST. See `docs/development/kickoffs/DIST.md` for the gate.
+
+## Verification discipline, in order
+
+1. `cd bio-plane && npm test` — the whole battery, not the suite you touched.
+2. The negative control for whatever you just added.
+3. Build, sign, deploy (DIST only), and wait for the rollout gate.
+4. Live-verify **in your own instance's scratch namespace**, never the real
+   record, and sweep it after.
+5. `op=audit` clean before you call anything done.
+
+## Where things are
+
+| Path | What |
+| --- | --- |
+| `bio-plane/src/` | the plane: `index.mjs` control plane, `store.mjs` the DO, `schema.mjs`, `cdx.mjs`, `subresources.mjs` |
+| `bio-plane/checks/bio-checks.mjs` | the check catalog. C-numbers. The gate runs it |
+| `bio-plane/test/` | the battery. `hygiene.test.mjs` catches source-level hazards |
+| `newgroup/` | the installer. Out of bounds without an explicit instruction |
+| `docs/development/` | DEBT, MEASUREMENTS, the designs, the kickoffs |
+| `release/` | the signed artifact and RELEASE.json |
+
+## Traps that have already cost time
+
+- **New schema tables go BEFORE the `host_governor` block** in `schema.mjs`.
+  `hygiene.test.mjs` asserts the literal ends on a `);`.
+- **No backticks inside the schema or setup template literals.** A balanced
+  stray pair still parses, so `node --check` will not save you.
+- **A derived table must be added to `purge`** or a whole-store purge reports
+  scope ALL and silently leaves rows (D-113).
+- **`store.mjs` is ~4900 lines.** Grep before assuming a helper does not exist.
+
+## Credentials
+
+Read from `.env`, never from a chat message and never committed. `.env` is
+gitignored and carried into worktrees by `.worktreeinclude`. `tokens.mjs`
+denylists any token value published in the repo and treats it as NOT SET, so
+committing one revokes it.

@@ -1,12 +1,15 @@
 # Thread CAPTURE: paste-ready kickoff
 
-Rewritten 2026-07-31 at the close of the inbox-and-archive session. FIVE
+Rewritten 2026-07-31, then UPDATED the same day at the close of the session that
+decided the move to parallel development. SEVEN
 releases were cut, signed, deployed byte-identical and live-verified that day:
 0.49.0 (the task inbox, D-98), 0.50.0 (source reachability, D-104), 0.51.0 (the
-archive fallback's decision half), 0.52.0 (the archive provenance chain, D-112)
-and 0.53.0 (a deploy that waits for the build to serve, D-108, plus a purge that
-means ALL, D-113). The plane is at 0.53.0, op=audit 31/31 clean, and the
-installer carries 0.53.0. See `kickoffs/README.md` for the thread register and
+archive fallback's decision half), 0.52.0 (the archive provenance chain, D-112),
+0.53.0 (a deploy that waits for the build to serve, D-108, plus a purge that
+means ALL, D-113), 0.54.0 (capture authority recorded, the age arm corroborated,
+the fallback narrowed to operator credentials) and 0.55.0 (the publication fence
+moved off the content axis onto the provenance chain, D-114, catalog 1.18.0).
+The plane is at 0.55.0, op=audit 31/31 clean, and the installer carries 0.55.0. See `kickoffs/README.md` for the thread register and
 the append-only rules, and `kickoffs/BATON.md` for the release baton, which
 CAPTURE currently holds.
 
@@ -59,7 +62,7 @@ Grants (sessions carry no secrets; paste every one even if unchanged):
   Ratification seed, only if something is published: [PASTE]
 
 Deploy target: account 20b533579290b9b93168345edd3b7f72 (biocloudflare), plane
-worker biosmoke7. The plane is at 0.53.0, op=audit 31/31 clean.
+worker biosmoke7. The plane is at 0.55.0, op=audit 31/31 clean.
 
 Work without asking me to confirm anything determinable from the repo. Stop and
 tell me if any item in the plan changes the ones after it. Decision items at the
@@ -103,6 +106,11 @@ is why, not a summary; read the document.
 ## The session plan
 
 In order. Stop and say so if any item changes the ones after it.
+
+NOTE, 2026-07-31: this thread no longer cuts its own releases. Land tested code
+on `main` and hand off to DIST (`kickoffs/DIST.md`). Read `CLAUDE.md` and
+`PARALLELISM.md` first: claim CAPTURE in `CLAIMS.md`, work in a worktree, and do
+not edit another area's paths.
 
 **(1) D-109, drain the task queue.** First because it is the smallest thing
 standing between a shipped mechanism and a working one: undetermined captures
