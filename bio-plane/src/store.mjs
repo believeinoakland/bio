@@ -835,6 +835,19 @@ export class Store extends DurableObject {
                          : null,
         tick: ()    => { const d = this.taskDrain({ limit: Store.TASK_DRAIN_ALARM_BATCH, actor: "alarm" });
                          this.#lastDrainProgress = d.drained > 0; return { drain: d }; } },
+      /* CAP-3 (CAPTURE, appended here under CONDUCT's authorisation while RECORD
+         is dormant). The archive-fallback MONITORING consumer: it fires the
+         built-but-idle fallback for documents that have become fallback_eligible.
+         It is a pure clock gated on pending work — `wake` is null unless
+         monitoring is configured AND a failing document could still reach the
+         threshold, so an unconfigured or idle instance holds no alarm exactly as
+         before. Its `tick` is ASYNC (it does a governed archive fetch through
+         op=acquire); onAlarm awaits it. Bodies and rationale live beside the
+         reachability code, this is only its registration. */
+      { name: "archive-monitor",
+        due:  (now) => now,
+        wake: (now) => this.#monitorPending() ? now + this.#monitorTickMs() : null,
+        tick: (now) => this.#monitorTick(now) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -861,13 +874,19 @@ export class Store extends DurableObject {
     const probe = await this.#probeState(now);
     const reg = this.#schedConsumers(probe);
     const grace = Store.SCHED_GRACE_MS;
-    let swept = 0, drain = null; const probes = [];
+    let swept = 0, drain = null, monitor = null; const probes = [];
     for (const c of reg) {
       const d = c.due(now);
       if (d === null || d > now + grace) continue;
-      const r = c.tick(now);
+      /* Awaited so an ASYNC consumer's work COMPLETES inside the alarm. The two
+         original consumers return synchronously, and awaiting a plain value is a
+         no-op, so this is a strict generalisation for the async consumers REC-1
+         foresaw ("the monitoring, archive-fallback eligibility ... clocks still
+         to come") — not a reshape of the mechanism. */
+      const r = await c.tick(now);
       if (c.name === "selection-sweep") swept = r.swept;
       else if (c.name === "task-drain") drain = r.drain;
+      else if (c.name === "archive-monitor") monitor = r && r.monitor;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -882,7 +901,8 @@ export class Store extends DurableObject {
     return { swept, drained: d.drained, created: d.created.length,
              folded: d.folded.length, refused: d.refused.length,
              waiting: d.waiting.length, remaining: d.remaining,
-             rearmed: nextAt !== null, nextAt, probes };
+             rearmed: nextAt !== null, nextAt, probes,
+             ...(monitor ? { monitor } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -5167,6 +5187,129 @@ export class Store extends DurableObject {
     };
   }
 
+  /* ==================================================================
+   *  CAP-3: the archive-fallback MONITORING consumer.
+   *
+   *  The decision half and the capture half of the archive fallback both work
+   *  and are live-verified, and NOTHING invoked them: no periodic actor
+   *  consulted `source_reachability` and nothing fired the fallback (the largest
+   *  gap between what is built and what runs). This is the consumer that closes
+   *  it. It is REC-1's designed extension — one entry appended to the single
+   *  reconciling DO alarm's `#schedConsumers` registry (RECORD's scheduler,
+   *  DORMANT, this cross-area touch authorised by CONDUCT) — NOT a second alarm
+   *  and NOT a cron. SCHEDULER.md is the authority for why.
+   *
+   *  Each tick consults `sourcereach` for every document whose CURRENT failing
+   *  run could reach the RULED threshold, and for those the fence finds
+   *  `fallback_eligible` it fires the fallback by invoking op=acquire with
+   *  via:"archive.org" and the DOCUMENT address — the SAME op a caller uses, so
+   *  the two-hop grade-C chain, the re-checked eligibility fence and the
+   *  provenance hop built from the CDX record that call itself fetches are all
+   *  produced by one code path that cannot drift (D-112). It reaches that op over
+   *  `env.SELF`, a service binding to this instance's own Worker, under a daemon
+   *  credential: the archive arm is admin/probe by design, "an operator or daemon
+   *  credential, never a member's".
+   *
+   *  D-104 is load-bearing here and was read before this was written: a governed
+   *  refusal is OUR OWN politeness declining and moves no failure counter, so a
+   *  self-throttled instance never trips the fallback. The exclusion lives in
+   *  `recordSourceOutcome`; this tick only reads the verdict that respects it.
+   *
+   *  INERT unless configured. With no `env.SELF` and no daemon token the consumer
+   *  contributes no wake and holds no alarm — exactly the SCHED_PROBE seam's
+   *  posture — so an instance that has not wired monitoring behaves byte-for-byte
+   *  as it did before. Live wiring is per-instance because THE INSTANCE NAME IS
+   *  THE WORKER NAME (a static self-binding target would be wrong on a deployed
+   *  slug), so it is provisioned by the installer/CONDUCT, not by this file. */
+  static MONITOR_TICK_MS = 3600000;   // 1h. Cadence is the binding variable, not corpus size (ARCHIVE-FALLBACK.md).
+  static MONITOR_TICK_BATCH = 50;     // eligible documents acted on per tick, bounded like TASK_DRAIN_ALARM_BATCH.
+
+  #monitorTickMs() {
+    const v = Number(this.env && this.env.MONITOR_TICK_MS);
+    return Number.isFinite(v) && v >= 0 ? v : Store.MONITOR_TICK_MS;
+  }
+  /* The archive arm of op=acquire is admin/probe only. A dedicated MONITOR_TOKEN
+     is preferred so the monitoring surface can be scoped and rotated on its own;
+     ADMIN_TOKEN is the fallback, because monitoring writes the real record's
+     reachability, not scratch. */
+  #monitorToken() {
+    return (this.env && (this.env.MONITOR_TOKEN || this.env.ADMIN_TOKEN)) || null;
+  }
+  #monitorConfigured() {
+    return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorToken());
+  }
+  /* The smallest consecutive-failure count from which a document could still
+     reach EITHER arm: the count arm at `failures`, or the age arm at `minForAge`
+     then fourteen days. A SINGLE unretried failure is deliberately below this and
+     is NOT monitoring work for the archive tick — that is a gap in our own
+     attention for the ordinary path to retry, D-104 one level up (the age arm's
+     own reasoning in `sourceReachability`), never evidence the source is gone. */
+  #monitorFloor() {
+    const TH = this.#thresholds();
+    return Math.max(1, Math.min(TH.failures, TH.minForAge));
+  }
+  /* Pending monitoring work keeps the one alarm armed; none lets it
+     self-terminate on an idle Free-tier instance (the property REC-1 prized). */
+  #monitorPending() {
+    if (!this.#monitorConfigured()) return false;
+    return this.#one(`SELECT count(*) c FROM source_reachability WHERE consecutive_failures >= ?`,
+                     this.#monitorFloor()).c > 0;
+  }
+
+  /* The tick. Consult sourcereach for every failing document and fire the archive
+     fallback for those the fence finds eligible. It records nothing about the
+     source itself: op=acquire's own path records the outcome of the ARCHIVE fetch
+     against the DOCUMENT address, and a success there is the RULED "an alternative
+     source counts as a re-fetch for monitoring", which resets the failing run and
+     drops the document out of eligibility on the next tick. The tick only DECIDES
+     and INVOKES; the counter and the capture stay where they already live. */
+  async #monitorTick(now) {
+    if (!this.#monitorConfigured()) return { monitor: { configured: false } };
+    const nowIso = Number.isFinite(now)
+      ? new Date(now).toISOString().split(".")[0] + "Z"
+      : new Date().toISOString().split(".")[0] + "Z";
+    const rows = this.#rows(
+      `SELECT address_norm FROM source_reachability
+        WHERE consecutive_failures >= ? ORDER BY first_failure_since LIMIT ?`,
+      this.#monitorFloor(), Store.MONITOR_TICK_BATCH);
+    const eligible = [], fired = [], failed = [];
+    for (const { address_norm } of rows) {
+      const reach = this.sourceReachability({ addressNorm: address_norm, now: nowIso });
+      if (!reach.fallback_eligible) continue;   // governed refusals excluded here, in the verdict (D-104)
+      eligible.push(address_norm);
+      const r = await this.#fireArchiveFallback(address_norm);
+      (r.ok ? fired : failed).push(r.ok
+        ? { address: address_norm, grade: r.grade, hops: r.hops }
+        : { address: address_norm, reason: r.reason });
+    }
+    return { monitor: { configured: true, at: nowIso, checked: rows.length, eligible, fired, failed } };
+  }
+
+  /* Fire the fallback through the SAME op a caller uses, so every fence in that
+     path holds and the chain is built once. A caller supplies no hop, no replay
+     URL and no CDX evidence: op=acquire re-checks eligibility and builds the
+     archive hop from the record IT fetched, which is exactly why the invocation
+     names only the document address. */
+  async #fireArchiveFallback(address) {
+    const token = this.#monitorToken();
+    try {
+      const res = await this.env.SELF.fetch(
+        new Request(`https://self/api/?op=acquire&token=${encodeURIComponent(token)}`, {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ via: "archive.org", address }),
+        }));
+      const out = await res.json().catch(() => null);
+      const doc = out && out.ok && out.document;
+      if (doc) return { ok: true,
+        grade: doc.capture && doc.capture.grade,
+        hops: Array.isArray(doc.provenance_chain) ? doc.provenance_chain.length : null,
+        sha: doc.capture && doc.capture.sha256 };
+      return { ok: false, reason: (out && (out.reason || out.error)) || `http ${res.status}` };
+    } catch (e) {
+      return { ok: false, reason: String(e && e.message || e) };
+    }
+  }
+
   /** Record the outcome of one attempt on one document address.
    *
    *  `outcome` is deliberately a closed set, because the entire value of this
@@ -5177,7 +5320,7 @@ export class Store extends DurableObject {
    *    fetch_failed    the network failed reaching it: also evidence
    *    governed        OUR governor declined to ask: evidence about US
    */
-  recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
+  async recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
     if (typeof addressNorm !== "string" || addressNorm === "")
       return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
@@ -5217,6 +5360,15 @@ export class Store extends DurableObject {
               first_failure_since = COALESCE(first_failure_since, ?),
               last_failure = ?, last_outcome = ?, last_status = ?, updated_at = ?
         WHERE address_norm = ?`, now, now, outcome, st, now, addressNorm);
+    /* CAP-3. A counted failure is the archive-monitor consumer's producer: it may
+       have just pushed this document to the fallback threshold, so arm the one DO
+       alarm the way taskEnqueue arms the drain (SCHEDULER.md: "arm it from
+       whatever producer creates its work"). Arming only ever SCHEDULES, never
+       writes work, so the producer/consumer split holds. Gated on the consumer
+       being configured so an instance that has not wired monitoring neither arms
+       nor holds an alarm — governed and success never reach here, so the D-104
+       exclusion is preserved structurally rather than re-checked. */
+    if (this.#monitorConfigured()) await this.#armScheduler();
     return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
   }
 
