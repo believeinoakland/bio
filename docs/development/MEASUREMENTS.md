@@ -273,3 +273,22 @@ egress proxy on 2026-07-30, so none of the CDX claims in `ARCHIVE-FALLBACK.md`
 the 24-to-60/min ceilings) were verified. The PLANE'S egress is Cloudflare and
 does reach the archive; the archive session should measure these through the
 deployed plane before building on them. See D-105.
+
+## docprofile bundling into the plane (D-60 adoption feasibility)
+
+Measured **2026-07-30**, thread CAPTURE, container esbuild matching the plane's
+build flags (`--bundle --format=esm --platform=neutral`).
+
+| Fact | Value |
+| --- | --- |
+| docprofile raw source | 37,709 bytes, 5 files (index + 4 handlers) |
+| External dependencies | none; zero npm, zero `node:` builtins, only internal cross-imports |
+| Bundled + tree-shaken cost | **5,436 bytes** (the plane needs only `digests`/`compare`; the rest drops) |
+| Plane bundle headroom | ~2,490 KB under the 3 MB Free-worker limit |
+| Import path from `bio-plane/src/` | `../../docprofile/index.mjs` (docprofile is at repo root, outside bio-plane/) |
+| Installer impact | none: `build` inlines all imports into one self-contained `dist/bio-plane.bundled.mjs`, so the cross-directory location matters only at BUILD time, and a clean checkout has `docprofile/` present |
+
+Conclusion: the "measure bundle size before believing it fits" instruction on
+D-60 is discharged. It fits with room to spare, and the bundle-size concern that
+genuinely applies to `unpdf` (D-91) does not apply to docprofile. D-60 adoption
+is a build task.

@@ -62,10 +62,15 @@ instead of a count nobody reads. ONE question the contract leaves for Bob and
 you must not guess: does an undetermined capture create a task automatically at
 intake or only when a member acts on the working set. Ask; do not decide.
 (3) D-102 and D-103, the small ones: the wizard binds INSTANCE_NAME, and
-governorstate/governorconfig get control-plane ops. (4) If time remains, start
-D-91 (PDF link annotations first, unpdf second) or plane adoption of the
-volatile digest (D-60); measure bundle size against the 3MB limit before
-believing either fits. (5) Push, appending to DEBT.md and MEASUREMENTS.md,
+governorstate/governorconfig get control-plane ops. (4) If time remains, plane
+adoption of the volatile digest (D-60) is the cheaper win: feasibility is
+ALREADY MEASURED (docprofile tree-shakes to 5.3KB, zero deps, import path
+`../../docprofile/index.mjs` from src/, build inlines it so the installer is
+unaffected), so it is a build task, not an investigation. Import digests/compare
+into monitoring, op=audit's duplicate sweep, and resolveLinks' bracket arm; do
+not grow a second copy. D-91 (PDF link annotations first, unpdf second) is the
+larger alternative and DOES still need the bundle-size and CPU measurement
+before believing unpdf fits. (5) Push, appending to DEBT.md and MEASUREMENTS.md,
 prepending a state doc entry naming this thread, and rewriting ONLY
 docs/development/kickoffs/CAPTURE.md for the session after.
 
