@@ -161,6 +161,12 @@ as a re-fetch for monitoring after three consecutive failures or fourteen days.
 Content is identified in PDFs as in HTML; CAPTURE extracts structure, FRAMEWORK
 decides content. Archive.org is a BACKUP source only. BIO does not disguise its
 requests, and the measurements keep proving legibility is also what works.
+Refinement (RULED 2026-07-30): delegating the operator's OWN browser user-agent
+to their OWN instance is legitimate, not disguise, because the authorship is
+real; it is HELD IN RESERVE with a named trigger (the honest agent stops
+gaining admission) and a named veto (outside counsel Bob is consulting), and is
+NOT adopted while the honest CivicOS string works. Do not build browser-UA
+delegation pre-emptively.
 
 ## Open, and named
 

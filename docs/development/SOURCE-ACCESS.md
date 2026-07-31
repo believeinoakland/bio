@@ -11,6 +11,22 @@ was declining it.
 BIO does not disguise its requests.** Legibility was the fix. The agent that
 works is the honest one.
 
+**Refinement, RULED 2026-07-30 (Bob): delegating the operator's OWN browser
+user-agent to their OWN instance is a legitimate act, not disguise.** The
+distinction is authorship. A fabricated Mozilla string invents a client that
+does not exist; an operator configuring their instance to present the
+user-agent of the browser they personally use is speaking as themselves through
+a tool they run, which is what a person hitting "save to my archive" already
+does. This is HELD IN RESERVE, not adopted: it is used only if and when
+measurement shows the honest CivicOS agent no longer gains admission, because
+the honest agent works today and reserve options stay in reserve. The position
+is also explicitly REVISABLE on outside counsel: Bob is consulting journalists
+and lawyers, and their read on how a court or a newsroom would characterise
+UA delegation governs whether this stays available. Until then: the honest
+CivicOS string is what ships and what runs; browser-UA delegation is a
+documented fallback with a named trigger (admission stops) and a named veto
+(counsel), not a default.
+
 ## The measurement
 
 2026-07-30, from Anthropic egress, `curl`, one URL
