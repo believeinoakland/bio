@@ -12196,6 +12196,70 @@ function userAgent(env, purpose = "acquire") {
   const instance = env && env.INSTANCE_NAME || "unnamed";
   return `CivicOS/${version} (+https://github.com/believeinoakland/bio; instance ${instance}; ${purpose})`;
 }
+async function archiveSelect(env, st, address) {
+  const addrNorm = normalizeAddress(address);
+  const reach = (await (await st.fetch(
+    `http://x/sourcereach?address=${encodeURIComponent(addrNorm)}`
+  )).json()).result;
+  if (!reach.fallback_eligible) {
+    return { ok: false, status: 409, payload: {
+      ok: false,
+      reason: "NOT_ELIGIBLE",
+      detail: "archive.org is a backup source and this document has not been unreachable long enough to justify one",
+      reachability: reach
+    } };
+  }
+  try {
+    await st.fetch("http://x/governorconfig", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ host: "web.archive.org", appetite_per_min: 24 })
+    });
+  } catch {
+  }
+  let res;
+  try {
+    const g = await governedFetch(env, st, cdxQuery(address), "archive-lookup");
+    if (g.refusedByGovernor)
+      return { ok: false, status: 429, payload: {
+        ok: false,
+        reason: "HOST_COOLING_OFF",
+        detail: `the governor is holding requests to web.archive.org (${g.reason})`,
+        retry_in_ms: g.retry_in_ms || 0
+      } };
+    res = g.res;
+  } catch (e) {
+    return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } };
+  }
+  if (!res.ok)
+    return { ok: false, status: 502, payload: {
+      ok: false,
+      reason: "ARCHIVE_REFUSED",
+      status: res.status,
+      detail: res.status === 429 ? "the Internet Archive is rate-limiting us; the governor will hold this host" : "the CDX endpoint did not answer with a record"
+    } };
+  const parsed = parseCdx(await res.text());
+  if (!parsed.ok) return { ok: false, status: 502, payload: { ok: false, ...parsed } };
+  const sel = selectCapture(parsed.rows);
+  if (!sel.ok)
+    return { ok: false, status: 404, payload: {
+      ok: false,
+      reason: sel.reason,
+      detail: sel.detail,
+      considered: sel.considered,
+      address
+    } };
+  const replay = replayLocator(sel.chosen);
+  return {
+    ok: true,
+    reach,
+    chosen: sel.chosen,
+    rejected: sel.rejected,
+    usable_count: sel.usable_count,
+    replay,
+    hop: archiveHop(sel.chosen, replay)
+  };
+}
 async function governedFetch(env, stub, target, purpose) {
   let host = null;
   try {
@@ -13107,77 +13171,22 @@ var index_default = {
           detail: "the document address must be https on a public host"
         }, 400);
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const addrNorm = normalizeAddress(address);
-      const reach = (await (await st.fetch(
-        `http://x/sourcereach?address=${encodeURIComponent(addrNorm)}`
-      )).json()).result;
-      if (!reach.fallback_eligible) {
-        return json({
-          ok: false,
-          reason: "NOT_ELIGIBLE",
-          detail: "archive.org is a backup source and this document has not been unreachable long enough to justify one",
-          reachability: reach
-        }, 409);
-      }
-      try {
-        await st.fetch("http://x/governorconfig", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ host: "web.archive.org", appetite_per_min: 24 })
-        });
-      } catch {
-      }
-      const query = cdxQuery(address);
-      let res2;
-      try {
-        const g = await governedFetch(env, st, query, "archive-lookup");
-        if (g.refusedByGovernor)
-          return json({
-            ok: false,
-            reason: "HOST_COOLING_OFF",
-            detail: `the governor is holding requests to web.archive.org (${g.reason})`,
-            retry_in_ms: g.retry_in_ms || 0
-          }, 429);
-        res2 = g.res;
-      } catch (e) {
-        return json({ ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) }, 502);
-      }
-      if (!res2.ok)
-        return json({
-          ok: false,
-          reason: "ARCHIVE_REFUSED",
-          status: res2.status,
-          detail: res2.status === 429 ? "the Internet Archive is rate-limiting us; the governor will hold this host" : "the CDX endpoint did not answer with a record"
-        }, 502);
-      const parsed = parseCdx(await res2.text());
-      if (!parsed.ok) return json({ ok: false, ...parsed }, 502);
-      const sel = selectCapture(parsed.rows);
-      if (!sel.ok)
-        return json({
-          ok: false,
-          reason: sel.reason,
-          detail: sel.detail,
-          considered: sel.considered,
-          address
-        }, 404);
-      const replay = replayLocator(sel.chosen);
+      const sel = await archiveSelect(env, st, address);
+      if (!sel.ok) return json(sel.payload, sel.status);
       return json({
         ok: true,
         address,
-        eligible_because: reach.basis,
+        eligible_because: sel.reach.basis,
         chosen: sel.chosen,
         /* Every row the index offered and why it was not used. A fallback that
            says only "nothing suitable" when the index holds forty redirects is
            unauditable. */
         rejected: sel.rejected,
         usable_count: sel.usable_count,
-        /* What to fetch, and how to file it. The capture is a separate,
-           ordinary acquire so the streaming, hashing and R2 path is the one
-           already proven rather than a second copy of it. */
-        retrieval_locator: replay,
-        capture_with: { op: "acquire", locator: replay, via: "archive.org", documentAddress: sel.chosen.original },
-        provenance_hop: archiveHop(sel.chosen, replay),
-        note: "grade tracks directness: a capture filed through this lands at C, below a direct capture of the same document"
+        retrieval_locator: sel.replay,
+        provenance_hop: sel.hop,
+        capture_with: { op: "acquire", via: "archive.org", address },
+        note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, because the hop that reaches the record must be built by the same call that fetched the CDX record"
       });
     }
     if (op === "acquire") {
@@ -13185,6 +13194,23 @@ var index_default = {
       if (typeof env.CAPTURES?.put !== "function")
         return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
       const body2 = await req.json().catch(() => null);
+      const stArc = env.STORE.get(env.STORE.idFromName(storeName));
+      let archiveHopRecorded = null, archiveChosen = null, archiveAddress = null;
+      if (body2?.via === "archive.org") {
+        const addr = body2?.address;
+        if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
+          return json({
+            ok: false,
+            reason: "BAD_ADDRESS",
+            detail: "an archive-sourced capture names the document address, not a replay locator"
+          }, 400);
+        const sel = await archiveSelect(env, stArc, addr);
+        if (!sel.ok) return json(sel.payload, sel.status);
+        archiveHopRecorded = sel.hop;
+        archiveChosen = sel.chosen;
+        archiveAddress = sel.chosen.original;
+        body2.locator = sel.replay;
+      }
       const locator = body2?.locator;
       if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
         return json({
@@ -13196,7 +13222,7 @@ var index_default = {
       const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
       const via = body2?.via === "archive.org" ? "archive.org" : "direct";
-      const documentAddress = via === "archive.org" && typeof body2?.documentAddress === "string" && isPublicHttpsLocator(body2.documentAddress) ? body2.documentAddress : locator;
+      const documentAddress = via === "archive.org" && archiveAddress ? archiveAddress : locator;
       const addrNorm = normalizeAddress(documentAddress);
       const noteOutcome = async (outcome, status) => {
         try {
@@ -13570,13 +13596,24 @@ var index_default = {
              direct fetch is ONE hop, which is what grades it above an
              archive-sourced capture of the same document: grade tracks
              directness, never technique. */
+          /* Ordered hops from us back to the origin. A direct fetch is ONE hop,
+             which is what grades it above an archive-sourced capture of the same
+             document: grade tracks directness, never technique.
+             *
+             * An archive capture is TWO, and the second is weaker and says so.
+             * Our hop is honest about what we actually did (we fetched the
+             * replay address, not the publisher), and theirs carries the CDX
+             * evidence with `bound: false` and the reason it is unsigned. RULED:
+             * transitive trust is accepted WHERE DISCLOSED, and what is
+             * inherited is the fact of publication, never the credibility of
+             * the content. */
           provenance_chain: [{
             who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
             asserts: `these bytes were served for ${locator} at ${retrieved}`,
             evidence: "first-party https fetch, hashed at receipt, transport record on this document",
             bound: false,
-            via: "direct"
-          }],
+            via
+          }, ...archiveHopRecorded ? [archiveHopRecorded] : []],
           capture: {
             method: multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
             /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop

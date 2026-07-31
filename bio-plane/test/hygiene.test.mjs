@@ -142,5 +142,27 @@ console.log("\n--- the version sources agree (D-106) ---");
     declared ? declared[1] : null, pkg.version);
 }
 
+/* D-112. The archive leg of a provenance chain must be built by the call that
+   fetched the CDX record, never handed in by a caller: a chain hop a caller can
+   supply is a chain hop a caller can invent, and the entire value of a disclosed
+   transitive-trust chain is that the disclosure is ours. This is a SOURCE check
+   because it is a property of what the code may read, and a runtime test can
+   only ever show that one particular forged request was ignored. */
+console.log("\n--- no caller-supplied provenance (D-112) ---");
+{
+  const idx = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "index.mjs"), "utf8");
+  const reads = (re) => (idx.match(re) || []).length;
+  t("nothing reads a documentAddress off the request body",
+    reads(/body\??\.\s*documentAddress/g), 0);
+  t("nothing reads a provenance hop or chain off the request body",
+    reads(/body\??\.\s*(provenance_chain|provenanceHop|archiveHop|hop)\b/g), 0);
+  t("nothing reads a capture grade off the request body",
+    reads(/body\??\.\s*grade\b/g), 0);
+  t("the archive hop is built from archiveSelect's own result",
+    /archiveHopRecorded = sel\.hop/.test(idx), true);
+  t("and the document address comes from the CDX record, not the request",
+    /documentAddress = via === "archive\.org" && archiveAddress/.test(idx), true);
+}
+
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

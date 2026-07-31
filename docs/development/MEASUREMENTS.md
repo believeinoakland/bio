@@ -507,3 +507,37 @@ faking failures or hammering a real source until it refuses. Neither is worth
 doing. The selection logic is instead asserted against the VERBATIM CDX response
 measured earlier the same day, 37 assertions in `test/cdx.test.mjs`, including
 that the newest row overall (a 301) is not chosen while the newest usable row is.
+
+## 2026-07-31, thread CAPTURE: the deploy rollout is NOT atomic (D-108, corrected)
+
+The 0.49.0 observation was diagnosed as a Durable Object lagging behind a fresh
+Worker isolate. Deploying 0.52.0 showed that diagnosis was too narrow.
+
+Immediately after `deploy.mjs` reported byte-identical verification:
+
+| Call | Answer | Which build answered |
+| --- | --- | --- |
+| `GET /version` | `0.51.0` | the PREVIOUS release |
+| `op=acquire` with `via=archive.org` (fence test) | `BAD_LOCATOR` | previous |
+| same, with a forged `locator` | `SOURCE_REFUSED` | previous, and it FETCHED the forged locator |
+| `op=acquire` with `via=archive.org` on an eligible address | `NO_USABLE_CAPTURE` | the NEW build |
+
+Those four calls were seconds apart in one shell command. The third and fourth
+disagree about which code is running, so the rollout is **per-isolate and not
+atomic**: a verification issued in that window can receive a MIX of old and new
+answers, and reach opposite conclusions about the same property depending on
+which request landed where.
+
+A poll of `/version` answered `0.52.0` on its first attempt moments later, and
+three subsequent rounds of the same two probes were stable and correct. So the
+window is short. It is also long enough to have produced, in this session, a
+result that looked exactly like a security defect: the forged-locator probe
+appeared to show the new code honouring a caller-supplied replay locator, when
+in fact the old code was answering.
+
+The lesson is sharper than the original entry's. It is not enough to retry until
+a NEW op appears; a verification must confirm it is talking to the new build
+before it believes ANY answer, including a failure. `/version` is the cheapest
+such confirmation and it was already available and already wrong when first
+asked. Nothing here is a fault in `deploy.mjs`, which verified the bytes
+correctly both times. The gap is entirely in what is done after it returns.
