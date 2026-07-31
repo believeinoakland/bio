@@ -125,7 +125,11 @@ console.log("\n--- ratification ---");
 const rat = await POST("op=ratify&token=adm-ratify", { bundleId: ID, expectedSha: LIVE, sig: signRatify("sparky", ID, LIVE) });
 t("ratification succeeds", rat.ok, true);
 t("attested by the key's member", rat.attestor, "sparky");
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.16.5)");
+/* 1.17.0: C-19.1, the task inbox grammar (D-98). CORRECTED rather than
+   loosened to a pattern match: the point of this assertion is that a
+   ratification records WHICH catalog judged it, so a test that stopped
+   pinning the exact version would stop testing the thing it exists for. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.17.0)");
 t("bundle, file, and capture published", rat.published.shas, 3);
 t("all bytes copied to the published bucket", rat.published.copied, 3);
 

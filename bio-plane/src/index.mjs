@@ -176,6 +176,16 @@ const OPS = {
   expertisedeclare:    { classes: ["admin", "member", "probe"], mutating: true  },
   expertiseconfirm:    { classes: ["admin", "member", "probe"], mutating: true  },
   expertiselist:       { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-98, the task inbox. Note what is NOT here: `taskenqueue`. The producer is
+     the capture path and reaches the queue through the Durable Object directly,
+     so there is no control-plane route by which any credential can put an event
+     in the queue on its own account. The consumer, `taskdrain`, is the sole
+     writer of tasks, and `actor` on every one of these is stamped server-side
+     below: a forward a caller can sign as someone else is not a forward. */
+  tasks:               { classes: ["admin", "member", "probe"], mutating: false },
+  taskdrain:           { classes: ["admin", "member", "probe"], mutating: true  },
+  taskforward:         { classes: ["admin", "member", "probe"], mutating: true  },
+  taskresolve:         { classes: ["admin", "member", "probe"], mutating: true  },
   /* Section 8.1. Admin class ONLY, and additionally refused to a SESSION below:
      "the ADMIN_TOKEN-class credential" is not satisfied by a session belonging
      to an administrator, because a session is password-derived and the root of
@@ -1250,6 +1260,34 @@ export default {
         });
       } catch { /* an unfiled address is not a failed capture */ }
 
+      /* D-98 PRODUCER, and this is the entire extent of what the capture path
+         may do about an undetermined capture: enqueue ONE event.
+         *
+         * Bob RULED that an undetermined-authority capture creates a task
+         * automatically at capture. Writing the task here would mean a leaked
+         * capture credential could choose an assignee, forge a history entry and
+         * put text of its choosing in front of a member. It cannot. This names no
+         * assignee, sets no status, writes no history, and cannot reach the tasks
+         * table at all; the consumer decides every one of those and is the sole
+         * writer. The blast radius of this credential stops at the queue.
+         *
+         * The event carries a capture_sha and NOT a bundle id, because at this
+         * moment no bundle exists: op=acquire returns a document that op=promote
+         * later files. The consumer resolves the sha through the register once it
+         * does, and an event whose capture is never promoted simply waits rather
+         * than inventing a subject to point at. */
+      if (!authorityAsserted) {
+        try {
+          await stLim.fetch("http://x/taskenqueue", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ kind: "authority-undetermined", captureSha: sha,
+              subject: locator, locator, at: retrieved }),
+          });
+        } catch { /* An unqueued task is not a failed capture. The capture is
+                     still recorded as undetermined and C-18.9 still refuses it
+                     at or past verified, so the fence holds without the inbox. */ }
+      }
+
       /* Capture fidelity. A captured page whose stylesheets were never fetched
          renders bare, which makes the capture a poor rendition of what the
          source served even though its bytes are perfect. So on request the
@@ -2015,6 +2053,18 @@ export default {
       try {
         const b = JSON.parse(passBody);
         b.by = viaSession ? sessMember : `token:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* D-98. Who forwarded a task and who resolved it are the two facts its
+       history exists to hold, so neither is taken from the caller. A machine
+       credential says what it is rather than borrowing a person's name, and the
+       store refuses a forward or a resolution that names no member, so a daemon
+       cannot close somebody's work. */
+    if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.actor = viaSession ? sessMember : `token:${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }

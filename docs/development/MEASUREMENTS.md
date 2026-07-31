@@ -307,3 +307,56 @@ deliberately conservative placeholder chosen so that if the archive session
 begins fetching before it re-measures, it does so under the gentlest figure
 available rather than the most permissive. Re-set it from OUR OWN measurement,
 through the plane's Cloudflare egress, once D-105 is discharged.
+
+## 2026-07-31, thread CAPTURE: the release-verification window (D-108)
+
+Instrument: `curl` against `biosmoke7.believeinoakland.workers.dev`, immediately
+after `scripts/deploy.mjs` reported `verified: deployed bytes are hash-identical
+to the signed asset` for 0.49.0.
+
+| What was asked | Answer | Served by |
+| --- | --- | --- |
+| `GET /version` | `0.49.0` | the Worker |
+| `op=audit` | 31/31, 0 findings | the Durable Object |
+| `op=tasks` (new in 0.49.0) | `unknown op: tasks` | the Durable Object |
+| `op=tasks`, minutes later, no redeploy | `ok: true` | the Durable Object |
+
+NOT a measurement of the window's LENGTH, which was not instrumented: the two
+`op=tasks` calls were minutes apart with other work between them, so all that is
+established is that the window is longer than one request and shorter than a few
+minutes. Anyone who needs the actual figure should poll at a known interval; do
+not quote a duration from this row, because there is not one here.
+
+What IS established, and is the point: `op=audit` answered CLEANLY from the same
+Durable Object that did not yet know `op=tasks`. So a post-deploy verification
+consisting of `/version` plus `op=audit` passes completely while a newly shipped
+op is still unreachable. Both checks were run this session and both were green
+while the release's headline feature answered `unknown op`.
+
+The error string is what located it: `unknown op: tasks` with the colon is the
+Durable Object's format (`store.mjs`), and `unknown op` without one is the
+control plane's (`index.mjs`). A fresh Worker isolate had the new `OPS` table and
+forwarded correctly; the DO behind it was still running the 0.48.0 route map.
+
+## 2026-07-31, thread CAPTURE: the signing path, re-verified from scratch
+
+The out-of-tree Node SSHSIG reconstruction was rebuilt at `/tmp/sign/sign.mjs`
+from `src/signpage.mjs`'s own algorithm and checked against stock
+`ssh-keygen 9.6p1` before any signature was trusted. One positive control and
+FOUR negative controls, all as expected:
+
+| Control | Result |
+| --- | --- |
+| the 0.49.0 signature over the 0.49.0 asset | `Good "bio-release" signature` |
+| one appended line of bytes | `incorrect signature`, rc 255 |
+| namespace `bio-ratify` instead of `bio-release` | `namespace does not match`, rc 255 |
+| the same message signed with the RATIFICATION key | refused, rc 255 |
+| the 0.48.0 signature against the 0.49.0 bytes | `incorrect signature`, rc 255 |
+
+The reconstructed signer's public half is byte-identical to the entry already in
+the installer's `ARMED_SIGNERS`, which is the property that matters: the
+installer will accept what this produced without any change to its trust set.
+
+Separately, the 0.48.0 release already in `release/` was verified the same way
+before being relied on, which is what established that D-106's blast radius was
+narrower than the item claimed: the repository fallback was sound throughout.

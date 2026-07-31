@@ -447,6 +447,73 @@ CREATE TABLE IF NOT EXISTS cpu_probe (
   at          TEXT NOT NULL
 );
 
+-- ---- D-98: the task inbox, and the queue that makes auto-creation safe ----
+
+-- THE PRODUCER/CONSUMER BOUNDARY, and it is a safety property rather than a
+-- transport detail. Bob RULED that an undetermined-authority capture creates a
+-- task automatically at capture. If the capture path wrote the task directly
+-- then a leaked capture credential could put arbitrary assignees, forged
+-- history and chosen subjects in front of a member. It cannot: the capture path
+-- reaches only this table, every field here is already bounded at enqueue, and
+-- nothing here names an assignee, a status or an actor because those are not
+-- the producer's to say.
+--
+-- A table rather than a Cloudflare Queue, deliberately. Everything stays inside
+-- the Durable Object and therefore inside the audit model, which is the same
+-- reasoning that keeps the store in the DO. A Queue would buy cross-instance
+-- fan-out that a sovereign single-instance record does not want.
+--
+-- Keyed on (kind, capture_sha) so a noisy re-capture loop cannot flood the
+-- queue: re-enqueuing the same capture is a no-op, and the consumer folds the
+-- event into the open task rather than spawning a duplicate. capture_sha and
+-- NOT a bundle id, because at the moment of capture no bundle exists yet: the
+-- consumer resolves the sha through the register once the capture is filed, and
+-- an event whose capture has not been promoted simply waits.
+CREATE TABLE IF NOT EXISTS task_queue (
+  kind        TEXT NOT NULL,
+  capture_sha TEXT NOT NULL,
+  subject     TEXT NOT NULL,
+  locator     TEXT,
+  enqueued    TEXT NOT NULL,
+  attempts    INTEGER NOT NULL DEFAULT 0,
+  last_try    TEXT,
+  PRIMARY KEY (kind, capture_sha)
+);
+
+-- The inbox itself, the tasks array of data/inbox.json persisted. WORKING store
+-- only: an inbox is the group talking to itself about what it has NOT
+-- established, which is the opposite of ratified public material, so it never
+-- crosses the publication fence.
+--
+-- history is a JSON array, append-only by the write path, shaped exactly like a
+-- member_expertise row (at, event, actor). Who a task was taken FROM is as much
+-- a fact as who holds it now, so a forward appends and never rewrites.
+CREATE TABLE IF NOT EXISTS tasks (
+  id            TEXT PRIMARY KEY,
+  kind          TEXT NOT NULL,
+  refers_to     TEXT NOT NULL,
+  capture_sha   TEXT,
+  subject_text  TEXT NOT NULL,
+  subject_desc  TEXT,
+  locators      TEXT,
+  assignee      TEXT NOT NULL,
+  assignee_role TEXT NOT NULL,
+  status        TEXT NOT NULL DEFAULT 'open',
+  created       TEXT NOT NULL,
+  resolved_at   TEXT,
+  history       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tasks_assignee ON tasks(assignee, status);
+CREATE INDEX IF NOT EXISTS tasks_refers ON tasks(refers_to);
+-- The RULED dedup, enforced by the store rather than remembered by the writer:
+-- one LIVE task per (refers_to, kind). Live means open OR forwarded, and the
+-- distinction matters: a forwarded task is still somebody's work, so excluding
+-- it here would let a re-capture spawn a second task for a subject already in
+-- flight, which is the flood the dedup exists to prevent. Only 'resolved' is
+-- exempt, because a subject that comes back undetermined after being resolved
+-- is genuinely new and not a duplicate of a closed one.
+CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique ON tasks(refers_to, kind) WHERE status IN ('open', 'forwarded');
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

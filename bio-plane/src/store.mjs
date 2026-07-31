@@ -2,8 +2,8 @@ import { DurableObject } from "cloudflare:workers";
 /* The catalog's own frontmatter parser. References are read from the document
    with the same code that later checks them, so the store's projection and the
    checker's view cannot disagree about what the document says. */
-import { parseFrontmatter, checkGatheringGrammar, MECHANICAL_FIELD_SETS,
-         checkBundle, createSha256 } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_FIELD_SETS,
+         checkBundle, createSha256, isPublicHttpsLocator } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
@@ -36,6 +36,27 @@ import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MA
    accelerator recorded it and as the check catalog recognises it. */
 const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2MiB
+
+/* ---- D-98 task inbox helpers, module scope because they are pure ----
+   The F5 bound lives HERE, at the producer boundary, so a subject is inert
+   before it is stored rather than after it is read. Anything a member sees on
+   a task passed through boundedSubject on its way in. */
+const TASK_KINDS = ["authority-undetermined"];
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+/* Single line, length-capped, control characters stripped. Newlines go first
+   because a multi-line subject is how a plausible-looking instruction gets
+   room to look like a message rather than a label. */
+const boundedSubject = (v) =>
+  String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
+/* The id suffix the TASK grammar requires: lowercase alphanumeric groups joined
+   by single dashes, never empty, never leading or trailing dashes. Derived from
+   the subject so an id is legible, but it is an IDENTIFIER and not a rendering:
+   the subject itself is carried in the bounded field the grammar checks. */
+const taskSlug = (subject) => {
+  const s = String(subject || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/g, "");
+  return s || "authority";
+};
+const isHttpsPublic = (u) => isPublicHttpsLocator(u);
 
 export class Store extends DurableObject {
   constructor(ctx, env) {
@@ -4575,6 +4596,258 @@ export class Store extends DurableObject {
     return { runtime, observed, previous: cur.observed, moved: true, moved_at: now, recorded: true, samples: 1 };
   }
 
+  /* ---- D-98: the task inbox ----
+   *
+   * Bob RULED that an undetermined-authority capture creates a task
+   * AUTOMATICALLY AT CAPTURE, through a PRODUCER/CONSUMER QUEUE, and the queue
+   * is the safety property rather than a transport detail.
+   *
+   * The split, stated once here because it is the whole point: the capture path
+   * may only ENQUEUE. It cannot write a task, cannot name an assignee, cannot
+   * set a status, cannot forge a history entry. Everything a member would READ
+   * off a task is bounded at the enqueue boundary; everything a member would
+   * ACT on is decided by the consumer, which is the sole writer. So the blast
+   * radius of a leaked daemon credential stops at `task_queue`, where the worst
+   * it can do is queue noise that dedups against itself.
+   *
+   * That is also why the grammar runs at the WRITE and not only at the gate.
+   * The transport for these tasks MIGHT ONE DAY BE EMAIL, which renders in a
+   * client we do not control, so a malformed task must never land at all rather
+   * than be caught later at ratification.
+   */
+
+  /** PRODUCER. Called from the capture path. Bounds what it accepts, records
+   *  no decision, and is idempotent on (kind, capture_sha) so a re-capture loop
+   *  cannot flood the queue. */
+  taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
+    if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
+    if (typeof captureSha !== "string" || !/^[0-9a-f]{64}$/.test(captureSha))
+      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
+    /* F5 bound applied HERE, at the boundary, not later. A subject that reaches
+       the queue is already inert: single line, length-capped, and it will be
+       rendered as quoted data by anything that shows it. */
+    const text = boundedSubject(subject) || "a capture whose authority could not be determined";
+    const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
+    const now = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
+    const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
+    if (existing) return { ok: true, queued: false, deduped: true, kind, captureSha };
+    this.sql.exec(
+      `INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
+      kind, captureSha, text, loc, now);
+    return { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now };
+  }
+
+  /** The RULED routing order, resolved at write time by the consumer.
+   *
+   *  1. the referred bundle's project manager, 2. a group admin, 3. nobody.
+   *  A project's MANAGER is its owner in `project_participants`; the referred
+   *  bundle is usually Information rather than a project, so a project that
+   *  CITES it counts, which is what "the referred bundle's project" means in a
+   *  record where evidence is shared and projects point at it.
+   *
+   *  Returns a `basis` for the drain report but never stores it on the task:
+   *  the grammar is closed and a field invented here would be a second grammar. */
+  #routeTask(bundleId) {
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+    const ownerOf = (projectId) => this.#one(
+      `SELECT pp.member_id FROM project_participants pp
+         JOIN members m ON m.member_id = pp.member_id
+        WHERE pp.project_id = ? AND pp.owner = 1 AND m.status = 'active'
+        ORDER BY pp.member_id LIMIT 1`, projectId);
+    if (b && b.object_type === "project") {
+      const o = ownerOf(bundleId);
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: "owner of the referred project" };
+    }
+    const cite = this.#one(
+      `SELECT r.bundle_id AS project_id FROM refs r
+         JOIN bundles pb ON pb.bundle_id = r.bundle_id AND pb.object_type = 'project'
+        WHERE r.target_id = ? ORDER BY r.bundle_id`, bundleId);
+    if (cite) {
+      const o = ownerOf(cite.project_id);
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite.project_id}, which cites this bundle` };
+    }
+    const adm = this.#one(
+      `SELECT member_id FROM members WHERE role = 'admin' AND status = 'active' ORDER BY created, member_id LIMIT 1`);
+    if (adm) return { assignee: adm.member_id, assignee_role: "group-admin", basis: "no project manager; the RULED fallback to a group admin" };
+    /* Named honestly rather than assigned to someone who does not exist. An
+       unassigned task is still visible and still routable by hand; a task
+       addressed to a phantom is not. */
+    return { assignee: "unassigned", assignee_role: "group-admin", basis: "no project manager and no active administrator" };
+  }
+
+  #taskOf(row) {
+    let locators = null, history = [];
+    try { locators = row.locators ? JSON.parse(row.locators) : null; } catch { locators = null; }
+    try { history = JSON.parse(row.history); } catch { history = []; }
+    return {
+      id: row.id, kind: row.kind, refers_to: row.refers_to,
+      subject: { text: row.subject_text, ...(row.subject_desc ? { description: row.subject_desc } : {}) },
+      ...(locators && locators.length ? { locators } : {}),
+      assignee: row.assignee, assignee_role: row.assignee_role,
+      status: row.status, created: row.created,
+      ...(row.resolved_at ? { resolved_at: row.resolved_at } : {}),
+      history,
+    };
+  }
+
+  /** The C-19.1 grammar, run against a candidate task before it is stored.
+   *  The EXPORTED catalog function, never a copy: a second grammar pretending
+   *  to be the same one is the failure this reuse exists to avoid. */
+  #refuseUngrammatical(task) {
+    const findings = [];
+    checkInboxGrammar(
+      { files: new Map([["data/inbox.json", JSON.stringify({ tasks: [task] })]]),
+        resolveTarget: (id) => !!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id) },
+      findings);
+    const errs = findings.filter((x) => x.severity === "error");
+    return errs.length ? { ok: false, reason: "UNGRAMMATICAL", findings: errs.map((e) => ({ check: e.check, detail: e.message })) } : null;
+  }
+
+  /** CONSUMER, and the SOLE writer of tasks.
+   *
+   *  Drains queued events, resolves each capture to the bundle that filed it,
+   *  applies the routing order and the grammar, and folds a repeat into the
+   *  live task rather than spawning a duplicate. An event whose capture has not
+   *  been promoted into any bundle yet simply WAITS: at capture time no bundle
+   *  exists, and inventing a refers_to would be worse than being patient. */
+  taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
+    const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 50)));
+    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const queued = this.#rows(`SELECT * FROM task_queue ORDER BY enqueued, capture_sha LIMIT ?`, cap);
+    const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
+    for (const q of queued) {
+      const reg = this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, q.capture_sha);
+      if (!reg) {
+        this.sql.exec(`UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
+          at, q.kind, q.capture_sha);
+        out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts + 1,
+          detail: "the capture is not yet filed in any bundle; the event is kept, not dropped" });
+        continue;
+      }
+      const live = this.#one(
+        `SELECT * FROM tasks WHERE refers_to=? AND kind=? AND status IN ('open','forwarded')`, reg.bundle_id, q.kind);
+      if (live) {
+        /* The RULED fold. The task already in front of a member is the one that
+           matters; a re-capture adds a dated note to it and nothing else. */
+        const hist = this.#taskOf(live).history;
+        hist.push({ at, event: "folded", actor });
+        this.sql.exec(`UPDATE tasks SET history=? WHERE id=?`, JSON.stringify(hist), live.id);
+        this.sql.exec(`DELETE FROM task_queue WHERE kind=? AND capture_sha=?`, q.kind, q.capture_sha);
+        out.folded.push({ id: live.id, refers_to: reg.bundle_id });
+        out.drained++;
+        continue;
+      }
+      const route = this.#routeTask(reg.bundle_id);
+      const year = at.slice(0, 4);
+      const slug = taskSlug(q.subject);
+      const alloc = this.allocId("TASK", year);
+      const task = {
+        id: `${alloc.id}-${slug}`,
+        kind: q.kind,
+        refers_to: reg.bundle_id,
+        subject: { text: q.subject },
+        ...(q.locator && isHttpsPublic(q.locator) ? { locators: [q.locator] } : {}),
+        assignee: route.assignee,
+        assignee_role: route.assignee_role,
+        status: "open",
+        created: at,
+        history: [{ at, event: "created", actor }],
+      };
+      const bad = this.#refuseUngrammatical(task);
+      if (bad) {
+        /* Refused rather than stored malformed, and the event is DROPPED rather
+           than retried forever: a grammar failure is deterministic, so retrying
+           it is a loop. The refusal is reported so it is visible. */
+        this.sql.exec(`DELETE FROM task_queue WHERE kind=? AND capture_sha=?`, q.kind, q.capture_sha);
+        out.refused.push({ captureSha: q.capture_sha, refers_to: reg.bundle_id, findings: bad.findings });
+        out.drained++;
+        continue;
+      }
+      this.sql.exec(
+        `INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, subject_desc, locators,
+                            assignee, assignee_role, status, created, resolved_at, history)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        task.id, task.kind, task.refers_to, q.capture_sha, task.subject.text, null,
+        task.locators ? JSON.stringify(task.locators) : null,
+        task.assignee, task.assignee_role, task.status, task.created, null,
+        JSON.stringify(task.history));
+      this.sql.exec(`DELETE FROM task_queue WHERE kind=? AND capture_sha=?`, q.kind, q.capture_sha);
+      out.created.push({ id: task.id, refers_to: task.refers_to, assignee: task.assignee,
+        assignee_role: task.assignee_role, basis: route.basis });
+      out.drained++;
+    }
+    out.remaining = this.#one(`SELECT count(*) c FROM task_queue`).c;
+    return { ok: true, ...out };
+  }
+
+  /** Read the inbox. Filterable by assignee and status, because the first thing
+   *  a member wants is their own open work. */
+  taskList({ assignee = null, status = null, refersTo = null, limit = 200 } = {}) {
+    const cap = Math.max(1, Math.min(1000, Math.floor(Number(limit) || 200)));
+    const where = [], args = [];
+    if (assignee) { where.push("assignee = ?"); args.push(assignee); }
+    if (status) { where.push("status = ?"); args.push(status); }
+    if (refersTo) { where.push("refers_to = ?"); args.push(refersTo); }
+    const rows = this.#rows(
+      `SELECT * FROM tasks ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY created DESC, id LIMIT ?`,
+      ...args, cap);
+    return {
+      ok: true,
+      tasks: rows.map((r) => this.#taskOf(r)),
+      counts: {
+        open: this.#one(`SELECT count(*) c FROM tasks WHERE status='open'`).c,
+        forwarded: this.#one(`SELECT count(*) c FROM tasks WHERE status='forwarded'`).c,
+        resolved: this.#one(`SELECT count(*) c FROM tasks WHERE status='resolved'`).c,
+        queued: this.#one(`SELECT count(*) c FROM task_queue`).c,
+      },
+    };
+  }
+
+  /** Forward a task to a member better placed to attest it.
+   *
+   *  A MEMBER action, never a daemon one: the ruling makes forwarding a human
+   *  judgement, and `member_expertise` is a hint for that human rather than an
+   *  automatic reassignment. The prior assignment stays in history, because who
+   *  a task was taken FROM is as much a fact as who holds it now. */
+  taskForward({ id = null, to = null, actor = null, now = null } = {}) {
+    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
+    const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
+    if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
+    if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
+    const target = this.#one(`SELECT member_id FROM members WHERE member_id=? AND status='active'`, to);
+    if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
+    if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
+    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const task = this.#taskOf(row);
+    task.history.push({ at, event: "forwarded", actor });
+    task.assignee = target.member_id;
+    task.assignee_role = "member";
+    task.status = "forwarded";
+    const bad = this.#refuseUngrammatical(task);
+    if (bad) return bad;
+    this.sql.exec(`UPDATE tasks SET assignee=?, assignee_role=?, status=?, history=? WHERE id=?`,
+      task.assignee, task.assignee_role, task.status, JSON.stringify(task.history), id);
+    return { ok: true, id, assignee: task.assignee, assignee_role: task.assignee_role, from: row.assignee, at };
+  }
+
+  /** Resolve a task. Also a member action. */
+  taskResolve({ id = null, actor = null, now = null } = {}) {
+    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
+    const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
+    if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
+    if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
+    const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
+    const task = this.#taskOf(row);
+    task.history.push({ at, event: "resolved", actor });
+    task.status = "resolved";
+    task.resolved_at = at;
+    const bad = this.#refuseUngrammatical(task);
+    if (bad) return bad;
+    this.sql.exec(`UPDATE tasks SET status=?, resolved_at=?, history=? WHERE id=?`,
+      task.status, at, JSON.stringify(task.history), id);
+    return { ok: true, id, status: "resolved", resolved_at: at };
+  }
+
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -4621,6 +4894,18 @@ export class Store extends DurableObject {
         projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
                                                 sourceBundle: url.searchParams.get("bundle") || null }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
+        /* D-98. Five ops, and the split between them is the safety property:
+           `taskenqueue` is all the capture path can reach, and it writes only to
+           the queue; `taskdrain` is the sole writer of tasks; the rest are
+           member actions. */
+        taskenqueue: () => this.taskEnqueue(body || {}),
+        taskdrain: () => this.taskDrain(body || {}),
+        tasks: () => this.taskList({ assignee: url.searchParams.get("assignee"),
+                                     status: url.searchParams.get("status"),
+                                     refersTo: url.searchParams.get("refers"),
+                                     limit: url.searchParams.get("limit") }),
+        taskforward: () => this.taskForward(body || {}),
+        taskresolve: () => this.taskResolve(body || {}),
         governoradmit: () => this.governorAdmit(body || { host: url.searchParams.get("host") }),
         governorreport: () => this.governorReport(body || {}),
         governorconfig: () => this.governorConfig(body || {}),

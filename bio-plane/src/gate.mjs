@@ -34,7 +34,7 @@
 
 import { checkBundle } from "../checks/bio-checks.mjs";
 
-export const CATALOG_VERSION = "1.16.5";
+export const CATALOG_VERSION = "1.17.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
