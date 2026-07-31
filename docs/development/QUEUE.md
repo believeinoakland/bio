@@ -137,7 +137,7 @@ behind-interface: I6
 depends-on: none
 accepts-when: the instrument lists each fleet member and its three surfaces; adding a stub member with an untested op makes the run report it.
 added: 2026-07-31 · BOB
-landed:
+landed: 7e5b67f (with CPDF-6) — coverage.mjs DISCOVERS fleet members from a fleet-member.json marker (never hand-listed), holds each to surface-ops-reached + a declared control; --strict fails on an uncovered member. Negative control: stub member with an untested op → reported UNREACHED, --strict exits 1.
 
 ### M0-6 · queued
 milestone: M0
@@ -231,7 +231,7 @@ accepts-when: a recorded table of documents against decode outcome, with the res
 added: 2026-07-31 · BOB
 landed: 62a650b — 14 real Oakland docs (MEASUREMENTS.md). Tier-1 FULLY 29% (agendas, modern ACFR/decks — free, in-plane), PARTIAL 21%, Tier-2 REQUIRED 36% (ACFRs, encrypted staff reports — the agenda→staff-report substance), OCR-only 14%. VERDICT: pdf-worker (CPDF-6) is CENTRAL. Findings for CPDF-4/6: Tier-1 should emit reason:"encrypted"; CPDF-6 must pin an unpdf/pdf.js version verified on workerd.
 
-### CPDF-6 · active
+### CPDF-6 · done
 milestone: M2
 heed: CPDF-5 findings — pin an unpdf/pdf.js version verified on the Workers runtime (one doc threw `Math.sumPrecise is not a function` on node v26), and handle permission-only encryption (pdf.js decrypts an empty-user-password PDF transparently; several ACFRs/staff reports are encrypted). Land M0-5 (fleet coverage instrument) in the SAME turn (per its item).
 scope: **`pdf-worker`, the first fleet member (I6).** Holds `unpdf`; the plane hands it a capture sha and a store, it reads the bytes from R2 itself and returns the I2 structure+text shape in the record's terms rather than the library's. Writes NOTHING — no register row, no provenance, no capture. `CAPTURES` read binding only, never `PUBLISHED`. Tier 2 handles only the residue CPDF-5 measured. Lift the extraction logic and size guard from branch `content-pdf/phase2-text`.
@@ -239,7 +239,7 @@ behind-interface: I6
 depends-on: CPDF-5, CPDF-7
 accepts-when: the plane returns text for a CID-font PDF Tier 1 could not decode; the worker refuses to write anything; a request for a document over the envelope returns text-undetermined rather than truncated text.
 added: 2026-07-31 · BOB
-landed:
+landed: 7e5b67f — pdf-worker/** (first fleet member, I6): POST /structure, CAPTURES-read-only (write-nothing structural — no PUBLISHED/DO binding), unpdf 1.8.0 pinned (verified on workerd, guarded polyfill for the node Math.sumPrecise artifact), bundle 0.55MB gzip (never in the plane). Plane escalates over env.PDF_WORKER only when Tier 1 got ~nothing; absent the binding it returns Tier 1 named. Tier 1 now NAMES encryption (CPDF-5 gap). battery 46/46 (2384); fleet coverage lists it; negative controls run. DELEGATIONS: RECORD I3 (escalation call site in index.mjs, landed here) + DIST (deploy the member+binding, install the fleet — D-115/116). Live-verify is CPDF-3 (gated).
 
 ### CPDF-3 · blocked
 milestone: M2
