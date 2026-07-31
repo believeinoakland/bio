@@ -52,3 +52,12 @@ interfaces consumed: none
 interfaces owned: none
 expected: D-113 as a CLASS. A hygiene check asserting every CREATE TABLE in schema.mjs is either named in op=purge's whole-store table list or in a small explicit exemption allowlist (each with a one-line reason), so a forgotten derived table fails loudly. Also corrects derived capture tables currently missing from the whole-store purge. No deploy this turn; ARCH integrates.
 released:
+
+## CLAIM 2026-07-31 CONTENT-PDF
+session: content-pdf-agent-1
+opened: 2026-07-31T00:00:00Z
+paths: bio-plane/src/pdfstructure.mjs, bio-plane/test/pdfstructure.test.mjs, the pdfstructure entries in bio-plane/package.json (the test:pdfstructure script and the additive link in the test chain)
+interfaces consumed: I1 (bytes → content)
+interfaces owned: none yet; expects to propose I2 (structure → framework) producer-side from what the extractor emits
+expected: D-91 phase 1 — the PDF outbound-link structure graph (anchor / intra / deferred / refused / undetermined), byte-identical wrappers to subresources.mjs. No text extraction (unpdf) this turn.
+released:
