@@ -15,13 +15,11 @@
       "Bash(git clean -fdx:*)",
       "Bash(rm -rf:*)",
       "Bash(sudo:*)",
-      "Bash(chmod 777:*)",
-      "Edit(.env)",
-      "Write(.env)",
-      "Edit(.env.local)",
-      "Write(.env.local)"
+      "Bash(chmod 777:*)"
     ],
     "ask": [
+      "Write(.env)",
+      "Edit(.env)",
       "Bash(git push:*)",
       "Bash(node scripts/deploy.mjs:*)",
       "Bash(node bio-plane/scripts/deploy.mjs:*)",

@@ -22,8 +22,13 @@ blanket allow does NOT weaken the lists below it:
   never-force-push rule structural instead of remembered; `git reset --hard`,
   `clean -fdx`, `rm -rf`, `sudo`, `chmod 777`; and any write to `.env`, so
   nothing can overwrite or corrupt the credentials.
-- **ask**: `git push`, the plane deploy, the installer deploy. Each is public or
-  irreversible and worth one beat of a human's attention.
+- **ask**: writing `.env`, `git push`, the plane deploy, the installer deploy.
+  Each is public, irreversible, or touches credentials, and is worth one beat of
+  a human's attention.
+
+`.env` was briefly on the DENY list, which was wrong: the operator does not edit
+files by hand, so denying it blocked the one legitimate way credentials get onto
+a machine. It asks instead, so the write still happens under a human's eye.
 
 ## The tradeoff, stated plainly
 
