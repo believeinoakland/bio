@@ -21,10 +21,14 @@ This is the safety property, not a transport detail: the daemon credential's
 blast radius stops at the queue boundary, so a leaked capture token can enqueue
 noise but can never write a task, set an assignee, or forge history. Bob's queue
 instinct made this safer than either option originally posed.
-(2) D-102: the installer wizard must PROMPT each new group for an installation
-name, which becomes the INSTANCE_NAME UA component, so a third party can
-throttle one operator by name. Interim: this instance is bound as 'development',
-done live and verified in the provenance chain.
+(2) D-102, RESOLVED and simpler than stated: the instance name IS THE WORKER
+NAME. The wizard already collects it as `slug`, so there was no prompt to add,
+only a binding to make; done on install AND update, the update half being what
+retro-names copies that predate it. The interim 'development' override was
+removed the same day and this instance is bound to biosmoke7, verified live in
+the provenance chain. The rule is uniform: no second name, no override, no
+prompt, because a name that can differ from the worker is a second source of
+truth that drifts.
 (3) Browser-UA delegation is LEGITIMATE but HELD IN RESERVE. Delegating the
 operator's OWN browser user-agent to their OWN instance is speaking as
 themselves through a tool they run, not inventing a client that does not exist.

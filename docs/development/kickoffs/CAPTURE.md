@@ -22,7 +22,7 @@ Kickoff: thread CAPTURE. Fetch these from
 raw.githubusercontent.com/believeinoakland/bio/main and read them before anything
 else: docs/development/kickoffs/README.md (the thread register and the
 never-force-push rule), docs/development/kickoffs/BATON.md (who may cut a plane
-release), docs/development/DEBT.md (D-98, D-91, D-102, D-103, D-60 and D-65 are
+release), docs/development/DEBT.md (D-106, D-98, D-91, D-60 and D-65 are
 this thread's open work; take the next free D-number at the moment you write),
 docs/development/SOURCE-ACCESS.md (the contact URL is the measured admission
 key; the allowlist ask is Bob's and pending),
@@ -66,11 +66,16 @@ routing and the grammar, and dedups on (refers_to, kind) so a re-capture loop
 cannot flood it. This is the safety property, not a detail: the daemon
 credential cannot write a task. Transport is table-as-queue in the DO unless a
 Cloudflare Queue buys something specific.
-(3) D-102 and D-103, the small ones. D-103 IS DONE, staged as 0.48.0 (signed,
-not deployed): governorstate/governorconfig are wired as control-plane ops, so
-this reduces to DEPLOYING 0.48.0 with the baton and to D-102, the wizard
-prompting for an installation name that becomes the UA component (RULED; interim
-name is 'development', already bound live on this instance). (4) If time remains, plane
+(3) D-106, the urgent small one, which replaces the old item 3 because D-102 and
+D-103 are both DONE and DEPLOYED in 0.48.0. The INSTALLER ships 0.35.0 while the
+plane runs 0.48.0, so a group installing today gets a plane that cannot reach
+oaklandca.gov at all and identifies as bio-acquire: every fix of the 2026-07-30
+session is absent from a fresh install. Two separable halves, and the SECOND
+matters more: (a) cut an installer release embedding the current plane, and
+(b) make the embed step REFUSE when the embedded version does not match
+bio-plane/package.json, because a silently stale installer is what let this
+drift thirteen releases unnoticed. Sovereign instances are the distribution
+model. (4) If time remains, plane
 adoption of the volatile digest (D-60) is the cheaper win: feasibility is
 ALREADY MEASURED (docprofile tree-shakes to 5.3KB, zero deps, import path
 `../../docprofile/index.mjs` from src/, build inlines it so the installer is
@@ -96,6 +101,15 @@ items at the end only.
 ---
 
 ## What this thread should know without being told
+
+**The instance name IS the worker name, with no exceptions.** The wizard already
+collects it as `slug`; the wizard and deploy.mjs both bind INSTANCE_NAME from it,
+on install and on update, so an update retro-names copies that predate the
+binding. A third party therefore sees the same name the operator types into a
+URL, which is what lets them throttle one operator rather than a provider. Do
+not add a second name, an override, or a prompt: a name that can differ from the
+worker is a second source of truth that drifts, and the one interim override
+this project had ('development') was removed the day it was created.
 
 **The contact URL is the measured admission key.** D-94's component ladder,
 second-path confirmed: purpose and instance are droppable from the agent;
