@@ -51,7 +51,7 @@ paths: bio-plane/test/hygiene.test.mjs, the purge table list in bio-plane/src/st
 interfaces consumed: none
 interfaces owned: none
 expected: D-113 as a CLASS. A hygiene check asserting every CREATE TABLE in schema.mjs is either named in op=purge's whole-store table list or in a small explicit exemption allowlist (each with a one-line reason), so a forgotten derived table fails loudly. Also corrects derived capture tables currently missing from the whole-store purge. No deploy this turn; ARCH integrates.
-released:
+released: 2026-07-31 — landed on main by ARCH (integration turn), commit 6eb2b42. Full battery green; the negative control was re-run by ARCH before landing (throwaway table -> the check fails naming it).
 
 ## CLAIM 2026-07-31 CONTENT-PDF
 session: content-pdf-agent-1
@@ -60,4 +60,10 @@ paths: bio-plane/src/pdfstructure.mjs, bio-plane/test/pdfstructure.test.mjs, the
 interfaces consumed: I1 (bytes → content)
 interfaces owned: none yet; expects to propose I2 (structure → framework) producer-side from what the extractor emits
 expected: D-91 phase 1 — the PDF outbound-link structure graph (anchor / intra / deferred / refused / undetermined), byte-identical wrappers to subresources.mjs. No text extraction (unpdf) this turn.
-released:
+released: 2026-07-31 — phase 1 landed on main by ARCH (integration turn), commit 0b1c6ce. Phase 2 (text via unpdf, measured against the 3MB bundle and CPU ceilings) remains; the op wiring needed to live-verify is the DELEGATION below.
+
+## DELEGATION 2026-07-31 CONTENT-PDF → CAPTURE
+from: content-pdf-agent-1 (recorded by ARCH at integration)
+need: wire op=pdfstructure into the `if (op === …)` dispatch in bio-plane/src/index.mjs — a few additive lines that read a capture_sha through the existing op=capture byte path and call extractPdfStructure(bytes) from bio-plane/src/pdfstructure.mjs. index.mjs is CAPTURE's; this is the delegation the CONTENT-PDF kickoff anticipated, not a quiet edit.
+why: the extractor is complete and unit-tested against fixtures but cannot be live-verified against real captured PDFs until an op exposes it. If op-wiring delegation recurs across content areas, that is the trigger to promote op-contract ownership out of CAPTURE (the I3 move PARALLELISM.md anticipates).
+status: open

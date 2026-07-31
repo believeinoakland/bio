@@ -229,3 +229,67 @@ those — for instance, promoting `content_type` from frontmatter to a register
 column, which is a real latent improvement — propose it in `INTERFACE-CHANGES.md`
 and bump this version, because a content area is building against the split as it
 is written here.
+
+---
+
+## I2 — content → framework (structure)
+
+- **ID:** I2
+- **Owner:** `FRAMEWORK` (currently dormant)
+- **Version:** 0.1.0 — **PROVISIONAL**, producer-proposed 2026-07-31 from
+  CONTENT-PDF's as-built output (plane 0.55.0), written from the code that emits
+  it rather than as anyone would like it, exactly as I1 was.
+- **Producers:** `CONTENT-PDF` (live), `CONTENT-HTML` (dormant)
+- **Consumer:** `FRAMEWORK` (dormant)
+- **Status:** PROVISIONAL. FRAMEWORK cannot yet answer, so `ARCH` registers the
+  producer's shape (protocol step 3, answering for a dormant area in writing) so
+  content work proceeds. It becomes STABLE when a FRAMEWORK session confirms or
+  counters it via `INTERFACE-CHANGES.md` (which does not exist until then).
+
+### What it is
+
+What a content area emits after reading captured bytes (I1) and identifying a
+document's STRUCTURE — its outbound links and their element references — WITHOUT
+deciding what the content means (that stays FRAMEWORK's). Structure is
+container-agnostic by construction: a PDF's links and an HTML page's links are
+characterised into the SAME partitions, so FRAMEWORK consumes both identically.
+
+### The shape, as CONTENT-PDF emits it today
+
+`extractPdfStructure(bytes)` (`bio-plane/src/pdfstructure.mjs`) returns:
+
+```
+{ ok: true, container: "pdf", version: "1.7"|null, pages: <int>,
+  links: [ LinkRecord, ... ],
+  counts: { anchor, intra, deferred, refused, undetermined },
+  notes: [ <string>, ... ] }               // lenient-parse notes
+```
+or `{ ok:false, container, reason: "NOT_A_PDF"|"NOT_BYTES" }` on bad input.
+
+**LinkRecord:**
+```
+{ partition: "deferred"|"refused"|"anchor"|"intra"|"undetermined",
+  wrapper:   <string>|null,   // byte-identical to subresources.mjs linkWrapper[partition](...)
+  target:    { ... },         // by partition, below
+  source:    { page:<int 0-based>, rect:[x0,y0,x1,y1]|null } | null }
+```
+- **deferred / refused:** `target = { url }`.
+- **anchor:** `target = { page:<0-based>, fragment:"#page=<1-based>", dest:<name|null> }`.
+- **intra:** `target = { sha256:<64-hex>, name:<filename|null>, bytes:<int> }`.
+- **undetermined:** `target = { why:<reason>, ...hints }`.
+
+### Invariants a consumer may rely on
+
+- The four content partitions and their wrappers are IDENTICAL to I1's HTML side
+  (`subresources.mjs` `LINK_TYPES` / `linkWrapper`). `undetermined` is the only
+  addition and always carries `wrapper: null` and a stated `why` — an unresolved
+  link is CARRIED, never dropped and never invented.
+- Element reference = source page index (0-based) + annotation rect. Structure
+  with no such reference (e.g. a document-level embedded file) sets `source: null`
+  rather than inventing one.
+
+### Open before it can go STABLE
+
+- A FRAMEWORK session confirms or counters the shape.
+- `CONTENT-HTML` emits the same shape from HTML, proving the container-agnostic
+  claim across both producers rather than asserting it from one.
