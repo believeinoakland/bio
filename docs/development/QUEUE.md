@@ -66,6 +66,27 @@ _(drained by CONDUCT 2026-07-31: re-read the updated `kickoffs/CONDUCT.md` loop 
 
 _(drained by CONDUCT 2026-07-31: M8 (a member can reach what the record holds) is now in MILESTONES and the UI inventory in UI-PLAN — read and acknowledged. UI stays DORMANT; M8 depends on nothing and is available to activate when a slot frees, with UI-PLAN's U11 ("members & keys") to be SPLIT first since it exceeds its rung. No queue item superseded, no worker stopped.)_
 
+### 2026-07-31 · BOB · M8 is built as CONSTRUCTS — read this before scoping any UI item
+
+`docs/architecture/BIO_Interaction_Constructs_v0_1.md` is new and governs how M8 is
+scoped. **Do not queue UI work op-by-op.** Five interaction constructs carry the whole
+capability set; a member learns five shapes instead of forty screens, which is the
+non-technical-audience rule doing real work.
+
+**NAME COLLISION, so a worker does not read the wrong file:** `architecture/
+CONSTRUCTS.md` is the CONTENT framework's inventory. The new file is INTERACTION
+constructs. Unrelated.
+
+The one structural point: **TASK is the attention layer, not a peer of the acts.** It
+says "this needs you" and points at a ballot, a proposal, a justified transition or an
+attestation, which is what stops the inbox becoming a second parallel application.
+
+Build order inside M8 is in `MILESTONES.md`: T, then J, then B, S alongside J, P when
+M4 has findings, A on the crucial path. When UI activates, scope its first item as
+**the task construct**, not as "the tasks screen".
+
+Nothing here supersedes a queue item or stops a worker.
+
 ---
 
 Item format:

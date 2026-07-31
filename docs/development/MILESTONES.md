@@ -288,6 +288,31 @@ D-78/D-82 (an assistant-surfaced focus must be written and shown as one).
 **Areas:** UI, with RECORD for anything needing an op shape it does not have.
 **Depends on:** nothing. Every op it needs already ships.
 
+> **Built as CONSTRUCTS, not as forty screens**
+> (`architecture/BIO_Interaction_Constructs_v0_1.md`, 2026-07-31, at Bob's direction).
+> The audience is non-technical and the workflow exists to remove members from
+> logistics; forty screens is forty things to learn. Five shapes carry the whole
+> capability set, and each new capability then arrives already familiar:
+>
+> **T · TASK** is the ATTENTION layer and not a peer of the acts — it says *this needs
+> you* and points at one of the others, which is what stops the inbox becoming a
+> second parallel application. **B · BALLOT** is a multi-party act with computed
+> arithmetic (the `adminarith`/`projectownerarith` ops exist so the tally is computed
+> rather than transcribed). **P · PROPOSAL** is a derived finding awaiting an authored
+> act — D-90's "derived informs, authored binds" is its charter, and D-82 requires it
+> to LOOK derived. **J · JUSTIFIED TRANSITION** is a state change carrying authored
+> text that becomes evidence, so the system must NEVER prefill it. **A · ATTESTATION**
+> is the irreversible signed act and must carry that weight in the interface.
+> **S · SELECTION-SCOPED** is a modifier that makes the plane's report-vs-refuse
+> weights felt. **U · UNDETERMINED** is a display primitive rendered identically
+> everywhere, or members learn to ignore the honest gap this record rests on.
+>
+> Build order inside M8: **T first** (attention layer, sharpest gap, plane half
+> ships), then **J** (U5 already built one instance — generalising working code
+> unlocks dispose/sever/reinstate/retire together), then **B** (makes seven releases
+> of enforced-but-unreachable S-12 governance usable), **S** alongside J, **P** when
+> M4 produces findings to propose, **A** on the crucial path.
+
 > **The measured gap.** 85 ops declared, 63 member-reachable, **18 reached by the
 > UI**. Raw counts overstate it — plumbing and diagnostics want no surface — but six
 > member-facing FAMILIES shipped with no surface AND no rung naming them, which is
