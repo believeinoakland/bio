@@ -261,3 +261,15 @@ via the `GOVERNOR_APPETITE_PER_MIN` binding.
 | 403/503 cool-off | 30s × 2^n, cap 30min | refusal is discovered capacity |
 | Escalation reset | one success zeroes n | mirrors the counterparty relenting |
 | Subresource stagger | 50 to 250ms jittered | a browser's connection pool, riding the primary admission |
+
+## What could NOT be measured this session, and why
+
+Recorded so the gap is visible rather than silently inherited as fact.
+
+**Wayback CDX, from the Anthropic container egress: unreachable.**
+`web.archive.org` returns HTTP 403 `x-block-reason: hostname_blocked` at the
+egress proxy on 2026-07-30, so none of the CDX claims in `ARCHIVE-FALLBACK.md`
+(record field shape, the `id_` raw-bytes suffix, `warc/revisit` dedup records,
+the 24-to-60/min ceilings) were verified. The PLANE'S egress is Cloudflare and
+does reach the archive; the archive session should measure these through the
+deployed plane before building on them. See D-105.

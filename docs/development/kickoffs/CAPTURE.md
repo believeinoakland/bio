@@ -39,13 +39,19 @@ checks the baton on the REMOTE and now binds INSTANCE_NAME from the slug).
 
 This session, in order. Stop and tell me if any item changes the ones after it.
 (1) The archive fallback, per ARCHIVE-FALLBACK.md and the monitoring re-fetch
-ruling: an archive-sourced observation files via 'archive.org' with the CDX
-original as the document address and the replay address as the retrieval
-locator; the provenance_chain grows the second hop, unsigned, and the grade
-sits below a direct capture of the same document; the three-failures-or-
-fourteen-days threshold triggers it for monitoring only. Respect the archive's
-third-party rate figures (theirs, not ours) through the governor's config
-table. (2) D-98, the tasks table on the gathering queue's shape, C-18.5's
+ruling. TWO THINGS FIRST, both recorded as debt this session: MEASURE the CDX
+claims through the plane's own egress before building on them (D-105: the
+Anthropic container cannot reach web.archive.org, so the record shape and rate
+figures in ARCHIVE-FALLBACK.md are still vendor description, not measurement),
+and build the failure counter to EXCLUDE governed refusals from the first line
+(D-104: our own governor declining is not the source being unreachable, and
+counting it would trip the fallback on our own politeness). Then: an
+archive-sourced observation files via 'archive.org' with the CDX original as
+the document address and the replay address as the retrieval locator; the
+provenance_chain grows the second hop, unsigned, and the grade sits below a
+direct capture of the same document; the three-failures-or-fourteen-days
+threshold triggers it for monitoring only. Respect the archive's third-party
+rate figures (theirs, not ours) through the governor's config table. (2) D-98, the tasks table on the gathering queue's shape, C-18.5's
 grammar bounds and the quoted-data exporter, so authority-undetermined
 captures land in a project manager's inbox instead of a count nobody reads.
 (3) D-102 and D-103, the small ones: the wizard binds INSTANCE_NAME, and
