@@ -3,6 +3,12 @@
 This session runs the work. Renamed from `ARCH` on 2026-07-31. Read
 `ORCHESTRATION.md` for the model. The loop:
 
+0. **Drain the `BOB INBOX` at the top of `QUEUE.md` FIRST.** It is append-only and BOB
+   is its producer; you are the sole writer of everything below it. Enact each entry
+   into the queue proper, then delete it. This is what lets an architectural change
+   land WITHOUT pausing you (`ORCHESTRATION.md`). An entry may say that a queued or
+   in-flight item is superseded — whether to stop a running worker or let it land is
+   YOURS to decide; BOB's duty was only to make the supersession visible.
 1. **Read `QUEUE.md`.** For each ACTIVE area (max two), if no worker is running
    for it and its top item is runnable (status `queued`, depends-on all `done`),
    spawn a worktree-isolated worker for that ONE item, with a self-contained

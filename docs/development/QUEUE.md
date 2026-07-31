@@ -46,6 +46,36 @@ run EARLY and its cost is one worker. CAP-3 touches only CAPTURE's own paths and
 contends with neither active area. **The M0 lane likewise does not hold a slot**:
 CONDUCT drains one M0 item whenever it has integration capacity between area items.
 
+---
+
+## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
+
+The producer/consumer split that makes an architectural change landable WITHOUT
+pausing CONDUCT (`ORCHESTRATION.md`). BOB appends; CONDUCT is the sole writer of
+everything below this section and drains the inbox as part of its loop, deleting an
+entry only once it has been enacted below. The two parties write to disjoint regions,
+so neither has to stop for the other.
+
+An entry names: what changed, which queue items it affects, and whether any in-flight
+work is superseded. It does NOT decide worker lifecycle — stopping a running worker is
+CONDUCT's call.
+
+### 2026-07-31 · BOB · enacted in this rewrite, nothing outstanding
+The Worker-topology decision, the M0/RECORD/FRAMEWORK restructure and the CAP-4
+determination are already reflected below, because this rewrite was made under an
+explicit pause. Two items for CONDUCT's attention rather than its keyboard:
+
+- **A stale CLAIM is live.** `capture-bootstrap-1` (CAPTURE, opened 2026-07-31T17:57Z)
+  has never been released and its session is long gone. Under `PARALLELISM.md` a claim
+  older than its expected scope is stale and CONDUCT may reassign it. It reserves most
+  of CAPTURE's paths, so CAP-3 will collide with it. Reassign or release it before
+  spawning a CAPTURE worker.
+- **`pdf-worker/**` does not exist yet.** The topology is decided and registered (I6)
+  and NO code has been written — deliberately, since that is an area's work and BOB
+  writes none. CPDF-6 creates it. Nothing is half-built.
+
+---
+
 Item format:
 
     ### <ID> · <queued | active | done | blocked | superseded>

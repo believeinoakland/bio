@@ -36,12 +36,18 @@ those workers are drawn from — an area is a queue, not a standing agent.
 
 | Thread | Owns | Kickoff |
 | --- | --- | --- |
+| `RECORD` | **ACTIVE, new 2026-07-31** · the store core, retrieval and the scheduler · `schema.mjs` core, `store.mjs` (not CAPTURE's link/capture/task/reachability functions), `query.mjs`, the OPS table in `index.mjs` · OWNS I3 and I5 | `kickoffs/RECORD.md` |
 | `CAPTURE` | **holds the release baton** · `bio-plane/src/subresources.mjs`, `src/cpu.mjs`, capture and link tables in `src/schema.mjs`, capture ops in `src/index.mjs`, `test/subresources.test.mjs` | `kickoffs/CAPTURE.md` |
-| `CONTENT-PDF` | **ready to run** · structure inside PDFs (D-91) · `bio-plane/src/pdfstructure.mjs`, `test/pdfstructure.test.mjs` (new) · CONSUMES I1, PRODUCES structure | `kickoffs/CONTENT-PDF.md` |
+| `CONTENT-PDF` | structure AND text inside PDFs (D-91) · `bio-plane/src/pdfstructure.mjs`, `test/pdfstructure.test.mjs`, and **`pdf-worker/**` (the first fleet member, I6)** · CONSUMES I1, PRODUCES structure. Its kickoff item (3) was SUPERSEDED 2026-07-31 by the Worker-topology decision | `kickoffs/CONTENT-PDF.md` |
 | `CONTENT-HTML` | **dormant, scope pending** · content inside HTML (D-64) · not yet carvable (link graph is CAPTURE's, recognizers are FRAMEWORK's, D-64 blocked on D-55) | `kickoffs/CONTENT-HTML.md` |
 | `UI` | `civicos-ui/**`, `docs/development/UI-PLAN.md` | `kickoffs/UI.md` |
 | `DIST` | **cuts all plane releases** · `newgroup/**`, `release/**`, `scripts/deploy.mjs`, versions and tags | `kickoffs/DIST.md` |
 | `FRAMEWORK` | `docprofile/**`, `docs/architecture/BIO_Content_Framework_*`, `docs/architecture/CONSTRUCTS.md`, `docs/development/DOCUMENT-PROFILES.md` | `kickoffs/FRAMEWORK.md` |
+
+**A WORKER is not an AREA.** As of 2026-07-31 the topology includes single-purpose
+Workers beside the plane (`pdf-worker` first). A fleet member is one area's CODE and
+DIST's RELEASE OBJECT; owning the code does not mean deploying it. See
+`PARALLELISM.md`, "Deployment units are a separate axis from areas".
 
 **Owns** means: this thread may rewrite these paths freely. It does NOT mean
 other threads may not read them, and it does not make ownership permanent. A
