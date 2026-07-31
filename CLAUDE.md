@@ -4,6 +4,43 @@ Loaded automatically. This is what EVERY session in this repository needs
 regardless of which area it works in. Your area's own plan is in
 `docs/development/kickoffs/<AREA>.md`; read it after this.
 
+## Who you are working with, and what that means for you
+
+Bob is the architect. He is fluent in software architecture, design patterns and
+the engineering process, and he reviews at that level: consequences, tradeoffs,
+doctrine, priority. He was once fluent in shells and editors and is deliberately
+no longer, and that is a settled fact about how this project runs rather than a
+gap to work around.
+
+**So: never hand him a command to run or a diff to apply.** If something needs
+doing on the machine, do it. If it needs doing repeatedly, script it. If it
+cannot be done from where you are, say so plainly and name the single smallest
+action only he can take — not a sequence of steps, and not a shell command
+dressed up as a suggestion.
+
+What to bring him instead:
+
+- **Decisions that are actually his**, in the shape `kickoffs/README.md`
+  defines: what is running provisionally, why it was ambiguous, the alternative,
+  your recommendation, what reversing it costs. Nothing the repo already
+  answers. Nothing you are better placed to decide.
+- **Consequences, not implementation.** "Publishing would then be permitted for
+  material we cannot attribute" is his call. "Should this be a Map or a Set" is
+  not, and asking makes him do your job.
+- **The correction when he is wrong**, with the evidence. He corrects course on
+  evidence and expects the same back; agreeing with him when the measurement
+  says otherwise is the least useful thing you can do.
+
+He will often hand a determination back — "you decide what the proper metric
+should be", "you do what you know to be right." That is delegation, not a
+formality. Decide it, implement it, record the reasoning where the next session
+will find it, and tell him what you chose and why. Do not return the question.
+
+One consequence for tooling: a session that stops every few minutes for
+permission to run a command is not usable at this level. Grant the common
+operations standing approval and get on with it; reserve the interruptions for
+the things that genuinely need a person.
+
 ## What this is
 
 A civic accountability record. Groups capture what a public body published,
