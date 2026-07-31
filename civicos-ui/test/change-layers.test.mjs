@@ -26,7 +26,7 @@
 import { webcrypto } from "crypto";
 import {
   assess, LAYER, doctypeFor, meetingCalendar, generic,
-  CONNECTION, diffEntities, TYPE_CONFIDENCE,
+  CONNECTION, diffEntities, CONFIDENCE,
 } from "../../docprofile/registry.mjs";
 
 const sha = async (b) => [...new Uint8Array(await webcrypto.subtle.digest("SHA-256", b))]
@@ -86,7 +86,7 @@ ok("which also stops before the content is read", r.stopped_at === LAYER.NOTEWOR
 /* ---- 2. the content type is a separate axis from the stack ---- */
 const dt = doctypeFor({ text: CAL(JULY), locator: LOC });
 ok("a calendar is recognised as a calendar", dt.type.key === "meeting_calendar");
-ok("with certainty from its meeting links", dt.confidence === TYPE_CONFIDENCE.CERTAIN);
+ok("with certainty from its meeting links", dt.confidence === CONFIDENCE.CERTAIN);
 ok("and the type is not a property of the stack that served it",
    doctypeFor({ text: CAL(JULY), locator: "https://granicus.example/Calendar" }).type.key === "meeting_calendar");
 ok("an unrecognised type falls back and describes nothing",

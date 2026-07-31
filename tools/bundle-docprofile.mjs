@@ -9,8 +9,11 @@
  * no return. */
 import fs from "fs";
 export const ORDER = [
+  /* recogniser and events first: they define the one confidence ladder, the shared
+     registry helper, and the event catalogue that everything below draws on. */
+  "docprofile/recogniser.mjs",
+  "docprofile/events.mjs",
   "docprofile/index.mjs",
-  "docprofile/monitoring.mjs",
   "docprofile/handlers/client-rendered.mjs",
   "docprofile/handlers/aspnet-webforms.mjs",
   "docprofile/handlers/wordpress.mjs",

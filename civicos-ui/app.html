@@ -1659,6 +1659,156 @@ function acquireWhy(a){
    canonical source and the plane imports it as modules; this runtime is one
    self-contained file, so it carries a copy and the build refuses any drift.
    Do not edit here. Edit docprofile/ and rebuild. */
+/* ---- docprofile/recogniser.mjs ---- */
+/* One extension shape for every axis: the RECOGNISER and its REGISTRY.
+ *
+ * This is §4 of BIO_Content_Framework_v0_10 made real, and it is the reconciliation
+ * D-68 / CONSTRUCTS Step 0 exists to perform. The inventory's worst finding was that
+ * two axes (host stack, content type) each grew their OWN copy of the same
+ * apparatus in a day: two confidence ladders, two ordered registries, two
+ * `identify`-shaped loops. They were never two ideas. They are one, written twice.
+ *
+ * A RECOGNISER answers one question about a capture and declares how sure it is:
+ *
+ *     detect(ctx) -> { match, confidence, signals[] }
+ *     key, label, version          // machine name, words for a member, and the
+ *                                  //   version so a judgment can be found and
+ *                                  //   revised when the rule later improves
+ *
+ * A REGISTRY holds the recognisers for ONE axis, ordered most specific first. The
+ * first CERTAIN detection wins; short of that the highest confidence wins; and a
+ * fallback that never matches is reached only by falling through and is always the
+ * conservative one. That is the WHOLE extension mechanism: adding a host stack, a
+ * content type, or an axis nobody has thought of yet is the same act — write a
+ * recogniser, register it. The test of whether this consolidation worked is that the
+ * ENTITY axis (CONSTRUCTS Step 4) costs one `makeRegistry()` and nothing else.
+ */
+
+/* The one confidence ladder, used by every axis. `certain` is a signal only this
+   thing produces; `likely` is consistent but not conclusive; `possible` is a weak
+   hint; `none` is the fallback's floor. Confidence below `certain` changes the
+   answer (framework invariant 5): a merely-likely recogniser declines to narrow and
+   the conservative default applies. Content-type recognisers simply never use
+   `possible`; the ladder is still one ladder. */
+const CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", POSSIBLE: "possible", NONE: "none" };
+
+const RANK = { none: 0, possible: 1, likely: 2, certain: 3 };
+/** Where a confidence sits on the single ladder, for comparing two detections. */
+function confidenceRank(c) { return RANK[c] || 0; }
+
+/** Build a recogniser registry for one axis.
+ *
+ *  `isFallback` names the member that is returned when nothing detects — the
+ *  conservative handler on the stack axis, the generic type on the content axis.
+ *  Both carry `fallback: true`, so the default suffices and no axis needs its own
+ *  registry code. That is the point.
+ *
+ *  `recognise(ctx)` always returns a member: an unrecognised capture gets the
+ *  fallback rather than an error, because refusing to profile would just move the
+ *  special case back out into every caller. */
+function makeRegistry(opts = {}) {
+  const isFallback = opts.isFallback || ((m) => m.fallback === true);
+  const members = [];
+  const registry = {
+    register(m) { members.push(m); return m; },
+    all() { return members.slice(); },
+    fallbackMember() { return members.find(isFallback) || members[members.length - 1]; },
+    recognise(ctx) {
+      const considered = [];
+      let best = null;
+      for (const m of members) {
+        const d = m.detect(ctx) || { match: false };
+        if (!d.match) continue;
+        considered.push({ key: m.key, confidence: d.confidence, signals: d.signals || [] });
+        if (!best || confidenceRank(d.confidence) > confidenceRank(best.confidence)) best = { member: m, ...d };
+        if (d.confidence === CONFIDENCE.CERTAIN) break;
+      }
+      if (!best)
+        return { member: registry.fallbackMember(), confidence: CONFIDENCE.NONE, signals: [], considered, matched: false };
+      return { member: best.member, confidence: best.confidence, signals: best.signals || [], considered, matched: true };
+    },
+  };
+  return registry;
+}
+
+/* ---- docprofile/events.mjs ---- */
+/* The shared event catalogue, and significance graded ONCE.
+ *
+ * CONSTRUCTS Step 0, collisions #5 and #6. Before this, a content type invented its
+ * own event-type strings inline (`delisted`, `cancelled`, `minutes_replaced`, ...)
+ * and stamped a significance beside each push site by hand, and `meaningful` was a
+ * second boolean carried alongside the significance it could have been derived from.
+ * Both are the lesson the plane's check catalogue already taught: a vocabulary with
+ * no registry is a vocabulary that the second author either duplicates or contradicts.
+ *
+ * So every event a content type can emit is named here ONCE, with its significance,
+ * and a content type draws its events from `event()` rather than writing the string
+ * and the grade itself. A second content type either reuses these types or extends
+ * the catalogue in this one place.
+ */
+
+/* How much a member should be troubled, ordered so a report leads with the worst
+   thing rather than the first thing. */
+const SIGNIFICANCE = { EVENT: "event", NOTICE: "notice", ROUTINE: "routine" };
+const SIG_RANK = { routine: 0, notice: 1, event: 2 };
+/** Where a significance sits, for ordering and for deriving `meaningful`. */
+function significanceRank(s) { return SIG_RANK[s] != null ? SIG_RANK[s] : -1; }
+
+/* The catalogue. Each entry names the fixed significance of that kind of event.
+   Document events come in agenda/ and minutes/ pairs because the two are the same
+   shape of thing arriving on the same clock. */
+const EVENTS = {
+  /* a public record removed from a public list, or one that cannot be told apart
+     from that because the window could not be read — close to the reason BIO exists */
+  delisted:          { significance: SIGNIFICANCE.EVENT },
+  possibly_delisted: { significance: SIGNIFICANCE.EVENT },
+  /* a meeting's own status, date or a swapped/withdrawn document: things a member
+     watching that body needs to see */
+  cancelled:         { significance: SIGNIFICANCE.EVENT },
+  rescheduled:       { significance: SIGNIFICANCE.EVENT },
+  status_changed:    { significance: SIGNIFICANCE.EVENT },
+  moved:             { significance: SIGNIFICANCE.EVENT },
+  agenda_withdrawn:  { significance: SIGNIFICANCE.EVENT },
+  minutes_withdrawn: { significance: SIGNIFICANCE.EVENT },
+  agenda_replaced:   { significance: SIGNIFICANCE.EVENT },
+  minutes_replaced:  { significance: SIGNIFICANCE.EVENT },
+  /* the body holding a meeting is named differently: worth showing, not an alarm */
+  renamed:           { significance: SIGNIFICANCE.NOTICE },
+  /* the list doing its job: a new meeting, or a document arriving on schedule */
+  scheduled:         { significance: SIGNIFICANCE.ROUTINE },
+  agenda_published:  { significance: SIGNIFICANCE.ROUTINE },
+  minutes_published: { significance: SIGNIFICANCE.ROUTINE },
+};
+
+/** Build an event, drawing its significance from the catalogue so the grade lives in
+ *  ONE place. An unknown type throws rather than defaulting: a silently-routine typo
+ *  is exactly the miscarriage the catalogue exists to prevent, and a new event type
+ *  is a deliberate addition to the catalogue above, not an inline string. */
+function event(type, detail) {
+  const spec = EVENTS[type];
+  if (!spec) throw new Error(`docprofile: unknown event type "${type}" — add it to the catalogue in events.mjs`);
+  return { type, significance: spec.significance, ...(detail || {}) };
+}
+
+/** The worst significance among a set of events, or null when there are none. */
+function worstSignificance(events) {
+  let worst = null;
+  for (const e of events)
+    if (worst === null || SIG_RANK[e.significance] > SIG_RANK[worst]) worst = e.significance;
+  return worst;
+}
+
+/** `meaningful` is DERIVED, never a second fact carried beside the grade: a change is
+ *  meaningful exactly when its worst event rises to EVENT. (CONSTRUCTS Step 0 #6) */
+function isMeaningful(events) {
+  return worstSignificance(events) === SIGNIFICANCE.EVENT;
+}
+
+/** Sort events worst-first, in place, so a report leads with the heaviest thing. */
+function bySeverity(events) {
+  return events.sort((a, b) => SIG_RANK[b.significance] - SIG_RANK[a.significance]);
+}
+
 /* ---- docprofile/index.mjs ---- */
 /* docprofile — recognising what kind of document this is, and what follows.
  *
@@ -1726,6 +1876,11 @@ function acquireWhy(a){
  * Handlers earn the right to narrow that, per stack, on measurement.
  */
 
+
+/* The confidence ladder is ONE ladder now, defined in recogniser.mjs and used by
+   every axis (CONSTRUCTS Step 0 #1). It is re-exported here so the many existing
+   importers of `CONFIDENCE` from this module keep working. */
+
 /** Entity-decode enough to make an href comparable. Deliberately minimal: this is
  *  used to READ keys out of markup, never to rewrite anything the record holds. */
 function unescapeHtml(s) {
@@ -1734,11 +1889,6 @@ function unescapeHtml(s) {
 }
 
 const REGION = { EVIDENTIARY: "evidentiary", PRESENTATIONAL: "presentational", MECHANICAL: "mechanical" };
-
-/* Confidence in a detection, because a handler applied to the wrong document is
-   how a real change gets hidden. Only `certain` licenses a handler's narrowing
-   rules; anything weaker falls back to conservative treatment and says so. */
-const CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", POSSIBLE: "possible", NONE: "none" };
 
 const PLACEHOLDER = "\u0000BIO-NORMALISED\u0000";
 
@@ -1820,8 +1970,15 @@ async function digests(bytes, handler, ctx) {
   };
 }
 
-/** Has this document changed, and in what sense? The answer a member is owed is
- *  the `evidentiary` line; everything else is for the record.
+/** The layer-3 primitive: has this document changed, and in what sense? NOT a public
+ *  entry point — `assess()` is the one entry point for the layered change question
+ *  and it CALLS this to settle layers 2 and 3 (CONSTRUCTS Step 0 #2: monitor() was
+ *  deleted, compare() demoted to the primitive it always was). It stays exported
+ *  only for the pure duplicate-detection caller that wants the L3 answer without the
+ *  content-type layers above it, and for the suite that pins its three verdicts.
+ *
+ *  The answer a member is owed is the `evidentiary` line; everything else is for the
+ *  record.
  *
  *  `verdict` is one of:
  *    identical      the source served the same bytes
@@ -1880,41 +2037,33 @@ function fidelity(manifest, handler, ctx) {
            why: "everything the page needs to read correctly is held; some decoration is not" };
 }
 
-/* ---- the registry ---- */
+/* ---- the STACK axis: one registry of the shared shape ----
+   The host-stack recognisers live on a `makeRegistry()` instance exactly like the
+   content-type axis does, so there is no longer an `identify`-shaped loop written
+   twice. registry.mjs registers the handlers into this instance at import; the
+   handlers themselves are the recognisers. */
+const stacks = makeRegistry();
 
-const HANDLERS = [];
-/** Handlers are ordered most specific first and the first CERTAIN detection wins;
-   registration order is the tie-break, so a stack handler must be registered
-   ahead of the generic ones. */
-function register(handler) { HANDLERS.push(handler); return handler; }
-function handlers() { return HANDLERS.slice(); }
+/** Add a handler to the stack registry. Ordered most specific first; the conservative
+   handler carries `fallback: true` and is only ever reached by falling through. */
+function register(handler) { return stacks.register(handler); }
+function handlers() { return stacks.all(); }
 
-/** Identify the document. `ctx` carries whatever the caller knows: the response
- *  headers, the locator, the content type, and the decoded text.
+/** Identify the document's host stack. `ctx` carries whatever the caller knows: the
+ *  response headers, the locator, the content type, and the decoded text.
  *
- *  Returns the chosen handler and the confidence, and ALWAYS returns something:
- *  an unrecognised document gets the conservative handler rather than an error,
- *  because refusing to profile a document would just move the special case back
- *  out into the caller. */
+ *  A thin wrapper over the shared registry that adds the stack axis's own
+ *  extra — the document `kind` its handler reads from the address. Always returns a
+ *  handler: an unrecognised document gets the conservative one rather than an error. */
 function identify(ctx) {
-  const considered = [];
-  let best = null;
-  for (const h of HANDLERS) {
-    const d = h.detect(ctx) || { match: false };
-    if (d.match) considered.push({ handler: h.key, confidence: d.confidence, signals: d.signals || [] });
-    if (!d.match) continue;
-    if (!best || RANK[d.confidence] > RANK[best.confidence]) best = { handler: h, ...d };
-    if (d.confidence === CONFIDENCE.CERTAIN) break;
-  }
-  if (!best) {
-    const fb = HANDLERS.find((h) => h.conservative);
-    return { handler: fb, confidence: CONFIDENCE.NONE, signals: [], considered,
+  const r = stacks.recognise(ctx);
+  const handler = r.member;
+  if (!r.matched)
+    return { handler, confidence: CONFIDENCE.NONE, signals: [], considered: r.considered,
              why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported" };
-  }
-  return { handler: best.handler, confidence: best.confidence, signals: best.signals || [], considered,
-           kind: best.handler.kind ? best.handler.kind(ctx) : "unknown" };
+  return { handler, confidence: r.confidence, signals: r.signals, considered: r.considered,
+           kind: handler.kind ? handler.kind(ctx) : "unknown" };
 }
-const RANK = { none: 0, possible: 1, likely: 2, certain: 3 };
 
 /** Everything the record should keep about how a document was profiled. Written
  *  onto the capture, because a later session must be able to see WHICH handler
@@ -1930,183 +2079,6 @@ function profileRecord(id, ctx) {
     at: (ctx && ctx.now) || new Date().toISOString().split(".")[0] + "Z",
     note: id.why || null,
   };
-}
-
-/* ---- docprofile/monitoring.mjs ---- */
-/* Monitoring, by what kind of document it is.
- *
- * RULED by Bob, 2026-07-30: `index` versus `record` changes monitoring's
- * BEHAVIOUR, not just which normalisation rules apply.
- *
- * WHY. A Legistar calendar changing is the calendar working. A
- * LegislationDetail.aspx page changing is an event somebody should look at. One
- * monitoring contract cannot serve both, and applying the record's contract to an
- * index is what turns monitoring into noise on exactly the pages BIO watches most
- * closely: an index changes every time the body it indexes does anything, so a
- * substance check on it fires constantly and gets ignored, and then the one change
- * that mattered arrives in the same undifferentiated stream as the rest.
- *
- * The inversion is the point. On a RECORD, the question is "did the substance
- * change", and the answer is normally no. On an INDEX, the substance is a LIST, and
- * the question is not whether the list changed but what happened to its MEMBERS:
- *
- *   an entry vanished        a public record removed from a public list, which is
- *                            close to the reason this system exists
- *   an entry was altered     a meeting cancelled, an item's status moved, a
- *                            document swapped under a stable heading
- *   an entry appeared        the index doing its job
- *
- * MEASURED on oakland.legistar.com/Calendar.aspx, 2026-07-30: the page carries 18
- * meeting rows, each keyed by a stable `MeetingDetail.aspx?ID=` and each naming its
- * own agenda documents, and five of the eighteen read CANCELLED. A member watching
- * the Rules and Legislation Committee needs the cancellation. It is an alteration
- * to one row of an index: a substance check on the whole page would have reported
- * it in the same breath as a new meeting being scheduled three weeks out, and a
- * substance check on the committee's own detail page would not have seen it at all.
- *
- * AND THE NEGATIVE CASE, which Bob named as equally important. On an index,
- * "nothing changed" is a STRONGER claim than on a record, precisely because an
- * index is expected to move. Confirming that all eighteen members are present and
- * unaltered is a dated, first-party statement that nothing was quietly withdrawn,
- * and that is worth recording as evidence in its own right.
- */
-
-const CONTRACT = {
-  /* Watch the document's own substance. The normal case, and the answer is
-     normally that nothing changed. */
-  SUBSTANCE: "substance",
-  /* Watch the membership of a list. What matters is which entries are present and
-     whether each entry's own line still says what it said. */
-  MEMBERSHIP: "membership",
-  /* Watching is not meaningful. A client-rendered shell has stable bytes and no
-     substance, so a substance check on it reports "unchanged" forever while the
-     figures behind it move freely. Reporting that as monitoring would be the
-     system lying quietly, which is the worst failure available to it. */
-  UNMONITORABLE: "unmonitorable",
-};
-
-/* How much a member should be troubled. Ordered, so a report can lead with the
-   worst thing rather than the first thing. */
-const SIGNIFICANCE = { EVENT: "event", NOTICE: "notice", ROUTINE: "routine" };
-const SIG_RANK = { routine: 0, notice: 1, event: 2 };
-
-/** What contract applies, and what the watcher should therefore do. */
-function contract(handler, kind) {
-  if (handler.shell)
-    return { mode: CONTRACT.UNMONITORABLE, kind,
-             why: "this address builds its page in the browser, so watching the delivered "
-                + "bytes would report nothing changing while the figures behind it move" };
-  if (kind === "index" && typeof handler.members === "function")
-    return { mode: CONTRACT.MEMBERSHIP, kind,
-             why: "this is a list, so what matters is which entries are on it and whether "
-                + "each entry still says what it said, rather than whether the page differs" };
-  if (kind === "index")
-    /* An index whose handler cannot extract members must NOT fall back to a
-       substance check pretending to be useful. It falls back to a substance check
-       that says what it is: noisy, and a sign the handler needs members(). */
-    return { mode: CONTRACT.SUBSTANCE, kind, degraded: true,
-             why: "this is a list and its entries cannot be read individually yet, so any "
-                + "change to it will be reported without saying which entry moved" };
-  return { mode: CONTRACT.SUBSTANCE, kind,
-           why: "this is a record of one thing, so any change to its substance is worth attention" };
-}
-
-/** Diff two membership sets. Keys are the stable identity of an entry; `digest` is
- *  the entry's own line, so an entry that stayed but changed is distinguishable
- *  from one that left. */
-function diffMembers(before, after) {
-  const b = new Map(before.map((m) => [m.key, m]));
-  const a = new Map(after.map((m) => [m.key, m]));
-  const events = [];
-  for (const [key, was] of b) {
-    const now = a.get(key);
-    if (!now) {
-      /* The heaviest thing this system can notice. A record that was listed and is
-         no longer listed is not the absence of information, it is information. */
-      events.push({ type: "removed", significance: SIGNIFICANCE.EVENT, key,
-                    label: was.label, was: was.digest,
-                    why: "an entry that was on this list is no longer on it" });
-      continue;
-    }
-    if (now.digest !== was.digest)
-      events.push({ type: "altered", significance: SIGNIFICANCE.EVENT, key,
-                    label: now.label, was: was.label, now: now.label,
-                    why: "an entry on this list changed what it says" });
-  }
-  for (const [key, now] of a)
-    if (!b.has(key))
-      events.push({ type: "added", significance: SIGNIFICANCE.ROUTINE, key,
-                    label: now.label,
-                    why: "a new entry appeared, which is this list doing its job" });
-  events.sort((x, y) => SIG_RANK[y.significance] - SIG_RANK[x.significance]);
-  return { events, before_count: b.size, after_count: a.size };
-}
-
-/** Watch one document across two captures, under its own contract.
- *
- *  Always answers both directions. `changed` names what happened; `confirmed`
- *  states positively what was checked and found intact, because on an index that
- *  is the more valuable half and it is the half a diff normally throws away. */
-async function monitor(before, after, handler, ctx) {
-  const kind = handler.kind ? handler.kind(ctx) : "unknown";
-  const c = contract(handler, kind);
-  const base = { contract: c.mode, kind, handler: handler.key,
-                 confidence: ctx.confidence || CONFIDENCE.NONE };
-
-  if (c.mode === CONTRACT.UNMONITORABLE)
-    return { ...base, changed: null, events: [], confirmed: null, why: c.why };
-
-  if (c.mode === CONTRACT.MEMBERSHIP) {
-    const textOf = (b) => new TextDecoder("utf-8", { fatal: false }).decode(b);
-    const mb = handler.members({ ...ctx, text: textOf(before) });
-    const ma = handler.members({ ...ctx, text: textOf(after) });
-    /* Extraction that finds nothing is not a list with no entries. It is a reader
-       that failed, and reporting "every entry was removed" would be catastrophic
-       and confident. */
-    if (!mb.length || !ma.length)
-      return { ...base, changed: null, events: [], confirmed: null, degraded: true,
-               why: "the entries on this list could not be read this time, so nothing is claimed "
-                  + "about them either way" };
-    const d = diffMembers(mb, ma);
-    const worst = d.events.length ? d.events[0].significance : null;
-    return { ...base, changed: d.events.length > 0, events: d.events, significance: worst,
-             confirmed: { entries: ma.length,
-                          intact: mb.filter((m) => ma.some((x) => x.key === m.key && x.digest === m.digest)).length },
-             why: d.events.length
-               ? summarise(d.events)
-               : `all ${ma.length} entries on this list are still present and unchanged` };
-  }
-
-  const da = await digests(before, handler, ctx);
-  const db = await digests(after, handler, ctx);
-  if (base.confidence !== CONFIDENCE.CERTAIN && !handler.conservative)
-    return { ...base, changed: null, events: [], confirmed: null,
-             why: "the document differs and this kind of document is not recognised well enough "
-                + "to say whether the difference matters" };
-  if (da.evidentiary !== db.evidentiary)
-    return { ...base, changed: true, significance: SIGNIFICANCE.EVENT,
-             events: [{ type: "substance", significance: SIGNIFICANCE.EVENT,
-                        why: "the substance of this document changed" }],
-             confirmed: null, why: "the substance of this document changed" };
-  if (da.rendition !== db.rendition)
-    return { ...base, changed: false, significance: SIGNIFICANCE.NOTICE,
-             events: [{ type: "restyled", significance: SIGNIFICANCE.NOTICE,
-                        why: "something around the document changed, such as navigation" }],
-             confirmed: { substance: true },
-             why: "the document itself is unchanged; something around it moved" };
-  return { ...base, changed: false, events: [], confirmed: { substance: true },
-           why: da.identity === db.identity
-             ? "the source served exactly the same document"
-             : "the document is unchanged; only machinery this site rebuilds on every visit differs" };
-}
-
-function summarise(events) {
-  const n = (t) => events.filter((e) => e.type === t).length;
-  const parts = [];
-  if (n("removed")) parts.push(`${n("removed")} ${n("removed") === 1 ? "entry is" : "entries are"} no longer listed`);
-  if (n("altered")) parts.push(`${n("altered")} ${n("altered") === 1 ? "entry" : "entries"} changed`);
-  if (n("added")) parts.push(`${n("added")} new ${n("added") === 1 ? "entry" : "entries"}`);
-  return parts.join(", ");
 }
 
 /* ---- docprofile/handlers/client-rendered.mjs ---- */
@@ -2301,32 +2273,13 @@ const aspnetWebforms = {
     return /<main\b[^>]*>([\s\S]*)<\/main>/i;
   },
 
-  /* The entries on an index, keyed so one can be told from another across fetches.
-     MEASURED on Calendar.aspx: 41 table rows inside <main>, of which 18 carry a
-     MeetingDetail link with a stable numeric ID, and five of those eighteen read
-     CANCELLED. The ID is the key because it survives the row moving, the title
-     being edited and the grid being re-sorted; the row's own visible text is the
-     digest, so a cancellation is an ALTERED entry rather than a page that differs.
-
-     Legistar's document links (View.ashx?M=A for an agenda, M=IC for minutes) are
-     folded into the digest deliberately: an agenda being swapped under an unchanged
-     heading is exactly the kind of quiet substitution a member would want flagged,
-     and it changes no other part of the row. */
-  members(ctx) {
-    const text = String(ctx.text || "");
-    const main = /<main\b[^>]*>([\s\S]*)<\/main>/i.exec(text);
-    const scope = main ? main[1] : text;
-    const out = [];
-    for (const row of scope.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || []) {
-      const raw = unescapeHtml(row);
-      const id = /(?:Meeting|Legislation|MatterFile|Person)Detail\.aspx\?ID=(\d+)/i.exec(raw);
-      if (!id) continue;
-      const label = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-      const docs = (raw.match(/View\.ashx\?[^"'\s]*/gi) || []).sort().join(" ");
-      out.push({ key: id[1], label: label.slice(0, 160), digest: label + " || " + docs });
-    }
-    return out;
-  },
+  /* Membership — the entries on an index and which one changed — used to live here as
+     members(), keyed by the MeetingDetail id. It has moved to the CONTENT-TYPE axis,
+     where CONSTRUCTS Step 0 says it belongs: the Legistar row extraction now lives in
+     the meeting_calendar content type's parse(), which reads the same rows into named
+     facts (so it can say WHICH fact moved) and kills the relative-window false positive
+     a stack-level digest could not. The stack answers "how was this built"; "what is
+     on the list" is the content type's question. */
 
   /* Stylesheets decide whether the page reads as the source published it, so a
      missing one makes the rendition unfaithful. An icon or a background image does
@@ -2464,23 +2417,13 @@ const wordpress = {
     return /<article\b[^>]*>([\s\S]*)<\/article>/i;
   },
 
-  /* The entries on a listing, keyed by permalink. A headline being rewritten under
-     the same URL is an alteration worth seeing; a story dropping off the front page
-     is routine on a news site and is NOT treated as a removal, because a front page
-     rotates by design and flagging that would be the noise this contract exists to
-     avoid. Kept for section and category pages where membership is meaningful. */
-  members(ctx) {
-    const text = String(ctx.text || "");
-    const out = [];
-    for (const art of text.match(/<article\b[^>]*>[\s\S]*?<\/article>/gi) || []) {
-      const raw = unescapeHtml(art);
-      const href = /<a[^>]+href="([^"#?]+)"/i.exec(raw);
-      if (!href) continue;
-      const label = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-      out.push({ key: href[1], label: label.slice(0, 160), digest: label });
-    }
-    return out;
-  },
+  /* Listing membership — which stories are on a section or category page and which
+     headline was rewritten — used to live here as members(), keyed by permalink. It
+     is gone with its only consumer (the deleted monitor()): membership is the
+     CONTENT-TYPE axis's question now (CONSTRUCTS Step 0), and there is no WordPress
+     content type yet. When one is measured and written (Step 9) the extraction lands
+     there, on named facts, not back on the stack handler. The measurement that shaped
+     it is preserved in this file's header and in git history. */
 
   renderCritical(part) { return part.kind === "stylesheet"; },
   ignorable(part) {
@@ -2513,7 +2456,12 @@ const conservative = {
   key: "conservative",
   label: "an unrecognised document",
   version: 1,
+  /* `conservative` licenses the narrowing-without-certainty rule in compare()/assess();
+     `fallback` is what the shared registry looks for when nothing detects. This is
+     both the fallback member and the one handler whose rules are trusted without a
+     certain detection, and both facts are true of it. */
   conservative: true,
+  fallback: true,
   textual: true,
 
   /* Never claims a match: the registry reaches this handler by falling through,
@@ -2571,8 +2519,20 @@ const conservative = {
  * honest, and the noise is the signal that the type is worth measuring.
  */
 
-/** How sure we are that this is that kind of document. */
-const TYPE_CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", NONE: "none" };
+/* The content-type axis uses the ONE confidence ladder, re-exported here so content
+   types can pull it alongside entity/connection. TYPE_CONFIDENCE is gone: it was
+   CONFIDENCE duplicated because this axis was split off after the stack axis already
+   had a ladder (CONSTRUCTS Step 0 #1). A content type simply never returns `possible`;
+   the ladder is still one ladder. */
+
+/* What WATCHING this kind of document should do, DECLARED by the content type rather
+   than derived from the stack handler (CONSTRUCTS Step 0 #4). The kind is the content
+   type's business now, and so is the contract that follows from it. `unmonitorable`
+   is the shell case, which the stack axis already settles at layer 1 of assess(); a
+   content type declares SUBSTANCE (watch its own substance — the normal case) or
+   MEMBERSHIP (watch which entries are present and whether each still says what it
+   said — a list). */
+const CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" };
 
 /** An entity a content type found in a document. `key` must be stable across
  *  fetches: a position in a list is not a key, an id in a URL is. `facts` are the
@@ -2664,6 +2624,7 @@ function diffEntities(before, after) {
  */
 
 
+
 /* How long after a meeting minutes stop being merely late. Not a guess dressed as
    a rule: Oakland's own practice is the thing to measure, and until it is measured
    this is a threshold for RAISING A QUESTION, never for asserting a violation. */
@@ -2681,6 +2642,10 @@ const meetingCalendar = {
   key: "meeting_calendar",
   label: "a meeting calendar",
   version: 1,
+  /* A list, so what matters is its MEMBERSHIP — which meetings are on it and whether
+     each still says what it said — not whether the page differs. Declared here on the
+     content type (CONSTRUCTS Step 0 #4) rather than derived from the stack handler. */
+  contract: CONTRACT.MEMBERSHIP,
 
   detect(ctx) {
     const t = String(ctx.text || "");
@@ -2693,9 +2658,9 @@ const meetingCalendar = {
     /* The detail links are the definitive signal: a page listing meetings by id IS
        a meeting calendar whatever it is called. */
     if (signals.includes("meeting detail links") && signals.length >= 2)
-      return { match: true, confidence: TYPE_CONFIDENCE.CERTAIN, signals };
-    if (signals.length >= 2) return { match: true, confidence: TYPE_CONFIDENCE.LIKELY, signals };
-    return { match: false, confidence: TYPE_CONFIDENCE.NONE };
+      return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    if (signals.length >= 2) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
   },
 
   /** What is in it: the window it shows, and one entity per meeting. */
@@ -2767,37 +2732,41 @@ const meetingCalendar = {
       return t >= w.from && t <= w.to;
     };
 
+    /* Every event below is built with event(type, ...), which stamps the significance
+       from the shared catalogue (events.mjs) rather than inline here — so the grade
+       lives in one place and a typo'd type throws instead of quietly becoming routine.
+       `meaningful` and `worst` are then DERIVED from those graded events, never
+       carried as separate facts (CONSTRUCTS Step 0 #5, #6). */
+
     /* GONE: only a delisting if the meeting's date is inside the range the new
        capture actually shows. This is the whole reason this type exists. */
     let scrolled = 0;
     for (const e of d.gone) {
       const within = inWindow(e.facts.date);
       if (within === false) { scrolled++; continue; }
-      events.push({ type: within === null ? "possibly_delisted" : "delisted",
-                    significance: "event", key: e.key, label: e.label,
-                    why: within === null
-                      ? "a meeting is no longer listed, and this calendar's date range could not be "
-                      + "read, so whether it simply moved out of view is not established"
-                      : "a meeting dated inside the range this calendar shows is no longer listed" });
+      events.push(event(within === null ? "possibly_delisted" : "delisted",
+                    { key: e.key, label: e.label,
+                      why: within === null
+                        ? "a meeting is no longer listed, and this calendar's date range could not be "
+                        + "read, so whether it simply moved out of view is not established"
+                        : "a meeting dated inside the range this calendar shows is no longer listed" }));
     }
 
     for (const alt of d.altered) {
       const f = new Map(alt.moved.map((m) => [m.fact, m]));
       if (f.has("status")) {
         const now = f.get("status").now;
-        events.push({ type: now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
-                      significance: "event", key: alt.entity.key, label: alt.entity.label,
-                      was: f.get("status").was, now,
-                      why: `a meeting's status changed from ${f.get("status").was} to ${now}` });
+        events.push(event(now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
+                      { key: alt.entity.key, label: alt.entity.label, was: f.get("status").was, now,
+                        why: `a meeting's status changed from ${f.get("status").was} to ${now}` }));
       }
       if (f.has("date"))
-        events.push({ type: "moved", significance: "event", key: alt.entity.key,
-                      label: alt.entity.label, was: f.get("date").was, now: f.get("date").now,
-                      why: "a meeting's date changed" });
+        events.push(event("moved", { key: alt.entity.key, label: alt.entity.label,
+                      was: f.get("date").was, now: f.get("date").now, why: "a meeting's date changed" }));
       if (f.has("body"))
-        events.push({ type: "renamed", significance: "notice", key: alt.entity.key,
+        events.push(event("renamed", { key: alt.entity.key,
                       was: f.get("body").was, now: f.get("body").now,
-                      why: "the body holding a meeting is named differently" });
+                      why: "the body holding a meeting is named differently" }));
       /* A document APPEARING is the normal course of business and is a routine
          event with a temporal connection attached. A document DISAPPEARING or being
          SWAPPED is not: a published agenda or set of minutes that stops being the
@@ -2806,29 +2775,25 @@ const meetingCalendar = {
         if (!f.has(kind)) continue;
         const { was, now } = f.get(kind);
         if (!was && now)
-          events.push({ type: `${kind}_published`, significance: "routine", key: alt.entity.key,
-                        label: alt.entity.label, document: now,
-                        why: `${kind} were published for a meeting that had none` });
+          events.push(event(`${kind}_published`, { key: alt.entity.key, label: alt.entity.label,
+                        document: now, why: `${kind} were published for a meeting that had none` }));
         else if (was && !now)
-          events.push({ type: `${kind}_withdrawn`, significance: "event", key: alt.entity.key,
-                        label: alt.entity.label,
-                        why: `${kind} that this calendar previously offered are no longer offered` });
+          events.push(event(`${kind}_withdrawn`, { key: alt.entity.key, label: alt.entity.label,
+                        why: `${kind} that this calendar previously offered are no longer offered` }));
         else
-          events.push({ type: `${kind}_replaced`, significance: "event", key: alt.entity.key,
-                        label: alt.entity.label, was, now,
-                        why: `the ${kind} document for this meeting is a different document than before` });
+          events.push(event(`${kind}_replaced`, { key: alt.entity.key, label: alt.entity.label,
+                        was, now, why: `the ${kind} document for this meeting is a different document than before` }));
       }
     }
 
     /* A meeting appearing is the calendar doing its job. */
     for (const e of d.appeared)
-      events.push({ type: "scheduled", significance: "routine", key: e.key, label: e.label,
-                    why: "a meeting was added to the calendar" });
+      events.push(event("scheduled", { key: e.key, label: e.label,
+                    why: "a meeting was added to the calendar" }));
 
-    const RANKS = { routine: 0, notice: 1, event: 2 };
-    events.sort((x, y) => RANKS[y.significance] - RANKS[x.significance]);
-    const worst = events.length ? events[0].significance : null;
-    const meaningful = events.some((e) => e.significance === "event");
+    bySeverity(events);
+    const worst = worstSignificance(events);
+    const meaningful = isMeaningful(events);
 
     /* The confirmation half, kept even when something did change, because on a
        calendar most of it did not and that is worth saying. */
@@ -2905,8 +2870,16 @@ const meetingCalendar = {
 
 const generic = {
   key: "generic", label: "a document of no recognised type", version: 1, fallback: true,
-  detect() { return { match: false, confidence: TYPE_CONFIDENCE.NONE }; },
+  /* Watch its substance: with no reader for its members, the whole document is the
+     unit. This is the declared contract (CONSTRUCTS Step 0 #4), not one derived from
+     the stack that served it. */
+  contract: CONTRACT.SUBSTANCE,
+  detect() { return { match: false, confidence: CONFIDENCE.NONE }; },
   parse() { return { entities: [], facts: {} }; },
+  /* The one deliberate place `meaningful` is NOT derived from event significance:
+     with no type there are no graded events, but a substantive difference in an
+     unrecognised document must still be flagged. So it is asserted true, in the safe
+     direction, and left undescribed. */
   assess() {
     return { meaningful: true, significance: "notice", events: [], confirmed: null,
              why: "the substance of this document changed; what kind of document it is has not "
@@ -2915,42 +2888,37 @@ const generic = {
 };
 
 /* ---- docprofile/doctypes/registry.mjs ---- */
-/* Content types, in priority order. Same discipline as the stack registry: the
-   most specific first, the first CERTAIN detection wins, and the fallback never
-   matches and is only ever reached by falling through.
+/* The CONTENT-TYPE axis: a second registry of the SAME shape as the stack axis.
+ *
+ * Before CONSTRUCTS Step 0 this file carried its own ordered loop and its own rank
+ * table, a near-duplicate of the stack registry's. Now both axes are `makeRegistry()`
+ * instances of the one recogniser engine (recogniser.mjs), which is the whole claim
+ * of framework §4: a third axis is a third `makeRegistry()`, not a third loop.
+ *
+ * Only ONE real type is registered today, and that is deliberate rather than
+ * unfinished. meeting_calendar is written from a page that was fetched, diffed and
+ * read. A regulation, a staff directory, a set of meeting minutes and an agenda are
+ * all named in the design doc as types worth having and none has been measured, so
+ * none is written: a content type invented from what a document probably looks like
+ * is a type that reassures people about things it has not understood. The generic type
+ * reports change without describing it, which is noisy and honest, and the noise is
+ * the prompt to go and measure. */
 
-   Only ONE real type is registered today, and that is deliberate rather than
-   unfinished. meeting_calendar is written from a page that was fetched, diffed and
-   read. A regulation, a staff directory, a set of meeting minutes and an agenda are
-   all named in the design doc as types worth having and none has been measured, so
-   none is written: a content type invented from what a document probably looks like
-   is a type that reassures people about things it has not understood. The generic
-   type reports change without describing it, which is noisy and honest, and the
-   noise is the prompt to go and measure. */
 
 
+/* generic carries `fallback: true`, so the shared registry returns it when nothing
+   detects — same mechanism as the conservative handler on the stack axis. */
+const types = makeRegistry();
+types.register(meetingCalendar);
+types.register(generic);
 
+function doctypes() { return types.all(); }
 
-const TYPES = [meetingCalendar, generic];
-function doctypes() { return TYPES.slice(); }
-
-const TYPE_RANK = { none: 0, likely: 1, certain: 2 };
-
-/** Identify what KIND of content this is, independently of the stack that served
- *  it. Always returns something; an unrecognised type gets `generic`. */
+/** Identify what KIND of content this is, independently of the stack that served it.
+ *  A thin wrapper over the shared registry; always returns something. */
 function doctypeFor(ctx) {
-  let best = null;
-  const considered = [];
-  for (const t of TYPES) {
-    const d = t.detect(ctx) || { match: false };
-    if (d.match) considered.push({ type: t.key, confidence: d.confidence });
-    if (!d.match) continue;
-    if (!best || TYPE_RANK[d.confidence] > TYPE_RANK[best.confidence]) best = { type: t, ...d };
-    if (d.confidence === TYPE_CONFIDENCE.CERTAIN) break;
-  }
-  if (!best) return { type: TYPES[TYPES.length - 1], confidence: TYPE_CONFIDENCE.NONE,
-                      signals: [], considered };
-  return { type: best.type, confidence: best.confidence, signals: best.signals || [], considered };
+  const r = types.recognise(ctx);
+  return { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered };
 }
 
 /* ---- docprofile/pipeline.mjs ---- */
@@ -3027,30 +2995,33 @@ async function assess(before, after, ctx) {
     return out({ verdict: "unwatchable", meaningful: null, events: [], connections: [],
                  why: id.handler.warning });
 
-  /* ---- L2: anything different at all ---- */
-  const sha = ctx.sha256;
-  const [ha, hb] = [await sha(before), await sha(after)];
-  if (ha === hb) {
+  /* ---- L2 and L3: is anything different, and is it noteworthy ----
+     Both layers are the job of compare(), the L3 primitive, so the pipeline no longer
+     carries its own copy of the digest logic (CONSTRUCTS Step 0 #2). compare() returns
+     the verdict AND the two digest objects, so the trail can still report how much was
+     normalised and where reasoning stopped. */
+  const dctx = { ...ctx, text, confidence: id.confidence };
+  const cmp = await compare(before, after, id.handler, dctx);
+  const da = cmp.digests.before, db = cmp.digests.after;
+
+  if (cmp.verdict === "identical") {
     note(LAYER.BYTES, "identical bytes");
     /* NOTED, per Bob, not discarded. This is the confirmation half and on a
        frequently-checked source it is the majority of all observations. */
     return out({ verdict: "identical", meaningful: false, events: [], connections: [],
-                 confirmation: { kind: "identical_bytes", hash: ha, at: ctx.after_at || null,
+                 confirmation: { kind: "identical_bytes", hash: db.identity, at: ctx.after_at || null,
                    why: "the source served exactly the bytes the record holds" },
                  why: "the source is still serving exactly what the record holds" });
   }
-  note(LAYER.BYTES, "the bytes differ", { before: ha.slice(0, 12), after: hb.slice(0, 12) });
+  note(LAYER.BYTES, "the bytes differ", { before: da.identity.slice(0, 12), after: db.identity.slice(0, 12) });
 
-  /* ---- L3: is the difference noteworthy ---- */
-  const dctx = { ...ctx, text, confidence: id.confidence };
-  const [da, db] = [await digests(before, id.handler, dctx), await digests(after, id.handler, dctx)];
-  if (id.confidence !== CONFIDENCE.CERTAIN && !id.handler.conservative) {
+  if (cmp.verdict === "undetermined") {
     note(LAYER.NOTEWORTHY, "cannot say: the stack is not recognised confidently enough");
     return out({ verdict: "undetermined", meaningful: null, events: [], connections: [],
                  why: "the document differs and this kind of document is not recognised well "
                     + "enough to say whether the difference matters" });
   }
-  if (da.evidentiary === db.evidentiary && da.rendition === db.rendition) {
+  if (cmp.verdict === "unchanged") {
     note(LAYER.NOTEWORTHY, "only per-render machinery differs",
          { normalised: da.mechanical_bytes });
     /* Still a confirmation, and a slightly weaker one than identical bytes: the
@@ -3062,7 +3033,7 @@ async function assess(before, after, ctx) {
                    why: "the substance is the same; only machinery this site rebuilds on every visit differs" },
                  why: "the document is unchanged; only machinery this site rebuilds differs" });
   }
-  if (da.evidentiary === db.evidentiary) {
+  if (cmp.verdict === "restyled") {
     note(LAYER.NOTEWORTHY, "only the surroundings differ",
          { normalised: da.presentational_bytes });
     return out({ verdict: "restyled", meaningful: false, events: [], connections: [],
@@ -3070,6 +3041,7 @@ async function assess(before, after, ctx) {
                    why: "the document itself is unchanged; the site around it changed" },
                  why: "the document itself is unchanged; something around it moved, such as navigation" });
   }
+  /* cmp.verdict === "changed": the substance itself differs, so keep going. */
   note(LAYER.NOTEWORTHY, "the substance differs");
 
   /* ---- L4: what type of content ---- */
@@ -3125,7 +3097,6 @@ register(clientRendered);
 register(aspnetWebforms);
 register(wordpress);
 register(conservative);
-register(clientRendered); register(aspnetWebforms); register(wordpress); register(conservative);
 /*__DOCPROFILE_END__*/
 
 /* ============================================================

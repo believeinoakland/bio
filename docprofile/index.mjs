@@ -64,6 +64,13 @@
  * Handlers earn the right to narrow that, per stack, on measurement.
  */
 
+import { makeRegistry, CONFIDENCE } from "./recogniser.mjs";
+
+/* The confidence ladder is ONE ladder now, defined in recogniser.mjs and used by
+   every axis (CONSTRUCTS Step 0 #1). It is re-exported here so the many existing
+   importers of `CONFIDENCE` from this module keep working. */
+export { CONFIDENCE };
+
 /** Entity-decode enough to make an href comparable. Deliberately minimal: this is
  *  used to READ keys out of markup, never to rewrite anything the record holds. */
 export function unescapeHtml(s) {
@@ -72,11 +79,6 @@ export function unescapeHtml(s) {
 }
 
 export const REGION = { EVIDENTIARY: "evidentiary", PRESENTATIONAL: "presentational", MECHANICAL: "mechanical" };
-
-/* Confidence in a detection, because a handler applied to the wrong document is
-   how a real change gets hidden. Only `certain` licenses a handler's narrowing
-   rules; anything weaker falls back to conservative treatment and says so. */
-export const CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", POSSIBLE: "possible", NONE: "none" };
 
 const PLACEHOLDER = "\u0000BIO-NORMALISED\u0000";
 
@@ -158,8 +160,15 @@ export async function digests(bytes, handler, ctx) {
   };
 }
 
-/** Has this document changed, and in what sense? The answer a member is owed is
- *  the `evidentiary` line; everything else is for the record.
+/** The layer-3 primitive: has this document changed, and in what sense? NOT a public
+ *  entry point — `assess()` is the one entry point for the layered change question
+ *  and it CALLS this to settle layers 2 and 3 (CONSTRUCTS Step 0 #2: monitor() was
+ *  deleted, compare() demoted to the primitive it always was). It stays exported
+ *  only for the pure duplicate-detection caller that wants the L3 answer without the
+ *  content-type layers above it, and for the suite that pins its three verdicts.
+ *
+ *  The answer a member is owed is the `evidentiary` line; everything else is for the
+ *  record.
  *
  *  `verdict` is one of:
  *    identical      the source served the same bytes
@@ -218,41 +227,33 @@ export function fidelity(manifest, handler, ctx) {
            why: "everything the page needs to read correctly is held; some decoration is not" };
 }
 
-/* ---- the registry ---- */
+/* ---- the STACK axis: one registry of the shared shape ----
+   The host-stack recognisers live on a `makeRegistry()` instance exactly like the
+   content-type axis does, so there is no longer an `identify`-shaped loop written
+   twice. registry.mjs registers the handlers into this instance at import; the
+   handlers themselves are the recognisers. */
+const stacks = makeRegistry();
 
-const HANDLERS = [];
-/** Handlers are ordered most specific first and the first CERTAIN detection wins;
-   registration order is the tie-break, so a stack handler must be registered
-   ahead of the generic ones. */
-export function register(handler) { HANDLERS.push(handler); return handler; }
-export function handlers() { return HANDLERS.slice(); }
+/** Add a handler to the stack registry. Ordered most specific first; the conservative
+   handler carries `fallback: true` and is only ever reached by falling through. */
+export function register(handler) { return stacks.register(handler); }
+export function handlers() { return stacks.all(); }
 
-/** Identify the document. `ctx` carries whatever the caller knows: the response
- *  headers, the locator, the content type, and the decoded text.
+/** Identify the document's host stack. `ctx` carries whatever the caller knows: the
+ *  response headers, the locator, the content type, and the decoded text.
  *
- *  Returns the chosen handler and the confidence, and ALWAYS returns something:
- *  an unrecognised document gets the conservative handler rather than an error,
- *  because refusing to profile a document would just move the special case back
- *  out into the caller. */
+ *  A thin wrapper over the shared registry that adds the stack axis's own
+ *  extra — the document `kind` its handler reads from the address. Always returns a
+ *  handler: an unrecognised document gets the conservative one rather than an error. */
 export function identify(ctx) {
-  const considered = [];
-  let best = null;
-  for (const h of HANDLERS) {
-    const d = h.detect(ctx) || { match: false };
-    if (d.match) considered.push({ handler: h.key, confidence: d.confidence, signals: d.signals || [] });
-    if (!d.match) continue;
-    if (!best || RANK[d.confidence] > RANK[best.confidence]) best = { handler: h, ...d };
-    if (d.confidence === CONFIDENCE.CERTAIN) break;
-  }
-  if (!best) {
-    const fb = HANDLERS.find((h) => h.conservative);
-    return { handler: fb, confidence: CONFIDENCE.NONE, signals: [], considered,
+  const r = stacks.recognise(ctx);
+  const handler = r.member;
+  if (!r.matched)
+    return { handler, confidence: CONFIDENCE.NONE, signals: [], considered: r.considered,
              why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported" };
-  }
-  return { handler: best.handler, confidence: best.confidence, signals: best.signals || [], considered,
-           kind: best.handler.kind ? best.handler.kind(ctx) : "unknown" };
+  return { handler, confidence: r.confidence, signals: r.signals, considered: r.considered,
+           kind: handler.kind ? handler.kind(ctx) : "unknown" };
 }
-const RANK = { none: 0, possible: 1, likely: 2, certain: 3 };
 
 /** Everything the record should keep about how a document was profiled. Written
  *  onto the capture, because a later session must be able to see WHICH handler

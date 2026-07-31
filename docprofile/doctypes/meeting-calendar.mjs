@@ -28,7 +28,8 @@
  * the most valuable thing this type produces. Minutes that have not appeared three
  * weeks after a meeting are a fact about the body, not a gap in the record.
  */
-import { TYPE_CONFIDENCE, entity, referential, temporal, diffEntities } from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities } from "./index.mjs";
+import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 import { unescapeHtml } from "../index.mjs";
 
 /* How long after a meeting minutes stop being merely late. Not a guess dressed as
@@ -48,6 +49,10 @@ export default {
   key: "meeting_calendar",
   label: "a meeting calendar",
   version: 1,
+  /* A list, so what matters is its MEMBERSHIP — which meetings are on it and whether
+     each still says what it said — not whether the page differs. Declared here on the
+     content type (CONSTRUCTS Step 0 #4) rather than derived from the stack handler. */
+  contract: CONTRACT.MEMBERSHIP,
 
   detect(ctx) {
     const t = String(ctx.text || "");
@@ -60,9 +65,9 @@ export default {
     /* The detail links are the definitive signal: a page listing meetings by id IS
        a meeting calendar whatever it is called. */
     if (signals.includes("meeting detail links") && signals.length >= 2)
-      return { match: true, confidence: TYPE_CONFIDENCE.CERTAIN, signals };
-    if (signals.length >= 2) return { match: true, confidence: TYPE_CONFIDENCE.LIKELY, signals };
-    return { match: false, confidence: TYPE_CONFIDENCE.NONE };
+      return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    if (signals.length >= 2) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
   },
 
   /** What is in it: the window it shows, and one entity per meeting. */
@@ -134,37 +139,41 @@ export default {
       return t >= w.from && t <= w.to;
     };
 
+    /* Every event below is built with event(type, ...), which stamps the significance
+       from the shared catalogue (events.mjs) rather than inline here — so the grade
+       lives in one place and a typo'd type throws instead of quietly becoming routine.
+       `meaningful` and `worst` are then DERIVED from those graded events, never
+       carried as separate facts (CONSTRUCTS Step 0 #5, #6). */
+
     /* GONE: only a delisting if the meeting's date is inside the range the new
        capture actually shows. This is the whole reason this type exists. */
     let scrolled = 0;
     for (const e of d.gone) {
       const within = inWindow(e.facts.date);
       if (within === false) { scrolled++; continue; }
-      events.push({ type: within === null ? "possibly_delisted" : "delisted",
-                    significance: "event", key: e.key, label: e.label,
-                    why: within === null
-                      ? "a meeting is no longer listed, and this calendar's date range could not be "
-                      + "read, so whether it simply moved out of view is not established"
-                      : "a meeting dated inside the range this calendar shows is no longer listed" });
+      events.push(event(within === null ? "possibly_delisted" : "delisted",
+                    { key: e.key, label: e.label,
+                      why: within === null
+                        ? "a meeting is no longer listed, and this calendar's date range could not be "
+                        + "read, so whether it simply moved out of view is not established"
+                        : "a meeting dated inside the range this calendar shows is no longer listed" }));
     }
 
     for (const alt of d.altered) {
       const f = new Map(alt.moved.map((m) => [m.fact, m]));
       if (f.has("status")) {
         const now = f.get("status").now;
-        events.push({ type: now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
-                      significance: "event", key: alt.entity.key, label: alt.entity.label,
-                      was: f.get("status").was, now,
-                      why: `a meeting's status changed from ${f.get("status").was} to ${now}` });
+        events.push(event(now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
+                      { key: alt.entity.key, label: alt.entity.label, was: f.get("status").was, now,
+                        why: `a meeting's status changed from ${f.get("status").was} to ${now}` }));
       }
       if (f.has("date"))
-        events.push({ type: "moved", significance: "event", key: alt.entity.key,
-                      label: alt.entity.label, was: f.get("date").was, now: f.get("date").now,
-                      why: "a meeting's date changed" });
+        events.push(event("moved", { key: alt.entity.key, label: alt.entity.label,
+                      was: f.get("date").was, now: f.get("date").now, why: "a meeting's date changed" }));
       if (f.has("body"))
-        events.push({ type: "renamed", significance: "notice", key: alt.entity.key,
+        events.push(event("renamed", { key: alt.entity.key,
                       was: f.get("body").was, now: f.get("body").now,
-                      why: "the body holding a meeting is named differently" });
+                      why: "the body holding a meeting is named differently" }));
       /* A document APPEARING is the normal course of business and is a routine
          event with a temporal connection attached. A document DISAPPEARING or being
          SWAPPED is not: a published agenda or set of minutes that stops being the
@@ -173,29 +182,25 @@ export default {
         if (!f.has(kind)) continue;
         const { was, now } = f.get(kind);
         if (!was && now)
-          events.push({ type: `${kind}_published`, significance: "routine", key: alt.entity.key,
-                        label: alt.entity.label, document: now,
-                        why: `${kind} were published for a meeting that had none` });
+          events.push(event(`${kind}_published`, { key: alt.entity.key, label: alt.entity.label,
+                        document: now, why: `${kind} were published for a meeting that had none` }));
         else if (was && !now)
-          events.push({ type: `${kind}_withdrawn`, significance: "event", key: alt.entity.key,
-                        label: alt.entity.label,
-                        why: `${kind} that this calendar previously offered are no longer offered` });
+          events.push(event(`${kind}_withdrawn`, { key: alt.entity.key, label: alt.entity.label,
+                        why: `${kind} that this calendar previously offered are no longer offered` }));
         else
-          events.push({ type: `${kind}_replaced`, significance: "event", key: alt.entity.key,
-                        label: alt.entity.label, was, now,
-                        why: `the ${kind} document for this meeting is a different document than before` });
+          events.push(event(`${kind}_replaced`, { key: alt.entity.key, label: alt.entity.label,
+                        was, now, why: `the ${kind} document for this meeting is a different document than before` }));
       }
     }
 
     /* A meeting appearing is the calendar doing its job. */
     for (const e of d.appeared)
-      events.push({ type: "scheduled", significance: "routine", key: e.key, label: e.label,
-                    why: "a meeting was added to the calendar" });
+      events.push(event("scheduled", { key: e.key, label: e.label,
+                    why: "a meeting was added to the calendar" }));
 
-    const RANKS = { routine: 0, notice: 1, event: 2 };
-    events.sort((x, y) => RANKS[y.significance] - RANKS[x.significance]);
-    const worst = events.length ? events[0].significance : null;
-    const meaningful = events.some((e) => e.significance === "event");
+    bySeverity(events);
+    const worst = worstSignificance(events);
+    const meaningful = isMeaningful(events);
 
     /* The confirmation half, kept even when something did change, because on a
        calendar most of it did not and that is worth saying. */

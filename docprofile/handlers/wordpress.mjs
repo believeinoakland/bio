@@ -17,7 +17,7 @@
  * MECHANICAL. A teaser rail is not machinery: it is really on the page, it is
  * captured, it renders, and it is not the article's claim about its subject.
  */
-import { REGION, CONFIDENCE, unescapeHtml } from "../index.mjs";
+import { REGION, CONFIDENCE } from "../index.mjs";
 
 export default {
   key: "wordpress",
@@ -121,23 +121,13 @@ export default {
     return /<article\b[^>]*>([\s\S]*)<\/article>/i;
   },
 
-  /* The entries on a listing, keyed by permalink. A headline being rewritten under
-     the same URL is an alteration worth seeing; a story dropping off the front page
-     is routine on a news site and is NOT treated as a removal, because a front page
-     rotates by design and flagging that would be the noise this contract exists to
-     avoid. Kept for section and category pages where membership is meaningful. */
-  members(ctx) {
-    const text = String(ctx.text || "");
-    const out = [];
-    for (const art of text.match(/<article\b[^>]*>[\s\S]*?<\/article>/gi) || []) {
-      const raw = unescapeHtml(art);
-      const href = /<a[^>]+href="([^"#?]+)"/i.exec(raw);
-      if (!href) continue;
-      const label = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-      out.push({ key: href[1], label: label.slice(0, 160), digest: label });
-    }
-    return out;
-  },
+  /* Listing membership — which stories are on a section or category page and which
+     headline was rewritten — used to live here as members(), keyed by permalink. It
+     is gone with its only consumer (the deleted monitor()): membership is the
+     CONTENT-TYPE axis's question now (CONSTRUCTS Step 0), and there is no WordPress
+     content type yet. When one is measured and written (Step 9) the extraction lands
+     there, on named facts, not back on the stack handler. The measurement that shaped
+     it is preserved in this file's header and in git history. */
 
   renderCritical(part) { return part.kind === "stylesheet"; },
   ignorable(part) {

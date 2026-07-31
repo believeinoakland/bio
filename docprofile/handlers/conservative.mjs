@@ -22,7 +22,12 @@ export default {
   key: "conservative",
   label: "an unrecognised document",
   version: 1,
+  /* `conservative` licenses the narrowing-without-certainty rule in compare()/assess();
+     `fallback` is what the shared registry looks for when nothing detects. This is
+     both the fallback member and the one handler whose rules are trusted without a
+     certain detection, and both facts are true of it. */
   conservative: true,
+  fallback: true,
   textual: true,
 
   /* Never claims a match: the registry reaches this handler by falling through,

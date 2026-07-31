@@ -37,7 +37,7 @@
  * which keeps the expensive parsing off the overwhelming majority of checks where
  * the bytes are identical or the difference is machinery.
  */
-import { identify, digests, CONFIDENCE, profileRecord } from "./index.mjs";
+import { identify, compare, profileRecord } from "./index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
 
 export const LAYER = {
@@ -72,30 +72,33 @@ export async function assess(before, after, ctx) {
     return out({ verdict: "unwatchable", meaningful: null, events: [], connections: [],
                  why: id.handler.warning });
 
-  /* ---- L2: anything different at all ---- */
-  const sha = ctx.sha256;
-  const [ha, hb] = [await sha(before), await sha(after)];
-  if (ha === hb) {
+  /* ---- L2 and L3: is anything different, and is it noteworthy ----
+     Both layers are the job of compare(), the L3 primitive, so the pipeline no longer
+     carries its own copy of the digest logic (CONSTRUCTS Step 0 #2). compare() returns
+     the verdict AND the two digest objects, so the trail can still report how much was
+     normalised and where reasoning stopped. */
+  const dctx = { ...ctx, text, confidence: id.confidence };
+  const cmp = await compare(before, after, id.handler, dctx);
+  const da = cmp.digests.before, db = cmp.digests.after;
+
+  if (cmp.verdict === "identical") {
     note(LAYER.BYTES, "identical bytes");
     /* NOTED, per Bob, not discarded. This is the confirmation half and on a
        frequently-checked source it is the majority of all observations. */
     return out({ verdict: "identical", meaningful: false, events: [], connections: [],
-                 confirmation: { kind: "identical_bytes", hash: ha, at: ctx.after_at || null,
+                 confirmation: { kind: "identical_bytes", hash: db.identity, at: ctx.after_at || null,
                    why: "the source served exactly the bytes the record holds" },
                  why: "the source is still serving exactly what the record holds" });
   }
-  note(LAYER.BYTES, "the bytes differ", { before: ha.slice(0, 12), after: hb.slice(0, 12) });
+  note(LAYER.BYTES, "the bytes differ", { before: da.identity.slice(0, 12), after: db.identity.slice(0, 12) });
 
-  /* ---- L3: is the difference noteworthy ---- */
-  const dctx = { ...ctx, text, confidence: id.confidence };
-  const [da, db] = [await digests(before, id.handler, dctx), await digests(after, id.handler, dctx)];
-  if (id.confidence !== CONFIDENCE.CERTAIN && !id.handler.conservative) {
+  if (cmp.verdict === "undetermined") {
     note(LAYER.NOTEWORTHY, "cannot say: the stack is not recognised confidently enough");
     return out({ verdict: "undetermined", meaningful: null, events: [], connections: [],
                  why: "the document differs and this kind of document is not recognised well "
                     + "enough to say whether the difference matters" });
   }
-  if (da.evidentiary === db.evidentiary && da.rendition === db.rendition) {
+  if (cmp.verdict === "unchanged") {
     note(LAYER.NOTEWORTHY, "only per-render machinery differs",
          { normalised: da.mechanical_bytes });
     /* Still a confirmation, and a slightly weaker one than identical bytes: the
@@ -107,7 +110,7 @@ export async function assess(before, after, ctx) {
                    why: "the substance is the same; only machinery this site rebuilds on every visit differs" },
                  why: "the document is unchanged; only machinery this site rebuilds differs" });
   }
-  if (da.evidentiary === db.evidentiary) {
+  if (cmp.verdict === "restyled") {
     note(LAYER.NOTEWORTHY, "only the surroundings differ",
          { normalised: da.presentational_bytes });
     return out({ verdict: "restyled", meaningful: false, events: [], connections: [],
@@ -115,6 +118,7 @@ export async function assess(before, after, ctx) {
                    why: "the document itself is unchanged; the site around it changed" },
                  why: "the document itself is unchanged; something around it moved, such as navigation" });
   }
+  /* cmp.verdict === "changed": the substance itself differs, so keep going. */
   note(LAYER.NOTEWORTHY, "the substance differs");
 
   /* ---- L4: what type of content ---- */

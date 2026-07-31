@@ -23,8 +23,21 @@
  * honest, and the noise is the signal that the type is worth measuring.
  */
 
-/** How sure we are that this is that kind of document. */
-export const TYPE_CONFIDENCE = { CERTAIN: "certain", LIKELY: "likely", NONE: "none" };
+/* The content-type axis uses the ONE confidence ladder, re-exported here so content
+   types can pull it alongside entity/connection. TYPE_CONFIDENCE is gone: it was
+   CONFIDENCE duplicated because this axis was split off after the stack axis already
+   had a ladder (CONSTRUCTS Step 0 #1). A content type simply never returns `possible`;
+   the ladder is still one ladder. */
+export { CONFIDENCE } from "../recogniser.mjs";
+
+/* What WATCHING this kind of document should do, DECLARED by the content type rather
+   than derived from the stack handler (CONSTRUCTS Step 0 #4). The kind is the content
+   type's business now, and so is the contract that follows from it. `unmonitorable`
+   is the shell case, which the stack axis already settles at layer 1 of assess(); a
+   content type declares SUBSTANCE (watch its own substance — the normal case) or
+   MEMBERSHIP (watch which entries are present and whether each still says what it
+   said — a list). */
+export const CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" };
 
 /** An entity a content type found in a document. `key` must be stable across
  *  fetches: a position in a list is not a key, an id in a URL is. `facts` are the

@@ -20,7 +20,7 @@
  * shows. That is a real change in the document and this handler must not hide it,
  * so nothing about calendar rows is normalised. Only the two hidden fields are.
  */
-import { REGION, CONFIDENCE, unescapeHtml } from "../index.mjs";
+import { REGION, CONFIDENCE } from "../index.mjs";
 
 const VIEWSTATE_FIELDS = "__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION"
                        + "|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY|__LASTFOCUS";
@@ -111,32 +111,13 @@ export default {
     return /<main\b[^>]*>([\s\S]*)<\/main>/i;
   },
 
-  /* The entries on an index, keyed so one can be told from another across fetches.
-     MEASURED on Calendar.aspx: 41 table rows inside <main>, of which 18 carry a
-     MeetingDetail link with a stable numeric ID, and five of those eighteen read
-     CANCELLED. The ID is the key because it survives the row moving, the title
-     being edited and the grid being re-sorted; the row's own visible text is the
-     digest, so a cancellation is an ALTERED entry rather than a page that differs.
-
-     Legistar's document links (View.ashx?M=A for an agenda, M=IC for minutes) are
-     folded into the digest deliberately: an agenda being swapped under an unchanged
-     heading is exactly the kind of quiet substitution a member would want flagged,
-     and it changes no other part of the row. */
-  members(ctx) {
-    const text = String(ctx.text || "");
-    const main = /<main\b[^>]*>([\s\S]*)<\/main>/i.exec(text);
-    const scope = main ? main[1] : text;
-    const out = [];
-    for (const row of scope.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || []) {
-      const raw = unescapeHtml(row);
-      const id = /(?:Meeting|Legislation|MatterFile|Person)Detail\.aspx\?ID=(\d+)/i.exec(raw);
-      if (!id) continue;
-      const label = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-      const docs = (raw.match(/View\.ashx\?[^"'\s]*/gi) || []).sort().join(" ");
-      out.push({ key: id[1], label: label.slice(0, 160), digest: label + " || " + docs });
-    }
-    return out;
-  },
+  /* Membership — the entries on an index and which one changed — used to live here as
+     members(), keyed by the MeetingDetail id. It has moved to the CONTENT-TYPE axis,
+     where CONSTRUCTS Step 0 says it belongs: the Legistar row extraction now lives in
+     the meeting_calendar content type's parse(), which reads the same rows into named
+     facts (so it can say WHICH fact moved) and kills the relative-window false positive
+     a stack-level digest could not. The stack answers "how was this built"; "what is
+     on the list" is the content type's question. */
 
   /* Stylesheets decide whether the page reads as the source published it, so a
      missing one makes the rendition unfaithful. An icon or a background image does

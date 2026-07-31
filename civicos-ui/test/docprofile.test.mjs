@@ -20,14 +20,29 @@
  *   4. A client-rendered shell is recognised AS a shell, because that is the one
  *      failure that is silent: stable bytes, a consistent hash, monitoring
  *      reporting unchanged forever, and nothing of substance in the record.
+ *   5. The Step 0 CONSOLIDATION holds: one confidence ladder shared by both axes,
+ *      assess() the only public entry point, CONTRACT declared by the content type,
+ *      one event catalogue, meaningful derived from significance, and a new axis
+ *      costing only a makeRegistry().
+ *
+ * NEGATIVE CONTROL: give the content axis a second confidence ladder (return a
+ * confidence value not in CONFIDENCE from meeting_calendar.detect) -> "the CONTENT
+ * axis grades on the SAME object" fails; OR re-export monitor()/diffMembers() as a
+ * public entry from registry.mjs -> "the superseded monitor() is gone" /
+ * "diffMembers is gone in favour of diffEntities" fails. Both RUN 2026-07-31 and both
+ * failed as required; restored and the suite is green.
  */
 import { webcrypto } from "crypto";
 import fs from "fs";
 import {
   identify, compare, digests, fidelity, profileRecord, handlers,
-  aspnetWebforms, wordpress, clientRendered, conservative, CONFIDENCE, REGION,
-  monitor, contract, diffMembers, CONTRACT, SIGNIFICANCE,
+  aspnetWebforms, wordpress, conservative, CONFIDENCE,
+  CONTRACT, SIGNIFICANCE, meetingCalendar, generic, makeRegistry, assess,
+  EVENTS, event, isMeaningful,
 } from "../../docprofile/registry.mjs";
+/* A namespace import so the negative controls can assert what is NO LONGER a public
+   entry point without a static-import link error on a name that is gone on purpose. */
+import * as DP from "../../docprofile/registry.mjs";
 
 const sha = async (b) => [...new Uint8Array(await webcrypto.subtle.digest("SHA-256", b))]
   .map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -197,87 +212,85 @@ ok("the shell handler is asked FIRST, since any stack can serve a shell",
    keys.indexOf("client_rendered") === 0);
 ok("and the conservative handler is asked last", keys[keys.length - 1] === "conservative");
 
-/* ---- 5. monitoring, by document kind ----
-   RULED by Bob: index versus record changes monitoring's BEHAVIOUR. A Legistar
-   calendar changing is the calendar working; a detail page changing is an event.
-   One contract cannot serve both, and applying the record's contract to an index
-   is what turns monitoring into noise on exactly the pages BIO watches most. */
-const idxCtx = ctxFor(LEGISTAR("<p>x</p>", VS, "Home"), LOC, H);
-ok("an index is watched for its MEMBERSHIP",
-   contract(aspnetWebforms, "index").mode === CONTRACT.MEMBERSHIP);
-ok("a record is watched for its SUBSTANCE",
-   contract(aspnetWebforms, "record").mode === CONTRACT.SUBSTANCE);
-ok("and a shell is not watchable at all, rather than reported unchanged forever",
-   contract(clientRendered, "shell").mode === CONTRACT.UNMONITORABLE);
-ok("which is said in terms of what would go wrong",
-   /report nothing changing while the figures behind it move/.test(contract(clientRendered, "shell").why));
-/* An index whose entries cannot be read must not pretend a substance check is
-   equivalent; it says it is degraded so the gap is visible. */
-ok("an index with no member reader falls back and SAYS it is degraded",
-   contract(conservative, "index").degraded === true);
+/* ---- 5. THE CONSOLIDATION this step performed (CONSTRUCTS Step 0 / D-68) ----
+ *
+ * This section used to test monitor(), contract() and diffMembers(): a second,
+ * SUPERSEDED entry point to the change question, keyed by a flat per-row digest and
+ * carrying the relative-window false positive the layered pipeline was built to kill.
+ * Step 0 deleted all three. Their BEHAVIOUR was not lost — the membership question is
+ * the content type's now, answered through assess() and the meeting_calendar type, and
+ * change-layers.test.mjs covers it end to end: a meeting delisted from inside the shown
+ * range is an event, a meeting that scrolled out of a relative window is NOT, an
+ * unreadable grid claims nothing, a swapped document under an unchanged heading is
+ * caught. The old assertions were not exempted; they moved to where the behaviour now
+ * lives, and this section asserts instead that the CONSOLIDATION holds, which is what
+ * the whole step is for.
+ *
+ * NEGATIVE CONTROL for this section: reintroduce a second confidence ladder (give the
+ * content axis its own TYPE_CONFIDENCE object) OR re-export monitor()/diffMembers() as
+ * a public entry, and this section fails. Verified by hand while writing it: aliasing
+ * meeting_calendar's confidence values to a second frozen object breaks "the content
+ * axis grades on the SAME object"; restoring `export { monitor }` in monitoring's place
+ * breaks "the superseded monitor() is gone". Both were run and both failed as required. */
 
-/* Real rows, keyed by the stable id, digested by their own visible text. */
-const ROW = (id, title, doc) =>
-  `<tr><td><a href="MeetingDetail.aspx?ID=${id}&amp;GUID=G${id}">${title}</a>` +
-  `<a href="View.ashx?M=A&amp;ID=${doc}">Agenda</a></td></tr>`;
-const CAL = (rows) => LEGISTAR(`<table>${rows.join("")}</table>`, VS, "Home");
-const three = [ROW(1, "Rules Committee 7/30 10:30 AM", 900),
-               ROW(2, "Public Safety 7/28 6:00 PM", 901),
-               ROW(3, "Life Enrichment 7/28 4:00 PM", 902)];
-const mon = (a, b) => monitor(enc(a), enc(b), aspnetWebforms,
-  { ...ctxFor(b, LOC, H), confidence: CONFIDENCE.CERTAIN });
+/* ONE CONFIDENCE LADDER, shared by both axes (Step 0 #1). */
+ok("there is exactly one confidence ladder, with four rungs",
+   typeof CONFIDENCE === "object" && Object.keys(CONFIDENCE).length === 4);
+ok("the STACK axis grades on it", Object.values(CONFIDENCE).includes(
+   aspnetWebforms.detect(ctxFor(LEGISTAR("<p>x</p>", VS, ""), LOC, H)).confidence));
+const calText = LEGISTAR('<table><tr><td><a href="MeetingDetail.aspx?ID=1">m</a>'
+  + '<a href="View.ashx?M=A&amp;ID=9">Agenda</a></td></tr></table><div>Date Range Dropdown</div>', VS, "");
+ok("the CONTENT axis grades on the SAME object, not a second ladder",
+   Object.values(CONFIDENCE).includes(meetingCalendar.detect({ text: calText, locator: LOC }).confidence));
+ok("the duplicated TYPE_CONFIDENCE ladder is gone", DP.TYPE_CONFIDENCE === undefined);
 
-let m = await mon(CAL(three), CAL(three));
-ok("an unchanged list reports no change", m.changed === false);
-/* The negative case, which Bob named as equally important. On an index this is a
-   STRONGER claim than on a record, because an index is expected to move. */
-ok("and CONFIRMS positively what it checked and found intact",
-   m.confirmed.entries === 3 && m.confirmed.intact === 3);
-ok("saying so in terms a member can rely on", /all 3 entries on this list are still present and unchanged/.test(m.why));
+/* ONE PUBLIC ENTRY POINT for the change question: assess() (Step 0 #2). */
+ok("assess() is the entry point", typeof assess === "function");
+ok("the superseded monitor() is gone as a public entry point", DP.monitor === undefined);
+ok("and contract(), which derived the contract from the stack handler, is gone", DP.contract === undefined);
+ok("diffMembers is gone in favour of diffEntities",
+   DP.diffMembers === undefined && typeof DP.diffEntities === "function");
+ok("compare() survives only as the internal L3 primitive assess() calls", typeof compare === "function");
+/* assess() is reachable and answers a calendar through the one entry point. */
+const acx = { sha256: sha, locator: LOC, headers: H, now: "2026-08-01T00:00:00Z" };
+const same = await assess(enc(calText), enc(calText), acx);
+ok("and it settles an unchanged capture at the byte layer", same.verdict === "identical");
 
-m = await mon(CAL(three), CAL([three[0], three[2]]));
-ok("an entry that vanished is a CHANGE", m.changed === true);
-ok("and is an event rather than a notice", m.significance === SIGNIFICANCE.EVENT);
-ok("named as no longer listed, which is the point of watching a public list",
-   m.events[0].type === "removed" && /no longer on it/.test(m.events[0].why));
-ok("carrying what it used to say, since the entry is gone from the new capture",
-   /Public Safety/.test(m.events[0].label));
+/* CONTRACT is DECLARED BY THE CONTENT TYPE now, not derived from the stack (Step 0 #4). */
+ok("a calendar declares it is watched for its MEMBERSHIP", meetingCalendar.contract === CONTRACT.MEMBERSHIP);
+ok("an unrecognised type declares it is watched for its SUBSTANCE", generic.contract === CONTRACT.SUBSTANCE);
+ok("the contract is the content type's own property, never a function of a handler",
+   aspnetWebforms.contract === undefined && wordpress.contract === undefined && conservative.contract === undefined);
 
-m = await mon(CAL(three), CAL([ROW(1, "Rules Committee 7/30 - CANCELLED", 900), three[1], three[2]]));
-ok("an entry that changed what it says is an event", m.changed === true && m.significance === SIGNIFICANCE.EVENT);
-ok("reported as altered, not as removed and added",
-   m.events[0].type === "altered" && m.events.length === 1);
-ok("with both what it said and what it says now", /CANCELLED/.test(m.events[0].now) && !/CANCELLED/.test(m.events[0].was));
+/* A SHARED EVENT CATALOGUE, and `meaningful` DERIVED from significance (Step 0 #5, #6). */
+ok("events draw their significance from one catalogue",
+   EVENTS.cancelled.significance === SIGNIFICANCE.EVENT
+   && EVENTS.minutes_published.significance === SIGNIFICANCE.ROUTINE
+   && EVENTS.renamed.significance === SIGNIFICANCE.NOTICE);
+ok("meaningful is DERIVED: an event makes it true", isMeaningful([event("cancelled", {})]) === true);
+ok("and a routine-only change does not, so it is not a second fact",
+   isMeaningful([event("minutes_published", {})]) === false);
+ok("an unknown event type THROWS rather than defaulting to routine, which is the "
+ + "ad-hoc-string failure the catalogue exists to prevent",
+   (() => { try { event("not_a_real_type", {}); return false; } catch { return true; } })());
 
-/* The quiet substitution: a document swapped under a heading that did not move. */
-m = await mon(CAL(three), CAL([ROW(1, "Rules Committee 7/30 10:30 AM", 9999), three[1], three[2]]));
-ok("a document swapped under an unchanged heading is caught",
-   m.changed === true && m.events[0].type === "altered");
-
-m = await mon(CAL(three), CAL([...three, ROW(4, "Special Meeting 8/15", 903)]));
-ok("a new entry is ROUTINE, because that is the list doing its job",
-   m.changed === true && m.significance === SIGNIFICANCE.ROUTINE);
-ok("and the worst thing is reported first when several happen at once",
-   (await mon(CAL(three), CAL([three[0], ROW(4, "New", 903)]))).events[0].type === "removed");
-
-/* Extraction failure must never read as every entry being removed. */
-m = await mon(CAL(three), LEGISTAR("<p>the grid failed to render</p>", VS, "Home"));
-ok("a list whose entries cannot be read claims NOTHING either way",
-   m.changed === null && m.degraded === true);
-ok("rather than reporting a mass removal", !m.events.length);
-
-/* A record still gets substance monitoring, with the furniture discounted. */
-const RLOC = "https://oakland.legistar.com/LegislationDetail.aspx?ID=7";
-const rmon = (a, b) => monitor(enc(a), enc(b), aspnetWebforms,
-  { ...ctxFor(b, RLOC, H), confidence: CONFIDENCE.CERTAIN });
-const rec1 = LEGISTAR("<p>Ordinance 13579, adopted</p>", VS, "Home");
-m = await rmon(rec1, LEGISTAR("<p>Ordinance 13579, adopted</p>", "ZZ" + "q".repeat(600), "Home"));
-ok("a record whose page state moved is unchanged", m.changed === false && m.contract === CONTRACT.SUBSTANCE);
-ok("and confirms its substance", m.confirmed.substance === true);
-m = await rmon(rec1, LEGISTAR("<p>Ordinance 13579, rescinded</p>", VS, "Home"));
-ok("a record whose substance moved is an event", m.changed === true && m.significance === SIGNIFICANCE.EVENT);
-m = await rmon(rec1, LEGISTAR("<p>Ordinance 13579, adopted</p>", VS, "Home Contact"));
-ok("a record whose furniture moved is a notice, not a change",
-   m.changed === false && m.significance === SIGNIFICANCE.NOTICE);
+/* THE DEEPER TEST (Bob's): a NEW axis costs only a registry. Build a third axis with
+   the shared helper and two recognisers; the same recognise() engine serves it —
+   first-certain-wins, highest-confidence, fall through to the fallback — with no new
+   loop written. This is the standing proof that the ENTITY axis (Step 4) is cheap. */
+const axis = makeRegistry();
+axis.register({ key: "widget", version: 1, label: "a widget",
+  detect: (c) => /widget/.test(c.text || "")
+    ? { match: true, confidence: CONFIDENCE.CERTAIN, signals: ["says widget"] }
+    : { match: false, confidence: CONFIDENCE.NONE } });
+axis.register({ key: "nothing", version: 1, label: "unrecognised", fallback: true,
+  detect: () => ({ match: false, confidence: CONFIDENCE.NONE }) });
+ok("a brand-new axis is one makeRegistry() and its recognisers, no bespoke loop",
+   typeof axis.recognise === "function" && axis.all().length === 2);
+ok("it detects through the shared engine", axis.recognise({ text: "a widget here" }).member.key === "widget");
+ok("reports how sure on the same one ladder", axis.recognise({ text: "widget" }).confidence === CONFIDENCE.CERTAIN);
+ok("and falls through to its fallback exactly like the two real axes",
+   axis.recognise({ text: "something else" }).member.key === "nothing"
+   && axis.recognise({ text: "something else" }).matched === false);
 
 console.log(`docprofile: ${n} assertions, all green`);
