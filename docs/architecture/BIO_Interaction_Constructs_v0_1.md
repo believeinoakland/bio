@@ -1,4 +1,4 @@
-# BIO interaction constructs v0.1
+# BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
 Written 2026-07-31 (session BOB) at Bob's direction: *"it's important that we define
 and create the proper UI constructs… a tasks construct that supports that action-flow
@@ -9,6 +9,91 @@ constructs."*
 framework's inventory (stack handlers, digests, content types). This document is about
 INTERACTION constructs — the shapes through which a member acts. They are unrelated
 and a session that conflates them will build the wrong thing.
+
+## Revision 0.2, 2026-07-31: the count came down, and here is the tradeoff
+
+Bob, on reading v0.1: *"Are you suggesting that each of these are different
+constructs? Maybe they are. But have you considered the tradeoffs between fewer
+constructs for users to understand and interact with versus more where each better
+suits their desired/expected experience for that action?"*
+
+The challenge lands. v0.1 derived its set from SYSTEM properties — does this have its
+own accountability rule, do its refusals share a shape — and then argued "five shapes,
+not forty screens" while presenting seven. The argument cut against the answer.
+
+### The conflation that produced too many
+
+**Construct count for the MEMBER is not type count for the MODEL, and v0.1 treated
+them as one number.** The system may need to hold proposals and tasks as distinct
+types — different accountability, different ageing, different visual treatment — while
+the member experiences ONE queue whose items tell them what they want. That is not a
+compromise; it is the correct layering. A member learns "my queue"; the model keeps
+two types inside it.
+
+Applying that, three of v0.1's seven collapse:
+
+- **BALLOT into the act.** From the member's side, endorsing an administrator and
+  disposing of a focus are the same motion: an authored decision with a reason that
+  goes on the record. What differs is that the ballot shows a tally and your act may
+  not be decisive — that is a STATUS DISPLAY, not a different interaction.
+- **PROPOSAL into the queue.** Adopt/defer/dismiss versus do/forward/resolve are
+  different verb sets on an item in a list, not different lists. The accountability
+  rules survive intact as properties of the type: a proposal must still LOOK derived
+  (D-82) and must still age rather than vanish (D-79).
+- **SELECTION-SCOPED** was already a modifier in v0.1 and stays one.
+
+### Where FEWER costs something, which is the other half of the tradeoff
+
+Collapsing is not free, and two places it would do real damage:
+
+**1. A member's existing mental model.** This is the test v0.1 lacked, and it is
+exactly what Bob's question names. People arrive with a model for SIGNING that is not
+"filling in a form": deliberate, ceremonial, hard to do by accident. If ratification
+becomes a variation of the act surface, the ceremony is lost — and the ceremony IS the
+safeguard. A published hash answers forever; D-114 refused to loosen that fence on one
+session's reading of one sentence, and the interface must not be looser than the check.
+
+**2. Weight flattening.** If dismissing a focus and publishing a document are the same
+shape with different labels, the member's hand learns one motion and the difference
+stops being felt. That is a doctrine failure wearing a usability improvement.
+
+So the answer is not "as few as possible". It is: **collapse where the member's
+experience is genuinely the same motion; keep separate where their existing model, or
+the weight of the act, would be violated by sameness.**
+
+### The revised set: TWO constructs, one ladder, one primitive
+
+| | what the member learns |
+| --- | --- |
+| **QUEUE** | *things that want me.* One list. Items are typed and say what they offer: an obligation I must dispatch (do / forward / resolve), or something the system noticed and nobody has judged yet (adopt / defer / dismiss). |
+| **ACT** | *doing something to a record or a set.* One motion: choose, see what it will refuse and why BEFORE it runs, author the reason, get a receipt. Ballots are acts whose status shows a tally; bulk is the same act scoped to a selection. |
+| **THE WEIGHT LADDER** | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). |
+| **UNDETERMINED** | a display primitive, identical in all six places it appears. |
+
+**Attestation stays distinguishable — as the top rung of the ladder, not a separate
+construct.** That is the compromise the tradeoff actually supports: a member does not
+learn a new shape, but the act does not feel like the others either, because the top
+rung carries its own ceremony (what becomes permanent, what it does and does not
+claim, an explicit key act). One thing to learn, two things to feel.
+
+**Everything v0.1 wrote about ACCOUNTABILITY survives unchanged**, and that is the
+point of the collapse: those rules attach to the TYPE, not to a separate construct.
+The system still must not prefill a justification, still must show the denominator on
+a ballot, still must make a proposal look derived, still must render `undetermined`
+identically. Nothing is lost by the member meeting them through two doors instead of
+five.
+
+### What would falsify this
+
+If the first three capabilities built into the ACT construct each need a bespoke
+surface anyway, the collapse was wrong and v0.1's finer split was right. If they
+arrive as a type and a weight, it was right. **Build T (the queue) and one act, then
+re-read this** — the answer is cheap to get from two rungs of evidence and expensive
+to argue further in the abstract.
+
+The sections below are v0.1's derivation. They are kept because the accountability
+rules in them are unchanged and load-bearing; read them as the TYPES inside the two
+constructs above, not as seven peers.
 
 ## Why constructs rather than surfaces
 

@@ -1,3 +1,38 @@
+> **Built as CONSTRUCTS, not as forty screens**
+> (`architecture/BIO_Interaction_Constructs_v0_1.md`, at Bob's direction). Forty
+> screens is forty things for a non-technical member to learn; the construct set is
+> what makes each new capability arrive already familiar.
+>
+> **v0.2, after Bob challenged the count.** The first pass derived seven constructs
+> from SYSTEM properties, which conflated two different numbers: how many shapes the
+> MEMBER learns, and how many types the MODEL holds. They are not the same, and the
+> model may hold several types inside one construct.
+>
+> **TWO constructs, one ladder, one primitive.** **QUEUE** — things that want me; one
+> list, items typed by what they offer (dispatch an obligation, or judge something the
+> system noticed). **ACT** — doing something to a record or a set; one motion: choose,
+> see what it will refuse BEFORE it runs, author the reason, get a receipt. Ballots are
+> acts whose status shows a tally; bulk is the same act scoped to a selection. **THE
+> WEIGHT LADDER** is a property of every act, visible and escalating — reversible ·
+> reasoned (never prefilled) · terminal · attested (irreversible, public, needs a key).
+> **UNDETERMINED** is a display primitive rendered identically everywhere.
+>
+> Collapsing is not free and the tradeoff runs both ways: attestation stays
+> DISTINGUISHABLE as the ladder's top rung, because members arrive with a real model
+> for signing that a generic form violates, and because flattening the weight would
+> make dismissing a focus and publishing a document the same motion — a doctrine
+> failure wearing a usability improvement.
+>
+> Every accountability rule from v0.1 survives, attached to the TYPE rather than to a
+> separate construct. **Falsifiable:** build the queue and one act; if the next three
+> capabilities each need a bespoke surface anyway, the collapse was wrong.
+>
+> Build order inside M8: the **queue** first (attention layer, sharpest gap, plane half
+> ships), then the **act** at the reasoned rung (U5 already built one instance —
+> generalising it unlocks dispose/sever/reinstate/retire together, and makes the S-12
+> governance ballots reachable), then selection scoping, then the attested rung on the
+> crucial path.
+
 # Milestones: the capability ladder, and where every open piece of work sits
 
 Established 2026-07-31 (session BOB), at Bob's direction, after an audit found that
