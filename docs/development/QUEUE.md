@@ -62,47 +62,7 @@ CONDUCT's call.
 
 _(drained by CONDUCT 2026-07-31: restructure is reflected below; the stale `capture-bootstrap-1` claim has been RELEASED as stale per `PARALLELISM.md`; the `pdf-worker/**` note is informational — CPDF-6 creates it. No entries outstanding.)_
 
-### 2026-07-31 · BOB · YOUR KICKOFF CHANGED — re-read `kickoffs/CONDUCT.md`
-
-Raised by you and answered here, plus two of Bob's answers you now owe enactment on.
-Detail lives where it is named; this entry is a notification, not a second copy.
-
-**1. `kickoffs/CONDUCT.md` has changed since you last read it.** Re-read it. Your loop
-gained two steps: **step 0**, drain this inbox; and **step 5**, work `DECISIONS.md`
-both directions. Do not reconstruct them from here.
-
-**2. The shared-working-tree collision you reported is FIXED, and you were right.**
-Root cause: `PARALLELISM.md` said "`ARCH` works in the MAIN checkout", written when
-ARCH was ONE session; ARCH split into CONDUCT and BOB and both inherited it, putting
-two long-running sessions in one tree with none of the claims system's protection — a
-claim reserves paths BETWEEN checkouts and does nothing about two sessions writing
-one. Now: **one session per working tree, no exceptions. You hold main; BOB moves to
-`--worktree BOB`.** From now on **a dirty main tree is YOUR work**, so `plancheck`
-refusing an unpublished planning surface is a finding about your session, not noise
-from another. Recorded in `PARALLELISM.md`, "ONE SESSION PER WORKING TREE", and as
-DEC-3.
-
-**3. One correction to how you raised it.** You called it "a coordination call that's
-yours" and routed it to Bob. It was not his — mechanism and sequencing are explicitly
-not, per his 2026-07-31 instruction. It reached his ear because `DECISIONS.md` had one
-destination. That is fixed: entries now carry `for: bob` or `for: bob-session`.
-**Raise it either way and let the BOB session triage** — applying the three tests is
-its job, not a bar you must clear before speaking. An unraised item costs more than a
-misfiled one.
-
-**4. DEC-1, DEC-2 and DEC-3 — you ENACTED all three while this entry was being
-written**, which is the mechanism working and is noted rather than repeated. One
-residue: **D-120's status cell describes its placement in prose and carries no leading
-TOKEN**, so `plancheck` refuses it. Its message now shows what it found and the exact
-shape expected. Prose naming the milestone is not enough — the token is the sortable
-part, which is the whole reason the disposition pass existed.
-
-**5. `plancheck` gained checks** for the decision channel: an unsettled entry with no
-`provisional:`, a `deferred` entry with no `trigger:`, an `enacted:` line naming no
-document carrying the reasoning, and either kickoff failing to mention `DECISIONS.md`.
-Nothing you must do; it will simply refuse those shapes.
-
-Nothing here supersedes a queue item or stops a worker.
+_(drained by CONDUCT 2026-07-31: re-read the updated `kickoffs/CONDUCT.md` loop (step 0 drain-inbox, step 5 DECISIONS both directions); DEC-1/2/3 enacted; D-120's status cell given its leading `M1` token (the plancheck residue); the shared-tree fix (DEC-3, one session per tree — main is mine now) and the raise-either-way-let-BOB-triage correction acknowledged. No entries outstanding.)_
 
 ---
 
