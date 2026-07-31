@@ -130,13 +130,22 @@ if (debt) {
     if (!/^\|\s*D-\d+\s*\|/.test(line)) continue;
     const tail = line.replace(/\s+$/, "");
     const i = tail.lastIndexOf("|", tail.length - 2);
-    const status = i >= 0 ? tail.slice(i) : "";
-    if (TOKEN.test(status) || RESOLVED.test(status)) continue;
-    bad.push((line.match(/^\|\s*(D-\d+)/) || [])[1]);
+    const status = i >= 0 ? tail.slice(i).replace(/^\|\s*|\s*\|$/g, "").trim() : "";
+    if (TOKEN.test(`| ${status}`) || RESOLVED.test(`| ${status}`)) continue;
+    bad.push({ id: (line.match(/^\|\s*(D-\d+)/) || [])[1], status });
   }
-  if (bad.length)
-    fail(`NO DISPOSITION — ${bad.length} open debt row(s) carry no milestone or explicit\n`
-       + `        DOCTRINE/ACCEPTED/WATCH token, so they are invisible work: ${bad.join(", ")}`);
+  if (bad.length) {
+    /* Show what was FOUND and the exact shape expected. The first row to trip this
+       was written by a session that had placed the item correctly and described the
+       placement in prose — the token is what makes the ledger sortable, and a check
+       that only says "wrong" makes the reader guess which part. */
+    fail(`NO DISPOSITION — ${bad.length} open debt row(s) carry no leading disposition\n`
+       + `        TOKEN, so they cannot be sorted out of the ledger into work:\n`
+       + bad.map((b) => `          ${b.id}  found: "${b.status.slice(0, 60)}"`).join("\n")
+       + `\n        Expected the status cell to BEGIN with one of: M0..M7 | DOCTRINE |\n`
+       + `        ACCEPTED | WATCH | SUPERSEDED | NOT OURS, e.g. "M2 · open (DEC-1)".\n`
+       + `        Prose naming the milestone is not enough — the token is the sortable part.`);
+  }
 }
 
 /* ------------------------------------------- 3. THE DECISION CHANNEL */

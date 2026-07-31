@@ -90,15 +90,12 @@ destination. That is fixed: entries now carry `for: bob` or `for: bob-session`.
 its job, not a bar you must clear before speaking. An unraised item costs more than a
 misfiled one.
 
-**4. You owe enactment on two answered decisions** (`DECISIONS.md`, and `plancheck`
-warns until they are done). Each entry's `for CONDUCT to enact:` line is the spec:
-- **DEC-1**, the City allowlist ask — answered NO and CLOSED. D-94's disposition
-  changes; `CAP-3` is promoted from backstop to the primary resilience item; and
-  egress diversity via the member-driven capture path needs a debt row and a milestone
-  placement, as it is named nowhere in the ledger.
-- **DEC-2**, the root of trust — DEFERRED with a named trigger. D-1's disposition
-  should read "deferred until a running instance with multiple members" so no future
-  session re-raises it.
+**4. DEC-1, DEC-2 and DEC-3 — you ENACTED all three while this entry was being
+written**, which is the mechanism working and is noted rather than repeated. One
+residue: **D-120's status cell describes its placement in prose and carries no leading
+TOKEN**, so `plancheck` refuses it. Its message now shows what it found and the exact
+shape expected. Prose naming the milestone is not enough — the token is the sortable
+part, which is the whole reason the disposition pass existed.
 
 **5. `plancheck` gained checks** for the decision channel: an unsettled entry with no
 `provisional:`, a `deferred` entry with no `trigger:`, an `enacted:` line naming no
