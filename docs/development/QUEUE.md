@@ -20,12 +20,12 @@ Item format:
 
 ## CAPTURE — ACTIVE
 
-### CAP-1 · active
+### CAP-1 · done
 scope: Wire `op=pdfstructure` into the `if (op === …)` dispatch in `bio-plane/src/index.mjs` — read a `capture_sha` through the existing `op=capture` byte path, call `extractPdfStructure(bytes)` from `src/pdfstructure.mjs`, return the structure JSON. Unit-test offline. This is the DELEGATION from CONTENT-PDF (`CLAIMS.md`).
 behind-interface: I1 (bytes) + I2 (structure, provisional)
 depends-on: none (pdfstructure.mjs is on main)
 added: 2026-07-31 · CONDUCT
-landed:
+landed: 2ab62f4 — GET, read-only, mirrors op=capture GET auth; shared captureKey helper (no-op refactor); 29-assertion op test + negative control; full battery green.
 
 ### CAP-2 · queued
 scope: D-109 — drain the task queue on a Durable Object alarm (armed on enqueue, re-armed while `task_queue` is non-empty, self-terminating when it drains), per `kickoffs/CAPTURE.md` item (1). Do NOT drain from the capture path.

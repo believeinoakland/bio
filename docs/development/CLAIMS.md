@@ -66,7 +66,7 @@ released: 2026-07-31 — phase 1 landed on main by ARCH (integration turn), comm
 from: content-pdf-agent-1 (recorded by ARCH at integration)
 need: wire op=pdfstructure into the `if (op === …)` dispatch in bio-plane/src/index.mjs — a few additive lines that read a capture_sha through the existing op=capture byte path and call extractPdfStructure(bytes) from bio-plane/src/pdfstructure.mjs. index.mjs is CAPTURE's; this is the delegation the CONTENT-PDF kickoff anticipated, not a quiet edit.
 why: the extractor is complete and unit-tested against fixtures but cannot be live-verified against real captured PDFs until an op exposes it. If op-wiring delegation recurs across content areas, that is the trigger to promote op-contract ownership out of CAPTURE (the I3 move PARALLELISM.md anticipates).
-status: open
+status: fulfilled 2026-07-31 — op=pdfstructure landed 2ab62f4 (capture-agent-2 / QUEUE.md CAP-1). Live-verify (QUEUE.md CPDF-3) still awaits a DIST deploy.
 
 ## CLAIM 2026-07-31 CAPTURE
 session: capture-agent-2
@@ -75,4 +75,4 @@ paths: the pdfstructure op in bio-plane/src/index.mjs (the OPS spec entry, the o
 interfaces consumed: I1 (bytes → content), I2 (structure, provisional — consumed as the extractor's output shape)
 interfaces owned: none
 expected: QUEUE.md CAP-1 — fulfil the CONTENT-PDF→CAPTURE delegation above. Add op=pdfstructure (GET, read-only, same auth/caps posture as op=capture GET) that reads a capture sha through the exact R2 path op=capture uses and returns extractPdfStructure(bytes) as JSON. Test through the op with a fixture PDF (link annotation) plus a non-PDF negative control. Does NOT touch CONTENT-PDF's src/pdfstructure.mjs or test/pdfstructure.test.mjs. No deploy; CONDUCT integrates and live-verifies.
-released:
+released: 2026-07-31 — CAP-1 landed on main by CONDUCT, commit 2ab62f4. Full battery green; the captureKey extraction verified a no-op (capture behaviour unchanged), the op is read-only and mirrors op=capture GET auth (no new permission).
