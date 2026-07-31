@@ -164,5 +164,80 @@ console.log("\n--- no caller-supplied provenance (D-112) ---");
     /documentAddress = via === "archive\.org" && archiveAddress/.test(idx), true);
 }
 
+/* D-113 as a CLASS. op=purge's whole-store branch clears the corpus and every
+   table DERIVED from it, and that list is maintained by hand. Nothing failed
+   when a new derived table was added to schema.mjs and forgotten: D-98's tables
+   were three releases old before anyone noticed, and only during a tidy-up. A
+   whole-store purge that then reports scope "ALL" while leaving rows behind is
+   worse than one that reports a narrower scope, because the caller believes the
+   store is empty.
+
+   This closes the class the same way the template checks above close theirs: at
+   the moment the mistake is made. Every `CREATE TABLE` in schema.mjs must be
+   either cleared by the whole-store purge or named in the exemption allowlist
+   below with a one-line reason. A new derived table added to schema.mjs and not
+   to purge fails here immediately.
+
+   The exemptions are the tables a whole-store purge MUST NOT clear, each because
+   it is not derived from the corpus: identity, auth, measured runtime capability,
+   transient rate/governor state, inbound intake, or the deliberately-durable
+   published projection. If you are adding a DERIVED table, it does not belong
+   here; add it to purge. */
+console.log("\n--- every schema table is purged or explicitly exempt (D-113) ---");
+{
+  const schema = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "schema.mjs"), "utf8");
+  const store = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "store.mjs"), "utf8");
+
+  const schemaTables = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)/g)].map((m) => m[1]);
+  t("schema.mjs declares tables to check", schemaTables.length > 0, true);
+
+  /* What the WHOLE-STORE purge clears. Sliced from the purge method's source so
+     the check reads the real deletion list rather than a copy of it: the TABLES
+     array it deletes WHERE bundle_id IN both branches, plus every `DELETE FROM`
+     in the else (whole-store) branch. The per-bundle branch is deliberately not
+     consulted — several derived tables have no bundle_id and are cleared only by
+     a whole-store purge, which is the scope that claims "ALL". */
+  const pStart = store.indexOf("purge({ bundleId");
+  const pEnd = store.indexOf("---- credentials ----", pStart);
+  t("the purge method is locatable in store.mjs", pStart > -1 && pEnd > pStart, true);
+  const purgeSrc = store.slice(pStart, pEnd);
+  const tablesArr = /const TABLES\s*=\s*\[([^\]]*)\]/.exec(purgeSrc);
+  const fromArray = tablesArr ? [...tablesArr[1].matchAll(/"(\w+)"/g)].map((m) => m[1]) : [];
+  const fromDeletes = [...purgeSrc.matchAll(/DELETE FROM\s+(\w+)/g)].map((m) => m[1]);
+  const purged = new Set([...fromArray, ...fromDeletes]);
+  t("purge clears a non-trivial set of tables", purged.size >= 10, true);
+
+  /* Tables a whole-store purge MUST NOT clear. Each is not derived from the
+     corpus; the reason is stated so the exemption can be audited rather than
+     trusted. */
+  const EXEMPT = {
+    seq:                  "monotonic id counter; must survive so allocid never reissues an identifier (see purge comment)",
+    credentials:          "operator/member auth; a data purge must not delete logins and lock the instance out",
+    sessions:             "bearer login sessions; auth state, not corpus-derived",
+    bootstrap:            "one-row claim state; whether the instance has been claimed, not corpus data",
+    members:              "the roster; membership is identity, not derived from captured documents",
+    signers:              "registered signing keys; identity, not corpus-derived",
+    published_bundles:    "public ratified projection; kept verifiable forever by doctrine, not torn down with the working store",
+    published_shas:       "append-only published hashes; a hash once published stays verifiable forever (schema doctrine)",
+    inbox:                "quarantined public intake; inbound submissions awaiting review, explicitly not the record and not corpus-derived",
+    knock_rate:           "fixed-window knock rate accounting; transient, self-pruning as windows pass",
+    capture_limits:       "measured per-runtime subrequest ceiling; a capability fact, relearned by being refused, not corpus-derived",
+    runtime_observations: "measured CPU cost; a capability fact, not corpus-derived",
+    cpu_probe:            "stepped CPU-probe checkpoints; transient instrumentation, not corpus-derived",
+    host_governor:        "per-host token-bucket governor state; transient pacing, not corpus-derived",
+  };
+
+  /* An exemption for a table that IS purged, or for a table that does not exist,
+     is stale and misleading; catch it so the allowlist stays honest. */
+  for (const name of Object.keys(EXEMPT)) {
+    t(`exemption "${name}" names a real schema table`, schemaTables.includes(name), true);
+    t(`exemption "${name}" is not also purged (a stale exemption)`, purged.has(name), false);
+  }
+
+  /* The load-bearing assertion: nothing falls through the crack. */
+  const uncovered = schemaTables.filter((tbl) => !purged.has(tbl) && !(tbl in EXEMPT));
+  t(`every schema table is purged or exempt (uncovered: ${JSON.stringify(uncovered)})`, uncovered, []);
+}
+
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

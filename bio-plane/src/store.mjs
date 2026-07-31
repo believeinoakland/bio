@@ -2648,6 +2648,23 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM tasks`);
         this.sql.exec(`DELETE FROM task_queue`);
         this.sql.exec(`DELETE FROM source_reachability`);
+        /* The capture machinery's own derived tables, found MISSING here on
+           2026-07-31 when D-113 was closed as a class rather than an instance.
+           Every one is derived from the corpus and every one predates the fix
+           above, so each was the exact silent-leftover this list exists to
+           prevent: links a captured document made and their contemporaneity
+           verdicts; the address/capture index that answers "does the store hold
+           a capture of X"; the per-host asset cache and its per-document rows;
+           and the multi-tick capture work list. Leaving any of them behind lets
+           a store that reports scope ALL still answer as though captures it no
+           longer holds were present. hygiene.test.mjs now asserts this list
+           against schema.mjs so the next derived table cannot be forgotten. */
+        this.sql.exec(`DELETE FROM link_verdicts`);
+        this.sql.exec(`DELETE FROM links`);
+        this.sql.exec(`DELETE FROM captured_locators`);
+        this.sql.exec(`DELETE FROM site_asset_refs`);
+        this.sql.exec(`DELETE FROM site_assets`);
+        this.sql.exec(`DELETE FROM capture_sessions`);
       }
     });
     const after = this.stats();

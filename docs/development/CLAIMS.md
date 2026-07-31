@@ -43,3 +43,12 @@ interfaces consumed: none
 interfaces owned: I1 (bytes → content)
 expected: CAPTURE's standing responsibility (fetch, governor, subresources, links, reachability, archive fallback). This turn stood up the parallel-development scaffolding under the ARCH role from the main checkout — CLAIMS.md, INTERFACES.md with I1, the UI/FRAMEWORK kickoff refresh, and the biosmoke-ui instance — none of which is another area's code.
 released:
+
+## CLAIM 2026-07-31 CAPTURE
+session: capture-agent-1
+opened: 2026-07-31T20:30:00Z
+paths: bio-plane/test/hygiene.test.mjs, the purge table list in bio-plane/src/store.mjs
+interfaces consumed: none
+interfaces owned: none
+expected: D-113 as a CLASS. A hygiene check asserting every CREATE TABLE in schema.mjs is either named in op=purge's whole-store table list or in a small explicit exemption allowlist (each with a one-line reason), so a forgotten derived table fails loudly. Also corrects derived capture tables currently missing from the whole-store purge. No deploy this turn; ARCH integrates.
+released:
