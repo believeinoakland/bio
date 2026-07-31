@@ -20,6 +20,31 @@ byte by byte along with headers and context.
 So an archived capture can carry the original URL, the exact datetime, the status
 the source returned, and a digest.
 
+**MEASURED 2026-07-31 through the plane's own egress (D-105 closed).** Every
+field above is confirmed present and shaped as claimed, and the `id_` suffix
+returns raw bytes as described. Three corrections, each recorded in full in
+`MEASUREMENTS.md` and each load-bearing:
+
+1. **`length` is the compressed WARC record size, NOT the body length.** A row
+   declaring 6255 was fetched at 32,564 bytes. Never use it as a fixity or size
+   check on what we received.
+2. **A shared digest can mean an EMPTY body.** `3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ`
+   is base32(SHA-1(empty)), and it appeared twice in a five-row sample, on two
+   301s. Digest equality is therefore NOT sufficient evidence that a document was
+   unchanged, which constrains the revisit reading below: it holds only for a
+   real 200 with a non-empty body. Exclude the empty digest explicitly.
+3. **Most rows are not 200.** Three of five sampled rows were usable; two were
+   empty redirects. A fallback that takes the most recent row without filtering
+   on `statuscode == 200` and a non-empty digest will record a redirect as the
+   document.
+
+`output=json` returns an array of arrays with a header row, not objects.
+
+The Memento headers (`Memento-Datetime`, `Link` with `rel="original"` and a
+timemap) are ALREADY on the replay response, and `x-archive-src` names the source
+WARC. So the "build to Memento" ruling below is also the lower-effort path, not
+only the principled one.
+
 ### And what it does not
 
 **Nothing is signed.** There is no cryptographic attestation over a Wayback
@@ -41,7 +66,9 @@ Wayback tracks duplicates by digest, and a repeat capture of unchanged content i
 stored as a `warc/revisit` record referencing the earlier one.
 
 **A revisit record is a dated, third-party, identical-bytes observation across an
-interval.** That is exactly the PRIMARY contemporaneity route in
+interval** — subject to the measured constraint above: only where the status is a
+real 200 and the digest is not the empty-body digest. That is exactly the PRIMARY
+contemporaneity route in
 `LINK-FIDELITY.md`, the one reordered to the top on 2026-07-30 because monitoring
 works on sources where byte identity does not. The Archive has been running that
 monitoring for years on documents an instance may not be able to fetch at all.
@@ -112,6 +139,13 @@ their mission.
 Recorded with their source and date because they are somebody else's
 infrastructure, undocumented, and moving. This is exactly the category
 `MEASUREMENTS.md` exists to stop us treating as constants.
+
+**STILL UNVERIFIED, and deliberately so.** The 2026-07-31 measurement confirmed
+the record shape but did NOT test these ceilings, because establishing them means
+provoking a 429 and the documented consequence of mishandling one is an hour-long
+firewall block on Cloudflare's SHARED egress, falling on unrelated people. Their
+capacity is discovered by ordinary polite use being refused, exactly as D-95
+discovers it, never by probing for the wall.
 
 - CDX is limited to an average of **60 requests per minute** (IA staff to a
   researcher, via the wayback-researchers channel). Over that returns 429. **If

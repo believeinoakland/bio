@@ -360,3 +360,86 @@ installer will accept what this produced without any change to its trust set.
 Separately, the 0.48.0 release already in `release/` was verified the same way
 before being relied on, which is what established that D-106's blast radius was
 narrower than the item claimed: the repository fallback was sound throughout.
+
+## 2026-07-31, thread CAPTURE: the Wayback CDX claims, MEASURED at last (D-105)
+
+Instrument: `op=acquire` against the deployed plane at 0.49.0, `store=scratch`,
+which fetches through the plane's OWN Cloudflare egress and records the full
+transport block. THREE requests to archive.org in total, deliberately.
+
+First, D-105's premise reconfirmed: `https://web.archive.org/...` from the
+Anthropic container returns `Blocked by egress policy`. The plane reaches it
+fine. So every figure below is the plane's observation, which is the egress that
+will actually run the fallback.
+
+### The record shape: CONFIRMED, field for field
+
+`GET /cdx/search/cdx?url=www.oaklandca.gov&limit=5&output=json` → HTTP 200,
+690 bytes, `application/json`.
+
+    [["urlkey","timestamp","original","mimetype","statuscode","digest","length"],
+     ["gov,oaklandca)/","20180427023914","http://www.oaklandca.gov:80/","text/html","200","3BCPSIHGOCJ7ZRCJRSF5DRI5AD7BDOR6","6093"],
+     ...]
+
+Every field ARCHIVE-FALLBACK.md asserted is present and shaped as claimed: SURT
+urlkey, 14-digit timestamp, original, mimetype, statuscode, base32 SHA-1 digest,
+length. One shape detail the document did not state: `output=json` returns an
+ARRAY OF ARRAYS with a header row, not an array of objects, so a consumer reads
+by column index or maps the header itself.
+
+### The `id_` raw-bytes suffix: CONFIRMED, and Memento comes free
+
+`GET /web/20180427140438id_/https://www.oaklandca.gov/` → HTTP 200, 32,564
+bytes, `text/html`, not redirected. Response headers carry:
+
+- `Memento-Datetime: Fri, 27 Apr 2018 14:04:38 GMT`
+- `Link: <https://www.oaklandca.gov/>; rel="original", <.../timemap/link/...>; rel=...`
+- `x-archive-src: ARCHIVEIT-10368-ONE_TIME-JOB568626-...warc.gz`
+
+This matters for the "build to Memento, not to Wayback" ruling: the standard
+Memento headers are ALREADY on the replay response, so the archive datetime and
+the original URL can be read from RFC 7089 fields rather than from a
+Wayback-specific API. The recommendation is not merely principled; it is the
+lower-effort path. `x-archive-src` additionally NAMES the WARC the bytes came
+from, which is a provenance field worth recording even though the WARC itself is
+not retrievable.
+
+### THREE CORRECTIONS to ARCHIVE-FALLBACK.md as written
+
+**1. CDX `length` is not the body length, and must never be used as one.** The
+CDX row for the capture fetched above declares `length` 6255. The `id_` fetch of
+that exact capture returned 32,564 bytes. `length` is the compressed WARC record
+size, not the size of what a client receives. The design document says "a content
+digest and the length" without saying which, which invites exactly the wrong use.
+It is not a fixity check and not a size check on our bytes.
+
+**2. A shared digest can mean an EMPTY body, not identical content.** Two rows in
+the five-row sample carry the same digest, `3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ`.
+Computed here: that is base32(SHA-1(empty)), verified against
+`da39a3ee5e6b4b0d3255bfef95601890afd80709`. Both rows are 301 redirects with
+empty bodies. So digest equality across two CDX rows is NOT by itself evidence
+that a document was unchanged: for empty-bodied responses it is trivially and
+meaninglessly equal. This bears directly on the best part of the design, the
+`warc/revisit` record read as "a dated, third-party, identical-bytes observation
+across an interval". That reading holds ONLY where the body is non-empty and the
+status is a real 200. A revisit on an empty body attests nothing about content.
+Any contemporaneity claim built on archive digests must exclude the empty digest
+explicitly, the same way the governor excludes its own refusals from failures.
+
+**3. The status code in a CDX row is the ORIGIN's, and rows are mostly not 200.**
+Three of five sampled rows are usable captures; two are 301s with nothing in
+them. A fallback that takes "the most recent CDX row" without filtering on
+`statuscode == 200` and a non-empty digest will fetch a redirect and record it as
+the document.
+
+### What was deliberately NOT measured
+
+**The rate limits.** ARCHIVE-FALLBACK.md's 24-to-60 per minute figures and the
+one-hour firewall block on ignored 429s remain THIRD-PARTY DESCRIPTION and are
+still unverified. Establishing them requires provoking a 429, and the documented
+consequence of getting that wrong is an hour-long block applied to Cloudflare's
+shared egress, which would fall on unrelated people who have no idea we exist.
+That is not a cost this project gets to impose to satisfy its own curiosity. The
+figures stay flagged as theirs, our appetite stays the conservative 24/min, and
+their capacity is discovered the way D-95 already discovers capacity: by being
+refused in the ordinary course of polite use, and recording it.
