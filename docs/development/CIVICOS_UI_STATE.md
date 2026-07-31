@@ -1,5 +1,60 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+v33, 2026-07-31 session, thread CAPTURE, continuation. FIVE RELEASES, 0.49.0
+through 0.53.0, each signed, deployed byte-identical, tagged and live-verified.
+op=audit 31/31 clean throughout and the real record untouched: every live proof
+ran in the scratch namespace, which was swept at the end.
+
+WHAT SHIPPED. 0.49.0, D-98, the task inbox: C-19.1 as a sibling of C-18.5 (not a
+second grammar), the producer/consumer split enforced structurally with NO
+control-plane route to the queue at all, and `actor` stamped server-side.
+0.50.0, D-104, source reachability: a counter built BEFORE the fallback so its
+exclusion is designed in rather than retrofitted. 0.51.0 and 0.52.0, the archive
+fallback: `src/cdx.mjs` pure and separate from the plumbing, the eligibility
+fence, and then the two halves composed into one act so the provenance hop is
+built by the call that fetched the CDX record. 0.53.0, D-108 and D-113: a deploy
+that waits for the build to actually serve, and a purge that means ALL.
+
+THE THREE THINGS WORTH CARRYING, all of them the same shape.
+
+(1) MEASURE BEFORE BUILDING, AND THE MEASUREMENT WILL SURPRISE YOU. D-105 was
+closed by asking archive.org three questions through the plane's own egress, and
+three of ARCHIVE-FALLBACK.md's claims were wrong: CDX `length` is the compressed
+WARC record size and not the body length (6255 declared, 32,564 received); a
+shared digest can mean an EMPTY BODY, since 3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ is
+base32(SHA-1(empty)) and the NEWEST row in the sample is such a 301; and most
+rows are not 200. Each is now a refusal in code rather than a note.
+
+(2) AN EQUALITY OR AN OUTCOME THAT COSTS NOTHING TO PRODUCE IS NOT EVIDENCE.
+This turned out to be one principle wearing three hats: a governed refusal is
+not the source failing (D-104), two empty-body digests agreeing agree on nothing
+(D-105), and a chain hop a caller can hand us is a chain hop a caller can invent
+(D-112). All three are enforced structurally rather than by convention, and the
+third is guarded at SOURCE in hygiene.test.mjs because a runtime test can only
+show that one forged request was ignored.
+
+(3) NEGATIVE CONTROLS FOUND WHAT THE ASSERTIONS MISSED. Neutering the inbox
+write-path grammar check left all 67 assertions passing, because every task the
+consumer builds from ordinary input is well-formed by construction; an
+assertion driving it with a non-canonical bundle id was added and the control
+then failed 3. Removing D-104's exclusion breaks 17 of 34. Run the control.
+
+BOB'S RULING THIS TURN. There is no need to push capture traffic to the breaking
+point: the governor keeps traffic low enough that being banned is not a concern,
+and there is plenty of time to capture even large collections. This is why D-111
+exists as an entry rather than an omission: establishing a rate ceiling means
+hitting it, and the documented consequence lands on Cloudflare's SHARED egress,
+on people who have never heard of this project. Their capacity gets discovered
+by a refusal arriving in ordinary polite use, never by probing for the wall.
+
+THE NEAR MISS, because it is the most useful thing here. Seconds after deploy.mjs
+verified 0.52.0 byte-identical, /version answered 0.51.0 and a forged-locator
+probe appeared to show the new code fetching evil.example.com. It was the OLD
+code answering: the rollout is per-isolate and NOT atomic, so a verification in
+that window can receive a mix of old and new answers. deploy.mjs now gates on
+the version actually serving, and it fired correctly on 0.53.0. If a live probe
+ever contradicts the suite, check which build answered before believing either.
+
 v32, 2026-07-30 session, thread CAPTURE, continuation. A THIRD RELEASE AND FOUR
 RULINGS. 0.48.0 cut, signed, deployed byte-identical, tagged, op=audit 31/31
 clean. It carries D-103, the governor's operator surface: op=governorstate

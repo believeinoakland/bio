@@ -5,7 +5,7 @@ holder: CAPTURE
 since: 2026-07-30
 granted_by: bob
 scope: plane
-note: cut 0.46.0, 0.47.0 and 0.48.0; all three deployed byte-identical and live-verified
+note: cut 0.49.0 through 0.53.0 on 2026-07-31; all five deployed byte-identical and live-verified
 END-BATON-STATE -->
 
 **Holder: `CAPTURE`, since 2026-07-30, granted by Bob.**
