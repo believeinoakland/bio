@@ -709,6 +709,26 @@ export class Store extends DurableObject {
   static SELECTION_TTL_MS = 300000;
   static SELECTION_MAX_ITEMS = 10000;   // an enumeration above this is REFUSED, never downgraded
   static SELECTION_MAX_PER_OWNER = 32;
+  /* D-109. The task queue drains on the SAME Durable Object alarm the selection
+     sweep uses: armed on enqueue, re-armed by the alarm while the queue is
+     non-empty, self-terminating when it drains — the mechanism #armSweep proved
+     for selections. DELAY is short so a burst of captures coalesces into one
+     drain rather than one alarm apiece. BACKSTOP is longer and used when a tick
+     drained nothing: every remaining event is then a capture not yet filed in a
+     bundle (taskDrain keeps those, it does not drop them), and retrying that at
+     the short cadence would be a hot loop against work that only a later promote
+     can unblock. BATCH bounds one tick; a deeper backlog re-arms and continues.
+     DELAY is overridable per instance through TASK_DRAIN_DELAY_MS: production
+     takes the short default, and a test that drives the consumer by hand pushes
+     the automatic one out of its own window so the two never race on the clock. */
+  static TASK_DRAIN_DELAY_MS = 1000;
+  static TASK_DRAIN_BACKSTOP_MS = 60000;
+  static TASK_DRAIN_ALARM_BATCH = 200;
+
+  #drainDelayMs() {
+    const v = Number(this.env && this.env.TASK_DRAIN_DELAY_MS);
+    return Number.isFinite(v) && v >= 0 ? v : Store.TASK_DRAIN_DELAY_MS;
+  }
   /* MEASURED, and lower than SQLite's documented default by two orders of
      magnitude: workerd refuses a statement binding more than about 100
      variables. Binary-searched through this exact code path on 2026-07-25, where
@@ -754,10 +774,63 @@ export class Store extends DurableObject {
       await this.ctx.storage.setAlarm(Date.now() + Store.SELECTION_TTL_MS + 30000);
   }
 
-  async alarm() {
-    this.#sweepSelections();
+  /* D-109. The alarm is SHARED: one tick sweeps expired selections AND drains the
+     task queue, then re-arms for whichever still needs waking. `alarm()` is the
+     reserved handler workerd invokes and it cannot be called over RPC or in a
+     unit test, so its whole body is `onAlarm`, which the suite drives directly;
+     the reserved entry is a one-line forward with nothing of its own to break. */
+  async alarm() { await this.onAlarm(); }
+
+  async onAlarm() {
+    const swept = this.#sweepSelections();
+    const drain = this.taskDrain({ limit: Store.TASK_DRAIN_ALARM_BATCH, actor: "alarm" });
+    const nextAt = await this.#rearmSchedule(drain.drained > 0);
+    return { swept, drained: drain.drained, created: drain.created.length,
+             folded: drain.folded.length, refused: drain.refused.length,
+             waiting: drain.waiting.length, remaining: drain.remaining,
+             rearmed: nextAt !== null, nextAt };
+  }
+
+  /* Reconcile the single shared alarm to the EARLIEST wake either subsystem
+     needs, and never push a sooner one later. A live selection wants a wake one
+     TTL out; a non-empty queue wants one DELAY out after a tick that drained
+     something and one BACKSTOP out after a tick that only found unfiled captures.
+     Nothing pending leaves the alarm unset — which is how the drain, like the
+     sweep, self-terminates rather than spinning on an idle instance. */
+  async #rearmSchedule(madeProgress) {
+    const now = Date.now();
+    const wants = [];
     if (this.#one(`SELECT count(*) c FROM selections`).c > 0)
-      await this.ctx.storage.setAlarm(Date.now() + Store.SELECTION_TTL_MS + 30000);
+      wants.push(now + Store.SELECTION_TTL_MS + 30000);
+    if (this.#one(`SELECT count(*) c FROM task_queue`).c > 0)
+      wants.push(now + (madeProgress ? this.#drainDelayMs() : Store.TASK_DRAIN_BACKSTOP_MS));
+    if (!wants.length) {
+      /* Nothing left to wake for. Clear the alarm so the invariant is exact —
+         no pending work, no pending alarm — and the drain terminates cleanly
+         rather than leaving a stray wake from a superseded arming behind. Reached
+         only when BOTH subsystems are idle, so it can never cancel a live
+         selection's sweep. */
+      await this.ctx.storage.deleteAlarm();
+      return null;
+    }
+    const want = Math.min(...wants);
+    const at = await this.ctx.storage.getAlarm();
+    if (at === null || at > want) await this.ctx.storage.setAlarm(want);
+    return await this.ctx.storage.getAlarm();
+  }
+
+  /* Armed by the PRODUCER on enqueue so a queued event drains automatically,
+     without anyone calling op=taskdrain by hand. Only ever pulls the alarm
+     EARLIER, so a live selection's later wake is preserved and a burst of
+     enqueues coalesces into a single drain. Arming does not, and must not, write
+     a task: the split stays intact — enqueue schedules the consumer, it never IS
+     the consumer. */
+  async #armDrain() {
+    if (this.#one(`SELECT count(*) c FROM task_queue`).c === 0) return await this.ctx.storage.getAlarm();
+    const want = Date.now() + this.#drainDelayMs();
+    const at = await this.ctx.storage.getAlarm();
+    if (at === null || at > want) await this.ctx.storage.setAlarm(want);
+    return await this.ctx.storage.getAlarm();
   }
 
   static #digestOf(ids) {
@@ -4663,7 +4736,7 @@ export class Store extends DurableObject {
   /** PRODUCER. Called from the capture path. Bounds what it accepts, records
    *  no decision, and is idempotent on (kind, capture_sha) so a re-capture loop
    *  cannot flood the queue. */
-  taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
+  async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
     if (typeof captureSha !== "string" || !/^[0-9a-f]{64}$/.test(captureSha))
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
@@ -4674,11 +4747,19 @@ export class Store extends DurableObject {
     const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
     const now = at && ISO_INSTANT.test(at) ? at : new Date().toISOString().split(".")[0] + "Z";
     const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
-    if (existing) return { ok: true, queued: false, deduped: true, kind, captureSha };
+    if (existing) {
+      /* Still in the queue, so the consumer still owes it a drain: (re-)arm the
+         alarm rather than assume the earlier enqueue's arming survived. */
+      const armedAt = await this.#armDrain();
+      return { ok: true, queued: false, deduped: true, kind, captureSha, armedAt };
+    }
     this.sql.exec(
       `INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
       kind, captureSha, text, loc, now);
-    return { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now };
+    /* D-109: the enqueue arms the drain. This is the ONLY coupling the producer
+       has to the consumer, and it is a schedule, not a write. */
+    const armedAt = await this.#armDrain();
+    return { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
   }
 
   /** The RULED routing order, resolved at write time by the consumer.

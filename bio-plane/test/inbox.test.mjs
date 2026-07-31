@@ -139,7 +139,13 @@ const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
-  bindings: { ADMIN_TOKEN: "adm-inbox", MEMBER_TOKEN: "mem-inbox", PROBE_TOKEN: "prb-inbox", VERSION: "test" },
+  /* D-109 made the drain automatic: an enqueue now arms a Durable Object alarm
+     that drains the queue on its own. This suite drives the CONSUMER by hand to
+     assert the producer/consumer split, so it pins the automatic drain far out
+     of its own window (TASK_DRAIN_DELAY_MS) to keep those manual assertions from
+     racing a background alarm. The alarm itself is tested in task-drain-alarm.test.mjs. */
+  bindings: { ADMIN_TOKEN: "adm-inbox", MEMBER_TOKEN: "mem-inbox", PROBE_TOKEN: "prb-inbox", VERSION: "test",
+              TASK_DRAIN_DELAY_MS: "600000" },
 });
 
 const api = async (op, body, tok = "mem-inbox") =>

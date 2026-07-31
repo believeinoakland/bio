@@ -85,3 +85,12 @@ interfaces consumed: none (a measurement)
 interfaces owned: none
 expected: D-91 phase-2 go/no-go MEASUREMENT (CPDF-1). Bundle `unpdf` through the plane's esbuild target in a scratch temp dir (NOT added to shipped deps/bundle) and measure bundled size vs the 3MB Free-worker limit; time extraction on a real Oakland agenda as a labelled node proxy (not Worker CPU); record both with date and instrument and recommend go/no-go. Commits no text extractor and changes no shipped dependency or bundle. Verdict: GO — bundle fits with 2.29 MB gzip headroom; node-proxy cost modest. CPDF-2 unblocked.
 released: 2026-07-31 — measurement landed on branch content-pdf/phase2-measure; CONDUCT integrates. Worker-CPU-vs-ceiling confirmation via a deployed probe is the remaining gated follow-on (rides on the op=pdfstructure delegation above).
+
+## CLAIM 2026-07-31 CAPTURE
+session: capture-agent-3
+opened: 2026-07-31T00:00:00Z
+paths: the task-queue drain alarm in bio-plane/src/store.mjs (the alarm()/onAlarm handler, #rearmSchedule, #armDrain, #drainDelayMs, the TASK_DRAIN_* constants, and the arming added to taskEnqueue), bio-plane/test/task-drain-alarm.test.mjs, the TASK_DRAIN_DELAY_MS binding added to bio-plane/test/inbox.test.mjs, and the two test entries in bio-plane/package.json
+interfaces consumed: none
+interfaces owned: none
+expected: QUEUE.md CAP-2 / D-109 — drain the task queue automatically on a Durable Object alarm, the mechanism #armSweep proved for selections: armed on enqueue, re-armed by the alarm while task_queue is non-empty, self-terminating (deleteAlarm) when it drains. The capture path only ENQUEUES; taskEnqueue arms the alarm (a schedule, never a task write) so the producer/consumer split is preserved. onAlarm shares the single DO alarm with the selection sweep and reconciles to the earliest wake. op=taskdrain still works — the alarm and the manual drain coexist. NEGATIVE CONTROL run: neutering onAlarm's taskDrain call fails the suite naming the undrained queue ("the queue is empty after the drain" want 0 got 1; "the queue count is zero" want 0 got 1); restored and green. Full battery green (exit 0). No inbox-grammar or write-gate change. No deploy; CONDUCT integrates and live-verifies.
+released: 2026-07-31 — committed to branch capture/d109-drain; awaiting CONDUCT integration on main.

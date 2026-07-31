@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node test/hygiene.test.mjs && node test/store.test.mjs && node test/projection.test.mjs && node test/query.test.mjs && node test/search.test.mjs && node test/selection.test.mjs && node test/cite.test.mjs && node test/edges.test.mjs && node test/disposition.test.mjs && node test/release.test.mjs && node test/focus.test.mjs && node test/purge.test.mjs && node test/bootstrap.test.mjs && node test/livefire.test.mjs && node test/installer.test.mjs && node test/capture.test.mjs && node test/migrate.test.mjs && node test/browse.test.mjs && node test/fence.test.mjs && node test/sshsig.test.mjs && node test/members.test.mjs && node test/membership.test.mjs && node test/capability.test.mjs && node test/projects.test.mjs && node test/ratify.test.mjs && node test/doorbell.test.mjs && node test/signpage.test.mjs && node test/conformance.test.mjs && node test/gathering.test.mjs && node test/inbox.test.mjs && node test/reachability.test.mjs && node test/cdx.test.mjs && node test/acquire.test.mjs && node test/attest.test.mjs && node test/mechanical.test.mjs && node test/audit.test.mjs && node test/governor.test.mjs && node test/subresources.test.mjs && node test/pdfstructure.test.mjs && node test/pdfstructure-op.test.mjs",
+    "test": "node test/hygiene.test.mjs && node test/store.test.mjs && node test/projection.test.mjs && node test/query.test.mjs && node test/search.test.mjs && node test/selection.test.mjs && node test/cite.test.mjs && node test/edges.test.mjs && node test/disposition.test.mjs && node test/release.test.mjs && node test/focus.test.mjs && node test/purge.test.mjs && node test/bootstrap.test.mjs && node test/livefire.test.mjs && node test/installer.test.mjs && node test/capture.test.mjs && node test/migrate.test.mjs && node test/browse.test.mjs && node test/fence.test.mjs && node test/sshsig.test.mjs && node test/members.test.mjs && node test/membership.test.mjs && node test/capability.test.mjs && node test/projects.test.mjs && node test/ratify.test.mjs && node test/doorbell.test.mjs && node test/signpage.test.mjs && node test/conformance.test.mjs && node test/gathering.test.mjs && node test/inbox.test.mjs && node test/task-drain-alarm.test.mjs && node test/reachability.test.mjs && node test/cdx.test.mjs && node test/acquire.test.mjs && node test/attest.test.mjs && node test/mechanical.test.mjs && node test/audit.test.mjs && node test/governor.test.mjs && node test/subresources.test.mjs && node test/pdfstructure.test.mjs && node test/pdfstructure-op.test.mjs",
     "test:store": "node test/store.test.mjs",
     "test:livefire": "node test/livefire.test.mjs",
     "test:bundle": "node test/bundle.test.mjs",
@@ -33,6 +33,7 @@
     "test:governor": "node test/governor.test.mjs",
     "test:pdfstructure": "node test/pdfstructure.test.mjs",
     "test:pdfstructure-op": "node test/pdfstructure-op.test.mjs",
+    "test:task-drain-alarm": "node test/task-drain-alarm.test.mjs",
     "bench": "node test/scale.mjs",
     "probe:retrieval": "node test/retrieval-probe.mjs",
     "probe:facets": "node test/facet-probe.mjs 20000",
