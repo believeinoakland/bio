@@ -338,7 +338,7 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-57 self-reference reported as a change | CAPTURE | M3 |
 | D-59 `contemporaneous` never observed | CAPTURE | M3 |
 | D-60 / D-69 docprofile unadopted | FRAMEWORK → CAPTURE | M3 |
-| D-61 no unattended writer can take a lease | RECORD | M1 |
+| D-61 unattended writer can take a lease · DONE (REC-2) | RECORD | M1 · done |
 | D-62 `setup.mjs` omits `content_hash` | RECORD | M7 |
 | D-63 unmeasured stacks | FRAMEWORK | M2 |
 | D-64 client-rendered capture | CAPTURE | M2 · blocked on D-55 |

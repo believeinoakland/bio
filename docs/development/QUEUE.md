@@ -167,8 +167,7 @@ scope: D-61 — an unattended writer cannot take a lease, because `leases.actor`
 behind-interface: I5
 depends-on: REC-1
 accepts-when: a machine credential completes a capture started by a session and the manifest names the machine writer; negative control — an anonymous write is still refused.
-added: 2026-07-31 · BOB
-landed:
+landed: e425b24 — option (a): a NAMED machine actor `token:<class>`, server-stamped (caller `actor`/`author` DELETED first, so unforgeable), no schema change (leases.actor already TEXT NOT NULL). Store refuses a null/blank actor by name (ANONYMOUS_LEASE); promote's CAS on `base` untouched. battery 44/44 (2337); CONDUCT re-ran the anonymous-lease negative control (neuter guard → 20/2, restored → 22/22). I5 unchanged.
 
 ### REC-3 · queued
 milestone: M7
