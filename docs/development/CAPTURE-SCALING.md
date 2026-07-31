@@ -1,7 +1,15 @@
 # Capture scaling: shared site assets, resumable ticks, and the ceiling
 
-DRAFT, not ratified. Written 2026-07-28 after 0.37.0 measured the real limits
-against live pages. Nothing here is built yet; the measurements it rests on are.
+Written 2026-07-28 after 0.37.0 measured the real limits against live pages.
+
+**STATUS CORRECTED 2026-07-31 (session BOB). The header said "Nothing here is built
+yet" and that had been false for weeks** — five of this document's six order-of-work
+items shipped between 0.38.0 and 0.55.0, and a session reading the header would have
+concluded the substrate did not exist and rebuilt it. Per-item status is at the foot
+of this file, and it is now the rule for every design document that carries an
+order-of-work (`MILESTONES.md`).
+
+The measurements this rests on are real and stand.
 
 ## The three problems are one structure
 
@@ -301,18 +309,71 @@ than discovering it when a page comes back half-captured.
 
 ## Order of work
 
-1. `site_assets` table and its maintenance on capture. Costs nothing on its own
-   and is the substrate for the other two.
-2. Recurrence-based chrome classification reading from it, as a recorded
+Status per item, verified against the source on 2026-07-31.
+
+1. **BUILT.** `site_assets` table and its maintenance on capture. Costs nothing on
+   its own and is the substrate for the other two.
+   (`schema.mjs` `site_assets` / `site_asset_refs`, maintained in `store.mjs`.)
+2. **BUILT.** Recurrence-based chrome classification reading from it, as a recorded
    classification alongside the structural one, never replacing it.
-3. Asset reuse with the freshness window, with `fetched_this_capture: false`
-   recorded on every reused part.
-4. `capture_limits` calibration from the `PLATFORM_LIMIT` signal already emitted.
-5. Resumable sessions. NOT optional: they are what makes the free tier a
-   supported configuration, since first captures and heavy pages exceed the
-   ceiling no matter how good reuse gets.
-6. Post-hoc reuse verification from `site_assets`, which is free, and re-fetch
-   of reused parts at ratification, which is where the claim changes.
+   (`distinct_documents` per address, counted in `store.mjs`.)
+3. **BUILT.** Asset reuse with the freshness window, with `fetched_this_capture:
+   false` recorded on every reused part. (`subresources.mjs`; the manifest note names
+   the reuse and says a ratified capture must re-fetch — which is item 6.)
+4. **BUILT.** `capture_limits` calibration from the `PLATFORM_LIMIT` signal already
+   emitted. (`schema.mjs` `capture_limits`; first refusal recorded, rest DEFERRED.)
+5. **BUILT.** Resumable sessions. NOT optional: they are what makes the free tier a
+   supported configuration, since first captures and heavy pages exceed the ceiling
+   no matter how good reuse gets. (`capture_sessions`; `op=acquire` returns
+   `continuation`.)
+6. **DECIDED 2026-07-31 and QUEUED as CAP-4.** Post-hoc reuse verification from
+   `site_assets`, which is free, and re-fetch of reused parts at ratification.
+
+   **Provenance, recorded honestly.** Bob confirmed on 2026-07-31 that the ADJACENT
+   ruling is his and stands: *a reused asset IS allowed in a capture that will be
+   ratified as evidence.* He did not recall ruling that the re-fetch is MANDATORY,
+   and this document is why — that appeared once, in a section written by a session,
+   while the footer still listed it as open. He then delegated the determination.
+   So the mandatory-ness is now **this project's decision, taken by session BOB on
+   2026-07-31 under Bob's delegation**, not a ruling of his, and it is labelled that
+   way rather than left wearing his name.
+
+   **The decision, and the three refinements it carries:**
+
+   **(a) Post-hoc detection is unconditional.** It costs zero requests: when a later
+   capture of the same host fetches an asset whose sha differs from the stored one,
+   every earlier capture that reused the old bytes is identifiable from
+   `site_assets` and is flagged. Verdicts append and date, never overwrite.
+
+   **(b) At ratification the re-fetch is MANDATORY as an ATTEMPT AND A RECORD, never
+   as agreement.** `confirmed`, `changed` and `unavailable` are all valid
+   ratifications saying different things. What is forbidden is ratifying with a
+   reused part and saying nothing. This is what makes the rule survivable when a
+   source has gone dark, which is the circumstance the record exists for.
+
+   **(c) A plain GET, not a conditional one — this REVERSES the suggestion above.**
+   The section on checking a reused asset recommends `If-None-Match` wherever a
+   request is being spent anyway, and that is right during working capture, where
+   bytes and time are the budget. It is wrong at ratification. A 304 is the ORIGIN
+   asserting that nothing changed; a plain GET lets us hash the bytes ourselves, and
+   our own SHA-256 over what we received is what the record is keyed on. Both cost
+   exactly one subrequest, which is the only scarce resource here, so the
+   conditional form buys nothing against the binding constraint and pays for it in
+   evidence. An equality that costs nothing to produce is not evidence.
+
+   **(d) A fourth outcome, `not_attempted`, because the budget is finite.** A bundle
+   reusing 42 parts needs 42 subrequests at ratification, which fits under the
+   calibrated ceiling but not by much, and a heavier bundle will not fit at all.
+   Parts not reached within the invocation's budget are recorded as
+   `not_attempted` with that reason — never silently omitted. `undetermined` is
+   first-class and must be STATED; a ratification that quietly checked 40 of 60
+   parts and said nothing is exactly the claim this project must not make.
+
+**The two open questions below are also UNSCHEDULED**, and both were deferred to
+measurement that has never been scheduled: the freshness window (and whether it
+differs by kind), and the recurrence threshold, which wants fifteen or more captures
+per host before it says anything. Measurement first, then the constant — a threshold
+picked rather than measured is the mistake `SUBRESOURCE_CAP = 45` already made.
 
 Reuse still comes before sessions, because it determines how much work sessions
 have to do and shrinks them considerably. But it does not remove the need.
@@ -321,10 +382,15 @@ have to do and shrinks them considerably. But it does not remove the need.
 
 - The freshness window, and whether it differs by kind. Stylesheets and images
   inside the document are not the same risk.
-- Whether re-fetch at ratification is mandatory or advisory. Mandatory is
-  cleaner to reason about; advisory matters if a source has gone dark between
-  capture and ratification, which is exactly the case oaklandca.gov is currently
-  demonstrating, and where refusing to ratify would destroy the record's value
-  at the moment it was most needed.
+- ~~Whether re-fetch at ratification is mandatory or advisory.~~ **STRUCK
+  2026-07-31 (session BOB): this question is ANSWERED by this document's own
+  "Re-fetch at ratification is mandatory" section, which was written after it and
+  addresses the advisory case directly — mandatory means the ATTEMPT and the
+  RECORD, never that ratification requires a matching answer, so a source going
+  dark is `unavailable` and still ratifies. The footer was simply never updated.**
+  It is left visible rather than deleted because a document that says both
+  "RULED" and "open question" about one thing is how a settled decision comes to
+  be doubted later, and Bob doubted it on 2026-07-31 for exactly this reason. See
+  the note under item 6 above: the substance stands, the provenance is thin.
 - The recurrence threshold, which should come from measurement across fifteen
   or more captures per host rather than from a guess.

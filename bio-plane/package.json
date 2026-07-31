@@ -48,7 +48,9 @@
     "probe:limits": "node test/limits-probe.mjs",
     "test:edges": "node test/edges.test.mjs",
     "test:membership": "node test/membership.test.mjs",
-    "test:projects": "node test/projects.test.mjs"
+    "test:projects": "node test/projects.test.mjs",
+    "test:battery": "node scripts/battery.mjs",
+    "test:coverage": "node scripts/coverage.mjs"
   },
   "devDependencies": {
     "miniflare": "^4.20260722.0",

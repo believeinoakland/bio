@@ -664,3 +664,65 @@ size blockers:
    honours that; whole-document text extraction as `unpdf` is called here does not.
    That tension is a phase-2 design question (stream/range-feed pdf.js, or cap the
    document size text extraction attempts), not a bundle-size finding.
+
+## 2026-07-31 · Test coverage of the plane, measured for the first time (session BOB)
+
+Instrument: `bio-plane/scripts/coverage.mjs` (`npm run test:coverage`) and
+`bio-plane/scripts/battery.mjs` (`npm run test:battery`), both written this session.
+Machine: darwin, node v26.5.0, local miniflare/workerd. Method and its limits in
+`VERIFICATION.md`.
+
+**Line coverage is NOT reported, and the reason is structural rather than a choice.**
+36 of the 42 suites drive the plane through Miniflare, so `src/**` executes inside
+WORKERD and not in the node harness. `NODE_V8_COVERAGE` would instrument the test
+files and report nothing about `store.mjs`; a line-coverage figure produced that way
+would be a fabrication in the same sense as a Worker timing itself (D-56). Coverage is
+therefore measured in ops, checks and negative controls.
+
+| figure | measured | exactness |
+| --- | --- | --- |
+| battery suites | 42 | discovered from `test/`, not a hand-kept list |
+| assertions passing | 2,252 · 42/42 green | 33–35s wall clock |
+| ops declared in `OPS` | 85 | read out of the module |
+| ops reached through the control plane | 81 (95.3%) | **upper bound** — a suite using both routes is credited to the worker |
+| ops reached only at the Durable Object | 1 · `sourcereach` | exact · the D-43 class |
+| ops unreached by any suite | 3 · `archivelookup`, `linkproject`, `signerlist` | exact |
+| checks in the catalog | 51 | |
+| checks NAMED by an assertion | 18 (35.3%) | the other 33 execute, but only in the direction that passes |
+| suites declaring a negative control | 0 of 42 | the discipline is real and was never recorded |
+
+**Three defects the instruments found on their first run**, all in the test estate
+rather than the plane: `bundle.test.mjs` was in `test/` and absent from the
+hand-maintained `npm test` chain of 38, so nothing ran it; it read an absolute
+container path (`/home/claude/work/...`) and could not run on any other machine; and
+once running it failed, because its fixture configured an 11-character probe token
+where `livefire` asserts a 16-character floor. The fixture was corrected rather than
+the assertion relaxed.
+
+**Do not read 95.3% as a coverage claim.** The two exact buckets are the ones that
+mean anything: 3 ops no suite reaches at all, and 1 reached only where a real caller
+cannot. The 35.3% check figure is the one with the most room, and it is the S-7
+defect class exactly — a check exercised only in the passing direction is a check that
+was never proven to fire.
+
+## 2026-07-31 · unpdf inside the plane breaks the battery (CONTENT-PDF, via CONDUCT)
+
+Recorded here because it is the measurement that decided the Worker topology, and it
+belongs beside the CPDF-1 bundle figures rather than only in a decision summary.
+
+**Adding `unpdf` to the plane's module graph broke 21 miniflare test suites.** Cause:
+a bare npm specifier cannot resolve in un-bundled source, and the suites load
+`src/index.mjs` directly rather than the built artifact. So the dependency is not
+merely large, it is incompatible with how this project tests — the battery drives
+source, and source with a bare specifier does not load.
+
+Taken with CPDF-1's sizes (plane ~0.64 MB alone; plane + unpdf ~2.9 MB raw / 0.71 MB
+gzip against the 3 MB Free limit), the three costs of putting unpdf in the plane are:
+bundle headroom consumed, whole-document-in-memory extraction sharing the plane's CPU
+and 128 MB, and 21 suites unable to load their subject. Isolation into `pdf-worker`
+removes all three at once.
+
+**NOT measured, and it gates the design:** whether Workers Free permits a second
+script and service bindings at all, and what they cost against the request and CPU
+budgets. See D-118. Do not build the Tier 2 path on an assumption here — this is the
+same category as the subrequest ceiling before calibration.

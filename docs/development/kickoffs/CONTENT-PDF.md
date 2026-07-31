@@ -1,5 +1,9 @@
 # Area CONTENT-PDF: structure inside PDFs
 
+**CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by
+the function-specific Worker topology decision. Read it before starting — the old
+item told you to bundle `unpdf` into the plane, and that is now wrong.**
+
 Written 2026-07-31 by `ARCH` from the main checkout, standing this area up as the
 first content area to run in parallel (`PARALLELISM.md`, `INTERFACES.md`,
 `CLAIMS.md`). It is written to be SHOVEL-READY: the next session can claim, build,
@@ -15,6 +19,11 @@ walk subresources, or reach the archive fallback: everything it is entitled to
 from a capture is in I1, and it reads bytes through `op=capture` (range requests
 supported — that clause in I1 §3 was written for exactly this area, so a PDF is
 read in ranges, never pulled whole into a Worker).
+
+**As of 2026-07-31 this area also owns `pdf-worker/**`**, the first member of the
+Worker fleet (I6). Note the two axes do not coincide: `pdf-worker` is CONTENT-PDF's
+CODE and DIST's RELEASE OBJECT, exactly as the plane is. Do not deploy it; land it
+green and hand it to DIST.
 
 **Paths this area owns (all NEW — no collision with CAPTURE's claim):**
 
@@ -103,11 +112,37 @@ extractor and confirm the battery FAILS. A suite that still passes when you neut
 the parser is testing something else (this has bitten this project — read the
 negative-control rule in `CLAUDE.md`).
 
-**(3) MEASURE before committing to text (phase 2).** Do not bundle `unpdf` until
-you have measured its bundled size against the 3MB limit and its CPU against the
-ceiling, through the plane's egress (`cpu.mjs`; a Worker cannot time itself).
-Record both in `MEASUREMENTS.md`. Text extraction is a separate, measured decision,
-not part of phase 1.
+**(3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters
+the plane.** This item said "measure before bundling `unpdf`". The measurement ran
+(CPDF-1: it fits, 2.29MB gzip headroom) and then a second measurement overturned the
+approach: **putting `unpdf` in the plane's module graph broke 21 miniflare suites**,
+because a bare npm specifier cannot resolve in un-bundled source and this battery
+drives source rather than the built artifact.
+
+Bob's decision, 2026-07-31: a **function-specific Worker topology**. The plane stays
+lean; heavy dependency-laden functions move into dedicated single-purpose Workers
+called over service bindings. First member is `pdf-worker`, registered as **I6** in
+`INTERFACES.md`, and `PARALLELISM.md` carries the six standing rules for a fleet
+member (the two that bite: it ASSERTS nothing and writes nothing, and it holds a
+`CAPTURES` read binding and never `PUBLISHED`).
+
+Extraction is tiered, and the SEQUENCE is the point:
+
+- **Tier 1, in the plane, pure JS, no dependency** (QUEUE `CPDF-4`) — content-stream
+  text operators plus the font `ToUnicode` CMap, reusing the object parser
+  `pdfstructure.mjs` already has. Most municipal PDFs come from Word or InDesign and
+  carry `ToUnicode`.
+- **Measure Tier 1's coverage on real Oakland PDFs** (`CPDF-5`). That measurement
+  SIZES Tier 2 — it says how much `unpdf` is actually needed.
+- **Tier 2, `pdf-worker`/`unpdf`** (`CPDF-6`) — only the residue: CID fonts, missing
+  `ToUnicode`, complex layout.
+- Tables, visuals and OCR are later tiers, deferred by name rather than forgotten.
+
+**`CPDF-2`'s work is superseded, NOT discarded**: the extraction logic and size guard
+already written on branch `content-pdf/phase2-text` become the pdf-worker's Tier 2
+core. And run `CPDF-7` first if it has not run — whether Workers Free permits a
+second script and a service binding at all is UNMEASURED (D-118), and if it does not,
+Tier 1 is not an optimisation but the only PDF text a free instance will ever have.
 
 **(4) The output shape IS the I2 producer side — write it from the code.** I2
 (structure → framework) is not registered yet and its nominal owner FRAMEWORK is

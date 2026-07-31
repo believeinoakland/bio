@@ -37,6 +37,7 @@ responsibility that a session picks up by claiming it.
 | --- | --- | --- |
 | `CONDUCT` | no code. `QUEUE.md`, the interface registry, this file (renamed from `ARCH` 2026-07-31) | Orchestration + integration: drains `QUEUE.md` via ephemeral workers, verifies and lands on `main`. See `ORCHESTRATION.md` |
 | `BOB` | no code. Decisions and their decomposition | Requirements / UX / architecture with Bob; hands decompositions to CONDUCT to enqueue. See `ORCHESTRATION.md` |
+| `RECORD` | the store core: `schema.mjs`, `promote`/gate/audit, membership, projections, `query.mjs` and the retrieval surface, the scheduler. ADDED 2026-07-31 (session BOB) | OWNS I5, produces I3 |
 | `CAPTURE` | acquisition mechanics: fetch, governor, subresources, links, reachability, archive fallback | PRODUCES bytes and provenance |
 | `CONTENT-HTML` | identifying content inside HTML: recognizers, client-rendered documents (D-64) | CONSUMES bytes, PRODUCES structure |
 | `CONTENT-PDF` | identifying content inside PDFs, structure extraction (D-91) | CONSUMES bytes, PRODUCES structure |
@@ -44,9 +45,21 @@ responsibility that a session picks up by claiming it.
 | `UI` | `civicos-ui/**` | CONSUMES op contracts |
 | `DIST` | `newgroup/**`, `release/**`, deploy tooling, and CUTS RELEASES | CONSUMES the plane artifact |
 
-Seven areas is more than Bob intends to staff. They are listed so the map is
+Eight areas is more than Bob intends to staff. They are listed so the map is
 complete; two to four are live at any time and the rest are dormant, which is a
 normal state and not a gap.
+
+**Why `RECORD` was added, 2026-07-31.** It is not a new body of work — it is ground
+that was already being edited with no owner. `store.mjs` is ~4,900 lines and only its
+link, capture, task and reachability functions were claimed; the schema core,
+`promote`, the gate, the audit sweep, membership, the projections and the entire
+retrieval surface belonged to nobody. Unowned is not free: this file already says
+unclaimed paths are a collision risk rather than a licence, and the practical effect
+was that anything touching the store defaulted to `CAPTURE`, which is why CAPTURE now
+appears in three milestones and is the constraint on the whole board
+(`MILESTONES.md`). Retrieval sits inside `RECORD` rather than in an area of its own,
+because it is finished at its declared scope and splitting it would be structure
+bought before it is needed; the split is cheap later if search work grows.
 
 **`DIST` cutting releases is the load-bearing change.** Today the release baton
 is a lock held for a whole session, because cutting a release is five
@@ -55,6 +68,53 @@ RELEASE.json). No amount of process removes that. What removes it from the
 critical path is that **areas stop cutting releases**: they land tested code on
 `main` continuously, and `DIST` batches releases. The baton goes from held-for-a-
 session to held-for-minutes, and it stops being the thing every area waits on.
+
+## Deployment units are a SEPARATE axis from areas
+
+Added 2026-07-31, when Bob adopted a **function-specific Worker topology** and the
+first fleet member, `pdf-worker`. Recorded here because conflating the two axes is
+the mistake that would follow, and it would be expensive.
+
+- An **AREA** is a body of responsibility: who may edit which paths. It is about
+  sessions colliding.
+- A **WORKER** is a deployment unit: what ships together, versions together, and
+  rolls out together. It is about bytes reaching an account.
+
+They are not the same and one does not imply the other. `pdf-worker` is
+`CONTENT-PDF`'s code and `DIST`'s release object, exactly as the plane is
+`CAPTURE`/`RECORD` code and `DIST`'s release object.
+
+**The topology.** The plane stays a lean control/record Worker. Heavy,
+dependency-laden functions move into dedicated single-purpose Workers the plane calls
+over service bindings. A fleet, not a monolith, and more members are expected as
+needs emerge.
+
+Six rules, each of which is an existing lesson applied to a second Worker rather than
+a new idea:
+
+1. **A fleet member's API is in the RECORD'S terms, never the library's.** The plane
+   hands `pdf-worker` a capture sha and gets back the I2 shape. That is what keeps
+   the library swappable and stops a vendor's data model leaking into the record.
+2. **A fleet member ASSERTS nothing.** It returns derived output and writes nothing:
+   no register row, no provenance, no capture. Provenance stays the plane's, because
+   a hop a component can hand us is a hop a component can invent (D-112).
+3. **Narrowest bindings that do the job, and never `PUBLISHED`.** Every Worker
+   holding a `CAPTURES` binding is one more component inside the private fence. The
+   two-bucket fence is structural, and it is only structural while the set of things
+   that can reach the private bucket stays small and named.
+4. **Each member versions and rolls out on its own, so D-108 applies per member.**
+   "A deploy verified is not a build serving" now has a second face: the plane can be
+   current while the sibling it calls over a service binding is still serving the
+   previous build, and that window is invisible to both. A verification must
+   establish which build ANSWERED, for the member as well as the plane.
+5. **The version authority rule spans the fleet.** D-106's drift class — a version
+   living in four places and rotting in three — returns multiplied by the number of
+   members. `bio-plane/package.json` stays the single declared authority and the
+   embed step must refuse on ANY disagreement, in either direction, for every member.
+6. **The installer installs the FLEET.** `newgroup` installs one Worker today. A
+   sovereign instance that gets the plane and not `pdf-worker` is an instance whose
+   PDFs silently do less, which is precisely the D-106 failure — a group installing
+   today getting something quietly different from every description of it.
 
 ## Claiming an area
 

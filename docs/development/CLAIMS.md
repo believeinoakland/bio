@@ -93,4 +93,13 @@ paths: the task-queue drain alarm in bio-plane/src/store.mjs (the alarm()/onAlar
 interfaces consumed: none
 interfaces owned: none
 expected: QUEUE.md CAP-2 / D-109 — drain the task queue automatically on a Durable Object alarm, the mechanism #armSweep proved for selections: armed on enqueue, re-armed by the alarm while task_queue is non-empty, self-terminating (deleteAlarm) when it drains. The capture path only ENQUEUES; taskEnqueue arms the alarm (a schedule, never a task write) so the producer/consumer split is preserved. onAlarm shares the single DO alarm with the selection sweep and reconciles to the earliest wake. op=taskdrain still works — the alarm and the manual drain coexist. NEGATIVE CONTROL run: neutering onAlarm's taskDrain call fails the suite naming the undrained queue ("the queue is empty after the drain" want 0 got 1; "the queue count is zero" want 0 got 1); restored and green. Full battery green (exit 0). No inbox-grammar or write-gate change. No deploy; CONDUCT integrates and live-verifies.
-released: 2026-07-31 — committed to branch capture/d109-drain; awaiting CONDUCT integration on main.
+released: 2026-07-31 — CAP-2 / D-109 landed on main by CONDUCT, commit 39a0e1b. Full battery green (exit 0); the selection, inbox, and task-drain suites pass together, confirming the shared-alarm reconciliation preserves the selection sweep.
+
+## CLAIM 2026-07-31 BOB
+session: bob-planning-1
+opened: 2026-07-31T21:00:00Z
+paths: docs/development/MILESTONES.md (new), docs/development/VERIFICATION.md (new), docs/development/PLAN.md (header only), docs/development/ORCHESTRATION.md, docs/development/PARALLELISM.md (area table), docs/development/INTERFACES.md (I3/I4/I5 appended), docs/development/DEBT.md (Status column dispositions + appended section), docs/development/MEASUREMENTS.md (appended), docs/development/CAPTURE-SCALING.md (status markers), docs/development/kickoffs/README.md, CLAUDE.md (verification section), bio-plane/scripts/battery.mjs (new), bio-plane/scripts/coverage.mjs (new), bio-plane/test/bundle.test.mjs, bio-plane/package.json (two test scripts)
+interfaces consumed: none
+interfaces owned: registers I3, I4, I5 from the code as it stands (I3 owner moved CAPTURE -> RECORD)
+expected: the planning-infrastructure cleanup Bob directed — place every open construct architecturally, refactor the plan into milestones and pipelines CONDUCT can orchestrate, and stand up a verification process with a measured floor. NO area code touched: the two new scripts are instruments, and bundle.test.mjs was REPAIRED (it read an absolute container path, was absent from the npm test chain, and failed on an 11-character token fixture against livefire's 16-character floor). QUEUE.md deliberately NOT edited — it is CONDUCT's sole-writer file and CONDUCT was landing CAP-2 concurrently; the M0 items are handed over as a decomposition instead.
+released: 2026-07-31 — docs only; nothing deployed, nothing pushed.

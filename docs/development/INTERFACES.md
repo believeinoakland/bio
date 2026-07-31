@@ -293,3 +293,181 @@ or `{ ok:false, container, reason: "NOT_A_PDF"|"NOT_BYTES" }` on bad input.
 - A FRAMEWORK session confirms or counters the shape.
 - `CONTENT-HTML` emits the same shape from HTML, proving the container-agnostic
   claim across both producers rather than asserting it from one.
+
+---
+
+## I3 — plane → UI (the op contracts)
+
+- **ID:** I3
+- **Owner:** `RECORD` (moved from `CAPTURE` 2026-07-31; `PARALLELISM.md` anticipated
+  this the first time op-wiring became a recurring delegation, and it has now
+  recurred once — the `op=pdfstructure` delegation from CONTENT-PDF)
+- **Version:** 1.0.0 (first written 2026-07-31, from plane 0.55.0)
+- **Consumers:** `UI`, `DIST` (the installer's served surfaces), every content area
+  that needs its work reachable
+- **Status:** STABLE
+
+### What it is
+
+The op surface itself: how a caller names an operation, how it is authorised, and what
+shape an answer takes. It was never registered, and it is the interface with the most
+consumers.
+
+### The shape
+
+- **Dispatch.** `op` is resolved as `searchParams.get("op") || path.slice(1)`, so
+  `/api/?op=cite` and a bare `/cite` are the SAME dispatch. Both are the control
+  plane; both are authorised identically. A suite that drives one has driven the other
+  — and a suite that drives the Durable Object stub directly has driven NEITHER, which
+  is the D-43 defect class and is what `scripts/coverage.mjs` now counts.
+- **The op table.** `OPS` in `src/index.mjs` is the registry: each entry names
+  `classes` (the token classes admitted, or `null` for deliberately unauthenticated)
+  and `mutating`. An op absent from the table answers `unknown op`. A `classes: null`
+  op gates itself and MUST be reachable through the control plane, because that is a
+  real caller's only route.
+- **Answers.** JSON, `{ok: …}` shaped, with a named `reason` on a refusal. A refusal
+  is a structured answer and not an exception: an op that throws hands the caller a
+  platform error where a BIO reason belongs (D-39).
+- **Capability gating** applies to a SESSION and never to a machine credential: a
+  token class has no member behind it and therefore holds no capabilities.
+- **Namespace.** `store=` selects the namespace; the probe class is confined to
+  `scratch`. Unauthenticated invitation ops honour `store=`; `claim` and `login` are
+  pinned to `bio`, because an instance has one identity (D-44).
+
+### What changing it costs
+
+Adding an op is additive and needs no protocol. Renaming one, changing its `classes`,
+changing a refusal `reason` a caller matches on, or changing the answer shape is a
+change to this interface: `civicos-ui` and the served pages match on these strings.
+
+---
+
+## I4 — plane → installer (the release artifact)
+
+- **ID:** I4
+- **Owner:** `DIST`
+- **Version:** 1.0.0 (first written 2026-07-31; half-formalised by D-106's version
+  authority rule)
+- **Consumers:** `newgroup/**`, and every sovereign instance it installs
+- **Status:** STABLE
+
+### The shape
+
+- **`bio-plane/package.json` is the single declared version authority.** `resolveVersion`
+  refuses on ANY disagreement in either direction, names both files and prints the
+  exact edit, and runs BEFORE the esbuild so a mismatch costs a second and leaves no
+  stale artifact. A wrangler config AHEAD of package.json is the same drift mirrored,
+  not a newer release.
+- **The artifact** is `dist/bio-plane.bundled.mjs`, one self-contained module with
+  every import inlined — which is why `docprofile/` living outside `bio-plane/` costs
+  the deployed artifact nothing, as long as it is present at BUILD time.
+- **`release/RELEASE.json`** carries the signature. `selectRelease` prefers a newer
+  repository release over the built-in copy, and falls back to the built-in only when
+  the repository is unreachable or fails integrity or signature.
+- **`bindings: []` is a structural guarantee**, not a convention: the installer holds
+  no credential, and a deploy that broke that property would be a security regression
+  a hand-paste could cause silently (D-107).
+- **`INSTANCE_NAME` is bound from the worker slug**, on install and on update, with no
+  second name and no override. A third party sees the name the operator typed.
+
+### What changing it costs
+
+The version authority rule and the empty binding set are load-bearing security and
+correctness properties, not preferences. Changing either is an interface change.
+
+---
+
+## I5 — the store schema
+
+- **ID:** I5
+- **Owner:** `RECORD`
+- **Version:** 1.0.0 (first written 2026-07-31, from plane 0.55.0)
+- **Consumers:** every area that persists anything
+- **Status:** STABLE
+
+### The shape, and the three rules that are not style
+
+1. **A derived table MUST be named in `op=purge`'s whole-store arm**, or a whole-store
+   purge reports scope `ALL` and silently leaves rows (D-113). A purge that reports ALL
+   and leaves rows is worse than one reporting a narrower scope, because the caller
+   believes the store is empty. The list is maintained by hand today; the check that
+   closes the CLASS is an M0 item.
+2. **New tables go BEFORE the `host_governor` block.** `hygiene.test.mjs` asserts the
+   schema literal ends on a `);`, so a table appended at the very end fails it.
+3. **No backticks anywhere inside the schema template literal.** A BALANCED stray pair
+   still parses, so `node --check` does not save you — this class has struck three
+   times (D-24 twice, D-101). The guard counts ticks rather than parsing.
+
+Table ownership as it stands: `bundles`, `files`, `history`, `manifest`, `refs`,
+`register`, `leases`, `seq`, `credentials`, `sessions`, `bootstrap`, `members`,
+`signers`, `published_*`, `inbox`, `bundles_fts` and the selection tables are
+`RECORD`'s. `capture_limits`, `site_assets`, `site_asset_refs`, `capture_sessions`,
+`links`, `link_verdicts`, `captured_locators`, `runtime_observations`, `cpu_probe`,
+`task_queue`, `tasks`, `source_reachability`, `host_governor` are `CAPTURE`'s.
+
+### What changing it costs
+
+A schema change reshapes DERIVED tables only, and BEFORE schema application. Nothing
+reshapes a table holding first-party assertions: provenance documents are first-party
+material and are never rewritten, so the record is legitimately non-uniform across
+eras (D-99).
+
+---
+
+## I6 — plane → pdf-worker (the first fleet service binding)
+
+- **ID:** I6
+- **Owner:** `CONTENT-PDF` (the code); `DIST` releases it
+- **Version:** 0.1.0 — **PROVISIONAL.** Registered 2026-07-31 from Bob's topology
+  decision, BEFORE the worker exists, deliberately: I1 was written from code because
+  the code was there first, and this one is written from the decision because
+  building against an unregistered contract is what `PARALLELISM.md` forbids. It
+  becomes 1.0.0 and STABLE when `pdf-worker` ships and the shape is re-read from the
+  code, as I1 was.
+- **Consumers:** the plane (`RECORD` owns the calling side, `op=pdfstructure`)
+- **Status:** PROVISIONAL
+
+### What it is
+
+The first member of the function-specific Worker fleet (`PARALLELISM.md`, "Deployment
+units are a separate axis"). The plane stays lean; `pdf-worker` holds `unpdf`
+(pdf.js) and nothing else of consequence.
+
+### The shape
+
+**In:** a capture sha, and nothing more. `{ capture_sha: <64 lowercase hex>, store: <namespace> }`
+
+The worker **reads the bytes from R2 itself** rather than being handed them, which is
+the point: a document too large to hold in the plane is exactly the document this
+exists for, so passing bytes across the binding would reintroduce the constraint the
+split removes.
+
+**Out:** the I2 structure shape, extended with text. Not a pdf.js object, not a
+library type — the record's own vocabulary, per fleet rule 1. `undetermined` is
+first-class in the output: a tier that cannot decode something SAYS SO, per
+document and per region, and never returns silently truncated text.
+
+### What it consumes from I1, and the one thing that changes
+
+`pdf-worker` consumes I1 §2, the **R2 key shape** (`${storeName}/captures/${sha}`),
+rather than I1 §3, the `op=capture` op. I1 already documents the key shape as part of
+the contract's ground truth, so this is within I1 and not a change to it — but it
+promotes the key shape from documentation to a load-bearing dependency with a second
+consumer. Changing it now breaks a Worker, not just a reader.
+
+### What it must NOT do
+
+- **Write anything.** No register row, no provenance, no capture, no task. It returns
+  derived structure and the plane decides what that means (fleet rule 2).
+- **Hold a `PUBLISHED` binding.** `CAPTURES` read is the whole of its need.
+- **Be called by anything but the plane.** It has no member-facing surface and no
+  token classes of its own; the plane's op layer is the authorisation boundary.
+
+### Open before it can go STABLE
+
+- The worker exists and the shape is re-read from its code.
+- **Service bindings on Workers Free are UNMEASURED** and must not be assumed.
+  Workers Paid is an optimisation and never a requirement (RULED), so if the binding
+  or a second script is unavailable or capped on Free, the tiering below is not an
+  optimisation — it is what keeps a free instance able to read a PDF at all. Measure
+  before building the Tier 2 path. See D-118.

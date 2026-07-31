@@ -1,9 +1,29 @@
-# PLAN
+# PLAN — the foundation ladder. CLOSED 2026-07-31.
 
-The active work plan. Steps are ordered, each carries an acceptance test that is
-a command rather than a judgment, and each names what it unblocks. Sessions
-update the status column and nothing else about a step; changing a step's
-substance means writing why in the notes.
+**This document is HISTORY and is no longer the active plan.** S-1 through S-12 are
+complete: every rung built, verified, and where the rung was decommissioning, actually
+decommissioned. It is kept in full because its value is now the REASONING it preserves
+— why C-12.1 deadlocked and froze a bundle in production, why the plane and the
+catalog must share one hasher, why `promote` writing a whole image destroyed evidence
+twice, why the conformance pass moved inside the object. None of that is recoverable
+from the code.
+
+**The live plan is `QUEUE.md` (what is runnable) and `MILESTONES.md` (what the work is
+for).** Everything built after S-12 — the capture arc, 0.36.0 through 0.55.0 — arrived
+while this file was complete and stopped, and therefore had no home; that is the
+fragmentation `MILESTONES.md` was written to end. Do not append an S-13 here. A
+document carrying essay-length outcomes cannot be drained at the speed a queue moves,
+and appending to it would rebuild the same problem under a different name.
+
+**One property of this file was worth keeping and has moved rather than been lost:**
+every acceptance test is a command rather than a judgment, and a step that cannot be
+verified by running something is a wrong step. That is now `accepts-when:` on a queue
+item, and the rest of the discipline is in `VERIFICATION.md`.
+
+---
+
+The active work plan, as it stood. Steps are ordered, each carries an acceptance test
+that is a command rather than a judgment, and each names what it unblocks.
 
 Status values: `todo`, `doing`, `done`, `blocked`, `dropped`.
 

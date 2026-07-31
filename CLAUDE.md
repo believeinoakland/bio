@@ -122,8 +122,19 @@ tested code and ask DIST. See `docs/development/kickoffs/DIST.md` for the gate.
 
 ## Verification discipline, in order
 
-1. `cd bio-plane && npm test` — the whole battery, not the suite you touched.
-2. The negative control for whatever you just added.
+`docs/development/VERIFICATION.md` is the full process, the coverage floor and the
+measured state. The short version:
+
+1. `cd bio-plane && npm run test:battery` — EVERY suite, all of them reported. Not
+   `npm test`, which chains with `&&` and stops at the first failure, hiding the state
+   of everything after it (D-93). Not just the suite you touched.
+2. The negative control for whatever you just added — RUN, and recorded in the
+   suite's own `NEGATIVE CONTROL:` line so the next session can re-run it in one step
+   instead of re-deriving how to break the subject.
+2a. `npm run test:coverage` — no NEW unreached op, and an op you added carries a
+   control-plane assertion in the same turn. Coverage here is ops, checks and
+   controls; line coverage is not measurable, because the plane runs inside workerd
+   and not in the node harness.
 3. Build, sign, deploy (DIST only), and wait for the rollout gate.
 4. Live-verify **in your own instance's scratch namespace**, never the real
    record, and sweep it after.
@@ -137,6 +148,9 @@ tested code and ask DIST. See `docs/development/kickoffs/DIST.md` for the gate.
 | `bio-plane/checks/bio-checks.mjs` | the check catalog. C-numbers. The gate runs it |
 | `bio-plane/test/` | the battery. `hygiene.test.mjs` catches source-level hazards |
 | `newgroup/` | the installer. Out of bounds without an explicit instruction |
+| `docs/development/MILESTONES.md` | the capability ladder, and where every open piece of work sits |
+| `docs/development/QUEUE.md` | what is RUNNABLE now. CONDUCT's, sole writer. `PLAN.md` is closed history |
+| `docs/development/VERIFICATION.md` | what "tested" means here, the instruments, and the floor |
 | `docs/development/` | DEBT, MEASUREMENTS, the designs, the kickoffs |
 | `release/` | the signed artifact and RELEASE.json |
 

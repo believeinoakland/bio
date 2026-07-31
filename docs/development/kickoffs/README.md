@@ -168,6 +168,10 @@ Some findings belong to no thread and to all of them. File them as their own
 document and cross-reference from the threads that care, rather than burying them
 in a kickoff only one thread reads:
 
+- `MILESTONES.md` — the capability ladder and where every open piece of work sits.
+  Read it before deciding what an area does next; `QUEUE.md` is what is runnable
+- `VERIFICATION.md` — what "tested" means here, the coverage instruments, and the
+  floor a queue item must clear
 - `SOURCE-ACCESS.md` — a public body refusing the record, and the standing
   position that BIO does not disguise its requests
 - `MEASUREMENTS.md` — every number the project's limits rest on
