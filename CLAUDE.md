@@ -169,7 +169,23 @@ installer uses. If a wrangler command ever reports an account other than
 
 ## Credentials
 
-Read from `.env`, never from a chat message and never committed. `.env` is
-gitignored and carried into worktrees by `.worktreeinclude`. `tokens.mjs`
-denylists any token value published in the repo and treats it as NOT SET, so
-committing one revokes it.
+Read from `.env`, never committed. `.env` is gitignored and carried into
+worktrees by `.worktreeinclude`. `tokens.mjs` denylists any token value
+published in the repo and treats it as NOT SET, so committing one revokes it.
+
+**How a secret gets onto the machine, since the operator does not edit files by
+hand and should not be typing tokens into a conversation:** he copies the value
+to the macOS clipboard from wherever he keeps it, and you read it with
+`pbpaste`. The value never appears in a prompt, a transcript, or a tool call
+you print.
+
+    printf 'CLOUDFLARE_API_TOKEN=%s\n' "$(pbpaste)" >> .env
+
+NEVER echo, cat, or otherwise print a secret you have read this way, including
+"just to confirm it landed". Confirm it by USING it: run the command that needs
+it and report what the SERVICE said. `npx wrangler whoami` reporting the right
+account is proof the token is correct; printing the token proves nothing and
+puts it somewhere it was not before.
+
+If a value is already visible in the conversation because it arrived there
+before this rule existed, do not repeat it. Use it and move on.
