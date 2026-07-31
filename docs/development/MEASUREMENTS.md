@@ -292,3 +292,18 @@ Conclusion: the "measure bundle size before believing it fits" instruction on
 D-60 is discharged. It fits with room to spare, and the bundle-size concern that
 genuinely applies to `unpdf` (D-91) does not apply to docprofile. D-60 adoption
 is a build task.
+
+## A live governor config standing on the instance (NOT our measurement)
+
+Set **2026-07-30** while verifying D-103's ops on the deployed 0.48.0:
+`web.archive.org` has a configured appetite of **24/min** on the live instance.
+
+Recorded here so it is not mistaken for a finding. 24/min is the LOW end of the
+third-party rate figures quoted in `ARCHIVE-FALLBACK.md`, which are the
+archive's own published/observed numbers and not something this project
+measured. D-105 stands: those figures remain unverified from our side, because
+`web.archive.org` was unreachable from this session's egress. The value is a
+deliberately conservative placeholder chosen so that if the archive session
+begins fetching before it re-measures, it does so under the gentlest figure
+available rather than the most permissive. Re-set it from OUR OWN measurement,
+through the plane's Cloudflare egress, once D-105 is discharged.
