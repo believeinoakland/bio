@@ -66,8 +66,11 @@ routing and the grammar, and dedups on (refers_to, kind) so a re-capture loop
 cannot flood it. This is the safety property, not a detail: the daemon
 credential cannot write a task. Transport is table-as-queue in the DO unless a
 Cloudflare Queue buys something specific.
-(3) D-102 and D-103, the small ones: the wizard binds INSTANCE_NAME, and
-governorstate/governorconfig get control-plane ops. (4) If time remains, plane
+(3) D-102 and D-103, the small ones. D-103 IS DONE, staged as 0.48.0 (signed,
+not deployed): governorstate/governorconfig are wired as control-plane ops, so
+this reduces to DEPLOYING 0.48.0 with the baton and to D-102, the wizard
+prompting for an installation name that becomes the UA component (RULED; interim
+name is 'development', already bound live on this instance). (4) If time remains, plane
 adoption of the volatile digest (D-60) is the cheaper win: feasibility is
 ALREADY MEASURED (docprofile tree-shakes to 5.3KB, zero deps, import path
 `../../docprofile/index.mjs` from src/, build inlines it so the installer is

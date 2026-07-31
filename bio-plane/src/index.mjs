@@ -317,6 +317,16 @@ const OPS = {
      live instance stop being a plausible story and become a measured one.
      Admin, because the register is intake provenance for the working corpus. */
   registeraudit:{ classes: ["admin", "probe"],                     mutating: false },
+  /* D-103: the per-host governor's operator surface. governorstate is a read of
+     which hosts are held and why (admin and member: a member watching a capture
+     stall deserves to see the governor is the reason, not a broken source);
+     governorconfig sets a host's appetite and is admin/probe because tuning how
+     hard we lean on a counterparty is an operator decision, not a member one,
+     the same line memberset and signerset draw. Neither is a capacity FINDING:
+     a refusal still teaches capacity through governorReport on the fetch path.
+     This only exposes what the DO already tracks; it discovers nothing new. */
+  governorstate:  { classes: ["admin", "member", "probe"],           mutating: false },
+  governorconfig: { classes: ["admin", "probe"],                     mutating: true  },
   signeradd:    { classes: ["admin", "probe"],                     mutating: true  },
   signerlist:   { classes: ["admin", "member", "probe"],           mutating: false },
   signerset:    { classes: ["admin", "probe"],                     mutating: true  },
@@ -380,13 +390,14 @@ const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projec
 const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
-                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
+                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
                    ...EXPERTISE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
-                   ...EXPERTISE_ACTIONS, "memberadd", "memberset", "signeradd", "signerset"]),
+                   ...EXPERTISE_ACTIONS, "memberadd", "memberset", "signeradd", "signerset",
+                   "governorstate", "governorconfig"]),
 };
 
 /* ---- capabilities at the op layer. Membership Architecture v2 section 5 ----
@@ -477,6 +488,10 @@ const NEEDS = {
   memberset:        null,
   signeradd:        null,
   signerset:        null,
+  /* D-103: setting a host's appetite is an operator act bounded by
+     SESSION_OPS.admin, the same as the roster ops above, not a section-5
+     working capability. governorstate is a read and needs no entry at all. */
+  governorconfig:   null,
 };
 
 const KNOCK = {
@@ -960,6 +975,39 @@ export default {
       const p = await (await st.fetch(`http://x/projectlinks?capture=${capture}`
         + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : ""))).json();
       return json({ ok: true, ...p.result });
+    }
+
+    if (op === "governorstate") {
+      /* D-103: which hosts the governor is holding and why. A read; the host
+         param narrows to one, absence returns all. The store method already
+         shapes the rows, so this only forwards. */
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const host = url.searchParams.get("host");
+      const r = await (await st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`)).json();
+      return json({ ok: true, ...r.result });
+    }
+
+    if (op === "governorconfig") {
+      /* D-103: set a host's appetite. A host is required so a fat-fingered
+         global change is impossible; appetite_per_min omitted or null resets
+         that host to the instance default rather than pinning a number, which
+         is how an operator says "stop treating this host specially". */
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const host = url.searchParams.get("host");
+      if (!host)
+        return json({ ok: false, reason: "NEED_HOST", detail: "pass host=<hostname>; governorconfig never sets a global appetite" }, 400);
+      const raw = url.searchParams.get("appetite_per_min");
+      let appetite = null;
+      if (raw !== null && raw !== "") {
+        appetite = Number(raw);
+        if (!Number.isFinite(appetite) || appetite <= 0)
+          return json({ ok: false, reason: "BAD_APPETITE", detail: "appetite_per_min must be a positive number, or omit it to reset to the instance default" }, 400);
+      }
+      const r = await (await st.fetch("http://x/governorconfig", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ host, appetite_per_min: appetite }),
+      })).json();
+      return json({ ok: true, ...r.result });
     }
 
     if (op === "links") {

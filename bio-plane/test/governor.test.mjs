@@ -149,6 +149,28 @@ console.log("\n--- the state surface says who is held and why ---");
   t("and a cool-off in the future", st.hosts[0].cooloff_until > Date.now(), true);
 }
 
+console.log("\n--- D-103: the control-plane surface, both ways on class ---");
+{
+  const admin = async (u, opts) => (await mf.dispatchFetch("http://x" + u + (u.includes("?") ? "&" : "?") + "token=adm-gov", opts)).json();
+  const member = async (u, opts) => (await mf.dispatchFetch("http://x" + u + (u.includes("?") ? "&" : "?") + "token=mem-gov", opts)).json();
+  /* config requires a host: no fat-fingered global change. */
+  t("config with no host is refused", (await admin("/api/?op=governorconfig", { method: "POST" })).reason, "NEED_HOST");
+  t("a negative appetite is refused", (await admin("/api/?op=governorconfig&host=cfg.example.gov&appetite_per_min=-4", { method: "POST" })).reason, "BAD_APPETITE");
+  const set = await admin("/api/?op=governorconfig&host=cfg.example.gov&appetite_per_min=9", { method: "POST" });
+  t("an admin sets a host's appetite", set.appetite_per_min, 9);
+  /* the read reflects it, and a member CAN read (watching a stall). */
+  const st = await member("/api/?op=governorstate&host=cfg.example.gov");
+  t("a member reads the state", st.hosts?.[0]?.appetite_per_min, 9);
+  /* both ways: a member CANNOT config. */
+  const denied = await member("/api/?op=governorconfig&host=cfg.example.gov&appetite_per_min=1", { method: "POST" });
+  t("a member cannot config", denied.ok, false);
+  t("refused by class, not by validation", /forbidden/.test(denied.error || ""), true);
+  /* omitting appetite resets to the instance default (null), the operator's
+     way of saying stop treating this host specially. */
+  const reset = await admin("/api/?op=governorconfig&host=cfg.example.gov", { method: "POST" });
+  t("omitting appetite resets to the default", reset.appetite_per_min, null);
+}
+
 console.log(`\ngovernor: ${pass} pass, ${fail} fail`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);
