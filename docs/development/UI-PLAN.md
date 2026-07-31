@@ -137,6 +137,100 @@ self-announce staleness.
   audit added, the 500-bundle scratch store scrolls smoothly, the old
   token is dead.
 
+## The plane has moved. Inventory and gap, measured 2026-07-31 (session BOB)
+
+This plan was written 2026-07-28 against plane 0.45.0. The plane is now 0.55.0+ and
+the gap is not "a few rungs behind" — **whole capability families shipped with no
+surface and no rung naming them.** Measured, not estimated: the op table read out of
+`src/index.mjs`, the call sites read out of `app.html`.
+
+| | count |
+| --- | --- |
+| ops the plane declares | 85 |
+| ops reachable by a member class | 63 |
+| **distinct ops the UI reaches** | **18** |
+
+The 18: `acquire`, `allocid`, `attest`, `capture`, `image`, `lease`, `links`,
+`linkproject`, `list`, `login`, `memberlist`, `projection`, `promote`,
+`publishedmanifest`, `release`, `search`, `select`, `whoami`.
+
+Raw counts overstate the gap — `promote`, `lease`, `allocid`, `audit`, `stats`,
+`dangling`, `index`, `runtime`, `selftest` are plumbing or diagnostics and want no
+member surface. What matters is which MEMBER-FACING families have none.
+
+### Families that shipped with no UI and no rung
+
+1. **The task inbox (D-98, 0.49.0).** `tasks`, `taskforward`, `taskresolve`. The
+   ruling is that every user has a todo list behaving like an inbox and that an
+   undetermined-authority capture creates a task AUTOMATICALLY. The plane does it. A
+   member cannot see one. This is the largest single gap, because it is the surface
+   where the record ASKS SOMETHING OF A PERSON, and there is nowhere for it to ask.
+2. **Project participation and governance (S-12, 0.20.0–0.30.0, seven releases).**
+   `projectinvite`, `projectjoin`, `projectleave`, `projectremove`, `projectowneradd`,
+   `projectownerremove`, `projectfork`, `projectownerrescue`, `projectparticipants`,
+   `projectownerarith`. Membership v2's entire section 7 is enforced in the plane and
+   unreachable from a browser. U11 says "members & keys" and does not mention projects.
+3. **Expertise and licences (1.3, 4.9, 0.27.0).** `expertisedeclare`,
+   `expertiseconfirm`, `expertiselist`. A member declares expertise and an
+   administrator confirms it — two different claims by two different people, which is
+   the whole point, and neither can be made.
+4. **Verified export (section 8, 0.29.0).** `export`, `exportlog`. This is what makes
+   every governance rule enforceable, since a group that cannot leave can be held.
+   No surface. D-52 also notes no administrator is NOTIFIED of an export.
+5. **The citation lifecycle beyond citing.** `sever` and `reinstate` (0.19.0) and
+   `retire` (0.32.0) have no rung at all. U9 covers `cite` and `dispose` only, so as
+   planned the UI can create citations and never withdraw one — an accumulation
+   rather than a record of what a group currently relies on.
+6. **Selection as a lease.** The UI calls `select` and never `selection`, so it holds
+   no keep-alive and never learns what DRIFTED underneath a selection. The plane
+   detects drift exactly and classifies it; the member is not told.
+
+### Two drifts, not gaps
+
+- **`op=searchfields` exists so a UI does not keep a drifting copy of the query
+  vocabulary. The UI keeps one anyway** — it composes literal strings such as
+  `type:information state:collected`. That is the exact drift the op was published to
+  prevent, and it will break silently when a field is renamed.
+- **`op=inbox` / `inboxget` / `inboxresolve` is the DOORBELL** (membership requests)
+  and is a different thing from `tasks` (D-98). Both are unsurfaced, and their names
+  are close enough that a session will conflate them. Named here so it does not.
+
+### New capability the plane now supports and the UI has never been designed against
+
+Not catch-up — things that were impossible when this plan was written:
+
+- **A PDF's structure and text** (`pdfstructure`, D-91 phase 1 landed; text is
+  CPDF-4/6). An agenda packet can show its item graph and join the citation surface,
+  which is the document class this project exists for.
+- **The archive fallback** (0.51.0–0.55.0). A document whose source went dark can show
+  the archive capture, its grade C, and the two-hop provenance chain — the moment the
+  record is most valuable and currently the moment it says least.
+- **Three-valued authority and the provenance chain** (0.47.0, 0.55.0). The Trust
+  stratum can state `undetermined` honestly with its dated basis, instead of the
+  record looking evasive about something it is being careful about.
+- **Source reachability** (0.50.0). Monitoring can distinguish "we chose not to ask"
+  (governed) from "the source refused" — a distinction a member currently cannot see
+  and would otherwise read as a broken source.
+- **Governor state** (0.48.0). A stalled capture can say it is being PACED rather than
+  looking broken, which is directly the "technical complications are the system's
+  problem" rule below.
+- **Link verdicts and contemporaneity** (`links`, `captured_locators`). Partly built
+  in U7; the verdict basis is now richer than the surface shows, and D-57 records the
+  plane telling a member something false about a self-reference.
+
+### What this means for the ladder
+
+U9–U14 stand and are not re-ordered here. What changes: **U11 is far bigger than
+"members & keys"** and should be split, and **four families above have no rung at
+all**. The revised placement is in `MILESTONES.md` under **M8 · A member can reach
+what the record holds**, which is a new milestone rather than more of M7, because
+this is a capability axis and not an installation concern.
+
+The ordering principle stays Bob's, from "Who this is for" below: the member is
+non-technical, the workflow removes them from logistics, and a technical complication
+the system can classify is never surfaced as a choice. Several items above are
+attractive BECAUSE they remove a choice — the governor one especially.
+
 ## Who this is for
 
 RULED by Bob, 2026-07-30, and it governs every rung. The primary audience is

@@ -267,6 +267,44 @@ one).
 **Areas:** DIST, RECORD, UI.
 **Depends on:** nothing.
 
+### M8 · A member can reach what the record holds
+**Capability:** the surfaces a member uses expose what the plane can actually do —
+and, where the plane knows something a person would otherwise have to work out, the
+surface says it instead of asking.
+
+**Acceptance:** an undetermined-authority capture reaches a named member as a task
+they can forward or resolve; a project owner invites, removes and hands over
+ownership without an operator; a member declares expertise and an administrator
+confirms it; a group exports its record and every administrator learns it happened;
+a citation can be withdrawn as well as made.
+
+**Absorbs:** the six unsurfaced families measured 2026-07-31 in `UI-PLAN.md` — the
+task inbox (D-98), project participation and governance (S-12 §7), expertise and
+licences, verified export (§8, plus D-52's missing notification), the citation
+lifecycle beyond citing (`sever`/`reinstate`/`retire`), and selection-as-a-lease ·
+the two drifts: the UI's hand-composed query vocabulary where `op=searchfields`
+exists, and `inbox` (doorbell) versus `tasks` (D-98) being conflatable by name ·
+D-78/D-82 (an assistant-surfaced focus must be written and shown as one).
+**Areas:** UI, with RECORD for anything needing an op shape it does not have.
+**Depends on:** nothing. Every op it needs already ships.
+
+> **The measured gap.** 85 ops declared, 63 member-reachable, **18 reached by the
+> UI**. Raw counts overstate it — plumbing and diagnostics want no surface — but six
+> member-facing FAMILIES shipped with no surface AND no rung naming them, which is
+> the part that does not show up as "behind".
+>
+> **The sharpest one is the task inbox.** The ruling is that an undetermined capture
+> creates a task automatically and that every user has a todo list; the plane does
+> exactly that, and there is nowhere for it to ask. A record that must ask a person
+> something, and cannot, will either invent an answer or stay silent — and both are
+> failures this project has already named.
+>
+> **New capability, not catch-up.** PDF structure and text, the archive fallback's
+> two-hop chain on a source that went dark, three-valued authority stated honestly,
+> governed-versus-refused in monitoring, and the governor letting a stalled capture
+> say it is being PACED rather than looking broken. That last one is the ordering
+> rule doing work: it removes a choice a member should never have been given.
+
 ---
 
 ## Dependencies, and where the parallelism actually is
@@ -383,7 +421,13 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | **no scheduler exists** | RECORD | M1 |
 | **captured content is not indexed** | RECORD | M5 |
 | **capture-byte custody at scale** | RECORD | M6 |
-| UI-PLAN steps beyond U8 | UI | M7 |
+| UI-PLAN U9–U14 | UI | M8 |
+| the task inbox has no surface (D-98 shipped) | UI | M8 |
+| project participation + governance have no surface (S-12 §7) | UI | M8 |
+| expertise/licences have no surface | UI | M8 |
+| verified export has no surface (§8) | UI · RECORD | M8 |
+| sever / reinstate / retire have no rung | UI | M8 |
+| the UI hand-composes query syntax where `op=searchfields` exists | UI | M8 |
 
 ### Deliberately not scheduled, and why
 
