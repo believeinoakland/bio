@@ -11794,10 +11794,38 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    * looks like "unchanged" and means nothing. Equality that costs nothing to
    * produce is not evidence.
    */
-  /* CHOSEN, not measured, and recorded as such in MEASUREMENTS.md. Three is the
-     RULED threshold; fourteen days is the RULED staleness bound. */
+  /* CHOSEN, not measured, and recorded as such in MEASUREMENTS.md. Bob framed
+     three-or-fourteen as a suggestion for finding an auditable alternative path
+     and left the metric to this thread, 2026-07-31.
+     *
+     * The third constant is the thread's own judgement and the reason it exists
+     * is worth stating. With a single failure able to age into eligibility, a
+     * document that failed once and was then never retried becomes eligible
+     * after a fortnight, which reads OUR MONITORING NEGLECT as the source being
+     * unreachable. That is D-104's mistake one level up: an outcome that cost
+     * nothing to produce (not asking again) turning into evidence about someone
+     * else. So the age arm requires corroboration too. Two failures a fortnight
+     * apart is a source that has actually been unreachable; one failure and
+     * silence is a gap in our own attention. */
   static FALLBACK_CONSECUTIVE_FAILURES = 3;
   static FALLBACK_STALE_DAYS = 14;
+  static FALLBACK_MIN_FAILURES_FOR_AGE = 2;
+  /* Overridable PER INSTANCE at deploy time, never at runtime, exactly as
+     GOVERNOR_APPETITE_PER_MIN is. A test instance can be told to fail fast so
+     the fallback can be exercised without waiting a fortnight; a runtime op
+     would be a fence anyone holding a credential could lower, which is not a
+     fence. Bad values fall back to the constants rather than being obeyed. */
+  #thresholds() {
+    const pick = (v, dflt, min) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= min ? n : dflt;
+    };
+    return {
+      failures: pick(this.env.FALLBACK_CONSECUTIVE_FAILURES, _Store.FALLBACK_CONSECUTIVE_FAILURES, 1),
+      days: pick(this.env.FALLBACK_STALE_DAYS, _Store.FALLBACK_STALE_DAYS, 0),
+      minForAge: pick(this.env.FALLBACK_MIN_FAILURES_FOR_AGE, _Store.FALLBACK_MIN_FAILURES_FOR_AGE, 1)
+    };
+  }
   /** Record the outcome of one attempt on one document address.
    *
    *  `outcome` is deliberately a closed set, because the entire value of this
@@ -11878,10 +11906,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       };
     }
     const at = now && ISO_INSTANT.test(now) ? now : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
-    const byCount = row.consecutive_failures >= _Store.FALLBACK_CONSECUTIVE_FAILURES;
+    const TH = this.#thresholds();
+    const byCount = row.consecutive_failures >= TH.failures;
     const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
     const staleDays = since === null ? 0 : (Date.parse(at) - since) / 864e5;
-    const byAge = row.consecutive_failures > 0 && staleDays >= _Store.FALLBACK_STALE_DAYS;
+    const byAge = row.consecutive_failures >= TH.minForAge && staleDays >= TH.days;
     return {
       address_norm: row.address_norm,
       known: true,
@@ -11898,7 +11927,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       first_failure_since: row.first_failure_since || null,
       failing_days: since === null ? 0 : Math.floor(staleDays),
       fallback_eligible: byCount || byAge,
-      basis: byCount ? `${row.consecutive_failures} consecutive failures produced by the source, threshold ${_Store.FALLBACK_CONSECUTIVE_FAILURES}` : byAge ? `failing since ${row.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${_Store.FALLBACK_STALE_DAYS}` : row.governed_refusals > 0 && row.consecutive_failures === 0 ? `not eligible: ${row.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed` : "not eligible: the threshold is not met"
+      /* Reported so a verdict can be audited against the thresholds actually in
+         force, which on a test instance are not the shipped constants. */
+      thresholds: TH,
+      basis: byCount ? `${row.consecutive_failures} consecutive failures produced by the source, threshold ${TH.failures}` : byAge ? `failing since ${row.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${TH.days} with at least ${TH.minForAge} failures` : row.governed_refusals > 0 && row.consecutive_failures === 0 ? `not eligible: ${row.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed` : row.consecutive_failures === 1 && staleDays >= TH.days ? `not eligible: failing for ${Math.floor(staleDays)} days but on ONE failure that was never retried, which is a gap in our monitoring rather than evidence the source is unreachable; retry it` : "not eligible: the threshold is not met"
     };
   }
   async fetch(req) {
@@ -13208,6 +13240,14 @@ var index_default = {
       const stArc = env.STORE.get(env.STORE.idFromName(storeName));
       let archiveHopRecorded = null, archiveChosen = null, archiveAddress = null;
       if (body2?.via === "archive.org") {
+        if (cls !== "admin" && cls !== "probe")
+          return json({
+            ok: false,
+            reason: "NOT_PERMITTED",
+            op,
+            via: "archive.org",
+            detail: "the archive fallback is a monitoring path: it runs under an operator or daemon credential, never a member's. Capture the document directly, or ask an administrator to run the fallback."
+          }, 403);
         const addr = body2?.address;
         if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
           return json({
@@ -13632,6 +13672,16 @@ var index_default = {
                below a direct capture of the same document even though the
                bytes may be identical and the method just as careful. */
             grade: via === "archive.org" ? "C" : "B",
+            /* WHO SERVED US THESE BYTES, which is not who issued the document.
+               Bob, 2026-07-31: recording that the capture came through the
+               Internet Archive is proper even while the CONTENT authority is
+               still undetermined, because publication gates on there being no
+               undetermined authority link in the PROVENANCE, and the archive
+               leg is perfectly well attributed. Set only for an archive
+               capture: for a direct fetch the server and the document address
+               are the same string, and adding a field restating the locator
+               would invite it being read as the issuing party. */
+            ...via === "archive.org" ? { authority: "Internet Archive" } : {},
             actor_class: viaSession ? "member" : cls === "probe" ? "session" : "daemon",
             /* Over the reassembled whole, which is what C-18.1 requires of a
                parted document and what C-18.6 checks by streaming the parts. */

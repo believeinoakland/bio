@@ -103,10 +103,24 @@ try {
   t("a failure one day old is not eligible on either arm",
     (await read(B, day(2))).fallback_eligible, false);
   t("nor at thirteen days", (await read(B, day(14))).fallback_eligible, false);
+  /* CORRECTED 2026-07-31, not exempted. This asserted that ONE failure ages into
+     eligibility at fourteen days. It does not any more, and the old rule was the
+     weaker reading of the project's own principle: a document that failed once
+     and was never retried is a gap in OUR attention, and treating that as the
+     source being unreachable is D-104's mistake one level up. */
   const at14 = await read(B, day(15));
-  t("at fourteen days the age arm fires on a single failure", at14.fallback_eligible, true);
-  t("and the basis names the age, not a count", /failing since/.test(at14.basis), true);
-  t("it reports how long it has been failing", at14.failing_days, 14);
+  t("a SINGLE failure does not age into eligibility, however old", at14.fallback_eligible, false);
+  t("and the basis says it is our monitoring gap, not their outage",
+    /gap in our monitoring/.test(at14.basis), true);
+  t("it still reports how long it has been failing", at14.failing_days, 14);
+  await rec({ addressNorm: B, outcome: "fetch_failed", at: day(3) });
+  const corroborated = await read(B, day(15));
+  t("a SECOND failure corroborates it, and then the age arm fires",
+    corroborated.fallback_eligible, true);
+  t("and the basis names the age and the corroboration requirement",
+    /failing since.*at least 2 failures/.test(corroborated.basis), true);
+  t("the thresholds in force are reported so the verdict can be audited",
+    corroborated.thresholds, { failures: 3, days: 14, minForAge: 2 });
   /* The arm measures the FAILING RUN, so a governed refusal cannot age a
      document into eligibility on its own. */
   const C = "www.oaklandca.gov/never-actually-asked.pdf";

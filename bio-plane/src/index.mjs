@@ -1208,6 +1208,16 @@ export default {
       const stArc = env.STORE.get(env.STORE.idFromName(storeName));
       let archiveHopRecorded = null, archiveChosen = null, archiveAddress = null;
       if (body?.via === "archive.org") {
+        /* RULED: an alternative source counts as a re-fetch FOR MONITORING.
+           Monitoring is an operator and daemon function, so the archive arm is
+           admin and probe class only. A member reaching for the Archive by hand
+           is outside what the ruling permits, and the narrower surface also
+           keeps a UI from growing a button that loads somebody else's
+           infrastructure. The DIRECT arm of acquire is unaffected. */
+        if (cls !== "admin" && cls !== "probe")
+          return json({ ok: false, reason: "NOT_PERMITTED", op, via: "archive.org",
+            detail: "the archive fallback is a monitoring path: it runs under an operator or daemon credential, "
+                  + "never a member's. Capture the document directly, or ask an administrator to run the fallback." }, 403);
         const addr = body?.address;
         if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
           return json({ ok: false, reason: "BAD_ADDRESS",
@@ -1736,6 +1746,16 @@ export default {
                below a direct capture of the same document even though the
                bytes may be identical and the method just as careful. */
             grade: via === "archive.org" ? "C" : "B",
+            /* WHO SERVED US THESE BYTES, which is not who issued the document.
+               Bob, 2026-07-31: recording that the capture came through the
+               Internet Archive is proper even while the CONTENT authority is
+               still undetermined, because publication gates on there being no
+               undetermined authority link in the PROVENANCE, and the archive
+               leg is perfectly well attributed. Set only for an archive
+               capture: for a direct fetch the server and the document address
+               are the same string, and adding a field restating the locator
+               would invite it being read as the issuing party. */
+            ...(via === "archive.org" ? { authority: "Internet Archive" } : {}),
             actor_class: viaSession ? "member" : (cls === "probe" ? "session" : "daemon"),
             /* Over the reassembled whole, which is what C-18.1 requires of a
                parted document and what C-18.6 checks by streaming the parts. */

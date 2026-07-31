@@ -541,3 +541,22 @@ before it believes ANY answer, including a failure. `/version` is the cheapest
 such confirmation and it was already available and already wrong when first
 asked. Nothing here is a fault in `deploy.mjs`, which verified the bytes
 correctly both times. The gap is entirely in what is done after it returns.
+
+## 2026-07-31, thread CAPTURE: the fallback thresholds, revised (0.54.0)
+
+`FALLBACK_CONSECUTIVE_FAILURES = 3`, `FALLBACK_STALE_DAYS = 14`,
+`FALLBACK_MIN_FAILURES_FOR_AGE = 2`. All CHOSEN, none measured. Bob framed
+three-or-fourteen as a suggestion and left the metric to this thread on
+2026-07-31; the third constant is the thread's own, and the reason it exists is
+that without it a document that failed ONCE and was never retried becomes
+eligible after a fortnight. That reads our own monitoring neglect as the source
+being unreachable, which is D-104's mistake one level up: an outcome that cost
+nothing to produce turning into evidence about somebody else.
+
+All three are overridable per instance at DEPLOY time via bindings of the same
+names, never at runtime, exactly as `GOVERNOR_APPETITE_PER_MIN` is. A test
+instance can be told to fail fast so the fallback is exercisable without waiting
+a fortnight. A runtime op would be a fence any credential holder could lower,
+which is not a fence. Bad values fall back to the constants rather than being
+obeyed, and the thresholds actually in force are reported in every verdict so a
+result can be audited against them rather than against the shipped defaults.
