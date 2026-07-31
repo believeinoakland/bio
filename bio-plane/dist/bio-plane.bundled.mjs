@@ -388,14 +388,31 @@ CREATE INDEX IF NOT EXISTS link_verdicts_pair ON link_verdicts(source_capture, a
 -- outright and needs no timestamp from the source that anyone has to trust. A
 -- first draft keyed rows by (address, sha) and kept only the earliest date,
 -- which threw away exactly the evidence the verdict is built on.
+-- D-96: via names the SOURCE of an observation, because once an alternative
+-- source counts as a re-fetch for monitoring (RULED, AUTHORITY-AND-TRUST.md),
+-- archive bytes and live bytes must never be compared as one observation
+-- stream. Two sources agreeing is STRONGER evidence than one source repeating;
+-- two sources disagreeing is not evidence of change at all. The bracket arm
+-- cannot tell those apart without knowing which is which, so via is part of
+-- the KEY: an archive observation of the same bytes is a different fact from a
+-- direct one, not a repeat of it.
+--
+-- The address columns carry the DOCUMENT ADDRESS, the address the record
+-- reasons about; retrieval_locator carries what was actually fetched. For a
+-- direct capture they are the same string. For an archive capture the document
+-- address is the CDX original field through our own normaliser and the
+-- retrieval locator is the archive's replay address, and conflating them is
+-- how a provenance difference gets reported as a change.
 CREATE TABLE IF NOT EXISTS captured_locators (
-  address_norm    TEXT NOT NULL,
-  address         TEXT NOT NULL,
-  capture_sha     TEXT NOT NULL,
-  first_retrieved TEXT NOT NULL,
-  last_retrieved  TEXT NOT NULL,
-  observations    INTEGER NOT NULL DEFAULT 1,
-  PRIMARY KEY (address_norm, capture_sha)
+  address_norm      TEXT NOT NULL,
+  address           TEXT NOT NULL,
+  capture_sha       TEXT NOT NULL,
+  via               TEXT NOT NULL DEFAULT 'direct',
+  retrieval_locator TEXT,
+  first_retrieved   TEXT NOT NULL,
+  last_retrieved    TEXT NOT NULL,
+  observations      INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
 -- What the runtime was observed to COST and to ALLOW, measured rather than
@@ -429,6 +446,33 @@ CREATE TABLE IF NOT EXISTS cpu_probe (
   elapsed_ms  REAL NOT NULL,
   iterations  INTEGER NOT NULL,
   at          TEXT NOT NULL
+);
+
+-- D-95: the per-host request governor. Our APPETITE is a configured constant
+-- because it is ours; their CAPACITY is discovered by being refused and
+-- recorded, following the pattern capture_limits proved for the subrequest
+-- ceiling. It lives in the Durable Object because the object serialises, which
+-- makes one token bucket globally correct for the instance for free; a bucket
+-- in Worker memory governs nothing because every invocation is independent.
+-- appetite_per_min NULL means the configured default (a CHOSEN constant,
+-- recorded in MEASUREMENTS.md, never a finding). cooloff_until is how a 429 or
+-- a refusal overrides the bucket entirely: while it is in the future, no token
+-- balance admits anything to that host. refusals counts CONSECUTIVE refusals
+-- and decays to zero on success, so the cool-off escalates the way the
+-- counterparty's own escalation does and resets when they relent.
+CREATE TABLE IF NOT EXISTS host_governor (
+  host                TEXT PRIMARY KEY,
+  appetite_per_min    REAL,
+  tokens              REAL    NOT NULL DEFAULT 0,
+  refilled_at         INTEGER NOT NULL DEFAULT 0,
+  last_grant_at       INTEGER NOT NULL DEFAULT 0,
+  cooloff_until       INTEGER NOT NULL DEFAULT 0,
+  refusals            INTEGER NOT NULL DEFAULT 0,
+  last_refusal_at     INTEGER,
+  last_refusal_status INTEGER,
+  granted             INTEGER NOT NULL DEFAULT 0,
+  refused_total       INTEGER NOT NULL DEFAULT 0,
+  updated_at          TEXT
 );
 `;
 
@@ -1331,6 +1375,30 @@ var NON_MEMBER_AUTHORS = ["claude", "pwa-client", "daemon", "sweep", "session", 
 var CAPTURE_GRADES = ["A", "B", "C"];
 var ACTOR_CLASSES = ["daemon", "session", "member"];
 var ORIGIN_KINDS = ["named_request", "sweep", "member"];
+function checkAuthorityPublishable(ctx, findings) {
+  const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
+  const atFence = ctx.fm?.current_state === "verified" || hist.some((e) => e && e.to_state === "verified");
+  if (!atFence) return;
+  const raw = ctx.files.get("data/provenance.json");
+  if (!raw) return;
+  let reg;
+  try {
+    reg = JSON.parse(asText(raw));
+  } catch {
+    return;
+  }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
+  docs.forEach((d, i) => {
+    if (d && d.authority_state === "undetermined") {
+      findings.push(f(
+        "C-18.9",
+        "error",
+        `provenance documents[${i}] is authority-undetermined and this bundle is at or past verified: the record has not established who authored this material, and the group must not publish what it cannot attribute`,
+        ["determine the authority through the task list and record the determination with its basis", "or return the bundle to collected until the determination is made"]
+      ));
+    }
+  });
+}
 function checkReleaseAuthority(ctx, findings) {
   if (ctx.fm?.object_type !== "information") return;
   const raw = ctx.files.get("data/provenance.json");
@@ -1352,8 +1420,20 @@ function checkReleaseAuthority(ctx, findings) {
       findings.push(f("C-18.1", "error", `provenance documents[${i}] is not an object`));
       return;
     }
-    for (const k of ["file", "locator", "authority", "retrieved"]) {
+    for (const k of ["file", "locator", "retrieved"]) {
       if (!d[k]) findings.push(f("C-18.1", "error", `provenance documents[${i}] missing '${k}'`));
+    }
+    const aState = d.authority_state;
+    if (aState !== void 0 && !["determined", "undetermined"].includes(aState)) {
+      findings.push(f("C-18.1", "error", `provenance documents[${i}].authority_state '${aState}' is not 'determined' or 'undetermined'`));
+    }
+    if (aState === "undetermined") {
+      if (!d.authority_basis) findings.push(f("C-18.1", "error", `provenance documents[${i}] is authority-undetermined but names no authority_basis: why it could not be established is itself a recorded fact`));
+    } else if (!d.authority) {
+      findings.push(f("C-18.1", "error", `provenance documents[${i}] missing 'authority' and does not state authority_state 'undetermined': the source axis is named or its absence is declared, never left blank`));
+    }
+    if (aState === "determined" && !d.authority_basis) {
+      findings.push(f("C-18.1", "error", `provenance documents[${i}] is authority-determined but names no authority_basis: how it was reached is recorded in BOTH cases`));
     }
     if (d.file && !hasFile_(ctx, String(d.file)) && !Array.isArray(d.parts)) {
       findings.push(f("C-18.1", "error", `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
@@ -3220,6 +3300,7 @@ async function checkBundle(input, opts = {}) {
     checkWriteCompleteness(ctx, findings);
     await checkInformationExtension(ctx, findings);
     checkReleaseAuthority(ctx, findings);
+    checkAuthorityPublishable(ctx, findings);
     checkRegisterIntegrity(ctx, findings);
     await checkInfo2Contract(ctx, findings);
     await checkReleaseSignature(ctx, findings);
@@ -6183,7 +6264,7 @@ var Store = class _Store extends DurableObject {
   }
   #migrate() {
     const bare = (this.env.SCHEMA || SCHEMA || "").split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-    for (const [table, needed] of [["links", "citation_norm"]]) {
+    for (const [table, needed] of [["links", "citation_norm"], ["captured_locators", "via"]]) {
       const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
       if (cols.length && !cols.includes(needed)) this.sql.exec(`DROP TABLE ${table}`);
     }
@@ -10405,24 +10486,168 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     return { step, elapsed_ms: elapsedMs };
   }
   /* ------------------------------------------------------------------ *
+   * D-95: the per-host request governor
+   *
+   * Our APPETITE is a configured constant because it is ours. Their CAPACITY
+   * is discovered by being refused and recorded, the pattern capture_limits
+   * proved. This lives here because the Durable Object serialises, so one
+   * token bucket is globally correct for the instance for free; a bucket in
+   * Worker memory governs nothing, since every invocation is independent.
+   *
+   * Pacing resembles a person rather than a loop: grants to one host are
+   * separated by a JITTERED gap around the appetite's base interval, never a
+   * metronome. The chosen constants are recorded in MEASUREMENTS.md as chosen,
+   * not measured. A 429 overrides the bucket entirely: cooloff_until in the
+   * future refuses admission regardless of token balance, honouring
+   * Retry-After when the counterparty names one and escalating with
+   * consecutive refusals when it does not, mirroring their own escalation.
+   * Success decays the escalation to zero. This governs OUR instance only and
+   * cannot solve the shared-egress problem; that is D-95's recorded limit.
+   * ------------------------------------------------------------------ */
+  static GOVERNOR = {
+    defaultAppetitePerMin: 12,
+    /* chosen: one document fetch every ~5s on average */
+    jitterLow: 0.6,
+    jitterHigh: 1.5,
+    burstTokens: 3,
+    /* a person opens a few tabs; a loop opens forty */
+    cooloff429BaseMs: 6e4,
+    cooloff429CapMs: 36e5,
+    cooloffRefusedBaseMs: 3e4,
+    cooloffRefusedCapMs: 18e5
+  };
+  #governorRow(host, now) {
+    let r = [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)][0];
+    if (!r) {
+      this.sql.exec(
+        `INSERT INTO host_governor (host, tokens, refilled_at, updated_at) VALUES (?, ?, ?, ?)`,
+        host,
+        _Store.GOVERNOR.burstTokens,
+        now,
+        new Date(now).toISOString()
+      );
+      r = [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)][0];
+    }
+    return r;
+  }
+  governorAdmit({ host }) {
+    if (!host) return { admitted: false, reason: "no host named" };
+    const G = _Store.GOVERNOR;
+    const now = Date.now();
+    const r = this.#governorRow(host, now);
+    const appetite = r.appetite_per_min || Number(this.env && this.env.GOVERNOR_APPETITE_PER_MIN) || G.defaultAppetitePerMin;
+    const baseGapMs = 6e4 / appetite;
+    if (r.cooloff_until > now) {
+      this.sql.exec(
+        `UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
+        new Date(now).toISOString(),
+        host
+      );
+      return {
+        admitted: false,
+        reason: "cooling_off",
+        retry_in_ms: r.cooloff_until - now,
+        refusals: r.refusals,
+        last_refusal_status: r.last_refusal_status
+      };
+    }
+    const tokens = Math.min(G.burstTokens, r.tokens + (now - r.refilled_at) / 6e4 * appetite);
+    if (tokens < 1) {
+      const retryIn = Math.ceil((1 - tokens) / appetite * 6e4);
+      this.sql.exec(
+        `UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
+        tokens,
+        now,
+        new Date(now).toISOString(),
+        host
+      );
+      return { admitted: false, reason: "appetite", retry_in_ms: retryIn };
+    }
+    const jitter = G.jitterLow + Math.random() * (G.jitterHigh - G.jitterLow);
+    const gapWanted = baseGapMs * jitter;
+    const sinceLast = now - (r.last_grant_at || 0);
+    const wait = sinceLast >= gapWanted ? 0 : Math.round(gapWanted - sinceLast);
+    this.sql.exec(
+      `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
+      tokens - 1,
+      now,
+      now + wait,
+      new Date(now).toISOString(),
+      host
+    );
+    return { admitted: true, wait_ms: wait, appetite_per_min: appetite };
+  }
+  governorReport({ host, status, retry_after_ms = null }) {
+    if (!host) return { recorded: false };
+    const G = _Store.GOVERNOR;
+    const now = Date.now();
+    const r = this.#governorRow(host, now);
+    const s = Number(status) || 0;
+    if (s >= 200 && s < 400) {
+      this.sql.exec(
+        `UPDATE host_governor SET refusals = 0, updated_at = ? WHERE host = ?`,
+        new Date(now).toISOString(),
+        host
+      );
+      return { recorded: true, refusals: 0 };
+    }
+    if (s === 429 || s === 403 || s === 503) {
+      const refusals = (r.refusals || 0) + 1;
+      const base = s === 429 ? G.cooloff429BaseMs : G.cooloffRefusedBaseMs;
+      const cap = s === 429 ? G.cooloff429CapMs : G.cooloffRefusedCapMs;
+      const escalated = Math.min(cap, base * Math.pow(2, refusals - 1));
+      const cooloff = now + Math.max(escalated, Number(retry_after_ms) || 0);
+      this.sql.exec(
+        `UPDATE host_governor SET refusals = ?, last_refusal_at = ?, last_refusal_status = ?, cooloff_until = ?, updated_at = ? WHERE host = ?`,
+        refusals,
+        now,
+        s,
+        cooloff,
+        new Date(now).toISOString(),
+        host
+      );
+      return { recorded: true, refusals, cooloff_until: cooloff, cooloff_ms: cooloff - now };
+    }
+    return { recorded: true, ignored: s };
+  }
+  governorConfig({ host, appetite_per_min = null }) {
+    if (!host) return { configured: false };
+    const now = Date.now();
+    this.#governorRow(host, now);
+    this.sql.exec(
+      `UPDATE host_governor SET appetite_per_min = ?, updated_at = ? WHERE host = ?`,
+      appetite_per_min ? Number(appetite_per_min) : null,
+      new Date(now).toISOString(),
+      host
+    );
+    return { configured: true, host, appetite_per_min: appetite_per_min ? Number(appetite_per_min) : null };
+  }
+  governorState({ host = null }) {
+    const rows = host ? [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)] : [...this.sql.exec(`SELECT * FROM host_governor ORDER BY host`)];
+    return { hosts: rows.map((r) => ({ ...r })) };
+  }
+  /* ------------------------------------------------------------------ *
    * Links: what a document pointed at, and whether we hold that version
    * ------------------------------------------------------------------ */
-  recordCapturedLocator({ address, addressNorm, captureSha, retrieved }) {
+  recordCapturedLocator({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null }) {
     if (!addressNorm || !captureSha) return { recorded: false };
     this.sql.exec(
-      `INSERT INTO captured_locators (address_norm, address, capture_sha, first_retrieved, last_retrieved, observations)
-       VALUES (?, ?, ?, ?, ?, 1)
-       ON CONFLICT(address_norm, capture_sha) DO UPDATE SET
-         first_retrieved = MIN(first_retrieved, excluded.first_retrieved),
-         last_retrieved  = MAX(last_retrieved,  excluded.last_retrieved),
-         observations    = observations + 1`,
+      `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+       ON CONFLICT(address_norm, capture_sha, via) DO UPDATE SET
+         first_retrieved   = MIN(first_retrieved, excluded.first_retrieved),
+         last_retrieved    = MAX(last_retrieved,  excluded.last_retrieved),
+         retrieval_locator = COALESCE(excluded.retrieval_locator, retrieval_locator),
+         observations      = observations + 1`,
       addressNorm,
       address || addressNorm,
       captureSha,
+      String(via || "direct"),
+      retrievalLocator,
       retrieved,
       retrieved
     );
-    return { recorded: true, address_norm: addressNorm };
+    return { recorded: true, address_norm: addressNorm, via: String(via || "direct") };
   }
   /** File the links a captured document made. Replaces this capture's rows
    *  rather than appending, because a capture's own links are a property of its
@@ -10500,7 +10725,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       }
       const caps = [...this.sql.exec(
         `SELECT capture_sha, first_retrieved, last_retrieved, observations FROM captured_locators
-         WHERE address_norm = ? ORDER BY first_retrieved`,
+         WHERE address_norm = ? AND via = 'direct' ORDER BY first_retrieved`,
         r.address_norm
       )];
       if (!caps.length) {
@@ -10956,6 +11181,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           sourceBundle: url.searchParams.get("bundle") || null
         }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
+        governoradmit: () => this.governorAdmit(body || { host: url.searchParams.get("host") }),
+        governorreport: () => this.governorReport(body || {}),
+        governorconfig: () => this.governorConfig(body || {}),
+        governorstate: () => this.governorState(body || { host: url.searchParams.get("host") }),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),
@@ -11182,6 +11411,57 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
 };
 
 // src/index.mjs
+function userAgent(env, purpose = "acquire") {
+  const version = env && env.VERSION || "0.0.0";
+  const instance = env && env.INSTANCE_NAME || "unnamed";
+  return `CivicOS/${version} (+https://github.com/believeinoakland/bio; instance ${instance}; ${purpose})`;
+}
+async function governedFetch(env, stub, target, purpose) {
+  let host = null;
+  try {
+    host = new URL(target).host;
+  } catch {
+  }
+  let waitMs = 0;
+  if (host && stub) {
+    try {
+      const a = await (await stub.fetch("http://x/governoradmit", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ host })
+      })).json();
+      const g = a && a.result || null;
+      if (g && g.admitted === false)
+        return {
+          refusedByGovernor: true,
+          reason: g.reason || "governed",
+          retry_in_ms: g.retry_in_ms || 0,
+          last_refusal_status: g.last_refusal_status || null
+        };
+      waitMs = g && g.wait_ms || 0;
+    } catch {
+    }
+  }
+  if (waitMs) await new Promise((s) => setTimeout(s, waitMs));
+  const res = await fetch(target, { redirect: "follow", headers: { "user-agent": userAgent(env, purpose) } });
+  if (host && stub) {
+    const ra = res.headers.get("retry-after");
+    let raMs = null;
+    if (ra) {
+      const n = Number(ra);
+      raMs = Number.isFinite(n) ? n * 1e3 : Math.max(0, Date.parse(ra) - Date.now() || 0);
+    }
+    try {
+      await stub.fetch("http://x/governorreport", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ host, status: res.status, retry_after_ms: raMs })
+      });
+    } catch {
+    }
+  }
+  return { res };
+}
 var OPS = {
   //  op          class allowed              mutating
   selftest: { classes: ["admin", "member", "probe"], mutating: false },
@@ -11373,6 +11653,16 @@ var OPS = {
      live instance stop being a plausible story and become a measured one.
      Admin, because the register is intake provenance for the working corpus. */
   registeraudit: { classes: ["admin", "probe"], mutating: false },
+  /* D-103: the per-host governor's operator surface. governorstate is a read of
+     which hosts are held and why (admin and member: a member watching a capture
+     stall deserves to see the governor is the reason, not a broken source);
+     governorconfig sets a host's appetite and is admin/probe because tuning how
+     hard we lean on a counterparty is an operator decision, not a member one,
+     the same line memberset and signerset draw. Neither is a capacity FINDING:
+     a refusal still teaches capacity through governorReport on the fetch path.
+     This only exposes what the DO already tracks; it discovers nothing new. */
+  governorstate: { classes: ["admin", "member", "probe"], mutating: false },
+  governorconfig: { classes: ["admin", "probe"], mutating: true },
   signeradd: { classes: ["admin", "probe"], mutating: true },
   signerlist: { classes: ["admin", "member", "probe"], mutating: false },
   signerset: { classes: ["admin", "probe"], mutating: true },
@@ -11426,6 +11716,7 @@ var SESSION_OPS = {
     "audit",
     "select",
     "selectionrelease",
+    "governorstate",
     ...RETRIEVAL_READS,
     ...EDGE_ACTIONS,
     ...STATE_ACTIONS,
@@ -11455,7 +11746,9 @@ var SESSION_OPS = {
     "memberadd",
     "memberset",
     "signeradd",
-    "signerset"
+    "signerset",
+    "governorstate",
+    "governorconfig"
   ])
 };
 var NEEDS = {
@@ -11524,7 +11817,11 @@ var NEEDS = {
   memberadd: null,
   memberset: null,
   signeradd: null,
-  signerset: null
+  signerset: null,
+  /* D-103: setting a host's appetite is an operator act bounded by
+     SESSION_OPS.admin, the same as the roster ops above, not a section-5
+     working capability. governorstate is a read and needs no entry at all. */
+  governorconfig: null
 };
 var KNOCK = {
   windowMs: 10 * 60 * 1e3,
@@ -11916,6 +12213,31 @@ var index_default = {
       const p = await (await st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : ""))).json();
       return json({ ok: true, ...p.result });
     }
+    if (op === "governorstate") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const host = url.searchParams.get("host");
+      const r = await (await st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`)).json();
+      return json({ ok: true, ...r.result });
+    }
+    if (op === "governorconfig") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const host = url.searchParams.get("host");
+      if (!host)
+        return json({ ok: false, reason: "NEED_HOST", detail: "pass host=<hostname>; governorconfig never sets a global appetite" }, 400);
+      const raw = url.searchParams.get("appetite_per_min");
+      let appetite = null;
+      if (raw !== null && raw !== "") {
+        appetite = Number(raw);
+        if (!Number.isFinite(appetite) || appetite <= 0)
+          return json({ ok: false, reason: "BAD_APPETITE", detail: "appetite_per_min must be a positive number, or omit it to reset to the instance default" }, 400);
+      }
+      const r = await (await st.fetch("http://x/governorconfig", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ host, appetite_per_min: appetite })
+      })).json();
+      return json({ ok: true, ...r.result });
+    }
     if (op === "links") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const capture = url.searchParams.get("capture");
@@ -11986,16 +12308,21 @@ var index_default = {
           reason: "BAD_LOCATOR",
           detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address"
         }, 400);
-      if (typeof body2?.authority !== "string" || !body2.authority.trim())
-        return json({
-          ok: false,
-          reason: "NO_AUTHORITY",
-          detail: "record who issued the document; the capture chain and the source are separate claims and both are named"
-        }, 400);
+      const authorityAsserted = typeof body2?.authority === "string" && body2.authority.trim() ? body2.authority.trim() : null;
       const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+      const stGov = env.STORE.get(env.STORE.idFromName(storeName));
       let res2;
       try {
-        res2 = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+        const g = await governedFetch(env, stGov, locator, "acquire");
+        if (g.refusedByGovernor)
+          return json({
+            ok: false,
+            reason: "HOST_COOLING_OFF",
+            detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
+            retry_in_ms: g.retry_in_ms || 0,
+            locator
+          }, 429);
+        res2 = g.res;
       } catch (e) {
         return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
       }
@@ -12066,7 +12393,43 @@ var index_default = {
         existed = !!await env.CAPTURES.head(`${storeName}/captures/${sha}`);
       }
       const ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
+      const responseHeaders = [];
+      for (const [k, v] of res2.headers) responseHeaders.push([k, v]);
+      const transport = {
+        requested: locator,
+        resolved: res2.url || locator,
+        redirected: !!(res2.url && res2.url !== locator),
+        status: res2.status,
+        http_headers: responseHeaders,
+        /* WARC records WARC-IP-Address: the address that actually answered.
+           The Workers runtime does not expose the peer address of an outbound
+           fetch, so we do not have it and this says so rather than leaving a
+           field a reader would take as absence of a redirect or of an address.
+           Recorded as a named limitation because a silently missing field and
+           an unobtainable one are different facts about the record. */
+        peer_address: null,
+        peer_address_unavailable: "the Workers runtime does not expose the peer address of an outbound fetch"
+      };
       const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
+      const stLim = stGov;
+      try {
+        await stLim.fetch("http://x/recordcapturedlocator", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            address: res2.url || locator,
+            addressNorm: normalizeAddress(res2.url || locator),
+            captureSha: sha,
+            retrieved,
+            /* D-96: a direct fetch is its own source, and the document address
+               and the retrieval locator are the same string. An archive-sourced
+               capture will name via 'archive.org' and split the two. */
+            via: "direct",
+            retrievalLocator: locator
+          })
+        });
+      } catch {
+      }
       const HTML_CT = ["text/html", "application/xhtml+xml"];
       const SUB_PARSE_MAX = 8 * 1024 * 1024;
       let subs = null, subsSkipped = null, sessionId = null;
@@ -12081,7 +12444,6 @@ var index_default = {
           else {
             const primaryBytes = new Uint8Array(await obj.arrayBuffer());
             const hex2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-            const stLim = env.STORE.get(env.STORE.idFromName(storeName));
             let resumeState = null;
             sessionId = body2.continue || null;
             if (sessionId) {
@@ -12139,7 +12501,42 @@ var index_default = {
                 return { existed: false };
               },
               fetchOne: async (u) => {
-                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": "bio-acquire" } });
+                let subHost = null;
+                try {
+                  subHost = new URL(u).host;
+                } catch {
+                }
+                if (subHost) {
+                  try {
+                    const st = await (await stGov.fetch(`http://x/governorstate?host=${encodeURIComponent(subHost)}`)).json();
+                    const row = st?.result?.hosts?.[0];
+                    if (row && row.cooloff_until > Date.now())
+                      return { ok: false, status: 0, reason: "HOST_COOLING_OFF" };
+                  } catch {
+                  }
+                }
+                const stagger = env.GOVERNOR_SUBRESOURCE_STAGGER_MS !== void 0 ? Number(env.GOVERNOR_SUBRESOURCE_STAGGER_MS) || 0 : 50 + Math.floor(Math.random() * 200);
+                if (stagger) await new Promise((s) => setTimeout(s, stagger));
+                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
+                if (subHost) {
+                  try {
+                    await stGov.fetch("http://x/governorreport", {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({
+                        host: subHost,
+                        status: r.status,
+                        retry_after_ms: (() => {
+                          const ra = r.headers.get("retry-after");
+                          if (!ra) return null;
+                          const n = Number(ra);
+                          return Number.isFinite(n) ? n * 1e3 : Math.max(0, Date.parse(ra) - Date.now() || 0);
+                        })()
+                      })
+                    });
+                  } catch {
+                  }
+                }
                 if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };
                 return {
                   ok: true,
@@ -12193,16 +12590,6 @@ var index_default = {
             } catch {
             }
             try {
-              await stLim.fetch("http://x/recordcapturedlocator", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                  address: res2.url || locator,
-                  addressNorm: normalizeAddress(res2.url || locator),
-                  captureSha: sha,
-                  retrieved
-                })
-              });
               if (subs.links && subs.links.length) {
                 await stLim.fetch("http://x/recordlinks", {
                   method: "POST",
@@ -12247,8 +12634,30 @@ var index_default = {
         document: {
           file: `snapshots/${name}`,
           locator,
-          authority: body2.authority.trim(),
           retrieved,
+          /* D-97: authority mirrors verdict / verdict_basis / verdict_at
+             rather than inventing a shape. The determination when one was
+             made; the STATE always; the basis in BOTH cases, dated, because
+             "the member asserted it" and "nothing could establish it" are
+             both facts about how the record got here. An undetermined
+             capture is held and barred from publication, never refused at
+             intake (RULED, AUTHORITY-AND-TRUST.md). */
+          ...authorityAsserted ? { authority: authorityAsserted } : {},
+          authority_state: authorityAsserted ? "determined" : "undetermined",
+          authority_basis: authorityAsserted ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}` : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`,
+          /* The chain of custody as ordered hops from us back to the origin,
+             each naming who, what they assert, the evidence, and whether the
+             assertion is cryptographically bound or merely stated (RULED). A
+             direct fetch is ONE hop, which is what grades it above an
+             archive-sourced capture of the same document: grade tracks
+             directness, never technique. */
+          provenance_chain: [{
+            who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
+            asserts: `these bytes were served for ${locator} at ${retrieved}`,
+            evidence: "first-party https fetch, hashed at receipt, transport record on this document",
+            bound: false,
+            via: "direct"
+          }],
           capture: {
             method: multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
             grade: "B",
@@ -12258,7 +12667,8 @@ var index_default = {
             sha256: sha,
             encoding: "binary",
             bytes: total,
-            ...ct ? { content_type: ct } : {}
+            ...ct ? { content_type: ct } : {},
+            transport
           },
           ...multipart ? { parts: parts.map((p, i) => ({
             file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
@@ -12470,7 +12880,16 @@ var index_default = {
       const checked = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       let status = null, note = null, seen = null;
       try {
-        const res2 = await fetch(locator, { redirect: "follow", headers: { "user-agent": "bio-monitor" } });
+        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), locator, "monitor");
+        if (g.refusedByGovernor)
+          return json({
+            ok: false,
+            reason: "HOST_COOLING_OFF",
+            detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
+            retry_in_ms: g.retry_in_ms || 0,
+            locator
+          }, 429);
+        const res2 = g.res;
         if (res2.status === 404 || res2.status === 410) {
           status = "removed";
           note = `the source answered ${res2.status}`;
@@ -12797,5 +13216,6 @@ export {
   PUBLISHED_TOKEN_HASHES,
   Store,
   index_default as default,
-  liveToken
+  liveToken,
+  userAgent
 };

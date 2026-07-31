@@ -120,5 +120,27 @@ console.log("\n--- the schema template is intact ---");
   t("and the literal ends where the file says it does", typeof loaded === "string" && loaded.trimEnd().endsWith(");"), true);
 }
 
+/* D-106. The installer embedded 0.35.0 while the plane ran 0.48.0 for thirteen
+   releases. `newgroup/scripts/embed-release.mjs` now refuses on a mismatch, but
+   that refusal fires when somebody builds the INSTALLER, which may be weeks
+   after the drift was introduced and in a different thread. This fires at the
+   moment the drift is created: whoever bumps package.json to cut a release runs
+   this suite, and a wrangler.jsonc left behind fails here immediately.
+
+   Two checks in two places for one invariant is not duplication. The embed
+   refusal is the one that cannot be bypassed; this one is the one that is
+   cheap and early. */
+console.log("\n--- the version sources agree (D-106) ---");
+{
+  const root = fileURLToPath(new URL("..", import.meta.url));
+  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  const declared = /"VERSION":\s*"([^"]*)"/.exec(readFileSync(join(root, "wrangler.jsonc"), "utf8"));
+  t("package.json declares a semver version",
+    typeof pkg.version === "string" && /^\d+\.\d+\.\d+/.test(pkg.version), true);
+  t("wrangler.jsonc declares a VERSION var", !!declared, true);
+  t(`wrangler.jsonc VERSION equals package.json (${pkg.version}), the authority`,
+    declared ? declared[1] : null, pkg.version);
+}
+
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
