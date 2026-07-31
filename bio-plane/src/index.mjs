@@ -2217,9 +2217,19 @@ export default {
     const DO_PATH = { inbox: "inboxlist", memberlist: "memberlist", signerlist: "signerlist" };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
-    /* Authorship from a session is stamped by the server, never taken from
-       the request: a browser cannot write history as someone else. */
-    if (viaSession && op === "lease") inner.searchParams.set("actor", sessMember);
+    /* Who holds a lease is stamped by the server, never taken from the request,
+       for BOTH a session and a machine credential — the same impostor rule
+       `author`, `by` and `viewer` follow below. A session stamps the member; a
+       machine credential stamps `token:<class>`, a NAMED machine identity, so an
+       unattended writer can take the lock (D-61) without borrowing a person's
+       name and without being anonymous. The caller's own `actor` was copied in
+       the loop above, so it is DELETED first and set second: a lease whose actor
+       the caller may choose names nobody. This does not weaken integrity — the
+       lease is a courtesy lock and promote's CAS on `base` is what prevents a
+       lost update — it makes the courtesy lock reachable by a named daemon.
+       The store additionally refuses a null/blank actor by name, so a bypass of
+       this stamp fails closed rather than tripping the NOT NULL constraint. */
+    if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `token:${cls}`);
     /* D-15: whose view a query compiles for is decided by the SERVER, from the
        credential that authenticated, and set AFTER the caller's parameters were
        copied so a caller-supplied `viewer` is overwritten rather than honoured.
@@ -2276,7 +2286,19 @@ export default {
            other identity field here: a machine credential carries none and so
            cannot deactivate a project, which is deliberate. */
         delete b.actorMemberId;
+        /* Authorship on the manifest is the server's stamp, never the caller's,
+           for a machine credential as much as a session — the same rule `author`
+           already follows for cite/sever and `by` for the roster. A session
+           stamps the member; a machine credential stamps `token:<class>`, so an
+           unattended writer that completes a capture a member walked away from
+           (D-61) is NAMED on the manifest rather than anonymous, and cannot
+           borrow a person's name. Deleted first so a caller-supplied `author` is
+           overwritten, not honoured. `actorMemberId` stays session-only: a
+           machine credential holds no member and so cannot deactivate a
+           project. */
+        delete b.author;
         if (viaSession) { b.author = sessMember; b.actorMemberId = sessMember; }
+        else b.author = `token:${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({ ok: false, reason: "NOT_CAPABLE", op, needs: "create_projects",

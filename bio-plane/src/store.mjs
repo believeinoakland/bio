@@ -2759,6 +2759,22 @@ export class Store extends DurableObject {
   }
 
   acquireLease(bundleId, actor, ttlMs) {
+    /* D-61. A lease is NEVER anonymous. The column is NOT NULL, and an absent
+       actor used to trip SQLITE_CONSTRAINT_NOTNULL — a raw platform error where
+       a named BIO refusal belongs (the D-39 class). Refuse it here, fail-closed,
+       exactly as taskForward/taskResolve refuse a forward that names no member:
+       a writer that will not name itself does not take the lock. The control
+       plane stamps the actor server-side for BOTH a session (the member) and a
+       machine credential (token:<class>, a NAMED machine identity), so a real
+       caller is never anonymous and never reaches this refusal; the guard is the
+       floor that makes "anonymous is refused" true at the store rather than by
+       the courtesy of the caller. It bounds nothing about WHICH named actor may
+       hold the lease — the lease is a courtesy lock, and promote's CAS on `base`
+       is the integrity mechanism that this does not touch. */
+    if (typeof actor !== "string" || !actor.trim())
+      return { ok: false, reason: "ANONYMOUS_LEASE",
+               detail: "a lease is taken under a named actor — a member (from a session) or a machine "
+                     + "identity (token:<class>). An unnamed writer cannot hold the courtesy lock." };
     return this.ctx.storage.transactionSync(() => {
       const now = Date.now();
       const cur = this.#one(`SELECT actor, expires, base_sha FROM leases WHERE bundle_id=?`, bundleId);
