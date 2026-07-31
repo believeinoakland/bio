@@ -300,38 +300,77 @@ console.log("\n--- references have one home ---");
     cf.filter((x) => x.severity === "error").length, 0);
 }
 
-console.log("\n--- C-18.9: authority-undetermined material cannot cross the publication fence ---");
+console.log("\n--- C-18.9: what a capture must establish before it may be published ---");
 {
-  /* Deliberately minimal fixtures: other families will find plenty here, and
+  /* CORRECTED 2026-07-31, not exempted. This suite previously asserted that
+     content-authority-undetermined material could not cross the fence. That
+     rule was wrong and the reason is the project's own: refusing publication
+     on a missing attribution recreates, at the publication gate, the pressure
+     to INVENT an authority that D-97 removed at the intake gate. The gate now
+     sits on the PROVENANCE CHAIN, which is what a published hash actually
+     attests, and on the undetermined state being STATED rather than silent.
+
+     Deliberately minimal fixtures: other families will find plenty here, and
      only C-18.9 is asserted, so what is measured is the fence and nothing
-     else. Both ways: undetermined in the WORKING corpus is legitimate and
-     draws nothing; the same document at verified is refused; a determined one
-     at verified passes the fence. */
-  const prov = (det) => JSON.stringify({ documents: [{
+     else. */
+  const HOP = [{ who: "instance biosmoke7 (CivicOS/test)",
+                 asserts: "these bytes were served for https://example.gov/doc.pdf",
+                 evidence: "first-party https fetch", bound: false, via: "direct" }];
+  const prov = (o = {}) => JSON.stringify({ documents: [{
     file: "snapshots/doc.pdf", locator: "https://example.gov/doc.pdf",
     retrieved: "2026-07-30T00:00:00Z",
-    authority_state: det ? "determined" : "undetermined",
-    ...(det ? { authority: "Example City" } : {}),
-    authority_basis: det
+    authority_state: o.det ? "determined" : "undetermined",
+    ...(o.det ? { authority: "Example City" } : {}),
+    ...(o.noBasis ? {} : { authority_basis: o.det
       ? "asserted by the capturing member at intake, 2026-07-30T00:00:00Z"
-      : "no assertion was supplied and no mechanical determination is implemented; recorded 2026-07-30T00:00:00Z",
+      : "no assertion was supplied and no mechanical determination is implemented; recorded 2026-07-30T00:00:00Z" }),
+    ...(o.chain === undefined ? { provenance_chain: HOP } : (o.chain === null ? {} : { provenance_chain: o.chain })),
     capture: { method: "test", grade: "B", actor_class: "daemon", sha256: "0".repeat(64) },
     origin: { kind: "named_request" },
   }] });
   const md = (state) => `---\nid: INFO-2026-0009-fence\nobject_type: information\ncurrent_state: ${state}\n---\n\n# Fence\n`;
-  const run = async (state, det) => {
-    const files = new Map([["bundle.md", md(state)], ["data/provenance.json", prov(det)]]);
+  const run = async (state, o) => {
+    const files = new Map([["bundle.md", md(state)], ["data/provenance.json", prov(o)]]);
     const { findings } = await checkBundle({ folderName: "INFO-2026-0009-fence", files,
       sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
     return findings.filter((x) => x.check === "C-18.9");
   };
-  t("undetermined in the working corpus asserts nothing false and draws nothing",
-    (await run("collected", false)).length, 0);
-  const fenced = await run("verified", false);
-  t("the same document at verified is refused", fenced.length, 1);
-  t("naming what the group must not do",
-    /must not publish what it cannot attribute/.test(fenced[0].message), true);
-  t("a determined authority passes the fence", (await run("verified", true)).length, 0);
+  t("undetermined in the working corpus draws nothing", (await run("collected", {})).length, 0);
+  t("undetermined content authority NO LONGER blocks publication, when it is stated",
+    (await run("verified", {})).length, 0);
+  t("a determined authority still passes", (await run("verified", { det: true })).length, 0);
+
+  const silent = await run("verified", { noBasis: true });
+  t("but undetermined and SILENT is refused", silent.length, 1);
+  t("naming the distinction: an unanswered question may be published, an unstated one may not",
+    /unanswered question is honest only when the record says it is unanswered/.test(silent[0].message), true);
+
+  const noChain = await run("verified", { chain: null });
+  t("no provenance chain at all is refused at the fence", noChain.length, 1);
+  t("because a published hash claims a route the document does not name",
+    /claims these bytes came from somewhere by some route/.test(noChain[0].message), true);
+
+  const anon = await run("verified", { chain: [{ asserts: "x", bound: false }] });
+  t("an unattributed hop is refused", anon.length, 1);
+  t("naming what a hop must carry", /names no attestor/.test(anon[0].message), true);
+
+  const twoHop = await run("verified", { chain: [HOP[0], { who: "Internet Archive Wayback Machine",
+    asserts: "these bytes were served for the original", bound: false, via: "archive.org" }] });
+  t("a two-hop archive chain passes, which is the whole point of disclosure", twoHop.length, 0);
+
+  t("determined with no authority named is refused",
+    (await run("verified", { det: true, chain: undefined })).length === 0
+      ? (await (async () => { const files = new Map([["bundle.md", md("verified")],
+          ["data/provenance.json", JSON.stringify({ documents: [{ file: "snapshots/doc.pdf",
+            locator: "https://example.gov/doc.pdf", retrieved: "2026-07-30T00:00:00Z",
+            authority_state: "determined", authority: "   ", authority_basis: "b",
+            provenance_chain: HOP,
+            capture: { method: "test", grade: "B", actor_class: "daemon", sha256: "0".repeat(64) },
+            origin: { kind: "named_request" } }] })]]);
+          const { findings } = await checkBundle({ folderName: "INFO-2026-0009-fence", files,
+            sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+          return findings.filter((x) => x.check === "C-18.9").length; })())
+      : -1, 1);
 }
 
 await mf.dispose();

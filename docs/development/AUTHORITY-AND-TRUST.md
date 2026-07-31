@@ -189,3 +189,46 @@ barred from publication until resolved. What survives is the genuinely deferred
 case, which is the day BIO wants to treat a third party's script output as
 evidence in its own right. That still needs per-origin sub-document attribution
 and still shares a wall with D-53.
+
+## RULED 2026-07-31: what publication actually requires
+
+Bob, 2026-07-31: "A capture can be published if there are no undetermined
+authority links in the provenance. So recording that the capture was done
+through IA is proper, even if the content authority is still undetermined."
+
+That separates two things this project had been calling by one name.
+
+**PROVENANCE AUTHORITY** is who served us the bytes at each hop. We always know
+our own leg, and an archive hop names the archive. This is what a published hash
+attests: these bytes, this address, this date, this route.
+
+**CONTENT AUTHORITY** is who ISSUED the document. Frequently unknown, and
+legitimately so.
+
+The publication fence sits on the FIRST. C-18.9 previously refused publication
+whenever the content authority was undetermined, and that was wrong for the
+project's own reason: a hard refusal on a missing attribution pressures whoever
+wants to publish into INVENTING one, which is exactly the false assertion the
+three-valued ruling exists to prevent. D-97 removed that pressure at the intake
+gate. Leaving it at the publication gate moved it rather than removing it, and
+arguably made it worse, because by then a member has done the work and wants it
+out.
+
+So, as of catalog 1.18.0 and plane 0.55.0, a bundle at or past verified is
+refused when:
+
+1. a captured document carries NO provenance chain, because a published hash
+   claims a route and that document names none;
+2. any hop in the chain names no attestor, because an unattributed hop cannot
+   support the only claim publication makes;
+3. the content authority is undetermined AND SILENT, with no dated basis.
+
+Content-undetermined material with a dated basis MAY be published. Publishing
+"we do not know who issued this, and here is when we recorded that" is honest.
+Publishing it with the question quietly absent is not, and that is the line.
+
+Two things this does NOT change. Ratification is still a member's signed act, so
+nothing publishes itself; this decides what a member is allowed to sign for. And
+an undetermined capture still raises a D-98 inbox task at the moment of capture,
+so the question still reaches a person — it simply no longer blocks the record
+from saying what it honestly holds while the question is open.

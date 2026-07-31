@@ -129,7 +129,7 @@ t("attested by the key's member", rat.attestor, "sparky");
    loosened to a pattern match: the point of this assertion is that a
    ratification records WHICH catalog judged it, so a test that stopped
    pinning the exact version would stop testing the thing it exists for. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.17.0)");
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.18.0)");
 t("bundle, file, and capture published", rat.published.shas, 3);
 t("all bytes copied to the published bucket", rat.published.copied, 3);
 

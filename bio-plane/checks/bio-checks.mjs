@@ -790,16 +790,41 @@ const ORIGIN_KINDS = ['named_request', 'sweep', 'member'];
 
 /** C-18.1: intake provenance register shape, release authority, and the
  *  ratification fence (sweep intake lands at collected, never higher). */
-/** C-18.9: an authority-undetermined capture cannot be PUBLISHED (RULED,
- * AUTHORITY-AND-TRUST.md, 2026-07-30). The published bucket is the group
- * speaking in public, and it must not publish material it cannot attribute.
- * An undetermined capture is legitimate in the WORKING corpus: it asserts
- * nothing false, is held, and is resolved through the task list. What it may
- * not do is cross the fence. Implemented here rather than only as a
- * write-path refusal, per the D-50 lesson: the write path prevents the
- * damage, the catalog makes the condition reportable on a corpus handed in
- * from elsewhere. The gate runs at ratify, which is the two-bucket fence, so
- * this firing IS the refusal. */
+/** C-18.9: what a capture must establish before it may be PUBLISHED.
+ *
+ * REVISED 2026-07-31, and the revision is a correction of a conflation rather
+ * than a loosening. Two different things were being called "authority":
+ *
+ *   PROVENANCE authority  who served us the bytes at each hop. We always know
+ *                         our own leg, and an archive hop names the archive.
+ *                         This is what a published hash actually attests.
+ *   CONTENT authority     who ISSUED the document. Frequently unknown, and
+ *                         legitimately so.
+ *
+ * The old rule refused publication whenever the CONTENT authority was
+ * undetermined. That recreated, at the publication gate, exactly the failure
+ * D-97 removed at the intake gate: a hard refusal on a missing attribution
+ * pressures whoever wants to publish into INVENTING one, which is the false
+ * assertion the three-valued ruling exists to prevent. Moving the pressure
+ * later in the pipeline does not make it less corrupting; it makes it worse,
+ * because by then a member has done the work and wants it out.
+ *
+ * What a published hash claims is: these bytes, this address, this date, this
+ * chain of custody. It does not claim the document is authentic municipal
+ * record. So the gate belongs on the CHAIN:
+ *
+ *   1. A bundle at or past verified must carry a provenance chain for every
+ *      captured document. No chain is not "we fetched it ourselves"; it is a
+ *      claim with nothing behind it.
+ *   2. Every hop must name WHO. An unattributed hop cannot support the only
+ *      claim publication makes.
+ *   3. Content authority MAY be undetermined, but it must be STATED, dated,
+ *      and carried into what the public reads. Silence is refused. Publishing
+ *      "we do not know who issued this, and here is when we recorded that" is
+ *      honest; publishing it with the question quietly absent is not.
+ *
+ * Ratification remains a member's signed act, so nothing here publishes
+ * anything by itself: this decides what a member is ALLOWED to sign for. */
 function checkAuthorityPublishable(ctx, findings) {
   const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
   const atFence = ctx.fm?.current_state === 'verified' || hist.some(e => e && e.to_state === 'verified');
@@ -809,9 +834,34 @@ function checkAuthorityPublishable(ctx, findings) {
   let reg; try { reg = JSON.parse(asText(raw)); } catch { return; /* C-14.3 reports unparsable JSON */ }
   const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
   docs.forEach((d, i) => {
-    if (d && d.authority_state === 'undetermined') {
-      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is authority-undetermined and this bundle is at or past verified: the record has not established who authored this material, and the group must not publish what it cannot attribute`,
-        ['determine the authority through the task list and record the determination with its basis', 'or return the bundle to collected until the determination is made']));
+    if (!d || typeof d !== 'object') return; // C-18.1 reports the shape
+    const chain = d.provenance_chain;
+    if (!Array.isArray(chain) || chain.length === 0) {
+      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified with no provenance_chain: a published hash claims these bytes came from somewhere by some route, and this document names none`,
+        ['record the chain of custody for this capture, one hop per party, from us back to the source',
+         'or return the bundle to collected until the chain can be stated']));
+    } else {
+      chain.forEach((hop, h) => {
+        if (!hop || typeof hop !== 'object' || typeof hop.who !== 'string' || hop.who.trim() === '') {
+          findings.push(f('C-18.9', 'error', `provenance documents[${i}].provenance_chain[${h}] names no attestor: an unattributed hop cannot support the claim a published hash makes`,
+            ['name the party that served these bytes at this hop', 'or remove the hop if it did not happen']));
+        }
+      });
+    }
+    /* Undetermined content authority does NOT block publication, and this is
+       the deliberate change. What blocks it is undetermined and SILENT: a
+       reader of the published record must be able to see that the question was
+       asked and not answered, and when. */
+    if (d.authority_state === 'undetermined') {
+      const basis = d.authority_basis;
+      if (typeof basis !== 'string' || basis.trim() === '') {
+        findings.push(f('C-18.9', 'error', `provenance documents[${i}] is content-authority undetermined and this bundle is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
+          ['record a dated authority_basis saying what was tried and what it established',
+           'or determine the authority through the task list and record the determination']));
+      }
+    } else if (d.authority_state === 'determined' && (typeof d.authority !== 'string' || d.authority.trim() === '')) {
+      findings.push(f('C-18.9', 'error', `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this bundle is at or past verified`,
+        ['name the issuing party', "or correct authority_state to 'undetermined' with a dated basis"]));
     }
   });
 }
