@@ -763,75 +763,197 @@ export class Store extends DurableObject {
     return dead.length;
   }
 
-  /* The alarm is the backstop for the case the lazy sweep cannot cover: a member
-     makes a selection and never comes back, so no later call arrives to clean up
-     behind them. Rescheduled while any selection is live and left unset when
-     none is, so an idle instance carries no timer. */
-  async #armSweep() {
-    const live = this.#one(`SELECT count(*) c FROM selections`).c;
-    const at = await this.ctx.storage.getAlarm();
-    if (live > 0 && at === null)
-      await this.ctx.storage.setAlarm(Date.now() + Store.SELECTION_TTL_MS + 30000);
+  /* ==================================================================
+   *  THE SCHEDULER (REC-1, milestone M1, RECORD).
+   *
+   *  DECISION — recorded in full in docs/development/SCHEDULER.md and
+   *  summarised here because the second and third periodic consumers inherit
+   *  it. The plane's periodic work runs on ONE reconciling Durable Object
+   *  alarm, NOT on a Worker cron trigger. Three properties decided it, and a
+   *  cron loses all three:
+   *
+   *    1. GRANULARITY. A cron trigger's floor is one minute; the task drain
+   *       already coalesces at one SECOND (TASK_DRAIN_DELAY_MS). A cron could
+   *       not serve that consumer, so it would be a SECOND scheduler beside the
+   *       alarm rather than a replacement — the exact per-consumer sprawl REC-1
+   *       exists to end. One mechanism serves both sub-second and multi-hour
+   *       cadences; two mechanisms is the thing to avoid.
+   *    2. SELF-TERMINATION. The alarm is deleted when nothing is pending, so an
+   *       idle instance carries no timer and costs nothing. A cron fires the
+   *       Worker every minute forever, awake or not — a standing cost on every
+   *       sovereign instance, most of them on the Free tier the installer
+   *       targets, where invocations are budgeted (D-118 / CPDF-7).
+   *    3. LOCALITY. Every consumer — the sweep and drain here, and the
+   *       monitoring, archive-fallback eligibility, per-document cadence and M4
+   *       ageing clocks still to come — reconciles against the DO's own SQLite.
+   *       A cron at the Worker would have to hop into the DO anyway; the
+   *       periodic actor belongs next to its state, where the reconciling alarm
+   *       already lives.
+   *
+   *  MECHANISM. A registry (#schedConsumers) of consumers, each a small
+   *  { name, due, wake, tick }:
+   *    - onAlarm runs tick() for every consumer DUE at the firing instant, then
+   *      reconciles the single alarm to the EARLIEST wake() any consumer still
+   *      wants, deleting it when none does (self-terminating).
+   *    - a producer that created work arms via #armScheduler, reconciling the
+   *      same way but only ever pulling the alarm EARLIER, so a sooner wake set
+   *      by another consumer is never lost.
+   *  The reconcile keeps EVERY active consumer's wake, not just the one that
+   *  just ran — that is what stops a fast consumer from starving a slow one:
+   *  when the fast consumer idles, the slow one's wake is still in the set and
+   *  still re-arms the alarm. Reconcile over only the consumers that just ticked
+   *  and the slow one is dropped the instant the fast one idles; that is the
+   *  negative control in test/scheduler.test.mjs, and it names the victim.
+   *
+   *  Two REAL consumers are MOVED onto the mechanism as proof — RECORD's
+   *  selection sweep and CAP-2's D-109 task drain — but their bodies
+   *  (#sweepSelections, taskDrain) are UNCHANGED: they only register a tick and
+   *  a wake. New consumers register the same way and inherit reconciliation and
+   *  self-termination for free, which is the whole reason to decide this once.
+   * ================================================================== */
+  static SCHED_GRACE_MS = 250;   // an alarm may fire a hair early; run a consumer due within this window
+  #lastDrainProgress = true;     // did the last drain tick make progress — decides DELAY vs BACKSTOP on re-arm
+
+  /* The consumer registry. The two REAL consumers are ALWAYS due when the alarm
+     fires (`due: () => now`): they are cheap and a no-op on an empty subject, so
+     running them on any wake costs a bounded count and preserves the exact
+     pre-REC-1 behaviour the task-drain and selection suites pin. An INTERVAL
+     consumer (the env-gated test probes, and the future clocks) is due only at
+     its own anchored `next`, so it fires at its OWN cadence and no other's —
+     which is the property the reconcile has to protect. */
+  #schedConsumers(probe) {
+    const reg = [
+      { name: "selection-sweep",
+        due:  (now) => now,
+        wake: (now) => this.#one(`SELECT count(*) c FROM selections`).c > 0
+                         ? now + Store.SELECTION_TTL_MS + 30000 : null,
+        tick: ()    => ({ swept: this.#sweepSelections() }) },
+      { name: "task-drain",
+        due:  (now) => now,
+        wake: (now) => this.#one(`SELECT count(*) c FROM task_queue`).c > 0
+                         ? now + (this.#lastDrainProgress ? this.#drainDelayMs() : Store.TASK_DRAIN_BACKSTOP_MS)
+                         : null,
+        tick: ()    => { const d = this.taskDrain({ limit: Store.TASK_DRAIN_ALARM_BATCH, actor: "alarm" });
+                         this.#lastDrainProgress = d.drained > 0; return { drain: d }; } },
+    ];
+    for (const name of Object.keys(probe || {})) {
+      const st = probe[name];
+      reg.push({
+        name,
+        due:  () => st.remaining > 0 ? st.next : null,
+        wake: () => st.remaining > 0 ? st.next : null,
+        tick: (now) => { st.fires.push(now); st.remaining -= 1;
+                         st.next = st.remaining > 0 ? st.next + st.period : null;
+                         return { probe: name }; } });
+    }
+    return reg;
   }
 
-  /* D-109. The alarm is SHARED: one tick sweeps expired selections AND drains the
-     task queue, then re-arms for whichever still needs waking. `alarm()` is the
-     reserved handler workerd invokes and it cannot be called over RPC or in a
-     unit test, so its whole body is `onAlarm`, which the suite drives directly;
-     the reserved entry is a one-line forward with nothing of its own to break. */
+  /* `alarm()` is the reserved handler workerd invokes; it cannot be called over
+     RPC or in a unit test, so its whole body is `onAlarm`, which the suites
+     drive directly. The reserved entry is a one-line forward with nothing of its
+     own to break. onAlarm takes an explicit `now` so a suite can drive a pinned
+     virtual clock (following the reconciled `nextAt` exactly as workerd would);
+     workerd calls it with the default wall clock. */
   async alarm() { await this.onAlarm(); }
 
-  async onAlarm() {
-    const swept = this.#sweepSelections();
-    const drain = this.taskDrain({ limit: Store.TASK_DRAIN_ALARM_BATCH, actor: "alarm" });
-    const nextAt = await this.#rearmSchedule(drain.drained > 0);
-    return { swept, drained: drain.drained, created: drain.created.length,
-             folded: drain.folded.length, refused: drain.refused.length,
-             waiting: drain.waiting.length, remaining: drain.remaining,
-             rearmed: nextAt !== null, nextAt };
-  }
-
-  /* Reconcile the single shared alarm to the EARLIEST wake either subsystem
-     needs, and never push a sooner one later. A live selection wants a wake one
-     TTL out; a non-empty queue wants one DELAY out after a tick that drained
-     something and one BACKSTOP out after a tick that only found unfiled captures.
-     Nothing pending leaves the alarm unset — which is how the drain, like the
-     sweep, self-terminates rather than spinning on an idle instance. */
-  async #rearmSchedule(madeProgress) {
-    const now = Date.now();
-    const wants = [];
-    if (this.#one(`SELECT count(*) c FROM selections`).c > 0)
-      wants.push(now + Store.SELECTION_TTL_MS + 30000);
-    if (this.#one(`SELECT count(*) c FROM task_queue`).c > 0)
-      wants.push(now + (madeProgress ? this.#drainDelayMs() : Store.TASK_DRAIN_BACKSTOP_MS));
-    if (!wants.length) {
-      /* Nothing left to wake for. Clear the alarm so the invariant is exact —
-         no pending work, no pending alarm — and the drain terminates cleanly
-         rather than leaving a stray wake from a superseded arming behind. Reached
-         only when BOTH subsystems are idle, so it can never cancel a live
-         selection's sweep. */
-      await this.ctx.storage.deleteAlarm();
-      return null;
+  async onAlarm(now = Date.now()) {
+    const probe = await this.#probeState(now);
+    const reg = this.#schedConsumers(probe);
+    const grace = Store.SCHED_GRACE_MS;
+    let swept = 0, drain = null; const probes = [];
+    for (const c of reg) {
+      const d = c.due(now);
+      if (d === null || d > now + grace) continue;
+      const r = c.tick(now);
+      if (c.name === "selection-sweep") swept = r.swept;
+      else if (c.name === "task-drain") drain = r.drain;
+      else probes.push(c.name);
     }
+    /* Reconcile over the FULL registry, not just the consumers that ticked, and
+       AUTHORITATIVELY (`exact`): a fired alarm is spent, so onAlarm sets the
+       fresh earliest wake rather than only pulling an existing one earlier.
+       NEGATIVE CONTROL (see test/scheduler.test.mjs): pass a due-filtered subset
+       here instead of `reg` and a waiting consumer is starved the moment the
+       consumer sharing its window idles. */
+    const nextAt = await this.#reconcileAlarm(now, reg, true);
+    if (probe) await this.ctx.storage.put("sched_probe", probe);
+    const d = drain || { drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 };
+    return { swept, drained: d.drained, created: d.created.length,
+             folded: d.folded.length, refused: d.refused.length,
+             waiting: d.waiting.length, remaining: d.remaining,
+             rearmed: nextAt !== null, nextAt, probes };
+  }
+
+  /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
+     and never push a sooner one later. Nothing pending deletes the alarm — the
+     exact invariant (no pending work, no pending alarm) that makes every
+     consumer self-terminate on an idle instance rather than spin. Post-fire the
+     alarm is already cleared, so `exact` sets the fresh minimum; on an arm the
+     pull-earlier test preserves a sooner wake another consumer set. `exact` is
+     what makes the mechanism correct even where a caller (a unit-test driver, or
+     a runtime that does not pre-clear) has not cleared the spent alarm — onAlarm
+     owns the alarm after a fire and states the new earliest outright. */
+  async #reconcileAlarm(now, reg, exact = false) {
+    const wants = [];
+    for (const c of reg) { const w = c.wake(now); if (w !== null) wants.push(w); }
+    if (!wants.length) { await this.ctx.storage.deleteAlarm(); return null; }
     const want = Math.min(...wants);
+    if (exact) { await this.ctx.storage.setAlarm(want); return want; }
     const at = await this.ctx.storage.getAlarm();
     if (at === null || at > want) await this.ctx.storage.setAlarm(want);
     return await this.ctx.storage.getAlarm();
   }
 
-  /* Armed by the PRODUCER on enqueue so a queued event drains automatically,
-     without anyone calling op=taskdrain by hand. Only ever pulls the alarm
-     EARLIER, so a live selection's later wake is preserved and a burst of
-     enqueues coalesces into a single drain. Arming does not, and must not, write
-     a task: the split stays intact — enqueue schedules the consumer, it never IS
-     the consumer. */
-  async #armDrain() {
-    if (this.#one(`SELECT count(*) c FROM task_queue`).c === 0) return await this.ctx.storage.getAlarm();
-    const want = Date.now() + this.#drainDelayMs();
-    const at = await this.ctx.storage.getAlarm();
-    if (at === null || at > want) await this.ctx.storage.setAlarm(want);
-    return await this.ctx.storage.getAlarm();
+  /* The producer-side arm: a consumer that just created work reconciles the
+     alarm to include its wake, pulling it earlier if needed and never later.
+     Arming never writes work — it only schedules — so the producer/consumer
+     split D-109 relies on stays intact. */
+  async #armScheduler(now = Date.now()) {
+    const probe = await this.#probeState(now);
+    const reg = this.#schedConsumers(probe);
+    const at = await this.#reconcileAlarm(now, reg);
+    if (probe) await this.ctx.storage.put("sched_probe", probe);
+    return at;
   }
+
+  /* The two producers keep their names and call sites — selectionCreate arms
+     through #armSweep, taskEnqueue through #armDrain — but both now route
+     through the one reconcile, so a selection's wake and a drain's wake are
+     always weighed together rather than by two hand-written arms. #armDrain
+     resets the progress flag so a fresh enqueue coalesces at the short DELAY. */
+  async #armSweep() { return await this.#armScheduler(); }
+  async #armDrain() { this.#lastDrainProgress = true; return await this.#armScheduler(); }
+
+  /* ---- env-gated scheduler test seam (inert unless SCHED_PROBE is set) ------
+     A probe is a synthetic INTERVAL consumer used only to exercise the registry
+     with two independent, pinnable cadences and to detect starvation by name.
+     In production SCHED_PROBE is unset, #probeState returns null before touching
+     storage, and not one line below runs — the two real consumers are the whole
+     registry. State lives in a `sched_probe` KV value, not a schema table, so it
+     needs no purge entry and no migration. */
+  #probeSpecs() {
+    try { const s = JSON.parse((this.env && this.env.SCHED_PROBE) || "[]"); return Array.isArray(s) ? s : []; }
+    catch { return []; }
+  }
+  async #probeState(now = Date.now()) {
+    const specs = this.#probeSpecs();
+    if (!specs.length) return null;
+    let st = await this.ctx.storage.get("sched_probe");
+    if (!st) {
+      st = {};
+      for (const s of specs)
+        st[s.name] = { period: s.period, remaining: s.fires, next: now + s.period, fires: [] };
+      await this.ctx.storage.put("sched_probe", st);
+    }
+    return st;
+  }
+  /* RPC entries for the suite, mirroring how the task-drain suite drives onAlarm
+     directly: arm the probes (initialise from SCHED_PROBE, then reconcile) and
+     read back what fired and when. */
+  async schedProbeArm(now = Date.now()) { return await this.#armScheduler(now); }
+  async schedProbeLog() { return (await this.ctx.storage.get("sched_probe")) || {}; }
+  async schedAlarmAt() { return await this.ctx.storage.getAlarm(); }
 
   static #digestOf(ids) {
     /* A cheap order-sensitive digest. It answers "is this the same ordered set"
