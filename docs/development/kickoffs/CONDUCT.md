@@ -23,13 +23,29 @@ This session runs the work. Renamed from `ARCH` on 2026-07-31. Read
    piece is genuinely independent before it becomes runnable.
 4. **Keep two development areas busy;** promote a dormant area when a queue
    empties.
-5. **Run `node tools/plancheck.mjs` before you push, and get it green.** It is the
+5. **Work `DECISIONS.md`, both directions.** It is the return channel — `QUEUE.md`'s
+   `BOB INBOX` carries changes DOWN to you, this carries questions UP.
+   - **Lifting in:** when a worker closes a turn with a decision item, apply the three
+     tests in `kickoffs/README.md` FIRST and then write it into `DECISIONS.md` as a
+     `DEC-<n>`. You are its sole writer. An item the repository already answers, or
+     that you are better placed to decide, never reaches the file — resolve it and
+     record where the answer came from. Activation order, sequencing, mechanism and
+     scoping are YOURS, ruled 2026-07-31.
+   - **Never block on it.** Every `open` entry carries a `provisional:` saying what is
+     running meanwhile; if a worker would otherwise stop, run the cheap-to-reverse
+     alternative and say so. `plancheck` refuses an open entry with no provisional.
+   - **Draining out:** an entry the BOB session has set to `answered` is yours to
+     ENACT — make the queue and document changes it implies, then set `enacted:` with
+     the commit AND the document that now carries the REASONING. If the answer
+     contradicts what was running provisionally, unwind that first and say so in the
+     entry. A verdict with no reasoning in the record is a transcript.
+6. **Run `node tools/plancheck.mjs` before you push, and get it green.** It is the
    integration-side half of the same discipline: an ACTIVE area with no kickoff, an
    item behind an unregistered interface, an unknown milestone, an open debt row with
    no disposition, or a planning surface you have not published. It catches a BOB
    session's handoff mistakes as well as your own, which is the point — the check is
    on the repository's state, not on who last touched it.
-6. **Escalate to Bob ONLY genuine decisions** (doctrine, priority, risk he
+7. **Escalate to Bob ONLY genuine decisions** (doctrine, priority, risk he
    carries, effects on people outside the project). You write no area code; a
    turn that edits an area's code has stopped being CONDUCT — enqueue it and
    spawn a worker instead.

@@ -139,7 +139,72 @@ if (debt) {
        + `        DOCTRINE/ACCEPTED/WATCH token, so they are invisible work: ${bad.join(", ")}`);
 }
 
-/* --------------------------------------- 3. ORPHANED ARCHITECTURE (warn) */
+/* ------------------------------------------- 3. THE DECISION CHANNEL */
+
+const decisions = read("docs/development/DECISIONS.md");
+if (!decisions) {
+  fail(`MISSING — docs/development/DECISIONS.md does not exist, so a decision raised by`
+     + ` a worker\n        or by CONDUCT has nowhere to go but a session window.`);
+} else {
+  /* Split into chunks rather than one lazy regex: with the `m` flag a trailing `$`
+     alternative matches at the FIRST line end, so the body came back empty and every
+     entry looked as though it had no fields. Caught by the check reporting a missing
+     `provisional:` on two entries that plainly had one — which is the negative control
+     doing its job on the instrument itself. */
+  const entries = decisions.split(/^###\s+(?=DEC-)/m).slice(1).map((chunk) => {
+    const head = chunk.match(/^(DEC-\d+)\s+·\s+(open|answered|enacted)\b/);
+    return head ? [null, head[1], head[2], chunk] : null;
+  }).filter(Boolean);
+  const field = (body, name) => {
+    const m = body.match(new RegExp(`^${name}:\\s*(.*)$`, "m"));
+    if (!m) return null;
+    /* a field's value may continue on indented following lines */
+    const rest = body.slice(body.indexOf(m[0]) + m[0].length)
+      .split("\n").slice(1);
+    let v = m[1].trim();
+    for (const l of rest) { if (!/^\s{2,}\S/.test(l)) break; v += " " + l.trim(); }
+    return v;
+  };
+  let open = 0, answered = 0;
+  for (const [, id, status, body] of entries) {
+    if (status === "open") {
+      open++;
+      /* The productivity rule, made structural: an open decision must never be a
+         stopped session. Bob, 2026-07-31: never block on getting my answer. */
+      if (!field(body, "provisional"))
+        fail(`${id} is open with no \`provisional:\` line — so either work is BLOCKED on\n`
+           + `        Bob, or nobody said what is running meanwhile. Neither is acceptable:\n`
+           + `        state what runs, or state that nothing is blocked.`);
+    }
+    if (status === "answered") {
+      answered++;
+      if (!field(body, "response"))
+        fail(`${id} is marked answered and carries no \`response:\`.`);
+    }
+    if (status === "enacted") {
+      const e = field(body, "enacted");
+      /* The whole point of the file over a chat window: the REASONING lands
+         somewhere durable, not just the verdict. */
+      if (!e || !/\.md\b/.test(e))
+        fail(`${id} is enacted and its \`enacted:\` line names no DOCUMENT carrying the\n`
+           + `        reasoning. A verdict with no reasoning in the record is a transcript.`);
+    }
+  }
+  if (answered) warn(`${answered} decision(s) answered and not yet enacted — CONDUCT owes`
+                   + ` an enactment (DECISIONS.md).`);
+  notes.push(`decisions: ${open} open, ${answered} awaiting enactment, ${entries.length} total`);
+
+  const bobKick = read("docs/development/kickoffs/BOB.md");
+  const conductKick = read("docs/development/kickoffs/CONDUCT.md");
+  if (bobKick && !/DECISIONS\.md/.test(bobKick))
+    fail(`MECHANISM NOT IN THE LOOP — DECISIONS.md exists and kickoffs/BOB.md never`
+       + ` mentions it,\n        so nothing surfaces an open decision to Bob.`);
+  if (conductKick && !/DECISIONS\.md/.test(conductKick))
+    fail(`MECHANISM NOT IN THE LOOP — DECISIONS.md exists and kickoffs/CONDUCT.md never`
+       + ` mentions\n        it, so nothing lifts items in or drains answers out.`);
+}
+
+/* --------------------------------------- 4. ORPHANED ARCHITECTURE (warn) */
 
 if (interfaces && queue) {
   for (const m of interfaces.matchAll(/^##\s+(I\d+)\s+—([^\n]*)\n([\s\S]*?)(?=\n##\s+I\d+\s+—|$)/gm)) {

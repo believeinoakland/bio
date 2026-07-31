@@ -31,6 +31,26 @@ real answer.
 
 ---
 
+## Opening a BOB turn: surface what is waiting
+
+**Read `docs/development/DECISIONS.md` FIRST and surface every `open` entry to Bob**,
+before anything else this turn does. It is the return channel: CONDUCT lifts decision
+items raised by workers and by itself into that file, having applied the three tests,
+so what arrives there is what is genuinely Bob's — doctrine, risk carrying his name,
+effects on people outside the project, and the gated acts. This is the room those get
+discussed in; CONDUCT's session window is the wrong one, and an answer given there
+leaves its reasoning in a transcript rather than in the record.
+
+Present each entry as it is written — question, what is running provisionally, the
+alternative, the recommendation, and what reversing it costs. When Bob answers, write
+`response:` and `decided:` into the entry and set it to `answered`. **This session
+does not ENACT**; CONDUCT drains answered entries and records `enacted:` with the
+commit and the document that now carries the reasoning. An empty file is the healthy
+state and is worth one line, not a paragraph.
+
+**An open decision never blocks work.** Every open entry carries a `provisional:`
+line, and `plancheck` refuses one that does not.
+
 ## Closing a BOB turn: the handoff is the deliverable
 
 Added 2026-07-31, after a turn in which the thinking was right and the handoff failed.
