@@ -147,6 +147,15 @@ t("session cannot livefire", (await GET(`op=livefire&${S}`)).error, "this operat
 t("member session cannot manage the roster", (await POST(`op=memberadd&${S}`, { memberId: "x", name: "x" })).error, "this operation requires a machine credential, not a signed-in session");
 t("member session cannot register keys", (await POST(`op=signeradd&${S}`, { keyB64: "AAAAtest", memberId: "ruth" })).error, "this operation requires a machine credential, not a signed-in session");
 
+/* op=signerlist is the READ over the signer roster and, before this, no suite
+   reached it through the control plane — a real caller's only route (D-43). The
+   claim is reachability: the op answers with a structured roster rather than a
+   crash. The public name differs from the DO's internal path, so this also
+   exercises the DO_PATH rename the control plane owns. */
+const sl = await GET("op=signerlist&token=t-admin-1");
+t("op=signerlist is reached through the control plane", sl.ok, true);
+t("and answers with a signer roster rather than an exception", Array.isArray(sl.result.signers), true);
+
 console.log("\n--- admin session manages the roster ---");
 await POST("op=claim", { bootstrapToken: "t-admin-1", password: "steward-passphrase-1" });
 const alg = await POST("op=login", { role: "admin", password: "steward-passphrase-1" });

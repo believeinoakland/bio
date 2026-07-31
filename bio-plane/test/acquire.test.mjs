@@ -257,6 +257,24 @@ console.log("\n--- acquisition becomes evidence in the record ---");
   t("the assembled bundle has zero findings", errs.length, 0);
 }
 
+console.log("\n--- op=archivelookup is reachable through the control plane ---");
+/* Before this, no suite drove op=archivelookup: the archive fallback's DECIDE
+   surface (op=acquire with via=archive.org is the CAPTURE surface, tested above)
+   had no caller at all — the D-43 class, where op=invitelook shipped a
+   ReferenceError while 1276 assertions passed. The claim here is reachability,
+   not a successful lookup: a fresh store has recorded no source failures, so the
+   eligibility fence (D-104) refuses, and a STRUCTURED refusal proves the op was
+   reached and answered rather than crashing. The fence's own logic is proven in
+   reachability.test.mjs; this only proves a caller can get to it. */
+{
+  const al = await (await mf.dispatchFetch(
+    "http://x/api/?op=archivelookup&token=mem-acq&address="
+    + encodeURIComponent("https://www.oaklandca.gov/report.pdf"))).json();
+  t("archivelookup is reached and answers structurally, not with a crash", al.ok, false);
+  t("and refuses by the eligibility fence rather than an exception", al.reason, "NOT_ELIGIBLE");
+  t("carrying the reachability verdict the fence rested on", typeof al.reachability, "object");
+}
+
 await mf.dispose();
 console.log(`\nacquire: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

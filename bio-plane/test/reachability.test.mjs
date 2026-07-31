@@ -134,6 +134,21 @@ try {
     (await read("www.oaklandca.gov/somewhere-else")).known, false);
   t("because one page can be gone while the site answers",
     (await read(A)).address_norm, A);
+
+  console.log("\n--- op=sourcereach: the SAME read, through the surface a caller reaches ---");
+  /* Everything above drives the Durable Object directly, because the counter is
+     store state. But a real caller's ONLY route to this read is the control
+     plane, and until this assertion no suite took it — sourcereach was reached
+     only at the DO, the D-43 class exactly (op=invitelook shipped a ReferenceError
+     while 1276 store-level assertions passed). The claim is reachability: the op
+     answers with the same structured verdict through op= dispatch rather than
+     crashing. It hits the same "bio" store, so the recorded history is visible. */
+  const cp = await (await mf.dispatchFetch(
+    `http://x/api/?op=sourcereach&token=mem-reach&address=${encodeURIComponent(A)}&now=${encodeURIComponent(day(10))}`)).json();
+  t("op=sourcereach is reached through the control plane", cp.ok, true);
+  t("and returns the reachability verdict as structure, not an exception",
+    typeof cp.result.fallback_eligible, "boolean");
+  t("carrying the same address the store keyed it under", cp.result.address_norm, A);
 } finally {
   await mf.dispose();
 }

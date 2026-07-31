@@ -21,6 +21,7 @@
  *    guards the primary locator, and the fanout cap truncates VISIBLY rather
  *    than silently.
  */
+/* NEGATIVE CONTROL: delete the linkproject dispatch block below (the only place its op= appears) -> npm run test:coverage names that op UNREACHED again (M0-1; RUN 2026-07-31 verify-agent-1: unreached 0 -> 1, the op reappears in the list). */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -989,6 +990,19 @@ console.log("\n--- links resolve at read time, and the verdict has three values 
   const bad = await (await mf.dispatchFetch("http://x/api/?op=links&token=mem-sub")).json();
   t("with neither, it refuses by name rather than returning nothing",
     bad.reason, "NEED_CAPTURE_OR_ADDRESS");
+
+  /* op=linkproject projects the resolved links above into edges. It writes, so a
+     real caller reaches it only through the control plane and nowhere else — the
+     D-43 class exactly (op=invitelook shipped a ReferenceError because no suite
+     drove the op). Reachability, not the projection's correctness, is the claim:
+     the op is REACHED and answers structurally rather than crashing. */
+  const lpbad = await (await mf.dispatchFetch("http://x/api/?op=linkproject&token=mem-sub")).json();
+  t("op=linkproject is reached and validates its input by name, not by crashing",
+    lpbad.reason, "NEED_CAPTURE");
+  const lp = await (await mf.dispatchFetch(`http://x/api/?op=linkproject&token=mem-sub&capture=${SRC}`)).json();
+  t("op=linkproject projects through the surface a caller reaches", lp.ok, true);
+  t("and answers with an edge set rather than an exception", Array.isArray(lp.edges), true);
+  t("naming how many it projected", typeof lp.projected, "number");
 }
 
 console.log("\n--- an element reference is part of the citation, not a comment on it ---");
