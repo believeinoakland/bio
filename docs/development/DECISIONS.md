@@ -49,8 +49,9 @@ An empty file is the healthy state.
 
 ## Entry format
 
-    ### DEC-<n> · <open | answered | enacted>
+    ### DEC-<n> · <open | answered | deferred | enacted>
     raised:       <date> · <who>
+    for:          <bob | bob-session>   see "Who an entry is FOR", below
     question:     <one line, in the terms of the RECORD, not the code>
     why it is Bob's: <doctrine | risk he carries | outside effects | a gated act>
     provisional:  <what is running NOW — REQUIRED; "nothing is blocked" is valid>
@@ -58,15 +59,35 @@ An empty file is the healthy state.
     alternative:  <the other option, stated fairly enough that choosing it is easy>
     recommendation: <the raising session owes a view>
     reversal cost: <and whether it rises once data exists under the current choice>
-    response:     <Bob's answer — written by the BOB session>
+    trigger:      <REQUIRED if deferred: the condition that reopens it>
+    response:     <the answer — written by the BOB session>
     decided:      <date>
     enacted:      <commit · and the document that now carries the reasoning>
+
+## Who an entry is FOR, and why CONDUCT does not have to get that right
+
+Added 2026-07-31, within an hour of the file existing, because CONDUCT immediately
+raised something real that was NOT Bob's: two sessions sharing one working tree. It
+went to Bob's ear because this file only had one destination.
+
+So an entry names `for:`.
+
+- **`for: bob-session`** — architectural or process questions this session resolves
+  ITSELF. Coordination mechanism, interface shape, sequencing, how areas are carved.
+  These are surfaced to Bob as a LINE, not a question: decided, here is why.
+- **`for: bob`** — doctrine, risk carrying his name, effects on people outside the
+  project, and the gated acts. Only these are put to him.
+
+**CONDUCT should raise it either way and let this session triage.** Applying the three
+tests is the BOB session's job, not a bar CONDUCT must clear before speaking. A
+mis-filed entry costs one reclassification; an unraised one costs the thing going
+unrecorded, which is what happened here.
 
 ---
 
 ## Open
 
-### DEC-1 · open
+### DEC-1 · answered
 raised: 2026-07-31 · BOB (seeded from DEBT D-94)
 question: Do we ask the City of Oakland to allowlist the CivicOS user-agent?
 why it is Bob's: risk carrying his name, and relations with the City.
@@ -84,11 +105,30 @@ recommendation: hold, which is the current position. The City is non-supportive,
 reversal cost: asymmetric and rising. Not asking stays reversible forever; asking
   cannot be unsent, and D-94's ladder means the string we would disclose is the one
   thing keeping capture working.
-response:
-decided:
+response: NO, and CLOSED rather than held. Bob, 2026-07-31: "We expect Oakland to view
+  us as hostile to the administration's interests. Besides, every CivicOS instance, and
+  there could be a number of them running at some point, would each have to request
+  inclusion on that allowlist." The second half is a STRUCTURAL argument the raising
+  session had not made, and it is what closes the question instead of postponing it:
+  blocking the `CivicOS/` token is ONE action for them and total for us, while
+  allowlisting is one request per instance, forever, for both sides — so the mitigation
+  gets more expensive exactly as the project succeeds, which means it is not a
+  mitigation. The first half raises the standing assumption from "the City is
+  non-supportive" to "we expect to be seen as hostile", which is now what the access
+  strategy must survive.
+decided: 2026-07-31 · Bob
+reasoning recorded in: docs/development/SOURCE-ACCESS.md, section "RULED, 2026-07-31:
+  the allowlist is NOT a viable mechanism" — including the asymmetry table, why the
+  request is itself a disclosure, and why BIO still does not disguise its requests.
+for CONDUCT to enact: (1) D-94's status changes from "the allowlist request, Bob's to
+  make" to the allowlist arm CLOSED, the exposure remaining and unmitigated on that
+  axis. (2) The two mitigations that DO scale are promoted: `CAP-3` (nothing invokes
+  the archive fallback) becomes the primary resilience item rather than a backstop, and
+  the member-driven capture path for egress diversity needs a debt row and a milestone
+  placement — it is named nowhere in the ledger today.
 enacted:
 
-### DEC-2 · open
+### DEC-2 · deferred
 raised: 2026-07-31 · BOB (seeded from DEBT D-1)
 question: What should a ROOT OF TRUST be for a BIO group — who holds it, how does it
   survive a person leaving, and what does losing it cost?
@@ -110,8 +150,20 @@ recommendation: do not design this in the abstract. The useful next step is one
 reversal cost: low now, high later. Every governance rule written on top of the
   current root inherits its weakness, and migrating a root of trust after instances
   exist means re-establishing trust rather than editing a field.
-response:
-decided:
+response: DEFERRED, deliberately and with a trigger. Bob, 2026-07-31: "At this time I'm
+  not sure what the correct answer to this (recurring) question is. I again suggest
+  that it be deferred until we have a greater understanding from a running BIO instance
+  with multiple members." The word "again" is the useful part: this has been re-raised
+  more than once and re-answered the same way, which is waste. It now has a NAMED
+  TRIGGER so no session re-asks before the trigger and none forgets after it.
+trigger: a BIO instance running with MULTIPLE MEMBERS, from which what a real group can
+  actually hold in custody can be observed rather than assumed. Until then any custody
+  model is a guess about people, and a guess about people is the part of a security
+  design that fails silently.
+decided: 2026-07-31 · Bob
+reasoning recorded in: DEBT D-1, whose disposition becomes DEFERRED with this trigger.
+for CONDUCT to enact: update D-1's disposition to name the trigger, so a future session
+  reads "deferred until X" rather than "open doctrine" and does not re-raise it.
 enacted:
 
 ## Answered, awaiting enactment

@@ -288,6 +288,23 @@ or `{ ok:false, container, reason: "NOT_A_PDF"|"NOT_BYTES" }` on bad input.
   with no such reference (e.g. a document-level embedded file) sets `source: null`
   rather than inventing one.
 
+### The text extension (CPDF-4, 2026-07-31 — PROVISIONAL, for FW-1 to confirm/counter)
+
+Tier-1 in-plane text extraction (CPDF-4, commit 314f4b7) adds ONE top-level field,
+`text`, to the `ok:true` object; every other field is unchanged:
+
+- `text.document` — all pages' non-empty text, newline-joined.
+- `text.pages[]` — one entry per page in order: `{ page:<0-based>, text, undetermined:[Marker,...] }`.
+- `text.undetermined[]` — all per-region markers, flattened.
+- `text.counts` — `{ chars, undetermined }`.
+
+A `Marker` names the cause per region — never mojibake: `{ page, reason, font, codes, count }`,
+where `reason` ∈ { `no_tounicode`, `cid_font_no_tounicode`, `unmapped_code`,
+`no_current_font`, `font_not_in_resources`, `code_width_misaligned`, `text_extraction_error` }
+and `font` is the BaseFont (or null). This mirrors the link side's `undetermined` doctrine
+but as its own `text.undetermined` array (a reason+font shape, not a link partition).
+**FW-1 confirms or counters this EXTENDED shape (structure + text), not the link-only I2.**
+
 ### Open before it can go STABLE
 
 - A FRAMEWORK session confirms or counters the shape.

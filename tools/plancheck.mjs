@@ -152,7 +152,7 @@ if (!decisions) {
      `provisional:` on two entries that plainly had one — which is the negative control
      doing its job on the instrument itself. */
   const entries = decisions.split(/^###\s+(?=DEC-)/m).slice(1).map((chunk) => {
-    const head = chunk.match(/^(DEC-\d+)\s+·\s+(open|answered|enacted)\b/);
+    const head = chunk.match(/^(DEC-\d+)\s+·\s+(open|answered|deferred|enacted)\b/);
     return head ? [null, head[1], head[2], chunk] : null;
   }).filter(Boolean);
   const field = (body, name) => {
@@ -165,22 +165,25 @@ if (!decisions) {
     for (const l of rest) { if (!/^\s{2,}\S/.test(l)) break; v += " " + l.trim(); }
     return v;
   };
-  let open = 0, answered = 0;
+  let open = 0, pending = 0;
   for (const [, id, status, body] of entries) {
-    if (status === "open") {
-      open++;
-      /* The productivity rule, made structural: an open decision must never be a
+    if (status === "open" || status === "deferred") {
+      if (status === "open") open++;
+      /* The productivity rule, made structural: an unsettled decision must never be a
          stopped session. Bob, 2026-07-31: never block on getting my answer. */
       if (!field(body, "provisional"))
-        fail(`${id} is open with no \`provisional:\` line — so either work is BLOCKED on\n`
-           + `        Bob, or nobody said what is running meanwhile. Neither is acceptable:\n`
+        fail(`${id} is ${status} with no \`provisional:\` line — so either work is BLOCKED\n`
+           + `        on Bob, or nobody said what is running meanwhile. Neither is acceptable:\n`
            + `        state what runs, or state that nothing is blocked.`);
     }
-    if (status === "answered") {
-      answered++;
-      if (!field(body, "response"))
-        fail(`${id} is marked answered and carries no \`response:\`.`);
-    }
+    if (status === "deferred" && !field(body, "trigger"))
+      /* A deferral with no trigger is how the same question gets re-raised and
+         re-answered forever. Bob's "I AGAIN suggest" on DEC-2 is what earned this. */
+      fail(`${id} is deferred with no \`trigger:\` — name the condition that reopens it,\n`
+         + `        or the question will be re-asked and re-answered indefinitely.`);
+    if (status === "answered" && !field(body, "response"))
+      fail(`${id} is marked answered and carries no \`response:\`.`);
+    if (field(body, "decided") && !field(body, "enacted")) pending++;
     if (status === "enacted") {
       const e = field(body, "enacted");
       /* The whole point of the file over a chat window: the REASONING lands
@@ -190,9 +193,9 @@ if (!decisions) {
            + `        reasoning. A verdict with no reasoning in the record is a transcript.`);
     }
   }
-  if (answered) warn(`${answered} decision(s) answered and not yet enacted — CONDUCT owes`
-                   + ` an enactment (DECISIONS.md).`);
-  notes.push(`decisions: ${open} open, ${answered} awaiting enactment, ${entries.length} total`);
+  if (pending) warn(`${pending} decision(s) decided and not yet enacted — CONDUCT owes`
+                  + ` an enactment (DECISIONS.md).`);
+  notes.push(`decisions: ${open} open, ${pending} awaiting enactment, ${entries.length} total`);
 
   const bobKick = read("docs/development/kickoffs/BOB.md");
   const conductKick = read("docs/development/kickoffs/CONDUCT.md");

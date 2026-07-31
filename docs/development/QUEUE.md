@@ -208,16 +208,16 @@ accepts-when: recorded in `MEASUREMENTS.md` with date and instrument, stating wh
 added: 2026-07-31 · BOB
 landed: 5e24fd9 — MEASURED: account is Workers Free; Free DOES allow a second Worker + service bindings (cross-Worker call ~1ms, negligible subrequest). pdf-worker path VIABLE — D-118's "Tier-1 becomes the floor" conditional does NOT fire, CPDF-6 stays central. D-118 closed; the residual 10ms Worker-CPU ceiling is narrowed onto CPDF-1's gated follow-on.
 
-### CPDF-4 · active
+### CPDF-4 · done
 milestone: M2
 scope: **Tier 1 text extraction, in the plane, pure JS, no dependency.** Content-stream text operators plus the font `ToUnicode` CMap, reusing the PDF object parser `src/pdfstructure.mjs` already has (classic objects, FlateDecode, object streams) and honouring I1 range reads. Extend the I2 output with text; do not fork it. `undetermined` is first-class and per-region: a glyph that cannot be decoded is SAID, never silently dropped and never guessed.
 behind-interface: I2
 depends-on: none
 accepts-when: text extracted from fixture PDFs carrying `ToUnicode`; a CID-font fixture with no `ToUnicode` returns `undetermined` naming the font rather than mojibake; negative control — remove the CMap lookup and the suite fails on the decoded-text assertions.
 added: 2026-07-31 · BOB
-landed:
+landed: 314f4b7 — pure-JS content-stream lexer + interpreter + ToUnicode CMap decoding, reusing the existing object parser; extends I2 with a `text` field (document/pages/undetermined markers). undetermined per-region names the font/reason, never mojibake. index.mjs untouched (text flows through op=pdfstructure). battery 43/43 (2313), negative control run. I2 text extension registered (provisional) for FW-1.
 
-### CPDF-5 · queued
+### CPDF-5 · active
 milestone: M2
 scope: **Measure Tier 1's coverage on REAL Oakland PDFs** — agenda packets, staff reports, budget exhibits, an ACFR. What fraction decode fully, what partially, what fails and why. This measurement SIZES Tier 2: it says how much `unpdf` is actually needed, and it is the input to whether the fleet member is urgent or marginal. Record in `MEASUREMENTS.md` with date and instrument. Produces a decision input, commits no extractor.
 behind-interface: none

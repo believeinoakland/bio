@@ -179,3 +179,66 @@ eleven captures through the deployed 0.46.0, ten admitted, one 403 on a cold
 back-to-back pair, which is burst-shaped rather than categorical; the per-host
 governor shipped in 0.47.0 in response. What remains open is the first item,
 telling the City, and it now carries a measured, specific ask.
+
+## RULED, 2026-07-31: the allowlist is NOT a viable mechanism, and the reason is
+## structural rather than tactical
+
+Bob, answering DEC-1: **"We expect Oakland to view us as hostile to the
+administration's interests. Besides, every CivicOS instance, and there could be a
+number of them running at some point, would each have to request inclusion on that
+allowlist."**
+
+Two things settle here, and the second is the one that closes the question rather
+than postponing it.
+
+**The adversary posture is now a standing expectation, not an inference.** Earlier
+sessions recorded that the City is "non-supportive". The position is stronger: we
+expect to be seen as hostile to the administration's interests. That is not a
+prediction about any individual and it is not a grievance — it is the assumption the
+access strategy must survive. A system whose subject is holding an institution to
+account should not plan on that institution's goodwill.
+
+**The allowlist does not compose with the sovereignty model, and the asymmetry is
+what kills it.** BIO's distribution model is that any group runs its own instance in
+its own Cloudflare account. So the arithmetic runs one way:
+
+| | cost to them | cost to us |
+| --- | --- | --- |
+| block the `CivicOS/` product token | ONE action, once | every instance, everywhere, at once |
+| allowlist our instances | one review per instance, forever | one request per instance, forever |
+
+Blocking is O(1) for them and total for us. Allowlisting is O(n) for both, forever,
+and n grows exactly as the project succeeds. **A mitigation that gets more expensive
+the better the project does is not a mitigation.** The allowlist would also have to
+be re-won at every administration, every vendor change, and every WAF reconfiguration.
+
+And the request itself is a disclosure. The 2026-07-30 ladder measured that admission
+turns on the contact URL component; an allowlist request hands a party we expect to be
+hostile the exact string to filter, in writing, with a named point of contact. We
+would be paying an O(n) cost to reduce our own defensibility.
+
+**So the ask is CLOSED, not held.** D-94's allowlist arm is answered and no session
+should re-raise it. What D-94 records remains true and unmitigated on that axis: we
+are admitted because Akamai does not recognise `CivicOS`, and that will change.
+
+**What this promotes.** Only two mitigations scale, and both are already named:
+
+1. **The archive fallback** — built, live-verified, and IDLE. Nothing invokes it
+   (QUEUE `CAP-3`). It is the only path that survives the City refusing us outright,
+   and this ruling makes it the primary resilience mechanism rather than a backstop.
+2. **Egress diversity via the member-driven capture path** — many member addresses
+   rather than one Cloudflare egress. Not built.
+
+**What does NOT change: BIO does not disguise its requests.** That position stands and
+is not weakened by expecting hostility. A system whose product is the trustworthiness
+of a record does not lie about who is asking, and browser-UA delegation remains HELD
+IN RESERVE with a named trigger, not adopted pre-emptively. Being blocked honestly is
+a fact we can record; being admitted dishonestly is a claim we could not defend.
+
+One consequence worth stating so it is not discovered later: the instance-name
+component of the user-agent was justified as letting a third party throttle ONE
+operator rather than a provider. Under a hostile expectation that same component lets
+them block one group precisely. It stays, because the dominant risk is the product
+token — blocking `CivicOS/` catches every instance regardless of instance names, so
+removing the instance name would buy nothing while costing the accountability the
+component exists for.
