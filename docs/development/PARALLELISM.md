@@ -156,6 +156,18 @@ dormant areas.
 `ARCH` writing code would defeat the point, because the areas would then be
 receiving decisions from a party that is also a competitor for the same files.
 
+**`ARCH` works in the MAIN checkout; area sessions work in worktrees.** This was
+not designed — it fell out of standing this scaffolding up on 2026-07-31 — but it
+is the right shape and is written down so it is kept rather than rediscovered.
+The reason it is right: an area session is confined to its own paths and a
+worktree makes that confinement physical, one session per worktree, `.env`
+carried in by `.worktreeinclude`. `ARCH` owns no code and edits the cross-cutting
+registry — `CLAIMS.md`, `INTERFACES.md`, this file, the kickoffs — which every
+worktree must see, so it belongs in the main checkout where those files are the
+canonical copy, not in a worktree that would have to push them back. An `ARCH`
+turn that finds itself editing an area's code is a turn that has stopped being
+`ARCH`; claim the area and move to its worktree.
+
 ## Concurrency safeguards
 
 Existing, and they keep working: never force-push; fetch and rebase before every

@@ -29,6 +29,8 @@ guessing wrong means rewriting another thread's handoff at the end.
 | Thread | Owns | Kickoff |
 | --- | --- | --- |
 | `CAPTURE` | **holds the release baton** · `bio-plane/src/subresources.mjs`, `src/cpu.mjs`, capture and link tables in `src/schema.mjs`, capture ops in `src/index.mjs`, `test/subresources.test.mjs` | `kickoffs/CAPTURE.md` |
+| `CONTENT-PDF` | **ready to run** · structure inside PDFs (D-91) · `bio-plane/src/pdfstructure.mjs`, `test/pdfstructure.test.mjs` (new) · CONSUMES I1, PRODUCES structure | `kickoffs/CONTENT-PDF.md` |
+| `CONTENT-HTML` | **dormant, scope pending** · content inside HTML (D-64) · not yet carvable (link graph is CAPTURE's, recognizers are FRAMEWORK's, D-64 blocked on D-55) | `kickoffs/CONTENT-HTML.md` |
 | `UI` | `civicos-ui/**`, `docs/development/UI-PLAN.md` | `kickoffs/UI.md` |
 | `DIST` | **cuts all plane releases** · `newgroup/**`, `release/**`, `scripts/deploy.mjs`, versions and tags | `kickoffs/DIST.md` |
 | `FRAMEWORK` | `docprofile/**`, `docs/architecture/BIO_Content_Framework_*`, `docs/architecture/CONSTRUCTS.md`, `docs/development/DOCUMENT-PROFILES.md` | `kickoffs/FRAMEWORK.md` |
