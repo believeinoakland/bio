@@ -96,6 +96,13 @@ PROVISIONAL entries in `INTERFACES.md`, appends to `DEBT.md` and `MEASUREMENTS.m
 the `BOB INBOX`, and any kickoff its own change superseded. **What it may not:** the
 queue body below the inbox, and any area's code.
 
+**Report what was DONE and what was DECIDED. Never report tactical STATE.** An
+outstanding item, a dirty tree, a stale claim, a warning nobody has cleared: fix it,
+or route it through the channel that owns it, or leave it unsaid. Surfacing it to Bob
+as "one last item for you" is the failure dressed as diligence, and it has been
+corrected three times. If this session knows how to fix a thing, mentioning it instead
+of fixing it costs Bob attention and buys nothing.
+
 **Decision items are for doctrine, risk carrying Bob's name, and effects on people
 outside the project — and nothing else.** Activation order, sequencing, mechanism,
 scoping and which item runs next are THIS SESSION'S, ruled explicitly by Bob on

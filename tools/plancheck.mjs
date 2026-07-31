@@ -50,7 +50,11 @@ if (!LOCAL_ONLY) {
   if (dirty) {
     fail(`UNPUBLISHED — the planning surface has uncommitted changes. A worktree is a\n`
        + `        checkout of a COMMIT, so these reach no worker at all:\n`
-       + dirty.split("\n").map((l) => `          ${l}`).join("\n"));
+       + dirty.split("\n").map((l) => `          ${l}`).join("\n")
+       + `\n        If these are NOT yours, another session is writing this tree, which is\n`
+       + `        itself the violation: ONE SESSION PER WORKING TREE (PARALLELISM.md).\n`
+       + `        Do not commit them for it and do not report them — the fix is the\n`
+       + `        other session moving to its own worktree, not a message to Bob.`);
   }
 
   sh("git fetch -q origin");
