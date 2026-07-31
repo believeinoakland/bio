@@ -14,6 +14,7 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
+import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 
 /* The plane's identity to a source, in one place because it was in three and
    they had drifted: `bio-acquire` on capture, `bio-monitor` on monitoring, both
@@ -186,6 +187,13 @@ const OPS = {
      see WHY a document is or is not eligible, including the governed refusals
      that are deliberately excluded from the verdict. */
   sourcereach:         { classes: ["admin", "member", "probe"], mutating: false },
+  /* The archive fallback's DECISION half. Non-mutating: it asks the Internet
+     Archive what it holds and applies the rules; capturing the bytes is a
+     separate, ordinary op=acquire carrying via=archive.org. Keeping them apart
+     means the eligibility fence and the capture path each do one thing, and the
+     lookup can be run to ask "would this fire, and why" without fetching
+     anything into the record. */
+  archivelookup:       { classes: ["admin", "member", "probe"], mutating: false },
   tasks:               { classes: ["admin", "member", "probe"], mutating: false },
   taskdrain:           { classes: ["admin", "member", "probe"], mutating: true  },
   taskforward:         { classes: ["admin", "member", "probe"], mutating: true  },
@@ -1086,6 +1094,93 @@ export default {
      * state; the daemon and the member are writers like every writer." So this
      * returns a provenance document and the caller promotes it.
      */
+    /* ---- the archive fallback's decision half (D-99 / ARCHIVE-FALLBACK.md) ----
+     *
+     * ARCHIVE.ORG IS A BACKUP SOURCE, NEVER A PRIMARY ONE (RULED). This refuses
+     * unless the source-failure counter says the document has actually been
+     * unreachable: three consecutive failures the SOURCE produced, or a failing
+     * run of fourteen days. D-104's exclusion is what makes that fence mean
+     * something, because our own governor declining to ask never advances it.
+     * Without the fence, sustained politeness would load somebody else's
+     * infrastructure to solve a problem we made.
+     *
+     * It fetches through the same governor as everything else, and its host
+     * appetite is set conservatively from THEIR published figures rather than
+     * discovered by probing for the wall. Bob, 2026-07-31: there is no need to
+     * push traffic to the breaking point; there is plenty of time.
+     */
+    if (op === "archivelookup") {
+      const body = req.method === "POST" ? await req.json().catch(() => null) : null;
+      const address = body?.address || url.searchParams.get("address");
+      if (typeof address !== "string" || !isPublicHttpsLocator(address))
+        return json({ ok: false, reason: "BAD_ADDRESS",
+                      detail: "the document address must be https on a public host" }, 400);
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const addrNorm = normalizeAddress(address);
+
+      const reach = (await (await st.fetch(
+        `http://x/sourcereach?address=${encodeURIComponent(addrNorm)}`)).json()).result;
+      if (!reach.fallback_eligible) {
+        return json({ ok: false, reason: "NOT_ELIGIBLE",
+          detail: "archive.org is a backup source and this document has not been unreachable long enough to justify one",
+          reachability: reach }, 409);
+      }
+
+      /* THEIR figure, ours to obey conservatively. Recorded as a third-party
+         number in ARCHIVE-FALLBACK.md and never presented as measured. */
+      try {
+        await st.fetch("http://x/governorconfig", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ host: "web.archive.org", appetite_per_min: 24 }),
+        });
+      } catch { /* the default appetite already governs; a missing override is not a failure */ }
+
+      const query = cdxQuery(address);
+      let res;
+      try {
+        const g = await governedFetch(env, st, query, "archive-lookup");
+        if (g.refusedByGovernor)
+          return json({ ok: false, reason: "HOST_COOLING_OFF",
+                        detail: `the governor is holding requests to web.archive.org (${g.reason})`,
+                        retry_in_ms: g.retry_in_ms || 0 }, 429);
+        res = g.res;
+      } catch (e) {
+        return json({ ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) }, 502);
+      }
+      if (!res.ok)
+        return json({ ok: false, reason: "ARCHIVE_REFUSED", status: res.status,
+                      detail: res.status === 429
+                        ? "the Internet Archive is rate-limiting us; the governor will hold this host"
+                        : "the CDX endpoint did not answer with a record" }, 502);
+
+      const parsed = parseCdx(await res.text());
+      if (!parsed.ok) return json({ ok: false, ...parsed }, 502);
+      const sel = selectCapture(parsed.rows);
+      if (!sel.ok)
+        return json({ ok: false, reason: sel.reason, detail: sel.detail,
+                      considered: sel.considered, address }, 404);
+
+      const replay = replayLocator(sel.chosen);
+      return json({
+        ok: true,
+        address,
+        eligible_because: reach.basis,
+        chosen: sel.chosen,
+        /* Every row the index offered and why it was not used. A fallback that
+           says only "nothing suitable" when the index holds forty redirects is
+           unauditable. */
+        rejected: sel.rejected,
+        usable_count: sel.usable_count,
+        /* What to fetch, and how to file it. The capture is a separate,
+           ordinary acquire so the streaming, hashing and R2 path is the one
+           already proven rather than a second copy of it. */
+        retrieval_locator: replay,
+        capture_with: { op: "acquire", locator: replay, via: "archive.org", documentAddress: sel.chosen.original },
+        provenance_hop: archiveHop(sel.chosen, replay),
+        note: "grade tracks directness: a capture filed through this lands at C, below a direct capture of the same document",
+      });
+    }
+
     if (op === "acquire") {
       if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
@@ -1123,7 +1218,22 @@ export default {
          *
          * Recorded here rather than in governedFetch because this is where the
          * document address is known; the governor knows only a host. */
-      const addrNorm = normalizeAddress(locator);
+      /* D-96/D-99. A capture has TWO addresses and they are only the same for a
+         direct fetch. The DOCUMENT ADDRESS is what the record identifies, and
+         for an archive-sourced capture it is the CDX `original`, not the replay
+         URL. The RETRIEVAL LOCATOR is what we actually fetched. Keying
+         captured_locators on the document address is what lands an archive
+         capture on the SAME row as a direct one, so two sources agreeing
+         accumulate as corroboration instead of looking like two documents.
+         *
+         * `via` is a closed set rather than a free string for the reason D-104
+         * gives for outcomes: the value exists to hold a distinction, and a free
+         * string lets a caller erase it by accident. */
+      const via = body?.via === "archive.org" ? "archive.org" : "direct";
+      const documentAddress = via === "archive.org"
+        && typeof body?.documentAddress === "string" && isPublicHttpsLocator(body.documentAddress)
+        ? body.documentAddress : locator;
+      const addrNorm = normalizeAddress(documentAddress);
       const noteOutcome = async (outcome, status) => {
         try {
           await stGov.fetch("http://x/recordsourceoutcome", {
@@ -1285,13 +1395,13 @@ export default {
       try {
         await stLim.fetch("http://x/recordcapturedlocator", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ address: res.url || locator,
-            addressNorm: normalizeAddress(res.url || locator),
+          body: JSON.stringify({ address: via === "archive.org" ? documentAddress : (res.url || locator),
+            addressNorm: via === "archive.org" ? addrNorm : normalizeAddress(res.url || locator),
             captureSha: sha, retrieved,
             /* D-96: a direct fetch is its own source, and the document address
                and the retrieval locator are the same string. An archive-sourced
                capture will name via 'archive.org' and split the two. */
-            via: "direct", retrievalLocator: locator }),
+            via, retrievalLocator: locator }),
         });
       } catch { /* an unfiled address is not a failed capture */ }
 
@@ -1573,7 +1683,11 @@ export default {
             method: multipart
               ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt`
               : "bio-plane acquire, https fetch, hashed at receipt",
-            grade: "B",
+            /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
+               is one more party between us and the publisher, so it grades
+               below a direct capture of the same document even though the
+               bytes may be identical and the method just as careful. */
+            grade: via === "archive.org" ? "C" : "B",
             actor_class: viaSession ? "member" : (cls === "probe" ? "session" : "daemon"),
             /* Over the reassembled whole, which is what C-18.1 requires of a
                parted document and what C-18.6 checks by streaming the parts. */

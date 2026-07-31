@@ -5873,6 +5873,119 @@ async function captureSubresources({
   };
 }
 
+// src/cdx.mjs
+var EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
+function parseCdx(text) {
+  let raw;
+  try {
+    raw = JSON.parse(text);
+  } catch (e) {
+    return { ok: false, reason: "CDX_UNPARSEABLE", detail: String(e && e.message || e) };
+  }
+  if (!Array.isArray(raw)) return { ok: false, reason: "CDX_NOT_AN_ARRAY" };
+  if (raw.length === 0) return { ok: true, rows: [] };
+  const header = raw[0];
+  if (!Array.isArray(header) || !header.includes("timestamp") || !header.includes("original")) {
+    return { ok: false, reason: "CDX_NO_HEADER", detail: "the first row does not name timestamp and original" };
+  }
+  const rows = [];
+  for (let i = 1; i < raw.length; i++) {
+    const r = raw[i];
+    if (!Array.isArray(r)) continue;
+    const o = {};
+    for (let c = 0; c < header.length; c++) o[header[c]] = r[c];
+    rows.push(o);
+  }
+  return { ok: true, rows };
+}
+var TS_RE = /^\d{14}$/;
+function cdxTimestampToIso(ts) {
+  if (!TS_RE.test(String(ts || ""))) return null;
+  const s = String(ts);
+  return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}T${s.slice(8, 10)}:${s.slice(10, 12)}:${s.slice(12, 14)}Z`;
+}
+function rowRefusal(row) {
+  if (!row || typeof row !== "object") return "not a row";
+  if (!TS_RE.test(String(row.timestamp || ""))) return "timestamp is not 14 digits";
+  if (typeof row.original !== "string" || !row.original) return "no original URL";
+  if (String(row.statuscode) !== "200") return `statuscode ${row.statuscode}, not 200`;
+  if (!row.digest) return "no digest";
+  if (String(row.digest) === EMPTY_BODY_DIGEST) return "digest is the empty-body digest: the capture holds nothing";
+  return null;
+}
+function selectCapture(rows, { notAfter = null } = {}) {
+  const considered = [], usable = [];
+  for (const r of Array.isArray(rows) ? rows : []) {
+    const why = rowRefusal(r);
+    if (why) {
+      considered.push({ timestamp: r && r.timestamp, refused: why });
+      continue;
+    }
+    if (notAfter && String(r.timestamp) > String(notAfter)) {
+      considered.push({ timestamp: r.timestamp, refused: `later than the requested bound ${notAfter}` });
+      continue;
+    }
+    usable.push(r);
+  }
+  if (!usable.length) {
+    return {
+      ok: false,
+      reason: "NO_USABLE_CAPTURE",
+      detail: "the index holds no 200 response with a non-empty body for this address",
+      considered
+    };
+  }
+  usable.sort((a, b) => String(a.timestamp) < String(b.timestamp) ? 1 : -1);
+  const chosen = usable[0];
+  return {
+    ok: true,
+    chosen: {
+      timestamp: chosen.timestamp,
+      archived_at: cdxTimestampToIso(chosen.timestamp),
+      original: chosen.original,
+      mimetype: chosen.mimetype || null,
+      statuscode: String(chosen.statuscode),
+      digest: chosen.digest,
+      /* Carried but explicitly NOT used as a size or fixity check. MEASURED:
+         it is the compressed WARC record size. Recorded so the provenance hop
+         can state their claim verbatim, never so anything can compare it. */
+      warc_record_length: chosen.length === void 0 ? null : String(chosen.length)
+    },
+    rejected: considered,
+    usable_count: usable.length
+  };
+}
+function replayLocator(chosen) {
+  if (!chosen || !TS_RE.test(String(chosen.timestamp || ""))) return null;
+  return `https://web.archive.org/web/${chosen.timestamp}id_/${chosen.original}`;
+}
+function cdxQuery(address, { limit = 40 } = {}) {
+  const u = new URL("https://web.archive.org/cdx/search/cdx");
+  u.searchParams.set("url", String(address).replace(/^https?:\/\//, ""));
+  u.searchParams.set("output", "json");
+  u.searchParams.set("limit", String(-Math.abs(limit)));
+  u.searchParams.set("fl", "urlkey,timestamp,original,mimetype,statuscode,digest,length");
+  return u.toString();
+}
+function archiveHop(chosen, replay, { mementoDatetime = null, warcSource = null } = {}) {
+  return {
+    who: "Internet Archive Wayback Machine",
+    asserts: `these bytes were served for ${chosen.original} at ${chosen.archived_at}, with HTTP status ${chosen.statuscode}`,
+    evidence: [
+      `CDX record: timestamp ${chosen.timestamp}, digest ${chosen.digest} (base32 SHA-1, over the body as they stored it)`,
+      chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
+      chosen.warc_record_length ? `WARC record length ${chosen.warc_record_length}, which is THEIR compressed record size and not the length of what we received` : null,
+      mementoDatetime ? `Memento-Datetime: ${mementoDatetime}` : null,
+      warcSource ? `x-archive-src: ${warcSource}` : null,
+      `replayed from ${replay}`
+    ].filter(Boolean).join("; "),
+    /* Not cryptographic, and said plainly. This is delegated attestation. */
+    bound: false,
+    unsigned_reason: "no cryptographic attestation exists over a Wayback capture; this is a dated third-party claim we are trusting, not verifying",
+    via: "archive.org"
+  };
+}
+
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
 
@@ -12189,6 +12302,13 @@ var OPS = {
      see WHY a document is or is not eligible, including the governed refusals
      that are deliberately excluded from the verdict. */
   sourcereach: { classes: ["admin", "member", "probe"], mutating: false },
+  /* The archive fallback's DECISION half. Non-mutating: it asks the Internet
+     Archive what it holds and applies the rules; capturing the bytes is a
+     separate, ordinary op=acquire carrying via=archive.org. Keeping them apart
+     means the eligibility fence and the capture path each do one thing, and the
+     lookup can be run to ask "would this fire, and why" without fetching
+     anything into the record. */
+  archivelookup: { classes: ["admin", "member", "probe"], mutating: false },
   tasks: { classes: ["admin", "member", "probe"], mutating: false },
   taskdrain: { classes: ["admin", "member", "probe"], mutating: true },
   taskforward: { classes: ["admin", "member", "probe"], mutating: true },
@@ -12977,6 +13097,89 @@ var index_default = {
         }
       });
     }
+    if (op === "archivelookup") {
+      const body2 = req.method === "POST" ? await req.json().catch(() => null) : null;
+      const address = body2?.address || url.searchParams.get("address");
+      if (typeof address !== "string" || !isPublicHttpsLocator(address))
+        return json({
+          ok: false,
+          reason: "BAD_ADDRESS",
+          detail: "the document address must be https on a public host"
+        }, 400);
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const addrNorm = normalizeAddress(address);
+      const reach = (await (await st.fetch(
+        `http://x/sourcereach?address=${encodeURIComponent(addrNorm)}`
+      )).json()).result;
+      if (!reach.fallback_eligible) {
+        return json({
+          ok: false,
+          reason: "NOT_ELIGIBLE",
+          detail: "archive.org is a backup source and this document has not been unreachable long enough to justify one",
+          reachability: reach
+        }, 409);
+      }
+      try {
+        await st.fetch("http://x/governorconfig", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ host: "web.archive.org", appetite_per_min: 24 })
+        });
+      } catch {
+      }
+      const query = cdxQuery(address);
+      let res2;
+      try {
+        const g = await governedFetch(env, st, query, "archive-lookup");
+        if (g.refusedByGovernor)
+          return json({
+            ok: false,
+            reason: "HOST_COOLING_OFF",
+            detail: `the governor is holding requests to web.archive.org (${g.reason})`,
+            retry_in_ms: g.retry_in_ms || 0
+          }, 429);
+        res2 = g.res;
+      } catch (e) {
+        return json({ ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) }, 502);
+      }
+      if (!res2.ok)
+        return json({
+          ok: false,
+          reason: "ARCHIVE_REFUSED",
+          status: res2.status,
+          detail: res2.status === 429 ? "the Internet Archive is rate-limiting us; the governor will hold this host" : "the CDX endpoint did not answer with a record"
+        }, 502);
+      const parsed = parseCdx(await res2.text());
+      if (!parsed.ok) return json({ ok: false, ...parsed }, 502);
+      const sel = selectCapture(parsed.rows);
+      if (!sel.ok)
+        return json({
+          ok: false,
+          reason: sel.reason,
+          detail: sel.detail,
+          considered: sel.considered,
+          address
+        }, 404);
+      const replay = replayLocator(sel.chosen);
+      return json({
+        ok: true,
+        address,
+        eligible_because: reach.basis,
+        chosen: sel.chosen,
+        /* Every row the index offered and why it was not used. A fallback that
+           says only "nothing suitable" when the index holds forty redirects is
+           unauditable. */
+        rejected: sel.rejected,
+        usable_count: sel.usable_count,
+        /* What to fetch, and how to file it. The capture is a separate,
+           ordinary acquire so the streaming, hashing and R2 path is the one
+           already proven rather than a second copy of it. */
+        retrieval_locator: replay,
+        capture_with: { op: "acquire", locator: replay, via: "archive.org", documentAddress: sel.chosen.original },
+        provenance_hop: archiveHop(sel.chosen, replay),
+        note: "grade tracks directness: a capture filed through this lands at C, below a direct capture of the same document"
+      });
+    }
     if (op === "acquire") {
       if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
@@ -12992,7 +13195,9 @@ var index_default = {
       const authorityAsserted = typeof body2?.authority === "string" && body2.authority.trim() ? body2.authority.trim() : null;
       const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
-      const addrNorm = normalizeAddress(locator);
+      const via = body2?.via === "archive.org" ? "archive.org" : "direct";
+      const documentAddress = via === "archive.org" && typeof body2?.documentAddress === "string" && isPublicHttpsLocator(body2.documentAddress) ? body2.documentAddress : locator;
+      const addrNorm = normalizeAddress(documentAddress);
       const noteOutcome = async (outcome, status) => {
         try {
           await stGov.fetch("http://x/recordsourceoutcome", {
@@ -13115,14 +13320,14 @@ var index_default = {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            address: res2.url || locator,
-            addressNorm: normalizeAddress(res2.url || locator),
+            address: via === "archive.org" ? documentAddress : res2.url || locator,
+            addressNorm: via === "archive.org" ? addrNorm : normalizeAddress(res2.url || locator),
             captureSha: sha,
             retrieved,
             /* D-96: a direct fetch is its own source, and the document address
                and the retrieval locator are the same string. An archive-sourced
                capture will name via 'archive.org' and split the two. */
-            via: "direct",
+            via,
             retrievalLocator: locator
           })
         });
@@ -13374,7 +13579,11 @@ var index_default = {
           }],
           capture: {
             method: multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
-            grade: "B",
+            /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
+               is one more party between us and the publisher, so it grades
+               below a direct capture of the same document even though the
+               bytes may be identical and the method just as careful. */
+            grade: via === "archive.org" ? "C" : "B",
             actor_class: viaSession ? "member" : cls === "probe" ? "session" : "daemon",
             /* Over the reassembled whole, which is what C-18.1 requires of a
                parted document and what C-18.6 checks by streaming the parts. */

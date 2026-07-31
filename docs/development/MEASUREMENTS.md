@@ -470,3 +470,40 @@ live, because provoking a governed refusal against a real host means driving
 that host to its cool-off, which is the opposite of the point. Negative control:
 letting a governed refusal fall through to the failure path breaks 17 of the 34
 assertions.
+
+## 2026-07-31, thread CAPTURE: the archive fallback, live on 0.51.0
+
+The governor's own accounting, read back from `biosmoke7` (`store=scratch`)
+after the fallback's decision half ran for the first time:
+
+| host | appetite_per_min | granted | refused_total | cooloff_until |
+| --- | --- | --- | --- | --- |
+| `web.archive.org` | **24** | 3 | 0 | 0 |
+| `raw.githubusercontent.com` | null (instance default) | 5 | 0 | 0 |
+
+The 24 is THEIRS, not ours to have measured: it is the figure the maintained
+`wayback` client reduced to, recorded in ARCHIVE-FALLBACK.md as a third-party
+number, and applied here as a per-host override the moment the plane first
+speaks to that host. Three requests granted, none refused, no cool-off. Nothing
+about their actual ceiling was learned and nothing was meant to be (D-111).
+
+The eligibility fence, live and in order:
+
+| Step | Result |
+| --- | --- |
+| `archivelookup` on a healthy address | `NOT_ELIGIBLE`, basis "no attempt on this address has ever been recorded" |
+| one origin 404 | `consecutive_failures: 1`, not eligible |
+| three origin 404s | `consecutive_failures: 3`, eligible, basis names count and threshold |
+| `archivelookup` once eligible | ran, governed, and refused `NO_USABLE_CAPTURE` |
+
+That last refusal is the correct answer and worth stating plainly: the address
+driven to eligibility was a file that never existed in the repository, so the
+Internet Archive holds nothing for it and the index came back empty. The path
+was exercised end to end — fence, governor, CDX query, parse, selection — and it
+declined to invent a document. What was NOT exercised live is a SUCCESSFUL
+selection, because arranging one would mean finding an address that is both
+genuinely unreachable and archived, and manufacturing that state means either
+faking failures or hammering a real source until it refuses. Neither is worth
+doing. The selection logic is instead asserted against the VERBATIM CDX response
+measured earlier the same day, 37 assertions in `test/cdx.test.mjs`, including
+that the newest row overall (a 301) is not chosen while the newest usable row is.
