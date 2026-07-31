@@ -76,3 +76,12 @@ interfaces consumed: I1 (bytes → content), I2 (structure, provisional — cons
 interfaces owned: none
 expected: QUEUE.md CAP-1 — fulfil the CONTENT-PDF→CAPTURE delegation above. Add op=pdfstructure (GET, read-only, same auth/caps posture as op=capture GET) that reads a capture sha through the exact R2 path op=capture uses and returns extractPdfStructure(bytes) as JSON. Test through the op with a fixture PDF (link annotation) plus a non-PDF negative control. Does NOT touch CONTENT-PDF's src/pdfstructure.mjs or test/pdfstructure.test.mjs. No deploy; CONDUCT integrates and live-verifies.
 released: 2026-07-31 — CAP-1 landed on main by CONDUCT, commit 2ab62f4. Full battery green; the captureKey extraction verified a no-op (capture behaviour unchanged), the op is read-only and mirrors op=capture GET auth (no new permission).
+
+## CLAIM 2026-07-31 CONTENT-PDF
+session: content-pdf-agent-2
+opened: 2026-07-31T00:00:00Z
+paths: the CPDF-1 measurement section in docs/development/MEASUREMENTS.md (append-only), bio-plane/test/unpdf-measure-probe.mjs
+interfaces consumed: none (a measurement)
+interfaces owned: none
+expected: D-91 phase-2 go/no-go MEASUREMENT (CPDF-1). Bundle `unpdf` through the plane's esbuild target in a scratch temp dir (NOT added to shipped deps/bundle) and measure bundled size vs the 3MB Free-worker limit; time extraction on a real Oakland agenda as a labelled node proxy (not Worker CPU); record both with date and instrument and recommend go/no-go. Commits no text extractor and changes no shipped dependency or bundle. Verdict: GO — bundle fits with 2.29 MB gzip headroom; node-proxy cost modest. CPDF-2 unblocked.
+released: 2026-07-31 — measurement landed on branch content-pdf/phase2-measure; CONDUCT integrates. Worker-CPU-vs-ceiling confirmation via a deployed probe is the remaining gated follow-on (rides on the op=pdfstructure delegation above).

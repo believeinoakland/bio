@@ -560,3 +560,107 @@ a fortnight. A runtime op would be a fence any credential holder could lower,
 which is not a fence. Bad values fall back to the constants rather than being
 obeyed, and the thresholds actually in force are reported in every verdict so a
 result can be audited against them rather than against the shipped defaults.
+
+## 2026-07-31, thread CONTENT-PDF: `unpdf` text extraction — bundle size and node-proxy cost (D-91 phase 2, CPDF-1)
+
+The phase-2 go/no-go measurement for PDF text extraction (glyph→Unicode). This
+records TWO numbers behind one decision: the bundled size of `unpdf` against the
+Free-worker limit (authoritative, ours), and the extraction time on a real
+Oakland agenda (a NODE PROXY, explicitly not Worker CPU). It commits no text
+extractor; the extractor is CPDF-2, and it is now unblocked — see the
+recommendation. Reproduce with `bio-plane/test/unpdf-measure-probe.mjs` (a probe,
+not in the battery: it `npm install`s `unpdf` into an OS temp dir and changes
+nothing in the repo).
+
+**Instrument.** `unpdf` **1.8.0** (its bundled serverless pdf.js), bundled with
+**esbuild 0.25.12** using the plane's OWN `build` flags verbatim —
+`--bundle --format=esm --platform=neutral --external:cloudflare:workers
+--external:node:*`, unminified, exactly as `npm run build` ships. Installed into a
+scratch temp dir OUTSIDE the repo; `unpdf` was never added to `bio-plane/package.json`
+or the shipped bundle. Plane baseline built the same turn from `src/index.mjs` at
+version 0.55.0. Extraction timed on this machine (node v26.5.0, darwin/arm64).
+
+### Bundle size — OURS, and it FITS
+
+`unpdf`'s default text path does `await import("unpdf/pdfjs")`; under a single
+`--outfile` (no code-splitting, as the plane builds) esbuild inlines that into one
+file, so the figure below is the whole shippable payload, not a stub.
+
+| Bundle | Raw | Gzip-9 |
+| --- | --- | --- |
+| plane baseline (0.55.0, `src/index.mjs`) | 668,027 B (0.637 MB) | 181,887 B (0.173 MB) |
+| tiny module importing `unpdf` text entry (`extractText`+`getDocumentProxy`) | 2,379,943 B (2.270 MB) | 566,998 B (0.541 MB) |
+| **plane + unpdf, additive** | **3,047,970 B (2.907 MB)** | **747,680 B (0.713 MB)** |
+
+The additive row is an UPPER BOUND: a single integrated build tree-shares runtime
+helpers between the two, so the real combined bundle is no larger than this.
+
+The **3 MB Free-worker limit is the VENDOR'S figure** (Cloudflare Workers, Free
+plan), and Cloudflare states it is applied **after gzip**. Against that:
+
+- **Headroom with `unpdf`, gzip: 2,398,048 B (2.287 MB) under the limit.** The
+  compressed plane+unpdf is 0.713 MB — under a quarter of the 3 MB budget.
+- Even on the most conservative reading (comparing the RAW uncompressed payload to
+  3 MB, which is stricter than the vendor's own rule), it still fits: 2.907 MB
+  raw, **97,758 B (0.093 MB) of raw headroom**. Thin, but positive — and the
+  binding limit is the gzip one, where the margin is 2.29 MB.
+- Neither bundle is minified (the plane doesn't minify). Minifying would roughly
+  halve the raw size and shrink the gzip further, so a large additional safety
+  margin is available on demand and was NOT needed to clear the limit.
+
+**Bundle size is therefore NOT the blocker D-91 flagged it might be.** The single
+constraint that could have killed text extraction regardless of CPU — busting the
+3 MB limit — is cleared, on both the vendor's rule and the stricter raw reading.
+
+### Extraction cost — a NODE PROXY, NOT Worker CPU
+
+Timed on real Oakland City Council agenda PDFs fetched from `oakland.legistar.com`
+(`View.ashx?M=A&ID=…`, `application/pdf`, honest CivicOS user-agent) — the exact
+document class D-91 exists for. Median of 5 warm runs after a warm-up run:
+
+| Document (source: oakland.legistar.com) | Bytes | Pages | Chars extracted | Median warm | ms/page |
+| --- | --- | --- | --- | --- | --- |
+| agenda, ID 1423518 | 363,924 | 60 | 108,156 | **43.0 ms** | 0.72 |
+| agenda, ID 1425405 | 276,421 | 33 | 60,029 | **28.4 ms** | 0.9 |
+
+Plus a **one-time ~80–100 ms** cost on the first extraction in a process for
+pdf.js module load/init (the warm-up run: 100.6 ms and 81.5 ms respectively).
+Extracted text is clean and correct (verified: the first agenda's leading text is
+the real meeting header, "Tuesday, July 21, 2026 3:30 PM City of Oakland …").
+
+**These milliseconds are a Node figure and MUST NOT be read as Worker CPU.** A
+Worker cannot time itself — `Date.now()` is frozen during synchronous execution
+(the rule already established for `cpu.mjs` and recorded above) — so any in-Worker
+ms would be a fabrication. Nor do these ms map onto the enforced CPU ceiling
+recorded above, which is denominated in **reference iterations** (40,000,000 fit,
+killed in the next 2,000,000), not milliseconds; the two are not comparable. What
+the proxy establishes is only order of magnitude: extracting a typical 30–60-page
+agenda is **tens of milliseconds of CPU-bound work on warm node, ~0.7–0.9 ms/page**,
+i.e. NOT pathological (not seconds). Linear in pages on this evidence, so a
+~250-page ACFR extrapolates to ~180 ms warm on node — still not pathological, but
+an EXTRAPOLATION, not a measurement.
+
+**Authoritative Worker CPU vs the enforced ceiling remains UNMEASURED and is a
+gated follow-on.** It needs a deployed probe on the plane's own egress (the
+`op=pdfstructure` wiring is already a recorded DELEGATION to CAPTURE), timed the
+way `op=cpuprobe` walks the ceiling in reference iterations — not node ms. Until
+that runs, the CPU dimension is "encouraging on proxy, unconfirmed on Worker."
+
+### Recommendation: GO — pursue `unpdf` text extraction (CPDF-2 unblocked)
+
+The one constraint that would have been decisive regardless of CPU — bundle size
+against the 3 MB limit — is cleared with 2.29 MB of gzip headroom, and the
+node-proxy extraction cost is modest and not pathological. So phase 2 is worth
+building. Two conditions ride with the GO, and both are build/verify items, not
+size blockers:
+
+1. **Confirm Worker CPU against the ceiling on a deployed probe before adoption is
+   final** — the node ms do not establish it, and a large ACFR/budget PDF (the
+   32 MB budget book in the source-access table is the worst case) is where a
+   Worker CPU or memory limit, not the bundle, would bite first.
+2. **Reconcile with I1's range-reading design.** `unpdf`/pdf.js takes the whole
+   document as one `Uint8Array` in memory; I1 §3 was written so a PDF is read in
+   ranges and never pulled whole into a Worker. Link-annotation extraction (phase 1)
+   honours that; whole-document text extraction as `unpdf` is called here does not.
+   That tension is a phase-2 design question (stream/range-feed pdf.js, or cap the
+   document size text extraction attempts), not a bundle-size finding.
