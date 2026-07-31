@@ -14,6 +14,7 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
+import { extractPdfStructure } from "./pdfstructure.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 
 /* The plane's identity to a source, in one place because it was in three and
@@ -346,6 +347,14 @@ const OPS = {
      falls in depends on what the record holds today, not on what it held when
      the document was captured. */
   links:      { classes: ["admin", "member", "probe"],           mutating: false },
+  /* CONTENT-PDF's structure extractor (D-91), exposed as a READ over already-
+     captured bytes. It reads the exact R2 object op=capture serves and parses
+     it; it writes nothing and holds no PUT arm, so unlike op=capture it is
+     genuinely non-mutating. That gives it the SAME effective posture as an
+     op=capture GET — admin/member/probe class, a signed-in session reaches it
+     with no capability, no write gate — without the GET special-case op=capture
+     needs only because op=capture also writes. No new permission is invented. */
+  pdfstructure: { classes: ["admin", "member", "probe"],         mutating: false },
   runtime:    { classes: ["admin", "member", "probe"],           mutating: false },
   /* Turning resolved links into traversable edges WRITES, so it is its own op
      rather than a flag on the read. A mutating arm hiding inside a
@@ -615,6 +624,11 @@ const json = (o, status = 200) =>
   new Response(JSON.stringify(o, null, 1), {
     status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
   });
+
+/* The R2 key for a capture's bytes (I1 §2): content-addressed under the store
+   prefix. The ONE place this shape is written, so op=capture and op=pdfstructure
+   read the identical object rather than two copies of the key drifting apart. */
+const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 
 export default {
   async fetch(req, env) {
@@ -1110,7 +1124,7 @@ export default {
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, error: "capture requires sha256=<64 lowercase hex>" }, 400);
-      const key = `${storeName}/captures/${sha}`;
+      const key = captureKey(storeName, sha);
       if (req.method === "PUT" || req.method === "POST") {
         const body = new Uint8Array(await req.arrayBuffer());
         const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", body))]
@@ -1135,6 +1149,30 @@ export default {
                    "access-control-allow-origin": "*", "x-capture-sha256": sha,
                    ...(dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}) },
       });
+    }
+
+    /* D-91 delegation (CONTENT-PDF → CAPTURE): read a captured PDF's outbound-
+       link structure. This is a READ layered on op=capture — it takes the same
+       sha256 parameter, reads the SAME R2 object through the same captureKey
+       path, and returns the extractor's container-agnostic structure (the
+       provisional I2 shape). It parses bytes; it never writes them, which is why
+       its OPS spec is non-mutating and it needs no capture-GET special-case. */
+    if (op === "pdfstructure") {
+      if (typeof env.CAPTURES?.get !== "function")
+        return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
+      const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+      if (!/^[0-9a-f]{64}$/.test(sha))
+        return json({ ok: false, error: "pdfstructure requires sha256=<64 lowercase hex>" }, 400);
+      const obj = await env.CAPTURES.get(captureKey(storeName, sha));
+      if (!obj)
+        return json({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
+      const bytes = new Uint8Array(await obj.arrayBuffer());
+      const structure = await extractPdfStructure(bytes);
+      /* A found object that is not a parseable PDF (NOT_A_PDF / NOT_BYTES) is a
+         well-formed answer about ill-formed input, not a server fault: 422. The
+         bytes existed and were read; the record simply does not hold a PDF at
+         that sha. `ok:true` structure is the ordinary 200. */
+      return json(structure, structure.ok ? 200 : 422);
     }
 
     /* Acquisition: the fetch layer the intake doctrine calls M2'.
