@@ -88,14 +88,14 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
-### M0-1 · queued
+### M0-1 · done
 milestone: M0
 scope: Control-plane assertions for the three ops no suite reaches — `archivelookup`, `linkproject`, `signerlist` — and a control-plane assertion for `sourcereach`, which is reached only at the Durable Object (the D-43 class: a real caller's only route is the control plane). Reachability, not success: a structured BIO refusal counts, a worker exception does not.
 behind-interface: I3
 depends-on: none
 accepts-when: `npm run test:coverage` reports 0 unreached and 0 durable-object-only; negative control — revert one assertion and the instrument names that op again.
 added: 2026-07-31 · BOB
-landed:
+landed: fd53292 — control-plane assertions for archivelookup, linkproject, signerlist, sourcereach. Coverage 85/85, 0 unreached, 0 DO-only (was 81/85 + 1 + 3). Worker's negative control (delete linkproject dispatch → unreached 0→1) recorded in subresources.test.mjs. D-43 class closed for the current surface.
 
 ### M0-2 · queued
 milestone: M0
