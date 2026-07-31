@@ -27,7 +27,7 @@ depends-on: none (pdfstructure.mjs is on main)
 added: 2026-07-31 · CONDUCT
 landed: 2ab62f4 — GET, read-only, mirrors op=capture GET auth; shared captureKey helper (no-op refactor); 29-assertion op test + negative control; full battery green.
 
-### CAP-2 · queued
+### CAP-2 · active
 scope: D-109 — drain the task queue on a Durable Object alarm (armed on enqueue, re-armed while `task_queue` is non-empty, self-terminating when it drains), per `kickoffs/CAPTURE.md` item (1). Do NOT drain from the capture path.
 behind-interface: none (internal to CAPTURE)
 depends-on: none
@@ -43,17 +43,17 @@ landed:
 
 ## CONTENT-PDF — ACTIVE
 
-### CPDF-1 · active
+### CPDF-1 · done
 scope: D-91 phase-2 MEASUREMENT (not the build). Bundle `unpdf` through the plane's esbuild target in a scratch way (do NOT add it to the shipped deps/bundle); measure the bundled size against the 3MB Free-worker limit and current headroom, authoritatively. Measure extraction cost on a representative PDF as a node proxy, clearly labelled as node-not-Worker. Record both in `MEASUREMENTS.md` with date and instrument, and recommend go/no-go on text extraction. Produces a decision input, commits no text extractor.
 behind-interface: none (measurement)
 depends-on: none
 added: 2026-07-31 · CONDUCT
-landed:
+landed: 40eaba6 — unpdf FITS (plane+unpdf ~2.9MB raw / 0.71MB gzip; 2.29MB gzip headroom under the 3MB limit); node-proxy extraction ~0.7–0.9 ms/page. Verdict GO. See MEASUREMENTS.md 2026-07-31.
 
-### CPDF-2 · blocked
-scope: If CPDF-1 says go, implement PDF text extraction (glyph→Unicode via `unpdf`) behind the structure output; else record the alternative chosen and why.
+### CPDF-2 · active
+scope: Implement PDF text extraction via `unpdf` (CPDF-1 verdict GO). Read the WHOLE captured bytes (as op=pdfstructure already does) and extract glyph→Unicode text, exposed alongside the structure the extractor emits — EXTEND the I2 output, do not fork it. Wire unpdf so the plane's build inlines it, and RE-MEASURE the integrated built bundle to confirm it stays under the 3MB gzip limit (CPDF-1 measured components separately; the real build must be re-confirmed). unpdf/pdf.js needs the whole document in memory, which is exactly what I1's range reads avoid for large PDFs, so GUARD on size: a document too large for the Worker envelope is recorded text-undetermined (first-class), never silently truncated. The authoritative large-PDF ceiling needs a deployed probe (gated follow-on) — record it as undetermined, do not claim unbounded capability. Tests + negative control. Do NOT deploy (bundle grows ~4.5x; that ships only via a DIST release).
 behind-interface: I2
-depends-on: CPDF-1
+depends-on: CPDF-1 (done)
 added: 2026-07-31 · CONDUCT
 landed:
 
