@@ -58,9 +58,14 @@ RULED routing order, so this is a BUILD task: persist the tasks array in the
 DO, copy the C-18.5 validator with TASK fixtures both ways, export
 checkInboxGrammar for the write path exactly as checkGatheringGrammar is
 exported, so authority-undetermined captures land in a project manager's inbox
-instead of a count nobody reads. ONE question the contract leaves for Bob and
-you must not guess: does an undetermined capture create a task automatically at
-intake or only when a member acts on the working set. Ask; do not decide.
+instead of a count nobody reads. RULED and no longer open: an undetermined
+capture creates a task automatically at capture through a PRODUCER/CONSUMER
+QUEUE. The capture path only ENQUEUES (refers_to, F5-bounded subject,
+timestamp); a separate consumer holds the sole inbox write path, applies
+routing and the grammar, and dedups on (refers_to, kind) so a re-capture loop
+cannot flood it. This is the safety property, not a detail: the daemon
+credential cannot write a task. Transport is table-as-queue in the DO unless a
+Cloudflare Queue buys something specific.
 (3) D-102 and D-103, the small ones: the wizard binds INSTANCE_NAME, and
 governorstate/governorconfig get control-plane ops. (4) If time remains, plane
 adoption of the volatile digest (D-60) is the cheaper win: feasibility is

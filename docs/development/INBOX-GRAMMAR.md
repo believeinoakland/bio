@@ -106,20 +106,39 @@ exported from `bio-checks`, exactly as `checkGatheringGrammar` is, so:
   wasted. The comment on `checkGatheringGrammar` already states this reasoning;
   the inbox inherits it.
 
-## The one genuine open question, NOT decided here
+## RULED 2026-07-30: auto-create at capture, through a queue
 
-Everything above is derivation. This is the single judgement call, and it is
-Bob's:
+Bob's ruling: **an undetermined-authority capture creates an inbox task
+automatically at the moment of capture, and the transport is a
+producer/consumer queue.** The queue is not an implementation detail; it is
+what makes auto-creation safe.
 
-**Does an undetermined-authority capture CREATE a task automatically at intake,
-or only when a member acts on the working set?** Automatic creation means the
-inbox fills without anyone asking, which is what "it becomes a task" reads like
-literally, but it also means a capture daemon writes to the inbox, which widens
-what a leaked daemon token touches. Manual creation keeps the daemon out of the
-inbox at the cost of undetermined captures sitting unrouted until someone
-looks. The F5 posture bounds the DAMAGE either way (a daemon-written task still
-cannot steer a session), so this is a question about noise and timing, not
-safety. Flagged for Bob; the archive session should not guess it.
+The capture path is the PRODUCER: on filing a capture whose `authority_state`
+is `undetermined`, it enqueues one event carrying the referred bundle ID, the
+subject text (the locator or document title, F5-bounded at enqueue), and the
+capture timestamp. It does NOT write to the inbox table.
+
+A separate CONSUMER drains the queue and writes tasks. Only the consumer holds
+the write path to `data/inbox.json`, and it applies the routing order below and
+the C-19.1 grammar at write. This is the important safety property: a capture
+daemon, and therefore a leaked capture token, can only ENQUEUE. It cannot write
+a task that renders in front of a member, cannot set an assignee, cannot forge
+a `forwarded` history entry. The blast radius of the daemon credential stops at
+the queue boundary, where every field is already F5-bounded and rendered as
+quoted data.
+
+Enqueue must be idempotent on `(refers_to, kind)`: a bundle re-captured while
+still undetermined enqueues an event that the consumer must fold into the
+existing open task rather than spawning a duplicate, so a noisy re-capture loop
+cannot flood the inbox. The consumer is the natural place for that dedup,
+because it is the only writer and can read the current task set first.
+
+Transport shape is the consumer's choice between a Cloudflare Queue and a
+durable table drained on a schedule, decided when D-98 is built; both satisfy
+the producer/consumer split. The table-as-queue form keeps everything inside
+the Durable Object and the audit model, which is the same reasoning that keeps
+the store itself in the DO, so it is the default unless the Queue buys
+something specific.
 
 ## What this unblocks
 
