@@ -37,9 +37,11 @@ formality. Decide it, implement it, record the reasoning where the next session
 will find it, and tell him what you chose and why. Do not return the question.
 
 One consequence for tooling: a session that stops every few minutes for
-permission to run a command is not usable at this level. Grant the common
-operations standing approval and get on with it; reserve the interruptions for
-the things that genuinely need a person.
+permission to run a command is not usable at this level. `.claude/settings.json`
+already pre-approves everything this project does routinely, so if you find
+yourself prompting him for a command that recurs, ADD IT THERE rather than
+asking twice. Reserve the interruptions for the three things that are actually
+gated: pushing, deploying the plane, and deploying the installer.
 
 ## What this is
 

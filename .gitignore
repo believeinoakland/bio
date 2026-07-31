@@ -4,3 +4,7 @@
 # Credentials. Carried into worktrees by .worktreeinclude, never committed.
 .env
 .env.local
+
+# Personal, per-machine permission approvals. Project rules live in
+# .claude/settings.json and ARE committed.
+.claude/settings.local.json
