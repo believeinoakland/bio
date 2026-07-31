@@ -1,6 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "newgroup",
+  // The account this Worker belongs to, PINNED. Without it, wrangler falls back
+  // to whatever OAuth session happens to be on the machine, and on 2026-07-31 a
+  // fresh checkout was found authenticated to a DIFFERENT Cloudflare account
+  // entirely. A deploy would have succeeded and put the installer somewhere
+  // nobody was looking. Pinning it here makes the repository, not the machine,
+  // decide where this Worker goes.
+  "account_id": "20b533579290b9b93168345edd3b7f72",
   "main": "src/index.mjs",
   "compatibility_date": "2026-07-01",
 

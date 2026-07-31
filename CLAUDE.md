@@ -150,6 +150,23 @@ tested code and ask DIST. See `docs/development/kickoffs/DIST.md` for the gate.
   scope ALL and silently leaves rows (D-113).
 - **`store.mjs` is ~4900 lines.** Grep before assuming a helper does not exist.
 
+## Which Cloudflare account you are talking to
+
+`wrangler` authenticates from an OAuth session stored on the MACHINE, and a
+machine may well be logged in to a different account for unrelated work. On
+2026-07-31 a fresh checkout was found authenticated to `neologic`, not to this
+project's account, and a deploy would have SUCCEEDED — putting the installer
+somewhere nobody was looking, with no error to notice.
+
+Both `wrangler.jsonc` files now pin `account_id`, so the repository decides
+where a Worker goes rather than the machine. Do not remove it, and do not add a
+new Worker config without it.
+
+`scripts/deploy.mjs` was never exposed: it takes the account from `CF_ACCT` and
+talks to the REST API directly. The exposure was `wrangler deploy`, which the
+installer uses. If a wrangler command ever reports an account other than
+`20b533579290b9b93168345edd3b7f72`, stop and say so rather than proceeding.
+
 ## Credentials
 
 Read from `.env`, never from a chat message and never committed. `.env` is

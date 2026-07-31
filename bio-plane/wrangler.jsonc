@@ -1,6 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bio-plane",
+  // The account this Worker belongs to, PINNED, for the same reason as the
+  // installer: wrangler otherwise uses whatever OAuth session the machine
+  // carries. The RELEASE path does not depend on this (scripts/deploy.mjs takes
+  // the account from CF_ACCT and talks to the REST API directly), but
+  // `wrangler dev` does, and a dev session against the wrong account is a
+  // confusing way to lose an afternoon.
+  "account_id": "20b533579290b9b93168345edd3b7f72",
   "main": "src/index.mjs",
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
