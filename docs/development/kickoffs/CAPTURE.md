@@ -1,20 +1,39 @@
 # Thread CAPTURE: paste-ready kickoff
 
-Rewritten 2026-07-30 at the close of the release-and-governor session (0.46.0
-and 0.47.0 both cut, deployed, and live-verified). See `kickoffs/README.md` for
-the thread register and the append-only rules, and `kickoffs/BATON.md` for the
-release baton, which CAPTURE currently holds.
+Rewritten 2026-07-30 at the close of the release-and-governor session. THREE
+releases were cut, signed, deployed byte-identical and live-verified that day:
+0.46.0 (the legible user-agent and a resolving contact URL), 0.47.0 (the
+per-host governor, three-valued authority, the observation-source split), and
+0.48.0 (the governor's operator surface). The plane is at 0.48.0, op=audit
+31/31 clean. See `kickoffs/README.md` for the thread register and the
+append-only rules, and `kickoffs/BATON.md` for the release baton, which CAPTURE
+currently holds.
+
+WHAT IS NOT DONE, so this document is not read as a victory lap: 59 items are
+open in DEBT.md. Capture is still BYTES-ONLY for the document classes Oakland
+actually publishes (D-91 PDFs, D-64 client-rendered), the archive fallback is
+designed and unbuilt, several things exist with nothing consuming them (D-65
+monitoring contracts, D-67 connections, D-60 the stable digest), and D-94 is
+still open because we pass Akamai only by being unrecognised. The five-item
+plan of 2026-07-30 finished; the thread did not.
 
 This thread owns the capture and citation machinery in the plane:
 `bio-plane/src/subresources.mjs`, `src/cpu.mjs`, the capture and link tables in
 `src/schema.mjs`, the capture ops in `src/index.mjs`, the link and capture
 functions in `src/store.mjs`, the capture and authority checks in `bio-checks`,
 and `test/subresources.test.mjs` plus `test/governor.test.mjs`. It does NOT own
-`civicos-ui/**` or `docprofile/**`.
+`civicos-ui/**` or `docprofile/**`, and READING docprofile is expected (D-60
+adopts its `digests`/`compare` into the plane) while CHANGING it is not.
+`newgroup/**` was touched once, for D-102, under an explicit instruction from
+Bob; treat it as out of bounds again absent one.
 
 Bob pastes the block below verbatim and fills the four grant slots. Everything
 the session needs it fetches for itself from the public repo; Bob attaches
-nothing.
+nothing. The fourth slot is the release SIGNING SEED, the string beginning
+`BIOKEY-RAW1.bio-release.` — a 32-byte Ed25519 key in this project's own
+envelope, which `ssh-keygen` will not load, so a session reconstructs the
+SSHSIG path in Node and verifies every signature against stock `ssh-keygen -Y
+verify` before trusting it. Leave it blank when no release will be cut.
 
 ---
 
@@ -185,11 +204,30 @@ gaining admission) and a named veto (outside counsel Bob is consulting), and is
 NOT adopted while the honest CivicOS string works. Do not build browser-UA
 delegation pre-emptively.
 
+Also from 2026-07-30. An undetermined capture creates an inbox task
+AUTOMATICALLY AT CAPTURE, through a PRODUCER/CONSUMER QUEUE: the capture path
+only enqueues, a separate consumer holds the sole inbox write path, and the
+daemon credential therefore cannot write a task, assign one, or forge history.
+The instance name IS the worker name, everywhere, with no override. And THE
+CITY IS NON-SUPPORTIVE, which inverts the D-94 plan: an allowlist request to a
+hostile City may simply hand them the string to block, since they already
+denylist archive.org_bot and GPTBot by name, so the archive path and egress
+diversity are the priority and the ask is Bob's alone to time. Whether that
+reframing becomes doctrine in SOURCE-ACCESS.md is still Bob's call and is NOT
+yet written there.
+
 ## Open, and named
+
+**D-106 is being paid for right now.** The installer embeds 0.35.0 while the
+plane runs 0.48.0, so a group installing today gets an instance that cannot
+reach oaklandca.gov at all and identifies as `bio-acquire`. Everything the
+2026-07-30 session shipped is absent from a fresh install. Sovereign instances
+are the distribution model, so this outranks every other small item.
 
 **D-94's clock still ticks.** Admission rests on being unrecognised. The
 allowlist ask now carries a measured, specific claim: a named civic agent, a
 resolving contact, and a component ladder showing exactly what we send and why.
+Given the City's stance, the ask is held rather than pending.
 
 **D-98 blocks the authority ruling's landing.** Undetermined captures exist on
 the live instance now; nothing routes them to a person.
