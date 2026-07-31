@@ -9100,6 +9100,11 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       indexed: n("bundles_fts"),
       selections: n("selections"),
       selectionItems: n("selection_items"),
+      /* Reported so a purge can prove it took them, and so an operator can see
+         inbox and reachability depth without a second call. */
+      tasks: n("tasks"),
+      taskQueue: n("task_queue"),
+      sourceReachability: n("source_reachability"),
       dbBytes: this.ctx.storage.sql.databaseSize
     };
   }
@@ -9130,6 +9135,9 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         this.sql.exec(`DELETE FROM bundles`);
         this.sql.exec(`DELETE FROM selection_items`);
         this.sql.exec(`DELETE FROM selections`);
+        this.sql.exec(`DELETE FROM tasks`);
+        this.sql.exec(`DELETE FROM task_queue`);
+        this.sql.exec(`DELETE FROM source_reachability`);
       }
     });
     const after = this.stats();
@@ -9144,7 +9152,10 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         files: d("files"),
         history: d("history"),
         refs: d("refs"),
-        register: d("register")
+        register: d("register"),
+        tasks: d("tasks"),
+        taskQueue: d("taskQueue"),
+        sourceReachability: d("sourceReachability")
       }
     };
   }

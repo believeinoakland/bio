@@ -111,6 +111,71 @@ if (GATED) {
   }
 }
 
+
+/* ---- D-108: the bytes landing is not the same as the new build serving ----
+ *
+ * Verifying the deployed script proves the BYTES are right. It says nothing
+ * about which build is answering requests, and on 2026-07-31 those came apart
+ * visibly: seconds after a byte-identical verification of 0.52.0, `/version`
+ * answered 0.51.0, two probes were answered by the previous build and a third
+ * by the new one. The rollout is PER-ISOLATE AND NOT ATOMIC, so a verification
+ * issued in that window can receive a MIX and reach opposite conclusions about
+ * the same property.
+ *
+ * That nearly produced a false security finding: a probe appeared to show new
+ * code honouring a forged locator, when the old code was answering.
+ *
+ * So this waits for the instance to actually SERVE the version before the
+ * script reports done. It is not a pass/fail on the deploy, because the deploy
+ * succeeded: it is a gate on believing anything measured afterwards. A
+ * non-answer is reported loudly rather than silently tolerated, because the
+ * whole point is to stop the next person trusting a probe too early.
+ */
+async function workersSubdomain() {
+  try {
+    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/subdomain`,
+      { headers: { authorization: `Bearer ${TOKEN}` } });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && j.success && j.result ? j.result.subdomain : null;
+  } catch { return null; }
+}
+
+async function confirmServing(want) {
+  const sub = await workersSubdomain();
+  if (!sub) {
+    console.log("rollout: could not learn the workers.dev subdomain, so which build is SERVING is unconfirmed.");
+    console.log("         The bytes are verified. Do not measure behaviour until /version answers " + want + ".");
+    return;
+  }
+  const url = `https://${slug}.${sub}.workers.dev/version`;
+  const t0 = Date.now();
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    let seen = null;
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (r.ok) seen = (await r.text()).trim();
+    } catch { /* mid-rollout a request can simply fail; that is not an answer either */ }
+    if (seen === want) {
+      console.log(`rollout: serving ${want} after ${Math.round((Date.now() - t0) / 1000)}s (${attempt} check${attempt === 1 ? "" : "s"})`);
+      /* Said even on success, because /version is served by the WORKER and the
+         Durable Object is a separate cycle: an op routed into the DO can still
+         answer from the previous route map for a while after this line prints. */
+      console.log("         NOTE: this confirms the Worker. Ops routed into the Durable Object");
+      console.log("         (anything reaching op= handlers backed by the store) may lag briefly.");
+      return;
+    }
+    if (attempt === 1) console.log(`rollout: serving ${seen || "(no answer)"}, waiting for ${want}…`);
+    await new Promise((s) => setTimeout(s, 4000));
+  }
+  console.log("");
+  console.log(`  !! ROLLOUT NOT CONFIRMED after 60s: /version still does not answer ${want}.`);
+  console.log("  !! The signed bytes ARE deployed; this is about which build is answering.");
+  console.log("  !! DO NOT verify behaviour yet. A probe now can be answered by the previous");
+  console.log("  !! build and look exactly like a defect in the new one (D-108).");
+  console.log("");
+}
+
 const source = readFileSync(assetPath, "utf8");
 const want = createHash("sha256").update(readFileSync(assetPath)).digest("hex");
 const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scripts/${slug}`;
@@ -156,7 +221,11 @@ async function deployed() {
 const before = await deployed();
 console.log(`before: ${before ? before.slice(0, 16) + "\u2026" : "(unreadable)"}`);
 console.log(`signed: ${want.slice(0, 16)}\u2026  ${version}  ${source.length} bytes`);
-if (before === want) { console.log("already byte-identical to the signed asset; nothing to do"); process.exit(0); }
+if (before === want) {
+  console.log("already byte-identical to the signed asset; nothing to do");
+  await confirmServing(version);
+  process.exit(0);
+}
 
 for (let attempt = 1; attempt <= 4; attempt++) {
   const fd = new FormData();
@@ -176,7 +245,11 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   }
 
   const now = await deployed();
-  if (now === want) { console.log(`verified: deployed bytes are hash-identical to the signed asset`); process.exit(0); }
+  if (now === want) {
+    console.log(`verified: deployed bytes are hash-identical to the signed asset`);
+    await confirmServing(version);
+    process.exit(0);
+  }
   console.log(`  not yet: deployed ${now ? now.slice(0, 16) + "\u2026" : "(unreadable)"}`);
   if (attempt < 4) await new Promise((s) => setTimeout(s, 6000 * attempt));
 }

@@ -2587,6 +2587,9 @@ export class Store extends DurableObject {
       bundles: n("bundles"), files: n("files"), history: n("history"),
       refs: n("refs"), register: n("register"), indexed: n("bundles_fts"),
       selections: n("selections"), selectionItems: n("selection_items"),
+      /* Reported so a purge can prove it took them, and so an operator can see
+         inbox and reachability depth without a second call. */
+      tasks: n("tasks"), taskQueue: n("task_queue"), sourceReachability: n("source_reachability"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -2627,6 +2630,24 @@ export class Store extends DurableObject {
            ever picked. */
         this.sql.exec(`DELETE FROM selection_items`);
         this.sql.exec(`DELETE FROM selections`);
+        /* D-113. Everything else derived from the corpus, and the reason this
+           list must be extended whenever a derived table is added: a purge that
+           reports scope "ALL" and leaves rows behind is worse than one that
+           reports a narrower scope, because the caller believes the store is
+           empty. Found on 2026-07-31 when a scratch purge cleared five bundles
+           and left an open task pointing at one of them, which C-19.1 would then
+           refuse as unresolvable.
+           *
+           * A task and a queue event are derived: both exist only because a
+           * capture in this corpus was undetermined. Source reachability is
+           * derived too, but from ATTEMPTS rather than from bundles, so it is
+           * taken here only because a whole-store purge means the corpus itself
+           * is gone and the counter would otherwise outlive the thing it
+           * describes. A per-bundle purge deliberately touches none of it, for
+           * the same reason it leaves selections alone. */
+        this.sql.exec(`DELETE FROM tasks`);
+        this.sql.exec(`DELETE FROM task_queue`);
+        this.sql.exec(`DELETE FROM source_reachability`);
       }
     });
     const after = this.stats();
@@ -2634,7 +2655,9 @@ export class Store extends DurableObject {
     return {
       ok: true, scope: bundleId || "ALL", before, after,
       removed: { bundles: d("bundles"), files: d("files"), history: d("history"),
-                 refs: d("refs"), register: d("register") },
+                 refs: d("refs"), register: d("register"),
+                 tasks: d("tasks"), taskQueue: d("taskQueue"),
+                 sourceReachability: d("sourceReachability") },
     };
   }
 
