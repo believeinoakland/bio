@@ -60,19 +60,7 @@ An entry names: what changed, which queue items it affects, and whether any in-f
 work is superseded. It does NOT decide worker lifecycle — stopping a running worker is
 CONDUCT's call.
 
-### 2026-07-31 · BOB · enacted in this rewrite, nothing outstanding
-The Worker-topology decision, the M0/RECORD/FRAMEWORK restructure and the CAP-4
-determination are already reflected below, because this rewrite was made under an
-explicit pause. Two items for CONDUCT's attention rather than its keyboard:
-
-- **A stale CLAIM is live.** `capture-bootstrap-1` (CAPTURE, opened 2026-07-31T17:57Z)
-  has never been released and its session is long gone. Under `PARALLELISM.md` a claim
-  older than its expected scope is stale and CONDUCT may reassign it. It reserves most
-  of CAPTURE's paths, so CAP-3 will collide with it. Reassign or release it before
-  spawning a CAPTURE worker.
-- **`pdf-worker/**` does not exist yet.** The topology is decided and registered (I6)
-  and NO code has been written — deliberately, since that is an area's work and BOB
-  writes none. CPDF-6 creates it. Nothing is half-built.
+_(drained by CONDUCT 2026-07-31: restructure is reflected below; the stale `capture-bootstrap-1` claim has been RELEASED as stale per `PARALLELISM.md`; the `pdf-worker/**` note is informational — CPDF-6 creates it. No entries outstanding.)_
 
 ---
 
@@ -211,14 +199,14 @@ depends-on: CPDF-1
 added: 2026-07-31 · CONDUCT
 landed: superseded, not abandoned; see CPDF-4 through CPDF-6.
 
-### CPDF-7 · queued
+### CPDF-7 · done
 milestone: M2
 scope: D-118 — MEASURE whether Workers Free permits a second script and service bindings at all, and what they cost against the request and CPU budgets. Workers Paid is an optimisation and never a requirement (RULED), and the installer puts instances into other groups' accounts, most of them Free. If a Free instance cannot reach a second Worker, Tier 1 is not an optimisation but the floor, which raises CPDF-4's priority rather than CPDF-6's. Measure through the plane's own egress, as D-105 was measured rather than believed.
 behind-interface: none
 depends-on: none
 accepts-when: recorded in `MEASUREMENTS.md` with date and instrument, stating what a Free account can and cannot do; D-118 closed or narrowed.
 added: 2026-07-31 · BOB
-landed:
+landed: 5e24fd9 — MEASURED: account is Workers Free; Free DOES allow a second Worker + service bindings (cross-Worker call ~1ms, negligible subrequest). pdf-worker path VIABLE — D-118's "Tier-1 becomes the floor" conditional does NOT fire, CPDF-6 stays central. D-118 closed; the residual 10ms Worker-CPU ceiling is narrowed onto CPDF-1's gated follow-on.
 
 ### CPDF-4 · queued
 milestone: M2

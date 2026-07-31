@@ -42,7 +42,7 @@ paths: bio-plane/src/subresources.mjs, bio-plane/src/cpu.mjs, bio-plane/src/cdx.
 interfaces consumed: none
 interfaces owned: I1 (bytes → content)
 expected: CAPTURE's standing responsibility (fetch, governor, subresources, links, reachability, archive fallback). This turn stood up the parallel-development scaffolding under the ARCH role from the main checkout — CLAIMS.md, INTERFACES.md with I1, the UI/FRAMEWORK kickoff refresh, and the biosmoke-ui instance — none of which is another area's code.
-released:
+released: 2026-07-31 — RELEASED as STALE by CONDUCT per PARALLELISM.md's stale-claim rule (session capture-bootstrap-1 long gone, never released, over-reserved most of CAPTURE's paths and collided with RECORD's store-core work and a future CAP-3). Paths now belong to their areas: the store core/scheduler to RECORD, the capture/link/task/reachability functions to CAPTURE's live per-item claims.
 
 ## CLAIM 2026-07-31 CAPTURE
 session: capture-agent-1
