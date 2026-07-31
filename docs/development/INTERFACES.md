@@ -300,10 +300,19 @@ Tier-1 in-plane text extraction (CPDF-4, commit 314f4b7) adds ONE top-level fiel
 
 A `Marker` names the cause per region — never mojibake: `{ page, reason, font, codes, count }`,
 where `reason` ∈ { `no_tounicode`, `cid_font_no_tounicode`, `unmapped_code`,
-`no_current_font`, `font_not_in_resources`, `code_width_misaligned`, `text_extraction_error` }
-and `font` is the BaseFont (or null). This mirrors the link side's `undetermined` doctrine
-but as its own `text.undetermined` array (a reason+font shape, not a link partition).
-**FW-1 confirms or counters this EXTENDED shape (structure + text), not the link-only I2.**
+`no_current_font`, `font_not_in_resources`, `code_width_misaligned`, `text_extraction_error`,
+`encrypted` } and `font` is the BaseFont (or null). `encrypted` (CPDF-6, 2026-07-31) is a
+**document-level** marker (`page: null`): the Standard Security Handler is read from the
+trailer without decrypting anything, so Tier 1 NAMES encryption instead of degrading to a
+swarm of undecodable notes (the CPDF-5 gap). This mirrors the link side's `undetermined`
+doctrine but as its own `text.undetermined` array (a reason+font shape, not a link partition).
+
+The Tier-2 worker (I6) emits the SAME `text` shape with three additional `reason` values —
+`over_envelope` (a document too large for pdf.js: text-undetermined, never truncated),
+`no_text_layer` (a page pdf.js recovered nothing for — a scan/image, OCR territory), and
+`tier2_extraction_error` — plus a top-level **`tier`** field (`1` in-plane, `2` via the
+pdf-worker) so a consumer knows which extractor produced the text.
+**FW-1 confirms or counters this EXTENDED shape (structure + text + tier), not the link-only I2.**
 
 ### Open before it can go STABLE
 
@@ -480,11 +489,35 @@ consumer. Changing it now breaks a Worker, not just a reader.
 - **Be called by anything but the plane.** It has no member-facing surface and no
   token classes of its own; the plane's op layer is the authorisation boundary.
 
-### Open before it can go STABLE
+### As built (CPDF-6, 2026-07-31) — `pdf-worker/**`, branch `content-pdf/pdf-worker`
 
-- The worker exists and the shape is re-read from its code.
-- **Service bindings on Workers Free are UNMEASURED** and must not be assumed.
-  Workers Paid is an optimisation and never a requirement (RULED), so if the binding
-  or a second script is unavailable or capped on Free, the tiering below is not an
-  optimisation — it is what keeps a free instance able to read a PDF at all. Measure
-  before building the Tier 2 path. See D-118.
+The worker now EXISTS; the shape re-read from its code:
+
+- **Transport.** `POST` to the binding (`env.PDF_WORKER.fetch("https://pdf-worker/structure", …)`),
+  body `{ capture_sha, store }`. The worker reads `${store}/captures/${capture_sha}` from its
+  own `CAPTURES` read binding (I1 §2) and returns the I2 object above with a top-level `tier`.
+- **The plane escalates ONLY the measured residue.** `op=pdfstructure` runs Tier 1 in-plane,
+  then calls the worker only when `text.counts.undetermined > text.counts.chars` (Tier 1 got
+  essentially nothing — the encryption and whole-document no-/ToUnicode cases, CPDF-5's
+  buckets), never for a budget book already read at ~88%. The binding is OPTIONAL at runtime:
+  absent it (an instance that has not installed the fleet, D-115), the plane returns Tier 1,
+  named, no crash.
+- **unpdf 1.8.0 PINNED**, VERIFIED extracting on workerd (the member's real runtime, where
+  pdf.js's `Math.sumPrecise` resolves natively; node lacks it — a guarded polyfill covers
+  node). A Tier-2 **envelope** (`MAX_PDF_BYTES`, default 16 MB) declines an over-large document
+  to text-`undetermined`, never truncated.
+- **Writes nothing, holds only `CAPTURES` read**, no `PUBLISHED`, no `STORE` — asserted
+  behaviourally (R2 byte-for-byte unchanged after a call) and by a source scan (no
+  `.put`/`.delete`). Fleet rules 2/3 hold structurally.
+
+### Open before it can go STABLE (→ 1.0.0)
+
+- **A DIST deploy** of the member + the plane's service binding (a new Worker and a binding
+  are a gated release; the installer must learn to install the FLEET, D-115/D-116). Until
+  then the escalation path is dark on the live instance even though the code and the binding
+  config are landed. This is DELEGATED to DIST.
+- A FRAMEWORK session (FW-1) confirms or counters the extended `text`+`tier` shape.
+- Free-tier viability was MEASURED (CPDF-7, D-118 CLOSED): a second Worker and a service
+  binding both work on this Free account (~1 ms/call, one subrequest). The residual open
+  number is pdf.js against the 10 ms Worker-CPU ceiling — CPDF-1's gated follow-on, on a
+  deployed probe, out of scope here.

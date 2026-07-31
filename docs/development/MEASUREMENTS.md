@@ -999,3 +999,54 @@ and the extractor already emits nothing rather than mojibake, which is correct.
 Whether the record should ever grow a Tier-3 OCR path for this class is a roadmap
 question, noted for BOB/CONDUCT, low-urgency: on this sample it is ~14%, and it is
 disproportionately the design/scan documents rather than the deliberative record.
+
+## 2026-07-31, thread CONTENT-PDF: unpdf/pdf.js on workerd — the Math.sumPrecise runtime artifact PINNED and VERIFIED (CPDF-6)
+
+The go-decision detail CPDF-5 flagged as a live warning: the pdf-worker "must pin
+an unpdf/pdf.js version verified to run on the Workers runtime," because an unpdf
+oracle threw `Math.sumPrecise is not a function` inside pdf.js on node v26.5.0.
+MEASURED here, not assumed, by probing each runtime directly and then extracting
+real text through the member's actual runtime.
+
+**Instrument.** node v26.5.0, darwin/arm64; `miniflare` 4.20260722.0 driving
+`workerd` (the same harness the plane's op suites use); `unpdf` **1.8.0** installed
+into `pdf-worker/node_modules` and bundled by `pdf-worker/scripts/build.mjs`
+(esbuild, the plane's own build flags). The extraction subject is a valid
+(xref+trailer) PDF whose one font is base-14 Helvetica / WinAnsiEncoding with NO
+`/ToUnicode` — the `no_tounicode` residue class, run THROUGH the built worker
+bundle under workerd, i.e. exactly as it will serve.
+
+### `Math.sumPrecise` is present on workerd, absent on node — MEASURED
+
+| Runtime | `typeof Math.sumPrecise` |
+| --- | --- |
+| node v26.5.0 (the battery harness, and the CPDF-5 oracle) | `undefined` |
+| workerd (via miniflare; the pdf-worker's ACTUAL runtime) | `function` |
+
+So the CPDF-5 throw was a NODE artifact, not a Workers one: pdf.js calls a TC39
+Stage-4 builtin that node v26.5.0's V8 does not yet expose but workerd's does. The
+pdf-worker runs on workerd, where it resolves natively. Belt-and-suspenders, the
+worker carries a **guarded** `Math.sumPrecise` polyfill (defined only when the
+runtime lacks it), so the extractor is also safe in node and against a future
+workerd change — the runtime artifact is neutralised in either direction.
+
+### unpdf 1.8.0 extracts on workerd — MEASURED end-to-end
+
+Through the built bundle under workerd: Tier 1 (in-plane, pure JS) returns
+`text.document: ""` with one `no_tounicode` undetermined marker naming the font;
+`unpdf` 1.8.0 on the same bytes returns `"Hello Oakland 2026"`. The plane's
+`op=pdfstructure`, given the pdf-worker service binding, escalates the same doc and
+returns tier-2 text; without the binding it returns tier-1, named, no crash
+(pdf-worker-binding.test.mjs, in the battery). **unpdf 1.8.0 is PINNED** (exact, not
+`^`) on this evidence.
+
+### Sizes — the member FITS the Free limit alone (corroborates CPDF-1)
+
+| Bundle | Raw | Gzip-9 |
+| --- | --- | --- |
+| pdf-worker (worker + shared extractor + inlined unpdf 1.8.0) | 2,422,573 B (2.31 MB) | 578,121 B (0.55 MB) |
+
+Under the 3 MB Free gzip limit with ~2.45 MB of headroom, and unpdf stays OUT of
+the plane's own bundle entirely — the whole point of the fleet split. Each member
+versions and deploys separately (fleet rule 4); the committed bundle is what
+deploys and what the battery loads under workerd, as the plane ships its own.

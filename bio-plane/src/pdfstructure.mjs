@@ -493,6 +493,33 @@ class PdfDoc {
     this.pageCount = this.pageIndexByObj.size;
     (this._pageOrder ||= []).push(num);
   }
+
+  /** Is this an encrypted document? Detected from the Standard Security Handler
+   *  dictionary (/Filter /Standard with a revision /R) — which is itself NEVER
+   *  encrypted, so this is readable "from the trailer without decrypting
+   *  anything" (CPDF-5). Tier 1 has no decryption: strings and streams are
+   *  ciphertext, so content streams inflate to garbage and text decode yields
+   *  nothing. Rather than degrade to a swarm of undifferentiated
+   *  `content_stream_undecodable` notes (the CPDF-5 gap: the failure was silent
+   *  as to CAUSE though /Encrypt is right there), we NAME it — a single
+   *  `reason:"encrypted"` marker — so the record says WHY and the plane can route
+   *  straight to the pdf-worker (I6), whose pdf.js decrypts a permission-only
+   *  (empty-user-password) PDF transparently. Cached; call after scanTopLevel. */
+  isEncrypted() {
+    if (this._encrypted !== undefined) return this._encrypted;
+    let enc = false;
+    for (const v of this.objects.values()) {
+      const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
+      if (!map) continue;
+      const filter = map.Filter;
+      const isStandard = filter && filter.t === "name" && filter.v === "Standard";
+      const hasRevision = map.R != null && typeof this.resolve(map.R) === "number";
+      // /V and /R live only on the encryption dict; a page's /Filter is a codec
+      // name array, never the bare name "Standard" with a numeric /R beside it.
+      if (isStandard && hasRevision) { enc = true; break; }
+    }
+    return (this._encrypted = enc);
+  }
 }
 
 function numberVal(v) {
@@ -1102,6 +1129,15 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
 
 /** Document text (Tier 1). Extends the I2 output; see the module header. */
 async function extractText(doc, pageOrder) {
+  // Encrypted: Tier 1 cannot decode ciphertext content streams, so it decodes
+  // NOTHING. Say so with ONE document-level marker naming the cause, rather than
+  // attempting every page and emitting a swarm of undecodable notes (CPDF-5).
+  // The plane escalates on this to the pdf-worker (I6), which decrypts it.
+  if (doc.isEncrypted()) {
+    doc.note("encrypted");
+    const marker = { page: null, reason: "encrypted", font: null, codes: "", count: 0 };
+    return { document: "", pages: [], undetermined: [marker], counts: { chars: 0, undetermined: 1 } };
+  }
   const fontCache = new Map();
   const pages = [];
   const allUndetermined = [];

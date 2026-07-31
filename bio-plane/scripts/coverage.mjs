@@ -41,6 +41,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const REPO = join(ROOT, ".."); // the fleet lives BESIDE the plane, not inside it.
 const STRICT = process.argv.includes("--strict");
 const JSON_OUT = process.argv.includes("--json");
 
@@ -49,18 +50,27 @@ const JSON_OUT = process.argv.includes("--json");
 const indexSrc = readFileSync(join(ROOT, "src/index.mjs"), "utf8");
 const checksSrc = readFileSync(join(ROOT, "checks/bio-checks.mjs"), "utf8");
 
+/* The body of a `<name> = { ... }` object literal, brace-matched out of source
+   so a table read this way cannot fall behind a hand-kept list (D-113/D-93). The
+   plane's OPS table and a fleet member's SURFACE table are both read this way. */
+function tableBody(src, name) {
+  const decl = new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*\\{`);
+  const m = decl.exec(src);
+  if (!m) return null;
+  let i = src.indexOf("{", m.index), depth = 0;
+  for (let p = i; p < src.length; p++) {
+    if (src[p] === "{") depth++;
+    else if (src[p] === "}") { depth--; if (depth === 0) return src.slice(i + 1, p); }
+  }
+  return null;
+}
+
 /* The op table, read out of the module rather than hand-listed, so an op added
    later cannot pass by not being mentioned. Same reasoning as the capability
    completeness test. */
 function opTable(src) {
-  const start = src.indexOf("const OPS = {");
-  if (start < 0) throw new Error("OPS table not found in src/index.mjs");
-  let i = src.indexOf("{", start), depth = 0, end = -1;
-  for (let p = i; p < src.length; p++) {
-    if (src[p] === "{") depth++;
-    else if (src[p] === "}") { depth--; if (depth === 0) { end = p; break; } }
-  }
-  const body = src.slice(i + 1, end);
+  const body = tableBody(src, "OPS");
+  if (body == null) throw new Error("OPS table not found in src/index.mjs");
   const ops = new Map();
   for (const m of body.matchAll(/^\s{2}([a-z][a-z0-9]*)\s*:\s*\{([^}]*)\}/gm)) {
     const mutating = /mutating:\s*true/.test(m[2]);
@@ -124,6 +134,50 @@ const controlRows = battery.map(({ file, src }) => {
   return { suite: file, control: m ? m[1].trim() : null };
 });
 
+/* ------------------------------------------------------------------ fleet */
+/* D-117: the topology decision (I6) puts Workers BESIDE the plane. `coverage.mjs`
+   read only the plane's OPS table, so the day a second Worker ships its surface
+   is uncounted and the figure stays flat while a whole component goes untested —
+   wrong in the generous direction, the one failure this instrument exists to
+   prevent. A fleet member declares itself with a `fleet-member.json` at its root;
+   members are DISCOVERED, never hand-listed, so a new one cannot escape the count
+   by not being mentioned (the same lesson as the OPS table above). Each is held
+   to the plane's own two behavioural surfaces: every surface op reached by one of
+   the member's suites, and a declared negative control. (Checks are the plane's
+   conformance catalog; a fleet member has none, so that surface is N/A to it.) */
+function readJSON(p) { try { return JSON.parse(readFileSync(p, "utf8")); } catch { return null; } }
+function readText(p) { try { return readFileSync(p, "utf8"); } catch { return ""; } }
+
+/* A surface op is REACHED if a member suite names it path- or string-shaped
+   (`/structure`, `"structure"`), the fleet analog of the plane's call-shaped
+   matcher — a bare word in a comment does not count. */
+const surfaceCalled = (op, src) =>
+  new RegExp(`[/"'\`]${op}(?=[?"'\`&/\\s]|$)`).test(src);
+
+function discoverFleet() {
+  const members = [];
+  for (const name of readdirSync(REPO)) {
+    const meta = readJSON(join(REPO, name, "fleet-member.json"));
+    if (!meta) continue;
+    const dir = join(REPO, name);
+    const surfBody = tableBody(readText(join(dir, meta.entry || "src/index.mjs")), meta.surface || "SURFACE");
+    const surfaceOps = surfBody
+      ? [...surfBody.matchAll(/^\s{2}([a-zA-Z_][a-zA-Z0-9_]*)\s*:/gm)].map((m) => m[1])
+      : [];
+    let suites = [];
+    try { suites = readdirSync(join(dir, meta.testDir || "test")).filter((f) => f.endsWith(".test.mjs")); } catch { /* none */ }
+    const suiteSrcs = suites.map((f) => ({ file: f, src: readText(join(dir, meta.testDir || "test", f)) }));
+    const allSuiteText = suiteSrcs.map((s) => s.src).join("\n");
+    const control = suiteSrcs.some((s) => NEG.test(s.src.split("\n").slice(0, 60).join("\n")));
+    const ops = surfaceOps.map((op) => ({ op, reached: surfaceCalled(op, allSuiteText) }));
+    members.push({ name: meta.name || name, dir: name, ops, control, suites: suites.length, hasSurface: surfBody != null });
+  }
+  return members;
+}
+const fleet = discoverFleet();
+const fleetUnreached = fleet.flatMap((m) => m.ops.filter((o) => !o.reached).map((o) => ({ member: m.name, op: o.op })));
+const fleetUncontrolled = fleet.filter((m) => !m.control);
+
 /* ----------------------------------------------------------------- report */
 
 const unreached = opRows.filter((r) => r.level === "unreached");
@@ -134,7 +188,7 @@ const uncontrolled = controlRows.filter((r) => !r.control);
 const pct = (n, d) => d === 0 ? "100.0" : ((n / d) * 100).toFixed(1);
 
 if (JSON_OUT) {
-  console.log(JSON.stringify({ opRows, checkRows, controlRows }, null, 2));
+  console.log(JSON.stringify({ opRows, checkRows, controlRows, fleet }, null, 2));
 } else {
   console.log(`\nBIO plane coverage — ${suites.length} battery suites\n`);
 
@@ -167,10 +221,26 @@ if (JSON_OUT) {
     console.log(`    NEGATIVE CONTROL: <what to break> -> <what must then fail>`);
     for (const r of uncontrolled) console.log(`    ${r.suite}`);
   }
+
+  const fleetOps = fleet.reduce((n, m) => n + m.ops.length, 0);
+  console.log(`\nFLEET  ${fleet.length} member${fleet.length === 1 ? "" : "s"} beside the plane · `
+    + `${fleetOps - fleetUnreached.length}/${fleetOps} surface ops reached · `
+    + `${fleet.length - fleetUncontrolled.length}/${fleet.length} declaring a negative control`);
+  console.log(`  A second Worker's surface was uncounted (D-117); each member is now held to`);
+  console.log(`  the plane's own two behavioural surfaces — every surface op reached by one of`);
+  console.log(`  the member's suites, and a declared control. Discovered from fleet-member.json.`);
+  for (const m of fleet) {
+    const reached = m.ops.filter((o) => o.reached).length;
+    console.log(`\n    ${m.name} (${m.dir}/)  ${reached}/${m.ops.length} ops reached · `
+      + `${m.suites} suite${m.suites === 1 ? "" : "s"} · control ${m.control ? "declared" : "MISSING"}`);
+    for (const o of m.ops) console.log(`      ${o.reached ? "reached  " : "UNREACHED"} ${o.op}`);
+    if (!m.hasSurface) console.log(`      WARNING — no ${"surface"} table found at its entry; surface is uncounted`);
+  }
   console.log("");
 }
 
-if (STRICT && (unreached.length || doOnly.length || unnamed.length || uncontrolled.length)) {
+if (STRICT && (unreached.length || doOnly.length || unnamed.length || uncontrolled.length
+    || fleetUnreached.length || fleetUncontrolled.length)) {
   console.error("STRICT: coverage floor not met.");
   process.exit(1);
 }

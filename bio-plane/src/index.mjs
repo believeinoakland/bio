@@ -630,6 +630,20 @@ const json = (o, status = 200) =>
    read the identical object rather than two copies of the key drifting apart. */
 const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 
+/* Escalate a PDF to the pdf-worker (I6) ONLY when Tier 1 got essentially nothing:
+   more undetermined REGIONS than decoded characters. That is the measured line
+   between CPDF-5's buckets — the whole-document no-/ToUnicode case (many regions,
+   ~nil chars) and encryption (one `encrypted` region, zero chars) both escalate,
+   while a budget book Tier 1 already reads at ~88% (hundreds of thousands of
+   chars, far fewer regions) does not. Region count, not code-point count, is
+   what makes the zero-char encrypted case cross the line. A `text` that is
+   missing or malformed escalates nothing. */
+function needsTier2(text) {
+  const c = text && text.counts;
+  if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
+  return c.undetermined > c.chars;
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -1172,7 +1186,50 @@ export default {
          well-formed answer about ill-formed input, not a server fault: 422. The
          bytes existed and were read; the record simply does not hold a PDF at
          that sha. `ok:true` structure is the ordinary 200. */
-      return json(structure, structure.ok ? 200 : 422);
+      if (!structure.ok) return json(structure, 422);
+
+      /* TIER 2 (I6, the fleet). Tier 1 above is pure-JS, in-plane, free, and it
+         FULLY serves the agenda class the citation graph is keyed on. What it
+         cannot decode is the measured residue (CPDF-5): CID / no-/ToUnicode
+         fonts and permission-only ENCRYPTED PDFs — the staff-report substance an
+         agenda links to, and encrypted ACFRs. That residue is handled by a
+         SEPARATE Worker holding unpdf/pdf.js, called here over a service binding.
+
+         WHEN we escalate: only when Tier 1 got essentially NOTHING — more
+         undetermined regions than decoded characters (the encryption and
+         whole-document no-/ToUnicode cases that zero a document out), never for
+         a budget book Tier 1 already read at ~88%. That is a measured threshold
+         (CPDF-5's buckets), not a guess, and it keeps the free in-plane path the
+         common case and the paid cross-Worker hop the exception.
+
+         The plane ASSERTS the provenance; the member asserts nothing (fleet rule
+         2). We hand it a capture sha and a store and get back the record's own
+         I2 shape — the plane writes nothing here either; this op is read-only.
+
+         DELEGATION NOTE: this call site lives in index.mjs, RECORD's control
+         plane (I3), not CONTENT-PDF's paths. It ships here as one turn with the
+         member per the CPDF-6 item, and is flagged to CONDUCT as the CAPTURE/
+         RECORD-owned surface a normal CONTENT-PDF turn would DELEGATE. */
+      if (env.PDF_WORKER && needsTier2(structure.text)) {
+        try {
+          const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ capture_sha: sha, store: storeName }),
+          });
+          const t2 = await r.json();
+          if (r.ok && t2 && t2.ok) return json(t2, 200);
+          /* The member answered but could not help (not a PDF to it, an error):
+             keep Tier 1, and SAY the escalation was tried and did not add text. */
+          structure.notes = [...structure.notes, "tier2_no_improvement"];
+        } catch (e) {
+          /* Binding threw (member unavailable / rolling out, D-108 per member):
+             degrade to Tier 1, named, never a platform error to the caller. */
+          structure.notes = [...structure.notes, "tier2_unavailable"];
+        }
+      }
+      structure.tier = 1;
+      return json(structure, 200);
     }
 
     /* Acquisition: the fetch layer the intake doctrine calls M2'.

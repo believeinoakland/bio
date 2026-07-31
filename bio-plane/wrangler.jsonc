@@ -41,5 +41,18 @@
     { "binding": "PUBLISHED", "bucket_name": "bio-published" }
   ],
 
+  // The fleet (I6). pdf-worker is a SEPARATE Worker holding unpdf/pdf.js; the
+  // plane calls it over this service binding for Tier-2 text extraction on the
+  // residue Tier 1 cannot decode, and reshapes NOTHING — the member returns the
+  // record's own I2 shape. The binding is OPTIONAL at runtime: op=pdfstructure
+  // checks `env.PDF_WORKER` and falls back to in-plane Tier 1 when it is absent,
+  // so an instance that has not yet installed the fleet (D-115, DIST's) still
+  // reads PDFs — it just does Tier 1 only. DIST owns actually deploying the
+  // member and teaching the installer to install the fleet; a slot-less area
+  // cannot deploy a second Worker.
+  "services": [
+    { "binding": "PDF_WORKER", "service": "pdf-worker" }
+  ],
+
   "observability": { "enabled": true }
 }

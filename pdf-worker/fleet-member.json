@@ -1,0 +1,7 @@
+{
+  "name": "pdf-worker",
+  "entry": "src/index.mjs",
+  "surface": "SURFACE",
+  "testDir": "test",
+  "note": "The fleet-coverage marker (D-117). scripts/coverage.mjs discovers a fleet member by this file, reads its `surface` table from `entry`, and holds it to the same three surfaces the plane is held to: each surface op reached by a suite in `testDir`, and a declared negative control. A second Worker shipping with flat coverage is the failure this closes."
+}

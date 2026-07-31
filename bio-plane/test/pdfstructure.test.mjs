@@ -428,5 +428,40 @@ console.log("\n--- the text field is present and shaped even when a PDF has no t
   t("its text is empty and nothing was undetermined", [out.text.pages[0].text, out.text.undetermined.length], ["", 0]);
 }
 
+console.log("\n--- an ENCRYPTED PDF is NAMED, not degraded to a swarm of undecodable notes (CPDF-5) ---");
+{
+  // A Standard Security Handler dict (object 4). Tier 1 has no decryption, so it
+  // says `encrypted` — the one marker the plane escalates on to the pdf-worker
+  // (I6), whose pdf.js decrypts a permission-only PDF transparently. Detection
+  // reads the handler dict (never itself encrypted), so no ciphertext is needed.
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+    { num: 4, body: "<< /Filter /Standard /V 2 /R 3 /O (0000000000000000) /U (0000000000000000) /P -44 >>" },
+  ], "trailer\n<< /Root 1 0 R /Encrypt 4 0 R >>\n");
+  const out = await extractPdfStructure(bytes);
+  t("still ok:true — encryption is a fact about the doc, not a parse fault", out.ok, true);
+  t("text is empty, never guessed", out.text.document, "");
+  t("exactly one document-level undetermined marker", out.text.undetermined.length, 1);
+  t("named: encrypted", out.text.undetermined[0].reason, "encrypted");
+  t("document-level marker (no single page owns it)", out.text.undetermined[0].page, null);
+  t("and a note records it for the log", out.notes.includes("encrypted"), true);
+  // The escalation predicate the plane uses (undetermined regions > chars) fires.
+  t("undetermined regions exceed decoded chars -> the plane will escalate", out.text.counts.undetermined > out.text.counts.chars, true);
+}
+
+console.log("\n--- a normal (unencrypted) PDF is NOT flagged encrypted ---");
+{
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+  ]);
+  const out = await extractPdfStructure(bytes);
+  t("no encrypted note on a plain document", out.notes.includes("encrypted"), false);
+  t("no encrypted marker", out.text.undetermined.some((u) => u.reason === "encrypted"), false);
+}
+
 console.log(`\npdfstructure: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

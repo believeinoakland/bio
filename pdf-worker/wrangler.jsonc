@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pdf-worker",
+
+  // PINNED, for the same reason the plane and installer pin it: wrangler
+  // otherwise deploys wherever the machine's OAuth session points, and a fresh
+  // checkout was once found authenticated to the WRONG account with a deploy
+  // that would have SUCCEEDED (CLAUDE.md). A new Worker config must carry this.
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+
+  // Built by scripts/build.mjs (esbuild), which INLINES unpdf/pdf.js. The
+  // committed bundle is what deploys and what the battery loads under miniflare,
+  // exactly as the plane ships dist/bio-plane.bundled.mjs. unpdf never enters
+  // the plane's module graph — that separation is the whole point of the fleet.
+  "main": "dist/pdf-worker.bundled.mjs",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "vars": { "VERSION": "0.1.0" },
+
+  // The NARROWEST binding that does the job (fleet rule 3, I6): the private
+  // working corpus, and NOTHING else. No PUBLISHED — every Worker holding a
+  // PUBLISHED binding is one more thing inside the ratification fence, and this
+  // Worker has no business there. No STORE (Durable Object) binding either, so
+  // it structurally CANNOT write the record: it asserts nothing (fleet rule 2).
+  // R2 bindings are read/write at the platform level; this Worker never calls
+  // put/delete (a hygiene source scan and a behavioural R2-unchanged assertion
+  // in the suite enforce the read-only discipline the platform does not).
+  "r2_buckets": [
+    { "binding": "CAPTURES", "bucket_name": "bio-captures" }
+  ],
+
+  "observability": { "enabled": true }
+}
