@@ -850,3 +850,152 @@ The residual Free-plan concern — pdf.js against the 10 ms Worker-CPU ceiling �
 DIFFERENT question that already lives as CPDF-1's gated Worker-CPU follow-on; D-118
 does not need to carry it, and narrowing it there avoids a second home for one
 number (D-106's class).
+
+## 2026-07-31, thread CONTENT-PDF: Tier-1 text-extraction coverage on real Oakland PDFs, and the Tier-2 sizing (CPDF-5)
+
+The measurement that SIZES Tier 2 (the `unpdf` pdf-worker, CPDF-6): how much of
+Oakland's real output the in-plane pure-JS Tier-1 extractor (CPDF-4,
+`src/pdfstructure.mjs`) already decodes for free, versus how much genuinely needs
+the library. It commits no extractor and changes no shipped code. Reproduce with
+`bio-plane/test/tier1-coverage-probe.mjs` (Tier 1) and
+`bio-plane/test/tier1-coverage-tier2-oracle.mjs` (Tier 2); neither is in the
+battery — they fetch real documents and (the oracle) `npm install`s `unpdf` into
+an OS temp dir, touching nothing in the repo.
+
+**Instrument.** 14 real documents fetched 2026-07-31 across Oakland's document
+classes, each with its SOURCE URL below, using the honest CivicOS contact-URL
+agent that the user-agent ladder above measured admissible at `oaklandca.gov`
+(Legistar needs the per-file `GUID`, established this session — a bare
+`View.ashx?M=A&ID=` returns a "Confirmation/Gone" HTML interstitial, not the PDF).
+Tier 1 is `extractPdfStructure(bytes).text`, run in node v26.5.0. Tier 2 is
+`unpdf`'s serverless pdf.js `extractText`, run as an ORACLE on the same bytes so
+"the residue is recoverable by the pdf-worker" is MEASURED, not assumed. The
+`chars` columns are non-whitespace character counts, comparable across the two
+extractors; the `cover` column is Tier 1's decoded chars over decoded +
+undecodable code-points (the extractor's own per-region `undetermined[].count`),
+an approximate fraction because injected inter-run whitespace is counted as
+decoded.
+
+### The corpus and the two-tier outcome (MEASURED)
+
+| # | Document (id) | Class | Source | Size | Pages | T1 chars | T1 cover | T1 outcome | Residue cause | T2 (unpdf) chars | Disposition |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | acfr-2024 | ACFR | oaklandca.gov `…/annual-comprehensive-financial-reports/2024-city-of-oakland-acfr_final-121324.pdf` | 5.7 MB | 224 | 493,342 | 99.9% | **FULLY** | trivial (583 no-ToUnicode glyphs) | 378,589 | Tier 1 suffices |
+| 2 | acfr-2025 | ACFR | oaklandca.gov `…/2025-city-of-oakland-acfr_final-123025.pdf` | 2.2 MB | 224 | 0 | 0% | **nil** | **ENCRYPTED** (permission-only) | ERR* | **Tier 2** |
+| 3 | cafr-2003 | ACFR (legacy) | oaklandca.gov `…/2003-comprehensive-annual-financial-report-cafr-audit-pdf.pdf` | 3.2 MB | 167 | 739 | 0.2% | **nil** | fonts w/o /ToUnicode (342k) + undecodable streams | 278,758 | **Tier 2** |
+| 4 | budget-adopted-book-full | Budget book | oaklandca.gov `…/2025-2027-budget/fy25-27-adopted-budget-book-full-10.10.25-reduced-size.pdf` | 31 MB | 911 | 1,737,312 | 87.7% | **PARTIAL** | no-ToUnicode 235k + unmapped 6k + width 2k | 1,613,178 | Tier 1 usable; T2 polish |
+| 5 | budget-proposed-book | Budget book | oaklandca.gov `…/fy25-27-proposed-budget-book-final-revised-5.8.25-reduce-size.pdf` | 24 MB | 787 | 1,488,694 | 87.7% | **PARTIAL** | unmapped 97k + width 113k | 1,469,930 | Tier 1 usable; T2 polish |
+| 6 | budget-transmittal | Budget exhibit | oaklandca.gov `…/2025-2027-transmittal-letter-final.pdf` | 225 KB | 7 | 6,099 | 40.7% | **PARTIAL** | code_width_misaligned 6.7k + unmapped 2.1k | 14,364 | **Tier 2** recovers rest |
+| 7 | budget-2pager | Budget exhibit | oaklandca.gov `…/v1-fy25-27-2-pager-oakland-budget-basics-fy-3.pdf` | 3.6 MB | 2 | 0 | — | **nil** | image-only (0 fonts, 2 images) | 0 | **OCR only** |
+| 8 | budget-deepdive-presentation | Budget exhibit | oaklandca.gov `…/finance-2025-deep-dive-presentation.pdf` | 6.4 MB | 77 | 35,554 | 98.2% | **FULLY** | trivial | 29,738 | Tier 1 suffices |
+| 9 | budget-council-amendments | Budget exhibit | oaklandca.gov `…/city-council-budget-team-amendments.pdf` | 157 KB | 11 | 0 | 0% | **nil** | fonts w/o /ToUnicode (39k) | 17,167 | **Tier 2** |
+| 10 | legistar-agenda-1425405 | Agenda packet | oakland.legistar.com `View.ashx?M=A&ID=1425405&GUID=86B6D25C-…` | 270 KB | 33 | 60,865 | 99.9% | **FULLY** | trivial (45 unmapped) | 51,105 | Tier 1 suffices |
+| 11 | legistar-agenda-1425401 | Agenda packet | oakland.legistar.com `View.ashx?M=A&ID=1425401&GUID=4CF4BEBA-…` | 172 KB | 9 | 17,182 | 99.8% | **FULLY** | trivial (31 unmapped) | 14,437 | Tier 1 suffices |
+| 12 | legistar-staffrep-15579526 | Staff report | oakland.legistar.com `View.ashx?M=F&ID=15579526&GUID=E64EA1B6-…` | 175 KB | 6 | 0 | 0% | **nil** | **ENCRYPTED** (AES-128 permission-only) | 13,012 | **Tier 2** |
+| 13 | legistar-attach-15579527 | Staff report | oakland.legistar.com `View.ashx?M=F&ID=15579527&GUID=3C720652-…` | 180 KB | 1 | 41 | 2.1% | **nil** | fonts w/o /ToUnicode + images | 1,792 | **Tier 2** |
+| 14 | legistar-attach-15721260 | Staff report | oakland.legistar.com `View.ashx?M=F&ID=15721260&GUID=8F04A287-…` | 918 KB | 4 | 0 | — | **nil** | scanned CCITT fax (0 fonts) | 0 | **OCR only** |
+
+\* acfr-2025 threw `Math.sumPrecise is not a function` inside pdf.js on this
+node v26.5.0 + unpdf build — a library/runtime artifact, NOT an encryption
+failure (see the caveat below). Its Tier-2 recovery is inferred from doc 12, an
+identically permission-only-encrypted PDF that unpdf DID decode to 13,012 clean
+chars; it is not separately measured.
+
+### The four buckets (per-document count is the honest sizing)
+
+| Bucket | Count | Documents |
+| --- | --- | --- |
+| **Tier 1 FULLY** — no Tier 2 needed | 4 / 14 (29%) | acfr-2024, budget-deepdive-presentation, both agenda packets |
+| **Tier 1 PARTIAL** — usable text in-plane, Tier 2 a marginal improvement | 3 / 14 (21%) | both budget books (~88%), transmittal (41%) |
+| **Tier 2 REQUIRED** — Tier 1 yields ~nil, unpdf recovers real text | 5 / 14 (36%) | acfr-2025, cafr-2003, budget-council-amendments, legistar-staffrep-15579526, legistar-attach-15579527 |
+| **Neither tier — OCR only** — no text layer at all | 2 / 14 (14%) | budget-2pager, legistar-attach-15721260 |
+
+A corpus-wide code-point figure (81.9% of code-points decoded by Tier 1) exists
+but is dominated by the two multi-hundred-page budget books, so it flatters Tier 1
+and is not the sizing number. The per-document buckets are.
+
+### The residue, by cause — read off the extractor's own `undetermined` markers
+
+Tier 1 never guesses: every undecodable run is a `text.undetermined` marker naming
+its cause, per the first-class-undetermined doctrine. Summed across the corpus:
+
+| Cause (extractor's `reason`) | Undecodable code-points | Regions | Docs | What Tier 2 does |
+| --- | --- | --- | --- | --- |
+| `no_tounicode` | 618,517 | 99,596 | 5 | pdf.js maps glyphs by embedded font encoding — RECOVERS (measured) |
+| `code_width_misaligned` | 121,375 | 121,375 | 4 | pdf.js reads the true code width — RECOVERS (measured) |
+| `unmapped_code` | 105,794 | 105,794 | 6 | pdf.js falls back to font cmap — mostly RECOVERS |
+| `cid_font_no_tounicode` | 418 | 194 | 3 | pdf.js CID handling — RECOVERS |
+| **ENCRYPTION** (not surfaced as a `reason` — see below) | — | — | 2 | pdf.js decrypts permission-only PDFs transparently — RECOVERS (measured, doc 12) |
+| **no text layer** (scanned image) | — (0 markers) | — | 2 | nothing — needs OCR, which neither tier provides |
+
+The two Tier-1-failure causes that actually matter — because they zero out whole
+documents, not glyph fringes — are **encryption** and **fonts without /ToUnicode**,
+and Tier 2 was MEASURED to fix both.
+
+### Encryption is permission-only, and Tier 1 does not NAME it (an extractor gap)
+
+Docs 2 and 12 carry the Standard Security Handler with permission flags set
+(`/P -1340` and `/P -1324`, `/U` and `/O` present, AES-128 on doc 12) and an empty
+user password — the ubiquitous municipal "no-copy/no-print but readable by anyone"
+pattern. pdf.js opens these with the empty password automatically, which is why the
+oracle decoded doc 12 to clean agenda text. **Tier 1 has no decryption at all**, so
+it fails on the encrypted streams — but it fails SILENTLY as to cause: it degrades
+to a swarm of `objstm_undecodable` / `content_stream_undecodable` NOTES with no
+`undetermined` marker saying "encrypted", even though `/Encrypt` is right there in
+the trailer. Per "undetermined is first-class and must be STATED," this is a real
+gap: a `reason: "encrypted"` marker (readable from the trailer without decrypting
+anything) would tell the record WHY, and let the plane route straight to the
+pdf-worker instead of emitting hundreds of undifferentiated undecodable notes. A
+recommendation for CPDF-4/CPDF-6, not fixed here.
+
+### CAVEATS on the Tier-2 oracle, labelled
+
+- **`Math.sumPrecise is not a function`** was thrown by pdf.js on doc 2 (acfr-2025)
+  on this node v26.5.0 + `unpdf` build, and pdf.js emitted it as a warning on most
+  other docs while still extracting. This is a library/runtime-compatibility
+  artifact of THIS bench, not a property of the document. It is a live warning for
+  CPDF-6: **the pdf-worker must pin an `unpdf`/pdf.js version verified to run on the
+  Workers runtime** (and the battery's node), or it will hard-fail on exactly the
+  documents Tier 1 already cannot read — turning a Tier-2 recovery into a double
+  failure. The tiering conclusion does not rest on doc 2; doc 12 carries it.
+- The oracle establishes RECOVERABILITY (does real text come out), not Worker CPU
+  or memory. pdf.js pulls the whole document into memory — the CPDF-1 gated
+  follow-on (Worker CPU vs the 10 ms ceiling, in reference iterations) and I1's
+  range-read tension both still stand and are out of CPDF-5's scope.
+- 14 documents is a PURPOSIVE sample across classes, not a random draw from the
+  live capture stream. It sizes the PROBLEM SHAPE — which classes need which tier —
+  rather than a precise corpus percentage.
+
+### Tier-2 sizing conclusion: the pdf-worker is CENTRAL, not marginal
+
+By document CLASS the pattern is sharp and it decides CPDF-6's priority:
+
+- **Agenda packets (Legistar `M=A`): Tier 1 handles them FULLY, free, in-plane.**
+  They are generated with /ToUnicode. This is the class the citation graph is
+  keyed on, and Tier 1 already reads it.
+- **Modern un-encrypted ACFRs and slide decks: Tier 1 FULLY.** Budget BOOKS: Tier 1
+  PARTIAL at ~88% — usable for indexing and citation with a stated residue, Tier 2
+  an optional polish.
+- **Staff reports / attachments (Legistar `M=F`): the HARDEST class — all three
+  sampled failed Tier 1**, split across encryption, font-mapping gaps, and a scan.
+  This is precisely the agenda→staff-report→exhibit graph CAPTURE exists to build:
+  the agenda decodes free, but the substance it links to is where Tier 1 stops.
+- **The 2025 ACFR is encrypted.** An entire flagship financial document yields zero
+  text without Tier 2 — and no amount of Tier-1 font work touches encryption.
+
+So **CPDF-6 is on the critical path for the record's substance.** ~5/14 (36%) of a
+class-spread sample produce essentially NO usable text without the pdf-worker, and
+those are not fringe documents — they are an ACFR and the entire encrypted-staff-
+report class. Tier 1 (CPDF-4) remains genuinely valuable: it fully serves the
+agenda class and modern books/decks (~50% of the sample usable in-plane with no
+second Worker), which is real Free-tier savings. But the earlier open question —
+whether the fleet member is urgent or marginal — resolves to **urgent/central**.
+
+**One residue neither tier addresses: OCR.** 2/14 (a design-heavy 2-pager rendered
+as images, and a scanned CCITT-fax attachment) have no text layer; unpdf returns
+zero characters exactly as Tier 1 does. Doctrine already answers what to DO with
+them — mark `text-undetermined: no text layer (scanned)` and stop, never invent —
+and the extractor already emits nothing rather than mojibake, which is correct.
+Whether the record should ever grow a Tier-3 OCR path for this class is a roadmap
+question, noted for BOB/CONDUCT, low-urgency: on this sample it is ~14%, and it is
+disproportionately the design/scan documents rather than the deliberative record.
