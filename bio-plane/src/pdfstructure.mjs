@@ -21,9 +21,17 @@
  *   embedded / attached files                  -> intra (content-addressed), else undetermined
  *   element reference                          -> source page index + annotation /Rect
  *
- * The prose/content half (glyph->Unicode via embedded CMaps, `unpdf`) is
- * EXPENSIVE and is phase 2, gated on measurement — it is deliberately absent
- * here.
+ * The prose/content half is TIERED (D-91). Tier 1 lives HERE, pure JS, no
+ * dependency (QUEUE CPDF-4): it walks each page's content stream(s), reads the
+ * text-showing operators (Tj, TJ, and the '/" line variants), and decodes the
+ * shown bytes to Unicode through each font's /ToUnicode CMap (beginbfchar /
+ * bfrange). It reuses the same object/stream parser the link half uses. The
+ * SAME first-class-undetermined doctrine governs it: a run shown by a font with
+ * no /ToUnicode (a CID font is the canonical case), or a code that maps to
+ * nothing, is recorded as `undetermined` NAMING the cause (the font) and its
+ * bytes are NEVER guessed into readable text — no mojibake, per region. Tier 2
+ * (`unpdf`/pdf.js, for the residue Tier 1 cannot decode) is a separate fleet
+ * Worker (I6, CPDF-6) and does not live here.
  *
  * No DOM, no Worker bindings, no bundled dependency. FlateDecode is the native
  * DecompressionStream("deflate"). The parser is LENIENT by design: rather than
@@ -674,6 +682,451 @@ function undeterminedRecord(source, why, extra = {}) {
   return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
 }
 
+/* ================================================================== *
+ * Tier 1 text extraction (QUEUE CPDF-4)
+ *
+ * The prose half, pure JS: read the text-showing operators out of each page's
+ * content stream(s) and decode the shown bytes through the font's /ToUnicode
+ * CMap. Nothing here guesses. A byte a font's /ToUnicode does not cover, or a
+ * font that carries no /ToUnicode at all, produces an `undetermined` marker
+ * naming the font — never a substituted or best-effort character.
+ * ================================================================== */
+
+/* ---- content-stream lexer (a postfix grammar, unlike the object grammar) ---- *
+ * Tokens: { t:"str", bytes:[…0-255] } (raw shown bytes — NOT decoded as text,
+ * because the bytes ARE the character codes the font maps), { t:"num", v },
+ * { t:"name", v }, { t:"op", v }, and the array/dict delimiters. */
+function tokenizeContent(s) {
+  const toks = [];
+  let i = 0;
+  const n = s.length;
+  while (i < n) {
+    const c = s.charCodeAt(i);
+    if (isWhitespace(c)) { i++; continue; }
+    if (c === 0x25) { // % comment to EOL
+      while (i < n && s.charCodeAt(i) !== 0x0a && s.charCodeAt(i) !== 0x0d) i++;
+      continue;
+    }
+    if (c === 0x28) { const r = readLiteralBytes(s, i); toks.push({ t: "str", bytes: r.bytes }); i = r.pos; continue; }
+    if (c === 0x3c) {
+      if (s.charCodeAt(i + 1) === 0x3c) { toks.push({ t: "dict_open" }); i += 2; continue; }
+      const r = readHexBytes(s, i); toks.push({ t: "str", bytes: r.bytes }); i = r.pos; continue;
+    }
+    if (c === 0x3e && s.charCodeAt(i + 1) === 0x3e) { toks.push({ t: "dict_close" }); i += 2; continue; }
+    if (c === 0x5b) { toks.push({ t: "arr_open" }); i++; continue; }
+    if (c === 0x5d) { toks.push({ t: "arr_close" }); i++; continue; }
+    if (c === 0x2f) { const r = readContentName(s, i); toks.push({ t: "name", v: r.v }); i = r.pos; continue; }
+    if (c === 0x2b || c === 0x2d || c === 0x2e || (c >= 0x30 && c <= 0x39)) {
+      const r = readContentNumber(s, i); toks.push({ t: "num", v: r.v }); i = r.pos; continue;
+    }
+    // an operator: a run of regular characters (letters, and ' " * which are ops)
+    const start = i;
+    while (i < n) {
+      const cc = s.charCodeAt(i);
+      if (isWhitespace(cc) || isDelimiter(cc)) break;
+      i++;
+    }
+    if (i > start) toks.push({ t: "op", v: s.slice(start, i) });
+    else i++; // never stall
+  }
+  return toks;
+}
+
+/** Read a literal ( … ) string as RAW BYTES (0-255), honouring PDF escapes and
+ *  nested parens. Unlike parseLiteralString this does not decode to text — the
+ *  bytes are the codes the font maps. */
+function readLiteralBytes(s, pos) {
+  pos++; // (
+  const bytes = [];
+  let depth = 1;
+  const simple = { 110: 0x0a, 114: 0x0d, 116: 0x09, 98: 0x08, 102: 0x0c, 40: 0x28, 41: 0x29, 92: 0x5c };
+  while (pos < s.length) {
+    const c = s.charCodeAt(pos);
+    if (c === 0x5c) { // backslash
+      const nc = s.charCodeAt(pos + 1);
+      if (nc in simple) { bytes.push(simple[nc]); pos += 2; continue; }
+      if (nc >= 0x30 && nc <= 0x37) { // octal, up to 3 digits
+        let oct = "", p = pos + 1;
+        while (p < s.length && oct.length < 3 && s.charCodeAt(p) >= 0x30 && s.charCodeAt(p) <= 0x37) { oct += s[p]; p++; }
+        bytes.push(parseInt(oct, 8) & 0xff); pos = p; continue;
+      }
+      if (nc === 0x0a) { pos += 2; continue; }                       // line continuation
+      if (nc === 0x0d) { pos += s.charCodeAt(pos + 2) === 0x0a ? 3 : 2; continue; }
+      bytes.push(nc); pos += 2; continue;                            // unknown escape: literal next
+    }
+    if (c === 0x28) { depth++; bytes.push(0x28); pos++; continue; }
+    if (c === 0x29) { depth--; if (depth === 0) { pos++; break; } bytes.push(0x29); pos++; continue; }
+    bytes.push(c); pos++;
+  }
+  return { bytes, pos };
+}
+
+/** Read a < … > hex string as raw bytes. */
+function readHexBytes(s, pos) {
+  pos++; // <
+  let hex = "";
+  while (pos < s.length && s.charCodeAt(pos) !== 0x3e) {
+    const ch = s[pos];
+    if (/[0-9a-fA-F]/.test(ch)) hex += ch;
+    pos++;
+  }
+  pos++; // >
+  if (hex.length % 2) hex += "0";
+  const bytes = [];
+  for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substr(i, 2), 16));
+  return { bytes, pos };
+}
+
+function readContentName(s, pos) {
+  pos++; // /
+  let out = "";
+  while (pos < s.length) {
+    const c = s.charCodeAt(pos);
+    if (isWhitespace(c) || isDelimiter(c)) break;
+    if (c === 0x23 && pos + 2 < s.length) {
+      const h = parseInt(s.substr(pos + 1, 2), 16);
+      if (!Number.isNaN(h)) { out += String.fromCharCode(h); pos += 3; continue; }
+    }
+    out += s[pos]; pos++;
+  }
+  return { v: out, pos };
+}
+
+function readContentNumber(s, pos) {
+  const start = pos;
+  if (s.charCodeAt(pos) === 0x2b || s.charCodeAt(pos) === 0x2d) pos++;
+  while (pos < s.length) {
+    const c = s.charCodeAt(pos);
+    if ((c >= 0x30 && c <= 0x39) || c === 0x2e) pos++;
+    else break;
+  }
+  const v = parseFloat(s.slice(start, pos));
+  return { v: Number.isNaN(v) ? 0 : v, pos };
+}
+
+/* ---- /ToUnicode CMap parsing ---- *
+ * A CMap maps a character CODE (1+ bytes) to a Unicode string. We need only the
+ * bfchar/bfrange sections (and the codespacerange, which tells us how many bytes
+ * a code is). Everything else in the CMap is PostScript we ignore. */
+
+/** Interpret a hex run as UTF-16BE code units → a JS string. ToUnicode targets
+ *  are UTF-16BE; a single-byte target (2 hex) is treated as one code point. */
+function hexToUnicode(hex) {
+  if (hex.length <= 2) return String.fromCharCode(parseInt(hex || "0", 16));
+  let out = "";
+  for (let i = 0; i + 4 <= hex.length; i += 4) out += String.fromCharCode(parseInt(hex.substr(i, 4), 16));
+  if (hex.length % 4 === 2) out += String.fromCharCode(parseInt(hex.substr(hex.length - 2, 2), 16));
+  return out;
+}
+
+/** Increment the LAST 16-bit unit of a UTF-16BE hex target by `off` — the
+ *  bfrange incrementing form: <lo> <hi> <dst> maps lo→dst, lo+1→dst+1, … */
+function unicodeIncr(hex, off) {
+  const units = [];
+  for (let i = 0; i + 4 <= hex.length; i += 4) units.push(parseInt(hex.substr(i, 4), 16));
+  if (units.length === 0) return String.fromCharCode((parseInt(hex || "0", 16) + off) & 0xffff);
+  units[units.length - 1] = (units[units.length - 1] + off) & 0xffff;
+  return units.map((u) => String.fromCharCode(u)).join("");
+}
+
+function parseToUnicodeCMap(text) {
+  const map = new Map();
+  let width = null;
+
+  const csr = /begincodespacerange([\s\S]*?)endcodespacerange/.exec(text);
+  if (csr) {
+    const first = /<([0-9a-fA-F]+)>/.exec(csr[1]);
+    if (first) width = Math.max(1, Math.round(first[1].length / 2));
+  }
+
+  for (const m of text.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
+    const toks = m[1].match(/<([0-9a-fA-F]*)>/g) || [];
+    for (let i = 0; i + 1 < toks.length; i += 2) {
+      const src = toks[i].replace(/[<>]/g, "");
+      const dst = toks[i + 1].replace(/[<>]/g, "");
+      if (!src) continue;
+      map.set(parseInt(src, 16), hexToUnicode(dst));
+      if (width == null) width = Math.max(1, Math.round(src.length / 2));
+    }
+  }
+
+  for (const m of text.matchAll(/beginbfrange([\s\S]*?)endbfrange/g)) {
+    parseBfrange(m[1], map, (w) => { if (width == null) width = w; });
+  }
+
+  return { map, width: width ?? 1 };
+}
+
+/** bfrange has two target forms: an incrementing hex target, and an explicit
+ *  [ <..> <..> … ] array (one target per code in the range). Tokenise the block
+ *  into hex atoms and arrays, then consume triples. */
+function parseBfrange(blk, map, seenWidth) {
+  const tokens = [];
+  let i = 0;
+  while (i < blk.length) {
+    const c = blk[i];
+    if (c === "<") {
+      const j = blk.indexOf(">", i);
+      if (j === -1) break;
+      tokens.push({ t: "hex", v: blk.slice(i + 1, j).replace(/[^0-9a-fA-F]/g, "") });
+      i = j + 1;
+    } else if (c === "[") {
+      const j = blk.indexOf("]", i);
+      if (j === -1) break;
+      const arr = (blk.slice(i + 1, j).match(/<([0-9a-fA-F]*)>/g) || []).map((h) => h.replace(/[<>]/g, ""));
+      tokens.push({ t: "arr", v: arr });
+      i = j + 1;
+    } else i++;
+  }
+  for (let k = 0; k + 2 < tokens.length; k += 3) {
+    const lo = tokens[k], hi = tokens[k + 1], dst = tokens[k + 2];
+    if (lo.t !== "hex" || hi.t !== "hex") { k -= 2; k += 1; continue; }
+    const loN = parseInt(lo.v, 16), hiN = parseInt(hi.v, 16);
+    seenWidth(Math.max(1, Math.round(lo.v.length / 2)));
+    if (dst.t === "arr") {
+      for (let code = loN, idx = 0; code <= hiN && idx < dst.v.length; code++, idx++) map.set(code, hexToUnicode(dst.v[idx]));
+    } else {
+      for (let code = loN, off = 0; code <= hiN && off <= hiN - loN; code++, off++) map.set(code, unicodeIncr(dst.v, off));
+    }
+  }
+}
+
+/* ---- fonts ---- */
+
+function nameOf(doc, v) {
+  v = doc.resolve(v);
+  return v && v.t === "name" ? v.v : null;
+}
+
+/** Load a font's decoding info: its /ToUnicode map (or null), the code width in
+ *  bytes, whether it is a composite (Type0/CID) font, and a name to report when
+ *  something cannot be decoded. */
+async function loadFont(doc, fontVal) {
+  const map = doc.dictOf(fontVal);
+  if (!map) return null;
+  const subtype = nameOf(doc, map.Subtype);
+  const isType0 = subtype === "Type0";
+  let baseFont = nameOf(doc, map.BaseFont);
+  if (!baseFont && isType0) {
+    // A Type0's descendant CIDFont may carry the BaseFont.
+    const desc = doc.resolve(map.DescendantFonts);
+    if (desc && desc.t === "arr" && desc.items.length) baseFont = nameOf(doc, doc.dictOf(desc.items[0])?.BaseFont);
+  }
+  let toUni = null, width = null;
+  const tu = doc.resolve(map.ToUnicode);
+  if (tu && tu.t === "stream") {
+    const data = await doc.streamDecoded(tu);
+    if (data) {
+      const parsed = parseToUnicodeCMap(LATIN1.decode(data));
+      if (parsed.map.size) { toUni = parsed.map; width = parsed.width; }
+    }
+  }
+  if (width == null) width = isType0 ? 2 : 1; // composite codes are ≥2 bytes in practice; simple fonts are 1
+  return { subtype, isType0, baseFont, toUni, width };
+}
+
+/* ---- the per-page text interpreter ---- */
+
+const HEX_CAP = 64; // cap the bytes echoed into an undetermined marker
+
+function bytesToHex(bytes, cap = HEX_CAP) {
+  const n = Math.min(bytes.length, cap);
+  let out = "";
+  for (let i = 0; i < n; i++) out += HEX[bytes[i] >> 4] + HEX[bytes[i] & 15];
+  if (bytes.length > cap) out += "…";
+  return out;
+}
+
+function bytesToCodes(bytes, width) {
+  const codes = [];
+  const w = Math.max(1, width);
+  for (let i = 0; i + w <= bytes.length; i += w) {
+    let code = 0;
+    for (let k = 0; k < w; k++) code = (code << 8) | bytes[i + k];
+    codes.push(code);
+  }
+  return { codes, leftover: bytes.length % w };
+}
+
+/** Walk one page's Resources up the page tree — Resources is an inheritable
+ *  attribute, so a page that omits it uses its /Pages parent's. */
+function pageResources(doc, pageMap) {
+  let map = pageMap, seen = 0;
+  while (map && seen < 64) {
+    const res = doc.dictOf(map.Resources);
+    if (res) return res;
+    const parent = doc.resolve(map.Parent);
+    map = parent && parent.t === "dict" ? parent.map : null;
+    seen++;
+  }
+  return null;
+}
+
+/** Concatenate a page's content stream(s) into one decoded latin1 string. */
+async function pageContent(doc, pageMap) {
+  const c = doc.resolve(pageMap.Contents);
+  if (!c) return "";
+  const streams = c.t === "arr" ? c.items.map((x) => doc.resolve(x)) : [c];
+  const parts = [];
+  for (const st of streams) {
+    if (st && st.t === "stream") {
+      const data = await doc.streamDecoded(st);
+      if (data) parts.push(LATIN1.decode(data));
+      else doc.note("content_stream_undecodable");
+    }
+  }
+  return parts.join("\n");
+}
+
+/** Extract Tier 1 text from one page. Returns { text, undetermined:[markers] }.
+ *  `fontCache` is keyed by font object so a font shared across pages is parsed
+ *  once. Every undecodable region is recorded, never rendered. */
+async function extractPageText(doc, pageIdx, pageMap, fontCache) {
+  const resources = pageResources(doc, pageMap);
+  const fontDict = resources ? doc.dictOf(resources.Font) : null;
+  const content = await pageContent(doc, pageMap);
+  const toks = tokenizeContent(content);
+
+  const pieces = [];
+  const undetermined = [];
+  let curFont = null;      // font info, or null
+  let curFontName = null;  // the resource name last selected by Tf
+  const stack = [];
+
+  const getFont = async (name) => {
+    if (!fontDict || !(name in fontDict)) return null;
+    const ref = fontDict[name];
+    const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + name;
+    if (fontCache.has(key)) return fontCache.get(key);
+    const f = await loadFont(doc, ref);
+    fontCache.set(key, f);
+    return f;
+  };
+
+  const show = (bytes) => {
+    if (!bytes || bytes.length === 0) return;
+    if (!curFont) {
+      undetermined.push({
+        page: pageIdx,
+        reason: curFontName ? "font_not_in_resources" : "no_current_font",
+        font: curFontName ?? null,
+        codes: bytesToHex(bytes),
+        count: bytes.length,
+      });
+      return;
+    }
+    if (!curFont.toUni) {
+      undetermined.push({
+        page: pageIdx,
+        reason: curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
+        font: curFont.baseFont ?? curFontName ?? null,
+        codes: bytesToHex(bytes),
+        count: Math.ceil(bytes.length / (curFont.width || 1)),
+      });
+      return;
+    }
+    const { codes, leftover } = bytesToCodes(bytes, curFont.width);
+    for (const code of codes) {
+      const u = curFont.toUni.get(code);
+      if (u == null) {
+        undetermined.push({
+          page: pageIdx,
+          reason: "unmapped_code",
+          font: curFont.baseFont ?? curFontName ?? null,
+          codes: code.toString(16).padStart((curFont.width || 1) * 2, "0"),
+          count: 1,
+        });
+      } else pieces.push(u);
+    }
+    if (leftover) {
+      undetermined.push({
+        page: pageIdx,
+        reason: "code_width_misaligned",
+        font: curFont.baseFont ?? curFontName ?? null,
+        codes: bytesToHex(bytes.slice(bytes.length - leftover)),
+        count: leftover,
+      });
+    }
+  };
+
+  const lastOfType = (type) => {
+    for (let i = stack.length - 1; i >= 0; i--) if (stack[i].t === type) return stack[i];
+    return null;
+  };
+
+  for (const tk of toks) {
+    if (tk.t !== "op") { stack.push(tk); continue; }
+    switch (tk.v) {
+      case "Tf": {
+        const nameTok = lastOfType("name");
+        curFontName = nameTok ? nameTok.v : null;
+        curFont = curFontName ? await getFont(curFontName) : null;
+        break;
+      }
+      case "Tj": {
+        const st = lastOfType("str");
+        if (st) show(st.bytes);
+        break;
+      }
+      case "TJ": {
+        let inArr = false;
+        for (const it of stack) {
+          if (it.t === "arr_open") { inArr = true; continue; }
+          if (it.t === "arr_close") { inArr = false; continue; }
+          if (!inArr) continue;
+          if (it.t === "str") show(it.bytes);
+          else if (it.t === "num" && it.v < -100) pieces.push(" "); // a large negative advance is a word gap
+        }
+        break;
+      }
+      case "'":
+      case '"': {
+        // ' : next line then show;  " : aw ac (string) — next line then show
+        pieces.push("\n");
+        const st = lastOfType("str");
+        if (st) show(st.bytes);
+        break;
+      }
+      case "Td": case "TD": case "Tm": case "T*":
+        pieces.push("\n"); // a new text line
+        break;
+      default:
+        break;
+    }
+    stack.length = 0; // operands are consumed by their operator
+  }
+
+  let text = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
+  return { text, undetermined };
+}
+
+/** Document text (Tier 1). Extends the I2 output; see the module header. */
+async function extractText(doc, pageOrder) {
+  const fontCache = new Map();
+  const pages = [];
+  const allUndetermined = [];
+  for (let idx = 0; idx < pageOrder.length; idx++) {
+    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[idx] });
+    if (!pageMap) { pages.push({ page: idx, text: "", undetermined: [] }); continue; }
+    let res;
+    try {
+      res = await extractPageText(doc, idx, pageMap, fontCache);
+    } catch {
+      doc.note("text_extraction_error");
+      res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
+    }
+    pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    for (const u of res.undetermined) allUndetermined.push(u);
+  }
+  const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
+  return {
+    document,
+    pages,
+    undetermined: allUndetermined,
+    counts: { chars: document.length, undetermined: allUndetermined.length },
+  };
+}
+
 /* ------------------------------------------------------------------ *
  * The public entry point
  * ------------------------------------------------------------------ */
@@ -683,8 +1136,12 @@ function undeterminedRecord(source, why, extra = {}) {
  *
  * @param {Uint8Array} bytes  assembled PDF bytes (I1: read via op=capture)
  * @returns {Promise<object>} the container-agnostic structure object; see the
- *          module header and the returned `container`/`links` shape. This is the
- *          producer side of the proposed I2 (structure -> framework).
+ *          module header and the returned `container`/`links` shape. Carries a
+ *          `text` field (Tier 1, CPDF-4): { document, pages:[{page,text,
+ *          undetermined:[…]}], undetermined:[…], counts:{chars,undetermined} },
+ *          where each undetermined marker names the cause (the font) rather than
+ *          guessing an undecodable run into text. This is the producer side of
+ *          the proposed I2 (structure -> framework).
  */
 export async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
@@ -769,6 +1226,9 @@ export async function extractPdfStructure(bytes) {
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l of links) counts[l.partition]++;
 
+  // Tier 1 text (CPDF-4): extends this same I2 output object; do not fork it.
+  const text = await extractText(doc, pageOrder);
+
   return {
     ok: true,
     container: "pdf",
@@ -776,6 +1236,7 @@ export async function extractPdfStructure(bytes) {
     pages: doc.pageCount,
     links,
     counts,
+    text,
     notes: doc.notes,
   };
 }

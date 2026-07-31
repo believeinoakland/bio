@@ -113,8 +113,14 @@ interfaces owned: none
 expected: QUEUE.md CPDF-7 / D-118 — MEASURE whether Workers Free permits a second Worker script and service bindings, and what a cross-Worker call costs, through the project's own Cloudflare account and egress. Deploys THROWAWAY Workers (cpdf7-probe-*) and TEARS THEM DOWN, never touching biosmoke7/civicos/newgroup, the record or the installer; attaches no R2 binding. Commits no shipped code and changes no dependency. Findings: the account is on Workers FREE (the API refused limits.cpu_ms with "not supported for the Free plan"); on Free a second script deploys, a service binding deploys and RESOLVES, and a cross-Worker call runs end-to-end for ~1 ms wall-clock / one subrequest (25 binding calls in one Free invocation succeeded; teardown re-confirmed, back to three scripts). So D-118's conditional does NOT fire: pdf-worker (CPDF-6) is viable on Free and central; Tier 1 (CPDF-4) is not forced to be the floor by any binding limitation. D-118 CLOSED; the residual 10 ms Worker-CPU-ceiling question is narrowed onto CPDF-1's existing gated follow-on. No deploy of the plane; CONDUCT integrates.
 released: 2026-07-31 — measurement landed on branch content-pdf/cpdf7-fleet-measure; CONDUCT integrates. Not pushed.
 
-## CLAIM 2026-07-31 FRAMEWORK
-session: framework-agent-1
+## CLAIM 2026-07-31 CONTENT-PDF
+session: content-pdf-agent-5
+opened: 2026-07-31T00:00:00Z
+paths: bio-plane/src/pdfstructure.mjs, bio-plane/test/pdfstructure.test.mjs
+interfaces consumed: I1 (bytes → content)
+interfaces owned: none; extends the provisional I2 (structure → framework) producer-side with a `text` field (for FW-1 to confirm/counter)
+expected: QUEUE.md CPDF-4 — Tier 1 text extraction IN THE PLANE, pure JS, no dependency. Parse the text-showing operators (Tj, TJ, ', ") in each page's content stream(s), reusing the existing object/stream parser (FlateDecode, /ObjStm), and decode the shown bytes to Unicode via each font's /ToUnicode CMap (beginbfchar/bfrange). EXTEND the extractor's existing I2 output object with `text` (document-level + per-page, plus per-region `undetermined` markers) — do NOT fork the output shape. `undetermined` is first-class and per-region: a glyph/run with no ToUnicode, a CID font, or an unmapped code is recorded as undetermined NAMING the cause (the font), never dropped, never guessed into mojibake. No op edit (op=pdfstructure returns the extractor's object, so text flows through automatically). No deploy; CONDUCT integrates.
+released:
 opened: 2026-07-31T22:00:00Z
 paths: the docprofile package — docprofile/index.mjs, docprofile/registry.mjs, docprofile/monitoring.mjs, docprofile/pipeline.mjs, docprofile/doctypes/index.mjs, docprofile/doctypes/registry.mjs, docprofile/doctypes/meeting-calendar.mjs, docprofile/doctypes/generic.mjs, docprofile/handlers/aspnet-webforms.mjs, docprofile/handlers/wordpress.mjs (member extraction removal only); the new docprofile/recogniser.mjs and docprofile/events.mjs; tools/bundle-docprofile.mjs (ORDER list); the flattened docprofile block in civicos-ui/app.html (rebuilt, not hand-edited); civicos-ui/test/docprofile.test.mjs and civicos-ui/test/change-layers.test.mjs (rewritten onto the consolidated shape)
 interfaces consumed: I2 (structure, provisional — noted for FW-1/CPDF-4 that it will extend with text)

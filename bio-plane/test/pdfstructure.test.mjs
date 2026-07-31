@@ -1,8 +1,9 @@
-/* The PDF outbound-link graph (D-91 phase 1), tested against hand-built PDFs
- * whose structure is known byte-for-byte, so a PASS means the parser found what
- * is actually there rather than what a real-world fixture happened to contain.
+/* The PDF outbound-link graph (D-91 phase 1) AND Tier 1 text extraction
+ * (QUEUE CPDF-4), tested against hand-built PDFs whose structure and content
+ * streams are known byte-for-byte, so a PASS means the parser found what is
+ * actually there rather than what a real-world fixture happened to contain.
  *
- * Fixtures cover every partition the phase-1 mapping produces:
+ * Link fixtures cover every partition the phase-1 mapping produces:
  *   - a /URI link                              -> deferred
  *   - a mailto: /URI link                      -> refused
  *   - an internal /GoTo /Dest                  -> anchor, target page resolved
@@ -11,15 +12,26 @@
  *   - a /GoTo to a dangling page               -> undetermined (never invented)
  *   - a PDF with NO annotations                -> nothing found, nothing invented
  *
- * Two structural guards on top of the fixtures:
+ * Text fixtures cover Tier 1 decoding and the first-class-undetermined doctrine:
+ *   - a simple font with a /ToUnicode bfchar CMap   -> decoded to Unicode
+ *   - a bfrange CMap (incrementing and array forms) -> decoded
+ *   - a 2-byte Type0 font with /ToUnicode           -> decoded (composite codes)
+ *   - a FlateDecode content stream + CMap           -> read via the same parser
+ *   - TJ word-gap number                            -> a space; a small kern -> none
+ *   - a CID font with NO /ToUnicode                 -> undetermined NAMING the font
+ *   - a code absent from the CMap                   -> unmapped_code, never guessed
+ *
+ * Structural guards on top of the fixtures:
  *   - PARITY: every wrapper this module emits is byte-identical to what
  *     subresources.mjs's `linkWrapper` produces, so the two link systems cannot
  *     drift into two vocabularies.
- *   - NEGATIVE CONTROL (run by hand, recorded in the report): with the URI
- *     classifier forced to always return "deferred", the mailto assertion FAILS
- *     (refused expected, deferred got). Restored immediately after. A suite that
- *     stayed green through that break would be testing something else.
+ *
+ * Two negative controls are on record. The registered one (below) is the CMap
+ * lookup — the subject CPDF-4 added. The earlier link-side control also holds:
+ * with classifyUri forced to always return "deferred", the mailto assertion
+ * FAILS (refused expected, deferred got).
  */
+/* NEGATIVE CONTROL: in loadFont skip the /ToUnicode lookup (`const tu = false && doc.resolve(map.ToUnicode)`) so no CMap ever loads -> the decoded-text assertions fail. RUN 2026-07-31: 14 of 75 failed (every "decodes to"/document/per-page text assertion + the unmapped_code region — all runs collapse to no_tounicode); the CMap-independent doctrine assertions (CID-no-ToUnicode acceptance, no_current_font, empty-text shape) still passed; restored -> 75 pass 0 fail. */
 import { extractPdfStructure, PDF_LINK_TYPES } from "../src/pdfstructure.mjs";
 import { LINK_TYPES, linkWrapper } from "../src/subresources.mjs";
 import { deflateSync } from "node:zlib";
@@ -229,6 +241,191 @@ console.log("\n--- PARITY: the partition vocabulary mirrors subresources.mjs exa
   t("the four wrapper partitions are exactly the HTML LINK_TYPES, in order",
     PDF_LINK_TYPES.slice(0, 4), LINK_TYPES);
   t("and PDF adds only undetermined on top", PDF_LINK_TYPES, [...LINK_TYPES, "undetermined"]);
+}
+
+/* ================================================================== *
+ * Tier 1 text extraction (QUEUE CPDF-4)
+ * ================================================================== */
+
+/* Build a page whose Resources bind one font and whose Contents is `content`.
+ * `fontBody` is the font dict; `cmapBody` (or null) is its /ToUnicode stream.
+ * When `flate` is set, both the content and the CMap are FlateDecode-compressed,
+ * proving Tier 1 reuses the same stream parser the link half does. */
+function textPdf({ content, fontBody, cmapBody, flate = false }) {
+  const objs = [
+    { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>" },
+  ];
+  const cbuf = Buffer.from(content, "latin1");
+  if (flate) {
+    const z = deflateSync(cbuf);
+    objs.push({ num: 4, head: `<< /Length ${z.length} /Filter /FlateDecode >>`, stream: z });
+  } else {
+    objs.push({ num: 4, head: `<< /Length ${cbuf.length} >>`, stream: cbuf });
+  }
+  objs.push({ num: 5, body: fontBody });
+  if (cmapBody != null) {
+    const mbuf = Buffer.from(cmapBody, "latin1");
+    if (flate) {
+      const z = deflateSync(mbuf);
+      objs.push({ num: 6, head: `<< /Length ${z.length} /Filter /FlateDecode >>`, stream: z });
+    } else {
+      objs.push({ num: 6, head: `<< /Length ${mbuf.length} >>`, stream: mbuf });
+    }
+  }
+  return pdf(objs);
+}
+
+/* A ToUnicode CMap with a 1-byte codespace and the given bfchar/bfrange body. */
+const cmap1 = (body) =>
+  `/CIDInit /ProcSet findresource begin 12 dict begin begincmap
+/CMapName /Adobe-Identity-UCS def
+1 begincodespacerange
+<00> <FF>
+endcodespacerange
+${body}
+endcmap CMapName currentdict /CMap defineresource pop end end`;
+
+/* A ToUnicode CMap with a 2-byte codespace (composite/Type0 case). */
+const cmap2 = (body) =>
+  `/CIDInit /ProcSet findresource begin 12 dict begin begincmap
+/CMapName /Adobe-Identity-UCS def
+1 begincodespacerange
+<0000> <FFFF>
+endcodespacerange
+${body}
+endcmap CMapName currentdict /CMap defineresource pop end end`;
+
+const SIMPLE_FONT = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode 6 0 R >>";
+
+console.log("\n--- a simple font with a /ToUnicode bfchar CMap decodes to Unicode ---");
+{
+  // codes 01..05 -> H E L L O
+  const cmapBody = "5 beginbfchar\n<01> <0048>\n<02> <0045>\n<03> <004C>\n<04> <004C>\n<05> <004F>\nendbfchar";
+  const bytes = textPdf({
+    content: "BT /F1 12 Tf (\\001\\002\\003\\004\\005) Tj ET",
+    fontBody: SIMPLE_FONT,
+    cmapBody: cmap1(cmapBody),
+  });
+  const out = await extractPdfStructure(bytes);
+  t("it is a PDF", out.ok, true);
+  t("the shown bytes decode to HELLO through the CMap", out.text.document, "HELLO");
+  t("per-page text carries the same string", out.text.pages[0].text, "HELLO");
+  t("nothing was undetermined", out.text.undetermined, []);
+  t("the char count is honest", out.text.counts.chars, 5);
+}
+
+console.log("\n--- a bfrange CMap decodes: incrementing form and array form ---");
+{
+  // incrementing: 0x41..0x5A -> A..Z ; show H I
+  const inc = textPdf({
+    content: "BT /F1 12 Tf <4849> Tj ET",
+    fontBody: SIMPLE_FONT,
+    cmapBody: cmap1("1 beginbfrange\n<41> <5A> <0041>\nendbfrange"),
+  });
+  t("the incrementing bfrange decodes <4849> to HI", (await extractPdfStructure(inc)).text.document, "HI");
+
+  // array: codes 01..03 -> [A B C]
+  const arr = textPdf({
+    content: "BT /F1 12 Tf (\\001\\002\\003) Tj ET",
+    fontBody: SIMPLE_FONT,
+    cmapBody: cmap1("1 beginbfrange\n<01> <03> [<0041> <0042> <0043>]\nendbfrange"),
+  });
+  t("the array bfrange decodes to ABC", (await extractPdfStructure(arr)).text.document, "ABC");
+}
+
+console.log("\n--- a 2-byte Type0 font with /ToUnicode decodes composite codes ---");
+{
+  // 2-byte codes 0x0001 0x0002 -> H i ; codespace is 2 bytes so width is inferred
+  const bytes = textPdf({
+    content: "BT /F1 12 Tf <00010002> Tj ET",
+    fontBody: "<< /Type /Font /Subtype /Type0 /BaseFont /ABCDEF+Sub /Encoding /Identity-H /DescendantFonts [7 0 R] /ToUnicode 6 0 R >>",
+    cmapBody: cmap2("2 beginbfchar\n<0001> <0048>\n<0002> <0069>\nendbfchar"),
+  });
+  const out = await extractPdfStructure(bytes);
+  t("the two-byte codes decode to Hi", out.text.document, "Hi");
+  t("no run was left undetermined", out.text.undetermined.length, 0);
+}
+
+console.log("\n--- a FlateDecode content stream AND CMap are read via the same parser ---");
+{
+  const bytes = textPdf({
+    content: "BT /F1 12 Tf (\\001\\002) Tj ET",
+    fontBody: SIMPLE_FONT,
+    cmapBody: cmap1("2 beginbfchar\n<01> <0047>\n<02> <006F>\nendbfchar"),
+    flate: true,
+  });
+  t("compressed content + compressed CMap still decode to Go", (await extractPdfStructure(bytes)).text.document, "Go");
+}
+
+console.log("\n--- TJ: a large negative advance is a word gap; a small kern is not ---");
+{
+  const cmapBody = cmap1("2 beginbfchar\n<01> <0041>\n<02> <0042>\nendbfchar"); // 1->A 2->B
+  const gap = textPdf({ content: "BT /F1 12 Tf [(\\001)-250(\\002)] TJ ET", fontBody: SIMPLE_FONT, cmapBody });
+  t("a -250 advance inserts a space (A B)", (await extractPdfStructure(gap)).text.document, "A B");
+  const kern = textPdf({ content: "BT /F1 12 Tf [(\\001)-20(\\002)] TJ ET", fontBody: SIMPLE_FONT, cmapBody });
+  t("a -20 kern does not (AB)", (await extractPdfStructure(kern)).text.document, "AB");
+}
+
+console.log("\n--- THE ACCEPTANCE CASE: a CID font with NO /ToUnicode is undetermined, NAMING the font, never mojibake ---");
+{
+  const bytes = textPdf({
+    content: "BT /F1 12 Tf <00480049> Tj ET",
+    fontBody: "<< /Type /Font /Subtype /Type0 /BaseFont /ABCDEF+CustomCID /Encoding /Identity-H /DescendantFonts [7 0 R] >>",
+    cmapBody: null, // NO ToUnicode
+  });
+  const out = await extractPdfStructure(bytes);
+  t("no readable text is produced (no mojibake)", out.text.document, "");
+  t("exactly one undetermined region", out.text.undetermined.length, 1);
+  const u = out.text.undetermined[0];
+  t("the region is on the right page", u.page, 0);
+  t("the reason names the CID-font-with-no-ToUnicode cause", u.reason, "cid_font_no_tounicode");
+  t("and NAMES THE FONT (the BaseFont), never a guess", u.font, "ABCDEF+CustomCID");
+  t("the undecodable bytes are carried, not dropped", u.codes, "00480049");
+  t("per-page undetermined agrees", out.text.pages[0].undetermined[0].reason, "cid_font_no_tounicode");
+}
+
+console.log("\n--- a code absent from the CMap is unmapped_code, never guessed; mapped codes still decode ---");
+{
+  // 1->A only; show 1 then 2 (2 is unmapped)
+  const bytes = textPdf({
+    content: "BT /F1 12 Tf (\\001\\002) Tj ET",
+    fontBody: SIMPLE_FONT,
+    cmapBody: cmap1("1 beginbfchar\n<01> <0041>\nendbfchar"),
+  });
+  const out = await extractPdfStructure(bytes);
+  t("the mapped code still decodes (A)", out.text.document, "A");
+  t("the unmapped code is one undetermined region", out.text.undetermined.length, 1);
+  t("named unmapped_code", out.text.undetermined[0].reason, "unmapped_code");
+  t("carrying the code that had no mapping", out.text.undetermined[0].codes, "02");
+  t("and the font it was shown in", out.text.undetermined[0].font, "Helvetica");
+}
+
+console.log("\n--- text shown with no current font is undetermined, not dropped silently ---");
+{
+  const bytes = textPdf({
+    content: "BT (\\001\\002) Tj ET", // no Tf
+    fontBody: SIMPLE_FONT,
+    cmapBody: cmap1("1 beginbfchar\n<01> <0041>\nendbfchar"),
+  });
+  const out = await extractPdfStructure(bytes);
+  t("nothing readable", out.text.document, "");
+  t("one undetermined region naming the absence of a current font", out.text.undetermined[0].reason, "no_current_font");
+}
+
+console.log("\n--- the text field is present and shaped even when a PDF has no text ---");
+{
+  // reuse the no-annotations control PDF: one page, empty content
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+  ]);
+  const out = await extractPdfStructure(bytes);
+  t("text.document is the empty string, not missing", out.text.document, "");
+  t("one page entry, matching the page count", out.text.pages.length, 1);
+  t("its text is empty and nothing was undetermined", [out.text.pages[0].text, out.text.undetermined.length], ["", 0]);
 }
 
 console.log(`\npdfstructure: ${pass} passed, ${fail} failed`);
