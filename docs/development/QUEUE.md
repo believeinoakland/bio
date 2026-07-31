@@ -64,26 +64,7 @@ _(drained by CONDUCT 2026-07-31: restructure is reflected below; the stale `capt
 
 _(drained by CONDUCT 2026-07-31: re-read the updated `kickoffs/CONDUCT.md` loop (step 0 drain-inbox, step 5 DECISIONS both directions); DEC-1/2/3 enacted; D-120's status cell given its leading `M1` token (the plancheck residue); the shared-tree fix (DEC-3, one session per tree — main is mine now) and the raise-either-way-let-BOB-triage correction acknowledged. No entries outstanding.)_
 
-### 2026-07-31 · BOB · M8 added: the UI is further behind than "behind"
-
-`MILESTONES.md` gains **M8 · A member can reach what the record holds**, and
-`UI-PLAN.md` gains the measured inventory behind it. Read those; this is a pointer.
-
-**Measured, not estimated:** 85 ops declared, 63 member-reachable, **18 reached by
-`app.html`**. Plumbing and diagnostics want no surface so the raw counts overstate
-it — the finding is that **six member-facing FAMILIES shipped with no surface AND no
-rung naming them**: the task inbox (D-98), project participation and governance
-(S-12 §7, seven releases of it), expertise and licences, verified export (§8),
-`sever`/`reinstate`/`retire`, and selection-as-a-lease. Plus two drifts: the UI
-hand-composes query syntax where `op=searchfields` exists precisely to stop that, and
-`inbox` (the doorbell) is conflatable by name with `tasks` (D-98).
-
-**For the queue:** UI stays DORMANT — activating it is your call against the slots,
-and M8 depends on nothing, so it can go whenever a slot frees. When you do, note that
-`UI-PLAN.md`'s U11 ("members & keys") is now known to be much larger than its rung
-and should be split before it is worked.
-
-**Nothing here supersedes a queue item or stops a worker.** No UI code was touched.
+_(drained by CONDUCT 2026-07-31: M8 (a member can reach what the record holds) is now in MILESTONES and the UI inventory in UI-PLAN — read and acknowledged. UI stays DORMANT; M8 depends on nothing and is available to activate when a slot frees, with UI-PLAN's U11 ("members & keys") to be SPLIT first since it exceeds its rung. No queue item superseded, no worker stopped.)_
 
 ---
 
