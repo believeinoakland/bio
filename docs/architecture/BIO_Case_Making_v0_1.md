@@ -175,6 +175,82 @@ formats, and it has the same falsifiable test: when the second archetype arrives
 it cost a rendering, or does it cost a new case model? If the latter, the decomposition
 was wrong.
 
+## Are focus / project / action / case the right constructs? — asked and answered
+
+Bob asked directly, 2026-08-01. **Yes for what they cover; no for completeness**, and
+the gap is in one identifiable place.
+
+### The test
+
+The constructs should cover the PATH with no verb unhomed. Mapping them:
+
+| verb | construct | state |
+| --- | --- | --- |
+| questioning | **focus** — an open question or obstacle | built: `surfaced → elevated / deferred / dismissed` |
+| exploring, discovering | **project** — the investigation, carrying an `objective` | built: `forming → investigating → matured → closed` |
+| **documenting** | — | **NOTHING** |
+| impacting | **action** — outward-facing | built: `planned → active → awaiting_response → resolved / abandoned`, with `counterparty` and `## Correspondence` |
+| sharing / outputting | **case** | a UI concept only (`UI-PLAN` U12); not an object type |
+
+Two of the five are unhomed, and the pattern is not random: **the middle of the path
+and its end are missing** — precisely the part this design pass exists for.
+
+### What is right, and why each earns its place
+
+- **focus and project are correctly SEPARATE**, and the temptation to merge them should
+  be resisted. A question can be tracked without committing an investigation to it,
+  which is exactly what D-79's aggregation-and-ageing discipline needs for
+  machine-surfaced findings: hundreds of open questions is survivable, hundreds of open
+  investigations is not. `elevated_into` already models the promotion.
+- **action is right and is UNDERUSED**, not wrong. Its shape is outward-facing and
+  correct; what it lacks is connections (observation 2).
+- **`information` is the fifth object and is absent from Bob's list of four.** Worth
+  naming: it is the evidence unit, and the omission may be deliberate — it is substrate
+  the member consumes rather than a construct they drive. But a member does create it,
+  so whether it is a process construct is a real question rather than a formality.
+
+### What is missing
+
+**1. THE FINDING — a claim, what it rests on, and its strength. This is the big one.**
+Documenting has no object. Today a finding is prose inside a project's `bundle.md`, or
+it is implicit in a citation edge. It cannot be pointed at, cited, contradicted,
+graded, or composed.
+
+It cannot be folded into an existing type, and the reasons are not stylistic:
+
+- **not a `focus`** — a focus is an open QUESTION, a finding is a provisional ANSWER.
+  Opposite polarity, and merging them means the record cannot distinguish "we wonder"
+  from "we found", which is the distinction the whole system exists to keep.
+- **not `information`** — information is a captured DOCUMENT; a finding is a claim
+  DERIVED from documents. Merging them lets a claim inherit a document's provenance
+  without having a basis of its own, which is the overclaiming failure this project's
+  entire discipline defends against.
+
+**Everything the pass has proposed presupposes it.** Claim strength (observation 3) has
+nothing to compute over without it; D-72's connection grades have no consumer;
+invariant 7 has nothing to route equally; a case is prose rather than something
+composable.
+
+**2. THE CASE AS A RECORD OBJECT.** It is Bob's construct and the right one, and it
+exists only as a UI notion. If a case is what LEAVES and what a group stands behind, it
+needs states and a gate — because the boundary act already exists and currently
+ratifies BUNDLES, not cases.
+
+**3. THE FLOW MODEL** (D-128) — how the institution is supposed to work, declared and
+refined over time. Not a focus (not a question), not a project (not an investigation),
+not an action. It is a reference model many investigations read, and Bob named evolving
+that understanding as a core capability.
+
+### On adding constructs, having just argued for fewer
+
+This is a different axis from the interaction-construct count and the test is different.
+An INTERACTION construct earns its place if a member learns a shape once and reuses it.
+A RECORD OBJECT TYPE earns its place if **the record must make a distinct kind of claim
+about it**. A finding claims something documents do not claim; a case asserts something
+a project does not assert. Those pass the test. Adding them does not reopen the
+two-construct interaction decision, because all three are things the QUEUE and the ACT
+already reach.
+
 ## Open questions this pass must answer
 
 1. Do `focus` / `project` / `action` / `case file` survive, evolve, or get replaced?
