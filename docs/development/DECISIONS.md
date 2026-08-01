@@ -220,7 +220,7 @@ response:
 decided:
 enacted:
 
-### DEC-5 · open
+### DEC-5 · answered
 raised: 2026-07-31 · CONDUCT (lifted from CAP-3's report)
 for: bob
 question: Should the archive-fallback monitor self-invoke `op=acquire` by routing a DAEMON CREDENTIAL into the Durable Object (over an `env.SELF` service binding), or should the self-invocation take a path that places no standing credential in the DO?
@@ -230,8 +230,45 @@ blocks: none in the queue — it gates only the LIVE arming of CAP-3.
 alternative: a self-invocation path that holds no standing daemon credential in the DO (e.g. the DO calling the acquire logic directly rather than over an authenticated HTTP self-binding).
 recommendation: settle it WHEN DIST provisions the fleet's service bindings (it must, for CPDF-6's pdf-worker binding too) — it is the same "how does a Worker safely call another Worker on this instance" question. Prefer no standing credential in the DO if the direct-call alternative is clean.
 reversal cost: low in code (the consumer no-ops without the binding); higher once instances deploy with a credential path baked into the installer template.
-response:
-decided:
+response: SURFACE IT ALL, and the recommendation above is OVERRULED — correctly. Bob,
+  2026-08-01: "These are public documents… There's no reason to redact anything, even
+  internal metadata, from public records. Let the human analyst have the information
+  and options of deciding what matters and what doesn't. I contend that who edited a
+  document and when IS evidence that's every bit as relevant as other document
+  content. It demonstrates the actions of people and departments. That's gold."
+  THE RECOMMENDATION WAS NOT MERELY OVERRULED, IT WAS SELF-DEFEATING, and that is
+  worth recording rather than quietly dropping. "Present and not promoted" kept the
+  metadata off indexes and facets — but an analyst can only decide what matters if
+  they can FIND it, and the patterns that make this evidence (a department's editing
+  behaviour, a figure changed days before publication, one office touching documents
+  it has no business in) are only visible ACROSS documents. Withholding it from the
+  index would have withheld exactly the capability the material is valuable for. The
+  reasoning error was treating this as a disclosure question when it is an EVIDENCE
+  question about a public record.
+  SO IT IS EVIDENTIARY, not a footnote: creator, lastModifiedBy, revision count and
+  instants; tracked changes with author, date and the superseded wording; comments
+  with author and date; speaker notes; hidden sheets. Extracted as structure,
+  projected, indexed and searchable like any other content.
+  ONE CONSEQUENCE THAT GOES FURTHER THAN THE QUESTION ASKED: "the actions of people
+  and departments" is the ENTITY AXIS (M4, D-71, D-83). A person and an office are
+  entities; "who edited what, when" is a reading resolved ACROSS documents, which
+  D-71 already calls the single largest piece of manual work in case development.
+  Office-document metadata is therefore a first-class INPUT to the entity axis rather
+  than a per-document curiosity, and it strengthens M4's case rather than sitting
+  beside it.
+  SCOPE, stated because Bob stated it and an unscoped ruling would be over-applied:
+  this covers PUBLIC RECORDS. He explicitly noted "there may be other situations where
+  they're not and there are restrictions on what should be on the record or redacted."
+  Material arriving under restriction — a records response carrying statutory
+  redactions, member-origin or confidential-source material — is NOT settled by this
+  and is recorded as D-124 with its trigger.
+decided: 2026-08-01 · Bob
+reasoning recorded in: docs/development/OFFICE-FORMATS.md (the evidentiary section,
+  rewritten from "risk" to evidence) and DEBT D-122; the scope boundary in D-124.
+for CONDUCT to enact: D-122's disposition changes from DOCTRINE to M2 — it is now
+  build work, not an open question. `OFFICE-FORMATS.md` step 6 is UNGATED and moves
+  from last to alongside steps 3–4, since the evidentiary extras are no longer a
+  follow-on. Add the entity-axis link to M4's absorbs list.
 enacted:
 
 ### DEC-6 · open
@@ -291,7 +328,7 @@ response:
 decided:
 enacted:
 
-### DEC-11 · open
+### DEC-11 · answered
 renumbered: 2026-07-31 · CONDUCT — this entry collided with the daemon-credential DEC-5 above (BOB-session and CONDUCT numbered independently); renumbered DEC-5→DEC-11, content unchanged.
 raised: 2026-07-31 · BOB (from `OFFICE-FORMATS.md` research, D-124 — renumbered from D-122)
 for: bob
@@ -359,8 +396,19 @@ recommendation: a middle position, and it follows the record's own grain. HOLD
 reversal cost: rises once data exists. What is surfaced becomes searchable, cited and
   possibly published; unsurfacing it later does not unpublish it. Cheap to decide now,
   expensive after a corpus of office documents is indexed.
-response:
-decided:
+response: DUPLICATE of DEC-5, which Bob ANSWERED on 2026-08-01 — read that entry, not
+  this one. Closed here rather than left open so the same question cannot collect two
+  different answers, which is the failure mode a decisions register exists to prevent.
+  The answer: surface it all. These are public documents; there is no reason to redact
+  anything, internal metadata included; who edited a document and when IS evidence,
+  because it demonstrates the actions of people and departments. Scope is PUBLIC
+  records — restricted material is D-124, deferred with a trigger.
+  WORTH NOTING FOR THE REGISTER ITSELF: two sessions raised one question within hours,
+  which is not a fault — CONDUCT is told to raise rather than to pre-filter, and an
+  unraised item costs more than a misfiled one. But it does mean a session should scan
+  open entries for the same SUBJECT before adding one, and the BOB session (which
+  triages) is where a duplicate should be caught.
+decided: 2026-08-01 · Bob, via DEC-5
 enacted:
 
 ### DEC-10 · open
