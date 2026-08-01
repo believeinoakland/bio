@@ -200,6 +200,24 @@ accepts-when: after a document resolves to an entity, the connections among that
 added: 2026-07-31 · CONDUCT
 landed:
 
+### REC-6 · queued
+milestone: M8
+scope: `op=proposals` — the DISCOVERY feed for derived findings (from UI-5's delegation). There is NO op that enumerates derived findings, so UI-5's proposal surface can render/aggregate/act but cannot DISCOVER what to show — it ships with a gap banner. Add a read op that ENUMERATES the record's current derived findings: primarily FW-9's MISSING-PREDECESSOR findings across all progression instances (walk `progression_instances` → assemble → the required-undischarged stages), aggregated per D-79 (one proposal per (progression_key, stage_key) with N instances, weakest grade), each carrying its grade + `surfaced_by: machine`. This is the READ side of the walking-task FW-9/FW-10 deferred (it does NOT need the scheduled alarm — a read-time walk is fine; the alarm is for PUSH). Optionally include inferred connections as a second finding kind if clean. Derived findings INFORM — the op reports, never mutates.
+behind-interface: I3
+depends-on: none
+accepts-when: `op=proposals` returns the missing-predecessor findings for a store with a gap-carrying instance, aggregated (N instances = one entry), each with its grade and machine provenance; UI-5's surface populates from it; negative control — a store with no gaps returns an empty feed, and dropping the instance-walk returns nothing for a store known to have a gap.
+added: 2026-07-31 · CONDUCT
+landed:
+
+### REC-7 · queued
+milestone: M8
+scope: `op=proposedispose` — record a PROPOSAL's defer/dismiss WITHOUT minting a bundle (from UI-5's delegation). `op=dispose` disposes a focus BUNDLE (handle + state); a bare derived proposal has no bundle, so a member's defer/dismiss of a proposal has nowhere to land — UI-5's defer/dismiss is degraded. Doctrine is SETTLED (D-79: a finding AGES with a recorded reason rather than vanishing; a DECLINED proposal must NOT mint a bundle — declining is not authoring), so this is a mechanism gap, not a DEC. Add the proposal-disposition store (a small table keyed by the proposal's identity — (progression_key, stage_key) per D-79 aggregation) + `op=proposedispose` recording deferred/dismissed with a REQUIRED reason (never prefilled) and the deciding member (server-stamped); a dismissed/deferred proposal is filtered from (or annotated in) the REC-6 feed, and AGES rather than disappearing. I5-additive (schema traps: before host_governor, no backticks, purge/D-113).
+behind-interface: I3
+depends-on: none
+accepts-when: a member defers/dismisses a proposal with a reason → it is recorded (no bundle minted) and no longer surfaces as open in `op=proposals` (or surfaces annotated as deferred/dismissed with its reason), while an undismissed one still does; negative control — dispose without a reason is refused NO_REASON; dropping the store makes the dismissed proposal reappear as open.
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## CONTENT-PDF — DORMANT, restructured by the topology decision.
@@ -464,11 +482,11 @@ accepts-when: `civicos-ui/test/run.mjs` green with a subject-view test that look
 added: 2026-07-31 · CONDUCT
 landed: d2d94df — the SUBJECT VIEW: a read-only "Subjects" screen making the M4 reverse index member-visible. Find a subject by name/alias (op=entitybyalias, ambiguous names listed not collapsed) or id (op=entity); shows the entity + declared relations (justification+citation, labelled CONSTITUTIVE, structurally NO grade — D-83), every document that concerns it (op=concerns) at its HONEST grade (established only when established && !needs_confirmation, both read from the op; a C renders "unconfirmed / plausible, not established"), and the graded connections (op=connections, grade = weaker end). civicos-ui 17 harnesses green (subject-view 33). Plane battery untouched. NC RUN (force the established branch → C reads established, 5 fail). No DEC. NOTE: connections only show if op=connect was run (no auto-derivation) → logged D-122.
 
-### UI-5 · queued
+### UI-5 · done
 milestone: M8
 scope: The THIRD act — a PROPOSAL — completing v0.2's falsifiable test (act three of "the next three acts"; also closes D-82's DISPLAY half). A proposal is a DERIVED finding awaiting an AUTHORED act (D-90 invariant 8: "derived things inform, authored acts bind" — a proposal reports, never decides, never edits the thing it is about). Build the surface for the derived findings the record now produces — primarily FW-9's MISSING-PREDECESSOR findings (`op=instance`), with inferred connections (`op=connections`) as a secondary source if clean — rendering each VISIBLY AS A PROPOSAL (D-82: "a proposal must LOOK like one — what a member needs to know is that nobody has yet judged it worth asking"; show `surfaced_by` agent/machine, which REC-3 stamps). Give each the THREE affordances the construct names, and only three: ADOPT (author it into a focus/problem — the member decides it is worth pursuing; via `op=promote`), DEFER (with a recorded reason), DISMISS (with a recorded reason; via `op=dispose`). NOTHING adopted automatically, nothing dismissed silently. D-79: many instances of one check are ONE proposal with N instances, NEVER N tasks — do not drown the member. Consume existing ops; DELEGATE to RECORD if a needed op isn't exposed. REPORT the collapse verdict: did the proposal fit the ACT construct + the adopt/defer/dismiss affordances, or need its own construct? (v0.2 folded PROPOSAL into the act surface — this tests that.)
 behind-interface: I3
 depends-on: none
 accepts-when: `civicos-ui/test/run.mjs` green with a proposal test that renders a derived finding as visibly a proposal (its `surfaced_by`/derived nature shown, never as an established fact), offers exactly adopt/defer/dismiss, and requires a reason on defer/dismiss; negative control — remove the "visibly a proposal" marker and the finding reads as an established fact (D-82 regressed).
 added: 2026-07-31 · CONDUCT
-landed:
+landed: 97e6b99 — the PROPOSAL surface (ACT THREE). Renders FW-9 missing-predecessor findings (op=instance) as PROPOSALS, each with a load-bearing DERIVED badge ("surfaced by the record — not yet judged; a question the record raised, not an established finding"), grade shown as HOW-established (§8.1) never as trust/importance, surfaced_by machine. D-79 aggregation: grouped by (progression_key, stage_key) — N instances = ONE proposal with N, weakest/undetermined grade across the group. Three affordances only: ADOPT→op=promote (fully wired, authors a focus in the member's own words, browser sends no surfaced_by so plane stamps human), DEFER/DISMISS (full authored motion, degraded pending op=proposedispose). COLLAPSE VERDICT: FIT — act three held, NO new construct; v0.2's three-acts test COMPLETE. Gaps are in the PLANE data layer not the construct → two RECORD delegations: op=proposals (discovery feed) + op=proposedispose (proposal-disposition store, D-79). civicos-ui 18 harnesses (act-proposal 63). Plane battery untouched. NC RUN (neuter derived badge → reads as established, D-82 regressed). No DEC.
