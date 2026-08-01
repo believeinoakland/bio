@@ -173,14 +173,14 @@ depends-on: REC-1
 accepts-when: a machine credential completes a capture started by a session and the manifest names the machine writer; negative control — an anonymous write is still refused.
 landed: e425b24 — option (a): a NAMED machine actor `token:<class>`, server-stamped (caller `actor`/`author` DELETED first, so unforgeable), no schema change (leases.actor already TEXT NOT NULL). Store refuses a null/blank actor by name (ANONYMOUS_LEASE); promote's CAS on `base` untouched. battery 44/44 (2337); CONDUCT re-ran the anonymous-lease negative control (neuter guard → 20/2, restored → 22/22). I5 unchanged.
 
-### REC-3 · active
+### REC-3 · done
 milestone: M7
 scope: The small honesty defects in the plane's own surfaces, batched because each is minutes and none is worth a turn alone: D-39 (an empty POST body returns a Cloudflare 1101 rather than a named BIO refusal), D-110 (`setup.mjs` still explains the `NO_AUTHORITY` refusal D-97 removed), D-62 (`setup.mjs` omits `content_hash` when a document is attached, so a wizard-written bundle can never be released), D-78 (both bundle writers hardcode `surfaced_by: human`, so an assistant cannot honestly surface a focus).
 behind-interface: I3
 depends-on: none
 accepts-when: an empty POST to five ops returns a named reason; a wizard-written bundle with a document carries `content_hash` and passes C-2.7; a focus written by an agent records `surfaced_by: agent`.
 added: 2026-07-31 · BOB
-landed:
+landed: a0c6d98 — battery 51/51, coverage 85/85 (0 unreached). D-39 was already guarded at the DO (6ac72d0a); empty-body.test.mjs locks it in. D-110 stale NO_AUTHORITY deleted. D-62 setup.mjs emits content_hash for document bundles (clears C-2.7). D-78 surfaced_by SERVER-STAMPED at op=promote (agent vs human by actor class) — fixes both writers, no store/schema change. NCs RUN; all four DEBT rows self-closed. I3 note registered; revision-carry residual logged as D-121.
 
 ---
 

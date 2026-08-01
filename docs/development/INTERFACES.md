@@ -385,7 +385,7 @@ FW-1 CONFIRMED it 2026-07-31 (see Status above); the extended shape is the contr
 - **Owner:** `RECORD` (moved from `CAPTURE` 2026-07-31; `PARALLELISM.md` anticipated
   this the first time op-wiring became a recurring delegation, and it has now
   recurred once — the `op=pdfstructure` delegation from CONTENT-PDF)
-- **Version:** 1.0.0 (first written 2026-07-31, from plane 0.55.0)
+- **Version:** 1.1.0 (1.0.0 first written 2026-07-31 from plane 0.55.0; 1.1.0 2026-07-31, REC-3 — additive, non-breaking: `op=promote` server-stamps `surfaced_by` for focus/problem creations from the caller's actor class; no op renamed, no class/shape/reason changed)
 - **Consumers:** `UI`, `DIST` (the installer's served surfaces), every content area
   that needs its work reachable
 - **Status:** STABLE
