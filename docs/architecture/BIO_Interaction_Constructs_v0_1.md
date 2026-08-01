@@ -67,6 +67,13 @@ the weight of the act, would be violated by sameness.**
 | --- | --- |
 | **QUEUE** | *things that want me,* **grouped by the case they belong to.** Items are typed and say what they offer: an obligation I must dispatch (do / forward / resolve), or something the system noticed and nobody has judged yet (adopt / defer / dismiss). Items with no case sit ungrouped. |
 
+**The three classes are DOMAINS, not item types** (Bob, 2026-08-01): a FINDING is the substrate of
+case-making (D-127, undesigned — and it is what the system is for); an OBLIGATION is the civic system's own
+declared flow, whose delta against the observed flow is the analytic product (D-128); a CONDITION is a signal,
+with three dispositions — recorded (never surfaces), noticed (status where the thing lives), actionable (earns
+a queue item). So each has its own HOME beyond the queue — a case, a flow model, a signal history — while the
+QUEUE stays ONE surface reaching into all three. One thing to learn; three places the work lives.
+
 **What may be PUT in the queue is catalogued in `docs/development/NOTIFICATIONS.md`** — about thirty
 generators today, sorted into three classes (FINDING, OBLIGATION, CONDITION) rather than a severity
 ladder, with the item contract (summary, detail, basis, producer-published options) and the per-item

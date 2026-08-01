@@ -23,6 +23,90 @@ registry… which is the same lesson the check catalogue already taught the plan
 notification kinds get **stable ids the way checks do** — `N-<n>` beside `C-<n>` — and
 this catalogue closes the ad-hoc-event-strings half of D-68.
 
+## What the three classes actually ARE — Bob, 2026-08-01
+
+The classes were derived here as a notification taxonomy. Bob's response reframes them
+as three **domains of the CivicOS workflow**, of which notifications are only one entry
+point. Recorded before the taxonomy below, because it changes what the taxonomy is FOR.
+
+**FINDING is the substrate of case-making.** *"The system is about developing grounded,
+justified, and meaningful analysis and conclusions. These are built upon evidence and
+findings from that evidence. We haven't dove into that process of case making yet. But
+it will certainly involve organizing and building upon this substrate and their
+derivatives."* So a finding is not a message — it is a unit the analysis layer composes
+with. The case-making process itself is **NOT DESIGNED ANYWHERE** and is now recorded
+as D-127. A notification carrying a finding is one way a finding arrives; it is not
+what a finding is.
+
+**OBLIGATION is the civic system's own flows, and this corrects the class as written
+below.** *"Obligations are the flows (edges) that go on in a living civic system.
+Understanding those flows, evolving that understanding, and differentiating between how
+things are supposed to flow and how they really flow (and the implications of those
+differences)."*
+
+The catalogue below defines OBLIGATION as "a named person must act for the record to
+proceed" — that is a MEMBER task, and it conflated two different things:
+
+- the **civic obligation**: the body's own duty, declared — minutes follow a meeting
+  within N days, an award follows a solicitation. This is a model of how the
+  institution is SUPPOSED to work.
+- the **member task**: our workflow routing a piece of work to a person.
+
+They are related in one direction only: **a member task frequently arises BECAUSE a
+civic obligation was observed unmet.** The civic obligation is the primary object; the
+task is downstream plumbing. Naming them one thing would have modelled our inbox and
+called it the institution.
+
+**And the analytic product is the DELTA.** Declared flow versus observed flow, and what
+the difference implies. That is not a by-product of progressions — it is the reason to
+have them. A progression definition is the declared flow; its instances are the
+observed flow; a missing predecessor, an overdue successor and an out-of-order stage
+are the three shapes of divergence. Recorded as D-128.
+
+**CONDITION is the signal layer of a working civic system**, and this too is broader
+than written below. *"Conditions are the signals and side-effects of a working civic
+system. We need to notice what's happening. Sometimes these happenings are just a part
+of the record, sometimes they just need to be noticed though not acted on, and some
+need to be acted on."*
+
+The class below scopes CONDITION to "a fact about our own machinery". That is a SUBSET.
+The class is signals generally — the civic system's included — and Bob's three
+dispositions are the useful axis:
+
+| disposition | what it means | example |
+| --- | --- | --- |
+| **recorded** | part of the record; no surface at all | a monitor tick that found nothing changed |
+| **noticed** | worth seeing, not worth acting on | the governor is pacing a capture |
+| **actionable** | a member's action can change it | a capture stopped at the ceiling with work outstanding |
+
+That replaces the cruder rule below ("a CONDITION earns a queue item only when a
+member's action can change it") with a three-way one: *recorded* never surfaces,
+*noticed* surfaces as status where the thing lives, *actionable* earns a queue item.
+The middle disposition is the one a naive implementation loses, and losing it means
+either drowning the member or hiding what is happening.
+
+## Presented and treated differently — decided
+
+Bob: *"Perhaps each of these deserve to be presented and treated differently, given the
+very different roles they play in the workflow journey."*
+
+**Yes, and it does not reopen the construct count.** The resolution is the same shape as
+TASK-is-the-attention-layer:
+
+- **The QUEUE stays ONE surface** — things that want me, grouped by case. A member does
+  not learn three inboxes, and anything can reach them through one door.
+- **Each class has its own HOME beyond the queue**, because the work each supports is
+  genuinely different: findings compose into a **case** (D-127, undesigned); obligations
+  populate a **flow model** of the institution, declared against observed (D-128);
+  conditions accumulate into a **signal history** that is mostly read as status on the
+  thing it concerns rather than as a list.
+- **The queue is the attention layer INTO those homes**, exactly as a task points at an
+  act rather than becoming a second application.
+
+So: one thing to learn, three places the work actually lives. The v0.2 collapse holds;
+what this adds is that the three classes are not three item types in one list but three
+DOMAINS the one list reaches into.
+
 ## The classes: three, not four severities
 
 Bob's starting hypothesis was informational / requires-a-response / warning / error.
@@ -162,10 +246,12 @@ under them (drift — already detected exactly and classified from the manifest'
 dispose-refuses-`elevated`); or a precondition is absent (a reason is required and was
 not given).
 
-### "Deleted from the list" means three different things
+### "MARKED AS HANDLED" — and handling has a SCOPE, which differs by class
 
-The phrase is UI-shaped and the semantics differ by class. Getting this wrong would
-let one member's inbox hygiene erase a finding for the group:
+Bob accepted the correction and named the replacement: an item is **marked as
+handled**, never deleted. The word matters because nothing here is ever removed from
+the record — but handling has a SCOPE, and the scope differs by class. Getting that
+wrong would let one member's inbox hygiene erase a finding for the group:
 
 - **OBLIGATION resolved** → record state. It leaves EVERYONE's list.
 - **FINDING adopted / deferred / dismissed** → an authored record act, carrying its
@@ -173,7 +259,7 @@ let one member's inbox hygiene erase a finding for the group:
 - **CONDITION acknowledged or muted** → PERSONAL only. It leaves that member's list;
   the condition persists and another member still sees it.
 
-**Nothing is deleted from the record in any of the three cases.** This is the
+**Nothing is deleted from the record in any of the three cases — the word is HANDLED, and its scope is stated.** This is the
 muting-is-personal / dismissing-is-a-record-act rule stated per class, and it is the
 rule most likely to be lost when someone implements a delete button.
 
