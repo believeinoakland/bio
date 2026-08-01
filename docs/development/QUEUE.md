@@ -280,14 +280,14 @@ accepts-when: a time-pinned suite drives three consecutive source failures and s
 added: 2026-07-31 · CONDUCT
 landed:
 
-### CAP-4 · active
+### CAP-4 · done
 milestone: M2
 scope: `CAPTURE-SCALING.md` item 6, DECIDED 2026-07-31 under Bob's delegation — read that item before building, it carries four specifics. (a) Post-hoc reuse verification from `site_assets`, unconditional, costs zero requests, verdicts appended and dated. (b) At ratification, re-fetch every reused part: MANDATORY as an attempt and a record, never as agreement — `confirmed` / `changed` / `unavailable` all ratify, and ratifying with a reused part while saying nothing is what is forbidden. (c) A PLAIN GET, not `If-None-Match`: both cost one subrequest, and a 304 is the origin's assertion where a hash is our own evidence. This deliberately reverses the conditional-GET suggestion elsewhere in that document, which is right for working capture and wrong here. (d) A fourth outcome `not_attempted`, recorded with its reason, for parts the invocation's budget could not reach — bounded by the calibrated ceiling in `capture_limits`, never silently omitted.
 behind-interface: none
 depends-on: none
 accepts-when: a bundle ratified with reused parts records an outcome for every reused part; a source that has gone dark still ratifies, as `unavailable`; a bundle whose reuse count exceeds the calibrated ceiling ratifies with the residue recorded `not_attempted`. Negative control — drop the outcome record and the suite fails naming the unrecorded part.
 added: 2026-07-31 · BOB
-landed:
+landed: c7c57c9 — (a) post-hoc reuse verdicts on the change-case (zero requests, dated); (b) at ratification, re-fetch every reused part, four outcomes (confirmed/changed/unavailable/not_attempted) ALL ratify, recording is mandatory; (c) plain GET (our hash is evidence, not a 304); (d) not_attempted bounded by the calibrated ceiling. New table reuse_verdicts (in purge, D-113 hygiene green). battery 47/47 (2422); negative control run. I5 additive.
 
 ---
 
