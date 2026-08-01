@@ -192,7 +192,7 @@ measured state. The short version:
   stray pair still parses, so `node --check` will not save you.
 - **A derived table must be added to `purge`** or a whole-store purge reports
   scope ALL and silently leaves rows (D-113).
-- **`store.mjs` is ~4900 lines.** Grep before assuming a helper does not exist.
+- **`store.mjs` is ~4900 lines, and a stray byte makes plain `grep` treat it as BINARY and silently match nothing — use `grep -a` on it.** Grep before assuming a helper does not exist.
 
 ## Which Cloudflare account you are talking to
 
