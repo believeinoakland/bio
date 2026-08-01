@@ -229,14 +229,14 @@ accepts-when: after a document resolves to an entity, the connections among that
 added: 2026-07-31 · CONDUCT
 landed: 6fdb763 — connections AUTO-DERIVE (D-122 closed). SCHEDULED sweep on REC-1's DO alarm (a `connection-derive` consumer in #schedConsumers) — the FIRST framework consumer to ride REC-1, the foundation the deferred walking-task extends. Watermark table connection_dirty (entity_id PK), stamped in #upsertResolution ONLY on INSERT or grade-RAISE (many resolutions on one entity → one pending row), so the sweep is bounded by distinct changed entities. resolveReferences/testifyResolution now async + arm the alarm. Bounded (batch 100), self-terminating (wake null when drained → alarm deleted), idempotent (derive-then-delete, deriveConnections upserts). asserted_by stays system. cadence 60000ms (tactical). I5 1.7.0, purge whole-store arm (D-113). battery 62/62, --strict 105/105. NCs RUN (neuter batch → 15 fail, manual op=connect still passes; scheduler own NC 8 fail). DEFERRED (now UNBLOCKED): progression-instance auto-assembly + missing-predecessor surfacing on the same tick.
 
-### REC-6 · queued
+### REC-6 · done
 milestone: M8
 scope: `op=proposals` — the DISCOVERY feed for derived findings (from UI-5's delegation). There is NO op that enumerates derived findings, so UI-5's proposal surface can render/aggregate/act but cannot DISCOVER what to show — it ships with a gap banner. Add a read op that ENUMERATES the record's current derived findings: primarily FW-9's MISSING-PREDECESSOR findings across all progression instances (walk `progression_instances` → assemble → the required-undischarged stages), aggregated per D-79 (one proposal per (progression_key, stage_key) with N instances, weakest grade), each carrying its grade + `surfaced_by: machine`. This is the READ side of the walking-task FW-9/FW-10 deferred (it does NOT need the scheduled alarm — a read-time walk is fine; the alarm is for PUSH). Optionally include inferred connections as a second finding kind if clean. Derived findings INFORM — the op reports, never mutates.
 behind-interface: I3
 depends-on: none
 accepts-when: `op=proposals` returns the missing-predecessor findings for a store with a gap-carrying instance, aggregated (N instances = one entry), each with its grade and machine provenance; UI-5's surface populates from it; negative control — a store with no gaps returns an empty feed, and dropping the instance-walk returns nothing for a store known to have a gap.
 added: 2026-07-31 · CONDUCT
-landed:
+landed: 80eca24 — op=proposals, the DISCOVERY feed. ONE read-time walk (SELECT DISTINCT progression_key,entity_id FROM progression_instances → #assembleInstance, the SAME derivation op=instance uses so it can never drift) returns BOTH: instances[] (the raw shape UI-5's loadProposals ALREADY reads → its gap banner retires with ZERO UI change) AND proposals[] (server-side D-79 aggregation: one per (progression_key,stage_key), N instances, weakest §8.1 grade, surfaced_by machine, widest-first). Discharges + non-required stages excluded at the derivation point (a discharged gap drops out, N=2→1). Connections deferred (flagged). I3 1.3.0 additive. battery 63/63, --strict 106/106. NC RUN (empty walk → feed empty for a gap store). No DEC (instances-vs-aggregated was a delegated mechanism call).
 
 ### REC-7 · queued
 milestone: M8
