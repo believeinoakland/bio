@@ -213,12 +213,12 @@ duplicate sweep, which today cannot see a duplicate whose viewstate differs; and
 Add surface's already-held check, which currently fetches both captures and compares
 them in the browser.
 
-**Step 3 — QUEUED FW-5. Readings are PERSISTED.** Today `parse()` output is transient, which is
+**Step 3 — BUILT (FW-5). Readings are PERSISTED.** Today `parse()` output is transient, which is
 the quiet blocker on everything Bob's purpose statement asks for: entities cannot be
 resolved across documents if no document's entities are stored. Persist readings and
 index them by entity reference. Consumer: Step 4.
 
-**Step 4 — UNSCHEDULED. The ENTITY axis, which must also be the bias doctrine's SUBJECT REGISTRY**
+**Step 4 — QUEUED FW-6. The ENTITY axis, which must also be the bias doctrine's SUBJECT REGISTRY**
 (D-83). Aliases and member-declared relations are first-class, justified and citable,
 because safeguard 4 of `BIO_Declared_Bias_v0_1.md` depends on them and an entity model
 that only derives identity from source identifiers cannot express them. A declared

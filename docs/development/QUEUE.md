@@ -139,14 +139,14 @@ accepts-when: the instrument lists each fleet member and its three surfaces; add
 added: 2026-07-31 · BOB
 landed: 7e5b67f (with CPDF-6) — coverage.mjs DISCOVERS fleet members from a fleet-member.json marker (never hand-listed), holds each to surface-ops-reached + a declared control; --strict fails on an uncovered member. Negative control: stub member with an untested op → reported UNREACHED, --strict exits 1.
 
-### M0-6 · queued
+### M0-6 · done
 milestone: M0
 scope: The hygiene check that closes the planning-drift CLASS, on D-113's precedent: every open row in `DEBT.md` carries a disposition token, every `QUEUED <ID>` names an ID that exists here, and every design-doc order-of-work item carries a status marker. Then `coverage.mjs --strict` becomes the gate. NOT before M0-1 to M0-3 land: a floor set above the current state fails on day one and gets switched off.
 behind-interface: none
 depends-on: M0-1, M0-2, M0-3
 accepts-when: `npm run test:hygiene` fails when a disposition is removed from any open debt row, and when a design-doc item loses its status marker.
 added: 2026-07-31 · BOB
-landed:
+landed: 6a72951 — planning-hygiene.test.mjs enforces the 3 planning-drift invariants IN THE BATTERY (open DEBT row carries a disposition token · every QUEUED <ID> ref resolves to a real queue item · every governed order-of-work item carries a status marker, + a discovery guard on new "Order of work" headings so the registry can't silently fall behind, D-113's failure mode). test:coverage now runs --strict (VERIFICATION step 5, the M0 gate ON). Caught + fixed the one real drift: CONSTRUCTS "The plan" 13 unmarked steps (CONDUCT then advanced Step 3→BUILT FW-5, Step 4→QUEUED FW-6). CONFORMANCE-AND-INTAKE-ARC order-of-work (closed/superseded migration) EXEMPTED with a stated reason, not red-lit. NCs RUN (strip a disposition/a status marker → named failure). battery 55/55, coverage --strict exit 0. M0 LANE COMPLETE (M0-1..6 all done).
 
 ---
 
