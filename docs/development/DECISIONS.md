@@ -443,7 +443,10 @@ recommendation: hold the proposal-only default for now, and revisit once the rev
 reversal cost: LOW and it stays low. Overdue is derived on read (no stored finding, no minted task),
   so turning escalation on later mints nothing retroactively and turning it off strands nothing — the
   reversal is which consumer reads the same derived feed, not a data migration.
-trigger:
+trigger (if deferred rather than answered): CONSTRUCTS Step 8b landing the review
+  queue as a real surface WITH its aggregation and ageing disciplines, plus D-73's
+  exception documents. Those two together are what turn "escalate" from a task flood
+  into one aggregated item pointing at gaps the body has not already discharged.
 response:
 decided:
 enacted:
