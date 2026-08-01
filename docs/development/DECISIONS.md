@@ -411,7 +411,7 @@ response: DUPLICATE of DEC-5, which Bob ANSWERED on 2026-08-01 — read that ent
 decided: 2026-08-01 · Bob, via DEC-5
 enacted:
 
-### DEC-10 · open
+### DEC-10 · answered
 raised: 2026-07-31 · record-agent-8 (REC-8, CONSTRUCTS Step 7)
 for: bob
 question: When a required successor stage is OVERDUE and no member has acted on it, should the
@@ -447,8 +447,62 @@ trigger (if deferred rather than answered): CONSTRUCTS Step 8b landing the revie
   queue as a real surface WITH its aggregation and ageing disciplines, plus D-73's
   exception documents. Those two together are what turn "escalate" from a task flood
   into one aggregated item pointing at gaps the body has not already discharged.
-response:
-decided:
+response: NOTIFY, and the framing this entry rested on was WRONG at the root. Bob,
+  2026-08-01: "For a step that's marked as due-by, no new evidence and no human act
+  still changes its state." The D-90 argument recorded above -- that an overdue
+  successor is the WORLD changing with nobody deciding anything, so it informs rather
+  than binds -- does not hold, and the correction is worth keeping because it is
+  precise. **The due-by was AUTHORED.** A progression stage declaring "minutes follow
+  within N days" is a group's own expectation, so the deadline passing is not an
+  observation about the world, it is the DECLARED EXPECTATION BEING REALISED. The
+  clock is executing an authored act rather than substituting for one, which puts it
+  on the binding side of D-90 rather than the informing side. What follows is not
+  escalation-to-task; it is NOTIFICATION.
+  THE REAL QUESTION, restated by Bob and it is the harder one: how does the system
+  find the members who might be interested? "Sometimes paperwork just silently doesn't
+  get done (or at least done on time). Those conditions can be ignored."
+  THE RELEVANCE FILTER, RULED: **an overdue condition matters when the progression
+  instance has a CONNECTION TO A FOCUS OR PROJECT.** Overdue things with no case
+  connection are noise and are not notified at all. This solves the drowning problem
+  far better than the aggregation reframe above did: aggregation makes a flood
+  countable, relevance stops it being a flood. And it fits the record's grain, because
+  the connection is an AUTHORED act -- a member said this document matters to this
+  case, so the record can honestly tell them the thing they said matters has a gap.
+  WHO IS NOTIFIED, RULED (Bob: "perhaps the member recorded as having made the
+  connection"): the member who AUTHORED the connection to the Focus or Project. Where
+  that member is inactive or gone, fall back down D-98's existing ladder -- project
+  manager, then an active group admin, then honestly unassigned -- rather than
+  inventing a second routing rule. Where several members connected the same
+  progression, each is notified, and muting is per member.
+  THE UX, RULED: the notification must offer (a) remind me again at a further
+  increment overdue, (b) stop notifying me about this one, (c) stop notifying me about
+  that GROUP of overdue things.
+decided: 2026-08-01 · Bob
+reasoning recorded in: this entry and D-125 (the notification-preference state, which
+  the plane does not have). The D-90 correction is recorded here rather than in D-90,
+  because D-90's own rule is unchanged -- what changed is which side of it a declared
+  due-by falls on.
+this session's tactical determinations, decided rather than returned:
+  - **MUTING IS PERSONAL; DISMISSING IS A RECORD ACT, and they must never be one
+    control.** This is the hazard in the UX as described and it is worth naming loudly:
+    if "stop notifying me" also dismisses the finding, one member's inbox hygiene
+    erases a finding for the whole group. The finding stands; only that member's
+    notification stops. Nothing disappears silently.
+  - **The increment is the stage's OWN declared interval**, not a new constant. If
+    minutes are due within 21 days, the next increment is 21 days. The expectation
+    already carries the number; inventing a second one would let them drift.
+  - **The mute GROUP is keyed on the axes the connection was made on** -- the
+    progression type (all meeting->minutes), the body, or the Focus/Project -- so a
+    member can mute what they actually mean rather than a bucket the system chose.
+  - **The channel already exists and is the inbox** (D-98's `tasks`), which is the
+    QUEUE construct in `BIO_Interaction_Constructs`. No new transport is needed for
+    the in-app case, and D-52 ("there is no notification channel in this system at
+    all", raised for export notification) is substantially answered by the same
+    mechanism -- one channel, three consumers, which is the D-86 lesson applied.
+for CONDUCT to enact: DEC-10's provisional stands as the DERIVATION layer (overdue is
+  still derived on read, still mints nothing per instance); what is added on top is the
+  relevance filter, the routing, and the preference state in D-125. Place under M4
+  beside the progression work, with the inbox half under M8.
 enacted:
 
 ## Answered, awaiting enactment
