@@ -771,6 +771,111 @@ CREATE TABLE IF NOT EXISTS resolutions (
 CREATE INDEX IF NOT EXISTS resolutions_entity ON resolutions(entity_id);
 CREATE INDEX IF NOT EXISTS resolutions_capture ON resolutions(capture_sha);
 CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
+-- CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA, carrying a GRADE (D-67
+-- storage + D-72 grade). A connection links TWO captured documents that resolve to
+-- the SAME registry entity: two documents concerning one subject is the raw material
+-- of a connection (framework section 8). It is DERIVED from resolutions (FW-7) -- built
+-- UNDER the reverse-index join documentsConcerning already makes, not a parallel path.
+--
+-- The connection's GRADE is the framework section 8.1 method-as-grade FW-7 computes per
+-- resolution, applied to the two-node base case of section 8.2's "a progression instance
+-- inherits the WEAKEST connection grade along its chain": a connection's grade is the
+-- WEAKER of how its two ends resolved to the shared entity. a_grade / b_grade record how
+-- each end resolved (the strongest resolution of that capture to that entity); grade is
+-- min(a_grade, b_grade) by section-8.1 rank (A strongest .. D weakest). A case is only as
+-- strong as its weakest link, so a connection is no stronger than its weaker end.
+-- established is DERIVED from the WEAKER grade (1 only when BOTH ends are A/B), so a
+-- connection resting on a C correspondence at either end can NEVER read back as
+-- established -- the section-8.1 rule that an equality costing nothing is not evidence,
+-- enforced structurally at both ends.
+--
+-- asserted_by is THREE-VALUED and is NOT the grade (framework:554 -- the author says WHO
+-- claims the connection, the grade says WHAT would be needed to CHECK it). Domain:
+--   'system' -- the framework INFERRED the connection from the two resolutions (what
+--              op=connect writes: the rule is the system's, even if an underlying
+--              resolution was a member's grade-D testimony);
+--   'source' -- the source itself linked the two documents (a links_to edge, asserted_by
+--              source; NOT produced here -- reserved so a source-asserted connection is a
+--              distinct fact, not a repeat of a system inference);
+--   'member' -- a member asserted the connection directly (reserved for slice B).
+-- Only 'system' is written in slice A; the column carries the axis so the three authors
+-- of a connection stay distinct from its grade, as D-67 requires.
+--
+-- Keyed (a_capture_sha, b_capture_sha, entity_id) with the pair stored in canonical
+-- order (a_capture_sha < b_capture_sha), so (X,Y) and (Y,X) are ONE connection, never
+-- two. A re-derivation after a resolution's grade is RAISED (FW-7 grade is improvable)
+-- upserts the connection IN PLACE, so a connection is improvable too. DERIVED from the
+-- corpus and carrying BOTH ends' bundle ids, so a per-bundle purge (EITHER end matches)
+-- and a whole-store purge both clear it (D-113); op=purge deletes it explicitly in both
+-- arms (it has no single bundle_id, so it is NOT in purge's bundle_id TABLES list).
+-- PROGRESSION INSTANCES -- an actual N-stage chain of real documents threaded by an
+-- entity, and weakest-grade inheritance along a chain longer than two -- are SLICE B;
+-- this table is the two-node base case only.
+CREATE TABLE IF NOT EXISTS connections (
+  a_capture_sha TEXT NOT NULL,
+  b_capture_sha TEXT NOT NULL,
+  entity_id     TEXT NOT NULL,
+  a_bundle_id   TEXT NOT NULL,
+  b_bundle_id   TEXT NOT NULL,
+  a_grade       TEXT NOT NULL,
+  b_grade       TEXT NOT NULL,
+  grade         TEXT NOT NULL,
+  established   INTEGER NOT NULL DEFAULT 0,
+  asserted_by   TEXT NOT NULL,
+  basis         TEXT,
+  at            TEXT,
+  PRIMARY KEY (a_capture_sha, b_capture_sha, entity_id)
+);
+CREATE INDEX IF NOT EXISTS connections_entity ON connections(entity_id);
+CREATE INDEX IF NOT EXISTS connections_a ON connections(a_capture_sha);
+CREATE INDEX IF NOT EXISTS connections_b ON connections(b_capture_sha);
+CREATE INDEX IF NOT EXISTS connections_a_bundle ON connections(a_bundle_id);
+CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
+-- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
+-- section 8.2, "generalises the connection table rather than sitting beside it"). A
+-- definition is a named ordered set of STAGES with the rules a progression's junction
+-- checks need: after, cardinality, interval, required-ness. This is DATA in the record,
+-- not cases in a switch, so the set can be authored and (later) edited through a UI.
+-- BOTH of Bob's example progressions must be expressible as rows here -- the meeting
+-- chain (meeting -> agenda -> minutes) AND the procurement chain (need -> award ->
+-- signed contract) -- or the generalisation has not been made (the acceptance).
+--
+-- A progression definition is a CLAIM the group is making about how its institutions
+-- OUGHT to behave (framework 8.1's connection-table note 3), so it is FIRST-CLASS
+-- member-declared state carrying its author and date -- like the subject registry
+-- (entities), NOT a projection of the corpus. So a whole-store purge (the scratch-reset
+-- tool) clears it, but a per-bundle purge leaves it (it has no bundle_id). The connection
+-- table above is the TWO-STAGE case of this one (framework: "a connection row is a
+-- progression of two stages; nothing needs both"); they are one construct at two
+-- generalities, not two tables beside each other.
+CREATE TABLE IF NOT EXISTS progression_defs (
+  progression_key TEXT PRIMARY KEY,
+  label           TEXT NOT NULL,
+  note            TEXT,
+  declared_by     TEXT,
+  at              TEXT
+);
+-- The ordered STAGES of a progression definition. after_stage names the stage this one
+-- PRESUPPOSES (framework 8.2: "read forwards it predicts; read backwards it accuses" --
+-- the MISSING PREDECESSOR is slice B), NULL for the first stage. cardinality is 1 / 0..1
+-- / 0..n (an RFP has many responses; an award has one contract). within_interval is the
+-- clock that makes an absence OVERDUE rather than pending (NULL = no clock). required is
+-- always / usually / sometimes / never / unless_exception (a lawful skip needs an
+-- exception document -- slice B). stage_no is the ordinal, so the stages read in order
+-- without depending on after_stage forming a single line (a real chain can branch).
+-- Keyed (progression_key, stage_key). Cleared with its definition by a whole-store purge.
+CREATE TABLE IF NOT EXISTS progression_stages (
+  progression_key TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  stage_no        INTEGER NOT NULL,
+  label           TEXT,
+  after_stage     TEXT,
+  cardinality     TEXT NOT NULL,
+  within_interval TEXT,
+  required        TEXT NOT NULL,
+  PRIMARY KEY (progression_key, stage_key)
+);
+CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progression_key);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

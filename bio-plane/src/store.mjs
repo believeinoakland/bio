@@ -3300,6 +3300,201 @@ export class Store extends DurableObject {
              count: documents.length, resolution_count: rows.length, documents };
   }
 
+  /* ---- CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA, and the PROGRESSION
+   * DEFINITION as data (framework section 8, 8.1, 8.2). Absorbs D-67 (connections were
+   * emitted and stored nowhere) and D-72 (connections had no grade).
+   *
+   * A CONNECTION is the two-node base case of a progression: two captured documents that
+   * resolve to the SAME registry entity are connected, because two documents concerning
+   * one subject is the raw material of a connection (framework section 8). It is DERIVED
+   * from FW-7's resolutions -- built UNDER the reverse-index join documentsConcerning
+   * already makes, not a parallel path -- and it carries the section 8.1 GRADE: the
+   * WEAKER of how its two ends resolved to the shared entity, which is section 8.2's
+   * "a progression instance inherits the weakest connection grade along its chain" in
+   * its two-node base case. */
+
+  /* The weaker of two section-8.1 grades by rank (A strongest .. D weakest): a connection
+     is no stronger than its weaker end, because a case is only as strong as its weakest
+     link (framework 8.1). Reuses the resolution grade rank so the two axes cannot drift. */
+  static #weakerGrade(g1, g2) {
+    return (Store.#GRADE_RANK[g1] || 0) <= (Store.#GRADE_RANK[g2] || 0) ? g1 : g2;
+  }
+
+  /* The read-side view of a connection: established and needs_confirmation are surfaced
+     from the WEAKER grade so a connection resting on a C at either end is never read back
+     as established, and asserted_by is surfaced DISTINCT from grade (framework:554). */
+  #connectionView(r) {
+    return { a_capture_sha: r.a_capture_sha, b_capture_sha: r.b_capture_sha, entity_id: r.entity_id,
+             a_bundle_id: r.a_bundle_id, b_bundle_id: r.b_bundle_id,
+             grade: r.grade, a_grade: r.a_grade, b_grade: r.b_grade,
+             established: !!r.established, needs_confirmation: !Store.#isEstablished(r.grade),
+             asserted_by: r.asserted_by, basis: r.basis, at: r.at };
+  }
+
+  /* op=connect: DERIVE and persist the connections among every captured document that
+     concerns one entity. Reads the entity's resolutions (FW-7) exactly as the reverse
+     index does, collapses them to the STRONGEST grade each capture resolved to the entity
+     at, and forms one connection per PAIR of distinct captures -- graded the WEAKER of the
+     two ends, established only when BOTH ends are established (A/B), asserted_by 'system'
+     (the framework inferred it). Canonical pair order (a < b) means (X,Y) and (Y,X) are
+     ONE row; a re-derivation after a resolution's grade was RAISED (FW-7) upserts in place,
+     so a connection is improvable too. A PROGRESSION INSTANCE -- an N-stage chain of real
+     documents threaded by an entity -- is slice B; this forms the two-node base case. */
+  deriveConnections({ entityId, assertedBy = "system" } = {}) {
+    if (typeof entityId !== "string" || !entityId)
+      return { ok: false, reason: "NO_ENTITY", detail: "a connection is derived among the documents that concern one entity, by its id (op=connect&id=ENT-...)" };
+    const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
+    const rows = this.#rows(
+      `SELECT capture_sha, bundle_id, grade FROM resolutions WHERE entity_id=? ORDER BY capture_sha`, entityId);
+    /* Collapse to distinct captures, keeping the STRONGEST grade each resolved to the
+       entity at -- the same collapse op=concerns makes, so a connection end's grade is
+       exactly the grade that document appears at in the reverse index. */
+    const byCapture = new Map();
+    for (const r of rows) {
+      const cur = byCapture.get(r.capture_sha);
+      if (!cur || Store.#GRADE_RANK[r.grade] > Store.#GRADE_RANK[cur.grade])
+        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
+    }
+    const ends = [...byCapture.values()];
+    const at = new Date().toISOString();
+    const label = ent ? ent.label : entityId;
+    const connections = [];
+    this.ctx.storage.transactionSync(() => {
+      for (let i = 0; i < ends.length; i++) {
+        for (let j = i + 1; j < ends.length; j++) {
+          /* Canonical order: the lexicographically smaller capture sha is end A, so a pair
+             is ONE connection regardless of which end the loop reached first. */
+          let A = ends[i], B = ends[j];
+          if (A.capture_sha > B.capture_sha) { const tmp = A; A = B; B = tmp; }
+          const grade = Store.#weakerGrade(A.grade, B.grade);
+          const est = Store.#isEstablished(grade) ? 1 : 0;
+          const basis = `both documents concern ${label} (${entityId}); grade is the weaker of the two ends `
+                      + `(${A.grade}, ${B.grade}) -> ${grade}`;
+          this.sql.exec(
+            `INSERT INTO connections
+               (a_capture_sha,b_capture_sha,entity_id,a_bundle_id,b_bundle_id,a_grade,b_grade,grade,established,asserted_by,basis,at)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+             ON CONFLICT(a_capture_sha,b_capture_sha,entity_id) DO UPDATE SET
+               a_bundle_id=excluded.a_bundle_id, b_bundle_id=excluded.b_bundle_id,
+               a_grade=excluded.a_grade, b_grade=excluded.b_grade, grade=excluded.grade,
+               established=excluded.established, asserted_by=excluded.asserted_by,
+               basis=excluded.basis, at=excluded.at`,
+            A.capture_sha, B.capture_sha, entityId, A.bundle_id, B.bundle_id, A.grade, B.grade, grade, est,
+            String(assertedBy || "system"), basis.slice(0, 400), at);
+          connections.push(this.#connectionView({
+            a_capture_sha: A.capture_sha, b_capture_sha: B.capture_sha, entity_id: entityId,
+            a_bundle_id: A.bundle_id, b_bundle_id: B.bundle_id, a_grade: A.grade, b_grade: B.grade,
+            grade, established: est, asserted_by: String(assertedBy || "system"), basis: basis.slice(0, 400), at }));
+        }
+      }
+    });
+    return { ok: true, entity_id: entityId, found: !!ent,
+             entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
+             documents: ends.length, count: connections.length, connections };
+  }
+
+  /* op=connections: read the persisted connections, by entity (every connection through a
+     subject) or by capture sha (every connection this document is an end of, either side).
+     established and needs_confirmation come from the WEAKER grade, so a caller can never
+     read a connection resting on a C as settled. */
+  connectionsFor({ entityId = null, captureSha = null } = {}) {
+    let rows;
+    if (entityId) {
+      rows = this.#rows(
+        `SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha`, entityId);
+    } else if (captureSha) {
+      rows = this.#rows(
+        `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id`, captureSha, captureSha);
+    } else {
+      return { ok: false, reason: "NO_KEY", detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" };
+    }
+    return { ok: true, entity_id: entityId, capture_sha: captureSha, count: rows.length,
+             connections: rows.map((r) => this.#connectionView(r)) };
+  }
+
+  /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
+     crucial one -- a lawful skip needs an exception document (slice B). */
+  static #REQUIREDNESS = new Set(["always", "usually", "sometimes", "never", "unless_exception"]);
+
+  /* op=progressiondefine: author a PROGRESSION DEFINITION as data -- an ordered set of
+     stages carrying after / cardinality / interval / required-ness (framework 8.2's
+     progression table). It is a member's CLAIM about how an institution ought to behave
+     (framework 8.1 note 3), so it carries its author and date; the declaring member is
+     stamped server-side. Re-defining the same key REPLACES its stages (the set is
+     editable data, not code). Both example progressions -- meeting->agenda->minutes and
+     need->award->signed-contract -- must be expressible as calls here. */
+  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null } = {}) {
+    if (typeof progressionKey !== "string" || !progressionKey.trim())
+      return { ok: false, reason: "NO_KEY", detail: "a progression definition is named by a key, e.g. 'meeting' or 'procurement'" };
+    const key = progressionKey.trim();
+    if (typeof label !== "string" || !label.trim())
+      return { ok: false, reason: "NO_LABEL", detail: "a progression definition carries a human label" };
+    if (!Array.isArray(stages) || stages.length === 0)
+      return { ok: false, reason: "NO_STAGES", detail: "a progression is its ordered stages; name at least one" };
+    /* Normalise and validate every stage before writing any, so a bad row refuses the
+       whole definition rather than leaving a half-written one. */
+    const norm = [];
+    const seen = new Set();
+    for (let i = 0; i < stages.length; i++) {
+      const s = stages[i] || {};
+      const sk = typeof s.key === "string" ? s.key.trim() : (typeof s.stageKey === "string" ? s.stageKey.trim() : "");
+      if (!sk) return { ok: false, reason: "NO_STAGE_KEY", detail: `stage ${i + 1} has no key`, stage: i + 1 };
+      if (seen.has(sk)) return { ok: false, reason: "DUPLICATE_STAGE", detail: `stage key '${sk}' appears twice`, stage_key: sk };
+      seen.add(sk);
+      const card = typeof s.cardinality === "string" && s.cardinality.trim() ? s.cardinality.trim() : "";
+      if (!card) return { ok: false, reason: "NO_CARDINALITY", detail: `stage '${sk}' needs a cardinality (1, 0..1, 0..n)`, stage_key: sk };
+      const req = typeof s.required === "string" ? s.required.trim() : "";
+      if (!Store.#REQUIREDNESS.has(req))
+        return { ok: false, reason: "BAD_REQUIRED", stage_key: sk,
+                 detail: `stage '${sk}' required must be one of always, usually, sometimes, never, unless_exception` };
+      norm.push({ stage_key: sk, stage_no: i + 1,
+                  label: typeof s.label === "string" && s.label ? s.label : null,
+                  after_stage: typeof s.after === "string" && s.after.trim() ? s.after.trim()
+                             : (typeof s.afterStage === "string" && s.afterStage.trim() ? s.afterStage.trim() : null),
+                  cardinality: card, within_interval: typeof s.within === "string" && s.within.trim() ? s.within.trim() : null,
+                  required: req });
+    }
+    /* after_stage must name a stage in THIS definition (or be null): a stage cannot
+       presuppose one that does not exist. */
+    for (const s of norm) {
+      if (s.after_stage != null && !seen.has(s.after_stage))
+        return { ok: false, reason: "UNKNOWN_AFTER", stage_key: s.stage_key, after: s.after_stage,
+                 detail: `stage '${s.stage_key}' is after '${s.after_stage}', which is not a stage of this progression` };
+    }
+    const at = new Date().toISOString();
+    const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec(
+        `INSERT INTO progression_defs (progression_key,label,note,declared_by,at) VALUES (?,?,?,?,?)
+         ON CONFLICT(progression_key) DO UPDATE SET label=excluded.label, note=excluded.note,
+           declared_by=excluded.declared_by, at=excluded.at`,
+        key, label.trim(), note == null ? null : String(note).slice(0, 1000), by, at);
+      this.sql.exec(`DELETE FROM progression_stages WHERE progression_key=?`, key);
+      for (const s of norm)
+        this.sql.exec(
+          `INSERT INTO progression_stages (progression_key,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
+           VALUES (?,?,?,?,?,?,?,?)`,
+          key, s.stage_key, s.stage_no, s.label, s.after_stage, s.cardinality, s.within_interval, s.required);
+    });
+    return { ok: true, progression_key: key, label: label.trim(), stage_count: norm.length,
+             stages: norm, declared_by: by, at };
+  }
+
+  /* op=progression: read a progression definition and its ordered stages. */
+  readProgression({ progressionKey } = {}) {
+    if (typeof progressionKey !== "string" || !progressionKey.trim())
+      return { ok: false, reason: "NO_KEY", detail: "read a progression definition by its key (op=progression&key=meeting)" };
+    const key = progressionKey.trim();
+    const def = this.#one(`SELECT progression_key, label, note, declared_by, at FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return { ok: true, progression_key: key, found: false, stages: [] };
+    const stages = this.#rows(
+      `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
+         FROM progression_stages WHERE progression_key=? ORDER BY stage_no`, key);
+    return { ok: true, progression_key: key, found: true,
+             label: def.label, note: def.note, declared_by: def.declared_by, at: def.at,
+             stage_count: stages.length, stages };
+  }
+
   /* ---- coordination: what LockService and the nextSeq race did ---- */
 
   allocId(prefix, year) {
@@ -3360,6 +3555,10 @@ export class Store extends DurableObject {
       entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
       /* FW-7: the recogniser's resolutions, reported so a purge can PROVE it took them. */
       resolutions: n("resolutions"),
+      /* FW-8: the derived connections and the member-declared progression definitions,
+         reported so a whole-store purge can PROVE it cleared them (D-113). */
+      connections: n("connections"), progressionDefs: n("progression_defs"),
+      progressionStages: n("progression_stages"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -3403,6 +3602,11 @@ export class Store extends DurableObject {
         const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
         if (r && r.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t} WHERE bundle_id=?`, bundleId);
+        /* FW-8. A connection is DERIVED (two documents concerning one entity) and spans
+           TWO captures, so it has no single bundle_id and is NOT in TABLES; it is cleared
+           when EITHER end's bundle is purged, so the reverse-index connection cannot
+           outlive a document it joined (D-113). */
+        this.sql.exec(`DELETE FROM connections WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
@@ -3466,6 +3670,17 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM entity_relations`);
         this.sql.exec(`DELETE FROM entity_aliases`);
         this.sql.exec(`DELETE FROM entities`);
+        /* FW-8. Connections are DERIVED from the corpus (two captures concerning one
+           entity), so a whole-store purge clears them. Progression DEFINITIONS are
+           FIRST-CLASS member-declared state like the registry above -- not corpus-derived
+           -- but op=purge is the scratch-reset tool, so a whole-store purge that reported
+           scope ALL while leaving them is the D-113 silent-leftover; cleared here in the
+           whole-store arm only, left by a per-bundle purge (they have no bundle_id).
+           Stages before defs, so nothing outlives the definition it belongs to.
+           hygiene.test.mjs asserts this list against schema.mjs. */
+        this.sql.exec(`DELETE FROM connections`);
+        this.sql.exec(`DELETE FROM progression_stages`);
+        this.sql.exec(`DELETE FROM progression_defs`);
       }
     });
     const after = this.stats();
@@ -3480,7 +3695,11 @@ export class Store extends DurableObject {
                  entities: d("entities"), entityAliases: d("entityAliases"),
                  entityRelations: d("entityRelations"),
                  /* FW-7: the recogniser's resolutions a purge took (D-113). */
-                 resolutions: d("resolutions") },
+                 resolutions: d("resolutions"),
+                 /* FW-8: the derived connections and member-declared progression
+                    definitions a whole-store purge took (D-113). */
+                 connections: d("connections"), progressionDefs: d("progressionDefs"),
+                 progressionStages: d("progressionStages") },
     };
   }
 
@@ -6201,6 +6420,17 @@ export class Store extends DurableObject {
         resolvetestify: () => this.testifyResolution(body || {}),
         resolutions: () => this.resolutionsForCapture({ captureSha: url.searchParams.get("sha256") }),
         concerns: () => this.documentsConcerning({ entityId: url.searchParams.get("id") }),
+        /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA carrying a GRADE (the
+           two-node base case of a progression), and the PROGRESSION DEFINITION as data.
+           connect DERIVES the connections among the documents that concern one entity,
+           each graded the WEAKER of its two ends (D-67 storage + D-72 grade); connections
+           reads them by entity or by capture; progressiondefine authors an ordered stage
+           set (both example progressions expressible as rows); progression reads one. */
+        connect: () => this.deriveConnections(body || { entityId: url.searchParams.get("id") }),
+        connections: () => this.connectionsFor({ entityId: url.searchParams.get("id"),
+                                                 captureSha: url.searchParams.get("sha256") }),
+        progressiondefine: () => this.defineProgression(body || {}),
+        progression: () => this.readProgression({ progressionKey: url.searchParams.get("key") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),

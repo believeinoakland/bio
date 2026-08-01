@@ -529,7 +529,7 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.3.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.4.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
   `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —
@@ -538,9 +538,15 @@ correctness properties, not preferences. Changing either is an interface change.
   and to `op=purge`'s whole-store arm; 1.3.0 2026-07-31, FW-7 — ADDITIVE: one new
   DERIVED table `resolutions` (the RECOGNISERS, CONSTRUCTS Step 4 slice B), added
   BEFORE `host_governor` and to `op=purge`'s `TABLES` (so it clears in BOTH the
-  per-bundle and whole-store arms, like `readings`/`reading_refs`). No existing
-  table's columns changed, so nothing built against I5 breaks; the shapes are in the
-  ownership list and note below.)
+  per-bundle and whole-store arms, like `readings`/`reading_refs`); 1.4.0 2026-07-31,
+  FW-8 — ADDITIVE: three new tables `connections` (DERIVED — the two-node base case of
+  a progression, CONSTRUCTS Step 5 slice A / D-67 storage + D-72 grade), `progression_defs`
+  and `progression_stages` (FIRST-CLASS member-declared, the progression definition as
+  data / D-73's rule half), all added BEFORE `host_governor` and cleared by `op=purge`
+  (connections in BOTH arms via an explicit `a_bundle_id`/`b_bundle_id` delete since it
+  has no single `bundle_id`; the two progression tables in the whole-store arm like the
+  registry). No existing table's columns changed, so nothing built against I5 breaks;
+  the shapes are in the ownership list and note below.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 
@@ -616,6 +622,37 @@ resolutions, by `capture_sha`) and **`op=concerns`** (the REVERSE INDEX — ever
 that concerns an entity, joined on `entity_id`, by id). DERIVED from the corpus (carries
 `bundle_id`), so cleared by BOTH a per-bundle and a whole-store purge (it is in
 `op=purge`'s `TABLES`).
+
+`connections`, `progression_defs`, `progression_stages` (FW-8, CONSTRUCTS Step 5 slice A)
+are `FRAMEWORK`'s: CONNECTIONS AS DATA carrying a GRADE (D-67 storage + D-72 grade) and the
+PROGRESSION DEFINITION as data (D-73's rule half). A `connections` row is the TWO-NODE base
+case of a progression (framework §8.2 — "a connection row is a progression of two stages"):
+two captured documents that resolve to the SAME `entities` row are connected, DERIVED from
+`resolutions` — built under the `op=concerns` join, not a parallel path. Keyed
+`(a_capture_sha, b_capture_sha, entity_id)` with the pair in canonical order (a < b) so
+(X,Y) and (Y,X) are ONE row; a re-derivation after a resolution's grade is RAISED upserts
+in place (a connection is improvable too). Its `grade` is the WEAKER of its two ends'
+grades (`a_grade`, `b_grade`) by the §8.1 rank — framework §8.2's "a progression instance
+inherits the weakest connection grade along its chain" in its two-node case — and
+`established` derives from that weaker grade, so a connection resting on a C at either end
+is NEVER established. `asserted_by` is THREE-VALUED (`system`/`source`/`member`) and is NOT
+the grade (framework:554): `op=connect` writes only `system` (the framework inferred it);
+`source` and `member` are reserved for slice B. DERIVED and carrying BOTH ends' bundle ids,
+so a per-bundle purge (EITHER end matches) and a whole-store purge both clear it — it is
+deleted EXPLICITLY in both arms (it has no single `bundle_id`, so it is NOT in `TABLES`).
+`progression_defs`/`progression_stages` are the progression definition as EDITABLE DATA
+(framework §8.2): a named ordered set of stages carrying `after_stage`, `cardinality`,
+`within_interval` and `required` (∈ {always, usually, sometimes, never, unless_exception}).
+Both example progressions are expressible as rows — meeting→agenda→minutes AND
+need→award→signed-contract. They are FIRST-CLASS member-declared (a group's CLAIM about how
+its institutions ought to behave, §8.1), so a whole-store purge clears them (scratch reset)
+and a per-bundle purge leaves them (no `bundle_id`). Write through `op=connect` (derive
+connections for an entity) and `op=progressiondefine` (author a definition, stamps
+`declared_by` from the session; both need `contribute`); read through `op=connections` (by
+entity id or capture sha) and `op=progression` (a definition by key). Progression
+INSTANCES, weakest-grade inheritance along an N-stage chain (D-73 pair→chain, beyond the
+two-node base case here), exception documents, junction checks and the missing-predecessor
+task are SLICE B — not built by FW-8.
 
 ### What changing it costs
 

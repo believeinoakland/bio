@@ -456,6 +456,19 @@ const OPS = {
   resolvetestify: { classes: ["admin", "member", "probe"],         mutating: true  },
   resolutions:    { classes: ["admin", "member", "probe"],         mutating: false },
   concerns:       { classes: ["admin", "member", "probe"],         mutating: false },
+  /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA and the PROGRESSION
+     DEFINITION as data (framework §8/§8.1/§8.2 — absorbs D-67 storage + D-72 grade).
+     `connect` DERIVES and persists the connections among the documents that concern one
+     entity, each carrying the §8.1 grade of its WEAKER end (the two-node base case of a
+     progression); `connections` reads them by entity or by capture; `progressiondefine`
+     authors a progression's ordered stages as data (both example progressions expressible
+     as rows), stamping the declaring member below; `progression` reads one. The two writes
+     mutate; the two reads are ungated like the FW-7 reads. Probe admitted so the surface is
+     exercisable. Progression INSTANCES and the missing-predecessor task are slice B. */
+  connect:          { classes: ["admin", "member", "probe"],       mutating: true  },
+  connections:      { classes: ["admin", "member", "probe"],       mutating: false },
+  progressiondefine:{ classes: ["admin", "member", "probe"],       mutating: true  },
+  progression:      { classes: ["admin", "member", "probe"],       mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -566,16 +579,26 @@ const TASK_ACTIONS = ["taskforward", "taskresolve"];
    of the record. The reads take no viewer stamp — they key on a capture sha and an
    entity id, not on the corpus view. */
 const RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concerns"];
+/* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA and the PROGRESSION DEFINITION
+   as data. A member DERIVES the connections among the documents concerning an entity
+   (connect) and READS them (connections), and AUTHORS a progression definition
+   (progressiondefine) and READS one (progression). Named as one set in both the member
+   and admin lists so the two cannot drift apart. The two WRITES are stamped with the
+   declaring member below, like the registry and recogniser writes: a progression
+   definition is a member's claim about how an institution ought to behave (framework
+   §8.1), and who derived a connection is part of the record. The reads take no viewer
+   stamp — they key on an entity id, a capture sha and a progression key. */
+const PROGRESSION_ACTIONS = ["connect", "connections", "progressiondefine", "progression"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
-                   ...EDGE_ACTIONS, ...STATE_ACTIONS,
+                   ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
-                   ...EDGE_ACTIONS, ...STATE_ACTIONS,
+                   ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
@@ -642,6 +665,15 @@ const NEEDS = {
      working-corpus reads. */
   resolve:          "contribute",
   resolvetestify:   "contribute",
+  /* FW-8: deriving a CONNECTION between two documents that concern one subject, and
+     authoring a PROGRESSION DEFINITION, both write into the record how the corpus's
+     documents relate and how the group expects its institutions to behave — a corpus-
+     shaping act on the same surface as building the registry and resolving references, so
+     `contribute`: a view-only member does not derive connections or define progressions.
+     The declaring member is stamped server-side. The reads (connections/progression) are
+     ungated, like the registry, recogniser and working-corpus reads. */
+  connect:          "contribute",
+  progressiondefine:"contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */
@@ -2853,6 +2885,27 @@ export default {
       try {
         const b = JSON.parse(passBody);
         b.resolvedBy = viaSession ? sessMember : `class:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* FW-8: a PROGRESSION DEFINITION is a member's constitutive claim about how an
+       institution ought to behave (framework §8.1 note 3), so who declared it is stamped
+       from the session and overwritten if the caller supplied it, exactly as the registry
+       writes are. And a DERIVED connection is asserted by the SYSTEM in slice A: asserted_by
+       is FORCED to "system" server-side so a caller cannot pass it off as source- or
+       member-asserted (a member-asserted connection is a distinct, slice-B fact — an
+       equality a caller can hand us is one a caller can invent). */
+    if (op === "progressiondefine" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    if (op === "connect" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.assertedBy = "system";
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
