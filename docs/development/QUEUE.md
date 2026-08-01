@@ -103,14 +103,14 @@ accepts-when: `npm run test:coverage` reports 0 unreached and 0 durable-object-o
 added: 2026-07-31 · BOB
 landed: fd53292 — control-plane assertions for archivelookup, linkproject, signerlist, sourcereach. Coverage 85/85, 0 unreached, 0 DO-only (was 81/85 + 1 + 3). Worker's negative control (delete linkproject dispatch → unreached 0→1) recorded in subresources.test.mjs. D-43 class closed for the current surface.
 
-### M0-2 · queued
+### M0-2 · done
 milestone: M0
 scope: Backfill the negative-control register: one `NEGATIVE CONTROL: <what to break> -> <what must then fail>` line in the first 60 lines of each of the 42 suites. RUN each control, do not infer it; record what actually broke. Several are already written in prose in DEBT (D-104's is "let a governed refusal fall through -> 17 of 34 fail") and can be lifted, but each still gets run once to confirm it still holds.
 behind-interface: none
 depends-on: none
 accepts-when: `npm run test:coverage` reports 42 of 42 suites declaring a control; spot-check three by breaking the subject and confirming the named failure.
 added: 2026-07-31 · BOB
-landed:
+landed: 0dbcb86 — negative-control register backfilled across all 41 remaining bio-plane suites, each control RUN not inferred (three spot-checks reproduced, incl. D-104's 17-of-34 now 17-of-40). Comment-only, battery unchanged. Coverage now 53/53 declaring (CONDUCT reformatted FW-3 profile + FW-4 framework-digest-audit NC lines to the instrument's single-line `*/`-terminated form at integration). Findings: the fence is enforced in the AUTH layer (index.mjs:842), not the per-op gate; the C-19.1 inbox grammar check now fails 31 when neutered (the historical all-67-pass defect is genuinely covered).
 
 ### M0-3 · done
 milestone: M0

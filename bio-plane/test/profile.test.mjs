@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: stop stamping the handler in op=acquire (delete profile.handler after the profile is built) -> "profile names the host stack handler" fails (want "aspnet_webforms", got undefined). RUN 2026-07-31, restored. A profile that still passes with the handler unstamped records nothing load-bearing. */
 /* The profile op=acquire records (CONSTRUCTS Step 1 / FW-3).
  *
  * The whole constructs ladder above capture rests on ONE fact being written at

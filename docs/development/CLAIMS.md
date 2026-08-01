@@ -260,4 +260,4 @@ paths: header comments only (first 60 lines) of the bio-plane/test/**/*.test.mjs
 interfaces consumed: none
 interfaces owned: none
 expected: QUEUE.md M0-2 — backfill the negative-control register across every suite that lacks one (41 of 51 bio-plane suites; the other 10 + the pdf-worker fleet member already declare theirs). RUN each control (break the named subject, run the suite, record the REAL observed failure, restore), never infer it. accepts-when: `npm run test:coverage` reports every suite declaring a control; three spot-checks with their real observed failures in the report. No push, no deploy — CONDUCT integrates.
-released:
+released: 2026-07-31 — landed on main by CONDUCT (0dbcb86), CLAIMS union-resolved. battery 53/53, coverage 53/53 declaring after CONDUCT fixed the two new-suite NC formats. No dishonest suite found. M0-6 (hygiene gate) now UNBLOCKED (M0-1/2/3 all done).

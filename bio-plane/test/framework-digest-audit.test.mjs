@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: drop the normalised-digest write in op=acquire (set profile.digests.evidentiary = null / gate digestCertain to false) -> the viewstate pair's evidentiary digests are absent, C-18.3's normalised arm finds nothing, and "op=audit folds the viewstate pair" flips true->false (21->15 pass). RUN 2026-07-31, restored. */
 /* The normalisation digests op=acquire computes, and the duplicate they let
  * op=audit finally see (CONSTRUCTS Step 2 / FW-4).
  *
