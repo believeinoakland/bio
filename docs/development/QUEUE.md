@@ -329,14 +329,14 @@ accepts-when: two captures of the same document differing only in viewstate/boil
 added: 2026-07-31 · CONDUCT
 landed: 2145416 — op=acquire stores document.profile.digests {determined,rendition,evidentiary,boundary_missed?,basis}; identity REUSES capture_sha (verify-only, not restored). Three digests per DOCUMENT-PROFILES.md "Three digests, not one". C-18.3 dup sweep gained a NORMALISED arm folding register documents whose evidentiary digests match though raw bytes differ. Trust gate: stored determined only when read-as-text AND stack CERTAIN — undetermined records evidentiary:null and two nulls NEVER fold (dedup does not inherit compare()'s narrow-without-certainty licence, since folding hides a document). I1 1.2.0 ADDITIVE. battery 53/53, coverage 85/85, checks 51/51. NC RUN (force digestCertain=false → viewstate pair no longer folds, 21→15). DELEGATION FW→UI recorded (Add-surface consumes evidentiary digest; UI dormant).
 
-### FW-5 · queued
+### FW-5 · done
 milestone: M3
 scope: CONSTRUCTS Step 3 — READINGS ARE PERSISTED. A reading is `{ entities[], facts }` (`BIO_Content_Framework_v0_10.md`:480, `parse(ctx) -> reading`). Today `parse()` output is transient — produced in `docprofile/pipeline.mjs` (compare/monitor) and in `civicos-ui` content types, stored nowhere — which is the quiet blocker on cross-document entity resolution. In `op=acquire` (where FW-3 already reads the primary text and resolves the doctype), call the doctype's `parse()` on the captured text to produce the reading and PERSIST it in a NEW store table (I5, ADDITIVE — new table, no existing shape change), indexed by the entity REFERENCES the reading carries (the raw/source-assigned references AS THEY APPEAR — NOT a canonical entity id; resolving references to canonical entities IS Step 4/D-83 and must NOT be built here). "A reading that finds nothing is a failed reader, never an emptied document" (framework:489) — persist a failed/empty reading honestly as such, never fabricate entities. Consumer: Step 4 (the entity axis).
 behind-interface: I5
 depends-on: FW-4
 accepts-when: after `op=acquire`+promote, a document's reading (its `entities[]`+`facts`) is retrievable from the store, and a lookup by an entity reference returns the documents whose readings carry it; negative control — dropping the persist makes the reference lookup return nothing for a document known to contain it.
 added: 2026-07-31 · CONDUCT
-landed:
+landed: aee6d52 — op=acquire runs the doctype parse() over the text FW-3/4 already read; reading {content_type,reader_version,found,at,entities[{key,kind,label,facts,ref}],facts} persisted at op=promote, DERIVED from provenance.json in the register txn (a projection, not a second source of truth). Two new tables readings(PK capture_sha) + reading_refs(PK capture_sha,ref; INDEX on ref) storing RAW kind:key refs — canonical resolution left to Step 4/D-83. op=reading + op=readingref reverse index (87/87 ops, 0 unreached). Failed/empty readings persist honestly (found:false). I5 additive 1.1.0; both tables in purge (D-113). battery 54/54. NC RUN (comment out #writeReadings → reference lookup returns nothing, true→false).
 
 ---
 
