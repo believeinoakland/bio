@@ -311,14 +311,14 @@ accepts-when: `INTERFACES.md` I2 records CONFIRMED, or a counter-proposal exists
 added: 2026-07-31 · CONDUCT
 landed: 44a867a — CONFIRMED: I2 (structure+text) STABLE 1.0.0; the shape serves FRAMEWORK (container-agnostic partitions imported not re-derived, undetermined first-class on both axes, tier stamped at the op). No code (battery already pins the shape). No counter — INTERFACE-CHANGES.md not needed yet.
 
-### FW-3 · queued
+### FW-3 · done
 milestone: M3
 scope: CONSTRUCTS Step 1 — the plane records the profile. `op=acquire` calls `identify()` and `doctypeFor()` and writes handler, content type, both confidences, signals and what was normalised onto the capture. Roughly twenty lines, and everything above it depends on it: a judgment whose author and version are unrecorded cannot be revised when the author turns out to be wrong. **This writes to CAPTURE's path and is a DELEGATION**, with FRAMEWORK's guidance; docprofile is read, never grown into a second copy. It may also be an I1 shape change — check before assuming it is additive.
 behind-interface: I1
 depends-on: FW-2
 accepts-when: a capture carries its profile; the document page names the kind of document the record thinks it holds.
 added: 2026-07-31 · BOB
-landed:
+landed: 02491bd — op=acquire records document.profile (docprofile identify/doctypeFor/profileRecord; recogniser key/label/version + confidence + signals on both axes, normalisation, kind, source content-type). FIRST plane consumer of docprofile. I1 bumped 1.1.0 (ADDITIVE — new sibling field; C-18.1 tolerates extra keys). Recognisers read the primary bounded (single-part ≤8MB textual); PDF/multipart profiles honestly as conservative/generic (profiled_from_text:false). battery 52/52, coverage 85/85. NC RUN (delete profile.handler → 2 fail). Step 2 (digests) deliberately left separate.
 
 ---
 
