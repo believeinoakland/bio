@@ -28,6 +28,7 @@
     "test:gathering": "node test/gathering.test.mjs",
     "test:acquire": "node test/acquire.test.mjs",
     "test:profile": "node test/profile.test.mjs",
+    "test:framework-digest-audit": "node test/framework-digest-audit.test.mjs",
     "test:attest": "node test/attest.test.mjs",
     "test:mechanical": "node test/mechanical.test.mjs",
     "test:audit": "node test/audit.test.mjs",

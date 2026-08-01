@@ -23,8 +23,13 @@ import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./
    The package lives outside bio-plane/, which costs the deployed artifact nothing
    (I4): esbuild inlines it at build, and the miniflare battery resolves it from
    disk (modulesRoot "/"). profileRecord serialises the stack axis; the doctype
-   axis is added beside it at the call site. */
-import { identify, doctypeFor, profileRecord } from "../../docprofile/registry.mjs";
+   axis is added beside it at the call site.
+
+   CONSTRUCTS Step 2 / FW-4 also reads docprofile's `digests()` — the ONE
+   implementation of the three normalisation digests, never a second copy — and
+   `CONFIDENCE` (the single ladder) to gate whether a normalised digest can be
+   trusted to assert two documents are the same substance. */
+import { identify, doctypeFor, profileRecord, digests, CONFIDENCE } from "../../docprofile/registry.mjs";
 
 /* The plane's identity to a source, in one place because it was in three and
    they had drifted: `bio-acquire` on capture, `bio-monitor` on monitoring, both
@@ -606,6 +611,15 @@ async function fingerprint(v) {
   if (!v) return null;
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return [...new Uint8Array(b)].slice(0, 8).map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+/* Full 64-hex SHA-256 of a string or a byte view. This is what docprofile's
+   `digests()` calls to name each normalised variant (CONSTRUCTS Step 2 / FW-4);
+   it hashes the SAME raw bytes for `identity`, which is why identity must equal
+   the capture sha and is asserted to. */
+async function sha256Hex(v) {
+  const b = await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v);
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
 async function classify(token, env) {
@@ -1816,12 +1830,16 @@ export default {
          it on the conservative handler and the generic type rather than a guess.
          Even then the headers and the address still carry signal. */
       const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
-      let profileText = "";
+      let profileText = "", profileBytes = null;
       if (!multipart && total <= PROFILE_TEXT_MAX
           && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "")) {
         try {
           const pobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
-          if (pobj) profileText = new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(await pobj.arrayBuffer()));
+          /* The raw bytes are kept, not just the decoded text: FW-4's digests()
+             hashes them for `identity` (which must equal the capture sha) and
+             re-encodes the normalised text for the other two. */
+          if (pobj) { profileBytes = new Uint8Array(await pobj.arrayBuffer());
+                      profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes); }
         } catch { /* an unreadable primary is not a failed capture: the profile below
                      still records what the headers and the address say. */ }
       }
@@ -1858,6 +1876,59 @@ export default {
         source_content_type: ct || null,
         profiled_from_text: !!profileText,
       };
+
+      /* CONSTRUCTS Step 2 (FW-4): COMPUTE and STORE the normalisation digests the
+         profile's declared policy above defines. docprofile names THREE digests
+         (DOCUMENT-PROFILES.md, "Three digests, not one"):
+
+           identity     sha256 of the raw bytes — the capture's name. This ALREADY
+                        exists as `capture_sha` (I1 §1) and is NOT recomputed under
+                        a second name: it is `sha`, and digests().identity is only
+                        used to VERIFY the read-back bytes are the registered ones.
+           rendition    mechanical regions normalised — "would this look the same?"
+           evidentiary  presentational AND mechanical normalised — "has the
+                        substance changed?" This is the one the dup sweep compares.
+
+         The digests are stored ONLY when they can be trusted to assert sameness:
+         the bytes were read as text AND the stack was identified with CERTAINTY (a
+         signal only that stack emits, e.g. Legistar's __VIEWSTATE field). The
+         failure asymmetry runs the OTHER WAY here than in compare(): reporting a
+         change that did not happen costs attention, but folding two DISTINCT review
+         items into one corroboration HIDES a document — so a normalised digest that
+         claims "same substance" must be earned. That is why the conservative
+         handler's narrow-without-certainty licence (which compare() honours because
+         its job is to over-report CHANGE) is deliberately NOT extended to dedup: a
+         merely-likely or unrecognised document records its normalised digests
+         ABSENT (null), never a fabricated value, and the sweep must never treat two
+         absents as equal. */
+      const digestCertain = !!profileBytes && stackId.handler.textual === true
+        && stackId.confidence === CONFIDENCE.CERTAIN;
+      if (digestCertain) {
+        const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex });
+        if (dg.identity !== sha) {
+          /* The bytes read back are not the bytes registered. An equality asserted
+             on the wrong bytes is worse than none, so refuse to claim a digest
+             rather than store one computed from something else (CLAUDE.md: an
+             equality that costs nothing to produce is not evidence). */
+          profile.digests = { determined: false, rendition: null, evidentiary: null,
+            basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted" };
+        } else {
+          profile.digests = {
+            determined: true,
+            rendition: dg.rendition,
+            evidentiary: dg.evidentiary,
+            boundary_missed: !!dg.boundary_missed,
+            basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`,
+          };
+        }
+      } else {
+        profile.digests = {
+          determined: false, rendition: null, evidentiary: null,
+          basis: profileBytes
+            ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined`
+            : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`,
+        };
+      }
 
       /* The shape C-18.1 requires, assembled here so the caller does not have to
          know it and cannot get it subtly wrong. */

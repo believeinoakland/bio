@@ -24,7 +24,7 @@ a lie.
 
 - **ID:** I1
 - **Owner:** `CAPTURE`
-- **Version:** 1.1.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0 2026-07-31, FW-3 — ADDITIVE, non-breaking: `op=acquire` writes a new sibling field `document.profile` (§4) recording docprofile's stack/content-type identification; no existing field's name, shape or value domain changed, and C-18.1 tolerates the extra key)
+- **Version:** 1.2.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0 2026-07-31, FW-3 — ADDITIVE: `op=acquire` writes a new sibling field `document.profile` (§4) recording docprofile's stack/content-type identification; 1.2.0 2026-07-31, FW-4 — ADDITIVE, non-breaking: `document.profile.digests` (§4c) records the COMPUTED normalisation digests (rendition, evidentiary; identity is the existing `capture_sha`, not restated); no existing field's name, shape or value domain changed, and C-18.1 tolerates the extra key — conformance.test.mjs stays green with real acquire documents carrying it)
 - **Consumers:** `CONTENT-HTML`, `CONTENT-PDF`, `FRAMEWORK` (the document page reads `document.profile`)
 - **Status:** STABLE
 
@@ -215,11 +215,44 @@ the generic type — `undetermined`, stated, never a guessed stack.
 | `content_type_confidence` | one of the ladder above | the second confidence. |
 | `content_type_signals` | array of strings | why the content-type recogniser matched. |
 | `contract` | `substance` \| `membership` \| `unmonitorable` \| null | the monitoring contract the content type declares. |
-| `normalised` | array of `{region, label}` | what the identified handler treats as machinery/furniture — the normalisation policy the profile's judgment rests on, DECLARED (the computed digests are a later step). |
+| `normalised` | array of `{region, label}` | what the identified handler treats as machinery/furniture — the normalisation policy the profile's judgment rests on, DECLARED. `digests` below is that policy COMPUTED (FW-4). |
+| `digests` | object, §4c below | **added 1.2.0 (FW-4).** The COMPUTED normalisation digests: `{determined, rendition, evidentiary, boundary_missed?, basis}`. `identity` is NOT here — it is the raw-bytes `capture_sha` (§1), reused, never restated. When the bytes could not be normalised with certainty, `determined:false` and both digests are `null` (undetermined is stated, never fabricated). |
 | `boundary` | boolean | whether the handler normalises around a document boundary (e.g. `<main>`). |
 | `source_content_type` | string \| null | the server's own `Content-Type`, distinct from the recognised content TYPE. |
 | `profiled_from_text` | boolean | whether the bytes were read as text (false = profiled from headers + address only). |
 | `at` / `note` | ISO8601 instant · string \| null | the profiling instant (equals `retrieved`) and any recogniser note. |
+
+**`document.profile.digests`** — the COMPUTED normalisation digests (1.2.0, FW-4,
+CONSTRUCTS Step 2). docprofile defines THREE digests (`DOCUMENT-PROFILES.md`,
+"Three digests, not one"): `identity` (sha256 of the raw bytes — this is the
+existing `capture_sha` in §1 and §4, reused and NEVER recomputed under a second
+name), `rendition` (mechanical regions normalised — "would this look the same?"),
+and `evidentiary` (presentational AND mechanical normalised — "has the substance
+changed?"). Only the latter two are stored here.
+
+| Field | Value | Notes |
+| --- | --- | --- |
+| `determined` | boolean | whether the digests can be trusted to assert two documents are the same substance. TRUE only when the bytes were read as text AND the stack was identified with CERTAINTY — a signal only that stack emits. |
+| `rendition` | 64-hex \| null | mechanical-normalised digest; `null` when undetermined. |
+| `evidentiary` | 64-hex \| null | presentational+mechanical-normalised digest; `null` when undetermined. This is the one `op=audit`'s duplicate sweep (C-18.3) compares. |
+| `boundary_missed` | boolean | present when determined: the handler's boundary did not match, so nothing outside it was normalised (a boundary that missed is never read as a document with no content). |
+| `basis` | string | why the digests are determined, or why they are undetermined. |
+
+The trust rule runs OPPOSITE to change-detection's. `compare()` extends the
+narrow-without-certainty licence to the conservative handler because that handler's
+job is to over-report CHANGE, which is the safe direction there. Deduplication's
+safe direction is the reverse: folding two DISTINCT review items into one
+corroboration HIDES a document, so a normalised digest is stored only when EARNED
+(certain stack, read as text). An undetermined capture — a PDF, a multipart giant,
+or a merely-likely stack — records `evidentiary: null`, and the sweep never treats
+two nulls as equal (an equality that costs nothing to produce is not evidence).
+
+**Consumer note:** `op=audit`'s duplicate sweep (C-18.3, `bio-checks.mjs`) now
+compares the determined `evidentiary` digest in addition to the raw `capture_sha`,
+so it folds a duplicate whose `__VIEWSTATE`/furniture differs — which raw byte
+comparison cannot see. The Add-surface already-held check in `civicos-ui` (today it
+fetches both captures and compares in the browser) is a further DOWNSTREAM consumer
+of this stored digest; wiring it is recorded as a DELEGATION, not built by FW-4.
 
 ### 5. Address → capture — the reverse lookup
 

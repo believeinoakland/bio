@@ -224,6 +224,27 @@ console.log("\n--- release authority ---");
 await proves("C-18.3", "one capture hash appears in two register documents", "information",
   new Map([["bundle.md", baseMd("information")],
     ["data/provenance.json", JSON.stringify({ documents: [{ capture: { sha256: H64 } }, { capture: { sha256: H64 } }] })]]));
+/* The NORMALISED arm (FW-4): DIFFERENT raw shas, but the same DETERMINED
+   evidentiary digest — a duplicate whose viewstate/boilerplate differs. The raw
+   arm cannot see it (the shas differ); the normalised arm folds it. */
+await proves("C-18.3", "two register documents share a determined evidentiary digest but differ in raw bytes", "information",
+  new Map([["bundle.md", baseMd("information")],
+    ["data/provenance.json", JSON.stringify({ documents: [
+      { capture: { sha256: "a".repeat(64) }, profile: { digests: { determined: true, evidentiary: "e".repeat(64) } } },
+      { capture: { sha256: "b".repeat(64) }, profile: { digests: { determined: true, evidentiary: "e".repeat(64) } } },
+    ] })]]));
+/* The negative control the honesty rule demands: two UNDETERMINED digests (null,
+   the PDF/uncertain case) must NOT fold. Different raw shas, so the raw arm is
+   silent too — the whole bundle is clean, proving an absent digest is never
+   treated as an equality. */
+{
+  const undetermined = new Map([["bundle.md", baseMd("information")],
+    ["data/provenance.json", JSON.stringify({ documents: [
+      { capture: { sha256: "c".repeat(64) }, profile: { digests: { determined: false, evidentiary: null } } },
+      { capture: { sha256: "d".repeat(64) }, profile: { digests: { determined: false, evidentiary: null } } },
+    ] })]]);
+  t("C-18.3 does NOT fold two undetermined (null) evidentiary digests", has(await findingsFor("information", undetermined), "C-18.3"), false);
+}
 await proves("C-18.4", "a crucial document names neither co_archive nor timestamp", "information",
   new Map([["bundle.md", baseMd("information").replace("criticality: supporting", "criticality: crucial")],
     ["data/provenance.json", JSON.stringify({ documents: [{ file: "snapshots/doc.pdf" }] })]]));

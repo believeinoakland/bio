@@ -1361,9 +1361,13 @@ const CRITICALITY_ENUM = ['crucial', 'supporting'];
 const CADENCE_ENUM = ['hourly', 'daily', 'weekly', 'monthly', 'none'];
 const GATH_STATUS_ENUM = ['open', 'captured', 'retired'];
 
-/** C-18.3 (error): a capture.sha256 appearing in more than one register
- *  document is a missed corroboration (the ring-once rule: identical content
- *  is corroboration on one entry, never two review items). C-18.4 (warn, F4):
+/** C-18.3 (error): a missed corroboration under the ring-once rule (identical
+ *  content is corroboration on one entry, never two review items). TWO arms:
+ *  the RAW arm folds captures with the same capture.sha256; the NORMALISED arm
+ *  (CONSTRUCTS Step 2 / FW-4) folds captures whose determined evidentiary digest
+ *  matches though their raw bytes differ — the same document served with a
+ *  different __VIEWSTATE or furniture, which raw byte comparison cannot see. An
+ *  undetermined (null) evidentiary digest is never bucketed. C-18.4 (warn, F4):
  *  crucial-criticality material whose register entries lack both co_archive
  *  and timestamp. Both scoped by declared contract (register present). */
 function checkRegisterIntegrity(ctx, findings) {
@@ -1375,16 +1379,40 @@ function checkRegisterIntegrity(ctx, findings) {
   const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
   if (!docs) return; // C-18.1 reports shape
   const byHash = {};
+  /* The NORMALISED bucket (CONSTRUCTS Step 2 / FW-4). Keyed by the evidentiary
+     digest — presentational and mechanical normalised — so two captures of the
+     SAME document that differ only in per-render machinery (an ASP.NET __VIEWSTATE)
+     or furniture fold into ONE corroboration, which the raw-hash bucket above
+     cannot see because their raw bytes differ. Only a DETERMINED digest is bucketed:
+     an undetermined capture records `evidentiary: null` and two of those must never
+     be treated as equal (an equality that costs nothing to produce is not evidence),
+     so nulls are skipped rather than collated. */
+  const byEvid = {};
   for (let i = 0; i < docs.length; i++) {
     const h = docs[i] && docs[i].capture && docs[i].capture.sha256;
-    if (!h) continue;
-    (byHash[h] = byHash[h] || []).push(i);
+    if (h) (byHash[h] = byHash[h] || []).push(i);
+    const dg = docs[i] && docs[i].profile && docs[i].profile.digests;
+    if (dg && dg.determined === true && typeof dg.evidentiary === 'string')
+      (byEvid[dg.evidentiary] = byEvid[dg.evidentiary] || []).push(i);
   }
   for (const h of Object.keys(byHash)) {
     if (byHash[h].length > 1) {
       findings.push(f('C-18.3', 'error', `capture hash ${h.slice(0, 16)}… appears in ${byHash[h].length} register documents (indices ${byHash[h].join(', ')}); identical content is corroboration on one entry, never duplicate review items`,
         ['fold the duplicates into corroborations[] on the earliest entry', 'if the captures genuinely differ, correct the recorded hashes']));
     }
+  }
+  for (const e of Object.keys(byEvid)) {
+    const idx = byEvid[e];
+    if (idx.length < 2) continue;
+    /* Fire ONLY when at least two DIFFERENT raw captures share the evidentiary
+       digest: a bucket whose members are all one raw sha is identical bytes and is
+       already reported by the raw arm above, so reporting it again would double-count
+       the same corroboration. This arm is exactly the duplicate the raw arm cannot
+       see — same substance, different viewstate/boilerplate. */
+    const rawShas = new Set(idx.map((i) => docs[i] && docs[i].capture && docs[i].capture.sha256).filter(Boolean));
+    if (rawShas.size < 2) continue;
+    findings.push(f('C-18.3', 'error', `${idx.length} register documents (indices ${idx.join(', ')}) share the evidentiary digest ${e.slice(0, 16)}… but differ in raw bytes; the substance is identical and only per-render machinery or furniture differs — corroboration on one entry, never duplicate review items`,
+      ['fold the duplicates into corroborations[] on the earliest entry', 'if the substance genuinely differs the normalisation is wrong — correct the handler']));
   }
   if (ctx.fm.criticality === 'crucial') {
     for (let i = 0; i < docs.length; i++) {
