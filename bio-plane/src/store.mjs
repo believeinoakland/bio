@@ -4252,6 +4252,66 @@ export class Store extends DurableObject {
              disposition_count: dispositions.length };
   }
 
+  /* op=captureprogressions (REC-9): map a CAPTURE back to the progression INSTANCES it sits in —
+     the per-document lookup UI-9's document page needs (its items 3–4) and no existing op answers:
+     op=instance needs BOTH (progression_key, entity_id), and op=proposals walks every instance but
+     carries no capture_sha to tie a finding to THIS document. READ-ONLY and DERIVE-ON-READ — no
+     table, because an instance's findings go stale if stored (FW-9's own reasoning) — so the findings
+     are recomputed here at the ONE derivation point, exactly as proposalsFeed recomputes them, never
+     re-implemented.
+
+     The walk: the DISTINCT (progression_key, entity_id, stage_key) placements of THIS capture, by
+     JOINING `progression_instances` on capture_sha — a capture may be placed at a stage in several
+     instances, so several rows. Each (progression_key, entity_id) instance is assembled ONCE via
+     `#assembleInstance` (its instance grade + missing_predecessor findings, FW-10 discharge doctrine
+     and stage required-ness enforced THERE), and its overdue_successor findings come from REC-8's
+     `#overdueFindings` against the injectable clock (`now` as-of / BIO_NOW_MS / wall — the same seam
+     op=proposals opened, so overdue is deterministic in a suite). Both kinds are returned (missing
+     first, then overdue) exactly as proposalsFeed's instances[] shape carries them. The CAPTURE's own
+     stage in each instance is reported from its placement row; its label is read from the assembled
+     stages. A capture threaded into NOTHING returns an empty list, honestly — never a fabricated
+     membership. established/needs_confirmation are PROJECTED from each finding's already-derived grade
+     (the same boundary projection #resolutionView / connectionsFor make — #isEstablished, grade==="C"),
+     NOT a new claim: an undetermined finding stays undetermined (established false, never invented). */
+  captureProgressions({ captureSha, nowMs } = {}) {
+    if (typeof captureSha !== "string" || !captureSha)
+      return { ok: false, reason: "NO_SHA",
+               detail: "progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)" };
+    const now = this.#nowMs(nowMs);
+    /* the placements of THIS capture: which (progression, entity) instance, and at which stage. A
+       capture in NO progression yields no rows -> an empty list, never a guessed membership. */
+    const rows = this.#rows(
+      `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
+         WHERE capture_sha=? ORDER BY progression_key, entity_id, stage_key`, captureSha);
+    const assembled = new Map();   // progression::entity -> { inst, overdue }: assemble each instance ONCE
+    /* project a finding's already-derived grade into its two display booleans, the SAME boundary
+       projection #resolutionView makes — never a new determination. undetermined -> not established. */
+    const project = (f) => ({ ...f,
+      established: f.grade_determined === true && Store.#isEstablished(f.grade),
+      needs_confirmation: f.grade === "C" });
+    const instances = [];
+    for (const r of rows) {
+      const ck = r.progression_key + "::" + r.entity_id;
+      let a = assembled.get(ck);
+      if (!a) {
+        const inst = this.#assembleInstance(r.progression_key, r.entity_id);
+        a = { inst, overdue: (inst && inst.found) ? this.#overdueFindings(inst, now) : [] };
+        assembled.set(ck, a);
+      }
+      const inst = a.inst;
+      if (!inst || !inst.found) continue;   // definition gone, or nothing threaded -> not a membership
+      const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
+      const missing = (inst.findings || []).filter((f) => f.kind === "missing_predecessor");
+      const findings = [...missing, ...a.overdue].map(project);
+      instances.push({
+        progression_key: inst.progression_key, progression_label: inst.label,
+        entity_id: inst.entity_id, entity_label: inst.entity ? inst.entity.label : null,
+        stage_key: r.stage_key, stage_label: stage ? stage.label : r.stage_key,
+        findings });
+    }
+    return { ok: true, capture_sha: captureSha, count: instances.length, instances };
+  }
+
   /* op=proposedispose (REC-7): record a member's DEFER or DISMISS of a derived PROPOSAL, WITHOUT
      minting a bundle. REC-6's op=proposals surfaces the record's own questions (one missing-
      predecessor finding per (progression_key, stage_key), aggregated). A member who decides a
@@ -7343,6 +7403,14 @@ export class Store extends DurableObject {
            op=sourcereach opened for its time-armed verdict. Absent, the feed uses env BIO_NOW_MS
            if set, else the wall clock. */
         proposals: () => this.proposalsFeed(url.searchParams.get("now")),
+        /* REC-9: op=captureprogressions, the per-document progression lookup (UI-9's delegation).
+           Maps a CAPTURE back to the progression instances it is threaded into, its stage in each,
+           and each instance's missing_predecessor + overdue_successor findings — REUSING the ONE
+           derivation point (#assembleInstance + REC-8's #overdueFindings), keyed by capture instead
+           of by (progression, entity). `now` is the same optional as-of clock op=proposals takes, so
+           the overdue computation is deterministic in a suite. Reports, never mutates. */
+        captureprogressions: () => this.captureProgressions({ captureSha: url.searchParams.get("sha256"),
+                                                              nowMs: url.searchParams.get("now") }),
         /* REC-7: op=proposedispose, record a member's DEFER/DISMISS of a derived proposal WITHOUT
            minting a bundle (D-79 — declining is not authoring). Writes one disposition row keyed by
            (progression_key, stage_key); op=proposals then ages that proposal out of the open feed.

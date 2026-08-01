@@ -46,6 +46,7 @@
     "test:proposals-feed": "node test/proposals-feed.test.mjs",
     "test:proposedispose": "node test/proposedispose.test.mjs",
     "test:overdue-successor": "node test/overdue-successor.test.mjs",
+    "test:capture-progressions": "node test/capture-progressions.test.mjs",
     "bench": "node test/scale.mjs",
     "probe:retrieval": "node test/retrieval-probe.mjs",
     "probe:facets": "node test/facet-probe.mjs 20000",

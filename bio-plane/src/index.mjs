@@ -501,6 +501,16 @@ const OPS = {
      beyond the disposition. Contribute-gated like the other progression writes; the deciding member
      is stamped server-side below, and op=proposals then ages the disposed proposal out of open. */
   proposedispose:   { classes: ["admin", "member", "probe"],       mutating: true  },
+  /* REC-9: the per-document progression lookup (UI-9's delegation). `captureprogressions` maps a
+     CAPTURE back to the progression instances it is threaded into, its stage in each, and each
+     instance's missing_predecessor + overdue_successor findings — the ONE derivation point
+     (#assembleInstance + REC-8's #overdueFindings), keyed by capture instead of by (progression,
+     entity). No existing op answers it: op=instance needs BOTH (progression_key, entity_id), and
+     op=proposals walks every instance but carries no capture_sha. It REPORTS and never mutates —
+     derived things inform — and is ungated like the other progression reads (op=instance /
+     op=proposals): a member session reads this document's place in the record's processes. Takes the
+     same optional `now` as-of clock op=proposals takes. */
+  captureprogressions:{ classes: ["admin", "member", "probe"],      mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -634,10 +644,14 @@ const RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concern
    REC-7 adds a WRITE: `proposedispose` records a member's DEFER/DISMISS of a derived proposal
    (stamped with the deciding member below, like the other progression writes) — WITHOUT minting a
    bundle (D-79: declining is not authoring). op=proposals then ages the disposed proposal out of
-   the open feed. Named here so the member and admin lists cannot drift apart. */
+   the open feed. Named here so the member and admin lists cannot drift apart.
+   REC-9 adds a READ: `captureprogressions` is the per-document lookup — it maps a CAPTURE back to the
+   progression instances it is threaded into, its stage in each, and each instance's missing-predecessor
+   + overdue-successor findings (the same ONE derivation op=proposals reads, keyed by capture). Ungated
+   like the other progression reads, named here so the two lists cannot drift apart. */
 const PROGRESSION_ACTIONS = ["connect", "connections", "progressiondefine", "progression",
                              "thread", "instance", "discharge", "exceptions", "proposals",
-                             "proposedispose"];
+                             "proposedispose", "captureprogressions"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
