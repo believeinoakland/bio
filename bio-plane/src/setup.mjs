@@ -711,7 +711,7 @@ const stamp = ()=>{
    and the per-type extension fields each type's own check requires. The first
    prose section carries what the member wrote, and the rest are present and
    empty, which is what the catalog asks for. */
-const mdFor = (id, type, state, title, body, now, hasDoc)=>{
+const mdFor = (id, type, state, title, body, now, hasDoc, src)=>{
   const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
@@ -721,6 +721,15 @@ const mdFor = (id, type, state, title, body, now, hasDoc)=>{
     "  source: null","visuals: []"];
   if (type === "information") fm.push(
     "criticality: supporting","source_status: unchanged",
+    /* D-62: the captured document's own hash, in the frontmatter, because C-2.7
+       makes a well-formed content_hash an ENTRY REQUIREMENT for verified and the
+       release flow reads the frontmatter and nothing else. Found live: this
+       mdFor omitted it even when a document was attached, so the first bundle a
+       member wrote with a capture could never have been released, and its bytes
+       were unfindable through the search layer's hash: facet, which reads this
+       field (defeating the D-60 duplicate detection). Absent for typed intake,
+       where there is no document and inventing one would be a lie. */
+    ...(src && src.content_hash ? ["content_hash: sha256:"+src.content_hash] : []),
     "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
     "monitoring:","  enabled: false","  frequency: none");
   if (type === "focus" || type === "problem") fm.push(
@@ -765,7 +774,12 @@ async function docFiles(text, doc, textSha){
 function acquireWhy(a){
   const why = a.reason || a.error || "unknown";
   if (why === "BAD_LOCATOR") return "That address cannot be fetched. It must be an https address on a public site: not a plain http address, not an address on this machine, and not one carrying a username or password.";
-  if (why === "NO_AUTHORITY") return "Say who issued the document.";
+  /* D-110: the mapping for a missing-authority refusal was deleted here. D-97
+     (0.47.0) removed that refusal: a caller who cannot name the issuing party
+     now leaves the capture honestly undetermined rather than being forced to
+     invent an authority to get past the door. Explaining a refusal the plane no
+     longer makes is a copy of an overturned rule in the surface a member reads,
+     so no reason string for it survives — not even in this comment. */
   if (why === "SOURCE_REFUSED") return "The site answered with an error (" + a.status + "). The address may be wrong, or the document may no longer be published there.";
   if (why === "FETCH_FAILED") return "The site could not be reached just now. Nothing was written.";
   if (why === "EMPTY") return "The site returned an empty document, so there was nothing to keep.";
@@ -809,7 +823,8 @@ $("#n-save").addEventListener("click", async ()=>{
       if (att.attestation) doc.attestations = [att.attestation];
       if (att.archive) doc.co_archive = att.archive;
     }
-    const text = mdFor(id, type, state, title, body, now, !!doc);
+    const text = mdFor(id, type, state, title, body, now, !!doc,
+      doc && doc.capture ? { content_hash: doc.capture.sha256 } : null);
     const r = await post("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },

@@ -2446,6 +2446,40 @@ export default {
                     + "contribute to projects it has been invited to, if it holds contribute." }, 403);
           b.ownerMemberId = sessMember;
         }
+        /* D-78: surfaced_by is the ACTOR CLASS, decided by the SERVER and never
+           taken from the caller's assertion. A focus opened by an assistant (a
+           machine credential) honestly records `agent`; one opened by a member
+           records `human`. Both bundle writers (setup.mjs, civicos-ui) emit a
+           literal `human`, and the store byte-trusts bundle.md, so the honest
+           place to decide it is HERE, at the trust boundary, beside author,
+           owner and by — the same delete-and-restamp discipline, and the reason
+           it fixes BOTH writers at once. C-2.8 already permits either value.
+           Stamped on the CREATION (the surfacing act itself); a revision carries
+           the document's value forward, so the origin fact is not rewritten by
+           whoever later edits it. Only a focus/problem carries the field, and
+           the store recomputes nothing — the recomputed bundle.md sha below is
+           what becomes the bundle_sha, so overwriting a caller's `agent` claim
+           on a session write cannot smuggle a false attribution past the gate. */
+        if (b.base === null && b.meta
+            && (b.meta.object_type === "focus" || b.meta.object_type === "problem")
+            && Array.isArray(b.files)) {
+          const bm = b.files.find((f) => f && f.path === "bundle.md" && typeof f.text === "string");
+          if (bm) {
+            const want = viaSession ? "human" : "agent";
+            const lines = bm.text.split("\n");
+            const end = lines.indexOf("---", 1);
+            let changed = false;
+            for (let i = 1; i < (end === -1 ? lines.length : end); i++) {
+              if (lines[i].startsWith("surfaced_by:")) { lines[i] = "surfaced_by: " + want; changed = true; break; }
+            }
+            if (changed) {
+              bm.text = lines.join("\n");
+              const bytes = new TextEncoder().encode(bm.text);
+              bm.bytes = bytes.length;
+              bm.sha256 = createSha256().update(bytes).hex();
+            }
+          }
+        }
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
