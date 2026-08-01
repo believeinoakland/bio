@@ -383,6 +383,15 @@ accepts-when: threading the need→award→contract documents MINUS the solicita
 added: 2026-07-31 · CONDUCT
 landed: d5da71d — progression INSTANCES + the missing-predecessor finding (M4 acceptance). One table progression_instances (a row per doc placed at a stage; instance = rows sharing progression_key+entity_id). op=thread admits a placement ONLY if the doc RESOLVES to the threading entity (FW-7), else NOT_CONCERNED; grade is the RECORD's strongest resolution, never the caller's; threadedBy stamped server-side. Grade + findings DERIVED ON READ (never stored stale): instance grade = weakest along the chain of consecutive placed stages (N-stage generalisation of FW-8's 2-node #weakerGrade; D-73 chain done). Missing REQUIRED stage (always/usually) → missing_predecessor finding carrying the instance grade; sometimes/never respected; <2 stages → grade null (undetermined honest). op=thread/instance, I5 1.5.0, purge both arms (D-113). battery 60/60, --strict 103/103. NCs RUN (empty REQUIRED_FIRES hides the gap; weaker→stronger hides the weak link). DEC-9 raised (unless_exception firing, deferred exception machinery). DEFERRED slice C: exception docs, junction findings, the scheduled walking-task (rides REC-1).
 
+### FW-10 · queued
+milestone: M4
+scope: CONSTRUCTS Step 5, SLICE C (part) — EXCEPTION DOCUMENTS that discharge a legitimate skip (framework §8.2), building on FW-9's missing-predecessor findings. A missing REQUIRED stage that HAS a discharging exception document is NOT a gap (a lawful skip — e.g. an emergency-procurement memo discharging a missing solicitation). Model exception documents (a document, threaded to the instance, naming the stage it discharges and carrying a reason/citation), and make FW-9's `#assembleInstance` missing-predecessor check consult them: a required stage with a discharging exception → NO finding (or a distinct "discharged" state, not a gap). This ALSO gives DEC-9 its mechanism: `unless_exception` stages become DISCHARGEABLE — firing a finding ONLY when required-and-undischarged (DEC-9 recommended exactly this once the exception-doc slice lands; implement the mechanism and note in DEC-9 that it now exists — Bob still rules the policy, don't pre-empt it). DEFER and FLAG: junction checks as findings; the scheduled walking-task (rides REC-1). New tables/columns I5-additive (schema traps: BEFORE host_governor, no backticks, purge/D-113). New ops get control-plane assertions (--strict).
+behind-interface: I5
+depends-on: FW-9
+accepts-when: a procurement instance missing its solicitation but carrying a discharging exception document surfaces NO missing-predecessor finding for that stage (while one WITHOUT the exception still does); an `unless_exception` stage fires only when undischarged; negative control — ignore the exception document and the finding reappears.
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## CONTENT-HTML — DORMANT
