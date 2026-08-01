@@ -550,6 +550,47 @@ CREATE TABLE IF NOT EXISTS source_reachability (
 );
 CREATE INDEX IF NOT EXISTS source_reach_failing ON source_reachability(consecutive_failures);
 
+-- CAP-4: the verdict on a REUSED subresource, APPENDED and dated, never
+-- overwritten, the same append-only discipline link_verdicts follows and for the
+-- same reason: a verdict that changed is itself a fact about the record, so the
+-- current answer is the newest row and the older rows are how anyone tells
+-- whether it was always this answer.
+--
+-- Two producers write here, and the phase column says which. POSTHOC detection
+-- is free and unconditional (CAPTURE-SCALING item 6a): when a later direct
+-- capture of a host fetches an asset whose bytes differ from the stored ones,
+-- every earlier capture that REUSED the old bytes is named here as 'changed' at
+-- zero request cost. RATIFY re-fetches every reused part with a PLAIN GET
+-- (item 6b/6c) -- our own SHA-256 over what we received is the evidence, where a
+-- 304 would be only the origin's assertion -- and records one of four outcomes:
+--   confirmed      the re-fetch matched the reused bytes; the strongest claim.
+--   changed        the source now serves something else; ratified with the bytes
+--                  captured on the day, the divergence a dated fact.
+--   unavailable    the source no longer answers; ratified with the bytes
+--                  captured, the record now holding what nobody can re-fetch.
+--   not_attempted  the invocation's re-fetch budget (the calibrated capture_limits
+--                  ceiling, item 6d) could not reach this part; recorded WITH its
+--                  reason, never silently omitted.
+-- All four are valid ratifications. What is forbidden is ratifying with a reused
+-- part and saying nothing: the mandatory part is the ATTEMPT and the RECORD, not
+-- the agreement. source_capture is the primary_sha of the capture that reused the
+-- part; bundle_id is set for a ratify verdict and null for a posthoc one, which
+-- happens at capture time when no bundle exists yet.
+CREATE TABLE IF NOT EXISTS reuse_verdicts (
+  source_capture TEXT NOT NULL,
+  bundle_id      TEXT,
+  host           TEXT NOT NULL,
+  address_norm   TEXT NOT NULL,
+  phase          TEXT NOT NULL,
+  verdict        TEXT NOT NULL,
+  reused_sha     TEXT NOT NULL,
+  observed_sha   TEXT,
+  basis          TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (source_capture, address_norm, phase, at)
+);
+CREATE INDEX IF NOT EXISTS reuse_verdicts_bundle ON reuse_verdicts(bundle_id);
+CREATE INDEX IF NOT EXISTS reuse_verdicts_pair ON reuse_verdicts(source_capture, address_norm);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

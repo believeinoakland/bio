@@ -2261,10 +2261,92 @@ export default {
         }
       }
 
+      /* CAP-4 / CAPTURE-SCALING item 6: re-fetch the reused parts at
+         ratification, which is where a working capture's reuse becomes evidence.
+         MANDATORY as an ATTEMPT AND A RECORD, never as agreement (item 6b): the
+         four outcomes -- confirmed, changed, unavailable, not_attempted -- all
+         ratify and say different things, and the one forbidden thing is ratifying
+         with a reused part and saying nothing. A PLAIN GET, not If-None-Match
+         (item 6c): both cost the one scarce subrequest, but our own SHA-256 over
+         what we received is the evidence the record is keyed on, where a 304 would
+         be only the origin's assertion. Bounded by the calibrated capture_limits
+         ceiling (item 6d): parts the budget cannot reach are recorded
+         `not_attempted` WITH the reason, never silently omitted. Ratification is
+         rare and deliberate, so the budget is available exactly when the stakes
+         rise; this does not gate -- every outcome still ratifies. */
+      let reuseReport = null;
+      const reused = (await (await stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`)).json()).result;
+      if (reused && Array.isArray(reused.parts) && reused.parts.length) {
+        const lim = (await (await stub.fetch("http://do/capturelimit?runtime=subrequests")).json()).result;
+        const observed = lim && lim.observed ? lim.observed : null;
+        /* Our APPETITE is ours and constant; the runtime's CAPACITY is the
+           observed ceiling, discovered by being refused (capture_limits doctrine).
+           A margin is reserved for the plane's own DO/R2 subrequests during this
+           ratification so re-fetching does not itself trip the ceiling. */
+        const appetite = Number(env.RATIFY_REFETCH_BUDGET) || 500;
+        const margin = env.RATIFY_REFETCH_MARGIN !== undefined ? (Number(env.RATIFY_REFETCH_MARGIN) || 0) : 4;
+        const budget = observed != null ? Math.min(appetite, Math.max(0, observed - margin)) : appetite;
+        const rhex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+        const verdicts = [];
+        let spent = 0;
+        for (const p of reused.parts) {
+          const base = { source_capture: p.primary_sha, host: p.host,
+                         address_norm: p.address_norm, reused_sha: p.reused_sha };
+          if (!p.address || !isPublicHttpsLocator(p.address)) {
+            verdicts.push({ ...base, verdict: "unavailable", observed_sha: null,
+              basis: "the reused part has no re-fetchable public https address on record, so the source "
+                   + "cannot be re-checked; ratified with the bytes captured on the day" });
+            continue;
+          }
+          if (spent >= budget) {
+            verdicts.push({ ...base, verdict: "not_attempted", observed_sha: null,
+              basis: `this ratification's re-fetch budget (${budget}, bounded by the calibrated subrequest `
+                   + `ceiling ${observed == null ? "none observed" : observed}) was spent before this part; `
+                   + `it is recorded as outstanding, not silently omitted` });
+            continue;
+          }
+          spent++;
+          let r = null;
+          try { r = await fetch(p.address, { redirect: "follow", headers: { "user-agent": userAgent(env, "ratify") } }); }
+          catch { r = null; }
+          if (!r || !r.ok) {
+            verdicts.push({ ...base, verdict: "unavailable", observed_sha: null,
+              basis: `a plain GET returned ${r ? r.status : "a network error"}; the source no longer answers, `
+                   + `and the bundle is ratified with the bytes captured on the day` });
+            continue;
+          }
+          const got = rhex(await crypto.subtle.digest("SHA-256", new Uint8Array(await r.arrayBuffer())));
+          if (got === p.reused_sha)
+            verdicts.push({ ...base, verdict: "confirmed", observed_sha: got,
+              basis: "a plain GET re-fetched the reused part and our own SHA-256 over what we received "
+                   + "matches the reused bytes" });
+          else
+            verdicts.push({ ...base, verdict: "changed", observed_sha: got,
+              basis: "a plain GET returned different bytes than were reused; ratified with the bytes captured "
+                   + "on the day, the divergence recorded as the dated fact it is" });
+        }
+        const at = new Date().toISOString();
+        await stub.fetch(new Request("http://do/recordreuseverdicts", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ bundleId: body.bundleId, at, verdicts }) }));
+        const tally = (k) => verdicts.filter((v) => v.verdict === k).length;
+        reuseReport = {
+          reused_parts: reused.parts.length, budget, ceiling: observed,
+          confirmed: tally("confirmed"), changed: tally("changed"),
+          unavailable: tally("unavailable"), not_attempted: tally("not_attempted"),
+          outcomes: verdicts.map((v) => ({ address_norm: v.address_norm, source_capture: v.source_capture,
+                                           verdict: v.verdict, observed_sha: v.observed_sha, basis: v.basis })),
+          note: "every reused part carries an outcome. confirmed/changed/unavailable all ratify and say "
+              + "different things; not_attempted names a part the budget could not reach. Re-fetch is a plain "
+              + "GET, hashed by us -- a reused part ratified in silence is what is forbidden.",
+        };
+      }
+
       return json({ ok: true, bundleId: body.bundleId, bundleSha: body.expectedSha,
                     existed: pub.existed, ratifiedAt: pub.ratifiedAt,
                     attestor: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
                     published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
+                    ...(reuseReport ? { reuse: reuseReport } : {}),
                     store: storeName, tokenClass: cls }, 200);
     }
 

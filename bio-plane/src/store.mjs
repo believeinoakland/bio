@@ -2895,6 +2895,11 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM captured_locators`);
         this.sql.exec(`DELETE FROM site_asset_refs`);
         this.sql.exec(`DELETE FROM site_assets`);
+        /* CAP-4: verdicts on reused parts are derived from the corpus (a ratify
+           verdict names a bundle; a posthoc verdict names a capture that reused
+           bytes now gone). A whole-store purge that reported ALL and left these
+           behind is the exact D-113 silent-leftover, so they go here too. */
+        this.sql.exec(`DELETE FROM reuse_verdicts`);
         this.sql.exec(`DELETE FROM capture_sessions`);
       }
     });
@@ -4786,6 +4791,24 @@ export class Store extends DurableObject {
         changedCount++;
         changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256,
                        reused_by: affected.map((a) => a.primary_sha) });
+        /* CAP-4 item 6a: POST-HOC reuse verification, unconditional and free. A
+           later direct capture just fetched different bytes than what earlier
+           captures REUSED from the record, so each of those captures now holds a
+           reused part the source has since changed. That verdict is APPENDED and
+           dated here (never overwritten, the same discipline link_verdicts
+           follows) at zero request cost -- no fetch is made at any point; this is
+           detection over what is already stored. INSERT OR IGNORE because the key
+           carries the second, so two changes to one asset within the same second
+           for one capture fold into the earlier row rather than throwing. */
+        for (const a of affected)
+          this.sql.exec(
+            `INSERT OR IGNORE INTO reuse_verdicts
+               (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
+             VALUES (?, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?)`,
+            a.primary_sha, host, o.address_norm, cur.sha256, o.sha256,
+            `a later direct capture of this host fetched different bytes for this address; `
+              + `this earlier capture reused the old ones, which are now unverified against the source`,
+            now);
       } else if (!o.reused) {
         this.sql.exec(
           `UPDATE site_assets SET last_seen = ?, last_fetched = ? WHERE host = ? AND address_norm = ?`,
@@ -4804,6 +4827,67 @@ export class Store extends DurableObject {
         host, o.address_norm, primarySha, now, o.reused ? 1 : 0, o.sha256);
     }
     return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
+  }
+
+  /** CAP-4: the reused subresource PARTS of a bundle, so ratification can
+   *  re-fetch each one. A part is reused when a capture in this bundle drew an
+   *  asset from the record rather than requesting it, which is exactly a
+   *  `site_asset_refs` row with `reused = 1` whose `primary_sha` is one of the
+   *  bundle's registered captures. The register is the trust root and keys on
+   *  capture_sha, so the join to it is what scopes the reused parts to THIS
+   *  bundle. `reused_sha` is the bytes the capture actually reused (the ref row's
+   *  own sha, not necessarily what `site_assets` holds NOW -- the source may have
+   *  changed since), and `address` comes along from `site_assets` because a
+   *  re-fetch needs the real address, not the normalised key. */
+  reusedParts(bundleId) {
+    if (!bundleId) return { bundleId: null, parts: [] };
+    const parts = this.#rows(
+      `SELECT ar.host AS host, ar.address_norm AS address_norm, ar.primary_sha AS primary_sha,
+              ar.sha256 AS reused_sha, sa.address AS address, sa.content_type AS content_type
+       FROM site_asset_refs ar
+       JOIN register r ON r.capture_sha = ar.primary_sha
+       LEFT JOIN site_assets sa ON sa.host = ar.host AND sa.address_norm = ar.address_norm
+       WHERE r.bundle_id = ? AND ar.reused = 1
+       ORDER BY ar.host, ar.address_norm`, bundleId);
+    return { bundleId, parts, count: parts.length };
+  }
+
+  /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.
+   *  Appended and dated, never overwritten: a re-ratification is a fresh attempt
+   *  and a fresh set of dated rows, so the history of what the source said each
+   *  time it was checked is readable. The control plane owns all outbound R2 and
+   *  network traffic (VERIFICATION.md), so it does the fetching and hashing and
+   *  hands the store the verdicts to commit; the store invents none of them. */
+  recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    let recorded = 0;
+    for (const v of verdicts) {
+      if (!v || !v.source_capture || !v.address_norm || !v.verdict) continue;
+      this.sql.exec(
+        `INSERT OR IGNORE INTO reuse_verdicts
+           (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
+         VALUES (?, ?, ?, ?, 'ratify', ?, ?, ?, ?, ?)`,
+        v.source_capture, bundleId, v.host || "", v.address_norm, v.verdict,
+        v.reused_sha || "", v.observed_sha ?? null, v.basis || "", now);
+      recorded++;
+    }
+    return { ok: true, bundleId, recorded, at: now };
+  }
+
+  /** CAP-4: read the reuse verdicts, newest first. By bundle (ratify verdicts) or
+   *  by source_capture (which also surfaces the free posthoc verdicts that carry
+   *  no bundle). The current answer for a part is its newest row; the older rows
+   *  are the trail of what the source said each time it was checked. */
+  reuseVerdicts({ bundleId = null, sourceCapture = null } = {}) {
+    if (bundleId)
+      return { bundleId, verdicts: this.#rows(
+        `SELECT source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at
+         FROM reuse_verdicts WHERE bundle_id = ? ORDER BY at DESC, address_norm`, bundleId) };
+    if (sourceCapture)
+      return { sourceCapture, verdicts: this.#rows(
+        `SELECT source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at
+         FROM reuse_verdicts WHERE source_capture = ? ORDER BY at DESC, address_norm`, sourceCapture) };
+    return { verdicts: [] };
   }
 
   /** Chrome by RECURRENCE, which works on sites that never write a <nav>.
@@ -5465,6 +5549,14 @@ export class Store extends DurableObject {
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
         siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
         recordsiteassets: () => this.recordSiteAssets(body || {}),
+        /* CAP-4: reuse verification. `reusedparts` enumerates a bundle's reused
+           parts so ratification can re-fetch them; `recordreuseverdicts` commits
+           the outcomes the control plane produced; `reuseverdicts` reads them
+           (also surfacing the free posthoc verdicts by source_capture). */
+        reusedparts: () => this.reusedParts(url.searchParams.get("id")),
+        recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
+        reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),
+                                                  sourceCapture: url.searchParams.get("capture") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
