@@ -314,6 +314,89 @@ claim alone. If a later session finds a way to make completeness attributable wi
 distinct object, the collapse is worth revisiting — but the burden is on that argument,
 not on this one.
 
+## THEY COLLAPSE. Focus, finding and case are one recursive object — Bob, 2026-08-01
+
+Bob: *"Really, I'm wondering if focus, finding, and case are all the same thing. More to
+the point, I need to see a reason why they're each different and must remain different.
+If we can't then they should collapse."*
+
+**I cannot produce a sufficient reason, and the previous two sections of this document
+were structure looking for a justification.** Recorded in full, including what failed,
+because the failures are the argument.
+
+### Every defence reduces to a STATE or a FIELD, not a type
+
+| defence offered | why it fails |
+| --- | --- |
+| a focus is a QUESTION, a finding is an ANSWER | that is "does this node have a conclusion yet" — a lifecycle state |
+| a finding may not be empty; a focus may | a per-stage requirement, exactly as C-2.7 already makes `content_hash` an entry requirement for `verified` |
+| a case asserts COMPLETENESS, a finding does not | a field, and an authored one. It survives the collapse intact — see below |
+| a finding is REUSABLE, a case is BOUNDED | the same field, read the other way |
+| composition — a case gathers findings | **Bob's point: if a finding may rest on earlier findings, recursion already does this and the root finding IS the case** |
+| publication changes what the record owes the world | a stage with heavy semantics. The plane already models exactly this: ratification is irreversible and a published hash answers forever |
+
+So the object is one thing with a recursive basis and a lifecycle:
+
+    an INQUIRY — a question, which may gather evidence and other inquiries,
+                 which may reach a conclusion,
+                 which may be published as something the group stands behind
+
+`focus` is that object early. `finding` is it once it concludes. `case` is it once it
+is published and asserts its own material set. **A conclusion resting on conclusions is
+free**, which is what the domain actually looks like: you ask, you gather, you conclude,
+and your conclusion becomes an input to a larger question.
+
+### What the collapse BUYS, which is not only tidiness
+
+- **Recursion for nothing.** The layered-argument structure the pass needs stops being a
+  feature and becomes the shape of the object.
+- **One mental model**, and it matches how research feels. This is the audience rule
+  paying out: a member learns *an inquiry* rather than three things and the rules for
+  moving between them.
+- **D-79 applies uniformly.** A machine-surfaced question and a machine-derived
+  conclusion are the same type, so aggregation, ageing, and D-82's must-look-derived
+  rule are written once.
+- **Claim strength composes naturally** — weakest link along a basis chain, where the
+  chain may include other inquiries.
+
+### What must NOT be lost in the collapse
+
+**The completeness assertion stays an explicit AUTHORED ACT at the publication stage.**
+It must not become an implicit consequence of a state change. The reasoning from the
+previous section survives unchanged and is now a stage requirement rather than a type:
+publishing asserts *"this is the material set"*, no gate can verify it, so the record
+does what it does with everything it cannot establish — makes it visible, attributable
+and stated, with what was EXCLUDED named by its author and never prefilled.
+
+If the collapse quietly turns that into a checkbox, the collapse has cost the one thing
+the separate object was protecting.
+
+### What does NOT collapse
+
+- **`information`** — a captured document with provenance and custody. Evidence, not a
+  claim about evidence. Merging it would let a claim inherit a document's provenance
+  without a basis of its own.
+- **`action`** — outward-facing engagement with a `counterparty` and correspondence. An
+  inquiry is a thought; an action is a thing done to the world.
+- **`project`** — and this one is worth stating because it looked collapsible too. Its
+  states resemble the inquiry lifecycle, but its real content is **governance**: owners,
+  participants, the three visibility positions (D-15), fork, name uniqueness. A project
+  is a CONTAINER WITH MEMBERSHIP AND ACCESS CONTROL; an inquiry is a claim structure.
+  Different axis, and merging them would put access control on every question.
+
+**So the member-facing set becomes four: information · inquiry · action · project** —
+evidence, claim, engagement, workspace. Down from five, and each answers a different
+question: *what did we capture · what do we assert · what did we do · who is working on
+this.*
+
+### The risk this creates, named so it is watched
+
+One object with a long lifecycle can grow into a god-object whose checks become a
+thicket. The mitigation already exists — the catalogue does per-state requirements
+today — but the failure mode is real and the guard is that **every stage requirement
+must name the doctrine it enforces**, or the lifecycle accumulates rules nobody can
+justify.
+
 ## Open questions this pass must answer
 
 1. Do `focus` / `project` / `action` / `case file` survive, evolve, or get replaced?
