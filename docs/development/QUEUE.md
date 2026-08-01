@@ -365,6 +365,20 @@ drift class returns multiplied), D-107 (no scripted installer deploy with read-b
 D-54 (the installer does not detect the Workers plan). Activate when a fleet member is
 close to shipping, and not after it ships.
 
-## UI — DORMANT
-`civicos-ui/**`; CONSTRUCTS Steps 2 onward and the display half of D-82. Activate per
-`UI-PLAN.md` when prioritised.
+## UI — ACTIVE (M8, activated 2026-07-31 by CONDUCT: M0 lane complete, a slot free)
+`civicos-ui/**`; the member surfaces of M8, per `UI-PLAN.md` and the interaction
+constructs **v0.2** (`BIO_Interaction_Constructs_v0_1.md` — the count came down to TWO
+constructs + a weight ladder + the TASK/QUEUE attention layer; MILESTONES M8 build-order:
+**the queue FIRST**). NOTE: this supersedes the earlier drained-inbox note's v0.1
+`T→J→B(+S)→P→A` order — MILESTONES M8 already carries v0.2, so the queue-first order governs.
+The display half of D-82 (`surfaced_by`) and the FW-4→UI already-held delegation are later
+UI items, not UI-1.
+
+### UI-1 · queued
+milestone: M8
+scope: The TASK INBOX — the member surface for the attention layer, which MILESTONES M8 builds FIRST. The plane HALF ALREADY EXISTS (D-98, 0.49.0): ops `tasks`, `taskforward`, `taskresolve`, routing through `member_expertise` → project manager → group admin, forwardable, deduped on `(refers_to, kind)`. It has NO surface — "the record can be obliged to ask a person something and has nowhere to ask," M8's sharpest gap. Build the `civicos-ui` surface that lists a member's tasks (each says *this needs you* and POINTS AT the act it resolves in), and lets them forward (`taskforward`) and resolve (`taskresolve`). Honour the TASK construct's accountability rules: a task is never silently dropped (it AGES with a recorded reason, D-79) and is addressed to somebody or honestly `unassigned` (never a phantom); the refusal shape is "this is not yours to resolve, and here is who it is with." This is ONE construct's surface (the queue) + the wiring to the acts it points at — NOT the acts themselves (the ACT construct is later items). The clock half (D-86: temporal expectations + bias debt as obligations-with-a-clock) is related — surface what the existing ops expose and NOTE any gap rather than building the clock here.
+behind-interface: I3
+depends-on: none
+accepts-when: `civicos-ui/test/run.mjs` green with a task-inbox test that lists a member's tasks, forwards one and resolves one through the plane ops, and shows an `unassigned` task honestly; negative control — break the `taskresolve` wiring and the resolve path fails.
+added: 2026-07-31 · CONDUCT
+landed:
