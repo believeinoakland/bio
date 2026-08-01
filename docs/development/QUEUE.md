@@ -130,7 +130,7 @@ accepts-when: with `ssh-keygen` hidden from PATH, `npm test` completes, reports 
 added: 2026-07-31 · BOB
 landed: 0e2c4f0 — `npm test` = `node scripts/battery.mjs` (discovering runner); ratify/reuse-ratify/signpage skip loudly (named) + sshsig reports 16+2skip named when ssh-keygen absent; battery.mjs skip-aware. Hidden-ssh-keygen: 45/48 green + 3 named skips, none hidden; normally 48/48. Corrected the stale "&& chain" text in CLAUDE.md + VERIFICATION.md. D-93 CLOSED.
 
-### M0-5 · queued
+### M0-5 · done
 milestone: M0
 scope: D-117 — teach `scripts/coverage.mjs` to enumerate FLEET members, not just `bio-plane/src/index.mjs`. The topology decision (I6) means a second Worker's surface is uncounted, so the day `pdf-worker` ships the figure stays flat while a whole component goes untested. Land in the same turn as the first fleet member, not after.
 behind-interface: I6
