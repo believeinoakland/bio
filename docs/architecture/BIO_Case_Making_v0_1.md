@@ -37,6 +37,12 @@ substrate serves genuinely different outputs:
 
 ## Observations, offered as input to the pass
 
+> **"Output" is a noun and also a verb** (Bob, 2026-08-01). Worth holding onto through
+> this pass: the artifact and the ACT of releasing it are different things, and the
+> plane already models the act — ratification is outputting, and it is the boundary
+> where a claim stops being ours and starts being answerable. A design that names only
+> the noun will end up with a case file nobody had to decide to publish.
+
 ### 1. The constructs conflate the WORK with the OUTPUT, and the substrate already has the fence
 
 `focus` / `project` / `action` describe WORK. A case file, as UI-PLAN U12 describes it,
@@ -98,20 +104,64 @@ exhortation: a finding that cuts against the case has the same strength computat
 one that supports it, so it cannot be quietly excluded by a rendering without the
 exclusion being visible.
 
-### 4. The administrator archetype inverts the threat model, and that is Bob's to rule
+### 4. CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric
 
-Every doctrinal assumption in this repository is outsider-looking-in. `SOURCE-ACCESS.md`
-now records that **we expect Oakland to view us as hostile to the administration's
-interests**; the two-bucket fence exists so a subject cannot see what is being
-investigated; D-94's whole ladder is about admission to a source that may block us.
+This section originally read "the administrator archetype inverts the threat model" and
+treated an adversarial default as the given. Bob corrected it on 2026-08-01 and the
+correction is doctrine:
 
-A government administrator running an instance is a different system entirely: the
-subject and the user are the same institution, the "sources" are their own, and the
-adversarial fence protects nothing. It is also plausibly where the most IMPACT is
-available, since an administrator can actually fix what the record finds.
+> "Whatever happens in the world, there is usually those who are supportive of that
+> thing and those that aren't. The potential for threats exist for both ends of that
+> continuum and everybody in between. Some people are willing to damage a publisher,
+> but there are other times people who make claims that reach far beyond what the
+> evidence can support… the goal of CivicOS is to improve outcomes using greater
+> understanding, less narrative, and accountability… nowhere in the doctrine is anything
+> like 'Stick it to the man!' It's about better government… If we start by assuming that
+> at the highest level all stakeholders want better outcomes in the public interest,
+> then we're all on the same side. — Even though, there are bad actors among us."
 
-This is not a UX variation. It is a question about what CivicOS is, and it is doctrine.
-**Raised, not answered.**
+**So an administrator is not an inversion. They are a stakeholder like any other**, and
+the question I raised as doctrine dissolves: there is one system serving people who want
+better outcomes, and the archetypes differ in what they DO with a case rather than in
+whose side they are on.
+
+**The threat model is SYMMETRIC, and its more dangerous half is ours.** Someone may
+damage a publisher; someone may also make claims far beyond what the evidence supports.
+Reading this codebase against that: almost every hard-won rule defends against the
+SECOND — `undetermined` is first-class and must be stated, an equality that costs
+nothing to produce is not evidence, grade tracks directness and never technique, the
+publication fence, the refusal to invent an authority to get past a gate. **The primary
+threat model has always been self-directed; the doctrine just made it explicit.**
+
+That reframes claim strength (observation 3) entirely. It is not a convenience for
+lawyers. **It is the core defence against this project's own characteristic failure**,
+and it is why a rendering must state what it excluded rather than silently omit it.
+
+**Bad actors are real and are identified BY EVIDENCE, never assumed by role.** Corrupt
+officials, power-hungry politicians, greedy organisations, people seeking financial
+security beyond what the system can afford — all exist. None of that licenses a
+structural prior. Concretely, and this binds the entity work in M4: **the subject
+registry (D-83) must carry no adversarial attribute**, no suspicion flag, no
+category-level prior. An entity is an entity; what is claimed about it is claimed with
+evidence attached, or it is not claimed.
+
+### 4a. "Less narrative" is a design constraint, and it cuts against how such tools usually work
+
+Bob has said both *"CivicOS is about telling a story"* and *"less narrative"*, and they
+are not in tension once the words are separated:
+
+- a **story** is what the record supports, told so a person can follow it;
+- a **narrative** is a frame imposed on the material, which the material then gets
+  fitted to.
+
+A case-making tool that makes it easy to build a COMPELLING story is dangerous, because
+compellingness and support are different axes and the tool would be optimising the
+wrong one. **The tool should make a supported case easy to build and an unsupported one
+hard to state.** That is an inversion of how storytelling and case-building tools
+normally work, and it should be visible in the surface: strength shown rather than
+hidden, exclusions named rather than dropped, and nothing that drafts framing FOR a
+member — the same rule as never prefilling a justification, extended from a field to a
+whole argument.
 
 ### 5. A caution about designing for four audiences at once
 
@@ -138,5 +188,9 @@ was wrong.
    resolving it.)
 6. What closes the loop from action to consequence, and how does a consequence become
    evidence about the system's own responsiveness?
-7. Is the government-administrator archetype in scope? (Observation 4 — doctrine.)
+7. ~~Is the government-administrator archetype in scope?~~ **ANSWERED 2026-08-01: yes,
+   and the question was malformed.** All stakeholders are assumed to want better
+   outcomes; archetypes differ in what they DO with a case, not in whose side they are
+   on. What remains open is narrower and real: an administrator's instance holds the
+   body's own material, so what does the two-bucket fence protect there, and from whom?
 8. What does the ladder look like once case-making is at the top rather than appended?

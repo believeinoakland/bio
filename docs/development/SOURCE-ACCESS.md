@@ -191,7 +191,16 @@ allowlist."**
 Two things settle here, and the second is the one that closes the question rather
 than postponing it.
 
-**The adversary posture is now a standing expectation, not an inference.** Earlier
+**CORRECTED 2026-08-01. This paragraph originally read "the adversary posture is now a standing
+expectation", which drifted from what Bob actually said and inverted its direction.** He said we expect
+to be VIEWED as hostile. That is a statement about how we may be PERCEIVED and a fact to plan around;
+it is not a posture we hold. BIO's doctrine contains nothing resembling "stick it to the man" — the
+objective is BETTER GOVERNMENT, and the working assumption is that at the highest level all
+stakeholders want better outcomes in the public interest, bad actors being the exception identified by
+evidence rather than the default assumed by role. Access caution survives that assumption intact,
+because being misread is an operational fact whatever anyone's intentions are.
+
+**Being seen as hostile is a standing expectation, not an inference.** Earlier
 sessions recorded that the City is "non-supportive". The position is stronger: we
 expect to be seen as hostile to the administration's interests. That is not a
 prediction about any individual and it is not a grievance — it is the assumption the

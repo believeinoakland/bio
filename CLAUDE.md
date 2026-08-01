@@ -57,6 +57,21 @@ progressions model how {information, money, responsibility, relationships, decis
 power} is supposed to flow and where it actually does. All of it serves the path, and
 a capability that does not serve the path is not obviously worth building.
 
+**The stance, and it is doctrine.** BIO is defined through doctrine and nothing in it
+resembles "stick it to the man". The objective is BETTER GOVERNMENT, pursued through
+**greater understanding, less narrative, and accountability**. The working assumption is
+that at the highest level all stakeholders want better outcomes in the public interest,
+so we are on the same side — while bad actors genuinely exist among us, and are
+identified BY EVIDENCE rather than assumed by role. No structural prior against any
+class of actor belongs anywhere in this system.
+
+**"Less narrative" is a constraint on us, not only on them.** Threats to the record run
+in both directions: someone may damage a publisher, and someone may make claims reaching
+far beyond what the evidence supports. Nearly every rule below defends against the
+SECOND — undetermined is first-class, an equality that costs nothing is not evidence,
+grade tracks directness, the publication fence. The primary threat model here has always
+been self-directed.
+
 The record is the FOUNDATION of that, and the whole product is TRUSTWORTHINESS OF THE
 RECORD: groups capture what a public body published and can prove later that it said
 what they claim. So a defect that makes the record claim more than it can support is
