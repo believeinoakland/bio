@@ -302,14 +302,14 @@ accepts-when: `civicos-ui/test/run.mjs` green with one ladder and one entry poin
 added: 2026-07-31 · BOB
 landed: 6f1a70f — seven vocabularies reconciled: one confidence ladder, one recogniser/registry engine, assess() sole public entry, monitoring.mjs + diffMembers + duplicate loops deleted. docprofile net -27 lines. civicos-ui/test/run.mjs + full battery green; negative controls (single ladder / sole entry) recorded. I2 unchanged (Step 0 internal). Unblocks M3/M4.
 
-### FW-1 · active
+### FW-1 · done
 milestone: M3
 scope: Confirm or counter the provisional I2 structure interface that CONTENT-PDF produces — this is what turns I2 STABLE. Note CPDF-4 extends I2 with text, so answer the extended shape rather than the link-only one.
 behind-interface: I2
 depends-on: none
 accepts-when: `INTERFACES.md` I2 records CONFIRMED, or a counter-proposal exists in `INTERFACE-CHANGES.md`.
 added: 2026-07-31 · CONDUCT
-landed:
+landed: 44a867a — CONFIRMED: I2 (structure+text) STABLE 1.0.0; the shape serves FRAMEWORK (container-agnostic partitions imported not re-derived, undetermined first-class on both axes, tier stamped at the op). No code (battery already pins the shape). No counter — INTERFACE-CHANGES.md not needed yet.
 
 ### FW-3 · queued
 milestone: M3
