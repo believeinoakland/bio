@@ -254,6 +254,40 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 .offenders{margin:8px 0 0;padding:0;list-style:none;font-family:var(--font-fact);font-size:12px}
 .offenders li{padding:3px 0}
 
+/* UI-2 the ACT: disposition dialog (choose / pre-flight / author / receipt) */
+#dlg .cc.bad{color:var(--signal-dk)}
+.dz-what{display:flex;flex-direction:column;gap:1px;background:var(--paper-2);border:var(--hair);border-radius:var(--r-2);padding:8px 12px;margin:0 0 12px}
+.dz-what .dz-ttl{font-weight:600;font-size:14px}
+.dz-what .id,.dz-rgrid .id{font-family:var(--font-fact);font-size:11px;color:var(--muted)}
+.dz-choose{display:flex;flex-direction:column;gap:8px;margin:0 0 4px}
+.dz-opt{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;border:var(--hair);border-radius:var(--r-2);padding:9px 12px;cursor:pointer}
+.dz-opt.on{border-color:var(--verdigris);background:var(--tint-muted)}
+.dz-opt input{grid-row:1/3;align-self:center}
+.dz-opt .dz-verb{font-weight:600;font-size:14px}
+.dz-opt .dz-mean{grid-column:2;font-size:12.5px;color:var(--ink-soft)}
+.dz-pf{border:var(--hair);border-left:3px solid var(--rule);border-radius:var(--r-2);padding:10px 13px;margin:12px 0 4px;background:#fff}
+.pf-cap{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+.pf-row{display:flex;gap:9px;align-items:baseline;padding:4px 0}
+.pf-mark{font-family:var(--font-fact);font-weight:700;width:1em;flex:none}
+.pf-row.ok .pf-mark{color:var(--verdigris-dk)}
+.pf-row.no .pf-mark{color:var(--signal-dk)}
+.pf-title{font-weight:500;font-size:13.5px}
+.pf-need{display:block;font-size:12.5px;color:var(--signal-dk);margin-top:2px}
+.pf-clear{font-size:12.5px;color:var(--verdigris-dk);margin-top:7px;border-top:var(--hair);padding-top:7px}
+.wl{border:var(--hair);border-radius:var(--r-2);padding:11px 13px;margin:14px 0 2px;background:var(--paper-2)}
+.wl-cap{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+.wl-rung{display:flex;align-items:baseline;gap:9px;padding:3px 0;color:var(--muted)}
+.wl-rung .wl-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--rule);flex:none;align-self:center}
+.wl-rung.on{color:var(--ink)}
+.wl-rung.on .wl-dot{background:var(--verdigris);border-color:var(--verdigris-dk)}
+.wl-name{font-weight:600;font-size:13px;min-width:8.5ch}
+.wl-gloss{font-size:12.5px}
+.wl-here{font-family:var(--font-fact);font-size:10.5px;color:var(--verdigris-dk);border:1px solid var(--verdigris);border-radius:10px;padding:1px 7px;margin-left:auto}
+.wl-note{font-size:12.5px;color:var(--ink-soft);margin:8px 0 0}
+.dz-receipt .dz-rhead{font-weight:700;font-size:17px;margin:2px 0 6px}
+.dz-rlede{font-size:13.5px;color:var(--ink-soft);margin:0 0 12px;max-width:58ch}
+.dz-rgrid{display:flex;flex-direction:column;gap:1px;border:var(--hair);border-radius:var(--r-2);overflow:hidden}
+
 /* line icons */
 svg.ic{display:none}
 
@@ -576,6 +610,11 @@ function canRelease(){
   return !!(PLANE.session && PLANE.me && PLANE.me.session
             && (PLANE.me.capabilities||[]).includes("contribute"));
 }
+/* Disposition (defer/dismiss a focus) is capability-gated exactly like release:
+   op=dispose NEEDS `contribute` (bio-plane/src/index.mjs) and the store stamps
+   the author from the session, so a member without contribute gets no act
+   surface rather than one that fails on submit. Same shape as canRelease. */
+function canDispose(){ return canRelease(); }
 
 /* ============================================================
    DATA: every op contract in one place, plus liveness.
@@ -3704,6 +3743,27 @@ async function openBundle(id, fromNav){
         relBar = `<h2 class="sec">Release</h2><div class="rv-bar" style="margin:0"><button class="btn" onclick="openReleaseDialog('${esc(id)}')">Release this document</button><span class="n">Moves it from collected to verified, in your name, on the permanent record.</span></div>`;
     }
 
+    /* --- disposition, the first ACT: defer or dismiss a focus (UI-2) --- */
+    let dispBar = "";
+    if(["focus","problem"].includes(otype)){
+      const st = fm.current_state || (proj&&proj.current_state) || "surfaced";
+      const canMove = (DISPOSE_LEGAL[st]||[]).some(t=>DISPOSITIONS.includes(t));
+      if(canDispose() && canMove){
+        /* Title/id/state cross the inline handler JSON-encoded and attribute-
+           escaped (a title may carry an apostrophe), the same way the release
+           flow passes its id set — never a bare-quoted string. */
+        const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(fm.title||(proj&&proj.title)||id)), jst = esc(JSON.stringify(st));
+        dispBar = `<h2 class="sec">Disposition</h2>
+          <div class="rv-bar" style="margin:0;gap:8px">
+            <button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${jst},'deferred')">Defer&hellip;</button>
+            <button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${jst},'dismissed')">Dismiss&hellip;</button>
+            <span class="n">Deferring or dismissing is a reasoned act: reversible and kept, but it records why, in your name.</span>
+          </div>`;
+      } else if(canDispose() && st==="elevated"){
+        dispBar = `<h2 class="sec">Disposition</h2><p class="rel-note" style="margin:0">This focus has been elevated into a project, so it can no longer be deferred or dismissed.</p>`;
+      }
+    }
+
     const back = `<a onclick="go('record')">The record</a> &rsaquo; `;
     const tab = k => `<a${k==="s1"?' class="on"':""} data-s="${k}" onclick="strataGo(this,'${k}')" title="${esc(STRATA_INFO[k].tip)}">${esc(STRATA_INFO[k].label)}</a>`;
     const openTab = PRIMARY_K>=0 ? `<a class="openlink" onclick="openArtifact(${PRIMARY_K})" title="opens like any link: a tab for what the browser renders, a download otherwise; verified against the record underneath">Open the document<span class="arr" aria-hidden="true">\u2197</span></a>` : "";
@@ -3715,7 +3775,7 @@ async function openBundle(id, fromNav){
          <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
          <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${openTab}${seals}</div>
        </div>
-       <div id="docscroll">${s1}${s2}${s3}${s4}${relBar}</div>`;
+       <div id="docscroll">${s1}${s2}${s3}${s4}${relBar}${dispBar}</div>`;
     strataSpy();
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
@@ -3983,6 +4043,230 @@ function releaseRefusal(e){
   if(e.reason==="SET_MOVED"){ RECORD_CACHE=null; renderReview(); }
   return `<b>${head}</b>${detail}${off}${again}`;
 }
+
+/* ============================================================
+   UI-2 — THE FIRST ACT: focus disposition, a JUSTIFIED TRANSITION.
+   (BIO_Interaction_Constructs v0.2 — the ACT construct + the WEIGHT
+   LADDER; §J "a state change carrying authored text that becomes
+   evidence".) ONE motion, exactly and only:
+     1 CHOOSE      defer or dismiss this focus.
+     2 PRE-FLIGHT  see WHAT IT WILL REFUSE and WHY *before* it runs.
+                   This is the ACT construct's defining property, not a
+                   nicety: the member meets the refusal before committing.
+     3 AUTHOR      the reason. REQUIRED, and NEVER prefilled — the text
+                   becomes the member's own act on the permanent record,
+                   so the system must not put words in their mouth.
+     4 RECEIPT     what the plane returned: the act happened, here is the
+                   record of it.
+   The act's WEIGHT-LADDER rung is shown: disposition is `reasoned`.
+   Plane op consumed (I3): op=select (a one-focus enumerated selection)
+   then op=dispose(handle,to,reason). op=dispose has NO dry-run, so the
+   pre-flight is computed from the op's DECLARED refusal shape plus the
+   focus's own known state — honest against what exists, never a guess.
+   ============================================================ */
+
+/* The plane's OWN legal-transition table, mirrored from bio-plane/src/
+   store.mjs dispose() (the `LEGAL` map). Mirrored, not invented: the UI
+   pre-flights the same ILLEGAL_TRANSITION the store would refuse, so a
+   stale view is refused here rather than surfaced as a dead button.
+   `deferred->deferred` is deliberately ABSENT — a no-op move is a refusal,
+   because it usually means the view was taken before someone else moved it. */
+const DISPOSE_LEGAL = {
+  surfaced:  ["elevated", "deferred", "dismissed"],
+  deferred:  ["surfaced", "elevated", "dismissed"],
+  dismissed: ["surfaced", "elevated", "deferred"],
+  elevated:  [],
+};
+const DISPOSITIONS = ["deferred", "dismissed"];   // the two the UI offers (op=dispose's DISPOSITIONS)
+const DISPOSE_REASON_MAX = 160;                    // Store.EDGE_REASON_MAX
+const DISPOSE_REASON_RULE = /["\\\r\n]/;           // the store's restricted-grammar rule
+const DISPOSE_VERB = { deferred:"Defer", dismissed:"Dismiss" };
+const DISPOSE_DONE = { deferred:"deferred", dismissed:"dismissed" };
+
+/* THE PRE-FLIGHT — pure, so the harness can prove it. Given the focus's
+   current state, the chosen disposition, and the reason authored so far,
+   it returns every gate the act must clear (for the panel) and the ONE
+   refusal that would fire first, in the plane's own checking order:
+   NOT_A_DISPOSITION -> NO_REASON (C-2.8) -> BAD_REASON -> ILLEGAL_TRANSITION.
+   `ok` is true only when nothing would refuse. */
+function disposePreflight({ state, to, reason }){
+  const why = String(reason == null ? "" : reason).trim();
+  const isDisp   = DISPOSITIONS.includes(to);
+  const hasReason= why.length > 0;
+  const goodGrammar = !DISPOSE_REASON_RULE.test(why) && why.length <= DISPOSE_REASON_MAX;
+  const legalMove = (DISPOSE_LEGAL[state] || []).includes(to);
+  const gates = [
+    { id:"reason", title:"A reason", pass:hasReason,
+      need:"Required, and never written for you. This act records your reason — WHY you defer or dismiss — in your name, on the permanent record, so the decision itself stays accountable and not just its outcome. It is refused until you write one." },
+    { id:"grammar", title:"Within the record's grammar", pass:!hasReason ? true : goodGrammar,
+      need:`At most ${DISPOSE_REASON_MAX} characters, and no quotation marks, backslashes, or line breaks: the reason is written verbatim into the record, whose format has no escapes.` },
+    { id:"move", title:"A move this focus can make", pass:isDisp && legalMove,
+      need: !isDisp ? "Only deferring and dismissing are dispositions here; elevating a focus opens a project and is a different act."
+          : state==="elevated" ? "This focus has been elevated into a project, so it can no longer be deferred or dismissed."
+          : state===to ? `This focus is already ${DISPOSE_DONE[to]}. Someone may have moved it while this page was open; reopen it to see where it stands.`
+          : "That is not a move this focus can make from where it stands now." },
+  ];
+  // The plane checks reason BEFORE it resolves the set, so NO_REASON/BAD_REASON
+  // outrank ILLEGAL_TRANSITION when more than one would fire.
+  let refusal = null;
+  if(!isDisp)               refusal = { reason:"NOT_A_DISPOSITION", detail:gates[2].need };
+  else if(!hasReason)       refusal = { reason:"NO_REASON",         detail:gates[0].need };
+  else if(!goodGrammar)     refusal = { reason:"BAD_REASON",        detail:gates[1].need };
+  else if(!legalMove)       refusal = { reason:"ILLEGAL_TRANSITION",detail:gates[2].need };
+  return { ok: refusal===null, gates, refusal };
+}
+
+/* The WEIGHT LADDER, learned once and read everywhere. Not a construct — a
+   property of every act, visible and escalating. This act sits on `reasoned`. */
+const WEIGHT_LADDER = [
+  { rung:"reversible", gloss:"can be undone" },
+  { rung:"reasoned",   gloss:"a justification is required, and never prefilled" },
+  { rung:"terminal",   gloss:"cannot be walked back" },
+  { rung:"attested",   gloss:"irreversible and public; needs a key" },
+];
+function weightLadderHtml(here){
+  const rungs = WEIGHT_LADDER.map(r=>{
+    const on = r.rung===here;
+    return `<div class="wl-rung${on?" on":""}"><span class="wl-dot"></span><span class="wl-name">${esc(r.rung)}</span><span class="wl-gloss">${esc(r.gloss)}</span>${on?`<span class="wl-here">this act</span>`:""}</div>`;
+  }).join("");
+  return `<div class="wl"><div class="wl-cap">How heavy this act is</div>${rungs}
+    <p class="wl-note">Deferring or dismissing is <b>reasoned</b>: it is kept and returnable, so it can be undone — but it never happens silently, because it carries a reason that goes on the record as your own words.</p></div>`;
+}
+
+/* CHOOSE + PRE-FLIGHT + AUTHOR, in one dialog. Opened from the act bar on a
+   focus's page for one chosen disposition; the member can still switch between
+   the two here (that is the CHOICE), and every switch re-runs the pre-flight. */
+let DISPOSE_CTX = null;   // { id, title, state }
+function openDisposeDialog(id, title, state, to){
+  DISPOSE_CTX = { id, title, state };
+  const choose = DISPOSITIONS.map(d=>`<label class="dz-opt${d===to?" on":""}">
+      <input type="radio" name="dz-to" value="${d}" ${d===to?"checked":""} onchange="disposeChoose(this.value)">
+      <span class="dz-verb">${esc(DISPOSE_VERB[d])}</span>
+      <span class="dz-mean">${d==="deferred"
+        ? "Park it, with a reason. Kept, and returnable when the group is ready to look again."
+        : "Decline it, with a reason. Kept, never deleted, so the decision itself stays accountable."}</span>
+    </label>`).join("");
+  $("#dlg").innerHTML =
+    `<h2 id="dz-h">${esc(DISPOSE_VERB[to])} this focus</h2>
+     <p class="what">Disposing a focus moves its state and writes your reason into its permanent Session Log. It is reversible — a deferred or dismissed focus is kept and can be re-triaged — but it is never silent.</p>
+     <div class="dz-what"><span class="dz-ttl">${esc(title||id)}</span><span class="id">${esc(id)}</span></div>
+     <div class="dz-choose">${choose}</div>
+     <div class="dz-pf" id="dz-pf"><!-- pre-flight, painted by disposeValidate --></div>
+     <label class="fld" for="dz-reason">Your reason</label>
+     <textarea class="txt" id="dz-reason" maxlength="${DISPOSE_REASON_MAX}"
+       placeholder="e.g. Duplicates the audit already open under Project 14; nothing new to pursue here"
+       oninput="disposeValidate()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+     <div class="cc" id="dz-cc">0 / ${DISPOSE_REASON_MAX}</div>
+     ${weightLadderHtml("reasoned")}
+     <div id="dz-err" class="teach hidden"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="dz-go" disabled onclick="doDispose()">${esc(DISPOSE_VERB[to])}</button></div>`;
+  $("#dz-go").dataset.to = to;
+  $("#dlg-wrap").classList.remove("hidden");
+  disposeValidate();
+  const r = $("#dz-reason"); if(r && r.focus) r.focus();
+}
+function disposeChoose(to){
+  const go = $("#dz-go"); if(go) go.dataset.to = to;
+  const h = $("#dz-h"); if(h) h.textContent = `${DISPOSE_VERB[to]} this focus`;
+  $("#dlg").querySelectorAll(".dz-opt").forEach(o=>{
+    const on = o.querySelector("input").value===to; o.classList.toggle("on", on);
+  });
+  disposeValidate();
+}
+/* Paint the pre-flight from the current choice + reason, and gate the commit
+   button on it. The panel is the point: it shows what WILL refuse and why,
+   before the act runs. */
+function disposeValidate(){
+  if(!DISPOSE_CTX) return;
+  const go = $("#dz-go"); const to = go ? go.dataset.to : "deferred";
+  const el = $("#dz-reason"); const reason = el ? el.value : "";
+  const pf = disposePreflight({ state: DISPOSE_CTX.state, to, reason });
+  const cc = $("#dz-cc");
+  if(cc){
+    const bad = reason.trim() && DISPOSE_REASON_RULE.test(reason);
+    cc.textContent = bad ? "no quotation marks, backslashes, or line breaks — written verbatim into the record" : `${reason.length} / ${DISPOSE_REASON_MAX}`;
+    cc.classList.toggle("bad", !!bad);
+  }
+  const pane = $("#dz-pf");
+  if(pane){
+    const rows = pf.gates.map(g=>`<div class="pf-row ${g.pass?"ok":"no"}">
+        <span class="pf-mark">${g.pass?"✓":"✗"}</span>
+        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
+      </div>`).join("");
+    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
+      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. This act is ready.</div>` : "");
+  }
+  if(go) go.disabled = !pf.ok;
+}
+/* COMMIT. The pre-flight runs ONE more time here as the real gate: if the act
+   WOULD be refused — no reason authored above all — the SURFACE refuses it and
+   never reaches the plane, so the C-2.8 requirement is felt before the request
+   is even sent. (Removing this early return is the harness's negative control:
+   an empty-reason act would then be sent to the plane.) Only a clean pre-flight
+   builds the one-focus selection and disposes it. */
+async function doDispose(){
+  if(!DISPOSE_CTX) return;
+  const go = $("#dz-go"); const to = go ? go.dataset.to : "deferred";
+  const el = $("#dz-reason"); const reason = el ? String(el.value||"").trim() : "";
+  const err = $("#dz-err"); if(err) err.classList.add("hidden");
+  const pf = disposePreflight({ state: DISPOSE_CTX.state, to, reason });
+  if(!pf.ok){                       // the surface refuses, before the plane
+    // The pre-flight speaks in the member's words (its `detail`), not the
+    // plane's code — the plane is never even reached, so there is no plane
+    // voice to render verbatim here. The §J verbatim passthrough is for a
+    // real plane refusal (the catch below), exactly as release does it.
+    if(err){ err.innerHTML = `<b>This act won't run yet — and nothing has been written.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
+    disposeValidate();
+    return { refused:true, reason:pf.refusal.reason };
+  }
+  if(go){ go.disabled = true; go.textContent = "…"; }
+  try{
+    const sel = await recPost("select", { ids:[DISPOSE_CTX.id] }, { kind:"enumerated" });
+    const res = await rec("dispose", { handle: sel.handle, to, reason });
+    RECORD_CACHE = null;            // this focus's state moved; the cache is stale
+    disposeReceipt(res, DISPOSE_CTX);
+    return res;
+  }catch(e){
+    if(err){ err.innerHTML = disposeRefusalHtml(e); err.classList.remove("hidden"); }
+    if(go){ go.disabled=false; go.textContent = DISPOSE_VERB[to]; }
+    disposeValidate();
+    return { refused:true, reason:e && e.reason };
+  }
+}
+/* THE RECEIPT — what the plane returned, in the record's terms: the act
+   happened, here is the record of it. */
+function disposeReceipt(res, ctx){
+  const to = res.to || "deferred";
+  const ids = Array.isArray(res.disposed) && res.disposed.length ? res.disposed : [ctx.id];
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt">
+       <div class="dz-rhead">${esc(DISPOSE_DONE[to]==="deferred"?"Deferred.":"Dismissed.")}</div>
+       <p class="dz-rlede">The plane recorded the act. It now reads as <span class="chip ${esc(to)}">${esc(to)}</span> in the record, and its Session Log carries your name and your reason. It is kept, and can be re-triaged.</p>
+       <div class="dz-rgrid">
+         <div class="kv"><span class="k">Focus</span><span class="v">${esc((ctx&&ctx.title)||ids[0])} <span class="id">${esc(ids[0])}</span></span></div>
+         <div class="kv"><span class="k">Now</span><span class="v plain">${esc(to)}</span></div>
+         <div class="kv"><span class="k">Your reason, as recorded</span><span class="v plain">${esc(res.reason||"")}</span></div>
+         <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — reversible, but never silent</span></div>
+       </div>
+       <div class="row-btns"><button class="btn" onclick="disposeDone('${esc(ids[0])}')">Done</button></div>
+     </div>`;
+}
+function disposeDone(id){ closeDialog(); RECORD_CACHE = null; if(id) openBundle(id); }
+/* A refusal renders in the PLANE'S OWN VOICE, offenders named, nothing written
+   — the same rule as release. For the surface-side pre-flight refusal the
+   `detail` is the surface's member-facing account of the same rule. */
+function disposeRefusalHtml(e){
+  const head = esc([e.reason, e.error].filter(Boolean).join(" · ") || "The plane refused, and wrote nothing.");
+  const detail = e.detail ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
+  let off = "";
+  if(Array.isArray(e.offenders) && e.offenders.length){
+    off = `<ul class="offenders">` + e.offenders.map(o=> typeof o==="string"
+      ? `<li>${esc(o)}</li>` : `<li>${esc(o.id||JSON.stringify(o))}${o.from?` — currently ${esc(o.from)}`:""}</li>`).join("") + `</ul>`;
+  }
+  return `<b>${head}</b>${detail}${off}`;
+}
+
 async function renderMonitoring(){
   $("#content").innerHTML = `<h1 class="rec">Monitoring &amp; developments</h1><p class="lede">What changed, or needs a second look. A re-evaluate flag means something a document depends on moved; a monitored document is re-checked against its live source on a schedule.</p><div id="mon"><p class="count-line">Loading&hellip;</p></div>`;
   try{
