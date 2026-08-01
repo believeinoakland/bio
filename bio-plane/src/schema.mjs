@@ -876,6 +876,47 @@ CREATE TABLE IF NOT EXISTS progression_stages (
   PRIMARY KEY (progression_key, stage_key)
 );
 CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progression_key);
+-- CONSTRUCTS Step 5, SLICE B (FW-9): a PROGRESSION INSTANCE -- an actual N-stage chain of
+-- REAL captured documents threaded through a definition's stages by a THREADING ENTITY (a
+-- contract number, a project id, a fund). Framework 8.2: "an instance of a progression is
+-- assembled by following an entity" -- which is why the entity axis is Step 4 and this is
+-- Step 5. Each row is ONE captured document placed at ONE stage of ONE instance; the
+-- instance is all rows sharing (progression_key, entity_id). The INSTANCE GRADE (the
+-- weakest connection along the chain, framework 8.2's D-73 pair->chain generalised beyond
+-- FW-8's two-node base case) and the MISSING-PREDECESSOR findings are DERIVED on read from
+-- these rows plus the definition -- NEVER stored as a grade that could go stale, so an
+-- instance read reflects the live definition and the documents still held (undetermined is
+-- honest; a grade is never invented). grade here is the DOCUMENT's own end-grade: the
+-- STRONGEST 8.1 resolution of THIS capture to the threading entity (the same collapse
+-- op=concerns and op=connect make), so a placement records how well its document is tied to
+-- the subject, and the chain math takes the weaker end of each consecutive pair.
+--
+-- A placement is only admitted for a document that ACTUALLY resolves to the threading
+-- entity (FW-7): a document that does not concern the entity cannot be threaded on it (an
+-- equality a caller can hand us is one a caller can invent). Which STAGE a document fills is
+-- the member's authored judgment (this document is the award, that one the contract), so
+-- threaded_by is stamped server-side; the GRADE is the record's, never the caller's.
+--
+-- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly
+-- as resolutions do (it is in op=purge's TABLES): a per-bundle purge removes that document's
+-- placements and the instance honestly re-reads with that stage now unfilled, and a
+-- whole-store purge takes them all (D-113). EXCEPTION documents that discharge a lawful
+-- skip, JUNCTION checks as findings, and the SCHEDULED task that walks this table for
+-- missing predecessors are DEFERRED past FW-9.
+CREATE TABLE IF NOT EXISTS progression_instances (
+  progression_key TEXT NOT NULL,
+  entity_id       TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  capture_sha     TEXT NOT NULL,
+  bundle_id       TEXT NOT NULL,
+  grade           TEXT NOT NULL,
+  threaded_by     TEXT,
+  at              TEXT,
+  PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha)
+);
+CREATE INDEX IF NOT EXISTS progression_instances_key ON progression_instances(progression_key, entity_id);
+CREATE INDEX IF NOT EXISTS progression_instances_bundle ON progression_instances(bundle_id);
+CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instances(capture_sha);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

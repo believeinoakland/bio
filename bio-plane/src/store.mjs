@@ -3495,6 +3495,203 @@ export class Store extends DurableObject {
              stage_count: stages.length, stages };
   }
 
+  /* ---- CONSTRUCTS Step 5, SLICE B (FW-9): PROGRESSION INSTANCES, N-stage weakest-grade
+   * inheritance, and the MISSING-PREDECESSOR finding (M4's acceptance: "a progression with a
+   * missing predecessor is visible"). A progression INSTANCE threads REAL captured documents
+   * through a definition's stages, assembled by following a THREADING ENTITY (framework 8.2:
+   * "an instance of a progression is assembled by following an entity"). It builds ON FW-8:
+   *   - a document is threaded only if it RESOLVES to the entity (FW-7) -- a real connection,
+   *     not one a caller can invent;
+   *   - the instance grade is the WEAKEST connection along the chain -- FW-8 graded the
+   *     two-node base case, this generalises it to N stages (D-73 pair->chain);
+   *   - a REQUIRED stage with no document is a missing-predecessor finding carrying the
+   *     instance's grade (framework 8.2: "an award with no solicitation").
+   * DEFERRED past FW-9 (flagged, not built): exception documents that discharge a lawful
+   * skip; junction checks as findings; the scheduled task that walks the table. */
+
+  /* The strongest 8.1 grade each captured document resolved to this entity at, with its
+     bundle -- the SAME collapse op=concerns and op=connect make, so a placement's end-grade
+     is exactly the grade that document appears at in the reverse index. Reuses the resolution
+     grade rank so the instance axis cannot drift from the connection axis. */
+  #strongestResolutionsFor(entityId) {
+    const rows = this.#rows(
+      `SELECT capture_sha, bundle_id, grade FROM resolutions WHERE entity_id=? ORDER BY capture_sha`, entityId);
+    const byCapture = new Map();
+    for (const r of rows) {
+      const cur = byCapture.get(r.capture_sha);
+      if (!cur || Store.#GRADE_RANK[r.grade] > Store.#GRADE_RANK[cur.grade])
+        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
+    }
+    return byCapture;
+  }
+
+  /* A missing stage is a FINDING only when the group's definition says the stage is always
+     or usually expected (framework 8.2 required-ness). A sometimes/never stage missing is
+     NOT a finding -- respect the stage's required-ness. unless_exception is DEFERRED with the
+     exception-document machinery (DEC-9): its finding turns on "no exception document", a
+     check FW-9 does not build, so FW-9 does not claim a finding it cannot yet substantiate
+     (undetermined is honest; the finding reports, it does not decide). */
+  static #REQUIRED_FIRES = new Set(["always", "usually"]);
+
+  /* Assemble a progression INSTANCE from its stored placements plus the CURRENT definition,
+     deriving the instance grade and the missing-predecessor findings ON READ -- never from a
+     stored grade that could go stale, so the instance reflects the live definition and the
+     documents still held. found:false if the definition is gone. */
+  #assembleInstance(progressionKey, entityId) {
+    const def = this.#one(
+      `SELECT progression_key, label FROM progression_defs WHERE progression_key=?`, progressionKey);
+    if (!def) return { ok: true, progression_key: progressionKey, entity_id: entityId, found: false, defined: false,
+                       detail: "no such progression definition (define it first, op=progressiondefine)" };
+    const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
+    const stageDefs = this.#rows(
+      `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
+         FROM progression_stages WHERE progression_key=? ORDER BY stage_no`, progressionKey);
+    const rows = this.#rows(
+      `SELECT stage_key, capture_sha, bundle_id, grade FROM progression_instances
+         WHERE progression_key=? AND entity_id=?`, progressionKey, entityId);
+    /* found:false when NOTHING has been threaded on this entity -- an empty instance has no
+       missing predecessor (there is no successor either), and reporting every required stage
+       as absent would be a finding about a thing that does not exist. `defined:true` tells a
+       caller the progression IS defined (they did not mistype the key), only that no document
+       has been threaded on this entity yet. */
+    if (rows.length === 0)
+      return { ok: true, progression_key: progressionKey, entity_id: entityId, found: false, defined: true,
+               label: def.label, entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
+               grade: null, grade_determined: false, stage_count: stageDefs.length, placed_count: 0,
+               chain: [], stages: [], findings: [], finding_count: 0 };
+    /* Group placements by stage; the stage's REPRESENTATIVE for the chain is its STRONGEST
+       document (a stage is as well-evidenced as its best document, cardinality 0..n). */
+    const docsByStage = new Map();
+    for (const r of rows) {
+      if (!docsByStage.has(r.stage_key)) docsByStage.set(r.stage_key, []);
+      docsByStage.get(r.stage_key).push({ capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
+    }
+    const repGrade = new Map();
+    for (const [sk, docs] of docsByStage) {
+      let best = docs[0];
+      for (const d of docs) if (Store.#GRADE_RANK[d.grade] > Store.#GRADE_RANK[best.grade]) best = d;
+      repGrade.set(sk, best.grade);
+    }
+    /* The chain: PLACED stages in stage order (a missing stage in the middle is skipped here
+       and surfaces as a finding below, not as a broken chain). Each consecutive pair is a
+       connection graded the WEAKER of its two ends (FW-8 #weakerGrade); the INSTANCE grade is
+       the WEAKEST connection along the whole chain (framework 8.2, D-73 generalised to N
+       stages). With fewer than two placed stages there is NO connection, so the grade is
+       UNDETERMINED -- never invented (CLAUDE.md: undetermined is first-class and stated). */
+    const placedInOrder = stageDefs.filter((s) => docsByStage.has(s.stage_key));
+    const chain = [];
+    let instanceGrade = null;
+    for (let i = 1; i < placedInOrder.length; i++) {
+      const a = placedInOrder[i - 1], b = placedInOrder[i];
+      const ga = repGrade.get(a.stage_key), gb = repGrade.get(b.stage_key);
+      const g = Store.#weakerGrade(ga, gb);
+      chain.push({ from_stage: a.stage_key, to_stage: b.stage_key, a_grade: ga, b_grade: gb, grade: g });
+      if (instanceGrade === null || Store.#GRADE_RANK[g] < Store.#GRADE_RANK[instanceGrade]) instanceGrade = g;
+    }
+    const determined = instanceGrade !== null;
+    /* The stage view, and the missing-predecessor findings. A REQUIRED stage (always/usually)
+       with no document is a finding carrying the INSTANCE's grade -- the finding REPORTS the
+       gap, it does not decide (framework invariant 8), and it carries the weakest grade the
+       chain rests on so a case built on it says how strong that chain is. */
+    const stages = [], findings = [];
+    for (const s of stageDefs) {
+      const docs = docsByStage.get(s.stage_key) || [];
+      const present = docs.length > 0;
+      stages.push({ stage_key: s.stage_key, label: s.label, after_stage: s.after_stage,
+                    cardinality: s.cardinality, required: s.required, present, document_count: docs.length,
+                    grade: present ? repGrade.get(s.stage_key) : null,
+                    documents: docs.map((d) => ({ capture_sha: d.capture_sha, bundle_id: d.bundle_id, grade: d.grade })) });
+      if (!present && Store.#REQUIRED_FIRES.has(s.required)) {
+        findings.push({ kind: "missing_predecessor", stage_key: s.stage_key, stage_label: s.label,
+                        required: s.required, after_stage: s.after_stage,
+                        grade: determined ? instanceGrade : "undetermined", grade_determined: determined,
+                        detail: `the '${s.stage_key}' stage is ${s.required} required but no threaded document fills it`
+                              + ` -- a missing predecessor (framework 8.2), carrying the instance's grade` });
+      }
+    }
+    return { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
+             label: def.label, entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
+             grade: instanceGrade, grade_determined: determined,
+             established: determined && Store.#isEstablished(instanceGrade),
+             stage_count: stageDefs.length, placed_count: placedInOrder.length,
+             chain, stages, findings, finding_count: findings.length };
+  }
+
+  /* op=thread: thread REAL captured documents through a progression definition's stages,
+     assembled by a THREADING ENTITY -- one instance per (definition, entity). A document is
+     admitted ONLY if it RESOLVES to the entity (FW-7): a document that does not concern the
+     subject cannot be threaded on it (an equality a caller can hand us is one a caller can
+     invent). Each placement's GRADE is the record's (the document's strongest resolution to
+     the entity), never the caller's; which STAGE a document fills is the member's authored
+     judgment, so threaded_by is stamped server-side. Re-threading REPLACES the instance's
+     placements (an instance is editable, like a definition). Returns the assembled instance
+     -- grade and findings derived. */
+  threadInstance({ progressionKey, entityId, placements, threadedBy = null } = {}) {
+    if (typeof progressionKey !== "string" || !progressionKey.trim())
+      return { ok: false, reason: "NO_KEY", detail: "a progression instance names its definition by key (op=thread)" };
+    const key = progressionKey.trim();
+    if (typeof entityId !== "string" || !entityId.trim())
+      return { ok: false, reason: "NO_ENTITY", detail: "a progression instance is threaded by an entity, named by its id" };
+    const eid = entityId.trim();
+    if (!Array.isArray(placements) || placements.length === 0)
+      return { ok: false, reason: "NO_PLACEMENTS", detail: "name at least one {stage, captureSha} placement to thread" };
+    const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return { ok: false, reason: "NO_SUCH_PROGRESSION", progression_key: key,
+      detail: "define the progression first (op=progressiondefine), then thread documents through it" };
+    const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, eid);
+    if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: eid,
+      detail: "the threading entity must be registered (op=entitycreate)" };
+    const stageKeys = new Set(this.#rows(
+      `SELECT stage_key FROM progression_stages WHERE progression_key=?`, key).map((r) => r.stage_key));
+    /* The documents that ACTUALLY concern the entity, at their strongest resolution grade --
+       the only documents that may be threaded on it. */
+    const concerning = this.#strongestResolutionsFor(eid);
+    const norm = [];
+    const seen = new Set();
+    for (let i = 0; i < placements.length; i++) {
+      const p = placements[i] || {};
+      const sk = typeof p.stage === "string" ? p.stage.trim() : (typeof p.stageKey === "string" ? p.stageKey.trim() : "");
+      if (!sk) return { ok: false, reason: "NO_STAGE", detail: `placement ${i + 1} names no stage`, placement: i + 1 };
+      if (!stageKeys.has(sk)) return { ok: false, reason: "BAD_STAGE", stage_key: sk,
+        detail: `'${sk}' is not a stage of progression '${key}'` };
+      const cs = typeof p.captureSha === "string" ? p.captureSha.trim()
+               : (typeof p.capture_sha === "string" ? p.capture_sha.trim() : "");
+      if (!cs) return { ok: false, reason: "NO_CAPTURE", stage_key: sk, detail: `placement for '${sk}' names no capture sha` };
+      const dup = sk + " " + cs;
+      if (seen.has(dup)) return { ok: false, reason: "DUPLICATE_PLACEMENT", stage_key: sk, capture_sha: cs,
+        detail: `the same document is placed at '${sk}' twice` };
+      seen.add(dup);
+      const res = concerning.get(cs);
+      if (!res) return { ok: false, reason: "NOT_CONCERNED", stage_key: sk, capture_sha: cs, entity_id: eid,
+        detail: "this document does not resolve to the threading entity, so it cannot be threaded on it "
+              + "(resolve it first with op=resolve, or thread it on the entity it actually concerns)" };
+      norm.push({ stage_key: sk, capture_sha: cs, bundle_id: res.bundle_id, grade: res.grade });
+    }
+    const at = new Date().toISOString();
+    const by = threadedBy == null ? null : String(threadedBy).slice(0, 200);
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec(`DELETE FROM progression_instances WHERE progression_key=? AND entity_id=?`, key, eid);
+      for (const p of norm)
+        this.sql.exec(
+          `INSERT INTO progression_instances (progression_key,entity_id,stage_key,capture_sha,bundle_id,grade,threaded_by,at)
+           VALUES (?,?,?,?,?,?,?,?)`,
+          key, eid, p.stage_key, p.capture_sha, p.bundle_id, p.grade, by, at);
+    });
+    const inst = this.#assembleInstance(key, eid);
+    return { ...inst, threaded: norm.length, threaded_by: by, at };
+  }
+
+  /* op=instance: read a progression INSTANCE -- the documents threaded through a definition
+     by an entity, with the instance grade (the weakest connection along the chain) and the
+     missing-predecessor findings, all DERIVED on read from the CURRENT definition. */
+  readInstance({ progressionKey, entityId } = {}) {
+    if (typeof progressionKey !== "string" || !progressionKey.trim())
+      return { ok: false, reason: "NO_KEY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
+    if (typeof entityId !== "string" || !entityId.trim())
+      return { ok: false, reason: "NO_ENTITY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
+    return this.#assembleInstance(progressionKey.trim(), entityId.trim());
+  }
+
   /* ---- coordination: what LockService and the nextSeq race did ---- */
 
   allocId(prefix, year) {
@@ -3559,6 +3756,9 @@ export class Store extends DurableObject {
          reported so a whole-store purge can PROVE it cleared them (D-113). */
       connections: n("connections"), progressionDefs: n("progression_defs"),
       progressionStages: n("progression_stages"),
+      /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
+         them (D-113). */
+      progressionInstances: n("progression_instances"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -3589,8 +3789,16 @@ export class Store extends DurableObject {
        it out would let a whole-store purge report scope ALL while a document's
        resolutions survived, the D-113 silent-leftover; hygiene.test.mjs holds this list
        against schema.mjs. */
+    /* FW-9: `progression_instances` (CONSTRUCTS Step 5 slice B) is DERIVED from the corpus —
+       each row is a captured document threaded at a stage — and carries bundle_id, so it
+       clears in BOTH arms exactly as resolutions do. A per-bundle purge removes that
+       document's placements and the instance honestly re-reads with that stage now unfilled;
+       a whole-store purge takes them all. Leaving it out would let a whole-store purge report
+       scope ALL while a threaded document survived, the D-113 silent-leftover; hygiene.test.mjs
+       holds this list against schema.mjs. Progression DEFINITIONS are member-declared (no
+       bundle_id) and cleared in the whole-store arm below with the registry. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
-                    "readings", "reading_refs", "resolutions"];
+                    "readings", "reading_refs", "resolutions", "progression_instances"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -3699,7 +3907,9 @@ export class Store extends DurableObject {
                  /* FW-8: the derived connections and member-declared progression
                     definitions a whole-store purge took (D-113). */
                  connections: d("connections"), progressionDefs: d("progressionDefs"),
-                 progressionStages: d("progressionStages") },
+                 progressionStages: d("progressionStages"),
+                 /* FW-9: the threaded progression instances a purge took (D-113). */
+                 progressionInstances: d("progressionInstances") },
     };
   }
 
@@ -6431,6 +6641,14 @@ export class Store extends DurableObject {
                                                  captureSha: url.searchParams.get("sha256") }),
         progressiondefine: () => this.defineProgression(body || {}),
         progression: () => this.readProgression({ progressionKey: url.searchParams.get("key") }),
+        /* CONSTRUCTS Step 5, SLICE B (FW-9): PROGRESSION INSTANCES and the MISSING-PREDECESSOR
+           finding. op=thread threads REAL captured documents through a definition's stages by
+           a threading entity (only documents that resolve to it, FW-7), stamping threaded_by
+           below; op=instance reads the instance with its grade (the weakest connection along
+           the N-stage chain, D-73) and its missing-predecessor findings, derived on read. */
+        thread: () => this.threadInstance(body || {}),
+        instance: () => this.readInstance({ progressionKey: url.searchParams.get("key"),
+                                            entityId: url.searchParams.get("id") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),

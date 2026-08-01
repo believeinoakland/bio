@@ -529,7 +529,7 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.4.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.5.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
   `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —
@@ -545,8 +545,12 @@ correctness properties, not preferences. Changing either is an interface change.
   data / D-73's rule half), all added BEFORE `host_governor` and cleared by `op=purge`
   (connections in BOTH arms via an explicit `a_bundle_id`/`b_bundle_id` delete since it
   has no single `bundle_id`; the two progression tables in the whole-store arm like the
-  registry). No existing table's columns changed, so nothing built against I5 breaks;
-  the shapes are in the ownership list and note below.)
+  registry); 1.5.0 2026-07-31, FW-9 — ADDITIVE: one new DERIVED table
+  `progression_instances` (CONSTRUCTS Step 5 slice B — a progression INSTANCE threaded
+  through a definition's stages by an entity), added BEFORE `host_governor` and to
+  `op=purge`'s `TABLES` (so it clears in BOTH arms like `resolutions`, since a placement
+  carries `bundle_id`). No existing table's columns changed, so nothing built against I5
+  breaks; the shapes are in the ownership list and note below.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 
@@ -653,6 +657,32 @@ entity id or capture sha) and `op=progression` (a definition by key). Progressio
 INSTANCES, weakest-grade inheritance along an N-stage chain (D-73 pair→chain, beyond the
 two-node base case here), exception documents, junction checks and the missing-predecessor
 task are SLICE B — not built by FW-8.
+
+`progression_instances` (FW-9, CONSTRUCTS Step 5 slice B) is `FRAMEWORK`'s: a progression
+INSTANCE — an actual N-stage chain of REAL captured documents threaded through a definition's
+stages by a THREADING ENTITY (framework §8.2, "an instance of a progression is assembled by
+following an entity"). Each row is ONE captured document placed at ONE stage of ONE instance;
+the instance is all rows sharing `(progression_key, entity_id)`, keyed
+`(progression_key, entity_id, stage_key, capture_sha)` so a stage may hold several documents
+(cardinality `0..n`). A document is admitted only if it RESOLVES to the threading entity
+(FW-7) — a real connection, not one a caller can invent — and each placement's `grade` is the
+STRONGEST §8.1 resolution of THAT capture to the entity (the same collapse `op=concerns`/
+`op=connect` make), never the caller's. The INSTANCE grade (the WEAKEST connection along the
+chain — FW-8 graded the two-node base case, FW-9 generalises to N stages, D-73 pair→chain) and
+the MISSING-PREDECESSOR findings are DERIVED ON READ from these rows plus the CURRENT
+definition, NEVER stored as a grade that could go stale: a stage that is `required`
+(always/usually, framework §8.2) with no threaded document surfaces as a finding carrying the
+instance's grade (the framework's own example, an award with no solicitation, M4's acceptance).
+Requiredness is respected — a missing `sometimes`/`never` stage is NOT a finding, and
+`unless_exception` is DEFERRED with the exception-document machinery (DEC-9). Fewer than two
+placed stages yield an UNDETERMINED grade — never invented (undetermined is first-class).
+DERIVED from the corpus (carries `bundle_id`), so cleared by BOTH a per-bundle and a
+whole-store purge (it is in `op=purge`'s `TABLES`). Write through `op=thread` (thread
+documents into an instance — stamps `threaded_by` from the session, needs `contribute`); read
+through `op=instance` (by `progression_key` + `entity_id`; ungated like the other reads).
+Exception documents that discharge a lawful skip, junction checks as findings, and the
+SCHEDULED task that walks this table for missing predecessors (it would ride the REC-1 DO-alarm
+scheduler) are DEFERRED past FW-9.
 
 ### What changing it costs
 
