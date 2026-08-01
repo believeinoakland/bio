@@ -933,6 +933,25 @@ export class Store extends DurableObject {
         wake: (now) => this.#one(`SELECT count(*) c FROM connection_dirty`).c > 0
                          ? now + this.#connectionDeriveDelayMs() : null,
         tick: ()    => ({ connderive: this.#deriveConnectionsSweep() }) },
+      /* REC-8 (CONSTRUCTS Step 7, AGEING): the OVERDUE-SUCCESSOR scan — the SECOND framework
+         consumer on this alarm. It is the record's PROACTIVE noticing of a temporal expectation
+         coming due (FW-8 gave each stage a `within_interval`; nothing checked it). It writes
+         NOTHING — the overdue findings are DERIVED ON READ in op=proposals (an overdue flag goes
+         stale against the clock, so there is no overdue table). This consumer is the PUSH SIGNAL:
+         its WAKE is the EARLIEST FUTURE deadline across all instances, so the alarm fires exactly
+         when the next required successor tips past its deadline, and SELF-TERMINATES (wake null)
+         when no future deadline remains — an instance with no dated predecessor, no parseable
+         interval, or nothing threaded holds no alarm. It does NOT mint a task/focus per overdue
+         instance (D-79 don't-drown; escalation is DEC-10, Bob's). Uses the firing instant `now`,
+         the virtual clock a suite drives onAlarm(now) with, exactly as the other consumers do.
+         DEFERRED and flagged (D-86, the other half): bias-debt — a decayed bias measure is the
+         SAME shape (an obligation with a clock, blocking a state transition, settleable in batches),
+         and rides THIS consumer shape later with a different producer. REC-8 builds only the temporal
+         half; a bias-debt sweep would register beside overdue-scan and inherit the reconcile. */
+      { name: "overdue-scan",
+        due:  (now) => now,
+        wake: (now) => this.#overdueScan(now).next_deadline,
+        tick: (now) => ({ overduescan: this.#overdueScan(now) }) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -959,7 +978,7 @@ export class Store extends DurableObject {
     const probe = await this.#probeState(now);
     const reg = this.#schedConsumers(probe);
     const grace = Store.SCHED_GRACE_MS;
-    let swept = 0, drain = null, monitor = null, connderive = null; const probes = [];
+    let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null; const probes = [];
     for (const c of reg) {
       const d = c.due(now);
       if (d === null || d > now + grace) continue;
@@ -973,6 +992,7 @@ export class Store extends DurableObject {
       else if (c.name === "task-drain") drain = r.drain;
       else if (c.name === "archive-monitor") monitor = r && r.monitor;
       else if (c.name === "connection-derive") connderive = r && r.connderive;
+      else if (c.name === "overdue-scan") overduescan = r && r.overduescan;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -989,7 +1009,8 @@ export class Store extends DurableObject {
              waiting: d.waiting.length, remaining: d.remaining,
              rearmed: nextAt !== null, nextAt, probes,
              ...(monitor ? { monitor } : {}),
-             ...(connderive ? { connderive } : {}) };
+             ...(connderive ? { connderive } : {}),
+             ...(overduescan ? { overduescan } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -3778,7 +3799,7 @@ export class Store extends DurableObject {
      judgment, so threaded_by is stamped server-side. Re-threading REPLACES the instance's
      placements (an instance is editable, like a definition). Returns the assembled instance
      -- grade and findings derived. */
-  threadInstance({ progressionKey, entityId, placements, threadedBy = null } = {}) {
+  async threadInstance({ progressionKey, entityId, placements, threadedBy = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
       return { ok: false, reason: "NO_KEY", detail: "a progression instance names its definition by key (op=thread)" };
     const key = progressionKey.trim();
@@ -3830,6 +3851,14 @@ export class Store extends DurableObject {
           key, eid, p.stage_key, p.capture_sha, p.bundle_id, p.grade, by, at);
     });
     const inst = this.#assembleInstance(key, eid);
+    /* REC-8: a newly threaded instance may create a FUTURE overdue deadline (a placed, dated
+       predecessor with a required successor still absent). ARM the reconciling alarm so the
+       overdue-scan consumer wakes at that deadline — the producer/consumer split REC-5 established
+       (a resolve arms the connection-derive sweep; a thread arms the overdue scan). Arming only
+       SCHEDULES; the finding itself is derived on read, so this writes no overdue state. When the
+       instance is already overdue (or carries no determinable deadline) there is no future wake and
+       the scan self-terminates — the finding still surfaces through op=proposals. */
+    await this.#armScheduler();
     return { ...inst, threaded: norm.length, threaded_by: by, at };
   }
 
@@ -3928,6 +3957,158 @@ export class Store extends DurableObject {
     return { ok: true, progression_key: key, entity_id: eid, exception_count: exceptions.length, exceptions };
   }
 
+  /* ---- CONSTRUCTS Step 7 (REC-8): AGEING -- the record NOTICES when a required successor
+   * stage is OVERDUE (framework 8.2, "minutes follow a meeting within N days"). FW-8 gave each
+   * stage a `within_interval` but nothing checked it; REC-8 checks it. This is DERIVED ON READ,
+   * NEVER stored: an overdue flag goes stale against the clock (the same argument FW-9 made for
+   * the missing-predecessor grade), and a stored `overdue` boolean computed at one instant is a
+   * false claim at the next -- so there is NO overdue table. The finding is recomputed in the feed
+   * (op=proposals) and on the alarm tick, both against an INJECTABLE clock (#nowMs), so the
+   * computation is deterministic in the suite rather than a function of the day it runs.
+   *
+   * The honesty rules are load-bearing and every one is a "skip" (undetermined, NOT overdue):
+   *   - the successor's `within_interval` must PARSE to a real duration -- "before the meeting"
+   *     and "by due date" do not, so a stage carrying one of those is never overdue;
+   *   - the predecessor stage (the successor's `after_stage`) must be PLACED -- if it is itself
+   *     absent, the clock has not started (that gap is the predecessor's own finding);
+   *   - the predecessor's document must carry a DETERMINABLE DATE (the reading's `at`, FW-5,
+   *     preferred; else the register's `registered` time) -- if neither is determinable the
+   *     deadline cannot be computed and is NEVER fabricated. */
+
+  /* The injectable clock. Env-overridable exactly as REC-5 made its cadence/batch env-overridable
+     (BIO_NOW_MS), so a suite pins "now" and the overdue computation is deterministic; a caller may
+     also pass an explicit instant (op=proposals&now=<ms>, an as-of read, the same seam op=sourcereach
+     opened for its time-armed verdict). Falls through to the wall clock in production. Milliseconds. */
+  #nowMs(explicit) {
+    /* an ABSENT param is null (or "") -- fall through to env, NOT to Number(null)===0 (epoch). */
+    if (explicit !== undefined && explicit !== null && explicit !== "") {
+      const e = Number(explicit);
+      if (Number.isFinite(e) && e >= 0) return e;
+    }
+    const v = Number(this.env && this.env.BIO_NOW_MS);
+    if (Number.isFinite(v) && v >= 0) return v;
+    return Date.now();
+  }
+
+  /* Turn a member-declared `within_interval` and an anchor instant into a deadline, or null when
+     the interval does not parse (undetermined -- never a fabricated deadline). day/week are fixed
+     spans; month/year use CALENDAR arithmetic on the anchor date, so "1 year" is exact rather than
+     a 365-day approximation. Anything that is not "<n> <unit>" (e.g. "before the meeting", "by due
+     date") returns null and the stage is simply not overdue. */
+  #intervalDeadlineMs(anchorMs, within) {
+    if (typeof within !== "string") return null;
+    const m = within.trim().match(/^(\d+)\s*(day|days|week|weeks|month|months|year|years)$/i);
+    if (!m) return null;
+    const n = parseInt(m[1], 10);
+    if (!Number.isFinite(n)) return null;
+    const unit = m[2].toLowerCase();
+    if (unit === "day" || unit === "days") return anchorMs + n * 86400000;
+    if (unit === "week" || unit === "weeks") return anchorMs + n * 7 * 86400000;
+    const d = new Date(anchorMs);
+    if (unit === "month" || unit === "months") { d.setUTCMonth(d.getUTCMonth() + n); return d.getTime(); }
+    if (unit === "year" || unit === "years") { d.setUTCFullYear(d.getUTCFullYear() + n); return d.getTime(); }
+    return null;
+  }
+
+  /* A captured document's DATE, in ms, or null when none is determinable. The reading's `at`
+     (FW-5, a document's own date -- what op=acquire's reader found) is PREFERRED; the register's
+     `registered` instant is the fallback (when the capture was filed). Neither determinable ->
+     null, and the stage anchored on it is never overdue -- undetermined stays undetermined. */
+  #captureDateMs(captureSha) {
+    if (typeof captureSha !== "string" || !captureSha) return null;
+    const r = this.#one(`SELECT at FROM readings WHERE capture_sha=?`, captureSha);
+    if (r && typeof r.at === "string" && r.at) { const t = Date.parse(r.at); if (Number.isFinite(t)) return t; }
+    const reg = this.#one(`SELECT registered FROM register WHERE capture_sha=?`, captureSha);
+    if (reg && typeof reg.registered === "string" && reg.registered) { const t = Date.parse(reg.registered); if (Number.isFinite(t)) return t; }
+    return null;
+  }
+
+  /* For an already-assembled instance, the deadline of every missing-required-undischarged
+     successor whose deadline is DETERMINABLE (parseable interval + placed predecessor + dated
+     predecessor). Returns {finding, within_interval, predecessor_stage, predecessor_ms,
+     deadline_ms} per such stage -- REGARDLESS of whether it is past (that comparison against `now`
+     is the caller's, so the same walk serves both the overdue findings and the alarm's next-wake).
+     Reuses #assembleInstance's OWN required/discharge decision (its missing_predecessor findings),
+     so the requiredness and FW-10 discharge doctrine is enforced at the one derivation point and
+     never re-implemented here -- REC-8 adds only the temporal layer on top. */
+  #instanceDeadlines(inst) {
+    const out = [];
+    if (!inst || !inst.found || !Array.isArray(inst.findings) || inst.findings.length === 0) return out;
+    const missing = inst.findings.filter((f) => f.kind === "missing_predecessor");
+    if (missing.length === 0) return out;
+    const within = new Map(this.#rows(
+      `SELECT stage_key, within_interval FROM progression_stages WHERE progression_key=?`, inst.progression_key)
+      .map((r) => [r.stage_key, r.within_interval]));
+    const stageByKey = new Map((inst.stages || []).map((s) => [s.stage_key, s]));
+    for (const f of missing) {
+      const wi = within.get(f.stage_key);
+      if (!wi) continue;                                       // no within_interval -> undetermined, not overdue
+      const anchorKey = f.after_stage;
+      if (!anchorKey) continue;                                // no predecessor -> no clock anchor
+      const anchor = stageByKey.get(anchorKey);
+      if (!anchor || !anchor.present) continue;                // predecessor itself absent -> clock not started
+      let anchorMs = null;                                     // the LATEST determinable predecessor date --
+      for (const d of (anchor.documents || [])) {              // the most generous anchor, so a deadline is
+        const t = this.#captureDateMs(d.capture_sha);          // declared overdue only when it truly is (we do
+        if (t !== null && (anchorMs === null || t > anchorMs)) anchorMs = t;  // not over-accuse on a stale date)
+      }
+      if (anchorMs === null) continue;                         // no determinable date -> never a fabricated deadline
+      const deadline = this.#intervalDeadlineMs(anchorMs, wi);
+      if (deadline === null) continue;                         // interval did not parse -> undetermined
+      out.push({ finding: f, within_interval: wi, predecessor_stage: anchorKey,
+                 predecessor_ms: anchorMs, deadline_ms: deadline });
+    }
+    return out;
+  }
+
+  /* The OVERDUE findings for one instance at `nowMs`: a distinct finding KIND (overdue_successor)
+     so a consumer tells "never happened" (missing_predecessor) from "not yet, but overdue". Every
+     overdue stage is ALSO a missing_predecessor (overdue is computed only over those), so overdue is
+     strictly an escalation carrying the SAME grade (the instance's weakest connection, or
+     undetermined -- never invented). */
+  #overdueFindings(inst, nowMs) {
+    const out = [];
+    for (const d of this.#instanceDeadlines(inst)) {
+      if (d.deadline_ms >= nowMs) continue;                    // not yet overdue
+      const f = d.finding;
+      out.push({ kind: "overdue_successor", stage_key: f.stage_key, stage_label: f.stage_label,
+                 required: f.required, after_stage: f.after_stage, predecessor_stage: d.predecessor_stage,
+                 predecessor_at: new Date(d.predecessor_ms).toISOString(), within_interval: d.within_interval,
+                 deadline: new Date(d.deadline_ms).toISOString(), overdue_by_ms: nowMs - d.deadline_ms,
+                 grade: f.grade, grade_determined: f.grade_determined,
+                 detail: "the '" + f.stage_key + "' stage is " + f.required + " required and still absent past its '"
+                       + d.within_interval + "' deadline after '" + d.predecessor_stage + "' ("
+                       + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = "
+                       + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2,"
+                       + " temporal), carrying the instance's grade" });
+    }
+    return out;
+  }
+
+  /* The whole-store overdue scan, at `nowMs`: how many required successors are currently overdue,
+     and the EARLIEST FUTURE deadline still ahead (the next instant a not-yet-overdue stage tips
+     over). It is the alarm consumer's body AND its wake source -- the alarm arms to next_deadline
+     and fires exactly when the record next has something to notice, and self-terminates when there
+     is no future deadline left (everything determinable is already overdue, or nothing is
+     determinable). It WRITES NOTHING: derive-on-read owns the truth, the scan is only the push
+     signal. Bounded by the count of threaded instances, like proposalsFeed's own walk. */
+  #overdueScan(nowMs) {
+    const pairs = this.#rows(
+      `SELECT DISTINCT progression_key, entity_id FROM progression_instances ORDER BY progression_key, entity_id`);
+    let overdue = 0, next = null;
+    for (const p of pairs) {
+      const inst = this.#assembleInstance(p.progression_key, p.entity_id);
+      for (const d of this.#instanceDeadlines(inst)) {
+        if (d.deadline_ms < nowMs) overdue += 1;                // already past its deadline
+        /* a FUTURE deadline (strictly ahead) is the next instant to wake for; the exact-boundary
+           instant is neither, so the alarm never re-arms to `now` and spin-fires. */
+        else if (d.deadline_ms > nowMs && (next === null || d.deadline_ms < next)) next = d.deadline_ms;
+      }
+    }
+    return { overdue_count: overdue, next_deadline: next,
+             next_deadline_at: next === null ? null : new Date(next).toISOString() };
+  }
+
   /* op=proposals (REC-6): the DISCOVERY feed for DERIVED findings. UI-5's proposal surface can
      render, aggregate and act on proposals, but until this op nothing ENUMERATES the record's
      derived findings, so the surface cannot DISCOVER what to show (it ships a gap banner). This
@@ -3956,7 +4137,12 @@ export class Store extends DurableObject {
      Only instances that PRODUCE a missing-predecessor finding enter the feed: an instance with no
      gap is not a proposal, and reporting it would be noise about a thing that is fine. Connections
      as a second finding kind are DEFERRED as a follow-on (missing-predecessors only here). */
-  proposalsFeed() {
+  proposalsFeed(nowMs) {
+    /* REC-8: the INJECTABLE clock the overdue-successor findings are computed against (env
+       BIO_NOW_MS, or an explicit op=proposals&now=<ms> as-of instant, else the wall clock), so
+       "which required successors are overdue" is deterministic in the suite rather than a function
+       of the day the feed is read. */
+    const now = this.#nowMs(nowMs);
     /* REC-7 / D-79: DISPOSITION-AWARENESS. A proposal a member has deferred or dismissed
        (op=proposedispose) is AGED — it must not keep reappearing as an OPEN question, and it must
        not silently vanish either (a finding that disappears is indistinguishable from one never
@@ -3985,27 +4171,47 @@ export class Store extends DurableObject {
          stage never fired. A finding whose (progression_key, stage_key) has been disposed is AGED
          OUT of the open feed (it lives on in `dispositions`). An instance with no OPEN finding
          left contributes nothing to the open feed — its aged findings are recorded, not shown. */
-      const findings = (inst.findings || []).filter(
-        (f) => f.kind === "missing_predecessor" && !disposed.has(inst.progression_key + "::" + f.stage_key));
+      const disp = (sk) => disposed.has(inst.progression_key + "::" + sk);
+      const missing = (inst.findings || []).filter(
+        (f) => f.kind === "missing_predecessor" && !disp(f.stage_key));
+      /* REC-8: the OVERDUE-SUCCESSOR findings for this instance at `now`, a DISTINCT finding kind
+         so a consumer tells "never happened" (missing_predecessor) from "not yet, but overdue".
+         Every overdue stage is also a missing stage (overdue is computed only over the missing
+         findings above), so the same disposition ages both — a member who set the gap aside is not
+         re-asked because it later crossed its deadline. */
+      const overdueF = this.#overdueFindings(inst, now).filter((f) => !disp(f.stage_key));
+      const overdueByStage = new Map(overdueF.map((f) => [f.stage_key, f]));
+      /* the instances[] shape carries BOTH kinds (missing first, then overdue) so UI-5's raw
+         consumer sees the distinct overdue_successor finding alongside the missing_predecessor one. */
+      const findings = [...missing, ...overdueF];
       if (findings.length === 0) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
       instances.push({
         progression_key: inst.progression_key, progression_label: inst.label,
         entity_id: inst.entity_id, entity_label: entityLabel, findings });
-      for (const f of findings) {
+      /* D-79 aggregation stays ONE proposal per (progression_key, stage_key) — overdue does NOT
+         split a stage into two proposals (that would drown, and would break the disposition key
+         which is (progression, stage), kind-agnostic). Instead the proposal is ANNOTATED overdue,
+         and each instance entry says whether IT is overdue and by when. Iterate the missing
+         findings (one per stage), annotating from overdueByStage — every overdue stage has a
+         missing counterpart, so nothing is missed. */
+      for (const f of missing) {
         const key = inst.progression_key + "::" + f.stage_key;
         let g = groups.get(key);
         if (!g) {
           g = { key, progression_key: inst.progression_key, progression_label: inst.label,
                 stage_key: f.stage_key, stage_label: f.stage_label, required: f.required,
-                surfaced_by: "machine", instances: [] };
+                surfaced_by: "machine", overdue_count: 0, instances: [] };
           groups.set(key, g);
         }
+        const od = overdueByStage.get(f.stage_key) || null;
+        if (od) g.overdue_count += 1;
         /* the finding's grade is the instance's grade (the weakest connection along its chain),
            or "undetermined" when the instance has fewer than two placed stages — never invented. */
         g.instances.push({ entity_id: inst.entity_id, entity_label: entityLabel,
           progression_key: inst.progression_key,
-          grade: f.grade_determined ? f.grade : null, grade_determined: f.grade_determined === true });
+          grade: f.grade_determined ? f.grade : null, grade_determined: f.grade_determined === true,
+          overdue: !!od, deadline: od ? od.deadline : null });
       }
     }
     /* D-79: ONE proposal per (progression_key, stage_key) carrying its N instances, graded the
@@ -4020,6 +4226,13 @@ export class Store extends DurableObject {
       g.grade = anyUndetermined
         ? null
         : g.instances.map((i) => i.grade).reduce((a, b) => Store.#weakerGrade(a, b));
+      /* REC-8: the temporal escalation on the proposal — `overdue` true when ANY of its instances
+         is past its within_interval deadline, `overdue_count` how many, and `kinds` the distinct
+         finding kinds this proposal aggregates (a consumer sorts/badges the overdue ones without
+         re-deriving the clock). A proposal with no overdue instance carries the same missing-only
+         shape as before. */
+      g.overdue = g.overdue_count > 0;
+      g.kinds = g.overdue ? ["missing_predecessor", "overdue_successor"] : ["missing_predecessor"];
       proposals.push(g);
     }
     /* biggest pattern first — the DROWNING failure D-79 names is showing many small findings as
@@ -7125,7 +7338,11 @@ export class Store extends DurableObject {
         /* REC-6: op=proposals, the DISCOVERY feed for derived findings (UI-5's delegation). A
            read-time walk of every progression instance for its missing-predecessor findings,
            D-79-aggregated per (progression_key, stage_key). Reports, never mutates. */
-        proposals: () => this.proposalsFeed(),
+        /* REC-8: `now` is an optional AS-OF instant (ms) so a suite can pin the clock the
+           overdue-successor findings are computed against, deterministically — the same seam
+           op=sourcereach opened for its time-armed verdict. Absent, the feed uses env BIO_NOW_MS
+           if set, else the wall clock. */
+        proposals: () => this.proposalsFeed(url.searchParams.get("now")),
         /* REC-7: op=proposedispose, record a member's DEFER/DISMISS of a derived proposal WITHOUT
            minting a bundle (D-79 — declining is not authoring). Writes one disposition row keyed by
            (progression_key, stage_key); op=proposals then ages that proposal out of the open feed.

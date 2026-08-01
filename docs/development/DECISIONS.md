@@ -328,6 +328,43 @@ response:
 decided:
 enacted:
 
+### DEC-10 · open
+raised: 2026-07-31 · record-agent-8 (REC-8, CONSTRUCTS Step 7)
+for: bob
+question: When a required successor stage is OVERDUE and no member has acted on it, should the
+  record ESCALATE it beyond a proposal — mint a task, open a Focus, or push it onto a review queue —
+  or does it stay a surfaced proposal until a member adopts, defers or dismisses it?
+why it is Bob's: doctrine and the shape of the member's attention. CONSTRUCTS Step 7 names the
+  consumer as "the review queue, or a Focus, which Bob has not ruled on"; D-79 rules that a machine
+  finding must not "drown" a member by minting one task per instance; and the discovery-loop doctrine
+  (Step 8b) says nothing is adopted automatically and nothing vanishes silently. Whether an AGEING
+  clock is allowed to cross from "surfaced" into "assigned work" is exactly the escalation policy
+  that is his, not this session's.
+provisional: NOTHING IS BLOCKED, and the honest default is running. An overdue successor surfaces
+  as an `overdue_successor` finding on `op=proposals` — a DISTINCT kind beside `missing_predecessor`,
+  carrying the instance's grade and the deadline — adopted / deferred / dismissed through the SAME
+  REC-6/REC-7 proposal machinery a member already uses. The scheduled `overdue-scan` consumer on
+  REC-1's DO alarm is the PUSH SIGNAL (it wakes at the next deadline and self-terminates) and mints
+  NOTHING per instance. So the record NOTICES and surfaces, and does not yet drown.
+blocks: none
+alternative: let an undischarged, undisposed overdue proposal that has aged past some threshold
+  ELEVATE automatically — to a Focus at `surfaced` (advisory, commits nobody, per Step 8b's assistant-
+  surfacing ruling) or onto a dedicated review queue — so a genuinely-overdue obligation is not lost
+  merely because no one happened to read the feed.
+recommendation: hold the proposal-only default for now, and revisit once the review queue exists as
+  a real surface (Step 8b). Escalation without a queue to escalate INTO would just be a task per
+  instance, which is the D-79 drowning the doctrine forbids; and an overdue finding is derived and
+  clock-relative, so an auto-minted task could outlive the gap it was minted for. When Step 8b lands
+  the aggregation + ageing disciplines, an aged overdue proposal moving to a Focus at `surfaced` is
+  the natural elevation and fits the existing machinery.
+reversal cost: LOW and it stays low. Overdue is derived on read (no stored finding, no minted task),
+  so turning escalation on later mints nothing retroactively and turning it off strands nothing — the
+  reversal is which consumer reads the same derived feed, not a data migration.
+trigger:
+response:
+decided:
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_
