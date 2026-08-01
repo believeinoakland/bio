@@ -2735,6 +2735,16 @@ export class Store extends DurableObject {
          index or nothing does. */
       this.#writeText(bundleId, files);
 
+      /* CONSTRUCTS Step 3 (FW-5): persist the READING the doctype's reader
+         produced at acquire. It rides on the acquire document in
+         data/provenance.json, so it is DERIVED from the document here rather than
+         threaded as a second payload field — the same discipline the refs
+         projection above follows, in the SAME transaction, so the reading and its
+         entity-reference index can never be a revision behind the document they
+         describe. A reading indexed by its raw entity references is the reverse
+         index Step 4 resolves entities across documents with. */
+      this.#writeReadings(bundleId, files);
+
       /* 7.1: the creator of a project is its sole initial owner, written in the
          SAME transaction as the project itself so a project cannot exist
          unowned even for an instant. Two round trips from the control plane
@@ -2764,6 +2774,86 @@ export class Store extends DurableObject {
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner };
     });
+  }
+
+  /* CONSTRUCTS Step 3 (FW-5): persist a captured document's READING and index it
+     by entity reference. Called inside the promote transaction, from the acquire
+     document carried in data/provenance.json — the reading is a projection of the
+     document, derived here exactly as `refs` is derived from bundle.md, so it can
+     never disagree with the document it describes. A re-promotion REPLACES this
+     capture's reading and its reference rows, so a revised reader never leaves
+     stale references behind. Every reference is stored AS IT APPEARS — the raw
+     kind:key — and is NEVER resolved to a canonical entity (Step 4 / D-83). */
+  #writeReadings(bundleId, files) {
+    const prov = files.find((f) => f.path === "data/provenance.json");
+    if (!prov || typeof prov.text !== "string") return;
+    let docs;
+    try { docs = JSON.parse(prov.text).documents; } catch { return; }
+    if (!Array.isArray(docs)) return;
+    for (const doc of docs) {
+      const sha = doc && doc.capture && doc.capture.sha256;
+      const reading = doc && doc.reading;
+      if (typeof sha !== "string" || !sha || !reading || typeof reading !== "object") continue;
+      const entities = Array.isArray(reading.entities) ? reading.entities : [];
+      /* Replace, so a re-promotion carries no orphan references. */
+      this.sql.exec(`DELETE FROM reading_refs WHERE capture_sha=?`, sha);
+      this.sql.exec(
+        `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
+         VALUES (?,?,?,?,?,?,?,?)`,
+        sha, bundleId,
+        typeof reading.content_type === "string" ? reading.content_type : null,
+        Number.isInteger(reading.reader_version) ? reading.reader_version : null,
+        reading.found ? 1 : 0, entities.length,
+        JSON.stringify(reading), typeof reading.at === "string" ? reading.at : null);
+      for (const e of entities) {
+        if (!e || (e.key == null && e.kind == null)) continue;
+        /* The reference exactly as the reading carries it: the reader's own
+           composed ref when present, otherwise kind:key. Raw, source-assigned,
+           unresolved. */
+        const ref = typeof e.ref === "string" && e.ref
+          ? e.ref : `${e.kind == null ? "" : e.kind}:${e.key == null ? "" : e.key}`;
+        this.sql.exec(
+          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label)
+           VALUES (?,?,?,?,?,?)`,
+          sha, bundleId, ref,
+          e.kind == null ? null : String(e.kind),
+          e.key == null ? null : String(e.key),
+          e.label == null ? null : String(e.label));
+      }
+    }
+  }
+
+  /* CONSTRUCTS Step 3 read side: the reading of one captured document, by its
+     capture identity (register.capture_sha). Returns the stored reading —
+     entities[] + document facts — or found:false when the store holds none. */
+  readingFor(captureSha) {
+    if (typeof captureSha !== "string" || !captureSha)
+      return { ok: false, reason: "NO_SHA", detail: "a reading is read by its capture sha256" };
+    const row = this.#one(
+      `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at
+         FROM readings WHERE capture_sha=?`, captureSha);
+    if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
+    let reading = null;
+    try { reading = JSON.parse(row.reading); } catch { /* a malformed stored reading is surfaced as null */ }
+    return { ok: true, found: true, capture_sha: row.capture_sha, bundle_id: row.bundle_id,
+             content_type: row.content_type, reader_version: row.reader_version,
+             reader_found: !!row.found, entity_count: row.entity_count, at: row.at, reading };
+  }
+
+  /* The reverse index Step 4 builds on: every captured document whose reading
+     carries this entity reference. The reference is matched AS IT APPEARS — the
+     raw kind:key — and is NOT resolved to a canonical entity, so two documents
+     that name the same source id land together without any identity model. */
+  documentsByReference(ref) {
+    if (typeof ref !== "string" || !ref)
+      return { ok: true, ref: typeof ref === "string" ? ref : null, count: 0, documents: [] };
+    const rows = this.#rows(
+      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label, r.content_type
+         FROM reading_refs rr LEFT JOIN readings r ON r.capture_sha = rr.capture_sha
+        WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha`, ref);
+    return { ok: true, ref, count: rows.length,
+             documents: rows.map((r) => ({ capture_sha: r.capture_sha, bundle_id: r.bundle_id,
+               ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type })) };
   }
 
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -2838,7 +2928,15 @@ export class Store extends DurableObject {
      so orphaning them costs storage but cannot corrupt anything. Reclaiming
      them is a separate sweep against the register, not part of this. */
   purge({ bundleId = null } = {}) {
-    const TABLES = ["files", "history", "manifest", "refs", "register", "leases"];
+    /* D-113. `readings` and `reading_refs` (FW-5, CONSTRUCTS Step 3) are DERIVED
+       from the corpus — a projection of each captured document's provenance — and
+       both carry bundle_id, so listing them here clears them in BOTH arms: the
+       per-bundle DELETE ... WHERE bundle_id, and the whole-store DELETE. A
+       whole-store purge that reported scope ALL and left a document's reading and
+       its entity references behind is exactly the silent-leftover D-113 exists to
+       prevent, and hygiene.test.mjs holds this list against schema.mjs. */
+    const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
+                    "readings", "reading_refs"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -5557,6 +5655,10 @@ export class Store extends DurableObject {
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),
                                                   sourceCapture: url.searchParams.get("capture") }),
+        /* CONSTRUCTS Step 3 (FW-5): read a captured document's reading by capture
+           sha, and the reverse index by raw entity reference. */
+        reading: () => this.readingFor(url.searchParams.get("sha256")),
+        readingref: () => this.documentsByReference(url.searchParams.get("ref")),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),

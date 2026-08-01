@@ -419,6 +419,14 @@ const OPS = {
      live instance stop being a plausible story and become a measured one.
      Admin, because the register is intake provenance for the working corpus. */
   registeraudit:{ classes: ["admin", "probe"],                     mutating: false },
+  /* CONSTRUCTS Step 3 (FW-5): the reading persisted at promote. `reading` reads
+     one captured document's reading (entities + document facts) by its capture
+     sha; `readingref` is the reverse index — which documents' readings carry a
+     raw entity reference (kind:key, as it appears, unresolved). Both read-only:
+     a member watching the record may see what kind of thing the plane read out of
+     a document and which other documents mention the same reference. */
+  reading:      { classes: ["admin", "member", "probe"],           mutating: false },
+  readingref:   { classes: ["admin", "member", "probe"],           mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -468,6 +476,13 @@ const OPS = {
    session already reads through op=index and op=audit, so this widens no fence:
    `viewer` and `owner` are stamped from the session's own identity below. */
 const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
+/* CONSTRUCTS Step 3 (FW-5): the reading reads. A member session viewing a
+   captured document may read what the plane read out of it and which other
+   documents' readings carry the same entity reference. Reads of the working
+   corpus, like the retrieval reads above; named as one set so the member and
+   admin lists cannot drift apart. Neither takes a viewer stamp: they key on a
+   capture sha and a raw reference, not on the corpus view. */
+const READING_READS = ["reading", "readingref"];
 /* The selection-backed actions on a Project's citation edges. Named as a set
    rather than listed twice, because the member and admin session lists drifting
    apart is exactly the class of defect this repository keeps finding. */
@@ -493,11 +508,11 @@ const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
-                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
+                   ...RETRIEVAL_READS, ...READING_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
                    ...EXPERTISE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
+                   ...RETRIEVAL_READS, ...READING_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
                    ...EXPERTISE_ACTIONS, "memberadd", "memberset", "signeradd", "signerset",
                    "governorstate", "governorconfig"]),
 };
@@ -1930,6 +1945,76 @@ export default {
         };
       }
 
+      /* CONSTRUCTS Step 3 (FW-5): the plane READS the document. The doctype
+         resolved above (docType) declares a reader — parse(ctx) -> reading:
+         entities[] + document facts (framework:480). Run it over the SAME captured
+         text FW-3 already read back, and carry the reading on the acquire document
+         so op=promote can persist it beside the register row (the reading is
+         per-capture, written when the capture is promoted — never here, because no
+         intake path writes live state).
+
+         "A reading that finds nothing is a failed reader, never an emptied
+         document" (framework:489). A reader that is absent, that could not run
+         (the bytes were not read as text), or that found nothing is recorded
+         HONESTLY as a failed/empty reading — found:false, no entities — never
+         backfilled with invented entities to make it look productive. That
+         asymmetry is the single most dangerous error available to this layer, so
+         the failure direction is the safe one and it is stated.
+
+         The entity REFERENCES are carried AS THEY APPEAR: each entity's raw,
+         source-assigned kind:key (an id in a URL is a key, framework §7). They are
+         NOT resolved to a canonical entity id — that, and the subject registry,
+         are Step 4 / D-83 and are deliberately not built here. The reference is
+         what op=promote indexes so a later lookup by reference returns the
+         documents whose readings carry it. */
+      const readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
+        key: e && e.key != null ? String(e.key) : null,
+        kind: e && e.kind != null ? e.kind : null,
+        label: e && e.label != null ? e.label : null,
+        facts: e && e.facts && typeof e.facts === "object" ? e.facts : {},
+        /* The reference exactly as the reading carries it: kind:key, raw. */
+        ref: `${e && e.kind != null ? e.kind : ""}:${e && e.key != null ? e.key : ""}`,
+      })).filter((e) => e.key != null || e.kind != null);
+      let reading;
+      const canRead = !!profileText && typeof docType.type.parse === "function";
+      if (canRead) {
+        try {
+          const parsed = docType.type.parse({ ...profCtx, handler: stackId.handler, at: retrieved }) || {};
+          const { entities: parsedEntities, ...rest } = parsed;
+          /* Document facts: the reader's own `facts` object when it returned one
+             alone (the generic shape), otherwise the named top-level keys it
+             returned beside its entities (a calendar's window and reading instant).
+             Either way it is what the reader said, never invented. */
+          const facts = (rest && typeof rest.facts === "object" && Object.keys(rest).length === 1)
+            ? rest.facts : rest;
+          const entities = readEntities(parsedEntities);
+          reading = {
+            content_type: docType.type.key, reader_version: docType.type.version ?? null,
+            read_from_text: true, found: entities.length > 0,
+            entities, facts: facts || {}, at: retrieved,
+            basis: entities.length
+              ? `read by the ${docType.type.key} reader v${docType.type.version}`
+              : `the ${docType.type.key} reader found no entities in this document; recorded as an empty reading, never an emptied document`,
+          };
+        } catch (e) {
+          /* A reader that THREW read nothing. A failed reading, stated, never a
+             fabricated one. */
+          reading = {
+            content_type: docType.type.key, reader_version: docType.type.version ?? null,
+            read_from_text: true, found: false, entities: [], facts: {}, at: retrieved,
+            basis: `the ${docType.type.key} reader could not parse this document (${String(e && e.message || e)}), so nothing is claimed about its entities`,
+          };
+        }
+      } else {
+        reading = {
+          content_type: docType.type.key, reader_version: docType.type.version ?? null,
+          read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
+          basis: !profileText
+            ? `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`
+            : `the ${docType.type.key} content type declares no reader, so this document has no reading`,
+        };
+      }
+
       /* The shape C-18.1 requires, assembled here so the caller does not have to
          know it and cannot get it subtly wrong. */
       return json({
@@ -1942,6 +2027,13 @@ export default {
              versions that let it be revised later. A new sibling field, additive
              to I1. */
           profile,
+          /* CONSTRUCTS Step 3 (FW-5): what the doctype's reader found in this
+             document — entities[] (each with its raw kind:key reference) plus
+             document facts. A new sibling field, additive to I1. op=promote
+             derives it from data/provenance.json and persists it into the
+             `readings` table indexed by entity reference; a failed/empty reading
+             is carried honestly (found:false), never fabricated (framework:489). */
+          reading,
           /* D-97: authority mirrors verdict / verdict_basis / verdict_at
              rather than inventing a shape. The determination when one was
              made; the STATE always; the basis in BOTH cases, dated, because

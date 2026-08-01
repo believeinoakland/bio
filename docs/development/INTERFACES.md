@@ -529,7 +529,12 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.0.0 (first written 2026-07-31, from plane 0.55.0)
+- **Version:** 1.1.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+  2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
+  `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
+  `op=purge`'s whole-store arm per the three rules below. No existing table's
+  columns changed, so nothing built against I5 breaks; the shape is in the
+  ownership list and note below.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 
@@ -552,6 +557,17 @@ Table ownership as it stands: `bundles`, `files`, `history`, `manifest`, `refs`,
 `RECORD`'s. `capture_limits`, `site_assets`, `site_asset_refs`, `capture_sessions`,
 `links`, `link_verdicts`, `captured_locators`, `runtime_observations`, `cpu_probe`,
 `task_queue`, `tasks`, `source_reachability`, `host_governor` are `CAPTURE`'s.
+`readings` and `reading_refs` (FW-5, CONSTRUCTS Step 3) are `FRAMEWORK`'s: a
+reading is what a doctype's `parse()` found in a captured document — its
+entities[] plus document facts — persisted by `op=promote` (derived from
+`data/provenance.json`, exactly as `refs` is derived from `bundle.md`, so it is a
+projection and never a second source of truth). `readings` holds one row per
+captured document keyed by `capture_sha` (the reading as JSON, plus `found`,
+`entity_count`, `content_type`, `reader_version`); `reading_refs` indexes each
+entity by the RAW reference it carries (`ref` = `kind:key`, e.g. `meeting:2101`,
+NOT a canonical entity id — that is Step 4 / D-83). Read through `op=reading`
+(by `capture_sha`) and `op=readingref` (the reverse index, by `ref`). Both are
+DERIVED from the corpus and cleared by a whole-store purge.
 
 ### What changing it costs
 

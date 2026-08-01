@@ -591,6 +591,50 @@ CREATE TABLE IF NOT EXISTS reuse_verdicts (
 );
 CREATE INDEX IF NOT EXISTS reuse_verdicts_bundle ON reuse_verdicts(bundle_id);
 CREATE INDEX IF NOT EXISTS reuse_verdicts_pair ON reuse_verdicts(source_capture, address_norm);
+-- CONSTRUCTS Step 3 (FW-5): READINGS ARE PERSISTED. A reading is what a content
+-- type's parse() found in a captured document -- its entities plus document-level
+-- facts (BIO_Content_Framework_v0_10.md:480). op=acquire runs the resolved
+-- doctype's reader over the captured text and carries the reading on the acquire
+-- document; op=promote DERIVES it from data/provenance.json and persists it here,
+-- in the SAME transaction that writes the register row and the refs projection it
+-- sits beside -- the same discipline refs follow, so the table is a projection of
+-- the document rather than a second place to state it. One row per captured
+-- document, keyed by the capture identity (register.capture_sha, I1 section 1).
+-- found is 0 for a FAILED or EMPTY reading, recorded HONESTLY as such: a reader
+-- that finds nothing is a failed reader, never an emptied document (framework:489),
+-- so an empty reading is a fact about the reader and is never backfilled with
+-- invented entities. reading holds the whole reading as JSON. DERIVED from the
+-- corpus, so a whole-store purge clears it (D-113).
+CREATE TABLE IF NOT EXISTS readings (
+  capture_sha    TEXT PRIMARY KEY,
+  bundle_id      TEXT NOT NULL,
+  content_type   TEXT,
+  reader_version INTEGER,
+  found          INTEGER NOT NULL DEFAULT 0,
+  entity_count   INTEGER NOT NULL DEFAULT 0,
+  reading        TEXT NOT NULL,
+  at             TEXT
+);
+CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
+-- The entity-reference index: one row per entity a reading carries, keyed by the
+-- reference AS IT APPEARS in the reading -- the raw, source-assigned kind:key (an
+-- id in a URL is a key, a position in a list is not), e.g. meeting:2101. It is NOT
+-- a canonical entity id: resolving a reference to a canonical entity, and the
+-- subject registry, are Step 4 / D-83 and are deliberately not built here. This is
+-- what makes "which documents' readings carry this reference" one indexed lookup,
+-- the reverse index Step 4 consumes. Also DERIVED from the corpus; a whole-store
+-- purge clears it (D-113).
+CREATE TABLE IF NOT EXISTS reading_refs (
+  capture_sha  TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,
+  ref          TEXT NOT NULL,
+  ref_kind     TEXT,
+  ref_key      TEXT,
+  label        TEXT,
+  PRIMARY KEY (capture_sha, ref)
+);
+CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
+CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
