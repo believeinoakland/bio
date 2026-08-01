@@ -45,11 +45,23 @@ gated: pushing, deploying the plane, and deploying the installer.
 
 ## What this is
 
-A civic accountability record. Groups capture what a public body published,
-prove later that it said what they claim, and build cases on it. The whole
-product is TRUSTWORTHINESS OF THE RECORD, so a defect that makes the record
-claim more than it can support is worse than a missing feature, and much worse
-than an ugly one.
+**CivicOS exists to answer questions, make a case, tell a story, and take action to
+affect a living civic system.** Bob, 2026-08-01, and it governs everything below:
+*"There's nothing about CivicOS and how it works that's more important than
+supporting users traverse that winding path of questioning, exploring, discovering,
+documenting, and impacting the civic system."*
+
+Everything else here is SUBSTRATE for that. Capture produces bytes and provenance;
+content produces structure; the framework produces meaning; retrieval finds things;
+progressions model how {information, money, responsibility, relationships, decisions,
+power} is supposed to flow and where it actually does. All of it serves the path, and
+a capability that does not serve the path is not obviously worth building.
+
+The record is the FOUNDATION of that, and the whole product is TRUSTWORTHINESS OF THE
+RECORD: groups capture what a public body published and can prove later that it said
+what they claim. So a defect that makes the record claim more than it can support is
+worse than a missing feature, and much worse than an ugly one — because a case built
+on a record that overclaims is worse than no case.
 
 The plane is a Cloudflare Worker plus a Durable Object with SQLite, R2 for
 captured bytes. `newgroup` is the installer that puts a sovereign instance into
