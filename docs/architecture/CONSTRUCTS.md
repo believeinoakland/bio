@@ -181,6 +181,10 @@ Shape sketch only, to be settled in the architecture pass:
 
 ## The plan: bottom up, and each step has a consumer
 
+Status per item, against QUEUE.md and MILESTONES.md (`BUILT` / `QUEUED <ID>` /
+`UNSCHEDULED` / `BLOCKED`), verified 2026-07-31. Steps 0–2 are FW-2/FW-3/FW-4
+(landed); Step 3 is FW-5 (queued); Steps 4 onward are M4+ and not yet scheduled.
+
 The rule for the plan is that no step is done until something CONSUMES its output.
 That is the discipline whose absence produced 1,463 unconsumed lines.
 
@@ -188,7 +192,7 @@ The plan below predates the framework document and its Step 0 is unchanged: the
 reconciliation is exactly what §4 of the framework requires, since one recogniser
 shape and one confidence ladder is what removes the duplication.
 
-**Step 0. Implement §4 of the framework, not merely deduplicate.** RULED by Bob,
+**Step 0 — BUILT (FW-2). Implement §4 of the framework, not merely deduplicate.** RULED by Bob,
 2026-07-30: "we must do the work upfront in order to end up with the results we
 need." So this is the full version, not the narrow one. One recogniser interface and
 one registry helper, with both existing axes rewritten onto them; one confidence
@@ -197,24 +201,24 @@ by the content type; a shared event catalogue; significance graded once and the
 boolean derived. This step should shrink the codebase, and the test of whether it
 worked is that Step 4 costs a registry.
 
-**Step 1. The plane records the profile.** `op=acquire` calls `identify()` and
+**Step 1 — BUILT (FW-3). The plane records the profile.** `op=acquire` calls `identify()` and
 `doctypeFor()` and writes the profile onto the capture: handler, content type, both
 confidences, signals, versions, and what was normalised. Roughly twenty lines.
 Consumer: the document page says what kind of document the record thinks it holds.
 Nothing above this is trustworthy without it, because a judgment whose author and
 version are unrecorded cannot be revised when the author turns out to be wrong.
 
-**Step 2. The plane computes and stores the three digests.** Consumers: `op=audit`'s
+**Step 2 — BUILT (FW-4). The plane computes and stores the three digests.** Consumers: `op=audit`'s
 duplicate sweep, which today cannot see a duplicate whose viewstate differs; and the
 Add surface's already-held check, which currently fetches both captures and compares
 them in the browser.
 
-**Step 3. Readings are PERSISTED.** Today `parse()` output is transient, which is
+**Step 3 — QUEUED FW-5. Readings are PERSISTED.** Today `parse()` output is transient, which is
 the quiet blocker on everything Bob's purpose statement asks for: entities cannot be
 resolved across documents if no document's entities are stored. Persist readings and
 index them by entity reference. Consumer: Step 4.
 
-**Step 4. The ENTITY axis, which must also be the bias doctrine's SUBJECT REGISTRY**
+**Step 4 — UNSCHEDULED. The ENTITY axis, which must also be the bias doctrine's SUBJECT REGISTRY**
 (D-83). Aliases and member-declared relations are first-class, justified and citable,
 because safeguard 4 of `BIO_Declared_Bias_v0_1.md` depends on them and an entity model
 that only derives identity from source identifiers cannot express them. A declared
@@ -225,7 +229,7 @@ correspondence such as a name. That method IS the connection grade (framework §
 Consumers: the reverse index, "every document that concerns this ordinance", which is
 the single largest piece of manual work the framework can remove.
 
-**Step 5. The PROGRESSION table lands as data,** of which the connection table is the
+**Step 5 — UNSCHEDULED. The PROGRESSION table lands as data,** of which the connection table is the
 two-stage case. Stages with `after`, cardinality, interval and required-ness; exception
 documents that discharge a legitimate skip; junction checks as rules; the three-valued
 `asserted_by`; and a grade on every connection, with a progression instance inheriting
@@ -234,25 +238,25 @@ connections, and a UI surface that shows and edits it. Meeting-to-minutes and
 need-to-signed-contract must both be expressible as rows, or the generalisation has
 not been made.
 
-**Step 5a. Measure Oakland's shared identifiers.** Empirical work, exactly like
+**Step 5a — UNSCHEDULED. Measure Oakland's shared identifiers.** Empirical work, exactly like
 measuring a host stack, and cheap: which identifiers does the city reuse across
 Legistar, its procurement portal and its finance system? A contract number, a project
 number, a resolution number, an APN, a fund code. Each one found in two systems
 converts a whole progression from Grade C to Grade B, which makes this the highest
 value-per-hour measurement available. Consumer: Step 4's entity recognisers.
 
-**Step 6. Monitoring adopts the contracts,** with frequency by document kind, and
+**Step 6 — UNSCHEDULED. Monitoring adopts the contracts,** with frequency by document kind, and
 stores confirmations. Consumer: the daemon. This is where the negative result finally
 lands somewhere.
 
-**Step 7. Ageing.** Something notices when a temporal expectation comes due.
+**Step 7 — UNSCHEDULED. Ageing.** Something notices when a temporal expectation comes due.
 Consumer: the review queue, or a Focus, which Bob has not ruled on.
 
-**Step 8. Presentation.** The document page and the case file show referential and
+**Step 8 — UNSCHEDULED. Presentation.** The document page and the case file show referential and
 temporal connections apart, each with its grade, and show which links in a case are
 the weak ones.
 
-**Step 8a. Satisfaction conditions, on projects AND on bias statements.** One
+**Step 8a — UNSCHEDULED. Satisfaction conditions, on projects AND on bias statements.** One
 evaluator, two consumers (D-88). On a project it derives progress against an objective;
 on a `pattern` bias statement it derives a standing measure of how far the evidence
 still bears the statement out, which is the inverse of bias debt and the thing that
@@ -266,7 +270,7 @@ Consumers: the project page, which shows derived progress and the gap list; and 
 review queue, which gets its work from the gaps. Aspiration and goal, the two object
 types §12 says do not exist yet, come with it.
 
-**Step 8b. The discovery loop, with unattended surfacing.** An assistant may open a
+**Step 8b — UNSCHEDULED. The discovery loop, with unattended surfacing.** An assistant may open a
 focus or a problem at `surfaced` without a member, per Bob's ruling, because those are
 advisory and commit nobody; elevation, adoption and dismissal stay member acts. Fix
 `surfaced_by` in both writers first (D-78), since an assistant-surfaced focus that
@@ -282,7 +286,7 @@ disappears silently, because a finding that vanishes is indistinguishable from o
 that was never made. This is where invariant 7 is enforced in practice: a finding that
 cuts against the goal takes exactly the same path as one that supports it.
 
-**Step 9. Then more content types and more stacks,** each measured first, and each
+**Step 9 — UNSCHEDULED. Then more content types and more stacks,** each measured first, and each
 now cheap because Steps 0 through 8 gave it somewhere to land.
 
 Steps 3 and 4 moved up from the tail of the v1 plan. They were sequenced late because

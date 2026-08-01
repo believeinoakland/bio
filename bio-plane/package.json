@@ -14,7 +14,7 @@
     "test:capture": "node test/capture.test.mjs",
     "test:migrate": "node test/migrate.test.mjs",
     "test:browse": "node test/browse.test.mjs",
-    "test:hygiene": "node test/hygiene.test.mjs",
+    "test:hygiene": "node scripts/battery.mjs hygiene",
     "test:purge": "node test/purge.test.mjs",
     "test:installer": "node test/installer.test.mjs",
     "test:sshsig": "node test/sshsig.test.mjs",
@@ -57,7 +57,7 @@
     "test:membership": "node test/membership.test.mjs",
     "test:projects": "node test/projects.test.mjs",
     "test:battery": "node scripts/battery.mjs",
-    "test:coverage": "node scripts/coverage.mjs"
+    "test:coverage": "node scripts/coverage.mjs --strict"
   },
   "devDependencies": {
     "miniflare": "^4.20260722.0",
