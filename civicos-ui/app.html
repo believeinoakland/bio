@@ -287,6 +287,20 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 .dz-receipt .dz-rhead{font-weight:700;font-size:17px;margin:2px 0 6px}
 .dz-rlede{font-size:13.5px;color:var(--ink-soft);margin:0 0 12px;max-width:58ch}
 .dz-rgrid{display:flex;flex-direction:column;gap:1px;border:var(--hair);border-radius:var(--r-2);overflow:hidden}
+/* UI-3 the BALLOT: the two properties the ballot type adds — a checkable DENOMINATOR and the two-owner DIVERGENCE */
+.bl-den{border:var(--hair);border-left:3px solid var(--verdigris);border-radius:var(--r-2);padding:10px 13px;margin:12px 0 4px;background:var(--paper-2)}
+.bl-cap{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+.bl-takes{font-size:14px}
+.bl-run{font-size:12.5px;color:var(--ink-soft);margin-top:7px;border-top:var(--hair);padding-top:7px}
+.bl-tbl{border:var(--hair);border-radius:var(--r-2);padding:10px 13px;margin:12px 0 4px;background:#fff}
+.bl-arith{width:100%;border-collapse:collapse;font-size:12.5px}
+.bl-arith th{text-align:left;font-family:var(--font-fact);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);padding:2px 8px 5px;border-bottom:var(--hair)}
+.bl-arith td{padding:4px 8px;border-bottom:1px solid var(--paper-2);vertical-align:top}
+.bl-arith .bl-n{font-family:var(--font-fact);font-weight:700;width:3ch}
+.bl-arith .bl-why{color:var(--muted);font-size:11.5px}
+.bl-arith tr.bl-div td{background:var(--tint-muted)}
+.bl-arith tr.bl-div .bl-flag{color:var(--verdigris-dk);font-weight:600;font-size:11px}
+.bl-note{font-size:12.5px;color:var(--ink-soft);margin:8px 0 0}
 
 /* line icons */
 svg.ic{display:none}
@@ -4124,13 +4138,14 @@ const WEIGHT_LADDER = [
   { rung:"terminal",   gloss:"cannot be walked back" },
   { rung:"attested",   gloss:"irreversible and public; needs a key" },
 ];
-function weightLadderHtml(here){
+function weightLadderHtml(here, note){
   const rungs = WEIGHT_LADDER.map(r=>{
     const on = r.rung===here;
     return `<div class="wl-rung${on?" on":""}"><span class="wl-dot"></span><span class="wl-name">${esc(r.rung)}</span><span class="wl-gloss">${esc(r.gloss)}</span>${on?`<span class="wl-here">this act</span>`:""}</div>`;
   }).join("");
+  const body = note || `Deferring or dismissing is <b>reasoned</b>: it is kept and returnable, so it can be undone — but it never happens silently, because it carries a reason that goes on the record as your own words.`;
   return `<div class="wl"><div class="wl-cap">How heavy this act is</div>${rungs}
-    <p class="wl-note">Deferring or dismissing is <b>reasoned</b>: it is kept and returnable, so it can be undone — but it never happens silently, because it carries a reason that goes on the record as your own words.</p></div>`;
+    <p class="wl-note">${body}</p></div>`;
 }
 
 /* CHOOSE + PRE-FLIGHT + AUTHOR, in one dialog. Opened from the act bar on a
@@ -4265,6 +4280,298 @@ function disposeRefusalHtml(e){
       ? `<li>${esc(o)}</li>` : `<li>${esc(o.id||JSON.stringify(o))}${o.from?` — currently ${esc(o.from)}`:""}</li>`).join("") + `</ul>`;
   }
   return `<b>${head}</b>${detail}${off}`;
+}
+
+/* ============================================================
+   UI-3 — THE SECOND ACT: a BALLOT (project owner removal, section 7.10),
+   through the SAME ACT construct + weight ladder UI-2 established, and
+   v0.2's FALSIFIABLE test act TWO: does the ACT construct hold for an act
+   UNLIKE the justified transition?
+
+   The one motion is unchanged — CHOOSE · see WHAT IT WILL REFUSE and WHY
+   before it runs · AUTHOR the reason · RECEIPT · weight-ladder position —
+   PLUS the two properties the BALLOT type adds (interaction-constructs
+   v0.2, §B):
+     (a) SHOW THE DENOMINATOR. "N of M owners' votes" is a fact a member can
+         CHECK; "pending approval" is not. It is read STRAIGHT from the
+         arithmetic op (op=projectownerarith's `live` row) and the act's
+         return (op=projectownerremove's VOTES_SHORT have/need) — never
+         recomputed in the interface, where floor(n/2)+1 would drift from the
+         plane exactly as the searchfields copy does (INTERFACES.md).
+     (b) DISPLAY THE DIVERGENCE AT TWO OWNERS. Owner removal follows the 4.7
+         admin rule EXCEPT at two owners, where the departing owner MAY vote
+         (unanimity-with-assent) rather than removal being impossible. That
+         row is the one a shared implementation gets wrong, so it is SHOWN,
+         from the op's own `table`, not hidden.
+
+   Plane ops consumed (I3), never reshaped:
+     op=projectownerarith (GET)  -> { table:[ownerMath(1..9)], live, projectId }
+       — the COMPUTED tally. `live` = ownerMath(this project's owners) NOW.
+     op=projectparticipants (GET) -> the owners to choose a target from.
+     op=projectownerremove (mutating) -> the act. `by` is stamped server-side
+       (a browser cannot vote as someone else); a reason is required
+       (NO_REASON); it returns VOTES_SHORT {have,need,deciders} while the
+       ballot is open, or carries when the denominator is met.
+
+   NOTE for DEC-8 (the pre-flight-source question): this ballot's arithmetic
+   gates (LAST_OWNER, TARGET_CANNOT_VOTE) are NOT a client mirror of the rule
+   — they are computed by the PLANE and read off `live.possible` /
+   `live.targetMayVote`. So op=projectownerarith IS a partial dry-run of the
+   act's refusals, and this act REDUCES rather than deepens the mirror
+   concern. What the surface cannot know — who has ALREADY voted — is not
+   pre-flighted: it comes back on the receipt as the running tally, which is
+   the honest place for it.
+   ============================================================ */
+
+/* A member session may attempt the ballot; the plane refuses a non-owner by
+   name (NOT_THE_OWNER) and the pre-flight mirrors that from the owners list,
+   so a member who is not an owner sees why rather than a dead button. A
+   machine credential matches no owner row and is refused by the store, so the
+   affordance is session-shaped, like release and dispose. */
+function canBallot(){ return !!(PLANE.session && PLANE.me && PLANE.me.session); }
+
+/* THE DENOMINATOR — read STRAIGHT from the arithmetic op's `live` row. The
+   interface NEVER computes the threshold; that math is the plane's, and a copy
+   here would drift from it (v0.2 §B). This one function is the denominator
+   WIRING: break it (return a constant instead of the op's field) and the shown
+   tally stops reflecting the op — which is this suite's negative control. */
+function ballotDenominator(live){
+  return { need: live.votesNeeded, of: live.owners, eligible: live.eligibleVoters,
+           possible: live.possible, targetMayVote: live.targetMayVote };
+}
+function ballotDenominatorHtml(live, tally){
+  const d = ballotDenominator(live);
+  const takes = d.possible
+    ? `This removal takes <b>${d.need} of ${d.of}</b> owners&rsquo; votes`
+      + (d.eligible===d.of ? `` : `, and ${d.eligible} of the ${d.of} may vote`) + `.`
+    : `With ${d.of} owner${d.of===1?"":"s"}, no owner can be removed &mdash; ${esc(live.why||"one owner is the floor")}.`;
+  const running = tally
+    ? `<div class="bl-run"><b>${tally.have} of ${tally.need}</b> cast so far`
+      + (Array.isArray(tally.deciders)&&tally.deciders.length ? ` (${tally.deciders.map(esc).join(", ")})` : ``)
+      + `. The rest must still act — this is where it stands, not &ldquo;pending&rdquo;.</div>`
+    : `<div class="bl-run">No vote cast yet. When one is, you will see the count &mdash; a number you can check, never &ldquo;pending approval&rdquo;.</div>`;
+  return `<div class="bl-den"><div class="bl-cap">What this ballot takes</div><div class="bl-takes">${takes}</div>${running}</div>`;
+}
+
+/* DISPLAY THE DIVERGENCE AT TWO OWNERS — shown, not hidden, and rendered from
+   the op's own `table` (each row is ownerMath(n)). The n=2 row is flagged
+   because owner removal DIVERGES there from the administrator rule; the row's
+   own words (`why`, from the plane) explain it, so the interface does not
+   restate the rule and cannot drift from it. */
+function ballotDivergenceHtml(table){
+  const rows = (table||[]).map(r=>{
+    const two = r.owners===2;
+    const carries = r.possible
+      ? `${r.votesNeeded} of ${r.owners}${r.targetMayVote?", incl. the departing owner":""}`
+      : "not removable";
+    return `<tr class="${two?"bl-div":""}"><td class="bl-n">${r.owners}</td><td>${esc(carries)}</td>`
+         + `<td class="bl-why">${esc(r.why||"")}</td>${two?`<td class="bl-flag">the divergence</td>`:`<td></td>`}</tr>`;
+  }).join("");
+  return `<div class="bl-tbl"><div class="bl-cap">How the threshold changes with the number of owners</div>
+    <table class="bl-arith"><thead><tr><th>Owners</th><th>To remove one</th><th>Why</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="bl-note">At <b>two</b> owners this parts company with the administrator rule, where a removal at two is impossible. Here the departing owner is one of the two votes &mdash; a resignation with the other&rsquo;s assent. That row is the one a shared implementation gets wrong, so it is shown, in the plane&rsquo;s own words, not hidden.</p></div>`;
+}
+
+/* THE PRE-FLIGHT — pure, so the harness can prove it, and its arithmetic gates
+   READ the plane's computed `live` row rather than re-derive the rule. Returns
+   every gate (for the panel) and the ONE refusal that fires first, in the
+   store's own order:
+     NOT_THE_OWNER (I am not an owner) -> NOT_AN_OWNER (target is not an owner)
+       -> NO_REASON -> LAST_OWNER (live.possible is false)
+       -> TARGET_CANNOT_VOTE (I am the target and live.targetMayVote is false).
+   The running tally (who has already voted) is server state the surface cannot
+   see, so it is NOT a gate here — it returns on the receipt. */
+function ballotPreflight({ live, owners, target, me, reason }){
+  const why = String(reason==null?"":reason).trim();
+  const list = Array.isArray(owners)?owners:[];
+  const iAmOwner    = list.includes(me);
+  const targetOwner = !!target && list.includes(target);
+  const hasReason   = why.length>0;
+  const iAmTarget   = !!target && target===me;
+  const possible      = !!(live && live.possible);       // FROM the arithmetic op
+  const targetMayVote = !!(live && live.targetMayVote);  // FROM the arithmetic op
+  const gates = [
+    { id:"owner", title:"You are an owner of this project", pass:iAmOwner,
+      need:"Only an owner of a project votes on its ownership." },
+    { id:"target", title:"The person named is an owner", pass:targetOwner,
+      need: !target ? "Choose which owner this removal is about."
+                    : "That person is not an owner of this project, so there is no ownership to remove." },
+    { id:"reason", title:"A reason", pass:hasReason,
+      need:"Required, and never written for you. Your reason is kept in your name in this project's ownership history, so the decision itself stays accountable and not only its outcome." },
+    { id:"possible", title:"This removal is possible at this size", pass:possible,
+      need: (live && live.why) ? live.why : "the removal cannot be carried at this number of owners." },
+    { id:"vote", title:"This is a vote you may cast", pass:!(iAmTarget && !targetMayVote),
+      need:"At three or more owners the person being removed is counted but does not vote. At exactly two owners they must — that is the divergence, and it is why you can end your own ownership at two but not at three." },
+  ];
+  let refusal = null;
+  if(!iAmOwner)                        refusal = { reason:"NOT_THE_OWNER",     detail:gates[0].need };
+  else if(!targetOwner)                refusal = { reason:"NOT_AN_OWNER",      detail:gates[1].need };
+  else if(!hasReason)                  refusal = { reason:"NO_REASON",         detail:gates[2].need };
+  else if(!possible)                   refusal = { reason:"LAST_OWNER",        detail:gates[3].need };
+  else if(iAmTarget && !targetMayVote) refusal = { reason:"TARGET_CANNOT_VOTE",detail:gates[4].need };
+  return { ok: refusal===null, gates, refusal };
+}
+
+/* CHOOSE + DENOMINATOR + DIVERGENCE + PRE-FLIGHT + AUTHOR, in one dialog.
+   Fetches the arithmetic (the tally + the divergence table) and the owners to
+   choose a target from; if the arithmetic op refuses, it says so rather than
+   inventing a denominator. */
+let BALLOT_CTX = null;   // { projectId, projectTitle, owners:[handle], me, live, table }
+async function openBallotDialog(projectId, projectTitle){
+  let arith;
+  try{ arith = await rec("projectownerarith", { projectId }); }
+  catch(e){
+    $("#dlg").innerHTML = `<h2>Remove a project owner</h2>
+      <div class="teach">${ballotRefusalHtml(e)}</div>
+      <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Close</button></div>`;
+    $("#dlg-wrap").classList.remove("hidden"); return;
+  }
+  let owners = [];
+  try{ const pp = await rec("projectparticipants", { projectId });
+       owners = (pp.participants||[]).filter(p=>p.owner).map(p=>p.handle); }catch(_){ owners = []; }
+  const me = (PLANE.me && PLANE.me.handle) || (PLANE.me && PLANE.me.member) || "";
+  BALLOT_CTX = { projectId, projectTitle, owners, me, live:arith.live, table:arith.table };
+  const first = owners.find(h=>h!==me) || owners[0] || "";
+  const choose = owners.length ? owners.map(h=>`<label class="dz-opt${h===first?" on":""}">
+      <input type="radio" name="bl-t" value="${esc(h)}" ${h===first?"checked":""} onchange="ballotChoose(this.value)">
+      <span class="dz-verb">${esc(h)}${h===me?" (you)":""}</span>
+      <span class="dz-mean">${h===me
+        ? "You may end your OWN ownership only where the arithmetic allows it — at two owners that is a resignation with the other's assent."
+        : "End this member's ownership. They stay a participant; only their ownership ends."}</span>
+    </label>`).join("") : `<p class="what">This project has no owners you can act on.</p>`;
+  $("#dlg").innerHTML =
+    `<h2 id="bl-h">Remove a project owner</h2>
+     <p class="what">Removing an owner is a ballot: it takes more than one person, and it shows you exactly how many. Your vote is recorded with your reason — it is never silent, and it never claims to have carried until the count says so.</p>
+     <div class="dz-what"><span class="dz-ttl">${esc(projectTitle||projectId)}</span><span class="id">${esc(projectId)}</span></div>
+     <div class="dz-choose">${choose}</div>
+     ${ballotDenominatorHtml(BALLOT_CTX.live, null)}
+     ${ballotDivergenceHtml(BALLOT_CTX.table)}
+     <div class="dz-pf" id="bl-pf"><!-- pre-flight, painted by ballotValidate --></div>
+     <label class="fld" for="bl-reason">Your reason</label>
+     <textarea class="txt" id="bl-reason"
+       placeholder="e.g. Stepped away from the project months ago; ownership should reflect who is doing the work"
+       oninput="ballotValidate()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+     <div class="cc" id="bl-cc"></div>
+     ${weightLadderHtml("reasoned", `Removing an owner is <b>reasoned</b>, and it is <b>ours</b> not mine: it carries a reason in my name, and it only takes effect once enough owners have voted the same way — a tally you can check, never a silent approval.`)}
+     <div id="bl-err" class="teach hidden"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="bl-go" disabled onclick="doBallot()">Cast this vote</button></div>`;
+  const go = $("#bl-go"); if(go) go.dataset.target = first;
+  $("#dlg-wrap").classList.remove("hidden");
+  ballotValidate();
+}
+function ballotChoose(target){
+  const go = $("#bl-go"); if(go) go.dataset.target = target;
+  $("#dlg").querySelectorAll(".dz-opt").forEach(o=>{
+    const on = o.querySelector("input").value===target; o.classList.toggle("on", on);
+  });
+  ballotValidate();
+}
+/* Paint the pre-flight from the current target + reason, and gate the commit
+   button on it — the panel shows what WILL refuse and why, before the act
+   runs. The denominator panel does not change with the target (it is a
+   property of the ballot's SIZE, read from the op), so it is not repainted. */
+function ballotValidate(){
+  if(!BALLOT_CTX) return;
+  const go = $("#bl-go"); const target = go ? go.dataset.target : "";
+  const el = $("#bl-reason"); const reason = el ? el.value : "";
+  const pf = ballotPreflight({ live:BALLOT_CTX.live, owners:BALLOT_CTX.owners, target, me:BALLOT_CTX.me, reason });
+  const cc = $("#bl-cc"); if(cc) cc.textContent = `${String(reason||"").length} characters`;
+  const pane = $("#bl-pf");
+  if(pane){
+    const rows = pf.gates.map(g=>`<div class="pf-row ${g.pass?"ok":"no"}">
+        <span class="pf-mark">${g.pass?"✓":"✗"}</span>
+        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
+      </div>`).join("");
+    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
+      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. Your vote is ready to cast.</div>` : "");
+  }
+  if(go) go.disabled = !pf.ok;
+}
+/* COMMIT. The pre-flight runs ONCE MORE here as the real gate: an act that
+   WOULD be refused — no reason, or a vote this member may not cast — is refused
+   by the SURFACE and never reaches the plane. (Removing this early return is
+   the harness's second control.) On a clean pre-flight it casts the vote and
+   renders the receipt: VOTES_SHORT is NOT an error — the vote landed, the
+   ballot is simply not yet decided, so the tally is shown as the fact it is. */
+async function doBallot(){
+  if(!BALLOT_CTX) return;
+  const ctx = BALLOT_CTX;
+  const go = $("#bl-go"); const target = go ? go.dataset.target : "";
+  const el = $("#bl-reason"); const reason = el ? String(el.value||"").trim() : "";
+  const err = $("#bl-err"); if(err) err.classList.add("hidden");
+  const pf = ballotPreflight({ live:ctx.live, owners:ctx.owners, target, me:ctx.me, reason });
+  if(!pf.ok){                       // the surface refuses, before the plane
+    if(err){ err.innerHTML = `<b>This ballot won't run yet — and no vote has been cast.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
+    ballotValidate();
+    return { refused:true, reason:pf.refusal.reason };
+  }
+  if(go){ go.disabled = true; go.textContent = "…"; }
+  try{
+    // `by` is NOT sent — the plane stamps who is voting from the session.
+    const res = await rec("projectownerremove", { projectId: ctx.projectId, handle: target, reason });
+    RECORD_CACHE = null;            // ownership changed
+    ballotReceipt({ carried:true, res, target, reason, ctx });
+    return res;
+  }catch(e){
+    if(e && e.reason==="VOTES_SHORT"){
+      // the vote WAS recorded; the ballot is open. Show the tally, not an error.
+      ballotReceipt({ carried:false, res:e, target, reason, ctx });
+      return { recorded:true, ...e };
+    }
+    if(go){ go.disabled=false; go.textContent = "Cast this vote"; }
+    if(err){ err.innerHTML = ballotRefusalHtml(e); err.classList.remove("hidden"); }
+    ballotValidate();
+    return { refused:true, reason:e && e.reason };
+  }
+}
+/* THE RECEIPT — what the plane returned, in the record's terms. The tally is
+   read FROM the return (VOTES_SHORT have/need/deciders, or the carried
+   deciders/owners), never recomputed. */
+function ballotReceipt({ carried, res, target, reason, ctx }){
+  const you = target===ctx.me;
+  if(carried){
+    const deciders = Array.isArray(res.deciders)?res.deciders:[];
+    const ownersNow = Array.isArray(res.owners)?res.owners:[];
+    $("#dlg").innerHTML =
+      `<div class="dz-receipt">
+         <div class="dz-rhead">Carried.</div>
+         <p class="dz-rlede">The vote carried. <b>${esc(target)}</b>${you?" (you)":""} is no longer an owner of this project — they remain a participant — and the ownership history carries your name and your reason.</p>
+         <div class="dz-rgrid">
+           <div class="kv"><span class="k">No longer an owner</span><span class="v plain">${esc(target)}${you?" (you)":""}</span></div>
+           <div class="kv"><span class="k">Carried by</span><span class="v plain">${deciders.map(esc).join(", ")||"—"}</span></div>
+           <div class="kv"><span class="k">Owners now</span><span class="v plain">${ownersNow.map(esc).join(", ")||"—"}</span></div>
+           <div class="kv"><span class="k">Your reason, as recorded</span><span class="v plain">${esc(reason||"")}</span></div>
+           <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — a vote, recorded, never silent</span></div>
+         </div>
+         <div class="row-btns"><button class="btn" onclick="closeDialog()">Done</button></div>
+       </div>`;
+    return;
+  }
+  // VOTES_SHORT: the ballot is ours and not yet decided — the tally is a fact.
+  const have = res.have, need = res.need;
+  const deciders = Array.isArray(res.deciders)?res.deciders:[];
+  const short = (typeof need==="number" && typeof have==="number") ? need-have : null;
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt">
+       <div class="dz-rhead">Your vote is in.</div>
+       <p class="dz-rlede">This ballot is not decided yet, and here is exactly where it stands — a count you can check, not a &ldquo;pending&rdquo; label.</p>
+       <div class="dz-rgrid">
+         <div class="kv"><span class="k">Votes to remove ${esc(target)}</span><span class="v plain"><b>${esc(String(have))} of ${esc(String(need))}</b></span></div>
+         <div class="kv"><span class="k">Cast by</span><span class="v plain">${deciders.map(esc).join(", ")||"—"}</span></div>
+         <div class="kv"><span class="k">What carries it</span><span class="v plain">${short==null?"—":short>0?`${short} more owner${short===1?"":"s"} must vote the same way`:"the threshold is met"}</span></div>
+         <div class="kv"><span class="k">Your reason, as recorded</span><span class="v plain">${esc(reason||"")}</span></div>
+         <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — a vote, recorded, never silent</span></div>
+       </div>
+       <div class="row-btns"><button class="btn" onclick="closeDialog()">Done</button></div>
+     </div>`;
+}
+/* A real plane refusal renders in the PLANE'S OWN VOICE, offenders named,
+   nothing written — the same rule as release and dispose. */
+function ballotRefusalHtml(e){
+  const head = esc([e && e.reason, e && e.error].filter(Boolean).join(" · ") || "The plane refused, and cast no vote.");
+  const detail = (e && e.detail) ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
+  return `<b>${head}</b>${detail}`;
 }
 
 async function renderMonitoring(){
