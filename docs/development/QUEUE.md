@@ -320,14 +320,14 @@ accepts-when: a capture carries its profile; the document page names the kind of
 added: 2026-07-31 · BOB
 landed: 02491bd — op=acquire records document.profile (docprofile identify/doctypeFor/profileRecord; recogniser key/label/version + confidence + signals on both axes, normalisation, kind, source content-type). FIRST plane consumer of docprofile. I1 bumped 1.1.0 (ADDITIVE — new sibling field; C-18.1 tolerates extra keys). Recognisers read the primary bounded (single-part ≤8MB textual); PDF/multipart profiles honestly as conservative/generic (profiled_from_text:false). battery 52/52, coverage 85/85. NC RUN (delete profile.handler → 2 fail). Step 2 (digests) deliberately left separate.
 
-### FW-4 · queued
+### FW-4 · done
 milestone: M3
 scope: CONSTRUCTS Step 2 — the plane COMPUTES and STORES the normalisation digests on the capture, per the handler's declared normalisation policy that FW-3 recorded (the three the framework's normalisation defines — read `docprofile` + `DOCUMENT-PROFILES.md`/`CONSTRUCTS.md` for the exact set; do not invent one). The raw-bytes identity already exists as `capture_sha` (I1 §1) — reuse it, do not recompute a second raw digest under a new name. Then wire `op=audit`'s duplicate sweep to compare the NORMALISED digest so it catches a duplicate whose viewstate/boilerplate differs, which it cannot see today. The Add-surface already-held check (`civicos-ui`, which today fetches both captures and compares in the browser) is a DOWNSTREAM UI consumer of the stored digest — recorded here, NOT built in this item (a DELEGATION note if you touch its shape).
 behind-interface: I1
 depends-on: FW-3
 accepts-when: two captures of the same document differing only in viewstate/boilerplate report as duplicates through `op=audit`; negative control — two genuinely different documents do not, and dropping the normalised-digest write makes the sweep miss the viewstate pair again.
 added: 2026-07-31 · CONDUCT
-landed:
+landed: 2145416 — op=acquire stores document.profile.digests {determined,rendition,evidentiary,boundary_missed?,basis}; identity REUSES capture_sha (verify-only, not restored). Three digests per DOCUMENT-PROFILES.md "Three digests, not one". C-18.3 dup sweep gained a NORMALISED arm folding register documents whose evidentiary digests match though raw bytes differ. Trust gate: stored determined only when read-as-text AND stack CERTAIN — undetermined records evidentiary:null and two nulls NEVER fold (dedup does not inherit compare()'s narrow-without-certainty licence, since folding hides a document). I1 1.2.0 ADDITIVE. battery 53/53, coverage 85/85, checks 51/51. NC RUN (force digestCertain=false → viewstate pair no longer folds, 21→15). DELEGATION FW→UI recorded (Add-surface consumes evidentiary digest; UI dormant).
 
 ---
 
