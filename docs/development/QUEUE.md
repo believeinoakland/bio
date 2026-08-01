@@ -112,7 +112,7 @@ accepts-when: `npm run test:coverage` reports 42 of 42 suites declaring a contro
 added: 2026-07-31 · BOB
 landed:
 
-### M0-3 · queued
+### M0-3 · active
 milestone: M0
 scope: Name the 33 checks no assertion names. One assertion per check that tampers a conformant bundle and requires THAT check id in the findings. The catalog executes today via the conformance suite's zero-findings assertion, so these checks are exercised only in the direction that passes — the S-7 defect exactly, where C-20.1 skipped every mechanical entry and the audit reported clean because it was not looking. Largest single coverage gain available, and mechanical. Split across two or three workers if one turn is too long.
 behind-interface: none
@@ -173,7 +173,7 @@ depends-on: REC-1
 accepts-when: a machine credential completes a capture started by a session and the manifest names the machine writer; negative control — an anonymous write is still refused.
 landed: e425b24 — option (a): a NAMED machine actor `token:<class>`, server-stamped (caller `actor`/`author` DELETED first, so unforgeable), no schema change (leases.actor already TEXT NOT NULL). Store refuses a null/blank actor by name (ANONYMOUS_LEASE); promote's CAS on `base` untouched. battery 44/44 (2337); CONDUCT re-ran the anonymous-lease negative control (neuter guard → 20/2, restored → 22/22). I5 unchanged.
 
-### REC-3 · queued
+### REC-3 · active
 milestone: M7
 scope: The small honesty defects in the plane's own surfaces, batched because each is minutes and none is worth a turn alone: D-39 (an empty POST body returns a Cloudflare 1101 rather than a named BIO refusal), D-110 (`setup.mjs` still explains the `NO_AUTHORITY` refusal D-97 removed), D-62 (`setup.mjs` omits `content_hash` when a document is attached, so a wizard-written bundle can never be released), D-78 (both bundle writers hardcode `surfaced_by: human`, so an assistant cannot honestly surface a focus).
 behind-interface: I3
