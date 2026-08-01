@@ -177,6 +177,15 @@ accepts-when: `npm run test:hygiene` fails when a disposition is removed from an
 added: 2026-07-31 · BOB
 landed: 6a72951 — planning-hygiene.test.mjs enforces the 3 planning-drift invariants IN THE BATTERY (open DEBT row carries a disposition token · every QUEUED <ID> ref resolves to a real queue item · every governed order-of-work item carries a status marker, + a discovery guard on new "Order of work" headings so the registry can't silently fall behind, D-113's failure mode). test:coverage now runs --strict (VERIFICATION step 5, the M0 gate ON). Caught + fixed the one real drift: CONSTRUCTS "The plan" 13 unmarked steps (CONDUCT then advanced Step 3→BUILT FW-5, Step 4→QUEUED FW-6). CONFORMANCE-AND-INTAKE-ARC order-of-work (closed/superseded migration) EXEMPTED with a stated reason, not red-lit. NCs RUN (strip a disposition/a status marker → named failure). battery 55/55, coverage --strict exit 0. M0 LANE COMPLETE (M0-1..6 all done).
 
+### M0-7 · queued
+milestone: M0
+scope: The END-TO-END pipeline integration test — the whole M4 entity-axis chain driven THROUGH THE CONTROL PLANE in ONE suite, proving the pieces COMPOSE. Each op is unit-tested in isolation; nothing proves a field one op writes is the field the next op reads — and a DEPLOY exercises that composition for the first time. Chain one document's journey: `op=acquire` (carries profile+digests+reading, FW-3/4/5) → `op=promote` (reading persists) → `op=entitycreate`+`op=resolve` (reference resolves to the entity at its §8.1 grade, FW-6/7) → the REC-5 alarm tick (connections auto-derive) → `op=connections` shows the graded connection → `op=progressiondefine`+`op=thread` (FW-8/9) → `op=instance` shows the instance, its weakest-grade, and a missing-predecessor finding → `op=proposals` surfaces it (REC-6) → `op=proposedispose` ages it (REC-7). ASSERT the JOIN KEYS line up across stages (capture_sha, entity_id, progression_key/stage_key) — that each stage consumes the prior stage's actual output, not a fixture. This is "test through the op, verify live" applied end-to-end short of a real deploy, and it is the evidence a deploy decision rests on. Adds NO op.
+behind-interface: none
+depends-on: none
+accepts-when: one suite carries a document acquire→promote→resolve→derive(tick)→thread→surface→age end-to-end through the control plane, all green; negative control — break ONE join (e.g. mismatch the entity_id between resolve and concerns) and a downstream assertion fails, proving the test exercises the COMPOSITION, not just the endpoints.
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## RECORD — ACTIVE (new area, unstaffed — claim it first)
