@@ -67,6 +67,12 @@ the weight of the act, would be violated by sameness.**
 | --- | --- |
 | **QUEUE** | *things that want me,* **grouped by the case they belong to.** Items are typed and say what they offer: an obligation I must dispatch (do / forward / resolve), or something the system noticed and nobody has judged yet (adopt / defer / dismiss). Items with no case sit ungrouped. |
 
+**What may be PUT in the queue is catalogued in `docs/development/NOTIFICATIONS.md`** — about thirty
+generators today, sorted into three classes (FINDING, OBLIGATION, CONDITION) rather than a severity
+ladder, with the item contract (summary, detail, basis, producer-published options) and the per-item
+application semantics. Notification kinds take stable `N-` ids the way checks take `C-` ids, which closes
+the ad-hoc-event-strings half of D-68.
+
 **The queue groups by CASE, ruled 2026-08-01 (DEC-10).** All events on one Focus or
 Project aggregate into a single standing entry — "three things need attention on the
 Sewer Fund project" — and the entry is handled both **at group level and item by
@@ -96,7 +102,7 @@ the first time outside the record surfaces — which makes this the first real t
 the modifier generalises.
 
 | **ACT** | *doing something to a record or a set.* One motion: choose, see what it will refuse and why BEFORE it runs, author the reason, get a receipt. Ballots are acts whose status shows a tally; bulk is the same act scoped to a selection. |
-| **THE WEIGHT LADDER** | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). |
+| **THE WEIGHT LADDER** | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). Orthogonal to it, an act applied to a SET carries one of three application modes: `refuse` (all-or-nothing), `report` (proceeds, says what moved), or `per-item` (each succeeds independently or is RETAINED WITH A REASON). See `NOTIFICATIONS.md`. |
 | **UNDETERMINED** | a display primitive, identical in all six places it appears. |
 
 **Attestation stays distinguishable — as the top rung of the ladder, not a separate
