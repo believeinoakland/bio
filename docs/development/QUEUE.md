@@ -374,6 +374,15 @@ accepts-when: both meeting→agenda→minutes and need→award→signed-contract
 added: 2026-07-31 · CONDUCT
 landed: fe81904 — connections as data + progression definitions. op=connect (deriveConnections) builds on FW-7's same-entity collapse (op=concerns), NOT a parallel path: one `connections` row per capture-pair sharing an entity, GRADE = the WEAKER of the two ends' §8.1 grades (weakest-link base case), established derives from it (a C at either end can never read established). asserted_by three-valued + DISTINCT from grade, forced `system` server-side. Improvable (upsert keyed a/b/entity, re-derive raises with FW-7). progression_defs + progression_stages (after/cardinality/interval/required) author via op=progressiondefine (member-declared, framework §8.1 note 3); BOTH examples round-trip as rows (meeting→agenda→minutes, need→…→contract). 4 ops (connect/progressiondefine mutating + connections/progression reads), 101/101 --strict. I5 1.4.0, purge covers all 3 (D-113). battery 59/59. NCs RUN (weaker→stronger grade; disable persist). DEFERRED slice B: instances, N-chain inheritance, exception docs, junction findings, missing-predecessor task.
 
+### FW-9 · queued
+milestone: M4
+scope: CONSTRUCTS Step 5, SLICE B — progression INSTANCES and the MISSING-PREDECESSOR finding (M4's acceptance: "a progression with a missing predecessor is visible"). Built on FW-8's `progression_defs`/`progression_stages` + `connections`. (1) A progression INSTANCE threads REAL documents through a definition's stages via their entity connections (FW-8 `connections` / FW-7 `resolutions`) — one instance per (definition, threading entity). (2) Its grade = the WEAKEST grade along the chain (D-73 pair→chain; FW-8 did the 2-node base case, do the general N-stage inheritance here). (3) The MISSING-PREDECESSOR finding: a stage that is `required` (always/usually) with no document in the instance surfaces as a finding carrying the instance's grade (an award with no solicitation — the framework's own example). DEFER and FLAG: exception documents that discharge a legitimate skip; junction checks as findings; the SCHEDULED task that walks the table (rides the REC-1 DO-alarm scheduler — a later slice). New tables I5-additive (schema traps: BEFORE host_governor, no backticks, purge/D-113). New ops get control-plane assertions (--strict).
+behind-interface: I5
+depends-on: FW-8
+accepts-when: threading the need→award→contract documents MINUS the solicitation through the procurement definition yields an instance whose missing `solicitation` stage surfaces as a finding; the instance's grade is the weakest connection along its chain; negative control — dropping the missing-predecessor check hides the gap, and forcing the chain grade to the strongest hides a weak link.
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## CONTENT-HTML — DORMANT
@@ -418,3 +427,12 @@ depends-on: none
 accepts-when: `civicos-ui/test/run.mjs` green with an act test that disposes a focus with an authored reason and gets a receipt, and that the act is REFUSED (reason shown) when the required reason is absent; negative control — remove the reason-required pre-flight and the empty-reason act is no longer refused in the surface.
 added: 2026-07-31 · CONDUCT
 landed: 0e34d9b — the first ACT surface: focus DISPOSITION (defer/dismiss) as a JUSTIFIED TRANSITION. The one motion renders in full: CHOOSE (radio, re-runs pre-flight) · PRE-FLIGHT "before this runs — what it will refuse and why" (C-2.8 NO_REASON, BAD_REASON grammar, ILLEGAL_TRANSITION vs the plane LEGAL table) with commit disabled until it clears AND re-checked as the real gate · AUTHOR the reason (required, NEVER prefilled) · RECEIPT from the plane return · weight ladder with "reasoned" marked. op=dispose is SELECTION-scoped (op=select {ids:[focus]} → dispose handle), author server-stamped, no plane reshape. COLLAPSE VERDICT: the ACT construct FIT (evidence FOR v0.2 collapse). civicos-ui 15 harnesses green (act-dispose 50). Plane battery untouched. NC RUN (disable pre-flight gate → empty-reason act reaches the plane). DEC-8 raised: the pre-flight has no plane DRY-RUN primitive (mirrored client-side; won't generalise to server-state refusals).
+
+### UI-3 · queued
+milestone: M8
+scope: The SECOND act — a BALLOT — continuing v0.2's FALSIFIABLE test (does the ACT construct hold for an act UNLIKE the justified transition? "if the next three acts each need a new construct, the collapse was wrong" — this is act two). A ballot is a multi-party act with COMPUTED ARITHMETIC: the arithmetic already exists as ops (`adminarith`, `projectownerarith` — computed, not transcribed). Build ONE ballot (e.g. administrator addition past the second, or owner add/remove) through the SAME ACT construct + weight ladder UI-2 established (choose · see what it will refuse and why BEFORE it runs · author · receipt), PLUS the ballot's two extra properties the construct names (v0.2 §B): SHOW THE DENOMINATOR (a fact a member can check — "2 of 3 endorsements", never "pending approval"), and DISPLAY THE DIVERGENCE AT TWO OWNERS (the row a shared implementation gets wrong) — never restating the rule in the interface, where it would drift from the plane. REPORT the collapse verdict (did the ballot fit the one construct, or need a new one?). Consume the arithmetic op; DELEGATE to RECORD if a needed pre-flight isn't exposed (cf. DEC-8), do not reshape the plane.
+behind-interface: I3
+depends-on: none
+accepts-when: `civicos-ui/test/run.mjs` green with a ballot test showing the computed tally/denominator FROM the arithmetic op and an act that refuses+explains before it runs; negative control — break the denominator wiring and the tally no longer reflects the op.
+added: 2026-07-31 · CONDUCT
+landed:
