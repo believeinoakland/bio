@@ -3525,13 +3525,19 @@ export class Store extends DurableObject {
     return byCapture;
   }
 
-  /* A missing stage is a FINDING only when the group's definition says the stage is always
-     or usually expected (framework 8.2 required-ness). A sometimes/never stage missing is
-     NOT a finding -- respect the stage's required-ness. unless_exception is DEFERRED with the
-     exception-document machinery (DEC-9): its finding turns on "no exception document", a
-     check FW-9 does not build, so FW-9 does not claim a finding it cannot yet substantiate
-     (undetermined is honest; the finding reports, it does not decide). */
-  static #REQUIRED_FIRES = new Set(["always", "usually"]);
+  /* A missing stage is a FINDING only when the group's definition says the stage is expected
+     (framework 8.2 required-ness) AND the skip is UNDISCHARGED. A sometimes/never stage missing
+     is NOT a finding -- respect the stage's required-ness. always and usually fire (as FW-9).
+     unless_exception is the crucial one: FW-9 left it SILENT because its finding turns on "no
+     exception document" and FW-9 did not build that check (DEC-9 provisional a). FW-10 builds
+     the exception-document machinery, so unless_exception GRADUATES to DISCHARGEABLE and now
+     fires when required-and-UNDISCHARGED -- exactly DEC-9's own recommendation (c). This is the
+     PROVISIONAL: DEC-9 stays OPEN and Bob rules whether unless_exception fires by default; the
+     reversal is this one line (drop "unless_exception" from the set to return it to silence).
+     Discharge itself applies to ANY of these -- a required stage that is missing but carries a
+     discharging exception document is a "discharged" state, not a finding (see #assembleInstance).
+     The finding reports; it does not decide. */
+  static #REQUIRED_FIRES = new Set(["always", "usually", "unless_exception"]);
 
   /* Assemble a progression INSTANCE from its stored placements plus the CURRENT definition,
      deriving the instance grade and the missing-predecessor findings ON READ -- never from a
@@ -3549,6 +3555,19 @@ export class Store extends DurableObject {
     const rows = this.#rows(
       `SELECT stage_key, capture_sha, bundle_id, grade FROM progression_instances
          WHERE progression_key=? AND entity_id=?`, progressionKey, entityId);
+    /* FW-10: the EXCEPTION DOCUMENTS recorded against this instance -- the documents that
+       discharge a lawful skip (framework 8.2). Loaded here and CONSULTED per stage below: a
+       required stage that is missing but discharged is a distinct "discharged" state, not a
+       missing-predecessor finding. Grouped by the stage each names. */
+    const excRows = this.#rows(
+      `SELECT stage_key, capture_sha, bundle_id, reason, citation, declared_by, at FROM progression_exceptions
+         WHERE progression_key=? AND entity_id=?`, progressionKey, entityId);
+    const excByStage = new Map();
+    for (const e of excRows) {
+      if (!excByStage.has(e.stage_key)) excByStage.set(e.stage_key, []);
+      excByStage.get(e.stage_key).push({ capture_sha: e.capture_sha, bundle_id: e.bundle_id,
+        reason: e.reason, citation: e.citation, declared_by: e.declared_by, at: e.at });
+    }
     /* found:false when NOTHING has been threaded on this entity -- an empty instance has no
        missing predecessor (there is no successor either), and reporting every required stage
        as absent would be a finding about a thing that does not exist. `defined:true` tells a
@@ -3558,7 +3577,7 @@ export class Store extends DurableObject {
       return { ok: true, progression_key: progressionKey, entity_id: entityId, found: false, defined: true,
                label: def.label, entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
                grade: null, grade_determined: false, stage_count: stageDefs.length, placed_count: 0,
-               chain: [], stages: [], findings: [], finding_count: 0 };
+               chain: [], stages: [], findings: [], finding_count: 0, discharges: [], discharge_count: 0 };
     /* Group placements by stage; the stage's REPRESENTATIVE for the chain is its STRONGEST
        document (a stage is as well-evidenced as its best document, cardinality 0..n). */
     const docsByStage = new Map();
@@ -3589,24 +3608,52 @@ export class Store extends DurableObject {
       if (instanceGrade === null || Store.#GRADE_RANK[g] < Store.#GRADE_RANK[instanceGrade]) instanceGrade = g;
     }
     const determined = instanceGrade !== null;
-    /* The stage view, and the missing-predecessor findings. A REQUIRED stage (always/usually)
-       with no document is a finding carrying the INSTANCE's grade -- the finding REPORTS the
-       gap, it does not decide (framework invariant 8), and it carries the weakest grade the
-       chain rests on so a case built on it says how strong that chain is. */
-    const stages = [], findings = [];
+    /* The stage view, the missing-predecessor findings, and the DISCHARGED states (FW-10). A
+       REQUIRED stage (always/usually/unless_exception) with no document is normally a finding
+       carrying the INSTANCE's grade -- the finding REPORTS the gap, it does not decide (framework
+       invariant 8), and it carries the weakest grade the chain rests on so a case built on it says
+       how strong that chain is. BUT a missing required stage that carries a DISCHARGING exception
+       document is a lawful, recorded skip: it becomes a distinct "discharged" state carrying the
+       exception's reason/citation and the discharging document -- NOT a finding, and NOT silently
+       absent (the record must show WHY the skip is legitimate). Undischarged-and-required still
+       fires. A discharge only applies to a stage that is actually MISSING: an exception naming a
+       stage that is present discharges nothing (there is no skip), and is carried on the stage as
+       inert so the record shows it too. */
+    const stages = [], findings = [], discharges = [];
     for (const s of stageDefs) {
       const docs = docsByStage.get(s.stage_key) || [];
       const present = docs.length > 0;
+      const exceptions = excByStage.get(s.stage_key) || [];
+      /* Only a MISSING stage can be discharged -- a discharge naming a present stage discharges
+         nothing (framework 8.2: the exception explains a SKIP, and a filled stage was not skipped). */
+      const discharged = !present && exceptions.length > 0;
       stages.push({ stage_key: s.stage_key, label: s.label, after_stage: s.after_stage,
                     cardinality: s.cardinality, required: s.required, present, document_count: docs.length,
                     grade: present ? repGrade.get(s.stage_key) : null,
+                    discharged, exception_count: exceptions.length, exceptions,
                     documents: docs.map((d) => ({ capture_sha: d.capture_sha, bundle_id: d.bundle_id, grade: d.grade })) });
       if (!present && Store.#REQUIRED_FIRES.has(s.required)) {
-        findings.push({ kind: "missing_predecessor", stage_key: s.stage_key, stage_label: s.label,
-                        required: s.required, after_stage: s.after_stage,
-                        grade: determined ? instanceGrade : "undetermined", grade_determined: determined,
-                        detail: `the '${s.stage_key}' stage is ${s.required} required but no threaded document fills it`
-                              + ` -- a missing predecessor (framework 8.2), carrying the instance's grade` });
+        if (discharged) {
+          /* A lawful, RECORDED skip -- the exception document names why the stage may be missing
+             (framework 8.2). Reported distinctly (not a finding, not hidden), carrying the same
+             reason/citation the writer earned, so the record shows the skip AND its legitimacy. */
+          discharges.push({ kind: "discharged_skip", stage_key: s.stage_key, stage_label: s.label,
+                            required: s.required, after_stage: s.after_stage,
+                            documents: exceptions,
+                            detail: `the '${s.stage_key}' stage is ${s.required} required and unfilled, but its skip is`
+                                  + ` DISCHARGED by ${exceptions.length} exception document(s) naming why it may be missing`
+                                  + ` (framework 8.2) -- a lawful, recorded skip, not a gap` });
+        } else {
+          findings.push({ kind: "missing_predecessor", stage_key: s.stage_key, stage_label: s.label,
+                          required: s.required, after_stage: s.after_stage,
+                          /* every required tier is DISCHARGEABLE by an exception document (FW-10); this
+                             one simply carries none. unless_exception's firing here is DEC-9's open policy. */
+                          dischargeable: true,
+                          grade: determined ? instanceGrade : "undetermined", grade_determined: determined,
+                          detail: `the '${s.stage_key}' stage is ${s.required} required but no threaded document fills it`
+                                + ` and no exception document discharges the skip -- a missing predecessor (framework 8.2),`
+                                + ` carrying the instance's grade` });
+        }
       }
     }
     return { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
@@ -3614,7 +3661,8 @@ export class Store extends DurableObject {
              grade: instanceGrade, grade_determined: determined,
              established: determined && Store.#isEstablished(instanceGrade),
              stage_count: stageDefs.length, placed_count: placedInOrder.length,
-             chain, stages, findings, finding_count: findings.length };
+             chain, stages, findings, finding_count: findings.length,
+             discharges, discharge_count: discharges.length };
   }
 
   /* op=thread: thread REAL captured documents through a progression definition's stages,
@@ -3692,6 +3740,90 @@ export class Store extends DurableObject {
     return this.#assembleInstance(progressionKey.trim(), entityId.trim());
   }
 
+  /* op=discharge (FW-10): record an EXCEPTION DOCUMENT that discharges a lawful SKIP -- a real
+     captured document, threaded onto ONE progression instance and NAMING the ONE stage it
+     discharges, carrying the reason and citation the institution is supposed to publish for the
+     skip (framework 8.2). A discharge must be EARNED, and the earning is enforced HERE so the
+     record never rests on a caller's bare assertion (an equality a caller can hand us is one a
+     caller can invent):
+       - the document must ACTUALLY resolve to the threading entity (FW-7) -- NOT_CONCERNED
+         otherwise, the same gate op=thread uses (a document that does not concern the subject
+         cannot discharge that subject's skip);
+       - it must name a REAL stage of the definition -- BAD_STAGE otherwise (an exception that
+         names no real stage discharges nothing);
+       - both a reason and a citation are required -- NO_REASON / NO_CITATION, refused fail-closed
+         rather than stored empty, the same statement anatomy FW-8's declared relations carry.
+     Whether the discharge APPLIES (the stage is missing-and-required) is derived on READ in
+     #assembleInstance -- derived findings inform, they do not decide, so this stores the document,
+     never a "discharged" flag that could go stale against the live placements. Re-recording the
+     same document at the same stage UPSERTS (an exception is editable data); recording it at a
+     different stage or from a different document ADDS (a stage may be discharged by several). */
+  dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null } = {}) {
+    if (typeof progressionKey !== "string" || !progressionKey.trim())
+      return { ok: false, reason: "NO_KEY", detail: "an exception document names its progression by key (op=discharge)" };
+    const key = progressionKey.trim();
+    if (typeof entityId !== "string" || !entityId.trim())
+      return { ok: false, reason: "NO_ENTITY", detail: "an exception document discharges a skip in one entity's instance, named by id" };
+    const eid = entityId.trim();
+    const sk = typeof stageKey === "string" ? stageKey.trim() : (typeof stage === "string" ? stage.trim() : "");
+    if (!sk) return { ok: false, reason: "NO_STAGE", detail: "an exception document NAMES the stage it discharges" };
+    const cs = typeof captureSha === "string" ? captureSha.trim()
+             : (typeof capture_sha === "string" ? capture_sha.trim() : "");
+    if (!cs) return { ok: false, reason: "NO_CAPTURE", detail: "an exception document IS a captured document, named by its capture sha" };
+    const rsn = typeof reason === "string" ? reason.trim() : "";
+    if (!rsn) return { ok: false, reason: "NO_REASON",
+      detail: "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)" };
+    const cite = typeof citation === "string" ? citation.trim() : "";
+    if (!cite) return { ok: false, reason: "NO_CITATION",
+      detail: "an exception document carries a citation -- where the justification for the skip is published" };
+    const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, key);
+    if (!def) return { ok: false, reason: "NO_SUCH_PROGRESSION", progression_key: key,
+      detail: "define the progression first (op=progressiondefine), then discharge a skip in one of its instances" };
+    const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, eid);
+    if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: eid,
+      detail: "the threading entity must be registered (op=entitycreate)" };
+    const stageRow = this.#one(`SELECT stage_key FROM progression_stages WHERE progression_key=? AND stage_key=?`, key, sk);
+    if (!stageRow) return { ok: false, reason: "BAD_STAGE", stage_key: sk,
+      detail: `'${sk}' is not a stage of progression '${key}' -- an exception must name a real stage to discharge` };
+    /* the document must ACTUALLY concern the entity (FW-7), at its strongest resolution -- the
+       same earned-connection gate op=thread applies to a placement. Its bundle rides along. */
+    const res = this.#strongestResolutionsFor(eid).get(cs);
+    if (!res) return { ok: false, reason: "NOT_CONCERNED", stage_key: sk, capture_sha: cs, entity_id: eid,
+      detail: "this document does not resolve to the threading entity, so it cannot discharge that entity's skip "
+            + "(resolve it first with op=resolve, or discharge the skip in the instance it actually concerns)" };
+    const at = new Date().toISOString();
+    const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
+    this.sql.exec(
+      `INSERT INTO progression_exceptions (progression_key,entity_id,stage_key,capture_sha,bundle_id,reason,citation,declared_by,at)
+       VALUES (?,?,?,?,?,?,?,?,?)
+       ON CONFLICT(progression_key,entity_id,stage_key,capture_sha) DO UPDATE SET
+         bundle_id=excluded.bundle_id, reason=excluded.reason, citation=excluded.citation,
+         declared_by=excluded.declared_by, at=excluded.at`,
+      key, eid, sk, cs, res.bundle_id, rsn.slice(0, 4000), cite.slice(0, 2000), by, at);
+    /* return the reassembled instance so the caller sees the discharge take effect ON READ --
+       the stage moves from a missing-predecessor finding to a discharged state (when it was in
+       fact missing-and-required). */
+    const inst = this.#assembleInstance(key, eid);
+    return { ...inst, discharged_stage: sk, exception_document: cs, reason: rsn.slice(0, 4000),
+             citation: cite.slice(0, 2000), declared_by: by, at };
+  }
+
+  /* op=exceptions (FW-10): read the EXCEPTION DOCUMENTS recorded against one progression instance
+     -- the raw discharge rows, including any that discharge nothing (a stage that is not missing),
+     so the record is auditable. The instance read (op=instance) shows which discharges APPLY as
+     "discharged" states; this shows every exception recorded, applied or not. */
+  readExceptions({ progressionKey, entityId } = {}) {
+    if (typeof progressionKey !== "string" || !progressionKey.trim())
+      return { ok: false, reason: "NO_KEY", detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" };
+    if (typeof entityId !== "string" || !entityId.trim())
+      return { ok: false, reason: "NO_ENTITY", detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" };
+    const key = progressionKey.trim(), eid = entityId.trim();
+    const exceptions = this.#rows(
+      `SELECT stage_key, capture_sha, bundle_id, reason, citation, declared_by, at FROM progression_exceptions
+         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`, key, eid);
+    return { ok: true, progression_key: key, entity_id: eid, exception_count: exceptions.length, exceptions };
+  }
+
   /* ---- coordination: what LockService and the nextSeq race did ---- */
 
   allocId(prefix, year) {
@@ -3759,6 +3891,9 @@ export class Store extends DurableObject {
       /* FW-9: the threaded progression instances, reported so a purge can PROVE it cleared
          them (D-113). */
       progressionInstances: n("progression_instances"),
+      /* FW-10: the exception documents that discharge a lawful skip, reported so a purge can
+         PROVE it cleared them (D-113). */
+      progressionExceptions: n("progression_exceptions"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -3797,8 +3932,16 @@ export class Store extends DurableObject {
        scope ALL while a threaded document survived, the D-113 silent-leftover; hygiene.test.mjs
        holds this list against schema.mjs. Progression DEFINITIONS are member-declared (no
        bundle_id) and cleared in the whole-store arm below with the registry. */
+    /* FW-10: `progression_exceptions` (CONSTRUCTS Step 5 slice C) is DERIVED from the corpus too --
+       each row is a captured exception document threaded onto an instance -- and carries bundle_id,
+       so it clears in BOTH arms exactly as progression_instances do. A per-bundle purge removes that
+       document's discharges and the stage honestly re-reads as an undischarged gap; a whole-store
+       purge takes them all. Leaving it out would let a whole-store purge report scope ALL while a
+       discharge survived, the D-113 silent-leftover; hygiene.test.mjs holds this list against
+       schema.mjs. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
-                    "readings", "reading_refs", "resolutions", "progression_instances"];
+                    "readings", "reading_refs", "resolutions", "progression_instances",
+                    "progression_exceptions"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -3909,7 +4052,9 @@ export class Store extends DurableObject {
                  connections: d("connections"), progressionDefs: d("progressionDefs"),
                  progressionStages: d("progressionStages"),
                  /* FW-9: the threaded progression instances a purge took (D-113). */
-                 progressionInstances: d("progressionInstances") },
+                 progressionInstances: d("progressionInstances"),
+                 /* FW-10: the exception documents a purge took (D-113). */
+                 progressionExceptions: d("progressionExceptions") },
     };
   }
 
@@ -6649,6 +6794,14 @@ export class Store extends DurableObject {
         thread: () => this.threadInstance(body || {}),
         instance: () => this.readInstance({ progressionKey: url.searchParams.get("key"),
                                             entityId: url.searchParams.get("id") }),
+        /* CONSTRUCTS Step 5, SLICE C (FW-10): EXCEPTION DOCUMENTS that discharge a lawful skip.
+           op=discharge records an exception document (a real captured document resolving to the
+           threading entity, naming the stage it discharges, carrying reason + citation), stamping
+           declared_by below; op=instance then renders that stage as a "discharged" state rather
+           than a missing-predecessor finding. op=exceptions reads the raw discharge rows. */
+        discharge: () => this.dischargeStage(body || {}),
+        exceptions: () => this.readExceptions({ progressionKey: url.searchParams.get("key"),
+                                                entityId: url.searchParams.get("id") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),

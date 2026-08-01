@@ -12,7 +12,10 @@
  * carrying the instance's grade — the framework's own example, an award with no solicitation.
  *
  * Doctrine proved here: requiredness is respected (a sometimes/never stage missing is NOT a
- * finding; unless_exception is DEFERRED with the exception-document machinery, DEC-9);
+ * finding). NOTE: unless_exception was SILENT in FW-9 (DEC-9 provisional a); FW-10 landed the
+ * exception-document machinery and GRADUATED unless_exception to fire when undischarged (DEC-9
+ * mechanism / recommendation c), so the assertions below were CORRECTED (not exempted) where
+ * that stage now fires — see the SUPERSEDED comments inline and progression-exception.test.mjs.
  * undetermined is honest (a one-document instance has no chain, so no invented grade); a
  * document that does not resolve to the entity cannot be threaded on it.
  *
@@ -155,26 +158,40 @@ t("the instance grade equals the mirrored weakest-of-chain (the store owns the r
   threaded.grade, [weaker("A", "A"), weaker("A", "C")].reduce((a, b) => weaker(a, b)));
 
 console.log("\n--- the MISSING-PREDECESSOR finding (M4's acceptance) ---");
-t("exactly ONE missing-predecessor finding surfaces", threaded.finding_count, 1);
-const f = threaded.findings[0];
+/* SUPERSEDED by FW-10 (the exception-document slice / DEC-9's mechanism). FW-9 asserted exactly
+   ONE finding here because unless_exception was SILENT (DEC-9 provisional a — the exception-doc
+   check did not exist). FW-10 builds that check, so unless_exception GRADUATES to dischargeable
+   and fires when required-and-UNDISCHARGED (DEC-9 recommendation c). The 'recommendation' stage
+   (unless_exception, absent, no exception document) now fires too, so TWO findings surface. The
+   old "exactly ONE" was correct for FW-9's world and is corrected, not exempted. */
+t("TWO missing-predecessor findings surface: solicitation (usually) and recommendation (unless_exception, undischarged — FW-10/DEC-9)",
+  threaded.finding_count, 2);
+const f = threaded.findings[0];  // findings are in stage order; solicitation (stage 2) precedes recommendation (stage 3)
 t("the finding is the missing REQUIRED 'solicitation' stage (an award with no solicitation)",
   [f.kind, f.stage_key, f.required], ["missing_predecessor", "solicitation", "usually"]);
 t("the finding CARRIES the instance's grade — the weakest grade the chain rests on (C)",
   [f.grade, f.grade_determined], ["C", true]);
 
-console.log("\n--- requiredness is RESPECTED: a sometimes/never/unless_exception missing stage is NOT a finding ---");
+console.log("\n--- requiredness is RESPECTED: a sometimes/never missing stage is NOT a finding ---");
 t("the 'amendment' stage (never required), absent, produced NO finding",
   threaded.findings.some((x) => x.stage_key === "amendment"), false);
-t("the 'recommendation' stage (unless_exception), absent, produced NO finding — DEFERRED with the exception doc (DEC-9)",
-  threaded.findings.some((x) => x.stage_key === "recommendation"), false);
+/* SUPERSEDED by FW-10: unless_exception is now DISCHARGEABLE and fires when undischarged (DEC-9's
+   mechanism landed). This instance records NO exception document for 'recommendation', so it fires
+   a dischargeable missing_predecessor finding. (FW-10's own suite proves that recording an exception
+   document turns this back OFF — the discharged state.) */
+t("the 'recommendation' stage (unless_exception, UNDISCHARGED), absent, now FIRES a dischargeable finding — FW-10/DEC-9",
+  threaded.findings.some((x) => x.stage_key === "recommendation" && x.dischargeable === true), true);
 t("the 'need' stage is present (placed), so it is not missing and not a finding",
   [threaded.stages.find((s) => s.stage_key === "need").present,
    threaded.findings.some((x) => x.stage_key === "need")], [true, false]);
 
 console.log("\n--- op=instance: the persisted instance reads back with grade, chain and findings derived ---");
 const inst = await get("instance", "key=procurement&id=" + cid);
-t("the instance reads back found, at grade C, with one finding",
-  [inst.found, inst.grade, inst.finding_count], [true, "C", 1]);
+/* SUPERSEDED by FW-10: finding_count is 2 now (solicitation + the graduated unless_exception
+   recommendation), not 1 — same DEC-9 mechanism as above. Grade and the visible solicitation gap
+   are unchanged. */
+t("the instance reads back found, at grade C, with two findings",
+  [inst.found, inst.grade, inst.finding_count], [true, "C", 2]);
 t("the missing solicitation is VISIBLE on read (the M4 capability)",
   inst.findings[0].stage_key, "solicitation");
 t("the placed stages carry their document and its end-grade; missing stages carry no document",

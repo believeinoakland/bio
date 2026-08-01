@@ -477,6 +477,15 @@ const OPS = {
      both DERIVED on read. `thread` mutates; `instance` is ungated like the other reads. */
   thread:           { classes: ["admin", "member", "probe"],       mutating: true  },
   instance:         { classes: ["admin", "member", "probe"],       mutating: false },
+  /* CONSTRUCTS Step 5, SLICE C (FW-10): EXCEPTION DOCUMENTS that discharge a lawful skip
+     (framework §8.2). `discharge` records an exception document against an instance's stage — a
+     real captured document that RESOLVES to the threading entity (FW-7) and NAMES a real stage,
+     carrying reason + citation — and stamps the declaring member below; op=instance then renders
+     that missing required stage as a "discharged" state, not a missing-predecessor finding.
+     `exceptions` reads the raw discharge rows. `discharge` mutates; `exceptions` is ungated like
+     the other progression reads. */
+  discharge:        { classes: ["admin", "member", "probe"],       mutating: true  },
+  exceptions:       { classes: ["admin", "member", "probe"],       mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -599,9 +608,12 @@ const RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concern
    CONSTRUCTS Step 5, SLICE B (FW-9) extends the set: a member THREADS real documents into a
    progression instance (thread — stamped with the threading member below, like the writes
    above) and READS the instance (instance — no viewer stamp, keyed on progression key and
-   entity id). Named here so the member and admin lists cannot drift apart. */
+   entity id). Named here so the member and admin lists cannot drift apart.
+   CONSTRUCTS Step 5, SLICE C (FW-10) extends it again: a member DISCHARGES a lawful skip by
+   recording an exception document (discharge — stamped with the declaring member below) and
+   READS the raw discharges (exceptions — no viewer stamp, keyed on progression key + entity id). */
 const PROGRESSION_ACTIONS = ["connect", "connections", "progressiondefine", "progression",
-                             "thread", "instance"];
+                             "thread", "instance", "discharge", "exceptions"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
@@ -693,6 +705,11 @@ const NEEDS = {
      does not thread instances. The threading member is stamped server-side. The read
      (instance) is ungated, like connections/progression. */
   thread:           "contribute",
+  /* FW-10: recording an exception document that DISCHARGES a lawful skip is likewise a
+     corpus-shaping act — it changes what the record claims about a missing stage (a gap becomes
+     a lawful recorded skip) — so `contribute`, stamped with the declaring member below. The read
+     (exceptions) is ungated, like the other progression reads. */
+  discharge:        "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */
@@ -2938,6 +2955,19 @@ export default {
       try {
         const b = JSON.parse(passBody);
         b.threadedBy = viaSession ? sessMember : `class:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* FW-10: an exception document DISCHARGES a lawful skip, and WHO declared the skip lawful is
+       part of the record — the author of a justification, exactly as a progression definition or a
+       declared relation carries its author. Stamped from the session and overwritten if the caller
+       supplied it; a machine credential says what it is (class:<cls>) rather than borrowing a
+       person's name. The GRADE-like earning (the document must resolve to the entity) is the
+       record's, checked in the store, never the caller's. */
+    if (op === "discharge" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }

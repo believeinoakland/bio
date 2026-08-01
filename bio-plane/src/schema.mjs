@@ -917,6 +917,47 @@ CREATE TABLE IF NOT EXISTS progression_instances (
 CREATE INDEX IF NOT EXISTS progression_instances_key ON progression_instances(progression_key, entity_id);
 CREATE INDEX IF NOT EXISTS progression_instances_bundle ON progression_instances(bundle_id);
 CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instances(capture_sha);
+-- CONSTRUCTS Step 5, SLICE C (FW-10): an EXCEPTION DOCUMENT that discharges a LEGITIMATE SKIP
+-- (framework 8.2: "a sole-source award skips the solicitation stage lawfully ... a skipped
+-- stage with no exception document is [a finding]. The table records which document discharges
+-- which skip"). A row is a REAL captured document, threaded onto ONE progression instance and
+-- NAMING the ONE stage it discharges, carrying a reason and a citation -- the justification an
+-- institution is supposed to publish for the skip, the same statement anatomy FW-8's declared
+-- relations carry (justification + citation, both NOT NULL). Keyed
+-- (progression_key, entity_id, stage_key, capture_sha) so a stage may be discharged by several
+-- documents and re-recording the same document at a stage UPSERTS in place.
+--
+-- A discharge must be EARNED, enforced by the write path (op=discharge), never by a caller's
+-- bare assertion (an equality a caller can hand us is one a caller can invent): the document
+-- must ACTUALLY resolve to the threading entity (FW-7) -- refused NOT_CONCERNED otherwise, the
+-- same gate op=thread uses -- and must name a REAL stage of the definition (BAD_STAGE
+-- otherwise). Whether the discharge APPLIES is derived ON READ in #assembleInstance: only a
+-- REQUIRED stage that is actually MISSING is discharged (rendered a distinct "discharged"
+-- state carrying this reason/citation, never a gap and never silently absent); an exception
+-- naming a stage that is not missing discharges nothing (the stage is present, so there is no
+-- skip to discharge). Derived findings inform, they do not decide -- so this table stores the
+-- documents, not a stored "discharged" boolean that could go stale against the live placements.
+--
+-- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly as
+-- progression_instances do (it is in op=purge's TABLES): a per-bundle purge removes that
+-- document's discharges and the stage honestly re-reads as an undischarged gap; a whole-store
+-- purge takes them all (D-113). JUNCTION checks as findings and the SCHEDULED walking-task are
+-- DEFERRED past FW-10.
+CREATE TABLE IF NOT EXISTS progression_exceptions (
+  progression_key TEXT NOT NULL,
+  entity_id       TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  capture_sha     TEXT NOT NULL,
+  bundle_id       TEXT NOT NULL,
+  reason          TEXT NOT NULL,
+  citation        TEXT NOT NULL,
+  declared_by     TEXT,
+  at              TEXT,
+  PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha)
+);
+CREATE INDEX IF NOT EXISTS progression_exceptions_key ON progression_exceptions(progression_key, entity_id);
+CREATE INDEX IF NOT EXISTS progression_exceptions_bundle ON progression_exceptions(bundle_id);
+CREATE INDEX IF NOT EXISTS progression_exceptions_capture ON progression_exceptions(capture_sha);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

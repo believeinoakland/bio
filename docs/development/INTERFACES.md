@@ -529,7 +529,7 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.5.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.6.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
   `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —
@@ -549,8 +549,12 @@ correctness properties, not preferences. Changing either is an interface change.
   `progression_instances` (CONSTRUCTS Step 5 slice B — a progression INSTANCE threaded
   through a definition's stages by an entity), added BEFORE `host_governor` and to
   `op=purge`'s `TABLES` (so it clears in BOTH arms like `resolutions`, since a placement
-  carries `bundle_id`). No existing table's columns changed, so nothing built against I5
-  breaks; the shapes are in the ownership list and note below.)
+  carries `bundle_id`); 1.6.0 2026-07-31, FW-10 — ADDITIVE: one new DERIVED table
+  `progression_exceptions` (CONSTRUCTS Step 5 slice C — an EXCEPTION DOCUMENT that discharges a
+  lawful skip, framework §8.2), added BEFORE `host_governor` and to `op=purge`'s `TABLES` (so it
+  clears in BOTH arms like `progression_instances`, since an exception document carries
+  `bundle_id`). No existing table's columns changed, so nothing built against I5 breaks; the
+  shapes are in the ownership list and note below.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 
@@ -683,6 +687,34 @@ through `op=instance` (by `progression_key` + `entity_id`; ungated like the othe
 Exception documents that discharge a lawful skip, junction checks as findings, and the
 SCHEDULED task that walks this table for missing predecessors (it would ride the REC-1 DO-alarm
 scheduler) are DEFERRED past FW-9.
+
+`progression_exceptions` (FW-10, CONSTRUCTS Step 5 slice C) is `FRAMEWORK`'s: an EXCEPTION
+DOCUMENT that discharges a LEGITIMATE SKIP (framework §8.2 — "a skipped stage with no exception
+document is [a finding]. The table records which document discharges which skip"). A row is a
+REAL captured document threaded onto ONE progression instance and NAMING the ONE stage it
+discharges, carrying a `reason` and a `citation` (both NOT NULL — the justification an
+institution publishes for a lawful skip, the same statement anatomy FW-8's declared relations
+carry). Keyed `(progression_key, entity_id, stage_key, capture_sha)` so a stage may be
+discharged by several documents and re-recording the same document at a stage UPSERTS. A
+discharge must be EARNED, enforced at the write path (`op=discharge`) and NEVER on a caller's
+bare assertion (an equality a caller can hand us is one a caller can invent): the document must
+ACTUALLY resolve to the threading entity (FW-7 — refused `NOT_CONCERNED`, the same gate
+`op=thread` uses) and NAME a real stage (refused `BAD_STAGE`), and carry a reason + citation
+(refused `NO_REASON` / `NO_CITATION`). Whether the discharge APPLIES is DERIVED ON READ in
+`#assembleInstance`: only a REQUIRED stage that is actually MISSING is discharged (rendered a
+distinct "discharged" state carrying the reason/citation and the document — never a gap, never
+silently absent, and never a stored `discharged` boolean that could go stale against the live
+placements — derived findings inform, they do not decide). An exception naming a stage that is
+present discharges nothing (there is no skip). This also GIVES DEC-9 ITS MECHANISM:
+`unless_exception` graduates to DISCHARGEABLE — a required `unless_exception` stage now fires a
+missing-predecessor finding ONLY when undischarged (DEC-9's own recommendation c; the policy of
+whether it fires by default stays Bob's, DEC-9 left OPEN). DERIVED from the corpus (carries
+`bundle_id`), so cleared by BOTH a per-bundle and a whole-store purge (it is in `op=purge`'s
+`TABLES`). Write through `op=discharge` (stamps `declared_by` from the session, needs
+`contribute`); read through `op=exceptions` (the raw discharge rows, by `progression_key` +
+`entity_id`; ungated like the other reads) — the discharges that APPLY also surface on
+`op=instance` as the "discharged" states. JUNCTION checks as findings and the SCHEDULED
+walking-task (it would ride the REC-1 DO-alarm scheduler) remain DEFERRED past FW-10.
 
 ### What changing it costs
 
