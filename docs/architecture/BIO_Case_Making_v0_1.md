@@ -389,15 +389,80 @@ evidence, claim, engagement, workspace. Down from five, and each answers a diffe
 question: *what did we capture · what do we assert · what did we do · who is working on
 this.*
 
-### The risk this creates, named so it is watched
+### The god-object risk, WITHDRAWN as stated and narrowed to what is real
 
-One object with a long lifecycle can grow into a god-object whose checks become a
-thicket. The mitigation already exists — the catalogue does per-state requirements
-today — but the failure mode is real and the guard is that **every stage requirement
-must name the doctrine it enforces**, or the lifecycle accumulates rules nobody can
-justify.
+Bob: *"changing its name as it evolves doesn't make it god-like."* Correct, and the
+risk as I wrote it was over-weighted. Phase naming is vocabulary, not structure, and a
+long lifecycle is not itself a hazard — the check catalogue already carries forty-nine
+per-state requirements, each with a number and a stated reason, and has not become a
+thicket.
 
-## Open questions this pass must answer
+What remains, smaller and real: **every stage requirement must name the doctrine it
+enforces.** That is the catalogue's existing discipline applied to a new type, not a
+new burden. Without it a lifecycle accumulates rules nobody can justify — which is a
+risk of any state machine, not of this one.
+
+## Naming: three names for three phases, and the type name question
+
+**RULED by Bob, 2026-08-01: `inquiry` early (NOT `focus`), `finding` once it concludes,
+`case` once published.** Same object, different phases, different names.
+
+**This session's determination on how that is expressed**, since a phase called
+"inquiry" on a type called `inquiry` reads badly:
+
+- the TYPE is `inquiry`;
+- the STATE values are neutral and machine-facing — `open` → `concluded` → `published`,
+  with the existing triage dispositions surviving as exits;
+- **`inquiry` / `finding` / `case` are the MEMBER-FACING NAMES for those phases**, which
+  is what Bob asked for and what a member reads everywhere.
+
+That keeps the state vocabulary clean and gives the member the three words that
+describe what they are looking at.
+
+**The rename cost, stated honestly: this is the concept's SECOND rename.** `problem`
+became `focus` in 0.35.0, and the append-only constraint means `problem` is still a
+legal alias in existing history and no history row was rewritten. `focus` → `inquiry`
+adds a third name for one thing. The precedent handles it exactly — canonical
+vocabulary changes everywhere, prior names stay legal where they already exist,
+projections normalise — and PLAN.md records the whole shape of that migration. It is
+not free, and it is affordable, and it should not happen a third time.
+
+## Division: one inquiry becomes two or more
+
+**RULED by Bob: the lifecycle must include dividing into 2 or more.** Composition came
+free with recursion; division does not, and working through it produces four things.
+
+**1. The sub-question case is already free; the genuinely new case is SUPERSESSION.**
+Two different things wear the word "split":
+
+- *this question has parts* — B and C are inquiries the parent cites as basis. Recursion
+  already does this; nothing new is needed.
+- *this question was MALFORMED* — A was one question and is actually two. A does not
+  continue. This is the new capability, and `supersedes` is already in `REL_VOCAB`.
+
+**2. Apportioning the basis is an AUTHORED act, never automatic.** If A gathered thirty
+documents and four sub-inquiries, dividing means deciding which belong to B, which to C,
+and which to both. A machine cannot decide that, and evidence must never be silently
+reassigned — the split records who apportioned what.
+
+**3. A PUBLISHED case cannot be divided.** It can only be superseded by new inquiries
+that cite it. A published hash answers forever and somebody may already have acted on
+it; retraction and revision are different acts, and dividing a case after the world has
+relied on it would be revision pretending to be housekeeping.
+
+**4. Weakest-link composition makes division NECESSARY, not merely convenient** — and
+this is the part worth keeping. If a case is only as strong as its weakest leg, then an
+inquiry mixing one well-supported claim with one thin one is worth exactly the thin one.
+Without division a member's only options are to overclaim (publish the mix at the
+strong claim's apparent strength) or to stay silent (publish nothing). **Division is the
+mechanism by which the strength rule does not force that choice**: separate the thin
+leg, publish the strong claim honestly at its own strength, and leave the weak one open
+as what it is. That makes division a doctrine requirement rather than a convenience.
+
+**And merging is free**, for symmetry: two members independently opening inquiries into
+the same thing is resolved by a parent that cites both. No new mechanism.
+
+## Open questions this pass must answer## Open questions this pass must answer
 
 1. Do `focus` / `project` / `action` / `case file` survive, evolve, or get replaced?
    Bob is explicitly open on this and it is the first question.
