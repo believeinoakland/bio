@@ -1,9 +1,12 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) stop stamping a session lease with the signed-in member (index.mjs: set the lease `actor` to `token:${cls}` unconditionally instead of `viaSession ? sessMember : ...`) -> 1 assertion fails ("session lease is stamped with the member, not the claimed actor"); restored, 55 pass. */
 /* Member credentials and the session write powers.
  *
  * Runs the full Worker (index.mjs) under miniflare with the DO bound, so
  * every assertion crosses the real surface: op registry, classification,
  * session rules, author stamping. No R2 here; intake without evidence
  * storage must work, per the installer doctrine that R2 is optional.
+ *
+ * Negative-control detail: stop stamping a session lease with the signed-in member (index.mjs: set the lease `actor` to `token:${cls}` unconditionally instead of `viaSession ? sessMember : ...`) -> 1 assertion fails ("session lease is stamped with the member, not the claimed actor"); restored, 55 pass.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

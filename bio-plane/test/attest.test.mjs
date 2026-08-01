@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) flip the certReq flag in tsa.mjs timestampRequest (derBoolean(true) -> false) so the DER diverges from what openssl builds -> 2 assertions fail (byte-identical-to-openssl and its downstream); restored, 48 pass. (Needs openssl on PATH — present.) */
 /* Co-attestation: the part of provenance a group cannot fabricate for itself.
+ *
+ * Negative-control detail: flip the certReq flag in tsa.mjs timestampRequest (derBoolean(true) -> false) so the DER diverges from what openssl builds -> 2 assertions fail (byte-identical-to-openssl and its downstream); restored, 48 pass. (Needs openssl on PATH — present.)
  *
  * The strongest assertion here is the first one: the TimeStampReq this plane
  * builds is byte-identical to the one OpenSSL builds for the same digest and

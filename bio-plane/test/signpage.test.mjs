@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) corrupt the SSHSIG signed-preimage magic in the page's own sshsig() ("SSHSIG" -> "SSHXIG") in the SOURCE tools/sign-release.html (this suite lifts the inline script from that file, NOT the generated src/signpage.mjs) -> 6 assertions fail (ssh-keygen rejects the page's release and ratification signatures); restored, 35 pass. */
 /* The signing page, checked against OpenSSH.
+ *
+ * Negative-control detail: corrupt the SSHSIG signed-preimage magic in the page's own sshsig() ("SSHSIG" -> "SSHXIG") in the SOURCE tools/sign-release.html (this suite lifts the inline script from that file, NOT the generated src/signpage.mjs) -> 6 assertions fail (ssh-keygen rejects the page's release and ratification signatures); restored, 35 pass.
  *
  * Bob signs in a browser tab because he has no terminal, which means the
  * page reimplements SSHSIG construction in about forty lines of

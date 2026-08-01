@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) make the in-DO conformance pass ignore error findings (store.mjs: filter errs to empty so every bundle counts clean) -> 6 assertions fail (clean/withErrors/tally/named-checks disagree with external gating) and the suite then throws at the offenders sample; restored, 18 pass. */
 /* The whole-store conformance pass, run where the data is.
  *
  * The benchmark that produced this operation: gating 20,000 bundles from outside
@@ -5,6 +6,8 @@
  * locally, and roughly 97% of the gap is one network round trip per image. The
  * store was never the constraint and neither were the checks, which run in half a
  * millisecond. Fetching bundles one at a time was.
+ *
+ * Negative-control detail: make the in-DO conformance pass ignore error findings (store.mjs: filter errs to empty so every bundle counts clean) -> 6 assertions fail (clean/withErrors/tally/named-checks disagree with external gating) and the suite then throws at the offenders sample; restored, 18 pass.
  *
  * So the assertions here are about two things. That the pass agrees exactly with
  * gating from outside, because a faster answer that differs is worthless. And that

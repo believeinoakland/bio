@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) neuter the C-19.1 task grammar check (early `return` at the top of checkInboxGrammar so no violation is ever reported) -> 31 assertions fail (every per-bound violation fixture). This is the counter to the historical defect CLAUDE.md records: neutering the grammar once left all assertions passing because every input was well-formed by construction; the suite now tests the grammar BOTH ways, so the control bites. Restored, 71 pass. */
 /* The task inbox: the grammar, and the producer/consumer split (D-98).
+ *
+ * Negative-control detail: neuter the C-19.1 task grammar check (early `return` at the top of checkInboxGrammar so no violation is ever reported) -> 31 assertions fail (every per-bound violation fixture). This is the counter to the historical defect CLAUDE.md records: neutering the grammar once left all assertions passing because every input was well-formed by construction; the suite now tests the grammar BOTH ways, so the control bites. Restored, 71 pass.
  *
  * Two things are under test and they are different in kind.
  *

@@ -1,6 +1,9 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) stop the edge status transition in the sever/reinstate path (store.mjs: `changes.set(id, { status: current.get(id).status, note })` instead of `status: to`, so a sever/reinstate records its note but never flips the edge state) -> 11 assertions fail (status severed/confirmed, the round-trip, conformance of the moved edge); restored, 50 pass. */
 /* Severing and reinstating a citation: the FIRST state-changing actions to refer
  * to a selection, and therefore the first callers of `selectionResolve`'s
  * REFUSING arm.
+ *
+ * Negative-control detail: stop the edge status transition in the sever/reinstate path (store.mjs: `changes.set(id, { status: current.get(id).status, note })` instead of `status: to`, so a sever/reinstate records its note but never flips the edge state) -> 11 assertions fail (status severed/confirmed, the round-trip, conformance of the moved edge); restored, 50 pass.
  *
  * 0.18.0 shipped `cite` at weight `report` and left the refusing arm with no
  * caller, deliberately. It also left a hole: edges could be created and never

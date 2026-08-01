@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the per-IP knock rate limit in the store (guard `cnt(ipBucket) >= perIpLimit` with `false`) so one source is never throttled -> 3 assertions fail (the 13th knock refused RATE_IP, and the 429 status); restored, 36 pass. */
 /* The doorbell: the one door open to the public.
  *
  * Two halves. verify answers a hash question from the published
@@ -6,6 +7,8 @@
  * anonymous caller must be able to reach the inbox and nothing beyond
  * it, must not be able to read anything back, and must not be able to
  * fill the store faster than the rate limits allow.
+ *
+ * Negative-control detail: disable the per-IP knock rate limit in the store (guard `cnt(ipBucket) >= perIpLimit` with `false`) so one source is never throttled -> 3 assertions fail (the 13th knock refused RATE_IP, and the 429 status); restored, 36 pass.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

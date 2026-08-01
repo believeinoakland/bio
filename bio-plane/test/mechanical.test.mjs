@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the write-path envelope gate in promote (guard `writer && !(operation in MECHANICAL_FIELD_SETS)` with `false`, so a mechanical write naming an unregistered/absent operation is admitted) -> 3 assertions fail (the UNDECLARED_OPERATION refusals); restored, 44 pass. */
 /* Mechanical writers, held to their declared envelope.
+ *
+ * Negative-control detail: disable the write-path envelope gate in promote (guard `writer && !(operation in MECHANICAL_FIELD_SETS)` with `false`, so a mechanical write naming an unregistered/absent operation is admitted) -> 3 assertions fail (the UNDECLARED_OPERATION refusals); restored, 44 pass.
  *
  * A daemon writing into the record is the highest-leverage actor in the system:
  * it writes often, unattended, and nobody reads most of what it does. So the

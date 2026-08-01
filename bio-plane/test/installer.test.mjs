@@ -1,9 +1,12 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the published-token denylist in tokens.mjs liveToken (return true for any non-empty value instead of checking PUBLISHED_TOKEN_HASHES) so a leaked repo token authenticates -> 4 assertions fail (published value authenticates as admin, selftest calls the poisoned binding live, bootstrap reports a usable credential, claim accepts the published bootstrap token); restored, 30 pass. */
 /* Installer-readiness guarantees:
  *  1. A published repository token value can never authenticate and can never
  *     arm the bootstrap claim, even if an operator sets it.
  *  2. R2 absence is a first-class healthy state; half a fence is a defect.
  *  3. The instance serves its own setup page at /, while the /api surface and
  *     the legacy root query API keep answering JSON.
+ *
+ * Negative-control detail: disable the published-token denylist in tokens.mjs liveToken (return true for any non-empty value instead of checking PUBLISHED_TOKEN_HASHES) so a leaked repo token authenticates -> 4 assertions fail (published value authenticates as admin, selftest calls the poisoned binding live, bootstrap reports a usable credential, claim accepts the published bootstrap token); restored, 30 pass.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

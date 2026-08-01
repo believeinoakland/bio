@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the store CAS-on-base inside the SHIPPED artifact dist/bio-plane.bundled.mjs (guard `cur.bundle_sha !== base` with `false`), so the bundled build no longer refuses a stale write -> livefire against the bundle reports 14/19, ok:false, exit 1: 5 self-test assertions fail (STALE/garbage base refused, live/history state, lease base); restored the artifact via git. */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -5,7 +6,8 @@ import { fileURLToPath } from "node:url";
    `/home/claude/work/bio-plane/dist/...`, a path that exists on one container and
    nowhere else, so this suite could not run on any other machine — and it had been
    dropped from the hand-maintained `npm test` chain rather than fixed, which is
-   how it stopped being run by anything without anybody being told. */
+   how it stopped being run by anything without anybody being told.
+   Negative-control detail: disable the store CAS-on-base inside the SHIPPED artifact dist/bio-plane.bundled.mjs (guard `cur.bundle_sha !== base` with `false`), so the bundled build no longer refuses a stale write -> livefire against the bundle reports 14/19, ok:false, exit 1: 5 self-test assertions fail (STALE/garbage base refused, live/history state, lease base); restored the artifact via git. */
 const P = fileURLToPath(new URL("../dist/bio-plane.bundled.mjs", import.meta.url));
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: P, script: readFileSync(P, "utf8"),

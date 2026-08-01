@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) make the op read the wrong R2 key (append "x" to captureKey(storeName, sha)) so a present capture is never found -> 4 assertions fail (the structure read-back / same-object / JSON checks) and the suite then throws reading structure off the NOT_FOUND body; restored, 29 pass. */
 /* op=pdfstructure THROUGH THE OP (CAP-1, the CONTENT-PDF → CAPTURE delegation).
+ *
+ * Negative-control detail: make the op read the wrong R2 key (append "x" to captureKey(storeName, sha)) so a present capture is never found -> 4 assertions fail (the structure read-back / same-object / JSON checks) and the suite then throws reading structure off the NOT_FOUND body; restored, 29 pass.
  *
  * The extractor itself is proven byte-for-byte in pdfstructure.test.mjs. This
  * suite proves the WIRING a caller actually reaches: that bytes stored through

@@ -1,5 +1,8 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) empty the catalog's LEGACY_TYPE_ALIASES ({ problem: 'focus' } -> {}) so a legacy `problem` document no longer normalises to focus -> 1 assertion fails (a legacy problem document projects/filters as focus); restored, 13 pass. */
 /* The Focus rename, code side (Bob's directive, 2026-07-27; Technical
  * Architecture Decisions "Focus, formerly Problem").
+ *
+ * Negative-control detail: empty the catalog's LEGACY_TYPE_ALIASES ({ problem: 'focus' } -> {}) so a legacy `problem` document no longer normalises to focus -> 1 assertion fails (a legacy problem document projects/filters as focus); restored, 13 pass.
  *
  * Three claims, each asserted in the direction a rename can silently break:
  *   1. CANONICAL WORKS: a FOCUS- bundle with object_type `focus` and schema

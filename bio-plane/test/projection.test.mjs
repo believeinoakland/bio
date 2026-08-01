@@ -1,9 +1,12 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) neuter the `nested(block,key)` helper in the store projection to always return undefined, so nested-block fields (produced_by.*, source.*, monitoring.*) no longer project -> 10 assertions fail (the produced_mode/tier/source_locator/authority/retrieved/monitor_* columns); restored, 33 pass. */
 /* The metadata projection, S-10 step 1.
  *
  * Probe 2 measured that a full search/filter/sort surface needs the fields the
  * UX filters on to exist as typed indexed columns, and found that the `bundles`
  * projection covers about half of what real frontmatter carries. This suite is
  * the contract for the other half.
+ *
+ * Negative-control detail: neuter the `nested(block,key)` helper in the store projection to always return undefined, so nested-block fields (produced_by.*, source.*, monitoring.*) no longer project -> 10 assertions fail (the produced_mode/tier/source_locator/authority/retrieved/monitor_* columns); restored, 33 pass.
  *
  * The projection is DERIVED FROM bundle.md, not from the caller's `meta`. The
  * bundle format is authoritative (schema.mjs line 3) and these fields have no

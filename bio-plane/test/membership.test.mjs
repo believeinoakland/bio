@@ -1,9 +1,12 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) drop the +1 from the removal majority in Store.adminMath (`Math.floor(n/2)` instead of `Math.floor(n/2)+1`) so a plurality ejects -> 15 assertions fail (one vote now ejects; the have/need tally; "no removal carried by one vote") then the suite throws; restored, 97 pass. */
 /* The membership model's member half: handles, capabilities, and the
  * administrator arithmetic of Section 4.
  *
  * `architecture/BIO_Membership_Architecture_v1.md` is the design and nothing in
  * it is undecided. This suite asserts the parts that are cheap to get wrong and
  * expensive to retrofit, which is most of Section 4.
+ *
+ * Negative-control detail: drop the +1 from the removal majority in Store.adminMath (`Math.floor(n/2)` instead of `Math.floor(n/2)+1`) so a plurality ejects -> 15 assertions fail (one vote now ejects; the have/need tally; "no removal carried by one vote") then the suite throws; restored, 97 pass.
  *
  * THE ARITHMETIC IS THE POINT. Removal takes a majority of ALL administrators,
  * counting the target in the denominator but not letting them vote, and ties do

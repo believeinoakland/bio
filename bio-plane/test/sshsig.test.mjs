@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) corrupt the SSHSIG signed-preimage magic in verifySshsig ("SSHSIG" -> "SSHXIG") so the preimage disagrees with what OpenSSH signs -> 2 assertions fail (fresh signature verifies; fresh signature bound to its bytes); restored, 18 pass. (With ssh-keygen absent the same 2 are the named skips, so the control targets exactly the fresh path.) */
 /* SSHSIG conformance: this module must agree with stock OpenSSH.
+ *
+ * Negative-control detail: corrupt the SSHSIG signed-preimage magic in verifySshsig ("SSHSIG" -> "SSHXIG") so the preimage disagrees with what OpenSSH signs -> 2 assertions fail (fresh signature verifies; fresh signature bound to its bytes); restored, 18 pass. (With ssh-keygen absent the same 2 are the named skips, so the control targets exactly the fresh path.)
  *
  * Fixtures are generated fresh by ssh-keygen on every run when it is
  * available, so agreement is with the installed OpenSSH, not with a frozen

@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) revert Store.snapPath to the non-canonical `_history/<snapKey>/<path>` layout (D-2) instead of the filename-suffix form -> 6 assertions fail (the snapshot-key-form and zero-C-12 / projection-conformant checks); restored, 49 pass. */
 /* The plane's projection, judged by the authoritative catalog.
+ *
+ * Negative-control detail: revert Store.snapPath to the non-canonical `_history/<snapKey>/<path>` layout (D-2) instead of the filename-suffix form -> 6 assertions fail (the snapshot-key-form and zero-C-12 / projection-conformant checks); restored, 49 pass.
  *
  * Every other suite in this directory asserts what the plane's authors
  * believed. This one asserts what the specification requires, by importing

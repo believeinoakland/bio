@@ -1,9 +1,12 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) change the positive-FTS-term join in compile() from " AND " to " OR " (query.mjs) -> the AND-semantics assertions fail (86 pass, 2 fail); restored, 88 pass. */
 /* The query language, S-10 step 3.
  *
  * This suite needs no runtime, no store and no corpus, because query.mjs holds
  * no database handle: it turns a typed string into SQL and hands it back. That
  * is what makes the whole language assertable at this speed, and it is why the
  * module is pure.
+ *
+ * Negative-control detail: change the positive-FTS-term join in compile() from " AND " to " OR " (query.mjs) -> the AND-semantics assertions fail (86 pass, 2 fail); restored, 88 pass.
  *
  * What is being held to a contract here:
  *   - A bare multi-word string is AND. Bob's decision, recorded in

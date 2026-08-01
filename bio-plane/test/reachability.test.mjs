@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) let a governed refusal fall through to the failure path (disable the `outcome === "governed"` branch in recordSourceOutcome so it increments consecutive_failures) -> 17 assertions fail (was "17 of 34" in D-104; the suite is now 40 and still fails exactly 17); restored, 40 pass. */
 /* Source reachability, and the one outcome that must never count (D-104).
+ *
+ * Negative-control detail: let a governed refusal fall through to the failure path (disable the `outcome === "governed"` branch in recordSourceOutcome so it increments consecutive_failures) -> 17 assertions fail (was "17 of 34" in D-104; the suite is now 40 and still fails exactly 17); restored, 40 pass.
  *
  * The archive fallback fires after three consecutive failures or fourteen days.
  * This suite exists to prove that OUR OWN governor declining to ask is not one

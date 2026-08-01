@@ -1,5 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the server-side integrity check in the capture handler (guard `digest !== sha` with `false`, accepting a body whose bytes do not match the sha256 parameter) -> 2 assertions fail (the INTEGRITY refusal on a mismatched body); restored, 19 pass. */
 /* The capture op: the one op that moves bytes. Content-addressed, verified
-   server-side, immutable once landed, confined by store prefix. */
+   server-side, immutable once landed, confined by store prefix.
+   Negative-control detail: disable the server-side integrity check in the capture handler (guard `digest !== sha` with `false`, accepting a body whose bytes do not match the sha256 parameter) -> 2 assertions fail (the INTEGRITY refusal on a mismatched body); restored, 19 pass. */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

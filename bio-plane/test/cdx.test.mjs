@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) neuter rowRefusal to always return null (admit every archive row) -> 12 assertions fail (the three measured refusals, the whole selection block, the derived instant) and the suite then throws TypeError at the considered-rows check; restored, 37 pass. */
 /* Reading a CDX index, tested against the bytes archive.org actually returned.
  *
  * The fixture below is VERBATIM from the 2026-07-31 measurement through the
@@ -5,6 +6,8 @@
  * pass. That matters: all three of this module's refusals exist because the
  * real response contradicted the design document, and a hand-written fixture
  * would have reproduced the document's assumptions rather than reality.
+ *
+ * Negative-control detail: neuter rowRefusal to always return null (admit every archive row) -> 12 assertions fail (the three measured refusals, the whole selection block, the derived instant) and the suite then throws TypeError at the considered-rows check; restored, 37 pass.
  */
 import { parseCdx, selectCapture, replayLocator, cdxQuery, cdxTimestampToIso,
          rowRefusal, archiveHop, EMPTY_BODY_DIGEST } from "../src/cdx.mjs";

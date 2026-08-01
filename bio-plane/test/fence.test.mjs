@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the unauthenticated gate in index.mjs (guard `if (!cls)` with `false`, so an unrecognised token is no longer rejected as "unauthenticated" and falls through to the per-op class check) -> 14 assertions fail (the inert-PUBLIC_TOKEN and projection refusals now answer "forbidden for token class" instead of "unauthenticated"); restored, 33 pass. (Confirmed the fence lives in the AUTH layer, line 842, not the per-op class gate at 843 — disabling 843 alone failed nothing.) */
 /* The two-bucket fence, asserted at the door.
  *
  * The design rule is stated in the control plane's own header: the public token
@@ -16,6 +17,8 @@
  * metadata, by any op. It is separate from the read suites because it is a
  * doctrine boundary rather than a feature, and because the next op that touches
  * the fence should land its assertion here.
+ *
+ * Negative-control detail: disable the unauthenticated gate in index.mjs (guard `if (!cls)` with `false`, so an unrecognised token is no longer rejected as "unauthenticated" and falls through to the per-op class check) -> 14 assertions fail (the inert-PUBLIC_TOKEN and projection refusals now answer "forbidden for token class" instead of "unauthenticated"); restored, 33 pass. (Confirmed the fence lives in the AUTH layer, line 842, not the per-op class gate at 843 — disabling 843 alone failed nothing.)
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

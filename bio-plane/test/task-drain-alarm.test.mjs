@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) neuter the archive-consumer's tick in onAlarm (replace `this.taskDrain(...)` with `{ drained: 0 }`, so the alarm fires but drains nothing) -> the suite throws AssertionError at the first drained-queue check (enqueue-arms-alarm still passes, then "the queue is empty after the drain" fails); restored, 19 pass. (This suite uses node assert, which throws rather than counting.) */
 /* D-109: the task queue drains on a Durable Object alarm.
+ *
+ * Negative-control detail: neuter the archive-consumer's tick in onAlarm (replace `this.taskDrain(...)` with `{ drained: 0 }`, so the alarm fires but drains nothing) -> the suite throws AssertionError at the first drained-queue check (enqueue-arms-alarm still passes, then "the queue is empty after the drain" fails); restored, 19 pass. (This suite uses node assert, which throws rather than counting.)
  *
  * The mechanism is the one #armSweep proved for selections: an alarm armed on
  * enqueue, re-armed by the alarm while the queue is non-empty, self-terminating

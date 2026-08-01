@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) index the empty string instead of the bundle's text in promote's FTS write (store.mjs: `...FTS_COLUMNS.map(() => "")`), so the text index diverges from the corpus it is derived from -> 19 assertions fail (op=searchindexcheck disagrees, and no body/title term is found) then the suite throws on the empty hit set; restored, 164 pass. */
 /* Retrieval end to end, S-10 steps 2 to 4.
+ *
+ * Negative-control detail: index the empty string instead of the bundle's text in promote's FTS write (store.mjs: `...FTS_COLUMNS.map(() => "")`), so the text index diverges from the corpus it is derived from -> 19 assertions fail (op=searchindexcheck disagrees, and no body/title term is found) then the suite throws on the empty hit set; restored, 164 pass.
  *
  * Three claims are on trial here, and each one is checked the way it can fail
  * rather than the way it is meant to work.

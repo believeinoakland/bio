@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-Problem is narrowed instead of refused whole) -> 4 assertions fail (NOT_PROBLEMS, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass. */
 /* S-11 step 3: bulk disposition of Problems, `op=dispose`, weight `refuse`.
+ *
+ * Negative-control detail: disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-Problem is narrowed instead of refused whole) -> 4 assertions fail (NOT_PROBLEMS, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass.
  *
  * The first selection-backed action to move an OBJECT's state rather than an
  * edge's. Steps 1 and 2 edited the `references` block of a Project; this edits

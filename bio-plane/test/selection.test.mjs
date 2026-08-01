@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) force every selection with no explicit kind to resolve as "query" (store.mjs: guard the `ids.length ? "enumerated"` arm with `false`, so a picked-ids selection stops enumerating) -> 7 assertions fail (kind enumerated, the stored-item count, resolving to exactly what was picked) then the suite throws; restored, 65 pass. */
 /* Server-side selections, S-10 step 5.
+ *
+ * Negative-control detail: force every selection with no explicit kind to resolve as "query" (store.mjs: guard the `ids.length ? "enumerated"` arm with `false`, so a picked-ids selection stops enumerating) -> 7 assertions fail (kind enumerated, the stored-item count, resolving to exactly what was picked) then the suite throws; restored, 65 pass.
  *
  * A selection exists so that the set an operator selected is the set an action
  * lands on. Bob settled the three questions this was blocked on, 2026-07-25:

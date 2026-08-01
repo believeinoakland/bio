@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) overclaim the capture grade in the acquire path (index.mjs: a direct fetch stamps "A" instead of "B") -> 1 assertion fails (the load-bearing "acquire says B, a Worker cannot produce a grade-A capture"); restored, 72 pass. */
 /* Acquisition: the fetch layer, and the honesty of what it claims.
+ *
+ * Negative-control detail: overclaim the capture grade in the acquire path (index.mjs: a direct fetch stamps "A" instead of "B") -> 1 assertion fails (the load-bearing "acquire says B, a Worker cannot produce a grade-A capture"); restored, 72 pass.
  *
  * The intake doctrine's Section 3 makes grade a claim about the CAPTURE CHAIN,
  * not about the source and not about the information: "a claim about evidence is

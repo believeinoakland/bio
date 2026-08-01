@@ -1,5 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the confirm-target gate in the purge op (guard `confirm !== storeName` with `false`, so a purge with no/other confirm is not refused) -> 3 assertions fail (the unconfirmed-target and wrong-confirm refusals); restored, 14 pass. */
 /* Purge, both layers. The store layer does the deletion; the control plane
-   decides who may ask and refuses an unconfirmed target. Credential-free. */
+   decides who may ask and refuses an unconfirmed target. Credential-free.
+   Negative-control detail: disable the confirm-target gate in the purge op (guard `confirm !== storeName` with `false`, so a purge with no/other confirm is not refused) -> 3 assertions fail (the unconfirmed-target and wrong-confirm refusals); restored, 14 pass. */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

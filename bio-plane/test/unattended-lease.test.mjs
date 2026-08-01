@@ -1,5 +1,8 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) neuter the ANONYMOUS_LEASE guard in acquireLease (guard the null/blank-actor refusal with `false`) so an anonymous write is admitted -> 2 assertions fail (an anonymous lease must be refused by name); restored, 22 pass. */
 /* REC-2 / D-61: an unattended (machine) writer can complete a capture a member
  * walked away from, and is NAMED on the record rather than anonymous.
+ *
+ * Negative-control detail: neuter the ANONYMOUS_LEASE guard in acquireLease (guard the null/blank-actor refusal with `false`) so an anonymous write is admitted -> 2 assertions fail (an anonymous lease must be refused by name); restored, 22 pass.
  *
  * DECISION — option (a), a named machine actor identity on the lease, NOT option
  * (b), dropping the lease from the refill path. The lease is a courtesy lock and

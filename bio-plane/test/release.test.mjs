@@ -1,5 +1,8 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the acknowledgment requirement in the release path (guard `if (!ack)` with `false`, so a bulk release with no acknowledgment is admitted) -> 2 assertions fail (NO_ACKNOWLEDGMENT, and nothing-moved-while-the-paperwork-was-wrong); restored, 31 pass. */
 /* S-11 step 5, the LAST rung: bulk RELEASE of Information, `op=release`,
  * collected -> verified over a selection, weight `refuse`.
+ *
+ * Negative-control detail: disable the acknowledgment requirement in the release path (guard `if (!ack)` with `false`, so a bulk release with no acknowledgment is admitted) -> 2 assertions fail (NO_ACKNOWLEDGMENT, and nothing-moved-while-the-paperwork-was-wrong); restored, 31 pass.
  *
  * Decided by Bob 2026-07-27, Intake Doctrine v1.2. What is asserted here, in
  * doctrine order:

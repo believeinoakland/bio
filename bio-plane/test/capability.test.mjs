@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the session capability gate in index.mjs (guard the `needs && ... !sessCaps.has(needs)` branch with `false`, so a member missing a capability is not refused NOT_CAPABLE) -> 8 assertions fail (the contribute/publish/create_projects refusals); restored, 63 pass. */
 /* Capability enforcement at the op layer. Membership Architecture v2 section 5.
  *
  * Runs the full Worker under miniflare, because the control plane is the only
@@ -7,6 +8,8 @@
  * What this suite is for: capabilities are RECORDED today and nothing consults
  * them. A member with no `publish` reaches op=ratify and is stopped only by the
  * absence of a signing key, which is the key doing the capability's job.
+ *
+ * Negative-control detail: disable the session capability gate in index.mjs (guard the `needs && ... !sessCaps.has(needs)` branch with `false`, so a member missing a capability is not refused NOT_CAPABLE) -> 8 assertions fail (the contribute/publish/create_projects refusals); restored, 63 pass.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

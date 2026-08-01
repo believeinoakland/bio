@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the cool-off gate in Store.admitFetch (guard the `r.cooloff_until > now` branch with `false`, admitting a cooling-off host) -> 8 assertions fail (the refused-by-name and retry-in-ms checks at both levels); restored, 37 pass. */
 /* D-95: the per-host request governor.
  *
  * Two levels, per the standing lesson: the bucket's arithmetic at the store,
@@ -6,6 +7,8 @@
  * both ways: a host under cool-off is refused by NAME, and a host in good
  * standing is admitted, because a governor that refused everything would pass
  * a one-way check by being useless.
+ *
+ * Negative-control detail: disable the cool-off gate in Store.admitFetch (guard the `r.cooloff_until > now` branch with `false`, admitting a cooling-off host) -> 8 assertions fail (the refused-by-name and retry-in-ms checks at both levels); restored, 37 pass.
  *
  * Time is not mocked. The suite drives the real clock with a LOW configured
  * appetite so exhaustion arrives in milliseconds of arithmetic rather than

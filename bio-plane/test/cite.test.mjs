@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) stop cite() from adding new targets (store.mjs: guard the `else add.push(id)` arm with `if (false)`, so a fresh selection resolves to nothing to cite) -> 3 assertions fail (it names what it added; the project's sha moved; both targets cited) and the suite then throws reading the missing edge; restored, 73 pass. */
 /* Citing Information in a Project: the FIRST action that refers to a selection.
+ *
+ * Negative-control detail: stop cite() from adding new targets (store.mjs: guard the `else add.push(id)` arm with `if (false)`, so a fresh selection resolves to nothing to cite) -> 3 assertions fail (it names what it added; the project's sha moved; both targets cited) and the suite then throws reading the missing edge; restored, 73 pass.
  *
  * `selectionResolve` has existed and been tested since 0.17.0 with no caller.
  * This is its first one, and it is deliberately the lightest real action in the

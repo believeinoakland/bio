@@ -1,6 +1,8 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) drop the download-name header on the capture GET (guard the `content-disposition` spread with `false`, so `dl=` no longer travels) -> 1 assertion fails ("the filename travels"); restored, 41 pass. (Also observed: disabling the session-write boundary at index.mjs:832 instead crashes the suite as a session purge succeeds — a stronger but uncleanly-counted break.) */
 /* The record browser's contract: a password sign-in yields a session that can
    READ everything and write NOTHING, capture downloads carry a filename, and
-   the instance page ships the browsing sections. */
+   the instance page ships the browsing sections.
+   Negative-control detail: drop the download-name header on the capture GET (guard the `content-disposition` spread with `false`, so `dl=` no longer travels) -> 1 assertion fails ("the filename travels"); restored, 41 pass. (Also observed: disabling the session-write boundary at index.mjs:832 instead crashes the suite as a session purge succeeds — a stronger but uncleanly-counted break.) */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

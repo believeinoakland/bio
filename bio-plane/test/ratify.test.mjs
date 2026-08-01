@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the SSHSIG allowed-key check in verifySshsig (guard `!allowed.includes(p.pubB64)` with `false`, so any self-consistent signature is accepted regardless of signer) -> 3 assertions fail (the unknown-key and revoked-signer refusals); restored, 35 pass. */
 /* Ratification through the gate, the published fence, and doorbell 7a.
+ *
+ * Negative-control detail: disable the SSHSIG allowed-key check in verifySshsig (guard `!allowed.includes(p.pubB64)` with `false`, so any self-consistent signature is accepted regardless of signer) -> 3 assertions fail (the unknown-key and revoked-signer refusals); restored, 35 pass.
  *
  * The attestation signatures in this suite are produced by stock
  * ssh-keygen, not by BIO code, so the suite proves the plane accepts

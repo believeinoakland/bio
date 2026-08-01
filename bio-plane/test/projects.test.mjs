@@ -1,5 +1,8 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) skip the D-15 participant filter in query.mjs viewerPredicate (make the member branch return the unfiltered `1=1` gate for every identified member, not just machine credentials) so an uninvited member sees projects -> 3 assertions fail (dave sees the secret project, its existence leaks, and it does not vanish when he leaves); restored, 102 pass. */
 /* Project participation and the three visibility positions.
  * Membership Architecture section 7, and D-15.
+ *
+ * Negative-control detail: skip the D-15 participant filter in query.mjs viewerPredicate (make the member branch return the unfiltered `1=1` gate for every identified member, not just machine credentials) so an uninvited member sees projects -> 3 assertions fail (dave sees the secret project, its existence leaks, and it does not vanish when he leaves); restored, 102 pass.
  *
  * THE LEAK THIS CLOSES. `cites` lives on the citing object (State Rules 5.2),
  * so a Project's interest in a piece of Information is a property of the

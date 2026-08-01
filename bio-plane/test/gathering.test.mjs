@@ -1,4 +1,7 @@
+/* NEGATIVE CONTROL: (run 2026-07-31) neuter the C-18.5 gathering grammar check (early `return` at the top of checkGatheringGrammar so no violation is reported) -> 17 assertions fail (every per-bound violation fixture: target length, https-public-host locators, enumerated fields); restored, 29 pass. */
 /* Gathering requests: the queue a session works from.
+ *
+ * Negative-control detail: neuter the C-18.5 gathering grammar check (early `return` at the top of checkGatheringGrammar so no violation is reported) -> 17 assertions fail (every per-bound violation fixture: target length, https-public-host locators, enumerated fields); restored, 29 pass.
  *
  * The grammar in C-18.5 is not decoration. A gathering request names a target in
  * prose and a set of locators to fetch, and a session reads that queue and acts
