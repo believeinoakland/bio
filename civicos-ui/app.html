@@ -206,6 +206,10 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .subj-note{font-size:12.5px;color:var(--muted);max-width:var(--measure-work);margin:0 0 14px;line-height:1.5}
 .subj-conn .ends{font-size:13.5px;color:var(--ink);margin-bottom:3px}
 .subj-conn .weaker{font-size:12px;color:var(--muted)}
+/* UI-9: a progression finding under an instance the document sits in */
+.docprog-finding{margin:8px 0 0;padding:8px 11px;border-left:2px solid var(--rule);background:var(--paper-2);border-radius:var(--r-2)}
+.docprog-finding.overdue{border-left-color:#d6a48c;background:var(--tint-note)}
+.docprog-finding .ends{font-size:13px;color:var(--ink);margin-bottom:3px}
 
 /* cards */
 .card{background:var(--sheet);border:var(--hair);padding:16px 18px;margin:0 0 16px;box-shadow:var(--e-2)}
@@ -3769,6 +3773,11 @@ async function openBundle(id, fromNav){
        record holds today. */
     const capSha = primaryCaptureSha(img, fm);
     LINKS = await linksFor(capSha); LINKS_ID = id; LINKS_OPEN = {};
+    /* UI-9: the document's REFERENTIAL + TEMPORAL structure — the subjects it
+       resolves to, what it connects to, the processes it sits in and any overdue
+       successor. Built async (its own reads) and degrades honestly section by
+       section, so it never blanks the page. */
+    const docKnows = await docKnowsPanel(capSha);
     const vFact = releaseFact(bundleMd);
     const leanTitles = rev.map(r=>r.fromTitle).filter(Boolean);
     const cFact = leanTitles.length ? `Load-bearing for: ${leanTitles.join("; ")}.` : "No case cites it yet.";
@@ -3906,7 +3915,7 @@ async function openBundle(id, fromNav){
          <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
          <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${openTab}${seals}</div>
        </div>
-       <div id="docscroll">${s1}${s2}${s3}${s4}${relBar}${dispBar}${attestBar}</div>`;
+       <div id="docscroll">${s1}${s2}${s3}${s4}${docKnows}${relBar}${dispBar}${attestBar}</div>`;
     strataSpy();
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
@@ -5450,6 +5459,187 @@ function subjConnectionsHtml(c){
     </div>`;
   }).join("");
   return head + rows + `</section>`;
+}
+
+/* ============================================================
+   UI-9: THE DOCUMENT'S PLACE IN THE ACCOUNTABILITY WEB — "what the record
+   knows about THIS document" (CONSTRUCTS Step 8, PRESENTATION, the
+   document-page half; UI-4 is the per-SUBJECT half). On the open document
+   page (openBundle), the document's REFERENTIAL and TEMPORAL structure, each
+   shown APART and each at its §8.1 grade:
+
+     (1) the SUBJECTS this document resolves to (op=resolutions by capture),
+         each at its resolution grade — a Grade C reads "plausible, not
+         established", NEVER as fact;
+     (2) what it CONNECTS to (op=connections by capture) — each graded the
+         WEAKER of its two ends, shown as HOW established, not credibility;
+     (3) which PROGRESSIONS it participates in and at which stage, and
+     (4) whether a required SUCCESSOR is OVERDUE (REC-8's overdue_successor).
+
+   Honesty is kept by REUSE, not re-derivation. Every grade is rendered
+   through UI-4's subjGradeBadge with the plane's OWN established /
+   needs_confirmation flags, so a C is structurally incapable of reading as
+   established (the same seam UI-4's negative control breaks). The overdue days
+   come from the op's own overdue_by_ms (REC-8 derived on read), never computed
+   here, so an undated / undetermined step stays SILENT rather than getting a
+   fabricated deadline — undetermined is first-class and stated.
+
+   Items (1) and (2) read EXISTING per-capture ops. Items (3) and (4) need a
+   per-document → progression-instance lookup NO op exposes today: op=instance
+   reads ONE instance by (progression_key, entity_id), and op=proposals
+   aggregates every instance but carries no capture_sha to tie a finding to
+   THIS document. So the progression half reads a DELEGATED op
+   (op=captureprogressions) and degrades honestly when it is absent — exactly
+   as UI-5's loadProposals reads a delegated op=proposals and reports the gap
+   rather than inventing findings. The delegation is in CLAIMS.md.
+   ============================================================ */
+
+/* Bounded fan-out: a subject's human label + kind for one id, so the panel
+   never shows a member a raw registry id. Cached for the page; a read that
+   fails falls back to the raw reference text, never invents a name. */
+const DOC_ENT_CACHE = new Map();
+async function docEntityLabel(entityId){
+  if(!entityId) return null;
+  if(DOC_ENT_CACHE.has(entityId)) return DOC_ENT_CACHE.get(entityId);
+  let v = null;
+  try{ const r = await rec("entity", { id:entityId }); if(r && r.found && r.entity) v = { label:r.entity.label, kind:r.entity.kind }; }catch(_){}
+  DOC_ENT_CACHE.set(entityId, v); return v;
+}
+
+/* The ONE place the panel decides a progression finding is OVERDUE, so the
+   honest "an overdue note appears ONLY when a step is truly overdue" property
+   has a single seam. It reads the plane's distinct finding KIND (REC-8's
+   overdue_successor), and NEVER re-derives a deadline from a date. Forcing this
+   to return true is UI-9's negative control: a non-overdue (missing_predecessor)
+   finding then renders an overdue note when nothing is overdue, and the "none
+   when nothing is overdue" assertion fails. */
+function docFindingOverdue(f){ return !!f && f.kind === "overdue_successor"; }
+
+/* The panel. Reads the two existing per-capture ops (resolutions, connections)
+   and the delegated progression lookup; each read is caught so a single failure
+   degrades its own section honestly and never blanks the document page. */
+async function docKnowsPanel(captureSha){
+  if(!captureSha) return "";   // no primary capture on this bundle: nothing per-document to say
+  let resolutions = null, connections = null;
+  try{ resolutions = await rec("resolutions", { sha256:captureSha }); }catch(_){ resolutions = { _err:true }; }
+  try{ connections = await rec("connections", { sha256:captureSha }); }catch(_){ connections = { _err:true }; }
+  const prog = await docProgressions(captureSha);
+  /* pre-resolve subject labels for the resolutions rows (bounded, deduped) */
+  const labels = new Map();
+  for(const r of (resolutions && resolutions.resolutions) || [])
+    if(r.entity_id && !labels.has(r.entity_id)) labels.set(r.entity_id, await docEntityLabel(r.entity_id));
+  return `<div id="docknows">
+    <h2 class="sec">What the record knows about this document</h2>
+    <p class="lede" style="margin:0 0 18px">Beyond the document itself: the subjects it names, the documents it connects to, and the institutional processes it is part of. Each carries a grade, and a grade says how the link was established — a shared identifier, a corresponding name, a member's testimony — never how much to trust the document.</p>
+    ${docResolutionsHtml(resolutions, labels)}
+    ${docConnectionsHtml(connections, captureSha)}
+    ${docProgressionsHtml(prog)}
+  </div>`;
+}
+
+/* (1) The SUBJECTS this document resolves to (op=resolutions by capture). The
+   established / needs_confirmation flags are the op's, read straight through
+   subjGradeBadge — a Grade C reads "unconfirmed", never as established. */
+function docResolutionsHtml(res, labels){
+  const head = `<section class="tsec"><h2>Subjects this document names</h2>`
+    + `<p class="subj-note">The record matched a reference in this document to a registered subject. The grade states HOW that was established — a shared identifier, or only a corresponding name — and nothing about how much to trust the document itself.</p>`;
+  if(!res || res._err) return head + `<div class="empty">The record could not read which subjects this document names.</div></section>`;
+  const rows = res.resolutions || [];
+  if(!rows.length) return head + `<div class="empty">No reference in this document has been matched to a subject yet.</div></section>`;
+  const out = rows.map(r=>{
+    const ent = (labels && labels.get(r.entity_id)) || null;
+    const who = ent
+      ? `${esc(ent.label)}${ent.kind?` <span class="subj-ref">(${esc(humanKind(ent.kind))})</span>`:""}`
+      : `<span class="mono">${esc(r.ref||"a reference")}</span>`;
+    return `<div class="subj-doc">
+      <div class="top"><span>${who}</span>${subjGradeBadge(r.grade, r.established, r.needs_confirmation)}</div>
+      ${r.ref ? `<div class="subj-ref">Matched on the reference ${esc(r.ref)}.</div>` : ""}
+    </div>`;
+  }).join("");
+  return head + out + `</section>`;
+}
+
+/* (2) What this document CONNECTS to (op=connections by capture). A connection's
+   grade is the WEAKER of its two ends; the badge shows HOW, never credibility.
+   Each row shows the OTHER end (this document is one of the two). */
+function docConnectionsHtml(c, captureSha){
+  const head = `<section class="tsec"><h2>Documents this one connects to</h2>`
+    + `<p class="subj-note">Two documents that concern the same subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.</p>`;
+  if(!c || c._err) return head + `<div class="empty">The record could not read this document's connections.</div></section>`;
+  const conns = c.connections || [];
+  if(!conns.length) return head + `<div class="empty">No connection from this document to another has been derived yet.</div></section>`;
+  const out = conns.map(x=>{
+    const thisIsA = x.a_capture_sha === captureSha;
+    const otherId = thisIsA ? x.b_bundle_id : x.a_bundle_id;
+    const otherSha = thisIsA ? x.b_capture_sha : x.a_capture_sha;
+    const other = otherId || (String(otherSha||"").slice(0,12)+"…");
+    const target = otherId || otherSha || "";
+    return `<div class="subj-doc subj-conn">
+      <div class="ends">Connected to ${target?`<a onclick="openBundle('${esc(target)}')">${esc(other)}</a>`:`<span class="mono">${esc(other)}</span>`}</div>
+      <div class="weaker">Ends resolved at Grade ${esc(x.a_grade)} and Grade ${esc(x.b_grade)} — the connection takes the weaker.</div>
+      <div class="top">${subjGradeBadge(x.grade, x.established, x.needs_confirmation)}</div>
+    </div>`;
+  }).join("");
+  return head + out + `</section>`;
+}
+
+/* (3)+(4) The PROGRESSIONS this document sits in and at which stage, and any
+   OVERDUE required successor. Reads the delegated op; degrades honestly to a
+   named gap when the op is absent (the UI-5 loadProposals pattern). */
+function docProgressionsHtml(p){
+  const head = `<section class="tsec"><h2>Processes this document is part of</h2>`
+    + `<p class="subj-note">An institutional process runs in stages — a meeting, then its minutes; a need, an award, a signed contract. Where this document sits in one, and whether a required next step is overdue, is shown honestly: an undated or undetermined step is never given a made-up deadline.</p>`;
+  if(p && p.gap) return head + docProgGapHtml() + `</section>`;
+  if(!p || p._err) return head + `<div class="empty">The record could not read which processes this document is part of.</div></section>`;
+  const insts = p.instances || [];
+  if(!insts.length) return head + `<div class="empty">This document has not been placed in any tracked process yet.</div></section>`;
+  return head + insts.map(docInstanceHtml).join("") + `</section>`;
+}
+
+/* One progression instance this document sits in, with its findings. An
+   overdue_successor renders the plane's own overdue_by_ms as "N days overdue";
+   a missing_predecessor (never overdue) renders no deadline; an undetermined
+   instance grade is STATED, never a guessed letter. */
+function docInstanceHtml(inst){
+  const gradeBadge = f => (f.grade_determined===false || !f.grade)
+    ? `<span class="subj-grade g-unconf">Grade undetermined</span><span class="subj-how">The record cannot yet say how strongly this process is connected, and does not guess.</span>`
+    : subjGradeBadge(f.grade, f.established, f.needs_confirmation);
+  const notes = (inst.findings || []).map(f=>{
+    const req = esc(PROP_REQUIRED_WORD[f.required] || ((f.required||"") + " expected"));
+    if(docFindingOverdue(f)){
+      const days = Number.isFinite(f.overdue_by_ms) ? Math.floor(f.overdue_by_ms/86400000) : null;
+      const when = days===null ? "overdue" : (days<=0 ? "overdue today" : `${days} day${days===1?"":"s"} overdue`);
+      return `<div class="docprog-finding overdue">
+        <div class="ends"><b>The ${esc(f.stage_label||f.stage_key)}</b> is ${req}, and it is <b>${esc(when)}</b>${f.deadline?` — due ${esc(fmtWhenFull(f.deadline))}`:""}.</div>
+        <div class="top">${gradeBadge(f)}</div>
+      </div>`;
+    }
+    return `<div class="docprog-finding">
+      <div class="ends"><b>The ${esc(f.stage_label||f.stage_key)}</b> is ${req} but no document fills it yet.</div>
+      <div class="top">${gradeBadge(f)}</div>
+    </div>`;
+  }).join("");
+  return `<div class="subj-doc">
+    <div class="ends">In the <b>${esc(inst.progression_label||inst.progression_key)}</b> process${inst.entity_label?`, tracking ${esc(inst.entity_label)}`:""}, this document is the <b>${esc(inst.stage_label||inst.stage_key)}</b>.</div>
+    ${notes || `<div class="weaker">Every required step around it is accounted for — nothing is missing or overdue.</div>`}
+  </div>`;
+}
+
+/* The delegated per-document progression read. Returns { instances } when the
+   op answers, a { gap } marker when the op is not on the plane (an unregistered
+   op answers "unknown op", I3), and { _err } on any other failure — never
+   invented findings. Mirrors UI-5's loadProposals exactly. */
+async function docProgressions(captureSha){
+  let raw;
+  try{ raw = await rec("captureprogressions", { sha256:captureSha }); }
+  catch(e){
+    if(e && /unknown op/i.test(String(e.error || e.reason || ""))) return { gap:true, reason:"no-op" };
+    return { _err:true };
+  }
+  return { instances: (raw && raw.instances) || [] };
+}
+function docProgGapHtml(){
+  return `<div class="prop-banner"><b>The record cannot yet say which processes this document is part of.</b> The finding kinds exist — a required step with no document, and a required next step that is overdue, both derived on read — but no op today maps a captured document back to the process instances it sits in (op=instance reads one process by its subject; op=proposals walks every instance but does not say which document is which). That per-document lookup is delegated to the record's keeper; until it lands, this document's place in a process is not shown, and the record does not guess one.</div>`;
 }
 
 /* ============================================================
