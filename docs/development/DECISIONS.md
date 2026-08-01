@@ -499,6 +499,42 @@ this session's tactical determinations, decided rather than returned:
     the in-app case, and D-52 ("there is no notification channel in this system at
     all", raised for export notification) is substantially answered by the same
     mechanism -- one channel, three consumers, which is the D-86 lesson applied.
+AMENDED 2026-08-01, same conversation, and it supersedes the aggregation reasoning
+  earlier in this entry rather than sitting beside it. Bob: "all events associated with
+  the same focus or project should be aggregated together into a single notification,
+  as long as the notification interface is rich enough to allow the group of things to
+  be handled both individually and at a group level."
+  **THE AGGREGATION KEY IS THE CASE, NOT THE FINDING TYPE**, and that is the whole
+  improvement. The version this entry argued earlier grouped by KIND -- "fourteen
+  bodies have minutes overdue" -- which is a system-shaped bucket that crosses cases,
+  so a member working the sewer fund is told about parks minutes. Grouping by Focus or
+  Project groups by the member's own unit of work: "three things need attention on the
+  Sewer Fund project." And it needs no second axis, because the aggregation key is the
+  SAME connection the relevance filter already keys on.
+  **IT ALSO WIDENS THE UNIT from overdue to ALL EVENTS on the case**, which is broader
+  than the question this entry asked and is the right generalisation: a missing
+  predecessor, a monitor-detected source change, an authority-undetermined capture on a
+  document the case cites, an assistant-surfaced proposal against the project. So the
+  notification construct is PER-CASE, not per-finding-type, and the member's queue is
+  organised by case rather than by item kind.
+  this session's further tactical determinations:
+  - **The per-case item is a STANDING, ACCUMULATING queue entry, not a stream of
+    messages.** This dissolves the digest-cadence question rather than answering it:
+    there is no "notify every N hours" job and no rolled-up email schedule. One live
+    item per (member, case) exists while it has unhandled events, updates as events
+    arrive, and RE-notifies only on a snooze increment or when a new event lands after
+    the member last looked.
+  - **A group-level mute is scoped to the KINDS PRESENT WHEN IT WAS MADE.** A
+    genuinely new kind of event on that case surfaces again. Otherwise "mute this case"
+    becomes a permanent blindfold, which is the silent disappearance the doctrine
+    forbids -- the same hazard as muting-versus-dismissing, one level up.
+  - **Group-level and item-level acts are the SELECTION-SCOPED modifier** already
+    defined in `BIO_Interaction_Constructs` -- the same weights, the same
+    see-what-it-refuses-before-it-runs. This is its first use outside the record
+    surfaces and the first real test that the modifier generalises.
+  - **Grouping needs no new stored relation.** `tasks.refers_to` names a bundle; the
+    case comes from the citation edge that already exists, so the group is DERIVED from
+    the authored connection rather than duplicated beside it.
 for CONDUCT to enact: DEC-10's provisional stands as the DERIVATION layer (overdue is
   still derived on read, still mints nothing per instance); what is added on top is the
   relevance filter, the routing, and the preference state in D-125. Place under M4

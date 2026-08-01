@@ -65,7 +65,36 @@ the weight of the act, would be violated by sameness.**
 
 | | what the member learns |
 | --- | --- |
-| **QUEUE** | *things that want me.* One list. Items are typed and say what they offer: an obligation I must dispatch (do / forward / resolve), or something the system noticed and nobody has judged yet (adopt / defer / dismiss). |
+| **QUEUE** | *things that want me,* **grouped by the case they belong to.** Items are typed and say what they offer: an obligation I must dispatch (do / forward / resolve), or something the system noticed and nobody has judged yet (adopt / defer / dismiss). Items with no case sit ungrouped. |
+
+**The queue groups by CASE, ruled 2026-08-01 (DEC-10).** All events on one Focus or
+Project aggregate into a single standing entry — "three things need attention on the
+Sewer Fund project" — and the entry is handled both **at group level and item by
+item**. Two reasons this is the right key rather than grouping by finding type:
+
+- **It is the member's own unit of work.** Grouping by kind is a system-shaped bucket
+  that crosses cases, so somebody working the sewer fund gets told about parks minutes.
+- **It needs no second axis.** The relevance filter that decides an event is worth
+  notifying at all is "does this instance connect to a Focus or Project", and the
+  aggregation key is that SAME connection. Filter and grouping share one key, and the
+  connection is an authored act, so the grouping is derived from something a member
+  actually did rather than from a rule the system invented.
+
+Two properties this puts on the construct, both of which are hazards if lost:
+
+- **The entry is standing and accumulating, not a stream.** No digest cadence, no
+  notify-every-N-hours job. One live item per (member, case) while it has unhandled
+  events; it re-notifies only on a snooze increment or when something new lands after
+  the member last looked.
+- **A group-level mute is scoped to the kinds present when it was made.** A genuinely
+  new kind of event on that case surfaces again, or "mute this case" becomes a
+  permanent blindfold — the silent-disappearance failure, one level up from the
+  muting-is-personal-dismissing-is-a-record-act rule.
+
+Group-level and item-level acts are the **SELECTION-SCOPED** modifier below, used for
+the first time outside the record surfaces — which makes this the first real test that
+the modifier generalises.
+
 | **ACT** | *doing something to a record or a set.* One motion: choose, see what it will refuse and why BEFORE it runs, author the reason, get a receipt. Ballots are acts whose status shows a tally; bulk is the same act scoped to a selection. |
 | **THE WEIGHT LADDER** | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). |
 | **UNDETERMINED** | a display primitive, identical in all six places it appears. |
