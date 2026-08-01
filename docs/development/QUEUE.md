@@ -256,6 +256,15 @@ accepts-when: a member defers/dismisses a proposal with a reason → it is recor
 added: 2026-07-31 · CONDUCT
 landed: ba36d49 — op=proposedispose ages a declined proposal WITHOUT minting a bundle (D-79). New table proposal_dispositions keyed by (progression_key, stage_key) — the SAME key REC-6 aggregates by — holding state(deferred/dismissed)+REQUIRED reason+server-stamped decided_by+at, UPSERT (one row per proposal). op writes ONE row, NO bundle/history/focus (declining is not authoring); refusals NO_REASON/BAD_REASON/NOT_A_DISPOSITION/BAD_STAGE/NO_DECIDER; forged decided_by ignored (server-stamped). FILTER-WITH-RECEIPT: proposalsFeed drops aged findings from open instances[]/proposals[] (UI-5 ages them with zero UI change) AND returns them in a new dispositions[] overlay (D-79 age-not-vanish, the decision on the record). A re-fired gap stays dismissed (key is identity). I5 1.8.0, I3 1.4.0, purge whole-store (D-113). battery 64/64, --strict 107/107. NCs RUN (refusals write nothing; neuter disposition read → dismissed reappears open). No DEC.
 
+### REC-8 · queued
+milestone: M4
+scope: CONSTRUCTS Step 7 (AGEING) — the record NOTICES when a temporal expectation comes DUE. FW-8 gave each progression stage a `within_interval`, but nothing CHECKS it: a stage can be arbitrarily overdue and the record stays silent. Add a SCHEDULED consumer on REC-1's DO alarm (reuse REC-5's `#schedConsumers` due/wake/tick pattern — the second framework consumer) that detects OVERDUE required stages: a predecessor stage is placed (its document carries a date — the reading's `at`, FW-5, or the capture time), the required successor stage is ABSENT and UNDISCHARGED (respect FW-10 exceptions), and `predecessor_date + successor.within_interval < now` → surface an OVERDUE finding carrying the instance's grade, feeding `op=proposals` alongside the missing-predecessor finding (a distinct finding kind, e.g. `overdue_successor`). TESTABILITY: "now" must be an INJECTABLE clock (env-overridable, as REC-5 made the alarm delay/batch env-overridable) so the overdue computation is deterministic in the suite — do NOT read an uncontrollable wall clock. HONESTY: a stage with no `within_interval`, or a predecessor with no determinable date, is NOT overdue (undetermined, never a fabricated deadline). DEFER and flag: bias-debt (D-86's other half — a decayed bias measure as an obligation-with-a-clock). New table/columns I5-additive (schema traps: before host_governor, no backticks, purge/D-113); new ops get a control-plane assertion (--strict).
+behind-interface: I5
+depends-on: none
+accepts-when: a progression instance whose required successor is absent past its stage's `within_interval` (by the injected clock) surfaces an `overdue_successor` finding through `op=proposals`; the same instance BEFORE the interval elapses does NOT; a discharged or non-`within_interval` stage does NOT; negative control — freeze/reset the injected clock to before the deadline and the overdue finding disappears, and dropping the overdue check hides a genuinely-overdue stage.
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## CONTENT-PDF — DORMANT, restructured by the topology decision.
