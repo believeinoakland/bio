@@ -338,6 +338,15 @@ accepts-when: after `op=acquire`+promote, a document's reading (its `entities[]`
 added: 2026-07-31 · CONDUCT
 landed: aee6d52 — op=acquire runs the doctype parse() over the text FW-3/4 already read; reading {content_type,reader_version,found,at,entities[{key,kind,label,facts,ref}],facts} persisted at op=promote, DERIVED from provenance.json in the register txn (a projection, not a second source of truth). Two new tables readings(PK capture_sha) + reading_refs(PK capture_sha,ref; INDEX on ref) storing RAW kind:key refs — canonical resolution left to Step 4/D-83. op=reading + op=readingref reverse index (87/87 ops, 0 unreached). Failed/empty readings persist honestly (found:false). I5 additive 1.1.0; both tables in purge (D-113). battery 54/54. NC RUN (comment out #writeReadings → reference lookup returns nothing, true→false).
 
+### FW-6 · queued
+milestone: M4
+scope: CONSTRUCTS Step 4, SLICE A — the SUBJECT REGISTRY / entity axis, built ONCE (D-83: the framework's entity axis and `BIO_Declared_Bias_v0_1.md` safeguard 4's subject registry are the SAME construct; building them twice is the live risk). A new store registry (I5, ADDITIVE) of ENTITIES — the subject kinds safeguard 4 names (source, institution, office, movement; RECONCILE with the framework's own entity kinds and FLAG as a DEC any kind the doctrine leaves ambiguous, e.g. person/ordinance) — each with first-class ALIASES — plus DECLARED RELATIONS between entries (`proxy_for`, `member_of`, `overlaps`), each carrying a justification + citation "like a pattern statement" (read safeguard 4 + the pattern-statement shape). A declared relation is CONSTITUTIVE, not evidentiary: it sits OUTSIDE the §8.1 A–D connection grade — do NOT attach a grade to it (grading it Grade D is a category error, D-83). Ops to create and read entities/aliases/relations. This slice is the registry itself; RESOLVING a reading reference (`reading_refs`, FW-5) to a registry entity, declaring the §8.1 method-as-grade, is the NEXT slice — do NOT build recognisers here.
+behind-interface: I5
+depends-on: FW-5
+accepts-when: an entity with aliases and a justified `proxy_for`/`member_of`/`overlaps` relation round-trips through the store and is retrievable by key and by alias; a declared relation carries NO connection grade; negative control — dropping the alias/relation persist makes the retrieval return nothing for one known to exist.
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## CONTENT-HTML — DORMANT
