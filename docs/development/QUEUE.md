@@ -182,6 +182,15 @@ accepts-when: an empty POST to five ops returns a named reason; a wizard-written
 added: 2026-07-31 · BOB
 landed: a0c6d98 — battery 51/51, coverage 85/85 (0 unreached). D-39 was already guarded at the DO (6ac72d0a); empty-body.test.mjs locks it in. D-110 stale NO_AUTHORITY deleted. D-62 setup.mjs emits content_hash for document bundles (clears C-2.7). D-78 surfaced_by SERVER-STAMPED at op=promote (agent vs human by actor class) — fixes both writers, no store/schema change. NCs RUN; all four DEBT rows self-closed. I3 note registered; revision-carry residual logged as D-121.
 
+### REC-4 · queued
+milestone: M8
+scope: The server-side TASK-ACTOR FENCE (lifted from UI-1's delegation). Today `taskResolve`/`taskForward` (`store.mjs` ~5299) refuse no-actor / no-such-task / already-resolved, but do NOT refuse a member who is neither the task's `assignee` nor an admin — any member-class credential can resolve or forward ANY task by id (the actor is stamped honestly into history, so it is traceable, but not PREVENTED). The TASK construct makes the refusal an accountability rule ("this is not yours to resolve, and here is who it is with"), and UI-1 renders that refusal — but it is COSMETIC until the plane enforces it. Add the fence in the plane, for BOTH `taskResolve` and `taskForward`: a caller who is neither the assignee nor an admin is refused with a NAMED reason mirroring the construct's refusal shape. RECONCILE with D-98's routing doctrine before over-fencing: an `unassigned` task is meant to be claimable by the routed role — check what the routing intends (member_expertise → PM → group admin) and keep that path open; the admin override stays. This is an I3 addition (a new named refusal reason), not a reshape.
+behind-interface: I3
+depends-on: none
+accepts-when: a member who is neither the assignee nor an admin is refused `taskResolve`/`taskForward` on another's assigned task with the named reason; the assignee and an admin still succeed; an unassigned task stays claimable per D-98 routing; negative control — remove the fence and the non-assignee resolve succeeds again.
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## CONTENT-PDF — DORMANT, restructured by the topology decision.
@@ -346,6 +355,15 @@ depends-on: FW-5
 accepts-when: an entity with aliases and a justified `proxy_for`/`member_of`/`overlaps` relation round-trips through the store and is retrievable by key and by alias; a declared relation carries NO connection grade; negative control — dropping the alias/relation persist makes the retrieval return nothing for one known to exist.
 added: 2026-07-31 · CONDUCT
 landed: 4037add — the SUBJECT REGISTRY built ONCE (D-83 closed for the "built twice" risk). 3 tables entities/entity_aliases/entity_relations (I5 1.2.0), kind = closed UNION of safeguard 4's four subject kinds + the framework's entity kinds (DEC-6 leaves the bias-statement-reach question for Bob; union now, no migration either way). Aliases first-class (case/space-folded reverse lookup). Declared relations proxy_for/member_of/overlaps carry NOT-NULL justification+citation and STRUCTURALLY NO grade column (D-83 category error prevented by shape). 6 ops (entitycreate/entityalias/relationdeclare mutating + entity/entitybyalias/relation), registry writes ruled "contribute" capability (corpus-shaping). ops 93/93 (0 unreached, --strict), purge covers all 3 (D-113). battery 56/56. NC RUN (drop alias/relation persist → lookup empty). NEXT slice: the recognisers (reading_ref → entity, method=§8.1 grade).
+
+### FW-7 · queued
+milestone: M4
+scope: CONSTRUCTS Step 4, SLICE B — the RECOGNISERS. Resolve a reading reference (`reading_refs`, FW-5, a raw `kind:key`) to a registry entity (`entities`/`entity_aliases`, FW-6), and DECLARE THE METHOD, which IS the §8.1 connection grade (framework §8.1): **A** = the source's own identifier, both ends captured; **B** = an identifier the source uses, matched exactly in captured content at both ends; **C** = correspondence (a name/title/date proximity), NEVER presented as established and flagged for a member to confirm. Store each resolution (`capture_sha`/reading_ref → `entity_id`, with grade + method) in a new table (I5, additive). This delivers the reverse index — "every document that concerns this entity" — the single largest piece of manual work the framework removes. Undetermined is first-class: a reference matching NO entity stays honestly UNRESOLVED (never force-matched); a Grade C correspondence is flagged for confirmation, never shown as established (an equality that costs nothing is not evidence). A declared relation (FW-6) is constitutive and stays OUTSIDE this grade — do NOT grade relations. Grade is IMPROVABLE (§8.1: a C becomes B when a shared identifier is found) — model the resolution so its grade can be RAISED, not frozen.
+behind-interface: I5
+depends-on: FW-5, FW-6
+accepts-when: a reading reference matching an entity's alias resolves to it at grade C, and one matching a source identifier at both ends resolves at grade A/B; "every document concerning entity X" returns the captures whose readings resolve to X; a reference matching nothing is honestly unresolved; negative control — a Grade C resolution is not reported as established, AND dropping the resolver empties the reverse index for a document known to concern X.
+added: 2026-07-31 · CONDUCT
+landed:
 
 ---
 
