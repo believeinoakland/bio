@@ -182,6 +182,31 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .tk-picker select{font:inherit;font-size:13px;padding:4px;margin-right:8px}
 .tk-err{font-size:13px;color:var(--signal-dk);margin-top:6px}
 
+/* subject view (UI-4): the reverse index, made member-visible */
+.subj-search{display:flex;gap:8px;align-items:center;max-width:520px;margin:0 0 20px}
+.subj-search input{flex:1;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--rule);border-radius:var(--r-2);background:#fff}
+.subj-search button{font:inherit;font-size:13px;padding:8px 14px;border-radius:var(--r-2);border:1px solid var(--verdigris-dk);background:var(--verdigris);color:var(--sheet);cursor:pointer}
+.subj-ent{background:var(--sheet);border:var(--hair);padding:16px 18px;margin:0 0 18px;box-shadow:var(--e-2)}
+.subj-ent .kind{font-family:var(--font-fact);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.subj-ent h2{font-family:var(--font-fact);font-size:20px;font-weight:600;color:var(--ink);margin:2px 0 8px}
+.subj-alias{display:inline-block;font-size:12.5px;color:var(--ink);background:var(--tint-muted);border:var(--hair);border-radius:var(--r-2);padding:2px 8px;margin:0 6px 6px 0}
+.subj-alias.canon{background:var(--tint-note);border-color:#d6a48c}
+.subj-relcard{border-top:var(--hair);padding:12px 0}
+.subj-rel-phrase{font-size:14px;color:var(--ink);font-weight:600;margin-bottom:3px}
+.subj-constit{font-size:12px;color:var(--muted);background:var(--tint-muted);border-radius:var(--r-2);padding:6px 10px;margin:6px 0}
+.subj-just{font-size:13.5px;color:var(--ink);line-height:1.45;margin:4px 0}
+.subj-cite{font-size:12.5px;color:var(--muted);font-style:italic}
+.subj-doc{background:var(--sheet);border:var(--hair);padding:12px 15px;margin:0 0 10px;box-shadow:var(--e-2)}
+.subj-doc .top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px}
+.subj-grade{font-family:var(--font-fact);font-size:12px;font-weight:600;padding:2px 9px;border-radius:var(--r-2);white-space:nowrap}
+.subj-grade.g-est{background:#e2ede3;color:#2f5136;border:1px solid #8fb79a}
+.subj-grade.g-unconf{background:var(--tint-note);color:var(--signal-dk);border:1px solid #d6a48c}
+.subj-how{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.subj-ref{font-size:12px;color:var(--muted)}
+.subj-note{font-size:12.5px;color:var(--muted);max-width:var(--measure-work);margin:0 0 14px;line-height:1.5}
+.subj-conn .ends{font-size:13.5px;color:var(--ink);margin-bottom:3px}
+.subj-conn .weaker{font-size:12px;color:var(--muted)}
+
 /* cards */
 .card{background:var(--sheet);border:var(--hair);padding:16px 18px;margin:0 0 16px;box-shadow:var(--e-2)}
 .kv{display:flex;gap:12px;align-items:baseline;padding:7px 0;border-top:var(--hair)}
@@ -746,6 +771,7 @@ const RAIL = [
   {id:"record",   icon:"i-record",   label:"Record"},
   {id:"tasks",    icon:"i-review",   label:"Tasks"},
   {id:"search",   icon:"i-search",   label:"Search"},
+  {id:"subjects", icon:"i-focus",    label:"Subjects"},
   {id:"focuses",  icon:"i-focus",    label:"Focuses"},
   {id:"projects", icon:"i-projects", label:"Projects"},
   {id:"review",   icon:"i-review",   label:"Review"},
@@ -783,7 +809,7 @@ function navRemember(){
 function navLabel(p){
   if(!p) return "";
   if(p.type==="bundle") return "the document";
-  const t = {record:"The record",tasks:"Tasks",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  const t = {record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -832,14 +858,14 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={record:"The record",tasks:"Tasks",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","focuses","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
     return;
   }
   const R = {
-    record: renderRecord, tasks: renderTasks, search: renderSearchScreen, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
+    record: renderRecord, tasks: renderTasks, search: renderSearchScreen, subjects: renderSubjectView, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
     projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
@@ -4797,6 +4823,206 @@ function taskErr(id, e){
   const host = document.querySelector(`#tk [data-err="${id}"]`);
   const msg = (e && (e.reason||e.error||e.detail)) ? [e.reason,e.detail].filter(Boolean).join(" · ") : "The plane did not accept that.";
   if(host) host.textContent = msg;
+}
+
+/* ============================================================
+   UI-4: THE SUBJECT VIEW — "what the record knows about a subject".
+
+   The member-facing payoff of the entity axis (FW-6/7/8): op=concerns already
+   turns "every document that concerns this ordinance" into one query; this makes
+   it a page. It READS only — op=entitybyalias / op=entity to find the subject,
+   op=concerns for the documents that concern it, op=connections for the graded
+   links among them. It writes nothing and reshapes no plane path.
+
+   The three honesty rules this screen exists to keep, all from the framework:
+
+   1. A DECLARED RELATION (proxy_for / member_of / overlaps) is CONSTITUTIVE, not
+      evidentiary — the group fixing what its own terms mean, not a claim about the
+      world that could be checked. It sits OUTSIDE the §8.1 A–D scale (grading it is
+      the D-83 category error), and the plane's relation row carries no grade column,
+      so the surface has none to show. It shows the justification + citation instead.
+
+   2. A resolution GRADE states HOW a document's concern was established, never how
+      credible it is (§8.1). A Grade C is CORRESPONDENCE — a name/title matched, not
+      an identifier — "plausible, never presented as established, flagged for a member
+      to confirm." The `established` / `needs_confirmation` flags are READ FROM the op
+      (op=concerns computes them from the grade), never re-derived from the letter here,
+      so a C can never be shown as settled.
+
+   3. A CONNECTION's grade is the WEAKER of its two ends (a case is only as strong as
+      its weakest link), shown as HOW it was established, never as credibility.
+   ============================================================ */
+
+/* §8.1 — grade states how a link was established, and nothing else. */
+const SUBJ_GRADE_HOW = {
+  A:"the source's own identifier, with both ends captured",
+  B:"an identifier the source uses, matched in both captures",
+  C:"a name or title that corresponds — not a shared identifier",
+  D:"a member's testimony, recorded with an author and a date"
+};
+const SUBJ_REL_PHRASE = {
+  proxy_for:"is a proxy for",
+  member_of:"is a member of",
+  overlaps:"overlaps with"
+};
+/* The grade badge + its plain-English HOW. `established` and `needsConfirm` come
+   FROM the plane (op=concerns / op=connections); this never re-reads the letter to
+   decide settledness, so a C is structurally incapable of rendering as established. */
+function subjGradeBadge(grade, established, needsConfirm){
+  const how = SUBJ_GRADE_HOW[grade] || "an unrecorded method";
+  if(established && !needsConfirm){
+    return `<span class="subj-grade g-est">Grade ${esc(grade)} · established</span>`
+      + `<span class="subj-how">Established by ${esc(how)}.</span>`;
+  }
+  const flag = grade==="C"
+    ? "Plausible, not established — unconfirmed. A name or title corresponds, which is not proof; a member must confirm it."
+    : "Asserted, not established — recorded as testimony, with its author and date.";
+  return `<span class="subj-grade g-unconf">Grade ${esc(grade)} · unconfirmed</span>`
+    + `<span class="subj-how">${esc(flag)}</span>`;
+}
+
+async function renderSubjectView(){
+  setActive("subjects");
+  const c = $("#content");
+  c.innerHTML = `<h1 class="rec">Subjects</h1><p class="lede">What the record knows about a subject — a source, an office, an ordinance, a person. Find one by name and see its declared relations, every document that concerns it, and how strongly each concern was established.</p>
+    <div class="subj-search">
+      <input id="subj-q" placeholder="e.g. Sheng Thao, or an entity id (ENT-…)" onkeydown="if(event.key==='Enter')lookupSubject()">
+      <button onclick="lookupSubject()">Find</button>
+    </div>
+    <div id="subj-res"></div>`;
+  const el = $("#subj-q"); if(el && el.focus) el.focus();
+}
+
+/* Look up a subject. An ENT- id reads directly (op=entity); anything else is a
+   name/alias (op=entitybyalias). More than one hit is a genuinely ambiguous name,
+   shown in full rather than collapsed — the registry does not pretend it away. */
+async function lookupSubject(){
+  const res = $("#subj-res");
+  const q = (($("#subj-q") && $("#subj-q").value) || "").trim();
+  if(!q){ if(res) res.innerHTML = ""; return; }
+  if(res) res.innerHTML = `<p class="count-line">Looking&hellip;</p>`;
+  try{
+    if(/^ENT-/i.test(q)){ await showEntity(q); return; }
+    const r = await rec("entitybyalias", { alias:q });
+    const ents = r.entities || [];
+    if(ents.length === 0){
+      if(res) res.innerHTML = `<div class="empty">No subject in the registry is known by “${esc(q)}”. The registry holds only subjects a member has declared; a name that is not here has not been entered yet.</div>`;
+      return;
+    }
+    if(ents.length === 1){ await showEntity(ents[0].entity_id, ents[0]); return; }
+    /* Ambiguous name — list every subject that carries it, in full. */
+    if(res) res.innerHTML = `<p class="count-line">“${esc(q)}” names ${ents.length} subjects. Choose one:</p>`
+      + ents.map(e=>`<div class="subj-ent"><div class="kind">${esc(humanKind(e.kind))}</div><h2>${esc(e.label)}</h2>`
+          + `<button class="subj-search" style="border:none;background:none;padding:0;color:var(--verdigris-dk);cursor:pointer" onclick="showEntity('${esc(e.entity_id)}')">Open this subject →</button></div>`).join("");
+  }catch(e){ if(res) res.innerHTML = errPane(e); }
+}
+
+/* Paint one subject: the entity + its declared relations, then the documents that
+   concern it (op=concerns) with honest grades, then the graded connections among
+   them (op=connections). Reads all three; writes nothing. */
+async function showEntity(entityId, known){
+  const res = $("#subj-res");
+  if(res) res.innerHTML = `<p class="count-line">Loading the subject&hellip;</p>`;
+  try{
+    let entity = known || null;
+    if(!entity){
+      const r = await rec("entity", { id:entityId });
+      if(!r.found || !r.entity){
+        if(res) res.innerHTML = `<div class="empty">No subject with id ${esc(entityId)} is in the registry.</div>`;
+        return;
+      }
+      entity = r.entity;
+    }
+    /* The reverse index, and the connections among what it returns. */
+    let concerns = { documents:[] }, connections = { connections:[] };
+    try{ concerns = await rec("concerns", { id:entityId }); }catch(_){ concerns = { documents:[], _err:true }; }
+    try{ connections = await rec("connections", { id:entityId }); }catch(_){ connections = { connections:[] }; }
+    if(res) res.innerHTML =
+        subjEntityHtml(entity)
+      + subjRelationsHtml(entity)
+      + subjConcernsHtml(concerns)
+      + subjConnectionsHtml(connections);
+    document.querySelectorAll("#subj-res [data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
+  }catch(e){ if(res) res.innerHTML = errPane(e); }
+}
+
+/* (1a) The entity itself: kind, label, aliases. */
+function subjEntityHtml(e){
+  const aliases = (e.aliases||[]).map(a=>
+    `<span class="subj-alias${a.canonical?" canon":""}" title="${a.canonical?"the canonical label":"an alias"}">${esc(a.alias)}</span>`).join("");
+  return `<div class="subj-ent">
+    <div class="kind">${esc(humanKind(e.kind))}</div>
+    <h2>${esc(e.label)}</h2>
+    ${aliases ? `<div class="subj-aliases" style="margin-top:6px">Known as: ${aliases}</div>` : ""}
+    ${e.note ? `<p class="subj-just">${esc(e.note)}</p>` : ""}
+  </div>`;
+}
+
+/* (1b) Declared relations — CONSTITUTIVE, so shown WITHOUT any A–D grade. Each
+   carries its justification + citation (like a pattern statement) and is labelled
+   as the group fixing what its own terms mean, not a connection to be graded. */
+function subjRelationsHtml(e){
+  const rels = e.relations || [];
+  if(!rels.length) return `<section class="tsec"><h2>Declared relations</h2><div class="empty">No relations have been declared for this subject.</div></section>`;
+  const cards = rels.map(r=>{
+    const phrase = SUBJ_REL_PHRASE[r.relation] || String(r.relation||"").replace(/_/g," ");
+    const other = r.direction === "out" ? r.to_entity : r.from_entity;
+    const line = r.direction === "out"
+      ? `<b>${esc(e.label)}</b> ${esc(phrase)} <span class="mono">${esc(other)}</span>`
+      : `<span class="mono">${esc(other)}</span> ${esc(phrase)} <b>${esc(e.label)}</b>`;
+    return `<div class="subj-relcard">
+      <div class="subj-rel-phrase">${line}</div>
+      <div class="subj-constit">Declared by the group — a constitutive statement, not evidence. It fixes what the record's own terms mean and carries no A–D grade; it is not a connection to be graded.</div>
+      ${r.justification ? `<div class="subj-just">${esc(r.justification)}</div>` : ""}
+      ${r.citation ? `<div class="subj-cite">Cited: ${esc(r.citation)}</div>` : ""}
+    </div>`;
+  }).join("");
+  return `<section class="tsec"><h2>Declared relations</h2><div class="subj-ent">${cards}</div></section>`;
+}
+
+/* (2) Every document that concerns the subject (op=concerns), each with its
+   resolution grade shown HONESTLY. The established / needs_confirmation flags are
+   the op's, read straight through subjGradeBadge — a Grade C reads "unconfirmed",
+   never as established. */
+function subjConcernsHtml(c){
+  const docs = c.documents || [];
+  const head = `<section class="tsec"><h2>Documents that concern this subject</h2>`
+    + `<p class="subj-note">Each document below carries a reference the record resolved to this subject. The grade states HOW that was established — a shared identifier, or only a corresponding name — and nothing about how much to trust the document itself.</p>`;
+  if(c._err) return head + `<div class="empty">The record could not answer which documents concern this subject.</div></section>`;
+  if(!docs.length) return head + `<div class="empty">No captured document has been resolved to this subject yet.</div></section>`;
+  const rows = docs.map(d=>{
+    const target = d.bundle_id || d.capture_sha;
+    return `<div class="subj-doc">
+      <div class="top">
+        ${target ? `<button class="tlink" data-open="${esc(target)}">${esc(d.bundle_id || ("capture "+String(d.capture_sha).slice(0,12)+"…"))} ↗</button>` : `<span>${esc(String(d.capture_sha).slice(0,12))}…</span>`}
+        ${subjGradeBadge(d.grade, d.established, d.needs_confirmation)}
+      </div>
+      ${d.ref ? `<div class="subj-ref">Resolved on the reference ${esc(d.ref)}.</div>` : ""}
+    </div>`;
+  }).join("");
+  return head + rows + `</section>`;
+}
+
+/* (3) The graded connections among the documents that concern this subject
+   (op=connections). A connection's grade is the WEAKER of its two ends; the badge
+   shows HOW, never credibility. Connections are derived by a separate step
+   (op=connect); when none are recorded yet, that is stated honestly rather than
+   shown as "no connections". */
+function subjConnectionsHtml(c){
+  const conns = c.connections || [];
+  const head = `<section class="tsec"><h2>Connections among these documents</h2>`
+    + `<p class="subj-note">Two documents that concern this subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.</p>`;
+  if(!conns.length) return head + `<div class="empty">No connections among these documents have been derived yet.</div></section>`;
+  const rows = conns.map(x=>{
+    const a = x.a_bundle_id || (String(x.a_capture_sha).slice(0,12)+"…");
+    const b = x.b_bundle_id || (String(x.b_capture_sha).slice(0,12)+"…");
+    return `<div class="subj-doc subj-conn">
+      <div class="ends"><span class="mono">${esc(a)}</span> &harr; <span class="mono">${esc(b)}</span></div>
+      <div class="weaker">Ends resolved at Grade ${esc(x.a_grade)} and Grade ${esc(x.b_grade)} — the connection takes the weaker.</div>
+      <div class="top">${subjGradeBadge(x.grade, x.established, x.needs_confirmation)}</div>
+    </div>`;
+  }).join("");
+  return head + rows + `</section>`;
 }
 
 /* ============================================================
