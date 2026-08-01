@@ -251,6 +251,69 @@ a project does not assert. Those pass the test. Adding them does not reopen the
 two-construct interaction decision, because all three are things the QUEUE and the ACT
 already reach.
 
+## Is a case anything other than a published finding? — Bob, 2026-08-01
+
+The question nearly collapses the object, and it should be recorded that it nearly did.
+Three of the four defences fail:
+
+- **Composition fails.** "A case composes several findings" is not a distinction if a
+  finding's basis may include other findings. Recursion handles it, and the root
+  finding is then the case.
+- **Narrative order fails.** A reading order is a property of the RENDERING, not of the
+  object. Same answer as audience thresholds.
+- **Audience threshold fails**, for the reason already given in observation 3: that is
+  rendering.
+
+**One survives, and it is enough: a case makes a COMPLETENESS CLAIM and a finding does
+not.**
+
+- A **finding** claims: *X is true, and here is what it rests on.*
+- A **case** claims: *these things, taken together, support this conclusion — and this
+  is the material set.*
+
+That second assertion is a different kind of claim, and it is **the most dangerous one
+this system can make.** A published finding that is true but selectively chosen is not
+a lie at the finding level and IS a lie at the case level. Selection is precisely how
+overclaiming happens in case-making, which makes this the case-making face of the
+symmetric threat model Bob set out — the half that is ours.
+
+### Why it cannot be a state on a finding
+
+The tempting simplification is `finding.published = true`. It fails on reuse:
+
+**A finding must NOT assert completeness, so that it can be reused across cases. A case
+must, so that it can be trusted.** If findings carried a completeness burden they would
+become case-specific and stop being reusable units; if cases did not carry it, nothing
+would ever be accountable for what was left out. Two different claims, two objects, and
+the difference is not publication state.
+
+### What follows for the gate, and it parallels something already built
+
+A system cannot VERIFY completeness — no gate can know what a group did not look at. It
+can do what this record does everywhere else with what it cannot establish: make the
+claim **visible, attributable and stated**.
+
+So a case's gate is not *"are these findings true"* — that is each finding's own gate,
+already inherited. It is **"has the author stated what was excluded, and why."**
+
+That is the release flow's shape exactly (U5: typed acknowledgment and mitigation,
+**never prefilled**), raised from a document to an argument. And it gives invariant 7 —
+a finding that cuts against the goal is surfaced as prominently as one that supports it
+— its enforcement point: the exclusion is an authored field on the case, so leaving
+something out is an act with a name on it rather than an absence nobody can see.
+
+### The remaining distinction, smaller but real
+
+**A case is ADDRESSED and a finding is not.** A case is made TO someone FOR something —
+reporting to the public, a claim to a court, a fix asked of a body. That is where
+`action` connects: the ask is an action, and the case is what justifies it. A finding is
+addressed to no one.
+
+**Provisional conclusion of the pass:** case survives as an object, on the completeness
+claim alone. If a later session finds a way to make completeness attributable without a
+distinct object, the collapse is worth revisiting — but the burden is on that argument,
+not on this one.
+
 ## Open questions this pass must answer
 
 1. Do `focus` / `project` / `action` / `case file` survive, evolve, or get replaced?
