@@ -140,6 +140,31 @@ than a ruling of his, and is labelled that way · D-54 (the installer does not d
 the Workers plan) · D-63 / D-66
 (more stacks, more content types — standing, measurement-first).
 **Areas:** CONTENT-PDF, CAPTURE, FRAMEWORK.
+
+> **Office formats, researched 2026-07-31 (`OFFICE-FORMATS.md`).** Spreadsheets,
+> Word-format and presentation documents are ONE container problem, not three:
+> `.docx`/`.xlsx`/`.pptx` are OOXML (a ZIP of XML parts) and `.odt`/`.ods`/`.odp` are
+> the same shape. **Measured in workerd:** `DecompressionStream("deflate-raw")` works
+> and round-trips, so the container needs ZERO dependency — and office TEXT is easier
+> than PDF text, not harder, because it is XML text nodes with no glyph problem. No
+> Tier 2, no fleet member.
+>
+> **The architectural point is bigger than the formats.** Dispatch today is already
+> two mechanisms that do not scale — a hardcoded `HTML_CT` array guarding acquire-time
+> subresources, and a separate read-time `op=pdfstructure`. Three more formats makes
+> five special cases across two mechanisms. The framework already specifies the fix
+> (§4's uniform recogniser plus a registry per axis) and names FORMAT as a candidate
+> axis, and **D-70 records that this uniformity has never been tested because no third
+> axis has been added.** This is that test. So: stand up the FORMAT registry and move
+> HTML and PDF ONTO it first — adding formats before it means building them twice, and
+> if a new format then costs a registry entry, §9's cost table is real.
+>
+> Two element references land BETTER than PDF's page+rect: `Sheet1!B14` and
+> slide+shape are stable and human-meaningful — the first time the record can cite
+> finer than a whole document without inventing an anchor scheme. That needs I2 to
+> grow a per-container `source` (D-123), which is `INTERFACE-CHANGES.md`'s first real
+> use; the protocol file does not exist yet, by design, and writing it is part of the
+> work rather than a surprise halfway through.
 **Depends on:** the PDF half on a Free-tier measurement (D-118); the rendered half on
 D-55, and **D-55 is less blocked than its row says** — see below.
 
@@ -470,6 +495,9 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-118 service bindings on Free unmeasured | CONTENT-PDF | M2 · measure first |
 | pdf-worker · Tier 1 in-plane extractor, then coverage measurement | CONTENT-PDF | M2 |
 | pdf-worker · Tier 2 (`unpdf`) as a fleet member behind I6 | CONTENT-PDF · DIST | M2 |
+| D-121 office formats: the FORMAT registry + OOXML container | CONTENT-* · CAPTURE | M2 |
+| D-122 office formats carry latent evidence AND personal data | — | DOCTRINE · DEC-5 |
+| D-123 I2 element reference needs a per-container form | CONDUCT (answers for dormant FRAMEWORK) | M2 |
 | CAPTURE-SCALING item 6 · reuse verification + re-fetch at ratification | CAPTURE | M2 · DECIDED, queued CAP-4 |
 | CAPTURE-SCALING open · freshness window, recurrence threshold | CAPTURE | M2 (measurement first) |
 | ARCHIVE-FALLBACK · per-document cadence by volatility | RECORD · CAPTURE | M1 |

@@ -291,6 +291,43 @@ response:
 decided:
 enacted:
 
+### DEC-5 · open
+raised: 2026-07-31 · BOB (from `OFFICE-FORMATS.md` research, D-122)
+for: bob
+question: When the record holds a Word, Excel or PowerPoint document, may it SURFACE
+  the personal data the publisher left inside it — `lastModifiedBy` naming a member of
+  staff, a tracked change attributing an edit to a person, a comment candid about a
+  named individual?
+why it is Bob's: effects on people outside the project. These are named individuals
+  who did not publish this about themselves, and the surfacing decision is the
+  D-77 / invariant-7 neighbourhood rather than a display choice.
+provisional: nothing is blocked and nothing is built. Office-format support is
+  research only. Steps 1 to 5 of the build order (the FORMAT registry, the container
+  reader, structure, text, and the measurement on real documents) are unaffected by
+  this answer; only step 6, the evidentiary extras, waits on it. CAPTURING is not in
+  question either way — the record holds what was served, and stripping bytes would
+  break the hash and the premise.
+blocks: step 6 of `OFFICE-FORMATS.md` only.
+alternative: surface everything the document contains, on the reasoning that we hold
+  what was served and the body chose to publish the file; or the reverse, extract the
+  evidentiary structure and never surface the person-identifying metadata at all.
+recommendation: a middle position, and it follows the record's own grain. HOLD
+  everything (no choice there), EXTRACT everything into structure, but treat
+  person-identifying metadata as present-and-not-promoted: available when a member
+  goes looking at a document, never in a list, a search facet, a digest or an export
+  summary. The asymmetry is the point — a staff member's name showing up because
+  somebody opened the document they wrote is different from that name being
+  searchable across the corpus. Tracked changes and comments are the harder case,
+  because their evidentiary value is often exactly the attribution; my recommendation
+  is that they surface WITH the attribution when a member reads the document, since a
+  redacted edit history would be a claim we cannot support.
+reversal cost: rises once data exists. What is surfaced becomes searchable, cited and
+  possibly published; unsurfacing it later does not unpublish it. Cheap to decide now,
+  expensive after a corpus of office documents is indexed.
+response:
+decided:
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_

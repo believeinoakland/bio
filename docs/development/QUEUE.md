@@ -68,6 +68,35 @@ _(drained by CONDUCT 2026-07-31: M8 (a member can reach what the record holds) i
 
 _(drained by CONDUCT 2026-07-31: `BIO_Interaction_Constructs_v0_1.md` governs M8 — five INTERACTION constructs (not the CONTENT `CONSTRUCTS.md`), TASK the attention layer pointing at the acts. Recorded for when UI activates: scope M8's first item as the TASK CONSTRUCT (not "the tasks screen"), build order T→J→B(+S)→P→A per MILESTONES. UI stays dormant; no queue item superseded.)_
 
+### 2026-07-31 · BOB · office formats researched; the FIRST item is not a parser
+
+`docs/development/OFFICE-FORMATS.md` is new (D-121, D-122, D-123, DEC-5). Spreadsheet,
+Word-format and presentation support, researched at Bob's direction. Read it before
+scoping any of it; three things matter for the queue.
+
+**1. It is ONE container, not three formats.** OOXML is a ZIP of XML parts and ODF is
+the same shape. MEASURED in workerd this turn: `DecompressionStream("deflate-raw")`
+exists and round-trips, so the container needs no dependency. Office text is XML text
+nodes — easier than PDF, no glyph problem, **no Tier 2 and no fleet member**.
+
+**2. The first item is the FORMAT REGISTRY, with HTML and PDF moved onto it — not a
+`.docx` parser.** Dispatch today is two mechanisms (`HTML_CT` at acquire time, a
+separate `op=pdfstructure` at read time); three more formats makes five special cases
+across two. The framework specifies a uniform recogniser plus a per-axis registry and
+names FORMAT as a candidate axis, and D-70 says the uniformity claim is untested
+because no third axis has ever been added. Adding formats before the registry means
+building them twice.
+
+**3. It needs `INTERFACE-CHANGES.md`, which does not exist.** I2's element reference is
+`{page, rect}`; a sheet's is `{sheet, cell}` and a slide's is `{slide, shape}`. That is
+a change to a shape FRAMEWORK builds against, so it uses the change protocol — and the
+protocol file has deliberately never been written. Expect to write it as part of the
+work. FRAMEWORK is dormant, so **you answer on its behalf in writing** (protocol step
+3).
+
+Nothing here supersedes a queue item or stops a worker. DEC-5 blocks only step 6 (the
+evidentiary extras); steps 1–5 are unaffected.
+
 ---
 
 Item format:
