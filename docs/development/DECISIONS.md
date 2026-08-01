@@ -312,6 +312,40 @@ blocks: step 6 of `OFFICE-FORMATS.md` only.
 alternative: surface everything the document contains, on the reasoning that we hold
   what was served and the body chose to publish the file; or the reverse, extract the
   evidentiary structure and never surface the person-identifying metadata at all.
+what is literally in the file, so the question is concrete rather than abstract:
+  `docProps/core.xml` — `<dc:creator>`, `<cp:lastModifiedBy>`, `<cp:revision>17</>`,
+  created and modified instants. `word/comments.xml` — `<w:comment w:author="…"
+  w:date="…">` with the comment text. Tracked changes — `<w:ins w:author="…"
+  w:date="…">` around inserted text and `<w:del>` around deleted text, so the
+  PREVIOUS WORDING and who replaced it are both recoverable. XLSX carries the same
+  core.xml plus authored cell comments; PPTX adds `notesSlide` parts.
+the two scenarios, which is why this is not obvious either way:
+  FOR surfacing — a staff report whose tracked changes show a cost figure moved from
+  $4.2M to $2.8M three days before publication, by a named deputy. That is precisely
+  the finding this project exists to make, and "someone changed it" is a far weaker
+  claim than the record showing who and when. Redacting the author would make the
+  finding unciteable at the moment it matters most.
+  AGAINST surfacing — a junior analyst appears as `lastModifiedBy` on two hundred
+  routine documents. Aggregated that is a work-pattern profile of one person: who
+  touched what, who worked late, when someone was on leave. Nobody asked for it, no
+  case needs it, and it only becomes POSSIBLE if the field is searchable across the
+  corpus rather than sitting on a document.
+the line the asymmetry suggests: the first is a fact ABOUT A DOCUMENT; the second is a
+  pattern ABOUT A PERSON, and the second is created by INDEXING rather than by holding.
+  BIO's subject is an institution, not the individuals who staff it — a named officer
+  acting in an official capacity in a way that bears on a finding is in scope; a
+  corpus-wide index of who edited what is a different instrument altogether.
+what "present and not promoted" would MEAN operationally, since it is the
+  recommendation and it must be enforceable rather than a UI convention:
+    held in the bytes — always, no choice, the hash forbids anything else
+    extracted into structure — yes, so a later session can re-evaluate it
+    shown when a member opens that document — yes
+    projected into an indexed/filterable column, a search facet, a digest or an
+      export summary — NO
+    on the published (public) surface — no by default; a separate question
+  The plane already has the mechanism: `bundles` holds indexed columns and `fm_json`
+  holds the per-schema tail, so "not promoted" is a PROJECTION decision that is
+  structurally enforceable, not a rule the UI has to remember.
 recommendation: a middle position, and it follows the record's own grain. HOLD
   everything (no choice there), EXTRACT everything into structure, but treat
   person-identifying metadata as present-and-not-promoted: available when a member
