@@ -43,6 +43,7 @@
     "test:scheduler": "node test/scheduler.test.mjs",
     "test:unattended-lease": "node test/unattended-lease.test.mjs",
     "test:archive-monitoring": "node test/archive-monitoring.test.mjs",
+    "test:proposals-feed": "node test/proposals-feed.test.mjs",
     "bench": "node test/scale.mjs",
     "probe:retrieval": "node test/retrieval-probe.mjs",
     "probe:facets": "node test/facet-probe.mjs 20000",

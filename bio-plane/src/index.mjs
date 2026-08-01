@@ -486,6 +486,14 @@ const OPS = {
      the other progression reads. */
   discharge:        { classes: ["admin", "member", "probe"],       mutating: true  },
   exceptions:       { classes: ["admin", "member", "probe"],       mutating: false },
+  /* REC-6: the DISCOVERY feed for DERIVED findings (UI-5's delegation). `proposals` walks every
+     progression instance at READ time for its missing-predecessor findings and returns them BOTH
+     raw-per-instance (the shape UI-5's loadProposals already consumes) and D-79-aggregated (one
+     proposal per (progression_key, stage_key), N instances, weakest grade, surfaced_by machine).
+     It REPORTS and never mutates — derived things inform — and is ungated like the other
+     progression reads (op=instance / op=exceptions): a member session reads the record's own
+     questions. It needs no scheduled alarm; the PUSH walking-task is a separate later item. */
+  proposals:        { classes: ["admin", "member", "probe"],       mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -611,9 +619,13 @@ const RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concern
    entity id). Named here so the member and admin lists cannot drift apart.
    CONSTRUCTS Step 5, SLICE C (FW-10) extends it again: a member DISCHARGES a lawful skip by
    recording an exception document (discharge — stamped with the declaring member below) and
-   READS the raw discharges (exceptions — no viewer stamp, keyed on progression key + entity id). */
+   READS the raw discharges (exceptions — no viewer stamp, keyed on progression key + entity id).
+   REC-6 extends it once more with a READ: `proposals` is the DISCOVERY feed — a read-time walk of
+   every progression instance for its missing-predecessor findings, D-79-aggregated. Ungated like
+   the other progression reads (no viewer stamp, keys on nothing — it enumerates the whole record's
+   derived questions), named here so the member and admin lists cannot drift apart. */
 const PROGRESSION_ACTIONS = ["connect", "connections", "progressiondefine", "progression",
-                             "thread", "instance", "discharge", "exceptions"];
+                             "thread", "instance", "discharge", "exceptions", "proposals"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",

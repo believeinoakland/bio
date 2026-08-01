@@ -3928,6 +3928,90 @@ export class Store extends DurableObject {
     return { ok: true, progression_key: key, entity_id: eid, exception_count: exceptions.length, exceptions };
   }
 
+  /* op=proposals (REC-6): the DISCOVERY feed for DERIVED findings. UI-5's proposal surface can
+     render, aggregate and act on proposals, but until this op nothing ENUMERATES the record's
+     derived findings, so the surface cannot DISCOVER what to show (it ships a gap banner). This
+     is the READ side of the FW-9/FW-10 walking-task that was deferred: a read-time walk of every
+     progression INSTANCE for its MISSING-PREDECESSOR findings. It does NOT need the scheduled
+     alarm (that is the deferred PUSH task); it REPORTS and never mutates — derived things inform.
+
+     The walk: every distinct (progression_key, entity_id) with placements is ONE instance; reuse
+     `#assembleInstance` (the SAME derivation op=instance returns) so the feed cannot drift from a
+     single-instance read. `#assembleInstance` already respects FW-10 discharges (a discharged
+     skip is a "discharged" state, NOT a finding) and stage required-ness (a missing
+     sometimes/never stage is not a finding), so a discharged or non-required missing stage never
+     enters this feed — the doctrine is enforced at the one derivation point, not re-implemented.
+
+     Two shapes, from the ONE walk, so no caller is forced to reshape and the two cannot disagree:
+       - `instances`: the RAW per-instance reads UI-5's loadProposals already consumes
+         ({progression_key, progression_label, entity_id, entity_label, findings[]}), so the
+         existing surface populates with NO UI change; UI-5's proposalsFrom does its own D-79
+         grouping over these (the aggregation stays in the tested UI, exactly as UI-5's delegation
+         offered).
+       - `proposals`: the SERVER-SIDE D-79 aggregation the kickoff mandates — ONE proposal per
+         (progression_key, stage_key) carrying its N instances, the WEAKEST §8.1 grade across them
+         (any undetermined instance → the aggregate is undetermined, never guessed), surfaced_by
+         `machine`. This is what a thin client (or a future UI-5 pass-through) reads without
+         re-deriving, and it is the shape the acceptance suite asserts.
+     Only instances that PRODUCE a missing-predecessor finding enter the feed: an instance with no
+     gap is not a proposal, and reporting it would be noise about a thing that is fine. Connections
+     as a second finding kind are DEFERRED as a follow-on (missing-predecessors only here). */
+  proposalsFeed() {
+    /* DISTINCT (progression_key, entity_id): the identity of an instance is the pair; a stage
+       holds several documents but that is still one instance. Ordered so the feed is stable. */
+    const pairs = this.#rows(
+      `SELECT DISTINCT progression_key, entity_id FROM progression_instances
+         ORDER BY progression_key, entity_id`);
+    const instances = [];
+    const groups = new Map();   // (progression_key::stage_key) -> aggregated proposal
+    for (const p of pairs) {
+      const inst = this.#assembleInstance(p.progression_key, p.entity_id);
+      /* only the UNDISCHARGED, required missing-predecessor findings #assembleInstance already
+         computed — a discharged skip is in `discharges`, not here, and a non-required missing
+         stage never fired. An instance with no such finding contributes nothing to the feed. */
+      const findings = (inst.findings || []).filter((f) => f.kind === "missing_predecessor");
+      if (findings.length === 0) continue;
+      const entityLabel = inst.entity ? inst.entity.label : null;
+      instances.push({
+        progression_key: inst.progression_key, progression_label: inst.label,
+        entity_id: inst.entity_id, entity_label: entityLabel, findings });
+      for (const f of findings) {
+        const key = inst.progression_key + "::" + f.stage_key;
+        let g = groups.get(key);
+        if (!g) {
+          g = { key, progression_key: inst.progression_key, progression_label: inst.label,
+                stage_key: f.stage_key, stage_label: f.stage_label, required: f.required,
+                surfaced_by: "machine", instances: [] };
+          groups.set(key, g);
+        }
+        /* the finding's grade is the instance's grade (the weakest connection along its chain),
+           or "undetermined" when the instance has fewer than two placed stages — never invented. */
+        g.instances.push({ entity_id: inst.entity_id, entity_label: entityLabel,
+          progression_key: inst.progression_key,
+          grade: f.grade_determined ? f.grade : null, grade_determined: f.grade_determined === true });
+      }
+    }
+    /* D-79: ONE proposal per (progression_key, stage_key) carrying its N instances, graded the
+       WEAKEST §8.1 grade across them (a case is only as strong as its weakest link). ANY
+       undetermined instance makes the aggregate undetermined — undetermined is first-class and
+       is STATED, never averaged away into a determined grade. */
+    const proposals = [];
+    for (const g of groups.values()) {
+      g.n = g.instances.length;
+      const anyUndetermined = g.instances.some((i) => !i.grade_determined || !i.grade);
+      g.grade_determined = !anyUndetermined;
+      g.grade = anyUndetermined
+        ? null
+        : g.instances.map((i) => i.grade).reduce((a, b) => Store.#weakerGrade(a, b));
+      proposals.push(g);
+    }
+    /* biggest pattern first — the DROWNING failure D-79 names is showing many small findings as
+       many items, so the widest question leads. Stable tiebreak on the aggregation key. */
+    proposals.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+    return { ok: true, instances, proposals,
+             instance_count: instances.length, proposal_count: proposals.length };
+  }
+
   /* ---- coordination: what LockService and the nextSeq race did ---- */
 
   allocId(prefix, year) {
@@ -6920,6 +7004,10 @@ export class Store extends DurableObject {
         discharge: () => this.dischargeStage(body || {}),
         exceptions: () => this.readExceptions({ progressionKey: url.searchParams.get("key"),
                                                 entityId: url.searchParams.get("id") }),
+        /* REC-6: op=proposals, the DISCOVERY feed for derived findings (UI-5's delegation). A
+           read-time walk of every progression instance for its missing-predecessor findings,
+           D-79-aggregated per (progression_key, stage_key). Reports, never mutates. */
+        proposals: () => this.proposalsFeed(),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
