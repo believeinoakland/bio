@@ -238,14 +238,14 @@ accepts-when: `op=proposals` returns the missing-predecessor findings for a stor
 added: 2026-07-31 · CONDUCT
 landed: 80eca24 — op=proposals, the DISCOVERY feed. ONE read-time walk (SELECT DISTINCT progression_key,entity_id FROM progression_instances → #assembleInstance, the SAME derivation op=instance uses so it can never drift) returns BOTH: instances[] (the raw shape UI-5's loadProposals ALREADY reads → its gap banner retires with ZERO UI change) AND proposals[] (server-side D-79 aggregation: one per (progression_key,stage_key), N instances, weakest §8.1 grade, surfaced_by machine, widest-first). Discharges + non-required stages excluded at the derivation point (a discharged gap drops out, N=2→1). Connections deferred (flagged). I3 1.3.0 additive. battery 63/63, --strict 106/106. NC RUN (empty walk → feed empty for a gap store). No DEC (instances-vs-aggregated was a delegated mechanism call).
 
-### REC-7 · queued
+### REC-7 · done
 milestone: M8
 scope: `op=proposedispose` — record a PROPOSAL's defer/dismiss WITHOUT minting a bundle (from UI-5's delegation). `op=dispose` disposes a focus BUNDLE (handle + state); a bare derived proposal has no bundle, so a member's defer/dismiss of a proposal has nowhere to land — UI-5's defer/dismiss is degraded. Doctrine is SETTLED (D-79: a finding AGES with a recorded reason rather than vanishing; a DECLINED proposal must NOT mint a bundle — declining is not authoring), so this is a mechanism gap, not a DEC. Add the proposal-disposition store (a small table keyed by the proposal's identity — (progression_key, stage_key) per D-79 aggregation) + `op=proposedispose` recording deferred/dismissed with a REQUIRED reason (never prefilled) and the deciding member (server-stamped); a dismissed/deferred proposal is filtered from (or annotated in) the REC-6 feed, and AGES rather than disappearing. I5-additive (schema traps: before host_governor, no backticks, purge/D-113).
 behind-interface: I3
 depends-on: none
 accepts-when: a member defers/dismisses a proposal with a reason → it is recorded (no bundle minted) and no longer surfaces as open in `op=proposals` (or surfaces annotated as deferred/dismissed with its reason), while an undismissed one still does; negative control — dispose without a reason is refused NO_REASON; dropping the store makes the dismissed proposal reappear as open.
 added: 2026-07-31 · CONDUCT
-landed:
+landed: ba36d49 — op=proposedispose ages a declined proposal WITHOUT minting a bundle (D-79). New table proposal_dispositions keyed by (progression_key, stage_key) — the SAME key REC-6 aggregates by — holding state(deferred/dismissed)+REQUIRED reason+server-stamped decided_by+at, UPSERT (one row per proposal). op writes ONE row, NO bundle/history/focus (declining is not authoring); refusals NO_REASON/BAD_REASON/NOT_A_DISPOSITION/BAD_STAGE/NO_DECIDER; forged decided_by ignored (server-stamped). FILTER-WITH-RECEIPT: proposalsFeed drops aged findings from open instances[]/proposals[] (UI-5 ages them with zero UI change) AND returns them in a new dispositions[] overlay (D-79 age-not-vanish, the decision on the record). A re-fired gap stays dismissed (key is identity). I5 1.8.0, I3 1.4.0, purge whole-store (D-113). battery 64/64, --strict 107/107. NCs RUN (refusals write nothing; neuter disposition read → dismissed reappears open). No DEC.
 
 ---
 
