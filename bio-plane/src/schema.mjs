@@ -958,6 +958,34 @@ CREATE TABLE IF NOT EXISTS progression_exceptions (
 CREATE INDEX IF NOT EXISTS progression_exceptions_key ON progression_exceptions(progression_key, entity_id);
 CREATE INDEX IF NOT EXISTS progression_exceptions_bundle ON progression_exceptions(bundle_id);
 CREATE INDEX IF NOT EXISTS progression_exceptions_capture ON progression_exceptions(capture_sha);
+-- REC-5 / D-122: the CONNECTION-DERIVE DIRTY-SET. A bounded work-queue of the
+-- entities whose resolutions have changed since their connections were last
+-- derived, so the scheduled connection-derive sweep (a consumer on REC-1's DO
+-- alarm) re-derives only what moved rather than re-deriving the whole store every
+-- tick. It is a WATERMARK, not a second source of truth: the connections it
+-- produces are DERIVED from resolutions exactly as op=connect derives them, and a
+-- dirty row that is lost only costs one skipped re-derivation, while a spurious
+-- one costs one idempotent no-op re-derivation -- both harmless, which is why a
+-- transient set is safe here where the record proper never is.
+--
+-- Stamped at op=resolve / op=resolvetestify, and ONLY when a resolution is
+-- INSERTED or RAISED in grade (a kept idempotent re-resolve changes nothing, so
+-- it dirties nothing). Keyed by entity_id, so many resolutions touching one
+-- entity collapse to ONE pending row and the sweep is bounded by the count of
+-- DISTINCT changed entities, not by resolve volume. The sweep deletes a row once
+-- it has derived that entity's connections; when the set empties the consumer's
+-- wake goes null and the alarm self-terminates.
+--
+-- DERIVED from the corpus (an entity is dirty only because a captured document
+-- resolved to it), so a whole-store purge clears it -- op=purge deletes it in the
+-- whole-store arm (D-113; hygiene.test.mjs holds the list). It has no bundle_id
+-- and is a transient queue, so a per-bundle purge leaves it: at worst a stale
+-- entity_id triggers one harmless idempotent re-derivation on the next tick.
+CREATE TABLE IF NOT EXISTS connection_dirty (
+  entity_id  TEXT PRIMARY KEY,
+  stamped_at TEXT
+);
+CREATE INDEX IF NOT EXISTS connection_dirty_stamped ON connection_dirty(stamped_at);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

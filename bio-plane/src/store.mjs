@@ -729,6 +729,76 @@ export class Store extends DurableObject {
     const v = Number(this.env && this.env.TASK_DRAIN_DELAY_MS);
     return Number.isFinite(v) && v >= 0 ? v : Store.TASK_DRAIN_DELAY_MS;
   }
+
+  /* REC-5 / D-122: how the SCHEDULED connection-derive sweep is paced and bounded.
+     DELAY_MS is deliberately far larger than the drain's second-scale cadence:
+     connections are a projection nobody is blocking on, deriving them a minute
+     after a resolve is well inside "eventually" for a civic record, and a slack
+     delay keeps the sweep off the resolve hot path. It is a tactical cadence, not
+     a doctrine — reversible by editing this one constant — and it sits between the
+     drain's 60s backstop and the selection TTL, so the alarm the resolve arms
+     never fires inside another suite's sub-second wall-time (the flakiness the
+     drain suite pins TASK_DRAIN_DELAY_MS out of its window to avoid). Overridable
+     by a binding for exactly that reason: a test pins it far out to drive onAlarm
+     by hand, or short to prove the real alarm fires. BATCH bounds the entities one
+     tick derives; more than that and the wake stays non-null so the next tick
+     drains the rest — bounded per tick, self-terminating overall. */
+  static CONNECTION_DERIVE_DELAY_MS = 60000;
+  static CONNECTION_DERIVE_BATCH = 100;
+
+  #connectionDeriveDelayMs() {
+    const v = Number(this.env && this.env.CONNECTION_DERIVE_DELAY_MS);
+    return Number.isFinite(v) && v >= 0 ? v : Store.CONNECTION_DERIVE_DELAY_MS;
+  }
+  /* Overridable like the delay so a suite can pin the batch to 1 and PROVE the
+     sweep is bounded per tick and drains a larger dirty-set across several
+     self-re-arming ticks rather than in one full-store pass. */
+  #connectionDeriveBatch() {
+    const v = Number(this.env && this.env.CONNECTION_DERIVE_BATCH);
+    return Number.isFinite(v) && v >= 1 ? Math.floor(v) : Store.CONNECTION_DERIVE_BATCH;
+  }
+
+  /* Stamp an entity into the connection-derive dirty-set so the scheduled sweep
+     picks it up. Keyed by entity_id, so re-stamping the same entity is one row:
+     the set is bounded by the count of DISTINCT changed entities, never by the
+     number of resolutions that touched them. Runs inside the caller's resolve
+     transaction, so a resolution and the dirt it produces commit atomically. */
+  #stampConnectionDirty(entityId) {
+    if (typeof entityId !== "string" || !entityId) return;
+    this.sql.exec(
+      `INSERT INTO connection_dirty (entity_id, stamped_at) VALUES (?, ?)
+       ON CONFLICT(entity_id) DO UPDATE SET stamped_at=excluded.stamped_at`,
+      entityId, new Date().toISOString());
+  }
+
+  /* The connection-derive sweep's tick body: derive connections for a BOUNDED
+     batch of dirty entities, then clear each from the set. deriveConnections is
+     idempotent (it UPSERTS by the FW-8 connection key), so re-deriving an entity
+     is a no-op on the second run and the sweep is safe to re-run. Derive-then-
+     delete in that order means a crash between the two leaves the entity dirty and
+     it is simply re-derived next tick — the safe failure direction (re-derive, not
+     skip). The whole body is synchronous (deriveConnections uses transactionSync),
+     so no resolve can interleave between reading the batch and clearing it. */
+  #deriveConnectionsSweep() {
+    const batch = this.#rows(
+      `SELECT entity_id FROM connection_dirty ORDER BY stamped_at, entity_id LIMIT ?`,
+      this.#connectionDeriveBatch());
+    const swept = [];
+    for (const { entity_id } of batch) {
+      const r = this.deriveConnections({ entityId: entity_id, assertedBy: "system" });
+      this.sql.exec(`DELETE FROM connection_dirty WHERE entity_id=?`, entity_id);
+      swept.push({ entity_id, connections: r && r.ok ? r.count : 0 });
+    }
+    const remaining = this.#one(`SELECT count(*) c FROM connection_dirty`).c;
+    return { entities: swept.length, remaining, swept };
+  }
+
+  /* The producer-side arm for the connection-derive consumer: a resolve that
+     dirtied an entity reconciles the alarm to include the sweep's wake. Mirrors
+     #armSweep / #armDrain — it only SCHEDULES, it never derives, so the
+     producer/consumer split holds (the sweep is the sole writer of connections on
+     this path). */
+  async #armConnectionDerive() { return await this.#armScheduler(); }
   /* MEASURED, and lower than SQLite's documented default by two orders of
      magnitude: workerd refuses a statement binding more than about 100
      variables. Binary-searched through this exact code path on 2026-07-25, where
@@ -848,6 +918,21 @@ export class Store extends DurableObject {
         due:  (now) => now,
         wake: (now) => this.#monitorPending() ? now + this.#monitorTickMs() : null,
         tick: (now) => this.#monitorTick(now) },
+      /* REC-5 / D-122: the CONNECTION-DERIVE sweep. Closes the gap where op=connect
+         was a manual mutation nothing called, so the entity axis stayed empty. It
+         is due on any wake (cheap, and a no-op on an empty dirty-set, exactly like
+         the two originals), and its WAKE is null unless the dirty-set has pending
+         entities — so an instance with nothing to derive holds no alarm and the
+         consumer self-terminates. Each tick derives a BOUNDED batch and clears it;
+         while more remain the count stays > 0 and the wake re-arms for the next
+         tick, so the sweep drains progressively rather than re-deriving the whole
+         store at once. The derivation stamps asserted_by 'system' (deriveConnections'
+         default): a scheduled derivation is a MACHINE act, never a member's. */
+      { name: "connection-derive",
+        due:  (now) => now,
+        wake: (now) => this.#one(`SELECT count(*) c FROM connection_dirty`).c > 0
+                         ? now + this.#connectionDeriveDelayMs() : null,
+        tick: ()    => ({ connderive: this.#deriveConnectionsSweep() }) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -874,7 +959,7 @@ export class Store extends DurableObject {
     const probe = await this.#probeState(now);
     const reg = this.#schedConsumers(probe);
     const grace = Store.SCHED_GRACE_MS;
-    let swept = 0, drain = null, monitor = null; const probes = [];
+    let swept = 0, drain = null, monitor = null, connderive = null; const probes = [];
     for (const c of reg) {
       const d = c.due(now);
       if (d === null || d > now + grace) continue;
@@ -887,6 +972,7 @@ export class Store extends DurableObject {
       if (c.name === "selection-sweep") swept = r.swept;
       else if (c.name === "task-drain") drain = r.drain;
       else if (c.name === "archive-monitor") monitor = r && r.monitor;
+      else if (c.name === "connection-derive") connderive = r && r.connderive;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -902,7 +988,8 @@ export class Store extends DurableObject {
              folded: d.folded.length, refused: d.refused.length,
              waiting: d.waiting.length, remaining: d.remaining,
              rearmed: nextAt !== null, nextAt, probes,
-             ...(monitor ? { monitor } : {}) };
+             ...(monitor ? { monitor } : {}),
+             ...(connderive ? { connderive } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -3123,6 +3210,10 @@ export class Store extends DurableObject {
         `INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,established,raised_from,resolved_by,at)
          VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
         captureSha, bundleId, ref, entityId, grade, method, b, est, null, by, at);
+      /* REC-5 / D-122: a NEW resolution can add a document to an entity, forming
+         new pairs — stamp the entity so the scheduled sweep re-derives its
+         connections. In the caller's transaction, so it commits with the row. */
+      this.#stampConnectionDirty(entityId);
       return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade, method, basis: b,
                established: !!est, needs_confirmation: grade === "C", raised: false, resolved_by: by, at };
     }
@@ -3131,6 +3222,10 @@ export class Store extends DurableObject {
         `UPDATE resolutions SET grade=?, method=?, basis=?, established=?, raised_from=?, resolved_by=?, at=?
           WHERE capture_sha=? AND ref=? AND entity_id=?`,
         grade, method, b, est, existing.grade, by, at, captureSha, ref, entityId);
+      /* REC-5 / D-122: a RAISED grade can strengthen a connection end (the weaker
+         end governs, FW-8), so the derived grade may change — stamp for re-derive.
+         A kept (equal/weaker) resolution below changes nothing and dirties nothing. */
+      this.#stampConnectionDirty(entityId);
       return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade, method, basis: b,
                established: !!est, needs_confirmation: grade === "C", raised: true, raised_from: existing.grade,
                resolved_by: by, at };
@@ -3194,7 +3289,7 @@ export class Store extends DurableObject {
      resolutions. With a `ref`, resolve just that reference; without one, resolve every
      reference the document's reading carries. A reference matching no entity is returned
      UNRESOLVED and honestly so -- there is no row, no force-match. */
-  resolveReferences({ captureSha, ref = null, resolvedBy = null } = {}) {
+  async resolveReferences({ captureSha, ref = null, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "a resolution is over a captured document, named by its capture sha256" };
     let refs;
@@ -3220,6 +3315,11 @@ export class Store extends DurableObject {
         for (const m of matches) resolved.push(m);
       }
     });
+    /* REC-5 / D-122: #recognise stamped every entity whose resolution was inserted
+       or raised (never a kept one). If anything was dirtied, ARM the scheduled
+       connection-derive sweep so the entity axis self-populates without a manual
+       op=connect. Producer-side only: it SCHEDULES, it never derives here. */
+    if (resolved.some((m) => !m.kept)) await this.#armConnectionDerive();
     return { ok: true, capture_sha: captureSha, references: refs.length,
              resolved_count: resolved.length, unresolved_count: unresolved.length, resolved, unresolved };
   }
@@ -3231,7 +3331,7 @@ export class Store extends DurableObject {
      reading and the entity is registered, so testimony cannot invent either end. It
      shares the improvable-grade rule: a D never downgrades a stronger machine
      resolution already present for the same triple. */
-  testifyResolution({ captureSha, ref, entityId, basis, resolvedBy = null } = {}) {
+  async testifyResolution({ captureSha, ref, entityId, basis, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "testimony is about a captured document, named by its capture sha256" };
     if (typeof ref !== "string" || !ref)
@@ -3249,6 +3349,10 @@ export class Store extends DurableObject {
     const method = `testimony -- asserted by ${resolvedBy || "a member"} with no captured basis (framework 8.1 grade D)`;
     const m = this.ctx.storage.transactionSync(() => this.#upsertResolution({
       captureSha, bundleId: rr.bundle_id, ref, entityId, grade: "D", method, basis: b, resolvedBy }));
+    /* REC-5 / D-122: a grade-D testimony that INSERTED or RAISED a resolution
+       dirtied the entity (a kept D below a stronger machine grade did not) — arm
+       the sweep so the connection is re-derived. */
+    if (!m.kept) await this.#armConnectionDerive();
     return { ok: true, grade_declared: "D", ...m };
   }
 
@@ -3894,6 +3998,10 @@ export class Store extends DurableObject {
       /* FW-10: the exception documents that discharge a lawful skip, reported so a purge can
          PROVE it cleared them (D-113). */
       progressionExceptions: n("progression_exceptions"),
+      /* REC-5 / D-122: the connection-derive dirty-set's depth, reported so a whole-store
+         purge can PROVE it cleared the pending work-queue (D-113) and so an operator can
+         see how many entities are awaiting a sweep. */
+      connectionDirty: n("connection_dirty"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -4032,6 +4140,14 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM connections`);
         this.sql.exec(`DELETE FROM progression_stages`);
         this.sql.exec(`DELETE FROM progression_defs`);
+        /* REC-5 / D-122. The connection-derive dirty-set is a transient work-queue
+           DERIVED from the corpus (an entity is dirty only because a document
+           resolved to it). A whole-store purge means the corpus is gone, so the
+           pending queue must go with it or a scratch reset reports scope ALL while
+           leaving rows the next sweep would act on (the D-113 silent-leftover). It
+           has no bundle_id and is safe to re-derive, so a per-bundle purge leaves
+           it. hygiene.test.mjs asserts this list against schema.mjs. */
+        this.sql.exec(`DELETE FROM connection_dirty`);
       }
     });
     const after = this.stats();
@@ -4054,7 +4170,9 @@ export class Store extends DurableObject {
                  /* FW-9: the threaded progression instances a purge took (D-113). */
                  progressionInstances: d("progressionInstances"),
                  /* FW-10: the exception documents a purge took (D-113). */
-                 progressionExceptions: d("progressionExceptions") },
+                 progressionExceptions: d("progressionExceptions"),
+                 /* REC-5 / D-122: the pending connection-derive dirt a whole-store purge took (D-113). */
+                 connectionDirty: d("connectionDirty") },
     };
   }
 

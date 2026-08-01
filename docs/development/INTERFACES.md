@@ -529,7 +529,7 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.6.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.7.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
   `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —
@@ -553,8 +553,15 @@ correctness properties, not preferences. Changing either is an interface change.
   `progression_exceptions` (CONSTRUCTS Step 5 slice C — an EXCEPTION DOCUMENT that discharges a
   lawful skip, framework §8.2), added BEFORE `host_governor` and to `op=purge`'s `TABLES` (so it
   clears in BOTH arms like `progression_instances`, since an exception document carries
-  `bundle_id`). No existing table's columns changed, so nothing built against I5 breaks; the
-  shapes are in the ownership list and note below.)
+  `bundle_id`); 1.7.0 2026-07-31, REC-5 — ADDITIVE: one new DERIVED table `connection_dirty`
+  (D-122 — the connection-derive WATERMARK: a bounded work-queue of entities whose
+  resolutions changed since their connections were last derived, so the scheduled
+  connection-derive sweep on REC-1's DO alarm re-derives only what moved; stamped at
+  op=resolve/op=resolvetestify on insert-or-raise, keyed by `entity_id`), added BEFORE
+  `host_governor` and cleared by `op=purge`'s whole-store arm only (it has no `bundle_id`
+  and is a transient queue, so a per-bundle purge leaves it — at worst one harmless
+  idempotent re-derivation next tick). No existing table's columns changed, so nothing built
+  against I5 breaks; the shapes are in the ownership list and note below.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 
@@ -715,6 +722,28 @@ whether it fires by default stays Bob's, DEC-9 left OPEN). DERIVED from the corp
 `entity_id`; ungated like the other reads) — the discharges that APPLY also surface on
 `op=instance` as the "discharged" states. JUNCTION checks as findings and the SCHEDULED
 walking-task (it would ride the REC-1 DO-alarm scheduler) remain DEFERRED past FW-10.
+
+`connection_dirty` (REC-5, D-122) is `RECORD`'s: the CONNECTION-DERIVE WATERMARK — the
+first consumer to actually RIDE the REC-1 DO-alarm scheduler for framework work, closing
+the gap where `op=connect` was a manual mutation nothing called and the entity axis stayed
+empty (UI-4). It is a bounded work-queue of the entities whose `resolutions` CHANGED since
+their connections were last derived: stamped at `op=resolve` / `op=resolvetestify` ONLY when
+a resolution is INSERTED or grade-RAISED (a kept idempotent re-resolve dirties nothing),
+keyed by `entity_id` so many resolutions touching one entity collapse to ONE pending row —
+the sweep is bounded by the count of DISTINCT changed entities, never by resolve volume. A
+`connection-derive` consumer on the DO alarm derives connections (the EXISTING FW-8
+`deriveConnections`, `asserted_by` `system` — a scheduled derivation is a machine act, not a
+member's) for a bounded batch of dirty entities per tick and clears each once derived; while
+more remain the consumer's wake stays non-null and re-arms, and when the set empties the wake
+goes null and the alarm SELF-TERMINATES. Idempotent by the FW-8 connection key (re-deriving
+UPSERTS, never duplicates), so a lost dirty row costs one skipped re-derivation and a spurious
+one costs one no-op — which is why a transient set is safe here. DERIVED from the corpus (an
+entity is dirty only because a document resolved to it) but with NO `bundle_id`, so it is
+cleared by `op=purge`'s WHOLE-STORE arm only (a per-bundle purge leaves it — at worst one
+harmless re-derivation next tick). No new op: it reuses `op=resolve`/`op=connect`/
+`op=connections`, and the alarm is driven by the reserved `onAlarm`. DEFERRED past REC-5 and
+flagged: auto-assembling progression INSTANCES + surfacing missing-predecessor findings on the
+same tick (the FW-9/FW-10 walking-task, now that connections auto-derive).
 
 ### What changing it costs
 
