@@ -2856,6 +2856,212 @@ export class Store extends DurableObject {
                ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type })) };
   }
 
+  /* ---- CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis ----
+   *
+   * The framework's third registry, and the bias doctrine's safeguard-4 subject
+   * registry, are ONE construct (D-83), so it is built ONCE here. An entity is a
+   * subject the record is about (a source, institution, office, movement -- and,
+   * because the same axis serves the framework, a person, body, ordinance, parcel,
+   * contract or fund); it has first-class ALIASES, and DECLARED RELATIONS to other
+   * entities (proxy_for, member_of, overlaps).
+   *
+   * A declared relation is CONSTITUTIVE, not evidentiary: the group fixing what its
+   * own statements mean rather than claiming something checkable. It carries a
+   * justification and a citation "like a pattern statement" (safeguard 4), and it
+   * carries NO section-8.1 connection grade -- there is no grade field to carry one.
+   * Grading a constitutive relation Grade D is the category error D-83 names, and the
+   * enforcement here is structural rather than a convention.
+   *
+   * RESOLVING a reading_refs reference (FW-5) to an entry here, and declaring the
+   * resolution METHOD as the connection grade (framework 8.1), is the NEXT slice and
+   * is deliberately not built here. This slice is the registry itself. */
+
+  /* The union kind vocabulary, reconciled across the two doctrines this one axis
+     serves (D-83): safeguard 4's four SUBJECT kinds, plus the framework's entity
+     kinds (framework:248). Closed and validated at the write path, so introducing a
+     kind outside it is a loud refusal rather than a silent new vocabulary -- the
+     spirit of safeguard 4, where introducing a new SUBJECT is a reviewed act. */
+  static #ENTITY_KINDS = new Set([
+    /* safeguard 4's SUBJECT kinds */ "source", "institution", "office", "movement",
+    /* the framework's entity kinds */ "person", "body", "ordinance", "parcel", "contract", "fund",
+  ]);
+  /* The three DECLARED-relation predicates safeguard 4 names, and only these. */
+  static #RELATION_KINDS = new Set(["proxy_for", "member_of", "overlaps"]);
+
+  /* The case-folded, whitespace-collapsed form the alias reverse index keys on, so
+     "City Clerk", "city clerk" and "  City   Clerk " are one lookup. */
+  static #normAlias(s) {
+    return String(s ?? "").trim().replace(/\s+/g, " ").toLowerCase().slice(0, 200);
+  }
+  static #cleanLabel(s) {
+    return String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
+  }
+
+  /* Create a registry entry, with its canonical label seeded as an alias so the
+     entry is retrievable BY that name as well as by any explicit alias, and any
+     inline aliases attached in the SAME transaction so an entity never exists
+     nameless-but-for-its-id even for an instant. The kind is validated against the
+     closed union vocabulary; an unknown kind is refused by name rather than stored,
+     because a registry that silently accepts any kind is not a registry. */
+  createEntity({ kind, label, note = null, aliases = [], declaredBy = null } = {}) {
+    const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
+    if (!k) return { ok: false, reason: "NO_KIND",
+      detail: "an entity needs a kind: one of " + [...Store.#ENTITY_KINDS].join(", ") };
+    if (!Store.#ENTITY_KINDS.has(k))
+      return { ok: false, reason: "UNKNOWN_KIND", kind: k,
+        detail: "the subject registry admits a closed kind vocabulary (D-83 reconciles safeguard 4 with the "
+              + "framework's entity axis): one of " + [...Store.#ENTITY_KINDS].join(", ")
+              + ". Introducing a new kind is a doctrine change, not a write." };
+    const lab = Store.#cleanLabel(label);
+    if (!lab) return { ok: false, reason: "NO_LABEL", detail: "an entity needs a canonical label, such as 'City Clerk'" };
+    const extra = Array.isArray(aliases) ? aliases : [];
+    const at = new Date().toISOString();
+    const { id } = this.allocId("ENT", at.slice(0, 4));
+    return this.ctx.storage.transactionSync(() => {
+      this.sql.exec(
+        `INSERT INTO entities (entity_id,kind,label,note,declared_by,at) VALUES (?,?,?,?,?,?)`,
+        id, k, lab, note == null ? null : String(note).slice(0, 2000),
+        declaredBy == null ? null : String(declaredBy), at);
+      /* The canonical label is itself an alias (canonical=1), so a lookup by the
+         entity's own name resolves without a special case. */
+      const seen = new Set();
+      const put = (name, canonical) => {
+        const norm = Store.#normAlias(name);
+        if (!norm || seen.has(norm)) return;
+        seen.add(norm);
+        this.sql.exec(
+          `INSERT OR IGNORE INTO entity_aliases (entity_id,alias,alias_norm,canonical,declared_by,at)
+           VALUES (?,?,?,?,?,?)`,
+          id, Store.#cleanLabel(name), norm, canonical ? 1 : 0,
+          declaredBy == null ? null : String(declaredBy), at);
+      };
+      put(lab, true);
+      for (const a of extra) put(a, false);
+      const count = this.#one(`SELECT count(*) c FROM entity_aliases WHERE entity_id=?`, id).c;
+      return { ok: true, entity_id: id, kind: k, label: lab, alias_count: count, at };
+    });
+  }
+
+  /* Attach an alias to an existing entity. First-class: an alias is added after the
+     fact, by a member, exactly as it can be given at creation. */
+  addEntityAlias({ entityId, alias, declaredBy = null } = {}) {
+    if (typeof entityId !== "string" || !entityId)
+      return { ok: false, reason: "NO_ENTITY", detail: "an alias is attached to an entity by its id" };
+    const norm = Store.#normAlias(alias);
+    if (!norm) return { ok: false, reason: "NO_ALIAS", detail: "an alias needs a name" };
+    const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, entityId);
+    if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
+    const dup = this.#one(`SELECT alias FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
+    if (dup) return { ok: false, reason: "ALREADY_ALIASED", entity_id: entityId, alias: dup.alias };
+    const at = new Date().toISOString();
+    this.sql.exec(
+      `INSERT INTO entity_aliases (entity_id,alias,alias_norm,canonical,declared_by,at) VALUES (?,?,?,?,?,?)`,
+      entityId, Store.#cleanLabel(alias), norm, 0, declaredBy == null ? null : String(declaredBy), at);
+    return { ok: true, entity_id: entityId, alias: Store.#cleanLabel(alias), at };
+  }
+
+  /* Declare a CONSTITUTIVE relation between two entries. proxy_for / member_of /
+     overlaps only, both ends must be registered entities, and BOTH a justification
+     and a citation are required -- the statement anatomy of a pattern statement,
+     which is what safeguard 4 asks a relation to carry. There is no grade argument
+     and no grade stored: a declared relation is not on the connection-grade axis at
+     all (D-83), and that is enforced by the shape rather than by a caller's
+     restraint. */
+  declareRelation({ fromEntity, toEntity, relation, justification, citation, declaredBy = null } = {}) {
+    const rel = typeof relation === "string" ? relation.trim().toLowerCase() : "";
+    if (!Store.#RELATION_KINDS.has(rel))
+      return { ok: false, reason: "UNKNOWN_RELATION", relation: rel,
+        detail: "a declared relation is one of " + [...Store.#RELATION_KINDS].join(", ")
+              + " (safeguard 4). A connection grade is NOT a relation kind: a declared relation is "
+              + "constitutive, not evidentiary, and carries no grade (D-83)." };
+    if (typeof fromEntity !== "string" || !fromEntity || typeof toEntity !== "string" || !toEntity)
+      return { ok: false, reason: "NO_ENDS", detail: "a relation names two entities by id: fromEntity and toEntity" };
+    if (fromEntity === toEntity)
+      return { ok: false, reason: "SELF_RELATION", detail: "a relation is between two distinct entities" };
+    const just = typeof justification === "string" ? justification.trim() : "";
+    const cite = typeof citation === "string" ? citation.trim() : "";
+    /* Justified AND citable, like a pattern statement (safeguard 4). Refused fail-
+       closed rather than stored empty, so an un-justified or un-cited relation
+       cannot enter the registry. */
+    if (!just) return { ok: false, reason: "NO_JUSTIFICATION",
+      detail: "a declared relation carries a justification, like a pattern statement (safeguard 4)" };
+    if (!cite) return { ok: false, reason: "NO_CITATION",
+      detail: "a declared relation carries a citation, like a pattern statement (safeguard 4)" };
+    const from = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, fromEntity);
+    if (!from) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: fromEntity, end: "from" };
+    const to = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, toEntity);
+    if (!to) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: toEntity, end: "to" };
+    const at = new Date().toISOString();
+    const { id } = this.allocId("REL", at.slice(0, 4));
+    this.sql.exec(
+      `INSERT INTO entity_relations (relation_id,from_entity,to_entity,relation,justification,citation,declared_by,at)
+       VALUES (?,?,?,?,?,?,?,?)`,
+      id, fromEntity, toEntity, rel, just.slice(0, 4000), cite.slice(0, 2000),
+      declaredBy == null ? null : String(declaredBy), at);
+    return { ok: true, relation_id: id, relation: rel, from_entity: fromEntity, to_entity: toEntity,
+             justification: just.slice(0, 4000), citation: cite.slice(0, 2000), declared_by: declaredBy, at };
+  }
+
+  /* Read an entry BY KEY (its allocated entity_id), with its aliases and every
+     declared relation it is an end of. A relation is returned with its justification
+     and citation and WITHOUT a grade, because a declared relation has none (D-83) --
+     the read cannot invent a field the table does not carry. */
+  readEntity({ entityId } = {}) {
+    if (typeof entityId !== "string" || !entityId)
+      return { ok: false, reason: "NO_ENTITY", detail: "an entity is read by its id (op=entity&id=ENT-...)" };
+    const e = this.#one(
+      `SELECT entity_id, kind, label, note, declared_by, at FROM entities WHERE entity_id=?`, entityId);
+    if (!e) return { ok: true, found: false, entity_id: entityId, entity: null };
+    return { ok: true, found: true, entity: this.#entityView(e) };
+  }
+
+  /* Read entries BY ALIAS: every entity carrying the given name (canonical or not).
+     Usually one; more than one is a genuinely ambiguous name, returned in full
+     rather than collapsed, since the registry does not pretend an ambiguity away. */
+  entitiesByAlias({ alias } = {}) {
+    const norm = Store.#normAlias(alias);
+    if (!norm) return { ok: true, alias: typeof alias === "string" ? alias : null, count: 0, entities: [] };
+    const hits = this.#rows(
+      `SELECT e.entity_id, e.kind, e.label, e.note, e.declared_by, e.at
+         FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
+        WHERE a.alias_norm=? ORDER BY e.entity_id`, norm);
+    return { ok: true, alias, alias_norm: norm, count: hits.length,
+             entities: hits.map((e) => this.#entityView(e)) };
+  }
+
+  /* One declared relation by its id. The load-bearing read for the "carries no
+     grade" property: the returned object has a justification and a citation and no
+     grade key, because the row has no grade column (D-83). */
+  readRelation({ relationId } = {}) {
+    if (typeof relationId !== "string" || !relationId)
+      return { ok: false, reason: "NO_RELATION", detail: "a relation is read by its id (op=relation&id=REL-...)" };
+    const r = this.#one(
+      `SELECT relation_id, from_entity, to_entity, relation, justification, citation, declared_by, at
+         FROM entity_relations WHERE relation_id=?`, relationId);
+    if (!r) return { ok: true, found: false, relation_id: relationId, relation: null };
+    return { ok: true, found: true, relation: {
+      relation_id: r.relation_id, relation: r.relation, from_entity: r.from_entity, to_entity: r.to_entity,
+      justification: r.justification, citation: r.citation, declared_by: r.declared_by, at: r.at } };
+  }
+
+  /* The entity view shared by readEntity and entitiesByAlias: the entry, its
+     aliases, and the relations it is either end of. Relations carry justification +
+     citation and NO grade -- there is no grade to read. */
+  #entityView(e) {
+    const aliases = this.#rows(
+      `SELECT alias, canonical, declared_by, at FROM entity_aliases WHERE entity_id=? ORDER BY canonical DESC, alias`,
+      e.entity_id).map((a) => ({ alias: a.alias, canonical: !!a.canonical, declared_by: a.declared_by, at: a.at }));
+    const rels = this.#rows(
+      `SELECT relation_id, from_entity, to_entity, relation, justification, citation, declared_by, at
+         FROM entity_relations WHERE from_entity=? OR to_entity=? ORDER BY at, relation_id`,
+      e.entity_id, e.entity_id).map((r) => ({
+        relation_id: r.relation_id, relation: r.relation, from_entity: r.from_entity, to_entity: r.to_entity,
+        direction: r.from_entity === e.entity_id ? "out" : "in",
+        justification: r.justification, citation: r.citation, declared_by: r.declared_by, at: r.at }));
+    return { entity_id: e.entity_id, kind: e.kind, label: e.label, note: e.note,
+             declared_by: e.declared_by, at: e.at, aliases, relations: rels };
+  }
+
   /* ---- coordination: what LockService and the nextSeq race did ---- */
 
   allocId(prefix, year) {
@@ -2911,6 +3117,9 @@ export class Store extends DurableObject {
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
       tasks: n("tasks"), taskQueue: n("task_queue"), sourceReachability: n("source_reachability"),
+      /* FW-6: the subject registry's depth, reported so a whole-store purge can
+         PROVE it cleared the registry rather than assert it (D-113). */
+      entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -2999,6 +3208,18 @@ export class Store extends DurableObject {
            behind is the exact D-113 silent-leftover, so they go here too. */
         this.sql.exec(`DELETE FROM reuse_verdicts`);
         this.sql.exec(`DELETE FROM capture_sessions`);
+        /* FW-6 / D-83: the SUBJECT REGISTRY (entities, their aliases, their declared
+           relations). Unlike the tables above it is FIRST-CLASS member-declared
+           state, not a projection of the corpus -- but op=purge is the scratch-reset
+           tool, and a whole-store purge that reported scope ALL while leaving the
+           registry populated is exactly the D-113 silent-leftover: the caller
+           believes the store is empty. So it is cleared here, in the whole-store arm
+           only, and left untouched by a per-bundle purge (it has no bundle_id).
+           Relations first, then aliases, then entities, so nothing outlives an end
+           it references. hygiene.test.mjs asserts this list against schema.mjs. */
+        this.sql.exec(`DELETE FROM entity_relations`);
+        this.sql.exec(`DELETE FROM entity_aliases`);
+        this.sql.exec(`DELETE FROM entities`);
       }
     });
     const after = this.stats();
@@ -3008,7 +3229,10 @@ export class Store extends DurableObject {
       removed: { bundles: d("bundles"), files: d("files"), history: d("history"),
                  refs: d("refs"), register: d("register"),
                  tasks: d("tasks"), taskQueue: d("taskQueue"),
-                 sourceReachability: d("sourceReachability") },
+                 sourceReachability: d("sourceReachability"),
+                 /* FW-6: the registry rows a whole-store purge took (D-113). */
+                 entities: d("entities"), entityAliases: d("entityAliases"),
+                 entityRelations: d("entityRelations") },
     };
   }
 
@@ -5659,6 +5883,16 @@ export class Store extends DurableObject {
            sha, and the reverse index by raw entity reference. */
         reading: () => this.readingFor(url.searchParams.get("sha256")),
         readingref: () => this.documentsByReference(url.searchParams.get("ref")),
+        /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY. Create an entity
+           (with inline aliases), attach an alias, declare a constitutive relation;
+           read an entity BY KEY, entities BY ALIAS, and one relation by id. A
+           declared relation carries a justification + citation and NO grade (D-83). */
+        entitycreate: () => this.createEntity(body || {}),
+        entityalias: () => this.addEntityAlias(body || {}),
+        relationdeclare: () => this.declareRelation(body || {}),
+        entity: () => this.readEntity({ entityId: url.searchParams.get("id") }),
+        entitybyalias: () => this.entitiesByAlias({ alias: url.searchParams.get("alias") }),
+        relation: () => this.readRelation({ relationId: url.searchParams.get("id") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),

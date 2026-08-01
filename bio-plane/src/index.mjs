@@ -427,6 +427,22 @@ const OPS = {
      a document and which other documents mention the same reference. */
   reading:      { classes: ["admin", "member", "probe"],           mutating: false },
   readingref:   { classes: ["admin", "member", "probe"],           mutating: false },
+  /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis (D-83 —
+     the framework's entity axis and the bias doctrine's safeguard-4 subject registry
+     are ONE construct). Members BUILD the registry: entitycreate registers a subject
+     (with inline aliases), entityalias attaches an alias, relationdeclare declares a
+     CONSTITUTIVE relation (proxy_for/member_of/overlaps) carrying a justification +
+     citation and NO connection grade (a declared relation is not on the §8.1 grade
+     axis; grading it Grade D is the category error D-83 names). The three writes
+     stamp declared_by from the session, like expertisedeclare. The reads (entity by
+     key, entitybyalias, relation by id) are read-only. Members author and read the
+     registry; probe is admitted so the surface is exercisable. */
+  entitycreate: { classes: ["admin", "member", "probe"],           mutating: true  },
+  entityalias:  { classes: ["admin", "member", "probe"],           mutating: true  },
+  relationdeclare:{ classes: ["admin", "member", "probe"],         mutating: true  },
+  entity:       { classes: ["admin", "member", "probe"],           mutating: false },
+  entitybyalias:{ classes: ["admin", "member", "probe"],           mutating: false },
+  relation:     { classes: ["admin", "member", "probe"],           mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -505,15 +521,25 @@ const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projec
    what is wrong. Putting confirm in the admin set alone would answer "requires a
    machine credential", which is true of neither the caller nor the rule. */
 const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
+/* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY actions. Members BUILD the
+   registry — register a subject, alias it, declare a constitutive relation — and
+   READ it by key, by alias, and by relation id. Named as one set, in both the member
+   and admin lists, so the two cannot drift apart (the class of defect this repository
+   keeps finding). The three WRITES are stamped with the declaring member below, like
+   the expertise actions: a declared relation is a member's constitutive statement,
+   and who declared it is part of the record. The reads take no viewer stamp: they key
+   on an entity id, an alias and a relation id, not on the corpus view. */
+const REGISTRY_ACTIONS = ["entitycreate", "entityalias", "relationdeclare",
+                          "entity", "entitybyalias", "relation"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
-                   ...RETRIEVAL_READS, ...READING_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
-                   ...EXPERTISE_ACTIONS]),
+                   ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...READING_READS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...PROJECT_ACTIONS,
-                   ...EXPERTISE_ACTIONS, "memberadd", "memberset", "signeradd", "signerset",
+                   ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, "memberadd", "memberset", "signeradd", "signerset",
                    "governorstate", "governorconfig"]),
 };
 
@@ -559,6 +585,18 @@ const NEEDS = {
      not by a capability, because capabilities gate sessions and the rule here
      is about who a session IS. */
   release:          "contribute",
+  /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
+     statements MEAN — registering a subject, aliasing it, and declaring a
+     constitutive relation between subjects (mechanical bias-statement equivalence
+     extends exactly as far as the registry declares it, safeguard 4). That is a
+     corpus-shaping act, the same surface as the state and edge actions, so it takes
+     `contribute`: a view-only member does not reshape subject equivalences. The
+     declaring member is stamped server-side, so who fixed a relation is in the
+     record; the reads (entity/entitybyalias/relation) are ungated, like the other
+     working-corpus reads. */
+  entitycreate:     "contribute",
+  entityalias:      "contribute",
+  relationdeclare:  "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */
@@ -2734,6 +2772,19 @@ export default {
         const b = JSON.parse(passBody);
         if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `class:${cls}`;
         else b.by = viaSession ? sessMember : `class:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* FW-6: the SUBJECT REGISTRY writes carry WHO declared the entry or the
+       relation, stamped from the session and overwritten if the caller supplied it,
+       on the same reasoning as author, by and memberId above: a declared relation is
+       a member's constitutive statement, so an entry a caller could attribute to
+       someone else is not that member's declaration. A machine credential says what
+       it is (class:<cls>) rather than borrowing a person's name. */
+    if ((op === "entitycreate" || op === "entityalias" || op === "relationdeclare") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }

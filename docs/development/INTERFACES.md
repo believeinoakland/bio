@@ -529,12 +529,15 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.1.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.2.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
-  `op=purge`'s whole-store arm per the three rules below. No existing table's
-  columns changed, so nothing built against I5 breaks; the shape is in the
-  ownership list and note below.)
+  `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —
+  ADDITIVE: three new tables `entities`, `entity_aliases`, `entity_relations` (the
+  SUBJECT REGISTRY, CONSTRUCTS Step 4 slice A / D-83), added BEFORE `host_governor`
+  and to `op=purge`'s whole-store arm. No existing table's columns changed, so
+  nothing built against I5 breaks; the shapes are in the ownership list and note
+  below.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 
@@ -568,6 +571,27 @@ entity by the RAW reference it carries (`ref` = `kind:key`, e.g. `meeting:2101`,
 NOT a canonical entity id — that is Step 4 / D-83). Read through `op=reading`
 (by `capture_sha`) and `op=readingref` (the reverse index, by `ref`). Both are
 DERIVED from the corpus and cleared by a whole-store purge.
+
+`entities`, `entity_aliases`, `entity_relations` (FW-6, CONSTRUCTS Step 4 slice A /
+D-83) are `FRAMEWORK`'s: the SUBJECT REGISTRY, which IS the framework's entity axis
+and the bias doctrine's safeguard-4 subject registry — one construct built once. An
+`entities` row is a subject (kind ∈ the closed union {source, institution, office,
+movement, person, body, ordinance, parcel, contract, fund}, reconciled across the two
+doctrines — DEC-6 leaves open whether a bias STATEMENT may take the non-safeguard-4
+kinds as a subject) keyed by an allocated `entity_id` (the retrieval KEY). `entity_aliases`
+holds first-class aliases per entity (the canonical label is seeded as one), keyed for
+reverse lookup by a case-folded `alias_norm`. `entity_relations` holds DECLARED relations
+(`proxy_for`/`member_of`/`overlaps`), each with a NOT-NULL `justification` and `citation`
+"like a pattern statement" — and **deliberately NO grade column**: a declared relation is
+CONSTITUTIVE, not evidentiary, so it sits outside the §8.1 A–D connection grade, and its
+absence is the structural enforcement (grading it Grade D is the category error D-83
+names). Unlike `readings`, these are FIRST-CLASS member-declared state, not a corpus
+projection — but a whole-store purge (the scratch-reset tool) clears them like selections;
+a per-bundle purge leaves them (no `bundle_id`). Write through `op=entitycreate` (with
+inline aliases), `op=entityalias`, `op=relationdeclare` (all stamp `declared_by` from the
+session, all need `contribute`); read through `op=entity` (by key), `op=entitybyalias`,
+`op=relation` (by id). RESOLVING a `reading_refs` reference to an `entities` row, declaring
+the §8.1 resolution-method-as-grade, is the NEXT slice — NOT built here.
 
 ### What changing it costs
 

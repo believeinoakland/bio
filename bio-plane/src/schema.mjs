@@ -635,6 +635,89 @@ CREATE TABLE IF NOT EXISTS reading_refs (
 );
 CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
 CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
+-- CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY, which IS the framework's
+-- entity axis. Built ONCE (D-83): the bias doctrine's subject registry
+-- (BIO_Declared_Bias_v0_1.md safeguard 4) and the framework's entity axis
+-- (BIO_Content_Framework_v0_10.md section 8) are the SAME construct, and the live
+-- risk D-83 names is building them twice. An ENTITY is a thing the case is about
+-- which OUTLIVES any document that mentions it (framework:247) and, in the doctrine,
+-- a SUBJECT a bias statement addresses (safeguard 4). It is RESOLVED across
+-- documents, not extracted from one (framework:251); that resolution -- matching a
+-- reading_refs reference (FW-5) to an entry here -- is the NEXT slice, not this one.
+--
+-- kind: safeguard 4 names four SUBJECT kinds (source, institution, office,
+-- movement); the framework's entity axis names more (person, body, ordinance,
+-- parcel, contract, fund). The vocabulary here is their UNION and is validated at
+-- the write path (store.createEntity KNOWN_KINDS), because a registry admitting only
+-- the four could not carry the ordinance or contract the framework must graph, and
+-- D-83 says the construct is built ONCE. Whether a bias STATEMENT may take a person
+-- or an ordinance as its subject -- or only the four named kinds -- is the reviewable
+-- question DEC-6 leaves open for Bob; the registry admits the kind either way, so
+-- nothing is blocked on the answer.
+--
+-- entity_id is the allocated canonical key an entry is retrieved BY (op=entity);
+-- label is its canonical name; declared_by and at record who fixed the entry and
+-- when, because an entity here is a member-declared act, not a corpus derivation.
+-- Unlike readings/reading_refs this is FIRST-CLASS, member-declared state, not a
+-- projection of the corpus -- but op=purge is the scratch-reset tool, so a
+-- whole-store purge clears it like selections and every other instance-scoped table
+-- (D-113); a per-bundle purge deliberately leaves it, as it has no bundle_id.
+CREATE TABLE IF NOT EXISTS entities (
+  entity_id   TEXT PRIMARY KEY,
+  kind        TEXT NOT NULL,
+  label       TEXT NOT NULL,
+  note        TEXT,
+  declared_by TEXT,
+  at          TEXT
+);
+CREATE INDEX IF NOT EXISTS entities_kind ON entities(kind);
+-- ALIASES are FIRST-CLASS and per entity (safeguard 4). An entry is retrievable by
+-- any of its names, not only its canonical one, so an entity's canonical label is
+-- ALSO seeded here as an alias (canonical=1) and op=entitybyalias finds it. alias is
+-- the name as declared; alias_norm is the case-folded, whitespace-collapsed form the
+-- reverse lookup keys on. The PRIMARY KEY makes one entity carry a normalised name
+-- once; the same alias_norm may recur across DIFFERENT entities (a genuinely
+-- ambiguous name), and op=entitybyalias returns every match rather than pretending
+-- the ambiguity away. Cleared by a whole-store purge with its entity (D-113).
+CREATE TABLE IF NOT EXISTS entity_aliases (
+  entity_id   TEXT NOT NULL,
+  alias       TEXT NOT NULL,
+  alias_norm  TEXT NOT NULL,
+  canonical   INTEGER NOT NULL DEFAULT 0,
+  declared_by TEXT,
+  at          TEXT,
+  PRIMARY KEY (entity_id, alias_norm)
+);
+CREATE INDEX IF NOT EXISTS entity_aliases_norm ON entity_aliases(alias_norm);
+CREATE INDEX IF NOT EXISTS entity_aliases_entity ON entity_aliases(entity_id);
+-- DECLARED RELATIONS between entries: proxy_for, member_of, overlaps (safeguard 4),
+-- each carrying a justification and a citation "like a pattern statement" -- the
+-- statement anatomy of BIO_Declared_Bias_v0_1.md (a required justification, a
+-- citation), both NOT NULL here so a relation cannot be declared un-justified or
+-- un-cited, exactly as safeguard 4 requires ("each relation justified and citable").
+--
+-- THERE IS DELIBERATELY NO GRADE COLUMN, and its ABSENCE is the point (D-83). A
+-- declared relation is CONSTITUTIVE, not evidentiary: the group is FIXING what its
+-- own statements mean, not claiming something checkable about the world. So it sits
+-- OUTSIDE the framework's section 8.1 A-to-D connection grade, which states how a
+-- connection's provenance was ESTABLISHED. Grading a constitutive relation Grade D
+-- ("asserted with no captured basis") is the category error D-83 names explicitly:
+-- it is not weak evidence, it is not evidence at all. The enforcement is structural
+-- -- there is simply no field to carry a grade -- rather than a convention a later
+-- writer could forget; entityregistry.test.mjs asserts a read relation exposes none.
+-- Constitutive, member-declared, first-class; cleared by a whole-store purge (D-113).
+CREATE TABLE IF NOT EXISTS entity_relations (
+  relation_id   TEXT PRIMARY KEY,
+  from_entity   TEXT NOT NULL,
+  to_entity     TEXT NOT NULL,
+  relation      TEXT NOT NULL,
+  justification TEXT NOT NULL,
+  citation      TEXT NOT NULL,
+  declared_by   TEXT,
+  at            TEXT
+);
+CREATE INDEX IF NOT EXISTS entity_relations_from ON entity_relations(from_entity);
+CREATE INDEX IF NOT EXISTS entity_relations_to ON entity_relations(to_entity);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
