@@ -249,7 +249,7 @@ value-per-hour measurement available. Consumer: Step 4's entity recognisers.
 stores confirmations. Consumer: the daemon. This is where the negative result finally
 lands somewhere.
 
-**Step 7 — UNSCHEDULED. Ageing.** Something notices when a temporal expectation comes due.
+**Step 7 — BUILT (REC-8). Ageing.** Something notices when a temporal expectation comes due.
 Consumer: the review queue, or a Focus, which Bob has not ruled on.
 
 **Step 8 — UNSCHEDULED. Presentation.** The document page and the case file show referential and
