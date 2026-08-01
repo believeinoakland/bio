@@ -155,6 +155,33 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .chip.elevated,.chip.active,.chip.modified,.chip.overdue,.chip.awaiting_response{color:var(--signal-dk);background:#fff;border-color:#d6a48c}
 .chip.deferred,.chip.dismissed,.chip.retired,.chip.closed,.chip.abandoned{color:#9aa09a;background:var(--tint-muted);border-color:var(--rule)}
 
+/* task inbox (UI-1) */
+.tsec{margin:0 0 26px}
+.tsec>h2{font-family:var(--font-fact);font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--muted);text-transform:uppercase;margin:0 0 10px;padding-bottom:6px;border-bottom:var(--hair)}
+.tcard{background:var(--sheet);border:var(--hair);padding:14px 16px;margin:0 0 12px;box-shadow:var(--e-2)}
+.tcard.tunassigned{border-left:3px solid #d6a48c}
+.tcard.tother{opacity:.72}
+.tk-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.tk-kind{font-family:var(--font-fact);font-size:15px;font-weight:600;color:var(--ink)}
+.tk-need{font-size:14px;color:var(--ink);margin:2px 0 8px;line-height:1.45}
+.tk-meta{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+.tk-age{color:var(--muted);font-size:12.5px}
+.tk-ref{color:var(--muted);font-size:12px}
+.tlink{background:none;border:none;padding:0;cursor:pointer;color:var(--verdigris-dk);font:inherit;font-size:13px}
+.tlink:hover{text-decoration:underline}
+.tk-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.tbtn{font-family:inherit;font-size:13px;padding:6px 12px;border-radius:var(--r-2);border:1px solid var(--rule);background:#fff;color:var(--ink);cursor:pointer}
+.tbtn:hover{border-color:var(--verdigris-dk);color:var(--verdigris-dk)}
+.tbtn.tres{background:var(--verdigris);color:var(--sheet);border-color:var(--verdigris-dk)}
+.tbtn.tres:hover{background:var(--verdigris-dk);color:var(--sheet)}
+.tk-refusal{font-size:13px;color:var(--signal-dk);background:var(--tint-note);border:1px solid #d6a48c;padding:7px 10px;border-radius:var(--r-2)}
+.tk-aged{font-size:12.5px;color:#9aa09a;background:var(--tint-muted);padding:5px 9px;border-radius:var(--r-2);margin-bottom:8px}
+.tk-hist{list-style:none;margin:8px 0 0;padding:8px 0 0;border-top:var(--hair);font-size:12px;color:var(--muted)}
+.tk-hist li{padding:1px 0}
+.tk-picker{margin-top:8px;padding:8px;border:var(--hair);background:var(--paper-2);border-radius:var(--r-2)}
+.tk-picker select{font:inherit;font-size:13px;padding:4px;margin-right:8px}
+.tk-err{font-size:13px;color:var(--signal-dk);margin-top:6px}
+
 /* cards */
 .card{background:var(--sheet);border:var(--hair);padding:16px 18px;margin:0 0 16px;box-shadow:var(--e-2)}
 .kv{display:flex;gap:12px;align-items:baseline;padding:7px 0;border-top:var(--hair)}
@@ -664,6 +691,7 @@ async function boot(){
 /* ---------- rail, shaped from whoami ---------- */
 const RAIL = [
   {id:"record",   icon:"i-record",   label:"Record"},
+  {id:"tasks",    icon:"i-review",   label:"Tasks"},
   {id:"search",   icon:"i-search",   label:"Search"},
   {id:"focuses",  icon:"i-focus",    label:"Focuses"},
   {id:"projects", icon:"i-projects", label:"Projects"},
@@ -702,7 +730,7 @@ function navRemember(){
 function navLabel(p){
   if(!p) return "";
   if(p.type==="bundle") return "the document";
-  const t = {record:"The record",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  const t = {record:"The record",tasks:"Tasks",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -751,14 +779,14 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={record:"The record",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={record:"The record",tasks:"Tasks",search:"Search",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","focuses","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
     return;
   }
   const R = {
-    record: renderRecord, search: renderSearchScreen, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
+    record: renderRecord, tasks: renderTasks, search: renderSearchScreen, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
     projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
@@ -3983,6 +4011,203 @@ async function renderMembers(){
       : `<div class="empty">No members listed, or this token cannot read the roster.</div>`;
   }catch(e){ $("#mm").innerHTML = errPane(e); }
 }
+/* ============================================================
+   UI-1: THE TASK INBOX — the member surface for the attention layer.
+
+   The plane half already ships (D-98, 0.49.0): op=tasks lists, op=taskforward
+   and op=taskresolve act, routing member_expertise -> project manager -> group
+   admin, deduped on (refers_to, kind). This is the QUEUE construct of
+   BIO_Interaction_Constructs v0.2 ("things that want me", one list). Each item
+   says THIS NEEDS YOU and POINTS AT the act it resolves in; it does not
+   reimplement the act (the ACT construct is later items). Following the pointer
+   IS the "do"; the two verbs here are forward and resolve.
+
+   The accountability rules ARE the surface, not decoration:
+
+   - A task is never silently dropped. Unactioned it AGES with a recorded reason
+     (D-79). The plane does not yet RUN the ageing job (D-79 is open under M4), so
+     this surface shows the age from `created` and renders an ageing reason ONLY
+     if the task's own history carries one. It never fabricates a reason, and it
+     never hides a stale task.
+   - A task is addressed to somebody or honestly `unassigned` — never a phantom
+     (D-98's third under-specification). `unassigned` is its own honest state
+     with its own section, because those are the ones at risk of falling through.
+   - The refusal shape is "this is not yours to resolve, and here is who it is
+     with." A task held by another member renders exactly that, with no active
+     resolve/forward. (The plane admits any member's call; the SURFACE is honest
+     about whose task it is. That the plane does not itself enforce assignee-
+     ownership on taskresolve is noted to RECORD, not worked around here.)
+   ============================================================ */
+
+/* Member-facing labels for each task kind. TASK_KINDS in the plane is
+   ["authority-undetermined"] today; the construct names more to come
+   (ratification, endorsement, expertise-confirm, focus-review, temporal
+   expectation, bias debt). An unknown kind is rendered HONESTLY from its own
+   token rather than hidden — undetermined is first-class here too. */
+const TASK_KIND_UI = {
+  "authority-undetermined": {
+    label: "Authority undetermined",
+    needs: "The record could not tell who published this capture. Someone has to determine its authority before it can be trusted.",
+    act:   "Determine who published it",
+  },
+};
+function humanKind(kind){ return String(kind||"").replace(/[-_]+/g," ").replace(/\b\w/g, c=>c.toUpperCase()); }
+function taskKindLabel(kind){ return (TASK_KIND_UI[kind] && TASK_KIND_UI[kind].label) || humanKind(kind); }
+function myMemberId(){ return (PLANE.me && PLANE.me.member) || null; }
+
+/* Age from `created`, in plain words. A task is never silently dropped, so the
+   surface always says how long it has waited — the honest floor while the plane
+   grows the ageing job that will attach a reason (D-79). */
+function taskAge(iso){
+  if(!iso) return "";
+  const t = new Date(iso); if(isNaN(t)) return "";
+  const days = Math.floor((Date.now() - t.getTime())/86400000);
+  if(days <= 0) return "opened today";
+  if(days === 1) return "opened yesterday";
+  if(days < 30) return `opened ${days} days ago`;
+  const mo = Math.round(days/30);
+  return mo <= 1 ? "opened about a month ago" : `opened about ${mo} months ago`;
+}
+/* If the plane ever ages a task, the history carries the event and its reason.
+   Surface it verbatim; never invent one. */
+function agedEvent(t){
+  const h = (t && t.history) || [];
+  for(let i=h.length-1;i>=0;i--){
+    const e = h[i];
+    if(e && (e.event==="aged" || e.event==="deferred") && e.reason) return { at:e.at, reason:e.reason };
+  }
+  return null;
+}
+function assigneeBadge(t){
+  if(t.assignee === "unassigned")
+    return `<span class="chip flag" title="No project manager and no active administrator was available to hold this. It is shown honestly as unassigned rather than addressed to someone who does not exist, and can still be routed by hand.">Unassigned</span>`;
+  return `<span class="chip" title="Currently with this member">${esc(t.assignee)}</span>`;
+}
+function taskStatusChip(t){
+  const map = { open:"With you now", forwarded:"Forwarded", resolved:"Resolved" };
+  return `<span class="chip ${t.status==="resolved"?"verified":(t.status==="forwarded"?"elevated":"collected")}">${esc(map[t.status]||t.status)}</span>`;
+}
+function taskHistory(t){
+  const h = (t && t.history) || [];
+  if(!h.length) return "";
+  const verb = { forwarded:"forwarded", resolved:"resolved", aged:"aged", deferred:"deferred" };
+  return `<ul class="tk-hist">${h.map(e=>`<li>${esc(fmtWhen(e.at))} · ${esc(verb[e.event]||e.event)}${e.actor?` by ${esc(e.actor)}`:""}${e.reason?` — ${esc(e.reason)}`:""}</li>`).join("")}</ul>`;
+}
+
+let TASKS_LAST = [];
+async function renderTasks(){
+  setActive("tasks");
+  const c = $("#content");
+  c.innerHTML = `<h1 class="rec">Tasks</h1><p class="lede">Things the record needs a person to settle. Each one points at where it gets resolved. Nothing here is deleted: a task no one acts on ages with its reason rather than vanishing, and one no one holds is shown as unassigned, never hidden.</p><div id="tk">Loading&hellip;</div>`;
+  try{
+    const r = await rec("tasks");
+    const tasks = (r.result && r.result.tasks) || [];
+    TASKS_LAST = tasks;
+    const me = myMemberId();
+    const live = tasks.filter(t=>t.status !== "resolved");
+    const mine       = live.filter(t=>me && t.assignee===me);
+    const unassigned = live.filter(t=>t.assignee==="unassigned");
+    const others     = live.filter(t=>t.assignee!=="unassigned" && t.assignee!==me);
+    const badge = $("#cnt-tasks"); if(badge) badge.textContent = mine.length ? String(mine.length) : "";
+    let html = "";
+    html += taskSection("Yours", mine, "yours", me);
+    html += taskSection("Unassigned — no one is holding these", unassigned, "unassigned", me);
+    if(others.length) html += taskSection("With other members", others, "others", me);
+    if(!mine.length && !unassigned.length && !others.length)
+      html += `<div class="empty">No open tasks. When the record needs a person to decide something, it appears here.</div>`;
+    $("#tk").innerHTML = html;
+    wireTaskActions();
+  }catch(e){ $("#tk").innerHTML = errPane(e); }
+}
+
+function taskSection(title, list, group, me){
+  if(!list.length) return "";
+  return `<section class="tsec"><h2>${esc(title)}${group==="yours"?` <span class="tk-age">(${list.length})</span>`:""}</h2>${list.map(t=>taskCard(t, group, me)).join("")}</section>`;
+}
+
+function taskCard(t, group, me){
+  const k = TASK_KIND_UI[t.kind];
+  const need = (k && k.needs) || (t.subject && t.subject.text) || "The record needs a person to settle this.";
+  const actLabel = (k && k.act) || "Go to where this is resolved";
+  const aged = agedEvent(t);
+  const pointer = t.refers_to
+    ? `<button class="tlink" data-open="${esc(t.refers_to)}" title="${esc(actLabel)} — the task points at the act, it does not replace it">${esc(actLabel)} ↗</button> <span class="tk-ref">on ${esc(t.refers_to)}</span>`
+    : `<span class="tk-ref">${esc(humanKind(t.kind))}</span>`;
+  const cls = group==="unassigned" ? " tunassigned" : (group==="others" ? " tother" : "");
+  return `<div class="tcard${cls}" data-id="${esc(t.id)}">
+    <div class="tk-head"><span class="tk-kind">${esc(taskKindLabel(t.kind))}</span>${assigneeBadge(t)}${taskStatusChip(t)}</div>
+    <div class="tk-need">${esc(need)}</div>
+    ${aged ? `<div class="tk-aged">Still here after ${esc(fmtWhen(aged.at))}: ${esc(aged.reason)}</div>` : ""}
+    <div class="tk-meta">${pointer}<span class="tk-age" title="Opened ${esc(fmtWhenFull(t.created))}">${esc(taskAge(t.created))}</span></div>
+    <div class="tk-acts" data-acts="${esc(t.id)}">${taskActions(t, group)}</div>
+    <div class="tk-err" data-err="${esc(t.id)}"></div>
+    ${taskHistory(t)}
+  </div>`;
+}
+
+function taskActions(t, group){
+  if(group==="others"){
+    return `<div class="tk-refusal">This isn't yours to resolve — it's with <b>${esc(t.assignee)}</b>.</div>`;
+  }
+  const fwd = `<button class="tbtn tfwd" data-fwd="${esc(t.id)}">Forward to someone&hellip;</button>`;
+  const res = `<button class="tbtn tres" data-res="${esc(t.id)}">Mark resolved</button>`;
+  return fwd + res;
+}
+
+function wireTaskActions(){
+  document.querySelectorAll("#tk [data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
+  document.querySelectorAll("#tk [data-res]").forEach(b=>b.onclick=()=>resolveTask(b.dataset.res));
+  document.querySelectorAll("#tk [data-fwd]").forEach(b=>b.onclick=()=>openForward(b.dataset.fwd));
+}
+
+let TASKS_BUSY = false;
+/* Resolve THROUGH op=taskresolve. The actor is stamped by the plane from the
+   session, never sent from here (the plane refuses a resolution that names no
+   member). On success re-read the inbox so the member sees the true state, not
+   an optimistic guess. */
+async function resolveTask(id){
+  if(TASKS_BUSY) return; TASKS_BUSY = true;
+  try{
+    await recPost("taskresolve", { id });
+    await renderTasks();
+  }catch(e){ taskErr(id, e); }
+  finally{ TASKS_BUSY = false; }
+}
+/* Forward THROUGH op=taskforward to a named active member. A forward is a human
+   judgement (the plane refuses a daemon's), so the target is chosen, never
+   guessed. */
+async function forwardTask(id, to){
+  if(TASKS_BUSY) return; TASKS_BUSY = true;
+  try{
+    await recPost("taskforward", { id, to });
+    await renderTasks();
+  }catch(e){ taskErr(id, e); }
+  finally{ TASKS_BUSY = false; }
+}
+/* The picker reads the roster through op=memberlist. If this credential cannot
+   read it, the surface says so rather than offering a control that cannot work. */
+async function openForward(id){
+  const host = document.querySelector(`#tk [data-acts="${id}"]`);
+  if(!host) return;
+  let members = [];
+  try{ const r = await rec("memberlist"); members = (r.result && (r.result.members||r.result)) || []; }
+  catch(e){ taskErr(id, { reason:"This account cannot read the member roster, so it cannot choose who to forward to." }); return; }
+  const t = TASKS_LAST.find(x=>String(x.id)===String(id));
+  const opts = members
+    .filter(m=>(m.status?m.status==="active":true) && (m.member_id||m.member||m.handle) !== (t&&t.assignee))
+    .map(m=>{ const mid=m.member_id||m.member||m.id; const label=m.handle||m.cover||mid; return `<option value="${esc(mid)}">${esc(label)}</option>`; }).join("");
+  if(!opts){ taskErr(id, { reason:"No other active member to forward this to." }); return; }
+  host.innerHTML = `<div class="tk-picker"><select data-pick="${esc(id)}"><option value="">Choose a member&hellip;</option>${opts}</select><button class="tbtn tdofwd" data-dofwd="${esc(id)}">Forward</button><button class="tbtn tcancel" data-cancel="${esc(id)}">Cancel</button></div>`;
+  const sel = host.querySelector(`[data-pick="${id}"]`);
+  host.querySelector(`[data-dofwd="${id}"]`).onclick = ()=>{ const to = sel && sel.value; if(to) forwardTask(id, to); };
+  host.querySelector(`[data-cancel="${id}"]`).onclick = ()=>{ const t2=TASKS_LAST.find(x=>String(x.id)===String(id)); host.innerHTML = taskActions(t2, "yours"); wireTaskActions(); };
+}
+function taskErr(id, e){
+  const host = document.querySelector(`#tk [data-err="${id}"]`);
+  const msg = (e && (e.reason||e.error||e.detail)) ? [e.reason,e.detail].filter(Boolean).join(" · ") : "The plane did not accept that.";
+  if(host) host.textContent = msg;
+}
+
 /* ============================================================
    U8: THE ADD SURFACE.
 
