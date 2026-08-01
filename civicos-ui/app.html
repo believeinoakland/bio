@@ -312,6 +312,12 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 .dz-receipt .dz-rhead{font-weight:700;font-size:17px;margin:2px 0 6px}
 .dz-rlede{font-size:13.5px;color:var(--ink-soft);margin:0 0 12px;max-width:58ch}
 .dz-rgrid{display:flex;flex-direction:column;gap:1px;border:var(--hair);border-radius:var(--r-2);overflow:hidden}
+/* UI-6 the ATTESTATION: the honesty fence — what co-attestation does, and cannot */
+.az-honesty{border:var(--hair);border-left:3px solid var(--signal);border-radius:var(--r-2);padding:10px 13px;margin:12px 0 4px;background:var(--tint-note)}
+.az-honesty p{font-size:12.5px;color:var(--ink-soft);margin:6px 0 0}
+.az-honesty .az-cannot b{color:var(--signal-dk)}
+.az-planenote{font-size:12px;color:var(--muted);margin:10px 0 0;font-style:italic}
+.dz-opt.az-off{opacity:.55}
 /* UI-3 the BALLOT: the two properties the ballot type adds — a checkable DENOMINATOR and the two-owner DIVERGENCE */
 .bl-den{border:var(--hair);border-left:3px solid var(--verdigris);border-radius:var(--r-2);padding:10px 13px;margin:12px 0 4px;background:var(--paper-2)}
 .bl-cap{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
@@ -3832,6 +3838,25 @@ async function openBundle(id, fromNav){
       }
     }
 
+    /* --- attestation, the fourth ACT: co-attest a held capture (UI-6). An
+       information document that holds a capture can be co-attested: an
+       independent timestamp raises it from Grade B toward evidentiary weight.
+       Capability-shaped like the other acts (contribute), and the button says
+       plainly what the act is and what it does not reach. --- */
+    let attestBar = "";
+    if(otype==="information"){
+      const capSha = primaryCaptureSha(img, fm);
+      if(canAttest() && /^[0-9a-f]{64}$/.test(capSha||"")){
+        const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(fm.title||(proj&&proj.title)||id)),
+              jsha = esc(JSON.stringify(capSha)), jloc = esc(JSON.stringify(loc||""));
+        attestBar = `<h2 class="sec">Attestation</h2>
+          <div class="rv-bar" style="margin:0;gap:8px">
+            <button class="btn ghost" onclick="openAttestDialog(${jid},${jt},${jsha},${jloc})">Co-attest this capture&hellip;</button>
+            <span class="n">An irreversible, public act: it asks an independent timestamp authority to attest these bytes existed, raising the capture from Grade B toward evidentiary weight. It never reaches Grade A.</span>
+          </div>`;
+      }
+    }
+
     const back = `<a onclick="go('record')">The record</a> &rsaquo; `;
     const tab = k => `<a${k==="s1"?' class="on"':""} data-s="${k}" onclick="strataGo(this,'${k}')" title="${esc(STRATA_INFO[k].tip)}">${esc(STRATA_INFO[k].label)}</a>`;
     const openTab = PRIMARY_K>=0 ? `<a class="openlink" onclick="openArtifact(${PRIMARY_K})" title="opens like any link: a tab for what the browser renders, a download otherwise; verified against the record underneath">Open the document<span class="arr" aria-hidden="true">\u2197</span></a>` : "";
@@ -3843,7 +3868,7 @@ async function openBundle(id, fromNav){
          <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
          <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${openTab}${seals}</div>
        </div>
-       <div id="docscroll">${s1}${s2}${s3}${s4}${relBar}${dispBar}</div>`;
+       <div id="docscroll">${s1}${s2}${s3}${s4}${relBar}${dispBar}${attestBar}</div>`;
     strataSpy();
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
@@ -5576,6 +5601,278 @@ function proposalAdoptReceipt(id, kind, title, ctx){
        <div class="row-btns"><button class="btn ghost" onclick="closeDialog();renderProposals()">Back to proposals</button>
          <button class="btn" onclick="closeDialog();openBundle('${esc(id)}')">Open the ${esc(kind)}</button></div>
      </div>`;
+}
+
+/* ============================================================
+   UI-6 — THE FOURTH ACT: ATTESTATION — a member CO-ATTESTS a HELD
+   capture, through the SAME ACT construct + weight ladder UI-2/3/5
+   established. (BIO_Interaction_Constructs v0.2 — the ACT construct;
+   §A ATTESTATION, "the irreversible signed act"; the WEIGHT LADDER's
+   TOP rung, `attested`.)
+
+   This is the v0.2 FALSIFIABLE test, act FOUR (bonus confirmation — the
+   three-act test already passed): does the ONE construct hold for the
+   HEAVIEST act, one that is irreversible and public, and whose "text
+   that becomes evidence" is NOT a member's authored justification but a
+   third party's signed token?
+
+   The one motion, unchanged:
+     1 CHOOSE      co-attest this capture — with a timestamp only, or a
+                   timestamp AND an opt-in request to a public web archive
+                   (off by default: asking a public archive PUBLISHES the
+                   fact of interest, which is a tactical judgement, not a
+                   default — the plane's own reasoning, index.mjs ~2373).
+     2 PRE-FLIGHT  see WHAT IT WILL REFUSE and WHY *before* it runs — the
+                   op's declared refusals, in the plane's checking order:
+                   NO_STORAGE (503) -> BAD_SHA (400) -> NO_SUCH_CAPTURE
+                   (404). op=attest has NO dry-run, so this is computed
+                   from the declared refusal shape + what the doc page
+                   already knows (the capture's own sha256, and that it is
+                   held), exactly as dispose does.
+     3 AUTHOR      GENUINELY ABSENT. op=attest takes no text: the evidence
+                   is the timestamp token, not the member's words, so the
+                   construct's AUTHOR step is not skipped for convenience —
+                   it is not part of THIS act. That absence is the finding.
+     4 RECEIPT     what the plane returned — on success, the stored RFC3161
+                   token and the capture's HONEST new standing; on failure
+                   (NO_ATTESTATION, every authority unreachable), EVERY
+                   recorded attempt with its reason, and the standing left
+                   UNCHANGED.
+
+   THE HONESTY FENCE, load-bearing (index.mjs:2304): co-attestation raises
+   a capture from Grade B TOWARD evidentiary weight; it NEVER yields Grade
+   A — Grade A needs a chain-of-custody web archive this surface cannot
+   produce. The surface must never say Grade A, on the pre-flight or the
+   receipt. `ATTEST_YIELDS_GRADE` is the single source of truth for the
+   yielded grade and the negative-control anchor.
+
+   THE CEREMONY OF THE TOP RUNG (v0.2 §A): the surface states what becomes
+   permanent and what it does and does NOT claim. The rung is `attested`,
+   but the KEY is the timestamp AUTHORITY's, not the member's: unlike
+   signing a release, this act touches NO signing seed of its own
+   (BIO_RELEASE_SEED / BIO_RATIFY_SEED are DIST's, not this act's). That
+   honest nuance is carried in the ladder note rather than hidden.
+
+   Plane op consumed (I3), never reshaped:
+     op=attest (POST { sha256, archive?, locator? }) — co-attestation over
+       a capture hash via a timestamp authority (RFC 3161). NEEDS
+       `contribute`; classes admit member/admin; mutating. It stores the
+       token and does NOT claim to have verified the signature (its own
+       note, rendered verbatim on the receipt).
+   ============================================================ */
+
+/* op=attest is capability-gated exactly like release/dispose: it NEEDS
+   `contribute` (bio-plane/src/index.mjs NEEDS) and the store acts in the
+   session's name, so a member without contribute gets no act surface
+   rather than one that fails on submit. Same shape as canRelease. */
+function canAttest(){
+  return !!(PLANE.session && PLANE.me && PLANE.me.session
+            && (PLANE.me.capabilities||[]).includes("contribute"));
+}
+
+/* THE HONESTY, in one place. Co-attestation strengthens a Grade B capture
+   TOWARD evidentiary weight; it NEVER reaches Grade A. This constant is the
+   single source of truth for the grade the act claims to yield, and the
+   NEGATIVE-CONTROL anchor: set it to "A" and the surface starts over-claiming,
+   which the suite catches. It is NOT read from the op (op=attest returns no
+   grade field) — it is doctrine (index.mjs:2304), stated by the surface. */
+const ATTEST_YIELDS_GRADE = "B";   // B toward evidentiary weight, never A
+function attestStandingClaim(strengthened){
+  if(!strengthened)
+    return { grade:"B", line:`No timestamp was obtained, so the capture's standing is <b>unchanged — Grade B</b>. Nothing was strengthened, and nothing here claims otherwise.` };
+  const g = ATTEST_YIELDS_GRADE;
+  // The false branch the negative control forces: claiming co-attestation
+  // reached Grade A. The honest branch keeps it at B, toward evidentiary weight.
+  return g === "A"
+    ? { grade:"A", line:`The capture is now <b>Grade A</b>.` }
+    : { grade:"B", line:`Still <b>Grade ${esc(g)}</b>, now <b>strengthened toward evidentiary weight</b> by an independent timestamp — <b>not</b> Grade A, which needs a chain-of-custody web archive this surface cannot produce.` };
+}
+/* The "what it does / what it cannot" block, shown BEFORE the act runs and
+   again on the receipt, so the member meets the limit at both ends. */
+function attestHonestyHtml(){
+  return `<div class="az-honesty"><div class="pf-cap">What co-attestation does — and what it cannot</div>
+    <p class="az-does"><b>Does:</b> asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. That is the part an attacker holding a write token cannot forge, so it strengthens the capture toward evidentiary weight.</p>
+    <p class="az-cannot"><b>Cannot:</b> make this Grade A. Grade A needs a chain-of-custody web archive this surface cannot produce; co-attestation raises Grade B <b>toward</b> evidentiary weight, it does not reach Grade A. Anyone can later verify the timestamp themselves; this plane obtains and stores it and does not claim to have checked the authority's signature.</p></div>`;
+}
+
+/* THE PRE-FLIGHT — pure, so the harness can prove it. Given the capture's
+   sha256, whether it is held, and whether this instance can store evidence,
+   it returns every gate (for the panel) and the ONE refusal that fires first,
+   in the plane's own checking order:
+     NO_STORAGE (503) -> BAD_SHA (400) -> NO_SUCH_CAPTURE (404).
+   `held` and `hasStorage` default to present (the doc page is showing a held
+   capture on a configured instance); a caller passes false to pre-flight the
+   refusal. `ok` is true only when nothing would refuse. */
+function attestPreflight({ sha, held, hasStorage }){
+  const goodSha  = /^[0-9a-f]{64}$/.test(String(sha==null?"":sha).toLowerCase());
+  const storage  = hasStorage !== false;
+  const isHeld   = held !== false;
+  const gates = [
+    { id:"storage", title:"This instance can store evidence", pass:storage,
+      need:"This instance has no evidence storage configured, so it cannot hold a timestamp token. Co-attestation is unavailable here." },
+    { id:"sha", title:"A capture hash to attest", pass:goodSha,
+      need:"Co-attestation is taken over the sha-256 of a capture already in the record. This document does not present one to attest." },
+    { id:"held", title:"The capture is in the record", pass:goodSha && isHeld,
+      need:"Nothing in the record has that hash. Capture the document before attesting it." },
+  ];
+  let refusal = null;
+  if(!storage)        refusal = { reason:"NO_STORAGE",      detail:gates[0].need };
+  else if(!goodSha)   refusal = { reason:"BAD_SHA",         detail:gates[1].need };
+  else if(!isHeld)    refusal = { reason:"NO_SUCH_CAPTURE", detail:gates[2].need };
+  return { ok: refusal===null, gates, refusal };
+}
+
+function attestPublicLocator(loc){ return /^https:\/\//i.test(String(loc||"").trim()); }
+
+/* CHOOSE + PRE-FLIGHT, in one dialog. There is no AUTHOR field — the act
+   carries no member text. The one CHOICE is whether to ALSO ask a public web
+   archive to fetch the source (opt-in, because it publishes the fact of
+   interest). Opened from the Attestation act-bar on an information document. */
+let ATTEST_CTX = null;   // { id, title, sha, locator, archive }
+function openAttestDialog(id, title, sha, locator){
+  ATTEST_CTX = { id, title, sha, locator: locator||"", archive:false };
+  const canArch = attestPublicLocator(locator);
+  const choose = `
+    <label class="dz-opt on">
+      <input type="radio" name="az-arch" value="no" checked onchange="attestChoose(false)">
+      <span class="dz-verb">Timestamp only</span>
+      <span class="dz-mean">Ask a timestamp authority to record that these exact bytes existed. Nothing about the source is published.</span>
+    </label>
+    <label class="dz-opt${canArch?"":" az-off"}">
+      <input type="radio" name="az-arch" value="yes" ${canArch?"":"disabled"} onchange="attestChoose(true)">
+      <span class="dz-verb">Timestamp and request a public web archive</span>
+      <span class="dz-mean">${canArch
+        ? "Also ask a public archive to fetch and keep the source. This is off by default because asking publicly PUBLISHES the fact that this group is interested in this source — a tactical judgement, not a default."
+        : "Unavailable: this document has no public https source to archive."}</span>
+    </label>`;
+  $("#dlg").innerHTML =
+    `<h2 id="az-h">Co-attest this capture</h2>
+     <p class="what">Co-attesting asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. It is <b>irreversible and public</b>. It raises the capture from Grade B <b>toward</b> evidentiary weight — it does not, and cannot, make it Grade A.</p>
+     <div class="dz-what"><span class="dz-ttl">${esc(title||id)}</span><span class="id">capture ${esc(String(sha||"").slice(0,16))}…</span></div>
+     <div class="dz-choose">${choose}</div>
+     ${attestHonestyHtml()}
+     <div class="dz-pf" id="az-pf"><!-- pre-flight, painted by attestValidate --></div>
+     ${weightLadderHtml("attested", `Co-attestation is <b>attested</b> — the top rung. It is <b>irreversible and public</b>: it asks an independent timestamp authority to record that these exact bytes existed, and that record cannot be withdrawn. The key here is the <b>authority's</b>, not yours — unlike signing a release, this act invokes an outside witness and touches no signing key of your own.`)}
+     <div id="az-err" class="teach hidden"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="az-go" onclick="doAttest()">Co-attest</button></div>`;
+  $("#dlg-wrap").classList.remove("hidden");
+  attestValidate();
+}
+function attestChoose(archive){
+  if(ATTEST_CTX) ATTEST_CTX.archive = !!archive;
+  $("#dlg").querySelectorAll(".dz-opt").forEach(o=>{
+    const inp = o.querySelector("input");
+    o.classList.toggle("on", inp && inp.value === (archive?"yes":"no"));
+  });
+}
+/* Paint the pre-flight from the capture the dialog holds, and gate the commit
+   button on it. The panel is the point: it shows what WILL refuse and why,
+   before the act runs. A held capture on a configured instance clears every
+   gate — the panel then says the act is ready and carries no member text. */
+function attestValidate(){
+  if(!ATTEST_CTX) return;
+  const pf = attestPreflight({ sha: ATTEST_CTX.sha, held: ATTEST_CTX.held, hasStorage: ATTEST_CTX.hasStorage });
+  const pane = $("#az-pf");
+  if(pane){
+    const rows = pf.gates.map(g=>`<div class="pf-row ${g.pass?"ok":"no"}">
+        <span class="pf-mark">${g.pass?"✓":"✗"}</span>
+        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
+      </div>`).join("");
+    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
+      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. This act carries no words to author — the evidence is the timestamp itself.</div>` : "");
+  }
+  const go = $("#az-go"); if(go) go.disabled = !pf.ok;
+}
+/* COMMIT. The pre-flight runs ONE more time here as the real gate: if the act
+   WOULD be refused, the SURFACE refuses it and op=attest is never sent.
+   (Removing this early return is one break the harness can run.) Only a clean
+   pre-flight sends op=attest. A NO_ATTESTATION answer (every authority
+   unreachable) throws through recPost with its attempts; that is an HONEST
+   failure receipt, not an error swallowed. */
+async function doAttest(){
+  if(!ATTEST_CTX) return;
+  const err = $("#az-err"); if(err) err.classList.add("hidden");
+  const pf = attestPreflight({ sha: ATTEST_CTX.sha, held: ATTEST_CTX.held, hasStorage: ATTEST_CTX.hasStorage });
+  if(!pf.ok){                       // the surface refuses, before the plane
+    if(err){ err.innerHTML = `<b>This act won't run — and nothing has been recorded.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
+    attestValidate();
+    return { refused:true, reason:pf.refusal.reason };
+  }
+  const go = $("#az-go"); if(go){ go.disabled = true; go.textContent = "…"; }
+  const body = { sha256: ATTEST_CTX.sha, ...(ATTEST_CTX.archive ? { archive:true, locator: ATTEST_CTX.locator } : {}) };
+  try{
+    const res = await recPost("attest", body);
+    attestReceipt(res, ATTEST_CTX);
+    return res;
+  }catch(e){
+    // NO_ATTESTATION carries the recorded attempts — an honest failure, shown as one.
+    if(e && (e.reason==="NO_ATTESTATION" || Array.isArray(e.attempts))){
+      attestFailReceipt(e, ATTEST_CTX);
+      return { refused:true, reason: e.reason||"NO_ATTESTATION" };
+    }
+    if(err){ err.innerHTML = attestRefusalHtml(e); err.classList.remove("hidden"); }
+    if(go){ go.disabled=false; go.textContent = "Co-attest"; }
+    attestValidate();
+    return { refused:true, reason: e && e.reason };
+  }
+}
+/* THE RECEIPT — success. The stored RFC3161 token, and the capture's HONEST
+   new standing: still Grade B, strengthened TOWARD evidentiary weight, NEVER
+   Grade A. The plane's own note is rendered verbatim (§ passthrough), because
+   it carries the further honesty that the plane did not verify the signature. */
+function attestReceipt(res, ctx){
+  const a = res.attestation || {};
+  const claim = attestStandingClaim(true);
+  const arch = res.archive ? `<div class="kv"><span class="k">Public archive</span><span class="v plain">${esc(res.archive.locator||res.archive.service||"requested")}</span></div>` : "";
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt">
+       <div class="dz-rhead">Co-attested.</div>
+       <p class="dz-rlede">An independent timestamp authority recorded that this capture's exact bytes existed no later than a fixed instant. The token is stored and anyone can verify it against the authority's certificate.</p>
+       <div class="dz-rgrid">
+         <div class="kv"><span class="k">Document</span><span class="v">${esc((ctx&&ctx.title)||(ctx&&ctx.id)||"")} <span class="id">${esc((ctx&&ctx.id)||"")}</span></span></div>
+         <div class="kv"><span class="k">Over capture</span><span class="v plain">${esc(a.over||(ctx&&ctx.sha)||"")}</span></div>
+         <div class="kv"><span class="k">Timestamp</span><span class="v plain">${esc(a.kind||"rfc3161")}${a.service?` · ${esc(a.service)}`:""}${a.bytes?` · ${esc(String(a.bytes))} bytes`:""}</span></div>
+         <div class="kv"><span class="k">Token hash</span><span class="v plain">${esc(a.sha256||"")}</span></div>
+         ${arch}
+         <div class="kv"><span class="k">Resulting standing</span><span class="v plain" data-standing="${esc(claim.grade)}">${claim.line}</span></div>
+         <div class="kv"><span class="k">Weight</span><span class="v plain">attested — irreversible and public; the authority's key, not yours</span></div>
+       </div>
+       ${res.note?`<p class="az-planenote">${esc(res.note)}</p>`:""}
+       <div class="row-btns"><button class="btn" onclick="attestDone('${esc((ctx&&ctx.id)||"")}')">Done</button></div>
+     </div>`;
+}
+/* THE RECEIPT — failure. Every recorded attempt with its reason: a register
+   showing a failed attempt and one showing NO attempt are different claims
+   (index.mjs), so the failures belong on screen, not dropped. The standing is
+   stated as UNCHANGED — nothing was strengthened, and nothing over-claims. */
+function attestFailReceipt(e, ctx){
+  const attempts = Array.isArray(e && e.attempts) ? e.attempts : [];
+  const rows = attempts.length ? attempts.map(t=>`<div class="kv"><span class="k">${esc(t.service||"an authority")}</span><span class="v plain">did not attest${t.note?` — ${esc(t.note)}`:""}${t.attempted?` (${esc(t.attempted)})`:""}</span></div>`).join("")
+    : `<div class="kv"><span class="k">Attempt</span><span class="v plain">no authority answered</span></div>`;
+  const claim = attestStandingClaim(false);
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt">
+       <div class="dz-rhead">No timestamp was obtained.</div>
+       <p class="dz-rlede">Every authority was tried and none attested. That is recorded as it happened — a register showing a failed attempt and one showing no attempt are different claims, so the attempts are shown here rather than dropped.</p>
+       <div class="dz-rgrid">
+         <div class="kv"><span class="k">Document</span><span class="v">${esc((ctx&&ctx.title)||(ctx&&ctx.id)||"")} <span class="id">${esc((ctx&&ctx.id)||"")}</span></span></div>
+         ${rows}
+         <div class="kv"><span class="k">Resulting standing</span><span class="v plain" data-standing="${esc(claim.grade)}">${claim.line}</span></div>
+         <div class="kv"><span class="k">Weight</span><span class="v plain">attested — nothing became permanent this time</span></div>
+       </div>
+       <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Close</button>
+         <button class="btn" onclick="attestRetry()">Try again</button></div>
+     </div>`;
+}
+function attestRetry(){ const c = ATTEST_CTX; if(c) openAttestDialog(c.id, c.title, c.sha, c.locator); }
+function attestDone(id){ closeDialog(); RECORD_CACHE = null; if(id) openBundle(id); }
+/* A refusal renders in the PLANE'S OWN VOICE, offenders named, nothing written
+   — the same rule as release and dispose. */
+function attestRefusalHtml(e){
+  const head = esc([e&&e.reason, e&&e.error].filter(Boolean).join(" · ") || "The plane refused, and stored nothing.");
+  const detail = (e&&e.detail) ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
+  return `<b>${head}</b>${detail}`;
 }
 
 /* ============================================================
