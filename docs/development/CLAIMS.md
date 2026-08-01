@@ -294,7 +294,7 @@ paths: civicos-ui/app.html (the TASK INBOX surface ONLY — a new `tasks` rail e
 interfaces consumed: I3 (plane → UI op contracts — consumes op=tasks, op=taskforward, op=taskresolve, op=memberlist, op=whoami; consumed, never reshaped)
 interfaces owned: none
 expected: QUEUE.md UI-1 / MILESTONES M8 — the TASK INBOX, the member surface over the already-shipped plane attention layer (D-98). Lists a member's tasks (each pointing at the act it resolves in), forwards (op=taskforward) and resolves (op=taskresolve) through the existing ops. Honours the TASK construct's accountability rules (v0.2): a task ages with a recorded reason and is never silently dropped (age surfaced from `created` + any history ageing event; the ageing JOB itself is D-79/M4 and NOT built here); a task is addressed to somebody or honestly `unassigned`, never a phantom; the refusal shape "this is not yours to resolve, and here is who it is with" is rendered for a task assigned to another member. Points at the acts (openBundle on refers_to); does NOT build the acts. accepts-when civicos-ui/test/task-inbox.test.mjs: lists a member's tasks, forwards one and resolves one through the plane ops, and shows an `unassigned` task honestly; NEGATIVE CONTROL RUN — break the taskresolve wiring and the resolve path fails. Battery untouched (no plane code edited). No push, no deploy — CONDUCT integrates.
-released:
+released: 2026-07-31 — landed on main by CONDUCT (105198b), CLAIMS union-resolved. civicos-ui all harnesses green, plane battery 56/56 (no plane code touched). No DEC. UI→RECORD delegation (server-side task-actor fence) lifted by CONDUCT into REC-4.
 
 ## DELEGATION 2026-07-31 UI → RECORD
 from: ui-agent-1 (UI-1, the task inbox)

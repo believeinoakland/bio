@@ -374,11 +374,11 @@ constructs + a weight ladder + the TASK/QUEUE attention layer; MILESTONES M8 bui
 The display half of D-82 (`surfaced_by`) and the FW-4→UI already-held delegation are later
 UI items, not UI-1.
 
-### UI-1 · queued
+### UI-1 · done
 milestone: M8
 scope: The TASK INBOX — the member surface for the attention layer, which MILESTONES M8 builds FIRST. The plane HALF ALREADY EXISTS (D-98, 0.49.0): ops `tasks`, `taskforward`, `taskresolve`, routing through `member_expertise` → project manager → group admin, forwardable, deduped on `(refers_to, kind)`. It has NO surface — "the record can be obliged to ask a person something and has nowhere to ask," M8's sharpest gap. Build the `civicos-ui` surface that lists a member's tasks (each says *this needs you* and POINTS AT the act it resolves in), and lets them forward (`taskforward`) and resolve (`taskresolve`). Honour the TASK construct's accountability rules: a task is never silently dropped (it AGES with a recorded reason, D-79) and is addressed to somebody or honestly `unassigned` (never a phantom); the refusal shape is "this is not yours to resolve, and here is who it is with." This is ONE construct's surface (the queue) + the wiring to the acts it points at — NOT the acts themselves (the ACT construct is later items). The clock half (D-86: temporal expectations + bias debt as obligations-with-a-clock) is related — surface what the existing ops expose and NOTE any gap rather than building the clock here.
 behind-interface: I3
 depends-on: none
 accepts-when: `civicos-ui/test/run.mjs` green with a task-inbox test that lists a member's tasks, forwards one and resolves one through the plane ops, and shows an `unassigned` task honestly; negative control — break the `taskresolve` wiring and the resolve path fails.
 added: 2026-07-31 · CONDUCT
-landed:
+landed: 105198b — the TASK INBOX ships: a member Tasks screen over the existing plane ops (tasks/taskforward/taskresolve/memberlist/whoami, D-98), partitioned honestly into Yours / Unassigned / With-other-members. Accountability rules rendered: age from created (an ageing REASON shown only if the task history carries one — never fabricated; the D-79 ageing job doesn't exist yet), unassigned-not-phantom, refusal shape "this isn't yours to resolve — it's with <assignee>". Points at the act (openBundle refers_to), does not reimplement it. Clock-half gap (D-86) NOTED not built (ops expose no clock; TASK_KINDS only authority-undetermined). civicos-ui/test/run.mjs green (14 harnesses incl task-inbox 33). Plane battery untouched. NC RUN (taskresolve→tasknope, 4 fail). DELEGATION UI→RECORD raised: the plane lets any member resolve/forward any task — the refusal is cosmetic until the plane enforces it (→ REC-4).
