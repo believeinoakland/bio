@@ -3062,6 +3062,244 @@ export class Store extends DurableObject {
              declared_by: e.declared_by, at: e.at, aliases, relations: rels };
   }
 
+  /* ---- CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISERS ----
+   *
+   * A RESOLUTION matches one raw reading_refs reference (FW-5, a source-assigned
+   * kind:key a captured document's reading carries) to a registry ENTITY (FW-6) and
+   * DECLARES THE METHOD -- which IS the framework's section 8.1 connection grade. It
+   * is the grading mechanism for referential connections (framework 8.1: "entity
+   * resolution is therefore the grading mechanism"), and it delivers the reverse
+   * index -- "every document that concerns this entity" -- by joining resolutions on
+   * entity_id, the single largest manual task the framework removes.
+   *
+   * The recogniser (op=resolve) matches a reference against the registry in a strict
+   * PRIORITY order and DECLARES THE GRADE FROM HOW IT MATCHED, which is all a grade is
+   * (framework 8.1: "grade states how the connection was established, and nothing
+   * else"):
+   *   A -- the reference's raw composite key (kind:key) matched, exactly, a registered
+   *        IDENTIFIER (an alias) of the entity: the source's OWN identifier names the
+   *        subject at both ends captured+hashed.
+   *   B -- the reference's BARE key matched a registered identifier exactly, but not as
+   *        the source's composite addressing key: an identifier the source USES, matched
+   *        in captured content at both ends.
+   *   C -- the reference's LABEL (a name/title) matched an entity ALIAS by name:
+   *        correspondence, not identity. Plausible, NEVER established, FLAGGED for a
+   *        member to confirm.
+   * A reference matching nothing stays honestly UNRESOLVED -- never force-matched to
+   * manufacture a hit. The recogniser NEVER mints a D: grade D is member TESTIMONY
+   * (op=resolvetestify), recorded with an author and a date, never produced by the
+   * machine. And the recogniser matches a reference to an entity's OWN aliases only --
+   * it NEVER traverses a declared relation (proxy_for/member_of/overlaps), which is
+   * constitutive and sits outside this grade (D-83): resolving THROUGH a relation
+   * silently would smuggle a member's constitutive statement into an evidentiary grade.
+   *
+   * Grade is IMPROVABLE (framework 8.1): the row is keyed (capture_sha, ref, entity_id)
+   * so a re-resolution that finds a STRONGER basis raises the grade+method IN PLACE, via
+   * #upsertResolution, never a second row and never a downgrade -- a C becomes A the
+   * moment a member registers the source identifier as an alias and the recogniser is
+   * re-run. */
+
+  static #GRADE_RANK = { A: 4, B: 3, C: 2, D: 1 };
+  /* established is a PROPERTY OF THE GRADE, computed here and stored, so a Grade C can
+     never be read back as established (an equality that costs nothing is not evidence,
+     CLAUDE.md): A and B rest on a captured identifier at both ends; C is correspondence
+     awaiting a member's confirmation; D is bare testimony. */
+  static #isEstablished(grade) { return grade === "A" || grade === "B"; }
+
+  /* Upsert one resolution with the improvable-grade rule: a first resolution INSERTs; a
+     re-resolution at a STRONGER grade RAISES in place (recording raised_from); an equal
+     or weaker one is kept (idempotent, never a downgrade, never a duplicate row). Runs
+     inside the caller's transaction. */
+  #upsertResolution({ captureSha, bundleId, ref, entityId, grade, method, basis, resolvedBy }) {
+    const rank = Store.#GRADE_RANK;
+    const at = new Date().toISOString();
+    const est = Store.#isEstablished(grade) ? 1 : 0;
+    const b = basis == null ? null : String(basis).slice(0, 400);
+    const by = resolvedBy == null ? null : String(resolvedBy).slice(0, 200);
+    const existing = this.#one(
+      `SELECT grade FROM resolutions WHERE capture_sha=? AND ref=? AND entity_id=?`, captureSha, ref, entityId);
+    if (!existing) {
+      this.sql.exec(
+        `INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,established,raised_from,resolved_by,at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        captureSha, bundleId, ref, entityId, grade, method, b, est, null, by, at);
+      return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade, method, basis: b,
+               established: !!est, needs_confirmation: grade === "C", raised: false, resolved_by: by, at };
+    }
+    if (rank[grade] > (rank[existing.grade] || 0)) {
+      this.sql.exec(
+        `UPDATE resolutions SET grade=?, method=?, basis=?, established=?, raised_from=?, resolved_by=?, at=?
+          WHERE capture_sha=? AND ref=? AND entity_id=?`,
+        grade, method, b, est, existing.grade, by, at, captureSha, ref, entityId);
+      return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade, method, basis: b,
+               established: !!est, needs_confirmation: grade === "C", raised: true, raised_from: existing.grade,
+               resolved_by: by, at };
+    }
+    return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade: existing.grade,
+             established: Store.#isEstablished(existing.grade), needs_confirmation: existing.grade === "C",
+             raised: false, kept: true };
+  }
+
+  /* Every entity carrying, exactly, the given normalised alias. The recogniser's one
+     matching primitive: an entity's aliases are the identifiers and names it answers
+     to. DISTINCT because an entity could carry the same normalised string twice only
+     by construction it cannot -- but the guard costs nothing and keeps a hit a hit. */
+  #entitiesByAliasNorm(norm) {
+    if (!norm) return [];
+    return this.#rows(`SELECT DISTINCT entity_id FROM entity_aliases WHERE alias_norm=?`, norm).map((r) => r.entity_id);
+  }
+
+  /* The recogniser over ONE reading reference: decide the grade from HOW it matched
+     (A composite identifier, B bare identifier, C name correspondence), and upsert a
+     resolution to every entity that matched at the STRONGEST available tier. Returns
+     the matches (possibly several -- an ambiguous name resolves to every entity that
+     carries it, honestly, never collapsed to one) or an empty list when nothing
+     matched. Never falls through to a weaker tier once a stronger one has hit: a name
+     correspondence is not recorded when the source's own identifier already resolved
+     the reference. */
+  #recognise(rr, resolvedBy) {
+    const refNorm = Store.#normAlias(rr.ref);
+    const keyNorm = rr.ref_key == null ? "" : Store.#normAlias(rr.ref_key);
+    const labelNorm = rr.label == null ? "" : Store.#normAlias(rr.label);
+    let grade = null, basis = null, method = null, hits = [];
+    const a = this.#entitiesByAliasNorm(refNorm);
+    if (a.length) {
+      grade = "A"; hits = a; basis = rr.ref;
+      method = `source identifier -- the reference's composite key '${rr.ref}' matched a registered identifier `
+             + `of the entity exactly; the source names this subject by this key, both ends captured`;
+    } else {
+      const b = keyNorm && keyNorm !== refNorm ? this.#entitiesByAliasNorm(keyNorm) : [];
+      if (b.length) {
+        grade = "B"; hits = b; basis = rr.ref_key;
+        method = `source identifier in content -- the reference's key '${rr.ref_key}' matched a registered `
+               + `identifier of the entity exactly at both ends`;
+      } else {
+        const c = labelNorm ? this.#entitiesByAliasNorm(labelNorm) : [];
+        if (c.length) {
+          grade = "C"; hits = c; basis = rr.label;
+          method = `correspondence -- the reference's name '${rr.label}' matched an entity alias by name; `
+                 + `plausible, never established, flagged for a member to confirm`;
+        }
+      }
+    }
+    const matches = [];
+    for (const entityId of hits) {
+      matches.push(this.#upsertResolution({
+        captureSha: rr.capture_sha, bundleId: rr.bundle_id, ref: rr.ref, entityId, grade, method, basis, resolvedBy }));
+    }
+    return matches;
+  }
+
+  /* op=resolve: run the recogniser over a captured document's references and store the
+     resolutions. With a `ref`, resolve just that reference; without one, resolve every
+     reference the document's reading carries. A reference matching no entity is returned
+     UNRESOLVED and honestly so -- there is no row, no force-match. */
+  resolveReferences({ captureSha, ref = null, resolvedBy = null } = {}) {
+    if (typeof captureSha !== "string" || !captureSha)
+      return { ok: false, reason: "NO_SHA", detail: "a resolution is over a captured document, named by its capture sha256" };
+    let refs;
+    if (ref != null) {
+      if (typeof ref !== "string" || !ref)
+        return { ok: false, reason: "NO_REF", detail: "resolve a single reference by its raw kind:key, or omit ref to resolve all" };
+      const one = this.#one(
+        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        captureSha, ref);
+      if (!one) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
+        detail: "this captured document's reading carries no such reference (nothing to resolve)" };
+      refs = [one];
+    } else {
+      refs = this.#rows(
+        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? ORDER BY ref`,
+        captureSha);
+    }
+    const resolved = [], unresolved = [];
+    this.ctx.storage.transactionSync(() => {
+      for (const rr of refs) {
+        const matches = this.#recognise(rr, resolvedBy);
+        if (matches.length === 0) { unresolved.push({ ref: rr.ref, kind: rr.ref_kind, key: rr.ref_key, label: rr.label }); continue; }
+        for (const m of matches) resolved.push(m);
+      }
+    });
+    return { ok: true, capture_sha: captureSha, references: refs.length,
+             resolved_count: resolved.length, unresolved_count: unresolved.length, resolved, unresolved };
+  }
+
+  /* op=resolvetestify: a member's Grade D TESTIMONY that a document concerns an entity,
+     recorded with an author and a date (framework 8.1 grade D). The RECOGNISER never
+     mints a D -- this is the ONLY path a D enters, and it is member-driven, never the
+     machine's. It refuses unless the reference actually appears in the document's
+     reading and the entity is registered, so testimony cannot invent either end. It
+     shares the improvable-grade rule: a D never downgrades a stronger machine
+     resolution already present for the same triple. */
+  testifyResolution({ captureSha, ref, entityId, basis, resolvedBy = null } = {}) {
+    if (typeof captureSha !== "string" || !captureSha)
+      return { ok: false, reason: "NO_SHA", detail: "testimony is about a captured document, named by its capture sha256" };
+    if (typeof ref !== "string" || !ref)
+      return { ok: false, reason: "NO_REF", detail: "testimony names the raw reference (kind:key) the document carries" };
+    if (typeof entityId !== "string" || !entityId)
+      return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
+    const b = typeof basis === "string" ? basis.trim() : "";
+    if (!b) return { ok: false, reason: "NO_BASIS",
+      detail: "grade D is recorded testimony: it carries the member's stated basis, with an author and a date" };
+    const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=?`, captureSha, ref);
+    if (!rr) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
+      detail: "this captured document's reading carries no such reference to testify about" };
+    const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, entityId);
+    if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
+    const method = `testimony -- asserted by ${resolvedBy || "a member"} with no captured basis (framework 8.1 grade D)`;
+    const m = this.ctx.storage.transactionSync(() => this.#upsertResolution({
+      captureSha, bundleId: rr.bundle_id, ref, entityId, grade: "D", method, basis: b, resolvedBy }));
+    return { ok: true, grade_declared: "D", ...m };
+  }
+
+  /* The read-side view of a resolution: established and needs_confirmation are surfaced
+     explicitly from the grade so a caller cannot misread a C as established. */
+  #resolutionView(r) {
+    return { capture_sha: r.capture_sha, bundle_id: r.bundle_id, ref: r.ref, entity_id: r.entity_id,
+             grade: r.grade, established: !!r.established, needs_confirmation: r.grade === "C",
+             method: r.method, basis: r.basis, raised_from: r.raised_from, resolved_by: r.resolved_by, at: r.at };
+  }
+
+  /* op=resolutions: every resolution the recogniser (or a member's testimony) recorded
+     for one captured document, by its capture sha. */
+  resolutionsForCapture({ captureSha } = {}) {
+    if (typeof captureSha !== "string" || !captureSha)
+      return { ok: false, reason: "NO_SHA", detail: "resolutions are read for a captured document, by its capture sha256" };
+    const rows = this.#rows(
+      `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
+         FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id`, captureSha);
+    return { ok: true, capture_sha: captureSha, count: rows.length, resolutions: rows.map((r) => this.#resolutionView(r)) };
+  }
+
+  /* op=concerns: THE REVERSE INDEX -- every document (capture, with its bundle) that
+     concerns entity X, by joining resolutions on entity_id. This is the single largest
+     piece of manual work the framework removes. It joins on entity_id ONLY: a declared
+     relation is NEVER traversed (do not resolve THROUGH a relation, D-83), so "concerns
+     X" means a reference in the document resolved to X itself, not to a proxy of X.
+     Each document reports the STRONGEST grade any of its references resolved to X at,
+     with established/needs_confirmation surfaced so a C is never presented as settled. */
+  documentsConcerning({ entityId } = {}) {
+    if (typeof entityId !== "string" || !entityId)
+      return { ok: false, reason: "NO_ENTITY", detail: "the reverse index answers by entity id (op=concerns&id=ENT-...)" };
+    const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
+    const rows = this.#rows(
+      `SELECT capture_sha, bundle_id, ref, grade, method, established, at
+         FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha`, entityId);
+    /* Collapse to distinct captures, keeping the strongest grade per capture. */
+    const byCapture = new Map();
+    for (const r of rows) {
+      const cur = byCapture.get(r.capture_sha);
+      if (!cur || Store.#GRADE_RANK[r.grade] > Store.#GRADE_RANK[cur.grade]) {
+        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, ref: r.ref,
+          grade: r.grade, established: !!r.established, needs_confirmation: r.grade === "C", method: r.method, at: r.at });
+      }
+    }
+    const documents = [...byCapture.values()];
+    return { ok: true, entity_id: entityId, found: !!ent,
+             entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
+             count: documents.length, resolution_count: rows.length, documents };
+  }
+
   /* ---- coordination: what LockService and the nextSeq race did ---- */
 
   allocId(prefix, year) {
@@ -3120,6 +3358,8 @@ export class Store extends DurableObject {
       /* FW-6: the subject registry's depth, reported so a whole-store purge can
          PROVE it cleared the registry rather than assert it (D-113). */
       entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
+      /* FW-7: the recogniser's resolutions, reported so a purge can PROVE it took them. */
+      resolutions: n("resolutions"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -3144,8 +3384,14 @@ export class Store extends DurableObject {
        whole-store purge that reported scope ALL and left a document's reading and
        its entity references behind is exactly the silent-leftover D-113 exists to
        prevent, and hygiene.test.mjs holds this list against schema.mjs. */
+    /* FW-7: `resolutions` (CONSTRUCTS Step 4 slice B) is DERIVED from the corpus — a
+       recogniser's match of a captured document's reference to an entity — and carries
+       bundle_id, so it clears in BOTH arms exactly as readings/reading_refs do. Leaving
+       it out would let a whole-store purge report scope ALL while a document's
+       resolutions survived, the D-113 silent-leftover; hygiene.test.mjs holds this list
+       against schema.mjs. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
-                    "readings", "reading_refs"];
+                    "readings", "reading_refs", "resolutions"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -3232,7 +3478,9 @@ export class Store extends DurableObject {
                  sourceReachability: d("sourceReachability"),
                  /* FW-6: the registry rows a whole-store purge took (D-113). */
                  entities: d("entities"), entityAliases: d("entityAliases"),
-                 entityRelations: d("entityRelations") },
+                 entityRelations: d("entityRelations"),
+                 /* FW-7: the recogniser's resolutions a purge took (D-113). */
+                 resolutions: d("resolutions") },
     };
   }
 
@@ -5943,6 +6191,16 @@ export class Store extends DurableObject {
         entity: () => this.readEntity({ entityId: url.searchParams.get("id") }),
         entitybyalias: () => this.entitiesByAlias({ alias: url.searchParams.get("alias") }),
         relation: () => this.readRelation({ relationId: url.searchParams.get("id") }),
+        /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISERS. resolve runs the
+           recogniser over a captured document's references and stores each resolution
+           with its §8.1 grade (A/B/C, never D — the machine never testifies);
+           resolvetestify is the member's grade-D testimony path; resolutions reads a
+           document's resolutions; concerns is the REVERSE INDEX, every document that
+           concerns an entity, by joining on entity_id (never through a relation). */
+        resolve: () => this.resolveReferences(body || {}),
+        resolvetestify: () => this.testifyResolution(body || {}),
+        resolutions: () => this.resolutionsForCapture({ captureSha: url.searchParams.get("sha256") }),
+        concerns: () => this.documentsConcerning({ entityId: url.searchParams.get("id") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),

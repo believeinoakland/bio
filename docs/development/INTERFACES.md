@@ -529,15 +529,18 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.2.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.3.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
   `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —
   ADDITIVE: three new tables `entities`, `entity_aliases`, `entity_relations` (the
   SUBJECT REGISTRY, CONSTRUCTS Step 4 slice A / D-83), added BEFORE `host_governor`
-  and to `op=purge`'s whole-store arm. No existing table's columns changed, so
-  nothing built against I5 breaks; the shapes are in the ownership list and note
-  below.)
+  and to `op=purge`'s whole-store arm; 1.3.0 2026-07-31, FW-7 — ADDITIVE: one new
+  DERIVED table `resolutions` (the RECOGNISERS, CONSTRUCTS Step 4 slice B), added
+  BEFORE `host_governor` and to `op=purge`'s `TABLES` (so it clears in BOTH the
+  per-bundle and whole-store arms, like `readings`/`reading_refs`). No existing
+  table's columns changed, so nothing built against I5 breaks; the shapes are in the
+  ownership list and note below.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 
@@ -590,8 +593,29 @@ projection — but a whole-store purge (the scratch-reset tool) clears them like
 a per-bundle purge leaves them (no `bundle_id`). Write through `op=entitycreate` (with
 inline aliases), `op=entityalias`, `op=relationdeclare` (all stamp `declared_by` from the
 session, all need `contribute`); read through `op=entity` (by key), `op=entitybyalias`,
-`op=relation` (by id). RESOLVING a `reading_refs` reference to an `entities` row, declaring
-the §8.1 resolution-method-as-grade, is the NEXT slice — NOT built here.
+`op=relation` (by id).
+
+`resolutions` (FW-7, CONSTRUCTS Step 4 slice B) is `FRAMEWORK`'s: the RECOGNISERS.
+A resolution is the recogniser's match of one raw `reading_refs` reference (FW-5, a
+source-assigned `kind:key`) to a registry `entities` row (FW-6), DECLARING THE METHOD —
+which IS the framework's §8.1 connection **grade**. Keyed `(capture_sha, ref, entity_id)`
+so a re-resolution that finds a stronger basis RAISES the grade+method IN PLACE
+(`raised_from` records the prior grade), never a second row and never a downgrade — grade
+is IMPROVABLE, not frozen. `grade` ∈ {A,B,C,D}: **A** the reference's composite key matched
+a registered identifier exactly (the source's own identifier, both ends captured); **B**
+the bare key matched a registered identifier in content; **C** a name/title matched an
+entity ALIAS (correspondence — NEVER established, `needs_confirmation`); **D** member
+TESTIMONY (`op=resolvetestify`, an author + a date, no captured basis). `established` is
+DERIVED from grade at write (1 for A/B, 0 for C/D), so a C can never read back as
+established. The recogniser (`op=resolve`) mints only A/B/C, matches a reference to an
+entity's OWN aliases only, and NEVER traverses a declared relation (do not resolve THROUGH
+a constitutive `proxy_for`/`member_of`/`overlaps` edge, D-83). Write through `op=resolve`
+(the recogniser) and `op=resolvetestify` (grade-D testimony) — both stamp `resolved_by`
+from the session and need `contribute`; read through `op=resolutions` (a document's
+resolutions, by `capture_sha`) and **`op=concerns`** (the REVERSE INDEX — every document
+that concerns an entity, joined on `entity_id`, by id). DERIVED from the corpus (carries
+`bundle_id`), so cleared by BOTH a per-bundle and a whole-store purge (it is in
+`op=purge`'s `TABLES`).
 
 ### What changing it costs
 

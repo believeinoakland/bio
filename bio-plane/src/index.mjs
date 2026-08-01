@@ -443,6 +443,19 @@ const OPS = {
   entity:       { classes: ["admin", "member", "probe"],           mutating: false },
   entitybyalias:{ classes: ["admin", "member", "probe"],           mutating: false },
   relation:     { classes: ["admin", "member", "probe"],           mutating: false },
+  /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISERS. `resolve` runs the recogniser
+     over a captured document's reading references and stores each resolution with its
+     §8.1 connection grade (A source's own composite identifier, B the source's bare
+     identifier in content, C name correspondence — never D, which the machine never
+     mints); `resolvetestify` is the member's grade-D TESTIMONY path (an author and a
+     date, no captured basis). Both mutate and stamp resolved_by from the session below.
+     `resolutions` reads a document's resolutions; `concerns` is the REVERSE INDEX —
+     every document that concerns an entity, joined on entity_id, never through a
+     declared relation. Both read-only; probe admitted so the surface is exercisable. */
+  resolve:        { classes: ["admin", "member", "probe"],         mutating: true  },
+  resolvetestify: { classes: ["admin", "member", "probe"],         mutating: true  },
+  resolutions:    { classes: ["admin", "member", "probe"],         mutating: false },
+  concerns:       { classes: ["admin", "member", "probe"],         mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -544,14 +557,25 @@ const REGISTRY_ACTIONS = ["entitycreate", "entityalias", "relationdeclare",
    (`#refuseNotYours`, NOT_YOURS) refuses a member who is neither the assignee
    nor an admin — the enforcement UI-1 delegated as cosmetic. */
 const TASK_ACTIONS = ["taskforward", "taskresolve"];
+/* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
+   captured document's references to registry entities (resolve), TESTIFIES a grade-D
+   connection (resolvetestify), and READS the resolutions of a document (resolutions)
+   and the reverse index for an entity (concerns). Named as one set in both the member
+   and admin lists so the two cannot drift apart. The two WRITES are stamped with the
+   resolving member below, like the registry writes: who resolved or testified is part
+   of the record. The reads take no viewer stamp — they key on a capture sha and an
+   entity id, not on the corpus view. */
+const RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concerns"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
-                   ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
+                   ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
+                   ...EDGE_ACTIONS, ...STATE_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
-                   ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
+                   ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
+                   ...EDGE_ACTIONS, ...STATE_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
@@ -610,6 +634,14 @@ const NEEDS = {
   entitycreate:     "contribute",
   entityalias:      "contribute",
   relationdeclare:  "contribute",
+  /* FW-7: RESOLVING a reference to an entity, and TESTIFYING a grade-D connection,
+     both write into the record what documents concern which subjects — a corpus-shaping
+     act on the same surface as building the registry, so `contribute`: a view-only
+     member does not resolve references or testify. The resolving member is stamped
+     server-side. The reads (resolutions/concerns) are ungated, like the registry and
+     working-corpus reads. */
+  resolve:          "contribute",
+  resolvetestify:   "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */
@@ -2808,6 +2840,19 @@ export default {
       try {
         const b = JSON.parse(passBody);
         b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* FW-7: WHO resolved a reference or TESTIFIED a grade-D connection is part of the
+       record, stamped from the session and overwritten if supplied, on the same
+       reasoning as the registry writes above: a resolution a caller could attribute to
+       someone else is not that member's act, and a grade-D testimony without a named
+       author is not testimony at all (framework 8.1). A machine credential says what it
+       is (class:<cls>) rather than borrowing a person's name. */
+    if ((op === "resolve" || op === "resolvetestify") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.resolvedBy = viaSession ? sessMember : `class:${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }

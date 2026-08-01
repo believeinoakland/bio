@@ -718,6 +718,59 @@ CREATE TABLE IF NOT EXISTS entity_relations (
 );
 CREATE INDEX IF NOT EXISTS entity_relations_from ON entity_relations(from_entity);
 CREATE INDEX IF NOT EXISTS entity_relations_to ON entity_relations(to_entity);
+-- CONSTRUCTS Step 4, SLICE B (FW-7): the RESOLUTIONS. A resolution is the RECOGNISER's
+-- act of matching one raw reading_refs reference (FW-5, a source-assigned kind:key
+-- carried by a captured document's reading) to a registry ENTITY (FW-6), and DECLARING
+-- THE METHOD -- which IS the framework's section 8.1 connection grade. It is what turns
+-- "which documents carry this raw reference" (FW-5's reverse index over the unresolved
+-- kind:key) into "every document that concerns this ENTITY" (the reverse index this
+-- table delivers), the single largest manual task the framework removes.
+--
+-- grade states HOW the reference was matched, and NOTHING else (framework 8.1):
+--   A -- the source's own identifier: the reference is the source's composite key
+--        (kind:key), matched exactly to a registered identifier of the entity, at both
+--        ends captured+hashed. The publisher names this subject by this key.
+--   B -- an identifier the source USES, matched exactly in captured content at both
+--        ends: the bare key matched a registered identifier, but not as the source's
+--        own composite addressing key.
+--   C -- correspondence, not identity: a name/title matched an entity ALIAS. Plausible,
+--        NEVER presented as established, and FLAGGED for a member to confirm (an
+--        equality that costs nothing to produce is not evidence, CLAUDE.md).
+--   D -- asserted with no captured basis: member TESTIMONY, recorded with an author and
+--        a date. The RECOGNISER never mints a D (op=resolve produces only A/B/C); the
+--        model holds it so a member can testify (op=resolvetestify), never the machine.
+-- established is derived from grade at write time -- 1 for A/B, 0 for C/D -- so a C can
+-- NEVER be read back as established (the column carries the flag structurally, not by a
+-- caller's restraint). needs_confirmation is the read-side face of a C.
+--
+-- Grade is IMPROVABLE (framework 8.1: a C becomes B when a shared identifier is later
+-- found in both ends, A when the source links them). The row is keyed
+-- (capture_sha, ref, entity_id) so a RE-resolution that finds a stronger basis RAISES
+-- the grade+method IN PLACE (raised_from records the prior grade), never a second row
+-- and never a downgrade -- the resolution is not frozen. A DECLARED relation (FW-6) is
+-- constitutive, sits OUTSIDE this grade, and is NEVER traversed to resolve a reference:
+-- the recogniser matches a reference to an entity's own aliases only, never THROUGH a
+-- proxy_for/member_of/overlaps edge.
+--
+-- DERIVED from the corpus (keyed by a capture and carrying its bundle_id), so a
+-- whole-store purge AND a per-bundle purge clear it (D-113); it is in op=purge's TABLES.
+CREATE TABLE IF NOT EXISTS resolutions (
+  capture_sha  TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,
+  ref          TEXT NOT NULL,
+  entity_id    TEXT NOT NULL,
+  grade        TEXT NOT NULL,
+  method       TEXT NOT NULL,
+  basis        TEXT,
+  established  INTEGER NOT NULL DEFAULT 0,
+  raised_from  TEXT,
+  resolved_by  TEXT,
+  at           TEXT,
+  PRIMARY KEY (capture_sha, ref, entity_id)
+);
+CREATE INDEX IF NOT EXISTS resolutions_entity ON resolutions(entity_id);
+CREATE INDEX IF NOT EXISTS resolutions_capture ON resolutions(capture_sha);
+CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
