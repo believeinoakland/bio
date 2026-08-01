@@ -365,6 +365,15 @@ accepts-when: a reading reference matching an entity's alias resolves to it at g
 added: 2026-07-31 · CONDUCT
 landed: 2d11c03 — the RECOGNISERS: new DERIVED table `resolutions` (capture_sha,ref,entity_id PK; grade,method,basis,established,raised_from). #recognise matches a reading_ref against entity_aliases in strict priority — A composite id, B bare id in content, C name correspondence — records at the strongest tier that hit, never traverses a declared relation (D-83). Grade IMPROVABLE in place (C→A via raised_from; #upsertResolution never downgrades, never duplicates). Grade C STRUCTURALLY can't read established. op=concerns = the reverse index "every document that concerns entity X". op=resolvetestify holds member grade-D testimony (author+date, never machine-minted). 4 ops (resolve/resolvetestify mutating contribute + resolutions/concerns reads). I5 1.3.0 additive. purge covers it (both arms, D-113). battery 58/58, coverage --strict 97/97. NCs RUN (force C established → 3 fail; neuter upsert → reverse index empties). CONSTRUCTS Step 4 COMPLETE (registry + recognisers).
 
+### FW-8 · queued
+milestone: M4
+scope: CONSTRUCTS Step 5, SLICE A — PROGRESSIONS AS DATA (framework §8.2, "generalises the connection table rather than sitting beside it"). Absorbs D-67 (connections are EMITTED and nothing stores/relates/shows them) and D-72 (connections have NO grade). Built on FW-7's `resolutions` (two documents resolving to the same entity is the raw material of a connection). (1) PERSIST a CONNECTION as data carrying a GRADE — the §8.1 A–D method-as-grade FW-7 computes per resolution; a connection between two documents derives from how each end resolved (D-72 closed). First find where connections are EMITTED today (D-67) and build storage under them, not a parallel path. (2) Model the PROGRESSION DEFINITION as data: ordered stages with `after`, cardinality, interval, required-ness — such that BOTH example progressions are expressible as rows: **meeting→agenda→minutes** AND **need→award→signed-contract** (the acceptance). DEFER to slice B and FLAG it in your report: progression INSTANCES, weakest-grade inheritance along a chain (D-73, pair→chain), exception documents that discharge a legitimate skip, junction checks as findings, and the task that walks the table for a missing predecessor. New tables are I5-additive (schema traps: BEFORE host_governor, no backticks, add to purge — D-113). Give every new op a control-plane assertion (coverage runs --strict).
+behind-interface: I5
+depends-on: FW-7
+accepts-when: both meeting→agenda→minutes and need→award→signed-contract are expressible as progression-definition rows; a connection persists carrying its §8.1 grade and is retrievable; negative control — dropping the grade write leaves a connection ungraded (D-72 regressed), and dropping the persist loses the connection (D-67 regressed).
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## CONTENT-HTML — DORMANT
@@ -400,3 +409,12 @@ depends-on: none
 accepts-when: `civicos-ui/test/run.mjs` green with a task-inbox test that lists a member's tasks, forwards one and resolves one through the plane ops, and shows an `unassigned` task honestly; negative control — break the `taskresolve` wiring and the resolve path fails.
 added: 2026-07-31 · CONDUCT
 landed: 105198b — the TASK INBOX ships: a member Tasks screen over the existing plane ops (tasks/taskforward/taskresolve/memberlist/whoami, D-98), partitioned honestly into Yours / Unassigned / With-other-members. Accountability rules rendered: age from created (an ageing REASON shown only if the task history carries one — never fabricated; the D-79 ageing job doesn't exist yet), unassigned-not-phantom, refusal shape "this isn't yours to resolve — it's with <assignee>". Points at the act (openBundle refers_to), does not reimplement it. Clock-half gap (D-86) NOTED not built (ops expose no clock; TASK_KINDS only authority-undetermined). civicos-ui/test/run.mjs green (14 harnesses incl task-inbox 33). Plane battery untouched. NC RUN (taskresolve→tasknope, 4 fail). DELEGATION UI→RECORD raised: the plane lets any member resolve/forward any task — the refusal is cosmetic until the plane enforces it (→ REC-4).
+
+### UI-2 · queued
+milestone: M8
+scope: The first ACT surface — v0.2's FALSIFIABLE TEST ("build the queue and ONE act; if the next three acts each need a new construct, the collapse was wrong"). Build ONE act through the ACT construct and its WEIGHT LADDER (reversible · reasoned · terminal · attested), as a JUSTIFIED TRANSITION (interaction-constructs v0.2, §J — "a state change carrying authored text that becomes evidence"). Cleanest existing candidate: FOCUS DISPOSITION (`op=dispose` to deferred/dismissed), which C-2.8 ALREADY requires a reason for — a natural "reasoned" rung. Build the ONE MOTION the construct names: CHOOSE the act; see WHAT IT WILL REFUSE and WHY *before* it runs (pre-flight the refusal — e.g. the C-2.8 reason requirement); AUTHOR the reason (required, NEVER prefilled); get a RECEIPT. Show the act's weight-ladder position. Confirm the plane op and its refusal shape by grep; if a needed pre-flight/refusal isn't exposed, DELEGATE to RECORD, do not reshape the plane. The two-construct-collapse verdict (did this act fit the one construct, or need a new one?) is a REPORTED DELIVERABLE — v0.2's test.
+behind-interface: I3
+depends-on: none
+accepts-when: `civicos-ui/test/run.mjs` green with an act test that disposes a focus with an authored reason and gets a receipt, and that the act is REFUSED (reason shown) when the required reason is absent; negative control — remove the reason-required pre-flight and the empty-reason act is no longer refused in the surface.
+added: 2026-07-31 · CONDUCT
+landed:
