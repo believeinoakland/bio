@@ -121,7 +121,7 @@ accepts-when: `npm run test:coverage` reports 51 of 51 checks named; each new as
 added: 2026-07-31 · BOB
 landed: 8dcb4ba — check-firing.test.mjs: all 33 previously-unnamed checks now named, 51/51 (100%, was 18/51). Each asserted BOTH ways (fires on a one-thing tamper of a conformant bundle, silent on the untouched base) — the paired assertion is the built-in negative control. battery 48/48 (2493). Closes the S-7 class.
 
-### M0-4 · queued
+### M0-4 · active
 milestone: M0
 scope: `npm test` becomes `node scripts/battery.mjs`, so a crash cannot hide the suites behind it (D-93 first half). Then the second half: `ratify.test.mjs` detects `ssh-keygen` and SKIPS LOUDLY with a named reason, or fails loudly — never quietly does less, and `sshsig` must report why it ran 16 rather than 18.
 behind-interface: none
