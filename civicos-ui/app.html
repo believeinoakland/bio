@@ -326,6 +326,33 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 .bl-arith tr.bl-div td{background:var(--tint-muted)}
 .bl-arith tr.bl-div .bl-flag{color:var(--verdigris-dk);font-weight:600;font-size:11px}
 .bl-note{font-size:12.5px;color:var(--ink-soft);margin:8px 0 0}
+/* UI-5 the PROPOSAL: a DERIVED finding awaiting an authored act. It must LOOK derived
+   (D-82) and group N instances of one check into ONE item (D-79), never N. The derived
+   marker is the load-bearing distinction — its removal is the negative control. */
+.prop-banner{border:var(--hair);border-left:3px solid #d6a48c;border-radius:var(--r-2);padding:12px 15px;margin:0 0 18px;background:var(--tint-note);font-size:13.5px;color:var(--ink-soft)}
+.prop-banner b{color:var(--ink)}
+.prop-card{background:var(--sheet);border:var(--hair);border-left:3px dashed #b7935f;padding:0 0 14px;margin:0 0 14px;box-shadow:var(--e-2)}
+.prop-derived{display:flex;flex-direction:column;gap:3px;padding:9px 15px;background:var(--tint-note);border-bottom:var(--hair)}
+.prop-dtag{font-family:var(--font-fact);font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--signal-dk);display:inline-flex;align-items:center;gap:6px}
+.prop-dtag::before{content:"";width:8px;height:8px;border-radius:50%;border:1.5px solid var(--signal-dk);background:transparent}
+.prop-dwhy{font-size:12.5px;color:var(--ink-soft)}
+.prop-dwhy b{color:var(--signal-dk)}
+.prop-q{font-family:var(--font-sheet);font-size:17px;font-weight:600;margin:12px 15px 4px;color:var(--ink)}
+.prop-meta{font-size:13px;color:var(--ink-soft);margin:0 15px 8px}
+.prop-meta b{color:var(--ink)}
+.prop-grade{font-size:12.5px;color:var(--ink-soft);margin:0 15px 8px;padding:6px 10px;background:var(--paper-2);border-radius:var(--r-2)}
+.prop-grade.und{color:var(--signal-dk)}
+.prop-grade b{color:var(--ink)}
+.prop-insts{margin:0 15px 8px;font-size:12.5px}
+.prop-insts summary{cursor:pointer;color:var(--verdigris-dk);font-family:var(--font-fact);font-size:12px}
+.prop-insts ul{margin:8px 0 0;padding-left:18px;color:var(--ink-soft)}
+.prop-insts li{margin:0 0 4px}
+.prop-inst-g{font-family:var(--font-fact);font-size:11px;color:var(--muted)}
+.prop-acts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 15px 0}
+.prop-note{font-size:12px;color:var(--muted);margin:10px 15px 0;max-width:64ch}
+.prop-adopt-lede{font-size:13.5px;color:var(--ink-soft);margin:0 0 10px;max-width:58ch}
+.prop-context{border:var(--hair);border-left:3px solid #b7935f;border-radius:var(--r-2);padding:9px 12px;margin:0 0 12px;background:var(--tint-note);font-size:12.5px;color:var(--ink-soft)}
+.prop-context .pc-cap{font-family:var(--font-fact);font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--signal-dk);margin:0 0 4px}
 
 /* line icons */
 svg.ic{display:none}
@@ -770,6 +797,7 @@ async function boot(){
 const RAIL = [
   {id:"record",   icon:"i-record",   label:"Record"},
   {id:"tasks",    icon:"i-review",   label:"Tasks"},
+  {id:"proposals",icon:"i-focus",    label:"Proposals"},
   {id:"search",   icon:"i-search",   label:"Search"},
   {id:"subjects", icon:"i-focus",    label:"Subjects"},
   {id:"focuses",  icon:"i-focus",    label:"Focuses"},
@@ -858,14 +886,14 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={record:"The record",tasks:"Tasks",proposals:"Proposals",search:"Search",subjects:"Subjects",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","focuses","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
     return;
   }
   const R = {
-    record: renderRecord, tasks: renderTasks, search: renderSearchScreen, subjects: renderSubjectView, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
+    record: renderRecord, tasks: renderTasks, proposals: renderProposals, search: renderSearchScreen, subjects: renderSubjectView, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
     projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
@@ -5023,6 +5051,531 @@ function subjConnectionsHtml(c){
     </div>`;
   }).join("");
   return head + rows + `</section>`;
+}
+
+/* ============================================================
+   UI-5 — THE THIRD ACT: a PROPOSAL, through the SAME ACT construct + weight
+   ladder UI-2/UI-3 established, and v0.2's FALSIFIABLE test act THREE: does the
+   ACT construct hold for a DERIVED FINDING awaiting an authored act?
+
+   A PROPOSAL is a derived finding the record produced — primarily FW-9's
+   MISSING-PREDECESSOR findings (op=instance): a REQUIRED stage of a progression
+   with no threaded document (the framework's own example, an award with no
+   solicitation). D-90 invariant 8 is its charter: "derived things inform and
+   authored acts bind." A proposal REPORTS; it never decides, never blocks, and
+   never edits the thing it is about. The path from a proposal to a binding change
+   runs THROUGH a person — which is the ACT.
+
+   The three rules this surface exists to keep, all doctrine:
+
+   1. IT MUST LOOK DERIVED (D-82, the DISPLAY half this closes). A member needs to
+      know that NOBODY HAS YET JUDGED IT WORTH ASKING — the difference between a
+      machine noticing a pattern and a member deciding it matters. The derived
+      marker (proposalDerivedBadgeHtml) carries that; removing it is this suite's
+      negative control, and the card then reads as an established finding. It is
+      NOT a discount on the question: a good question stands on its merits whoever
+      asked it. surfaced_by is "machine" because a derived finding is intrinsically
+      machine-surfaced (REC-3 stamps agent/human on authored bundles; a proposal is
+      not authored until a member adopts it).
+
+   2. AGGREGATE, DO NOT DROWN (D-79). One check firing across N progression
+      instances is ONE proposal with N instances, NEVER N items. "Why do these N
+      awards have no solicitation" is ONE question. proposalsFrom() groups by
+      (progression_key, stage_key); the instances are listed under the one card.
+
+   3. EXACTLY THREE AFFORDANCES, and only three (interaction-constructs v0.2 §P):
+      ADOPT (author it into a focus/problem the member decides is worth pursuing —
+      op=promote, the plane stamps surfaced_by human because a person judged it),
+      DEFER (with a recorded reason), DISMISS (with a recorded reason). Nothing is
+      adopted automatically and nothing is dismissed silently.
+
+   Plane ops consumed (I3), never reshaped:
+     op=instance (GET key=&id=) -> { found, grade, grade_determined, established,
+       finding_count, findings:[{kind:"missing_predecessor", stage_key, required,
+       grade, grade_determined}], stages:[...] } — the derived findings we RENDER.
+     op=promote (mutating) -> ADOPT authors a focus/problem; the browser never
+       sends surfaced_by (REC-3 stamps it from the session: a member session -> human).
+
+   TWO GAPS, reported as DELEGATIONs to RECORD (CLAIMS.md) and built around here:
+     (a) NO AGGREGATED FEED. No op enumerates progression instances and returns
+         their missing-predecessor findings; op=instance reads ONE instance by
+         (key, entity). loadProposals() reads a delegated op=proposals when present
+         (returning the instance reads, which THIS surface aggregates per D-79) and
+         reports the gap honestly when it is absent, rather than inventing findings.
+     (b) NO DISPOSITION HOME FOR A BARE PROPOSAL. op=dispose disposes a FOCUS bundle
+         (a handle + a state); a proposal is not a bundle, and D-79 records that the
+         ageing/aggregation store "does not exist". DEFER/DISMISS author the full
+         motion (reason required, never prefilled; pre-flight; receipt) and record
+         through a delegated op=proposedispose; absent it, the commit says so and
+         writes nothing. ADOPT, by contrast, is fully reachable through op=promote.
+   ============================================================ */
+
+/* §8.1 grade rank (A strongest .. D weakest); a proposal's strength is the WEAKEST
+   connection across its instances (a case is only as strong as its weakest link),
+   and UNDETERMINED if any instance is undetermined — never guessed. */
+const PROP_GRADE_RANK = { A:4, B:3, C:2, D:1 };
+function weakerGrade(a, b){ return (PROP_GRADE_RANK[a]||0) <= (PROP_GRADE_RANK[b]||0) ? a : b; }
+const PROP_GRADE_HOW = {   // §8.1 — HOW a connection was established, never credibility
+  A:"a shared identifier, both ends captured", B:"an identifier matched in both captures",
+  C:"a corresponding name — not a shared identifier", D:"a member's testimony" };
+const PROP_REQUIRED_WORD = { always:"always expected", usually:"usually expected" };
+
+/* D-79 AGGREGATION — pure, so the harness can prove it. Given the instance reads
+   (each { progression_key, progression_label, entity_id, entity_label, findings[] }),
+   group every missing-predecessor finding by (progression_key, stage_key) into ONE
+   proposal carrying its N instances. This is the rule: N instances of one check are
+   ONE proposal, never N. */
+function proposalsFrom(instances){
+  const groups = new Map();
+  for(const inst of (instances||[])){
+    for(const f of (inst.findings||[])){
+      if(f.kind !== "missing_predecessor") continue;   // the derived finding we surface
+      const key = inst.progression_key + "::" + f.stage_key;
+      let g = groups.get(key);
+      if(!g){
+        g = { key, progression_key: inst.progression_key,
+          progression_label: inst.progression_label || humanKind(inst.progression_key),
+          stage_key: f.stage_key, stage_label: f.stage_label || humanKind(f.stage_key),
+          required: f.required, surfaced_by: "machine", instances: [] };
+        groups.set(key, g);
+      }
+      g.instances.push({ entity_id: inst.entity_id, entity_label: inst.entity_label || inst.entity_id,
+        progression_key: inst.progression_key, grade: f.grade, grade_determined: f.grade_determined !== false });
+    }
+  }
+  const out = [];
+  for(const g of groups.values()){
+    g.n = g.instances.length;
+    const anyUndet = g.instances.some(i => !i.grade_determined || !i.grade);
+    g.grade_determined = !anyUndet;
+    g.grade = anyUndet ? null : g.instances.map(i => i.grade).reduce((a, b) => weakerGrade(a, b));
+    out.push(g);
+  }
+  // biggest pattern first (the drowning failure is showing many small ones as many items)
+  out.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+  return out;
+}
+
+function proposalQuestion(p){
+  const stage = String(p.stage_label || p.stage_key).toLowerCase();
+  const prog = String(p.progression_label || p.progression_key).toLowerCase();
+  return p.n === 1
+    ? `Why does this ${prog} have no ${stage}?`
+    : `Why do these ${p.n} ${prog} instances have no ${stage}?`;
+}
+
+/* THE DERIVED MARKER (D-82) — the load-bearing distinction, and this suite's
+   negative control. It says two things a member must know: the record surfaced
+   this (surfaced_by machine), and NOBODY HAS YET JUDGED IT WORTH PURSUING. Remove
+   it and the card below reads as an established finding — the D-82 regression. */
+function proposalDerivedBadgeHtml(p){
+  return `<div class="prop-derived">
+    <span class="prop-dtag">Surfaced by the record — not yet judged</span>
+    <span class="prop-dwhy">The record noticed this pattern on its own. <b>Nobody has yet decided it is worth pursuing.</b> It is a question the record raised, not an established finding — it decides nothing and changes nothing until a person acts on it.</span>
+  </div>`;
+}
+
+/* The strength grade, shown HONESTLY: how strongly the record connected the
+   evidence (§8.1), never how much to trust it, and never a claim that the question
+   matters. Undetermined is stated, not filled in. */
+function proposalGradeHtml(p){
+  if(!p.grade_determined || !p.grade)
+    return `<div class="prop-grade und">Strength: <b>undetermined</b> — the record cannot yet say how strongly these are connected, and does not guess.</div>`;
+  return `<div class="prop-grade">Strength: <b>Grade ${esc(p.grade)}</b>, established by ${esc(PROP_GRADE_HOW[p.grade] || "an unrecorded method")}. That is how strongly the record connected the evidence — not how much to trust it, and not a judgment that the question matters.</div>`;
+}
+
+function proposalInstanceHtml(i){
+  const g = i.grade_determined && i.grade
+    ? `<span class="prop-inst-g" title="how this instance's link was established">Grade ${esc(i.grade)}</span>`
+    : `<span class="prop-inst-g" title="not yet determined">grade undetermined</span>`;
+  return `<li>${esc(i.entity_label)} ${g}</li>`;
+}
+
+/* ONE proposal card: the derived marker FIRST (D-82), then the question, the D-79
+   aggregation ("N instances of one check, grouped"), the honest grade, the N
+   instances under one disclosure, and EXACTLY THREE affordances. */
+function proposalCardHtml(p){
+  const insts = p.instances.map(proposalInstanceHtml).join("");
+  const many = p.n > 1;
+  return `<div class="prop-card" data-key="${esc(p.key)}">
+    ${proposalDerivedBadgeHtml(p)}
+    <h3 class="prop-q">${esc(proposalQuestion(p))}</h3>
+    <div class="prop-meta">In the <b>${esc(p.progression_label)}</b> progression, the <b>${esc(p.stage_label)}</b> stage is ${esc(PROP_REQUIRED_WORD[p.required] || (p.required + " expected"))} but no document fills it. ${many ? `<b>${p.n} instances</b> of this one check — grouped as one question, not ${p.n} separate items.` : `One instance.`}</div>
+    ${proposalGradeHtml(p)}
+    <details class="prop-insts"><summary>${many ? `All ${p.n} instances` : `The instance`}</summary><ul>${insts}</ul></details>
+    <div class="prop-acts">
+      <button class="btn" data-prop-adopt="${esc(p.key)}" onclick="openProposalAdopt('${esc(p.key)}')">Adopt — make it a focus</button>
+      <button class="btn ghost" data-prop-defer="${esc(p.key)}" onclick="openProposalAct('${esc(p.key)}','deferred')">Defer&hellip;</button>
+      <button class="btn ghost" data-prop-dismiss="${esc(p.key)}" onclick="openProposalAct('${esc(p.key)}','dismissed')">Dismiss&hellip;</button>
+    </div>
+    <div class="prop-note">Adopting authors a focus <b>in your name</b> — the record then knows a person judged this worth pursuing. Deferring or dismissing records your reason and keeps the proposal; nothing here is adopted automatically and nothing is dismissed silently.</div>
+  </div>`;
+}
+
+/* ---- the screen ---- */
+let PROPOSALS_LAST = [];
+async function renderProposals(){
+  setActive("proposals");
+  const c = $("#content");
+  c.innerHTML = `<h1 class="rec">Proposals</h1>
+    <p class="lede">Questions the record raised on its own, and nobody has yet judged. Each is a pattern the record noticed — a required step of a progression with no document, most often — reported honestly as a question, never as an established fact. You decide what happens to each: adopt it as a focus, defer it, or dismiss it. Nothing here decides anything until you act.</p>
+    <div id="prop">Loading&hellip;</div>`;
+  try{
+    const feed = await loadProposals();
+    const host = $("#prop");
+    if(feed.gap){
+      host.innerHTML = proposalGapHtml(feed);
+      return;
+    }
+    PROPOSALS_LAST = feed.proposals || [];
+    const badge = $("#cnt-proposals"); if(badge) badge.textContent = PROPOSALS_LAST.length ? String(PROPOSALS_LAST.length) : "";
+    if(!PROPOSALS_LAST.length){
+      host.innerHTML = `<div class="empty">The record has surfaced no proposals right now. When it notices a pattern that wants a person — a required step with no document, say — it appears here as a question, not a fact.</div>`;
+      return;
+    }
+    host.innerHTML = PROPOSALS_LAST.map(proposalCardHtml).join("");
+  }catch(e){ const host = $("#prop"); if(host) host.innerHTML = errPane(e); }
+}
+
+/* The honest gap: the aggregated derived-findings feed is not on the plane yet.
+   Say so plainly and name what is delegated, rather than showing an empty screen
+   that implies the record found nothing. */
+function proposalGapHtml(feed){
+  return `<div class="prop-banner">
+    <b>The record cannot yet enumerate its own derived findings.</b> This surface renders a
+    proposal from the missing-predecessor findings a progression instance produces (op=instance),
+    grouped so one check across many instances is one proposal — but there is no op today that
+    walks every instance and returns those findings as one feed. That op (an aggregated
+    <span class="mono">op=proposals</span>) is delegated to RECORD; until it lands, the record has
+    no way to hand this surface the findings to show. The rendering, the grouping, and the
+    adopt / defer / dismiss acts are built and proven against the instance shape.
+  </div>`;
+}
+
+/* ---- the FEED loader. Reads a delegated op=proposals (returning the instance
+   reads this surface aggregates per D-79); reports the gap honestly when the op is
+   not on the plane, rather than inventing findings. ---- */
+async function loadProposals(){
+  let raw;
+  try{ raw = await rec("proposals"); }
+  catch(e){
+    // An unregistered op answers "unknown op" (I3); anything else is a real error.
+    if(e && /unknown op/i.test(String(e.error || e.reason || ""))) return { gap:true, reason:"no-op" };
+    return { gap:true, reason:"error", err:e };
+  }
+  const instances = (raw && (raw.instances || (raw.result && raw.result.instances))) || [];
+  return { gap:false, proposals: proposalsFrom(instances) };
+}
+
+/* ============================================================
+   THE THREE AFFORDANCES, each an ACT (choose/pre-flight/author/receipt).
+   ============================================================ */
+function canProposalAct(){ return canContribute(); }   // authoring is a member's act (op=promote / op=proposedispose need contribute)
+
+/* ---- DEFER / DISMISS: an authored disposition with a required reason ---- */
+const PROP_DISPOSE_VERB = { deferred:"Defer", dismissed:"Dismiss" };
+const PROP_DISPOSE_DONE = { deferred:"deferred", dismissed:"dismissed" };
+
+/* THE PRE-FLIGHT — pure, so the harness can prove it. A proposal has no state
+   machine (there is no illegal transition between defer and dismiss), so the gates
+   are the two that make a disposition accountable: a reason (required, never
+   prefilled) within the record's grammar. Order mirrors the store's dispose:
+   NO_REASON -> BAD_REASON. */
+function proposalDisposePreflight({ to, reason }){
+  const why = String(reason == null ? "" : reason).trim();
+  const isDisp = ["deferred", "dismissed"].includes(to);
+  const hasReason = why.length > 0;
+  const goodGrammar = !DISPOSE_REASON_RULE.test(why) && why.length <= DISPOSE_REASON_MAX;
+  const gates = [
+    { id:"reason", title:"A reason", pass:hasReason,
+      need:"Required, and never written for you. This records WHY you defer or dismiss the record's question, in your name, so the decision itself stays accountable and not only its outcome. It is refused until you write one." },
+    { id:"grammar", title:"Within the record's grammar", pass:!hasReason ? true : goodGrammar,
+      need:`At most ${DISPOSE_REASON_MAX} characters, and no quotation marks, backslashes, or line breaks: the reason is written verbatim into the record.` },
+  ];
+  let refusal = null;
+  if(!isDisp)           refusal = { reason:"NOT_A_DISPOSITION", detail:"Only deferring and dismissing are dispositions here." };
+  else if(!hasReason)   refusal = { reason:"NO_REASON",  detail:gates[0].need };
+  else if(!goodGrammar) refusal = { reason:"BAD_REASON", detail:gates[1].need };
+  return { ok: refusal === null, gates, refusal };
+}
+
+let PROP_ACT_CTX = null;   // { key, proposal, to }
+function openProposalAct(key, to){
+  const p = PROPOSALS_LAST.find(x => x.key === key);
+  if(!p) return;
+  PROP_ACT_CTX = { key, proposal:p, to };
+  const choose = ["deferred", "dismissed"].map(d => `<label class="dz-opt${d===to?" on":""}">
+      <input type="radio" name="pa-to" value="${d}" ${d===to?"checked":""} onchange="proposalActChoose(this.value)">
+      <span class="dz-verb">${esc(PROP_DISPOSE_VERB[d])}</span>
+      <span class="dz-mean">${d==="deferred"
+        ? "Park the question, with a reason. Kept, and returnable when the group is ready to look again."
+        : "Decline the question, with a reason. Kept, never deleted, so the decision itself stays accountable."}</span>
+    </label>`).join("");
+  $("#dlg").innerHTML =
+    `<h2 id="pa-h">${esc(PROP_DISPOSE_VERB[to])} this proposal</h2>
+     <p class="what">A proposal is the record's question, not yours yet. Deferring or dismissing it records your reason on the record; it is reversible — a deferred or dismissed proposal is kept — but never silent, and it neither adopts nor edits anything.</p>
+     <div class="prop-context"><div class="pc-cap">The record's question, as it stands</div>${esc(proposalQuestion(PROP_ACT_CTX.proposal))}</div>
+     <div class="dz-choose">${choose}</div>
+     <div class="dz-pf" id="pa-pf"></div>
+     <label class="fld" for="pa-reason">Your reason</label>
+     <textarea class="txt" id="pa-reason" maxlength="${DISPOSE_REASON_MAX}"
+       placeholder="e.g. These awards are below the solicitation threshold, so no RFP was required"
+       oninput="proposalActValidate()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+     <div class="cc" id="pa-cc">0 / ${DISPOSE_REASON_MAX}</div>
+     ${weightLadderHtml("reasoned", `Deferring or dismissing a proposal is <b>reasoned</b>: it is kept and returnable, so it can be undone — but it never happens silently, because it carries a reason that goes on the record as your own words.`)}
+     <div id="pa-err" class="teach hidden"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="pa-go" disabled onclick="doProposalDispose()">${esc(PROP_DISPOSE_VERB[to])}</button></div>`;
+  $("#pa-go").dataset.to = to;
+  $("#dlg-wrap").classList.remove("hidden");
+  proposalActValidate();
+  const r = $("#pa-reason"); if(r && r.focus) r.focus();
+}
+function proposalActChoose(to){
+  PROP_ACT_CTX && (PROP_ACT_CTX.to = to);
+  const go = $("#pa-go"); if(go) go.dataset.to = to;
+  const h = $("#pa-h"); if(h) h.textContent = `${PROP_DISPOSE_VERB[to]} this proposal`;
+  $("#dlg").querySelectorAll(".dz-opt").forEach(o => o.classList.toggle("on", o.querySelector("input").value === to));
+  proposalActValidate();
+}
+function proposalActValidate(){
+  if(!PROP_ACT_CTX) return;
+  const go = $("#pa-go"); const to = go ? go.dataset.to : "deferred";
+  const el = $("#pa-reason"); const reason = el ? el.value : "";
+  const pf = proposalDisposePreflight({ to, reason });
+  const cc = $("#pa-cc");
+  if(cc){
+    const bad = reason.trim() && DISPOSE_REASON_RULE.test(reason);
+    cc.textContent = bad ? "no quotation marks, backslashes, or line breaks — written verbatim" : `${reason.length} / ${DISPOSE_REASON_MAX}`;
+    cc.classList.toggle("bad", !!bad);
+  }
+  const pane = $("#pa-pf");
+  if(pane){
+    const rows = pf.gates.map(g => `<div class="pf-row ${g.pass?"ok":"no"}">
+        <span class="pf-mark">${g.pass?"✓":"✗"}</span>
+        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
+      </div>`).join("");
+    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
+      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. This act is ready.</div>` : "");
+  }
+  if(go) go.disabled = !pf.ok;
+}
+/* COMMIT. The pre-flight runs once more as the real gate: an empty reason above
+   all is refused IN THE SURFACE and never reaches the plane. Only a clean
+   pre-flight records the disposition — through the delegated op=proposedispose,
+   because a proposal is not a focus bundle and op=dispose cannot take it. Absent
+   that op, the plane answers "unknown op" and the surface says the record cannot
+   yet keep a proposal's disposition, having written nothing. (Removing the early
+   return is this suite's negative control on the reason gate.) */
+async function doProposalDispose(){
+  if(!PROP_ACT_CTX) return;
+  const go = $("#pa-go"); const to = go ? go.dataset.to : "deferred";
+  const el = $("#pa-reason"); const reason = el ? String(el.value||"").trim() : "";
+  const err = $("#pa-err"); if(err) err.classList.add("hidden");
+  const pf = proposalDisposePreflight({ to, reason });
+  if(!pf.ok){                       // the surface refuses, before the plane
+    if(err){ err.innerHTML = `<b>This act won't run yet — and nothing has been written.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
+    proposalActValidate();
+    return { refused:true, reason:pf.refusal.reason };
+  }
+  if(go){ go.disabled = true; go.textContent = "…"; }
+  try{
+    const res = await recPost("proposedispose", { key: PROP_ACT_CTX.key, to, reason });
+    proposalDisposeReceipt(res, PROP_ACT_CTX, to, reason);
+    return res;
+  }catch(e){
+    // The delegated disposition op is not on the plane yet — say so, having written nothing.
+    const gap = e && /unknown op/i.test(String(e.error || e.reason || ""));
+    if(err){
+      err.innerHTML = gap
+        ? `<b>The record cannot yet keep a proposal's disposition — nothing was written.</b><div style="margin-top:4px">A proposal is not a focus, so it cannot be disposed the way a focus is. Recording that a member deferred or dismissed the record's own question (and ageing it, per the aggregation discipline) needs an op RECORD does not expose yet (<span class="mono">op=proposedispose</span>). Your reason was not lost — it simply has nowhere to be stored until that lands.</div>`
+        : proposalRefusalHtml(e);
+      err.classList.remove("hidden");
+    }
+    if(go){ go.disabled=false; go.textContent = PROP_DISPOSE_VERB[to]; }
+    proposalActValidate();
+    return { refused:true, reason: e && (e.reason || e.error), gap:!!gap };
+  }
+}
+function proposalDisposeReceipt(res, ctx, to, reason){
+  const done = PROP_DISPOSE_DONE[(res && res.to) || to] || to;
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt">
+       <div class="dz-rhead">${esc(done==="deferred"?"Deferred.":"Dismissed.")}</div>
+       <p class="dz-rlede">The record kept the proposal and recorded your act. It carries your name and your reason; it is kept, never deleted, and can be re-triaged. The record's question stands answered by a person, not silently dropped.</p>
+       <div class="dz-rgrid">
+         <div class="kv"><span class="k">Proposal</span><span class="v">${esc(proposalQuestion(ctx.proposal))}</span></div>
+         <div class="kv"><span class="k">Now</span><span class="v plain">${esc(done)}</span></div>
+         <div class="kv"><span class="k">Your reason, as recorded</span><span class="v plain">${esc((res && res.reason) || reason || "")}</span></div>
+         <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — reversible, but never silent</span></div>
+       </div>
+       <div class="row-btns"><button class="btn" onclick="closeDialog();renderProposals()">Done</button></div>
+     </div>`;
+}
+function proposalRefusalHtml(e){
+  const head = esc([e && e.reason, e && e.error].filter(Boolean).join(" · ") || "The plane refused, and wrote nothing.");
+  const detail = e && e.detail ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
+  return `<b>${head}</b>${detail}`;
+}
+
+/* ---- ADOPT: author a focus/problem from the proposal (op=promote). This is the
+   affordance that is FULLY reachable, and the one where "derived informs, authored
+   binds" completes: the member writes the focus in their OWN words (never prefilled
+   — the machine's question is shown as CONTEXT, not put in their mouth), and the
+   plane stamps surfaced_by human because a person judged it worth pursuing. ---- */
+const PROP_ADOPT_KINDS = [["focus","A question worth pursuing"], ["problem","A problem to be solved"]];
+
+/* PRE-FLIGHT — pure. The member must hold contribute, choose focus or problem, and
+   AUTHOR a title and a statement. The statement is never prefilled, so authoring it
+   is required, not editing the machine's words. */
+function proposalAdoptPreflight({ kind, title, statement, canContribute }){
+  const t = String(title == null ? "" : title).trim();
+  const s = String(statement == null ? "" : statement).trim();
+  const kindOk = ["focus","problem"].includes(kind);
+  const gates = [
+    { id:"cap", title:"You can write to the record", pass:!!canContribute,
+      need:"Adopting authors a bundle in your name, which needs a member session holding contribute." },
+    { id:"kind", title:"A focus or a problem", pass:kindOk,
+      need:"A proposal is adopted into a focus or a problem — the two questions-worth-pursuing the record holds." },
+    { id:"title", title:"A title, in your words", pass:t.length > 0,
+      need:"Give the focus a title. This becomes a bundle in your name, so you name it — the record's question is a starting point, not your words." },
+    { id:"statement", title:"A statement, in your words", pass:s.length > 0,
+      need:"Write what you are pursuing and why. It is never written for you: an adopted focus carries a person's judgment, not a machine's, so the statement must be yours." },
+  ];
+  let refusal = null;
+  if(!canContribute) refusal = { reason:"NO_CONTRIBUTE", detail:gates[0].need };
+  else if(!kindOk)   refusal = { reason:"BAD_KIND",      detail:gates[1].need };
+  else if(!t.length) refusal = { reason:"NO_TITLE",      detail:gates[2].need };
+  else if(!s.length) refusal = { reason:"NO_STATEMENT",  detail:gates[3].need };
+  return { ok: refusal === null, gates, refusal };
+}
+
+let PROP_ADOPT_CTX = null;   // { key, proposal, kind }
+function openProposalAdopt(key){
+  const p = PROPOSALS_LAST.find(x => x.key === key);
+  if(!p) return;
+  PROP_ADOPT_CTX = { key, proposal:p, kind:"focus" };
+  const kinds = PROP_ADOPT_KINDS.map(([v,l],i) => `<label class="dz-opt${i===0?" on":""}">
+      <input type="radio" name="ad-kind" value="${v}" ${i===0?"checked":""} onchange="proposalAdoptChoose(this.value)">
+      <span class="dz-verb">${esc(v==="focus"?"Focus":"Problem")}</span><span class="dz-mean">${esc(l)}</span>
+    </label>`).join("");
+  const insts = p.instances.map(i => esc(i.entity_label)).join(", ");
+  $("#dlg").innerHTML =
+    `<h2 id="ad-h">Adopt this proposal as a focus</h2>
+     <p class="prop-adopt-lede">Adopting turns the record's question into a focus <b>you author</b>. The record then knows a person judged it worth pursuing — that is the whole difference between a machine noticing a pattern and a member deciding it matters.</p>
+     <div class="prop-context">
+       <div class="pc-cap">What the record noticed — for reference, not to copy</div>
+       ${esc(proposalQuestion(p))}<br>
+       <span style="color:var(--muted)">${esc(p.progression_label)} · missing ${esc(p.stage_label)} · ${p.n} instance${p.n===1?"":"s"}${insts?` (${insts})`:""}${p.grade_determined&&p.grade?` · Grade ${esc(p.grade)}`:" · strength undetermined"}</span>
+     </div>
+     <div class="dz-choose">${kinds}</div>
+     <div class="dz-pf" id="ad-pf"></div>
+     <label class="fld" for="ad-title">Title, in your words</label>
+     <input class="txt" id="ad-title" placeholder="name the question you are taking on" oninput="proposalAdoptValidate()">
+     <label class="fld" for="ad-statement">What are you pursuing, and why?</label>
+     <textarea class="txt" id="ad-statement" style="min-height:110px" placeholder="in your own words; this becomes the focus's statement, read later as your judgment" oninput="proposalAdoptValidate()"></textarea>
+     ${weightLadderHtml("reasoned", `Adopting is <b>reasoned</b>: it writes a focus into the working record in your name. It is reversible — a focus can be deferred or dismissed later — but it is never silent, and it is your judgment, not the record's, that it records.`)}
+     <div id="ad-err" class="teach hidden"></div>
+     <div id="ad-prog"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="ad-go" disabled onclick="doProposalAdopt()">Adopt as a focus</button></div>`;
+  $("#dlg-wrap").classList.remove("hidden");
+  proposalAdoptValidate();
+  const el = $("#ad-title"); if(el && el.focus) el.focus();
+}
+function proposalAdoptChoose(kind){
+  PROP_ADOPT_CTX && (PROP_ADOPT_CTX.kind = kind);
+  const h = $("#ad-h"); if(h) h.textContent = `Adopt this proposal as a ${kind}`;
+  const go = $("#ad-go"); if(go) go.textContent = `Adopt as a ${kind}`;
+  $("#dlg").querySelectorAll(".dz-opt").forEach(o => o.classList.toggle("on", o.querySelector("input").value === kind));
+  proposalAdoptValidate();
+}
+function proposalAdoptValidate(){
+  if(!PROP_ADOPT_CTX) return;
+  const kind = PROP_ADOPT_CTX.kind || "focus";
+  const title = ($("#ad-title")||{}).value || "";
+  const statement = ($("#ad-statement")||{}).value || "";
+  const pf = proposalAdoptPreflight({ kind, title, statement, canContribute: canProposalAct() });
+  const pane = $("#ad-pf");
+  if(pane){
+    const rows = pf.gates.map(g => `<div class="pf-row ${g.pass?"ok":"no"}">
+        <span class="pf-mark">${g.pass?"✓":"✗"}</span>
+        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
+      </div>`).join("");
+    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
+      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. This act is ready.</div>` : "");
+  }
+  const go = $("#ad-go"); if(go) go.disabled = !pf.ok;
+}
+/* COMMIT. Build a focus/problem bundle the SAME way the Add surface does (mdFor +
+   docFiles + registerFor — one writer, not a fourth), with the member's authored
+   title and statement, and promote it. The browser never sends surfaced_by: the
+   plane stamps it from the session (REC-3), so a member-authored adopt records
+   surfaced_by human, which is the point. The proposal's derived context is noted in
+   the statement body as reference, never as the member's own claim. */
+async function doProposalAdopt(){
+  if(!PROP_ADOPT_CTX) return;
+  const kind = PROP_ADOPT_CTX.kind || "focus";
+  const title = String(($("#ad-title")||{}).value || "").trim();
+  const statement = String(($("#ad-statement")||{}).value || "").trim();
+  const err = $("#ad-err"); if(err) err.classList.add("hidden");
+  const pf = proposalAdoptPreflight({ kind, title, statement, canContribute: canProposalAct() });
+  if(!pf.ok){
+    if(err){ err.innerHTML = `<b>This won't run yet — and nothing has been written.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
+    proposalAdoptValidate();
+    return { refused:true, reason:pf.refusal.reason };
+  }
+  const go = $("#ad-go"); if(go){ go.disabled = true; go.textContent = "…"; }
+  try{
+    const now = new Date().toISOString().split(".")[0] + "Z";
+    const a = await rec("allocid", { prefix: PREFIX[kind], year: String(new Date().getFullYear()) });
+    const stem = (a.result && a.result.id) || a.id;
+    const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    const p = PROP_ADOPT_CTX.proposal;
+    const body = statement + NL + NL
+      + "Adopted from a proposal the record surfaced: in the " + p.progression_label
+      + " progression, the " + p.stage_label + " stage was not found across " + p.n + " instance"
+      + (p.n===1?"":"s") + ". This focus records that a member judged the question worth pursuing.";
+    const text = mdFor(id, kind, FIRST_STATE[kind], title, body, now, false, null);
+    const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
+    const files = await docFiles(text, null, await sha256Text(text), null);
+    const r = await recPost("promote", {
+      bundleId: id, base: null, snapKey: stamp(), author: who,
+      meta: { object_type: kind, group:"believe-in-oakland", title,
+              current_state: FIRST_STATE[kind], created: now, last_updated: now },
+      files, register: registerFor(null),
+    });
+    const res = r.result || r;
+    if(!res || res.ok === false){
+      const why = (res && res.reason) || r.error || "unknown";
+      if(err){ err.innerHTML = why === "GATE_REFUSED"
+        ? `<b>The checks refused this bundle: ${esc((res.findings||[]).map(f=>f.check).join(", "))}. Nothing was written.</b>`
+        : `<b>Refused: ${esc(why)}. Nothing was written.</b>`; err.classList.remove("hidden"); }
+      if(go){ go.disabled=false; go.textContent = `Adopt as a ${kind}`; }
+      return { refused:true, reason:why };
+    }
+    RECORD_CACHE = null; IMG_CACHE.delete(id); PROJ_CACHE.delete(id);
+    proposalAdoptReceipt(id, kind, title, PROP_ADOPT_CTX);
+    return { ok:true, id, kind };
+  }catch(e){
+    if(err){ err.innerHTML = `<b>${esc((e && (e.reason||e.error||e.message)) || "That did not go through.")}</b>`; err.classList.remove("hidden"); }
+    if(go){ go.disabled=false; go.textContent = `Adopt as a ${kind}`; }
+    return { refused:true, reason: e && (e.reason||e.error) };
+  }
+}
+function proposalAdoptReceipt(id, kind, title, ctx){
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt">
+       <div class="dz-rhead">Adopted.</div>
+       <p class="dz-rlede">You authored a ${esc(kind)} from the record's question. It is written into the working record <b>in your name</b>, at its first state, with <span class="mono">surfaced_by: human</span> — the record now knows a person, not the machine, judged this worth pursuing. Publishing is a separate act with its own signature.</p>
+       <div class="dz-rgrid">
+         <div class="kv"><span class="k">${esc(humanKind(kind))}</span><span class="v">${esc(title)} <span class="id">${esc(id)}</span></span></div>
+         <div class="kv"><span class="k">From the proposal</span><span class="v plain">${esc(proposalQuestion(ctx.proposal))}</span></div>
+         <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — reversible, but never silent</span></div>
+       </div>
+       <div class="row-btns"><button class="btn ghost" onclick="closeDialog();renderProposals()">Back to proposals</button>
+         <button class="btn" onclick="closeDialog();openBundle('${esc(id)}')">Open the ${esc(kind)}</button></div>
+     </div>`;
 }
 
 /* ============================================================
