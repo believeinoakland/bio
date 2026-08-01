@@ -39,6 +39,7 @@
     "test:pdfstructure": "node test/pdfstructure.test.mjs",
     "test:pdfstructure-op": "node test/pdfstructure-op.test.mjs",
     "test:task-drain-alarm": "node test/task-drain-alarm.test.mjs",
+    "test:task-fence": "node test/task-fence.test.mjs",
     "test:scheduler": "node test/scheduler.test.mjs",
     "test:unattended-lease": "node test/unattended-lease.test.mjs",
     "test:archive-monitoring": "node test/archive-monitoring.test.mjs",

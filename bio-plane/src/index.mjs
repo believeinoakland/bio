@@ -531,16 +531,29 @@ const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
    on an entity id, an alias and a relation id, not on the corpus view. */
 const REGISTRY_ACTIONS = ["entitycreate", "entityalias", "relationdeclare",
                           "entity", "entitybyalias", "relation"];
+/* D-98, the TASK construct's two member verbs. Forwarding and resolving a task
+   are MEMBER actions performed by a PERSON through their session — the construct
+   makes them a human judgement, and the record's whole point is that who
+   resolved or forwarded a task is that member's own act. They were reachable
+   only by a machine credential, which left the browser half unreachable: the
+   `recPost("taskresolve", …)` a signed-in member fires from the Tasks screen was
+   answered "requires a machine credential". They belong in BOTH session lists
+   for the same reason the edge and state actions do (REC-4). The actor is
+   stamped server-side from the session below, so a browser can never sign a
+   forward or a resolution as somebody else, and the store's TASK-ACTOR FENCE
+   (`#refuseNotYours`, NOT_YOURS) refuses a member who is neither the assignee
+   nor an admin — the enforcement UI-1 delegated as cosmetic. */
+const TASK_ACTIONS = ["taskforward", "taskresolve"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
-                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS]),
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
-                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, "memberadd", "memberset", "signeradd", "signerset",
-                   "governorstate", "governorconfig"]),
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, "memberadd", "memberset",
+                   "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
 
 /* ---- capabilities at the op layer. Membership Architecture v2 section 5 ----
@@ -647,6 +660,16 @@ const NEEDS = {
      SESSION_OPS.admin, the same as the roster ops above, not a section-5
      working capability. governorstate is a read and needs no entry at all. */
   governorconfig:   null,
+  /* REC-4 / D-98: forwarding or resolving a task carries NO working capability.
+     The authorization is not "may this member contribute" but "is this THIS
+     member's task" — an identity question the store's TASK-ACTOR FENCE answers
+     (`taskResolve`/`taskForward` refuse a non-assignee, non-admin with NOT_YOURS,
+     naming who it is with). Exactly the reasoning `release` records: the rule is
+     about who a session IS, not a capability, so a view-only member holds these
+     as much as a contributor does — an obligation is settled by whoever it was
+     addressed to. */
+  taskforward:      null,
+  taskresolve:      null,
 };
 
 const KNOCK = {

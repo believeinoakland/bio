@@ -5492,6 +5492,52 @@ export class Store extends DurableObject {
     };
   }
 
+  /** REC-4: the TASK-ACTOR FENCE, shared by taskForward and taskResolve.
+   *
+   *  The construct's accountability rule (BIO_Interaction_Constructs_v0_1.md,
+   *  T · TASK): a task is an obligation with an ASSIGNEE, and its refusal shape
+   *  is "this is not yours to resolve, and here is who it is with." Stamping the
+   *  actor honestly into history made the act TRACEABLE but did not PREVENT it,
+   *  so any member-class credential could resolve or forward ANY task by id. This
+   *  is the prevention. The UI (UI-1) hides the verb on another member's task,
+   *  but that gating is cosmetic until the plane enforces it — a caller that
+   *  reaches the op directly must be refused here.
+   *
+   *  Who may act, and why:
+   *   - the ASSIGNEE — it is theirs; a task is "mine" (the construct's word).
+   *   - an ADMIN MEMBER — `#isAdminMember` (the ROOT admin session, actor
+   *     "admin"; or any in-app member with role='admin'), the same "group admin"
+   *     the routing (#routeTask) falls back to. The admin override stays.
+   *   - anyone, when the task is honestly `unassigned` — D-98's routing intends
+   *     an unassigned task to stay CLAIMABLE and "routable by hand". An
+   *     unassigned task exists PRECISELY because routing found no project manager
+   *     and no active admin (#routeTask's last arm), so requiring assignee-or-
+   *     admin would strand it forever — the exact over-fencing REC-4 warns
+   *     against. DEC-7 raises whether "claimable" should be narrowed to the
+   *     routed role (member_expertise → PM → group admin) rather than any actor;
+   *     the provisional here is: any caller that reaches the op may claim an
+   *     unassigned task, which blocks nothing.
+   *
+   *  A machine credential (`actor` = "token:member" / "token:probe" /
+   *  "token:admin") is neither a member nor ROOT_ADMIN, so it is fenced off an
+   *  ASSIGNED task and can only act on an unassigned one — which matches the
+   *  standing doctrine that capabilities gate a SESSION and never a machine
+   *  credential, and the D-98 note that "a daemon cannot close somebody's work".
+   *
+   *  Returns a NOT_YOURS refusal NAMING who it is with, or null to proceed. */
+  #refuseNotYours(row, actor, verb) {
+    if (row.assignee === "unassigned") return null;
+    if (actor === row.assignee) return null;
+    if (this.#isAdminMember(actor)) return null;
+    return {
+      ok: false,
+      reason: "NOT_YOURS",
+      detail: `this task is not yours to ${verb}; it is with ${row.assignee}`,
+      assignee: row.assignee,
+      assignee_role: row.assignee_role,
+    };
+  }
+
   /** Forward a task to a member better placed to attest it.
    *
    *  A MEMBER action, never a daemon one: the ruling makes forwarding a human
@@ -5503,6 +5549,8 @@ export class Store extends DurableObject {
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
     if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
+    const fenced = this.#refuseNotYours(row, actor, "forward");
+    if (fenced) return fenced;
     const target = this.#one(`SELECT member_id FROM members WHERE member_id=? AND status='active'`, to);
     if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
     if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
@@ -5525,6 +5573,8 @@ export class Store extends DurableObject {
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
+    const fenced = this.#refuseNotYours(row, actor, "resolve");
+    if (fenced) return fenced;
     const at = now && ISO_INSTANT.test(now) ? now : new Date().toISOString().split(".")[0] + "Z";
     const task = this.#taskOf(row);
     task.history.push({ at, event: "resolved", actor });

@@ -450,7 +450,7 @@ FW-1 CONFIRMED it 2026-07-31 (see Status above); the extended shape is the contr
 - **Owner:** `RECORD` (moved from `CAPTURE` 2026-07-31; `PARALLELISM.md` anticipated
   this the first time op-wiring became a recurring delegation, and it has now
   recurred once — the `op=pdfstructure` delegation from CONTENT-PDF)
-- **Version:** 1.1.0 (1.0.0 first written 2026-07-31 from plane 0.55.0; 1.1.0 2026-07-31, REC-3 — additive, non-breaking: `op=promote` server-stamps `surfaced_by` for focus/problem creations from the caller's actor class; no op renamed, no class/shape/reason changed)
+- **Version:** 1.2.0 (1.0.0 first written 2026-07-31 from plane 0.55.0; 1.1.0 2026-07-31, REC-3 — additive, non-breaking: `op=promote` server-stamps `surfaced_by` for focus/problem creations from the caller's actor class; no op renamed, no class/shape/reason changed; 1.2.0 2026-07-31, REC-4 — additive, non-breaking on `op=taskforward` and `op=taskresolve`: (a) a NEW named refusal reason `NOT_YOURS` (the TASK-ACTOR FENCE, D-98 / construct T · TASK) — a caller who is neither the task's `assignee` nor an admin is refused, and the refusal NAMES who it is with (`assignee`, `assignee_role`, and a human `detail`); an honestly `unassigned` task stays claimable. No existing reason, class, or success shape changed. (b) both ops are now reachable by a member/admin SESSION, not only a machine credential — the assignee acts through their browser session (actor stamped server-side), which the Tasks screen already assumed; a widening of reach, additive, nothing previously admitted is now refused. See DEC-7.)
 - **Consumers:** `UI`, `DIST` (the installer's served surfaces), every content area
   that needs its work reachable
 - **Status:** STABLE
