@@ -191,6 +191,15 @@ accepts-when: a member who is neither the assignee nor an admin is refused `task
 added: 2026-07-31 · CONDUCT
 landed: edfbea5 — server-side task-actor fence (#refuseNotYours on taskForward+taskResolve): non-assignee non-admin refused NOT_YOURS "this task is not yours to <verb>; it is with <assignee>"; assignee + admin (#isAdminMember) succeed; unassigned stays claimable (D-98: unassigned EXISTS because routing found no PM/admin, so fencing it would strand it forever). BIG FIND: the ops were machine-credential-only (not in SESSION_OPS), so UI-1 was DEAD against the real plane (its mock never hit the op auth); REC-4 opened both to member/admin SESSIONS (TASK_ACTIONS→SESSION_OPS, NEEDS=null, identity-not-capability) — a spoofed body actor cannot pass (server stamps from session), and a machine credential is now fenced off assigned tasks. I3 1.2.0 (additive: NOT_YOURS reason + session reach). battery 57/57, coverage --strict 93/93. NC RUN + CONDUCT RE-RAN (neuter fence → 9 fail; restored 19). DEC-7 raised (bob-session).
 
+### REC-5 · queued
+milestone: M4
+scope: Close D-122 — connections AUTO-DERIVE. Today `op=connect` is a manual `contribute` mutation nothing calls, so the entity axis is BUILT but stays EMPTY (UI-4's subject view is usually blank; the whole FW-6→10 machinery only populates by hand). Make connections derive automatically for an entity when its resolutions change. PREFER the SCHEDULED sweep on REC-1's DO-alarm (grep `store.mjs` with `grep -a` for the `#schedConsumers` registry; the consumer pattern is in `scheduler.test.mjs` / `task-drain-alarm.test.mjs`): register a consumer that on tick runs the `op=connect` derivation (`deriveConnections`) for entities whose resolutions changed since last swept, self-terminating when caught up. (Derive-on-resolve — deriving synchronously at `op=resolve` for the ONE affected entity — is an acceptable alternative if the scheduled path proves heavy; FW-8 avoided per-resolve derivation for O(n²) reasons, so a synchronous variant MUST be scoped to the single affected entity, never the whole store.) Idempotent — a re-derivation UPSERTS (FW-8's `connections` are keyed), never duplicates. This is the engine that makes the entity axis SELF-POPULATING and the foundation the deferred progression walking-task (FW-9/FW-10) will extend. DEFER and flag: auto-assembling progression instances + surfacing missing-predecessor findings on the same tick.
+behind-interface: I5
+depends-on: none
+accepts-when: after a document resolves to an entity, the connections among that entity's documents appear WITHOUT a manual `op=connect` (via the tick or the resolve hook) and are visible through `op=connections`; negative control — disable the auto-derivation and the connections stay empty until a manual `op=connect`.
+added: 2026-07-31 · CONDUCT
+landed:
+
 ---
 
 ## CONTENT-PDF — DORMANT, restructured by the topology decision.
