@@ -16,6 +16,15 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 import { extractPdfStructure } from "./pdfstructure.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
+/* docprofile is READ here, never copied. This is the FIRST plane consumer of it
+   (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
+   RECORD which host stack and which content type the record thinks it holds, so
+   a judgment can later be found and revised when its recogniser turns out wrong.
+   The package lives outside bio-plane/, which costs the deployed artifact nothing
+   (I4): esbuild inlines it at build, and the miniflare battery resolves it from
+   disk (modulesRoot "/"). profileRecord serialises the stack axis; the doctype
+   axis is added beside it at the call site. */
+import { identify, doctypeFor, profileRecord } from "../../docprofile/registry.mjs";
 
 /* The plane's identity to a source, in one place because it was in three and
    they had drifted: `bio-acquire` on capture, `bio-monitor` on monitoring, both
@@ -1789,6 +1798,67 @@ export default {
         }
       }
 
+      /* CONSTRUCTS Step 1 (FW-3): the plane RECORDS THE PROFILE. docprofile is
+         READ, never copied — identify() names the host stack and doctypeFor()
+         names the kind of content, each with a confidence and its signals, and,
+         the part the whole ladder above rests on, each recogniser's own key and
+         VERSION so a judgment can be found and revised when the recogniser later
+         turns out wrong. The profile is a sibling field on the acquire document
+         (op=promote persists it into data/provenance.json); it ADDS to the record
+         and reshapes no existing field, so it is additive to I1.
+
+         The recognisers read the document as TEXT, so the primary is read back out
+         of the store — bounded, and only when the bytes are single-part and look
+         textual — for the same reason the subresource walk reads it back: the
+         recogniser must see the bytes the record actually holds. A PDF or a
+         multipart giant is neither cheap to decode nor something these HTML-stack
+         recognisers can read, so it is HONESTLY left unread (text ""), which lands
+         it on the conservative handler and the generic type rather than a guess.
+         Even then the headers and the address still carry signal. */
+      const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+      let profileText = "";
+      if (!multipart && total <= PROFILE_TEXT_MAX
+          && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "")) {
+        try {
+          const pobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+          if (pobj) profileText = new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(await pobj.arrayBuffer()));
+        } catch { /* an unreadable primary is not a failed capture: the profile below
+                     still records what the headers and the address say. */ }
+      }
+      const profHeaders = {};
+      for (const [hk, hv] of res.headers) profHeaders[hk.toLowerCase()] = hv;
+      const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
+      const stackId = identify(profCtx);
+      const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind });
+      const profile = {
+        /* The STACK axis, via docprofile's own serialiser (handler key/label/
+           version, its confidence, its signals, the document kind, what was
+           considered, the instant, and any note). Reused rather than restated so
+           the record's notion of "how a document was profiled" lives in one place. */
+        ...profileRecord(stackId, { now: retrieved }),
+        /* The CONTENT-TYPE axis beside it: the second confidence and second signal
+           set the item asks for, keyed distinctly from the stack axis's. */
+        content_type: docType.type.key,
+        content_type_label: docType.type.label,
+        content_type_version: docType.type.version,
+        content_type_confidence: docType.confidence,
+        content_type_signals: docType.signals,
+        contract: docType.type.contract || null,
+        /* What this handler treats as machinery/furniture on this class of
+           document — the normalisation the profile's judgment rests on. Declared
+           (region + label), not the computed digests: those are Step 2, with their
+           own consumers. Recorded so a later reader can see WHY a digest called
+           certain bytes non-substantive. */
+        normalised: (typeof stackId.handler.rules === "function"
+          ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
+        boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
+        /* The source's own Content-Type, distinct from the recognised content
+           TYPE above: one is what the server declared, the other is what the
+           record decided the document is. */
+        source_content_type: ct || null,
+        profiled_from_text: !!profileText,
+      };
+
       /* The shape C-18.1 requires, assembled here so the caller does not have to
          know it and cannot get it subtly wrong. */
       return json({
@@ -1796,6 +1866,11 @@ export default {
         document: {
           file: `snapshots/${name}`,
           locator, retrieved,
+          /* CONSTRUCTS Step 1 (FW-3): which host stack and which content type the
+             record thinks it holds, with the confidence, signals and recogniser
+             versions that let it be revised later. A new sibling field, additive
+             to I1. */
+          profile,
           /* D-97: authority mirrors verdict / verdict_basis / verdict_at
              rather than inventing a shape. The determination when one was
              made; the STATE always; the basis in BOTH cases, dated, because

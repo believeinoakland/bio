@@ -24,8 +24,8 @@ a lie.
 
 - **ID:** I1
 - **Owner:** `CAPTURE`
-- **Version:** 1.0.0 (first written 2026-07-31, from plane 0.55.0)
-- **Consumers:** `CONTENT-HTML`, `CONTENT-PDF`
+- **Version:** 1.1.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0 2026-07-31, FW-3 — ADDITIVE, non-breaking: `op=acquire` writes a new sibling field `document.profile` (§4) recording docprofile's stack/content-type identification; no existing field's name, shape or value domain changed, and C-18.1 tolerates the extra key)
+- **Consumers:** `CONTENT-HTML`, `CONTENT-PDF`, `FRAMEWORK` (the document page reads `document.profile`)
 - **Status:** STABLE
 
 ### What it is
@@ -171,6 +171,7 @@ because headers cannot be recovered later:
 | `parts` | array of `{file, sha256, bytes}` | present only for a multipart capture. |
 | `renditions` | array | derived companions (e.g. a rendered HTML snapshot). A rendition has **no locator, authority, or grade of its own** — it is a rendering of this document, named on the same register document, and says so. A consumer must not treat a rendition as an independent acquisition. |
 | `origin` | `{kind: "named_request" | "sweep", ...}` | how the capture was initiated. |
+| `profile` | object, §4c | **added 1.1.0 (FW-3).** What kind of document the record thinks it holds: the host-stack handler and the content type, each with a confidence, its signals, and its recogniser VERSION, plus the handler's declared normalisation. A consumer treats it as advisory metadata, never as authority; `undetermined` is honest (an unreadable-here document profiles as the conservative handler / generic type, `profiled_from_text: false`), never a guessed stack. |
 
 **`document.provenance_chain`** — ordered hops from us back to the origin. Hop 0
 is always present:
@@ -188,6 +189,37 @@ An archive capture appends a second, weaker hop carrying the CDX evidence with
 the FACT OF PUBLICATION, never the credibility of the content (RULED,
 `AUTHORITY-AND-TRUST.md`). `bound` is `false` on hop 0 too: a self-recorded hash
 proves integrity since capture and nothing about origin.
+
+### 4c. The profile — what kind of document the record thinks it holds (1.1.0)
+
+Added by FW-3 (CONSTRUCTS Step 1), the FIRST plane consumer of `docprofile/`.
+`op=acquire` calls docprofile's `identify()` (host stack) and `doctypeFor()`
+(content type) — the existing recognisers, not a second copy — and records the
+result as `document.profile`. It is advisory metadata about the document's KIND,
+recorded so a later session can revise a downstream judgment when its recogniser
+turns out wrong; a consumer never treats it as authority over the bytes.
+
+The recognisers read the document as TEXT, so the primary is read back from R2,
+bounded (single-part, ≤ 8 MB, a textual `content-type`). A non-textual or
+multipart document is left unread and profiles as the conservative handler and
+the generic type — `undetermined`, stated, never a guessed stack.
+
+| Field | Value | Notes |
+| --- | --- | --- |
+| `handler` / `handler_label` / `handler_version` | host-stack recogniser key, words, and VERSION | the version is the "author" of the stack judgment, so a wrong recogniser can be found and re-run. |
+| `confidence` | `certain` \| `likely` \| `possible` \| `none` | the stack axis's confidence. |
+| `signals` | array of strings | why the stack recogniser matched. |
+| `document_kind` | e.g. `index` \| `record` \| `page` \| `unknown` | the handler's read of the ADDRESS. |
+| `considered` | array | every stack recogniser that matched, for audit. |
+| `content_type` / `content_type_label` / `content_type_version` | content-type recogniser key, words, and VERSION | the second axis, keyed distinctly; its version is the second author. |
+| `content_type_confidence` | one of the ladder above | the second confidence. |
+| `content_type_signals` | array of strings | why the content-type recogniser matched. |
+| `contract` | `substance` \| `membership` \| `unmonitorable` \| null | the monitoring contract the content type declares. |
+| `normalised` | array of `{region, label}` | what the identified handler treats as machinery/furniture — the normalisation policy the profile's judgment rests on, DECLARED (the computed digests are a later step). |
+| `boundary` | boolean | whether the handler normalises around a document boundary (e.g. `<main>`). |
+| `source_content_type` | string \| null | the server's own `Content-Type`, distinct from the recognised content TYPE. |
+| `profiled_from_text` | boolean | whether the bytes were read as text (false = profiled from headers + address only). |
+| `at` / `note` | ISO8601 instant · string \| null | the profiling instant (equals `retrieved`) and any recogniser note. |
 
 ### 5. Address → capture — the reverse lookup
 

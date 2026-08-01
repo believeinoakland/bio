@@ -27,6 +27,7 @@
     "test:conformance": "node test/conformance.test.mjs",
     "test:gathering": "node test/gathering.test.mjs",
     "test:acquire": "node test/acquire.test.mjs",
+    "test:profile": "node test/profile.test.mjs",
     "test:attest": "node test/attest.test.mjs",
     "test:mechanical": "node test/mechanical.test.mjs",
     "test:audit": "node test/audit.test.mjs",
