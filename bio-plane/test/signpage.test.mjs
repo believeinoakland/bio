@@ -11,12 +11,24 @@
  */
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash, webcrypto } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import vm from "node:vm";
 import { verifySshsig, NS_RELEASE, NS_RATIFY, ratifyStatement } from "../src/sshsig.mjs";
+
+/* The whole point of this suite is to hand the page's WebCrypto output to stock
+   ssh-keygen for judgment, so without ssh-keygen there is nothing to judge it
+   against: SKIP LOUDLY WITH A NAMED REASON and exit 0 rather than dying with an
+   unhandled spawn error (D-93). Same guard as ratify.test.mjs. */
+if (spawnSync("ssh-keygen", ["-Q"]).error) {
+  console.log("\n--- signpage ---");
+  console.log("  SKIP  entire suite — ssh-keygen is not on PATH");
+  console.log("signpage: SKIPPED — ssh-keygen not on PATH; the page's reimplemented SSHSIG "
+    + "output is only worth its conformance against stock ssh-keygen, which cannot run without it");
+  process.exit(0);
+}
 
 const PAGE = fileURLToPath(new URL("../../tools/sign-release.html", import.meta.url));
 let pass = 0, fail = 0;

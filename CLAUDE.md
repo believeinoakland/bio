@@ -153,9 +153,11 @@ tested code and ask DIST. See `docs/development/kickoffs/DIST.md` for the gate.
 `docs/development/VERIFICATION.md` is the full process, the coverage floor and the
 measured state. The short version:
 
-1. `cd bio-plane && npm run test:battery` — EVERY suite, all of them reported. Not
-   `npm test`, which chains with `&&` and stops at the first failure, hiding the state
-   of everything after it (D-93). Not just the suite you touched.
+1. `cd bio-plane && npm run test:battery` — EVERY suite, all of them reported. Not just
+   the suite you touched. As of M0-4 `npm test` runs the same discovering runner (it no
+   longer chains with `&&`, which stopped at the first failure and hid everything after
+   it — D-93), so either entry point runs the whole battery; `test:battery` is the
+   canonical name.
 2. The negative control for whatever you just added — RUN, and recorded in the
    suite's own `NEGATIVE CONTROL:` line so the next session can re-run it in one step
    instead of re-deriving how to break the subject.

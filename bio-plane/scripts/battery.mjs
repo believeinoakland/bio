@@ -52,10 +52,24 @@ const run = (file) => new Promise((resolve) => {
    because that is what the suites already print. A suite whose count cannot be
    read is reported as unknown rather than as zero: an unreadable number and no
    assertions are different claims, and collapsing them is how a suite that
-   silently ran short would pass unnoticed (the `sshsig` 16-vs-18 case in D-93). */
+   silently ran short would pass unnoticed (the `sshsig` 16-vs-18 case in D-93).
+   The optional third group is a NAMED skip count on the same line ("..., 2 skip
+   (fresh signature verifies; ...)"): a suite that honestly ran fewer assertions
+   says so and says WHICH, so the runner can surface it instead of the number
+   looking like a full green. */
 const tally = (out) => {
-  const m = [...out.matchAll(/(\d+)\s+pass(?:ed)?,\s+(\d+)\s+fail(?:ed)?/g)].pop();
-  return m ? { pass: +m[1], fail: +m[2] } : null;
+  const m = [...out.matchAll(/(\d+)\s+pass(?:ed)?,\s+(\d+)\s+fail(?:ed)?(?:,\s+(\d+)\s+skip(?:ped)?\s*\(([^)]*)\))?/g)].pop();
+  return m ? { pass: +m[1], fail: +m[2], skip: m[3] ? +m[3] : 0, skipWhat: m[4] || "" } : null;
+};
+
+/* A suite that cannot run at all prints a wholesale marker ("name: SKIPPED —
+   <reason>") and exits 0. That is not a failure (it must not stop the battery)
+   and not a pass (it proved nothing), so it gets its own status and its reason
+   is carried into the summary BY NAME — the D-93 requirement that a suite never
+   quietly does less. */
+const skipReason = (out) => {
+  const m = out.match(/^\s*[\w.-]+:\s*SKIPPED\b[\s—:-]*(.*)$/mi);
+  return m ? m[1].trim() : null;
 };
 
 console.log(`\nbattery: ${suites.length} suites\n`);
@@ -63,20 +77,32 @@ const results = [];
 for (const file of suites) {
   const r = await run(file);
   const t = tally(r.out);
-  results.push({ ...r, tally: t });
-  const ok = r.code === 0;
-  const counts = t ? `${t.pass} pass${t.fail ? `, ${t.fail} FAIL` : ""}` : "assertions unknown";
-  console.log(`  ${ok ? "ok  " : "FAIL"}  ${file.padEnd(28)} ${String(r.ms).padStart(6)}ms  ${counts}`);
-  if (!ok && !QUIET) console.log(r.out.split("\n").filter((l) => /FAIL|Error|error/.test(l)).slice(0, 8).map((l) => `          ${l}`).join("\n"));
+  const skip = r.code === 0 ? skipReason(r.out) : null;
+  results.push({ ...r, tally: t, skip });
+  const failedRun = r.code !== 0;
+  const status = failedRun ? "FAIL" : skip ? "skip" : "ok  ";
+  const counts = skip
+    ? `SKIPPED — ${skip}`
+    : t
+      ? `${t.pass} pass${t.fail ? `, ${t.fail} FAIL` : ""}${t.skip ? `, ${t.skip} skipped` : ""}`
+      : "assertions unknown";
+  console.log(`  ${status}  ${file.padEnd(28)} ${String(r.ms).padStart(6)}ms  ${counts}`);
+  if (failedRun && !QUIET) console.log(r.out.split("\n").filter((l) => /FAIL|Error|error/.test(l)).slice(0, 8).map((l) => `          ${l}`).join("\n"));
 }
 
 const failed = results.filter((r) => r.code !== 0);
-const unknown = results.filter((r) => r.tally === null);
+const skips = results.filter((r) => r.skip);
+const partial = results.filter((r) => r.tally && r.tally.skip > 0);
+const unknown = results.filter((r) => r.tally === null && !r.skip);
 const assertions = results.reduce((n, r) => n + (r.tally ? r.tally.pass : 0), 0);
 const ms = results.reduce((n, r) => n + r.ms, 0);
+const green = results.length - failed.length - skips.length;
 
-console.log(`\n${results.length - failed.length}/${results.length} suites green · `
+console.log(`\n${green}/${results.length} suites green · `
+  + (skips.length ? `${skips.length} skipped · ` : "")
   + `${assertions} assertions passing · ${(ms / 1000).toFixed(1)}s`);
+if (skips.length) console.log(`  SKIPPED (named): ${skips.map((r) => `${r.file} — ${r.skip}`).join("\n                   ")}`);
+if (partial.length) console.log(`  ran short (named): ${partial.map((r) => `${r.file} skipped ${r.tally.skip} — ${r.tally.skipWhat}`).join("\n                     ")}`);
 if (unknown.length) console.log(`  ${unknown.length} suite(s) reported no assertion count: ${unknown.map((r) => r.file).join(", ")}`);
 if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")}`);
 console.log("");

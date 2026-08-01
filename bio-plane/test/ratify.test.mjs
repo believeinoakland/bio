@@ -6,14 +6,42 @@
  * load-bearing: the unknown key, the stale sha, the tampered statement,
  * the revoked signer, and the gate refusals each demand a specific
  * refusal, not an absence of success.
+ *
+ * Every assertion here signs a real `bio-ratify` statement with stock
+ * ssh-keygen; there is no honest way to run a subset without it. So when
+ * ssh-keygen is not on PATH the suite SKIPS LOUDLY WITH A NAMED REASON and
+ * exits 0, rather than dying with an unhandled spawn error (D-93: that death,
+ * under the old `&&` chain, hid every suite behind it). It never quietly does
+ * less: it either runs in full or names exactly why it did not.
+ *
+ * NEGATIVE CONTROL: remove the ssh-keygen guard below and hide ssh-keygen from
+ * PATH -> the suite dies mid-run on the first execFileSync and the battery
+ * reports `FAIL ratify.test.mjs ... assertions unknown` — a bare failure with
+ * no named reason, instead of the loud named skip. (Run 2026-07-31, M0-4:
+ * without the guard, `PATH=/nonexistent node scripts/battery.mjs ratify` gave
+ * `FAIL ... assertions unknown`; with it, `skip ... SKIPPED — ssh-keygen not on
+ * PATH`.)
  */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+/* Detect stock ssh-keygen before Miniflare spins up or any key is generated.
+   spawnSync sets `.error` (ENOENT) only when the binary cannot be spawned at
+   all, which is exactly "not on PATH"; a non-zero exit for the bare `-Q` usage
+   does not. */
+if (spawnSync("ssh-keygen", ["-Q"]).error) {
+  console.log("\n--- ratify ---");
+  console.log("  SKIP  entire suite — ssh-keygen is not on PATH");
+  console.log("ratify: SKIPPED — ssh-keygen not on PATH; every assertion signs a real "
+    + "bio-ratify statement with stock ssh-keygen and cannot run without it");
+  process.exit(0);
+}
+
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 const mf = new Miniflare({

@@ -82,12 +82,16 @@ Recorded because they are the argument for having built them:
 
 ## The battery runs every suite, and reports all of them
 
-`npm test` chained 38 suites with `&&`, which **stops at the first failure**. D-93 is
-that defect exactly: `ratify.test.mjs` dies when `ssh-keygen` is absent and everything
-after it never runs, on the one path where a false green matters most.
+`npm test` once chained 38 suites with `&&`, which **stops at the first failure**. D-93
+was that defect exactly: `ratify.test.mjs` dies when `ssh-keygen` is absent and
+everything after it never runs, on the one path where a false green matters most. As of
+M0-4 **both entry points run the discovering runner** — `npm test` is now
+`node scripts/battery.mjs`, the same command `npm run test:battery` invokes — so a
+crashing suite can no longer hide the suites behind it.
 
 ```bash
 cd bio-plane && npm run test:battery       # every suite, all reported, fails if any failed
+cd bio-plane && npm test                   # identical: also the runner now
 node scripts/battery.mjs search cite       # a subset, by name fragment
 ```
 
@@ -98,8 +102,15 @@ rather than as zero, because an unreadable number and no assertions are differen
 claims — the `sshsig` 16-versus-18 case in D-93 is what happens when they are
 collapsed.
 
-`npm test` keeps the chain for now so nothing that invokes it breaks. The chain is
-replaced by the runner when the queue item that does so lands.
+The second half of D-93 is closed too: a suite that depends on stock `ssh-keygen`
+(`ratify`, `reuse-ratify`, `signpage`) now detects its absence and **skips loudly with
+a named reason** — `name: SKIPPED — ssh-keygen not on PATH; …` — rather than dying with
+an unhandled spawn error; and `sshsig`, which has a pinned-fixture fallback, runs its 16
+pinned assertions and **names the 2 fresh-signature cases it skipped** (`16 pass, 0
+fail, 2 skip (…)`) rather than silently reporting 16. The runner surfaces both:
+skipped suites are listed `SKIPPED (named)` and a short-running suite is listed `ran
+short (named)`, and neither counts as a failure, so with `ssh-keygen` hidden the battery
+still completes green.
 
 ## The negative-control register
 
@@ -147,9 +158,11 @@ Each of these is a queue item under M0 in `MILESTONES.md`, not an aspiration her
 3. **Name the 33 unnamed checks**, cheapest first: one assertion per check that
    tampers a conformant bundle and requires that check by id. This is the largest
    single coverage gain available and it is mechanical.
-4. **`npm test` becomes the runner**, so a crash cannot hide the suites behind it
+4. ~~**`npm test` becomes the runner**, so a crash cannot hide the suites behind it
    (closes D-93's first half; the second half is `ratify.test.mjs` skipping loudly
-   when `ssh-keygen` is absent rather than dying).
+   when `ssh-keygen` is absent rather than dying).~~ DONE (M0-4): `npm test` is now
+   `node scripts/battery.mjs`; `ratify`/`reuse-ratify`/`signpage` skip loudly with a
+   named reason and `sshsig` names its 2 skipped cases — both halves of D-93 closed.
 5. **`--strict` becomes the gate** once 1 to 3 are done, so the floor cannot fall
    back. Not before: a gate set above the current state fails on day one and gets
    switched off, which is worse than no gate.

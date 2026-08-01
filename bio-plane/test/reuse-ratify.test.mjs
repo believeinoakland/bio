@@ -31,10 +31,22 @@ import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { normalizeAddress } from "../src/subresources.mjs";
+
+/* Every ratification here is signed with stock ssh-keygen, so without it there
+   is nothing to sign and no subset to run: SKIP LOUDLY WITH A NAMED REASON and
+   exit 0 rather than dying with an unhandled spawn error (D-93). Same guard, and
+   same reason, as ratify.test.mjs. */
+if (spawnSync("ssh-keygen", ["-Q"]).error) {
+  console.log("\n--- reuse-ratify ---");
+  console.log("  SKIP  entire suite — ssh-keygen is not on PATH");
+  console.log("reuse-ratify: SKIPPED — ssh-keygen not on PATH; every ratification here "
+    + "signs a real bio-ratify statement with stock ssh-keygen and cannot run without it");
+  process.exit(0);
+}
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const sha = (b) => createHash("sha256").update(Buffer.from(b)).digest("hex");
