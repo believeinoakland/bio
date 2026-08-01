@@ -182,14 +182,14 @@ accepts-when: an empty POST to five ops returns a named reason; a wizard-written
 added: 2026-07-31 · BOB
 landed: a0c6d98 — battery 51/51, coverage 85/85 (0 unreached). D-39 was already guarded at the DO (6ac72d0a); empty-body.test.mjs locks it in. D-110 stale NO_AUTHORITY deleted. D-62 setup.mjs emits content_hash for document bundles (clears C-2.7). D-78 surfaced_by SERVER-STAMPED at op=promote (agent vs human by actor class) — fixes both writers, no store/schema change. NCs RUN; all four DEBT rows self-closed. I3 note registered; revision-carry residual logged as D-121.
 
-### REC-4 · queued
+### REC-4 · done
 milestone: M8
 scope: The server-side TASK-ACTOR FENCE (lifted from UI-1's delegation). Today `taskResolve`/`taskForward` (`store.mjs` ~5299) refuse no-actor / no-such-task / already-resolved, but do NOT refuse a member who is neither the task's `assignee` nor an admin — any member-class credential can resolve or forward ANY task by id (the actor is stamped honestly into history, so it is traceable, but not PREVENTED). The TASK construct makes the refusal an accountability rule ("this is not yours to resolve, and here is who it is with"), and UI-1 renders that refusal — but it is COSMETIC until the plane enforces it. Add the fence in the plane, for BOTH `taskResolve` and `taskForward`: a caller who is neither the assignee nor an admin is refused with a NAMED reason mirroring the construct's refusal shape. RECONCILE with D-98's routing doctrine before over-fencing: an `unassigned` task is meant to be claimable by the routed role — check what the routing intends (member_expertise → PM → group admin) and keep that path open; the admin override stays. This is an I3 addition (a new named refusal reason), not a reshape.
 behind-interface: I3
 depends-on: none
 accepts-when: a member who is neither the assignee nor an admin is refused `taskResolve`/`taskForward` on another's assigned task with the named reason; the assignee and an admin still succeed; an unassigned task stays claimable per D-98 routing; negative control — remove the fence and the non-assignee resolve succeeds again.
 added: 2026-07-31 · CONDUCT
-landed:
+landed: edfbea5 — server-side task-actor fence (#refuseNotYours on taskForward+taskResolve): non-assignee non-admin refused NOT_YOURS "this task is not yours to <verb>; it is with <assignee>"; assignee + admin (#isAdminMember) succeed; unassigned stays claimable (D-98: unassigned EXISTS because routing found no PM/admin, so fencing it would strand it forever). BIG FIND: the ops were machine-credential-only (not in SESSION_OPS), so UI-1 was DEAD against the real plane (its mock never hit the op auth); REC-4 opened both to member/admin SESSIONS (TASK_ACTIONS→SESSION_OPS, NEEDS=null, identity-not-capability) — a spoofed body actor cannot pass (server stamps from session), and a machine credential is now fenced off assigned tasks. I3 1.2.0 (additive: NOT_YOURS reason + session reach). battery 57/57, coverage --strict 93/93. NC RUN + CONDUCT RE-RAN (neuter fence → 9 fail; restored 19). DEC-7 raised (bob-session).
 
 ---
 
