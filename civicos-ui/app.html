@@ -222,6 +222,30 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px 0 12px;padding-bottom:7px;border-bottom:var(--hair)}
 .empty{color:var(--muted);font-size:14px;padding:24px 0}
 
+/* home (UI-8): the "what needs you" orientation surface, M8's entry point */
+.hm-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:0 0 24px}
+.hm-card{background:var(--sheet);border:var(--hair);padding:16px 18px;box-shadow:var(--e-2);display:flex;flex-direction:column}
+.hm-card h2{font-family:var(--font-fact);font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--muted);text-transform:uppercase;margin:0 0 10px}
+.hm-count{font-family:var(--font-record);font-size:34px;font-weight:600;line-height:1;color:var(--ink)}
+.hm-count.zero{color:var(--muted)}
+.hm-count .u{font-family:var(--font-ui);font-size:14px;font-weight:400;color:var(--muted);margin-left:8px}
+.hm-line{font-size:13.5px;color:var(--ink);margin:10px 0 4px;line-height:1.45}
+.hm-sub{font-size:12.5px;color:var(--muted);margin:2px 0;line-height:1.4}
+.hm-urgent{font-size:13px;color:var(--ink);background:var(--paper-2);border:var(--hair);border-radius:var(--r-2);padding:9px 11px;margin:10px 0 4px;line-height:1.45}
+.hm-urgent .k{font-family:var(--font-fact);font-weight:600;color:var(--ink)}
+.hm-urgent .age{color:var(--muted);font-size:12px}
+.hm-pending{font-size:12.5px;color:var(--signal-dk);background:var(--tint-note);border:1px solid #d6a48c;border-radius:var(--r-2);padding:8px 10px;margin:8px 0 4px;line-height:1.45}
+.hm-go{margin-top:auto;padding-top:12px}
+.hm-go button{font:inherit;font-size:13px;padding:6px 12px;border-radius:var(--r-2);border:1px solid var(--rule);background:#fff;color:var(--ink);cursor:pointer}
+.hm-go button:hover{border-color:var(--verdigris-dk);color:var(--verdigris-dk)}
+.hm-entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:4px 0 0}
+.hm-entry{text-align:left;background:var(--sheet);border:var(--hair);box-shadow:var(--e-2);padding:14px 16px;cursor:pointer;font:inherit;display:flex;gap:12px;align-items:flex-start}
+.hm-entry:hover{border-color:var(--verdigris-dk)}
+.hm-entry svg{width:20px;height:20px;color:var(--verdigris-dk);flex:none;margin-top:2px}
+.hm-entry .t{font-family:var(--font-fact);font-size:14px;font-weight:600;color:var(--ink)}
+.hm-entry .d{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.hm-allclear{font-size:14px;color:var(--ink);background:#e2ede3;border:1px solid #8fb79a;border-radius:var(--r-2);padding:14px 16px;margin:0 0 24px;line-height:1.5}
+
 /* the fence band, with the printer's double rule */
 .fence{grid-row:3/4;grid-column:2/3;position:relative;height:var(--fence-h);background:var(--paper-2);border-top:1px solid var(--rule-strong);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
 .fence::before{content:"";position:absolute;top:-4px;left:0;right:0;border-top:1px solid var(--rule-strong)}
@@ -546,6 +570,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 
 <!-- rail icon sprite: light-stroke civic/archival line icons -->
 <svg class="ic" xmlns="http://www.w3.org/2000/svg"><defs>
+<g id="i-home" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9.5 L10 3.5 L17 9.5"/><path d="M5 8.5 V16.5 H15 V8.5"/></g>
 <g id="i-record" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="2.5" width="13" height="15"/><line x1="6" y1="6" x2="14" y2="6"/><line x1="6" y1="9" x2="14" y2="9"/><line x1="6" y1="12" x2="11" y2="12"/></g>
 <g id="i-search" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="5"/><line x1="12.8" y1="12.8" x2="17" y2="17"/></g>
 <g id="i-focus" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="1.8" fill="currentColor" stroke="none"/></g>
@@ -774,7 +799,7 @@ function previewShell(){
   $("#m-idstr").textContent = GROUP.idstr.slice(0,32);
   $("#gate").classList.add("hidden"); $("#pub").classList.remove("on");
   $("#work").classList.add("on"); document.documentElement.setAttribute("data-space","working");
-  go("record", true);
+  go("home", true);
 }
 function previewNote(){ return `<div class="teach" style="margin:8px 0">Preview mode. Connect a plane (sign in, or serve this from the worker) to load the real record from R2. Nothing shown here is invented.</div>`; }
 
@@ -808,11 +833,12 @@ async function boot(){
   $("#pub").classList.remove("on");
   $("#work").classList.add("on");
   document.documentElement.setAttribute("data-space","working");
-  go("record", true);
+  go("home", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
 const RAIL = [
+  {id:"home",     icon:"i-home",     label:"Home"},
   {id:"record",   icon:"i-record",   label:"Record"},
   {id:"tasks",    icon:"i-review",   label:"Tasks"},
   {id:"proposals",icon:"i-focus",    label:"Proposals"},
@@ -904,14 +930,14 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={record:"The record",tasks:"Tasks",proposals:"Proposals",search:"Search",subjects:"Subjects",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={home:"Home",record:"The record",tasks:"Tasks",proposals:"Proposals",search:"Search",subjects:"Subjects",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","focuses","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
     return;
   }
   const R = {
-    record: renderRecord, tasks: renderTasks, proposals: renderProposals, search: renderSearchScreen, subjects: renderSubjectView, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
+    home: renderHome, record: renderRecord, tasks: renderTasks, proposals: renderProposals, search: renderSearchScreen, subjects: renderSubjectView, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
     projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
@@ -4887,6 +4913,148 @@ async function renderMembers(){
     }
   }catch(e){ $("#mm").innerHTML = errPane(e); }
 }
+
+/* ============================================================
+   UI-8: THE MEMBER HOME — the "what needs you" orientation surface, M8's
+   ENTRY POINT ("a member can reach what the record holds"). It is the first
+   screen a member lands on, because nothing else tells them what the record is
+   ASKING of them.
+
+   HOME aggregates the attention the record holds for THIS member and points at
+   where each act happens. It is READ-ONLY orientation — never an act surface;
+   the acts (resolve a task, adopt a proposal) live on their own screens, which
+   HOME links to. It sends no act op.
+
+   Two summaries, and every count COMES FROM AN OP — never invented:
+
+   - OPEN TASKS from op=tasks, the SAME feed UI-1's inbox reads, partitioned the
+     SAME way (mine / unassigned / others over the live, non-resolved tasks) so
+     the home count and the inbox can never disagree. It shows how many need you,
+     the one waiting longest (the honest proxy for "most urgent" — the plane
+     computes no priority or clock yet, D-86), and the unassigned tasks no one is
+     holding, surfaced so they cannot fall through.
+
+   - OPEN PROPOSALS from op=proposals (REC-6's discovery feed, now live), read
+     through the SAME loadProposals() UI-5 uses, so the two surfaces aggregate
+     identically. If op=proposals is absent, HOME degrades HONESTLY to a "feed
+     pending" note exactly as UI-5's gap banner does — it NEVER fabricates a
+     count.
+
+   HONESTY is load-bearing (the whole product is trustworthiness of the record):
+   an empty record shows an honest empty state ("nothing needs you right now"),
+   never a fake number and never a fabricated task; a feed that cannot be read is
+   STATED as undetermined, not guessed. The all-clear banner is shown ONLY when
+   both feeds answered AND both are genuinely empty — a fetch error or a pending
+   proposals feed withholds it, because "nothing needs you" is itself a claim the
+   record must be able to stand behind.
+   ============================================================ */
+
+/* Summarise op=tasks for THIS member. Reuses myMemberId() and the exact
+   partition renderTasks applies. The count is the op's, not the home's: no task
+   in the feed -> no number. Throws on a real fetch failure so the caller can say
+   so rather than show a zero it did not earn. */
+async function homeTasksSummary(){
+  const me = myMemberId();
+  const r = await rec("tasks");
+  const tasks = (r.result && r.result.tasks) || [];
+  const live = tasks.filter(t=>t.status !== "resolved");
+  const mine       = live.filter(t=>me && t.assignee===me);
+  const unassigned = live.filter(t=>t.assignee==="unassigned");
+  /* "most urgent" = the longest-waiting of YOUR tasks, by created date. The
+     plane computes no priority, so waiting-longest is the honest ordering (the
+     same ageing framing UI-1 uses), never a fabricated urgency. */
+  const urgent = mine.slice().sort((a,b)=> new Date(a.created||0) - new Date(b.created||0))[0] || null;
+  return { yours: mine.length, unassigned: unassigned.length, urgent };
+}
+
+/* Summarise op=proposals through the SAME loadProposals() UI-5 uses. It never
+   throws — it returns {gap:true,...} when the op is absent/errored, which HOME
+   renders as an honest "feed pending" rather than a count. */
+async function homeProposalsSummary(){
+  const feed = await loadProposals();
+  if(feed.gap) return { pending:true, reason:feed.reason };
+  return { pending:false, count:(feed.proposals||[]).length };
+}
+
+function homeTasksCardHtml(t, err){
+  let body;
+  if(err){
+    body = `<div class="hm-pending">The record could not be asked for your tasks just now, so no count is shown rather than a wrong one. ${esc((err&&(err.reason||err.error||err.detail))||"Could not reach the plane.")}</div>`;
+  }else{
+    const total = t.yours, zero = total===0;
+    body = `<div class="hm-count ${zero?"zero":""}">${total}<span class="u">${total===1?"needs you":"need you"}</span></div>`;
+    if(t.urgent){
+      body += `<div class="hm-urgent"><span class="k">${esc(taskKindLabel(t.urgent.kind))}</span> — <span class="age">${esc(taskAge(t.urgent.created))}</span>, waiting longest.</div>`;
+    }else if(zero){
+      body += `<div class="hm-sub">Nothing is assigned to you. When the record needs you to decide something, it appears here.</div>`;
+    }
+    if(t.unassigned)
+      body += `<div class="hm-sub">And <b>${t.unassigned}</b> ${t.unassigned===1?"task":"tasks"} no one is holding yet — shown so ${t.unassigned===1?"it does":"they do"} not fall through.</div>`;
+  }
+  return `<div class="hm-card"><h2>Open tasks</h2>${body}<div class="hm-go"><button data-go="tasks">Open Tasks</button></div></div>`;
+}
+
+function homeProposalsCardHtml(p){
+  let body;
+  if(p.pending){
+    body = `<div class="hm-pending">The record cannot enumerate its derived findings yet — the proposals feed is not answering on this plane. Rather than show a count it cannot stand behind, it says so. No number is invented.</div>`;
+  }else{
+    const total = p.count, zero = total===0;
+    body = `<div class="hm-count ${zero?"zero":""}">${total}<span class="u">${total===1?"awaits you":"await you"}</span></div>`;
+    body += zero
+      ? `<div class="hm-sub">The record has surfaced no proposals right now. When it notices a pattern that wants a person, it appears here as a question — never as a fact.</div>`
+      : `<div class="hm-sub">${total===1?"A question the record raised on its own, and nobody has":`Questions the record raised on their own, and nobody has`} yet judged ${total===1?"it":"them"} — a question, not an established finding.</div>`;
+  }
+  return `<div class="hm-card"><h2>Open proposals</h2>${body}<div class="hm-go"><button data-go="proposals">Open Proposals</button></div></div>`;
+}
+
+/* Clear entry to the surfaces M8 has built. Members is admin-gated exactly as
+   the rail is (capability a member lacks is ABSENT, not shown), so the home
+   entry matches what the member can actually navigate to. */
+function homeEntryHtml(){
+  const isAdmin = !!(PLANE.me && PLANE.me.administer);
+  const entries = [
+    { go:"tasks",    icon:"i-review",  t:"Tasks",         d:"Everything the record needs a person to settle — yours, and the ones no one is holding." },
+    { go:"subjects", icon:"i-focus",   t:"Subjects",      d:"What the record knows about a subject: every document that concerns it, at its honest grade." },
+  ];
+  if(isAdmin) entries.push({ go:"members", icon:"i-members", t:"Members & keys", d:"Who holds power in the group, and the governance thresholds — facts you can check." });
+  return `<h2 class="sec">Go to a surface</h2>
+    <div class="hm-entries">${entries.map(e=>
+      `<button class="hm-entry" data-go="${e.go}"><svg viewBox="0 0 20 20"><use href="#${e.icon}"/></svg><span><span class="t">${esc(e.t)}</span><span class="d">${esc(e.d)}</span></span></button>`).join("")}</div>`;
+}
+function wireHomeEntries(){
+  document.querySelectorAll("#hm [data-go], #content .hm-entry[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+}
+
+let HOME_LAST = null;
+async function renderHome(){
+  setActive("home");
+  const c = $("#content");
+  const who = PLANE.me && (PLANE.me.handle || PLANE.me.cover);
+  c.innerHTML = `<h1 class="rec">Home</h1>
+    <p class="lede">What the record is asking of you${who?`, ${esc(who)}`:""}. Every count here is read from the record — what it actually holds, never a guess — and each points at where the work is done. Nothing is acted on from this screen.</p>
+    <div id="hm">Loading&hellip;</div>`;
+  const host = $("#hm");
+  /* The two summaries degrade INDEPENDENTLY: a task-fetch failure must not
+     suppress the proposals count, and vice versa. */
+  let tasks = null, tasksErr = null;
+  try{ tasks = await homeTasksSummary(); }catch(e){ tasksErr = e; }
+  const props = await homeProposalsSummary();
+  HOME_LAST = { tasks, tasksErr, props };
+  /* All-clear ONLY when both feeds answered and both are genuinely empty. An
+     error or a pending feed withholds it — "nothing needs you" is a claim the
+     record must be able to stand behind. */
+  const allClear = !tasksErr && tasks && tasks.yours===0 && tasks.unassigned===0
+                   && !props.pending && props.count===0;
+  const banner = allClear
+    ? `<div class="hm-allclear"><b>Nothing needs you right now.</b> The record has no open tasks assigned to you, none going unheld, and no proposals awaiting a person. When it does, it will appear here — the count will always be the record's own, never a placeholder.</div>`
+    : "";
+  host.innerHTML = banner
+    + `<div class="hm-sum">${homeTasksCardHtml(tasks, tasksErr)}${homeProposalsCardHtml(props)}</div>`
+    + homeEntryHtml();
+  wireHomeEntries();
+}
+
 /* ============================================================
    UI-1: THE TASK INBOX — the member surface for the attention layer.
 
