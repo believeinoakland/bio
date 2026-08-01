@@ -332,6 +332,18 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 .bl-arith tr.bl-div td{background:var(--tint-muted)}
 .bl-arith tr.bl-div .bl-flag{color:var(--verdigris-dk);font-weight:600;font-size:11px}
 .bl-note{font-size:12.5px;color:var(--ink-soft);margin:8px 0 0}
+/* UI-7 the MEMBERS & GOVERNANCE roster (read-only). Reuses the bl-* denominator/
+   divergence chrome above; the mm-* rules are only the roster + section framing. */
+.mm-gov{margin:6px 0 22px}
+.mm-gov h2{font-size:16px;margin:0 0 4px}
+.mm-lede{font-size:13px;color:var(--ink-soft);margin:0 0 10px}
+.mm-sub{font-size:13px;color:var(--ink-soft);margin:16px 0 2px}
+.mm-reconcile{font-size:12.5px;color:var(--ink-soft);border-left:3px solid var(--tint-muted);padding:6px 0 6px 11px;margin:8px 0 0}
+.mm-note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+.mm-rh{font-size:16px;margin:18px 0 8px}
+.mm-roster td{vertical-align:top}
+.mm-roster .mm-cover{color:var(--muted);font-size:12px;margin-top:2px}
+.mm-none{color:var(--muted);font-size:12.5px}
 /* UI-5 the PROPOSAL: a DERIVED finding awaiting an authored act. It must LOOK derived
    (D-82) and group N instances of one check into ONE item (D-79), never N. The derived
    marker is the load-bearing distinction — its removal is the negative control. */
@@ -4672,13 +4684,207 @@ async function renderMonitoring(){
     LIST_REPAINT = paintMon;
   }catch(e){ $("#mon").innerHTML = errPane(e); }
 }
+/* ============================================================
+   UI-7: THE MEMBERS & GOVERNANCE ROSTER — the READ-ONLY half of U11.
+   A member surface showing WHO holds power in the group and the group's
+   governance STATE, both rendered as FACTS a member can CHECK. It only SHOWS:
+   there is NO add/remove and NO key operation here (those are BALLOT acts,
+   UI-3, or a later U11 split).
+
+   Plane ops consumed (I3), never reshaped:
+     op=memberlist (GET)  -> { members:[{ member_id, cover, handle, role,
+       status, capabilities, invite_pending, ... }] }. `role` is admin|member.
+       NOTE: the FOUNDING administrator (the ADMIN_TOKEN holder) has NO members
+       row, so it is NOT in this list — but op=adminarith COUNTS it. See
+       founderReconcileHtml.
+     op=adminarith (GET)  -> { table:[adminMath(1..9)], live:adminMath(#admins) }.
+       adminMath(n) = { administrators, votesNeeded, eligibleVoters, possible }.
+       The §4.7 consensus/majority denominator, COMPUTED by the plane.
+     op=projectownerarith (GET, no projectId) -> { table:[ownerMath(1..9)],
+       live:null }. Its `table` carries the TWO-OWNER divergence (row n=2, where
+       owner removal parts company with the admin rule); rendered by UI-3's
+       ballotDivergenceHtml, REUSED, not re-derived.
+     op=projectparticipants (GET, per project) -> the owners of each project,
+       to answer "which projects does each member own" — a read op=memberlist
+       does not expose (see the DELEGATION in CLAIMS.md).
+
+   The governance figures are NEVER recomputed in the interface: floor(n/2)+1
+   here would drift from the plane exactly as UI-3 warns, so the denominator is
+   read STRAIGHT off the arithmetic op's own fields, and shown as "N of M",
+   never as "pending".
+   ============================================================ */
+
+/* THE ROLE WIRING — a member's class is read STRAIGHT from op=memberlist's
+   `role` field, never inferred from capabilities and never invented. Break this
+   (return a constant instead of m.role) and a member's displayed role stops
+   reflecting the op — this suite's NEGATIVE CONTROL. */
+function memberRole(m){ return m && m.role; }
+function memberRoleBadge(m){
+  const role = memberRole(m);
+  if(role === "admin")
+    return `<span class="chip elevated" title="An administrator: bound by the Section 4 process, not by the working capabilities below. Adding or removing one is a group decision, never one person's.">Administrator</span>`;
+  if(role === "member")
+    return `<span class="chip collected" title="An ordinary member. What they may do is set by the capabilities beside them.">Member</span>`;
+  /* Undetermined is first-class: an unexpected role token is shown as itself,
+     never silently folded into "member". */
+  return `<span class="chip flag" title="The record reports a class this surface does not recognise. It is shown as-is rather than guessed.">${esc(role==null?"unknown":String(role))}</span>`;
+}
+const MEMBER_STATUS_UI = {
+  active:   { label:"Active",   cls:"verified",  note:"Signed-in and acting." },
+  proposed: { label:"Proposed", cls:"collected", note:"Put forward, not yet endorsed into the group." },
+  invited:  { label:"Invited",  cls:"collected", note:"Has an unspent invitation; has not joined yet." },
+  revoked:  { label:"Revoked",  cls:"flag",      note:"No longer active. Kept on the roster, never erased." },
+};
+function memberStatusBadge(m){
+  const s = m && m.status;
+  if(!s) return "";
+  const u = MEMBER_STATUS_UI[s];
+  return u ? `<span class="chip ${u.cls}" title="${esc(u.note)}">${esc(u.label)}</span>`
+           : `<span class="chip flag" title="A standing this surface does not recognise; shown as-is.">${esc(s)}</span>`;
+}
+function memberCapsHtml(m){
+  const caps = (m && (m.capabilities||m.caps)) || [];
+  if(!caps.length) return `<span class="mm-none" title="Holds no working capability: may read the record, but not contribute, publish, or create projects.">view only</span>`;
+  return caps.map(c=>`<span class="chip verified">${esc(c)}</span>`).join(" ");
+}
+
+/* THE ADMIN DENOMINATOR — read STRAIGHT from op=adminarith's `live` row, the
+   same "a number you can check, never pending" shape UI-3's ballotDenominator
+   uses. The threshold math is the plane's; a copy here would drift from it. */
+function adminDenominator(live){
+  return { need: live.votesNeeded, of: live.administrators,
+           eligible: live.eligibleVoters, possible: live.possible };
+}
+function adminDenominatorHtml(live){
+  const d = adminDenominator(live);
+  const takes = d.possible
+    ? `Removing an administrator takes <b>${d.need} of ${d.of}</b> administrators&rsquo; votes`
+      + (d.eligible===d.of ? `` : `, and ${d.eligible} of the ${d.of} may vote &mdash; the one facing removal is counted but does not vote`) + `.`
+    : `With ${d.of} administrator${d.of===1?"":"s"}, no administrator can be removed by vote &mdash; a majority that excludes the one facing removal cannot be reached at this size. That is the rule holding at the smallest group, not a fault.`;
+  return `<div class="bl-den"><div class="bl-cap">What removing an administrator takes right now</div>`
+       + `<div class="bl-takes">${takes}</div>`
+       + `<div class="bl-run">These are facts you can check against the roster below &mdash; a count, never &ldquo;pending&rdquo;.</div></div>`;
+}
+/* How the administrator threshold SCALES, from op=adminarith's own `table`
+   (each row is adminMath(n)). Same chrome as UI-3's divergence table. */
+function adminScaleHtml(table){
+  const rows = (table||[]).map(r=>{
+    const carries = r.possible ? `${r.votesNeeded} of ${r.administrators}` : "not removable";
+    const why = r.possible ? `${r.eligibleVoters} of ${r.administrators} may vote`
+                           : "no majority excluding the target is reachable";
+    return `<tr class="${r.possible?"":"bl-div"}"><td class="bl-n">${r.administrators}</td><td>${esc(carries)}</td><td class="bl-why">${esc(why)}</td></tr>`;
+  }).join("");
+  return `<div class="bl-tbl"><div class="bl-cap">How the administrator threshold changes with the number of administrators</div>`
+       + `<table class="bl-arith"><thead><tr><th>Administrators</th><th>To remove one</th><th>Who votes</th></tr></thead><tbody>${rows}</tbody></table>`
+       + `<p class="bl-note">A lone captured administrator can never eject anyone at any size; removal only loosens as the group grows. This is the Section 4.7 rule, computed by the record, not restated here.</p></div>`;
+}
+
+/* THE FOUNDER RECONCILIATION. op=adminarith counts the founding administrator
+   (the ADMIN_TOKEN holder), who has NO members row and so does NOT appear in
+   op=memberlist. Rather than let the denominator ("N of M") look inconsistent
+   with a roster that lists fewer administrator rows, the surface STATES the
+   gap. It never invents a row for the founder — undetermined identity is shown,
+   not filled in. */
+function founderReconcileHtml(liveAdmins, rosterAdminRows){
+  const unlisted = (liveAdmins|0) - (rosterAdminRows|0);
+  if(unlisted <= 0) return "";
+  return `<p class="mm-reconcile">The count above includes <b>${unlisted}</b> administrator${unlisted===1?"":"s"} the roster does not list a row for: the founding administrator holds the group through the hosting account itself, so they carry no member entry and cannot be removed from inside the application. They are counted here because the vote count is honest about who exists, not only about who is listed.</p>`;
+}
+
+function governanceHtml(adminArith, ownerArith, rosterAdminRows){
+  let out = `<section class="mm-gov"><h2>How power changes hands here</h2>`
+          + `<p class="mm-lede">These are the group&rsquo;s own rules, computed by the record. Nothing on this screen changes anything &mdash; it only shows you the arithmetic so you can check it yourself.</p>`;
+  if(adminArith && adminArith.live){
+    out += adminDenominatorHtml(adminArith.live);
+    out += founderReconcileHtml(adminArith.live.administrators, rosterAdminRows);
+    if(Array.isArray(adminArith.table)) out += adminScaleHtml(adminArith.table);
+  } else {
+    out += `<p class="mm-note">The administrator arithmetic could not be read with this account.</p>`;
+  }
+  if(ownerArith && Array.isArray(ownerArith.table)){
+    out += `<div class="mm-sub">Project ownership follows the same rule, with one deliberate divergence:</div>`;
+    out += ballotDivergenceHtml(ownerArith.table);   // REUSED from UI-3
+  }
+  return out + `</section>`;
+}
+
+/* PER-MEMBER PROJECT OWNERSHIP. op=memberlist does not carry which projects a
+   member owns, so it is answered by a BOUNDED fan-out over the record's project
+   bundles (op=projectparticipants each). It degrades HONESTLY: a project that
+   cannot be read is skipped rather than guessed, and if the projects cannot be
+   listed at all the roster says ownership could not be read rather than
+   implying nobody owns anything. A DELEGATION in CLAIMS.md proposes op=memberlist
+   carry an `owns` projection so this N+1 is not needed. */
+const MM_OWNERSHIP_CAP = 80;
+async function memberOwnership(){
+  let record;
+  try{ record = await loadRecord(); }
+  catch(_){ return { ok:false, owns:new Map() }; }
+  const projects = (record||[]).filter(h=>(h.object_type||h.type)==="project");
+  const owns = new Map();   // handle -> [{ id, title }]
+  let capped = false;
+  const slice = projects.slice(0, MM_OWNERSHIP_CAP);
+  if(projects.length > MM_OWNERSHIP_CAP) capped = true;
+  for(const p of slice){
+    const pid = p.bundle_id || p.id;
+    if(!pid) continue;
+    try{
+      const pp = await rec("projectparticipants", { projectId: pid });
+      for(const part of (pp.participants||[])){
+        if(!part.owner) continue;
+        const arr = owns.get(part.handle) || [];
+        arr.push({ id: pid, title: p.title || pid });
+        owns.set(part.handle, arr);
+      }
+    }catch(_){ /* a project this account cannot read is skipped, never guessed */ }
+  }
+  return { ok:true, owns, capped, projectCount: projects.length };
+}
+function memberOwnsHtml(m, ownedInfo){
+  if(!ownedInfo || !ownedInfo.ok)
+    return `<span class="mm-none" title="The list of projects could not be read with this account, so ownership is not shown rather than guessed.">not read</span>`;
+  const key = m.handle;
+  const owned = (key && ownedInfo.owns.get(key)) || [];
+  if(!owned.length) return `<span class="mm-none">&mdash;</span>`;
+  return owned.map(p=>`<span class="chip elevated" title="Owns this project: an owner invites, removes, and votes on its ownership (Section 7).">${esc(p.title)}</span>`).join(" ");
+}
+
+function rosterRow(m, ownedInfo){
+  const handle = m.handle || m.member_id || m.member || m.id || "";
+  const cover  = m.cover || m.name || "";
+  const pending = m.invite_pending ? ` <span class="chip collected" title="An invitation has been issued and not yet spent.">invite pending</span>` : "";
+  return `<tr>
+    <td class="ttl">${esc(handle)}${cover?`<div class="mm-cover">${esc(cover)}</div>`:""}</td>
+    <td>${memberRoleBadge(m)}${pending}</td>
+    <td>${memberStatusBadge(m)}</td>
+    <td>${memberCapsHtml(m)}</td>
+    <td>${memberOwnsHtml(m, ownedInfo)}</td>
+  </tr>`;
+}
+
 async function renderMembers(){
-  $("#content").innerHTML = `<h1 class="rec">Members &amp; keys</h1><p class="lede">Members sign in with a handle and password. A cover is a label, not a legal name. A password can never publish; only a registered key can.</p><div id="mm">Loading&hellip;</div>`;
+  $("#content").innerHTML = `<h1 class="rec">Members &amp; governance</h1>`
+    + `<p class="lede">Who holds power in this group, and the rules by which it changes hands. Members sign in with a handle and password; a cover is a label, not a legal name; a password can never publish, only a registered key can. This screen only SHOWS &mdash; adding or removing a member, or a key, happens elsewhere, as a decision the group can check.</p>`
+    + `<div id="mm-gov"></div><h2 class="mm-rh">The roster</h2><div id="mm">Loading&hellip;</div>`;
   try{
-    const r = await rec("memberlist"); const members = (r.result&&(r.result.members||r.result))||[];
-    $("#mm").innerHTML = members.length
-      ? `<table class="rec"><thead><tr><th>Handle</th><th>Cover</th><th>Can</th></tr></thead><tbody>${members.map(m=>`<tr><td class="ttl">${esc(m.handle||m.member||m.id||"")}</td><td style="color:var(--muted)">${esc(m.cover||m.name||"")}</td><td>${((m.capabilities||m.caps||[]).map(c=>`<span class="chip verified">${esc(c)}</span>`).join(" "))||'<span class="chip collected">contribute</span>'}</td></tr>`).join("")}</tbody></table>`
-      : `<div class="empty">No members listed, or this token cannot read the roster.</div>`;
+    /* Read the roster and the two arithmetic ops together; ownership fans out
+       over the projects. A failure in one does not blank the others. */
+    const [rosterR, adminR, ownerR, ownedInfo] = await Promise.all([
+      rec("memberlist").catch(e=>({ __err:e })),
+      rec("adminarith").catch(()=>null),
+      rec("projectownerarith").catch(()=>null),
+      memberOwnership().catch(()=>({ ok:false, owns:new Map() })),
+    ]);
+    if(rosterR && rosterR.__err){ $("#mm").innerHTML = errPane(rosterR.__err); }
+    const members = (rosterR && !rosterR.__err && (rosterR.result && (rosterR.result.members||rosterR.result))) || [];
+    const rosterAdminRows = members.filter(m=>memberRole(m)==="admin" && (m.status?m.status==="active":true)).length;
+    $("#mm-gov").innerHTML = governanceHtml(adminR, ownerR, rosterAdminRows);
+    if(!(rosterR && rosterR.__err)){
+      $("#mm").innerHTML = members.length
+        ? `<table class="rec mm-roster"><thead><tr><th>Member</th><th>Class</th><th>Standing</th><th>May</th><th>Owns</th></tr></thead><tbody>${members.map(m=>rosterRow(m, ownedInfo)).join("")}</tbody></table>`
+          + (ownedInfo && ownedInfo.capped ? `<p class="mm-note">Ownership was read for the first ${MM_OWNERSHIP_CAP} of ${ownedInfo.projectCount} projects.</p>` : "")
+        : `<div class="empty">No members listed, or this account cannot read the roster.</div>`;
+    }
   }catch(e){ $("#mm").innerHTML = errPane(e); }
 }
 /* ============================================================
