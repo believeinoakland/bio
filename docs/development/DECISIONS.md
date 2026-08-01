@@ -291,8 +291,9 @@ response:
 decided:
 enacted:
 
-### DEC-5 · open
-raised: 2026-07-31 · BOB (from `OFFICE-FORMATS.md` research, D-122)
+### DEC-11 · open
+renumbered: 2026-07-31 · CONDUCT — this entry collided with the daemon-credential DEC-5 above (BOB-session and CONDUCT numbered independently); renumbered DEC-5→DEC-11, content unchanged.
+raised: 2026-07-31 · BOB (from `OFFICE-FORMATS.md` research, D-124 — renumbered from D-122)
 for: bob
 question: When the record holds a Word, Excel or PowerPoint document, may it SURFACE
   the personal data the publisher left inside it — `lastModifiedBy` naming a member of
