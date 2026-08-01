@@ -450,7 +450,7 @@ FW-1 CONFIRMED it 2026-07-31 (see Status above); the extended shape is the contr
 - **Owner:** `RECORD` (moved from `CAPTURE` 2026-07-31; `PARALLELISM.md` anticipated
   this the first time op-wiring became a recurring delegation, and it has now
   recurred once — the `op=pdfstructure` delegation from CONTENT-PDF)
-- **Version:** 1.3.0 (1.0.0 first written 2026-07-31 from plane 0.55.0; 1.1.0 2026-07-31, REC-3 — additive, non-breaking: `op=promote` server-stamps `surfaced_by` for focus/problem creations from the caller's actor class; no op renamed, no class/shape/reason changed; 1.2.0 2026-07-31, REC-4 — additive, non-breaking on `op=taskforward` and `op=taskresolve`: (a) a NEW named refusal reason `NOT_YOURS` (the TASK-ACTOR FENCE, D-98 / construct T · TASK) — a caller who is neither the task's `assignee` nor an admin is refused, and the refusal NAMES who it is with (`assignee`, `assignee_role`, and a human `detail`); an honestly `unassigned` task stays claimable. No existing reason, class, or success shape changed. (b) both ops are now reachable by a member/admin SESSION, not only a machine credential — the assignee acts through their browser session (actor stamped server-side), which the Tasks screen already assumed; a widening of reach, additive, nothing previously admitted is now refused. See DEC-7. 1.3.0 2026-07-31, REC-6 — additive, non-breaking: one NEW read op `op=proposals`, the DISCOVERY feed for DERIVED findings (UI-5's delegation). A read-time walk of every progression instance for its undischarged missing-predecessor findings, returned BOTH raw-per-instance (`instances[]` — the shape `op=instance` returns, which UI-5's `loadProposals` already consumes, so its surface populates with NO UI change) AND D-79-aggregated (`proposals[]` — ONE proposal per `(progression_key, stage_key)` carrying its N instances, the WEAKEST §8.1 grade across them with any-undetermined→undetermined, `surfaced_by: machine`). Ungated like the other progression reads (admin/member/probe, `mutating:false`); REPORTS, never mutates. No op renamed, no class/shape/reason changed on any existing op.)
+- **Version:** 1.4.0 (1.0.0 first written 2026-07-31 from plane 0.55.0; 1.1.0 2026-07-31, REC-3 — additive, non-breaking: `op=promote` server-stamps `surfaced_by` for focus/problem creations from the caller's actor class; no op renamed, no class/shape/reason changed; 1.2.0 2026-07-31, REC-4 — additive, non-breaking on `op=taskforward` and `op=taskresolve`: (a) a NEW named refusal reason `NOT_YOURS` (the TASK-ACTOR FENCE, D-98 / construct T · TASK) — a caller who is neither the task's `assignee` nor an admin is refused, and the refusal NAMES who it is with (`assignee`, `assignee_role`, and a human `detail`); an honestly `unassigned` task stays claimable. No existing reason, class, or success shape changed. (b) both ops are now reachable by a member/admin SESSION, not only a machine credential — the assignee acts through their browser session (actor stamped server-side), which the Tasks screen already assumed; a widening of reach, additive, nothing previously admitted is now refused. See DEC-7. 1.3.0 2026-07-31, REC-6 — additive, non-breaking: one NEW read op `op=proposals`, the DISCOVERY feed for DERIVED findings (UI-5's delegation). A read-time walk of every progression instance for its undischarged missing-predecessor findings, returned BOTH raw-per-instance (`instances[]` — the shape `op=instance` returns, which UI-5's `loadProposals` already consumes, so its surface populates with NO UI change) AND D-79-aggregated (`proposals[]` — ONE proposal per `(progression_key, stage_key)` carrying its N instances, the WEAKEST §8.1 grade across them with any-undetermined→undetermined, `surfaced_by: machine`). Ungated like the other progression reads (admin/member/probe, `mutating:false`); REPORTS, never mutates. No op renamed, no class/shape/reason changed on any existing op. 1.4.0 2026-07-31, REC-7 — additive, non-breaking: one NEW write op `op=proposedispose` (mutating, `contribute`, admin/member/probe) records a member's DEFER or DISMISS of a derived proposal — keyed by the proposal's identity `(progression_key, stage_key)`, carrying a REQUIRED reason (refused `NO_REASON`, never prefilled; `NOT_A_DISPOSITION`/`BAD_REASON`/`BAD_STAGE`/`NO_DECIDER` the other named refusals) and the SERVER-STAMPED deciding member — and mints NO bundle (D-79: declining is not authoring). And `op=proposals` gains DISPOSITION-AWARENESS, ADDITIVELY: a disposed proposal is FILTERED from the OPEN `instances`/`proposals` (so a declined proposal ages out rather than reappearing as open — UI-5's `loadProposals` re-aggregates `instances[]`, so its surface ages it with NO UI change) and RETURNED alongside in a NEW `dispositions[]` array (`{key, progression_key, stage_key, state, reason, decided_by, at}`) with a `disposition_count`, so the decision stays on the record. The existing `instances[]`/`proposals[]` shapes and their fields are unchanged — a reader that ignores `dispositions[]` sees the same shape, only with aged proposals excluded. No op renamed, no class/reason changed on any existing op.)
 - **Consumers:** `UI`, `DIST` (the installer's served surfaces), every content area
   that needs its work reachable
 - **Status:** STABLE
@@ -529,7 +529,7 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.7.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.8.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
   `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —
@@ -560,8 +560,18 @@ correctness properties, not preferences. Changing either is an interface change.
   op=resolve/op=resolvetestify on insert-or-raise, keyed by `entity_id`), added BEFORE
   `host_governor` and cleared by `op=purge`'s whole-store arm only (it has no `bundle_id`
   and is a transient queue, so a per-bundle purge leaves it — at worst one harmless
-  idempotent re-derivation next tick). No existing table's columns changed, so nothing built
-  against I5 breaks; the shapes are in the ownership list and note below.)
+  idempotent re-derivation next tick); 1.8.0 2026-07-31, REC-7 — ADDITIVE: one new table
+  `proposal_dispositions` (D-79 — the PROPOSAL-DISPOSITION store: a member's DEFER/DISMISS of a
+  DERIVED proposal, keyed by the proposal's identity `(progression_key, stage_key)` — the same key
+  REC-6's op=proposals aggregates by — holding state (deferred/dismissed), the REQUIRED reason, the
+  server-stamped deciding member, and the time. It is how a declined proposal AGES rather than
+  vanishing: op=proposals reads it, filters the aged proposal out of the OPEN feed, and returns it
+  alongside. Member-authored decision state, NOT corpus-derived and carrying NO `bundle_id`
+  (declining is not authoring — it mints no bundle), so added BEFORE `host_governor` and cleared by
+  `op=purge`'s whole-store arm ONLY, like the registry and the progression definitions — a
+  per-bundle purge leaves it. A re-disposition UPSERTS on the key, so one proposal re-decided keeps
+  ONE row. No existing table's columns changed, so nothing built against I5 breaks. The shapes are
+  in the ownership list and note below.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 

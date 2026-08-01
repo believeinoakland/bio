@@ -3957,6 +3957,20 @@ export class Store extends DurableObject {
      gap is not a proposal, and reporting it would be noise about a thing that is fine. Connections
      as a second finding kind are DEFERRED as a follow-on (missing-predecessors only here). */
   proposalsFeed() {
+    /* REC-7 / D-79: DISPOSITION-AWARENESS. A proposal a member has deferred or dismissed
+       (op=proposedispose) is AGED — it must not keep reappearing as an OPEN question, and it must
+       not silently vanish either (a finding that disappears is indistinguishable from one never
+       made). Both halves are kept here: the disposition, keyed by the SAME (progression_key,
+       stage_key) the aggregation is keyed by, FILTERS its proposal out of the OPEN feed
+       (`instances`/`proposals`) so it stops surfacing as open, and is RETURNED alongside in
+       `dispositions` so the decision — its state, reason, who and when — stays on the record.
+       Dropping this lookup is REC-7's negative control: with no dispositions read, an aged
+       proposal reappears as open. */
+    const disposed = new Map();   // (progression_key::stage_key) -> the disposition row
+    for (const d of this.#rows(
+      `SELECT progression_key, stage_key, state, reason, decided_by, at
+         FROM proposal_dispositions`))
+      disposed.set(d.progression_key + "::" + d.stage_key, d);
     /* DISTINCT (progression_key, entity_id): the identity of an instance is the pair; a stage
        holds several documents but that is still one instance. Ordered so the feed is stable. */
     const pairs = this.#rows(
@@ -3968,8 +3982,11 @@ export class Store extends DurableObject {
       const inst = this.#assembleInstance(p.progression_key, p.entity_id);
       /* only the UNDISCHARGED, required missing-predecessor findings #assembleInstance already
          computed — a discharged skip is in `discharges`, not here, and a non-required missing
-         stage never fired. An instance with no such finding contributes nothing to the feed. */
-      const findings = (inst.findings || []).filter((f) => f.kind === "missing_predecessor");
+         stage never fired. A finding whose (progression_key, stage_key) has been disposed is AGED
+         OUT of the open feed (it lives on in `dispositions`). An instance with no OPEN finding
+         left contributes nothing to the open feed — its aged findings are recorded, not shown. */
+      const findings = (inst.findings || []).filter(
+        (f) => f.kind === "missing_predecessor" && !disposed.has(inst.progression_key + "::" + f.stage_key));
       if (findings.length === 0) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
       instances.push({
@@ -4008,8 +4025,96 @@ export class Store extends DurableObject {
     /* biggest pattern first — the DROWNING failure D-79 names is showing many small findings as
        many items, so the widest question leads. Stable tiebreak on the aggregation key. */
     proposals.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-    return { ok: true, instances, proposals,
-             instance_count: instances.length, proposal_count: proposals.length };
+    /* the aged decisions, on the record (D-79 age-not-vanish). Every recorded disposition, so a
+       member (or UI-5) can see WHICH questions were deferred/dismissed, by whom, why and when —
+       independent of whether the underlying gap still fires, because the decision stands until it
+       is re-triaged. Stable order, widest identity first is meaningless here so ordered by key. */
+    const dispositions = [...disposed.values()]
+      .map((d) => ({ key: d.progression_key + "::" + d.stage_key,
+                     progression_key: d.progression_key, stage_key: d.stage_key,
+                     state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at }))
+      .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+    return { ok: true, instances, proposals, dispositions,
+             instance_count: instances.length, proposal_count: proposals.length,
+             disposition_count: dispositions.length };
+  }
+
+  /* op=proposedispose (REC-7): record a member's DEFER or DISMISS of a derived PROPOSAL, WITHOUT
+     minting a bundle. REC-6's op=proposals surfaces the record's own questions (one missing-
+     predecessor finding per (progression_key, stage_key), aggregated). A member who decides a
+     question is not worth pursuing — or wants it parked — needs somewhere to record that. op=dispose
+     cannot take it: it disposes a focus BUNDLE (a handle + a state), and a proposal is not a bundle.
+     Doctrine is SETTLED (D-79): a declined proposal AGES with a recorded reason; it does NOT mint a
+     bundle, open a focus, or attribute anything beyond this disposition record — because DECLINING
+     IS NOT AUTHORING. So this writes ONE row keyed by the proposal's identity and nothing else: no
+     bundle, no history entry, no manifest. proposalsFeed reads it and ages the proposal out of open.
+
+     The reason is REQUIRED and never prefilled (NO_REASON, fail-closed) — the whole point is that a
+     member's decision to set aside the record's question is itself accountable, in their own words.
+     The deciding member is STAMPED server-side by index.mjs (decidedBy); a caller-supplied value is
+     overwritten there, and a blank one is refused here (NO_DECIDER) so a bypass fails closed. */
+  proposeDispose({ progressionKey, stageKey, key, to, state, reason, decidedBy = null } = {}) {
+    /* the proposal identity is (progression_key, stage_key). UI-5 sends the aggregation key it
+       already holds ("progression::stage"); the pair may also be passed explicitly. */
+    let pk = typeof progressionKey === "string" ? progressionKey.trim() : "";
+    let sk = typeof stageKey === "string" ? stageKey.trim() : "";
+    if ((!pk || !sk) && typeof key === "string" && key.includes("::")) {
+      const i = key.indexOf("::");
+      if (!pk) pk = key.slice(0, i).trim();
+      if (!sk) sk = key.slice(i + 2).trim();
+    }
+    if (!pk) return { ok: false, reason: "NO_KEY",
+      detail: "a proposal disposition names its progression (progressionKey, or key='progression::stage')" };
+    if (!sk) return { ok: false, reason: "NO_STAGE",
+      detail: "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')" };
+    /* deferred (parked, returnable) or dismissed (declined). Both age the proposal out of the open
+       feed. Elevating/adopting is a DIFFERENT act (op=promote authors a focus) and is not a
+       disposition here — the same line op=dispose draws between a disposition and elevation. */
+    const DISPOSITIONS = ["deferred", "dismissed"];
+    const st = typeof to === "string" ? to.trim() : (typeof state === "string" ? state.trim() : "");
+    if (!DISPOSITIONS.includes(st))
+      return { ok: false, reason: "NOT_A_DISPOSITION", to: st || null, dispositions: DISPOSITIONS,
+               detail: "a proposal is deferred (parked) or dismissed (declined); adopting one authors a "
+                     + "focus (op=promote) and is not a disposition" };
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON",
+               detail: "deferring or dismissing the record's own question is recorded with a reason, in the "
+                     + "member's own words — a disposition with no reason ages a finding with no account of why" };
+    if (why.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON",
+               detail: `a reason is at most ${Store.EDGE_REASON_MAX} characters and cannot contain a quote, `
+                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+    const by = decidedBy == null ? "" : String(decidedBy).trim();
+    if (!by)
+      return { ok: false, reason: "NO_DECIDER",
+               detail: "a disposition is recorded under the deciding member, stamped from the session. An "
+                     + "unnamed decider cannot age the record's question." };
+    /* the proposal's identity must be REAL: a defined progression and a stage that belongs to it.
+       A proposal only ever exists for a defined progression's real stage (proposalsFeed derives it
+       from progression_instances → stages), so this catches a typo'd or invented key rather than
+       silently recording a disposition against nothing. It does NOT require a gap to currently fire:
+       the disposition is a standing decision keyed by identity, and D-79 keeps it until re-triaged
+       even if the gap comes and goes. */
+    const def = this.#one(`SELECT progression_key FROM progression_defs WHERE progression_key=?`, pk);
+    if (!def) return { ok: false, reason: "NO_SUCH_PROGRESSION", progression_key: pk,
+      detail: "define the progression first (op=progressiondefine); a proposal exists only for a defined one" };
+    const stageRow = this.#one(
+      `SELECT stage_key FROM progression_stages WHERE progression_key=? AND stage_key=?`, pk, sk);
+    if (!stageRow) return { ok: false, reason: "BAD_STAGE", progression_key: pk, stage_key: sk,
+      detail: `'${sk}' is not a stage of progression '${pk}' — a disposition must name a real stage` };
+    const at = new Date().toISOString();
+    /* UPSERT on the identity: a proposal re-decided (deferred→dismissed, or a corrected reason)
+       keeps ONE row, re-triageable, never a second. No bundle is written, no history, no manifest —
+       declining is not authoring, so the disposition row is the whole of the act. */
+    this.sql.exec(
+      `INSERT INTO proposal_dispositions (progression_key,stage_key,state,reason,decided_by,at)
+       VALUES (?,?,?,?,?,?)
+       ON CONFLICT(progression_key,stage_key) DO UPDATE SET
+         state=excluded.state, reason=excluded.reason, decided_by=excluded.decided_by, at=excluded.at`,
+      pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at);
+    return { ok: true, key: pk + "::" + sk, progression_key: pk, stage_key: sk,
+             to: st, state: st, reason: why, decided_by: by, at, bundle: null };
   }
 
   /* ---- coordination: what LockService and the nextSeq race did ---- */
@@ -4086,6 +4191,10 @@ export class Store extends DurableObject {
          purge can PROVE it cleared the pending work-queue (D-113) and so an operator can
          see how many entities are awaiting a sweep. */
       connectionDirty: n("connection_dirty"),
+      /* REC-7 / D-79: the recorded proposal dispositions, reported so a whole-store purge can
+         PROVE it cleared the aged decisions (D-113) and an operator can see how many of the
+         record's own questions a member has deferred or dismissed. */
+      proposalDispositions: n("proposal_dispositions"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -4232,6 +4341,13 @@ export class Store extends DurableObject {
            has no bundle_id and is safe to re-derive, so a per-bundle purge leaves
            it. hygiene.test.mjs asserts this list against schema.mjs. */
         this.sql.exec(`DELETE FROM connection_dirty`);
+        /* REC-7 / D-79. Proposal dispositions are member-authored decisions (a member aged the
+           record's own question), not a projection of the corpus — like the registry and
+           progression definitions above. But op=purge is the scratch-reset tool, so a whole-store
+           purge that reported scope ALL while leaving dispositions is the D-113 silent-leftover.
+           Cleared here in the whole-store arm only; a per-bundle purge leaves it (no bundle_id).
+           hygiene.test.mjs asserts this list against schema.mjs. */
+        this.sql.exec(`DELETE FROM proposal_dispositions`);
       }
     });
     const after = this.stats();
@@ -4256,7 +4372,9 @@ export class Store extends DurableObject {
                  /* FW-10: the exception documents a purge took (D-113). */
                  progressionExceptions: d("progressionExceptions"),
                  /* REC-5 / D-122: the pending connection-derive dirt a whole-store purge took (D-113). */
-                 connectionDirty: d("connectionDirty") },
+                 connectionDirty: d("connectionDirty"),
+                 /* REC-7 / D-79: the aged proposal dispositions a whole-store purge took (D-113). */
+                 proposalDispositions: d("proposalDispositions") },
     };
   }
 
@@ -7008,6 +7126,11 @@ export class Store extends DurableObject {
            read-time walk of every progression instance for its missing-predecessor findings,
            D-79-aggregated per (progression_key, stage_key). Reports, never mutates. */
         proposals: () => this.proposalsFeed(),
+        /* REC-7: op=proposedispose, record a member's DEFER/DISMISS of a derived proposal WITHOUT
+           minting a bundle (D-79 — declining is not authoring). Writes one disposition row keyed by
+           (progression_key, stage_key); op=proposals then ages that proposal out of the open feed.
+           decidedBy is stamped server-side at index.mjs, like every other authorship. */
+        proposedispose: () => this.proposeDispose(body || {}),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),

@@ -986,6 +986,46 @@ CREATE TABLE IF NOT EXISTS connection_dirty (
   stamped_at TEXT
 );
 CREATE INDEX IF NOT EXISTS connection_dirty_stamped ON connection_dirty(stamped_at);
+-- REC-7 / D-79: the PROPOSAL-DISPOSITION store. A derived proposal (REC-6's
+-- op=proposals: one missing-predecessor finding per (progression_key, stage_key),
+-- aggregated across the instances that fire it) is NOT a bundle, so a member who
+-- defers or dismisses it has nowhere to land a disposition -- op=dispose disposes
+-- a focus BUNDLE (a handle + a state), and declining a proposal must NOT mint a
+-- bundle, because declining is not authoring (D-79). This table is that home: it
+-- records that a member aged the record's own question, keyed by the SAME identity
+-- REC-6 aggregates by, so the disposition attaches to the proposal and not to any
+-- one instance beneath it.
+--
+-- D-79's AGE RATHER THAN VANISH: a machine-surfaced finding nobody has acted on
+-- moves to deferred/dismissed with the reason recorded, never silently
+-- disappearing, because a finding that disappears is indistinguishable from one
+-- never made -- and that rule does not relax because the finder was a machine.
+-- This row IS the ageing: op=proposals reads it, filters the aged proposal out of
+-- the OPEN feed, and returns it alongside so the decision stays on the record.
+-- state is 'deferred' (parked, returnable) or 'dismissed' (declined); both age the
+-- proposal out of open. A re-disposition UPSERTS on the (progression_key,
+-- stage_key) key -- the same proposal re-decided keeps ONE row, re-triageable,
+-- never a second. decided_by is the deciding member, STAMPED server-side (never
+-- the caller's word). A re-fired proposal whose gap still exists but was dismissed
+-- stays dismissed with its reason until this row changes: the key is the identity,
+-- not the instance set, so a wider gap does not silently resurrect it.
+--
+-- Member-authored state (a member's decision), not a projection of the corpus --
+-- like the registry and the progression definitions above -- but op=purge is the
+-- scratch-reset tool, so a whole-store purge that reported scope ALL while leaving
+-- dispositions is the D-113 silent-leftover: cleared in the whole-store arm only,
+-- left by a per-bundle purge (it has no bundle_id). hygiene.test.mjs asserts this
+-- against schema.mjs.
+CREATE TABLE IF NOT EXISTS proposal_dispositions (
+  progression_key TEXT NOT NULL,
+  stage_key       TEXT NOT NULL,
+  state           TEXT NOT NULL,
+  reason          TEXT NOT NULL,
+  decided_by      TEXT,
+  at              TEXT,
+  PRIMARY KEY (progression_key, stage_key)
+);
+CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

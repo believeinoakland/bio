@@ -494,6 +494,13 @@ const OPS = {
      progression reads (op=instance / op=exceptions): a member session reads the record's own
      questions. It needs no scheduled alarm; the PUSH walking-task is a separate later item. */
   proposals:        { classes: ["admin", "member", "probe"],       mutating: false },
+  /* REC-7: record a member's DEFER/DISMISS of a derived proposal WITHOUT minting a bundle (UI-5's
+     second delegation). op=dispose disposes a focus BUNDLE; a proposal is not a bundle, and D-79
+     settles that declining ages a finding with a recorded reason — it does not author. So this
+     MUTATES (it writes one disposition row) but mints no bundle, opens no focus, attributes nothing
+     beyond the disposition. Contribute-gated like the other progression writes; the deciding member
+     is stamped server-side below, and op=proposals then ages the disposed proposal out of open. */
+  proposedispose:   { classes: ["admin", "member", "probe"],       mutating: true  },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -623,9 +630,14 @@ const RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concern
    REC-6 extends it once more with a READ: `proposals` is the DISCOVERY feed — a read-time walk of
    every progression instance for its missing-predecessor findings, D-79-aggregated. Ungated like
    the other progression reads (no viewer stamp, keys on nothing — it enumerates the whole record's
-   derived questions), named here so the member and admin lists cannot drift apart. */
+   derived questions), named here so the member and admin lists cannot drift apart.
+   REC-7 adds a WRITE: `proposedispose` records a member's DEFER/DISMISS of a derived proposal
+   (stamped with the deciding member below, like the other progression writes) — WITHOUT minting a
+   bundle (D-79: declining is not authoring). op=proposals then ages the disposed proposal out of
+   the open feed. Named here so the member and admin lists cannot drift apart. */
 const PROGRESSION_ACTIONS = ["connect", "connections", "progressiondefine", "progression",
-                             "thread", "instance", "discharge", "exceptions", "proposals"];
+                             "thread", "instance", "discharge", "exceptions", "proposals",
+                             "proposedispose"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
@@ -722,6 +734,12 @@ const NEEDS = {
      a lawful recorded skip) — so `contribute`, stamped with the declaring member below. The read
      (exceptions) is ungated, like the other progression reads. */
   discharge:        "contribute",
+  /* REC-7: deferring or dismissing a derived proposal ages the record's own question — it changes
+     what the working corpus SURFACES as open (an aged finding stops appearing) — so it rides the
+     same `contribute` surface as the other progression writes: a view-only member does not age the
+     record's questions. It mints NO bundle (D-79: declining is not authoring); the deciding member
+     is stamped server-side. op=proposals (the read) is ungated, like the other progression reads. */
+  proposedispose:   "contribute",
   /* Dispositioning a knock decides what enters the working corpus, which is the
      contribute surface even though the row it writes is an inbox row. Reading
      the inbox is not gated; acting on it is. */
@@ -2980,6 +2998,20 @@ export default {
       try {
         const b = JSON.parse(passBody);
         b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* REC-7: WHO deferred or dismissed a proposal is the whole of the disposition — declining is
+       not authoring, so the disposition record IS the act, and it must carry the deciding member.
+       Stamped from the session and overwritten if the caller supplied it, exactly as the other
+       progression writes are: a member's decision to set aside the record's question, addressed to
+       nobody but themselves. A machine credential says what it is (class:<cls>) rather than
+       borrowing a person's name; the store refuses a blank decider (NO_DECIDER), so a bypass fails
+       closed. */
+    if (op === "proposedispose" && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.decidedBy = viaSession ? sessMember : `class:${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
