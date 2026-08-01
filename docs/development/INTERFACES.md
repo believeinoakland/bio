@@ -236,15 +236,60 @@ is written here.
 
 - **ID:** I2
 - **Owner:** `FRAMEWORK` (currently dormant)
-- **Version:** 0.1.0 — **PROVISIONAL**, producer-proposed 2026-07-31 from
-  CONTENT-PDF's as-built output (plane 0.55.0), written from the code that emits
-  it rather than as anyone would like it, exactly as I1 was.
+- **Version:** 1.0.0 — **STABLE**, CONFIRMED by the consumer's owner FRAMEWORK
+  (session framework-agent-2, FW-1) 2026-07-31. Supersedes the provisional 0.1.0
+  producer-proposed 2026-07-31 from CONTENT-PDF's as-built output (plane 0.55.0),
+  written from the code that emits it rather than as anyone would like it, exactly
+  as I1 was — and the extended text+tier shape (CPDF-4/CPDF-6/I6) confirmed with it.
 - **Producers:** `CONTENT-PDF` (live), `CONTENT-HTML` (dormant)
 - **Consumer:** `FRAMEWORK` (dormant)
-- **Status:** PROVISIONAL. FRAMEWORK cannot yet answer, so `ARCH` registers the
-  producer's shape (protocol step 3, answering for a dormant area in writing) so
-  content work proceeds. It becomes STABLE when a FRAMEWORK session confirms or
-  counters it via `INTERFACE-CHANGES.md` (which does not exist until then).
+- **Status:** STABLE. FRAMEWORK, the consumer, confirms the shape serves what it
+  must do — identify a document's CONTENT and INTENT — WITHOUT a shape change. The
+  reasoning, because an interface going stable is a real event and not a rubber
+  stamp:
+  - **Container-agnostic by construction, not by assertion.** The four content
+    partitions and their wrappers are the SAME `LINK_TYPES`/`linkWrapper` HTML
+    uses — `pdfstructure.mjs` IMPORTS them from `subresources.mjs` rather than
+    re-deriving them, and `pdfstructure.test.mjs` pins every wrapper byte-identical
+    to `linkWrapper.<partition>(...)`. So FRAMEWORK's content-type recognition and
+    its referential/temporal `connections()` consume a PDF's links and an HTML
+    page's links through ONE code path, with no per-container branch. That is
+    exactly Bob's ruling that content is identified in PDFs as in HTML, delivered
+    as a property of the type rather than a promise about it.
+  - **`undetermined` is first-class on BOTH axes — the one thing FRAMEWORK cannot
+    do without.** docprofile's every default is the failure asymmetry: never
+    invent, over-report, and STATE the gap (`docprofile/index.mjs`). A link that
+    cannot be resolved is CARRIED with a stated `why` and no wrapper; a text run a
+    font cannot decode is a `Marker` NAMING the font/reason, never mojibake. That
+    lets a doctype reader honestly refuse (`meaningful: null`, "could not be read
+    this time") instead of parsing garbage into a false claim — the distinction the
+    whole product rests on.
+  - **It gives a doctype the two inputs it needs, keyed so they compose.**
+    `text.document`/`text.pages[]` is what a recogniser regexes over to identify a
+    kind of document and read its meaning (L1/L4/L5); `links[]` partitioned is the
+    outbound graph L6 turns into referential/temporal connections — and `intra`
+    targets are content-addressed by `sha256`, a STRONGER referential key than an
+    HTML href. Text and links share the 0-based page index (`source.page` ↔
+    `text.pages[].page`), so a link and the page it sits on are correlatable rather
+    than two parallel lists.
+  - **`tier` is present at the boundary FRAMEWORK actually consumes.** The op
+    (`op=pdfstructure`) stamps `tier:1` in-plane and the pdf-worker returns
+    `tier:2`, so a consumer always knows which extractor produced the text and can
+    weight its confidence — even though the raw `extractPdfStructure()` function
+    leaves it unset (the function is not the interface; the op is).
+  - **Its restraint is a feature, not a gap.** Tier-1 text is a flat per-page
+    string with no table/row geometry, so a Legistar-style `<tr>` parse does not
+    transfer to PDF — but asserting layout the extractor cannot support would be
+    exactly the invented-structure this project forbids. Positional/structured text
+    is a FUTURE, doctype-driven ASK (FRAMEWORK raises it via the change protocol
+    when a concrete PDF doctype needs it), not a reason to hold the contract
+    provisional. The honest maximum a no-layout Tier-1 reader can give is what I2
+    gives.
+
+  No producer code was changed to confirm this: the shape FRAMEWORK confirmed is
+  already the shape the battery pins (`pdfstructure.test.mjs` — partitions, wrapper
+  byte-identity, `counts`, `text.document`/`pages[]`/`undetermined`/`counts`; the
+  pdf-worker tests — the `text`+`tier` extension).
 
 ### What it is
 
@@ -313,12 +358,24 @@ The Tier-2 worker (I6) emits the SAME `text` shape with three additional `reason
 `tier2_extraction_error` — plus a top-level **`tier`** field (`1` in-plane, `2` via the
 pdf-worker) so a consumer knows which extractor produced the text.
 **FW-1 confirms or counters this EXTENDED shape (structure + text + tier), not the link-only I2.**
+FW-1 CONFIRMED it 2026-07-31 (see Status above); the extended shape is the contract.
 
-### Open before it can go STABLE
+### Settled at STABLE, and the one residual
 
-- A FRAMEWORK session confirms or counters the shape.
-- `CONTENT-HTML` emits the same shape from HTML, proving the container-agnostic
-  claim across both producers rather than asserting it from one.
+- **CONFIRMED:** a FRAMEWORK session (framework-agent-2, FW-1) judged the extended
+  shape as the consumer's owner and confirmed it without a change. This is the
+  event that made I2 stable.
+- **Residual, producer-side, NOT a consumer reservation:** `CONTENT-HTML` (dormant)
+  will emit the same shape from HTML, exercising the container-agnostic claim from a
+  second producer. For the LINK partitions this is already guaranteed by
+  construction — both producers wrap through the one `subresources.mjs`
+  `linkWrapper`, so an HTML producer cannot drift the four partition wrappers
+  without failing the same parity assertion. What CONTENT-HTML still has to show is
+  that HTML's `text` maps onto the same `text.{document,pages[],undetermined,counts}`
+  shape; if it cannot (HTML has no page pagination, so `pages[]` may need a
+  documented degenerate form), that is a PROPOSED change against this now-stable
+  contract via `INTERFACE-CHANGES.md`, raised by CONTENT-HTML when it activates —
+  not a reason the PDF consumer contract stays open now.
 
 ---
 
