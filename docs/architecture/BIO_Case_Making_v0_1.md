@@ -459,6 +459,17 @@ mechanism by which the strength rule does not force that choice**: separate the 
 leg, publish the strong claim honestly at its own strength, and leave the weak one open
 as what it is. That makes division a doctrine requirement rather than a convenience.
 
+**5. A published case is an INPUT, not a terminus** (Bob, 2026-08-01). It cannot be
+divided, and it can be cited as basis by another inquiry or taken up by another project.
+That is what keeps the record cumulative instead of a series of dead ends: a case
+answers a question and becomes evidence for the next one, and because recursion is the
+basis mechanism, this needs no new machinery — a later inquiry cites it exactly as it
+cites a document. Two consequences worth holding: the citing inquiry inherits the cited
+case's STRENGTH as one leg of its own weakest-link chain, so a case built on a case
+cannot be stronger than the case beneath it; and a case that is later superseded leaves
+everything that cited it needing re-evaluation, which is the same obligation the record
+already carries when a capture's basis moves.
+
 **And merging is free**, for symmetry: two members independently opening inquiries into
 the same thing is resolved by a parent that cites both. No new mechanism.
 
