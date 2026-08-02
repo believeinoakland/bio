@@ -38,40 +38,52 @@ making a change another session must know about.**
 ## Starting a BOB session — the paste block
 
 Nothing about this role lives in a conversation. `CLAUDE.md` auto-loads, the memory index
-auto-loads, and everything else this session needs it reads for itself from the
-repository. So a session is replaced, not migrated: end the old one and start a new one
-with the block below.
+auto-loads, and everything else this session needs it reads for itself. So a session is
+replaced, not migrated: end the old one, start `claude --worktree BOB`, and paste this.
 
 ```
 Kickoff: session BOB.
 
-Read CLAUDE.md first, then docs/development/kickoffs/BOB.md, and follow it.
+Read CLAUDE.md, then docs/development/kickoffs/BOB.md, and follow it.
 
-Then read, in this order:
-  docs/development/ORCHESTRATION.md — COMMUNICATING A CHANGE is the coordination skill
-  docs/development/MILESTONES.md    — the capability ladder, M0-M8
-  docs/development/QUEUE.md         — what is runnable; the BOB INBOX is at the top
-  docs/development/DECISIONS.md     — surface every `open` entry to me before anything else
-  docs/development/VERIFICATION.md  — what "tested" means here and the floor
+State of play, 2026-08-01. A sixteen-file research study landed in
+docs/development/research/. Read RECONCILED.md FIRST — it resolves 38 contradictions
+between the others and re-derives the build order. Then BUILD-ORDER.md (35 queue-format
+items), PROBLEM-DOMAIN.md (the only externally-sourced pass, and the one that
+contradicts the design), and CRITIQUE.md. The rest are inputs to those four.
+docs/architecture/BIO_Case_Making_v0_1.md carries the design and its resolutions R1-R4.
 
-The research corpus from the 2026-08-01 study is in docs/development/research/ —
-sixteen files. Read RECONCILED.md first (it resolves the contradictions between the
-others), then BUILD-ORDER.md, then CRITIQUE.md. The rest are inputs to those three.
-docs/architecture/BIO_Case_Making_v0_1.md carries the design and its four resolutions.
+Your first three jobs, in this order:
 
-Run `node tools/plancheck.mjs` before you hand anything off.
+1. Surface the FOUR open decisions marked `for: bob` in docs/development/DECISIONS.md
+   (DEC-4, DEC-12, DEC-13, DEC-14) — question, what runs meanwhile, the alternative,
+   your recommendation, what reversing costs. DEC-13 and DEC-14 came from the problem
+   domain and both say the design has something backwards; read those two closely
+   enough to defend or revise the recommendation rather than repeating it.
+
+2. Resolve the FOUR marked `for: bob-session` (DEC-6, DEC-7, DEC-8, DEC-9). These are
+   yours, the previous session left them undone, and DEC-8 bears on the ACT construct
+   that every surface in the build order rests on. Decide them, record the reasoning,
+   tell Bob in a line each. Do not return them to him.
+
+3. Get the build order to CONDUCT. The queue is EMPTY — 44 done, 0 runnable — and the
+   35 items cannot be queued until MILESTONES.md gains rungs for them, because
+   plancheck refuses a queue naming a milestone the ladder does not define. Both rungs
+   are drafted in BUILD-ORDER.md section 2.0. Hand it over through the BOB INBOX at the
+   top of QUEUE.md; do not write the queue body.
+
+Verify before you trust. Every research pass in the study made at least one sharp claim
+that did not survive checking, and the shell's `grep` is ugrep with -I, which silently
+skips bio-plane/src/store.mjs because of a raw NUL byte (D-131). Use python for counts.
+
+Run `node tools/plancheck.mjs` before any handoff.
 ```
 
-**Two things to know before you paste it.**
-
-Work in a worktree — `claude --worktree BOB` — not the main checkout. `CONDUCT` holds
-main, and one session per working tree is the rule (`PARALLELISM.md`, DEC-3). A fresh
-session in the main checkout will collide with CONDUCT exactly as this one did.
-
-And if sub-sessions are still running when you replace the session, their FILES still
-land — they write to the repository directly. What is lost is the completion summary and
-the verification pass over it, which is the part that has caught a wrong claim in every
-round so far. So let them finish, or re-read their files and check them yourself.
+**Two things that are easy to get wrong.** Work in a worktree — `CONDUCT` holds main and
+one session per tree is the rule (DEC-3); a fresh session in main collides exactly as the
+last one did. And if sub-sessions are still running when a session is replaced, their
+FILES land but the completion summary and the verification over it are lost — which is
+the step that caught a wrong claim in every round of the study.
 
 ## Where this session runs
 
