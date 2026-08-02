@@ -568,6 +568,71 @@ response:
 decided:
 enacted:
 
+### DEC-13 · open
+raised: 2026-08-01 · BOB (from PROBLEM-DOMAIN.md, the first externally-sourced pass)
+for: bob
+question: Must a case be put to its SUBJECT for response BEFORE publication, with the
+  response carried inside the published artifact?
+why it is Bob's: effects on people outside the project — it gives the subject of a case a
+  right of reply — and it changes what publication means.
+provisional: NOT doing it. `AUDIENCES.md` section 7 runs `RATIFY -> CASE -> action`, so
+  contact happens after publication if at all, and that file lists pre-publication
+  contact among its HAZARDS.
+blocks: nothing built. It reshapes the publication ceremony (SB-OUTPUT O1) before it is
+  built, which is cheap now and expensive later.
+alternative: publish first and let the subject respond afterwards, which is what the
+  design currently assumes.
+the practice says the current ordering is INVERTED, and the sources are professional
+  standards rather than opinion: the SPJ code; GAGAS/GAO audit protocol, which gives the
+  audited body 7-30 days on a DRAFT and prints its rationale for disagreement alongside
+  the finding; and the Columbia Journalism School review of Rolling Stone's "A Rape on
+  Campus", which identified a comment request made WITHOUT SPECIFICS as the central
+  failure. On that evidence, what the design lists as a hazard is what the practice
+  treats as mandatory.
+recommendation: ADOPT, and make it a stage of the ceremony rather than a courtesy. A case
+  put to its subject with specifics, a stated window, and the response carried in the
+  published artifact is stronger evidence than the same case published cold — the reply is
+  itself a dated first-party fact about the body, and a refusal to reply is too. It also
+  fits the record's grain: it is the same move as recording an attestation attempt that
+  failed rather than omitting it. The hazard AUDIENCES named is real and is about
+  tipping-off, so the window should be stated and short rather than open-ended.
+reversal cost: low now, high after the ceremony is built and cases are published under the
+  other rule — a published case cannot acquire a right of reply retroactively.
+response:
+decided:
+enacted:
+
+### DEC-14 · open
+raised: 2026-08-01 · BOB (from PROBLEM-DOMAIN.md)
+for: bob
+question: Are BIO's claims about its OWN impact held to the same evidentiary standard as
+  its findings about a public body?
+why it is Bob's: doctrine, and it is invariant 7 turned on ourselves.
+provisional: unstated, which is the problem — D-128's consequence loop assumes an action's
+  outcome becomes evidence about how the system responds, and nothing says how strongly
+  that causal link must be established.
+blocks: nothing today; it settles what D-128's consequence half may claim.
+the evidence is uncomfortable and is why this cannot stay unstated: Worthy's study of FOI
+  outcomes found 53% of articles sought accountability and that "few elicited a response",
+  with 40% of requesters reporting their leverage DECREASED; the Metaketa I coordinated
+  trials of information-and-accountability interventions pool to approximately zero; and
+  ProPublica itself concedes impact is "easier to identify than to conclusively prove".
+  So publication is not reliably the active ingredient, and a causal claim from our own
+  action to a body's behaviour is exactly the kind of claim this record would refuse from
+  anyone else.
+alternative: hold impact claims to the same standard, which under the UNRATED rule (R1)
+  means most of them stay unrated forever, and the consequence loop reports sequence
+  rather than causation.
+recommendation: the same standard, stated plainly — and accept that this makes most impact
+  claims UNRATED. The record can say "we asked on this date, this changed on that date"
+  without claiming the first caused the second, which is honest and still useful. Applying
+  a looser standard to our own claims than to the body's would be the exact failure the
+  declared-bias doctrine exists to catch, and it would be undetectable from inside.
+reversal cost: low. It is a rule about what may be claimed, not stored data.
+response:
+decided:
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_
