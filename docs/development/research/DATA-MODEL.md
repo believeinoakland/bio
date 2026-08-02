@@ -78,6 +78,12 @@ purge that reports scope `ALL` leaves the entire participation graph standing. T
 D-113 silent-leftover, in a table the D-113 test cannot see. It is not in `op=purge` (§1.4) and
 not in `EXEMPT` (`hygiene.test.mjs:216-231`).
 
+**This is the residue of D-113-as-a-class.** `DEBT.md:141` records D-113 as fixed for the
+instance in 0.53.0 but **open as a class**, and names the proposed close: *"a hygiene check that
+every `CREATE TABLE` in `schema.mjs` is named in purge or explicitly exempted."* That check was
+built and it holds (§1.4) — and it closes the class only for the file it reads. Five tables are
+created outside that file, so the class is narrower than it was and is not closed.
+
 `bundles` additionally carries **17 columns that are not in `schema.mjs`**, added by the
 `ALTER TABLE … ADD COLUMN` loop at `store.mjs:120-176`: `schema_id`, `produced_mode`,
 `capability_tier`, `source_locator`, `source_authority`, `source_retrieved`, `source_status`,
@@ -335,7 +341,17 @@ DIVISION mechanism names as already present — *"`supersedes` is already in `RE
 (`BIO_Case_Making_v0_1.md:441`) — is present as a *string in a list* and nothing more. It has
 no producer, no consumer, no store semantics, and no check beyond "is this value in the
 vocabulary". Reading that sentence as "the mechanism exists" would be the mistake; it means
-"the vocabulary will not refuse it."
+"the vocabulary will not refuse it." The design's other optimistic reading is the same shape:
+*"`elevated_into` already models the promotion"* (`:204`) is true of the schema and false of
+the code.
+
+**And the recorded drift is itself out of date.** `BIO_DATAPLANE_STATE.md:1317-1327` (Finding 4
+of the 2026-07-24 conformance run) and `DEBT.md:20` (D-8, still `open`) record that State Rules
+5.1 declares a **closed six-value** vocabulary while the catalog carries a **seventh**,
+`corroborates` — resolved in the code's favour because the code is what actually refuses a
+reference (C-6.1, `bio-checks.mjs:1000`). `links_to` arrived later and makes **eight**, and it
+is recorded in neither the drift finding nor D-8. So the closed vocabulary has drifted twice
+and is documented once.
 
 ---
 
@@ -708,6 +724,62 @@ closes the drift before it compounds. Bob's *"it should not happen a third time"
 about the concept; the mechanism should nonetheless be made rename-proof, because it is cheaper
 now than during the next one.
 
+### The mapping is written four times, in code that does not share it
+
+| # | site | form |
+| --- | --- | --- |
+| 1 | `bio-checks.mjs:25-26` | `LEGACY_TYPE_ALIASES` + `normalizeType` — the canonical one |
+| 2 | `store.mjs:194` | `UPDATE bundles SET object_type='focus' WHERE object_type='problem'` — the idempotent boot normaliser |
+| 3 | `store.mjs:2807` | an inline ternary inside `promote`'s upsert: `meta.object_type === "problem" ? "focus" : meta.object_type` |
+| 4 | `query.mjs:411` | a filter-value rewrite: `if (f.col === "object_type" && raw.toLowerCase() === "problem") raw = "focus"` — with the deliberate carve-out that **schema stamps are document truth and are NOT mapped** |
+
+Sites 2, 3 and 4 each restate rule 1 independently, and nothing binds them. A third name must
+be added to all four or the corpus answers differently depending on which door it is asked
+through. **Collapse 3 into a call to the catalog's `normalizeType`** while the change is open —
+`store.mjs:382-384` already gives the reason for exactly this ("using the CATALOG'S OWN parser
+so the store's view and the checker's view cannot disagree"), and site 3 is the one that
+violates it.
+
+### Three more type tables, and one guarantee that does not exist
+
+- **`setup.mjs` derives `FIRST_STATE` and `HEADINGS` from the catalog at build time**
+  (`setup.mjs:15,23-25` import `STATES`/`HEADINGS` and `JSON.stringify` them). Those are free.
+  Its hand-written tables are not: `setup.mjs:220` (the `<option>`), `:494` (`TYPES`, the browse
+  list), `:674` (`PREFIX`), `:689` (`SCHEMA_OF`), `:735` (the focus-extension frontmatter).
+- **`store.mjs:1571-1579` holds a second copy of the focus state machine** — `FOCUS_STATES` and
+  a literal `LEGAL` transition object — under a comment reading *"Legal transitions, from the
+  catalog's own table rather than a second copy of it."* It is a second copy. Verified: the
+  object is written out literally at `:1576-1579` and nothing is imported from `bio-checks.mjs`
+  to build it. `op=dispose`'s type gate is a third dual-spelling site (`store.mjs:1611`), and it
+  re-promotes with a hardcoded `object_type: "focus"` (`:1681`).
+- **`civicos-ui/app.html:1696-1711` holds a full static copy** of `PREFIX`, `FIRST_STATE`,
+  `HEADINGS` and `SCHEMA_OF`, plus dual-spelling filters at `:756`, `:1074`, `:1243`, `:1748`,
+  `:3869`, `:3980`, and `PROP_ADOPT_KINDS` at `:6015` which **still offers `problem` as a
+  distinct member-facing choice** — a residue the second rename did not clean up.
+- **The drift guard the UI claims for those tables does not exist.** `app.html:1690-1693` says
+  *"check-semantics.mjs fails the build if they drift from checks/bio-checks.mjs."* Verified
+  false: `check-semantics.mjs:21-38` reads `app.html` and `store.mjs` and never imports or reads
+  `bio-checks.mjs`, and `:51-53` compares **state tokens only**. `PREFIX`, `FIRST_STATE`,
+  `HEADINGS` and `SCHEMA_OF` are unguarded, and the comment asserting otherwise is the kind of
+  claim that makes the next session skip a check it thinks is already running. **Fix the comment
+  or the guard in the same pass**; a guard that is documented and not in the loop the reader
+  runs is not a mechanism (`CLAUDE.md`).
+
+### What a type rename does NOT touch
+
+- **`schema.mjs`.** `bundles.object_type` is `TEXT NOT NULL` with **no CHECK, no enum, no FK**
+  (`schema.mjs:7`), and `bundles_type_state` (`:18`) indexes whatever values are there. The
+  0.35.0 rename did not touch `schema.mjs` at all.
+- **`index.mjs`.** No object-type or prefix constants anywhere; it imports only
+  `isPublicHttpsLocator`, `parseFrontmatter`, `createSha256` from the catalog (`index.mjs:12`).
+- **`allocId`.** It does no prefix validation whatever — it interpolates
+  `${prefix}-${year}-${nnnn}` (`store.mjs:4395-4404`) and the control plane passes the caller's
+  string straight through (`:7328`). Minting `INQ-` costs zero store changes.
+- **`docprofile/`, `tools/`, `newgroup/`.** Zero object-type references.
+- **Facets.** `DEFAULT_FACETS` counts whatever is in the column (`query.mjs:90`), so normalising
+  the projection collapses the split count for free — measured in the second rename
+  (`focus.test.mjs:147`).
+
 ### The change list
 
 | # | file:line | change | reversible? |
@@ -721,13 +793,20 @@ now than during the next one.
 | 7 | `bio-checks.mjs:2810` | `knownSchemas` gains `inquiry@1`, **keeps** `focus@1` and `problem@1` | yes |
 | 8 | `bio-checks.mjs:1199` | `checkFocusExtension` → `checkInquiryExtension`, plus the new per-state entry requirements (§2.8) | yes |
 | 9 | `setup.mjs:689-690` | `SCHEMA_OF` gains `inquiry:"inquiry@1"`; existing keys stay | yes |
-| 10 | `store.mjs:194` | the boot normaliser becomes `UPDATE bundles SET object_type='inquiry' WHERE object_type IN ('problem','focus')` — the projection is derived, so this is the layer that normalises; **frontmatter in append-only history keeps whatever spelling it was written with** (`store.mjs:190-194`) | yes, re-derivable |
-| 11 | `store.mjs:2799` | promote's inline `object_type === "problem" ? "focus" : …` becomes a call to the catalog's `normalizeType`, so the store and the checker cannot disagree (the reason given at `store.mjs:382-384`) | yes |
-| 12 | `schema.mjs` (before `host_governor`) | `inquiry_basis`, `inquiry_exclusions` | additive |
-| 13 | `store.mjs:120-176` | six `bundles` ALTER columns; `store.mjs:199-201` the matching indexes | additive |
-| 14 | `store.mjs:4516-4518` | both new tables into `TABLES` | required by D-113 |
-| 15 | `query.mjs:47-73,90` | six `FIELDS` entries; `phase` into `DEFAULT_FACETS` | yes |
-| 16 | `store.mjs:2812-2820` | project `basis[]` and `completeness.excluded[]` in the same transaction as `refs` | yes |
+| 10 | `store.mjs:194` | mapping site 2 — `UPDATE bundles SET object_type='inquiry' WHERE object_type IN ('problem','focus')`; the projection is derived, so this is the layer that normalises, and **frontmatter in append-only history keeps whatever spelling it was written with** (`store.mjs:190-194`) | yes, re-derivable |
+| 11 | `store.mjs:2807` | mapping site 3 — replace the inline ternary with `normalizeType`, so the store and the checker cannot disagree (`store.mjs:382-384`) | yes |
+| 12 | `query.mjs:411` | mapping site 4 — accept `problem` **and** `focus` as filter values for `type:`. Keep the carve-out: schema stamps stay document truth | yes |
+| 13 | `store.mjs:1571-1691` | `op=dispose`: `FOCUS_STATES`/`LEGAL` become the inquiry machine (or, better, are imported from the catalog so the comment at `:1573-1575` becomes true); the type gate at `:1611` accepts three spellings; the re-promote at `:1681` stamps `inquiry`; the refusal strings at `:1583,1586,1615` stop saying "Problem" and `NOT_PROBLEMS` is renamed | yes; the reason code is a wire change |
+| 14 | `setup.mjs:220,494,674,689,735` | the `<option>`, `TYPES`, `PREFIX`, `SCHEMA_OF`, the extension frontmatter. `FIRST_STATE`/`HEADINGS` come free (`:15,23-25`) | yes |
+| 15 | `civicos-ui/app.html` | `PREFIX` `:1696`, `FIRST_STATE` `:1697`, `HEADINGS` `:1698-1704`, `SCHEMA_OF` `:1710`, `TYPE_LABEL` `:1074`, `SEMANTICS.types` `:982-991`, `RAIL` `:851`, routes `:944`, `ADD_TYPES` `:6457`, `SEARCH_SCOPES` `:3980`, `PROP_ADOPT_KINDS` `:6015`, and the dual-spelling filters at `:756,1243,1748,3869` | yes |
+| 16 | `civicos-ui/check-semantics.mjs` | either make the guard real (read `bio-checks.mjs`, compare `PREFIX`/`HEADINGS`/`SCHEMA_OF`) or correct the false claim at `app.html:1690-1693` | yes |
+| 17 | `schema.mjs` (before the `host_governor` block) | `inquiry_basis`, `inquiry_exclusions` | additive |
+| 18 | `store.mjs:120-176`, `:199-201` | six `bundles` ALTER columns and their indexes | additive |
+| 19 | `store.mjs:4516-4518` | both new tables into `TABLES` | required by D-113 |
+| 20 | `query.mjs:47-73,90` | six `FIELDS` entries; `phase` into `DEFAULT_FACETS` | yes |
+| 21 | `store.mjs:2812-2820` | project `basis[]` and `completeness.excluded[]` in the same transaction as `refs` | yes |
+| 22 | `bio-plane/migrate/migrate.mjs:29` | `TYPE_ROOTS` gains `"inquiries"`, keeps `"focuses"` and `"problems"` | yes |
+| 23 | tests | `focus.test.mjs` becomes `inquiry.test.mjs` with the same three blocks (canonical works / legacy keeps working / projection normalises) and the same negative control shape recorded at the top; `conformance.test.mjs:176,179`, `search.test.mjs` (which is now de facto the legacy-alias regression suite — it still authors `type: problem, schema: problem@1` at `:160`), `disposition.test.mjs` (untouched by the second rename and still entirely `problem`/`PROB-`), `check-firing.test.mjs:52-58`, and the UI's `act-dispose`/`act-proposal` suites | — |
 
 **What is NOT rewritten, and this is the whole of the append-only story.** No `history` row, no
 `manifest` row, no `files` row, no `published_shas` row, and no ratified `bundle.md`. A bundle
