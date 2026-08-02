@@ -46,35 +46,33 @@ Kickoff: session BOB.
 
 Read CLAUDE.md, then docs/development/kickoffs/BOB.md, and follow it.
 
-State of play, 2026-08-01. A sixteen-file research study landed in
-docs/development/research/. Read RECONCILED.md FIRST — it resolves 38 contradictions
-between the others and re-derives the build order. Then BUILD-ORDER.md (35 queue-format
-items), PROBLEM-DOMAIN.md (the only externally-sourced pass, and the one that
-contradicts the design), and CRITIQUE.md. The rest are inputs to those four.
-docs/architecture/BIO_Case_Making_v0_1.md carries the design and its resolutions R1-R4.
+State of play, 2026-08-01, after the handover turn. The sixteen-file research study in
+docs/development/research/ has been reconciled and handed to CONDUCT. RECONCILED.md is
+THE DESIGN — it resolves 38 contradictions and re-derives the build order, and where it
+disagrees with BUILD-ORDER.md / SB-CORE.md / SB-EVIDENCE.md / SB-OUTPUT.md it wins and
+those four are history. docs/architecture/BIO_Case_Making_v0_1.md carries the design and
+its resolutions R1-R4. What is DONE: M9 and M10 are rungs in MILESTONES.md, 27 debt rows
+are placed, the 36-item build order and the activation order are in the BOB INBOX, and
+DEC-6/7/8/9 are answered and recorded in the documents that now carry their reasoning.
 
-Your first three jobs, in this order:
+Your first job is the standing one: read DECISIONS.md and surface every `open` entry.
+There are SEVEN and they are all genuinely his — DEC-4, DEC-12, DEC-13, DEC-14, and
+DEC-15/16/17 raised from the reconciliation. Present each as written: question, what runs
+provisionally, the alternative, the recommendation, what reversing costs. DEC-13 and
+DEC-14 come from the externally-sourced problem-domain pass and both say the design has
+something backwards; read those closely enough to defend or revise the recommendation
+rather than repeat it. NOTHING blocks on any of the seven — every one carries a
+provisional that invents nothing, and saying so is part of presenting them.
 
-1. Surface the FOUR open decisions marked `for: bob` in docs/development/DECISIONS.md
-   (DEC-4, DEC-12, DEC-13, DEC-14) — question, what runs meanwhile, the alternative,
-   your recommendation, what reversing costs. DEC-13 and DEC-14 came from the problem
-   domain and both say the design has something backwards; read those two closely
-   enough to defend or revise the recommendation rather than repeating it.
-
-2. Resolve the FOUR marked `for: bob-session` (DEC-6, DEC-7, DEC-8, DEC-9). These are
-   yours, the previous session left them undone, and DEC-8 bears on the ACT construct
-   that every surface in the build order rests on. Decide them, record the reasoning,
-   tell Bob in a line each. Do not return them to him.
-
-3. Get the build order to CONDUCT. The queue is EMPTY — 44 done, 0 runnable — and the
-   35 items cannot be queued until MILESTONES.md gains rungs for them, because
-   plancheck refuses a queue naming a milestone the ladder does not define. Both rungs
-   are drafted in BUILD-ORDER.md section 2.0. Hand it over through the BOB INBOX at the
-   top of QUEUE.md; do not write the queue body.
+Then the work is whatever the answers create, plus RECONCILED.md section 4's remaining
+open questions (Q5 needs a design pass, Q6 was created by R2 and no file has seen it,
+Q11 is settled by a MEASUREMENT and not a ruling — run it and record it in
+MEASUREMENTS.md). An empty decision list is a real answer and a common one.
 
 Verify before you trust. Every research pass in the study made at least one sharp claim
 that did not survive checking, and the shell's `grep` is ugrep with -I, which silently
-skips bio-plane/src/store.mjs because of a raw NUL byte (D-131). Use python for counts.
+skips bio-plane/src/store.mjs because of a raw NUL byte (D-131, closed by REC-27). Use
+python for counts.
 
 Run `node tools/plancheck.mjs` before any handoff.
 ```

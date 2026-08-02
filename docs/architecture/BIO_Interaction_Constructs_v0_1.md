@@ -133,6 +133,51 @@ a ballot, still must make a proposal look derived, still must render `undetermin
 identically. Nothing is lost by the member meeting them through two doors instead of
 five.
 
+### RULED 2026-08-01: the pre-flight is plane-sourced — publication by default, dry-run when the refusal needs unseen state
+
+The ACT construct's defining property is *see what it will refuse and why BEFORE it runs.*
+This says how that is produced, because v0.2 did not, and two readings were live with
+different costs (DEC-8, raised by UI from the first act built).
+
+**The rule: a surface may RENDER a refusal it received from the plane. It may never
+COMPUTE one.** There are exactly two mechanisms and the choice between them is not taste:
+
+1. **PUBLICATION — the default.** The plane publishes the refusal contract and the surface
+   renders it: the `NEEDS` map, the legal-edge table EXPORTED from the check catalogue (not
+   copied), the set-application weight, `SESSION_OPS` membership, the rung, and the object
+   vocabularies. This is `op=affordances`, and it mints no new pattern — `whoami` already
+   publishes capabilities and `op=searchfields` already publishes the query language.
+   Publication is not a mirror: there is one authority, and the surface holds no second copy
+   of it.
+2. **DRY RUN — when a refusal turns on state the surface cannot see.** A non-mutating op
+   that runs the real act's refusal checks, writes nothing, and returns the named refusals in
+   the store's own order. `op=publishpreflight` is the first: publication's refusals depend on
+   the gate, the signer set and R2 object state, none of which a browser can evaluate — and
+   one of which (`NO_SIGNERS`) is today discovered LAST, after the member has already signed.
+
+**Why the obvious test — "is this refusal client-knowable?" — is the wrong one.** A refusal
+is client-knowable exactly when the surface HOLDS A COPY of the rule. So the test licenses
+the drift class `INTERFACES.md` names, and licenses it in proportion to how much the surface
+has already copied: it gets easier to satisfy the worse the problem gets.
+
+**And the copy's one defence was measured false.** The first act's mirrored `LEGAL` table
+was defended as *"already guarded by `check-semantics.mjs`"*. D-138, verified 2026-08-01:
+that file reads `app.html` and `store.mjs` and never reads `bio-checks.mjs` — it binds two
+copies to each other and leaves the AUTHORITY unchecked, while a comment in `app.html`
+claims otherwise. A drift in the catalogue passes silently. The mirror was defended by a
+guard that does not guard.
+
+**The standing test for a new act**, so this is not re-argued per surface: *can the surface
+state this refusal without holding a rule the plane also holds?* If yes, it came from
+`op=affordances`. If no, the act needs a dry-run op, and building the surface first is
+building a mirror it cannot honour.
+
+**Why this belongs in the doctrine and not only in a build item.** A surface that tells a
+member what will be refused, on its own authority, is a surface claiming more than it can
+support — the failure this product is organised against, appearing in the interface layer.
+An act whose pre-flight is a good guess is worse than an act with no pre-flight, because the
+member learns to trust it.
+
 ### What would falsify this
 
 If the first three capabilities built into the ACT construct each need a bespoke

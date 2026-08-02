@@ -271,7 +271,7 @@ for CONDUCT to enact: D-122's disposition changes from DOCTRINE to M2 — it is 
   follow-on. Add the entity-axis link to M4's absorbs list.
 enacted:
 
-### DEC-6 · open
+### DEC-6 · answered
 raised: 2026-07-31 · FRAMEWORK (FW-6, the SUBJECT REGISTRY slice)
 for: bob-session
 question: The SUBJECT REGISTRY is ONE construct serving both the bias doctrine and the framework's entity axis (D-83). Safeguard 4 of `BIO_Declared_Bias_v0_1.md` names exactly four SUBJECT kinds — source, institution, office, movement. The framework's entity axis (`BIO_Content_Framework_v0_10.md`:248) names more — person, body, ordinance, parcel, contract, fund. Does a bias STATEMENT get to take a person or an ordinance as its subject, or are the four safeguard-4 kinds the only ones a bias statement may address (with the rest admitted to the registry purely as framework entities to be graphed)?
@@ -281,11 +281,58 @@ blocks: none. The bias-statement path that would enforce the answer is not yet b
 alternative: split the vocabulary — the SUBJECT registry proper carries only the four safeguard-4 kinds, and the framework's other entity kinds live as a distinct class of registry entry that bias statements may not name as a subject. Rejected as the provisional because it reintroduces the two-registries risk D-83 exists to kill, but trivially expressible later as a rule over `kind` rather than a second table.
 recommendation: keep the union table and rule the CONSTRAINT at the bias-statement path when it is built. The entity axis genuinely needs person/ordinance/etc. as first-class subjects a case is about; whether a *bias* statement may target them is a smaller, later gate that a `kind ∈ {source,institution,office,movement}` check expresses in one line, with no cost to the registry now.
 reversal cost: low. The answer becomes a predicate on `kind` at the bias-statement write path; no registry migration either way, since every kind already coexists in one table.
-response:
-decided:
-enacted:
+response: **ADMIT EVERY REGISTRY KIND AS A LEGAL BIAS SUBJECT. No `kind` whitelist is
+  written at the bias-statement path, now or later.** Decided by this session, 2026-08-01.
+  FW-6's provisional (one `entities` table, the union vocabulary) therefore stands as the
+  answer and not as a holding position.
+  THE ARGUMENT THAT DECIDES IT, and it inverts the question. A narrow whitelist was
+  proposed as a safeguard. Check what it would guard: `office` is ALREADY one of the four
+  safeguard-4 kinds, and a statement whose subject is an office — asserting a prior against
+  whoever holds it — is the closest thing in this system to the structural-prior-by-role
+  that `CLAUDE.md` forbids outright. Meanwhile the kinds the whitelist would EXCLUDE
+  (person, ordinance, parcel, contract, fund) are the specific, evidence-bearing ones, the
+  ones a pattern statement can actually cite. **So the whitelist admits the doctrinally
+  riskiest kind and refuses the safest ones.** It is protection that protects nothing.
+  THE SECOND ARGUMENT, which is why this is not merely harmless but right. Declared bias is
+  a DISCLOSURE construct: it exists so that what a group already believes is stated where a
+  reader can discount it. A group that campaigned against a measure, or that already
+  believes a named official acts in bad faith, HAS that bias whatever the vocabulary
+  permits. Refusing the subject kind does not remove the bias; it removes the declaration of
+  it and pushes it into the unstated priors — which is precisely the masking the five
+  safeguards exist to defeat. A vocabulary restriction on a disclosure construct makes the
+  record less honest, not more.
+  WHAT ACTUALLY CONSTRAINS A BIAS STATEMENT, and it is unchanged and sufficient: the
+  MALFORMEDNESS RULE (a statement may raise scrutiny, constrain inference and assert
+  evidenced patterns, and may NEVER issue a verdict — refused no matter who declares it),
+  the CITATION REQUIREMENT on `kind=pattern`, strictest-wins in the effective set, the loud
+  interaction review a new subject triggers, and the group as backstop. Every one of those
+  operates identically whatever the subject's kind. None of the five safeguards is a kind
+  restriction, and safeguard 4's own argument is about registry-versus-free-text and about
+  declared relations — not about a closed kind list.
+  A DEFECT FOUND WHILE DECIDING THIS, recorded because it is the sort of thing that decides
+  a later argument by accident: **the bias document contradicts itself about the fourth
+  kind.** "Statement anatomy" says a subject is *"the source, institution, office, or TOPIC
+  it addresses"*; safeguard 4 says the registry carries *"sources, institutions, offices and
+  MOVEMENTS"*. So the "exactly four kinds" this entry was written against were never four
+  agreed kinds — they were two overlapping lists of four. That is further reason not to
+  build a gate on the list, and it is corrected in the document by this ruling.
+  THE RESIDUAL, stated with its trigger rather than left to be rediscovered: the sharpest
+  edge is a bare `scrutiny` statement naming a NATURAL PERSON with a justification and no
+  citations. That is admitted here. If practice shows it being used to do what the
+  malformedness rule forbids — a verdict wearing a scrutiny statement's clothes — the fix is
+  the one-line predicate this entry always said it was, and it belongs to Bob because it is
+  doctrine about a named individual. **Trigger: the first bias bundle carrying a
+  person-subject statement that a reviewer challenges as a verdict.** Nobody should re-raise
+  it before then; there is nothing to reason from until a real one exists.
+decided: 2026-08-01 · session BOB
+reasoning recorded in: docs/architecture/BIO_Declared_Bias_v0_1.md, "RULED 2026-08-01: the
+  subject vocabulary is the registry's, and the malformedness rule is the constraint" —
+  which also corrects the anatomy/safeguard-4 disagreement.
+for CONDUCT to enact: nothing in the queue and no code change. FW-6 shipped the deciding
+  behaviour already; this ruling makes the union table the answer rather than a provisional,
+  and removes a gate a future bias-statement slice would otherwise have felt obliged to add.
 
-### DEC-7 · open
+### DEC-7 · answered
 raised: 2026-07-31 · RECORD (REC-4, the TASK-ACTOR FENCE)
 for: bob-session
 question: REC-4 added the server-side fence so a member who is neither a task's `assignee` nor an admin is refused `taskresolve`/`taskforward` (NOT_YOURS). Two judgement calls sit under it. (a) The fence is only meaningful — and the Tasks screen only works — if the ASSIGNEE can reach these ops, so REC-4 opened `taskforward`/`taskresolve` to a member/admin SESSION (they were machine-credential-only, and `app.html` was already firing `recPost("taskresolve", …)` from a signed-in browser, which the plane answered "requires a machine credential"). (b) An honestly `unassigned` task is left CLAIMABLE by any caller that reaches the op, rather than only by "the routed role".
@@ -295,11 +342,59 @@ blocks: none.
 alternative: (a) keep the ops machine-credential-only and enforce the fence purely at the store on injected actor strings — rejected: it leaves the Tasks screen dead for the legitimate owner and makes "the assignee succeeds" untestable through the control plane. (b) narrow "claimable" to the routed role only (a member matching `member_expertise`, else the PM, else a group admin) rather than any caller — defensible, but the routing that produced `unassigned` had already exhausted PM and admin, and `member_expertise` is elsewhere doctrine'd as a HINT for a human forward rather than an automatic gate, so a hard expertise gate on claiming would be stricter than the routing itself.
 recommendation: keep both. (a) is the only reading in which forward/resolve are the "member actions" D-98 and the construct call them, and it is additive (no previously-admitted caller is now refused). (b) keeps the unassigned path open exactly as D-98's routing intends ("still visible and still routable by hand") while the fence still bites on every ASSIGNED task.
 reversal cost: low both ways. (a) reverts by removing the two ops from `SESSION_OPS`/`NEEDS` (and re-strands the UI, so it would come with a different task-action design). (b) becomes a predicate over the claimant's role at the top of `#refuseNotYours`; no data migration, since assignment is already a per-task field.
-response:
-decided:
-enacted:
+response: **BOTH KEPT AS SHIPPED — and (b) has a hole the entry did not see, which this
+  ruling closes.** Decided by this session, 2026-08-01, after reading the code rather than
+  the summary of it.
+  (a) KEEP, and the reasoning in the entry is right and does not need repeating except for
+  the part that carries it: opening `taskforward`/`taskresolve` to a member session is
+  ADDITIVE — no caller previously admitted is now refused — and the actor is stamped
+  server-side, so a browser cannot sign as somebody else. The alternative leaves the Tasks
+  screen dead for the task's legitimate owner and makes *"the assignee succeeds"* untestable
+  through the control plane, which is the failure `CLAUDE.md`'s TEST-THROUGH-THE-OP rule
+  exists to prevent — `op=invitelook` shipped with a ReferenceError while 1276 assertions
+  passed. Enforcement at the store on injected actor strings is a fence nobody can drive.
+  (b) KEEP the claimability of an honestly unassigned task, for the entry's reason: the
+  routing that produced `unassigned` had ALREADY exhausted PM and active admin, and
+  `member_expertise` is doctrine'd as a HINT for a human forward rather than an automatic
+  gate — so a hard expertise gate on CLAIMING would be stricter than the routing that
+  created the state, and would strand the task forever.
+  **THE HOLE, VERIFIED IN THE SOURCE THIS TURN.** `#refuseNotYours` (`store.mjs:6943-6946`)
+  returns `null` — allow — the moment `assignee === "unassigned"`, before it ever looks at
+  who is calling. `taskforward` and `taskresolve` both carry `"probe"` in their `classes`
+  (`index.mjs:271-272`). So **a machine credential can RESOLVE an unassigned task**: an
+  obligation is closed, with a history entry reading `actor: "token:probe"`, and no member
+  ever acted. The entry's own justification says a machine is *"fenced off an ASSIGNED task
+  and confined to unassigned ones"* and cites *"a daemon cannot close somebody's work"* — and
+  that is exactly true and exactly insufficient. **A daemon cannot close somebody's work; it
+  can close NOBODY'S work, and closing is the act.** The store's own comment two functions
+  down calls `taskResolve` *"Also a member action"*, and `index.mjs:602-604` calls both verbs
+  *"MEMBER actions performed by a PERSON through their session"*. The code permits what its
+  comments forbid.
+  **THE FIX IS THE PRECEDENT ALREADY IN THE FILE, not a new rule.** `release`
+  (`store.mjs:1857-1861`) refuses any author matching `/^token:/` with `MACHINE_CANNOT_RELEASE`
+  and the reason *"a machine credential may read and may prepare the review packet, and may
+  not release."* Same shape here: refuse at the ACT, not at the fence, so the refusal does not
+  depend on assignment state at all. `taskresolve` gains `MACHINE_CANNOT_RESOLVE` and
+  `taskforward` gains `MACHINE_CANNOT_FORWARD`. This also lines up with where the claim layer
+  is going — REC-13 mints `MACHINE_CANNOT_CONCLUDE` on the same precedent, so the record ends
+  with ONE rule stated in three places rather than three judgements: **a machine may surface,
+  route and prepare; a member authors, resolves and concludes.**
+  WHY THE FENCE STAYS TOO, rather than being replaced: the fence answers *is this THIS
+  member's task* and the act refusal answers *is this a person at all*. They are different
+  questions and the second is not derivable from the first — which is the whole reason the
+  hole existed.
+  ONE THING DELIBERATELY NOT DONE: `taskdrain` is untouched. It is the daemon's path and
+  draining is not resolving.
+decided: 2026-08-01 · session BOB
+reasoning recorded in: this entry, and DEBT D-151 (the verified defect, with the offending
+  lines and the negative control that must fail).
+for CONDUCT to enact: **REC-28**, handed over in the BOB INBOX — a small RECORD item that
+  adds the two act-level machine refusals, removes `"probe"` from the two ops' `classes`,
+  and corrects the `#refuseNotYours` comment, which currently states the guarantee the code
+  does not make. It supersedes nothing and blocks nothing; it is placed on M8 beside the
+  queue work that will make these two verbs member-visible for the first time.
 
-### DEC-8 · open
+### DEC-8 · answered
 raised: 2026-07-31 · UI (UI-2, the first ACT — focus disposition)
 for: bob-session
 question: The ACT construct's DEFINING property (v0.2, the `ACT` row) is "see what it will refuse and why BEFORE it runs". v0.2 does not say HOW that pre-flight is produced, and there are two readings with different costs. (a) The surface COMPUTES it from the op's declared refusal contract plus the state the surface already holds — a client-side mirror of the plane's refusal logic. (b) The plane exposes a DRY-RUN — an op that runs the real op's refusal checks and writes nothing, returning the named refusals — and the surface just renders them. UI-2 used (a), because every one of `op=dispose`'s refusals is client-knowable: the C-2.8 reason requirement is unconditional, the reason grammar is a static rule, and the legal-transition gate is computable from the focus's own `current_state` against the plane's `LEGAL` table (mirrored, and already guarded by `check-semantics.mjs`). So which is the doctrine for the ACT construct in GENERAL, once an act's refusals depend on server-side state the surface cannot see?
@@ -309,11 +404,64 @@ blocks: none. UI-2 needed no dry-run and reshaped no plane path.
 alternative: mandate a plane-side dry-run NOW, as the uniform mechanism for every act's pre-flight. Rejected as the provisional because it is capability the current act does not need (and `PARALLELISM.md`/`CLAUDE.md` both say build against what exists), but recorded here so the choice is made BEFORE the first act that genuinely needs it, not discovered after a surface has already shipped a mirror it cannot honour.
 recommendation: keep the surface-computed pre-flight while an act's refusals are fully client-knowable (dispose, and release, whose acknowledgment/mitigation rules are static), and introduce a plane dry-run op — a DELEGATION to RECORD at that point — for the first act whose refusal depends on server-side state. The seam is already in place: `disposePreflight()` is the one function that would call it.
 reversal cost: low. Replacing `disposePreflight()`'s body with a dry-run call is local to `civicos-ui`, and the mirrored `LEGAL` table would then be DELETED rather than maintained — a reduction, not a migration.
-response:
-decided:
-enacted:
+response: **THE PRE-FLIGHT IS PLANE-SOURCED ALWAYS. A surface may RENDER a refusal it
+  received from the plane; it may never COMPUTE one.** Decided by this session, 2026-08-01,
+  and it REVISES the provisional rather than confirming it. The provisional said *keep
+  computing the pre-flight in the surface where every refusal is client-knowable*. That is
+  the wrong axis and the evidence for saying so did not exist when the entry was written.
+  WHY "CLIENT-KNOWABLE" IS THE WRONG TEST. A refusal is client-knowable exactly when the
+  surface HOLDS A COPY of the rule — the `LEGAL` table, the `NEEDS` map, the reason grammar.
+  So the test licenses precisely the thing `INTERFACES.md` names as the drift class, and it
+  licenses it in proportion to how much the surface has already copied. It gets easier to
+  satisfy the worse the problem gets.
+  AND THE COPY'S ONE DEFENCE IS MEASURED FALSE. UI-2's argument rested on the mirrored
+  `LEGAL` table being *"already guarded by `check-semantics.mjs`"*. **D-138, verified
+  2026-08-01: `civicos-ui/check-semantics.mjs` reads `app.html` and `store.mjs` and never
+  reads `bio-checks.mjs`** — zero occurrences — while `app.html:1690-1693` claims it does. It
+  binds two copies to each other and leaves the AUTHORITY unchecked. A drift in the check
+  catalogue passes silently. So the mirror was defended by a guard that does not guard, which
+  is this project's favourite defect class and the third instance of it this month.
+  **THE RULE, in the form a build session can apply without re-deriving it.** The plane is
+  the source of every refusal a member is shown, by one of exactly two mechanisms, and the
+  choice between them is not taste:
+    1. **PUBLICATION — the default.** The plane publishes the refusal contract and the
+       surface renders it: the `NEEDS` map, the legal-edge table EXPORTED from the catalogue
+       (not copied), the set-application weight, `SESSION_OPS` membership, the rung, and the
+       object vocabularies. This is `op=affordances` (REC-19), and it mints no new pattern —
+       `whoami` already publishes capabilities and `op=searchfields` already publishes the
+       query language. Publication is not a mirror: there is one authority and the surface
+       holds no second copy of it.
+    2. **DRY RUN — when a refusal turns on state the surface cannot see.** A non-mutating op
+       that runs the real act's refusal checks, writes nothing, and returns the named
+       refusals in the store's own order. This is `op=publishpreflight` (REC-15), and it
+       exists because publication's refusals depend on the gate, the signer set and R2 object
+       state — none of which a browser can evaluate, and one of which (`NO_SIGNERS`) is
+       today discovered LAST, after the member has already signed.
+  **A surface computes nothing in either case.** `disposePreflight()` keeps its seam and
+  loses its body: once REC-19 publishes the legal edges, the mirrored `LEGAL` table is
+  DELETED rather than maintained — a reduction, which is what makes this cheap.
+  THIS COSTS NOTHING EXTRA, which is why it is decidable now rather than being a wish. Both
+  mechanisms are already in the build order for their own reasons, REC-19 is already ordered
+  ahead of every act surface, and REC-19 already deletes surface-side maps in five places
+  (`DISPOSITIONS`, `TASK_KIND_UI`, and the three copies UI-12/UI-14/UI-20 would otherwise
+  create). The ruling names the principle those items were each following separately.
+  THE STANDING TEST for a future act, so this does not have to be re-argued per surface:
+  *can the surface state this refusal without holding a rule the plane also holds?* If yes,
+  it came from `op=affordances`. If no, the act needs a dry-run op, and building the surface
+  first is building a mirror it cannot honour. **A surface that tells a member what will be
+  refused, on its own authority, is a surface claiming more than it can support** — which is
+  the failure this whole product is organised against, appearing in the interface layer.
+decided: 2026-08-01 · session BOB
+reasoning recorded in: docs/architecture/BIO_Interaction_Constructs_v0_1.md, "RULED
+  2026-08-01: the pre-flight is plane-sourced — publication by default, dry-run when the
+  refusal needs unseen state", inside the ACT ladder where the defining property is stated.
+for CONDUCT to enact: nothing new in the queue — REC-19 and REC-15 already carry the work.
+  Two amendments travel with the build order in the BOB INBOX: UI-12/UI-14/UI-16/UI-19/UI-20
+  each acquire "renders no refusal it computed itself" as an acceptance clause, and UI-10's
+  D-138 half (make `check-semantics.mjs` read `bio-checks.mjs`) is what keeps the interim
+  honest until REC-19 lands.
 
-### DEC-9 · open
+### DEC-9 · answered
 raised: 2026-07-31 · FRAMEWORK (FW-9, progression instances + the missing-predecessor finding)
 for: bob-session
 question: A progression stage's required-ness (framework §8.2) is one of `always`, `usually`, `sometimes`, `never`, `unless_exception`. FW-9's missing-predecessor finding fires when a REQUIRED stage has no threaded document. `always`/`usually` clearly fire and `sometimes`/`never` clearly do not — the kickoff enumerates exactly those. `unless_exception` is the open one: framework §8.2 says "a skipped stage is not automatically a finding: a skipped stage with **no exception document** is", so its finding turns on the ABSENCE of an exception document — and the exception-document machinery is explicitly DEFERRED past FW-9. So when a `unless_exception` stage is missing and FW-9 cannot yet check for an exception document, does the instance (a) stay SILENT (no finding), (b) fire a plain missing-predecessor finding, or (c) fire a finding FLAGGED "dischargeable, exception-doc check not yet built"?
@@ -324,9 +472,60 @@ blocks: none. FW-9 ships the missing-predecessor finding for always/usually, whi
 alternative: fire a plain missing-predecessor finding for `unless_exception` now (option b), so the §8.2 headline example surfaces from the canonical table without a group re-declaring the stage. Rejected as the provisional because it would have the record report a lawful sole-source award as a gap with no way yet to discharge it — claiming more than can be supported, the one failure mode CLAUDE.md names as worse than a missing feature.
 recommendation: keep silence (a) until the exception-document slice exists, then graduate `unless_exception` to a DISCHARGEABLE finding (c) — visible but flagged "a published exception document may lawfully discharge this; not yet checked" — rather than a plain one. That is the honest end state: the absence is reported, the adjudication is named as pending, and the finding still does not decide.
 reversal cost: low. The requiredness→fires decision lives in one set + one branch in `#assembleInstance` (store.mjs); graduating `unless_exception` is a local change plus the exception-doc check it waits on, and stored `progression_instances` rows are unaffected (grade and findings are derived on read).
-response:
-decided:
-enacted:
+response: **AN UNDISCHARGED `unless_exception` STAGE FIRES. Option (c) as FW-10 shipped it
+  is the answer, not the provisional.** Decided by this session, 2026-08-01. And it is
+  decidable HERE, without going to Bob, because Bob already ruled the governing principle on
+  the same day in DEC-10 — the entry two above this one.
+  **THE PRINCIPLE IS DEC-10'S, APPLIED.** DEC-10 asked whether an overdue clock may act when
+  nobody decided anything, and Bob's answer corrected the framing at the root: *"For a step
+  that's marked as due-by, no new evidence and no human act still changes its state… THE
+  DUE-BY WAS AUTHORED."* A group declaring a stage `unless_exception` is the same act in the
+  same place — the progression definition is authored, and `unless_exception` means *this
+  body is required to do this unless it publishes a reason not to*. So a stage skipped with no
+  exception document is not the machine substituting for a judgement; it is **the group's own
+  declared expectation being realised**, which DEC-10 puts on the binding side of D-90 rather
+  than the informing side. Silence (option a) would have the record decline to report a gap
+  the group itself defined as a gap.
+  **THE PREMISE THAT MADE SILENCE RIGHT IS GONE, and that is the second half.** This entry was
+  written when the exception-document machinery was deferred, so firing meant reporting a
+  lawful sole-source award as a gap with **no way for anyone to discharge it** — claiming more
+  than the record can support, which `CLAUDE.md` calls worse than a missing feature. FW-10
+  built the discharge: `progression_exceptions` (I5 1.6.0), `op=discharge` writes, `op=exceptions`
+  reads, and `#assembleInstance` turns a required-but-discharged stage into a "discharged"
+  state rather than a finding. The finding now fires **only when required AND undischarged**,
+  and the body holds the means to clear it. That is not the same claim the deferred version
+  would have made.
+  **AND THE DROWNING OBJECTION IS ANSWERED BY A RULING THAT ALREADY EXISTS, not by a new
+  one.** The honest worry about firing by default is volume — D-79's *"one task per instance"*
+  flood. DEC-10 settled that too: **an overdue or missing condition is NOTIFIED only when the
+  progression instance connects to a Focus or Project**, and the connection is an authored act
+  by a member. So "fires" and "reaches a person" are two different things and only the first is
+  decided here. A `unless_exception` finding on a progression nobody connected to a case sits
+  in the derived feed and notifies no one — Bob's own words, *"sometimes paperwork just
+  silently doesn't get done… those conditions can be ignored."* Relevance stops the flood;
+  requiredness does not have to.
+  WHAT THE FINDING MAY NOT DO, restated because it is where this could still go wrong: it
+  REPORTS and does not DECIDE. A missing-predecessor finding on an `unless_exception` stage
+  says the stage is required, no threaded document was found, and no exception document
+  discharges it. It does not say the skip was improper, and no surface may render it as
+  impropriety. The framework's headline example — an award with no solicitation — surfaces as
+  an absence with its discharge route named, which is exactly what a lawful sole-source
+  publisher needs in order to clear it.
+  ONE CORRECTION TO THIS ENTRY'S OWN RECOMMENDATION, worth stating so the next reader does not
+  think the flag was dropped by accident: the recommendation asked for a finding *"flagged
+  'a published exception document may lawfully discharge this; not yet checked'."* The second
+  clause is now FALSE and must not ship — the check IS built. A flag saying "not yet checked"
+  on a check that runs would be the record misdescribing its own machinery. What survives of
+  the recommendation is the first clause: the finding names the discharge route.
+decided: 2026-08-01 · session BOB
+reasoning recorded in: this entry, which is where DEC-10's principle is applied, plus a
+  cross-reference from DEC-10. `docs/development/NOTIFICATIONS.md` already carries the
+  relevance filter that keeps this from drowning anyone.
+for CONDUCT to enact: nothing in the queue and no code change — FW-10 already ships the
+  decided behaviour (`Store.#REQUIRED_FIRES = {always, usually, unless_exception}`). The
+  enactment is that `unless_exception` is now SETTLED rather than provisional, so a later
+  session must not quietly return it to silence, and any surface rendering the finding must
+  name the discharge route rather than a "not yet checked" caveat.
 
 ### DEC-11 · answered
 renumbered: 2026-07-31 · CONDUCT — this entry collided with the daemon-credential DEC-5 above (BOB-session and CONDUCT numbered independently); renumbered DEC-5→DEC-11, content unchanged.
@@ -632,6 +831,106 @@ reversal cost: low. It is a rule about what may be claimed, not stored data.
 response:
 decided:
 enacted:
+
+### DEC-15 · open
+raised: 2026-08-01 · BOB (from the reconciliation pass, Q4 — the only Tier-1 question that
+  blocks a build item outright)
+for: bob
+question: Where does a document leg's CONNECTION grade come from — is it EARNED from the
+  record (the strongest resolution of that document's captures to the inquiry's subject
+  entity), or AUTHORED outright by the member who cited it?
+why it is Bob's: doctrine. It fixes what a grade on a claim's leg MEANS, and therefore what
+  a case's stated strength is a statement about. `DATA-MODEL.md:864-871` flags its own
+  recommendation as *"my determination from the only grade vocabulary that exists, not a
+  citation"* — so the repository does not answer it and no session should pretend it does.
+provisional: nothing is blocked, because nothing above grade D is reachable yet. Every leg
+  today is either ungraded (which R1 now makes honest: the axis suspends and names the leg)
+  or a member's testimony, which is ALWAYS grade D and carries an author and a date. REC-18
+  is the item that would earn a higher grade and it is the one item in the build order marked
+  `blocked`.
+blocks: REC-18 — and therefore any connection strength above D, and therefore every audience
+  threshold that is not "everything".
+alternative: AUTHORED (D1(a)). A member states the grade when they cite, `grade_source`
+  collapses to one value, and the honesty rests entirely on the member. Simpler, reachable
+  immediately, and it makes the grade an opinion the record repeats rather than a fact the
+  record holds.
+narrowed since it was first raised, and the narrowing matters: R2 splits this in half. A
+  document leg has TWO grades — a CAPTURE grade and a CONNECTION grade — and **the capture
+  half needs no ruling**, because the record already earned it from how the bytes arrived
+  (and grade A for a direct capture is forbidden and enforced). Only the CONNECTION half is
+  open. That halves what this decision costs to get wrong.
+recommendation: EARNED (D1(b)), with testimony kept as the honest fallback. The whole
+  discipline of this record is that an equality or an outcome the caller can hand us is not
+  evidence — a caller-supplied A is exactly that, and `schema.mjs:739-743` already states the
+  rule the write path would enforce: *"the RECOGNISER never mints a D; the model holds it so a
+  member can testify, never the machine."* Earned grades also make weakest-link composition
+  do its work without anyone policing it. The price is real and should be stated: D1(b)
+  requires an inquiry to name a registry entity, and the registry has NO WRITE SURFACE until
+  UI-13 — so on the day REC-18 lands with no UI-13, every instance has an empty registry and
+  no leg can earn anything. That is a sequencing cost, not an argument against.
+reversal cost: rises with data. Grades authored under one rule and earned under another are
+  not comparable, and a published case freezes whichever it used into its own bytes.
+
+### DEC-16 · open
+raised: 2026-08-01 · BOB (from the reconciliation pass, Q3 — your own DEC-10 ruling, whose
+  premise the type collapse removed)
+for: bob
+question: When a member's queue groups events BY CASE, and questions now nest inside other
+  questions, is the grouping key the NEAREST case an event belongs to, or EVERY case above
+  it?
+why it is Bob's: DEC-10 is his ruling and this is its premise changing underneath it. He
+  ruled the aggregation key is the case *"as long as the notification interface is rich
+  enough to allow the group of things to be handled both individually and at a group level"*
+  — decided when a focus was a LEAF. Under the collapse an inquiry rests on other inquiries,
+  so "the case" is no longer one thing.
+provisional: REC-20 ships the `case` column and populates NOTHING — every item sits
+  UNGROUPED and is never given an invented home. That is the honest default and it costs one
+  predicate to switch either way.
+blocks: nothing built. It settles REC-20's population rule, UI-14's grouping, and REC-21's
+  mute scope — all three of which ship without it and would have to be revisited with it.
+alternative: the two branches ARE the alternatives, and their costs are symmetric, which is
+  why no session should pick: NEAREST means a member working the root question never hears
+  about the legs it rests on — the gap surfaces to whoever connected the leg, not to whoever
+  owns the argument. EVERY means one event appears in N groups, which breaks DEC-10's own
+  *"one standing entry per (member, case)"* and re-creates the flood relevance was supposed
+  to stop.
+recommendation: NEAREST, with one addition that costs little and repairs its worst case — an
+  event on a leg also surfaces on an ancestor when that ancestor is CONCLUDED or PUBLISHED,
+  because that is the moment a member has staked something on the leg and the record owes
+  them the news. Below that, silence on ancestors is right: an open question that rests on
+  forty documents should not narrate all forty. This is a recommendation and not a
+  determination — the reconciliation pass looked for a tiebreaker in sixteen files and found
+  none, which is the signal that the ruling's author should see it rather than a session
+  inventing one.
+reversal cost: low and it stays low. The key is derived from the citation edge at read time,
+  not stored, so changing it re-groups the feed and migrates nothing.
+
+### DEC-17 · open
+raised: 2026-08-01 · BOB (from the reconciliation pass, Q2 — a claim three research files
+  made and this session has WITHDRAWN)
+for: bob
+question: What makes an UNSUPPORTED case harder to state than a supported one — or is the
+  answer that nothing does, and the record relies on honest grading alone?
+why it is Bob's: doctrine about the cost of an act, which is exactly what `CLAUDE.md`
+  reserves. Every candidate answer is a new gate on publishing, and a gate on publishing is a
+  statement about who may say what.
+provisional: nothing is blocked and one partial answer is already RUNNING. R1 supplies it:
+  a thin case can no longer publish wearing a letter it did not earn — an ungraded leg
+  suspends the axis, the case publishes as suspended, and it names the leg that is why. So
+  the record no longer LAUNDERS weakness, which is the half that was actually failing.
+blocks: nothing mechanically. It blocks three research files' right to claim design
+  constraint C3 is discharged, which this session has withdrawn rather than left standing.
+alternative: accept that nothing makes it harder, and say so explicitly in the doctrine — the
+  record's defence against an unsupported case is that its strength is stated, per axis, with
+  the weak leg named, and a reader can see it. Honest, cheap, and already built.
+recommendation: the alternative — state the limit rather than build a gate. A global strength
+  floor on publication is its own doctrine problem (it would refuse honest weak findings,
+  which is the opposite of the product), and `AUDIENCES.md` §5 already forbids a per-audience
+  gate. What is missing is not friction but a stated position, and the position "we do not
+  stop you; we make what you are standing on visible" is defensible and matches everything
+  else here. Recorded as a recommendation rather than decided because writing it down IS the
+  doctrine.
+reversal cost: low. It is a rule about the cost of an act, and no stored data depends on it.
 
 ## Answered, awaiting enactment
 

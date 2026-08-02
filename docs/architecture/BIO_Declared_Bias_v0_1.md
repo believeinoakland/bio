@@ -143,6 +143,55 @@ MANIFEST: the list of (bias bundle id, revision) in force plus a hash of the
 computed effective statement set. The manifest is part of the evidentiary
 record and travels with publication.
 
+### RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint
+
+**Every kind the SUBJECT REGISTRY carries is a legal subject for a bias statement.**
+Decided by session BOB (DEC-6), raised by FRAMEWORK from the FW-6 registry slice. The
+registry is ONE construct serving both this doctrine and the content framework's entity
+axis (D-83), so its vocabulary is the union — source, institution, office, movement,
+person, body, ordinance, parcel, contract, fund — and a bias statement may name any of
+them. No `kind` whitelist is written at the bias-statement write path.
+
+**First, a correction to this document.** "Statement anatomy" above says a subject is
+*"the source, institution, office, or TOPIC it addresses"*; safeguard 4 says the registry
+carries *"sources, institutions, offices and MOVEMENTS"*. Those are two different lists,
+and the "four safeguard-4 kinds" a later reader would have built a gate on were never
+four agreed kinds. The registry's vocabulary is now the single answer and both sentences
+above defer to it.
+
+**Why a narrow list is not a safeguard.** It was proposed as one. Check what it would
+guard: `office` is already inside it, and a statement whose subject is an office —
+asserting a prior against whoever holds it — is the closest thing in this system to the
+structural-prior-by-role that `CLAUDE.md` forbids outright. The kinds it would exclude
+(person, ordinance, contract, fund) are the specific, citable, evidence-bearing ones. The
+whitelist admits the doctrinally riskiest kind and refuses the safest. It protects
+nothing.
+
+**And why the wider vocabulary is the more honest one.** This construct is a DISCLOSURE:
+it exists so that what a group already believes is stated where a reader can discount it.
+A group that campaigned against a measure, or that already believes a named official acts
+in bad faith, HOLDS that bias whatever the vocabulary permits. Refusing the subject kind
+does not remove the bias — it removes the declaration of it and pushes it into the
+unstated priors, which is exactly the masking the five safeguards exist to defeat. A
+vocabulary restriction on a disclosure construct makes the record less honest.
+
+**What constrains a bias statement is unchanged, and is sufficient:** the malformedness
+rule (raise scrutiny, constrain inference, assert evidenced patterns — never issue a
+verdict, refused no matter who declares it), the citation requirement on `kind=pattern`,
+strictest-wins in the effective set, the loud interaction review a new subject triggers,
+and the group as backstop. Every one operates identically whatever the subject's kind, and
+none of the five is a kind restriction. Safeguard 4's own argument is about
+registry-versus-free-text and about declared relations, not about a closed list.
+
+**The residual, with its trigger, so nobody re-raises it early and nobody forgets it.**
+The sharpest edge is a bare `scrutiny` statement naming a NATURAL PERSON with a
+justification and no citations. It is admitted here. If practice shows it used to do what
+the malformedness rule forbids — a verdict wearing a scrutiny statement's clothes — the fix
+is a one-line predicate on `kind` at the write path, and it belongs to Bob, because it is
+doctrine about a named individual. **Trigger: the first bias bundle carrying a
+person-subject statement that a reviewer challenges as a verdict.** There is nothing to
+reason from until a real one exists.
+
 ## Integration with the epistemics ladder
 
 Conclusions are graded on how they follow only from evidence and analysis

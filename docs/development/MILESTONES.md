@@ -399,6 +399,48 @@ D-78/D-82 (an assistant-surfaced focus must be written and shown as one).
 > say it is being PACED rather than looking broken. That last one is the ordering
 > rule doing work: it removes a choice a member should never have been given.
 
+### M9 · A member can state what they found, and what it rests on
+**Capability:** a question can reach a conclusion, the conclusion can rest on documents
+and on other conclusions, and the record can say how strongly — per axis, and honestly
+when it cannot say at all.
+
+**Acceptance:** a member asks a question and gets an `inquiry`; cites two documents and
+another inquiry onto it as basis; concludes it with an authored conclusion and an
+authored falsifier; and the page states BOTH derived strengths — capture and connection
+— each as its own weakest leg, BY NAME; never as a score, never as an average, never
+composed into one letter; and an ungraded leg SUSPENDS its axis, which then reads
+`undetermined` and names the leg that is why.
+
+**Absorbs:** D-127 (the collapse, RULED) · D-138 (the drift guard that does not read the
+authority it claims to check) · the `focus → inquiry` rename, the concept's third name ·
+`data/citations.json` / C-8.1's disposition.
+**Areas:** RECORD, UI. **Depends on:** nothing — the claim layer rests on the projection
+layer, which ships entire.
+
+### M10 · The group can stand behind what it found, and act on it
+**Capability:** a finding becomes a published case carrying an authored statement of what
+was left out; a stranger with no credential can read and check it; and an outward action
+can say which findings justified it and what came back.
+
+**Acceptance:** a concluded inquiry is published through a ceremony that refuses before it
+signs and cannot be signed before the exclusion is authored; the published case is
+readable and hash-checkable with no credential; an action names the finding it rests on,
+records what was sent and what returned, and its non-response is itself a finding.
+
+**Absorbs:** D-143 (the published surface with no data path) · D-144 (re-ratifying
+destroys the prior attestation) · D-150 (the completeness claim) · D-130's record half ·
+D-147 / D-148 (the records-request lifecycle and the fee quote as evidence) ·
+`AUDIENCES.md` H4/H5 (threshold and exclusions travel in-band).
+**Areas:** RECORD, UI. **Depends on:** M9.
+
+> **These two rungs are not appended after the substrate; they are what the other eight
+> serve.** D-127 records the structural finding and it is worth keeping in front of a
+> reader of this ladder: M0–M8 are substrate and surfaces — running unattended, every
+> document class as evidence, knowing and connecting what it holds, search, leaving,
+> installing, reaching — and not one of them is *a member can make a case*. The numbers
+> are positions in a list, not an order of importance, and this file's own rule
+> (*milestones are capabilities, never phases*) is what makes that safe to write down.
+
 ---
 
 ## Dependencies, and where the parallelism actually is
@@ -408,10 +450,19 @@ M0 ─┬─> M1 ─────────────────────
     ├─> M2 ──┐
     ├─> M6   ├─> M5
     ├─> M7   │
-    └─> M3 ──┴─> M4
-        ^
-        └── D-68 (CONSTRUCTS Step 0) blocks M3 AND M4
+    ├─> M3 ──┴─> M4
+    │   ^
+    │   └── D-68 (CONSTRUCTS Step 0) blocks M3 AND M4
+    ├─> M8
+    └─> M9 ──> M10
 ```
+
+**M9 depends on nothing, and that is the load-bearing fact about it.** It reads the
+projection layer, which ships entire; it needs no capture work, no framework work and no
+new interface. So the rung the whole system is for is not waiting on the substrate — it
+was waiting on being named. M10 depends on M9 alone. Neither contends with M1–M7, which
+is why the constraint from here is **worker slots and not dependencies** — the reverse of
+the situation this file recorded when CAPTURE was the constraint.
 
 **Four pipelines run without contending**, which is what makes this schedulable at
 CONDUCT's standing budget of two active areas:
@@ -440,11 +491,16 @@ Three findings fall out of that table and each changes what should be scheduled 
    not free — it is the collision risk `PARALLELISM.md` names. RECORD is added to the
    area table in this pass.
 
-**Suggested activation order**, given two slots and CAPTURE already busy: promote
-**RECORD** (M1's scheduler is the highest-value unblocked item on the board) and
-**FRAMEWORK** (D-68 unblocks two milestones). CONTENT-PDF finishes CPDF-2 and goes
-dormant until M4 needs it. That is a recommendation to CONDUCT, not an instruction —
-the queue is its file.
+**Suggested activation order — SUPERSEDED 2026-08-01.** The version below is kept as
+history: *promote RECORD (M1's scheduler) and FRAMEWORK (D-68), CONTENT-PDF finishes
+CPDF-2 and goes dormant.* All three happened; the queue drained to 44 done and 0
+runnable. The current order is in `QUEUE.md`'s BOB INBOX, handed over 2026-08-01 with
+the M9/M10 build order: **RECORD for REC-10 (the `inquiry` type, which unblocks 21 of the
+34 other items) and a second RECORD-path slot for REC-19 (`op=affordances`), with no act
+surface built before REC-19 exists.** The reasoning is in
+`research/BUILD-ORDER.md` §3.4 as re-checked by `research/RECONCILED.md` §3.4. Activation
+order is this session's under Bob's 2026-07-31 ruling; it is a handover to CONDUCT, and
+the queue is still CONDUCT's file.
 
 ---
 
@@ -525,6 +581,42 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | verified export has no surface (§8) | UI · RECORD | M8 |
 | sever / reinstate / retire have no rung | UI | M8 |
 | the UI hand-composes query syntax where `op=searchfields` exists | UI | M8 |
+
+**The case-making pass, 2026-08-01.** Twenty-seven rows arrived from the sixteen-file
+research study with no placement, which this table's own preamble forbids. Placed here;
+the item that carries each is named in `research/RECONCILED.md` §3 (the design of record)
+and handed to CONDUCT through the BOB INBOX.
+
+| item | area | milestone |
+| --- | --- | --- |
+| D-124 restricted material — DEC-5 scoped itself to PUBLIC records | — | DOCTRINE · deferred with a trigger |
+| D-125 no notification preferences (DEC-10 requires them) | RECORD | M8 · REC-21 |
+| D-126 ~30 notification generators, no catalogue, no classes | RECORD · UI | M8 · REC-20 |
+| **D-127 case-making is undesigned, and it is what the system is for** | RECORD · UI | **M9 · M10** — the rungs this pass adds |
+| D-128 declared-versus-observed flow is the analytic product | FRAMEWORK · RECORD | M4 · consequence half M10 (REC-24) |
+| D-129 `undetermined` conflates *cannot determine* and *positively none* | RECORD | M8 · a field beside the reason |
+| D-130 `counterparty: to be named` passes C-2.10 | RECORD · UI | M7 · REC-23 (UI half UI-15) |
+| D-131 a raw NUL byte makes `store.mjs` invisible to `grep` | RECORD | M0 · REC-27 |
+| D-132 `ADD_TICKS` used twice, declared nowhere | UI | M8 · UI-15 |
+| D-133 two Add-surface functions declared twice | UI | M8 · UI-15 |
+| D-134 the BALLOT act is complete, tested and unreachable | UI | M8 · UI-16 |
+| D-135 the viewer gate is stamped on compiled query paths only | RECORD | M7 · REC-25 |
+| D-136 three governance ops absent from `SESSION_OPS` | UI · RECORD | M8 · UI-16 |
+| D-137 the D-113 check is blind to eight hand-created tables | RECORD | M0 · REC-27 |
+| D-138 the drift guard never reads the catalogue it claims to check | UI | M9 · UI-10 |
+| D-139 nothing publishes what may be DONE to an object | RECORD | M8 · REC-19 |
+| D-140 the queue's two organising axes are not data | RECORD | M8 · REC-20 |
+| D-141 the UI rebuilds the project-visibility leak client-side | RECORD · UI | M7 · M8 (REC-25, then UI-16/UI-21 delete the client walk) |
+| D-142 search degrades to a substring scan and looks identical | UI | M8 · UI-21 |
+| D-143 a published case cannot be READ — no data path | RECORD · UI | M10 · REC-22, UI-18 |
+| D-144 re-ratifying destroys the previous attestation | RECORD | M10 · settled by DEC-12 |
+| D-145 bundle ids are per-instance, so nothing survives leaving | RECORD | M6 |
+| D-146 nine intent-layer write ops have no caller | UI | M8 · UI-13 |
+| D-147 `action` models a records request as one round trip | RECORD | M10 · REC-24 must read it before shipping the state machine |
+| D-148 a fee quote is EVIDENCE, not an administrative obstacle | RECORD | M10 · with D-147 |
+| D-149 the design is jurisdiction-blind | RECORD · FRAMEWORK | M10 · needs a design pass, not an item |
+| D-150 the completeness claim, externally validated | RECORD · UI | M10 · REC-14 |
+| D-151 a machine credential can resolve an unassigned task (DEC-7) | RECORD | M8 · REC-28 |
 
 ### Deliberately not scheduled, and why
 

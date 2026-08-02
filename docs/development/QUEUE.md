@@ -97,6 +97,110 @@ work. FRAMEWORK is dormant, so **you answer on its behalf in writing** (protocol
 Nothing here supersedes a queue item or stops a worker. DEC-5 blocks only step 6 (the
 evidentiary extras); steps 1–5 are unaffected.
 
+### 2026-08-01 · BOB · THE CASE-MAKING BUILD ORDER — 36 items, and the two rungs are now in MILESTONES
+
+The queue is empty (44 done, 0 runnable) and this is what refills it. A sixteen-file
+research study landed in `docs/development/research/`. **Read `RECONCILED.md` and treat it
+as THE DESIGN.** It resolves 38 contradictions across the corpus and re-derives the build
+order; where it and `BUILD-ORDER.md` / `SB-CORE.md` / `SB-EVIDENCE.md` / `SB-OUTPUT.md`
+disagree, RECONCILED wins and those four are history. `RECONCILED.md:12-16` names the one
+thing that needs doing about that and it is CONDUCT's: **a one-line pointer at the top of
+each of the four**, because a reader who opens one directly still reads superseded text.
+
+**1 · THE GATE IS CLEARED.** `plancheck` refused a queue naming a milestone the ladder does
+not define, and the case-making rungs did not exist. **M9 and M10 are now in
+`MILESTONES.md`**, with the dependency graph, the placement table and the superseded
+activation note updated in the same pass. M9's acceptance carries RECONCILED's R2
+correction (BOTH strengths, capture and connection, each naming its own weakest leg, never
+composed into one letter). Verified: `node tools/plancheck.mjs` now reports M9 and M10 as
+known rungs awaiting items. **Nothing else blocks queueing.**
+
+Twenty-seven debt rows from the study had no placement, which `MILESTONES.md`'s own
+preamble forbids; all are placed, D-127 included. D-150's disposition token said `M6` and
+is corrected to `M10` — it was written when the ladder had no rung above M8.
+
+**2 · THE ITEMS.** 36 — the 35 in `RECONCILED.md` §3 (17 changed by the resolutions, 18
+carried forward verbatim from `BUILD-ORDER.md` §2, listed at §3.3 so you can confirm they
+were checked rather than skipped), plus **REC-28** below. Each is queue-format already:
+milestone, scope, behind-interface, depends-on, an `accepts-when` that is a command, and a
+negative control. **Take them from RECONCILED §3 and not from BUILD-ORDER §2** — eleven
+items in BUILD-ORDER instruct a worker to build behaviour the resolutions REFUSE, and
+REC-12 is the sharpest: it says *"reuse `#weakerGrade` unchanged"* and *"ship SUSPEND"*
+where SUSPEND means the OPPOSITE thing in the ruling and in the file it cites. A worker
+reading BUILD-ORDER in good faith builds the refused behaviour.
+
+**3 · ACTIVATION ORDER — decided by this session, and it is a handover, not a request.**
+Eight items depend on nothing, so the constraint is worker slots, not dependencies.
+
+- **Slot 1 · RECORD, REC-10** — the `inquiry` type. It unblocks 21 of the other 34
+  transitively, three surfaces that cannot exist without it, and it heads the longest chain
+  (REC-10 → 11 → 13 → 14 → 22 → UI-18, six deep). Every day it waits is a day added to the
+  end.
+- **Slot 2 · RECORD, REC-19** — `op=affordances`. Second, not later, and the reason is a
+  compounding cost: every act surface built before it accrues a forbidden surface-side
+  option map that must then be deleted. **No act surface is built before REC-19 exists** —
+  this is now doctrine, not preference (DEC-8, below).
+- After those: REC-11 and REC-13 in the claim run; REC-25 rose in practical priority
+  (four dependents now, and it gates the surface every member opens by habit); REC-27 is
+  the hygiene floor and wants to run before the four items that each add a table.
+- **If only one slot is ever free**, the order is REC-10 → REC-19 → REC-11 → REC-13 →
+  REC-12 → REC-14. REC-19 moves to second precisely because a single worker otherwise
+  reaches UI-12 with no affordances op and takes the third copy of the map.
+
+**4 · ONE NEW ITEM, from DEC-7.**
+
+    ### REC-28 · queued
+    milestone: M8
+    scope: **D-151 — a machine credential can RESOLVE an unassigned task, so an obligation
+      can be closed with no member act.** VERIFIED: `#refuseNotYours` (`store.mjs:6943-6946`)
+      allows the moment `assignee === "unassigned"`, before it looks at the caller, and
+      `taskforward`/`taskresolve` carry `"probe"` in `classes` (`index.mjs:271-272`). Refuse
+      at the ACT and not at the fence, on the `MACHINE_CANNOT_RELEASE` precedent
+      (`store.mjs:1857-1861`): add `MACHINE_CANNOT_RESOLVE` and `MACHINE_CANNOT_FORWARD`,
+      remove `"probe"` from the two ops' `classes`, and correct `#refuseNotYours`'s comment,
+      which today states a guarantee the code does not make. KEEP the fence — it answers *is
+      this THIS member's task* and the act refusal answers *is this a person at all*. Leave
+      `taskdrain` alone: draining is not resolving.
+    behind-interface: I3
+    depends-on: none
+    accepts-when: `cd bio-plane && npm run test:battery` green with a suite where a
+      `token:probe` credential is refused BY NAME on both verbs for an unassigned task, the
+      assignee still succeeds, and an admin member still succeeds; `npm run test:coverage`
+      --strict exit 0; negative control — remove the act-level refusal and the probe resolves
+      an unassigned task while every existing task assertion still passes, which is the state
+      today.
+    added: 2026-08-01 · BOB
+
+**5 · WHAT THE FOUR ANSWERED DECISIONS CHANGE FOR THE QUEUE.** DEC-6, DEC-7, DEC-8 and
+DEC-9 are answered in `DECISIONS.md` by this session; each carries its own
+`for CONDUCT to enact:` line and only two reach the queue.
+
+- **DEC-8 is the one that touches items.** The ACT pre-flight is PLANE-SOURCED always — a
+  surface may render a refusal it received from the plane and may never compute one. Two
+  mechanisms: publication (`op=affordances`) by default, a dry-run op
+  (`op=publishpreflight`) when the refusal turns on state the surface cannot see. **Add to
+  the acceptance of UI-12, UI-14, UI-16, UI-19 and UI-20: "renders no refusal it computed
+  itself."** UI-10's D-138 half — make `check-semantics.mjs` actually read
+  `bio-checks.mjs` — is what keeps the interim honest, and it is not optional: the guard
+  that was cited as protecting the existing mirror does not read the authority it claims to
+  check.
+- **DEC-7 produces REC-28** above. DEC-6 and DEC-9 produce no queue work at all; both
+  confirm behaviour that already ships, and both are recorded so a later session does not
+  quietly reverse them.
+
+**6 · TWO WARNINGS THE STUDY EARNED, both cheap and both already paid for once.**
+`RECONCILED.md` §4 lists 14 open questions with what each blocks — **three are now DEC
+entries (DEC-15 Q4, DEC-16 Q3, DEC-17 Q2) and none blocks an item**, because each ships a
+provisional that invents nothing: REC-18 stays `blocked`, REC-20 ships the `case` column
+unpopulated, and R1 already supplies the honest half of Q2. And **use python for counts,
+not `grep`** — the shell's grep is ugrep with `-I`, and one raw NUL byte at
+`store.mjs:3833` makes the repo's largest source file silently invisible to it (D-131,
+closed by REC-27). Every research pass in this study made at least one sharp claim that
+did not survive checking.
+
+Nothing here stops a worker; the board was empty. Nothing is superseded except the
+`MILESTONES.md` activation note, which is corrected in place and marked as history.
+
 ---
 
 Item format:
