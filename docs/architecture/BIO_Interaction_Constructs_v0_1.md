@@ -247,6 +247,18 @@ severing and reinstating a citation, both requiring a reason · retirement,
 capability-shaped, typed acknowledgment and mitigation, **never prefilled**, refusals
 rendered verbatim with their offenders.
 
+**THE BOUNDARY OF THE PREFILL RULE, drawn 2026-08-01** (`PRACTICE-SURVEY.md`, and it
+is the one auto-composition in that whole survey BIO could take unchanged). Zotero's
+"Add Note from Annotations" assembles a member's OWN prior highlights into a note, each
+carrying its citation and a jump back to the source page. **That is permissible and
+useful. Generating NEW words is what is forbidden.**
+
+The line is precise and worth stating because without it a session builds no compose
+step at all, over-applying the rule: **assembling what a member already wrote is not a
+fabricated attribution; drafting a justification for them is.** A surface may gather a
+member's own authored notes, excerpts and prior reasons into one place for them to work
+from. It may not draft, suggest, template, or complete.
+
 **Accountability rule, and it is absolute: the system must never put words in a
 member's mouth.** The text becomes part of the record and is read later as that
 member's own act, so a prefilled or suggested justification is a fabricated attribution

@@ -205,7 +205,11 @@ and a set of options with handlers behind them.
 
 Four rules, each earned by a defect this project already has:
 
-**1. The OPTIONS come from the producer, never from the surface.** A UI that keeps its
+**1. The OPTIONS come from the producer, never from the surface.** *Precedent, recorded
+2026-08-01 so a later session arguing for a convenience kind-to-actions map has to answer it:
+GitHub's Checks API lets a check run declare its own `{label, description, identifier}` actions
+which GitHub renders and dispatches back as `check_run.requested_action`. Producer-declared
+options rendered by a surface, in production, at scale (`PRACTICE-SURVEY.md`).* A UI that keeps its
 own map of which actions apply to which kind is a drifting copy — precisely the defect
 measured in the UI today, which hand-composes query syntax while `op=searchfields`
 exists to prevent exactly that. The producer publishes the options; the surface renders
