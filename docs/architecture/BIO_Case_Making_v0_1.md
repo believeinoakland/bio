@@ -438,7 +438,7 @@ Two different things wear the word "split":
 - *this question has parts* — B and C are inquiries the parent cites as basis. Recursion
   already does this; nothing new is needed.
 - *this question was MALFORMED* — A was one question and is actually two. A does not
-  continue. This is the new capability, and `supersedes` is already in `REL_VOCAB`.
+  continue. This is the new capability. **CORRECTED 2026-08-01: an earlier version of this line said `supersedes` is already in `REL_VOCAB`, as if the mechanism existed. It does not.** VERIFIED: `supersedes`, `relates_to`, `initiates`, `corroborates` and `elevated_into` have ZERO occurrences in `store.mjs` — no producer and, for four of them, no consumer either; only `cites`, `derived_from` and `links_to` are actually created. `elevated_into` is REQUIRED by C-6.3 and written by no op at all. So membership of `REL_VOCAB` means only that C-6.1 will not refuse the string: division needs its edge BUILT, not merely permitted. The same correction applies to any design that leans on a relation being 'already in the vocabulary'.
 
 **2. Apportioning the basis is an AUTHORED act, never automatic.** If A gathered thirty
 documents and four sub-inquiries, dividing means deciding which belong to B, which to C,

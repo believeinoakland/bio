@@ -489,7 +489,7 @@ filters on, and `fm_json` for the per-schema tail"*), added by the same
 | --- | --- | --- | --- |
 | `inquiry_phase` | TEXT | `current_state` → `inquiry\|finding\|case` | the member-facing name (R1). A projection, because every surface renders it and none should re-derive the mapping |
 | `inquiry_strength` | TEXT | derived at promotion (§2.5) | the field a rendering **thresholds on** (design `:96-98`). Must be indexed or "every case at B or better" is a scan |
-| `inquiry_strength_determined` | INTEGER | 0 when the chain cannot be graded | so `undetermined` is a value the query language can select, not an absence indistinguishable from an ungraded row. Mirrors `grade_determined` (`store.mjs:3733`) |
+| `inquiry_strength_determined` | INTEGER | 0 when the chain cannot be graded | so `undetermined` is a value the query language can select, not an absence indistinguishable from an ungraded row. Mirrors `grade_determined` (`store.mjs:3704`, computed at `:3733`) |
 | `inquiry_basis_count` | INTEGER | `len(basis)` | lets "a conclusion with no basis" be a query rather than a scan |
 | `inquiry_excluded_count` | INTEGER | `len(completeness.excluded)` | invariant 7: a case asserting completeness with zero exclusions is a fact a reviewer should be able to *find* |
 | `inquiry_superseded_by` | TEXT | the reverse of a `supersedes` edge | R7's re-evaluation obligation is a lookup, not a graph walk |
@@ -698,7 +698,12 @@ grammar change is two regex alternatives. Take it.
 
 ## 2.7 The migration, under append-only, as the concept's THIRD name
 
-`problem → focus` (0.35.0) is the template and it is a good one. The essential move
+`problem → focus` (0.35.0) is the template and it is a good one. **The whole code migration was
+one commit** — `64b1ab0` "0.35.0: the Focus rename, code side", 18 files, +316/−101, of which 6
+files and 4 lines were the substantive plane change (`bio-checks.mjs` 43, `store.mjs` 19,
+`setup.mjs` 10, `query.mjs` 4, `migrate.mjs` 1, plus `focus.test.mjs` new at 153 lines). That is
+the honest measure of what a third rename costs in the plane. The UI was **not** in that commit
+and caught up separately, which is why its copies are the part that drifted. The essential move
 (`bio-checks.mjs:18-23`): *"History is append-only and is not rewritten, so `problem` and its
 literals remain LEGAL LEGACY ALIASES wherever they already exist, and the catalog judges a
 document by its NORMALIZED type."*
@@ -853,6 +858,42 @@ construct a `published` inquiry whose `completeness.excluded` is byte-identical 
 revision's and confirm C-21.1 fails; then a basis leg citing a grade-B published case at grade
 A and confirm C-21.2 fails. If either passes, the gate is a checkbox and the collapse has cost
 what it was protecting.
+
+## 2.9 What is UNVERIFIED, and what this lands on elsewhere
+
+**UNVERIFIED, and each needs Bob rather than a session's guess:**
+
+- **That an inquiry may be required to name a subject entity** (decision D1's price). The design
+  says strength composes as weakest-link over the basis and that D-72's grades are the input
+  (`:100-103`, `:358-360`); it does not say what a *document leg's* grade is. D1(b) is my
+  determination from the only grade vocabulary that exists, not a citation. If Bob rules that a
+  leg's grade is authored outright, D1(a) is the answer and `grade_source` collapses to one
+  value.
+- **The `surfaced` → `open` mapping** for existing focus bundles (§2.7). Three options, all
+  costed, my recommendation stated; none is free and the choice is a doctrine call.
+- **The disposition of `data/citations.json` / C-8.1** (§2.2.2). Retire or bind — either is
+  defensible, doing neither is not.
+- **Whether `divided` should be a state or a disposition.** I modelled it as a terminal state
+  because the parent was malformed rather than declined (`:438-441`), but `deferred`/`dismissed`
+  are also terminal-ish and are called dispositions, so the line is a judgment.
+
+**What this lands on elsewhere, none of which this pass edits:**
+
+- **`MILESTONES.md` has no rung for any of this.** M0–M8 are substrate and surfaces
+  (`MILESTONES.md:84-339`); `grep -c inquiry` returns 0 and there is no M9. **And D-127 is
+  missing from the placement table** (`:456-528`) which the file's own preamble says must hold
+  every open `DEBT.md` row (`:453-454`) — D-72, D-73, D-79, D-80, D-81, D-82 and D-113 are all
+  there. The most important open item in the repository is the one the ladder does not place.
+- **`QUEUE.md` has nothing queued.** `grep -c inquiry` returns 0. The nearest live thread is
+  UI-9's *"DEFER: the CASE FILE (Step 8's other half)"* (`QUEUE.md:579,584`), deferred with no
+  successor item, which is invisible to a reader who sees UI-1…UI-9 all marked `done`.
+- **D-8** (`DEBT.md:20`, open) is the vocabulary-drift row and should absorb `links_to` and,
+  when it lands, `supersedes`-with-requirements (§2.8).
+- **D-21** (`DEBT.md:38`) carries a contradictory status cell — `open | fixed 0.6.2` — and it is
+  the row that governs whether `inquiry_basis` may be written by an op or only projected from
+  the document. §2.6/D5 assumes the D-21 rule holds; if the row is genuinely closed, say so.
+- **D-113 as a class** (`DEBT.md:141`) is closed for `schema.mjs` and open for the five tables
+  in §1.2.
 
 ---
 
