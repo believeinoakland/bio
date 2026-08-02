@@ -262,6 +262,48 @@ for CONDUCT to enact: **CPDF-9** (measure OCR feasibility in workerd — bundle 
   Tier-3 OCR path behind whichever tier the measurement permits), both handed over in the BOB
   INBOX and both placed on M2. D-91's PDF-text arc gains the image-only branch. FW-15's
   acceptance gains an OCR'd document reaching `reading_refs`.
+AMENDED 2026-08-02 by Bob, and it widens the item in three ways: *"It's my sense that the
+  ability to extract text from imaged PDFs will be a very important capability that the
+  workflow must have in order to be effective. That said, these capabilities may not fit into
+  an OCR-specific worker. Research and measurement will be key to making that determination.
+  Another alternative would be to use a reliable web service that provides those capabilities.
+  Whether as a BIO worker or a service, the OCR fidelity may necessitate that further post
+  processing by a BIO resident AI function may be required in some cases. In any case, the
+  generated output will need to be assessed and graded."*
+  (a) **THE PLACEMENT SET IS FOUR, NOT THREE**, and an external SERVICE is a first-class
+  candidate rather than a last resort. CPDF-9 measures in-plane, the pdf-worker fleet member
+  (I6), an external service, and a service-plus-post-processing chain. **The service option
+  carries a cost the other three do not and CPDF-9 must price it**: the transcription becomes
+  a claim by a third party we do not control and cannot re-run identically once they change
+  their model. So the record must name the SERVICE, its endpoint identity and the date, exactly
+  as it names an engine and a version — a transcription is only checkable if you can say who
+  made it. No confidentiality issue arises (these are public records, DEC-5), and this is not
+  the same as the egress question in D-94: we are sending a document out, not fetching one.
+  (b) **A BIO RESIDENT AI FUNCTION MAY POST-PROCESS, AND IT IS A SECOND DERIVATION, NOT A
+  REPAIR.** Recorded as a chain and never collapsed: pixels → OCR → AI correction. Each step is
+  named with what performed it, and **each step can only weaken the claim, never strengthen
+  it** — an AI that "cleans up" a garbled line has produced a more READABLE text, not a more
+  RELIABLE one, and the danger of this capability is precisely that its output looks better
+  than its input. `text_source` therefore records the chain rather than a single token.
+  (c) **THE GRADE, WHICH IS THE PART THAT NEEDED DECIDING.** *"The generated output will need
+  to be assessed and graded"* — and this session's determination is that **it does NOT mint a
+  third axis.** R2 was hard-won and a third scale would be paid for on every surface. It bounds
+  the CAPTURE axis, and the argument is that the capture axis already asks the right question:
+  *how well do we know that this is what the source published.* For a text-layer PDF, byte
+  provenance answers it entirely. For an image-only PDF it does not — knowing the bytes arrived
+  perfectly says nothing about whether the text says what we transcribed, because a SECOND STEP
+  sits between the source and the claim. So the capture grade of a leg resting on derived text
+  is the weakest link of (byte provenance, transcription fidelity), which is the discipline
+  already in use rather than a new one.
+  (d) **AND NO MACHINE MINTS THE TRANSCRIPTION GRADE**, on the recogniser precedent
+  (`schema.mjs:739-743`, *"the RECOGNISER never mints a D"*). Machine OCR and AI correction are
+  both bounded below a ceiling the measurement sets. **A member who checks the transcription
+  against the image is TESTIFYING** — the existing `resolvetestify` construct, with an author, a
+  date and accountability — and that is the only route to the top of the transcription scale.
+  This is also what makes the region-anchor in (b) of the original ruling load-bearing rather
+  than nice: a member cannot testify to a transcription they cannot see the pixels for.
+  (e) The exact grade VALUES wait on CPDF-9, as Bob says. The doctrine above does not: it is
+  decidable now, and deciding it now is what stops the measurement being read as permission.
 
 ### DEC-5 · answered
 raised: 2026-07-31 · CONDUCT (lifted from CAP-3's report)
@@ -1287,6 +1329,34 @@ reasoning recorded in: this entry, and DEBT D-155. `research/AUDIENCES.md` §5 i
   written, and is about the AUDIENCE axis. D-155 records that the PROJECT axis is a different
   one, authored by the group about its own work rather than assigned by reader role, and is
   where a threshold may legitimately gate.
+ADDED 2026-08-02 by Bob, and it is a vocabulary finding rather than a change to this ruling:
+  *"the term 'audiences' is being used in 2 different contexts and refers to different things.
+  In gathering up requirements on which BIO development is driven, the word audience is used to
+  refer to different user types. But when referring to reader and consumers of a published
+  case, the audience are elements of the public who read a published case and use the
+  information, analysis, and conclusions a case contains."*
+  He is right and it is checkable: `research/AUDIENCES.md` enumerates *"eight audiences"* that
+  mix both senses in one list — an administrator and a lawyer reading a published case belong
+  to the second sense, while *"the publisher's own future members"* and the primary archetype
+  (*a member of a community accountability group*) are BIO USERS and belong to the first. The
+  word `archetype` appears twice in the whole file.
+  **AND THE CONFLATION IS WHY §5 HAD TO BE WRITTEN DEFENSIVELY.** Its hard constraint — *"a
+  per-audience relaxation is a structural prior by role… if administrators need a lower
+  threshold, that is a threshold on a RENDERING, and it must never be a threshold on
+  RATIFICATION"* — is correct and stays. But it reads as a warning against a temptation, and the
+  temptation only exists because "administrator" was sitting in a list that mixed a BIO USER
+  TYPE with a CASE READER. Separate the senses and the rule becomes a definition instead of a
+  guard: renderings vary by AUDIENCE, capabilities and journeys vary by USER TYPE, and neither
+  ever reaches ratification.
+  **This ruling is unaffected and is slightly clarified by it.** DEC-17 puts the bar on the
+  PROJECT — authored by the group, before the work, about its own intentions — which is neither
+  sense. It is not assigned by who reads the case and not by who uses the instrument.
+  DISAMBIGUATION ADOPTED, recorded as D-156: **AUDIENCE** is reserved for readers and consumers
+  of a published case, which is the sense the threshold and rendering machinery attaches to;
+  the requirements sense becomes **USER TYPE** (`ARCHETYPE` where a document already uses it,
+  since `JOURNEY-PRIMARY.md` and `AUDIENCES.md` both do). This is the D-68 vocabulary class,
+  caught before it reached the code rather than after — no surface names either concept yet, so
+  the correction costs documents and no migration.
 for CONDUCT to enact: amendments in the BOB INBOX — `project` frontmatter gains
   `required_strength{capture, connection}` (C-2.9 already requires a non-empty `objective`, so
   the shape and its check have a precedent in the same object); REC-15's preflight refuses

@@ -354,6 +354,62 @@ nesting) is with Bob with the context he asked for. REC-20 continues to ship the
 column unpopulated, every item ungrouped, nothing invented — which is the provisional and is
 correct regardless of the answer.
 
+### 2026-08-02 · BOB · TWO AMENDMENTS — CPDF-9/10 widen, and "audience" splits in two
+
+**A · DEC-4 amended by Bob. CPDF-9 measures FOUR placements, not three, and the GRADE is
+decided.** *"These capabilities may not fit into an OCR-specific worker… another alternative
+would be to use a reliable web service… the OCR fidelity may necessitate that further post
+processing by a BIO resident AI function may be required in some cases. In any case, the
+generated output will need to be assessed and graded."*
+
+- **CPDF-9's placement set becomes: in-plane · the pdf-worker fleet member (I6) · an external
+  SERVICE · a service-plus-AI-post-processing chain.** The service is a first-class candidate,
+  not a fallback. **Price its distinct cost:** the transcription becomes a claim by a third
+  party we cannot re-run identically once they change their model, so the record names the
+  service identity and the date exactly as it names an engine and a version. A transcription
+  is only checkable if you can say who made it. No confidentiality issue (public records,
+  DEC-5), and this is not D-94's egress question — we are sending a document out, not
+  fetching one.
+- **CPDF-10: `text_source` records a CHAIN, not a token** — `pixels → ocr(engine,version) →
+  ai(function,version)` — and each step names what performed it. **Each step can only weaken
+  the claim, never strengthen it.** An AI that cleans up a garbled line has produced more
+  READABLE text, not more RELIABLE text, and the hazard of this whole capability is that its
+  output looks better than its input. Do not let the chain collapse to a single label.
+- **THE GRADE, decided, and it does NOT mint a third axis.** R2 was hard-won and a third scale
+  would be paid for on every surface. Transcription fidelity **bounds the CAPTURE axis**: that
+  axis already asks *how well do we know this is what the source published*, and for an
+  image-only PDF, byte provenance does not answer it — a second step sits between the source
+  and the claim. So a leg resting on derived text takes the weakest link of (byte provenance,
+  transcription fidelity). Existing discipline, no new machinery.
+- **NO MACHINE MINTS THE TRANSCRIPTION GRADE** — the recogniser precedent
+  (`schema.mjs:739-743`, *"the RECOGNISER never mints a D"*). Machine OCR and AI correction are
+  both capped below a ceiling CPDF-9's measurement sets. **A member who checks a transcription
+  against the image is TESTIFYING** (`resolvetestify`, with author, date and accountability),
+  and that is the only route to the top of the scale. This is what makes CPDF-10's image-region
+  anchor load-bearing rather than nice: a member cannot testify to a transcription whose pixels
+  they cannot see.
+- Grade VALUES wait on CPDF-9. The doctrine above does not, and stating it now is what stops
+  the measurement being read as permission.
+
+**B · D-156 — "AUDIENCE" NAMES TWO THINGS, and this is caught before it reaches the code.**
+Named by Bob 2026-08-02. In requirements gathering it means **user types** — people who use
+BIO. About a published case it means **the readers and consumers of that case**. Verified:
+`research/AUDIENCES.md` enumerates *"eight audiences"* mixing both — an administrator or
+lawyer READING A CASE is the second sense, *"the publisher's own future members"* and the
+primary archetype are the first — and `archetype` occurs twice in the file.
+
+- **Adopted: `AUDIENCE` = readers/consumers of a published case. `USER TYPE` (or `ARCHETYPE`
+  where a document already uses it) = the requirements sense.**
+- **Renderings and thresholds vary by AUDIENCE; capabilities, journeys and surfaces vary by
+  USER TYPE; neither ever reaches ratification.** That last clause is `AUDIENCES.md` §5's
+  constraint, unchanged — but it stops being a warning against a temptation and becomes a
+  definition, because the temptation only existed while one list held both senses.
+- **This is the D-68 / D-8 vocabulary class, and it is free right now.** No surface, table or
+  op names either concept, so the correction costs documents and no migration. It will not stay
+  free — UI-18's threshold selector is the first thing that would name it. Affected:
+  `research/AUDIENCES.md`, `research/JOURNEY-PRIMARY.md`, `UI-PLAN.md`,
+  `research/CAPABILITIES.md`. Research passes take the pointer, not an edit.
+
 ---
 
 Item format:
