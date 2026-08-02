@@ -11,11 +11,20 @@ a reader who opens one at random will read text that has since been overturned.
 
     https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef
 
-It carries the journey, the ten surfaces, the layer stack, the 94-process coverage matrix,
-the 133 drawn states, what does not exist, the seventeen decisions and the six questions
-still open. It is a RENDERING of the files below and is not authoritative over them — where
-it and `RECONCILED.md` disagree, `RECONCILED.md` is the design. First published
-2026-08-02 by session BOB.
+**It is written to be read by someone who has not seen this codebase**, which the first
+draft was not — Bob's correction, 2026-08-02: *"the document doesn't include sufficient
+context needed for me or others to understand the document."* Part 0 is now orientation and
+vocabulary and is roughly a third of it: what CivicOS is and what it is for, who uses it
+versus who reads what it produces, the seven rules that decide arguments, the four objects,
+a glossary of every term the rest uses (grade, strength, leg, basis, falsifier, the fence,
+rung, hunch, progression, driver, path verb…), what changed in the collapse and R1–R4, and
+how much to trust the numbers. Parts 1–5 are the journey, the ten surfaces, the layer
+stack, the 94-process coverage matrix, the 133 drawn states, the absences, the seventeen
+decisions, the six open questions and the build order.
+
+It is a RENDERING of the files below and is not authoritative over them — where it and
+`RECONCILED.md` disagree, `RECONCILED.md` is the design. First published 2026-08-02 by
+session BOB; revised the same day to add Part 0.
 
 ## Reading order
 
