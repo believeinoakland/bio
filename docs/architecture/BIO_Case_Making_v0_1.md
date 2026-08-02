@@ -479,7 +479,7 @@ The critique found 10 doctrine hits, 13 correctness, 3 usability. Four are contr
 in THIS design rather than in the code, so they are resolved here. All four were verified
 against the source before deciding.
 
-### R1 · An UNDETERMINED leg SUSPENDS the chain. It does not floor it and is never ignored.
+### R1 · An UNDETERMINED leg leaves the chain UNRATED. It does not floor it and is never ignored.
 
 The three storyboards gave three different answers, and the code they proposed reusing
 gives a fourth: `#weakerGrade` (`store.mjs:3444-3446`) ranks an unknown grade with
@@ -494,9 +494,16 @@ Decided, and the reasoning is doctrinal rather than aesthetic:
   precisely the pressure D-97 removed at the intake gate and D-114 refused to recreate at
   the publication gate. Moving that pressure into strength would reintroduce it a third
   time.
-- **SUSPENDING states the truth.** The chain has no computed strength, and says which leg
-  is why. A case may still publish with strength stated as suspended pending that leg —
+- **UNRATED states the truth.** The chain has no computed strength, and says which leg is
+  why. A case may still publish with strength stated as UNRATED pending that leg —
   honest, publishable, and impossible to hide.
+
+**THE WORD IS `UNRATED`, NOT `SUSPEND`, and the rename is not cosmetic.** The
+reconciliation pass found that `SUSPEND` already means something ELSE in `SB-OUTPUT`
+section 5.1, and that `BUILD-ORDER`'s REC-12 says "ship SUSPEND" citing that file — so a
+worker following the build order in good faith would have built the behaviour R1
+forbids, while every document appeared to agree. A word two designs use differently is
+worse than a word neither has, because the disagreement is invisible until it ships.
 
 **Consequence for the build: `#weakerGrade` MUST NOT be reused unchanged.** A null grade
 is not a weak grade; it is the absence of one, and the two must not share a rank.
@@ -509,7 +516,23 @@ substitutes for the other**. Weakest-link across a mixed chain substitutes them 
 construction — a category error this design introduced by saying "strength composes as
 the weakest link" without asking *the weakest link of what*.
 
-Decided: **strength is a PAIR, never a scalar.** A chain carries the weakest CAPTURE
+**REFINED 2026-08-01 after reading the code's own stated intent, which R2's first
+version talked past.** `store.mjs:3441-3443` says, deliberately: *"Reuses the resolution
+grade rank so the two axes cannot drift."* That is an argument FOR sharing a scale, made
+by the person who built it, and it deserves an answer rather than an override. Reading
+the fuller comment at 3434-3439, the pair it composes is a connection's TWO ENDS — how
+each end resolved to the shared entity — and both are section 8.1 grades. **That
+composition is sound and R2 does not forbid it.**
+
+What R2 forbids is narrower and must be named precisely, because the first version did
+not: **CAPTURE grade must never be composed with CONNECTION grade.** Capture grade
+measures directness of acquisition (A is a WACZ chain of custody and is out of a Worker's
+reach; B is a direct fetch; C is via an archive). Connection grade measures what would be
+needed to check an inference. They answer different questions and the Intake Doctrine
+rules neither substitutes for the other — but they share the letters A–D, which is what
+makes the error easy and invisible.
+
+Decided: **a chain's strength is a PAIR, never a scalar.** A chain carries the weakest CAPTURE
 grade among its evidentiary legs and the weakest CONNECTION grade among its inferential
 legs, and nothing averages, mixes or collapses them. A rendering may show both; no
 rendering may reduce them to one letter.

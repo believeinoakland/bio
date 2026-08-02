@@ -541,6 +541,33 @@ for CONDUCT to enact: DEC-10's provisional stands as the DERIVATION layer (overd
   beside the progression work, with the inbox half under M8.
 enacted:
 
+### DEC-12 · open
+raised: 2026-08-01 · BOB (from the reconciliation pass, Q1)
+for: bob
+question: May a PUBLISHED case be revised and re-published, or is publication terminal?
+why it is Bob's: doctrine. It decides what a published hash promises a reader, and it is
+  the one act the system calls irreversible.
+provisional: TERMINAL is running, because that is what `DATA-MODEL` and `SB-CORE` assume
+  and it is the safer of the two to reverse. Nothing is blocked either way.
+blocks: nothing today. It settles D-144's fix and the publication storyboard's S16.
+alternative: revisable, with each publication carrying its own attestation and superseding
+  the last — which is what `SB-OUTPUT` drew and what the code half-does already.
+the code is SPLIT and that is the sharpest fact: `published_shas` is keyed
+  `(sha256, bundle_id, path)` and APPENDS, so a hash stays answerable forever;
+  `published_bundles` is keyed on `bundle_id` and UPSERTS, so re-ratifying destroys the
+  prior signature, attestor, time and gate version (D-144). So today the bytes accumulate
+  and the attestations do not — which is neither answer, and is a defect under either.
+recommendation: REVISABLE, with attestations accumulating. Terminal sounds stronger and is
+  weaker in practice: a record that cannot publish a correction can only publish a second
+  case that contradicts the first, leaving a reader to work out which is current. Revisable
+  keeps the correction attached to the thing corrected, and the append-only history is what
+  makes it honest rather than a rewrite. It also matches what the bytes already do.
+reversal cost: rises with data. Once cases are published under one rule, changing it means
+  reinterpreting what existing published hashes claimed.
+response:
+decided:
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_
