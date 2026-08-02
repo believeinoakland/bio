@@ -35,6 +35,44 @@ real answer.
 the channels, the rules that make them work, and the receipts. Read it before
 making a change another session must know about.**
 
+## Starting a BOB session — the paste block
+
+Nothing about this role lives in a conversation. `CLAUDE.md` auto-loads, the memory index
+auto-loads, and everything else this session needs it reads for itself from the
+repository. So a session is replaced, not migrated: end the old one and start a new one
+with the block below.
+
+```
+Kickoff: session BOB.
+
+Read CLAUDE.md first, then docs/development/kickoffs/BOB.md, and follow it.
+
+Then read, in this order:
+  docs/development/ORCHESTRATION.md — COMMUNICATING A CHANGE is the coordination skill
+  docs/development/MILESTONES.md    — the capability ladder, M0-M8
+  docs/development/QUEUE.md         — what is runnable; the BOB INBOX is at the top
+  docs/development/DECISIONS.md     — surface every `open` entry to me before anything else
+  docs/development/VERIFICATION.md  — what "tested" means here and the floor
+
+The research corpus from the 2026-08-01 study is in docs/development/research/ —
+sixteen files. Read RECONCILED.md first (it resolves the contradictions between the
+others), then BUILD-ORDER.md, then CRITIQUE.md. The rest are inputs to those three.
+docs/architecture/BIO_Case_Making_v0_1.md carries the design and its four resolutions.
+
+Run `node tools/plancheck.mjs` before you hand anything off.
+```
+
+**Two things to know before you paste it.**
+
+Work in a worktree — `claude --worktree BOB` — not the main checkout. `CONDUCT` holds
+main, and one session per working tree is the rule (`PARALLELISM.md`, DEC-3). A fresh
+session in the main checkout will collide with CONDUCT exactly as this one did.
+
+And if sub-sessions are still running when you replace the session, their FILES still
+land — they write to the repository directly. What is lost is the completion summary and
+the verification pass over it, which is the part that has caught a wrong claim in every
+round so far. So let them finish, or re-read their files and check them yourself.
+
 ## Where this session runs
 
 **In its own worktree — `claude --worktree BOB` — and NOT in the main checkout.**
