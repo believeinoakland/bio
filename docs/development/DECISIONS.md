@@ -304,6 +304,51 @@ AMENDED 2026-08-02 by Bob, and it widens the item in three ways: *"It's my sense
   than nice: a member cannot testify to a transcription they cannot see the pixels for.
   (e) The exact grade VALUES wait on CPDF-9, as Bob says. The doctrine above does not: it is
   decidable now, and deciding it now is what stops the measurement being read as permission.
+AMENDED AGAIN 2026-08-02. Bob: *"The sequence pixels → ocr → ai is only part of the chain. A
+  member can attest that the transcription is accurate. That can be sufficient to raise the
+  grade to the same level as text. Right?"*
+  **RIGHT — and the question exposes a defect in the model it was asked about, which is worth
+  more than the answer.** My framing said machine steps are *"capped below a ceiling"* and that
+  attestation is *"the only route to the top of the transcription scale"*, which quietly treated
+  A TEXT LAYER as the top of that scale. It is not, and the repository already knows it.
+  **A TEXT LAYER IS ITSELF AN UNVERIFIED TRANSCRIPTION.** `pdfstructure.mjs`'s Tier-1 extractor
+  decodes shown bytes *"through the font's /ToUnicode CMap"* and its own header records the
+  consequence: *"a byte a font's /ToUnicode does not cover, or a font that carries no /ToUnicode
+  at all, produces an `undetermined` marker naming the font — never a substituted or best-effort
+  character."* So what we call "the text" is a MAPPING THE FILE SUPPLIES from glyph codes to
+  characters. It is the publisher's claim about what their own glyphs mean, and it can be
+  absent, partial, or wrong while the page renders perfectly.
+  **AND THE SHARPEST CASE IS THE COMMON ONE: a scanned document run through the publisher's own
+  OCR and saved as a "searchable PDF" HAS a text layer, and that text layer is SOMEBODY ELSE'S
+  OCR OUTPUT, unverified.** Under the model as I stated it, we would grade a city scanner's
+  unchecked OCR as authoritative publisher text while grading our own OCR of the same pixels as
+  derived. That is incoherent, and it is the *"an equality that costs nothing to produce is not
+  evidence"* rule being violated in our favour rather than against us.
+  **SO THE CEILING WAS NEVER "HAS A TEXT LAYER". IT IS "VERIFIED AGAINST THE RENDERED IMAGE",
+  and that is reachable from both paths.** Corrected model: a text layer and an OCR run are both
+  TRANSCRIPTIONS of what was published — one supplied by the publisher, one derived by us — and
+  a member's attestation against the rendered image is the strongest position either can reach.
+  Attestation therefore applies to a TEXT LAYER too, and should be offered there; an unattested
+  text layer and an unattested OCR differ in provenance and in likely accuracy, not in kind.
+  three qualifications, decided, because "yes" without them would be the overclaim:
+  - **ATTESTATION IS SCOPED TO WHAT WAS ACTUALLY CHECKED**, and the scope is recorded. Attesting
+    the region a leg cites is not attesting the document, and a 200-page scanned budget attested
+    wholesale is a weaker claim than one figure checked against its rect. **A leg citing outside
+    the attested extent does not inherit the attested grade.** This is what makes the image-region
+    anchor load-bearing twice over.
+  - **THE CHAIN IS STILL RECORDED.** Attestation sets the GRADE; it does not erase the history.
+    `text_source` keeps `pixels → ocr(engine,version) → ai(function,version) → attested(member,
+    date, extent)`, because how a transcription was produced stays a fact about it after somebody
+    checks it. Verification supersedes the chain as the grade determinant and never as the record.
+  - **AND THE FAILURE MODE TO WATCH IS ROUTINE ATTESTATION**, since this is the one act that can
+    lift a machine product to the top of the scale. It is a member act with an author and a date
+    like any other testimony, it is refusable to a machine credential (D-151's rule), and CPDF-9
+    should measure where human checking actually fails — digits, which is precisely where OCR
+    fails and where skimming fails too.
+  one thing CPDF-9 gains from this: **detect whether a PDF's text layer was itself
+  machine-generated** (producer metadata routinely names the scanner or OCR software), because
+  the record should be able to say *this text came from the publisher's own OCR* rather than
+  presenting it as authored text. That is measurable, it is cheap, and nothing today looks.
 
 ### DEC-5 · answered
 raised: 2026-07-31 · CONDUCT (lifted from CAP-3's report)
@@ -1182,7 +1227,7 @@ for CONDUCT to enact: amendments in the BOB INBOX to REC-11 (`grade_source` admi
   publish while one stands). D-154 records the construct. No new item: every piece lands inside
   one already queued, which is the same result the reconciliation pass found for R1–R4.
 
-### DEC-16 · open
+### DEC-16 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q3 — your own DEC-10 ruling, whose
   premise the type collapse removed)
 for: bob
@@ -1250,6 +1295,60 @@ context added 2026-08-01, at Bob's request — *"I need more context in order to
   moment a member has staked a claim on the leg and the record owes them the news. Below that,
   silence on ancestors is right: an open question resting on forty documents should not narrate
   all forty to whoever opened it.
+response: **EVERY ANCESTOR, WITH ONE SHARED RESOLUTION.** Bob, 2026-08-02: *"It's my sense that
+  every ancestor should be told. However if a member resolves the notice then it needn't be
+  presented to other users after that. Is it that simple, or is there more to it?"*
+  **IT IS ESSENTIALLY THAT SIMPLE, AND IT IS A BETTER ANSWER THAN THE MIDDLE I RECOMMENDED —
+  for a reason worth recording, because my recommendation was built on a bad assumption.** The
+  every-ancestor branch was argued down in this entry on the ground that *"one event appears in
+  N groups and breaks DEC-10's one standing entry per (member, case)."* That objection assumed
+  the notification is the unit — N COPIES of an event, each needing separate handling. The
+  second sentence of Bob's answer removes the assumption: **the EVENT is the unit of state, with
+  one state and N homes.** It appears in every group it is relevant to and is handled once. The
+  flood objection dissolves without a second mechanism, and DEC-10's invariant is untouched,
+  because the standing entry is still per (member, case) — an event appearing in several entries
+  does not create several entries.
+  **AND IT IS THE ANSWER THAT MATCHES WHAT THE THING ACTUALLY IS.** The City replacing a page
+  under INFO-88 is ONE fact about the world. Nearest-ancestor made it private to whoever
+  happened to cite the document; every-ancestor-with-shared-resolution makes it what it is — a
+  fact the case needs to know about, which anyone standing on it can settle for everyone.
+  **THERE IS MORE TO IT, AND IT IS FOUR SMALL THINGS, ALL REUSING EXISTING RULES.**
+  - **NOTHING VANISHES SILENTLY, so "not presented" is not deletion.** A resolution is
+    attributed and dated and stays in the case's history; a member who did not resolve it sees
+    *resolved by X on this date*, not an empty space. This is your own DEC-10 rule
+    (muting-is-personal / dismissing-is-a-record-act) one level up — and note that shared
+    resolution makes it MORE important, because now one member's act clears another member's
+    queue, which is exactly the case where a silent disappearance would be indistinguishable
+    from a bug.
+  - **THE RESOLVER MAY BE AT THE WRONG ALTITUDE — and the design is safe anyway, for a reason
+    that must be stated or someone will "fix" it.** B at INQ-2 answering *does this leg still
+    hold* is not answering A's question at INQ-1, *does this change my conclusion*. If B resolves
+    it by looking and finding nothing changed, clearing it for A is correct. If B resolves it by
+    CHANGING something — regrading the leg, severing it, replacing the capture — that is
+    precisely when A most needs to know, and a naive shared resolution would hide it. The
+    safeguard is not to keep it open for everybody. It is that **an act which changes the record
+    is itself an event**, which propagates by the same every-ancestor rule. So a no-op
+    resolution correctly clears it for all, and a substantive one clears it and immediately
+    raises its own. No new machinery: that is the ordinary consequence loop.
+  - **WHO MAY RESOLVE: any member who can see the case and holds `contribute`, attributed —
+    not only the member who authored the connection.** Restricting it to the author strands the
+    event when that member is inactive or gone, which is the same failure D-98's routing ladder
+    exists to prevent and the same reasoning that keeps an unassigned task claimable (DEC-7).
+    A machine credential may not resolve (D-151's act-level refusal).
+  - **"EVERY ANCESTOR" IS A GRAPH WALK AND IT INHERITS R3'S DEPTH BOUND.** The basis graph is a
+    DAG enforced at write, and derivation carries a bound whose exhaustion reports `undetermined`
+    rather than failing. The notification fan-out is that same walk, so it takes the same bound —
+    and an exhausted walk must SAY the ancestor set is undetermined rather than silently
+    notifying a truncated set. A quietly truncated notification set is indistinguishable from
+    nobody caring, which is the failure this whole ruling is about.
+decided: 2026-08-02 · Bob
+reasoning recorded in: this entry, and `docs/architecture/BIO_Interaction_Constructs_v0_1.md`'s
+  QUEUE section, which carries DEC-10's grouping rules and now carries the nesting case.
+for CONDUCT to enact: amendments in the BOB INBOX. REC-20's `case` is populated with EVERY
+  ancestor over the bounded walk, and **item state lives on the EVENT, not on the (member, case)
+  entry** — that is the load-bearing shape change. REC-21's mute stays personal and structurally
+  distinct from resolution, which is now more important rather than less. UI-14 shows one event
+  under several cases, resolves once, and renders the attribution rather than a gap.
 
 ### DEC-17 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q2 — a claim three research files

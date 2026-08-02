@@ -410,6 +410,63 @@ primary archetype are the first — and `archetype` occurs twice in the file.
   `research/AUDIENCES.md`, `research/JOURNEY-PRIMARY.md`, `UI-PLAN.md`,
   `research/CAPABILITIES.md`. Research passes take the pointer, not an edit.
 
+### 2026-08-02 · BOB · DEC-16 ANSWERED — the queue has NO open decisions left, and REC-20's state moves
+
+**DEC-16 is ruled: every ancestor is told, and one member's resolution settles it for all.**
+`DECISIONS.md` carries the reasoning; `BIO_Interaction_Constructs_v0_1.md`'s QUEUE section
+carries the doctrine beside DEC-10's. **The `DECISIONS.md` open list is now EMPTY**, which is
+the healthy state and needs no action.
+
+**THE LOAD-BEARING CHANGE, and it is a shape change rather than a rule: the unit of state is
+the EVENT, not the (member, case) entry.** One state, N homes. REC-20 was scoped assuming the
+queue item carries the state; it does not. This is what makes every-ancestor safe rather than a
+flood — the objection to it assumed N copies each handled separately, and there are none.
+DEC-10's *one standing entry per (member, case)* survives intact: an event appearing in several
+entries does not create several entries.
+
+- **REC-20** — `case` is populated with **every ancestor**, over a walk that inherits **R3's
+  depth bound**; an exhausted walk reports the ancestor set `undetermined` rather than notifying
+  a silently truncated one, because a truncated set is indistinguishable from nobody caring.
+  Item state reads from the event. The unpopulated-column provisional is now retired.
+- **REC-21** — the mute stays personal and structurally distinct from resolution, and this
+  matters MORE now, not less: one member's resolution clears another member's queue, so the
+  boundary between a record act and a preference is the thing standing between that and a
+  silent disappearance.
+- **UI-14** — one event renders under several cases; resolving once clears all of them; a
+  member who did not resolve it sees **resolved by X on this date**, never a gap.
+- **AND THE RULE THAT KEEPS SHARED RESOLUTION HONEST, which a build session will not derive on
+  its own: an act that CHANGES the record is itself an event.** Resolving by looking and finding
+  nothing changed correctly clears it for everyone. Resolving by regrading a leg, severing it or
+  re-capturing clears it and immediately raises its own event, which propagates the same way.
+  Without this, a resolver at one altitude silently hides a change from the member who most
+  needs it. No new machinery — it is the ordinary consequence loop, and it must be asserted.
+- Any member who can see the case and holds `contribute` may resolve, attributed. Not only the
+  connection's author, whose absence would strand it (DEC-7's unassigned reasoning). A machine
+  credential may not (D-151).
+
+**ALSO, DEC-4 amended once more — attestation reaches the top of the scale, and the scale's top
+was never "has a text layer".** CPDF-9/CPDF-10 change again:
+
+- **A TEXT LAYER IS ITSELF AN UNVERIFIED TRANSCRIPTION**, and `pdfstructure.mjs` already says
+  so: Tier-1 text is decoded *"through the font's /ToUnicode CMap"*, and a font with no
+  `/ToUnicode` yields `undetermined` naming the font. The text is a mapping THE FILE SUPPLIES.
+  The common sharp case: a scanned document run through the publisher's own OCR and saved as a
+  *searchable PDF* HAS a text layer, and that layer is somebody else's unverified OCR — which we
+  would otherwise grade as authoritative publisher text while grading our own OCR of the same
+  pixels as derived.
+- **So the ceiling is VERIFIED AGAINST THE RENDERED IMAGE, reachable from both paths**, and
+  member attestation is offered on a TEXT LAYER too, not only on OCR output. Yes, attestation
+  raises OCR-derived text to parity — with three constraints: it is **SCOPED to what was
+  actually checked** and a leg citing outside the attested extent does not inherit it; the
+  **chain is still recorded** (`pixels → ocr → ai → attested(member, date, extent)`), because
+  verification supersedes the chain as the grade determinant and never as the record; and
+  routine rubber-stamping is the failure mode, so it is a member act refusable to a machine
+  credential and CPDF-9 measures where human checking actually fails — **digits**, which is
+  where OCR fails and where skimming fails too.
+- **CPDF-9 gains one cheap measurement:** detect whether a PDF's text layer was itself
+  machine-generated (producer metadata routinely names the scanner or OCR software), so the
+  record can say *this came from the publisher's own OCR*. Nothing looks today.
+
 ---
 
 Item format:

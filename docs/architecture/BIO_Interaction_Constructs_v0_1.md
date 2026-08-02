@@ -116,6 +116,37 @@ Group-level and item-level acts are the **SELECTION-SCOPED** modifier below, use
 the first time outside the record surfaces — which makes this the first real test that
 the modifier generalises.
 
+**RULED 2026-08-02 (DEC-16): once questions NEST, an event reaches EVERY ancestor, and
+one member's resolution settles it for all of them.** DEC-10 was ruled when a `focus`
+was a leaf. The type collapse made `inquiry` recursive — a basis leg may target another
+inquiry — so an event on a document now sits under a chain of questions, and "the case
+it belongs to" stopped being one thing.
+
+**The unit of state is the EVENT, not the notification.** It has one state and N homes.
+This is what keeps the every-ancestor answer from flooding anybody: the objection to it
+assumed N copies each needing separate handling, and there are not N copies. DEC-10's
+*one standing entry per (member, case)* is untouched — an event appearing in several
+entries does not create several entries.
+
+Four properties follow, and each reuses a rule that already exists:
+
+- **Resolution is attributed and visible, never a deletion.** A member who did not
+  resolve it sees *resolved by X on this date*, not a gap. Shared resolution makes the
+  muting-is-personal / dismissing-is-a-record-act rule MORE load-bearing, not less,
+  because one member's act now clears another's queue — the one case where a silent
+  disappearance is indistinguishable from a bug.
+- **An act that changes the record is itself an event.** This is what makes shared
+  resolution safe despite the resolver often being at a different altitude from the
+  member who most needs the news. Resolving by looking and finding nothing changed
+  correctly clears it for everyone; resolving by regrading, severing or re-capturing
+  clears it and immediately raises its own event, which propagates the same way.
+- **Any member who can see the case and holds `contribute` may resolve**, attributed —
+  not only the member who authored the connection, whose absence would otherwise strand
+  it. A machine credential may not (the act-level refusal, D-151).
+- **The ancestor walk inherits R3's depth bound**, and an exhausted walk states that the
+  ancestor set is `undetermined` rather than notifying a silently truncated one. A
+  truncated notification set is indistinguishable from nobody caring.
+
 | **ACT** | *doing something to a record or a set.* One motion: choose, see what it will refuse and why BEFORE it runs, author the reason, get a receipt. Ballots are acts whose status shows a tally; bulk is the same act scoped to a selection. |
 | **THE RUNG LADDER** (renamed from "weight" 2026-08-01 — see the collision note below) | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). Orthogonal to it, an act applied to a SET carries one of three application modes: `refuse` (all-or-nothing), `report` (proceeds, says what moved), or `per-item` (each succeeds independently or is RETAINED WITH A REASON). See `NOTIFICATIONS.md`. |
 | **UNDETERMINED** | a display primitive, identical in all six places it appears. |

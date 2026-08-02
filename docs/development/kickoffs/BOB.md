@@ -64,11 +64,17 @@ unproven absent outside evidence, and OCR for image-only PDFs. Read DECISIONS.md
 materially and the inbox entry outranks RECONCILED.md section 3 where they disagree.
 
 Your first job is the standing one: read DECISIONS.md and surface every `open` entry.
-There is ONE — DEC-16, the queue's grouping key once questions nest inside questions.
-Bob asked for more context rather than the question; that context is written into the
-entry (a concrete worked example, both branches' costs, and what getting it wrong costs,
-which is almost nothing since the key is derived at read time). Present it, and do not
-re-derive it. Nothing blocks: REC-20 ships the `case` column unpopulated.
+**There are NONE.** All seven were answered on 2026-08-01/02 and every consequence is
+handed over; an empty list is the healthy state and is worth one line, not a paragraph.
+CONDUCT owes 14 enactments, which is its loop and not yours to chase.
+
+TWO RULINGS ARE EASY TO UNDER-READ because their consequence is larger than their text.
+DEC-16 moved the unit of queue state from the (member, case) entry to the EVENT — one
+state, N homes — which is a shape change REC-20 was not scoped for. And DEC-4's second
+amendment establishes that a PDF TEXT LAYER is itself an unverified transcription (the
+extractor decodes through /ToUnicode and says so), so the grade ceiling is "verified
+against the rendered image" rather than "has a text layer", and member attestation is
+offered on both paths.
 
 Then the work is whatever the answers create, plus RECONCILED.md section 4's remaining
 open questions (Q5 needs a design pass, Q6 was created by R2 and no file has seen it,
