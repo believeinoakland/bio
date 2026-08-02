@@ -1224,15 +1224,15 @@ context added 2026-08-01, at Bob's request — *"I need more context in order to
   in a project, and that was the whole depth. The type collapse (D-127) made `focus`, `finding`
   and `case` one recursive type, `inquiry`, whose basis legs may point at OTHER INQUIRIES. So
   questions now nest, and "the case an event belongs to" is no longer one thing.
-  **A CONCRETE INSTANCE, which is the part the entry was missing.** Alice opens
+  **A CONCRETE INSTANCE, which is the part the entry was missing.** MEMBER A opens
   INQ-1 *"Was the sewer fund misused?"*. It rests on INQ-2 *"Was the $2.1m transfer
-  authorised?"*, which Bob opens, and INQ-2 rests on INFO-88, a controller memo Bob cited. All
-  three sit in the Sewer Fund project. Now the monitor detects that the City has replaced the
-  page INFO-88 was captured from.
-  - **NEAREST ancestor:** only Bob is notified — he made the connection to INQ-2, which is the
-    nearest case. Alice, who owns the top question and may be days from publishing it, hears
-    nothing, and the leg her conclusion rests on has moved underneath her.
-  - **EVERY ancestor:** Alice and Bob are both notified. But one event now produces entries on
+  authorised?"*, which MEMBER B opens, and INQ-2 rests on INFO-88, a controller memo B cited.
+  All three sit in the Sewer Fund project. Now the monitor detects that the City has replaced
+  the page INFO-88 was captured from.
+  - **NEAREST ancestor:** only B is notified — they made the connection to INQ-2, which is the
+    nearest case. A, who owns the top question and may be days from publishing it, hears
+    nothing, and the leg their conclusion rests on has moved underneath them.
+  - **EVERY ancestor:** A and B are both notified. But one event now produces entries on
     INQ-2, on INQ-1 and on the project — three groups for one thing — which breaks your own
     *"one standing entry per (member, case)"* and re-creates the flood the relevance filter was
     ruled in to prevent.
