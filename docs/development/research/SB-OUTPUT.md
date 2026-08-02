@@ -910,3 +910,1062 @@ flowchart TD
 
 Everything dashed is unbuilt. `COMMIT` is the only solid node: `op=ratify` ships
 and `setup.mjs:617-667` reaches it.
+
+---
+
+## 3. O2 · PUBLISHED CASE
+
+The reader here is **not a member and holds no credential**. That is not a
+degraded mode; it is the point. §8.2's guarantee is that published material is
+content-addressed and reconstructible *"without the cooperation, permission, or
+continued existence of the instance it came from."*
+
+`data-space="published"`, `--sheet` ground, `--t-pub-body` 18px, `--lh-read`
+1.62, `--measure-pub` 62ch. No rail, no fence band, no masthead search, no act
+bar. `tokens.css:145-151` already declares this register and
+`[data-space="published"]` *never references the fence*.
+
+### 3.1 What an anonymous reader can actually call today
+
+Measured, because it bounds the whole surface. Eight ops carry `classes: null`
+(`index.mjs:196-198`): `bootstrap`, `claim`, `login`, `enroll`, `invitelook`,
+`verify`, `knock`, `publishedmanifest`. Of those, exactly **two touch published
+material**: `publishedmanifest` (`:287`) and `verify` (`:544`).
+`publishedlist` (`:402`) requires a token class.
+
+`publishedList()` (`store.mjs:5964-5966`) selects
+`bundle_id, bundle_sha, ratified_at, attestor_member, gate_version` — **no
+title and no body.** `verifySha()` (`store.mjs:5957-5961`) answers
+`{published, sha256, matches[]}` from `published_shas` alone, with the property
+that *"a hash that was never ratified is indistinguishable from a hash that
+never existed."*
+
+**So the single largest absence in this whole document: there is no public op
+that returns a published case's BYTES or its PROSE.** The published bucket holds
+them — `ratify` copies every non-`_history/` file into
+`<store>/published/<sha256>` (`index.mjs:2691-2705`) — and nothing serves them
+without a credential. That is why `pubOpen` (`app.html:6853`) renders the bundle
+id as its `<h1>` and a paragraph saying the body is not rendered. It is not a
+UI shortcut; the read does not exist.
+
+### 3.2 STORYBOARD — twelve states
+
+---
+
+**S1 · THE PUBLISHED INDEX**
+
+```
+════════════════════════════════════════════════════════════════════
+  ▪  Believe In Oakland                    Case files    Verify a hash
+════════════════════════════════════════════════════════════════════
+
+  THE PUBLISHED RECORD
+
+  Cases this group stands behind. Every one can be checked against
+  its hash without our cooperation, and will still check out if this
+  group stops existing.
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │  Sewer fund transfers to the General Purpose Fund            │
+  │  published 1 August 2026 · strength C                        │
+  │  INQ-2026-0007 · sha256:9d0e77b31af4c2…                      │
+  ├──────────────────────────────────────────────────────────────┤
+  │  Which body may authorise an inter-fund transfer             │
+  │  published 14 July 2026 · strength C                         │
+  │  INQ-2026-0012 · sha256:1b8ac03e5f7d91…                      │
+  ├──────────────────────────────────────────────────────────────┤
+  │  Contract 4471 award timeline                                │
+  │  published 2 June 2026 · strength undetermined               │
+  │  superseded 9 July 2026 — this hash still answers            │
+  │  INQ-2026-0004 · sha256:77c1ee49b0a3fd…                      │
+  └──────────────────────────────────────────────────────────────┘
+════════════════════════════════════════════════════════════════════
+```
+
+Today rows show the bundle id where the title is, because the manifest carries
+none (P10 in §2.3). Strength and supersession likewise do not exist yet.
+
+---
+
+**S2 · THE CASE, IN FULL — the default, no threshold applied**
+
+The default view applies **no audience threshold at all**. A reader arriving
+from a link gets everything the case says, at its own strength, with its
+exclusions. A threshold is something a reader opts INTO, never the ground state
+— because the ground state is what a forwarded link resolves to.
+
+```
+════════════════════════════════════════════════════════════════════
+  ▪  Believe In Oakland                    Case files    Verify a hash
+════════════════════════════════════════════════════════════════════
+
+  CASE · published 1 August 2026
+
+  Sewer fund transfers to the
+  General Purpose Fund
+
+  ┌── what this case is worth ────────────────────────────────────┐
+  │  Strength  C                                                  │
+  │  A case is worth its weakest leg. This one's weakest leg is   │
+  │  a published case that is itself at C.                        │
+  │  Strength is how a claim was ESTABLISHED, not how credible    │
+  │  anyone finds it.                                             │
+  └───────────────────────────────────────────────────────────────┘
+
+  WHAT WE FOUND
+  [the conclusion, as its author wrote it]
+
+  WHAT THIS RESTS ON
+  ├─ A · ACFR FY2024, p.112 · grade A            [ read it ] [ hash ]
+  │     published beside this case
+  ├─ B · Ordinance 13842 · grade B               [ read it ] [ hash ]
+  │     published beside this case
+  ├─ C · "Which body may authorise an inter-fund transfer"
+  │     a published case · strength C                    [ open it ]
+  └─ D · Controller's memo, 12 March 2026 · strength undetermined
+        ⓘ  Not published. This case names it and this group holds
+           it; you cannot read it here and cannot check its hash.
+           The record does not say how it was established.
+
+  WHAT WOULD SHOW THIS WRONG
+  [the falsifier, as its author wrote it]
+
+  WHAT THIS CASE LEAVES OUT
+  [the completeness statement, verbatim, with its author and date]
+  ⓘ  No system checked whether this is complete. It records who
+     said it and when.
+
+  ── THE MATERIAL SET ───────────────────────────────────────────
+  5 files · 2,005,104 bytes · every one checkable
+  bundle.md                       sha256:3f0a…  [ get ] [ check ]
+  data/provenance.json            sha256:8b21…  [ get ] [ check ]
+  data/acfr-fy2024-p112.pdf       sha256:c904…  [ get ] [ check ]
+  …
+
+  ── WHAT THE PUBLISHED HASH CLAIMS ─────────────────────────────
+  That these exact bytes were held by this group, retrieved from
+  the address recorded beside each one, on the date recorded, by
+  the route recorded. It does NOT claim that any document here is
+  an authentic municipal record, that a public body agrees with
+  any of it, or that the conclusion is correct.
+
+  attested by a key registered to Ruth Ferreira · catalogue 1.17.0
+════════════════════════════════════════════════════════════════════
+```
+
+Note leg D. **A basis leg is not automatically published.** `ratify` copies the
+files of the bundle being ratified; a cited `information` bundle is a different
+bundle. So the published page must distinguish a leg it can serve from a leg it
+can only name, and say which — or a reader will assume every link resolves.
+
+---
+
+**S3 · A RENDERING AT A THRESHOLD**
+
+The selector offers the audiences `AUDIENCES.md` derived, each labelled by what
+that reader is DOING, never by who they are. Choosing one is a reading aid; it
+changes nothing in the record.
+
+```
+  ┌── read this at a threshold ───────────────────────────────────┐
+  │  ( ) everything this case says            ← you are here      │
+  │  ( ) claims strong enough to report      "records suggest"    │
+  │  ( ) claims strong enough to open a review "worth checking"   │
+  │  ( ) claims strong enough to plead      "the record establishes"│
+  │  ( ) claims safe to say out loud in a meeting                 │
+  └───────────────────────────────────────────────────────────────┘
+```
+
+And when one is chosen, the page grows a block that is **part of the document,
+not chrome** — it is in the print output, in the selection a reader copies, and
+in anything served:
+
+```
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  THIS IS A RENDERING, NOT THE CASE                            ║
+  ║                                                               ║
+  ║  Made for a reader deciding whether to open a review.         ║
+  ║  It shows only claims at strength C or better.                ║
+  ║                                                               ║
+  ║  2 of the 6 claims this case makes are NOT shown here.        ║
+  ║  They are named where they were left out, below.              ║
+  ║                                                               ║
+  ║  One of them cuts AGAINST this case.                          ║
+  ║                                                               ║
+  ║  The whole case, with nothing dropped:                        ║
+  ║  believeinoakland.org/published/INQ-2026-0007                  ║
+  ║                                                               ║
+  ║  rendering sha256:2ae1…  ·  case sha256:9d0e…  ·  1 Aug 2026  ║
+  ╚═══════════════════════════════════════════════════════════════╝
+```
+
+and at each point where something was dropped, in the body, in place:
+
+```
+  ── not shown at this threshold ────────────────────────────────
+  One claim here is at strength D and is not shown in this
+  rendering: "the 2019 transfer preceded any authorising
+  resolution we could find."  [ show it anyway ]
+
+  ── not shown at this threshold · CUTS AGAINST THIS CASE ───────
+  One claim here cuts against this case and is at strength D, so
+  this rendering drops it: INQ-2026-0021.  [ show it anyway ]
+```
+
+Four rules this obeys, each from `AUDIENCES.md`:
+
+- **H4 · in-band, without exception.** A rendering is a file and files get
+  forwarded. The threshold and the exclusions are inside the artifact.
+- **H5 · drop CLAIMS, never QUALIFIERS.** The strength block, the completeness
+  statement, and every "what the hash does not claim" sentence are present in
+  every rendering at every threshold. Only claims are ever dropped.
+- **Row 3 · the exclusion statement is shown to everyone**, and *"showing it is
+  not optional for anyone."*
+- **Row 11 · the refuting rendering is the same rendering.** There is no
+  variant for a subject of the case, no softened tone, no defensive framing. A
+  weaker rendering for an opposing party would be a structural prior wearing a
+  protective coat.
+
+**A claim that CUTS AGAINST the case is called out by name when a threshold
+drops it.** That is invariant 7's enforcement point on the reading side:
+`inquiry_basis.role = 'cuts_against'` is not just recorded, it is the one thing
+a rendering can never drop quietly.
+
+---
+
+**S4 · A LEG AT `undetermined`**
+
+Rendered with the UNDETERMINED primitive, identically to every other place it
+appears — never as an error, never averaged into a score, never treated as zero.
+
+```
+  D · Controller's memo, 12 March 2026
+      strength undetermined
+      ⓘ  What we do not know, and why: this document has not been
+         through review, so the record does not say how its
+         connection to this case was established. That is a gap,
+         stated. It is not a weak link and it is not a strong one.
+```
+
+**Open, and I do not resolve it:** whether an `undetermined` leg should FLOOR
+the weakest-link composition (making the whole case undetermined) or SUSPEND it
+(the case is graded on its determined legs and says one leg is ungraded). Both
+are defensible; the first is safer against overclaiming and the second is
+closer to how `#assembleInstance` already behaves, returning
+`grade: null, grade_determined: false` rather than inventing one. **I don't
+know**, and it is a doctrine question rather than an implementation one.
+
+---
+
+**S5 · VERIFY — idle, matched, and not published**
+
+This is the one control on the page whose whole purpose is that the reader does
+not have to trust us. Today it is a `<button>` with no handler
+(`app.html:6856`), sitting under a sentence promising exactly this
+(`PROCESS-CATALOGUE.md` §7b item 1: *"A control that promises the record's
+central claim and does nothing."*). `op=verify` ships and is called by nothing.
+
+```
+  ┌── check a hash yourself ──────────────────────────────────────┐
+  │  Paste a sha-256. We answer from the published record only.   │
+  │  [ ......................................................... ]│
+  │  [ Check ]                                                    │
+  └───────────────────────────────────────────────────────────────┘
+
+  ── published ────────────────────────────────────────────────────
+  Yes. These published bytes have that hash:
+    INQ-2026-0007 · data/acfr-fy2024-p112.pdf · capture
+    published 1 August 2026
+  [ get the bytes ]
+
+  ── not published ────────────────────────────────────────────────
+  No published bytes have that hash.
+  We answer this from the published record and nothing else, so a
+  hash we never published and a hash that never existed look the
+  same from here. This is not a statement about the document.
+```
+
+That last sentence is the honest rendering of `verifySha`'s own property, and it
+must be said, or a reader will read "not published" as "forged".
+
+---
+
+**S6 · SUPERSEDED — pull, never push**
+
+```
+  ┌── this case has been superseded ─────────────────── --signal ─┐
+  │  On 9 July 2026 this group published a case that supersedes    │
+  │  this one and says why:                                        │
+  │      "Contract 4471 award timeline — corrected"                │
+  │      INQ-2026-0019 · [ read it ]                               │
+  │                                                                │
+  │  This page has not changed and this hash still answers. If     │
+  │  you relied on it, what you relied on is still here.           │
+  └────────────────────────────────────────────────────────────────┘
+```
+
+Supersession is **discovered by re-resolving the case's address**, exactly as a
+citation resolves to a capture first. `AUDIENCES.md` H2 is explicit that the
+naive fix — a subscriber list — inverts §8.2: the published bucket is readable
+with no credential and therefore no identity, and requiring one to receive
+corrections would make anonymous reading second-class.
+
+**What this cannot do, stated:** the record has no relationship with an external
+citer and therefore no channel to tell them the ground moved. A journalist who
+quoted this case in June is not notified and cannot be. That is a missing
+channel, and this page is where its absence is felt.
+
+---
+
+**S7 · NOT FOUND**
+
+```
+  Nothing published here has that address.
+  This group publishes at /published/<case id>. If you followed a
+  link, the case it names was never published from this instance —
+  which is not the same as saying it does not exist somewhere else.
+```
+
+---
+
+**S8 · PRINT / THE WHOLE CASE AS ONE OUTPUT**
+
+U12 makes print first-class: *"reads the sewer case start to finish, checks a
+hash, and prints it whole."* The print stylesheet is not a stripped view; it is
+the same document with the interactive affordances resolved into text:
+
+- every `[ read it ]` becomes the full address and the sha256 in mono;
+- every collapsed basis leg is expanded;
+- the rendering block (S3) prints FIRST, at full size — not as a footnote;
+- the completeness statement prints in full;
+- a footer on every page: the case id, the case sha256, the rendering sha256 if
+  any, and the date printed.
+
+**Nothing is print-hidden.** A qualifier that survives on screen and vanishes on
+paper is H5's forbidden compression performed by a stylesheet.
+
+---
+
+**S9 · THE MATERIAL SET, AND GETTING THE BYTES**
+
+Each row offers the bytes and the check. Getting bytes requires a public op that
+does not exist (§3.3 U2). A row whose bytes are named in `published_shas` but
+absent from the bucket — the S15 case in O1 — must say so rather than 404:
+
+```
+  data/acfr-fy2024-p112.pdf   sha256:c904…
+  ⓘ  This file's hash is published; its bytes have not finished
+     copying across. You can still check any copy you have against
+     the hash above.
+```
+
+---
+
+**S10 · THE PUBLISHED RECORD IS EMPTY**
+
+```
+  This group has not published any case files yet. When it does,
+  they appear here, and anyone can check them against their hashes
+  without our cooperation.
+```
+
+(This string exists today, `app.html:6850`, and is right.)
+
+---
+
+**S11 · DEGRADED — the instance cannot be reached**
+
+The one state where the published surface's own doctrine is the answer:
+
+```
+  This copy is not answering right now.
+  Published material is content-addressed. If you hold the bytes,
+  their hashes are what identify them, and any copy of this
+  record — a mirror, an export, another instance — answers the
+  same question this one would.
+```
+
+---
+
+**S12 · WHAT THIS READER CANNOT DO, and what the page must never offer**
+
+There is no act on this page. No sign-in prompt, no "contact us", no comment
+box, no share widget, no analytics. Four affordances are named here as
+**forbidden**, each with its reason, because each is the obvious next feature:
+
+| tempting | why not |
+| --- | --- |
+| a reply / right-of-response box for the subject of a case | H7 — it would put the subject inside the publisher's workspace, and Membership v2 §2 forbids the network construct that needs |
+| "get notified when this changes" | H2 — a subscriber list requires identity, and the published bucket is deliberately readable without one |
+| a "verified author" badge | H3 — it makes a pseudonymous group's case LOOK weaker without being weaker: a structural prior against a class of publisher, arriving as a feature |
+| redact / take down | H1 — published material is already reconstructible by strangers, so a published redaction is a promise the architecture cannot keep |
+
+The one legitimate inbound channel already exists and is unreachable: the
+doorbell (`op=knock`, `classes: null`, `index.mjs:545`), which quarantines what
+it receives and touches nothing. A person who believes a published claim about
+them is wrong has no channel to say so — `AUDIENCES.md` row 16 — and the doorbell
+is the shape that channel would take.
+
+### 3.3 JUSTIFICATION
+
+**Why the full case is the default and the threshold is opt-in.** A rendering is
+a file, and the file that gets forwarded is whatever the URL resolves to. If a
+threshold were sticky, or defaulted from anything about the reader, then the
+artifact most likely to escape would be the one with the most dropped. Making
+the address resolve to the whole case means the thing that travels by default is
+the thing with nothing missing.
+
+**Why the rendering block is in the document and not the chrome.** H4 is a
+statement about files, not about pages. A caveat in a header bar survives
+screenshotting and nothing else. In the body, in the print output, and above the
+first claim, it survives being copied, quoted and forwarded — which is the only
+form of survival that matters here.
+
+**Why strength is shown to every reader at every threshold.** Administrators
+*"need the finding at low threshold WITH its strength visible so a thin claim is
+not actioned as a strong one."* Hiding strength is the compellingness
+optimisation; showing it is the whole defence.
+
+**Why the basis chain distinguishes a published leg from a named one.** Because
+the alternative is a link that looks like every other link and resolves to
+nothing, and a reader learns that this record's links are unreliable — the exact
+opposite of what the page is for.
+
+**Why supersession is a property of the page rather than a notice sent.**
+Argued above from §8.2. Worth adding: it is also the cheaper thing to be right
+about. A pull model has one failure mode (the reader does not come back); a push
+model has a subscriber list, an identity requirement, a delivery channel and a
+retention question, each of which can leak.
+
+**Why there is no `case` type and this still works.** Everything above renders
+from an `inquiry` bundle in the `published` phase. A separate published-case
+object would be a second place for the same claim to live.
+
+### 3.4 DATA MODEL
+
+**Exists.** `published_bundles` and `published_shas` (§2.3), both EXEMPT from
+purge. Ops `publishedmanifest` (`classes: null`) and `verify` (`classes: null`).
+The `PUBLISHED` R2 bucket, keyed `<store>/published/<sha256>`.
+
+**What must be added. Every one of these reads the published projection ONLY —
+that is what makes them safe to expose without a credential, and it is the
+property `schema.mjs:171-176` states the tables exist to guarantee.**
+
+| # | change | why |
+| --- | --- | --- |
+| U1 | **new op `publishedcase`** — `classes: null`, non-mutating. Given a bundle id, returns from the published projection: title, ratified_at, attestor, gate_version, bundle_sha, the frozen strength, the parsed `## Conclusion` / `## What Would Falsify This` / `## What This Excludes`, the basis legs with their frozen grades, and the file manifest with per-file sha and bytes | without it there is no published case page at all. This is the single largest absence in this document |
+| U2 | **new op `publishedbytes`** — `classes: null`, non-mutating, `?sha256=`. Streams from the `PUBLISHED` bucket if and only if a `published_shas` row names that hash; 404 otherwise | "check it yourself" is not real if the bytes need a credential. It answers by hash, never by path, so it cannot be walked |
+| U3 | **new table `published_edges(from_bundle, to_bundle, kind, published)`**, PK `(from_bundle, to_bundle, kind)`, written by `op=publish` from the ratified bundle's own `references[]`, **restricted to targets that are themselves published** | gives S2 its resolvable basis links and S6 its supersession discovery, from the published projection only, with no working-corpus read. The restriction is what stops the published graph naming working material |
+| U4 | `REL_VOCAB` gains nothing for this; `supersedes` is already there (`bio-checks.mjs:759`) and has **no producer and no consumer** | S6 needs it BUILT, not merely permitted — the correction `BIO_Case_Making_v0_1.md:441` already had to make once |
+| U5 | wire the existing `Verify` button to the existing `op=verify` | one handler closes the catalogue's #1 surface-with-no-process |
+| U6 | `published_bundles.title` (P10) | so the index can show a name |
+
+**Deliberately NOT added:** no `renderings` table, no `audiences` table, no
+`audience` column anywhere. A rendering is a pure function of
+`(case, threshold, format)` and storing it would make audience a property of the
+record. `DATA-MODEL.md` §2.5 says the same thing from the other side: *"whether a
+rendering's threshold excluded a leg — compare each leg's grade against the
+threshold at render time — a rendering is not record."*
+
+**The one thing that pulls the other way, and I record it unresolved.**
+`AUDIENCES.md` row 13 finds that *"a rendering that must persist is an artifact,
+not a view"* and that *"renderings that leave the building become records… the
+rendering has a noun, and the noun needs a hash, a date, and an author."* S3's
+block carries a rendering sha, a date and the case sha — computed at render
+time, not stored. **That is enough for a reader to identify what they were
+given, and not enough to re-serve it identically forever**, which is what a
+Bates-stamped production set needs. Whether BIO ever needs to re-serve a
+rendering identically is `AUDIENCES.md`'s open row 13, and it belongs to
+`action` (§4), not here. **I don't know** whether the pure-function rendering
+survives contact with the first lawyer.
+
+### 3.5 CAPABILITIES
+
+**None.** That is the design.
+
+| reader | what they get |
+| --- | --- |
+| no credential at all | the entire surface: index, case, renderings, verify, bytes, print |
+| any member | exactly the same surface. The published space must not gain anything for being signed in, or it stops being the thing a stranger can check |
+| administrator | exactly the same |
+
+**Absent without a credential, precisely:** everything in the working record.
+`op=list`, `op=search`, `op=projection`, `op=image` and every act op refuse at
+`index.mjs:1085` with 401. That refusal is currently one of `CAPABILITIES.md`
+F-3's four with no `reason` key, and this surface must never surface it to a
+public reader anyway — a published page that shows a plane authentication error
+has leaked the existence of a working corpus into a space whose whole guarantee
+is that it never consults one.
+
+**One live defect this surface must not inherit.** `#pub` today has no way back
+to the working space or the gate (`UI-BASELINE.md` §5.1 item 2), so a signed-in
+member who clicks "View the public record" loses their session to the reload
+needed to return. If O2 lives at a real address rather than a DOM class flip,
+that dead end disappears as a side effect — which is an argument for giving the
+published space a URL of its own.
+
+### 3.6 WORKFLOW EDGES
+
+```mermaid
+flowchart TD
+  RAT["op=ratify<br/>the only way in"] --> PB[("published_bundles<br/>published_shas<br/>EXEMPT from purge")]
+  RAT --> R2[("PUBLISHED bucket<br/>store/published/sha256")]
+  RAT --> PE[("published_edges<br/>NEW — targets that are<br/>themselves published only")]
+
+  PB --> IDX["S1 · the index<br/>op=publishedmanifest"]
+  IDX --> CASE
+
+  CASE["S2 · the case in full<br/>op=publishedcase — NEW"] --> REND["S3 · a rendering<br/>pure function of<br/>case, threshold, format"]
+  REND -->|"in-band block + per-drop notice"| CASE
+  CASE --> UNDET["S4 · a leg at undetermined"]
+  CASE --> MAT["S9 · the material set"]
+  MAT --> BYTES["op=publishedbytes — NEW<br/>by hash, never by path"]
+  CASE --> PRINT["S8 · print whole<br/>nothing print-hidden"]
+  REND --> PRINT
+
+  VER["S5 · verify a hash<br/>op=verify — EXISTS, unreached"] --> PBONLY(["answers from the published<br/>projection alone: never-published<br/>and never-existed look the same"])
+
+  PE --> SUP["S6 · superseded<br/>discovered on re-resolve"]
+  SUP -->|"pull, not push"| CASE
+
+  CASE -.->|"forbidden"| NO(["no reply box · no subscribe<br/>no author badge · no redaction<br/>H7 · H2 · H3 · H1"])
+
+  classDef missing stroke-dasharray: 5 5
+  class PE,IDX,CASE,REND,UNDET,MAT,BYTES,PRINT,SUP,NO missing
+```
+
+Solid: `op=ratify`, the two published tables, the R2 bucket, and `op=verify` —
+which ships and is reached by nothing.
+
+---
+
+## 4. O3 · ACTION PAGE
+
+`action` is the one object of the three that EXISTS. `bio-checks.mjs:51-83`
+gives it `planned → active → awaiting_response → resolved | abandoned`;
+`:42-48` requires `## Plan`, `## Status`, `## Correspondence`, `## Session Log`,
+`## Review Notes`; C-2.10 (`:1285-1296`) validates `action_kind` against seven
+values, `risk_tier` against {1,2,3}, `counterparty` as non-empty, and
+`resolution` against {complied, denied, escalated, withdrawn} when resolved;
+C-11.1 (`:1298-1315`) validates a `clock[]` of `{text, description, date, basis,
+status}` and refuses a silently past-due entry.
+
+**Nothing operates it.** No op moves its state. Nothing writes
+`## Correspondence`. Nothing ages the clock. There is no Actions entry on the
+rail (`app.html:844-855`). And the one surface that creates one writes
+`counterparty: to be named` (`app.html:1752`) — D-130.
+
+### 4.1 STORYBOARD — thirteen states
+
+`data-space="working"`, `--paper`. The page is one column at `--measure-work`
+with the correspondence as a dated ledger, not a chat.
+
+---
+
+**S1 · PLANNED, COUNTERPARTY NAMED — the whole page**
+
+```
+┌─ The record › ACTN-2026-0004-cpra-sewer-transfers ────────────────┐
+│                                                                   │
+│  A records request for the sewer fund transfer authorisations     │
+│  ⬤ planned · nothing has been sent                                │
+│  records request · risk 1 of 3                                    │
+│                                                                   │
+│  ── WHO THIS IS ADDRESSED TO ───────────────────────────────────  │
+│  City of Oakland · Office of the City Administrator,              │
+│  Public Records Unit                                              │
+│  a subject in this record  →  ENT-0142                            │
+│                                                                   │
+│  ── WHY WE ARE ASKING ──────────────────────────────────────────  │
+│  This action rests on 2 findings:                                 │
+│    ▸ INQ-2026-0007 · Sewer fund transfers to the GPF · C          │
+│         published 1 Aug 2026 — this action advances it            │
+│    ▸ INQ-2026-0012 · Which body may authorise a transfer · C      │
+│         published 14 Jul 2026 — this action rests on it           │
+│  [ Name another finding this rests on… ]                          │
+│                                                                   │
+│  ── THE PLAN ───────────────────────────────────────────────────  │
+│  [## Plan, as its author wrote it]                                │
+│                                                                   │
+│  ── THE CLOCK ──────────────────────────────────────────────────  │
+│  Determination due          10 Aug 2026    pending                │
+│    because: Gov. Code §7922.535, ten days from receipt            │
+│  [ Add a date this is held to… ]                                  │
+│                                                                   │
+│  ── CORRESPONDENCE ─────────────────────────────────────────────  │
+│  Nothing has been sent or received yet.                           │
+│  [ Record something we sent… ]  [ Record something we got… ]      │
+│                                                                   │
+│  ── ACTS ───────────────────────────────────────────────────────  │
+│  [ Start it — mark this active… ]   [ Abandon it… ]               │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+Every act carries a reason and a receipt; the ladder rung is `reasoned`.
+
+---
+
+**S2 · COUNTERPARTY UNDETERMINED — the D-130 fix**
+
+The placeholder is gone. `undetermined` is a value the member CHOOSES and must
+state a basis for — the same move D-97 made at the intake gate when it made
+authority three-valued rather than forcing a caller to invent one.
+
+```
+  ── WHO THIS IS ADDRESSED TO ───────────────────────────────────
+  ⓘ  Undetermined — stated, not assumed.
+
+  What we do not know, and why:
+  [AUTHORED — EMPTY AT SHIP]
+  "We know the transfer was authorised by someone inside the
+   Finance Department and the delegation memo names no office.
+   Until we know which office holds the records, we cannot
+   address this."
+
+  recorded by Marta Quinn · 28 July 2026
+  [ Name the counterparty… ]
+
+  ⓘ  This action will not be sent while this is undetermined,
+     because there is nowhere to send it. Nothing here fills the
+     field in for you.
+```
+
+And the authoring control it replaces, which must NOT exist:
+
+```
+  ┌── WHO THIS IS ADDRESSED TO ─────────────────────────────────┐
+  │  ( ) A named counterparty                                    │
+  │      [ .................................. ]  [ find a subject ]│
+  │  ( ) Not determined yet — and here is why                    │
+  │      [ ......................................................]│
+  │        required, in your words, never filled in for you       │
+  │                                                              │
+  │  There is no third option and no default. This field is how   │
+  │  the record says who we are asking, and it will not guess.    │
+  └──────────────────────────────────────────────────────────────┘
+```
+
+**A third value is a real question I do not answer.** D-129 records that
+`undetermined` conflates *we do not know* and *there is positively none*. An
+action addressed to nobody — a public statement — may be a genuine third state
+rather than an undetermined one. **I don't know**, and the two-value form above
+is the conservative choice because it never lets "none" be recorded as "not yet
+known".
+
+---
+
+**S3 · NO BASIS — the ask rests on nothing stated**
+
+Shown, never blocked. A member may act before they can articulate why, and
+forcing a basis would produce an invented one — the D-130 failure with a
+different field. But the absence is visible and named, and it is visible on the
+PUBLISHED case too if that case ever points at this action.
+
+```
+  ── WHY WE ARE ASKING ────────────────────────────────────────
+  ⓘ  This action names no finding it rests on.
+     The record can say we asked. It cannot yet say why.
+  [ Name a finding this rests on… ]
+```
+
+---
+
+**S4 · ACTIVE — something has gone out**
+
+Correspondence is a dated ledger. Each entry names its direction, its medium,
+who it was with, and **the artifact** — and the artifact is bytes the record
+holds, hashed, not a description of them.
+
+```
+  ── CORRESPONDENCE ─────────────────────────────────────────────
+  ▸ 29 Jul 2026 · SENT · email
+    to  Public Records Unit, Office of the City Administrator
+    the request as sent    ACTN-2026-0004/data/request-29jul.pdf
+                           sha256:5b70a1…            [ open ] [ hash ]
+    recorded by Marta Quinn
+
+  [ Record something we sent… ]   [ Record something we got… ]
+```
+
+---
+
+**S5 · AWAITING RESPONSE — the clock, with its basis**
+
+```
+  ⬤ awaiting_response · sent 29 July, nothing back yet
+
+  ── THE CLOCK ──────────────────────────────────────────────────
+  Determination due       10 Aug 2026     pending · 9 days
+    because: Gov. Code §7922.535, ten days from receipt
+  Records produced        24 Aug 2026     pending · 23 days
+    because: the department's own commitment in its 30 July
+             acknowledgment
+```
+
+Every clock entry carries a `basis` — the statute, order or commitment the date
+derives from — because C-11.1 already requires one, and because a date with no
+basis is the record asserting a deadline it invented.
+
+---
+
+**S6 · OVERDUE — and the non-response is itself evidence**
+
+```
+  ⬤ awaiting_response                                    --signal
+  Determination due      10 Aug 2026     OVERDUE by 6 days
+    because: Gov. Code §7922.535, ten days from receipt
+
+  ⓘ  Nothing has come back. That is a fact about how this part of
+     the system responds, and the record can hold it as one.
+  [ Record the non-response as a finding… ]
+```
+
+The act opens an inquiry whose basis includes this action and its clock. It
+does **not** draft the finding: the member states what they conclude from the
+silence, in their words. This is D-128's declared-versus-actual flow measured on
+our own intervention — the only place in the system where BIO is the
+counterparty's counterparty.
+
+**A clock does not age itself today.** P-51 is MISSING; C-11.1 validates the
+shape and nothing writes the truth. The honest interim rendering derives
+overdue-ness ON READ against the clock, exactly as REC-8's overdue-scan does
+(derived on read against an injectable clock, no stored flag), rather than
+showing a `pending` badge on a date that has passed.
+
+---
+
+**S7 · SOMETHING CAME BACK — recording it**
+
+The most important act on this page, and the one most likely to be built wrong.
+**The surface must not let a member type what the response said instead of
+capturing it.**
+
+```
+┌─ Record what came back ──────────────────────────  reasoned ─────┐
+│                                                                   │
+│  WHAT ARRIVED                                                     │
+│  ( ) A document — I have it, or it is at an address               │
+│      [ address or file ]                                          │
+│      It is captured, hashed, and becomes a document in the        │
+│      record that this action points at.                           │
+│                                                                   │
+│  ( ) Nothing I can put my hands on — a call, a counter, a         │
+│      conversation                                                 │
+│      [ what happened, in your words — AUTHORED, empty at ship ]   │
+│      ⓘ  This is recorded as your testimony, with your name and    │
+│         the date, at grade D. That is what the record can         │
+│         honestly say about something only you witnessed. It is    │
+│         not weaker for being yours; it is different, and it       │
+│         says which.                                               │
+│                                                                   │
+│  WHEN   [ 14 Aug 2026 ]      WITH   [ Public Records Unit ]        │
+│                                                                   │
+│  ── what this will do ─────────────────────────────────────────   │
+│  · this action moves awaiting_response → active                   │
+│  · the response becomes a document in the record, pointing back    │
+│    at this action                                                  │
+│  · nothing is concluded from it. What it means is a finding        │
+│    somebody has to make.                                           │
+│                                                                    │
+│                                  [ Cancel ]   [ Record it ]        │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+The two branches mirror a distinction the store already makes: *"the RECOGNISER
+never mints a D (`op=resolve` produces only A/B/C); the model holds it so a
+member can testify (`op=resolvetestify`), never the machine"*
+(`schema.mjs:739-743`). Grade D exists precisely so a member can put an
+unwitnessed thing on the record with their name on it, and this is the same
+shape.
+
+---
+
+**S8 · RESOLVED · COMPLIED**
+
+```
+  ⬤ resolved · complied · 24 August 2026
+
+  ── WHAT CAME BACK ─────────────────────────────────────────────
+  ▸ 22 Aug · RECEIVED · records production, 41 pages
+    INFO-2026-0071-transfer-authorisations   sha256:e4a0…
+    [ open the document ]
+
+  ── WHAT THIS CHANGED ──────────────────────────────────────────
+  This action's outcome is now evidence:
+    ▸ cited as basis by INQ-2026-0026 · "Did the transfers follow
+      the delegation the ordinance created?"
+  [ Open an inquiry from what came back… ]
+
+  ⓘ  Resolved does not mean answered. It means this ask is closed.
+     What the response shows is a finding, and findings are made
+     by people.
+```
+
+---
+
+**S9 · RESOLVED · DENIED**
+
+```
+  ⬤ resolved · denied · 18 August 2026
+
+  ── WHAT CAME BACK ─────────────────────────────────────────────
+  ▸ 18 Aug · RECEIVED · written denial
+    INFO-2026-0069-cpra-denial            sha256:aa31…
+    the exemption it cites: Gov. Code §7927.705         [ open ]
+
+  ⓘ  A denial is a document like any other. It is evidence about
+     what was asked and what was refused, and it is not evidence
+     that the records do not exist.
+```
+
+That last sentence is the surface refusing to let a denial be read as a finding
+— the same discipline as *"our governor refusing is not the source failing."*
+
+---
+
+**S10 · ESCALATED**
+
+`resolution: escalated` closes this action and the escalation is a NEW action
+that rests on this one. The page shows the chain rather than growing a second
+lifecycle inside one object.
+
+```
+  ⬤ resolved · escalated · 20 August 2026
+  escalated into  ACTN-2026-0009-controller-referral
+                  a referral to the City Controller  →
+  this action rests on: INQ-2026-0007, INQ-2026-0012
+  that action rests on: this one, and INFO-2026-0069 (the denial)
+```
+
+---
+
+**S11 · ABANDONED, WITH A REASON**
+
+`abandoned` is terminal and requires an authored reason, in the shape C-2.8
+already requires for a focus disposition and C-2.10 requires for `resolution`.
+A dead end kept with its reason is what makes the next member's work cheaper
+(D-81); an action that quietly stops is indistinguishable from one never taken.
+
+---
+
+**S12 · READ-ONLY — the member cannot contribute**
+
+The page renders in full — the ask, the basis, the clock, the correspondence,
+the outcome. Every act bar is ABSENT. No greyed buttons, no explanation of a
+capability, no "sign in as someone else". A read credential reads.
+
+---
+
+**S13 · REFUSALS**
+
+Rendered verbatim with their offenders named, in the plane's own order, never
+paraphrased. The ones this page will meet:
+
+- an illegal transition (`active → planned` is not in the catalogue's edge list)
+  — refused in the surface by a pre-flight mirroring the catalogue, before the
+  plane is reached, the same way `disposePreflight` does;
+- `resolved` without a `resolution` in {complied, denied, escalated, withdrawn}
+  — C-2.10;
+- a clock entry past its date and still `pending` — C-11.1's "silently past-due"
+  refusal, which is the check catching exactly the dishonesty S6 exists to
+  prevent;
+- a counterparty that is `undetermined` with no basis — the new half of C-2.10.
+
+### 4.2 JUSTIFICATION
+
+**Why the basis is at the top, above the plan.** Because the loop is the point.
+*"the record can hold 'we wrote to the city' and cannot say 'because of these
+three findings, and here is what came back, and here is what that changed'"*
+(D-127 (b)). Putting "why we are asking" above "the plan" makes the missing
+half visible when it is missing (S3) rather than invisible.
+
+**Why one edge, read from two ends.** P-53 collapses *join an action to the
+findings that justify it* and *give a case its addressee* into one edge. From
+the action it reads *why we asked*; from the case it reads *what we did about
+it*. Two tables would be two places for one fact to disagree with itself.
+
+**Why the counterparty fix is a control shape and not just a check change.**
+D-130's own words: the fix *"has two halves and the second is the real one:
+stop writing the placeholder, and give C-2.10 a way to say the counterparty is
+not yet determined so a member is not forced to invent one to save a draft."*
+A check that permits `undetermined` without a control that OFFERS it just moves
+the invention one field over. S2's radio pair is the control; the check is what
+makes it a boundary rather than a courtesy.
+
+**Why recording a response captures bytes rather than taking prose.** Because a
+description of a document is not a document, and the whole record rests on the
+difference. The testimony branch exists because refusing to record a phone call
+does not make the phone call not have happened — it makes the record silently
+incomplete, which is worse. Grade D with a name and a date is the honest
+version, and `op=resolvetestify` already establishes that this is how BIO holds
+a thing only a person witnessed.
+
+**Why nothing on this page concludes anything.** Every state that could tempt a
+conclusion — complied, denied, overdue, silence — says explicitly that what it
+MEANS is a finding somebody has to make. *Derived things inform and authored
+acts bind* (D-90, invariant 8). A page that let a denial auto-produce a finding
+would be the machine making a claim.
+
+**Why an escalation is a new action rather than a state.** Because
+`resolution: escalated` is already in the catalogue and a second lifecycle
+inside one object would put two clocks, two counterparties and two
+correspondence ledgers in one bundle. The chain is also what a reader needs:
+the referral's strength depends on the denial, which depends on the request.
+
+**Why there is no Actions rail entry in this storyboard.** There should be one —
+P-52 is a MISSING surface over ops that already answer (`list`/`search` return
+actions). It is out of scope here only because this is the page, not the index.
+
+### 4.3 DATA MODEL
+
+**Exists.** `bundles.object_type = 'action'`; frontmatter `action_kind`,
+`risk_tier`, `counterparty`, `resolution`, `clock[]`; headings `## Plan`,
+`## Status`, `## Correspondence`, `## Session Log`, `## Review Notes`; checks
+C-2.10 and C-11.1. **None of it is projected onto `bundles`** — it lands in
+`fm_json` at best. There is no correspondence table, no counterparty link, no
+action op, and no edge to anything.
+
+**What must change or be added.**
+
+| # | change | why |
+| --- | --- | --- |
+| A1 | `counterparty` becomes nested and three-valued in frontmatter: `state: named \| undetermined` · `name` · `entity_id` (optional, into the subject registry) · `basis` | D-130. The shape copies `source: {locator, authority, retrieved}`, which is already how a nested frontmatter fact is written |
+| A2 | C-2.10 refuses `state: undetermined` with an empty `basis`, and refuses `state: named` with an empty `name` | the check half of D-130. Presence of a non-empty string stops being sufficient |
+| A3 | **`app.html:1752` stops emitting `action_kind: other`, `risk_tier: 1`, `counterparty: to be named`** | the other half, and the one that fixes today's record. Three literals, one line |
+| A4 | `action_basis(bundle_id, ord, target_id, target_type, kind, note, at)`, PK `(bundle_id, ord)`, indexed on `target_id` — deliberately the same shape as `inquiry_basis` | P-53's edge. `kind ∈ rests_on \| advances`. Read from the action it is *why*; read from the case it is *what we did* |
+| A5 | `correspondence(bundle_id, ord, direction, at, medium, party, artifact_bundle_id, artifact_sha, account, author, recorded_at)`, PK `(bundle_id, ord)` — a projection of a new frontmatter `correspondence[]`, exactly as `refs` projects `references[]` | `## Correspondence` is a required heading with no writer. The prose heading keeps the narrative; the array carries the structure. `author` is stamped server-side at `index.mjs`, never taken from the caller |
+| A6 | C-2.10 gains: a correspondence entry has either an `artifact_sha` that resolves in `register`, or an `account` with an `author` — never neither, never both | the capture-or-testify choice made structural rather than conventional |
+| A7 | projection columns on `bundles`, in the `source_*` / `monitor_*` family style: `action_kind`, `action_risk_tier`, `action_counterparty_state`, `action_resolution`, `action_clock_next`, `action_clock_overdue INTEGER` | so an Actions index and "what is overdue" are queries rather than scans. Each needs a `FIELDS` entry in `query.mjs:47-73` |
+| A8 | **new op `actionmove`** — a justified transition: `{id, to, reason}`, reason required and never prefilled, actor stamped server-side | no op moves an action's state. It must read the legal-edge table from the catalogue, **not** hold a second copy — `op=dispose` holds a second copy of the focus state machine (`store.mjs:1571-1579`) and that is the hazard not to repeat |
+| A9 | **new op `actioncorrespond`** — appends one `correspondence[]` entry through `lease` + `promote`, never rewriting an earlier one | append-only, because a correspondence entry that changed is itself a fact |
+| A10 | `REL_VOCAB` gains `responds_to`, WITH a producer and a consumer | the response document points back at the action. D-8 (vocabulary drift, open) must absorb it, and `BIO_Case_Making_v0_1.md:441`'s correction applies: membership of the vocabulary means only that C-6.1 will not refuse the string |
+| A11 | the clock is derived overdue ON READ against an injectable clock, no stored flag, reusing REC-8's overdue-scan consumer shape | P-51. A stored overdue flag goes stale exactly as a stored strength does |
+
+**House rules:** both new tables go before the `host_governor` block in
+`schema.mjs` and into `op=purge`'s `TABLES` (`store.mjs:4516-4518`); `reason` and
+`basis` are `NOT NULL` on anything authored, following `entity_relations` and
+`progression_exceptions`; booleans are `INTEGER NOT NULL DEFAULT 0`; timestamps
+are `TEXT`.
+
+**What I am NOT proposing:** a counterparty table. A counterparty is either an
+entity in the subject registry (`entities`, which by doctrine carries **no
+adversarial attribute**) or a string with a stated basis. A separate
+counterparty registry would be a second subject registry with a different
+doctrine attached to it, and that is exactly where a structural prior by role
+would eventually be added.
+
+### 4.4 CAPABILITIES
+
+| held | what the member gets |
+| --- | --- |
+| `contribute` | every act: move the state, record correspondence, name a basis, add a clock entry, abandon with a reason |
+| read-only / no `contribute` | the whole page, no acts, no explanation (S12) |
+| `publish` | nothing extra. Publishing a CASE is O1; an action is never published by this page |
+| administrator | holds every working capability implicitly |
+
+**Absent without `contribute`:** the plane refuses `promote`, `lease`, `acquire`
+and `capture` at gate 4 with `NOT_CAPABLE` carrying `needs` and `held`. The new
+ops A8 and A9 take `contribute` too — **no new capability token is minted.**
+`CAPABILITIES.md` is explicit that a fifth token *"would break the pattern and
+would need §5 reopened"*, and nothing about an outward action is a different
+kind of authority from writing to the working corpus.
+
+**One thing worth naming:** `risk_tier` is validated at {1,2,3} and gates
+nothing. A tier-3 action — litigation support, a grand jury referral — is
+identical in permissions to a routine records request. Whether risk tier should
+gate anything (a second member's endorsement, a ballot) is a governance question
+nobody has asked. I record it and do not answer it.
+
+### 4.5 WORKFLOW EDGES
+
+```mermaid
+flowchart TD
+  INQ["a published case<br/>INQ · published"] -->|action_basis: advances| ACT
+  FIND["a finding<br/>INQ · concluded"] -->|action_basis: rests_on| ACT
+
+  ACT["action · planned"] --> CP{"counterparty"}
+  CP -->|named| SEND
+  CP -->|"undetermined, basis stated"| HOLD["not sent — there is<br/>nowhere to send it"]
+  CP -.->|"to be named"| D130(["D-130 · REFUSED<br/>a placeholder that satisfies<br/>a check is the defect class"])
+  HOLD -->|"the counterparty is determined"| SEND
+
+  SEND["op=actionmove → active<br/>op=actioncorrespond SENT<br/>the sent artifact is captured and hashed"] --> AWAIT
+
+  AWAIT["awaiting_response<br/>clock, with its statutory basis"] --> CLOCK{"the date passes"}
+  CLOCK -->|"overdue, derived on read"| SILENCE["the non-response<br/>is itself a fact"]
+  CLOCK -->|"something arrives"| GOT
+
+  GOT{"what arrived"} -->|a document| CAP["captured, hashed<br/>a new information bundle<br/>responds_to → this action"]
+  GOT -->|"only a person saw it"| TEST["recorded as testimony<br/>grade D · named · dated<br/>never minted by the machine"]
+
+  CAP --> RES
+  TEST --> RES
+  SILENCE --> NEWINQ
+
+  RES{"resolution"} -->|complied| NEWINQ
+  RES -->|denied| NEWINQ
+  RES -->|escalated| ACT2["a NEW action<br/>resting on this one"]
+  RES -->|withdrawn| END(["closed, with a reason"])
+
+  NEWINQ["a new inquiry<br/>whose basis includes what came back<br/>— or the silence"] --> LOOP(["the consequence is evidence<br/>about how the system responds<br/>D-128, measured on our own act"])
+  LOOP -.-> INQ
+
+  ACT2 --> AWAIT
+
+  classDef missing stroke-dasharray: 5 5
+  class INQ,FIND,ACT,CP,HOLD,SEND,AWAIT,CLOCK,SILENCE,GOT,CAP,TEST,RES,ACT2,NEWINQ,LOOP,END,D130 missing
+```
+
+**Every node is dashed.** The only thing in this diagram that runs today is the
+creation of the `action` bundle itself, and it runs with a placeholder in the
+field the whole object is about.
+
+---
+
+## 5. What I could not resolve
+
+Recorded rather than decided, each with what would settle it.
+
+1. **Whether `undetermined` FLOORS or SUSPENDS the weakest-link composition**
+   (O2 S4). Flooring is safer against overclaiming; suspending matches
+   `#assembleInstance`'s existing `grade: null, grade_determined: false`.
+   Doctrine, and Bob's. **I don't know.**
+2. **Whether a rendering ever needs to be re-servable identically** —
+   `AUDIENCES.md` row 13. If it does, a rendering acquires a hash, a date, an
+   author and a table, and the pure-function model in §3.4 is insufficient.
+   Settled by the first lawyer, not by argument.
+3. **Row 14 — addressed non-public delivery.** `AUDIENCES.md` leaves it
+   `undetermined` between "it is an `action`" and "it is a third bucket", and
+   says the choice is Bob's. O3 is designed as though it is an `action`, which
+   is the way `AUDIENCES.md` leans; if it is a third bucket, O3 needs a
+   correspondence artifact that crossed no fence and O1 needs a second gate.
+4. **Whether an action needs a third counterparty value for *positively
+   nobody*** (D-129), or whether every action is addressed by definition.
+5. **Whether `risk_tier` should gate anything.** It is validated and inert.
+6. **Whether the ceremony should also be reachable from Surface B for an
+   administrator recovering a broken instance** (§1.3).
+7. **Whether building O1 in `app.html` should be allowed to create a THIRD
+   hardcoded copy of the `NEEDS` map** (`CAPABILITIES.md` F-9), or whether the
+   plane should publish `NEEDS` first. This is a real fork in the build order
+   and it is not mine to take.
+8. **Two open questions `CAPABILITIES.md` explicitly refuses**, which O1 inherits:
+   is division owner-scoped or author-scoped, and does concluding require a
+   ballot when a project has multiple owners.
+
+## 6. Corrections this pass makes to the research already written
+
+1. **`PROCESS-CATALOGUE.md` §7b item 3 says of `tools/sign-release.html:402`
+   that "There is no ratify box." There is** — `setup.mjs:637`, a textarea posted
+   to `op=ratify` at `:638`. The true claim is narrower: there is no ratify box
+   in the MEMBER client.
+2. **`DATA-MODEL.md` §2.4.4's "no column is added to either" published table is
+   right about assertions and I diverge from it for one label.**
+   `published_bundles` needs `title`, because a title is not a claim and its
+   absence is why the public index can only show bundle ids. Reasoning in §2.3
+   P10; if a later session disagrees, the argument to answer is that projecting
+   a label is a cache and projecting an assertion is a second place for it to
+   live.
+3. **My own first pass put the exclusion statement in the bytes ONLY.**
+   `DATA-MODEL.md` D3 is right that this makes it storable and not auditable,
+   and that *"which published cases excluded this document"* must be an indexed
+   lookup or invariant 7 cannot be checked at all. §2.3 P8 now takes both.
