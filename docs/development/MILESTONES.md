@@ -114,7 +114,16 @@ D-61 (an unattended writer cannot take a lease).
 **Areas:** RECORD (the scheduler), CAPTURE (the callers).
 **Depends on:** nothing. **This is the top of the ladder.**
 
-> **The hole this milestone names.** `wrangler.jsonc` declares no cron trigger and the
+> **CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the
+> reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE
+> consumers (selection-sweep, task-drain, archive-monitor, connection-derive,
+> overdue-scan), three of which landed within a week of the decision. The shape held.
+> Two things did NOT close and are the live M1 gaps: `env.SELF` is bound in no
+> `wrangler.jsonc` and by no installer, so `archive-monitor` is INERT on every deployed
+> instance; and `op=monitor` has no caller anywhere, so "a changed source produces a
+> tick" still has no producer.
+>
+> **The hole this milestone named.** `wrangler.jsonc` declares no cron trigger and the
 > plane's only Durable Object alarm is the selection sweep (a second, for the task
 > drain, is landing now). Monitoring, the fallback's eligibility clock, cadence by
 > volatility and the ageing of temporal expectations (M4) each presuppose a periodic
@@ -506,7 +515,7 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | CLIENT-RENDERED · rendered grade and method vocabulary | CAPTURE | M2 · needs D-55 |
 | CONSTRUCTS Steps 0–5a | FRAMEWORK | M3 · M4 |
 | CONSTRUCTS Steps 6–8b | FRAMEWORK · UI | M4 |
-| **no scheduler exists** | RECORD | M1 |
+| ~~no scheduler exists~~ BUILT 2026-08-01 — one DO alarm, FIVE consumers | RECORD | M1 · landed |
 | **captured content is not indexed** | RECORD | M5 |
 | **capture-byte custody at scale** | RECORD | M6 |
 | UI-PLAN U9–U14 | UI | M8 |
