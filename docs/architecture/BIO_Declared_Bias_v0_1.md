@@ -222,6 +222,68 @@ re-run in one pass rather than being stalled by every amendment. A work
 product carrying bias debt cannot advance its workproduct_state or be ratified
 for publication until the debt is settled.
 
+### RULED 2026-08-01: a HUNCH is temporary declared bias, and it is bias debt
+
+Bob, 2026-08-01 (DEC-15). **Exploration and discovery are distinct processes from
+publishing**, and the investigative phase needs something the publishing phase must
+not tolerate:
+
+> *"Sometimes a valuable element of putting a case together comes down to a hunch. A
+> hunch can come in many shapes and sizes. They can also be dead wrong. But they're
+> important factors that can help bring an investigation together when there doesn't
+> appear to be any other way to do so. But another way of looking at a hunch is that
+> it's temporary bias. The investigator thinks this is true. In order for it to be
+> useful during the investigative phases of an inquiry, hunch-based connections must be
+> given a temporary high enough grade that otherwise disconnected evidence can be
+> brought together and related where they otherwise wouldn't without that hunch.
+> However — and this is important — a hunch is bias debt. It must be cleared before a
+> finding can be published. A published case must pass the gate of sound and credible
+> without any hunch connections."*
+
+**A hunch is a connection asserted by a member ahead of its evidence.** It is declared
+bias in the exact sense this document already defines — a disposition of the
+investigator that shapes what gets related to what — and it is DECLARED rather than
+tacit, which is the whole difference between a hunch and the undeclared prior this
+construct exists to surface.
+
+**It carries a grade, and the grade is the point.** A hunch-based connection takes a
+temporary grade high enough to make otherwise disconnected evidence traversable. This is
+the only authored grade permitted above D, and it is permitted precisely because it
+cannot survive publication. `grade_source: 'hunch'` sits beside `'resolution'` (earned
+from the record) and `'testimony'` (a member's signed grade-D account), carries an author
+and a date, and is **visible as a hunch on every surface from the moment it is made** —
+not disclosed at publication. The failure this construct invites is a hunch quietly
+ageing into a fact because nobody re-read the leg, and the defence is that it never
+stops announcing itself.
+
+**And it needs no new gate, which is why this ruling sits in THIS section.** The
+paragraph above already ends: *a work product carrying bias debt cannot advance its
+workproduct_state or be ratified for publication until the debt is settled.* That was
+written for a bias statement CHANGING and leaving old analysis owed a re-run. It states
+Bob's rule exactly, reached by registering the hunch as what it is.
+
+**What CLEARING means follows from the same paragraph rather than needing its own
+ruling.** Debt is *cleared by re-running the evaluation under the current set*. Retiring
+a hunch changes the effective set; clearing the debt is re-running the analysis without
+the hunch's licensing effect. So the test is **not** "delete the leg" and **not** "leave
+it in, unrated" — it is that **the case must still hold when the hunch is removed from
+the set.** In practice a leg whose grade came from a hunch has by then either acquired a
+real grade or has none, and an ungraded leg suspends its axis (R1), so a case leaning on
+an uncleared hunch cannot publish at a claimed strength. `op=publishpreflight` refuses
+`UNCLEARED_HUNCH` and names every leg, before any signature exists.
+
+**A hunch is not an `undetermined` leg and must never be composed as one.** R1 suspends
+an axis when a grade is ABSENT; a hunch grade is PRESENT and asserted. During `open` it
+composes normally — that is what makes it useful — and the case is simply unpublishable
+while it stands. Treating a hunch as undetermined would destroy exactly the
+traversability this ruling exists to preserve.
+
+**Sequencing, stated so a later session does not conclude the bias half was forgotten:**
+registering a hunch as a first-class statement in the bias manifest needs
+`object_type: bias`, which the check catalogue does not yet carry (D-84). So the
+leg-level `grade_source` and the publication refusal ship with the claim layer, where
+they bite; the manifest registration lands with D-84.
+
 ## Differential traversal and the cross-group rerun
 
 Because the record is re-derivable, two capabilities follow:

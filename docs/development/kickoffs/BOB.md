@@ -55,14 +55,20 @@ its resolutions R1-R4. What is DONE: M9 and M10 are rungs in MILESTONES.md, 27 d
 are placed, the 36-item build order and the activation order are in the BOB INBOX, and
 DEC-6/7/8/9 are answered and recorded in the documents that now carry their reasoning.
 
+Bob then answered six of the seven open decisions in one pass, and their consequences are
+handed over in a second BOB INBOX entry — editions (published is not terminal), the HUNCH
+as temporary declared bias and bias debt, a project-declared required strength, the
+subject's right of reply gated on the DECLARATION rather than the act, impact claims
+unproven absent outside evidence, and OCR for image-only PDFs. Read DECISIONS.md DEC-4,
+12, 13, 14, 15, 17 before touching REC-14, REC-15 or REC-18: REC-14's scope changed
+materially and the inbox entry outranks RECONCILED.md section 3 where they disagree.
+
 Your first job is the standing one: read DECISIONS.md and surface every `open` entry.
-There are SEVEN and they are all genuinely his — DEC-4, DEC-12, DEC-13, DEC-14, and
-DEC-15/16/17 raised from the reconciliation. Present each as written: question, what runs
-provisionally, the alternative, the recommendation, what reversing costs. DEC-13 and
-DEC-14 come from the externally-sourced problem-domain pass and both say the design has
-something backwards; read those closely enough to defend or revise the recommendation
-rather than repeat it. NOTHING blocks on any of the seven — every one carries a
-provisional that invents nothing, and saying so is part of presenting them.
+There is ONE — DEC-16, the queue's grouping key once questions nest inside questions.
+Bob asked for more context rather than the question; that context is written into the
+entry (a concrete worked example, both branches' costs, and what getting it wrong costs,
+which is almost nothing since the key is derived at read time). Present it, and do not
+re-derive it. Nothing blocks: REC-20 ships the `case` column unpopulated.
 
 Then the work is whatever the answers create, plus RECONCILED.md section 4's remaining
 open questions (Q5 needs a design pass, Q6 was created by R2 and no file has seen it,

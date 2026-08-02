@@ -201,6 +201,159 @@ did not survive checking.
 Nothing here stops a worker; the board was empty. Nothing is superseded except the
 `MILESTONES.md` activation note, which is corrected in place and marked as history.
 
+### 2026-08-01 · BOB · SIX RULINGS FROM BOB — read this BEFORE queueing REC-14, REC-15 or REC-18
+
+Bob answered six of the seven open decisions the same day the build order was handed over.
+**Four of them change items in that handover**, and two of those change items that were
+about to be queued. Nothing here supersedes an item or stops a worker — the board is still
+being filled — but REC-14's scope is materially different from what §3 of `RECONCILED.md`
+describes, so **this entry outranks the build order where they disagree** and a worker
+taking REC-14, REC-15, REC-18 or CPDF-work must read it. Full reasoning per ruling is in
+`DECISIONS.md`; the debt rows are D-152 to D-155.
+
+**A · DEC-12 — `published` IS NOT TERMINAL. Editions.** *"A closed finding can be reopened,
+and a published case can be revised, though when republished, the edition number must be
+incremented and the case treated as a separate document."*
+
+- **REC-14** — drop terminality. `edition` becomes required frontmatter on a `published`
+  inquiry and is stamped into the ratified bytes. `published_bundles` is re-keyed
+  `(bundle_id, edition)` and APPENDS. **This closes D-144 as a feature rather than fixing
+  it as a defect** — the file was split against itself (`published_shas` appends,
+  `published_bundles` upserts) and under this ruling the append was always right. Every
+  edition keeps its own signature, attestor, time and gate version. `concluded → open` is
+  legal; reopening does NOT unpublish, and editions already published stay published.
+- **A basis leg citing a published case NAMES ITS EDITION**, or C-21.2's inheritance rule
+  has no fixed thing to compare against. A leg citing edition 1 keeps citing edition 1 —
+  it does not silently follow. **REC-17** already has the right shape for the rest: a newer
+  edition SURFACES the re-evaluation obligation and recomputes nothing on the member's
+  behalf.
+- **REC-22 / UI-18** — `publishedList()` enumerates editions rather than one row per
+  bundle; a hash resolves to its edition; prior editions stay readable.
+- **REC-16 is UNCHANGED: `PUBLISHED_CANNOT_DIVIDE` stands.** Division says the parent was
+  malformed and does not continue; an edition says the case continues and is corrected.
+  Do not collapse them because revisability arrived.
+- The completeness statement is authored FRESH per edition under C-21.1's byte-check.
+- `RECONCILED.md` §4 Q1 is CLOSED and §0's "not decided by this file" now is.
+
+**B · DEC-15 — the HUNCH. A new `grade_source`, and it unblocks REC-18.** A hunch is
+temporary declared bias: a connection grade authored ahead of its evidence, high enough to
+make otherwise disconnected evidence traversable. It is BIAS DEBT and must clear before
+publication. Doctrine is in `BIO_Declared_Bias_v0_1.md`, in the Bias debt section, because
+**the gate already existed there** — *"a work product carrying bias debt cannot advance its
+workproduct_state or be ratified for publication until the debt is settled."*
+
+- **REC-11** — `grade_source` admits `hunch` beside `resolution` and `testimony`; author
+  and date required. It is the only authored grade permitted above D.
+- **REC-12** — a hunch grade **composes normally** and is NEVER treated as `undetermined`.
+  R1 suspends an axis when a grade is ABSENT; a hunch grade is present and asserted, and
+  treating it as undetermined would destroy the traversability the ruling exists to create.
+- **REC-15** — refuse `UNCLEARED_HUNCH`, naming every leg, in the same list as
+  `NO_SIGNERS`. Before any signature exists.
+- **REC-18 IS NO LONGER `blocked` ON A RULING** — only on UI-13's registry write surface.
+  Its scope narrows: build the EARNED path (`grade_source: 'resolution'`) as the thing a
+  hunch is cleared INTO. The D1(a)-versus-D1(b) fork is closed; they were two phases of one
+  lifecycle, not two answers.
+- **UI-11 / UI-12** — a hunch leg is visibly a hunch from the moment it is made, not
+  disclosed at publication; the strength panel says the case cannot publish while one
+  stands. The failure this invites is a hunch quietly ageing into a fact.
+- Manifest registration needs `object_type: bias` (D-84, M4) and is sequenced behind it.
+  The leg-level source and the refusal ship with the claim layer. Say so in the report so
+  nobody concludes the bias half was dropped.
+
+**C · DEC-17 — a project declares the strength its work requires.**
+
+- `project` frontmatter gains `required_strength{capture, connection}` — **a PAIR per R2**,
+  because a scalar re-collapses the two axes in the one field a reader will quote. C-2.9
+  already requires a non-empty `objective` on the same object; the check goes beside it.
+- **REC-15** refuses `BELOW_PROJECT_STRENGTH` naming the axis. **REC-14** stamps the
+  declared bar into the ratified bytes beside the derived strength, so a reader sees both
+  in one frozen artifact. **UI-18** renders them together, prominently.
+- A project with no declared bar gates nothing and the case SAYS so — an absent bar is not
+  a bar of zero and must not render as one. An inquiry outside any project inherits none.
+
+**D · DEC-13 — the subject's response, and the gate is the DECLARATION not the act.**
+
+- **REC-14** — the completeness block gains the group's position on putting the case to its
+  subject: authored, justified, never prefilled, carried inside the artifact as declared
+  bias. **The gate at ratification is that the position is declared and justified — never
+  that contact happened and never that the answer was favourable.** A group with cause not
+  to give notice says so and says why; a reader weighs it like any other declared bias.
+- **REC-24** — `action_kind` gains `request_for_comment`, and it **names the specific
+  inquiries it disclosed**. This is not decoration: the Columbia review of Rolling Stone
+  found a comment request made *without specifics* was the central failure, so *"we
+  contacted them"* and *"we put these four claims to them"* must be different rows. The
+  window is authored by the group; 7–30 calendar days is GAO's sourced precedent, not a
+  constant we invent. What comes back is CAPTURED, not summarised, and a non-response is
+  recorded with its date.
+- **UI-17** — the ceremony gains the stage, ordered BEFORE signing, since authoring it
+  changes the sha.
+- D-153 records that `research/AUDIENCES.md` H4/H6 are corrected from hazards to the
+  required workflow. **The pass is deliberately NOT edited** — same treatment RECONCILED
+  gave the storyboards. Add the pointer when you add the other four.
+
+**E · DEC-14 — impact claims are unproven absent outside evidence.** REC-24's consequence
+half only. An `action`'s recorded consequence is an OUTCOME by default (a hearing convened,
+a study commissioned — ProPublica's own *"outcomes short of impact"*), which is a dated
+first-party fact needing no causal claim. Promoting it to an IMPACT claim requires a basis
+leg pointing at evidence that is **not our own action**. Unproven is a stated state on the
+R1 shape, never a fifth grade and never a low one. No new item; a constraint on a queued
+one.
+
+**F · DEC-4 — OCR is IN, and it needs a measurement first. TWO NEW ITEMS.**
+
+    ### CPDF-9 · queued
+    milestone: M2
+    scope: **Measure whether OCR is reachable at all, before anything is designed.** D-152.
+      Bob overruled the accept-the-limit recommendation: image-only PDFs must be extracted
+      AND investigated for meaningful content. Unknown and gating: a WASM OCR engine's
+      bundle size against the Worker limit, its CPU against the isolate ceiling (D-36,
+      D-56), and its accuracy on a REAL Oakland scanned exhibit rather than a clean
+      synthetic. Three placements to decide between and the measurement decides it: in-plane
+      Tier 1, the pdf-worker fleet member (I6), or an external service. COMMITS NO PRODUCT
+      CODE. Record in `MEASUREMENTS.md` with date and instrument — a vendor's documentation
+      is a claim, not a measurement, and three archive-design claims already failed here.
+    behind-interface: none — it commits no code
+    depends-on: none
+    accepts-when: `MEASUREMENTS.md` carries bundle size, CPU per page and character accuracy
+      on a named real scanned Oakland document, each with date and instrument, and a stated
+      recommendation between the three placements; negative control — run the same engine on
+      a BLANK page and confirm it yields nothing rather than plausible text, because an OCR
+      engine that hallucinates on noise is the one failure mode that would put invented text
+      in the record.
+    added: 2026-08-01 · BOB
+
+    ### CPDF-10 · queued
+    milestone: M2
+    scope: **The Tier-3 OCR path, behind whatever placement CPDF-9's measurement permits.**
+      D-152. THE PROVENANCE RULE IS THE ITEM, not the engine: extracted text carries
+      `text_source: 'layer'`, OCR carries `text_source: 'ocr'` with engine, version and
+      per-region confidence, and the two are distinguishable everywhere the text is shown,
+      cited, indexed or exported. **A basis leg resting on OCR'd text carries its image
+      region (page + rect)** so a reader checks the claim against the pixels rather than
+      against our transcription — the same discipline as answering by hash. OCR NEVER raises
+      a capture grade. A low-confidence region reads `undetermined` rather than a best guess
+      — the mojibake rule one layer up, and the reason this capability cannot become an
+      overclaiming defect. Text reaches the READING path via FW-15's wire, not merely a text
+      field, or the class is captured, readable and still ungraphed.
+    behind-interface: I2
+    depends-on: CPDF-9, CPDF-8
+    accepts-when: `cd bio-plane && npm run test:battery` green with a real image-only Oakland
+      PDF yielding text marked `text_source: 'ocr'` with per-region confidence and reaching
+      `reading_refs`, while a text-layer PDF still yields `text_source: 'layer'` and the two
+      are distinguishable in the projection, the index and an export; negative control —
+      strip the `text_source` marker and the suite fails naming an OCR'd document
+      indistinguishable from a published text layer, AND drop the confidence floor so a
+      garbled region emits a best guess and the suite fails.
+    added: 2026-08-01 · BOB
+
+FW-15's acceptance also gains an OCR'd document reaching `reading_refs`, and D-91's PDF-text
+arc gains the image-only branch.
+
+**ONE THING STILL OPEN AND IT BLOCKS NOTHING.** DEC-16 (the queue's grouping key under
+nesting) is with Bob with the context he asked for. REC-20 continues to ship the `case`
+column unpopulated, every item ungrouped, nothing invented — which is the provisional and is
+correct regardless of the answer.
+
 ---
 
 Item format:

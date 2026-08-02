@@ -206,7 +206,7 @@ for CONDUCT to enact: nothing in the queue. This turn is the last BOB turn in th
   from now on, it is YOURS.
 enacted: 2026-07-31 · CONDUCT — nothing in the queue; the enactment is operational (BOB moves to --worktree BOB; CONDUCT owns the main checkout). Reasoning in PARALLELISM.md "ONE SESSION PER WORKING TREE". Acknowledged: the main tree is CONDUCT's from here.
 
-### DEC-4 · open
+### DEC-4 · answered
 raised: 2026-07-31 · CONDUCT (lifted from CPDF-5's report)
 for: bob
 question: Should the record ever extract text from SCANNED / image-only PDFs (no text layer), or is "captured but stated as unreadable" the permanent honest answer for that document class?
@@ -216,9 +216,52 @@ blocks: none — not CPDF-6.
 alternative: never build OCR; accept that image-only documents are captured-but-unreadable and say so — the honest limit.
 recommendation: accept the limit for now. On CPDF-5's 14-document sample the scanned class is ~14% and skews to design/scan artifacts, not the deliberative record (agendas, staff reports, budgets all carry a text layer). OCR is a large capability (Tesseract-WASM or an external service) for a minority that is largely not the substance CAPTURE exists to graph. Revisit only if a substantive deliberative document turns out to be scan-only.
 reversal cost: low. Marking undetermined is honest and reversible; adding OCR later is purely additive.
-response:
-decided:
-enacted:
+response: **BUILD IT. The recommendation is OVERRULED.** Bob, 2026-08-01: *"Some PDFs will be
+  released in the public record as image only. The textual contents of these images need to be
+  extracted and investigated for meaningful content."*
+  The recommendation rested on a sample statistic — ~14% of a 14-document sample, skewing to
+  design and scan artifacts — and treated coverage as a volume question. It is not one. **A
+  document class the record can capture and can never read is a hole an adversary can put
+  things in**, and it does not have to be a large class to matter: it has to contain one
+  document. The class is also not randomly assigned. Scanned-only is what a signed order, an
+  exhibit, a handwritten annotation, a faxed correspondence and an item deliberately released
+  as an image all look like, and those are the parts of a record most likely to be the finding.
+  "Largely not the substance CAPTURE exists to graph" was an inference from a 14-document
+  sample, not a measurement of the corpus, and it should have been labelled as such.
+  ALSO OVERRULED: *"investigated for meaningful content"* puts OCR text on the READING path,
+  not merely in a text field. An image-only PDF must reach the entity axis exactly as a
+  text-layer PDF does (FW-15's L2→L3 wire), or the class is captured, readable, and still
+  ungraphed.
+this session's determinations, which follow from the ruling and are mine:
+  - **OCR TEXT IS DERIVED FROM PIXELS AND MUST NEVER BE INDISTINGUISHABLE FROM TEXT THE
+    PUBLISHER WROTE.** This is the one thing that could turn this capability into an
+    overclaiming defect, so it is structural and not a convention. Extracted text carries
+    `text_source: 'layer'`; OCR carries `text_source: 'ocr'` with the engine, its version and a
+    per-region confidence. They are different provenance and the record says so everywhere the
+    text is shown, cited or indexed. A member reading a figure must be able to tell whether the
+    document said it or a machine guessed it.
+  - **AN OCR CITATION CARRIES ITS IMAGE REGION.** A basis leg resting on OCR'd text names the
+    page and rect, so a reader checks the claim against the pixels rather than against our
+    transcription. This is the same move as `published_shas` answering by hash: the check does
+    not depend on trusting us.
+  - **OCR NEVER RAISES A CAPTURE GRADE**, and a low-confidence region reads `undetermined`
+    rather than a best guess — the mojibake rule that produced the current honest behaviour,
+    applied one layer up. A garbled OCR line is exactly the invented attribution the gate
+    doctrine forbids.
+  - **MEASUREMENT FIRST, and it is a real gate, not diligence theatre.** Whether OCR runs
+    in-plane at all is unknown: a WASM engine's size against the Worker bundle limit, and its
+    CPU against the isolate ceiling (D-56, D-36). The pdf-worker fleet member (I6) is the
+    fallback and an external service is the second. Nothing is designed before that number
+    exists — `CLAUDE.md`'s measure-do-not-assume rule, and three archive-design claims already
+    failed exactly here.
+decided: 2026-08-01 · Bob
+reasoning recorded in: this entry, and DEBT D-152 (the OCR tier with its provenance rules and
+  the measurement that gates it).
+for CONDUCT to enact: **CPDF-9** (measure OCR feasibility in workerd — bundle size, CPU, and
+  accuracy on a real Oakland scanned exhibit; commits no product code) and **CPDF-10** (the
+  Tier-3 OCR path behind whichever tier the measurement permits), both handed over in the BOB
+  INBOX and both placed on M2. D-91's PDF-text arc gains the image-only branch. FW-15's
+  acceptance gains an OCR'd document reaching `reading_refs`.
 
 ### DEC-5 · answered
 raised: 2026-07-31 · CONDUCT (lifted from CAP-3's report)
@@ -740,7 +783,7 @@ for CONDUCT to enact: DEC-10's provisional stands as the DERIVATION layer (overd
   beside the progression work, with the inbox half under M8.
 enacted:
 
-### DEC-12 · open
+### DEC-12 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q1)
 for: bob
 question: May a PUBLISHED case be revised and re-published, or is publication terminal?
@@ -763,11 +806,59 @@ recommendation: REVISABLE, with attestations accumulating. Terminal sounds stron
   makes it honest rather than a rewrite. It also matches what the bytes already do.
 reversal cost: rises with data. Once cases are published under one rule, changing it means
   reinterpreting what existing published hashes claimed.
-response:
-decided:
-enacted:
+response: **REVISABLE, WITH EDITIONS.** Bob, 2026-08-01: *"A closed finding can be reopened,
+  and a published case can be revised, though when republished, the edition number must be
+  incremented and the case treated as a separate document."*
+  The EDITION is the part the recommendation did not have and it is what makes revisable safe.
+  "Revisable" on its own is ambiguous between amending a thing and replacing it; an incremented
+  edition treated as a SEPARATE DOCUMENT settles it — edition 2 does not overwrite edition 1,
+  it joins it. So a reader who relied on edition 1's hash is not betrayed, because edition 1
+  still answers, still carries its own attestation and its own date, and still says what it
+  said. The correction stays attached to the thing corrected, which was the recommendation's
+  argument, and nothing is rewritten, which was terminality's argument. Both were reaching for
+  a property editions provide.
+  **AND IT CONVERTS D-144 FROM A DEFECT INTO A MISSING FEATURE.** The register recorded that
+  the code is split against itself: `published_shas` is keyed `(sha256, bundle_id, path)` and
+  APPENDS, so a hash stays answerable forever, while `published_bundles` is keyed on
+  `bundle_id` and UPSERTS, so re-ratifying destroys the prior signature, attestor, time and
+  gate version. Under this ruling the append is RIGHT and the upsert is simply not yet
+  edition-aware. The fix is `published_bundles` keyed `(bundle_id, edition)`, which is a smaller
+  change than either branch of the original question implied.
+  REOPENING is settled in the same sentence and is worth stating separately because a build
+  session will meet it first: `concluded → open` is a legal transition, so a finding nobody has
+  published can be reopened without ceremony. What reopening does NOT do is unpublish: editions
+  already published stay published. The inquiry's own state and its publication history are two
+  different records, and this ruling is what makes them independent.
+this session's determinations, decided rather than returned:
+  - **A CITATION NAMES AN EDITION.** If a case is a separate document per edition, then a basis
+    leg resting on a published case must say WHICH edition, or C-21.2's inheritance rule ("a
+    case built on a case cannot be stronger than the case beneath it") has no fixed thing to
+    compare against. `target_id` plus an edition, and a leg citing edition 1 keeps citing
+    edition 1 when edition 2 appears — it does not silently follow.
+  - **AND THE SUPERSESSION IS SURFACED, NOT FOLLOWED.** REC-17's re-evaluation obligation
+    already exists for exactly this shape: an inquiry whose basis names edition 1 surfaces "the
+    case you rest on has a newer edition", and the member decides. Nothing recomputes a strength
+    on their behalf, because the strength was not changed for them.
+  - **REVISING IS NOT DIVIDING.** REC-16 keeps `PUBLISHED_CANNOT_DIVIDE`. Division says the
+    parent was malformed and does not continue; a new edition says the case continues and is
+    corrected. Making a published case divisible because it is now revisable would collapse two
+    acts that mean opposite things about the original.
+  - **WHAT MAY CHANGE BETWEEN EDITIONS IS EVERYTHING, AND WHAT MAY NOT IS THE HISTORY.** An
+    edition may reach a different conclusion, drop a leg, or retract entirely. It may not alter
+    or remove a prior edition, and the exclusion statement is authored fresh per edition under
+    C-21.1's byte-check — a completeness claim carried forward unchanged is the checkbox that
+    gate exists to refuse.
+decided: 2026-08-01 · Bob
+reasoning recorded in: this entry; `research/RECONCILED.md` §4 Q1 is CLOSED by it, and §0's
+  *"whether a published bundle may be REVISED is not decided by this file"* now is.
+for CONDUCT to enact: REC-14 changes materially and the amendment is in the BOB INBOX —
+  `published` is NO LONGER TERMINAL, `edition` is required frontmatter and is stamped into the
+  ratified bytes, `published_bundles` is re-keyed `(bundle_id, edition)`, and `publishedList()`
+  enumerates editions rather than one row per bundle. REC-22's public index and UI-18's case
+  page become edition-aware (a hash resolves to its edition; prior editions stay readable).
+  D-144's disposition changes from defect-to-fix to feature-to-build under M10.
 
-### DEC-13 · open
+### DEC-13 · answered
 raised: 2026-08-01 · BOB (from PROBLEM-DOMAIN.md, the first externally-sourced pass)
 for: bob
 question: Must a case be put to its SUBJECT for response BEFORE publication, with the
@@ -797,11 +888,70 @@ recommendation: ADOPT, and make it a stage of the ceremony rather than a courtes
   tipping-off, so the window should be stated and short rather than open-ended.
 reversal cost: low now, high after the ceremony is built and cases are published under the
   other rule — a published case cannot acquire a right of reply retroactively.
-response:
-decided:
-enacted:
+response: **ADOPT — AND THE GATE IS THE DECLARATION, NOT THE ACT.** Bob, 2026-08-01: *"I would
+  suggest that the question of whether a case be put to its subject before publication with the
+  response inside the artifact should be to do so. However the publisher's determination and
+  justification on this question can be an element of the recorded bias of that group that is
+  also inside the case."*
+  **THE SECOND SENTENCE IS THE DESIGN AND IT DISSOLVES THE OBJECTION THIS ENTRY COULD NOT
+  ANSWER.** The recommendation asked for a mandatory pre-publication contact stage, and the
+  honest counter was the tipping-off hazard `AUDIENCES.md` names — a group facing a
+  non-supportive City (DEC-1: *"we expect to be seen as hostile"*) may have real cause not to
+  give notice, and a mandate would either be broken quietly or would suppress the case. A
+  mandate has exactly two failure modes and this ruling has neither, because **what is required
+  is not the contact. It is the group's DECLARED, JUSTIFIED POSITION on the contact, carried
+  inside the published artifact.** A group that sought comment says so and prints what came
+  back. A group that deliberately did not says so and says why, and a reader weighs that
+  justification exactly as they weigh any other declared bias. Nobody is forced to tip anybody
+  off, and nobody gets to be silent about having chosen not to.
+  **AND IT REUSES A CONSTRUCT RATHER THAN MINTING A GATE.** Filing this as declared bias is not
+  a filing convenience. It is correct: a decision to publish without putting specifics to the
+  subject is a *disposition of the publisher that shapes the reading*, which is the definition
+  the bias construct already carries, and it is subject to the same malformedness rule and the
+  same ratification review as every other statement. So this needs no new machinery, and it
+  makes the bias manifest — which already travels with publication as part of the evidentiary
+  record — carry the one disclosure the practice literature says is most often missing.
+  THE EXTERNAL EVIDENCE STANDS BEHIND THE FIRST SENTENCE AND IS PROFESSIONAL-STANDARDS GRADE,
+  not opinion: the SPJ code; GAGAS/Yellow Book, where obtaining the views of responsible
+  officials is a REPORTING REQUIREMENT and GAO's own protocols give an agency 7 to 30 calendar
+  days on a draft, expect a single position with the rationale for any disagreement, and print
+  the response beside the finding; and the Columbia review of Rolling Stone, which identified a
+  comment request made WITHOUT SPECIFICS as the central failure. So what `AUDIENCES.md` §9 lists
+  as hazards H4 and H6 — the pre-ratification rendering that leaves the building, and the
+  embargo — are not hazards to be avoided. They are the workflow, and that file needs correcting
+  rather than working around.
+this session's determinations, decided rather than returned:
+  - **THE ASK CARRIES SPECIFICS OR IT IS NOT AN ASK.** The Rolling Stone finding is precise and
+    it is the difference between the ceremony working and being a ritual: the action must NAME
+    THE SPECIFIC INQUIRIES it disclosed, so *"we contacted them"* and *"we put these four claims
+    to them"* are different rows in the record. `action_kind` gains `request_for_comment`, and
+    it names its inquiries the way a basis leg names its targets.
+  - **THE WINDOW IS AUTHORED BY THE GROUP, WITH 7–30 DAYS AS THE SOURCED PRECEDENT** — not a
+    constant this project invents. It is the same shape as a progression's declared due-by, and
+    DEC-10 already rules what happens when an authored clock runs out.
+  - **WHAT COMES BACK IS CAPTURED, NOT SUMMARISED**, and a non-response is recorded as a
+    non-response with its date. A refusal to reply is a dated first-party fact about the body
+    and is frequently the more useful one. This is REC-24's correspondence ledger, which already
+    has the capture-or-testify structure this needs.
+  - **THE RESPONSE MAY CHANGE THE CASE, AND THAT IS THE POINT.** A reply that supplies a
+    document or contradicts a leg re-enters as evidence and can move a strength. It does not
+    get a veto, and it does not get to be omitted.
+  - **THE GATE AT RATIFICATION IS THAT THE POSITION IS DECLARED AND JUSTIFIED — NEVER THAT THE
+    ANSWER WAS FAVOURABLE**, and never that contact happened.
+decided: 2026-08-01 · Bob
+reasoning recorded in: this entry, and DEBT D-153. **`research/AUDIENCES.md` is NOT edited**,
+  deliberately: it is a research pass, and a pass is a record of what it concluded. Correcting
+  it in place would rewrite history and hide that the practice evidence arrived later and
+  overturned it. Same treatment `RECONCILED.md` gave the storyboard files — the correction lives
+  in a live surface and a pointer goes on the pass. So D-153 records that H4 and H6 are NOT
+  hazards to be avoided but the required workflow, and that row 14's "delivery with no bucket"
+  is the main path for any case naming anybody rather than an edge case.
+for CONDUCT to enact: three amendments in the BOB INBOX. REC-14's completeness block gains the
+  subject-response declaration as a required, authored, never-prefilled element. REC-24 gains
+  `request_for_comment` and the named-inquiries link. UI-17's ceremony gains the stage, ordered
+  BEFORE signing, since authoring it changes the sha. `D-153` records the AUDIENCES correction.
 
-### DEC-14 · open
+### DEC-14 · answered
 raised: 2026-08-01 · BOB (from PROBLEM-DOMAIN.md)
 for: bob
 question: Are BIO's claims about its OWN impact held to the same evidentiary standard as
@@ -828,11 +978,54 @@ recommendation: the same standard, stated plainly — and accept that this makes
   a looser standard to our own claims than to the body's would be the exact failure the
   declared-bias doctrine exists to catch, and it would be undetectable from inside.
 reversal cost: low. It is a rule about what may be claimed, not stored data.
-response:
-decided:
-enacted:
+response: **THE SAME STANDARD, AND UNPROVEN IS THE DEFAULT.** Bob, 2026-08-01: *"I would agree
+  with the conclusions of ProPublica. Should a CivicOS group make claims about the impact of
+  its work, absent outside supporting evidence, those claims should be viewed as unproven."*
+  Invariant 7 turned on ourselves, and answered the way the record answers everything else.
+  **THE OPERATIVE CLAUSE IS "ABSENT OUTSIDE SUPPORTING EVIDENCE", and it is a narrower and
+  better rule than the recommendation offered.** The recommendation said most impact claims stay
+  UNRATED forever. That is not what this says. It says the causal claim is unproven UNTIL
+  external evidence establishes it — so impact is reachable, by the same route any other claim
+  is: cite something outside our own action. A council member's statement naming the report, a
+  staff memo referencing it, a hearing record — those are captured documents with their own
+  provenance and their own grade, and a claim resting on them is a claim like any other. What is
+  refused is impact asserted from SEQUENCE ALONE, which is precisely the claim this record would
+  refuse from a public body.
+  **AND THE PROPUBLICA VOCABULARY GIVES THE MIDDLE TERM THAT KEEPS THIS FROM BEING A RULE ABOUT
+  SILENCE.** Their methodology paper distinguishes IMPACT from OUTCOMES — *"opportunities for
+  change"* such as a hearing convened, a study commissioned, a commission appointed, which it
+  calls *"'outcomes' short of impact."* An outcome is a dated, capturable, first-party fact about
+  the body that requires NO causal claim at all. So the record carries outcomes at full strength
+  and holds impact to the standard: *"we asked on this date, this changed on that date"* is
+  fully sayable, and *"our asking caused it"* is unproven until something outside us says so.
+  The record ends up with more to say, not less.
+  WHY THE EVIDENCE MADE THIS NECESSARY RATHER THAN FASTIDIOUS, kept because a later session will
+  be tempted to soften it: Worthy's FOI study found 53% of articles sought accountability and
+  that few elicited a response, with 40% of requesters reporting their leverage DECREASED; the
+  Metaketa I coordinated trials of information-and-accountability interventions pool to
+  approximately zero. **Publication is not reliably the active ingredient.** A system that
+  assumed otherwise about itself would be running on exactly the narrative it exists to remove.
+this session's determinations, decided rather than returned:
+  - **UNPROVEN IS A STATED STATE, NOT A LOW GRADE.** It reuses the R1 shape — the chain has no
+    computed strength on that axis and names why — rather than minting a fifth grade or floating
+    an impact claim at D. A low grade would say we established it weakly; unproven says we have
+    not established it.
+  - **THE OUTCOME/IMPACT LINE IS STRUCTURAL, AT THE WRITE PATH**, not a rendering convention. An
+    `action`'s recorded consequence is an OUTCOME by default; promoting it to an impact claim
+    requires a basis leg pointing at evidence that is not our own action. Same discipline as
+    `grade_source`: the machine never mints the stronger one.
+  - **AND THE HONEST ASYMMETRY IS ALLOWED TO STAND.** A body's non-response to our action IS a
+    first-party fact about the body and is fully claimable (DEC-13, REC-24). It is our claim to
+    have CAUSED something that is held. Those are different claims and only one of them is about
+    us.
+decided: 2026-08-01 · Bob
+reasoning recorded in: this entry, and DEBT D-128's consequence half, whose delta analysis is
+  where an unguarded causal claim would otherwise have entered.
+for CONDUCT to enact: REC-24's consequence half gains the outcome/impact split and the
+  unproven state; the amendment is in the BOB INBOX. No new item — it is a constraint on one
+  already queued.
 
-### DEC-15 · open
+### DEC-15 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q4 — the only Tier-1 question that
   blocks a build item outright)
 for: bob
@@ -870,6 +1063,82 @@ recommendation: EARNED (D1(b)), with testimony kept as the honest fallback. The 
   no leg can earn anything. That is a sequencing cost, not an argument against.
 reversal cost: rises with data. Grades authored under one rule and earned under another are
   not comparable, and a published case freezes whichever it used into its own bytes.
+response: **IT RESOLVES IT — the fork was a false one, and the answer is a LIFECYCLE with a
+  gate.** Bob, 2026-08-01, prefaced *"I'm not sure if what follows helps resolve this open
+  decision. If not, keep it open and ask again."* It does, completely, and this entry records
+  why rather than merely asserting it — because the connection is not obvious and a later
+  session should be able to check the reasoning rather than take it.
+  HIS RULING, in his words: *"Exploration and discovery are distinct processes from that of
+  publishing. Sometimes a valuable element of putting a case together comes down to a hunch…
+  another way of looking at a hunch is that it's temporary bias. The investigator thinks this is
+  true. In order for it to be useful during the investigative phases of an inquiry, hunch-based
+  connections must be given a temporary high enough grade that otherwise disconnected evidence
+  can be brought together and related where they otherwise wouldn't without that hunch. However
+  — and this is important — a hunch is bias debt. It must be cleared before a finding can be
+  published. A published case must pass the gate of sound and credible without any hunch
+  connections."*
+  **WHY THIS ANSWERS THE QUESTION.** The entry asked whether a document leg's connection grade
+  is EARNED from the record or AUTHORED by the member, and treated those as exclusive. They are
+  not: they belong to different phases of the same object. **During `open`, a connection grade
+  may be AUTHORED — that is a hunch, and it is what makes the graph traversable before the
+  evidence exists. At `published`, no hunch may remain — so every leg is EARNED or is honest
+  testimony.** D1(a) and D1(b) were each describing one end of a lifecycle and arguing about
+  which was the whole thing. `grade_source` does not collapse to one value; it gains a third,
+  and the third is temporary by construction.
+  **AND IT NEEDS NO NEW GATE, WHICH IS THE FINDING THAT MATTERS FOR THE BUILD.**
+  `BIO_Declared_Bias_v0_1.md`, "Bias debt", already ends: *"A work product carrying bias debt
+  cannot advance its workproduct_state or be ratified for publication until the debt is
+  settled."* That sentence was written for a different case — a bias statement CHANGING, leaving
+  old analysis owed a re-run — and it turns out to state Bob's rule exactly. So *"a hunch must be
+  cleared before a finding can be published"* is not a new constraint on ratification. It is the
+  EXISTING constraint, reached by registering the hunch as what it is.
+  **AND IT SETTLES WHAT "CLEARED" MEANS WITHOUT ANYONE HAVING TO RULE ON IT**, which was the one
+  ambiguity I could not close on my own. Bias debt is *"cleared by re-running the evaluation
+  under the current set"*. Retiring a hunch changes the effective bias set, which marks debt,
+  which is cleared by re-running the analysis WITHOUT the hunch's licensing effect. So the test
+  is not "delete the leg" and it is not "leave it in unrated" — it is **the case must still hold
+  when the hunch is removed from the set.** In practice a leg whose grade came from a hunch has
+  either acquired a real grade by publication time or has none, and under R1 an ungraded leg
+  suspends its axis, so a case leaning on an uncleared hunch cannot publish at a claimed
+  strength. The machinery that enforces this already exists and was built for something else.
+this session's determinations, which are mechanism and therefore mine:
+  - **`grade_source` GAINS `hunch`**, beside `resolution` (earned) and `testimony` (a member's
+    signed grade-D account). A hunch grade is authored, carries an author and a date like
+    testimony, and is the ONLY authored grade permitted above D — because its whole purpose is
+    to be high enough to connect things, and its whole safety is that it cannot survive
+    publication.
+  - **A HUNCH IS VISIBLE AS A HUNCH EVERYWHERE, from the moment it is made.** Not disclosed at
+    publication — visible on the inquiry page, in the strength panel, and in any export, from
+    the first read. The failure mode this construct invites is a hunch quietly ageing into a
+    fact because nobody re-read the leg, and the defence is that it never stops announcing
+    itself.
+  - **`op=publishpreflight` REFUSES `UNCLEARED_HUNCH`, naming every leg**, in the same list as
+    `NO_SIGNERS` and the gate findings. A member learns this before signing, not after, which is
+    REC-15's entire reason for existing.
+  - **THE BIAS-BUNDLE HALF IS SEQUENCED, NOT SKIPPED.** Registering a hunch as a first-class
+    bias statement needs `object_type: bias`, which does not exist in the check catalogue (D-84,
+    placed on M4). So the leg-level `grade_source: 'hunch'` and the publication refusal ship
+    with the claim layer where they actually bite, and the manifest registration lands with
+    D-84. That is a sequencing call and it is stated so nobody later concludes the bias half was
+    forgotten.
+  - **A HUNCH IS NOT AN `undetermined` LEG AND MUST NOT BE COMPOSED AS ONE.** R1 suspends an
+    axis when a grade is ABSENT; a hunch grade is PRESENT and asserted. During `open` it composes
+    normally — that is what makes it useful — and the case is simply unpublishable while it
+    stands. Treating a hunch as undetermined would destroy exactly the traversability Bob's
+    ruling exists to preserve.
+  - **REC-18 IS NO LONGER BLOCKED ON A RULING**, only on UI-13's registry write surface. Its
+    scope changes: it builds the EARNED path (`grade_source: 'resolution'`) as the thing a hunch
+    is cleared INTO, rather than waiting to learn whether earned grades exist at all.
+decided: 2026-08-01 · Bob
+reasoning recorded in: `docs/architecture/BIO_Declared_Bias_v0_1.md`, "RULED 2026-08-01: a
+  HUNCH is temporary declared bias, and it is bias debt" — placed in the Bias debt section
+  because that is the rule it turns out to be an instance of.
+for CONDUCT to enact: amendments in the BOB INBOX to REC-11 (`grade_source` admits `hunch`),
+  REC-12 (a hunch grade composes normally and is never treated as undetermined), REC-15
+  (`UNCLEARED_HUNCH`), REC-18 (unblocked from the ruling; scope narrowed to the earned path),
+  UI-11 and UI-12 (a hunch leg is visibly a hunch, and the strength panel says the case cannot
+  publish while one stands). D-154 records the construct. No new item: every piece lands inside
+  one already queued, which is the same result the reconciliation pass found for R1–R4.
 
 ### DEC-16 · open
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q3 — your own DEC-10 ruling, whose
@@ -904,8 +1173,43 @@ recommendation: NEAREST, with one addition that costs little and repairs its wor
   inventing one.
 reversal cost: low and it stays low. The key is derived from the citation edge at read time,
   not stored, so changing it re-groups the feed and migrates nothing.
+context added 2026-08-01, at Bob's request — *"I need more context in order to understand how
+  to make the decision."* Fair; the entry assumed the collapse and stated a consequence of it.
+  The question restated from the beginning:
+  **WHAT CHANGED UNDERNEATH YOUR DEC-10 RULING.** When you ruled that the queue groups by case
+  — *"all events associated with the same focus or project should be aggregated together into a
+  single notification"* — a `focus` was a LEAF. A document connected to a focus, the focus sat
+  in a project, and that was the whole depth. The type collapse (D-127) made `focus`, `finding`
+  and `case` one recursive type, `inquiry`, whose basis legs may point at OTHER INQUIRIES. So
+  questions now nest, and "the case an event belongs to" is no longer one thing.
+  **A CONCRETE INSTANCE, which is the part the entry was missing.** Alice opens
+  INQ-1 *"Was the sewer fund misused?"*. It rests on INQ-2 *"Was the $2.1m transfer
+  authorised?"*, which Bob opens, and INQ-2 rests on INFO-88, a controller memo Bob cited. All
+  three sit in the Sewer Fund project. Now the monitor detects that the City has replaced the
+  page INFO-88 was captured from.
+  - **NEAREST ancestor:** only Bob is notified — he made the connection to INQ-2, which is the
+    nearest case. Alice, who owns the top question and may be days from publishing it, hears
+    nothing, and the leg her conclusion rests on has moved underneath her.
+  - **EVERY ancestor:** Alice and Bob are both notified. But one event now produces entries on
+    INQ-2, on INQ-1 and on the project — three groups for one thing — which breaks your own
+    *"one standing entry per (member, case)"* and re-creates the flood the relevance filter was
+    ruled in to prevent.
+  **WHY IT IS YOURS AND NOT A SESSION'S:** both branches lose something you named as
+  load-bearing in DEC-10 — the first loses the member who staked something on the leg, the
+  second loses the single standing entry. The reconciliation pass looked for a tiebreaker across
+  sixteen files and found none.
+  **WHAT IT COSTS TO GET WRONG:** very little, and this is worth knowing before spending
+  thought on it. The key is derived from the citation edge at read time and stored nowhere, so
+  changing the answer re-groups the feed on the next read and migrates no data. Nothing is
+  blocked meanwhile — REC-20 ships the column unpopulated and every item sits ungrouped, which
+  invents no home for anything.
+  **MY RECOMMENDATION IS UNCHANGED and it is a middle:** nearest by default, and an event also
+  surfaces on an ancestor once that ancestor is CONCLUDED or PUBLISHED — because that is the
+  moment a member has staked a claim on the leg and the record owes them the news. Below that,
+  silence on ancestors is right: an open question resting on forty documents should not narrate
+  all forty to whoever opened it.
 
-### DEC-17 · open
+### DEC-17 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q2 — a claim three research files
   made and this session has WITHDRAWN)
 for: bob
@@ -931,6 +1235,64 @@ recommendation: the alternative — state the limit rather than build a gate. A 
   else here. Recorded as a recommendation rather than decided because writing it down IS the
   doctrine.
 reversal cost: low. It is a rule about the cost of an act, and no stored data depends on it.
+response: **THE PROJECT DECLARES ITS REQUIRED STRENGTH, AND THE CASE PUBLISHES IT
+  PROMINENTLY.** Bob, 2026-08-01: *"As is already in the development record, the level of
+  evidentiary strength required for different purposes varies. A property of a BIO project is
+  this level of evidentiary strength. This value is prominently included in the published
+  case."*
+  **THIS IS A BETTER ANSWER THAN EITHER OPTION THE ENTRY OFFERED, and the reason is that both
+  of mine put the standard in the wrong place.** The recommendation said nothing should make an
+  unsupported case harder to state, because a global floor would refuse honest weak findings.
+  The alternative was a floor. Both assumed the standard, if any, belongs to the SYSTEM. It
+  belongs to the GROUP, and to a particular piece of their work: a project convened to decide
+  whether to refer something to an auditor needs a different standard from one convened to
+  decide whether a thing is worth looking at, and both are legitimate. A single system-wide
+  answer was always going to be wrong for one of them.
+  **AND IT THREADS `AUDIENCES.md` §5 EXACTLY, which a per-audience gate could not.** That file
+  rules that per-audience relaxation is *"a structural prior by role — the same defect as a
+  suspicion flag, with the sign reversed"*, and that a threshold belongs on a RENDERING and never
+  on ratification. A PROJECT-declared strength is not a reader property: it is authored by the
+  group, before the work, about their own intentions. Nobody's standard is set by who they are.
+  **IT ALSO ANSWERS THE ORIGINAL QUESTION IN A WAY NEITHER OPTION DID.** What makes an
+  unsupported case harder to state is not friction and not refusal. It is that **the group
+  publishes the bar it set for itself, beside the strength it reached** — so falling short is
+  legible to a reader without the system having to decide what "short" means. That is the same
+  move as the declared exclusion and the declared bias: the discipline comes from having said in
+  advance what you were going to do.
+  AND IT LANDS ON AN OPEN ITEM: `BIO_Content_Framework_v0_10.md` §12 has recorded since v0.1 that
+  a claim *"needs a standard of proof attached and that is doctrine rather than architecture. It
+  is the next design conversation, not this one."* This is that conversation, arriving.
+this session's determinations, decided rather than returned:
+  - **THE DECLARED STRENGTH IS A PAIR, per R2** — a required capture strength and a required
+    connection strength — because a scalar would re-collapse the two axes the resolutions
+    separated, in the one field a reader is most likely to quote.
+  - **IT GATES RATIFICATION WITHIN ITS OWN PROJECT, and this is the one place I am reading
+    beyond what was said.** Bob's word is *required*, and DEC-10's principle is that an authored
+    expectation is the group executing its own act rather than the system imposing one — so a
+    case falling short of its project's own declared bar is refused at `publishpreflight`,
+    naming the shortfall per axis. **The escape is loud, not absent:** the group may amend the
+    project's declared strength, and the amendment is an authored, dated, on-the-record act
+    visible in the published case. You can lower your own bar; you cannot do it quietly. If the
+    intent was instead that a shortfall PUBLISHES with the gap shown rather than being refused,
+    that is a one-line change to the preflight and nothing else moves — say so and it changes.
+  - **A PROJECT WITH NO DECLARED STRENGTH GATES NOTHING**, and the case says so rather than
+    showing a blank. `undetermined` is first-class here as everywhere; an absent bar is not a
+    bar of zero, and it must not render as one.
+  - **AN INQUIRY OUTSIDE ANY PROJECT HAS NO BAR.** The declaration is a property of a project,
+    which is a container with membership and access control, and inheriting a bar from somewhere
+    else would invent one.
+decided: 2026-08-01 · Bob
+reasoning recorded in: this entry, and DEBT D-155. `research/AUDIENCES.md` §5 is not edited
+  (same reason as D-153): its ruling that a threshold may never gate ratification stands as
+  written, and is about the AUDIENCE axis. D-155 records that the PROJECT axis is a different
+  one, authored by the group about its own work rather than assigned by reader role, and is
+  where a threshold may legitimately gate.
+for CONDUCT to enact: amendments in the BOB INBOX — `project` frontmatter gains
+  `required_strength{capture, connection}` (C-2.9 already requires a non-empty `objective`, so
+  the shape and its check have a precedent in the same object); REC-15's preflight refuses
+  `BELOW_PROJECT_STRENGTH` naming the axis; REC-14 stamps the declared bar into the ratified
+  bytes beside the derived strength, so a reader sees both in the same frozen artifact; UI-18
+  renders them together. D-155 records it.
 
 ## Answered, awaiting enactment
 
