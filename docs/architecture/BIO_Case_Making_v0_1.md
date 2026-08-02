@@ -473,6 +473,83 @@ already carries when a capture's basis moves.
 **And merging is free**, for symmetry: two members independently opening inquiries into
 the same thing is resolved by a parent that cites both. No new mechanism.
 
+## Resolutions forced by the adversarial pass, 2026-08-01
+
+The critique found 10 doctrine hits, 13 correctness, 3 usability. Four are contradictions
+in THIS design rather than in the code, so they are resolved here. All four were verified
+against the source before deciding.
+
+### R1 · An UNDETERMINED leg SUSPENDS the chain. It does not floor it and is never ignored.
+
+The three storyboards gave three different answers, and the code they proposed reusing
+gives a fourth: `#weakerGrade` (`store.mjs:3444-3446`) ranks an unknown grade with
+`|| 0`, i.e. **below grade D** — weaker than the worst grade there is.
+
+Decided, and the reasoning is doctrinal rather than aesthetic:
+
+- **Ignoring it launders.** A chain whose weakest leg is invisible is exactly the
+  overclaiming this project's threat model calls the more dangerous half.
+- **Flooring it below D punishes honesty.** It would make recording `undetermined`
+  expensive, pressuring a member to invent a determination to keep a grade — which is
+  precisely the pressure D-97 removed at the intake gate and D-114 refused to recreate at
+  the publication gate. Moving that pressure into strength would reintroduce it a third
+  time.
+- **SUSPENDING states the truth.** The chain has no computed strength, and says which leg
+  is why. A case may still publish with strength stated as suspended pending that leg —
+  honest, publishable, and impossible to hide.
+
+**Consequence for the build: `#weakerGrade` MUST NOT be reused unchanged.** A null grade
+is not a weak grade; it is the absence of one, and the two must not share a rank.
+
+### R2 · Capture grade and connection grade are TWO scales and must never be composed into one number
+
+Both run A–D and they measure different things. `CAPTURE-FIDELITY.md:40` records that
+Grade A is out of a Worker's reach, and the Intake Doctrine rules that **neither axis
+substitutes for the other**. Weakest-link across a mixed chain substitutes them by
+construction — a category error this design introduced by saying "strength composes as
+the weakest link" without asking *the weakest link of what*.
+
+Decided: **strength is a PAIR, never a scalar.** A chain carries the weakest CAPTURE
+grade among its evidentiary legs and the weakest CONNECTION grade among its inferential
+legs, and nothing averages, mixes or collapses them. A rendering may show both; no
+rendering may reduce them to one letter.
+
+Two smaller consequences: **no surface may display Grade A for a direct capture** (the
+suite already has a negative control on this), and a case resting on one capture and one
+inference has two strengths, which is more honest than any single number would be.
+
+### R3 · The collapse deletes the system's only cycle guard, and must replace it explicitly
+
+Verified: `store.mjs:2092-2104` refuses a citation whose members are not `information`,
+and its comment names the side effect — *"this also catches a Project citing itself,
+which is a cycle with nothing to mean."* The only cycle protection in the record is an
+accident of a type check.
+
+Under the collapse an inquiry citing an inquiry is the POINT, so that type check goes and
+takes the guard with it — while strength becomes an unbounded recursive derive-on-read.
+A self-citing or cyclic basis graph would not merely be meaningless, it would not
+terminate.
+
+Decided: the basis graph is a DAG, enforced at write. An inquiry may not cite itself
+transitively, the refusal names the cycle it found, and derivation carries a depth bound
+whose exhaustion is reported as `undetermined` (R1) rather than as a failure.
+
+### R4 · Division must cost at least what severance costs
+
+The critique's sharpest finding, and it inverts an argument this document makes. Division
+was justified as the mechanism that stops weakest-link forcing a member to overclaim or
+stay silent. The abuse is the same mechanism: **dividing is a cheaper way to shed a
+finding that cuts against you than severing it**, and a published child currently
+discloses neither its parent nor its siblings. Invariant 7 — a finding that cuts against
+the case is surfaced as prominently as one that supports it — is defeated by a
+housekeeping operation.
+
+Decided: division carries severance's friction and then some. It requires an authored
+reason; the divided parent RECORDS where every leg went, including legs that cut against;
+and **a published child names its parent and its siblings.** A reader who can see one half
+of a divided inquiry can see that the other half exists. Without that, division is a
+laundering path with a tidy name.
+
 ## Open questions this pass must answer## Open questions this pass must answer
 
 1. Do `focus` / `project` / `action` / `case file` survive, evolve, or get replaced?
