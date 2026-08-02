@@ -74,6 +74,14 @@ with three dispositions — recorded (never surfaces), noticed (status where the
 a queue item). So each has its own HOME beyond the queue — a case, a flow model, a signal history — while the
 QUEUE stays ONE surface reaching into all three. One thing to learn; three places the work lives.
 
+**NAMING COLLISION, corrected 2026-08-01.** This document called the ladder WEIGHT. The plane already
+uses `weight` for something orthogonal and older: `selectionResolve({ …, weight = "report" })` in
+`store.mjs:1192` is the SET-APPLICATION mode — `report` proceeds and says what moved, `refuse` stops and
+hands over nothing, and `per-item` is the third mode this study added. Two different ideas under one word
+in a codebase that has already paid for exactly that (D-8's vocabulary drift, the three copies of one state
+machine). So: the LADDER is **rungs** — reversible, reasoned, terminal, attested — and **weight** stays the
+plane's set-application mode. An act has a rung; applying it to a set has a weight.
+
 **What may be PUT in the queue is catalogued in `docs/development/NOTIFICATIONS.md`** — about thirty
 generators today, sorted into three classes (FINDING, OBLIGATION, CONDITION) rather than a severity
 ladder, with the item contract (summary, detail, basis, producer-published options) and the per-item
@@ -109,7 +117,7 @@ the first time outside the record surfaces — which makes this the first real t
 the modifier generalises.
 
 | **ACT** | *doing something to a record or a set.* One motion: choose, see what it will refuse and why BEFORE it runs, author the reason, get a receipt. Ballots are acts whose status shows a tally; bulk is the same act scoped to a selection. |
-| **THE WEIGHT LADDER** | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). Orthogonal to it, an act applied to a SET carries one of three application modes: `refuse` (all-or-nothing), `report` (proceeds, says what moved), or `per-item` (each succeeds independently or is RETAINED WITH A REASON). See `NOTIFICATIONS.md`. |
+| **THE RUNG LADDER** (renamed from "weight" 2026-08-01 — see the collision note below) | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). Orthogonal to it, an act applied to a SET carries one of three application modes: `refuse` (all-or-nothing), `report` (proceeds, says what moved), or `per-item` (each succeeds independently or is RETAINED WITH A REASON). See `NOTIFICATIONS.md`. |
 | **UNDETERMINED** | a display primitive, identical in all six places it appears. |
 
 **Attestation stays distinguishable — as the top rung of the ladder, not a separate
