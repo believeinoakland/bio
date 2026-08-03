@@ -39,14 +39,20 @@ making a change another session must know about.**
 
 Nothing about this role lives in a conversation. `CLAUDE.md` auto-loads, the memory index
 auto-loads, and everything else this session needs it reads for itself. So a session is
-replaced, not migrated: end the old one, start `claude --worktree BOB`, and paste this.
+replaced, not migrated: end the old one, start a new one, and paste the block below.
+
+**The rule that matters is ONE SESSION PER CHECKOUT (DEC-3), not the command that starts
+it.** In the terminal that is `claude --worktree BOB`; in the desktop app it is a new
+session pointed at its own worktree. If no other session is live, the main checkout is
+fine and the collision DEC-3 exists to prevent cannot occur — check `git worktree list`
+and the tree's cleanliness rather than assuming either way.
 
 ```
 Kickoff: session BOB.
 
 Read CLAUDE.md, then docs/development/kickoffs/BOB.md, and follow it.
 
-State of play, 2026-08-01, after the handover turn. The sixteen-file research study in
+State of play, 2026-08-02, after the handover and the review draft. The research study in
 docs/development/research/ has been reconciled and handed to CONDUCT. RECONCILED.md is
 THE DESIGN — it resolves 38 contradictions and re-derives the build order, and where it
 disagrees with BUILD-ORDER.md / SB-CORE.md / SB-EVIDENCE.md / SB-OUTPUT.md it wins and
@@ -76,9 +82,29 @@ extractor decodes through /ToUnicode and says so), so the grade ceiling is "veri
 against the rendered image" rather than "has a text layer", and member attestation is
 offered on both paths.
 
-Then the work is whatever the answers create, plus RECONCILED.md section 4's remaining
-open questions (Q5 needs a design pass, Q6 was created by R2 and no file has seen it,
-Q11 is settled by a MEASUREMENT and not a ruling — run it and record it in
+THE LIVE THREAD IS THE REVIEW, and it is what this session is for right now. The
+consolidated record of the study is published for Bob at
+
+    https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef
+
+and he is reading it. docs/development/research/README.md describes it and carries the
+reading order for the sixteen files. He has already corrected it once — the first draft
+assumed the reader had lived in the repo, so Part 0 (orientation, the seven rules, the four
+objects, and a glossary of every term the rest uses) exists because of that. Expect the
+review to arrive as further corrections of that kind and take them the same way.
+
+**TO UPDATE THAT DOCUMENT YOU MUST PASS ITS URL.** This is a mechanism, not a note: a
+session that did not itself publish an artifact MINTS A NEW URL unless it passes `url` to
+the Artifact tool, and a new URL silently breaks the link Bob is reading from and the one
+recorded in the repo. So: rebuild the page as a file, then publish with
+`url: "https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef"`. Use
+`action: "list"` if the URL above ever goes stale. The page is self-contained HTML with no
+DOCTYPE/head/body wrapper (the tool adds them), renders mermaid natively, and must stay
+theme-aware — read the `artifact-design` skill before touching it.
+
+Then the work is whatever the review and the answers create, plus RECONCILED.md section 4's
+remaining open questions (Q5 needs a design pass, Q6 was created by R2 and no file has seen
+it, Q11 is settled by a MEASUREMENT and not a ruling — run it and record it in
 MEASUREMENTS.md). An empty decision list is a real answer and a common one.
 
 Verify before you trust. Every research pass in the study made at least one sharp claim
