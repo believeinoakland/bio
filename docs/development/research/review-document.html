@@ -280,6 +280,7 @@ footer{
   <a href="#doctrine">The seven rules</a>
   <a href="#objects">The four objects</a>
   <a href="#claims">Questions &amp; claims</a>
+  <a href="#machine">Where the machine helps</a>
   <a href="#vocab">Vocabulary</a>
   <a href="#changed">What changed</a>
   <a href="#method">How this was made</a>
@@ -512,7 +513,7 @@ footer{
     <table>
       <thead><tr><th style="width:16%">Object</th><th style="width:20%">Is</th><th>In the sewer-fund example</th></tr></thead>
       <tbody>
-        <tr><td><code>information</code></td><td><strong>Evidence.</strong> A captured document, everything known about how it reached us, <em>and what it says</em> — the extracted content, with the parts that could not be read marked as such.</td><td>The FY2024 budget PDF, captured from the city's own address on a stated date, with its bytes hashed — plus the fund names, figures and dates read out of it.</td></tr>
+        <tr><td><code>information</code></td><td><strong>Evidence.</strong> A captured document, everything known about how it reached us, and the <strong>content</strong> extracted from it — the passages, tables and figures the record can point at individually, with the parts that could not be read marked as such.</td><td>The FY2024 budget PDF, captured from the city's own address on a stated date, with its bytes hashed — plus the fund-transfer table on page 88, addressable on its own.</td></tr>
         <tr><td><code>inquiry</code></td><td><strong>A line of inquiry, at any stage of its life.</strong> A question — which may adopt an answer, becoming a finding, and may be published, becoming a case. One object in three phases; the next section is about exactly this.</td><td>“Was the $2.1m transfer authorised?” — which later concludes, and later still is published.</td></tr>
         <tr><td><code>action</code></td><td><strong>An outward engagement.</strong> Something sent to somebody outside the group, and whatever came back.</td><td>A public-records request to the city controller, its statutory deadline, and the reply.</td></tr>
         <tr><td><code>project</code></td><td><strong>A workspace.</strong> Membership and access control. Deliberately carries nothing about what is true.</td><td>“Sewer Fund” — who is working on it and who may see it.</td></tr>
@@ -520,14 +521,21 @@ footer{
     </table>
   </div>
   <div class="note">
-    <span class="lbl">What sits between the objects, and is not one of them</span>
+    <span class="lbl">Two things that are not objects, and carry most of the weight</span>
+    <p>
+      <strong>Content is what a document yields</strong> — a passage, a table, a figure, or the
+      whole document, which is just the widest extent a piece of content can have. It is the
+      unit everything else points at, because pointing at a whole document is rarely pointing
+      at anything: the reader still has to find the line. Extracting content is the step
+      between holding bytes and holding meaning.
+    </p>
     <p>
       <strong>A connection is an edge</strong> — a stated relationship between two pieces of
-      information, running through the thing they have in common. It is not a fifth object and
-      it is not part of either document; it is the link itself, and it is recorded, graded and
-      attributable like everything else. <strong>Most of the value of a record is in its
-      connections rather than its documents</strong>, because a document nobody has related to
-      anything answers no question. Connections are what make the four objects into a record
+      content, running through the thing they have in common. It is not a fifth object and
+      it is the link itself, and it is recorded, graded and attributable like everything else.
+      <strong>Most of the value of a record is in its connections rather than its
+      documents</strong>, because a document nobody has related to anything answers no
+      question. Connections are what make the four objects into a record
       instead of a filing cabinet.
     </p>
   </div>
@@ -665,16 +673,26 @@ classDiagram
       +role
       +connection_grade
     }
+    class Content {
+      +extent
+      +how_extracted
+    }
     class Document {
       +capture_grade
       +bytes_and_provenance
     }
+    class Connection {
+      +grade
+      +through_which_entity
+    }
 
     Inquiry "1" *-- "0..1" Claim : holds
     Claim "1" *-- "1..n" Leg : rests on
-    Leg "1" --> "0..1" Document : points at
+    Document "1" *-- "1..n" Content : yields
+    Leg "1" --> "0..1" Content : points at
     Leg "1" --> "0..1" Inquiry : or points at
-    note for Leg "each leg points at exactly one thing: a document, or another inquiry"
+    Connection "1" --> "2" Content : relates
+    note for Content "a passage, a table, a figure - or the whole document, which is just the widest extent"
 
 </pre>
     </div>
@@ -683,13 +701,16 @@ classDiagram
       (<code>*--</code>) is <em>composition</em> — the part cannot exist without the whole, so a
       claim belongs to one inquiry and a leg belongs to one claim. An open arrow
       (<code>--&gt;</code>) is <em>association</em> — a plain reference, pointing and nothing
-      more. Each leg points at exactly one thing, and there are exactly two kinds of thing it
-      may point at: <strong>a document</strong>, or <strong>another inquiry</strong>. The
-      second association is the recursion — a leg pointing at a concluded inquiry is how a case
-      assembles itself out of smaller findings with no extra machinery. The numbers are
-      multiplicities — and note <code>0..1</code> on the claim: that is exactly the open
-      question of whether one finding may hold several claims, written where it cannot be
-      missed.
+      more. <strong>A leg points at CONTENT, not at a document</strong> — a passage, a table, a
+      figure, or the whole document, which is simply the widest extent content can have. That
+      is the unit the rest of the system needs: a reader following a citation should land on
+      the line, not on a 300-page PDF. A leg may point instead at <strong>another
+      inquiry</strong>, and that second association is the recursion — a leg pointing at a
+      concluded inquiry is how a case assembles itself out of smaller findings with no extra
+      machinery. Note also that a <strong>connection relates two pieces of content</strong>,
+      for the same reason. The numbers are multiplicities — and <code>0..1</code> on the claim
+      is exactly the open question of whether one finding may hold several claims, written
+      where it cannot be missed.
       <br><br>
       Two fields carry more than their names show. A leg's <code>role</code> is
       <em>supports</em> or <em>cuts_against</em>, and both count toward strength identically —
@@ -761,6 +782,107 @@ stateDiagram-v2
 
 <hr class="rule">
 
+<section id="machine">
+  <h2><span class="tag">Start here</span>Where the machine helps, and where it must not</h2>
+  <p class="lede">
+    The point of the system is to make a member's work more productive and more insightful, and
+    machine assistance is central to that — not an add-on. But <em>less narrative</em> is a
+    constraint on us as much as on anyone, so what governs this is a boundary, not a feature
+    list. The boundary is one sentence: <strong>the machine may do the looking; the member does
+    the concluding.</strong>
+  </p>
+
+  <h3>Four things the machine does</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:15%">Role</th><th>What it does</th><th style="width:20%">Path verb</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Extract</strong></td>
+          <td>Turn a captured document into <em>content</em> — passages, tables, figures — and resolve the things it names to registry entries. This is what makes a document pointable-at instead of a filing cabinet.</td>
+          <td>discovering</td>
+        </tr>
+        <tr>
+          <td><strong>Pursue</strong></td>
+          <td>Take an <em>unsupported claim</em> the member authored and work it as a standing objective: find material bearing on it, and bring back candidates — some supporting, some cutting against, both offered.</td>
+          <td>discovering</td>
+        </tr>
+        <tr>
+          <td><strong>Find</strong></td>
+          <td>Search across <strong>both content and claims</strong> — the documents the record holds, and the concluded inquiries whose findings could themselves bear on this question.</td>
+          <td>exploring</td>
+        </tr>
+        <tr>
+          <td><strong>Check</strong></td>
+          <td>Read the record adversarially and <em>raise</em> what it finds: a leg that does not actually bear on its claim, an extraction that does not match the page image, a search too narrow for the completeness the case will assert, a conclusion below the strength its project declared.</td>
+          <td>across all</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <strong>Check is the role most worth building and the one most easily under-imagined.</strong>
+    This project's stated threat is its own overclaiming, so a machine reader whose whole job is
+    to argue against the group's work is aimed at the right target. It can run over a project,
+    an inquiry, a claim, an extraction or a search, and what it produces is a <em>question for a
+    member</em> — never an edit.
+  </p>
+
+  <div class="note">
+    <span class="lbl">The boundary, in four rules</span>
+    <p>
+      <strong>1 · The machine proposes; the member authors.</strong> Everything above returns
+      <em>candidates</em>. A candidate becomes part of the record only when a member performs
+      an act on it, with their name on it. This is what keeps the conclusion, the reason, the
+      falsifier and the completeness statement authored and never prefilled — the fields where
+      a suggestion would quietly become the member's testimony.
+    </p>
+    <p>
+      <strong>2 · The machine may not choose the question.</strong> It works on objectives the
+      member set — a claim they wrote, an inquiry they opened, a strength their project
+      declared. It never proposes what to be curious about. A machine that decides what is
+      worth investigating is a recommendation engine, and a recommendation engine is the
+      natural enemy of <em>less narrative</em>.
+    </p>
+    <p>
+      <strong>3 · Machine work is labelled and graded as machine work.</strong> Every bundle
+      already records how it was produced. Text a machine read is never presented as text the
+      publisher wrote; a connection a machine proposed is a <em>hunch</em> — declared bias,
+      carrying debt — until it is earned or a member attests to it.
+    </p>
+    <p>
+      <strong>4 · A checker raises; it never resolves.</strong> An adversarial pass produces
+      an item in someone's queue, not a change to the record. And no machine credential may
+      ever perform the attested act: <em>signing is a person's act, permanently.</em>
+    </p>
+  </div>
+
+  <h3>What this looks like on the member's path</h3>
+  <p>
+    A member opens an inquiry — <em>“Was the $2.1m transfer authorised?”</em> — and immediately
+    writes down what they think, as one or more claims that nothing yet supports. That is not
+    a defect in the record; it is an honest statement of a hunch, and it is where real work
+    starts. Each unsupported claim becomes a <strong>standing objective</strong>. The member
+    searches; the system pursues the same objective alongside them, across content and across
+    other groups' concluded findings. Candidates come back. The member turns the ones that
+    bear on the claim into legs — including the ones that cut against it, which are kept and
+    counted exactly like the rest. A checker, meanwhile, is asking whether the legs really
+    support what the claim says, and whether the project's declared standard has been reached.
+  </p>
+  <p>
+    <strong>None of it can be published while it rests on the assumption.</strong> A hunch is
+    bias debt, and bias debt of that one kind blocks publication — so the machine can help a
+    member chase an idea as far as they like, and the idea still has to be earned before the
+    group can sign it.
+  </p>
+  <p>
+    <em>This is a system definition, not an architecture. The roles and the boundary are
+    settled; how each is built, and which model does what, is not designed here.</em>
+  </p>
+</section>
+
+<hr class="rule">
+
 <section id="vocab">
   <h2><span class="tag">Start here</span>The vocabulary this document uses</h2>
   <p class="lede">
@@ -788,12 +910,13 @@ stateDiagram-v2
     <dt>Identifier</dt><dd>A string <b>the source itself mints to name one thing uniquely</b> — an ordinance number, a contract number, a parcel number, a case number. It matters for grading because an identifier is <i>designed</i> not to collide, so finding the same one at both ends is strong evidence the two documents mean the same thing.</dd>
     <dt>Correspondence</dt><dd>A match on attributes that <b>line up</b> rather than on a shared identifier — the same name, the same date, the same amount. Weaker than an identifier for one reason: two unrelated things can correspond by coincidence. Two contractors can share a name; two payments can share a sum.</dd>
     <dt>Grade A–D</dt><dd>How something was established. <b>A</b> the source itself says so, in its own words. <b>B</b> an <i>identifier</i> the source uses, found in captured content at both ends. <b>C</b> <i>correspondence</i> rather than identity. <b>D</b> asserted with no captured basis — recorded as testimony, with an author and a date, and not discounted for being D. <b>Grade is improvable</b>, and raising it is the clearest thing the system can offer a case.</dd>
-    <dt>Connection</dt><dd><b>An edge between two pieces of information</b>, running through the entity they share. The central construct, and the one most of a record's value sits in: documents answer nothing until something relates them. A connection carries its own grade, its own basis, and the name of whoever asserted it. Its grade is built from <b>how each end was established</b> — both ends measured the same way, so combining those two is legitimate. <b>Two limits as built, both real:</b> a connection runs between whole <i>documents</i>, though the evidence underneath it is anchored to specific passages — the anchor is discarded when the connection is formed, so following one lands you on a 300-page PDF rather than on the line. And it runs through a <i>named</i> thing, so two documents about the same <i>idea</i> that share no named entity cannot yet be connected.</dd>
+    <dt>Content</dt><dd><b>A piece of information extracted from a document</b>, and the unit the record actually points at: a passage, a table, a figure, a signature block — or the whole document, which is simply the widest extent content can have. Content carries its own <i>extent</i> (what part of the document it is) and <i>how it was extracted</i> (the publisher's own text layer, machine reading, OCR of an image, a member's transcription) — and the second of those is never hidden, because text a machine produced must never be indistinguishable from text the publisher wrote. <b>Extraction is the step between holding bytes and holding meaning:</b> nothing can be connected, cited or reasoned over until the thing being pointed at is smaller than a filing cabinet.</dd>
+    <dt>Connection</dt><dd><b>An edge between two pieces of content</b>, running through the entity they share. The central construct, and the one most of a record's value sits in: documents answer nothing until something relates them. A connection carries its own grade, its own basis, and the name of whoever asserted it. Its grade is built from <b>how each end was established</b> — both ends measured the same way, so combining those two is legitimate. <b>Two limits as built, both real:</b> a connection runs between whole <i>documents</i>, though the evidence underneath it is anchored to specific passages — the anchor is discarded when the connection is formed, so following one lands you on a 300-page PDF rather than on the line. And it runs through a <i>named</i> thing, so two documents about the same <i>idea</i> that share no named entity cannot yet be connected.</dd>
     <dt>Citation</dt><dd><b>A reference from one piece of content to another</b> — an act of pointing, carrying no claim about the world and therefore no grade. Distinct from a connection, and easy to confuse with one. As built it runs document to document; a reference <i>within</i> one document has nowhere to live yet.</dd>
     <dt>Claim</dt><dd><b>A proposition</b> — something that can be true or false. What an inquiry adopts as its answer, and the thing legs bear on. Never graded directly.</dd>
     <dt>The two graded things</dt><dd>Grade is applied to <b>two different kinds of thing</b>, and they are never combined. <b>Capture grade</b> belongs to a <i>document</i> — how its bytes were read in. <b>Connection grade</b> belongs to an <i>edge</i> — how a stated relationship was established. A document can be captured perfectly and connected weakly, and the reader needs to be told which.</dd>
     <dt>Strength</dt><dd><b>Two independent measurements, reported side by side and never composed.</b> The capture measurement is the weakest capture grade among <i>every document the conclusion reaches</i>; the connection measurement is the weakest connection grade among <i>every edge it rests on</i>. They range over different populations and answer different questions — <i>are these the bytes the body published?</i> and <i>are these things really related?</i> — so neither can stand in for the other, and no rendering reduces them to one letter.</dd>
-    <dt>Basis / leg</dt><dd>What a claim rests on. Each <b>leg</b> points at a document or at another claim, and carries a <b>role</b> — <i>supports</i> or <i>cuts against</i>. A leg that cuts against the conclusion counts toward strength exactly as a supporting one does; that is invariant 7 made storable.</dd>
+    <dt>Basis / leg</dt><dd><b>Basis is the whole; a leg is one element of it.</b> The basis is everything a claim rests on; each <b>leg</b> is a single piece of that support. The pair is kept because the rules need both — <i>the basis graph is acyclic</i> is about the whole, <i>every ungraded leg is named</i> is about the elements. Each leg points at content or at another inquiry, and carries a <b>role</b> — <i>supports</i> or <i>cuts against</i>. A leg that cuts against the conclusion counts toward strength exactly as a supporting one does; that is invariant 7 made storable.</dd>
     <dt>Not load-bearing</dt><dd>A leg with no established grade <b>contributes nothing and costs nothing</b>. It is not weighed, not averaged, does not drag the conclusion down, and does not stop it being graded. It stays in the basis, <b>named</b>, as something present but not yet carrying weight. The conclusion is graded on the legs that do carry weight, which is honest because those are the only legs it rests on. <b>Every ungraded leg is named, however many there are.</b></dd>
     <dt>Unrated</dt><dd>The boundary case: when <b>no</b> leg has an established grade, the conclusion rests on nothing established and has no computed strength at all — naming every leg that is why. It may still be published, as unrated. Punishing honesty and laundering weakness are both refused, which is why an ungraded leg is neither ranked below the worst grade nor quietly ignored.</dd>
     <dt>Hunch</dt><dd><b>An assumption held ahead of its evidence</b> — the working form of “I believe this and have not yet shown it”. It takes two shapes: a <i>connection</i> asserted before the evidence exists, graded temporarily high enough to make disconnected material traversable; and an <i>unsupported claim</i> added to an inquiry, which the system treats as a standing objective it can pursue on the member's behalf. Either way it is <i>temporary declared bias</i> — declared bias has its own entry under “Meaning”, below — and it is the <b>one kind of bias that must be cleared before publication</b>, because a hunch asserts what it has not earned.</dd>
@@ -1395,6 +1518,17 @@ flowchart BT
       at all.</strong> Those are three views of one absence: <em>there is no claim layer.</em>
       A member can capture a document, extract what it says, connect it to an entity and
       search it — and cannot state a conclusion that rests on it.
+    </p>
+    <p>
+      <strong>And there is a second absence of the same kind, one layer down.</strong> L3 is
+      called CONTENT, and content is extracted — the record stores what a machine read out of a
+      document, and can resolve a specific reference inside it to an entity. But
+      <strong>nothing in the system can point at a piece of content.</strong> Legs, citations
+      and connections all address a whole document, so the extraction exists and is
+      unaddressable: the record knows the transfer table is on page 88 and has no way to let a
+      claim cite it. Two layers, then, are named in the stack and have no object beneath the
+      name — L7 the claim, and L3 the content — and they fail together, because a claim that
+      could cite a passage is exactly what neither can express.
     </p>
     <p>
       The project's capability ladder — its ordered list of what the system is being built to

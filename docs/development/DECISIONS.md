@@ -1684,6 +1684,113 @@ response: **A HUNCH IS AN ASSUMPTION — and an unsupported claim is one, and it
     DISCOVERING, driven by the claim.
 decided: 2026-08-03 · Bob
 
+### DEC-23 · answered
+raised: 2026-08-03 · Bob, in the review of the study document
+for: bob
+question: Is CONTENT — a piece of information extracted from a document — a first-class thing
+  the record can point at, and is it the target of a leg, a citation and a connection?
+why it is Bob's: doctrine about what the record can express, and it changes the object model
+  before anything is built on it.
+provisional: DOCUMENT-level addressing was running. A leg, a citation and a connection each
+  address a whole capture or bundle; `readings`, `reading_refs` and `resolutions` already hold
+  sub-document material, and nothing can point at any of it.
+blocks: REC-11 (basis), REC-18 (leg grade), and the D-161/D-163/D-123 cluster.
+alternative: keep document-level targets and treat passage anchoring as a later refinement.
+recommendation: none offered; it arrived as a ruling, after three prior statements of it that
+  this session under-read.
+reversal cost: low today; very high once legs, citations and connections are built against
+  document identity, because every edge would need re-keying.
+response: **CONTENT IS THE UNIT THE RECORD POINTS AT, and a whole document is simply its widest
+  extent.** Bob, 2026-08-03: *"a target can be a document - but it can also be a piece of
+  content extracted from a document… we should be using the word 'content' to refer to a piece
+  of information extracted from a document, and a piece of content can be broad enough that it
+  refers to the entire document."*
+  **AND THE ANSWER TO HIS QUESTION IS YES, WITH A REASON THE STACK ALREADY CONTAINS.** He asked
+  whether extraction matters *"on the road to extracting meaning from the archive"*. `LAYERS`
+  runs L2 STRUCTURE → **L3 CONTENT** → L4 INTENT: content is already named as the layer between
+  bytes-with-shape and meaning. Nothing can be connected, cited or reasoned over until the thing
+  being pointed at is smaller than a filing cabinet — pointing at a 300-page PDF is not pointing.
+  **THE FINDING THIS EXPOSES, and it is the twin of the one the study already made about L7.**
+  The study's headline structural finding is that L7 (claim) is a named layer with no object.
+  **L3 (content) is a second one, and nobody noticed.** Extraction EXISTS — `readings` keyed by
+  capture, `reading_refs` giving each reference within a capture a kind/key/label, `resolutions`
+  keyed `(capture_sha, ref, entity_id)` and graded — but **no edge in the system can point at
+  any of it.** The record knows a reference sits at a place in a document and cannot let a claim
+  cite it. The two absences fail together: a claim that could cite a passage is exactly what
+  neither layer can express.
+  **IT ALSO COLLAPSES THREE DEBT ROWS INTO ONE PRIMITIVE.** D-161 (a connection discards the
+  passage anchor `resolutions` already holds), D-163 (a citation cannot point inside a document),
+  and D-123 (I2's element reference is PDF-shaped and office formats need a per-container form)
+  are all the same missing thing: **an addressable content extent**. They must be solved once.
+  **CONSEQUENT SHAPE, recorded so a build session does not re-derive it:** a leg points at
+  CONTENT or at another inquiry; a connection relates two pieces of CONTENT; a citation points
+  at CONTENT. Content carries its EXTENT (which part of the document) and HOW IT WAS EXTRACTED
+  (publisher text layer, machine reading, OCR, member transcription) — the second is never
+  hidden, per DEC-4: machine-produced text must never be indistinguishable from publisher text.
+  Capture grade stays a property of the DOCUMENT; how content was extracted is its own fact.
+decided: 2026-08-03 · Bob
+
+### DEC-24 · answered
+raised: 2026-08-03 · Bob, in the review of the study document
+for: bob
+question: What is the machine's role in the member's journey, and what boundary governs it?
+why it is Bob's: doctrine. It decides how much of the member's thinking the system may do, which
+  is the "less narrative" stance applied to ourselves.
+provisional: unstated, which was the problem. The only rules were negative and scattered — the
+  assembly rule (a surface may gather what a member wrote, and may not draft, suggest, template
+  or complete), the refused recommendation engine, D-89 (bias never shapes what is captured),
+  DEC-4 (OCR text never indistinguishable from publisher text), D-151/DEC-7 (a machine credential
+  may not resolve or attest).
+blocks: nothing built, and it must not stay unstated — it shapes REC-13, the queue/objectives
+  design, the evidence finder's scope and every act surface.
+alternative: leave AI out of the system definition until the substrate exists.
+recommendation: none offered; it arrived as a ruling.
+reversal cost: low now; the cost of NOT stating it is that each build session invents its own
+  boundary, which is how a recommendation engine arrives by accident.
+response: **AI IS PART OF THE SYSTEM DEFINITION NOW, AND THE BOUNDARY IS: THE MACHINE MAY DO THE
+  LOOKING; THE MEMBER DOES THE CONCLUDING.** Bob, 2026-08-03: *"We need to design the workflow so
+  that the journey is as productive and insightful as it can be. We'll integrate AI elements into
+  the framework to support those productivity and insight objectives… These promise to be very
+  important and promising capabilities related to the exploring and discovering verbs. We don't
+  need to fully architect and design them now, but they must be part of the system definition
+  now."*
+  **FOUR ROLES**, derived from his examples and placed on the path verbs:
+  - **EXTRACT** (discovering) — document → CONTENT (DEC-23), and resolve what it names to
+    registry entries. This is the role that makes everything else addressable.
+  - **PURSUE** (discovering) — an unsupported claim is a standing OBJECTIVE (DEC-22); find
+    material bearing on it and return candidates, supporting AND cutting against.
+  - **FIND** (exploring) — search across **both content and claims**: documents held, and
+    concluded inquiries whose findings bear on the question.
+  - **CHECK** (across all) — read the record ADVERSARIALLY and raise what it finds: a leg that
+    does not bear on its claim, an extraction that does not match the page image, a search too
+    narrow for the completeness the case will assert, a conclusion below its project's declared
+    required strength. Bob named the targets: *"a project, inquiries, claims, content extraction,
+    document search"*. **This is the role most worth building**: the stated threat model is
+    self-directed overclaiming, so a machine whose job is to argue against the group's own work
+    is aimed at the right target.
+  **AND HIS OTHER QUESTION IS ANSWERED YES:** an AI may research an inquiry with NO claims, or
+  one whose claims do not reach the declared strength. Both are objectives of the same kind — the
+  first is the inquiry itself, the second is the shortfall — and neither crosses the boundary,
+  because the member authored the question and the standard.
+  **THE BOUNDARY, IN FOUR RULES:**
+  1. **The machine proposes; the member authors.** Every role returns CANDIDATES; a candidate
+     enters the record only through a member act carrying their name. This is what preserves
+     authored-and-never-prefilled for the conclusion, the reason, the falsifier and the
+     completeness statement — the fields where a suggestion silently becomes testimony.
+  2. **The machine may not choose the question.** It works on objectives the member set. It never
+     proposes what to be curious about. This is the refused recommendation engine, and it is why
+     the empty EXPLORING machine-driver row stays empty as a design position.
+  3. **Machine work is labelled and graded as machine work.** `produced_by` already records mode
+     and tier on every bundle; extend rather than reinvent. Machine-read text is never presented
+     as publisher text (DEC-4); a machine-proposed connection is a HUNCH — declared bias carrying
+     debt — until earned or attested by a member.
+  4. **A checker raises; it never resolves.** An adversarial pass produces an item in a queue,
+     not a change to the record. And no machine credential performs the attested act.
+  **NOT DESIGNED HERE, and deliberately:** which model performs which role, how candidates are
+  ranked or presented, what an objective costs to run, and how a check's confidence is expressed.
+  The roles and the boundary are the system definition; the architecture is later work.
+decided: 2026-08-03 · Bob
+
 ## Answered, awaiting enactment
 
 _(none)_

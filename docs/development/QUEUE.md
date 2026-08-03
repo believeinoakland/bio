@@ -675,6 +675,67 @@ containment); the publication-bar note now carries DEC-17 correctly instead of o
 uniformity; the journey lede matches the redrawn diagram; an ACT walkthrough with its side
 effects; the assumption-first journey in Part 0.
 
+
+### 2026-08-03 · BOB · CONTENT becomes the unit the record points at (DEC-23), and AI enters the system definition (DEC-24)
+
+Review round four. Two rulings, both structural, both landing before anything is built against
+the old shape. Bob's review continues; decomposition still waits for it to finish.
+
+**DEC-23 · A LEG POINTS AT CONTENT, NOT AT A DOCUMENT — and a whole document is simply content's
+widest extent.** Bob had said this three times before this session read it correctly. Content is
+a piece of information extracted from a document: a passage, a table, a figure, or the whole
+thing. **The consequence for the object model:** a leg points at CONTENT or at another inquiry;
+a **connection relates two pieces of CONTENT**; a citation points at CONTENT. Content carries
+its EXTENT and HOW IT WAS EXTRACTED (publisher text layer / machine reading / OCR / member
+transcription), the second never hidden per DEC-4. Capture grade stays on the DOCUMENT.
+
+**AND IT EXPOSES A SECOND MISSING LAYER, recorded as D-164.** The study's headline finding is
+that **L7 (claim) is a named layer with no object**. **L3 (CONTENT) is a second one and nobody
+noticed.** Extraction already exists — `readings`, `reading_refs`, and `resolutions` keyed
+`(capture_sha, ref, entity_id)` with its own grade — and **nothing in the system can point at
+any of it.** The record knows a reference sits at a place in a document and cannot let a claim
+cite it. The two absences fail together, because a claim citing a passage is what neither can
+express.
+
+**D-164 SUPERSEDES THE FRAMING OF D-161, D-163 AND D-123.** All three are the same missing
+primitive seen three times: a connection discarding the anchor `resolutions` already holds; a
+citation unable to point inside a document; I2's element reference being PDF-shaped where office
+formats need a per-container form. **Solve the addressable content extent ONCE.** Solving them
+separately builds it three times and guarantees drift. This is a scoping change for whoever takes
+the D-123 work.
+
+**DEC-24 · THE MACHINE MAY DO THE LOOKING; THE MEMBER DOES THE CONCLUDING.** AI is part of the
+system definition now, not a later addition. **Four roles on the path verbs:** EXTRACT
+(discovering — document → content, and resolve what it names); PURSUE (discovering — an
+unsupported claim is a standing objective, DEC-22, returning candidates that support AND cut
+against); FIND (exploring — search across **both content and claims**, documents and concluded
+inquiries alike); CHECK (across all — read the record ADVERSARIALLY over a project, an inquiry,
+a claim, an extraction or a search, and RAISE what it finds). An AI may also research an inquiry
+with no claims, or one below its project's declared required strength; both are objectives of the
+same kind.
+
+**The boundary is four rules, and a build session must not soften any of them:** (1) the machine
+PROPOSES, the member AUTHORS — every role returns candidates, and a candidate enters the record
+only through a member act, which is what preserves authored-never-prefilled for the conclusion,
+the reason, the falsifier and the completeness statement; (2) the machine MAY NOT CHOOSE THE
+QUESTION — it works objectives the member set, which is why the empty EXPLORING machine-driver
+row stays empty as a design position; (3) machine work is LABELLED AND GRADED as machine work —
+extend `produced_by`, never present machine-read text as publisher text (DEC-4), and a
+machine-proposed connection is a HUNCH carrying bias debt until earned; (4) a CHECKER RAISES,
+NEVER RESOLVES — an adversarial pass produces a queue item, not a record change, and no machine
+credential performs the attested act.
+
+**Deliberately NOT designed:** which model serves which role, candidate ranking and presentation,
+what an objective costs to run, how a check expresses confidence. Roles and boundary are the
+definition; architecture is later.
+
+**Terminology, measured and settled (no change):** BASIS is already two things in shipped code —
+the SET a claim rests on (`inquiry_basis`, "the basis graph is a DAG") and a **justification
+column on four tables** (`connections`, `resolutions`, `link_verdicts`, `reuse_verdicts`) holding
+strings like *"both documents concern Sewer Fund; grade is the weaker of the two ends"* and *"the
+record holds no capture of this address"*. Renaming leg→basis would give one word three jobs and
+destroy the set/element distinction R1 and R2 depend on. **basis = the whole; leg = one element.**
+
 ---
 
 Item format:
