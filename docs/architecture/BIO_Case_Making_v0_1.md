@@ -723,6 +723,61 @@ because it planned from a hypothesis, but because it hid that it had.
   mechanical work.
 - The backward question's output is objectives (DEC-22), not commentary.
 
+### 6b · THE TWO HARD PARTS, SCOPED DOWN — 2026-08-03
+
+Both were named as blockers on specifying S11. Bob dispositioned both, and neither is a blocker
+any more.
+
+#### Resources: an ATTACHED LIST, not a model
+
+Bob: *"That depends on the action, right? But the complexity of figuring out the resources
+needed for every action is maybe too big and uncertain at this point. I would simply suggest
+that there being a means of collecting and presenting associated resource[s] be a part of the
+action plan. (a collapsable list?)"*
+
+**Adopted, and the reasoning is worth keeping because it is a general lesson about this design.**
+A typed resource model would have to decide, in advance and for every action kind, what
+categories exist — money, hours, expertise, standing, political capital, someone's willingness
+to be named — and the enumeration would be wrong for the first group that used it. **An open
+list attached to a step is honest about the uncertainty in a way a premature schema is not**,
+and it does not foreclose the schema later: real lists from real groups are the evidence a
+schema would need, and none exists yet. This is the same instinct as `MEASUREMENTS.md` — do not
+write a constant nobody measured.
+
+So: a step carries a **RESOURCES list**, free-form entries, collapsed by default and expandable.
+No enumerated categories, no required fields, no arithmetic over it. What it buys is that the
+question *"what would this cost us?"* has somewhere to live at the moment a group is deciding.
+
+#### Action preconditions: DEFERRED, with the derivation path named
+
+Bob: *"Knowing what each kind of action requires before it's worth attempting may also [be] too
+difficult to take on now. But what we do know is that it could be figured out through some
+combination of supporting evidence already gathered, mechanical means, and AI support."*
+
+**Deferred, and the second sentence is the part to keep**, because it converts an open-ended
+research problem into a bounded one with three named inputs:
+
+- **supporting evidence already gathered** — what this project has established is itself part of
+  the answer; the gap is relative to a corpus that exists, not to an abstract standard;
+- **mechanical means** — some preconditions are structural and checkable without judgement (a
+  filing window against a date, a standing requirement against who the group is, an exhaustion
+  requirement against actions already recorded);
+- **AI support** — for the procedural knowledge that is neither in the corpus nor mechanical.
+
+**What this changes for the build: the BACKWARD question is deferred; the plan is not.** A plan
+can be authored, ordered, branched, costed and labelled with support status today, with the
+member supplying what an action requires. What waits is the system ANSWERING *"what else would
+have to be true for X to be credible?"* on its own. That is a capability added later to a
+structure that already exists, not a prerequisite for it. Recorded as D-165.
+
+#### Consequence for S11
+
+With resources scoped to an attached list and preconditions deferred, **S11 is specifiable
+now** for everything except the backward question. Its state inventory can be drawn: the plan
+with its steps, dependencies, deadlines, branches keyed to outcomes, declined options with
+reasons, resources collapsed, and each element's support status. Only the *tell me what is
+missing* affordance waits on D-165.
+
 ### 7 · ONE QUESTION THIS MAP DOES NOT ANSWER, and it is Bob's
 
 **What, if any, of a plan is PUBLISHED?** A group's strategic deliberation — *we considered

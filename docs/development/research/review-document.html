@@ -812,11 +812,14 @@ stateDiagram-v2
       than it was.</li>
   </ul>
   <p>
-    Deadlines and resources sit on each step: what it costs in money, in members' hours, in
-    expertise the group may not have, and in standing to bring it at all. Plans differ by who
-    is running the project — a lawyer's, a journalist's and a campaigner's response to the same
-    finding are legitimately different — so a plan belongs to a <em>project and a finding</em>,
-    never to a person.
+    Each step carries its deadline, and a list of what it would take — money, members' hours,
+    expertise the group may not have, someone willing to put their name to it. That list is
+    deliberately just a list: kept with the step, collapsed until wanted, with no fixed
+    categories. Working out in advance what every kind of action costs would mean guessing at
+    categories before any group has used one, and the honest version of that guess is an open
+    list. Plans also differ by who is running the project — a lawyer's, a journalist's and a
+    campaigner's response to the same finding are legitimately different — so a plan belongs to
+    a <em>project and a finding</em>, never to a person.
   </p>
 
   <div class="note">
@@ -835,6 +838,15 @@ stateDiagram-v2
       missing, each of which becomes something to go and find out.
     </p>
     <p>
+      <strong>Today a member answers the backward question themselves</strong>, from their own
+      knowledge of what a filing or a referral requires. For the system to answer it would need
+      something it does not have: a model of what each kind of action demands before it is worth
+      attempting, which is procedural and differs by jurisdiction. That is deferred, and the way
+      in is known — some of it is already in what the project has established, some is
+      mechanical (does the filing window close before we could be ready?), and the rest is where
+      machine assistance earns its place.
+    </p>
+    <p>
       <strong>So the safeguard is labelling, not refusal.</strong> Every element of a plan shows
       how well supported it currently is: <strong>established</strong> (it meets the standard
       this project set for itself), <strong>short of the standard</strong> (real findings, with
@@ -851,8 +863,9 @@ stateDiagram-v2
   </div>
 
   <p>
-    <em>What is settled here is what a plan is and where it sits. How the surface is built —
-    and what it takes to answer the backward question well — is named as unfinished in Part 3.</em>
+    <em>What is settled here is what a plan is and where it sits. The one piece still missing
+    is the system answering the backward question by itself; everything else about the surface
+    can now be drawn.</em>
   </p>
 </section>
 
@@ -1543,7 +1556,7 @@ sequenceDiagram
     <h3>The Action Plan</h3>
     <p class="job">Show me every option we have in response to this finding — what each depends on, what it costs, when it must happen, and how well the evidence supports it today.</p>
     <p>The graph, not the single engagement: options with their dependencies, their deadlines, the resources each needs, and branches keyed to what each step might return. Options declined stay visible with their reason. Every element carries its support status — established, short of the standard, or hypothetical — so a plan can be built on unproven premises without ever pretending they are proven.</p>
-    <p class="needs">an eleventh surface · no states drawn yet · the plan object does not exist</p>
+    <p class="needs">an eleventh surface · no states drawn yet · the plan object does not exist · specifiable now except for the system answering the backward question</p>
   </div>
 </section>
 
@@ -1844,7 +1857,7 @@ flowchart BT
         <tr><td><strong>Sharing</strong></td><td>Publishing from the member's interface. It exists only in the operator's page; the signing tool instructs the operator to paste into a box that does not exist there.</td><td><em>Nothing this group produces can leave.</em> <span class="chip designed">split brain</span></td></tr>
         <tr><td><strong>The gate on sharing</strong></td><td>The completeness statement — the single reason a “case” is a distinct thing from a finding. No field, no storage, no check.</td><td>The one gate that stops a case overclaiming is not there. <span class="chip missing">missing</span></td></tr>
         <tr><td><strong>Impacting</strong></td><td>The whole action lifecycle: nothing moves an action's state, nothing records correspondence, nothing ages a deadline, and there is no way in from the menu.</td><td>The fifth stage of the path has no working parts. <span class="chip missing">missing</span></td></tr>
-        <tr><td><strong>Impacting</strong></td><td><strong>The action plan, and three things nobody has worked out yet.</strong> The plan object does not exist, and neither do the answers it needs: <em>what a resource is</em> (money, members' hours, expertise, standing — none is modelled); <em>what each kind of action actually requires</em> before it is worth attempting, which is procedural, varies by jurisdiction, and without which the backward question cannot be answered mechanically; and whether any part of a plan is ever published, which is an open decision.</td><td>The stage after a finding has no structure at all. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Impacting</strong></td><td><strong>The action plan.</strong> The object does not exist and no states are drawn, though the surface can now be specified. One capability inside it is deliberately deferred: the system answering <em>what else would have to be true for this action to be worth attempting</em>, which needs a model of what each kind of action requires — procedural, jurisdiction-specific, and reachable through a combination of what the project has already established, mechanical checks, and machine assistance. Until then a member answers it themselves.</td><td>The stage after a finding has no structure at all. <span class="chip missing">missing</span></td></tr>
         <tr><td><strong>Impacting</strong></td><td>The link from evidence to action to consequence. Nothing connects an action to the findings that justified it, or records what came back.</td><td>The record can hold “we wrote to the city” and cannot say “because of these findings, and here is the reply”. <span class="chip missing">missing</span></td></tr>
         <tr><td><strong>Every act</strong></td><td>Anything that declares <em>what may be done</em> to an object right now. So each act screen must keep its own copy of the plane's rules.</td><td>Five surfaces would each drift from the server independently. <span class="chip missing">missing</span></td></tr>
         <tr><td><strong>The public half</strong></td><td>A read path for published cases. A stranger can verify a hash and list identifiers, and cannot <em>read</em> the case.</td><td>The surface called “the reason the rest exists” has no data beneath it. <span class="chip missing">missing</span></td></tr>

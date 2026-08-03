@@ -1816,7 +1816,7 @@ response: **AI IS PART OF THE SYSTEM DEFINITION NOW, AND THE BOUNDARY IS: THE MA
   reasoning; never the sentence.**
 decided: 2026-08-03 · Bob
 
-### DEC-25 · open
+### DEC-25 · deferred
 raised: 2026-08-03 · session BOB, from Bob's action-plan ruling
 for: bob
 question: What, if any, part of an ACTION PLAN is published?
@@ -1832,14 +1832,24 @@ alternative: publish some of it — most plausibly the steps actually TAKEN and 
 recommendation: KEEP IT UNPUBLISHED, and make that structural rather than a permission check.
   What legitimately reaches the public is already covered without touching the plan: an action's
   OUTCOME can become evidence (DEC-14 governs claims about our own impact), and the group's
-  declared position on contacting the subject is published under DEC-13. Neither needs the
-  deliberation. The asymmetry that decides it: publishing the plan costs the group everything a
-  hostile counterparty would want — which options they can afford, what they are timing around,
-  what they decided against and why — and buys a reader very little the outcomes do not already
-  give them.
+  declared position on contacting the subject is published under DEC-13.
 reversal cost: low while nothing is built; high once plans exist and groups have written
-  candidly in them under one rule. **This is the entry's real urgency**: a group that wrote
-  freely believing the plan private cannot have that decision reversed on them later.
+  candidly in them under one rule.
+trigger: **a group asks to include any part of a plan in a published case**, or a published
+  case's account of what the group did is materially incomplete without it — whichever comes
+  first. Until then the never-published default costs nothing and is the safe branch.
+response: **DEFERRED.** Bob, 2026-08-03: *"I also need to defer DEC-25 for now."*
+  **AND THE DEFERRAL CARRIES ONE CONSEQUENCE A LATER SESSION MUST NOT MISS, because deferring
+  this is not neutral the way deferring most questions is.** The provisional is not merely a
+  placeholder: groups will write in their plans candidly BECAUSE the plans are private. Every
+  day the default runs, more material accumulates that was authored under a promise. **So if
+  this is ever answered the other way, it can only apply PROSPECTIVELY** — to plans written
+  after the change, with the group told before they write. Retroactively publishing deliberation
+  that was recorded under a privacy assumption would be a betrayal of the members who wrote it,
+  and it is the kind of harm this project's stance exists to refuse. Enact the deferral with
+  that constraint attached, not as a bare "not now".
+decided: 2026-08-03 · Bob
+
 
 ### DEC-26 · answered
 raised: 2026-08-03 · Bob, in the action-plan discussion
