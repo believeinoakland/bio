@@ -270,11 +270,15 @@ footer{
   </div>
 
   <div class="note why" style="margin-bottom:0;">
-    <span class="lbl">Third revision · what changed and why</span>
+    <span class="lbl">Fourth revision · what changed and why</span>
     <p>
       Part&nbsp;0 exists because the first draft assumed its reader had lived in the codebase.
-      This revision answers a second review of it, and <strong>five of the corrections changed
-      the design rather than the prose</strong> — they are recorded as rulings, not as edits.
+      The second review produced <strong>five corrections that changed the design rather than
+      the prose</strong> — recorded as rulings, not edits. This fourth revision is a full
+      front-to-back re-read for <em>sequence</em>: every term is now introduced before it is
+      used, or glossed in plain words at the point of use — the publication bar in “Who uses
+      it” no longer leans on four terms defined three sections later, and “classify what they
+      are filing” now says what it means.
     </p>
     <p>
       <strong>An ungraded leg no longer unrates a whole conclusion</strong> — it carries no
@@ -437,12 +441,12 @@ footer{
         <tr>
           <td><strong>User types</strong><br><span style="color:var(--text-3);font-size:.85rem;">people who use BIO</span></td>
           <td>The <em>primary</em> archetype is <strong>a member of a community accountability group</strong> — non-technical, volunteering their evenings, with no training in records law or evidence. It is not the only one. Journalists, lawyers, city administrators and oversight bodies run instances of their own, as does <strong>any role that involves collecting evidence and investigating, and any group trying to improve government</strong> with these capabilities. Also: the group's administrator, and the operator who installs the instance.</td>
-          <td>Capabilities, journeys and surfaces. What they are <em>allowed</em> to do and what screens they get.</td>
+          <td>What they may <em>do</em>, and which screens they get. The vocabulary below names these capabilities, journeys and surfaces.</td>
         </tr>
         <tr>
           <td><strong>Audiences</strong><br><span style="color:var(--text-3);font-size:.85rem;">readers of a published case</span></td>
           <td>Elements of the public who read a published case and use its information, analysis and conclusions: a journalist, a lawyer, a city administrator, an oversight body, the group's own future members, a member of the public.</td>
-          <td>Renderings and thresholds. How much of the case they are shown, and at what strength.</td>
+          <td>The <em>view</em> of a published case: how much of it they are shown, and how well-established a claim must be to appear in it. The vocabulary below names these renderings and thresholds.</td>
         </tr>
       </tbody>
     </table>
@@ -450,10 +454,18 @@ footer{
   <div class="note">
     <span class="lbl">And the rule that separates them, which is doctrine</span>
     <p>
-      <strong>Renderings and thresholds vary by audience. Capabilities, journeys and surfaces
-      vary by user type. Neither ever reaches ratification.</strong> There is no
-      “administrator build” with a relaxed gate. A per-reader relaxation would be a structural
-      prior by role — the same defect as a suspicion flag, with the sign reversed.
+      <strong>What varies by audience is only the view. What varies by user type is only the
+      working experience. Neither is allowed to touch the bar a case must clear to be
+      published.</strong> Publishing — the group signing a case as its own, defined properly in
+      the vocabulary below — has one set of requirements, the same for every group and every
+      reader. There is no “administrator edition” that clears a lower bar because its readers
+      are officials, and no harder bar because they are not.
+    </p>
+    <p>
+      The reason is the stance above. A case held to an easier standard because of <em>who
+      will read it</em> or <em>who wrote it</em> would build a role-based prior into the
+      record — the same defect as automatically treating documents from some office as
+      suspect, just pointing the opposite way. The record refuses both directions.
     </p>
     <p>
       <strong>The same person is often both, and that is why the split is about relationships
@@ -464,10 +476,15 @@ footer{
     </p>
   </div>
   <p>
-    The non-technical archetype is load-bearing on almost every design choice below. It is why
-    the member is never asked to classify what they are filing, why a technical failure must
-    never surface as a raw error, and why “what would prove you wrong” has to be offered as a
-    choice before it is offered as a blank text field.
+    The non-technical archetype is load-bearing on almost every design choice below. Three
+    examples, each explained fully later. When a member brings a worry to the system, they
+    write it in their own words — they are never asked to first sort it into a category like
+    “question”, “problem” or “project”, because choosing the category correctly would require
+    the analysis they came here to do. When something technical fails, the failure is
+    explained in their terms, never shown as a raw error. And when the system eventually asks
+    the hardest question in the product — <em>what would prove your conclusion wrong?</em> —
+    it first offers their own evidence to pick from, and only then a blank box, because a
+    blank box on a hard question invites a filler answer.
   </p>
 </section>
 
@@ -483,18 +500,18 @@ footer{
 
   <div class="gloss">
     <dt>Undetermined is first-class</dt>
-    <dd><b>Never invent an attribution to get past a gate.</b> If the system does not know something, it says so, in a form rendered identically everywhere. A gate that pressures someone into inventing an answer is a bug in the gate, not in the person.</dd>
+    <dd><b>Never invent an answer to get past a required field.</b> If the system does not know something — who authored a document, when a page was published — it records that it does not know, in a form rendered identically everywhere. A check that pressures someone into inventing an answer in order to proceed is a bug in the check, not in the person.</dd>
 
     <dt>An equality that costs nothing is not evidence</dt>
-    <dd>Two empty documents having the same hash agree on nothing. Our own governor refusing a request is not the source failing. A provenance step a caller can hand us is one a caller can invent. <b>All three are refused structurally, not by convention.</b></dd>
+    <dd>Two empty documents having the same digital fingerprint agree on nothing. Our own rate-limiter declining to fetch a page is not evidence the source failed. An account of where bytes came from that the sender supplies is an account the sender can invent. <b>All three are refused structurally, not by convention.</b></dd>
 
     <dt>Grade tracks how it was established, never how credible it is</dt>
     <dd>A grade says <b>what would be needed to check this</b>, not how much to believe it. A member who was in the room may produce the most valuable fact in a case at the lowest grade, and it is labelled by its author rather than discounted.</dd>
 
     <dt>A claim is worth its weakest link</dt>
-    <dd>A conclusion resting on four legs is worth the weakest one, and the surface <b>names which leg that is</b> — never a score, never an average, never a single composite letter. Twice over, because there are two different things being measured: the weakest document it reaches, and the weakest relationship it relies on.</dd>
+    <dd>A conclusion resting on four pieces of support — its <em>legs</em>, defined properly later — is worth the weakest one, and the screen <b>names which one that is</b>: never a score, never an average, never a single composite letter. Twice over, in fact, because two different things are measured — the weakest <em>document</em> the conclusion reaches, and the weakest <em>relationship</em> it relies on.</dd>
 
-    <dt>A finding that cuts against the case travels the same path as one that supports it</dt>
+    <dt>Evidence that cuts against your conclusion travels the same path as evidence that supports it</dt>
     <dd>Called <b>invariant 7</b>. Its enforcement point is that leaving something out is an authored act with a name on it, rather than an absence nobody can see.</dd>
 
     <dt>Measure, do not assume</dt>
@@ -507,7 +524,7 @@ footer{
   <p>
     One structural mechanism deserves naming here because it is referenced throughout:
     <strong>the two-bucket fence.</strong> Working material and published material live in
-    separate tables, and the public read path can only touch the published projection.
+    separate tables, and the code path that answers the public can only reach the published set.
     So answering an anonymous query <em>structurally cannot</em> leak working material — it is
     not a permission check that could be forgotten, it is a different set of tables.
   </p>
@@ -527,7 +544,7 @@ footer{
       <thead><tr><th style="width:16%">Object</th><th style="width:20%">Is</th><th>In the sewer-fund example</th></tr></thead>
       <tbody>
         <tr><td><code>information</code></td><td><strong>Evidence.</strong> A captured document, everything known about how it reached us, <em>and what it says</em> — the extracted content, with the parts that could not be read marked as such.</td><td>The FY2024 budget PDF, captured from the city's own address on a stated date, with its bytes hashed — plus the fund names, figures and dates read out of it.</td></tr>
-        <tr><td><code>inquiry</code></td><td><strong>A claim, at any stage of its life.</strong> A question, a concluded finding, or a published case — the same object in three phases.</td><td>“Was the $2.1m transfer authorised?” — which later concludes, and later still is published.</td></tr>
+        <tr><td><code>inquiry</code></td><td><strong>A line of inquiry, at any stage of its life.</strong> A question — which may adopt an answer, becoming a finding, and may be published, becoming a case. One object in three phases; the next section is about exactly this.</td><td>“Was the $2.1m transfer authorised?” — which later concludes, and later still is published.</td></tr>
         <tr><td><code>action</code></td><td><strong>An outward engagement.</strong> Something sent to somebody outside the group, and whatever came back.</td><td>A public-records request to the city controller, its statutory deadline, and the reply.</td></tr>
         <tr><td><code>project</code></td><td><strong>A workspace.</strong> Membership and access control. Deliberately carries nothing about what is true.</td><td>“Sewer Fund” — who is working on it and who may see it.</td></tr>
       </tbody>
@@ -549,8 +566,9 @@ footer{
   <div class="note">
     <span class="lbl">Why a project holds no claims, which is easy to get wrong</span>
     <p>
-      A project is a container with membership and access control; an inquiry is a claim
-      structure. <strong>Merging them would put access control on every question</strong> — so
+      A project is a container with membership and access control; an inquiry carries a
+      question, its evidence and its conclusion. <strong>Merging them would put access control
+      on every question</strong> — so
       the project workspace shows who is working on something and shows no strength, no grade
       and no conclusion.
     </p>
@@ -579,7 +597,8 @@ footer{
   </p>
   <p>
     <strong>An inquiry becomes a finding when a claim is added to it</strong> — together with
-    what the claim rests on, and with a statement of what would prove it wrong. That act is
+    what the claim rests on, and with a statement of what would prove it wrong (the
+    <em class="term">falsifier</em>, and it is required). That act is
     called <em class="term">concluding</em>, and it is not a third kind of object: it is the
     inquiry adopting a claim as its answer. This is why the evidence attaches to the
     <em>claim</em> rather than to the act of adopting it.
@@ -691,8 +710,9 @@ classDiagram
       Two fields carry more than their names show. A leg's <code>role</code> is
       <em>supports</em> or <em>cuts_against</em>, and both count toward strength identically —
       that is invariant 7 made storable. A leg's <code>connection_grade</code> <strong>may be
-      absent</strong>, and an absent one is the ungraded leg described above: it stays on the
-      diagram, carries no weight and costs none.
+      absent</strong> — a leg not yet graded. It stays in the basis, named, and neither
+      contributes to the conclusion's strength nor drags it down; the conclusion is graded on
+      the legs that carry weight. Only if <em>no</em> leg is graded is the conclusion unrated.
     </figcaption>
   </figure>
 
@@ -735,15 +755,19 @@ stateDiagram-v2
       A finding holds <strong>one</strong> claim of its own. Several propositions — <i>the
       transfer happened</i>, <i>no resolution authorised it</i>, <i>the balance fell below the
       statutory floor</i> — are expressed as <strong>separate inquiries that the larger one
-      rests on</strong>, along the dotted edge above. In that sense a finding does draw on many
+      rests on</strong> — legs pointing at concluded inquiries, which the “is a” arrow in the
+      reference tree above is what permits. In that sense a finding does draw on many
       claims: a leg pointing at a concluded inquiry is a leg pointing at that inquiry's claim.
     </p>
     <p>
-      <strong>The argument for keeping it that way is the collapse's own test.</strong> A claim
-      with legs is shaped exactly like an inquiry with legs, so a claim nested inside a finding
-      is an inquiry that has been denied its own identity — it cannot be cited by anything else,
-      published on its own, or given its own falsifier. Promoting it would rebuild the
-      multiplicity the collapse just removed.
+      <strong>The argument for keeping it that way is the same test that made inquiry one
+      object in the first place</strong> (the “collapse” — the design decision, described under
+      <em>What changed</em> below, that merged three separate object types into inquiry's three
+      phases after every defence of keeping them separate turned out to describe a phase or a
+      field, not a type). A claim with legs is shaped exactly like an inquiry with legs, so a
+      claim nested inside a finding is an inquiry that has been denied its own identity — it
+      cannot be cited by anything else, published on its own, or given its own falsifier.
+      Promoting it would rebuild the very multiplicity that merge removed.
     </p>
     <p>
       <strong>Two things could still force the change, and both are open.</strong> The first is
@@ -793,7 +817,7 @@ stateDiagram-v2
     <dt>Basis / leg</dt><dd>What a claim rests on. Each <b>leg</b> points at a document or at another claim, and carries a <b>role</b> — <i>supports</i> or <i>cuts against</i>. A leg that cuts against the conclusion counts toward strength exactly as a supporting one does; that is invariant 7 made storable.</dd>
     <dt>Not load-bearing</dt><dd>A leg with no established grade <b>contributes nothing and costs nothing</b>. It is not weighed, not averaged, does not drag the conclusion down, and does not stop it being graded. It stays in the basis, <b>named</b>, as something present but not yet carrying weight. The conclusion is graded on the legs that do carry weight, which is honest because those are the only legs it rests on. <b>Every ungraded leg is named, however many there are.</b></dd>
     <dt>Unrated</dt><dd>The boundary case: when <b>no</b> leg has an established grade, the conclusion rests on nothing established and has no computed strength at all — naming every leg that is why. It may still be published, as unrated. Punishing honesty and laundering weakness are both refused, which is why an ungraded leg is neither ranked below the worst grade nor quietly ignored.</dd>
-    <dt>Hunch</dt><dd>A connection a member asserts <b>ahead of its evidence</b>, graded temporarily high enough to make otherwise disconnected material traversable — so a line of thought can be followed before it can be proved. It is <i>temporary declared bias</i>, and it is the <b>one kind of bias that must be cleared before publication</b>, because a hunch carries a grade it has not earned.</dd>
+    <dt>Hunch</dt><dd>A connection a member asserts <b>ahead of its evidence</b>, graded temporarily high enough to make otherwise disconnected material traversable — so a line of thought can be followed before it can be proved. It is <i>temporary declared bias</i> — the group stating what it believes ahead of proof; declared bias has its own entry under “Meaning”, below — and it is the <b>one kind of bias that must be cleared before publication</b>, because a hunch carries a grade it has not earned.</dd>
   </div>
 
   <h4>Acts and their weight</h4>
@@ -895,8 +919,8 @@ stateDiagram-v2
   <div class="gloss">
     <dt>R1 · An ungraded leg carries no weight, and costs none</dt><dd>Ignoring an ungraded leg launders weakness; ranking it below the bottom grade punishes honesty. <b>So it does neither: it contributes nothing and it drags nothing down</b>, staying in the basis as a named leg that is not yet load-bearing, while the conclusion is graded on the legs that are. <b>Every ungraded leg is named, however many there are.</b> Only when <i>no</i> leg is graded does the conclusion have no strength at all — then it is <b>unrated</b>, and may still be published as such. <i>Amended 2 August; the first version unrated the whole conclusion for a single ungraded leg.</i></dd>
     <dt>R2 · Capture and connection are measured separately</dt><dd><i>This page used to call these “two axes”. That word is retired: axes are dimensions of one measurement, and treating them so is what produced the error corrected on 2 August.</i> They grade different kinds of thing — a capture grade belongs to a <i>document</i>, a connection grade to an <i>edge</i> — so nothing averages, mixes or collapses them, and <b>no rendering may reduce them to one letter.</b> A conclusion reports two measurements over two different populations: the weakest document it reaches, and the weakest relationship it relies on. A document captured directly is never the top capture grade — that claim is forbidden and enforced. <i>Amended 2 August; the first version split the <b>legs</b> into two kinds, which its own worked example contradicted — one document leg carries both grades.</i></dd>
-    <dt>R3 · The basis graph is acyclic</dt><dd>An inquiry may not rest on itself, even transitively. Enforced at write, and the refusal names the cycle it found. Without it, two mutually-citing claims make every read run forever.</dd>
-    <dt>R4 · Division costs what severance costs</dt><dd>Splitting a mixed inquiry requires an authored reason, records where <i>every</i> leg went including the ones that cut against, and a published child names its parent and its siblings. A reader who can see one half can see the other exists.</dd>
+    <dt>R3 · The basis graph is acyclic</dt><dd>An inquiry may not rest on itself, even transitively. Enforced at write, and the refusal names the cycle it found. Without it, two inquiries each resting on the other would make every strength computation run forever.</dd>
+    <dt>R4 · Division costs what severance costs</dt><dd>Because a conclusion is worth its weakest leg, a question mixing one strong claim with one thin one is worth the thin one — so the design lets a member <em>divide</em> such an inquiry into separate ones. This resolution prices it: removing a single leg (severance) requires an authored reason, so splitting the whole inquiry must too. Division records where <i>every</i> leg went, including the ones that cut against, and a published child names its parent and its siblings — a reader who can see one half can see the other exists.</dd>
   </div>
 
   <div class="note why">
@@ -1203,7 +1227,7 @@ sequenceDiagram
       <div class="cid"><span>S2</span><span class="chip partial">one instance built</span></div>
       <h3>The Act</h3>
       <p class="job">Do one thing, having seen what it will refuse before it runs, and leave a receipt with my name on it.</p>
-      <p>Four panes in fixed order: the option chosen; the refusals with offenders named; the reason field, empty; the receipt. Mute is personal, dismiss is a record act, and they are never the same control — one member's inbox hygiene must not erase a finding for the group.</p>
+      <p>Four panes in fixed order: the option chosen; the refusals with offenders named; the reason field, empty; the receipt. Mute (stop showing <em>me</em> this) is personal; dismiss (this is handled) is an act on the record — and they are never the same control — one member's inbox hygiene must not erase a finding for the group.</p>
       <p class="needs">today: exactly one act uses this shape</p>
     </div>
     <div class="card">
@@ -1376,9 +1400,10 @@ flowchart BT
       search it — and cannot state a conclusion that rests on it.
     </p>
     <p>
-      The capability ladder had no rung for it either. Two were added on 1 August, and the
-      ladder now says plainly that they are <em>not</em> appended after the substrate — they
-      are what the other eight rungs serve.
+      The project's capability ladder — its ordered list of what the system is being built to
+      be able to do, a different ladder from the act rungs in Part 1 — had no entry for it
+      either. Two were added on 1 August, and the ladder now says plainly that they are
+      <em>not</em> appended after the foundations: they are what the other eight entries serve.
     </p>
   </div>
 
@@ -1630,7 +1655,7 @@ flowchart BT
   </div>
   <div class="dec">
     <div class="dnum">DEC-16</div>
-    <div><p class="dq">With questions nesting inside questions, what does a member's queue group by?</p>
+    <div><p class="dq">With questions resting on other questions, what does a member's queue group by?</p>
     <p class="da"><strong>Every ancestor, with one shared resolution.</strong> The unit of state is the <em>event</em> — one state, several homes — which dissolves the flooding objection without a second mechanism.</p></div>
     <div class="dstat"><span class="chip open">architect</span></div>
   </div>
@@ -1665,7 +1690,7 @@ flowchart BT
     <div class="dstat"><span class="chip built">session</span></div>
   </div>
   <div class="dec" style="border-bottom:1px solid var(--rule-soft);">
-    <div class="dnum">DEC-1,2,3<br>5,10,11</div>
+    <div class="dnum">DEC-1 · 2 · 3 · 5 · 10 · 11</div>
     <div><p class="dq">Earlier rulings, all enacted or deferred with a named trigger</p>
     <p class="da">Whether to ask the city to allowlist our fetcher (closed, not held — it would be one blocking action for them and a per-instance request forever for us); what a group's root of trust should be (deferred until a real multi-member instance exists to observe); one working session per checkout; office-document metadata is evidence and is surfaced in full; overdue steps notify by case rather than by kind.</p></div>
     <div class="dstat"><span class="chip built">settled</span></div>
