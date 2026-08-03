@@ -736,6 +736,58 @@ strings like *"both documents concern Sewer Fund; grade is the weaker of the two
 record holds no capture of this address"*. Renaming leg→basis would give one word three jobs and
 destroy the set/element distinction R1 and R2 depend on. **basis = the whole; leg = one element.**
 
+
+### 2026-08-03 · BOB · SESSION CLOSING — ten decisions, two new surfaces, and a corrected §4
+
+The BOB session that ran 2026-08-02/03 is closing. Everything below is already recorded in
+`DECISIONS.md`, `DEBT.md`, the design documents and the review document; this entry is the
+index CONDUCT drains from. **`DECISIONS.md` has NO open entries** — 27 total, 25 answered,
+2 deferred with named triggers. **24 await enactment**, which is the largest backlog this
+register has carried; several reshape existing queue items rather than adding new ones.
+
+**RESHAPES AN EXISTING ITEM — read these before taking the item:**
+- **REC-12** is hit twice. DEC-18 (an ungraded leg is INERT — excluded from the population,
+  not ranked in it) and DEC-21 (two measurements over two POPULATIONS — a leg IS an edge, so
+  one document leg carries BOTH grades). A session reading only `RECONCILED` §1.1 R1-h would
+  build the refused behaviour.
+- **REC-11 / REC-18** — DEC-23: a leg points at CONTENT, not a document.
+- **UI-17 / UI-18** — the Q5 panel re-keying, the Q6 threshold pair, DEC-18's naming rule.
+- **REC-15 / UI-17** — D-158 bounds the per-member signing-key pre-flight.
+- **O1** — DEC-19: publishing is irreversible and correction moves forward.
+- **`op=publishpreflight`** — DEC-20: refuses `UNCLEARED_HUNCH` and nothing else on bias
+  grounds; the manifest must be SHOWN in the artifact, not merely cited.
+- **REC-13** — DEC-22: a claim may exist with NO legs, and is a standing objective.
+- **D-123's scope changed** — D-164 supersedes its framing. D-161, D-163 and D-123 are one
+  missing primitive seen three times (an addressable content extent). **Solve it once.**
+
+**NEW WORK, not yet decomposed — this is the real handoff:**
+- **The content-extent primitive (D-164).** L3 CONTENT is a named layer with no object, the
+  twin of the L7 finding. Extraction exists (`readings`, `reading_refs`, `resolutions`) and
+  nothing can point at any of it.
+- **The machine's four roles (DEC-24)** — extract, pursue, find, check — and the four bounds,
+  including rule 1's second half: the machine must SHOW ITS WORK.
+- **S11 THE ACTION PLAN.** Specifiable now EXCEPT the backward question (D-165, deferred with
+  its derivation path named). Resources are an attached open list, deliberately not a schema.
+- **S12 THE ASSISTANT** (DEC-27) — and its wizard, which is how multi-step work happens when
+  the assistant cannot perform authored acts. It holds no copy of the rules; it asks the
+  plane, so it is bound by DEC-8 and adds no new trust boundary.
+
+**A CORRECTION TO A PLANNING SURFACE, which matters for anyone reading §4:**
+`RECONCILED.md` §4 listed **Q1, Q2, Q3 and Q4 as OPEN** when all four had been settled by
+DEC-12, DEC-17, DEC-16 and DEC-15 respectively. Corrected 2026-08-03 — each is marked
+SETTLED in place with the ruling that settled it, and the original text kept below as
+history rather than rewritten. **All of Tier 1 is now closed.** Seven remain open across
+Tiers 2 and 3 (Q7, Q8, Q9, Q10, Q12, Q13, Q14).
+
+**AND ONE PROCESS NOTE WORTH KEEPING.** The review document's source is now committed at
+`docs/development/research/review-document.html` — it previously existed only in a session
+scratchpad and was reconstructed by fetching the artifact, so it had no history and no
+owner. `tools/mermaid-check.mjs` parses every diagram with the real mermaid parser and
+carries its own negative control. A full reconciliation on 2026-08-03 found **ten decisions
+missing from that document's Part 4** while their consequences sat in the body: incremental
+patching drifts, and the fix is to re-read against the register rather than trust the last
+patch.
+
 ---
 
 Item format:

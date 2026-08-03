@@ -52,65 +52,104 @@ Kickoff: session BOB.
 
 Read CLAUDE.md, then docs/development/kickoffs/BOB.md, and follow it.
 
-State of play, 2026-08-02, after the handover and the review draft. The research study in
-docs/development/research/ has been reconciled and handed to CONDUCT. RECONCILED.md is
-THE DESIGN — it resolves 38 contradictions and re-derives the build order, and where it
-disagrees with BUILD-ORDER.md / SB-CORE.md / SB-EVIDENCE.md / SB-OUTPUT.md it wins and
-those four are history. docs/architecture/BIO_Case_Making_v0_1.md carries the design and
-its resolutions R1-R4. What is DONE: M9 and M10 are rungs in MILESTONES.md, 27 debt rows
-are placed, the 36-item build order and the activation order are in the BOB INBOX, and
-DEC-6/7/8/9 are answered and recorded in the documents that now carry their reasoning.
+State of play, 2026-08-03, after a long review session with Bob on the study document.
 
-Bob then answered six of the seven open decisions in one pass, and their consequences are
-handed over in a second BOB INBOX entry — editions (published is not terminal), the HUNCH
-as temporary declared bias and bias debt, a project-declared required strength, the
-subject's right of reply gated on the DECLARATION rather than the act, impact claims
-unproven absent outside evidence, and OCR for image-only PDFs. Read DECISIONS.md DEC-4,
-12, 13, 14, 15, 17 before touching REC-14, REC-15 or REC-18: REC-14's scope changed
-materially and the inbox entry outranks RECONCILED.md section 3 where they disagree.
+YOUR FIRST JOB IS THE STANDING ONE: read DECISIONS.md and surface every `open` entry.
+**There are NONE.** 27 decisions, 25 answered, 2 DEFERRED with named triggers. An empty
+open list is the healthy state and is worth one line. CONDUCT owes 24 enactments; that is
+its loop, not yours to chase.
 
-Your first job is the standing one: read DECISIONS.md and surface every `open` entry.
-**There are NONE.** All seven were answered on 2026-08-01/02 and every consequence is
-handed over; an empty list is the healthy state and is worth one line, not a paragraph.
-CONDUCT owes 14 enactments, which is its loop and not yours to chase.
+**WHAT BOB SAID HE WANTS NEXT: "go through the open decisions to try to tackle them."
+Take that as the DEFERRALS AND THE OPEN QUESTIONS, because the DEC open list is empty.**
+Precisely, and read each in place before working it:
+  - DEC-2 deferred - a group's ROOT OF TRUST. Trigger: a BIO instance running with
+    MULTIPLE MEMBERS, so custody can be observed rather than guessed. Do not pre-empt it.
+  - DEC-25 deferred - is any part of an ACTION PLAN published? Running: never published.
+    **It carries a constraint that binds whoever answers it: groups write candidly in plans
+    BECAUSE plans are private, so a reversal can only apply PROSPECTIVELY, to plans written
+    after the change, with the group told first.**
+  - RECONCILED.md section 4, SEVEN still open: Q7, Q8, Q10 (all division residuals - Q7 and
+    Q10 are Bob's, Q8 is a DEC that REC-16 should raise), Q9 (the `undetermined` split),
+    Q12, Q13 (both minor), Q14 (three structural, incl. contradiction held inside ONE
+    inquiry, which is undesigned and honestly so).
+  - **NOT open, and do not re-open: Q1, Q2, Q3, Q4, Q5, Q6, Q11.** All settled, marked in
+    place in RECONCILED with the ruling that settled each. Q1-Q4 were still listed as open
+    until 2026-08-03 and were corrected then; if you find another stale one, fix it the same
+    way - mark it settled, keep the original text below as history, never rewrite it.
+  - Design questions that are NOT DECs and are genuinely live: whether one finding may hold
+    SEVERAL PARALLEL CLAIMS (Bob's overlapping-utility example, leaning toward plurality -
+    in BIO_Case_Making_v0_1.md); D-164 the content-extent primitive; D-165 action
+    preconditions (deferred, derivation path named).
 
-TWO RULINGS ARE EASY TO UNDER-READ because their consequence is larger than their text.
-DEC-16 moved the unit of queue state from the (member, case) entry to the EVENT — one
-state, N homes — which is a shape change REC-20 was not scoped for. And DEC-4's second
-amendment establishes that a PDF TEXT LAYER is itself an unverified transcription (the
-extractor decodes through /ToUnicode and says so), so the grade ceiling is "verified
-against the rendered image" rather than "has a text layer", and member attestation is
-offered on both paths.
+WHAT THIS SESSION SETTLED - ten decisions, DEC-18 to DEC-27. Read them; most reshape
+earlier work rather than adding to it.
+  - **DEC-18** an ungraded leg is INERT: contributes nothing, costs nothing, stays NAMED.
+    UNRATED survives only where NO leg is graded. This is NOT what RECONCILED 1.1 R1-h
+    refused - R1-h refused drawing support from a leg that paid nothing.
+  - **DEC-21** capture and connection grades are NOT combined, and R2's MECHANISM was wrong
+    while its conclusion was right: a leg IS an edge, so ONE document leg carries BOTH.
+    Two measurements over two POPULATIONS, not one over two kinds of leg.
+  - **DEC-23** CONTENT is the unit the record points at; a whole document is its widest
+    extent. Legs, citations and connections all address content. **D-164: L3 CONTENT is a
+    named layer with NO OBJECT - the twin of the L7 finding - and it supersedes the framing
+    of D-161, D-163 and D-123, which are one missing primitive seen three times.**
+  - **DEC-19** publishing IS irreversible; correction always moves FORWARD.
+  - **DEC-20** only a HUNCH blocks publication; other bias is disclosed and travels.
+  - **DEC-22** a hunch is any ASSUMPTION, including an unsupported claim, which is a
+    standing OBJECTIVE the system may pursue. Search covers CONTENT AND CLAIMS.
+  - **DEC-26** planning from unestablished findings is legitimate; the gate is at the ACT,
+    not the reasoning; the safeguard is LABELLING (established / short of the standard /
+    hypothetical).
+  - **DEC-24** the machine may do the looking; the member does the concluding. Four roles
+    (extract, pursue, find, check) and four bounds. **Amended: rule 1 has a second half -
+    the machine must SHOW ITS WORK, because a name on reasoning you cannot see is a rubber
+    stamp.**
+  - **DEC-27** the ASSISTANT: a prompt on every surface. Permissive - it may do anything
+    that does not break the rules, and the line is AUTHORSHIP not writing. It is NOT a
+    member, so the record names it separately from whoever directed it. Multi-step work is
+    a WIZARD that opens the surface owning each step. **It holds no copy of the rules; it
+    asks the plane, like every other surface (DEC-8), so it introduces NO new trust
+    boundary.**
+  - **DEC-17 amended** - the GROUP sets the default required strength a project starts from.
+  - New surfaces named, not drawn: **S11 the action plan**, **S12 the assistant**.
+    S11 is specifiable now EXCEPT the system answering the backward question (D-165).
 
-THE LIVE THREAD IS THE REVIEW, and it is what this session is for right now. The
-consolidated record of the study is published for Bob at
-
+THE REVIEW DOCUMENT. Published for Bob at
     https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef
+**Its SOURCE IS NOW IN THE REPO: docs/development/research/review-document.html.** Edit
+that file, verify, then publish it - do NOT reconstruct it by fetching the artifact.
+**To publish you MUST pass `url:` or a new URL is minted and Bob's link silently breaks.**
+Publishing is pre-approved in .claude/settings.json; it will not prompt.
 
-and he is reading it. docs/development/research/README.md describes it and carries the
-reading order for the sixteen files. He has already corrected it once — the first draft
-assumed the reader had lived in the repo, so Part 0 (orientation, the seven rules, the four
-objects, and a glossary of every term the rest uses) exists because of that. Expect the
-review to arrive as further corrections of that kind and take them the same way.
+**Verify diagrams before publishing - this is a loop, not advice:**
+    MERMAID_DIR=<dir with mermaid@11.15.0 + jsdom> node tools/mermaid-check.mjs \
+      docs/development/research/review-document.html
+A block that fails to parse renders as an ERROR BOX on the page and the READER finds it.
+The tool carries its own negative control and install line.
 
-**TO UPDATE THAT DOCUMENT YOU MUST PASS ITS URL.** This is a mechanism, not a note: a
-session that did not itself publish an artifact MINTS A NEW URL unless it passes `url` to
-the Artifact tool, and a new URL silently breaks the link Bob is reading from and the one
-recorded in the repo. So: rebuild the page as a file, then publish with
-`url: "https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef"`. Use
-`action: "list"` if the URL above ever goes stale. The page is self-contained HTML with no
-DOCTYPE/head/body wrapper (the tool adds them), renders mermaid natively, and must stay
-theme-aware — read the `artifact-design` skill before touching it.
+**NOTATION IS SETTLED AND BOB REJECTED TWO DRAFTS THAT IGNORED IT.** Structure ->
+`classDiagram` (`*--` composition, `-->` association, `<|--` is-a). Lifecycle ->
+`stateDiagram-v2`, edges labelled with the ACT that causes them. NEVER mix a structural and
+a behavioural model in one picture, and never hand-roll arrow semantics in a flowchart.
+To check APPEARANCE, build a local replica harness served by preview_start and screenshot
+it in both themes - the in-app browser CANNOT reach claude.ai or any external origin
+(navigations hang 300s with zero network requests; localhost is pre-approved).
 
-Then the work is whatever the review and the answers create, plus RECONCILED.md section 4's
-remaining open questions (Q5 needs a design pass, Q6 was created by R2 and no file has seen
-it, Q11 is settled by a MEASUREMENT and not a ruling — run it and record it in
-MEASUREMENTS.md). An empty decision list is a real answer and a common one.
+**HOW BOB REVIEWS, and it is the most useful thing in this block.** He reads as a reader
+who has not lived in the repo, and he is right nearly every time. Recurring corrections:
+terms used before they are defined; a word with a precise meaning used loosely elsewhere
+(`publish` for what the server tells the screen was one); examples that assume the model
+("the member is on the transfer inquiry"); and diagrams whose edges mean four things at
+once. **When he asks a question, ANSWER IT - do not just apply it.** Several of his
+questions ("why are those grades combined?", "is a citation a connection?") exposed real
+defects that only surfaced because the answer was worked out rather than accepted.
 
-Verify before you trust. Every research pass in the study made at least one sharp claim
-that did not survive checking, and the shell's `grep` is ugrep with -I, which silently
-skips bio-plane/src/store.mjs because of a raw NUL byte (D-131, closed by REC-27). Use
-python for counts.
+**Do not guess. Do not be lazy.** His words, twice. Measure with python (the shell's grep
+is ugrep with -I and silently skips bio-plane/src/store.mjs on a NUL byte, D-131); read the
+repo rather than recalling it. **On 2026-08-03 a full reconciliation found TEN decisions
+missing from the document's Part 4** while their consequences sat in the body - drift
+accumulates fast when a document is patched incrementally, so re-read it against the
+register periodically rather than trusting the last patch.
 
 Run `node tools/plancheck.mjs` before any handoff.
 ```

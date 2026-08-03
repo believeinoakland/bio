@@ -1332,7 +1332,18 @@ half — closed by R4).
 
 ### Tier 1 — blocks a build item that is otherwise ready
 
-**Q1 · May a published bundle be REVISED, or is `published` terminal?** *(= `CRITIQUE` D-1, D-9;
+> **ALL FIVE TIER-1 QUESTIONS ARE NOW CLOSED** — Q1, Q2, Q3 and Q4 by Bob's rulings (DEC-12,
+> DEC-17, DEC-16, DEC-15), and Q5 by the design pass it called for. Each is marked in place with
+> the ruling that settled it, and the original text is kept below it as history rather than
+> rewritten. **Nothing in Tier 1 blocks anything.**
+
+**Q1 · SETTLED by DEC-12 — REVISABLE, AS NUMBERED EDITIONS.** Each edition is a separate
+document; earlier editions stay published, keep their own attestation and still answer, so a
+reader who relied on one is never left holding a hash that changed. DEC-19 later fixed the
+vocabulary: publishing is IRREVERSIBLE, and correction moves forward. Original text follows as
+history.
+
+*Was:* **May a published bundle be REVISED, or is `published` terminal?** *(= `CRITIQUE` D-1, D-9;
 `SB-CORE.md:1309` vs `SB-OUTPUT.md:709-720`; `DATA-MODEL.md:433` vs `store.mjs:5934-5940`.)*
 **Blocks:** REC-14's terminality, REC-22's index shape, UI-18's index, and whether `SB-OUTPUT` S16
 exists at all. **Settled by:** Bob, and only Bob — it is a statement about what the record owes a
@@ -1343,7 +1354,12 @@ bundle, or the surface whose guarantee is *"anyone can check those bytes without
 cannot enumerate what it published. **Running provisionally:** terminal, which is the conservative
 branch and `DATA-MODEL`'s position.
 
-**Q2 · What makes an unsupported case HARDER to state?** *(= constraint C3; `CRITIQUE` D-6;
+**Q2 · SETTLED by DEC-17 — THE PROJECT DECLARES THE STRENGTH ITS WORK REQUIRES**, published
+beside the strength actually reached, with the GROUP setting the default a new project starts
+from (amended 2026-08-03). Not a global floor and not a per-reader gate — both of which this
+entry correctly predicted were wrong. Original text follows as history.
+
+*Was:* **What makes an unsupported case HARDER to state?** *(= constraint C3; `CRITIQUE` D-6;
 `Case_Making:159-164`.)* **Blocks:** nothing mechanically, and it blocks the three files' right to
 claim C3 is discharged — which this file has withdrawn (§2.2 C-13 row 3). **Settled by:** Bob.
 `AUDIENCES.md` §5 forbids a per-audience gate and a global strength floor is its own doctrine
@@ -1351,7 +1367,11 @@ problem, so the answer is probably not a floor. R1 supplies a partial: a thin ca
 publish wearing a letter it did not earn. **Why no session should decide it:** every candidate
 answer is new doctrine about the cost of an act, which is exactly what `CLAUDE.md` reserves.
 
-**Q3 · Under the collapse, is the queue's `case` key the NEAREST ancestor or EVERY ancestor?**
+**Q3 · SETTLED by DEC-16 — EVERY ANCESTOR, with one shared resolution.** The unit of queue
+state is the EVENT, not the (member, case) entry: one state, several homes, which dissolves the
+flooding objection without a second mechanism. Original text follows as history.
+
+*Was:* **Under the collapse, is the queue's `case` key the NEAREST ancestor or EVERY ancestor?**
 *(= `CRITIQUE` C-12; DEC-10 vs `SB-CORE.md:459`.)* **Blocks:** P-88, therefore REC-20's population
 rule, therefore UI-14's grouping and REC-21's mute scope. **Settled by:** Bob, because DEC-10 is his
 ruling and its premise — a focus is a leaf — is what the collapse removed. **Symmetric costs, both
@@ -1360,7 +1380,13 @@ every-ancestor means one event appears in N groups and breaks DEC-10's own *"one
 (member, case)"*. **Running provisionally:** REC-20 ships the column, every item ungrouped, nothing
 invented.
 
-**Q4 · Where does a document leg's CONNECTION grade come from?** *(= `DATA-MODEL` D1(b),
+**Q4 · SETTLED by DEC-15 — BOTH, AND THE FORK WAS FALSE: it is a LIFECYCLE.** During `open` a
+connection grade may be AUTHORED — that is a hunch, and it is what makes the graph traversable
+before the evidence exists. At `published` no hunch may remain, so every leg is EARNED or is
+honest testimony. DEC-22 later widened the hunch to any ASSUMPTION, including an unsupported
+claim. Original text follows as history.
+
+*Was:* **Where does a document leg's CONNECTION grade come from?** *(= `DATA-MODEL` D1(b),
 `SB-CORE` §5, `BUILD-ORDER` §1.4; narrowed by R2 — the CAPTURE half no longer needs a ruling.)*
 **Blocks:** REC-18, and therefore any strength above grade D on the connection axis, and therefore
 every audience threshold that is not "everything". **Settled by:** Bob. `DATA-MODEL.md:864-871`
