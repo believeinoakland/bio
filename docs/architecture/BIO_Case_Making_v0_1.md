@@ -473,6 +473,72 @@ already carries when a capture's basis moves.
 **And merging is free**, for symmetry: two members independently opening inquiries into
 the same thing is resolved by a parent that cites both. No new mechanism.
 
+## What a CLAIM is, and why it is a field rather than an object — 2026-08-03
+
+Bob, in review: *"So what's a claim? Is it an answer to the question posed in an inquiry?…
+Is a claim the object when it doesn't have enough supporting evidence, and a conclusion is
+when it does?"* Determined here because the collapse left the word undefined, and an
+undefined word in the middle of the design is how *"a claim can rest on another claim"* got
+written and had to be corrected.
+
+**An inquiry is a QUESTION and has no truth value. A claim is a PROPOSITION and can be true
+or false. Concluding is the inquiry ADOPTING a claim as its answer** — not a third object, but
+the relationship between the two, carrying the basis and the falsifier. This is why a leg
+attaches to the CLAIM rather than to the conclusion, which is Bob's own correction in the same
+review and is right.
+
+**A claim is a FIELD of an inquiry, not an object, and it is not a phase.** Three things follow
+and each was a candidate reading that fails:
+
+- **Claim and conclusion are not one object in two states.** The inquiry is the object; the
+  claim is what it holds; concluding is the act.
+- **They are NOT distinguished by evidential sufficiency, and that reading must be refused.**
+  *"Claim = not enough evidence yet, conclusion = enough"* puts a sufficiency threshold in the
+  middle of the record, which this project has refused three times: `AUDIENCES.md` §5 forbids a
+  per-reader gate, §4 Q2 calls a global strength floor *"its own doctrine problem"*, and DEC-15
+  routed around it rather than through it. The deeper reason is that **"enough" is not a
+  property of the evidence but of what you intend to do with it** — enough to publish a question
+  is not enough to refer to a prosecutor — so a threshold in the object would have to pick one
+  purpose and impose it on every other. What discharges the need for one is already built into
+  the design: strength is DERIVED and names its weakest legs; the falsifier is REQUIRED; and
+  DEC-15's project-declared required strength lets a GROUP declare its own standard, published
+  beside what was actually reached. A declaration, not a gate.
+- **A conclusion does not silently revert when its evidence weakens.** Strength genuinely can
+  fall — a grade regraded down, a leg severed, a capture that proves to be archival rather than
+  direct. When it does, DEC-16 already makes that an EVENT propagating to every ancestor, and
+  DEC-12 already permits REOPENING as an act with a name and a date. Nothing reverts by itself,
+  because a conclusion that un-concludes with nobody accountable is the record changing its mind
+  in silence.
+
+### Can one finding hold SEVERAL claims? Not today, and the alternative is already expressible
+
+Bob: *"a finding can have multiple claims. (That's true, right?)"* **It is not true as built, and
+the honest answer is that it may not need to be.**
+
+Several propositions — *the transfer happened*, *no resolution authorised it*, *the balance fell
+below the statutory floor* — are expressed as SEPARATE INQUIRIES that the larger one rests on.
+In that sense a finding does draw on many claims, because **a leg pointing at a concluded
+inquiry is a leg pointing at that inquiry's claim.** Composition is what the recursion is for.
+
+**The argument for keeping it a field is the collapse's own test.** A claim with legs is shaped
+exactly like an inquiry with legs, so a claim nested inside a finding is an inquiry denied its
+own identity — it cannot be cited by anything else, published on its own, or given its own
+falsifier. Promoting it rebuilds the multiplicity the collapse removed, which is the argument
+that closed focus/finding/case.
+
+**Two things could still force the promotion, and both are open:**
+
+1. **Ergonomics, and it is MEASURABLE rather than arguable.** If every component proposition
+   must become a full inquiry with its own falsifier, stating one finding may cost more than a
+   volunteer's evening. That is observable once M9 ships and should be measured, not predicted.
+2. **CONTRADICTION, which is §4 Q14 and is undesigned.** Two claims that conflict, both held,
+   neither abandoned. `role: cuts_against` is one leg's polarity, not a structure for two claims
+   contradicting each other. **If a claim ever becomes an object, this is the reason it will** —
+   and note the two cases are different: Bob's question is about COMPOSITION, which recursion
+   already answers, while Q14 is about CONTRADICTION, which nothing answers.
+
+`inquiry_basis` does not exist in the schema, so all of this is still free.
+
 ## Resolutions forced by the adversarial pass, 2026-08-01
 
 The critique found 10 doctrine hits, 13 correctness, 3 usability. Four are contradictions
