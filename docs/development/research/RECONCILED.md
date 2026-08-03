@@ -389,10 +389,16 @@ Also decided, because it is forced by C-9 below: **the exclusion control must le
 what was left out**, which supplies `inquiry_exclusions.target_id` and simultaneously moves the
 member's act from transcribing prose to pointing at material.
 
-Not decided: which permitted assembly panel, if any, sits beside the field. `CRITIQUE.md` offers
-two (show it after the field has content; show it without the case filter) and both are weak — the
-first is defeated by typing one word, the second produces a panel too broad to be the Zotero
-precedent it cites. Choosing a third would be inventing. §4 Q8; blocks UI-17 only.
+**DECIDED 2026-08-02 (session BOB), by the design pass §4 Q5 asked for:** which permitted assembly
+panel sits beside the field. `CRITIQUE.md` offered two — show it after the field has content, show
+it without the case filter — and both are weak, the first defeated by typing one word and the
+second still a panel of set-aside reasons with a haystack around it. **Both vary the timing or the
+breadth and leave the KEY untouched, which is where the rule actually bites:** an assembly is
+permitted when keyed on the SUBJECT being written about and performs generation by SELECTION when
+keyed on the ANSWER-SHAPE of the question the surface asks. So the panel is RE-KEYED onto the
+case's own BASIS LEGS — what the case rests on — whose content is the COMPLEMENT of the field's and
+therefore cannot be transcribed. This is an application of the existing rule and not the invention
+this passage feared. Full reasoning at §4 Q5; blocks UI-17 only, and its scope in §3 is updated.
 
 ### 2.2 · CORRECTNESS
 
