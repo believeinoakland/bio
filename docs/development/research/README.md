@@ -20,11 +20,21 @@ a glossary of every term the rest uses (grade, strength, leg, basis, falsifier, 
 rung, hunch, progression, driver, path verb…), what changed in the collapse and R1–R4, and
 how much to trust the numbers. Parts 1–5 are the journey, the ten surfaces, the layer
 stack, the 94-process coverage matrix, the 133 drawn states, the absences, the seventeen
-decisions, the six open questions and the build order.
+decisions, the remaining open questions and the build order.
 
 It is a RENDERING of the files below and is not authoritative over them — where it and
 `RECONCILED.md` disagree, `RECONCILED.md` is the design. First published 2026-08-02 by
-session BOB; revised the same day to add Part 0.
+session BOB; revised the same day to add Part 0, and again to record that §4's Q5, Q6 and
+Q11 are settled (six open questions became three) and to carry the two defects the Q11
+measurement found.
+
+**Updating it is a MECHANISM, not a note.** A session that did not itself publish the page
+MINTS A NEW URL unless it passes `url:` to the Artifact tool — and a new URL silently breaks
+both the link Bob is reading and the one recorded here. Rebuild the page as a file, then
+publish with `url: "https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef"`.
+The stored copy carries the platform's injected mermaid runtime (~3.3 MB of the ~3.4 MB); the
+page's own source is ~88 KB and the runtime must be STRIPPED before republishing, or it is
+inlined twice.
 
 ## Reading order
 
