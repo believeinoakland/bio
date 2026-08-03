@@ -297,7 +297,10 @@ footer{
     <p style="margin-bottom:0;">
       <strong>Still under discussion, and marked as such where it appears:</strong> whether one
       finding can hold several claims, and whether a connection should reach a passage rather
-      than a whole document. Nothing in either is built, so both stay cheap.
+      than a whole document. Nothing in either is built, so both stay cheap. <strong>And every
+      diagram is redrawn</strong>: structure in class-diagram notation, lifecycle as a state
+      machine, the journey and layer stack with node kind carried by form and colour, each
+      verified rendered in both themes before this was published.
     </p>
   </div>
 </header>
@@ -987,61 +990,82 @@ stateDiagram-v2
     <div class="diagram">
 <pre class="mermaid">
 flowchart TD
-  START["Something bothers me:<br/>the sewer fund keeps being moved"]
+  START(["Something bothers me:<br/>the sewer fund keeps being moved"]):::outside
 
   subgraph QUESTIONING
-    START --> A1
-    A1["ACT: ask<br/>on S1 QUEUE"] --> S3a["S3 INQUIRY PAGE<br/>phase: inquiry · open<br/>conclusion: undetermined"]
+    A1("ACT · ask<br/>the question goes on the record"):::act
+    S3a["S3 INQUIRY PAGE<br/>phase open · conclusion undetermined"]:::surface
+    A1 --> S3a
   end
+  START --> A1
 
   subgraph EXPLORING
-    S3a --> S4["S4 EVIDENCE FINDER<br/>search · selection lease"]
-    S4 --> S5["S5 DOCUMENT PAGE<br/>four strata · verify bytes myself"]
-    S4 -->|"nothing in the record answers this"| S6["S6 ADD<br/>capture with provenance"]
-    S6 --> S5
+    S4["S4 EVIDENCE FINDER<br/>search · selection lease"]:::surface
+    S5["S5 DOCUMENT PAGE<br/>four strata · verify bytes myself"]:::surface
+    A0("ACT · capture<br/>with provenance"):::act
+    S4 --> S5
+    S4 -->|"nothing in the record answers this"| A0
+    A0 --> S5
     S5 --> S4
   end
+  S3a --> S4
 
   subgraph DISCOVERING
-    S5 --> A2["ACT: cite<br/>this supports the inquiry"]
-    S4 --> A2
-    A2 --> S3b["S3 INQUIRY PAGE<br/>basis grows · strength recomputes<br/>weakest leg NAMED"]
-    S3b -->|"one leg is thin"| A3["ACT: divide<br/>apportion the basis, authored"]
+    A2("ACT · cite<br/>this bears on the inquiry"):::act
+    S3b["S3 INQUIRY PAGE<br/>basis grows · strength recomputes<br/>weakest legs NAMED"]:::surface
+    A3("ACT · divide<br/>apportion the basis, authored"):::act
+    A2 --> S3b
+    S3b -->|"one leg is thin"| A3
     A3 --> S3b
   end
+  S5 --> A2
+  S4 --> A2
 
   subgraph DOCUMENTING
-    S3b --> A4["ACT: conclude<br/>author the conclusion · select the basis<br/>name what would falsify it"]
-    A4 --> S3c["S3 INQUIRY PAGE<br/>phase: finding · concluded<br/>strength: weakest document<br/>and weakest relationship"]
-    S3c -->|"cited as basis by a larger question"| S3a
+    A4("ACT · conclude<br/>adopt a claim · select the basis<br/>name what would falsify it"):::act
+    S3c["S3 INQUIRY PAGE<br/>phase concluded · a FINDING<br/>weakest document · weakest relationship"]:::surface
+    A4 --> S3c
   end
+  S3b --> A4
+  S3c -->|"cited as a leg by a larger question"| S3a
 
   subgraph IMPACTING
-    S3c --> A5["ACT: plan an action<br/>counterparty · kind · justified by THESE findings"]
-    A5 --> S10["S10 ACTION PAGE<br/>planned · active · awaiting_response"]
-    S10 --> OUT["the letter leaves the system"]
-    OUT --> BACK["a reply arrives"]
-    BACK --> S6
-    S6 --> A6["ACT: record the consequence<br/>cite the reply back onto the action"]
+    A5("ACT · plan an action<br/>counterparty · kind · justified by THESE findings"):::act
+    S10["S10 ACTION PAGE<br/>planned · active · awaiting_response"]:::surface
+    OUT(["the letter leaves the system"]):::outside
+    BACK(["a reply arrives"]):::outside
+    A6("ACT · record the consequence<br/>cite the reply back onto the action"):::act
+    A5 --> S10
+    S10 --> OUT
+    OUT --> BACK
+    BACK --> A6
     A6 --> S10
-    A6 -->|"the reply is itself evidence"| S3b
   end
+  S3c --> A5
+  A6 -->|"the reply is itself evidence"| S3b
 
   subgraph SHARING
-    S3c --> A7["ACT: publish · ATTESTED rung<br/>state what was EXCLUDED and why<br/>sign with a key"]
-    A7 --> S8["S8 PUBLICATION CEREMONY<br/>refusals shown BEFORE it runs"]
-    S8 --> S9["S9 PUBLISHED CASE<br/>public · hash-checkable · printable"]
-    S9 -->|"a case is an INPUT, not a terminus"| S3a
-    S9 --> S1n["S1 QUEUE<br/>events on this case group here"]
+    A7("ACT · publish · the attested rung<br/>state what was EXCLUDED and why · sign"):::act
+    S8["S8 PUBLICATION CEREMONY<br/>refusals shown BEFORE it runs"]:::surface
+    S9["S9 PUBLISHED CASE<br/>public · hash-checkable · printable"]:::surface
+    A7 --> S8
+    S8 --> S9
   end
+  S3c --> A7
+  S9 -->|"a case is an INPUT, not a terminus"| S3a
 
-  S10 --> S1n
-  S3b --> S1n
+  classDef act fill:#2b585c,stroke:#1d3c3f,color:#ffffff
+  classDef surface fill:#e6e9ee,stroke:#4a5a72,color:#1c2124
+  classDef outside fill:#ece9e2,stroke:#8a7f6d,color:#42392e,stroke-dasharray:6 4
 </pre>
     </div>
     <figcaption>
-      <code>A1–A7</code> are acts; <code>S1–S10</code> are the surfaces inventoried below.
-      The five subgraphs are the path verbs, plus sharing.
+      <strong>The node's form tells you what kind of thing it is.</strong> A
+      <span class="chip open">dark teal box</span> is an ACT — the member does it and it goes on
+      the record. A <span class="chip designed">light box</span> is a SURFACE — a screen,
+      inventoried below. A rounded box with a dashed border is <em>outside the system</em> — a
+      worry, a letter in the post, a reply. Arrows are the order of work; a labelled arrow names
+      what carries the member across it. The six boxes are the path verbs, plus sharing.
     </figcaption>
   </figure>
 
@@ -1079,20 +1103,34 @@ flowchart TD
     <div class="diagram">
 <pre class="mermaid">
 sequenceDiagram
+  autonumber
   participant M as Member
   participant S as Surface
   participant P as Plane
-  M->>S: choose an option the PRODUCER published
-  S->>P: pre-flight this act
-  P-->>S: named refusals, with the offenders
-  S-->>M: what this will refuse, and why, BEFORE anything runs
-  M->>S: author the reason - empty, never prefilled
-  S->>P: op + reason; actor stamped server-side
-  P-->>S: receipt, or the plane's own refusal verbatim
-  S-->>M: what changed, and what this does NOT claim
+
+  rect rgba(43,88,92,0.10)
+    note over M,P: PRE-FLIGHT — a read that can be re-run and commits nothing
+    M->>S: choose an option the PRODUCER published
+    S->>P: pre-flight this act
+    P-->>S: named refusals, with the offenders
+    S-->>M: what this will refuse, and why, BEFORE anything runs
+  end
+
+  rect rgba(138,106,47,0.10)
+    note over M,P: THE ACT — one write, attributed
+    M->>S: author the reason — empty, never prefilled
+    S->>P: op + reason, the actor stamped server-side
+    P-->>S: receipt, or the plane's own refusal verbatim
+    S-->>M: what changed, and what this does NOT claim
+  end
 </pre>
     </div>
-    <figcaption>The defining property is beat three: see what it will refuse, and why, before it runs.</figcaption>
+    <figcaption>
+      Beats are numbered, and the two shaded phases are the point: everything in the first
+      costs nothing and can be re-run — the defining property is beat 3, see what it will
+      refuse and why <em>before</em> it runs — and only the second phase writes, once,
+      attributed.
+    </figcaption>
   </figure>
 
   <div class="note why">
@@ -1283,21 +1321,25 @@ sequenceDiagram
   <figure>
     <div class="diagram">
 <pre class="mermaid">
-flowchart TB
-  L8["L8 · SURFACES<br/>the screens a member uses<br/>reaches 33 of 94 available operations"]
-  L7["L7 · CLAIM / INQUIRY<br/>DOES NOT EXIST — owner NONE<br/>finding · strength · division · completeness"]
-  L6["L6 · RETRIEVAL<br/>search, filters, saved selections<br/>cannot see the meaning layer at all"]
-  L5["L5 · RECORD — THE SPINE<br/>one write authority · the gate and its checks<br/>object states · membership · the publication fence"]
-  L4["L4 · INTENT — meaning<br/>entities · connections graded A–D<br/>progressions · gaps derived on read"]
-  L3["L3 · CONTENT<br/>what kind of document is this<br/>and what does its text say"]
-  L2["L2 · STRUCTURE<br/>links, page text, element references"]
-  L1["L1 · BYTES<br/>capture · provenance chain · archive fallback"]
+flowchart BT
   L0["L0 · PLATFORM<br/>Worker + Durable Object + object storage"]
 
+  subgraph PIPE["THE DERIVATION PIPELINE — each layer reads only the one below it"]
+    L1["L1 · BYTES<br/>capture · provenance chain · archive fallback"]
+    L2["L2 · STRUCTURE<br/>links · page text · element references"]
+    L3["L3 · CONTENT<br/>what kind of document · what its text says"]
+    L4["L4 · INTENT — meaning<br/>entities · connections graded A–D<br/>progressions · gaps derived on read"]
+    L1 -->|bytes + provenance| L2
+    L2 -->|text + structure| L3
+    L3 -->|what it names| L4
+  end
+
+  L5["L5 · RECORD — THE SPINE<br/>one write authority · the gate and its checks<br/>object states · membership · the publication fence"]:::spine
+  L6["L6 · RETRIEVAL<br/>search · filters · saved selections"]
+  L7["L7 · CLAIM / INQUIRY — DOES NOT EXIST<br/>owner NONE<br/>finding · strength · division · completeness"]:::missing
+  L8["L8 · SURFACES<br/>the screens a member uses<br/>33 of 94 operations reachable"]
+
   L0 --> L1
-  L1 -->|bytes + provenance| L2
-  L2 -->|text + structure| L3
-  L3 -->|what it names| L4
   L1 <--> L5
   L2 <--> L5
   L3 <--> L5
@@ -1306,14 +1348,21 @@ flowchart TB
   L6 -->|operations| L8
   L4 -->|operations| L8
   L4 -.->|"no path today"| L6
-  L7 -.->|"BLOCKED: no producer, no consumer"| L8
   L4 -.->|"grades have no consumer"| L7
   L5 -.->|"the gate covers documents, not claims"| L7
+  L7 -.->|"BLOCKED · no producer, no consumer"| L8
+
+  classDef spine fill:#2b585c,stroke:#1d3c3f,color:#ffffff
+  classDef missing fill:#f3e3df,stroke:#9c4536,color:#9c4536,stroke-dasharray:6 4
 </pre>
     </div>
     <figcaption>
-      Solid edges work today. Dotted edges are the absences — and three of the four converge
-      on L7, the layer the whole system exists for.
+      <strong>Read it bottom-up, as a stack:</strong> the platform at the floor, the screens at
+      the top, and each layer of the derivation pipeline reading only the one below it. The
+      <span class="chip open">teal</span> layer is the spine — every layer reads and writes the
+      record through it. The <span class="chip missing">red, dashed</span> layer is the one that
+      does not exist. Solid edges work today; dotted edges are the absences — and three of the
+      four converge on L7, the layer the whole system exists for.
     </figcaption>
   </figure>
 
@@ -1738,20 +1787,40 @@ flowchart TB
     <div class="diagram">
 <pre class="mermaid">
 flowchart LR
-  A["the inquiry type<br/>REC-10"] --> B["basis + no cycles<br/>REC-11"]
-  B --> C["conclude<br/>REC-13"]
-  B --> D["strength: two measures<br/>REC-12"]
-  C --> E["publish + editions<br/>REC-14"]
-  D --> E
-  E --> F["the public read path<br/>REC-22"]
-  F --> G["the published case page<br/>UI-18"]
-  A -.->|"parallel slot"| H["publish what may be done<br/>REC-19"]
-  H -.-> I["every act surface"]
+  subgraph CHAIN["THE PUBLICATION CHAIN — longest path, six deep"]
+    A["REC-10<br/>the inquiry type"]:::chain
+    B["REC-11<br/>basis + no cycles"]:::chain
+    C["REC-13<br/>conclude"]:::chain
+    D["REC-12<br/>strength: two measures"]:::chain
+    E["REC-14<br/>publish + editions"]:::chain
+    F["REC-22<br/>the public read path"]:::chain
+    G["UI-18<br/>the published case page"]:::chain
+    A --> B
+    B --> C
+    B --> D
+    C --> E
+    D --> E
+    E --> F
+    F --> G
+  end
+
+  subgraph LANE["A PARALLEL SLOT — contends with nothing above"]
+    H["REC-19<br/>publish what may be done"]:::lane
+    I["every act surface"]:::lane
+    H --> I
+  end
+  A -.-> H
+
+  classDef chain fill:#e2ecec,stroke:#2b585c,color:#1c2124
+  classDef lane fill:#f2ebdc,stroke:#8a6a2f,color:#42392e
 </pre>
     </div>
     <figcaption>
-      The longest chain is six deep and it is the publication chain. Strength and conclude are
-      <em>not</em> serial with each other — two people can take them in the same week.
+      <strong>An arrow reads “must land before”.</strong> The longest chain is six deep and it
+      is the publication chain, boxed in <span class="chip open">teal</span>; the
+      <span class="chip partial">amber</span> lane is a parallel slot that contends with nothing
+      above it — the dotted edge is its only dependency. Strength and conclude are not serial
+      with each other: two people can take them in the same week.
     </figcaption>
   </figure>
 
