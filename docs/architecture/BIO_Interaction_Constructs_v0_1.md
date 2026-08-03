@@ -410,6 +410,34 @@ selection is rejected doctrine (D-35): a selection records INTENT, and an action
 on rows the operator never saw is an accountability failure in a record whose purpose is
 attribution. Visibility may only ever SHRINK a selection.
 
+## P · THE ASSISTANT — one way in, on every surface
+
+**Carries:** free natural-language input (typed or spoken) on every surface, expanding from a
+persistent tag into a dialog. RULED 2026-08-03 by Bob (DEC-27).
+
+**Both a construct and a surface.** The tag instantiates everywhere, like the ACT; the expanded
+dialog is S12, with its own states.
+
+**Three request kinds, three levels of ceremony**, because one rule cannot cover them: FIND is a
+read and needs none; CREATE proposes objects and needs confirmation; ACT changes the record.
+
+**The rule that protects everything else: the assistant may INITIATE an act, and the act still
+runs its four beats.** It is never a shortcut past the pre-flight, the authored reason, or the
+receipt. An assistant that could commit directly would be a back door around every safeguard
+here, and the most convenient control in the product -- which is precisely why it must not exist.
+
+**Accountability rule:** the member's words stay the member's. When prose becomes a claim, the
+member authored it -- the machine chose the shape, not the content, which is transcription and
+routing rather than generation. Three limits keep it there: it never commits, only proposes and
+shows what it understood; it structures only what was SAID, and asks rather than asserts when it
+thinks something further is implied; and it may propose project defaults from a
+self-identification but never set them silently, because a project's required evidentiary
+strength is a DECLARATION (DEC-17) and an inferred declaration is not one.
+
+**Voice:** transcribed speech is machine-produced text. A mis-transcription that reaches an
+authored field corrupts the member's own testimony, so transcription is always shown for
+correction before it becomes anything, and that it was transcribed is recorded.
+
 ## U · UNDETERMINED — a display primitive, not an act
 
 Not a construct a member operates; a shape the interface must render **identically

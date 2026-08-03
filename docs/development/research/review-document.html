@@ -261,7 +261,7 @@ footer{
   </p>
   <p class="readtime">Six parts · about 25 minutes · every count measured against the repository, not estimated</p>
   <div class="statline">
-    <div class="stat"><b>10</b><span>surfaces specified</span></div>
+    <div class="stat"><b>10<span style="font-size:.6em;opacity:.65">+2</span></b><span>surfaces · 2 named, not drawn</span></div>
     <div class="stat"><b>133</b><span>screen states drawn</span></div>
     <div class="stat"><b>94</b><span>processes catalogued</span></div>
     <div class="stat"><b>23</b><span>of those work today</span></div>
@@ -288,7 +288,8 @@ footer{
   <div class="navhead">1 · The path</div>
   <a href="#journey">The journey</a>
   <a href="#act">The ACT</a>
-  <a href="#surfaces">Ten surfaces</a>
+  <a href="#assistant">The assistant</a>
+  <a href="#surfaces">The surfaces</a>
   <a href="#hard">Four hard moments</a>
   <div class="navhead">2 · Underneath</div>
   <a href="#layers">The layer stack</a>
@@ -1471,10 +1472,99 @@ sequenceDiagram
 
 <hr class="rule">
 
-<section id="surfaces">
-  <h2><span class="tag">The path</span>Ten surfaces</h2>
+<section id="assistant">
+  <h2><span class="tag">The path</span>The assistant — one way in, on every screen</h2>
   <p class="lede">
-    Each carries one job, stated as a sentence the member would recognise. The chip is what
+    Every screen carries a small tag at the top. Tapping it opens a box the member can type or
+    speak anything into. It is the equivalent of the search box every serious tool has, except
+    that it does not only find things — it can also set things up and start work.
+  </p>
+  <p>
+    Three real examples, and they are deliberately different from each other:
+  </p>
+  <ul>
+    <li><em>“I'm a journalist. A source says the city's annual audit sent to the state
+      Controller is a controlled audit rather than the general audit that's required. I want to
+      open a new project to explore this tip.”</em></li>
+    <li><em>“I'm a resident of Oakland. The city appointed a police commissioner with a felony
+      record, the required public comment process wasn't followed, and the city attorney says
+      he isn't qualified.”</em></li>
+    <li><em>“Show me new content the system found over the weekend on the Sewer Fund project.”</em></li>
+  </ul>
+  <p>
+    The first asks for something to be set up. The second is not a request at all — it is
+    somebody describing a situation, which happens to contain several separate assertions. The
+    third is a question about what the record already holds. <strong>One box, three quite
+    different jobs</strong>, and they need different amounts of care.
+  </p>
+
+  <div class="note alarm">
+    <span class="lbl">The rule that protects everything else in this document</span>
+    <p>
+      <strong>The assistant can start an act. The act still runs all four beats.</strong> Asking
+      for something in the box never skips seeing what would be refused, never skips writing
+      your own reason, and never skips the receipt.
+    </p>
+    <p>
+      This has to be stated plainly because the opposite is so tempting to build. An assistant
+      that could just do things would be the most convenient control in the product — and it
+      would be a way around every safeguard described here. Convenience is exactly why it must
+      not exist.
+    </p>
+  </div>
+
+  <h3>Turning what someone typed into structure</h3>
+  <p>
+    Take the second example. Buried in three lines are several distinct assertions — the
+    appointee has a felony record; the required comment process was skipped; the city attorney
+    has said he is not qualified — plus several people and bodies, and a claim that a required
+    process was not followed. The assistant's job is to lay that out as a question with claims
+    beneath it, not to leave the member to do the filing.
+  </p>
+  <p>
+    <strong>Whose words are those claims?</strong> The member's. They typed them. The system
+    chose how to arrange them, not what they say — which is the difference between helping
+    someone file their own thinking and doing their thinking for them. That keeps it on the
+    right side of the line the rest of this document draws.
+  </p>
+  <p>
+    <strong>But arranging is still interpretation, so three limits hold it in place.</strong>
+    The assistant never commits anything: it shows what it understood — <em>this is what I read
+    as the question, these as the claims, these as the people and bodies named</em> — and the
+    member corrects it before anything exists. It only arranges what was actually said; if it
+    suspects a further claim is implied, it asks rather than adding one, because inventing a
+    claim would be the machine deciding what the investigation is about. And where someone opens
+    with <em>“I'm a journalist”</em> or <em>“I'm a resident”</em>, it may suggest suitable
+    defaults for the new project — including the standard of proof the project will hold itself
+    to — but it may never set that quietly. A standard of proof is something a group declares
+    about its own work, and a declaration nobody made is not a declaration.
+  </p>
+
+  <div class="note">
+    <span class="lbl">Speaking instead of typing</span>
+    <p>
+      Voice works the same way, with one extra care. A transcript is text a machine produced,
+      and if a mis-heard word slides into a field the member is signing their name to, the
+      record now holds their testimony wrong. So what was heard is always shown back for
+      correction before it becomes anything, and the record notes that it began as speech.
+    </p>
+  </div>
+
+  <p>
+    <strong>The assistant and the queue are the same material from opposite directions.</strong>
+    The queue pushes: it says what wants your attention. The assistant pulls: you ask. The third
+    example above is deliberately someone asking for what the queue would otherwise have brought
+    them.
+  </p>
+</section>
+
+<hr class="rule">
+
+<section id="surfaces">
+  <h2><span class="tag">The path</span>The surfaces</h2>
+  <p class="lede">
+    Twelve: ten specified in the study, plus the action plan and the assistant, both named here
+    and not yet drawn. Each carries one job, stated as a sentence the member would recognise. The chip is what
     exists <em>today</em>, measured against the shipping interface and the plane's op table —
     not what the specification asks for.
   </p>
@@ -1557,6 +1647,14 @@ sequenceDiagram
     <p class="job">Show me every option we have in response to this finding — what each depends on, what it costs, when it must happen, and how well the evidence supports it today.</p>
     <p>The graph, not the single engagement: options with their dependencies, their deadlines, the resources each needs, and branches keyed to what each step might return. Options declined stay visible with their reason. Every element carries its support status — established, short of the standard, or hypothetical — so a plan can be built on unproven premises without ever pretending they are proven.</p>
     <p class="needs">an eleventh surface · no states drawn yet · the plan object does not exist · specifiable now except for the system answering the backward question</p>
+  </div>
+
+  <div class="card">
+    <div class="cid"><span>S12</span><span class="chip missing">not yet specified</span></div>
+    <h3>The Assistant</h3>
+    <p class="job">Let me say what I want in my own words, from wherever I am, and show me what you understood before anything happens.</p>
+    <p>A tag on every screen, expanding into a prompt that accepts typed or spoken input. Three jobs behind one box: find what the record holds, set up new work from what the member described, and start an act — where starting is all it does, because the act still runs its four beats. Everything it proposes is shown back for correction before it exists.</p>
+    <p class="needs">a twelfth surface, and a construct that appears on all the others · no states drawn yet</p>
   </div>
 </section>
 

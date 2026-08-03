@@ -1897,6 +1897,73 @@ response: **AGREED, AND THE DESIGN ALREADY CONTAINS THE PRINCIPLE.** Bob, 2026-0
   which is where DEC-17's project-declared strength first does mechanical work.
 decided: 2026-08-03 · Bob
 
+### DEC-27 · answered
+raised: 2026-08-03 · Bob, in the review of the study document
+for: bob
+question: Should CivicOS have an ASSISTANT — a prompt affordance on every surface, taking free
+  natural-language text (and voice) — and what governs what it is allowed to do with what it is
+  given?
+why it is Bob's: doctrine. A general-purpose prompt that can create objects and start acts is
+  the single largest surface area the machine will ever have onto the record, and it touches
+  every rule about authorship.
+provisional: nothing. No such affordance is designed or built; today a member drives the system
+  by finding the right screen.
+blocks: nothing built. It adds a surface and a construct.
+alternative: no assistant; keep every capability behind the surface that owns it.
+recommendation: adopt, and the value of the entry is the BOUNDARY rather than the adoption.
+reversal cost: low now, very high later — an assistant that acquired the habit of committing
+  things directly would be relied on, and taking that back would break how members work.
+response: **ADOPT.** Bob, 2026-08-03: *"Just as most full featured UXs include a search box…
+  CivicOS should have an Assistant feature. At the top of every surface should be a tag… Hitting
+  this tag will expand into a larger window-ish dialog that a user can type anything into… It's
+  a feature that allows users to drive the system through natural text input - including voice
+  transcription."*
+  **IT IS BOTH A CONSTRUCT AND A SURFACE**, and saying so avoids a category error: the TAG is
+  present on every surface (like the ACT, which is not a screen and instantiates inside several),
+  while the expanded dialog is a place with its own states — S12.
+  **THREE REQUEST KINDS, and Bob's three examples are one of each — which is why the boundary
+  cannot be one rule:**
+  - **FIND** (*"show me new content uncovered over the weekend on the Sewer Fund project"*) — a
+    read. No ceremony; it changes nothing.
+  - **CREATE** (*"I want to open a new project to explore this tip"*) — proposes objects: a
+    project, an inquiry, and the unsupported CLAIMS the member's own prose already contains.
+  - **ACT** — anything that changes the record or reaches outside the group.
+  **THE RULE A BUILD SESSION WOULD MOST LIKELY GET WRONG, stated first: THE ASSISTANT MAY
+  INITIATE AN ACT, AND THE ACT STILL RUNS ITS FOUR BEATS.** It is not a shortcut past the
+  pre-flight, the authored reason or the receipt. An assistant that could commit directly would
+  be a back door around every safeguard in the system, and it would be the most convenient door
+  in the product — which is exactly why it must not exist.
+  **WHY THE CREATE CASE IS NOT A VIOLATION OF THE AUTHORSHIP RULES, which is the question that
+  matters most.** When a member types *"the annual audit is just a controlled audit rather than
+  the general audit that's required"*, and the system turns that into a claim, **the member
+  authored the claim** — those are their words. The machine chose the SHAPE, not the content.
+  That is transcription and routing, not generation, and it is on the permitted side of the
+  assembly rule for the same reason a member's own notes are.
+  **BUT THE SHAPE-CHOOSING IS INTERPRETATION, so three limits follow:**
+  1. **The assistant never commits. It proposes a structure, shows it, and the member confirms**
+     — DEC-24 rule 1, of which this is simply the most visible instance. And per rule 1's second
+     half, it shows its work: *this is what I read as the question, these as claims, these as
+     the people and bodies named.*
+  2. **It may only structure what the member SAID. It may not add propositions the member did
+     not state.** If it believes a fourth claim is implied, it ASKS; it does not assert. Adding
+     an unstated claim is the machine choosing the question, which DEC-24 rule 2 refuses.
+  3. **It may propose project defaults from a self-identification and may never silently set
+     them.** Bob's examples open *"I'm a journalist"* and *"I'm a resident of Oakland"*, which
+     bear on the project's declared required strength (DEC-17) and its action repertoire. But
+     that strength is a DECLARATION the group makes about its own work — inferring it from a
+     phrase and applying it quietly would hollow out the declaration. Propose, show, confirm.
+  **VOICE TRANSCRIPTION carries one consequence worth naming.** Transcribed speech is
+  machine-produced text, and if a mis-transcription flows into an authored field it corrupts the
+  member's own testimony — the one thing the record cannot afford to get wrong. So transcribed
+  text is always shown for correction before it becomes anything, and that it was transcribed is
+  recorded. This is DEC-4's principle (machine-produced text is never indistinguishable from
+  what a person wrote) applied to the member's own words instead of a publisher's.
+  **RELATION TO THE QUEUE, so the two do not drift into duplicating each other:** S1 THE QUEUE
+  pushes — it says what wants the member. The ASSISTANT pulls — the member asks. Same material,
+  opposite direction, and Bob's third example is deliberately a pull of what the queue would
+  otherwise have pushed.
+decided: 2026-08-03 · Bob
+
 ## Answered, awaiting enactment
 
 _(none)_
