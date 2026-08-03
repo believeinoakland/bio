@@ -467,6 +467,80 @@ was never "has a text layer".** CPDF-9/CPDF-10 change again:
   machine-generated (producer metadata routinely names the scanner or OCR software), so the
   record can say *this came from the publisher's own OCR*. Nothing looks today.
 
+
+### 2026-08-02 · BOB · Q5, Q6 and Q11 settled without a ruling — plus TWO MEASURED DEFECTS, one of them doctrine-touching
+
+`DECISIONS.md` has **no open entries** and this entry raises none. Three of RECONCILED §4's
+remaining open questions are closed by the work each one asked for — two design passes and one
+measurement — and each carries its reasoning in place in `research/RECONCILED.md` §4, with the
+affected item scopes in §3 updated in the same pass. Nothing here needs Bob.
+
+**Q5 — the completeness panel is RE-KEYED, and UI-17's no-panel provisional is retired.** The
+permitted-assembly boundary is not timing and not breadth, it is the KEY: an assembly is permitted
+when keyed on the SUBJECT being written about, and performs generation by SELECTION when keyed on
+the ANSWER-SHAPE of the question the surface is asking. Both fixes previously on offer varied
+timing or breadth and left the key untouched. **UI-17 step 3 now ships the field, the C-9 picker
+AND a panel of the case's own BASIS LEGS** — whose content is the COMPLEMENT of the field's and so
+cannot be transcribed. New negative control: any prior deferral/dismissal/severance reason
+appearing in step 3's panel fails the harness.
+
+**Q6 — a threshold over a pair is a NAMED STANCE resolving to a PAIR OF INDEPENDENT FLOORS.** Not
+one value applied to both axes (they move independently by audience: a lawyer needs both high, a
+government administrator holds the authoritative copy and relaxes capture, media need capture high
+and hedge connection in the verb), and not one named axis with the other unconstrained — **that
+second form is the more dangerous, because it admits arbitrary weakness SILENTLY**, which is R2's
+forbidden composition performed by omission. Both floors are stated in-band per H4; a floor of
+`none` is legitimate and must render explicitly, because an unstated floor reads as a satisfied
+one; a SUSPENDED axis satisfies only `none`. **Affects UI-18's threshold selector only, not its
+data path.**
+
+**Q11 — MEASURED, and the answer is YES.** `op=signerlist` is reachable by an ordinary member's
+SESSION and returns the whole list unfiltered (`member_id`, `status`), byte-identical to the
+`ADMIN_TOKEN` view; `op=whoami` gives the caller its own member id. So the per-member pre-flight is
+computable client-side with no new op. **Read-the-source trap worth naming: `signerlist` is in
+neither `SESSION_OPS.member` nor `SESSION_OPS.admin`, which looks like a refusal and is not one** —
+that gate is applied only to MUTATING ops. C-4's instance-wide `NO_SIGNERS` wording in UI-17 is
+UNCHANGED and stays; the per-member pre-flight is an ADDITION to it, not a replacement, until D-158
+closes. Instrument and figures in `MEASUREMENTS.md`.
+
+**TWO DEFECTS FOUND WHILE MEASURING. Both are measured, not reasoned, and neither needs a ruling —
+the design already decided both.**
+
+- **D-157 · `op=memberlist` hands the cover↔handle PAIRING to ordinary members and to
+  `MEMBER_TOKEN`.** `BIO_Membership_Architecture_v1.md` §3 and `v2` §3, identical: *"Only
+  administrators see cover and handle together."* MEASURED: an ordinary member session
+  (`administer: false`) and the shared `MEMBER_TOKEN` each receive `handle = cover` for every
+  member on the LIVE `bio` store. This is the anti-deanonymisation mechanism — the schema comment
+  says the split exists *"precisely so that a roster seized or subpoenaed does not deanonymise the
+  group."* **The source contradicts itself in three places**: `index.mjs:407` grants
+  `["admin","member","probe"]` while the comment eight lines below says *"All admin-only"*, and
+  `store.mjs:5810` says *"Every op that reaches this is admin-only at the control plane."*
+  **`PROBE_TOKEN` is NOT exposed** — `scopeFor` confines probe class to `scratch`, a different DO
+  with its own member table; that half was measured before it was claimed, and it is the claim that
+  would otherwise have been wrong. **The fix is a PROJECTION, not a refusal:** §3 also says
+  *"Members and the public see handles"*, so a member legitimately needs the handle roster and must
+  not receive `cover`. **`test/members.test.mjs:192` asserts the current behaviour** (*"machine
+  member token reads the roster"*) **and must be CORRECTED, never exempted** (`CLAUDE.md`), with a
+  comment saying why the old assertion was wrong. Negative control: a non-admin caller receiving a
+  `cover` field at all. Milestone M7. **No queue item covers this today.**
+- **D-158 · a signing key registered for a member who never ENROLLED reads `active` on
+  `op=signerlist` and is refused by `op=ratify`.** `signerList()` reads `signers` alone;
+  `gateFacts()` joins `members` and requires both active. Revocation agrees only because
+  `memberSet` CASCADES; there is no cascade for the never-enrolled case, and `signerAdd` checks
+  only that the member exists. Two candidate fixes, and the second is preferable: join `members` in
+  `signerList()`, or refuse `signerAdd` for a member who has not enrolled — the join is smaller but
+  leaves a row that means nothing, while refusing at write keeps the table honest and is the shape
+  `signerAdd`'s existing `NO_SUCH_MEMBER` check already reaches for. Whichever ships, assert the
+  other view against it. Milestone M10, and it bounds **REC-15/UI-17**'s per-member pre-flight.
+
+**No in-flight work is superseded.** UI-17 and UI-18 are `queued`, not active, so these scope
+changes cost nothing. Whether D-157 earns a slot is CONDUCT's call; this session's read is that it
+is small, self-contained, and the only one of the two that touches a person outside the project.
+
+**One documentation correction landed in the same pass:** UI-17's scope pointed at *"§4 Q8"* for
+the panel's permitted replacement; the panel question is **Q5** (Q8 is `divided` state-vs-disposition).
+Fixed in place.
+
 ---
 
 Item format:

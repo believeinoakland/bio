@@ -1016,18 +1016,24 @@ only)
   **(2) C-9 — step 3's control gains a picker over the member's own material**, so an exclusion can
   NAME what was left out and `inquiry_exclusions.target_id` has a source. **(3) D-10 — the assembly
   panel as drawn is REFUSED**: filtered to this case's deferrals, dismissals and severances, its
-  SELECTION does generation's work, and C-21.1 cannot see a paraphrase. **This item ships step 3
-  WITHOUT the panel** — the field, empty, plus the picker — and the panel's permitted replacement
-  is §4 Q8. Shipping no panel is the conservative branch: it removes an assembly the rule may not
-  permit and removes nothing the member authored. **(4) C-4 — `NO_SIGNERS` renders instance-wide
+  SELECTION does generation's work, and C-21.1 cannot see a paraphrase. **REPLACED 2026-08-02 by
+  §4 Q5's design pass, and the no-panel provisional is RETIRED:** step 3 ships the field, the C-9
+  picker, AND a panel showing this case's own BASIS LEGS — what the case RESTS ON. A permitted
+  assembly is keyed on the SUBJECT being written about; one keyed on the ANSWER-SHAPE of the
+  question being asked performs generation by selection whatever its filter, which is why the
+  timing fix and the drop-the-case-filter fix were both weak. The basis-leg panel's content is the
+  COMPLEMENT of the field's, so it cannot be transcribed — the member must perform the subtraction,
+  which is the judgement H5 requires them to own. **(4) C-4 — `NO_SIGNERS` renders instance-wide
   wording**, never *"for you"*. Op order, the sha-changes-so-signature-follows argument, `/sign` in
   a new tab, and Surface B's demotion are unchanged.
 - **behind-interface:** I3
 - **depends-on:** REC-15, UI-11
 - **accepts-when:** as before, plus — step 2 shows two strengths and a suspended axis by name; an
-  exclusion naming a document is retrievable by `target_id`. Negative controls — publish with an
-  ungraded leg and a composed letter appears, and the harness fails; render `grade A` beside a
-  direct capture and it fails; render `NO_SIGNERS` with per-member wording and it fails.
+  exclusion naming a document is retrievable by `target_id`; step 3's panel lists this case's basis
+  legs. Negative controls — publish with an ungraded leg and a composed letter appears, and the
+  harness fails; render `grade A` beside a direct capture and it fails; render `NO_SIGNERS` with
+  per-member wording and it fails; **render any prior deferral, dismissal or severance reason in
+  step 3's panel and it fails** (§4 Q5).
 - **added:** 2026-08-01 · BOB
 
 ---
@@ -1044,16 +1050,28 @@ only)
   is a basis leg and the case's strength IS its weakest leg, so a threshold that drops the
   determining leg drops the thing that produced the qualifier it preserves — the reader sees a
   strength and no leg that could have produced it. That leg is a QUALIFIER under H5 and is always
-  present. `undetermined` therefore never needs a position in the threshold order. Everything else
-  — in-band block, print-first, four forbidden affordances, the Verify wire — unchanged.
+  present. `undetermined` therefore never needs a position in the threshold order. **(4) §4 Q6,
+  SETTLED 2026-08-02 — the threshold SELECTOR's form.** A threshold is a NAMED STANCE resolving to a
+  PAIR OF INDEPENDENT FLOORS, one per axis, evaluated conjunctively: never one value applied to
+  both (the axes move independently by audience — a lawyer needs both high, an administrator holds
+  the authoritative copy and relaxes capture, media need capture high and hedge the connection in
+  the verb), and never one named axis with the other unconstrained (which admits arbitrary weakness
+  silently — R2's forbidden composition performed by omission). The reader picks the STANCE, per
+  `AUDIENCES.md` §0's labelled-by-what-the-reader-is-DOING rule, and the stance carries its pair.
+  Both floors are STATED in-band per H4, and a floor of `none` is legitimate but must render
+  explicitly — an unstated floor reads as a satisfied one. A SUSPENDED axis satisfies only `none`.
+  Everything else — in-band block, print-first, four forbidden affordances, the Verify wire —
+  unchanged.
 - **behind-interface:** I3
 - **depends-on:** REC-22, UI-17, **REC-16** *(new — nothing produces the parent/sibling disclosure
   without it)*
 - **accepts-when:** as before, plus — a threshold rendering that would drop a determining leg keeps
   it and says why; a published child names its parent and siblings; both strengths survive the print
-  stylesheet and the copied selection. Negative controls — drop the determining leg at a threshold
-  and the harness fails; publish a child with no parent named and it fails; compose the two
-  strengths into one letter anywhere on the page, including in print, and it fails.
+  stylesheet and the copied selection; **a rendering names BOTH floors it applied, including any set
+  to `none`**. Negative controls — drop the determining leg at a threshold and the harness fails;
+  publish a child with no parent named and it fails; compose the two strengths into one letter
+  anywhere on the page, including in print, and it fails; **apply one floor to both axes, or leave
+  one axis unconstrained, or omit a `none` floor from the rendering, and it fails** (§4 Q6).
 - **added:** 2026-08-01 · BOB
 
 ---
@@ -1229,6 +1247,16 @@ Fourteen. Compiled from ~40 raw mentions across `SB-CORE` §5, `SB-EVIDENCE` §6
 `LAYERS`, `JOURNEY-PRIMARY` and `COMPLETENESS-AUDIT`. Ranked by what each blocks, not by how
 interesting it is.
 
+**SETTLED 2026-08-02 BY SESSION BOB, in place, without a ruling — do not re-raise:** **Q5** (the
+completeness panel is re-keyed onto the case's basis legs — a design pass, as the entry required),
+**Q6** (a threshold is a named stance over a pair of independent floors — a rendering-design call,
+as the entry required), and **Q11** (settled by the MEASUREMENT the entry demanded, and recorded in
+`MEASUREMENTS.md` with its instrument; it also produced D-158). Each carries its reasoning and its
+build consequence in place below, and the corresponding item scopes in §3 are updated. The
+questions Bob answered on 2026-08-01/02 are recorded in `DECISIONS.md` DEC-12 through DEC-17 and
+their consequences are handed over in the `QUEUE.md` BOB INBOX; CONDUCT's enactment pass, not this
+file, is what reconciles those into the §3 items.
+
 **CLOSED BY R1–R4 and removed from every list — do not re-raise:** whether `undetermined` floors or
 suspends (was `SB-OUTPUT` §5.1, `BUILD-ORDER` HOLE-5, `CRITIQUE` D-2 — closed by R1); whether the
 two grade axes compose (was implicit everywhere — closed by R2); what replaces the cycle guard (was
@@ -1274,20 +1302,102 @@ a citation."* **Second-order cost of D1(b), which is why it is not free:** it re
 name a registry entity, and the registry has no write surface until UI-13.
 
 **Q5 · Which permitted assembly panel, if any, sits beside the completeness field?** *(=
-`CRITIQUE` D-10.)* **Blocks:** UI-17's step 3 only. **Settled by:** a further design pass, not by
-Bob and not by a build session. Both fixes on offer are weak — showing the panel after the field has
-content is defeated by typing one word; showing it without the case filter produces a panel too
-broad to be the Zotero precedent it cites. **Running provisionally:** UI-17 ships the field and the
-C-9 picker and NO panel, which removes an assembly the rule may not permit and removes nothing the
-member authored.
+`CRITIQUE` D-10.)* **Blocks:** UI-17's step 3 only. **SETTLED 2026-08-02 by the design pass this
+question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already
+in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.
+
+**THE ANSWER: the panel shows the case's own BASIS LEGS — what this case RESTS ON — and never the
+member's prior deferral, dismissal or severance reasons.**
+
+**The rule the two offered fixes both miss.** The permitted-assembly boundary is not about
+timing or breadth. It is about the KEY:
+
+> **An assembly is permitted when it is keyed on the SUBJECT the member is writing about. It
+> performs generation by SELECTION when it is keyed on the ANSWER-SHAPE of the question the
+> surface is asking.**
+
+That is what the Zotero precedent actually licenses — your annotations *on the document you are
+writing about*. It does not license "your reasons for setting things aside" shown at the moment
+you are asked to name what you set aside. The panel as `SB-OUTPUT.md:495-516` draws it is keyed
+`{this case} × {deferral, dismissal, severance}`, which is precisely the answer set of *"what does
+this case exclude"*. D-10 is right that the SELECTION does generation's work; this states why.
+
+**So both fixes on offer are weak for the same reason, and RECONCILED's own summary of the second
+was too generous.** Showing the panel AFTER the field has content varies the timing and leaves the
+key untouched — defeated by typing one word, as `CRITIQUE` says. Dropping the case filter varies
+the breadth and ALSO leaves the key untouched: a panel of every set-aside reason across every case
+is still a panel of set-aside reasons, now merely with a haystack around it. It is not *"too broad
+to be the Zotero precedent"* so much as **not a different category of thing at all** — it is less
+useful without being more permitted.
+
+**Why re-keying works where filtering cannot.** The basis legs are the member's own assembled
+material for this case, gathered one step earlier in step 2, and they are the subject of the
+writing. Decisively: **the panel's content is the COMPLEMENT of the field's, so it cannot be
+transcribed.** A member cannot copy an inclusion list into an exclusion claim. They must perform
+the subtraction themselves — which is exactly the judgement H5 requires them to own, and which the
+original panel performed FOR them. C-21.1's blindness to paraphrase stops mattering, because there
+is no longer a candidate sentence on screen to paraphrase.
+
+**What is lost, and what already covers it.** The original panel served one real case: a member who
+deferred something on this case and forgets it. That is covered by C-9's picker, already in UI-17's
+scope — and the difference is the one that matters here, because a picker is MEMBER-INITIATED
+retrieval (they go looking, holding the question) rather than SURFACE-INITIATED enumeration (it
+lists at them, holding the answer).
+
+**Build consequence:** UI-17 step 3 now ships the field, the C-9 picker AND the basis-leg panel.
+The provisional (no panel) is retired. Negative control: render any prior deferral, dismissal or
+severance reason in step 3 and the harness fails.
 
 ### Tier 2 — blocks a design decision, not an item
 
-**Q6 · What form does a THRESHOLD take over a PAIR of strengths?** *(New, forced by R2.)* Both
-axes at or above the threshold, or one named axis, or two independent selectors? **Blocks:** the
-threshold selector's design in UI-18; not its data path. **Settled by:** whoever designs the
-rendering, against `AUDIENCES.md`'s labelled-by-what-the-reader-is-DOING rule. Recorded here because
-R2 created it and no file has seen it.
+**Q6 · What form does a THRESHOLD take over a PAIR of strengths?** *(New, forced by R2; the
+question R2-f defers.)* **Blocks:** the threshold selector's design in UI-18; not its data path.
+**SETTLED 2026-08-02 by the design pass this question asked for (session BOB)**, against
+`AUDIENCES.md` §0's rule that a threshold is a parameter labelled by what the reader is DOING.
+
+**THE ANSWER: a threshold is a NAMED STANCE that resolves to a PAIR OF INDEPENDENT FLOORS, one per
+axis, evaluated conjunctively — never one value applied to both, and never one axis with the other
+left unconstrained.** Four clauses:
+
+**(1) The form is a pair of floors `(capture ≥ Cx, connection ≥ Cn)`, independently set.** This
+kills the single-shared-value form, because the axes move independently BY AUDIENCE and
+`AUDIENCES.md` §§1–4 already contain the counter-examples: a LAWYER at *"the record establishes"*
+needs both floors high — a perfect inference drawn over a mailed-in screenshot establishes nothing,
+and neither does an immaculate capture connected by a guess. A GOVERNMENT ADMINISTRATOR at *"worth
+checking"* holds the authoritative copy already and can re-derive the capture half, so they want
+connection high with capture RELAXED. MEDIA at *"records suggest"* must be able to defend the bytes
+publicly and are hedging the inference in the verb itself — capture high, connection lower. One
+shared number cannot express any of those three.
+
+**(2) It also kills the one-named-axis form, and that form is the more dangerous of the two**,
+because it fails silently. *"Claims whose connection is A or better"* admits an A-connection
+inference drawn over a grade-D capture, and the reader who asked for a strong rendering receives one
+whose evidentiary half is simply unstated. That is R2's forbidden composition performed by OMISSION
+rather than by averaging, and it is harder to see.
+
+**(3) What the READER chooses is the STANCE, not the letters.** `AUDIENCES.md` §0 fixes threshold
+labels as what the reader is doing — *"records suggest"*, *"worth checking"*, *"the record
+establishes"*, *"worth opening"*, *"does this reach me"*. So the selector offers named stances and
+each stance CARRIES its pair; the pair stays visible and adjustable, but two raw grade knobs are not
+what a reader is handed. This is the rule the question named, and it constrains the LABEL without
+constraining the mechanism underneath it.
+
+**(4) The rendering must STATE both floors it applied, in-band.** H4 already requires the threshold
+and the exclusions to travel inside the artifact in every rendering (`AUDIENCES.md` §8). A rendering
+that says *"at the lawyer's threshold"* without naming both floors has reduced the pair to one
+label — R2's forbidden composition wearing a stance's name. **A floor of "none" is legitimate** (the
+administrator relaxing capture; the peer instance wanting the whole corpus) **and must render as an
+explicit "no floor on capture", never as an absent line** — an unstated floor reads as a satisfied
+one.
+
+**Interaction with R1, stated because a build session will not derive it.** A SUSPENDED axis has no
+strength and cannot be compared to a floor, so it satisfies only the floor "none". This is
+consistent with UI-18's existing D-8/C-15 rule that `undetermined` *"never needs a position in the
+threshold order"*: it is not ranked among the letters, it fails every floor above "none", and the
+suspending leg is kept and named either way.
+
+**Build consequence:** UI-18's threshold selector. No change to its data path, as the question
+anticipated.
 
 **Q7 · Division's residuals after R4: the friction asymmetry, and the timing.** *(= `CRITIQUE`
 D-7's two halves R4 does not reach.)* (a) Severing one leg costs one reason for that leg; dividing
@@ -1317,9 +1427,30 @@ owner-only would let an owner block an honest de-escalation.
 
 **Q11 · Can a surface know, before the act, that a MEMBER holds no active signing key?** *(=
 `SB-CORE` §5; `CRITIQUE` C-4's undesigned half.)* **Blocks:** nothing; REC-15 ships the instance-wide
-refusal. **Settled by a MEASUREMENT, not a ruling** — what `op=signerlist` returns to a non-admin
-session. `CLAUDE.md`'s measure-do-not-assume rule applies: run it and put the answer in
-`MEASUREMENTS.md` with its date and instrument.
+refusal. **SETTLED 2026-08-02 BY MEASUREMENT, as this entry required** — run against the real plane
+under `workerd`, recorded in `MEASUREMENTS.md` with its date and instrument.
+
+**THE ANSWER: YES, with no new op.** `op=signerlist` is reachable by an ordinary member's SESSION
+(`administer: false`) and returns the WHOLE list unfiltered — `member_id` and `status` included,
+byte-identical to the `ADMIN_TOKEN` view — while `op=whoami` returns the caller's own `member`. So
+the pre-flight is `signers.filter(s => s.member_id === me && s.status === "active").length === 0`,
+computed client-side.
+
+**One thing the source makes easy to read backwards:** `signerlist` appears in NEITHER
+`SESSION_OPS.member` NOR `SESSION_OPS.admin`, which looks like a refusal and is not one — that gate
+(`index.mjs:1075`) is applied only to MUTATING ops, and `signerlist` is a read.
+
+**The measured limit, recorded as D-158.** `signerList()` reads the `signers` table alone;
+`ratify`'s predicate (`gateFacts`) also requires the MEMBER to be active. Revocation agrees only by
+CASCADE (`memberSet` revokes the member's signers and kills their sessions), and there is no cascade
+for a member who has never ENROLLED — a key registered for one reads `active` on `signerlist` and is
+refused `SIG_UNKNOWN_KEY` by `ratify`. **This does not weaken the answer in the direction Q11 asks
+about:** *"you hold no active signing key"* is never a false alarm, because a key `signerlist` does
+not show active is one `ratify` will not accept either. It is wrong only optimistically.
+
+**Build consequence:** C-4's instance-wide `NO_SIGNERS` wording in UI-17 is unaffected and stays.
+What becomes AVAILABLE is the per-member pre-flight UI-17 could not previously offer — as an
+addition to the instance-wide refusal, not a replacement for it, until D-158 closes.
 
 ### Tier 3 — recorded, blocking nothing now
 

@@ -1050,3 +1050,105 @@ Under the 3 MB Free gzip limit with ~2.45 MB of headroom, and unpdf stays OUT of
 the plane's own bundle entirely — the whole point of the fleet split. Each member
 versions and deploys separately (fleet rule 4); the committed bundle is what
 deploys and what the battery loads under workerd, as the plane ships its own.
+
+## 2026-08-02, session BOB: what `op=signerlist` tells a surface before the act (RECONCILED §4 Q11)
+
+RECONCILED `§4` Q11 asks whether a surface can know, BEFORE the act, that a MEMBER
+holds no active signing key, and states explicitly that it is *"settled by a
+MEASUREMENT, not a ruling"*. This is that measurement. **Q11 is settled: YES, with one
+divergence that is a defect rather than a limit** (D-158).
+
+**Instrument.** node v26.5.0, darwin/arm64; `miniflare` 4.20260722.0 driving `workerd`,
+running the real `bio-plane/src/index.mjs` with the `STORE` Durable Object bound — the
+same harness the op suites use, so every answer crosses the op registry, the session
+gate and the class gate. Real `ssh-keygen` ed25519 keys and real `bio-ratify`
+signatures for the ratify half. Roster: `ruth` and `gus` administrators (4.2 — the
+second member of a group must be an administrator), `tam` the first ordinary member.
+The probe asserts nothing; it prints what a surface actually receives, because the
+question is what CAN be known.
+
+### Reachability — an ordinary member's SESSION reaches it
+
+| Credential | `op=signerlist` |
+| --- | --- |
+| `ADMIN_TOKEN` | OK |
+| `MEMBER_TOKEN` | OK |
+| `PROBE_TOKEN` | OK (confined to the `scratch` store) |
+| **ordinary member SESSION** (`tam`, `administer: false`) | **OK** |
+| admin session | OK |
+| unauthenticated | REFUSED |
+
+`signerlist` is `mutating: false`, and the `SESSION_OPS` gate at `index.mjs:1075` is
+applied only to MUTATING ops — so a session falls through to the class check and
+`classes: ["admin","member","probe"]` admits it. Worth stating because the opposite is
+the natural reading of the source: `signerlist` appears in NEITHER `SESSION_OPS.member`
+nor `SESSION_OPS.admin`, which looks like a refusal and is not one.
+
+### The payload, and it is not filtered by caller
+
+An ordinary member's session receives the WHOLE list, byte-identical to the
+`ADMIN_TOKEN` view — `key_b64`, `member_id`, `comment`, `status`, `added` for every
+signer, revoked ones included. `op=whoami` on the same session returns
+`member: "tam"`, so the caller can identify its own rows.
+
+**So the pre-flight a surface needs is computable client-side, with no new op:**
+
+    signers.filter(s => s.member_id === me && s.status === "active").length === 0
+
+### The divergence: `signerlist`'s view is NOT the predicate `ratify` enforces
+
+`signerList()` (`store.mjs:5884`) reads the `signers` table alone. `gateFacts()`
+(`store.mjs:5920`) joins `members` and requires `s.status='active' AND m.status='active'`.
+Two paths, and only one of them is reconciled:
+
+| Case | `signerlist` says | `ratify` with that key | agree? |
+| --- | --- | --- | --- |
+| member REVOKED after enrolling | `status: "revoked"` | `SIG_UNKNOWN_KEY` | **yes** |
+| member INVITED, never enrolled | `status: "active"` | `SIG_UNKNOWN_KEY` | **no** |
+
+The first agrees by CASCADE and not by the join: `memberSet` (`store.mjs:5857-5861`)
+explicitly deletes the member's sessions and sets their signers to `revoked`. The
+second has no cascade to reconcile it — a member is `status='invited'` until they
+enrol (`store.mjs:5731`), and `signerAdd` checks only that the member EXISTS
+(`store.mjs:5874`), so a key registered for someone who has never enrolled reads
+`active` on one view and is absent from the other. **MEASURED, both rows.** Recorded as
+D-158.
+
+**What this means for Q11 and for REC-15.** The surface's answer is RELIABLE in the
+direction Q11 asks about — *"you hold no active signing key"* is never a false alarm,
+because a key that `signerlist` does not show active is one `ratify` will not accept
+either. It is unreliable in the optimistic direction, in exactly one reachable case:
+`signerlist` can show an active key for a never-enrolled member whose signature
+`ratify` refuses. C-4's instance-wide `NO_SIGNERS` wording in UI-17 is unaffected;
+what becomes available is the per-member pre-flight UI-17 could not previously offer.
+
+## 2026-08-02, session BOB: `op=memberlist` hands the cover↔handle PAIRING to non-administrators (D-157)
+
+Found while measuring Q11 and verified separately, because the claim is sharp.
+
+`BIO_Membership_Architecture_v1.md` §3 and `v2` §3, identical wording: **"Pairing. Only
+administrators see cover and handle together."** The cover/handle split is the
+anti-deanonymisation mechanism — `schema.mjs` on the `members.cover` column: *"the
+cover-and-handle split exists precisely so that a roster seized or subpoenaed does not
+deanonymise the group."*
+
+Same instrument as above. Covers chosen to look like the ones §3 tells groups to use.
+
+| Credential | store | sees `handle = cover` for every member? |
+| --- | --- | --- |
+| **ordinary member SESSION** (`administer: false`) | `bio` | **YES — all three** |
+| **`MEMBER_TOKEN`** (shared machine credential) | `bio` | **YES — all three** |
+| `ADMIN_TOKEN` | `bio` | yes (correct) |
+| `PROBE_TOKEN` | `scratch` | no — empty roster |
+
+**`PROBE_TOKEN` is NOT an exposure**, and this is the claim that would have been wrong
+without measuring: `scopeFor` (`index.mjs:862`) confines probe class to the `scratch`
+namespace, a different Durable Object with its own member table. The credential
+`package.json` documents as *"safe to share"* is in fact safe here.
+
+The exposure is `MEMBER_TOKEN` and ordinary member sessions on the LIVE store, and the
+source contradicts itself in three places at once — `index.mjs:407` grants
+`classes: ["admin","member","probe"]` while the comment eight lines below it says *"All
+admin-only: memberlist pairs cover with handle and only administrators see those
+together (section 3)"*, and `store.mjs:5810` says *"Every op that reaches this is
+admin-only at the control plane."* Neither comment is true. Recorded as D-157.
