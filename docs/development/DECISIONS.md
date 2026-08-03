@@ -1791,6 +1791,31 @@ response: **AI IS PART OF THE SYSTEM DEFINITION NOW, AND THE BOUNDARY IS: THE MA
   The roles and the boundary are the system definition; the architecture is later work.
 decided: 2026-08-03 · Bob
 
+### DEC-25 · open
+raised: 2026-08-03 · session BOB, from Bob's action-plan ruling
+for: bob
+question: What, if any, part of an ACTION PLAN is published?
+why it is Bob's: doctrine, risk carrying his name, and effects on people outside the project. A
+  plan holds the group's strategic deliberation, which is both the most sensitive material the
+  system will hold and the most likely to be sought under legal process.
+provisional: **THE PLAN IS WORKING MATERIAL AND IS NEVER PUBLISHED** — the conservative branch,
+  and it blocks nothing. The two-bucket fence already keeps working material off the public read
+  path by construction, so this is the default rather than a new mechanism.
+blocks: nothing. S11 is unbuilt and `impacting` has no working process at all.
+alternative: publish some of it — most plausibly the steps actually TAKEN and their outcomes, on
+  the argument that a reader judging a case should see what the group did about it.
+recommendation: KEEP IT UNPUBLISHED, and make that structural rather than a permission check.
+  What legitimately reaches the public is already covered without touching the plan: an action's
+  OUTCOME can become evidence (DEC-14 governs claims about our own impact), and the group's
+  declared position on contacting the subject is published under DEC-13. Neither needs the
+  deliberation. The asymmetry that decides it: publishing the plan costs the group everything a
+  hostile counterparty would want — which options they can afford, what they are timing around,
+  what they decided against and why — and buys a reader very little the outcomes do not already
+  give them.
+reversal cost: low while nothing is built; high once plans exist and groups have written
+  candidly in them under one rule. **This is the entry's real urgency**: a group that wrote
+  freely believing the plan private cannot have that decision reversed on them later.
+
 ## Answered, awaiting enactment
 
 _(none)_

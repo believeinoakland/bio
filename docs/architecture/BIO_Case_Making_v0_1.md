@@ -556,6 +556,126 @@ field reading. Still OPEN, leaning toward plurality; `inquiry_basis` does not ex
 shapes remain cheap.
 
 
+## THE ACTION PLAN — mapped 2026-08-03, not yet in the review document
+
+Bob, 2026-08-03: *"the finding of a project indicate[s] that some government action (or action
+by some other person or organization) doesn't conform to the law, policies, regulations, stated
+intentions/promises, or other restrictions. In situations like this, an action plan needs to be
+constructed. This action plan may differ based on the user type (journalist, activist, lawyer,
+etc.) or other very important (strategic, tactical, political, financial, temporal) factors. The
+system must include a surface that lays out the set of action options and depicts them together
+with the dependencies, deadlines, resources required, and other factors. The system (with support
+of AI skills) may suggest an action plan that includes a progressive series of steps with
+dependency graphs keyed to possible outcomes of each step."*
+
+This section is the MAP he asked for, before anything is added to the review document.
+
+### 1 · What a plan answers, and why it is not an inquiry
+
+A finding of NONCONFORMITY says conduct departed from a standard — a law, a policy, a
+regulation, a stated intention or promise, or another restriction. Note the structure this
+already has and needs no new machinery: **such a claim has legs pointing at BOTH the standard
+and the conduct**, and both are ordinary evidence.
+
+A plan answers *"what do we do about it?"* — and that is decisively **not a claim about the
+world**. It has no truth value, no falsifier, and evidence does not bear on it. So it fails the
+inquiry test at the first question, and cannot be modelled as one.
+
+### 2 · The object question, and the argument that settles it
+
+Three candidate shapes:
+
+| shape | why it fails, or does not |
+| --- | --- |
+| a field on the finding | the plan outlives and outgrows the finding, and may serve several findings at once |
+| a set of `action` bundles in a `proposed` state, with edges between them | **the near miss.** It reuses an object that exists and models decline as a state, which the collapse precedent favours. It fails on one thing: an `action` is defined as *"an outward engagement — something SENT to somebody outside the group"*, and an option never taken was never sent |
+| **a distinct object holding candidate STEPS** | **recommended** |
+
+**The decisive argument is the options NOT taken.** *"We considered a grand-jury referral and
+did not pursue it, because the filing window closes before we can reach the required strength"*
+is exactly the kind of authored decision this record exists to hold — it is the same doctrine as
+the completeness statement (what you left out, authored, never prefilled) and as invariant 7
+(what cuts against travels the same path as what supports). If an option only becomes an object
+once chosen, every rejected option vanishes and the plan silently overstates the group's
+deliberation. **A plan must be able to hold what it decided against.**
+
+So: a PLAN holds STEPS. A step that is taken produces an `action` (the existing object, unchanged,
+still the outward engagement). A step declined keeps its reason and stays visible.
+
+### 3 · Structure — borrow the progression vocabulary, do NOT borrow the progression object
+
+`progression_stages` already carries most of the shape: `stage_no`, `after_stage` (dependency),
+`within_interval` (deadline), `required`. A plan's steps want exactly those, plus three things
+progressions do not have:
+
+- **outcome-keyed branching.** `after_stage` is linear. Bob asks for *"dependency graphs keyed
+  to possible outcomes of each step"* — each step declares its possible OUTCOMES (records
+  produced / denied / ignored past the statutory deadline) and later steps hang off a specific
+  outcome. This is a decision tree, not a chain, and it is the genuinely new structure.
+- **resources.** What a step costs: money, member hours, expertise the group may not hold,
+  standing to bring it.
+- **disposition.** chosen · declined-with-reason · done · blocked.
+
+**AND THEY MUST NOT SHARE AN OBJECT, for a doctrinal reason rather than a technical one.** A
+progression models what SOMEBODY ELSE is supposed to do, and its entire purpose is to make a gap
+DETECTABLE and raise it as a finding about the world. A plan models what WE intend to do. If the
+two shared machinery, **our own missed deadline would surface as a finding about the record** —
+converting a management fact into evidence, which is precisely the overclaiming this project's
+threat model is pointed at. Same shape, opposite subject, separate objects.
+
+### 4 · Variation by user type is already expressible, and lands in the right place
+
+The plan varies by journalist / activist / lawyer, and by strategic, tactical, political,
+financial and temporal factors. This needs no new axis: **capabilities, journeys and surfaces
+vary by USER TYPE** (`AUDIENCES.md` §0, unchanged), and the action repertoire is part of the
+journey. The seven `action_kind` values already shipped — `cpra_request`, `grand_jury`,
+`controller_referral`, `public_comment`, `media`, `litigation_support`, `other` — with
+`risk_tier` 1–3, are that repertoire's first draft.
+
+The plan therefore belongs to a PROJECT + FINDING, never to a person: a lawyer's project and a
+journalist's project may build different plans from the SAME finding, and each project already
+declares the evidentiary strength its work requires (DEC-17). **A step may be blocked because
+the finding has not reached the project's declared strength** — which is the first place that
+declaration does mechanical work rather than only being disclosed.
+
+### 5 · Where the machine helps, within DEC-24's boundary and adding no exception to it
+
+- **SUGGEST a plan** (PURSUE): propose steps, sequencing, contingencies. Under DEC-24 rule 1 a
+  suggested plan is a set of CANDIDATES; the member adopts, edits or declines each, with a
+  reason. The machine never adopts a step.
+- **CHECK a plan** (CHECK): an unreachable deadline; a step depending on a resource the group
+  does not have; **an unhandled branch — an outcome with no next step**, which is the most
+  valuable check because it is the one a person misses; a step whose finding is below the
+  project's declared strength; a deadline now passed.
+- Rule 4 holds unchanged: a checker RAISES into a queue, never edits the plan.
+
+### 6 · The surface — S11, and the journey gains a stage
+
+Ten surfaces are specified today; this is an eleventh. S10 THE ACTION PAGE holds ONE outward
+engagement. **S11 THE ACTION PLAN holds the graph**: options, dependencies, deadlines, resources,
+branches keyed to outcomes, and the declined options with their reasons.
+
+The journey inserts cleanly and the existing edges are unchanged:
+
+    finding → S11 PLAN → S10 individual actions → consequence → back in as evidence
+
+`impacting` is currently the stage with *no working process whatsoever*, so nothing is being
+retrofitted.
+
+### 7 · ONE QUESTION THIS MAP DOES NOT ANSWER, and it is Bob's
+
+**What, if any, of a plan is PUBLISHED?** A group's strategic deliberation — *we considered
+litigation and cannot afford it*, *we are timing this before a council vote* — is plausibly the
+most sensitive material the system will ever hold, and precisely what an opponent would most
+want. It is also the material most likely to be sought under legal process.
+
+Running provisionally, and the conservative branch: **the plan is WORKING material and is never
+published.** What legitimately crosses into publication is already covered elsewhere — an
+action's OUTCOME can become evidence (DEC-14 governs impact claims), and the group's declared
+position on contacting the subject is published by DEC-13. Neither requires publishing the
+deliberation. **Recommendation: keep it that way, explicitly, and make the two-bucket fence's
+default cover plans by construction rather than by a permission check.** Raised as DEC-25.
+
 ## Resolutions forced by the adversarial pass, 2026-08-01
 
 The critique found 10 doctrine hits, 13 correctness, 3 usability. Four are contradictions
