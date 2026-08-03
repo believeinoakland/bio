@@ -508,6 +508,40 @@ worse than a word neither has, because the disagreement is invisible until it sh
 **Consequence for the build: `#weakerGrade` MUST NOT be reused unchanged.** A null grade
 is not a weak grade; it is the absence of one, and the two must not share a rank.
 
+**AMENDED 2026-08-02 by Bob (DEC-18) — an ungraded leg is INERT, and UNRATED becomes the
+boundary case rather than the rule.** *"An ungraded leg doesn't contribute to a conclusion,
+but if there are other graded legs, then it doesn't suspend the conclusion either."*
+
+This is not the behaviour R1 forbade, and the distinction is the whole amendment. R1's
+first bullet refused grading on the determined legs **while the ungraded leg still counted
+as part of what the conclusion rested on** — support drawn from a leg that paid nothing
+toward strength. The amendment removes the support as well as the cost:
+
+- **An ungraded leg contributes NOTHING.** Not weighed, not averaged, does not floor, does
+  not unrate. It sits in the basis, named and visible, as a leg that is present and **not
+  yet load-bearing**.
+- **The conclusion is graded on its load-bearing legs**, which is honest because those are
+  the only legs it rests on.
+- **UNRATED survives as the boundary case.** If EVERY leg is ungraded there are no
+  load-bearing legs, the conclusion rests on nothing established, and it is UNRATED.
+- **Every ungraded leg is named, one or many** (Bob, same review: *"more than one leg may
+  have no established grade, in which case every such leg will be named."*). This is what
+  keeps INERT from meaning INVISIBLE, and it is the clause the build must not drop.
+
+The consequence for `#weakerGrade` is UNCHANGED and if anything sharpened: a null grade
+still must not share a rank with a real one, because the comparator must now EXCLUDE the
+null leg from the population rather than rank it anywhere in it.
+
+**The residual hazard, named because the amendment creates it.** An ungraded leg costs the
+conclusion nothing, so leaving a leg ungraded is now the cheapest way to keep an
+inconvenient one out of the reckoning — a laundering path in the opposite direction from
+the one R1 closed. Three things already stand against it and they are named here so no
+build session assumes a fourth is needed: every ungraded leg is NAMED on the case and in
+the index row; the completeness statement is authored and must say what the case leaves
+out; and invariant 7 makes a leg that cuts against travel the same path as one that
+supports. Whether that is sufficient is D-159, and it is a question for use rather than for
+argument.
+
 ### R2 · Capture grade and connection grade are TWO scales and must never be composed into one number
 
 Both run A–D and they measure different things. `CAPTURE-FIDELITY.md:40` records that
@@ -540,6 +574,37 @@ rendering may reduce them to one letter.
 Two smaller consequences: **no surface may display Grade A for a direct capture** (the
 suite already has a negative control on this), and a case resting on one capture and one
 inference has two strengths, which is more honest than any single number would be.
+
+**AMENDED 2026-08-02 by Bob (DEC-21) — the CONCLUSION above stands; the MECHANISM below it
+was wrong.** Bob: *"A capture is the act of reading a document in. A connection is an edge
+between 2 or more pieces of information… They're different things. So why are those grades
+combined?"*
+
+They are not combined, and the word **PAIR** invited the reading that they are one two-part
+score. What does not survive is R2's account of which legs carry which axis:
+
+- a **CAPTURE** grade is a property of an INFORMATION object — how the bytes were read in;
+- a **CONNECTION** grade is a property of an EDGE between pieces of information.
+
+A leg of a basis IS an edge pointing at a target. So the leg has a connection grade of its
+own, and if its target is a document, that document has a capture grade. **One document leg
+carries BOTH** — which R2's own corrected example already showed (*"capture ⟨B⟩ … connection
+⟨A⟩"*). "Evidentiary legs versus inferential legs" cannot survive its own worked example.
+
+Corrected: a conclusion reports **two independent measurements over two different
+POPULATIONS**, not one measurement over two kinds of leg.
+
+| | ranges over | answers |
+| --- | --- | --- |
+| **CAPTURE** | every DOCUMENT the conclusion reaches | *how well do we know these are the bytes the body published?* |
+| **CONNECTION** | every EDGE the conclusion rests on | *how well established are the relationships this reasoning uses?* |
+
+Reported side by side because a reader needs both. Side by side is not composition.
+
+**Unchanged and not to be re-opened:** a connection's OWN grade is composed from its two
+ends (`connections.a_grade`, `b_grade` — how each end resolved to the shared entity), and
+that composition is legitimate because both ends measure the same kind of thing. The schema
+carries exactly this shape.
 
 ### R3 · The collapse deletes the system's only cycle guard, and must replace it explicitly
 

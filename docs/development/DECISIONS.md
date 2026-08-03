@@ -1463,6 +1463,161 @@ for CONDUCT to enact: amendments in the BOB INBOX — `project` frontmatter gain
   bytes beside the derived strength, so a reader sees both in the same frozen artifact; UI-18
   renders them together. D-155 records it.
 
+### DEC-18 · answered
+raised: 2026-08-02 · Bob, in the review of the study document
+for: bob
+question: Does an ungraded leg leave the whole conclusion UNRATED, or only fail to
+  contribute to it?
+why it is Bob's: doctrine. R1 is his resolution and this refines it; it decides what a
+  published strength asserts when part of the basis is unestablished.
+provisional: R1 as written was running — ANY leg with no grade left the chain with no
+  computed strength, naming the leg. `RECONCILED` §1.1 R1-h explicitly REFUSED the
+  alternative, calling it the laundering R1's first bullet forbids.
+blocks: REC-12's comparator, and therefore UI-17 step 2, UI-18's index rows and every
+  surface that renders a strength.
+alternative: R1 unchanged — one ungraded leg unrates the whole chain.
+recommendation: none was offered; this arrived as a correction rather than a question.
+reversal cost: rises once cases are published under either rule, because a published
+  strength means something different under each.
+response: **AN UNGRADED LEG IS INERT, NOT UNRATING.** Bob, 2026-08-02: *"An ungraded leg
+  doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't
+  suspend the conclusion either."*
+  **THIS IS NOT THE BEHAVIOUR R1-h REFUSED, AND THE DISTINCTION IS THE WHOLE RULING.**
+  What R1 forbade was grading on the determined legs *while the ungraded leg still counted
+  as part of what the conclusion rested on* — the conclusion drew support from a leg that
+  paid nothing toward strength, which is laundering. Bob's rule removes the support as well
+  as the cost: an ungraded leg **contributes nothing**. It is not weighed, it is not
+  averaged, it does not floor, and it does not unrate. It sits in the basis, named and
+  visible, as a leg that is present and not yet load-bearing.
+  So the conclusion is graded on its load-bearing legs, and that is honest because those
+  are the only legs it rests on.
+  **THE RESIDUAL CASE SURVIVES:** if EVERY leg is ungraded there are no load-bearing legs,
+  the conclusion rests on nothing established, and it is UNRATED naming all of them. R1's
+  behaviour is therefore not deleted — it becomes the boundary case rather than the rule.
+  **AND THE PLURAL IS PART OF THE RULING** (Bob, same review): *"more than one leg may have
+  no established grade, in which case every such leg will be named."* Every ungraded leg is
+  named, always — one or many — which is what keeps "inert" from meaning "invisible".
+decided: 2026-08-02 · Bob
+
+### DEC-19 · answered
+raised: 2026-08-02 · Bob, in the review of the study document
+for: bob
+question: Is an attestation irreversible, or must it be correctable?
+why it is Bob's: doctrine, and it decides what a published signature promises. It is the
+  one act the design called irreversible.
+provisional: IRREVERSIBLE was running and is stated in two places —
+  `BIO_Interaction_Constructs_v0_1.md` §A (*"Separate from a justified transition because it
+  cannot be undone"*) and the review document's rung ladder.
+blocks: nothing built; it reshapes O1, the publication ceremony, before it exists.
+alternative: irreversible, as written.
+recommendation: none offered; it arrived as a correction.
+reversal cost: low now, high once cases are published under the irreversible reading.
+response: **AN ATTESTATION MUST BE REVERSIBLE, BECAUSE PEOPLE MAKE MISTAKES.** Bob,
+  2026-08-02: *"You say that an attested rung is irreversible. But people make mistakes or
+  misinterpret. An attestation must be reversible to correct mistakes. (Though there may be
+  a record of the attestation and reversal in the record.)"*
+  **THE PARENTHESIS IS THE MECHANISM AND IT RESOLVES THE APPARENT CONFLICT WITH DEC-12.**
+  Reversal is not erasure. The attestation happened, and a record whose purpose is
+  attribution cannot un-happen it; what reversal means is a further ATTESTED act — dated,
+  attributed, signed — that retracts the first, with both standing in the record. The
+  published bytes stay answerable, so a reader who relied on the original can still see
+  exactly what they relied on and can now also see that it was withdrawn.
+  **THIS MAKES THE RUNG LADDER'S TOP TWO NAMES WRONG, NOT ONLY ITS TOP ONE.** DEC-12 already
+  ruled that a published case may be revised as a new edition and that a closed finding may
+  be reopened — so `terminal` (*"cannot be walked back"*) was already stale and nobody had
+  noticed. Corrected: what distinguishes the top of the ladder is not that the act cannot be
+  undone but that **it cannot be undone SILENTLY** — every correction is itself an act on the
+  record, with a name and a date on it. That is a stronger guarantee than irreversibility and
+  it is the one this project actually wants.
+decided: 2026-08-02 · Bob
+
+### DEC-20 · answered
+raised: 2026-08-02 · Bob, in the review of the study document
+for: bob
+question: Must all bias debt be cleared before publication, or only a hunch?
+why it is Bob's: doctrine. It decides what publication asserts about the group's own
+  declared position.
+provisional: ALL bias debt blocked publication. `BIO_Declared_Bias_v0_1.md` §"Bias debt":
+  *"A work product carrying bias debt cannot advance its workproduct_state or be ratified
+  for publication until the debt is settled."*
+blocks: nothing built; the publication pre-flight (`op=publishpreflight`) is designed and
+  not yet built, and this changes what it refuses.
+alternative: the blanket rule, as written.
+recommendation: none offered; it arrived as a correction.
+reversal cost: low — nothing is built against either reading.
+response: **ONLY A HUNCH BLOCKS. OTHER BIAS DEBT IS DISCLOSED AND TRAVELS.** Bob,
+  2026-08-02: *"Not all bias needs to be cleared before a piece is published. The only bias
+  type that must be clear before publication is hunches."* And, in the same review: *"Bias is
+  public and accompanies every published case produced under that bias."*
+  **THE TWO SENTENCES TOGETHER GIVE THE PRINCIPLE, WHICH THE BLANKET RULE DID NOT HAVE: bias
+  debt is DISCLOSED; hunch debt is DISQUALIFYING — because a hunch inflates a GRADE and
+  ordinary bias only frames interpretation.** A declared standing position is a lens a reader
+  can apply or discount for themselves, and it is published with the case precisely so they
+  can. It costs the reader nothing to be told. A HUNCH is different in kind: it is a
+  connection asserted ahead of its evidence, carrying a grade it has not earned, so a case
+  published over an uncleared hunch states a strength that is not true — which is the
+  overclaiming this project's threat model calls the dangerous half. The blanket rule was
+  reaching for the hunch case and caught everything.
+  **CONSEQUENCE FOR THE MANIFEST:** the bias manifest was already *"part of the evidentiary
+  record"* that *"travels with publication"*, so the publicity half is not a change — it is
+  a promotion from a property of the manifest to a stated guarantee of publication, and the
+  published case must SHOW it rather than merely cite it.
+decided: 2026-08-02 · Bob
+
+### DEC-21 · answered
+raised: 2026-08-02 · Bob, in the review of the study document
+for: bob
+question: Capture grade and connection grade grade DIFFERENT OBJECTS — a capture is the act
+  of reading a document in, a connection is an edge between pieces of information. So why are
+  those two grades combined into a conclusion's "strength"?
+why it is Bob's: doctrine. R2 is his resolution and this changes its mechanism.
+provisional: R2 as written was running — *"a chain carries the weakest CAPTURE grade among its
+  evidentiary legs and the weakest CONNECTION grade among its inferential legs"*, i.e. each leg
+  belongs to ONE axis and the two axes are read off two disjoint sets of legs.
+blocks: REC-12's comparator and REC-18's grade source; UI-17 step 2 and UI-18's index rows
+  render the result.
+alternative: R2 unchanged.
+recommendation: this entry answers rather than asks — the correction follows from the two
+  definitions Bob supplied in the same review, so it is recorded as derived rather than put
+  back to him. If he disagrees with the derivation it reverses in one line, because nothing
+  is built.
+reversal cost: low today and rising — REC-12 is the first item that would build the wrong
+  population into a comparator.
+response: **THEY ARE NOT COMBINED — AND R2'S MECHANISM IS WRONG WHILE ITS CONCLUSION IS RIGHT.**
+  Bob, 2026-08-02: *"A capture is the act of reading a document in. A connection is an edge
+  between 2 or more pieces of information… They're different things. So why are those grades
+  combined?"*
+  **They are not, and the word PAIR invited the reading that they are one two-part score.**
+  R2's conclusion stands and is unchanged: nothing averages, mixes or collapses them, and no
+  rendering may reduce them to one letter. What is wrong is R2's account of WHICH LEGS CARRY
+  WHICH AXIS, and Bob's definitions are what expose it:
+  - a CAPTURE grade is a property of an INFORMATION object — how the bytes were read in;
+  - a CONNECTION grade is a property of an EDGE between pieces of information.
+  A leg of a basis IS an edge, pointing at a target. So a leg has a connection grade of its
+  own, and if its target is a document that document has a capture grade. **A single document
+  leg therefore carries BOTH grades — which R2's own corrected example already shows**
+  (`RECONCILED` §1.2 R2-e: *"capture ⟨B⟩ — a direct capture by this instance · connection ⟨A⟩
+  — the document links them itself"*). One leg, two grades. The "evidentiary legs versus
+  inferential legs" split cannot survive its own worked example.
+  **CORRECTED, and this is what REC-12 must build.** A conclusion reports two independent
+  measurements over two DIFFERENT POPULATIONS, not one measurement over two kinds of leg:
+  - **CAPTURE** — the weakest capture grade among all the DOCUMENTS the conclusion reaches.
+    Answers *"how well do we know these are the bytes the body published?"*
+  - **CONNECTION** — the weakest connection grade among all the EDGES the conclusion rests on.
+    Answers *"how well established are the relationships this reasoning uses?"*
+  They are reported side by side because a reader needs both to know what checking the case
+  would take. Side by side is not composition: they are two facts about two different kinds of
+  thing, and neither can substitute for the other.
+  **WHAT R2 ALREADY GOT RIGHT AND MUST NOT BE RE-OPENED:** a CONNECTION's own grade is composed
+  from `connections.a_grade` and `b_grade` — how each END resolved to the shared entity — and
+  that composition is legitimate because both ends are the same kind of measurement. The schema
+  carries exactly this shape. R2's 2026-08-01 refinement said so, and it stands.
+  **AND IT CONFIRMS §4 Q6 INDEPENDENTLY.** A threshold was settled as two independent floors
+  because the axes move independently by reader; under this correction they are not merely
+  independent, they range over different populations, so a single shared floor was never
+  expressible in the first place.
+decided: 2026-08-02 · Bob (definitions) · session BOB (derivation)
+
 ## Answered, awaiting enactment
 
 _(none)_

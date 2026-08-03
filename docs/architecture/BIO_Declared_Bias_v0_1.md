@@ -222,6 +222,27 @@ re-run in one pass rather than being stalled by every amendment. A work
 product carrying bias debt cannot advance its workproduct_state or be ratified
 for publication until the debt is settled.
 
+**AMENDED 2026-08-02 by Bob (DEC-20). The blanket rule above is REPLACED: only a
+HUNCH blocks publication.** *"Not all bias needs to be cleared before a piece is
+published. The only bias type that must be clear before publication is hunches."*
+And, in the same review: *"Bias is public and accompanies every published case
+produced under that bias."*
+
+**The two sentences together give the principle the blanket rule did not have:
+bias debt is DISCLOSED; hunch debt is DISQUALIFYING — because a hunch inflates a
+GRADE and ordinary bias only frames interpretation.** A declared standing position
+is a lens a reader can apply or discount for themselves, and it is published with
+the case precisely so they can; it costs the reader nothing to be told. A hunch is
+different in kind — a connection asserted ahead of its evidence, carrying a grade it
+has not earned — so a case published over an uncleared hunch states a strength that
+is not true, which is the overclaiming half of this project's threat model. The
+blanket rule was reaching for the hunch case and caught everything.
+
+So: ordinary bias debt marks the work, travels with it, is shown to the reader, and
+does NOT block ratification. Uncleared HUNCH debt refuses publication, by name,
+before any signature exists (`op=publishpreflight` → `UNCLEARED_HUNCH`). The
+workproduct_state half of the old rule is likewise narrowed to hunches.
+
 ### RULED 2026-08-01: a HUNCH is temporary declared bias, and it is bias debt
 
 Bob, 2026-08-01 (DEC-15). **Exploration and discovery are distinct processes from

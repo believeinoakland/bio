@@ -354,12 +354,35 @@ written. `SEVERED_EDGE`, `NOT_INFORMATION`, `CITATION_TOO_LARGE` and the retire-
 cited-Information case all already answer this way; the surface renders them rather
 than paraphrasing.
 
-## A · ATTESTATION — the irreversible signed act
+## A · ATTESTATION — the signed act that cannot be undone SILENTLY
 
 **Carries:** ratification · co-attestation on crucial material · signing a release
 artifact.
 
-**Separate from a justified transition because it cannot be undone.** A published hash
+**CORRECTED 2026-08-02 by Bob (DEC-19). This construct was called "the irreversible signed
+act" and that was wrong.** *"People make mistakes or misinterpret. An attestation must be
+reversible to correct mistakes. (Though there may be a record of the attestation and reversal
+in the record.)"*
+
+**Reversal is not erasure, and the parenthesis is the mechanism.** The attestation happened,
+and a record whose purpose is attribution cannot un-happen it. Reversing one is a FURTHER
+attested act — dated, attributed, signed — that retracts the first, with **both** standing in
+the record. The published bytes stay answerable, so a reader who relied on the original can
+still see exactly what they relied on and can now also see it was withdrawn.
+
+**So what separates this rung is not that the act cannot be undone. It is that it cannot be
+undone SILENTLY** — every correction is itself an act on the record with a name and a date on
+it. That is a stronger guarantee than irreversibility, and it is the one this project wants:
+irreversibility protects the reader from the publisher, while non-silent correction protects
+the reader from the publisher AND lets the publisher be honest about having been wrong.
+
+**This also makes `terminal` stale, and it had been stale since 2026-08-01 without anyone
+noticing.** DEC-12 ruled that a published case may be revised as a new edition and that a
+closed finding may be REOPENED, so a rung defined as *"cannot be walked back"* no longer
+describes anything in the system. The ladder's top two rungs are distinguished by the WEIGHT
+and VISIBILITY of the correction they require, not by the absence of one.
+
+**Separate from a justified transition because of that weight.** A published hash
 answers forever by design. That is why D-114 refused to loosen the publication fence on
 one session's reading of one sentence, and the interface must carry the same weight: a
 considered act, not a button in a row of buttons.

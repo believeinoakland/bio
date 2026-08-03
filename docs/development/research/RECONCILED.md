@@ -89,6 +89,37 @@ CONFORMS (recorded so a reader knows it was checked, not missed).
 
 ### 1.1 · R1 — an undetermined leg SUSPENDS the chain; `#weakerGrade` must not be reused
 
+> **AMENDED 2026-08-02 — READ THIS BEFORE THE TABLE BELOW. Two changes, and the whole
+> section is read through them.**
+>
+> **(1) THE WORD IS `UNRATED`, NOT `SUSPEND`.** `BIO_Case_Making_v0_1.md` renamed it after
+> this pass was written, and gave the reason: `SUSPEND` already meant something ELSE in
+> `SB-OUTPUT` §5.1, so a worker following `BUILD-ORDER`'s *"ship SUSPEND"* in good faith
+> would have built the behaviour R1 forbids while every document appeared to agree. This
+> file still says SUSPEND in 50 places and has never said UNRATED; **`UNRATED` is canonical
+> and every `SUSPEND` below is to be read as `UNRATED`.** The R1-h row's argument is
+> unaffected and is in fact why the rename happened.
+>
+> **(2) AN UNGRADED LEG IS INERT, NOT UNRATING (Bob, DEC-18).** *"An ungraded leg doesn't
+> contribute to a conclusion, but if there are other graded legs, then it doesn't suspend
+> the conclusion either."* This is **not** the behaviour R1-h refused. R1-h refused grading
+> on the determined legs *while the ungraded leg still counted as part of what the
+> conclusion rested on*; the amendment removes the support as well as the cost. An ungraded
+> leg contributes NOTHING — not weighed, not averaged, does not floor, does not unrate — and
+> sits in the basis named and visible as a leg that is **not yet load-bearing**. The
+> conclusion is graded on its load-bearing legs.
+>
+> **`UNRATED` survives as the BOUNDARY CASE:** if every leg is ungraded there are no
+> load-bearing legs and the conclusion is UNRATED. **Every ungraded leg is named, one or
+> many** — that clause is what keeps INERT from meaning INVISIBLE and the build must not
+> drop it.
+>
+> **Rows that change:** R1-d's corrected wireframe text now applies only when NO leg is
+> graded; with leg D ungraded and others graded, the case publishes at its load-bearing
+> strength and NAMES leg D as not load-bearing. R1-i and R1-j are sharpened rather than
+> reversed — the comparator must EXCLUDE a null leg from the population rather than rank it
+> anywhere in it. R1-a, R1-b, R1-h, R1-m are unchanged.
+
 > **R1:** *"Ignoring it launders… Flooring it below D punishes honesty… SUSPENDING states the
 > truth. The chain has no computed strength, and says which leg is why… **Consequence for the
 > build: `#weakerGrade` MUST NOT be reused unchanged.** A null grade is not a weak grade; it
@@ -111,6 +142,36 @@ CONFORMS (recorded so a reader knows it was checked, not missed).
 | R1-m | **NEW.** `store.mjs:3441-3443`, the comment on `#weakerGrade` itself: *"Reuses the resolution grade rank so the two axes cannot drift."* | **CONTRADICTS R1 AND R2 at the source** | The code does not merely happen to compose across two axes — **its comment names the two axes and treats their shared rank as a FEATURE**. R2 rules the opposite. Any item touching this function must correct the comment and say why the old one was wrong, per `CLAUDE.md`'s correct-superseded-tests rule applied to a claim in a comment. Not previously noticed by any pass, including `CRITIQUE.md`, which quoted the function body and not the comment above it. |
 
 ### 1.2 · R2 — capture grade and connection grade are TWO scales
+
+> **AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.**
+> *"A capture is the act of reading a document in. A connection is an edge between 2 or more
+> pieces of information… They're different things. So why are those grades combined?"*
+>
+> They are not combined, and the word **PAIR** invited the reading that they are one
+> two-part score. Unchanged: nothing averages, mixes or collapses them, and no rendering may
+> reduce them to one letter. **What does not survive is R2's account of which legs carry
+> which axis.** A capture grade is a property of an INFORMATION object; a connection grade is
+> a property of an EDGE. A leg IS an edge pointing at a target — so the leg has a connection
+> grade of its own, and if its target is a document, that document has a capture grade.
+> **One document leg carries BOTH, which R2-e's own corrected example below already shows**
+> (*"capture ⟨B⟩ … connection ⟨A⟩"*). The evidentiary-legs-versus-inferential-legs split
+> cannot survive its own worked example.
+>
+> **Corrected: two independent measurements over two different POPULATIONS.** CAPTURE ranges
+> over every DOCUMENT the conclusion reaches; CONNECTION ranges over every EDGE it rests on.
+> Reported side by side because a reader needs both; side by side is not composition.
+>
+> **Rows that change:** R2-i (REC-12's `min`) becomes two minima over two POPULATIONS rather
+> than over two disjoint leg sets. R2-f's threshold form is settled at §4 Q6 and this
+> amendment confirms it independently — a single shared floor was never expressible, because
+> the axes do not merely move independently, they range over different things. R2-b's
+> which-axis column is REPLACED by the rule that a document leg carries both, so the field
+> records the leg's own connection grade and the capture grade is read from the target.
+> R2-a, R2-c, R2-d, R2-e, R2-g, R2-h, R2-j, R2-k, R2-l are unchanged.
+>
+> **Not re-opened:** a connection's OWN grade is composed from `connections.a_grade` and
+> `b_grade` — how each END resolved to the shared entity — and that is legitimate, because
+> both ends measure the same kind of thing. The schema carries exactly this shape.
 
 > **R2:** *"strength is a PAIR, never a scalar. A chain carries the weakest CAPTURE grade among
 > its evidentiary legs and the weakest CONNECTION grade among its inferential legs, and nothing
