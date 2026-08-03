@@ -28,6 +28,28 @@ session BOB; revised the same day to add Part 0, and again to record that §4's 
 Q11 are settled (six open questions became three) and to carry the two defects the Q11
 measurement found.
 
+**THE SOURCE IS NOW IN THE REPO: `review-document.html`, beside this file.** Until 2026-08-03
+it existed only in a session scratchpad and was reconstructed by fetching the published
+artifact and stripping the runtime — which meant the page had no history, no diff, and no
+owner between sessions. Edit the committed file, verify it, then publish it.
+
+**Verify the diagrams before publishing:**
+
+    MERMAID_DIR=<a dir with mermaid@11.15.0 + jsdom> node tools/mermaid-check.mjs \
+      docs/development/research/review-document.html
+
+A mermaid block that fails to parse renders as an ERROR BOX on the published page, so the
+reader discovers it rather than we do. `tools/mermaid-check.mjs` carries its own negative
+control and its install line.
+
+**Notation, because two drafts got this wrong and Bob rejected both.** Structure and lifecycle
+are different kinds of model and take different notations: a **`classDiagram`** for structure,
+whose arrowheads already carry agreed meanings (`*--` composition, `-->` association, `<|--`
+generalization), and a **`stateDiagram-v2`** for lifecycle, whose edges are the acts that cause
+each transition. A flowchart gives every relationship the same arrow, which is how a draft came
+to draw `CLAIM -> FINDING` — an edge that is not merely unclear but false, since the finding IS
+the inquiry holding the claim. **Do not mix a structural and a behavioural model in one picture.**
+
 **Updating it is a MECHANISM, not a note.** A session that did not itself publish the page
 MINTS A NEW URL unless it passes `url:` to the Artifact tool — and a new URL silently breaks
 both the link Bob is reading and the one recorded here. Rebuild the page as a file, then

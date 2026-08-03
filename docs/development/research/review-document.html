@@ -1,0 +1,1829 @@
+<title>CivicOS — UX, journeys, surfaces and processes: the review record</title>
+
+<style>
+:root{
+  --ink:#131719;
+  --paper:#f2f2ef;
+  --paper-2:#e9e9e5;
+  --rule:#d5d6d1;
+  --rule-soft:#e2e3de;
+  --text:#1c2124;
+  --text-2:#4e565a;
+  --text-3:#767d80;
+  --accent:#2b585c;
+  --accent-soft:#e2ecec;
+  --built:#4d6b4f;
+  --partial:#8a6a2f;
+  --designed:#4a5a72;
+  --missing:#9c4536;
+  --built-bg:#e6ede6;
+  --partial-bg:#f2ebdc;
+  --designed-bg:#e6e9ee;
+  --missing-bg:#f3e3df;
+
+  --serif: "Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+
+  --s1:.35rem; --s2:.6rem; --s3:1rem; --s4:1.6rem; --s5:2.4rem; --s6:3.6rem; --s7:5.5rem;
+  --maxprose:70ch;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --ink:#0e1113; --paper:#15181a; --paper-2:#1c2023; --rule:#2e3438; --rule-soft:#242a2d;
+    --text:#dfe3e4; --text-2:#a3adb1; --text-3:#798387;
+    --accent:#6fb3b6; --accent-soft:#1d2e30;
+    --built:#8fb894; --partial:#c9a463; --designed:#93a6c4; --missing:#d98a78;
+    --built-bg:#1d2820; --partial-bg:#2b2418; --designed-bg:#1e242e; --missing-bg:#2e1e1a;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#0e1113; --paper:#15181a; --paper-2:#1c2023; --rule:#2e3438; --rule-soft:#242a2d;
+  --text:#dfe3e4; --text-2:#a3adb1; --text-3:#798387;
+  --accent:#6fb3b6; --accent-soft:#1d2e30;
+  --built:#8fb894; --partial:#c9a463; --designed:#93a6c4; --missing:#d98a78;
+  --built-bg:#1d2820; --partial-bg:#2b2418; --designed-bg:#1e242e; --missing-bg:#2e1e1a;
+}
+:root[data-theme="light"]{
+  --ink:#131719; --paper:#f2f2ef; --paper-2:#e9e9e5; --rule:#d5d6d1; --rule-soft:#e2e3de;
+  --text:#1c2124; --text-2:#4e565a; --text-3:#767d80;
+  --accent:#2b585c; --accent-soft:#e2ecec;
+  --built:#4d6b4f; --partial:#8a6a2f; --designed:#4a5a72; --missing:#9c4536;
+  --built-bg:#e6ede6; --partial-bg:#f2ebdc; --designed-bg:#e6e9ee; --missing-bg:#f3e3df;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--paper); color:var(--text);
+  font-family:var(--sans); font-size:16px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 var(--s4);}
+
+.masthead{border-bottom:1px solid var(--rule);padding:var(--s6) 0 var(--s5);}
+.eyebrow{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 var(--s3);
+}
+h1{
+  font-family:var(--serif);font-weight:600;font-size:clamp(2rem,4.6vw,3.1rem);
+  line-height:1.12;letter-spacing:-.012em;margin:0 0 var(--s3);text-wrap:balance;max-width:20ch;
+}
+.standfirst{font-size:1.08rem;color:var(--text-2);max-width:var(--maxprose);margin:0 0 var(--s3);}
+.standfirst strong{color:var(--text);font-weight:600;}
+.readtime{
+  font-family:var(--mono);font-size:.76rem;color:var(--text-3);margin:0 0 var(--s4);
+}
+
+.statline{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);background:var(--paper-2);}
+.stat{flex:1 1 150px;padding:var(--s3);border-right:1px solid var(--rule);}
+.stat:last-child{border-right:0;}
+.stat b{
+  display:block;font-family:var(--mono);font-size:1.45rem;font-variant-numeric:tabular-nums;
+  color:var(--text);line-height:1.1;
+}
+.stat span{
+  display:block;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--text-3);margin-top:var(--s1);
+}
+
+.shell{display:block;}
+@media(min-width:1040px){
+  .shell{display:grid;grid-template-columns:206px 1fr;gap:var(--s6);align-items:start;}
+}
+nav.index{display:none;}
+@media(min-width:1040px){
+  nav.index{
+    display:block;position:sticky;top:var(--s4);padding-top:var(--s6);max-height:92vh;
+    overflow-y:auto;font-family:var(--mono);font-size:.75rem;line-height:1.45;
+  }
+  nav.index a{
+    display:block;padding:.26rem 0 .26rem .7rem;color:var(--text-3);text-decoration:none;
+    border-left:2px solid transparent;
+  }
+  nav.index a:hover,nav.index a:focus-visible{color:var(--accent);border-left-color:var(--accent);}
+  nav.index .navhead{
+    color:var(--text-2);letter-spacing:.1em;text-transform:uppercase;font-size:.66rem;
+    padding-left:.7rem;margin:var(--s3) 0 var(--s1);
+  }
+}
+
+.parthead{
+  border-top:2px solid var(--text);margin-top:var(--s7);padding-top:var(--s3);
+}
+.parthead .pnum{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);
+}
+.parthead h2{
+  font-family:var(--serif);font-size:clamp(1.7rem,3.4vw,2.4rem);margin:var(--s1) 0 var(--s2);
+}
+.parthead p{color:var(--text-2);}
+
+section{padding-top:var(--s5);scroll-margin-top:var(--s3);}
+h2{
+  font-family:var(--serif);font-weight:600;font-size:clamp(1.4rem,2.6vw,1.85rem);
+  line-height:1.22;margin:0 0 var(--s2);letter-spacing:-.01em;text-wrap:balance;
+}
+h2 .tag{
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:var(--s2);font-weight:400;
+}
+h3{font-family:var(--sans);font-weight:650;font-size:1.02rem;margin:var(--s5) 0 var(--s2);}
+h4{
+  font-family:var(--mono);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-3);margin:var(--s4) 0 var(--s2);font-weight:500;
+}
+p{max-width:var(--maxprose);margin:0 0 var(--s3);}
+.lede{font-size:1.02rem;color:var(--text-2);max-width:var(--maxprose);margin-bottom:var(--s4);}
+ul,ol{max-width:var(--maxprose);padding-left:1.15rem;margin:0 0 var(--s3);}
+li{margin-bottom:var(--s2);}
+strong{font-weight:640;}
+em.term{font-style:normal;font-weight:640;color:var(--accent);}
+code,.id{
+  font-family:var(--mono);font-size:.86em;background:var(--paper-2);
+  padding:.1em .35em;border-radius:2px;color:var(--text);
+}
+a{color:var(--accent);}
+.rule{border:0;border-top:1px solid var(--rule);margin:var(--s6) 0 0;}
+
+.note{
+  border-left:3px solid var(--accent);background:var(--accent-soft);
+  padding:var(--s3) var(--s4);margin:var(--s4) 0;max-width:var(--maxprose);
+}
+.note p:last-child{margin-bottom:0;}
+.note .lbl{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:var(--s2);
+}
+.note.alarm{border-left-color:var(--missing);background:var(--missing-bg);}
+.note.alarm .lbl{color:var(--missing);}
+.note.why{border-left-color:var(--partial);background:var(--partial-bg);}
+.note.why .lbl{color:var(--partial);}
+
+.tablewrap{overflow-x:auto;margin:var(--s3) 0 var(--s4);border:1px solid var(--rule);}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:520px;}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;}
+thead th{
+  background:var(--paper-2);font-family:var(--mono);font-weight:500;font-size:.72rem;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);
+  border-bottom:1px solid var(--rule);white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:0;}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;}
+tr.total td{font-weight:650;background:var(--paper-2);border-top:1px solid var(--rule);}
+
+.hm td.cell{text-align:center;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.92rem;}
+.hm td.c0{background:var(--missing-bg);color:var(--missing);font-weight:650;}
+.hm td.c1{background:color-mix(in srgb,var(--accent) 8%,transparent);}
+.hm td.c2{background:color-mix(in srgb,var(--accent) 18%,transparent);}
+.hm td.c3{background:color-mix(in srgb,var(--accent) 30%,transparent);}
+.hm td.c4{background:color-mix(in srgb,var(--accent) 44%,transparent);}
+.hm td.verb{font-weight:600;white-space:nowrap;}
+
+.chip{
+  display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.07em;
+  text-transform:uppercase;padding:.13rem .45rem;border:1px solid currentColor;
+  border-radius:2px;white-space:nowrap;line-height:1.5;
+}
+.chip.built{color:var(--built);background:var(--built-bg);}
+.chip.partial{color:var(--partial);background:var(--partial-bg);}
+.chip.designed{color:var(--designed);background:var(--designed-bg);}
+.chip.missing{color:var(--missing);background:var(--missing-bg);}
+.chip.open{color:var(--accent);background:var(--accent-soft);}
+
+.bar{display:flex;height:34px;border:1px solid var(--rule);margin:var(--s3) 0 var(--s2);overflow:hidden;}
+.bar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.74rem;color:#fff;}
+.bar .b-built{background:var(--built);}
+.bar .b-partial{background:var(--partial);}
+.bar .b-designed{background:var(--designed);}
+.bar .b-missing{background:var(--missing);}
+.barkey{display:flex;flex-wrap:wrap;gap:var(--s3);font-size:.8rem;color:var(--text-2);margin-bottom:var(--s4);}
+.barkey b{font-family:var(--mono);}
+
+.cards{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);margin:var(--s4) 0;}
+@media(min-width:700px){.cards{grid-template-columns:1fr 1fr;}}
+.card{background:var(--paper);padding:var(--s3) var(--s4) var(--s4);}
+.card .cid{
+  font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;color:var(--accent);
+  display:flex;justify-content:space-between;align-items:center;gap:var(--s2);margin-bottom:var(--s2);
+}
+.card h3{margin:0 0 var(--s2);font-size:.98rem;}
+.card p{font-size:.9rem;margin-bottom:var(--s2);max-width:none;color:var(--text-2);}
+.card p.job{color:var(--text);}
+.card .needs{font-size:.8rem;color:var(--text-3);font-family:var(--mono);line-height:1.45;}
+
+/* glossary */
+.gloss{
+  display:grid;gap:1px;background:var(--rule-soft);border:1px solid var(--rule);
+  margin:var(--s3) 0 var(--s4);
+}
+@media(min-width:640px){.gloss{grid-template-columns:190px 1fr;}}
+.gloss dt{
+  background:var(--paper-2);padding:.6rem .85rem;font-weight:640;font-size:.9rem;
+}
+.gloss dd{background:var(--paper);padding:.6rem .85rem;margin:0;font-size:.9rem;color:var(--text-2);}
+.gloss dd b{color:var(--text);font-weight:640;}
+
+figure{margin:var(--s4) 0;}
+.diagram{border:1px solid var(--rule);background:var(--paper-2);padding:var(--s3);overflow-x:auto;}
+figcaption{
+  font-size:.82rem;color:var(--text-3);margin-top:var(--s2);max-width:var(--maxprose);
+  border-left:2px solid var(--rule);padding-left:var(--s3);
+}
+pre.mermaid{margin:0;text-align:center;}
+
+.dec{border-top:1px solid var(--rule-soft);padding:var(--s3) 0;display:grid;gap:var(--s2);}
+@media(min-width:720px){.dec{grid-template-columns:82px 1fr 116px;align-items:baseline;gap:var(--s3);}}
+.dec .dnum{font-family:var(--mono);font-size:.82rem;color:var(--accent);}
+.dec .dq{font-weight:600;font-size:.94rem;margin:0 0 var(--s1);max-width:none;}
+.dec .da{font-size:.88rem;color:var(--text-2);margin:0;max-width:none;}
+.dec .dstat{font-size:.74rem;}
+
+footer{
+  border-top:1px solid var(--rule);margin-top:var(--s7);padding:var(--s4) 0 var(--s6);
+  font-size:.84rem;color:var(--text-3);
+}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">CivicOS · session BOB · record of conclusions · 2 August 2026 · revised</p>
+  <h1>UX, journeys, surfaces and processes</h1>
+  <p class="standfirst">
+    The consolidated record of a sixteen-file research study into what CivicOS asks a person
+    to do, what screens carry it, what runs underneath, and what does not exist yet.
+    <strong>Written to be read by someone who has not seen the codebase.</strong> Part&nbsp;0
+    is the orientation and the vocabulary; skip it only if you already have both.
+  </p>
+  <p class="readtime">Six parts · about 25 minutes · every count measured against the repository, not estimated</p>
+  <div class="statline">
+    <div class="stat"><b>10</b><span>surfaces specified</span></div>
+    <div class="stat"><b>133</b><span>screen states drawn</span></div>
+    <div class="stat"><b>94</b><span>processes catalogued</span></div>
+    <div class="stat"><b>23</b><span>of those work today</span></div>
+    <div class="stat"><b>36</b><span>build items queued</span></div>
+    <div class="stat"><b>3</b><span>questions still open</span></div>
+  </div>
+
+  <div class="note why" style="margin-bottom:0;">
+    <span class="lbl">Third revision · what changed and why</span>
+    <p>
+      Part&nbsp;0 exists because the first draft assumed its reader had lived in the codebase.
+      This revision answers a second review of it, and <strong>five of the corrections changed
+      the design rather than the prose</strong> — they are recorded as rulings, not as edits.
+    </p>
+    <p>
+      <strong>An ungraded leg no longer unrates a whole conclusion</strong> — it carries no
+      weight and costs none. <strong>Nothing in the system is irreversible</strong>, including
+      an attestation; the guarantee is that nothing can be undone <em>silently</em>.
+      <strong>Only a hunch blocks publication</strong>; other bias is disclosed and travels
+      with the case. <strong>Capture and connection grades measure different kinds of thing</strong>,
+      so the earlier account of how they combine was wrong at the mechanism.
+      And <strong>the primary user is not the only user</strong>.
+    </p>
+    <p>
+      Part&nbsp;0 also now defines the terms it was leaning on without stating.
+      <strong>“Questions &amp; claims” is a new section</strong> — an inquiry asks, a claim
+      answers, and a finding is an inquiry that has adopted one; with the three kinds of link
+      (citation, connection, leg) told apart, and a diagram. <em>Connection</em> had been used
+      throughout and never defined at all. <strong>“Axis” is retired</strong>: it implied
+      dimensions of one measurement, which is the mental model that produced the error above.
+      And a Worker, a Durable Object and R2 are now explained rather than named.
+    </p>
+    <p style="margin-bottom:0;">
+      <strong>Still under discussion, and marked as such where it appears:</strong> whether one
+      finding can hold several claims, and whether a connection should reach a passage rather
+      than a whole document. Nothing in either is built, so both stay cheap.
+    </p>
+  </div>
+</header>
+
+<div class="shell">
+
+<nav class="index" aria-label="Contents">
+  <div class="navhead">0 · Orientation</div>
+  <a href="#what">What CivicOS is</a>
+  <a href="#who">Who it is for</a>
+  <a href="#doctrine">The seven rules</a>
+  <a href="#objects">The four objects</a>
+  <a href="#claims">Questions &amp; claims</a>
+  <a href="#vocab">Vocabulary</a>
+  <a href="#changed">What changed</a>
+  <a href="#method">How this was made</a>
+  <div class="navhead">1 · The path</div>
+  <a href="#journey">The journey</a>
+  <a href="#act">The ACT</a>
+  <a href="#surfaces">Ten surfaces</a>
+  <a href="#hard">Four hard moments</a>
+  <div class="navhead">2 · Underneath</div>
+  <a href="#layers">The layer stack</a>
+  <a href="#processes">94 processes</a>
+  <a href="#states">133 states</a>
+  <div class="navhead">3 · Absences</div>
+  <a href="#gaps">What is missing</a>
+  <div class="navhead">4 · Settled &amp; open</div>
+  <a href="#decisions">17 decisions</a>
+  <a href="#open">Still open</a>
+  <div class="navhead">5 · Next</div>
+  <a href="#order">Build order</a>
+  <a href="#review">What I need</a>
+</nav>
+
+<main>
+
+<!-- ============================ PART 0 ============================ -->
+<div class="parthead">
+  <div class="pnum">Part 0</div>
+  <h2>Orientation</h2>
+  <p>What the system is, who uses it, the rules it will not break, and the words the rest of this document uses without explaining them again.</p>
+</div>
+
+<section id="what">
+  <h2><span class="tag">Start here</span>What CivicOS is</h2>
+  <p class="lede">
+    CivicOS is a tool for community accountability groups. It helps a small group of ordinary
+    people capture what a public body published, work out what it means, build a case they can
+    stand behind, and act on it — while never claiming more than the evidence supports.
+  </p>
+  <p>
+    A concrete example, and it is the one the design is tested against throughout:
+    <strong>a neighbourhood group notices that money keeps moving out of the city's sewer
+    fund.</strong> They want to know whether that is lawful, who authorised it, and whether
+    anyone is accountable. Answering that means finding budget documents, council agendas,
+    staff reports and contracts across a dozen city web pages; working out which ones relate
+    to each other; deciding what they collectively show; and eventually publishing a case
+    that a journalist, a lawyer or a city administrator can check without taking the group's
+    word for anything.
+  </p>
+  <p>
+    Today that work is done in shared folders, spreadsheets and email threads. It fails in
+    predictable ways: the source page changes and the screenshot has no proof of date, the
+    person who found the crucial document leaves, and the finished claim rests on a chain
+    nobody can retrace.
+  </p>
+
+  <div class="note">
+    <span class="lbl">The whole product, in one sentence</span>
+    <p>
+      <strong>The trustworthiness of the record.</strong> A group captures what a public body
+      published and can prove later that it said what they claim. Everything else —
+      the screens, the search, the workflow — is substrate for that. It follows that
+      <em>a defect which lets the record claim more than it can support is worse than a
+      missing feature, and much worse than an ugly one</em> — because a case built on a
+      record that overclaims is worse than no case at all.
+    </p>
+  </div>
+
+  <h3>The stance, which is doctrine and not a mission statement</h3>
+  <p>
+    The objective is <strong>better government</strong>, pursued through greater
+    understanding, less narrative, and accountability. The working assumption is that at the
+    highest level all stakeholders want better outcomes in the public interest — while bad
+    actors genuinely exist, and are identified <em>by evidence</em> rather than assumed by
+    role. There is no structural prior against any class of actor anywhere in the system.
+  </p>
+  <p>
+    <strong>“Less narrative” is a constraint on us, not only on them</strong>, and this is the
+    part that shapes the most design decisions. Threats to the record run in both directions:
+    someone may damage a publisher, and <em>someone may make claims reaching far beyond what
+    the evidence supports.</em> Nearly every rule in the next section defends against the
+    second. The primary threat model here has always been self-directed.
+  </p>
+
+  <h3>How it is deployed, which explains several constraints</h3>
+  <p>
+    Each group runs <strong>its own instance</strong>, installed into the group's own
+    Cloudflare account — not a tenant on our servers. An installer puts a sovereign instance
+    into a group's account; that is the distribution model, not a demo.
+  </p>
+  <p>
+    The server side is called <em class="term">the plane</em>, and it is built from three
+    Cloudflare parts. <strong>A Worker</strong> is a small program that runs in Cloudflare's
+    network rather than on a server you rent — it starts when a request arrives, handles it,
+    and stops, so there is nothing to keep running and nothing to patch. The trade is strict
+    ceilings on time and memory per request, which is why several design questions below
+    resolve to <em>measure it first</em>. <strong>A Durable Object</strong> is the exception
+    to a Worker's forgetfulness: a single long-lived instance that owns some state, handles
+    its requests one at a time, and here carries a SQLite database — the record itself.
+    <strong>R2</strong> is bulk file storage, and holds the captured bytes.
+  </p>
+  <p>
+    Two consequences show up repeatedly. The group owns and can leave with their record, so
+    the record must survive without us. And because the runtime is a Worker, capability that
+    would be routine on an ordinary server has to be shown to fit before it can be promised.
+  </p>
+
+</section>
+
+<hr class="rule">
+
+<section id="who">
+  <h2><span class="tag">Start here</span>Who uses it, and who reads what it produces</h2>
+  <p class="lede">
+    Two different populations, and until 2 August this project used one word — “audience” —
+    for both. They are separated now, because they need opposite things.
+  </p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:26%">Population</th><th>Who</th><th style="width:30%">What varies for them</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>User types</strong><br><span style="color:var(--text-3);font-size:.85rem;">people who use BIO</span></td>
+          <td>The <em>primary</em> archetype is <strong>a member of a community accountability group</strong> — non-technical, volunteering their evenings, with no training in records law or evidence. It is not the only one. Journalists, lawyers, city administrators and oversight bodies run instances of their own, as does <strong>any role that involves collecting evidence and investigating, and any group trying to improve government</strong> with these capabilities. Also: the group's administrator, and the operator who installs the instance.</td>
+          <td>Capabilities, journeys and surfaces. What they are <em>allowed</em> to do and what screens they get.</td>
+        </tr>
+        <tr>
+          <td><strong>Audiences</strong><br><span style="color:var(--text-3);font-size:.85rem;">readers of a published case</span></td>
+          <td>Elements of the public who read a published case and use its information, analysis and conclusions: a journalist, a lawyer, a city administrator, an oversight body, the group's own future members, a member of the public.</td>
+          <td>Renderings and thresholds. How much of the case they are shown, and at what strength.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <span class="lbl">And the rule that separates them, which is doctrine</span>
+    <p>
+      <strong>Renderings and thresholds vary by audience. Capabilities, journeys and surfaces
+      vary by user type. Neither ever reaches ratification.</strong> There is no
+      “administrator build” with a relaxed gate. A per-reader relaxation would be a structural
+      prior by role — the same defect as a suspicion flag, with the sign reversed.
+    </p>
+    <p>
+      <strong>The same person is often both, and that is why the split is about relationships
+      rather than populations.</strong> A lawyer may run an instance to build a case and also
+      read someone else's published case. Which sense applies depends on <em>the case</em>, not
+      on the person — so the two lists are not two groups of people to be told apart, and no
+      part of the system ever needs to decide which kind someone “is”.
+    </p>
+  </div>
+  <p>
+    The non-technical archetype is load-bearing on almost every design choice below. It is why
+    the member is never asked to classify what they are filing, why a technical failure must
+    never surface as a raw error, and why “what would prove you wrong” has to be offered as a
+    choice before it is offered as a blank text field.
+  </p>
+</section>
+
+<hr class="rule">
+
+<section id="doctrine">
+  <h2><span class="tag">Start here</span>The seven rules that decide arguments</h2>
+  <p class="lede">
+    These are not style preferences. Each was written after something went wrong, and each is
+    enforced structurally where it can be. Nearly every design decision in Parts 1–4 is one of
+    these being applied.
+  </p>
+
+  <div class="gloss">
+    <dt>Undetermined is first-class</dt>
+    <dd><b>Never invent an attribution to get past a gate.</b> If the system does not know something, it says so, in a form rendered identically everywhere. A gate that pressures someone into inventing an answer is a bug in the gate, not in the person.</dd>
+
+    <dt>An equality that costs nothing is not evidence</dt>
+    <dd>Two empty documents having the same hash agree on nothing. Our own governor refusing a request is not the source failing. A provenance step a caller can hand us is one a caller can invent. <b>All three are refused structurally, not by convention.</b></dd>
+
+    <dt>Grade tracks how it was established, never how credible it is</dt>
+    <dd>A grade says <b>what would be needed to check this</b>, not how much to believe it. A member who was in the room may produce the most valuable fact in a case at the lowest grade, and it is labelled by its author rather than discounted.</dd>
+
+    <dt>A claim is worth its weakest link</dt>
+    <dd>A conclusion resting on four legs is worth the weakest one, and the surface <b>names which leg that is</b> — never a score, never an average, never a single composite letter. Twice over, because there are two different things being measured: the weakest document it reaches, and the weakest relationship it relies on.</dd>
+
+    <dt>A finding that cuts against the case travels the same path as one that supports it</dt>
+    <dd>Called <b>invariant 7</b>. Its enforcement point is that leaving something out is an authored act with a name on it, rather than an absence nobody can see.</dd>
+
+    <dt>Measure, do not assume</dt>
+    <dd>Numbers carry their date and instrument. <b>A vendor's documentation is a claim, not a measurement.</b> Three claims the archive design rested on turned out to be wrong when finally measured, after weeks in the design document.</dd>
+
+    <dt>Run the negative control</dt>
+    <dd>Break the thing you just tested and confirm the test fails. <b>A suite that does not fail when you break its subject is not a suite.</b> One check here passed 67 assertions while testing nothing, because every input the code produced was well-formed by construction.</dd>
+  </div>
+
+  <p>
+    One structural mechanism deserves naming here because it is referenced throughout:
+    <strong>the two-bucket fence.</strong> Working material and published material live in
+    separate tables, and the public read path can only touch the published projection.
+    So answering an anonymous query <em>structurally cannot</em> leak working material — it is
+    not a permission check that could be forgotten, it is a different set of tables.
+  </p>
+</section>
+
+<hr class="rule">
+
+<section id="objects">
+  <h2><span class="tag">Start here</span>The four objects</h2>
+  <p class="lede">
+    Everything in the record is one of four things. Each is stored as a
+    <em class="term">bundle</em> — a text document with structured fields plus attached files,
+    with append-only history, so what changed and who changed it is always recoverable.
+  </p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:16%">Object</th><th style="width:20%">Is</th><th>In the sewer-fund example</th></tr></thead>
+      <tbody>
+        <tr><td><code>information</code></td><td><strong>Evidence.</strong> A captured document, everything known about how it reached us, <em>and what it says</em> — the extracted content, with the parts that could not be read marked as such.</td><td>The FY2024 budget PDF, captured from the city's own address on a stated date, with its bytes hashed — plus the fund names, figures and dates read out of it.</td></tr>
+        <tr><td><code>inquiry</code></td><td><strong>A claim, at any stage of its life.</strong> A question, a concluded finding, or a published case — the same object in three phases.</td><td>“Was the $2.1m transfer authorised?” — which later concludes, and later still is published.</td></tr>
+        <tr><td><code>action</code></td><td><strong>An outward engagement.</strong> Something sent to somebody outside the group, and whatever came back.</td><td>A public-records request to the city controller, its statutory deadline, and the reply.</td></tr>
+        <tr><td><code>project</code></td><td><strong>A workspace.</strong> Membership and access control. Deliberately carries nothing about what is true.</td><td>“Sewer Fund” — who is working on it and who may see it.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <span class="lbl">What sits between the objects, and is not one of them</span>
+    <p>
+      <strong>A connection is an edge</strong> — a stated relationship between two pieces of
+      information, running through the thing they have in common. It is not a fifth object and
+      it is not part of either document; it is the link itself, and it is recorded, graded and
+      attributable like everything else. <strong>Most of the value of a record is in its
+      connections rather than its documents</strong>, because a document nobody has related to
+      anything answers no question. Connections are what make the four objects into a record
+      instead of a filing cabinet.
+    </p>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Why a project holds no claims, which is easy to get wrong</span>
+    <p>
+      A project is a container with membership and access control; an inquiry is a claim
+      structure. <strong>Merging them would put access control on every question</strong> — so
+      the project workspace shows who is working on something and shows no strength, no grade
+      and no conclusion.
+    </p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section id="claims">
+  <h2><span class="tag">Start here</span>The question, the claim, and the three kinds of link</h2>
+  <p class="lede">
+    This is the middle of the system and the part most easily got wrong. Three words that
+    sound interchangeable are not, and three kinds of link that all look like arrows do
+    different jobs.
+  </p>
+
+  <h3>An inquiry asks; a claim answers</h3>
+  <p>
+    <strong>An inquiry is a question.</strong> <i>“Was the $2.1m transfer authorised?”</i> A
+    question has no truth value — it cannot be right or wrong, only open or answered.
+  </p>
+  <p>
+    <strong>A claim is a proposition.</strong> <i>“The transfer was not authorised by any
+    resolution.”</i> It can be true or false, supported or contradicted. It is the kind of
+    thing evidence bears on.
+  </p>
+  <p>
+    <strong>An inquiry becomes a finding when a claim is added to it</strong> — together with
+    what the claim rests on, and with a statement of what would prove it wrong. That act is
+    called <em class="term">concluding</em>, and it is not a third kind of object: it is the
+    inquiry adopting a claim as its answer. This is why the evidence attaches to the
+    <em>claim</em> rather than to the act of adopting it.
+  </p>
+
+  <div class="note">
+    <span class="lbl">What “strength” is a property of, since three different things carry a grade</span>
+    <p>
+      Grades are applied to <strong>a capture</strong> (a document read in), <strong>a
+      connection</strong> (a stated relationship between two pieces of information), and
+      <strong>a leg</strong> (a piece of a claim's support). A claim itself is never graded
+      directly — <strong>its strength is derived from what it rests on</strong>, which is what
+      stops anyone from simply declaring a claim strong.
+    </p>
+  </div>
+
+  <h3>The three kinds of link, which are not the same link</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:16%">Link</th><th style="width:34%">What it asserts</th><th>Graded?</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Citation</strong></td>
+          <td>A reference from one piece of content to another. <em>“This points at that.”</em> An act of pointing, and nothing more — you can cite something you believe is wrong.</td>
+          <td><strong>No.</strong> Pointing makes no claim about the world, so there is nothing to grade.</td>
+        </tr>
+        <tr>
+          <td><strong>Connection</strong></td>
+          <td>That two pieces of information <em>concern the same thing</em> — running through the entity they share. A claim about the world, and improvable as evidence firms up.</td>
+          <td><strong>Yes.</strong> Built from how well each end was established.</td>
+        </tr>
+        <tr>
+          <td><strong>Leg</strong></td>
+          <td>That a piece of evidence <em>bears on a claim</em> — either supporting it or cutting against it. A claim's basis is its legs.</td>
+          <td><strong>Yes.</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <em>Cuts against</em> is deliberately weaker than <em>disproves</em>. A leg pointing the
+    other way does not kill a conclusion; it is weighed with the rest, and it must travel the
+    same path as a supporting one. That is invariant 7, and it only works if the two can
+    coexist inside one claim.
+  </p>
+
+  <div class="note">
+    <span class="lbl">Why these are two diagrams in two different notations</span>
+    <p>
+      Earlier drafts of this page drew all of it as one flowchart, which was wrong twice over.
+      A flowchart gives every relationship the same arrow, so <em>contains</em>,
+      <em>refers&nbsp;to</em> and <em>becomes</em> render identically and a reader cannot tell
+      them apart. It also let a plainly false edge look reasonable — an arrow from the claim to
+      the finding, when <strong>the finding IS the inquiry that holds the claim</strong>, not
+      something the claim produces.
+    </p>
+    <p>
+      So: <strong>structure and lifecycle are different kinds of model and get different
+      notations.</strong> The first diagram is a UML class diagram, whose arrowheads already
+      have agreed meanings; the second is a state machine, where the labels are the acts that
+      cause each transition.
+    </p>
+  </div>
+
+  <h3>The reference tree — what holds what, and what points at what</h3>
+  <figure>
+    <div class="diagram">
+<pre class="mermaid">
+classDiagram
+    direction LR
+
+    class Inquiry {
+      +question
+      +phase
+    }
+    class Claim {
+      +proposition
+      +falsifier
+    }
+    class Leg {
+      +role
+      +connection_grade
+    }
+    class Target
+    class Document {
+      +capture_grade
+      +bytes_and_provenance
+    }
+
+    Inquiry "1" *-- "0..1" Claim : holds
+    Claim "1" *-- "1..n" Leg : rests on
+    Leg "1" --> "1" Target : points at
+    Target <|-- Document
+    Target <|-- Inquiry
+</pre>
+    </div>
+    <figcaption>
+      <strong>Read the arrowheads, they are standard.</strong> A filled diamond
+      (<code>*--</code>) is <em>composition</em> — the part cannot exist without the whole, so a
+      claim belongs to one inquiry and a leg belongs to one claim. An open arrow
+      (<code>--&gt;</code>) is <em>association</em> — a plain reference, which is all a leg does
+      to its target. A hollow triangle (<code>&lt;|--</code>) is <em>generalization</em>, read
+      “is a”. <strong>That last one carries the recursion:</strong> because an inquiry <em>is
+      a</em> target, a leg may point at another inquiry, and a case assembles itself out of
+      smaller findings with no extra machinery. The numbers are multiplicities — and note
+      <code>0..1</code> on the claim: that is exactly the open question of whether one finding
+      may hold several claims, written where it cannot be missed.
+      <br><br>
+      Two fields carry more than their names show. A leg's <code>role</code> is
+      <em>supports</em> or <em>cuts_against</em>, and both count toward strength identically —
+      that is invariant 7 made storable. A leg's <code>connection_grade</code> <strong>may be
+      absent</strong>, and an absent one is the ungraded leg described above: it stays on the
+      diagram, carries no weight and costs none.
+    </figcaption>
+  </figure>
+
+  <h3>The lifecycle — one object, three phases</h3>
+  <figure>
+    <div class="diagram">
+<pre class="mermaid">
+stateDiagram-v2
+    direction LR
+
+    state "open - an INQUIRY" as Open
+    state "concluded - a FINDING" as Concluded
+    state "published - a CASE" as Published
+    state "deferred" as Deferred
+    state "dismissed" as Dismissed
+
+    [*] --> Open : someone asks a question
+    Open --> Concluded : CONCLUDE - adopt a claim, name a falsifier
+    Concluded --> Open : REOPEN - an act, with a name and a date
+    Concluded --> Published : PUBLISH - the attested rung
+    Published --> Concluded : REVISE - begins a new edition
+    Concluded --> Deferred : DEFER
+    Concluded --> Dismissed : DISMISS
+</pre>
+    </div>
+    <figcaption>
+      The <em>same object</em> throughout: inquiry, finding and case are three names for one
+      thing at three moments, which is why no arrow in the diagram above connects them — an
+      arrow there would say they were separate objects. <strong>Every transition here is an act
+      a person performs</strong>, named on the edge, and every one has a way back. Revising does
+      not overwrite: it opens a new edition, and the earlier edition stays published and still
+      answers, so a reader who relied on it is not left holding a hash that changed underneath
+      them.
+    </figcaption>
+  </figure>
+
+  <div class="note why">
+    <span class="lbl">Can one finding hold several claims? Not today — and the alternative may already be enough</span>
+    <p>
+      A finding holds <strong>one</strong> claim of its own. Several propositions — <i>the
+      transfer happened</i>, <i>no resolution authorised it</i>, <i>the balance fell below the
+      statutory floor</i> — are expressed as <strong>separate inquiries that the larger one
+      rests on</strong>, along the dotted edge above. In that sense a finding does draw on many
+      claims: a leg pointing at a concluded inquiry is a leg pointing at that inquiry's claim.
+    </p>
+    <p>
+      <strong>The argument for keeping it that way is the collapse's own test.</strong> A claim
+      with legs is shaped exactly like an inquiry with legs, so a claim nested inside a finding
+      is an inquiry that has been denied its own identity — it cannot be cited by anything else,
+      published on its own, or given its own falsifier. Promoting it would rebuild the
+      multiplicity the collapse just removed.
+    </p>
+    <p>
+      <strong>Two things could still force the change, and both are open.</strong> The first is
+      ergonomic and honest: making every component proposition a full inquiry, each with its own
+      falsifier, may be too heavy for one person's evening, and that is measurable rather than
+      arguable. The second is <em>contradiction</em> — two claims that conflict, both held,
+      neither yet abandoned. That structure does not exist and nobody has designed it; it is the
+      first item in Part 4's open list. Nothing here is built yet, so both remain cheap.
+    </p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section id="vocab">
+  <h2><span class="tag">Start here</span>The vocabulary this document uses</h2>
+  <p class="lede">
+    Terms that appear throughout Parts 1–5 without further explanation. This is the
+    section to come back to.
+  </p>
+
+  <h4>The record and how things get into it</h4>
+  <div class="gloss">
+    <dt>The plane</dt><dd>The server side of one group's instance. A Worker plus a database plus object storage. Everything the record knows lives here.</dd>
+    <dt>Capture</dt><dd>Fetching a document a public body published and storing the <b>exact bytes</b>, with a record of what address served them, when, and what came back.</dd>
+    <dt>Provenance chain</dt><dd>The account of how bytes reached us. A direct fetch from the publisher is one hop; recovering a page that has gone dark from a web archive is two. Longer chains are honest, not hidden.</dd>
+    <dt>Op</dt><dd>One operation the plane offers — the API surface. 108 exist. “An op with no caller” means functioning capability no screen can reach.</dd>
+    <dt>The gate / checks</dt><dd>A catalogue of numbered rules a bundle must satisfy. The gate runs them and names which ones failed and on what.</dd>
+    <dt>Promote</dt><dd>The single write authority. Nothing enters the record except through it, which is why one place can enforce every rule.</dd>
+  </div>
+
+  <h4>How strongly something is held — and what the “something” is</h4>
+  <p style="font-size:.92rem;color:var(--text-2);">
+    Three things carry a grade: <strong>a capture</strong>, <strong>a connection</strong> and
+    <strong>a leg</strong>. A claim is never graded directly; its strength is derived from its
+    legs, which is what stops anyone declaring a claim strong.
+  </p>
+  <div class="gloss">
+    <dt>Identifier</dt><dd>A string <b>the source itself mints to name one thing uniquely</b> — an ordinance number, a contract number, a parcel number, a case number. It matters for grading because an identifier is <i>designed</i> not to collide, so finding the same one at both ends is strong evidence the two documents mean the same thing.</dd>
+    <dt>Correspondence</dt><dd>A match on attributes that <b>line up</b> rather than on a shared identifier — the same name, the same date, the same amount. Weaker than an identifier for one reason: two unrelated things can correspond by coincidence. Two contractors can share a name; two payments can share a sum.</dd>
+    <dt>Grade A–D</dt><dd>How something was established. <b>A</b> the source itself says so, in its own words. <b>B</b> an <i>identifier</i> the source uses, found in captured content at both ends. <b>C</b> <i>correspondence</i> rather than identity. <b>D</b> asserted with no captured basis — recorded as testimony, with an author and a date, and not discounted for being D. <b>Grade is improvable</b>, and raising it is the clearest thing the system can offer a case.</dd>
+    <dt>Connection</dt><dd><b>An edge between two pieces of information</b>, running through the entity they share. The central construct, and the one most of a record's value sits in: documents answer nothing until something relates them. A connection carries its own grade, its own basis, and the name of whoever asserted it. Its grade is built from <b>how each end was established</b> — both ends measured the same way, so combining those two is legitimate. <b>Two limits as built, both real:</b> a connection runs between whole <i>documents</i>, though the evidence underneath it is anchored to specific passages — the anchor is discarded when the connection is formed, so following one lands you on a 300-page PDF rather than on the line. And it runs through a <i>named</i> thing, so two documents about the same <i>idea</i> that share no named entity cannot yet be connected.</dd>
+    <dt>Citation</dt><dd><b>A reference from one piece of content to another</b> — an act of pointing, carrying no claim about the world and therefore no grade. Distinct from a connection, and easy to confuse with one. As built it runs document to document; a reference <i>within</i> one document has nowhere to live yet.</dd>
+    <dt>Claim</dt><dd><b>A proposition</b> — something that can be true or false. What an inquiry adopts as its answer, and the thing legs bear on. Never graded directly.</dd>
+    <dt>The two graded things</dt><dd>Grade is applied to <b>two different kinds of thing</b>, and they are never combined. <b>Capture grade</b> belongs to a <i>document</i> — how its bytes were read in. <b>Connection grade</b> belongs to an <i>edge</i> — how a stated relationship was established. A document can be captured perfectly and connected weakly, and the reader needs to be told which.</dd>
+    <dt>Strength</dt><dd><b>Two independent measurements, reported side by side and never composed.</b> The capture measurement is the weakest capture grade among <i>every document the conclusion reaches</i>; the connection measurement is the weakest connection grade among <i>every edge it rests on</i>. They range over different populations and answer different questions — <i>are these the bytes the body published?</i> and <i>are these things really related?</i> — so neither can stand in for the other, and no rendering reduces them to one letter.</dd>
+    <dt>Basis / leg</dt><dd>What a claim rests on. Each <b>leg</b> points at a document or at another claim, and carries a <b>role</b> — <i>supports</i> or <i>cuts against</i>. A leg that cuts against the conclusion counts toward strength exactly as a supporting one does; that is invariant 7 made storable.</dd>
+    <dt>Not load-bearing</dt><dd>A leg with no established grade <b>contributes nothing and costs nothing</b>. It is not weighed, not averaged, does not drag the conclusion down, and does not stop it being graded. It stays in the basis, <b>named</b>, as something present but not yet carrying weight. The conclusion is graded on the legs that do carry weight, which is honest because those are the only legs it rests on. <b>Every ungraded leg is named, however many there are.</b></dd>
+    <dt>Unrated</dt><dd>The boundary case: when <b>no</b> leg has an established grade, the conclusion rests on nothing established and has no computed strength at all — naming every leg that is why. It may still be published, as unrated. Punishing honesty and laundering weakness are both refused, which is why an ungraded leg is neither ranked below the worst grade nor quietly ignored.</dd>
+    <dt>Hunch</dt><dd>A connection a member asserts <b>ahead of its evidence</b>, graded temporarily high enough to make otherwise disconnected material traversable — so a line of thought can be followed before it can be proved. It is <i>temporary declared bias</i>, and it is the <b>one kind of bias that must be cleared before publication</b>, because a hunch carries a grade it has not earned.</dd>
+  </div>
+
+  <h4>Acts and their weight</h4>
+  <div class="gloss">
+    <dt>Act</dt><dd>Anything a member does that goes on the record. Always the same four-beat motion (Part 1).</dd>
+    <dt>Rung</dt><dd>How heavy an act is, visible before it runs: <b>reversible</b> · <b>reasoned</b> (a justification is required and never prefilled) · <b>weighty</b> (undoing it is itself an act, not a back button) · <b>attested</b> (public, requires a key, and correcting it requires another attested act). <b>Nothing here is irreversible</b> — see the note below the table.</dd>
+    <dt>Weight</dt><dd>A separate question: how an act applies to a <i>set</i>. <b>refuse</b> all-or-nothing · <b>report</b> proceeds and says what moved · <b>per-item</b> each succeeds or is retained <i>with its reason</i>.</dd>
+    <dt>Conclude</dt><dd>Turning a question into a finding. Requires an authored conclusion, at least one leg of basis, and a <b>falsifier</b>.</dd>
+    <dt>Falsifier</dt><dd>What would prove the conclusion wrong. Required, and there is no way around it. <b>Three reasons, and the first is the one that matters:</b> a claim nothing could falsify is not a finding, it is a position, and this project's stated threat is its own overclaiming. Naming one also forces the claim to be stated precisely enough to be checkable — a vague claim has no falsifier. And it leaves the record a trigger: if the falsifying thing later turns up, everyone can see the conclusion is owed a second look.</dd>
+    <dt>Publish / ratify / attest</dt><dd>Signing a case with a key so a stranger can verify it without trusting the group — or us. The heaviest act in the system, and <b>correctable</b>: see below.</dd>
+    <dt>Completeness statement</dt><dd>What the group left out of the case, and why — authored, never prefilled, and checked byte-for-byte against the previous version so it cannot be carried forward unchanged. This is the gate that makes a published case more than a published finding.</dd>
+    <dt>Edition</dt><dd>A published case can be revised. Republishing increments an edition, and the case is treated as a separate document — earlier editions stay published, stay verifiable, and still say what they said, so a reader who relied on one is never left holding a hash that has quietly changed underneath them.</dd>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Nothing in this system is irreversible, and that is deliberate</span>
+    <p>
+      An earlier version of this page said publishing was the one irreversible act. That was
+      wrong, and the correction matters more than it sounds. <strong>People make mistakes and
+      misread documents, so an attestation has to be correctable</strong> — a record that
+      cannot withdraw a claim it got wrong is not more trustworthy, it is only more rigid.
+    </p>
+    <p>
+      <strong>But reversal is not erasure.</strong> Withdrawing an attestation is <em>another
+      attested act</em> — dated, attributed, signed — and both stand in the record afterwards.
+      The original bytes still answer, so a reader who relied on them can still see exactly
+      what they relied on, and can now also see that it was withdrawn. A closed finding can be
+      reopened and a published case can be revised as a new edition on the same principle.
+    </p>
+    <p>
+      So the guarantee at the top of the ladder is not <em>this cannot be undone</em>. It is
+      <strong>this cannot be undone silently</strong> — which is the stronger promise, because
+      it protects a reader from the publisher <em>and</em> lets the publisher be honest about
+      having been wrong.
+    </p>
+  </div>
+
+  <h4>Meaning, and the machinery that finds it</h4>
+  <div class="gloss">
+    <dt>Entity / subject registry</dt><dd><b>The record's list of the things it talks about</b>, so that a thing keeps one identity across every document that mentions it. Each entry is a person, body, office, ordinance, parcel, contract or fund, and carries: <b>its aliases</b>, because the same fund is “Sewer Enterprise Fund” in the budget and “Fund 6100” in the ledger; and <b>its declared relationships</b> to other entries, each justified and citable. It is what makes “everything concerning Ordinance 13579” answerable rather than a text search, and it is the far end of every connection — an edge runs between two documents <i>through</i> the entry they share. A relationship the group declares here is <b>constitutive, not evidence</b>: it defines how the record uses a word, so it is not graded as though it were a weak claim about the world.</dd>
+    <dt>Reading</dt><dd>What a machine extracted from a document's text: which entities it names, what facts it states.</dd>
+    <dt>Progression</dt><dd>A model of how something is <i>supposed</i> to flow — a meeting has an agenda before it and minutes within N days after. Declaring it is what makes a <b>gap detectable</b>: an award with no solicitation is only a finding if somebody said a solicitation was expected.</dd>
+    <dt>Declared bias</dt><dd>The group states what it already believes, so a reader can discount it. A statement may raise scrutiny, constrain inference and assert evidenced patterns; <b>it may never issue a verdict.</b> The construct that fights undeclared distortion is held to a higher standard than the distortion. <b>Bias is public: it accompanies every published case produced under it</b>, in the artifact rather than by reference — a declared position a reader cannot see is not a declaration.</dd>
+    <dt>Bias debt</dt><dd>When a bias is added or changed, existing analysis is marked as owing a re-run. <b>Debt is disclosed; it does not block publication</b> — the reader is told what the analysis has not yet been re-run under, and can weigh it. <b>The single exception is a hunch, which must be cleared before publishing.</b> The line between them: a hunch inflates a <i>grade</i>, so publishing over one states a strength that is not true; ordinary bias only frames interpretation, which disclosure fully answers.</dd>
+  </div>
+
+  <h4>How the study talks about work</h4>
+  <div class="gloss">
+    <dt>Path verb</dt><dd>The five stages of the member's work: <b>questioning · exploring · discovering · documenting · impacting</b>, with <i>sharing</i> as the publication half. They come from the project's own statement of what the system is for.</dd>
+    <dt>Process</dt><dd>One thing the system does end to end. 94 catalogued.</dd>
+    <dt>Driver</dt><dd>What starts a process. <b>USER</b> a person initiates it · <b>DATA</b> bytes arriving or a value changing makes something newly true · <b>EVENT</b> one act invokes another · <b>CLOCK</b> a timer fires with no new input.</dd>
+    <dt>Surface</dt><dd>A screen or coherent region of the interface. Ten are specified.</dd>
+    <dt>State</dt><dd>One condition a surface can be in, including every honest failure — <i>drawn as a wireframe with its copy written</i>. 133 exist.</dd>
+    <dt>Layer</dt><dd>L0–L8, from the platform up to the screens. A layer may only know about the ones below it.</dd>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section id="changed">
+  <h2><span class="tag">Start here</span>What changed in the last two days, and why it matters</h2>
+  <p class="lede">
+    The study did not merely describe the design; it changed it in five places. A reader
+    comparing this against anything written before 1 August needs these.
+  </p>
+
+  <h3>The collapse — three concepts became one</h3>
+  <p>
+    The system used to have a <em>focus</em> (an open question), a <em>finding</em> (a
+    conclusion), and a <em>case</em> (something published). Those are now <strong>one recursive
+    object, <code>inquiry</code>, with phases</strong>: open → concluded → published. The
+    member-facing words <i>inquiry</i>, <i>finding</i> and <i>case</i> remain, but they are
+    names for phases and are never stored separately.
+  </p>
+  <p>
+    <strong>The reason is recursion — and it is recursion rather than nesting, which is not a
+    quibble.</strong> A line of inquiry can rest on other lines of inquiry. “Was the sewer fund
+    misused?” rests on “Was the $2.1m transfer authorised?”, which rests on documents. Three
+    separate types could not express that; one recursive type does it with no new mechanism.
+    This is the single largest change in the design, and most of Parts 2 and 3 trace back to it.
+  </p>
+  <p>
+    <em>Nesting</em> would mean each inquiry sits inside one parent and is part of it. That is
+    not the shape. An inquiry that supports another is <strong>independent</strong> — it can
+    support several at once, it has its own conclusion, and it can be published on its own. So
+    the structure is a graph, not a tree of boxes inside boxes. The proof is that the design
+    needs a rule (R3, below) forbidding an inquiry to rest on itself: <strong>under nesting
+    that could not happen in the first place</strong>, and no such rule would be necessary.
+  </p>
+  <p>
+    Note what the sentence above deliberately does not say: not <em>a claim rests on a claim</em>.
+    The thing that rests on things is <strong>an inquiry</strong> — and since inquiry, finding
+    and case are three phases of one object, everything here is equally true of all three. A
+    published case can be the basis of a fresh question, which is what a working record looks
+    like.
+  </p>
+
+  <h3>Four resolutions, forced by an adversarial pass</h3>
+  <div class="gloss">
+    <dt>R1 · An ungraded leg carries no weight, and costs none</dt><dd>Ignoring an ungraded leg launders weakness; ranking it below the bottom grade punishes honesty. <b>So it does neither: it contributes nothing and it drags nothing down</b>, staying in the basis as a named leg that is not yet load-bearing, while the conclusion is graded on the legs that are. <b>Every ungraded leg is named, however many there are.</b> Only when <i>no</i> leg is graded does the conclusion have no strength at all — then it is <b>unrated</b>, and may still be published as such. <i>Amended 2 August; the first version unrated the whole conclusion for a single ungraded leg.</i></dd>
+    <dt>R2 · Capture and connection are measured separately</dt><dd><i>This page used to call these “two axes”. That word is retired: axes are dimensions of one measurement, and treating them so is what produced the error corrected on 2 August.</i> They grade different kinds of thing — a capture grade belongs to a <i>document</i>, a connection grade to an <i>edge</i> — so nothing averages, mixes or collapses them, and <b>no rendering may reduce them to one letter.</b> A conclusion reports two measurements over two different populations: the weakest document it reaches, and the weakest relationship it relies on. A document captured directly is never the top capture grade — that claim is forbidden and enforced. <i>Amended 2 August; the first version split the <b>legs</b> into two kinds, which its own worked example contradicted — one document leg carries both grades.</i></dd>
+    <dt>R3 · The basis graph is acyclic</dt><dd>An inquiry may not rest on itself, even transitively. Enforced at write, and the refusal names the cycle it found. Without it, two mutually-citing claims make every read run forever.</dd>
+    <dt>R4 · Division costs what severance costs</dt><dd>Splitting a mixed inquiry requires an authored reason, records where <i>every</i> leg went including the ones that cut against, and a published child names its parent and its siblings. A reader who can see one half can see the other exists.</dd>
+  </div>
+
+  <div class="note why">
+    <span class="lbl">Why R2 was the expensive one</span>
+    <p>
+      Three of the sixteen files had drawn a case publishing at a single letter, with capture
+      facts and connection facts under one unlabelled grade. Under R2, every one of those
+      frames is wrong, and eleven build items changed. It also exposed a comment in the
+      shipping code that named the two axes and treated their <em>shared</em> ranking as a
+      feature — a design intent the resolution reverses.
+    </p>
+    <p>
+      <strong>And it was still not right on 2 August.</strong> R2 said a conclusion took its
+      capture grade from one set of legs and its connection grade from another — but a leg
+      <em>is</em> an edge pointing at a document, so a single leg carries both. R2's own
+      corrected example showed exactly that and nobody noticed the contradiction for a day.
+      The conclusion was never in doubt; the machinery under it was wrong.
+    </p>
+  </div>
+
+  <h3>Five rulings, 1–2 August</h3>
+  <ul>
+    <li><strong>A published case can be revised</strong>, as a numbered edition; earlier editions stay published and verifiable.</li>
+    <li>
+      <strong>A case is shown to the body it is about, before it is published</strong>, so they
+      can respond and the response is carried inside the published artifact — the practice
+      professional auditors and journalists treat as mandatory, and which this design had
+      listed as a <em>hazard</em>. <strong>But the requirement is the group's declared
+      position, not the contact itself.</strong> A group that sought comment says so and prints
+      what came back. A group that deliberately did not — because giving a hostile body advance
+      notice can be a real risk — says so, and says why, inside the case. A mandate would be
+      either broken quietly or would suppress the case; a declaration cannot be, and a reader
+      can weigh the justification for themselves.
+    </li>
+    <li><strong>Claims about our own impact are held to the same standard as findings about a body.</strong> Absent outside evidence, an impact claim is unproven.</li>
+    <li><strong>The hunch</strong> becomes a first-class construct: temporary declared bias, and <strong>the one kind of bias that must be cleared before publishing</strong>. Other bias is disclosed and travels with the case rather than blocking it.</li>
+    <li><strong>A project declares the evidentiary strength its work requires</strong>, and the published case carries that declaration beside the strength it actually reached.</li>
+  </ul>
+</section>
+
+<hr class="rule">
+
+<section id="method">
+  <h2><span class="tag">Start here</span>How this was produced, and how much to trust it</h2>
+  <p class="lede">
+    Sixteen files, about 1.1&nbsp;MB, from thirteen research passes over two days. This page
+    reports the <em>reconciled</em> design, not the raw passes.
+  </p>
+  <p>
+    Three of the passes — the core, evidence and output storyboards — were written in parallel
+    by sessions that could not read each other, and they contradict each other. A
+    reconciliation pass resolved <strong>38 contradictions</strong>, quoting both sides and
+    giving a reason for each, and found that <strong>17 of 35 build items</strong> were changed
+    by the resolutions while 18 were not. It added <strong>zero new items</strong> — every
+    correction landed inside work that already existed, which is itself a finding: the
+    resolutions changed what the items <em>do</em>, not what work exists.
+  </p>
+  <div class="note alarm">
+    <span class="lbl">The honest caveat, and it is not decorative</span>
+    <p>
+      <strong>Every research pass in this study made at least one sharp claim that did not
+      survive checking.</strong> Counts on this page were verified against the repository
+      rather than taken from a pass. Where a pass could have written a plausible answer and
+      instead stopped, the reconciliation records where it stopped and why — five such places
+      are named, and they are in Part 4's open questions rather than quietly closed.
+    </p>
+  </div>
+  <p>
+    <strong>Nothing described in Parts 1–3 as a specification has been built.</strong> The
+    surfaces are drawn, the states have their copy written, and the build order is queued.
+    What exists today is marked on every surface card and in every status chip.
+  </p>
+</section>
+
+<!-- ============================ PART 1 ============================ -->
+<div class="parthead">
+  <div class="pnum">Part 1</div>
+  <h2>The path</h2>
+  <p>What the system asks a person to do, from the moment something bothers them to the moment a stranger can check their case.</p>
+</div>
+
+<section id="journey">
+  <h2><span class="tag">The path</span>The journey, end to end</h2>
+  <p class="lede">
+    Six stages, ten surfaces. Every edge below is either an <strong>act</strong> — the member
+    does something and it goes on the record — or a <strong>read</strong>. Follow it left to
+    right through the sewer-fund example.
+  </p>
+
+  <figure>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart TD
+  START["Something bothers me:<br/>the sewer fund keeps being moved"]
+
+  subgraph QUESTIONING
+    START --> A1
+    A1["ACT: ask<br/>on S1 QUEUE"] --> S3a["S3 INQUIRY PAGE<br/>phase: inquiry · open<br/>conclusion: undetermined"]
+  end
+
+  subgraph EXPLORING
+    S3a --> S4["S4 EVIDENCE FINDER<br/>search · selection lease"]
+    S4 --> S5["S5 DOCUMENT PAGE<br/>four strata · verify bytes myself"]
+    S4 -->|"nothing in the record answers this"| S6["S6 ADD<br/>capture with provenance"]
+    S6 --> S5
+    S5 --> S4
+  end
+
+  subgraph DISCOVERING
+    S5 --> A2["ACT: cite<br/>this supports the inquiry"]
+    S4 --> A2
+    A2 --> S3b["S3 INQUIRY PAGE<br/>basis grows · strength recomputes<br/>weakest leg NAMED"]
+    S3b -->|"one leg is thin"| A3["ACT: divide<br/>apportion the basis, authored"]
+    A3 --> S3b
+  end
+
+  subgraph DOCUMENTING
+    S3b --> A4["ACT: conclude<br/>author the conclusion · select the basis<br/>name what would falsify it"]
+    A4 --> S3c["S3 INQUIRY PAGE<br/>phase: finding · concluded<br/>strength: weakest document<br/>and weakest relationship"]
+    S3c -->|"cited as basis by a larger question"| S3a
+  end
+
+  subgraph IMPACTING
+    S3c --> A5["ACT: plan an action<br/>counterparty · kind · justified by THESE findings"]
+    A5 --> S10["S10 ACTION PAGE<br/>planned · active · awaiting_response"]
+    S10 --> OUT["the letter leaves the system"]
+    OUT --> BACK["a reply arrives"]
+    BACK --> S6
+    S6 --> A6["ACT: record the consequence<br/>cite the reply back onto the action"]
+    A6 --> S10
+    A6 -->|"the reply is itself evidence"| S3b
+  end
+
+  subgraph SHARING
+    S3c --> A7["ACT: publish · ATTESTED rung<br/>state what was EXCLUDED and why<br/>sign with a key"]
+    A7 --> S8["S8 PUBLICATION CEREMONY<br/>refusals shown BEFORE it runs"]
+    S8 --> S9["S9 PUBLISHED CASE<br/>public · hash-checkable · printable"]
+    S9 -->|"a case is an INPUT, not a terminus"| S3a
+    S9 --> S1n["S1 QUEUE<br/>events on this case group here"]
+  end
+
+  S10 --> S1n
+  S3b --> S1n
+</pre>
+    </div>
+    <figcaption>
+      <code>A1–A7</code> are acts; <code>S1–S10</code> are the surfaces inventoried below.
+      The five subgraphs are the path verbs, plus sharing.
+    </figcaption>
+  </figure>
+
+  <h3>Two properties that are easy to lose, and both are load-bearing</h3>
+  <ul>
+    <li>
+      <strong>The journey re-enters itself twice.</strong> A concluded finding becomes a leg of
+      a larger question (<code>S3c → S3a</code>), and a published case becomes a leg of the
+      next one (<code>S9 → S3a</code>). That is what the collapse bought. <em>If either edge is
+      missing, the record becomes a series of dead ends instead of something cumulative</em> —
+      each case starting from nothing, which is exactly how this work fails in shared folders
+      today.
+    </li>
+    <li>
+      <strong>The consequence of an action re-enters as evidence</strong>
+      (<code>A6 → S3b</code>). What the city says back — or does not say — is new information
+      about how the system actually responds, as against how it is supposed to. This is the
+      loop that turns a group from a publisher into an observer of the body's behaviour, and
+      it is entirely unbuilt.
+    </li>
+  </ul>
+</section>
+
+<hr class="rule">
+
+<section id="act">
+  <h2><span class="tag">The path</span>The ACT — one motion, not seven dialogs</h2>
+  <p class="lede">
+    A non-technical member cannot learn seven different dialogs. Every act in the system is
+    therefore the same four beats, wherever it appears — it is not a screen, it instantiates
+    inside S1, S3, S5, S8 and S10.
+  </p>
+
+  <figure>
+    <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  participant M as Member
+  participant S as Surface
+  participant P as Plane
+  M->>S: choose an option the PRODUCER published
+  S->>P: pre-flight this act
+  P-->>S: named refusals, with the offenders
+  S-->>M: what this will refuse, and why, BEFORE anything runs
+  M->>S: author the reason - empty, never prefilled
+  S->>P: op + reason; actor stamped server-side
+  P-->>S: receipt, or the plane's own refusal verbatim
+  S-->>M: what changed, and what this does NOT claim
+</pre>
+    </div>
+    <figcaption>The defining property is beat three: see what it will refuse, and why, before it runs.</figcaption>
+  </figure>
+
+  <div class="note why">
+    <span class="lbl">Why beat three matters more than it looks</span>
+    <p>
+      The alternative — try it and read the error — trains a member to treat refusals as
+      obstacles to get around. Showing the refusal <em>first</em>, in the plane's own words
+      with the offending items named, makes the rule legible instead of adversarial. It is
+      also why the commit control is <strong>absent rather than greyed out</strong> while an
+      act would refuse: a disabled button invites a member to hunt for the trick that enables
+      it.
+    </p>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Ruled 1 August · DEC-8</span>
+    <p>
+      <strong>The pre-flight is plane-sourced always. A surface may render a refusal it
+      received from the plane; it may never compute one.</strong> Two mechanisms: the plane
+      <em>publishes</em> the refusal contract by default, and runs a <em>dry-run</em> op when a
+      refusal turns on state the surface cannot see. The obvious test — “is this refusal
+      knowable by the browser?” — is wrong, because a refusal is knowable by the browser
+      exactly when the browser holds a copy of the rule, and a copy is drift waiting to
+      happen.
+    </p>
+  </div>
+
+  <h3>The rung ladder — learned once, read everywhere</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Rung</th><th>What it promises the member</th><th>What the interface does</th></tr></thead>
+      <tbody>
+        <tr><td><code>reversible</code></td><td>This can be walked back.</td><td>Nothing special.</td></tr>
+        <tr><td><code>reasoned</code></td><td>A justification is required, and is never prefilled.</td><td>An empty field that cannot be skipped or suggested into.</td></tr>
+        <tr><td><code>weighty</code></td><td>Internal, and undoing it is itself an act.</td><td>Names what becomes fixed, before it fixes it.</td></tr>
+        <tr><td><code>attested</code></td><td>Public, requires a key; correcting it takes another attested act.</td><td>The full ceremony — and it deliberately feels different.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note alarm">
+    <span class="lbl">Measured, and it is why the ladder is not in the plane yet</span>
+    <p>
+      Of <strong>57 acts that change the record, 7 have a rung assigned by any document</strong>
+      — while the <code>reasoned</code> rung is nonetheless <em>enforced in 11 places</em>. The
+      enforcement is ahead of the vocabulary, so the rungs are being derived from what the code
+      already refuses rather than from taste.
+    </p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section id="surfaces">
+  <h2><span class="tag">The path</span>Ten surfaces</h2>
+  <p class="lede">
+    Each carries one job, stated as a sentence the member would recognise. The chip is what
+    exists <em>today</em>, measured against the shipping interface and the plane's op table —
+    not what the specification asks for.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="cid"><span>S1</span><span class="chip partial">three screens today</span></div>
+      <h3>The Queue</h3>
+      <p class="job">Tell me the things that want me, grouped by the case they belong to, and nothing else.</p>
+      <p>One standing entry per member per case while that case has unhandled events — “three things need attention on the Sewer Fund project” — expandable to items. Each item says what it is, what it rests on (or honestly that it does not know), and what can be done about it.</p>
+      <p class="needs">today: home + tasks + proposals, three separate screens with no grouping</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S2</span><span class="chip partial">one instance built</span></div>
+      <h3>The Act</h3>
+      <p class="job">Do one thing, having seen what it will refuse before it runs, and leave a receipt with my name on it.</p>
+      <p>Four panes in fixed order: the option chosen; the refusals with offenders named; the reason field, empty; the receipt. Mute is personal, dismiss is a record act, and they are never the same control — one member's inbox hygiene must not erase a finding for the group.</p>
+      <p class="needs">today: exactly one act uses this shape</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S3</span><span class="chip missing">the object does not exist</span></div>
+      <h3>The Inquiry Page</h3>
+      <p class="job">Hold one question through its whole life — asked, gathering, concluded, published.</p>
+      <p>The question as written; what it rests on, each leg with its role and grade; strength as the weakest leg <em>named</em> — separately for documents and for relationships, with no score and no average; what would falsify it; and what other questions now rely on this one.</p>
+      <p class="needs">16 states drawn · the surface with the most gap beneath it</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S4</span><span class="chip partial">two systems that cannot see each other</span></div>
+      <h3>The Evidence Finder</h3>
+      <p class="job">Find the material that bears on this question, and put it under the question.</p>
+      <p>Retrieval is genuinely two systems — a text-and-fields search, and the meaning layer's own lookups — and they cannot be joined today. A query crossing both is <strong>refused rather than approximated</strong>: an under-reporting result would be invisible, and the thing downstream is a case claiming to be complete.</p>
+      <p class="needs">13 states drawn · needs the visibility leak closed first</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S5</span><span class="chip built">largely built</span></div>
+      <h3>The Document Page</h3>
+      <p class="job">Let me read one document, see its standing honestly, and check the bytes myself.</p>
+      <p>The honest states are the point: text undetermined because the page was scanned; authority undetermined, with the task that raised; the source gone dark and recovered from an archive two hops away; and refusing to open at all because the bytes no longer match.</p>
+      <p class="needs">11 states drawn · withdrawing a citation has no button anywhere</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S6</span><span class="chip partial">crashes on one real path</span></div>
+      <h3>The Add Surface</h3>
+      <p class="job">Put a document into the record with its provenance intact — or say honestly that it could not be.</p>
+      <p>The hardest moment in the journey is here: taking in a member's worry without asking them to classify anything, and keeping a technical complication from becoming their problem.</p>
+      <p class="needs">a capture that hits the fetch ceiling shows the member a raw JavaScript error</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S7</span><span class="chip designed">enforced, unreachable</span></div>
+      <h3>The Project Workspace</h3>
+      <p class="job">Say who is working on this and who may see it — and nothing about what is true.</p>
+      <p>Membership, invitations, ownership handover, and the arithmetic behind a group decision. Shows no strength, no grade, no conclusion.</p>
+      <p class="needs">a complete, tested group-vote feature exists and nothing can reach it</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S8</span><span class="chip missing">split in two</span></div>
+      <h3>The Publication Ceremony</h3>
+      <p class="job">Perform the heaviest act in the system — this is what we stand behind, and this is what we left out.</p>
+      <p>Five steps whose <em>order is the argument</em>: authoring the exclusion changes the document's hash, so you cannot sign first and write the caveat afterwards.</p>
+      <p class="needs">publishing exists only in the operator's page, not in the member's — so nothing this group produces can leave</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S9</span><span class="chip missing">no data path</span></div>
+      <h3>The Published Case</h3>
+      <p class="job">Let a stranger read what the group stands behind, check it, and print it — without our cooperation.</p>
+      <p>A rendering may drop <em>claims</em> and may never drop <em>qualifiers</em>, and the qualifiers travel inside the artifact in every rendering, because files get forwarded. Nothing is hidden when printed: a caveat that survives on screen and vanishes on paper is a lie performed by a stylesheet.</p>
+      <p class="needs">today it renders an internal id as its headline · 12 states drawn</p>
+    </div>
+    <div class="card">
+      <div class="cid"><span>S10</span><span class="chip missing">nothing reachable at all</span></div>
+      <h3>The Action Page</h3>
+      <p class="job">Hold one outward engagement — who we wrote to, why, what came back, and what is now overdue.</p>
+      <p>Correspondence as a dated ledger, not a chat. The deadline carries a <em>because</em>: a statute, an order, or the department's own commitment. A date with no basis is the record asserting a deadline it invented.</p>
+      <p class="needs">impacting is the one stage with no working process whatsoever · 13 states drawn</p>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section id="hard">
+  <h2><span class="tag">The path</span>The four hardest moments</h2>
+  <p class="lede">
+    Where the design earns its keep or fails. Each is a place a non-technical member meets
+    something the system genuinely cannot simplify away — so the only question is how honestly
+    it is presented.
+  </p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:20%">Moment</th><th>Why it is hard</th><th style="width:34%">What the surface does</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Getting the bother in</strong></td>
+          <td>A member arrives with a worry, not a typed object. Asking them to choose between “question”, “problem” and “project” asks them to have already done the analysis they came here to do.</td>
+          <td>They write the question in their own words. The type is <em>inquiry</em> and the phase is derived. Nothing asks them to classify.</td>
+        </tr>
+        <tr>
+          <td><strong>Concluding, and naming the falsifier</strong></td>
+          <td>Stating what would prove you wrong is the least natural act in the product, and it is precisely what separates a finding from an opinion.</td>
+          <td>The falsifier is offered as a <em>selection</em> first — pick the leg that would do it — and free text second. The conclusion is authored, empty, and unavoidable.</td>
+        </tr>
+        <tr>
+          <td><strong>The weakest link, and division</strong></td>
+          <td>Weakest-link scoring means a question mixing one strong claim with one thin one is worth the thin one. <em>Without a way to split it, the member's only options are to overclaim or stay silent.</em></td>
+          <td>The strength consequence renders <em>live</em> as legs are selected — a weak leg visibly drags the chain down before anything is committed. Division is authored, apportions every leg including the ones that cut against, and discloses its siblings.</td>
+        </tr>
+        <tr>
+          <td><strong>The exclusion statement</strong></td>
+          <td>“What did you leave out, and why” is the gate that makes a case more than a published finding — and it is trivially satisfiable by a checkbox or a copy-paste.</td>
+          <td>The field ships empty, and the gate compares it byte-for-byte against the previous version so nothing can be carried forward unchanged. <em>A gate that only checks presence is a checkbox.</em></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ PART 2 ============================ -->
+<div class="parthead">
+  <div class="pnum">Part 2</div>
+  <h2>Underneath</h2>
+  <p>What has to exist for Part 1 to work — the layers, the processes, and the states a member can actually land in.</p>
+</div>
+
+<section id="layers">
+  <h2><span class="tag">Underneath</span>The layer stack, and the rung with no owner</h2>
+  <p class="lede">
+    The system is built in layers, each allowed to know only about the ones below it. Nine
+    layers; eight have an owner, a home and a defined interface. <strong>One does not
+    exist.</strong>
+  </p>
+
+  <figure>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart TB
+  L8["L8 · SURFACES<br/>the screens a member uses<br/>reaches 33 of 94 available operations"]
+  L7["L7 · CLAIM / INQUIRY<br/>DOES NOT EXIST — owner NONE<br/>finding · strength · division · completeness"]
+  L6["L6 · RETRIEVAL<br/>search, filters, saved selections<br/>cannot see the meaning layer at all"]
+  L5["L5 · RECORD — THE SPINE<br/>one write authority · the gate and its checks<br/>object states · membership · the publication fence"]
+  L4["L4 · INTENT — meaning<br/>entities · connections graded A–D<br/>progressions · gaps derived on read"]
+  L3["L3 · CONTENT<br/>what kind of document is this<br/>and what does its text say"]
+  L2["L2 · STRUCTURE<br/>links, page text, element references"]
+  L1["L1 · BYTES<br/>capture · provenance chain · archive fallback"]
+  L0["L0 · PLATFORM<br/>Worker + Durable Object + object storage"]
+
+  L0 --> L1
+  L1 -->|bytes + provenance| L2
+  L2 -->|text + structure| L3
+  L3 -->|what it names| L4
+  L1 <--> L5
+  L2 <--> L5
+  L3 <--> L5
+  L4 <--> L5
+  L5 --> L6
+  L6 -->|operations| L8
+  L4 -->|operations| L8
+  L4 -.->|"no path today"| L6
+  L7 -.->|"BLOCKED: no producer, no consumer"| L8
+  L4 -.->|"grades have no consumer"| L7
+  L5 -.->|"the gate covers documents, not claims"| L7
+</pre>
+    </div>
+    <figcaption>
+      Solid edges work today. Dotted edges are the absences — and three of the four converge
+      on L7, the layer the whole system exists for.
+    </figcaption>
+  </figure>
+
+  <div class="note alarm">
+    <span class="lbl">The structural finding, stated plainly</span>
+    <p>
+      <strong>The meaning layer produces grades and nothing consumes them. The record layer
+      can certify a document and cannot certify a claim. The search layer cannot see meaning
+      at all.</strong> Those are three views of one absence: <em>there is no claim layer.</em>
+      A member can capture a document, extract what it says, connect it to an entity and
+      search it — and cannot state a conclusion that rests on it.
+    </p>
+    <p>
+      The capability ladder had no rung for it either. Two were added on 1 August, and the
+      ladder now says plainly that they are <em>not</em> appended after the substrate — they
+      are what the other eight rungs serve.
+    </p>
+  </div>
+
+  <h3>What this means for scheduling</h3>
+  <p>
+    The genuinely serial chain is short. <strong>Eight of the thirty-six build items depend on
+    nothing</strong> and could start today, which means the constraint is people, not
+    dependencies — the reverse of the situation when capture was the bottleneck.
+  </p>
+</section>
+
+<hr class="rule">
+
+<section id="processes">
+  <h2><span class="tag">Underneath</span>Ninety-four processes, and where they run</h2>
+  <p class="lede">
+    A <em>process</em> is one thing the system does end to end. Each is counted once, under the
+    stage of work it advances and under <em>what starts it</em> — a user, arriving data, another
+    act, or a clock. The matrix below is the densest finding in the study.
+  </p>
+
+  <h4>What state the 94 are in</h4>
+  <div class="bar" role="img" aria-label="23 built, 7 partial, 32 designed but unreachable, 31 missing entirely">
+    <div class="b-built" style="flex:23">23</div>
+    <div class="b-partial" style="flex:7">7</div>
+    <div class="b-designed" style="flex:32">32</div>
+    <div class="b-missing" style="flex:31">31</div>
+  </div>
+  <div class="barkey">
+    <span><span class="chip built">built</span> <b>23</b> works end to end</span>
+    <span><span class="chip partial">partial</span> <b>7</b> runs, and is incomplete, inert or dishonest</span>
+    <span><span class="chip designed">designed</span> <b>32</b> the capability ships; nothing can reach it</span>
+    <span><span class="chip missing">missing</span> <b>31</b> nothing anywhere</span>
+  </div>
+  <p style="font-size:.9rem;">
+    The middle two columns are the interesting ones. <strong>32 processes are built and
+    unreachable</strong> — real, tested capability with no button, no timer and no caller. That
+    is a third of the system doing nothing, and it is why “what is missing” below is mostly
+    not about writing new logic.
+  </p>
+
+  <h4>Coverage: stage of work × what starts it</h4>
+  <div class="tablewrap">
+    <table class="hm">
+      <thead>
+        <tr><th>Stage of work</th><th class="num">User</th><th class="num">Data</th><th class="num">Event</th><th class="num">Clock</th><th class="num">Total</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="verb">questioning</td><td class="cell c2">4</td><td class="cell c1">1</td><td class="cell c0">0</td><td class="cell c1">2</td><td class="num">7</td></tr>
+        <tr><td class="verb">exploring</td><td class="cell c3">6</td><td class="cell c0">0</td><td class="cell c0">0</td><td class="cell c0">0</td><td class="num">6</td></tr>
+        <tr><td class="verb">discovering</td><td class="cell c4">9</td><td class="cell c3">6</td><td class="cell c1">1</td><td class="cell c2">5</td><td class="num">21</td></tr>
+        <tr><td class="verb">documenting</td><td class="cell c4">13</td><td class="cell c0">0</td><td class="cell c0">0</td><td class="cell c0">0</td><td class="num">13</td></tr>
+        <tr><td class="verb">impacting</td><td class="cell c2">5</td><td class="cell c0">0</td><td class="cell c0">0</td><td class="cell c1">1</td><td class="num">6</td></tr>
+        <tr><td class="verb">sharing</td><td class="cell c3">7</td><td class="cell c0">0</td><td class="cell c1">1</td><td class="cell c0">0</td><td class="num">8</td></tr>
+        <tr><td class="verb">running the machinery</td><td class="cell c4">18</td><td class="cell c2">4</td><td class="cell c2">3</td><td class="cell c4">8</td><td class="num">33</td></tr>
+        <tr class="total"><td>total</td><td class="num">62</td><td class="num">11</td><td class="num">5</td><td class="num">16</td><td class="num">94</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:.88rem;color:var(--text-2);">
+    Read a zero as: <em>nothing happens at this stage unless a person is present and acting.</em>
+    Eleven cells on the member's path are empty. Four matter, and one of them is deliberate.
+  </p>
+
+  <h3>The empty cells, which are the findings</h3>
+  <ul>
+    <li>
+      <strong>Documenting has no machine driver of any kind</strong> — data, event and clock
+      are all zero. This is the sharpest single number in the study. Documenting is the middle
+      of the path, and the record does nothing about it unattended: nothing ages a question
+      that has stalled, nothing notices when the evidence under a conclusion has changed,
+      nothing recomputes a strength — <em>because there is no object for any of that to happen
+      to.</em> The empty row and the missing layer are the same finding seen twice.
+    </li>
+    <li>
+      <strong>Exploring has no machine driver either, and that is correct.</strong> A machine
+      that explores on a member's behalf is a recommendation engine, and a recommendation
+      engine is the natural enemy of “less narrative”. <em>An empty row here is a design
+      position, not a gap</em> — but nobody had ever written that down, so it read as an
+      omission. It is stated here so it stops being rediscovered as a bug.
+    </li>
+    <li>
+      <strong>Once something is published, the system stops thinking about it.</strong> Nothing
+      ages a published case and nothing re-examines one whose evidence has moved. That is in
+      direct tension with the ruling that a published case is an <em>input</em>, not a
+      terminus — and it means a case can quietly become wrong with nobody notified.
+    </li>
+    <li>
+      <strong>Impacting has one machine process and it does not exist.</strong> An action
+      carries a deadline that a check validates the <em>shape</em> of and nothing ever
+      compares against the calendar. So the record can hold a statutory deadline and never
+      notice it passing.
+    </li>
+  </ul>
+
+  <h4>Reachability, measured</h4>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Measure</th><th class="num">Count</th><th>What it means in practice</th></tr></thead>
+      <tbody>
+        <tr><td>Operations the plane offers</td><td class="num">108</td><td>everything the server can do</td></tr>
+        <tr><td>Available to a signed-in member</td><td class="num">94</td><td>their credentials would be accepted</td></tr>
+        <tr><td>Actually reachable by clicking</td><td class="num">33</td><td>a member can get there without a developer</td></tr>
+        <tr><td>Administrator operations with any button</td><td class="num">0 of 14</td><td>group governance is operable only by driving the server directly</td></tr>
+        <tr><td>Notification types with anything that sends them</td><td class="num">1 of ~30</td><td>the record can notice things and has almost no way to tell anyone</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Raw counts overstate the gap — plumbing and diagnostics want no screen. What the counts do
+    not show is the shape of it: <strong>six whole member-facing families shipped with no
+    surface at all</strong>, and nine operations for declaring meaning landed with no caller
+    anywhere. A belief worth correcting: the meaning layer was thought to be waiting on members
+    populating it. It is not. <em>What is missing is a way to write to it, not a mechanism.</em>
+  </p>
+</section>
+
+<hr class="rule">
+
+<section id="states">
+  <h2><span class="tag">Underneath</span>One hundred and thirty-three states drawn</h2>
+  <p class="lede">
+    Not screens — <em>states</em>. Every honest failure, every “we do not know”, every refusal
+    a member can actually land in, drawn as a wireframe with its copy written. Most of the
+    design work in this study is here, because <strong>the failures are where a record either
+    stays honest or starts lying.</strong>
+  </p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Storyboard</th><th>Surfaces</th><th class="num">States</th><th>Mostly about</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Core</strong></td><td>Queue · Act · Inquiry</td><td class="num">46</td><td>15 · 15 · 16. Refusals shown before they run; strength with the weak leg named.</td></tr>
+        <tr><td><strong>Evidence</strong></td><td>Finder · Document · Add</td><td class="num">46</td><td>Text we cannot read, authority we cannot establish, sources gone dark, selections that drifted or expired.</td></tr>
+        <tr><td><strong>Output</strong></td><td>Ceremony · Published case · Action</td><td class="num">41</td><td>16 · 12 · 13. What becomes permanent; what a stranger can check; what came back.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <span class="lbl">The primitive drawn once and rendered identically everywhere</span>
+    <p>
+      <strong>UNDETERMINED.</strong> It appears in at least six places, and if it looks
+      different in each one, members learn to ignore the honest gap this entire record rests
+      on. It is a display primitive, not an act — and it must say <em>which kind</em> it is:
+      “we could not determine this” and “there is positively none” are different claims, and
+      collapsing them is how a record starts overstating itself by accident.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ PART 3 ============================ -->
+<div class="parthead">
+  <div class="pnum">Part 3</div>
+  <h2>Absences</h2>
+  <p>What the journey needs and does not have. Gaps, not features — these are the places the path simply stops.</p>
+</div>
+
+<section id="gaps">
+  <h2><span class="tag">Absences</span>What the journey requires and does not exist</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:15%">Where</th><th>What is not there</th><th style="width:26%">What it costs the member</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Documenting</strong></td><td>The concluded and published phases of a question. A finding today is prose typed inside a project's notes.</td><td>You cannot state a conclusion as a thing the system understands. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Discovering</strong></td><td>A claim resting on another claim. The collapse's central move has no place to be stored.</td><td>Every question starts from documents. Nothing accumulates. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Everywhere after</strong></td><td>Strength composed at the level of a claim. The grades exist and the weakest-link rule exists — one level too low, with nothing above consuming them.</td><td>The system knows how well each link is established and cannot tell you what the argument is worth. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Explore → discover</strong></td><td>Citing a document onto a question. Built in the plane, selection-backed, <em>and has no caller anywhere</em> — invisible because a name collision made a reader think it had shipped.</td><td>The act at the centre of the journey cannot be performed. <span class="chip designed">unreachable</span></td></tr>
+        <tr><td><strong>Sharing</strong></td><td>Publishing from the member's interface. It exists only in the operator's page; the signing tool instructs the operator to paste into a box that does not exist there.</td><td><em>Nothing this group produces can leave.</em> <span class="chip designed">split brain</span></td></tr>
+        <tr><td><strong>The gate on sharing</strong></td><td>The completeness statement — the single reason a “case” is a distinct thing from a finding. No field, no storage, no check.</td><td>The one gate that stops a case overclaiming is not there. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Impacting</strong></td><td>The whole action lifecycle: nothing moves an action's state, nothing records correspondence, nothing ages a deadline, and there is no way in from the menu.</td><td>The fifth stage of the path has no working parts. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Impacting</strong></td><td>The link from evidence to action to consequence. Nothing connects an action to the findings that justified it, or records what came back.</td><td>The record can hold “we wrote to the city” and cannot say “because of these findings, and here is the reply”. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Every act</strong></td><td>Anything that publishes <em>what may be done</em> to an object right now. So each act screen must keep its own copy of the plane's rules.</td><td>Five surfaces would each drift from the server independently. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>The public half</strong></td><td>A read path for published cases. A stranger can verify a hash and list identifiers, and cannot <em>read</em> the case.</td><td>The surface called “the reason the rest exists” has no data beneath it. <span class="chip missing">missing</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Three live defects worth seeing on their own</h3>
+  <p>
+    These are not gaps in an unbuilt design. They are in the shipping system now, and each was
+    verified in the source during this study.
+  </p>
+  <ul>
+    <li>
+      <strong>An uninvited member can see every project's identifier, title and state.</strong>
+      The visibility check is applied on the search path only, so four other ways in bypass it
+      — and the interface then rebuilds the same leak on the client by walking every project.
+      Two defects that compound rather than duplicate.
+    </li>
+    <li>
+      <strong>Search silently degrades to a title-substring scan, and looks identical when it
+      does.</strong> The fallback bypasses the visibility check and answers a much weaker
+      question in the same interface, with nothing to tell the member which one they got.
+    </li>
+    <li>
+      <strong>The record asserts a counterparty it does not have.</strong> The intake screen
+      writes the literal text “to be named” into every action's counterparty field, which
+      satisfies the check that the field is non-empty — in the one object that reaches outside
+      the system.
+    </li>
+  </ul>
+</section>
+
+<!-- ============================ PART 4 ============================ -->
+<div class="parthead">
+  <div class="pnum">Part 4</div>
+  <h2>Settled, and still open</h2>
+  <p>Seventeen decisions closed, and the six questions nobody should close by guessing.</p>
+</div>
+
+<section id="decisions">
+  <h2><span class="tag">Settled</span>Seventeen decisions, none open</h2>
+  <p class="lede">
+    Decisions reach this register when they are genuinely the architect's: doctrine about what
+    the record may claim, risk carrying his name, or effects on people outside the project.
+    Mechanism, sequencing and scoping are decided by the session and recorded, not asked.
+    <strong>Every entry carries what was running provisionally while it was open</strong>, so
+    an open question never stops work.
+  </p>
+
+  <div class="dec">
+    <div class="dnum">DEC-4</div>
+    <div><p class="dq">Should the record extract text from scanned, image-only PDFs?</p>
+    <p class="da"><strong>Yes — build it.</strong> The recommendation to accept the limit was overruled, correctly: coverage is not a volume question, and scanned-only is what a signed order, an exhibit or a deliberately-imaged release looks like. Verification against the rendered image is the grade ceiling, reachable from both machine reading and a publisher's text layer — because <em>a text layer is itself an unverified transcription.</em></p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-12</div>
+    <div><p class="dq">May a published case be revised, or is publication final?</p>
+    <p class="da"><strong>Revisable, as numbered editions</strong>, each a separate document; earlier editions stay published and verifiable. This turned a defect into a missing feature — the system was already keeping every published hash while overwriting the signature that attested it.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-13</div>
+    <div><p class="dq">Must a case be put to its subject before publication?</p>
+    <p class="da"><strong>Yes — and the gate is the declaration, not the act.</strong> The group's position on contacting the subject is declared, justified, and carried inside the case as declared bias. A group with cause not to give notice says so and says why, and a reader weighs that. Backed by professional standards: government audit practice gives a body 7–30 days on a draft and prints its disagreement alongside the finding.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-14</div>
+    <div><p class="dq">Are claims about our own impact held to the same standard as findings about a body?</p>
+    <p class="da"><strong>The same standard.</strong> Absent outside supporting evidence, an impact claim is unproven. <em>Outcomes</em> — a hearing convened, a study commissioned — are dated first-party facts and stay fully claimable. The evidence forced this: studies of information-and-accountability interventions pool to roughly zero effect.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-15</div>
+    <div><p class="dq">Where does a connection's grade come from — earned by the system, or asserted by the member?</p>
+    <p class="da"><strong>Both, and the fork was false.</strong> A <em>hunch</em> is temporary declared bias: asserted high enough during investigation to make disconnected material traversable, and it is bias debt that must clear before publication. The gate already existed in the bias doctrine, written for something else entirely.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-16</div>
+    <div><p class="dq">With questions nesting inside questions, what does a member's queue group by?</p>
+    <p class="da"><strong>Every ancestor, with one shared resolution.</strong> The unit of state is the <em>event</em> — one state, several homes — which dissolves the flooding objection without a second mechanism.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-17</div>
+    <div><p class="dq">What makes an unsupported case harder to state than a supported one?</p>
+    <p class="da"><strong>The project declares the strength its work requires, and the case publishes it</strong> beside the strength actually reached. Not a system-wide floor, which would refuse honest weak findings, and not a reader-based gate, which would be a prior by role.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-6</div>
+    <div><p class="dq">May a declared-bias statement name a person, or only an institution?</p>
+    <p class="da">Any registry kind is legal. A narrow list admits <em>office</em> — the kind most prone to becoming a prior against whoever holds it — and refuses the specific, citable ones. Refusing the subject does not remove the bias; it removes the disclosure of it.</p></div>
+    <div class="dstat"><span class="chip built">session</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-7</div>
+    <div><p class="dq">Who may act on a task, and who may claim an unassigned one?</p>
+    <p class="da">Both halves kept, and a hole closed: an automated credential could resolve an unassigned task. A daemon cannot close somebody's work — but it could close <em>nobody's</em> work, and closing is the act.</p></div>
+    <div class="dstat"><span class="chip built">session</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-8</div>
+    <div><p class="dq">How is an act's pre-flight produced?</p>
+    <p class="da">Plane-sourced always. A surface renders refusals; it never computes them. The existing copy's one defence turned out to be a guard that does not read the authority it claims to check.</p></div>
+    <div class="dstat"><span class="chip built">session</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-9</div>
+    <div><p class="dq">Does a skipped step with no published exception raise a finding?</p>
+    <p class="da">Yes — decidable without escalating, because an earlier ruling supplies the principle: the expectation was <em>authored</em> by the group, so acting on it executes their own decision rather than substituting for one.</p></div>
+    <div class="dstat"><span class="chip built">session</span></div>
+  </div>
+  <div class="dec" style="border-bottom:1px solid var(--rule-soft);">
+    <div class="dnum">DEC-1,2,3<br>5,10,11</div>
+    <div><p class="dq">Earlier rulings, all enacted or deferred with a named trigger</p>
+    <p class="da">Whether to ask the city to allowlist our fetcher (closed, not held — it would be one blocking action for them and a per-instance request forever for us); what a group's root of trust should be (deferred until a real multi-member instance exists to observe); one working session per checkout; office-document metadata is evidence and is surfaced in full; overdue steps notify by case rather than by kind.</p></div>
+    <div class="dstat"><span class="chip built">settled</span></div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section id="open">
+  <h2><span class="tag">Open</span>What is still genuinely unresolved</h2>
+  <p class="lede">
+    Nothing here blocks work. Each ships a provisional that invents nothing — which is the
+    rule that keeps an open question from becoming a stalled project.
+  </p>
+
+  <div class="note">
+    <span class="lbl">Three of these closed on 2 August, after this page was first published</span>
+    <p>
+      Each was closed by the work it asked for rather than by a ruling, so none of them needed
+      the architect. They are recorded here because this page listed them as open and you may
+      have read that list.
+    </p>
+    <p>
+      <strong>A threshold over a pair of strengths is a named stance carrying two independent
+      floors</strong>, one per graded thing — not one value applied to both, and not one of them
+      named with the other left unconstrained. The two move independently by reader: a lawyer needs both
+      high; a city administrator already holds the authoritative copy and can relax the capture
+      floor; a journalist needs the capture floor high and hedges the connection in the verb.
+      The second rejected form is the more dangerous, because it admits arbitrary weakness in
+      the unnamed half <em>silently</em>.
+    </p>
+    <p>
+      <strong>The panel beside the completeness field shows what the case rests on, never the
+      member's earlier reasons for setting things aside.</strong> The boundary turned out not to
+      be timing or breadth — which is why both fixes on offer were weak — but the
+      <em>key</em>: an assembly is permitted when it is keyed on the subject being written
+      about, and does the work of composition when it is keyed on the shape of the answer the
+      screen is asking for. Re-keyed onto the case's own legs, the panel's content is the
+      <em>complement</em> of the field's, so it cannot be transcribed — the member still has to
+      do the subtraction, which is the judgement the gate exists to make them own.
+    </p>
+    <p>
+      <strong>A screen can know before the act that a member holds no signing key</strong> — the
+      key-list operation answers an ordinary member's session, unfiltered, and needs no new
+      operation to support the check. That was settled by running it, not by reasoning about it.
+    </p>
+  </div>
+
+  <div class="note alarm">
+    <span class="lbl">And running that measurement found two defects in shipped code</span>
+    <p>
+      <strong>The roster hands the cover-to-handle pairing to ordinary members.</strong> Members
+      have two names on purpose: a <em>cover</em> that an administrator uses to tell participants
+      apart, and a <em>handle</em> that appears in the record. The membership design says in two
+      places that only administrators see the two together — it is the mechanism that stops a
+      seized or subpoenaed roster from deanonymising the group. Measured: an ordinary member's
+      session, and the shared day-to-day machine credential, each receive the full pairing for
+      every member. The code contradicts itself here, asserting <em>“admin-only”</em> in two
+      comments while granting member access on the line between them. The shareable testing
+      credential is <em>not</em> affected — it is confined to a separate scratch instance, and
+      that half was measured before it was claimed.
+    </p>
+    <p>
+      <strong>A signing key registered for someone who never finished enrolling reads as active
+      but cannot sign.</strong> Two code paths ask the same question differently; revocation
+      stays consistent only because it cascades, and nothing cascades for this case.
+    </p>
+    <p>
+      Neither needs a ruling — the design already decided both, and the fixes are recorded with
+      the work. They are here because the first one touches a person outside the project, and
+      because it shows what the caveat above means in practice: <em>the sharp claim that did not
+      survive checking, this time, was the code's own comment about itself.</em>
+    </p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:27%">Question</th><th>Why it is not settled</th><th style="width:19%">Settled by</th></tr></thead>
+      <tbody>
+        
+        
+        
+        <tr>
+          <td><strong>How does “undetermined” distinguish <em>we could not determine</em> from <em>there is positively none</em>?</strong></td>
+          <td>A working stopgap exists that invents no second treatment. The wrinkle survives the 2 August amendment and narrows to the boundary case: a conclusion left <em>unrated</em> because no leg is graded has no retry — looking again will never settle it, only grading a leg will — so the wording for that case is genuinely unwritten.</td>
+          <td>A field beside the reason</td>
+        </tr>
+        <tr>
+          <td><strong>Can two pieces of evidence contradicting each other be held inside one question?</strong></td>
+          <td>A leg that cuts against the conclusion is one leg's polarity — not a structure for two legs contradicting each other. Doctrine says contradiction is a thing to <em>find</em> rather than prevent, and nobody knows what shape that takes.</td>
+          <td>Undesigned, and honestly so</td>
+        </tr>
+        <tr>
+          <td><strong>A case sent to one recipient and not published</strong></td>
+          <td>An oversight referral is on neither side of the publication fence, and a rendering somebody acted on has become a record needing a hash, a date and an author. Provisionally modelled as an action.</td>
+          <td>The architect — and “settled by the first lawyer, not by argument”</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ PART 5 ============================ -->
+<div class="parthead">
+  <div class="pnum">Part 5</div>
+  <h2>Next</h2>
+  <p>What is queued to be built, in what order, and what I want from this review.</p>
+</div>
+
+<section id="order">
+  <h2><span class="tag">Order</span>Thirty-six items, and the chain that decides the calendar</h2>
+  <p class="lede">
+    Every item names its milestone, what it sits behind, what it depends on, and an acceptance
+    condition that is <em>a command that either passes or fails</em> rather than a judgement —
+    plus the deliberate break that must make the test fail, so a test that proves nothing is
+    caught.
+  </p>
+
+  <figure>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  A["the inquiry type<br/>REC-10"] --> B["basis + no cycles<br/>REC-11"]
+  B --> C["conclude<br/>REC-13"]
+  B --> D["strength: two measures<br/>REC-12"]
+  C --> E["publish + editions<br/>REC-14"]
+  D --> E
+  E --> F["the public read path<br/>REC-22"]
+  F --> G["the published case page<br/>UI-18"]
+  A -.->|"parallel slot"| H["publish what may be done<br/>REC-19"]
+  H -.-> I["every act surface"]
+</pre>
+    </div>
+    <figcaption>
+      The longest chain is six deep and it is the publication chain. Strength and conclude are
+      <em>not</em> serial with each other — two people can take them in the same week.
+    </figcaption>
+  </figure>
+
+  <h3>The first item, and the one that must not queue behind it</h3>
+  <p>
+    <strong>The inquiry type is the single highest-leverage item.</strong> It unblocks 21 of
+    the other 34 transitively, three surfaces that cannot exist without it, and the first
+    consumer the A–D grades have ever had. It depends on nothing.
+  </p>
+  <p>
+    <strong>Publishing what-may-be-done takes the parallel slot</strong>, for a compounding
+    reason rather than a preference: every act screen built before it accrues its own copy of
+    the plane's rules, which must later be deleted. Delaying the type costs
+    <em>existence</em> — three surfaces simply cannot be built. Delaying the other costs
+    <em>rework</em>, which is bounded and countable. Rework beats absence; and here the order
+    takes both, because no act surface appears until after it exists.
+  </p>
+</section>
+
+<hr class="rule">
+
+<section id="review">
+  <h2><span class="tag">Review</span>What I want from you on this</h2>
+  <p class="lede">
+    In the order I would take them. Everything here is cheap to change now and expensive once
+    the surfaces exist.
+  </p>
+  <ol>
+    <li>
+      <strong>The journey, and specifically its two re-entry edges.</strong> If a concluded
+      finding feeding a larger question, and a published case feeding the next one, are not how
+      you picture this working, then the recursion at the centre of the design is wrong and a
+      great deal follows from it.
+    </li>
+    <li>
+      <strong>The four hard moments.</strong> These are where a non-technical member meets
+      something irreducible. If any of the four is solved in a way you think a real group will
+      not actually do, say which — the surfaces are drawn but not built, so this is the
+      cheapest this will ever be.
+    </li>
+    <li>
+      <strong>The empty cells in the coverage matrix.</strong> One of them — exploring with no
+      machine driver — I am asserting is <em>correct</em> and should stay empty forever. That
+      is a design position stated on your behalf, and it should be confirmed rather than
+      assumed.
+    </li>
+    <li>
+      <strong>The three remaining open questions.</strong> One is yours; the other two are
+      undesigned and honestly so. Three more closed on 2 August by the design pass and the
+      measurement they asked for — recorded in Part 4, needing nothing from you. None blocks
+      the queue.
+    </li>
+  </ol>
+  <div class="note">
+    <span class="lbl">One thing this review does not need from you</span>
+    <p>
+      No scheduling decision. Activation order, item sequencing and mechanism are already
+      decided and handed over.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    <strong>Sources.</strong> Sixteen research files reconciled into a single design statement;
+    the decision register; the capability ladder; and the defect ledger. Counts measured
+    against the repository at commit <code>3785205</code>. Where a research pass made a claim
+    that did not survive checking, the reconciliation records both the claim and the
+    correction — every pass in this study had at least one.
+  </p>
+</footer>
+
+</main>
+</div>
+</div>
