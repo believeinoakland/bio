@@ -1962,6 +1962,57 @@ response: **ADOPT.** Bob, 2026-08-03: *"Just as most full featured UXs include a
   pushes — it says what wants the member. The ASSISTANT pulls — the member asks. Same material,
   opposite direction, and Bob's third example is deliberately a pull of what the queue would
   otherwise have pushed.
+  **EXTENDED 2026-08-03 (Bob, same review): THE STANCE IS PERMISSIVE, THE ASSISTANT IS NOT A
+  MEMBER, AND MULTI-STEP WORK IS A WIZARD.** *"It's an assistant, not a member… it can't do
+  anything that breaks the rules (but it can do anything that doesn't break the rules!). If what
+  it's asked to do involves multiple steps, it can create a wizard that opens up the right
+  surface for the current step and explains what needs to be done, why, and how it fits into the
+  objective. This enables the user to complete that step and press next (or finish), after which
+  the assistant checks to make sure it was done correctly, and advances to the next step."*
+
+  **(a) THE FRAMING IS CORRECTED: DEFAULT PERMITTED, BOUNDED BY THE RULES.** The version above
+  reads as a list of prohibitions, which would produce a timid assistant that asks permission
+  for things nothing forbids. The rules already encode everything that matters. Inside them the
+  assistant should be as useful as it can be.
+  **THE LINE IS AUTHORSHIP, NOT WRITING**, and that distinction is what makes the permissive
+  stance safe. The assistant may do anything the record can attribute MECHANICALLY — run a
+  search, gather candidates, gather content out of a document, run a check, and yes **capture a
+  document**, because a capture asserts nothing a person must vouch for: it records that these
+  bytes came from that address at that time, and the provenance is the honest machine account of
+  what happened. What it may not do is anything requiring a person to VOUCH: a conclusion, an
+  authored reason, a completeness statement, an attestation, or a grade asserted rather than
+  earned. Those are testimony, and testimony has a name on it.
+
+  **(b) ATTRIBUTION: THE ASSISTANT IS A NAMED NON-MEMBER ACTOR, AND BOTH FACTS ARE RECORDED.**
+  "Not a member" has a consequence the record cannot fudge. If the assistant acted inside the
+  member's identity, everything it did would carry that person's name, and the record's
+  attribution — the thing this whole system is for — would stop distinguishing what a person did
+  from what a machine did at their request. So the record states BOTH: *the assistant captured
+  this, at Anna's request.*
+  **The plane already has this shape and it should be extended rather than reinvented:** a
+  selection lease stamps `member:<id>` for a session and `token:<class>` for a machine
+  credential, precisely so *"an unattended writer can take the lock without borrowing a person's
+  name and without being anonymous"* (`index.mjs`). The assistant is that pattern with a
+  clearer name.
+
+  **(c) THE WIZARD — how multi-step work gets done when the assistant cannot do the steps.**
+  This resolves the gap the entry above left open: the assistant may not perform authored acts,
+  yet a member's request often needs several. The answer is that the assistant CONDUCTS and the
+  member ACTS. For each step it **opens the surface that already owns that step** — it does not
+  reproduce the surface inside itself, which would fork the interface — and says what this step
+  is, why it is needed, and how it serves the thing the member asked for. The member does the
+  step and presses next; the assistant checks the result and moves on.
+  **AND THE CHECK IS ADVISORY, NEVER ENFORCEMENT — this is the part a build session will get
+  wrong.** If the wizard's check could BLOCK, the rules would live in two places: in the plane,
+  and in the wizard. That is exactly the defect DEC-8 refuses, where a surface keeps its own copy
+  of the plane's rules and drifts from them. **Enforcement stays where it already is** — the
+  pre-flight and the gate — and they are unchanged. The wizard's check is help: it tells a
+  member something looks unfinished or inconsistent, and the member decides. If a thing must be
+  refused, it is refused by the plane at the act, not by the wizard at the step.
+  **The wizard also gives the show-your-work rule somewhere to land at a larger scale.** Rule 1's
+  second half says the machine never hides why it thought there was a reason; a wizard step says
+  why THIS step, and how it fits the objective — so a member is never moved through a sequence
+  they cannot see the shape of.
 decided: 2026-08-03 · Bob
 
 ## Answered, awaiting enactment

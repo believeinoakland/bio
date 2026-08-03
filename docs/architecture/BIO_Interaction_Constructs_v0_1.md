@@ -434,6 +434,30 @@ thinks something further is implied; and it may propose project defaults from a
 self-identification but never set them silently, because a project's required evidentiary
 strength is a DECLARATION (DEC-17) and an inferred declaration is not one.
 
+**Not a member, and the stance is PERMISSIVE.** The assistant may do anything that does not
+break the rules -- a restrictive framing produces an assistant that asks permission for things
+nothing forbids. **The line is AUTHORSHIP, not writing.** It may do what the record attributes
+mechanically: search, gather, extract content, run a check, capture a document (a capture
+asserts nothing a person must vouch for -- it records that these bytes came from that address
+at that time). It may not do what requires a person to vouch: a conclusion, an authored reason,
+a completeness statement, an attestation, a grade asserted rather than earned.
+
+**Attribution:** the assistant is a NAMED NON-MEMBER actor and the record states both facts --
+*the assistant did this, at Anna's request*. Extend the existing lease stamp, which already
+distinguishes `member:<id>` from `token:<class>` so an unattended writer never borrows a
+person's name and is never anonymous.
+
+**THE WIZARD -- how multi-step work happens when the assistant cannot perform the steps.** The
+assistant CONDUCTS; the member ACTS. For each step it opens **the surface that already owns that
+step** (never a copy of it inside the dialog, which would fork the interface) and says what the
+step is, why it is needed, and how it serves what was asked for. The member does it and presses
+next; the assistant checks and advances.
+
+**The wizard's check is ADVISORY, never enforcement.** If it could block, the rules would live
+in two places -- the plane and the wizard -- which is the drift DEC-8 refuses. Enforcement stays
+at the pre-flight and the gate, unchanged. The wizard says something looks unfinished; the
+member decides; a thing that must be refused is refused by the plane at the act.
+
 **Voice:** transcribed speech is machine-produced text. A mis-transcription that reaches an
 authored field corrupts the member's own testimony, so transcription is always shown for
 correction before it becomes anything, and that it was transcribed is recorded.

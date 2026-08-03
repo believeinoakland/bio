@@ -1498,6 +1498,24 @@ sequenceDiagram
     different jobs</strong>, and they need different amounts of care.
   </p>
 
+  <div class="note">
+    <span class="lbl">What it is allowed to do, which is most things</span>
+    <p>
+      <strong>The assistant may do anything that does not break the rules.</strong> That is
+      worth saying the permissive way round, because the cautious version produces something
+      that asks permission for things nothing forbids and is tiring to use. The rules already
+      cover what matters; inside them it should be as useful as it can be.
+    </p>
+    <p>
+      <strong>The line is authorship, not writing.</strong> It can search, gather, pull content
+      out of a document, run a check — and it can capture a document, because a capture claims
+      nothing anybody has to stand behind: it records that these bytes came from that address at
+      that time. What it cannot do is anything a person has to vouch for — a conclusion, a
+      reason, a statement of what was left out, a signature, or a grade claimed rather than
+      earned. Those are testimony, and testimony has a name on it.
+    </p>
+  </div>
+
   <div class="note alarm">
     <span class="lbl">The rule that protects everything else in this document</span>
     <p>
@@ -1510,6 +1528,17 @@ sequenceDiagram
       that could just do things would be the most convenient control in the product — and it
       would be a way around every safeguard described here. Convenience is exactly why it must
       not exist.
+    </p>
+  </div>
+
+  <div class="note">
+    <span class="lbl">It is an assistant, not a member — and the record says so</span>
+    <p>
+      It holds no membership and no permissions of its own. That matters for more than
+      tidiness: if it worked inside a member's identity, everything it did would carry that
+      person's name, and the record would stop being able to tell what a person did from what a
+      machine did at their request. Attribution is the point of the whole system, so the record
+      states both: <em>the assistant captured this, at Anna's request.</em>
     </p>
   </div>
 
@@ -1539,6 +1568,40 @@ sequenceDiagram
     to — but it may never set that quietly. A standard of proof is something a group declares
     about its own work, and a declaration nobody made is not a declaration.
   </p>
+
+  <h3>When it takes several steps: the wizard</h3>
+  <p>
+    Most useful requests need more than one thing done, and the assistant cannot do the ones
+    that need somebody's name on them. So it does not try. <strong>It conducts, and the member
+    acts.</strong>
+  </p>
+  <p>
+    For each step it opens <strong>the screen that already does that job</strong> — it does not
+    build its own copy inside the dialog, which would leave two versions of everything to keep
+    in step — and it says three things: what this step is, why it is needed, and how it serves
+    the thing that was asked for. The member does the step and presses next. The assistant
+    checks the result and moves on to the next one.
+  </p>
+  <p>
+    That last part is also where the show-your-work rule pays off at a larger scale. Nobody is
+    walked through a sequence they cannot see the shape of: at every step, the reason for being
+    on this screen is on the screen.
+  </p>
+
+  <div class="note why">
+    <span class="lbl">The wizard's check is advice, not a gate</span>
+    <p>
+      When the assistant checks that a step was done properly, it can say <em>this looks
+      unfinished</em> — and that is all. <strong>It cannot block.</strong>
+    </p>
+    <p>
+      The reason is worth understanding, because the alternative looks safer and is not. If the
+      wizard could refuse things, the rules would live in two places: in the server, and in the
+      wizard. Two copies drift, and the day they disagree is the day nobody can say what the
+      real rule is. <strong>Refusing stays where it already happens</strong> — before an act
+      runs — and the wizard is help on top of that, never a second gate.
+    </p>
+  </div>
 
   <div class="note">
     <span class="lbl">Speaking instead of typing</span>
@@ -1653,7 +1716,7 @@ sequenceDiagram
     <div class="cid"><span>S12</span><span class="chip missing">not yet specified</span></div>
     <h3>The Assistant</h3>
     <p class="job">Let me say what I want in my own words, from wherever I am, and show me what you understood before anything happens.</p>
-    <p>A tag on every screen, expanding into a prompt that accepts typed or spoken input. Three jobs behind one box: find what the record holds, set up new work from what the member described, and start an act — where starting is all it does, because the act still runs its four beats. Everything it proposes is shown back for correction before it exists.</p>
+    <p>A tag on every screen, expanding into a prompt that accepts typed or spoken input. Three jobs behind one box: find what the record holds, set up new work from what the member described, and start an act — where starting is all it does, because the act still runs its four beats. Multi-step requests become a wizard that opens the screen already owning each step, explains why that step exists, and checks the result before moving on — advising, never blocking. Everything it proposes is shown back for correction before it exists.</p>
     <p class="needs">a twelfth surface, and a construct that appears on all the others · no states drawn yet</p>
   </div>
 </section>
