@@ -662,6 +662,67 @@ The journey inserts cleanly and the existing edges are unchanged:
 `impacting` is currently the stage with *no working process whatsoever*, so nothing is being
 retrofitted.
 
+### 6a · PLANNING FROM WHAT IS NOT YET ESTABLISHED — agreed, and it is not a concession
+
+Bob, 2026-08-03: *"the process of building up an understanding of what's needed to justify an
+action isn't the same as claiming that the action is justified. Not at all! Agreed?"*
+
+**Agreed, and the design already contains the principle — this applies it one level up.** A
+HUNCH is a connection asserted ahead of its evidence so a line of thought can be followed
+(DEC-15). An UNSUPPORTED CLAIM is a standing objective the system can pursue (DEC-22). Both
+were ruled legitimate on the same reasoning: investigation must be free, and what is gated is
+PUBLICATION. Planning from an unestablished finding is the identical move, and refusing it
+would contradict two rulings already made.
+
+**The argument that matters most is what refusal would COST.** An investigator will do this
+reasoning regardless — in a notebook, in their head, in an email thread. Refusing to hold it
+does not make the record more honest; it makes the record LESS COMPLETE, and pushes the actual
+shape of the investigation into exactly the places this system exists to replace. A record that
+cannot say *"we were working toward this"* cannot show how a case was really built.
+
+**THE PRINCIPLE, stated so no build session re-litigates it: the gate belongs at the ACT, not
+at the reasoning.** A plan may rest on premises not yet established. An act that reaches outside
+the group may not be taken on them. That is the same line publication already draws.
+
+#### Two directions of exploration, and both are first-class
+
+- **FORWARD, from a hypothesis.** *"If this finding held, what action options would open up?"*
+  Asserts nothing about whether the finding holds. It maps consequence.
+- **BACKWARD, from an action.** *"Given what this project has already established, what
+  additional findings or claims would ALSO need to be true for action X to be a credible option
+  worth considering?"*
+
+**The backward question is the more valuable of the two, and it is the objectives engine
+pointed at a new target.** Its output is not prose — it is a WORK LIST: the specific findings
+that do not yet exist or are not yet established, each of which becomes an objective under
+DEC-22, pursued by the member and by the machine together. This is how investigators actually
+build cases, and it is the single most productive thing the system could compute.
+
+#### The safeguard is LABELLING, not refusal — and Bob named it first
+
+*"A property of action plans that are presented is which elements of the plan are currently
+supported by the evidence."* Every element of a plan carries its **support status**, and it is
+never absent or implied:
+
+| status | meaning |
+| --- | --- |
+| **established** | rests on findings that have reached the project's declared required strength |
+| **short of the standard** | rests on real findings that have not yet reached that strength — the gap named, per leg |
+| **hypothetical** | rests on a finding that does not yet exist, held as an explicit premise |
+
+**Rendering rule, and it is the whole safeguard:** a plan element's support status is displayed
+wherever the element is, in the same treatment everywhere, exactly as `undetermined` is. A plan
+that showed its steps without their support status would be the overclaiming failure — not
+because it planned from a hypothesis, but because it hid that it had.
+
+**Consequences for the build:**
+- A hypothetical premise in a plan is DECLARED, and it is bias debt of the hunch kind — so
+  nothing resting on it can be published while it stands, which needs no new gate.
+- An outward act's pre-flight REFUSES when its step is not `established`, naming the premise
+  and the shortfall. This is where the project's declared required strength (DEC-17) does
+  mechanical work.
+- The backward question's output is objectives (DEC-22), not commentary.
+
 ### 7 · ONE QUESTION THIS MAP DOES NOT ANSWER, and it is Bob's
 
 **What, if any, of a plan is PUBLISHED?** A group's strategic deliberation — *we considered

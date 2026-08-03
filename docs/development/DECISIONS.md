@@ -1816,6 +1816,52 @@ reversal cost: low while nothing is built; high once plans exist and groups have
   candidly in them under one rule. **This is the entry's real urgency**: a group that wrote
   freely believing the plan private cannot have that decision reversed on them later.
 
+### DEC-26 · answered
+raised: 2026-08-03 · Bob, in the action-plan discussion
+for: bob
+question: May an action plan be built on findings that are not yet established, and is doing so
+  the same as claiming the action is justified?
+why it is Bob's: doctrine. It decides whether the record may hold reasoning about what is not
+  yet proven.
+provisional: unstated. The map written earlier the same day did not address it, and a build
+  session reading only the overclaiming doctrine could plausibly have refused it.
+blocks: nothing built. It shapes S11 and the pre-flight on any outward act.
+alternative: permit planning only from established findings.
+recommendation: agree, and record the reasoning rather than the agreement.
+reversal cost: low now. High later in an unusual way: a group that used the system to think
+  with, and then found its thinking treated as assertion, would stop writing reasoning down.
+response: **AGREED, AND THE DESIGN ALREADY CONTAINS THE PRINCIPLE.** Bob, 2026-08-03: *"the
+  process of building up an understanding of what's needed to justify an action isn't the same
+  as claiming that the action is justified. Not at all! Agreed?"*
+  **It is the same move as two rulings already made.** A HUNCH is a connection asserted ahead of
+  its evidence so a line of thought can be followed (DEC-15). An UNSUPPORTED CLAIM is a standing
+  objective (DEC-22). Both were permitted on one reasoning: investigation is free, PUBLICATION is
+  gated. Planning from an unestablished finding is that move one level up, and refusing it would
+  contradict both.
+  **THE COST OF REFUSING IS THE ARGUMENT.** An investigator does this reasoning regardless — in a
+  notebook, in their head, in an email thread. Refusing to hold it does not make the record more
+  honest, it makes it LESS COMPLETE, and drives the real shape of the investigation into exactly
+  the places this system exists to replace.
+  **THE PRINCIPLE: the gate belongs at the ACT, not at the reasoning.** A plan may rest on
+  premises not yet established; an act reaching outside the group may not be taken on them.
+  **TWO DIRECTIONS, both first-class.** FORWARD from a hypothesis — *if this finding held, what
+  options open?* — asserts nothing about whether it holds. BACKWARD from an action — *what else
+  would need to be true for action X to be credible?* — **is the more valuable, and is the
+  objectives engine pointed at a new target**: its output is a WORK LIST of findings that do not
+  yet exist, each becoming an objective under DEC-22.
+  **THE SAFEGUARD IS LABELLING, NOT REFUSAL, and Bob named it first:** *"A property of action
+  plans that are presented is which elements of the plan are currently supported by the
+  evidence."* Every plan element carries a support status — **established** (meets the project's
+  declared required strength) · **short of the standard** (real findings, gap named per leg) ·
+  **hypothetical** (rests on a finding that does not yet exist) — rendered identically everywhere,
+  as `undetermined` is. **The overclaiming failure would not be planning from a hypothesis; it
+  would be hiding that it had.**
+  **BUILD CONSEQUENCES:** a hypothetical premise is declared and is bias debt of the hunch kind,
+  so nothing resting on it publishes while it stands — no new gate needed; an outward act's
+  pre-flight refuses when its step is not `established`, naming the premise and the shortfall,
+  which is where DEC-17's project-declared strength first does mechanical work.
+decided: 2026-08-03 · Bob
+
 ## Answered, awaiting enactment
 
 _(none)_
