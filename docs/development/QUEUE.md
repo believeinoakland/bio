@@ -808,6 +808,37 @@ showing no new unreached op.
 
 ---
 
+### 2026-08-03 · BOB · The open list worked: one decided (DEC-28), four raised for Bob (DEC-29–32), three settled by design pass
+
+Bob's directive was to go through the open questions. Everything is recorded in
+`DECISIONS.md`, `RECONCILED.md` §4 (in place, originals kept as history) and the review
+document (republished to the same URL). No in-flight work is superseded and nothing is
+blocked; the queue impact is scope notes, not new items.
+
+**RESHAPES AN EXISTING ITEM:**
+- **REC-16** — DEC-28 (answered, session): `divided` is a TERMINAL STATE, not a disposition.
+  It ships written by `op=inquirydivide`, its reason is the ACT's reason, and
+  `disposition_reason` is untouched. This was the explicit decision RECONCILED required so
+  REC-16 does not ship it silently. DEC-29 and DEC-30 (open, Bob's) also land on REC-16 when
+  answered — division's reason cost and prompt wording, and its actor scope — but both
+  provisionals match what REC-16 already ships, so REC-16 need not wait.
+- **UI-14** — Q13 settled: within a class, LONGEST-WAITING FIRST is the RULE, not a proxy;
+  acceptance gains "the ordering rule is stated on the surface".
+- **Every UI item rendering `undetermined`** — Q9 settled: the C-14 three-line shape's third
+  line comes from a CLOSED SET of three forms (could-not-determine / positively-none /
+  suspended-axis), selected by plane-published facts; the split field itself is RECORD's to
+  name at build (D-129). Negative control: a free-text third line fails the harness.
+- **Every UI item with a read-only credential view** — Q12 settled: narration is
+  SURFACE-scoped and plane-sourced (one sentence from `whoami`), controls are NEVER narrated
+  and never greyed. Acceptance clause for UI-12/14/16/17/18/20 class items.
+
+**OPEN FOR BOB, each with a worked recommendation in the register — no queue impact until
+answered:** DEC-29 (division's residual cost + the divide-prompt), DEC-30 (author-scoped
+division, no ballot on concluding), DEC-31 (addressed non-public delivery — defer on trigger,
+bind the in-band rendering rule now), DEC-32 (plurality as GROUNDS — note this one, if
+adopted, touches REC-11/REC-12's strength arithmetic: disjunctive over grounds, weakest leg
+within a ground).
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on

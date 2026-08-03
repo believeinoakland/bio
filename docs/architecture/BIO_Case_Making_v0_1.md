@@ -554,6 +554,16 @@ parent whose published rendering reassembles them; forcing the example into two 
 would split an answer a reader needs whole, which is the strongest argument yet against the
 field reading. Still OPEN, leaning toward plurality; `inquiry_basis` does not exist, so both
 shapes remain cheap.
+**RAISED AS DEC-32, 2026-08-03 (session BOB), with a worked recommendation:** plurality shaped
+as GROUNDS rather than claim-objects — one finding, one conclusion, `1..n` named grounds, each a
+labelled partition of the basis legs the member asserts is INDEPENDENTLY SUFFICIENT; today's
+flat basis is the degenerate one-ground case. The consequence that matters: grounds compose
+DISJUNCTIVELY — the finding's strength is its strongest sufficient ground, each ground's
+strength the weakest leg within it — so the utility example publishes at the constitutional
+ground's strength with the regulatory ground beside it, where today's weakest-leg rule would
+hold the whole finding down and push the member toward division. A suspended leg suspends its
+ground; the finding suspends only when every ground is (DEC-18's pattern, one level up).
+Contradiction (§4 Q14) stays separate: grounds agree on the conclusion. Awaiting Bob.
 
 
 ## THE ACTION PLAN — mapped 2026-08-03, not yet in the review document

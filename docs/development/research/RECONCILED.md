@@ -1324,6 +1324,18 @@ questions Bob answered on 2026-08-01/02 are recorded in `DECISIONS.md` DEC-12 th
 their consequences are handed over in the `QUEUE.md` BOB INBOX; CONDUCT's enactment pass, not this
 file, is what reconciles those into the §3 items.
 
+**SETTLED 2026-08-03 BY SESSION BOB, working the open list at Bob's direction:** **Q8** (settled
+by DEC-28 — `divided` is a terminal STATE, not a disposition), **Q9** (the design pass the N-8
+sub-question required — the third line takes one of three closed forms, below), **Q12** (narration
+is SURFACE-scoped and plane-sourced; controls are never narrated and never greyed) and **Q13**
+(longest-waiting first is the RULE, not a proxy). Each carries its reasoning in place below, with
+the original text kept as history. **The questions that are Bob's are now carried as register
+entries rather than as list rows: Q7 → DEC-29, Q10 → DEC-30, Q14's delivery bullet → DEC-31, and
+the parallel-claims question from `BIO_Case_Making_v0_1.md` → DEC-32** — each with a worked
+recommendation, awaiting his answer. Q14's other two bullets stay as they are: the contradiction
+shape has no consumer and stays honestly undesigned; the intent-axis projection is a RECORD-area
+call at build time.
+
 **CLOSED BY R1–R4 and removed from every list — do not re-raise:** whether `undetermined` floors or
 suspends (was `SB-OUTPUT` §5.1, `BUILD-ORDER` HOLE-5, `CRITIQUE` D-2 — closed by R1); whether the
 two grade axes compose (was implicit everywhere — closed by R2); what replaces the cycle guard (was
@@ -1492,7 +1504,12 @@ suspending leg is kept and named either way.
 **Build consequence:** UI-18's threshold selector. No change to its data path, as the question
 anticipated.
 
-**Q7 · Division's residuals after R4: the friction asymmetry, and the timing.** *(= `CRITIQUE`
+**Q7 · RAISED AS DEC-29, 2026-08-03** — with a worked recommendation (keep both: the
+apportionment table's refusal to drop a leg means division cannot do severance's work at a
+discount, so cost parity defends nothing; the prompt stays, required to state the disclosure).
+Awaiting Bob. Original text follows.
+
+*Was:* **Division's residuals after R4: the friction asymmetry, and the timing.** *(= `CRITIQUE`
 D-7's two halves R4 does not reach.)* (a) Severing one leg costs one reason for that leg; dividing
 costs one reason for the whole act — R4 answers by disclosure and does not equalise the cost.
 (b) `SB-CORE.md:1070-1073` offers `[ Divide this… ]` at the exact moment the member's strength is
@@ -1500,11 +1517,44 @@ held down, which is a compellingness prompt whatever its wording. **Blocks:** no
 live once REC-16 ships. **Settled by:** Bob, since R4 is his and these are what R4 chose not to
 cover.
 
-**Q8 · Is `divided` a STATE or a DISPOSITION?** *(= `SB-CORE` §5; N-7 — REC-16 decides it silently.)*
+**Q8 · SETTLED by DEC-28 — `divided` IS A TERMINAL STATE, not a disposition.** The line between
+the families is not terminality, it is what the word claims about the question: a disposition is
+a member's judgment about a well-formed question, which survives it unchanged; division says the
+question ITSELF was malformed and corrects it FORWARD into its children — DEC-19's shape, the
+supersession family. The act's reason stays the act's (R4-b) and never routes through
+`disposition_reason`; the surfaces already drew it as a state (`SB-CORE:1267`). The explicit
+decision this entry required now exists in the register instead of being shipped silently by
+REC-16. Original text follows as history.
+
+*Was:* **Is `divided` a STATE or a DISPOSITION?** *(= `SB-CORE` §5; N-7 — REC-16 decides it silently.)*
 `deferred` and `dismissed` are terminal-ish and are called dispositions. **Blocks:** nothing.
 **Settled by:** a DEC that REC-16 should raise rather than ship as settled.
 
-**Q9 · How does `undetermined` state the D-129 split — *could not determine* versus *positively
+**Q9 · SETTLED 2026-08-02→03 — the plane half was always D-129's answer; the N-8 form is now
+designed, by the deliberate pass the entry required rather than in passing (session BOB,
+2026-08-03).**
+
+**THE ANSWER: one three-line skeleton everywhere (C-14 stands), with the THIRD LINE drawn from a
+closed set of exactly three forms — selected by facts the plane publishes, never free text, never
+omitted:**
+- **could-not-determine** (`somevalue`) → *"Looking again may settle this."* — the only retryable
+  form, and it names the retry act where the surface has one (re-capture, re-run).
+- **positively-none** (`novalue`) → *"There is nothing here to find; looking again will not
+  change this."* — a property of the world, permanent.
+- **a SUSPENDED axis** (R1, the N-8 case) → *"Only grading the leg will settle this; looking
+  again will not."* — the retry is an act on the LEG, not on the source, and the line names the
+  leg.
+
+The plane carries the could-not-determine/positively-none split as a second field beside the
+reason — D-129's own recommendation; the field's name and vocabulary are RECORD's at build. The
+suspended form needs NO new field: suspension is derived from graded/ungraded facts the plane
+already holds (DEC-18). Constraint 2 holds — one shape in all six places; what varies is which
+closed form the third line takes, decided by published facts rather than by surface judgment, so
+DEC-8 is not violated (mapping a published enum to a fixed string is rendering, not computing).
+**Negative control:** a free-text third line, or a retry offer rendered on a positively-none,
+and the harness fails. Original text follows as history.
+
+*Was:* **How does `undetermined` state the D-129 split — *could not determine* versus *positively
 none*?** *(= GAP-I8, `SB-EVIDENCE` §6.4, HOLE-7; touches all ten surfaces.)* **Blocks:** nothing;
 C-14's three-line shape is a working stopgap that invents no second treatment. **Settled by:** a
 field beside the reason in the plane, which is D-129's own recommendation. **New sub-question from
@@ -1512,7 +1562,11 @@ R1 (N-8):** a SUSPENDED axis has no retry semantics — looking again will not s
 grading the leg will — so the third line needs a form for that case, and no session should invent
 it in passing.
 
-**Q10 · Is division owner-scoped or author-scoped, and does concluding need a ballot when a project
+**Q10 · RAISED AS DEC-30, 2026-08-03** — with a worked recommendation (author-scoped, no ballot;
+one name on every judgment, and dissent-before-the-act is a veto while dissent-on-the-record is
+evidence). Awaiting Bob. Original text follows.
+
+*Was:* **Is division owner-scoped or author-scoped, and does concluding need a ballot when a project
 has multiple owners?** *(= `SB-CORE` §5, `CAPABILITIES` §4, `SB-OUTPUT` §5.8, `BUILD-ORDER` §1.4 —
 four files, one question.)* **Blocks:** nothing; REC-16 ships author-scoped and raises a DEC, which
 is the right shape. **Settled by:** Bob. The material difference is stated and is worth repeating:
@@ -1547,11 +1601,45 @@ addition to the instance-wide refusal, not a replacement for it, until D-158 clo
 
 ### Tier 3 — recorded, blocking nothing now
 
-**Q12 · Is an absent capability NARRATED or silent?** *(= `CRITIQUE` U-1; three files each guessed;
+**Q12 · SETTLED 2026-08-03 by the design pass this question asked for (session BOB).**
+
+**THE ANSWER: narration is SURFACE-scoped and plane-sourced; controls are never narrated and
+never greyed.** The three files were answering two different questions, which is why they seemed
+to disagree: WHERE narration lives (the surface) and WHETHER controls explain themselves (never).
+- When a credential's relationship to an ENTIRE surface is read-only, the surface states it once,
+  in one sentence, sourced from what the plane published about the session (`whoami`
+  capabilities — DEC-8's publication mechanism). `SB-CORE:350`'s *"This credential can read the
+  queue and cannot act on it"* is exactly this and STANDS.
+- An absent capability at the level of an individual ACT removes the ENTRY POINT, silently.
+  `SB-OUTPUT:231`'s *"no greyed control and no explanation"* STANDS — it is the "absent, not
+  greyed" rule CRITIQUE verified held in all ten storyboards.
+- `SB-EVIDENCE`'s F-7 deletion STANDS, and its recorded worry (*"a vanishing entry may confuse"*)
+  is answered by the surface-level sentence: a member who cannot add is told once, at the
+  surface, what their credential is — not per-control, which is the greyed-button problem
+  wearing words.
+**Negative control:** a per-control explanation or a greyed control renders, and the harness
+fails. Original text follows as history.
+
+*Was:* **Is an absent capability NARRATED or silent?** *(= `CRITIQUE` U-1; three files each guessed;
 `SB-EVIDENCE.md:1494-1497` says so honestly.)* The CONTROL's absence is settled and undisputed.
 **Settled by:** whoever owns the member's reading experience; `Membership v2` §5 does not reach it.
 
-**Q13 · The queue's ordering rule within a class.** *(= `SB-CORE` §5, `CRITIQUE` U-3 — *"every frame
+**Q13 · SETTLED 2026-08-03 by the design pass this question asked for (session BOB).**
+
+**THE ANSWER: within a class, LONGEST-WAITING FIRST, stated on the surface — as the RULE, not a
+proxy.** The candidate orderings are bounded and each of the others fails on a standing rule:
+volume-ordering is already rejected; strength- or grade-ordering ranks by compellingness, which
+is C3's exact forbidden axis; a machine-scored priority has the machine deciding what a member
+attends to, which DEC-24 bounds (the machine surfaces, the member concludes); and an authored
+priority field is a prefill of judgment nobody wrote. Longest-waiting is the only ordering
+computable from a fact the record already holds — the item's own date — that asserts NOTHING
+about the item's merit. It operationalises exactly one guarantee, *nothing waits forever*, which
+is the attention layer's actual job. Today's Home already does it and says so (`app.html:4975`);
+what changes is the framing — the label stays, the word "proxy" goes, and UI-14's acceptance
+gains *"the ordering rule is stated on the surface."* A group wanting a different rule is a
+group-level setting on the DEC-17 pattern, not invented now. Original text follows as history.
+
+*Was:* **The queue's ordering rule within a class.** *(= `SB-CORE` §5, `CRITIQUE` U-3 — *"every frame
 in §1 is drawn in an arbitrary order for that reason."*)* **Blocks:** nothing; UI-14 ships
 longest-waiting as an explicit, labelled proxy, which today's Home already does and says.
 
@@ -1568,7 +1656,9 @@ none is reachable:
   14): a case sent to one recipient and not published is on neither side of the two-bucket fence, and
   a rendering someone acted on has become a record needing a hash, a date and an author. Both are
   Bob's; both are designed-as-an-`action` provisionally; `AUDIENCES.md` says the second is
-  *"settled by the first lawyer, not by argument."*
+  *"settled by the first lawyer, not by argument."* **RAISED AS DEC-31, 2026-08-03**, with the
+  recommendation to defer on a named trigger while binding the in-band rule (hash, date, author,
+  both floors travel inside any addressed rendering) now. Awaiting Bob.
 - The **`surfaced → open` mapping** for existing focus bundles (`DATA-MODEL` §2.7) is NOT on this
   list: REC-10 already carries the recommended answer (keep `surfaced` as a legal alias) with its
   reason, and that is a decision taken, not a question open.

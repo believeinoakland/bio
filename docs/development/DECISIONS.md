@@ -2042,6 +2042,170 @@ response: **ADOPT.** Bob, 2026-08-03: *"Just as most full featured UXs include a
   prompt with wide reach does not widen the system's attack surface in the way one might expect.
 decided: 2026-08-03 · Bob
 
+### DEC-28 · answered
+raised: 2026-08-03 · session BOB (RECONCILED §4 Q8 / SB-CORE §5, working the open questions at
+  Bob's direction)
+for: bob-session
+question: Is `divided` a STATE or a DISPOSITION?
+why it is this session's: data-model vocabulary and mechanism. RECONCILED flagged it only
+  because REC-16 must not ship it SILENTLY — the requirement was an explicit decision with its
+  reasoning recorded, not that the decision was Bob's.
+provisional: SB-CORE models it as a terminal state; REC-16 is unbuilt, so nothing ships either
+  way yet and nothing is blocked.
+blocks: none.
+alternative: a disposition, beside `deferred` and `dismissed`, which are also terminal-ish.
+recommendation: terminal state — see response.
+reversal cost: low until REC-16 ships; a rename after that touches vocabulary on every surface
+  that renders an inquiry's lifecycle.
+response: **A TERMINAL STATE, reached only by the division act.** Decided by this session,
+  2026-08-03. The line between the two families is not terminality — `deferred` and `dismissed`
+  are terminal-ish too — it is WHAT THE WORD CLAIMS ABOUT THE QUESTION. A disposition is a
+  member's judgment about a well-formed question: deferred says *not now*, dismissed says *not
+  worth pursuing*, and the question survives the judgment unchanged; what changed is the group's
+  stance toward it. Division says the QUESTION ITSELF was malformed — it was two questions — and
+  the parent is corrected FORWARD into its children. That is DEC-19's shape (correction always
+  moves forward) and the supersession family, not the declination family. Three consequences
+  make this material rather than taxonomy:
+  1. **The reason grammar.** Division's authored reason belongs to the ACT and covers the whole
+     restructuring (R4-b, one reason for the division). Routing it through `disposition_reason`
+     would make one field carry two grammars — a stance toward a question, and an account of a
+     restructuring — and every consumer of the field would have to know which it holds.
+  2. **A disposition can be revisited; `divided` cannot.** A deferred inquiry comes back. A
+     divided parent's legs are OWNED by its children now, and un-dividing would be the record
+     changing its mind in silence. The terminality is structural, not a policy choice, which is
+     exactly what "state" says and "disposition" does not.
+  3. **The surfaces already render it as a state** — `⟨INQUIRY⟩ · divided  divided by ⟨ana⟩ on
+     ⟨2026-08-03⟩` (SB-CORE:1267), with the parent's card naming where every leg went — and
+     R4-e's published-edge correction treats the divided parent as a terminal node the surface
+     may NAME and never serve. Both were designed on the state reading.
+decided: 2026-08-03 · session BOB
+reasoning recorded in: this entry; RECONCILED §4 Q8 is marked settled by it in place.
+for CONDUCT to enact: a scope note on REC-16 — `divided` ships as a terminal STATE written by
+  `op=inquirydivide`, its reason is the act's reason, and `disposition_reason` is untouched.
+  Nothing else changes; SB-CORE already drew it this way.
+
+### DEC-29 · open
+raised: 2026-08-03 · session BOB (RECONCILED §4 Q7 — CRITIQUE D-7's two halves R4 does not
+  reach)
+for: bob
+question: Division's two residuals after R4: (a) must division carry severance's PER-LEG reason
+  cost, or does one authored reason plus total disclosure stand? (b) may the surface offer
+  `[ Divide this… ]` at the exact moment the weakest leg is holding the member's strength down?
+why it is Bob's: R4 is his ruling and these are the two things it explicitly chose not to
+  cover; (b) is doctrine about whether the system may propose an act whose visible effect is a
+  higher publishable strength — the compellingness line (C3).
+provisional: nothing is blocked; both are live only when REC-16 ships. (a) runs as R4 is
+  written: one authored reason for the whole division. (b) runs as SB-CORE:1070-1073 draws it,
+  wording confined to the structural act, proposing no split and no wording.
+blocks: none.
+alternative: (a) a per-leg reason on apportionment, equalising the cost with severance.
+  (b) remove the contextual prompt; division stays reachable only from the standing action row.
+recommendation: KEEP BOTH, on one observation the register did not yet contain: **division
+  cannot do severance's work at a discount, because the apportionment table refuses to drop a
+  leg** — *"every leg gets a home… Neither is not"* (R4-a). Severance REMOVES material from a
+  question; division only RE-HOMES all of it, with the parent recording where every leg went
+  and each published child naming its parent and siblings. The two acts do not substitute, so
+  cost parity between them defends nothing — and the per-leg judgment division does involve is
+  already recorded PER LEG, in the apportionment itself. A per-leg reason would be friction
+  theatre on an act whose disclosure is already total. For (b), keep the prompt: the moment the
+  weakest leg is named is the moment the member can actually act on the structure, and what
+  polices misuse is R4's friction plus the fact that NOTHING LEAVES THE RECORD — the sibling
+  exists, and the published child must name it, so the raised strength conceals nothing. One
+  requirement instead of a timing rule: the prompt's wording must state the disclosure — that
+  the other question stays on the record and the published child will name it — so what is
+  offered is visibly honesty, not concealment. (DEC-26's principle, one construct over: the
+  gate is at the act, not at the reasoning that led there.)
+reversal cost: low both ways until REC-16 ships; (b)'s wording clause is a UI string.
+
+### DEC-30 · open
+raised: 2026-08-03 · session BOB (RECONCILED §4 Q10 — four files, one question)
+for: bob
+question: Is DIVISION owner-scoped or author-scoped, and does CONCLUDING an inquiry need a
+  ballot when a project has multiple owners?
+why it is Bob's: capability reach on two of the record's heaviest acts, and the accountability
+  shape of a conclusion — doctrine.
+provisional: nothing is blocked. REC-16 ships division author-scoped (any `contribute` holder,
+  act attributed); concluding is a single member's act, as everywhere else in the corpus.
+blocks: none.
+alternative: owner-scoped division (the §7 pattern — owners decide structure); conclusion by
+  ballot among owners.
+recommendation: AUTHOR-SCOPED division and NO BALLOT on concluding, with the same reason under
+  both: **the record wants ONE NAME on every judgment.** Division is how a member escapes an
+  overclaiming mix, so owner-only would let an owner hold another member's name against an
+  overclaim that member can see — de-escalation must never require permission from someone
+  whose incentive may run the other way (SB-CORE's own argument, and it is decisive). A ballot
+  on concluding would make conclusions committee products with diluted accountability, and the
+  machinery for disagreement already exists in a better shape: a conclusion is an act with a
+  name and a date, reopening is an act (DEC-12), strength falling is an event that propagates
+  (DEC-16), and contradiction is a thing to FIND (D-80). Dissent that must be expressed before
+  the act is a veto; dissent expressed on the record after it is evidence.
+reversal cost: asymmetric, and it favours this branch: adding a ballot later is additive;
+  removing one later takes away a protection someone relied on. Author-scoping likewise
+  reverses to a predicate on the act if practice shows abuse.
+
+### DEC-31 · open
+raised: 2026-08-03 · session BOB (RECONCILED §4 Q14 third bullet; AUDIENCES rows 13–14)
+for: bob
+question: What is ADDRESSED NON-PUBLIC DELIVERY — a case sent to one recipient (a confidential
+  referral, a pre-publication briefing) — and when does a persistent RENDERING someone acted on
+  become a record?
+why it is Bob's: effects on people outside the project (a recipient relies on it), risk
+  carrying his name, and it sits on neither side of the two-bucket fence — DEC-25's
+  neighbourhood.
+provisional: nothing is blocked. Both are modelled provisionally as an ACTION — the member
+  performs the delivery outside the system and records having done it — and the two-bucket
+  fence stays intact: nothing non-public leaves the instance by any system path.
+blocks: none.
+alternative: design the third bucket now — a delivery construct with recipient identity,
+  hashing, and re-serving.
+recommendation: DEFER with a named trigger, and bind ONE constraint now. AUDIENCES' own line —
+  *"settled by the first lawyer, not by argument"* — is right: designing confidential delivery
+  before any group needs one is designing custody in the abstract, the mistake DEC-2 exists to
+  refuse. Trigger: **the first group that asks to send a case to a named recipient without
+  publishing it.** The constraint that must NOT wait, because it is retroactively unfixable in
+  exactly the way DEC-25's is: any rendering that leaves the instance addressed to someone
+  carries its hash, its date, its author and both threshold floors IN-BAND (H4's rule, extended
+  from published renderings to addressed ones) — so that if the recipient acts on it, what they
+  acted on is checkable later. A rendering sent outward without those is an unverifiable claim
+  wearing the group's name; recording them costs nothing at the moment of sending and cannot be
+  done after.
+reversal cost: the deferral costs nothing (the action-model provisional blocks nothing); the
+  in-band constraint is a rendering rule, cheap now, impossible retroactively.
+
+### DEC-32 · open
+raised: 2026-08-03 · session BOB (Bob's overlapping-utility example,
+  BIO_Case_Making_v0_1.md, clarified by him 2026-08-03)
+for: bob
+question: May one finding hold SEVERAL PARALLEL CLAIMS — two independent bodies of support
+  answering one question — or must the utility example split into two inquiries whose published
+  rendering reassembles them?
+why it is Bob's: doctrine — what a finding IS and what its stated strength may claim. The
+  example is his and the lean toward plurality is his.
+provisional: nothing is blocked; `inquiry_basis` does not exist, so both shapes remain cheap.
+blocks: none.
+alternative: two inquiries under a parent whose rendering reassembles them — already weakened
+  in the doc's own analysis, because it splits an answer a reader needs whole.
+recommendation: ADOPT PLURALITY, shaped as GROUNDS rather than claim-objects: one finding, ONE
+  conclusion, `1..n` named GROUNDS, each ground a labelled partition of the basis legs that the
+  member asserts is INDEPENDENTLY SUFFICIENT. Today's flat basis is the degenerate case — one
+  implicit ground — so nothing existing changes shape. This keeps the collapse intact: a ground
+  has no identity, no falsifier of its own, and cannot be cited alone, so nothing nested
+  rebuilds the multiplicity the collapse removed. And it carries the consequence that is the
+  real payoff, because it changes the strength arithmetic: **grounds compose DISJUNCTIVELY —
+  the finding's strength is its strongest sufficient ground, and a ground's strength is the
+  weakest leg within it.** A conclusion established at B on the constitutional ground is
+  established at B, full stop; the regulatory ground offered beside it at C weakens nothing —
+  where today the weakest-leg rule holds the whole finding to C and pushes the member toward
+  division. So plurality removes one of the two honest pressures behind DEC-29's divide prompt,
+  and it is not an overclaim, because "independently sufficient" is the member's authored
+  judgment, per ground, with their name on it — the same accountability shape as the conclusion
+  itself. R1 composes cleanly: a suspended leg suspends its GROUND; the finding suspends only
+  when EVERY ground is suspended (DEC-18's pattern, one level up). Q14's contradiction case
+  stays separate and stays undesigned — grounds agree on the conclusion; contradiction is two
+  conclusions disagreeing.
+reversal cost: low now, while `inquiry_basis` is unbuilt. Rising after: once grounds exist,
+  renderings and citations will hang off their labels.
+
 ## Answered, awaiting enactment
 
 _(none)_
