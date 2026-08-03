@@ -453,10 +453,20 @@ step** (never a copy of it inside the dialog, which would fork the interface) an
 step is, why it is needed, and how it serves what was asked for. The member does it and presses
 next; the assistant checks and advances.
 
-**The wizard's check is ADVISORY, never enforcement.** If it could block, the rules would live
-in two places -- the plane and the wizard -- which is the drift DEC-8 refuses. Enforcement stays
-at the pre-flight and the gate, unchanged. The wizard says something looks unfinished; the
-member decides; a thing that must be refused is refused by the plane at the act.
+**THE ASSISTANT HOLDS NO COPY OF THE RULES -- it asks the plane, and DEC-8 already governs
+this.** *A surface may render a refusal it received from the plane; it may never compute one*,
+because a copy of a rule is drift waiting to happen. So the wizard MAY be definite: when it says
+a step cannot proceed it is relaying the plane's own refusal, in the plane's words -- the same
+answer the act's pre-flight gives, surfaced earlier. Not a second gate; the same gate, seen
+sooner.
+
+**Only OBJECTIVE checks are advisory** -- *you said three claims and there are two* -- because
+the objective belongs to the member, not to the record. Rule checks carry the plane's authority;
+objective checks carry none and say so.
+
+**Consequence: the assistant introduces NO NEW TRUST BOUNDARY.** It is bound by the same
+mechanism as every other surface, which is why a prompt with wide reach does not widen the
+system's attack surface.
 
 **Voice:** transcribed speech is machine-produced text. A mis-transcription that reaches an
 authored field corrupts the member's own testimony, so transcription is always shown for

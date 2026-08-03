@@ -1589,17 +1589,31 @@ sequenceDiagram
   </p>
 
   <div class="note why">
-    <span class="lbl">The wizard's check is advice, not a gate</span>
+    <span class="lbl">Where the assistant gets the rules — and why that makes it safe to trust</span>
     <p>
-      When the assistant checks that a step was done properly, it can say <em>this looks
-      unfinished</em> — and that is all. <strong>It cannot block.</strong>
+      <strong>The assistant does not know the rules. It asks the server, every time.</strong>
+      That is not a limitation placed on it; it is the same arrangement every screen in the
+      system already works under. No part of the interface is allowed to keep its own copy of
+      what is and is not permitted, because two copies drift, and the day they disagree is the
+      day nobody can say what the real rule is.
     </p>
     <p>
-      The reason is worth understanding, because the alternative looks safer and is not. If the
-      wizard could refuse things, the rules would live in two places: in the server, and in the
-      wizard. Two copies drift, and the day they disagree is the day nobody can say what the
-      real rule is. <strong>Refusing stays where it already happens</strong> — before an act
-      runs — and the wizard is help on top of that, never a second gate.
+      <strong>So when the wizard tells someone a step cannot go ahead, it is repeating the
+      server's answer, in the server's own words.</strong> Not a second opinion, and not a
+      second gate — the same gate, shown earlier. An assistant that hedged about a rule it could
+      simply have asked about would be worse, not safer.
+    </p>
+    <p>
+      <strong>There is one kind of check that genuinely is only advice</strong>, and it is worth
+      telling apart from the other. If it notices that what you said you wanted is not what you
+      have — <em>you meant to add three claims and there are two</em> — that is an observation
+      about <em>your</em> goal, not about a rule. Nobody else's authority is involved, so it
+      says so and you decide.
+    </p>
+    <p>
+      This also means the assistant adds no new place where trust can fail. A box that can reach
+      everything sounds like it should widen the risk, and it does not, because it is bound by
+      exactly the same mechanism as everything else.
     </p>
   </div>
 
@@ -1716,7 +1730,7 @@ sequenceDiagram
     <div class="cid"><span>S12</span><span class="chip missing">not yet specified</span></div>
     <h3>The Assistant</h3>
     <p class="job">Let me say what I want in my own words, from wherever I am, and show me what you understood before anything happens.</p>
-    <p>A tag on every screen, expanding into a prompt that accepts typed or spoken input. Three jobs behind one box: find what the record holds, set up new work from what the member described, and start an act — where starting is all it does, because the act still runs its four beats. Multi-step requests become a wizard that opens the screen already owning each step, explains why that step exists, and checks the result before moving on — advising, never blocking. Everything it proposes is shown back for correction before it exists.</p>
+    <p>A tag on every screen, expanding into a prompt that accepts typed or spoken input. Three jobs behind one box: find what the record holds, set up new work from what the member described, and start an act — where starting is all it does, because the act still runs its four beats. Multi-step requests become a wizard that opens the screen already owning each step, explains why that step exists, and checks the result before moving on — relaying the server's rules rather than keeping its own copy of them. Everything it proposes is shown back for correction before it exists.</p>
     <p class="needs">a twelfth surface, and a construct that appears on all the others · no states drawn yet</p>
   </div>
 </section>

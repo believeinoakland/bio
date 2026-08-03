@@ -2013,6 +2013,33 @@ response: **ADOPT.** Bob, 2026-08-03: *"Just as most full featured UXs include a
   second half says the machine never hides why it thought there was a reason; a wizard step says
   why THIS step, and how it fits the objective — so a member is never moved through a sequence
   they cannot see the shape of.
+  **CLARIFIED 2026-08-03 (Bob, same review), AND IT CORRECTS THE PARAGRAPH ABOVE.** *"The
+  assistant/wizard gets its understanding of the rules from the server - which is the source of
+  trust in that regard."*
+  **THE ASSISTANT IS A SURFACE, SO DEC-8 ALREADY GOVERNS IT AND NOTHING NEW IS NEEDED.** DEC-8:
+  the pre-flight is *plane-sourced always* — *"a surface may render a refusal it received from
+  the plane; it may never compute one"*, because *"a refusal is knowable by the browser exactly
+  when the browser holds a copy of the rule, and a copy is drift waiting to happen."* The
+  assistant holds no copy of the rules. It asks.
+  **WHAT THIS CORRECTS:** the wizard paragraph reached for DEC-8's REASONING (two copies drift)
+  and drew the wrong conclusion from it — *therefore the check is merely advisory*. The right
+  conclusion is *therefore the assistant is plane-sourced like every other surface*. There was
+  never a second copy to be advisory about.
+  **SO THE WIZARD MAY BE DEFINITE ABOUT RULES, and should be.** When it says a step cannot
+  proceed, it is relaying the plane's own refusal in the plane's own words — the same answer the
+  act's pre-flight gives, surfaced earlier. That is not a second gate; it is the same gate, seen
+  sooner. An assistant that hedged about a rule it could simply have asked about would be worse,
+  not safer.
+  **TWO KINDS OF CHECK, and only the second is advisory — the distinction the original paragraph
+  was groping for:**
+  - **RULE checks** are the plane's, relayed verbatim, and carry the plane's authority.
+  - **OBJECTIVE checks** are about whether the member's own stated goal has been met — *you said
+    you wanted three claims and there are two* — and those are advisory BY NATURE, because the
+    objective belongs to the member and not to the record. The assistant may observe; the member
+    decides.
+  **ARCHITECTURAL CONSEQUENCE WORTH NAMING: the assistant introduces NO NEW TRUST BOUNDARY.** It
+  is bound by the same mechanism that binds every other surface, which is why a general-purpose
+  prompt with wide reach does not widen the system's attack surface in the way one might expect.
 decided: 2026-08-03 · Bob
 
 ## Answered, awaiting enactment
