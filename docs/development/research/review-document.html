@@ -280,6 +280,7 @@ footer{
   <a href="#doctrine">The seven rules</a>
   <a href="#objects">The four objects</a>
   <a href="#claims">Questions &amp; claims</a>
+  <a href="#plan">Acting on a finding</a>
   <a href="#machine">Where the machine helps</a>
   <a href="#vocab">Vocabulary</a>
   <a href="#changed">What changed</a>
@@ -782,6 +783,81 @@ stateDiagram-v2
 
 <hr class="rule">
 
+<section id="plan">
+  <h2><span class="tag">Start here</span>What a group does about what it found</h2>
+  <p class="lede">
+    A finding is not the end of the work. Most findings say that something did not conform —
+    to a law, a policy, a regulation, a promise the body made, or some other restriction it was
+    under. What follows is a decision: <em>what do we do about it?</em> That decision has its
+    own structure, and the system holds it.
+  </p>
+
+  <h3>The action plan</h3>
+  <p>
+    An <em class="term">action plan</em> is the set of options a group is considering in
+    response to a finding, laid out with what each one depends on, what it costs, and when it
+    has to happen. It is not a claim about the world — it cannot be true or false, and no
+    evidence bears on it — so it is not an inquiry. It is a decision structure, and it holds
+    three things a list of tasks would not:
+  </p>
+  <ul>
+    <li><strong>Order and dependency.</strong> Some steps cannot start until another finishes.</li>
+    <li><strong>Branches keyed to outcomes.</strong> A public-records request can be answered,
+      refused, or ignored past its legal deadline — and each of those leads somewhere
+      different. The plan holds all three onward paths, not just the hoped-for one.</li>
+    <li><strong>The options not taken.</strong> <em>“We considered a grand-jury referral and did
+      not pursue it, because the filing window closes before we can reach the standard we set
+      ourselves”</em> is part of the record of how a group decided, and it is kept with its
+      reason. An option that vanishes when it is rejected makes the group look more decisive
+      than it was.</li>
+  </ul>
+  <p>
+    Deadlines and resources sit on each step: what it costs in money, in members' hours, in
+    expertise the group may not have, and in standing to bring it at all. Plans differ by who
+    is running the project — a lawyer's, a journalist's and a campaigner's response to the same
+    finding are legitimately different — so a plan belongs to a <em>project and a finding</em>,
+    never to a person.
+  </p>
+
+  <div class="note">
+    <span class="lbl">Planning from what is not yet proven — allowed, and clearly marked</span>
+    <p>
+      Investigators do not wait until everything is established before thinking about what
+      comes next. Two questions are normal and the system supports both. <strong>Forward:</strong>
+      <em>if this turned out to be true, what could we do?</em> <strong>Backward:</strong>
+      <em>given what we have already established, what else would have to be true before a
+      referral is worth considering?</em>
+    </p>
+    <p>
+      <strong>Working out what would justify an action is not the same as claiming it is
+      justified</strong> — and the backward question is the more useful of the two, because its
+      answer is not an opinion but a <em>work list</em>: the specific things that are still
+      missing, each of which becomes something to go and find out.
+    </p>
+    <p>
+      <strong>So the safeguard is labelling, not refusal.</strong> Every element of a plan shows
+      how well supported it currently is: <strong>established</strong> (it meets the standard
+      this project set for itself), <strong>short of the standard</strong> (real findings, with
+      the gap named), or <strong>hypothetical</strong> (resting on something that does not exist
+      yet). Shown the same way everywhere, exactly as <em>we do not know</em> is. The dishonest
+      thing would never be planning from a hypothesis — it would be hiding that you had.
+    </p>
+    <p>
+      <strong>The line is drawn at the act, not at the thinking.</strong> A plan may rest on
+      unproven premises. An action that actually reaches outside the group — a filing, a
+      referral, a conversation with a reporter — may not be taken on them, and the system
+      refuses it before it runs, naming which premise is missing.
+    </p>
+  </div>
+
+  <p>
+    <em>What is settled here is what a plan is and where it sits. How the surface is built —
+    and what it takes to answer the backward question well — is named as unfinished in Part 3.</em>
+  </p>
+</section>
+
+<hr class="rule">
+
 <section id="machine">
   <h2><span class="tag">Start here</span>Where the machine helps, and where it must not</h2>
   <p class="lede">
@@ -1231,7 +1307,7 @@ sequenceDiagram
 
   rect rgba(43,88,92,0.10)
     note over M,P: PRE-FLIGHT — a read that can be re-run and commits nothing
-    M->>S: choose an option the PRODUCER published
+    M->>S: choose an option the PLANE declared available
     S->>P: pre-flight this act
     P-->>S: named refusals, with the offenders
     S-->>M: what this will refuse, and why, BEFORE anything runs
@@ -1272,22 +1348,41 @@ sequenceDiagram
   <p>
     <strong>Beat one — she chooses what to do.</strong> On the document she picks <em>use this
     as support</em>, and marks the page-88 table specifically rather than the whole 300-page
-    ledger. The options she is offered are not invented by the screen: the server publishes
+    ledger. The options she is offered are not invented by the screen: the server declares
     which acts are available on this thing right now, so an option that appears is an option
     that can actually run.
   </p>
   <p>
     <strong>Beat two — she is shown what would be refused, before anything happens.</strong> The
-    screen asks the server to rehearse the act and reports back in the server's own words. If
-    the ledger's bytes no longer match what was captured — the file changed underneath the
-    record — she learns it now, with the offending item named, rather than by hitting a failure
-    after she has committed to it. This rehearsal writes nothing and can be repeated.
+    screen asks the server to <em>analyse</em> the act — work out what would happen if it ran —
+    and reports back in the server's own words. If the ledger's bytes no longer match what was
+    captured, meaning the file changed underneath the record, she learns it now, with the
+    offending item named, rather than by hitting a failure after she has committed to it. This
+    analysis changes nothing and can be run as often as she likes.
   </p>
   <p>
-    <strong>Beat three — she writes why, in her own words.</strong> A field arrives empty and is
-    never pre-filled with a suggestion: <em>“the ledger shows the $2.1m leaving Fund 6100 on 14
-    March.”</em> That sentence is her testimony, and a system that offered her a draft would be
-    quietly authoring it for her.
+    <strong>Beat three — she writes why, in her own words, with everything she needs in front
+    of her.</strong> The field arrives empty: <em>“the ledger shows the $2.1m leaving Fund 6100
+    on 14 March.”</em> That sentence is her testimony, and a system that drafted it for her
+    would be quietly authoring her evidence.
+  </p>
+  <p>
+    <strong>Empty is not the same as bare, and the difference is the whole point of this
+    beat.</strong> The system knows perfectly well why this link makes sense, and it shows her
+    — beside the empty field, not inside it. She sees both ends of the connection: the passage
+    in the ledger, and the part of the question it bears on. She sees what the two have in
+    common — the fund itself, as the record understands it. She sees how firmly the link is
+    tied, and what would be needed to tie it more firmly. And every one of those is a link she
+    can follow as far as she wants: to the full page image, to the capture and where it came
+    from, to the entity's other appearances across the record.
+  </p>
+  <p>
+    <strong>This matters most when it was not her idea.</strong> The link may have been proposed
+    by the machine rather than spotted by Anna. She is being asked to put her name to it, and a
+    name on something she cannot see the reasoning for is not authorship — it is a rubber
+    stamp, which is the failure this whole ceremony exists to prevent. So the rule has two
+    halves, and the second is as binding as the first: <strong>the system never writes her
+    reason, and it never hides why it thought there was one.</strong>
   </p>
   <p>
     <strong>Beat four — she gets a receipt</strong> naming what happened, when, and that it was
@@ -1330,8 +1425,7 @@ sequenceDiagram
     <span class="lbl">Ruled 1 August · DEC-8</span>
     <p>
       <strong>The pre-flight is plane-sourced always. A surface may render a refusal it
-      received from the plane; it may never compute one.</strong> Two mechanisms: the plane
-      <em>publishes</em> the refusal contract by default, and runs a <em>dry-run</em> op when a
+      received from the plane; it may never compute one.</strong> Two mechanisms: the plane <em>declares</em> the refusal contract by default, and runs a <em>dry-run</em> op when a
       refusal turns on state the surface cannot see. The obvious test — “is this refusal
       knowable by the browser?” — is wrong, because a refusal is knowable by the browser
       exactly when the browser holds a copy of the rule, and a copy is drift waiting to
@@ -1443,6 +1537,13 @@ sequenceDiagram
       <p>Correspondence as a dated ledger, not a chat. The deadline carries a <em>because</em>: a statute, an order, or the department's own commitment. A date with no basis is the record asserting a deadline it invented.</p>
       <p class="needs">impacting is the one stage with no working process whatsoever · 13 states drawn</p>
     </div>
+  </div>
+  <div class="card">
+    <div class="cid"><span>S11</span><span class="chip missing">not yet specified</span></div>
+    <h3>The Action Plan</h3>
+    <p class="job">Show me every option we have in response to this finding — what each depends on, what it costs, when it must happen, and how well the evidence supports it today.</p>
+    <p>The graph, not the single engagement: options with their dependencies, their deadlines, the resources each needs, and branches keyed to what each step might return. Options declined stay visible with their reason. Every element carries its support status — established, short of the standard, or hypothetical — so a plan can be built on unproven premises without ever pretending they are proven.</p>
+    <p class="needs">an eleventh surface · no states drawn yet · the plan object does not exist</p>
   </div>
 </section>
 
@@ -1743,8 +1844,9 @@ flowchart BT
         <tr><td><strong>Sharing</strong></td><td>Publishing from the member's interface. It exists only in the operator's page; the signing tool instructs the operator to paste into a box that does not exist there.</td><td><em>Nothing this group produces can leave.</em> <span class="chip designed">split brain</span></td></tr>
         <tr><td><strong>The gate on sharing</strong></td><td>The completeness statement — the single reason a “case” is a distinct thing from a finding. No field, no storage, no check.</td><td>The one gate that stops a case overclaiming is not there. <span class="chip missing">missing</span></td></tr>
         <tr><td><strong>Impacting</strong></td><td>The whole action lifecycle: nothing moves an action's state, nothing records correspondence, nothing ages a deadline, and there is no way in from the menu.</td><td>The fifth stage of the path has no working parts. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Impacting</strong></td><td><strong>The action plan, and three things nobody has worked out yet.</strong> The plan object does not exist, and neither do the answers it needs: <em>what a resource is</em> (money, members' hours, expertise, standing — none is modelled); <em>what each kind of action actually requires</em> before it is worth attempting, which is procedural, varies by jurisdiction, and without which the backward question cannot be answered mechanically; and whether any part of a plan is ever published, which is an open decision.</td><td>The stage after a finding has no structure at all. <span class="chip missing">missing</span></td></tr>
         <tr><td><strong>Impacting</strong></td><td>The link from evidence to action to consequence. Nothing connects an action to the findings that justified it, or records what came back.</td><td>The record can hold “we wrote to the city” and cannot say “because of these findings, and here is the reply”. <span class="chip missing">missing</span></td></tr>
-        <tr><td><strong>Every act</strong></td><td>Anything that publishes <em>what may be done</em> to an object right now. So each act screen must keep its own copy of the plane's rules.</td><td>Five surfaces would each drift from the server independently. <span class="chip missing">missing</span></td></tr>
+        <tr><td><strong>Every act</strong></td><td>Anything that declares <em>what may be done</em> to an object right now. So each act screen must keep its own copy of the plane's rules.</td><td>Five surfaces would each drift from the server independently. <span class="chip missing">missing</span></td></tr>
         <tr><td><strong>The public half</strong></td><td>A read path for published cases. A stranger can verify a hash and list identifiers, and cannot <em>read</em> the case.</td><td>The surface called “the reason the rest exists” has no data beneath it. <span class="chip missing">missing</span></td></tr>
       </tbody>
     </table>
@@ -1948,7 +2050,7 @@ flowchart LR
   end
 
   subgraph LANE["A PARALLEL SLOT — contends with nothing above"]
-    H["REC-19<br/>publish what may be done"]:::lane
+    H["REC-19<br/>declare what may be done"]:::lane
     I["every act surface"]:::lane
     H --> I
   end
@@ -1974,7 +2076,7 @@ flowchart LR
     consumer the A–D grades have ever had. It depends on nothing.
   </p>
   <p>
-    <strong>Publishing what-may-be-done takes the parallel slot</strong>, for a compounding
+    <strong>Declaring what-may-be-done takes the parallel slot</strong>, for a compounding
     reason rather than a preference: every act screen built before it accrues its own copy of
     the plane's rules, which must later be deleted. Delaying the type costs
     <em>existence</em> — three surfaces simply cannot be built. Delaying the other costs

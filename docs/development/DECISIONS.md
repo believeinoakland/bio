@@ -1789,6 +1789,31 @@ response: **AI IS PART OF THE SYSTEM DEFINITION NOW, AND THE BOUNDARY IS: THE MA
   **NOT DESIGNED HERE, and deliberately:** which model performs which role, how candidates are
   ranked or presented, what an objective costs to run, and how a check's confidence is expressed.
   The roles and the boundary are the system definition; the architecture is later work.
+  **AMENDED 2026-08-03 (Bob, in review): RULE 1 HAS A SECOND HALF, AND WITHOUT IT THE FIRST
+  HALF IS HOLLOW — THE MACHINE MUST SHOW ITS WORK.** Bob, on the authored-reason field: *"the
+  system does know why. If that reason isn't going to be the pre-fill value of the field, then
+  it should at least be there to read and consider so that she knows why this is a proper
+  action… an AI might have found this connection. So Anna may really need to learn from this
+  beat 3 process. So the beat 3 experience should include enough context (even links to each
+  end) to support her diving as far into the context as she needs to."*
+  **HE IS RIGHT, AND EMPTY WAS NEVER THE SAME AS BARE.** Rule 1 said the member AUTHORS. But
+  authorship over something the member cannot see the reasoning for is not authorship — it is a
+  rubber stamp, and rubber-stamping is a failure mode this project has already named once, in
+  DEC-4, where routine member attestation of machine-read text was the risk to design against.
+  A rule that says "the member authors" while permitting a bare field produces the exact outcome
+  it was written to prevent, and does so most often precisely when the proposal came from the
+  machine rather than from the person signing it.
+  **SO RULE 1 READS, IN FULL: the machine never writes the member's reason, and it never hides
+  why it thought there was one.** Beside the empty field — never inside it — the surface shows
+  the derivation: both ends of the proposed link, the entity they share, how firmly it is tied
+  and what would raise it, and the method that produced it. Each is a LINK the member may follow
+  to the page image, to the capture and its provenance, and to that entity elsewhere in the
+  record. Depth is the member's choice, not the surface's.
+  **THIS IS CONSISTENT WITH THE ASSEMBLY RULE AND DOES NOT WEAKEN IT**, on the §4 Q5 test: an
+  assembly is permitted when keyed on the SUBJECT the member is writing about, and refused when
+  keyed on the ANSWER-SHAPE of the question being asked. The derivation is subject material —
+  the evidence and how it connects. A candidate sentence would be answer-shaped. **Show the
+  reasoning; never the sentence.**
 decided: 2026-08-03 · Bob
 
 ### DEC-25 · open
