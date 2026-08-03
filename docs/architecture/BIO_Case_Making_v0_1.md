@@ -538,6 +538,23 @@ that closed focus/finding/case.
    already answers, while Q14 is about CONTRADICTION, which nothing answers.
 
 `inquiry_basis` does not exist in the schema, so all of this is still free.
+**CLARIFIED 2026-08-03 by Bob, and the question sharpens rather than closes.** *"I'm not
+necessarily suggesting that claims can themselves contain sub-claims. But I wonder if a
+finding with multiple claims is appropriate in some situations."* His example, recorded
+because it is the best test case the question has: an inquiry asks *"Can a parallel
+municipal power utility develop distribution lines separate from those of another utility in
+overlapping service territory?"* One claim's legs cite utility regulations that conflict
+with parallel distribution; a SECOND claim's legs cite rights enshrined in the state
+constitution and the court decisions that clarify them. **Two parallel claims — two
+independent bodies of support answering one question — not nesting.** That distinguishes it
+from the composition case above (which recursion already answers) and from Q14's
+contradiction case (which nothing answers): this is PLURALITY — same conclusion-shape, two
+grounds. The two candidate shapes are `0..n` claims on one finding, or two inquiries under a
+parent whose published rendering reassembles them; forcing the example into two inquiries
+would split an answer a reader needs whole, which is the strongest argument yet against the
+field reading. Still OPEN, leaning toward plurality; `inquiry_basis` does not exist, so both
+shapes remain cheap.
+
 
 ## Resolutions forced by the adversarial pass, 2026-08-01
 

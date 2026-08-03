@@ -1422,6 +1422,16 @@ this session's determinations, decided rather than returned:
   - **AN INQUIRY OUTSIDE ANY PROJECT HAS NO BAR.** The declaration is a property of a project,
     which is a container with membership and access control, and inheriting a bar from somewhere
     else would invent one.
+  **AMENDED 2026-08-03 (Bob, in review): THE GROUP SETS THE DEFAULT.** *"...settable at the
+  project level (with the default for new projects defined at the group level), and clearly
+  disclosed in every published case."* Two additions the original ruling did not carry: the
+  GROUP holds the default required strength that a new project starts from, and the project may
+  then set its own. The disclosure half was already ruled. Bob's framing in the same review
+  supplies the worked consequence: a lawyer's project may require *"beyond a reasonable
+  doubt"* where a reporter's requires *"convincing"* — and a lawyer building on a reporter's
+  published case sees the standard it was held to and the bias it was produced under, and may
+  need to BOLSTER it to meet their own standard before relying on it. The standard is authored
+  by the group about its own work; it is never set by who somebody is.
 decided: 2026-08-01 · Bob
 reasoning recorded in: this entry, and DEBT D-155. `research/AUDIENCES.md` §5 is not edited
   (same reason as D-153): its ruling that a threshold may never gate ratification stands as
@@ -1529,6 +1539,20 @@ response: **AN ATTESTATION MUST BE REVERSIBLE, BECAUSE PEOPLE MAKE MISTAKES.** B
   undone but that **it cannot be undone SILENTLY** — every correction is itself an act on the
   record, with a name and a date on it. That is a stronger guarantee than irreversibility and
   it is the one this project actually wants.
+  **AMENDED 2026-08-03 (Bob, in review): THE NAME OF THE PROPERTY IS CORRECTED — PUBLISHING
+  IS AN IRREVERSIBLE ACT, and it may be the only one.** *"Publishing IS an irreversible act!
+  It's (one of?) the only irreversible acts. (However another edition of a published case can
+  be published - as a separate document. However a claim can be removed from a finding,
+  potentially rescinding it to an inquiry once again.)"* The MECHANISM of this ruling is
+  unchanged and both halves of it stand: correction is always possible, and it always moves
+  FORWARD — a new edition (a separate document, all published editions stand), a withdrawal by
+  another attested act (both stand), a finding rescinded to an inquiry by removing its claim.
+  What is corrected is the vocabulary: the 2026-08-02 text said "an attestation must be
+  reversible", and that word overclaims — the ACT is irreversible, because what it published
+  never stops answering and can never be unpublished. Reversible-with-a-record and
+  irreversible-with-forward-correction are the same design; the second is the honest name for
+  it. The rung ladder's top rung is IRREVERSIBLE again, with the correction path stated beside
+  it rather than instead of it.
 decided: 2026-08-02 · Bob
 
 ### DEC-20 · answered
@@ -1617,6 +1641,48 @@ response: **THEY ARE NOT COMBINED — AND R2'S MECHANISM IS WRONG WHILE ITS CONC
   independent, they range over different populations, so a single shared floor was never
   expressible in the first place.
 decided: 2026-08-02 · Bob (definitions) · session BOB (derivation)
+
+### DEC-22 · answered
+raised: 2026-08-03 · Bob, in the review of the study document
+for: bob
+question: Is a HUNCH only an asserted connection, or the general form of an ASSUMPTION —
+  including an unsupported claim — and does the system work on the member's behalf toward it?
+why it is Bob's: doctrine. It widens a construct he ruled into existence (DEC-15) and creates
+  a machine driver in the member's path, which touches the "less narrative" stance.
+provisional: the narrow reading was running — DEC-15 defined the hunch as a CONNECTION
+  asserted ahead of its evidence, temporary declared bias, cleared before publication.
+blocks: nothing built. It reshapes REC-13's entry conditions (a claim may be added with NO
+  legs), the queue/objectives design, and the evidence-finder scope, all before they exist.
+alternative: keep hunches connection-only; treat an unsupported claim as merely an
+  incomplete finding with no standing of its own.
+recommendation: none was offered; this arrived as a ruling.
+reversal cost: low now; rises when the objectives engine exists.
+response: **A HUNCH IS AN ASSUMPTION — and an unsupported claim is one, and it is a STANDING
+  OBJECTIVE.** Bob, 2026-08-03: *"Part of the process of developing a finding or building a
+  case is setting up assumptions - which in CivicOS are called Hunches. So a part of the user
+  journeys that should be supported is the creation of an inquiry immediately followed by the
+  adding of an unsupported claim (or several claims) to the inquiry. The system will recognize
+  those unsupported claims by adding them to a list of objectives it can pursue on the user's
+  behalf. In the course of searching for information related to the claim (both by the user
+  and the system's objective engine) legs may be created that are added to the claim. Some
+  legs may be supportive of the claim, while others cut against. But both types are added.
+  Both content and claims are searched in the process of searching for such evidence."*
+  **FOUR CONSEQUENCES, recorded so a build session does not re-derive them:**
+  - **The hunch construct has two shapes, one debt.** An asserted CONNECTION (DEC-15,
+    unchanged) and an UNSUPPORTED CLAIM added to an inquiry. Both are temporary declared
+    bias; neither survives to publication (`UNCLEARED_HUNCH` covers both).
+  - **An unsupported claim is a first-class OBJECTIVE.** The system recognises it and may
+    pursue it: gathering candidate material bearing on the claim, from which the member
+    builds legs — supporting AND cutting against, both kept (invariant 7).
+  - **The search behind it covers CONTENT and CLAIMS** — documents, and concluded inquiries
+    whose findings bear on the question. This is a requirement on the evidence finder's
+    scope (the S4 two-systems split must not exclude inquiries from either side).
+  - **THE "LESS NARRATIVE" LINE HOLDS AND IS NOW STATED PRECISELY.** The empty
+    exploring row (machine chooses what a member should look into: REFUSED, a recommendation
+    engine) is not violated by the objective engine, because pursuing a claim the member
+    AUTHORED is directed by the member's own words. The engine's work lands under
+    DISCOVERING, driven by the claim.
+decided: 2026-08-03 · Bob
 
 ## Answered, awaiting enactment
 

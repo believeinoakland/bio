@@ -620,6 +620,61 @@ O1.** None is active, so nothing in flight is superseded. `BIO_Case_Making_v0_1.
 `BIO_Interaction_Constructs_v0_1.md` §A, `BIO_Declared_Bias_v0_1.md` and `RECONCILED` §1.1/§1.2
 all carry the reasoning; the review document is republished at its existing URL.
 
+
+### 2026-08-03 · BOB · Review round three: the hunch widens (DEC-22), two amendments, and the review document rebuilt as current-state
+
+Bob is mid-review of the study document; his round-three corrections carry design content.
+All recorded; nothing here is open. **His review continues — decomposition of the new
+construct work waits until it completes**, so expect one more entry rather than acting on
+partial scope.
+
+**DEC-22 (new, answered) · A HUNCH IS AN ASSUMPTION, an unsupported claim is one, and it is
+a STANDING OBJECTIVE.** The member journey to support: create an inquiry, immediately add one
+or more claims nothing yet supports; the system recognises each unsupported claim as an
+objective it can pursue on the member's behalf; legs arrive from the member's searching and
+the system's pursuit, supporting AND cutting against, both kept. The search covers CONTENT
+and CLAIMS — documents and concluded inquiries both. Consequences named in the entry:
+REC-13's entry conditions (a claim may exist with no legs), the queue/objectives design, the
+S4 evidence-finder scope, and the PRECISE statement of the "less narrative" line — a machine
+choosing what a member should look into stays REFUSED; a machine pursuing a claim the member
+authored is directed by the member's own words and lands under DISCOVERING.
+
+**DEC-17 amended · THE GROUP SETS THE DEFAULT required strength; each project may override;
+every published case discloses the declaration beside the strength reached.** The published
+consequence: a reader building on another group's case sees the standard it was held to and
+the bias it was produced under, and may need to bolster it to their own standard.
+
+**DEC-19 amended · the property's honest name is IRREVERSIBLE.** Publishing is the one
+irreversible act — a published edition can never be unpublished. The mechanism is unchanged:
+correction is always possible and always moves FORWARD (new edition, all editions stand; a
+withdrawal is another attested act, both stand; removing a finding's claim rescinds it to an
+inquiry). "Reversible with a record" overclaimed; the rung ladder's top rung reads
+irreversible again with the correction path beside it.
+
+**Composition question sharpened, still open** (`BIO_Case_Making_v0_1.md`): multiple claims
+per finding means PARALLEL claims — two independent grounds answering one question (Bob's
+overlapping-utility example, recorded there) — not sub-claims. Leaning toward plurality;
+nothing built either way.
+
+**Terminology measured, not changed: LEG stays, BASIS stays, with strict roles.** Bob asked
+whether "basis" should replace "leg" throughout (don't guess). Measured: the corpus has ~542
+leg uses and ~346 basis uses, and `basis` is ALREADY two things — the SET a claim rests on
+(`inquiry_basis`, "the basis graph is acyclic") and a COLUMN on four shipped tables
+(`connections`, `resolutions`, `link_verdicts`, `reuse_verdicts`) holding the textual
+justification for a grade or verdict. Renaming leg→basis gives one word three jobs and
+destroys the set/element distinction R1/R2 depend on ("the weakest leg", "every ungraded leg
+is named"). Ruled by this session under the delegation: **basis = the whole; leg = one
+element; the pairing is stated in the review document's vocabulary.**
+
+**The review document is republished as CURRENT-STATE ONLY** (Bob: repo carries the history;
+the document should not). Revision notes, amendment trailers and closed-on-date framing are
+gone; three settled questions folded into the decisions section present-tense. Also: the
+reference tree drops the Target abstraction (a leg points at a document or another inquiry,
+drawn as two associations — even a careful reader misread the generalization triangle as
+containment); the publication-bar note now carries DEC-17 correctly instead of overclaiming
+uniformity; the journey lede matches the redrawn diagram; an ACT walkthrough with its side
+effects; the assumption-first journey in Part 0.
+
 ---
 
 Item format:
