@@ -541,6 +541,85 @@ is small, self-contained, and the only one of the two that touches a person outs
 the panel's permitted replacement; the panel question is **Q5** (Q8 is `divided` state-vs-disposition).
 Fixed in place.
 
+
+### 2026-08-02 · BOB · Bob's review of the study document — FIVE DOCTRINE CHANGES, and two drifts they exposed
+
+Bob reviewed Part 0 of the published study document and fifteen corrections came back. Ten
+were prose. **Five changed the design**, and they are recorded as DEC-18 through DEC-21 with
+their reasoning in the documents that now carry it. `DECISIONS.md` has **no open entries** —
+these arrived answered.
+
+**DEC-18 · AN UNGRADED LEG IS INERT, NOT UNRATING. This changes REC-12's comparator and every
+surface that renders a strength.** *"An ungraded leg doesn't contribute to a conclusion, but if
+there are other graded legs, then it doesn't suspend the conclusion either."* **This is NOT the
+behaviour `RECONCILED` §1.1 R1-h refused, and a build session will get this wrong if it reads
+only R1-h.** R1-h refused grading on the determined legs *while the ungraded leg still counted
+as part of what the conclusion rested on* — support drawn from a leg that paid nothing. The
+amendment removes the support as well as the cost: an ungraded leg is not weighed, does not
+floor, does not unrate, and sits in the basis NAMED as not yet load-bearing. **UNRATED survives
+as the boundary case** where no leg is graded. **Every ungraded leg is named, one or many** —
+that clause is load-bearing and must not be dropped. The comparator must EXCLUDE a null leg
+from the population rather than rank it anywhere in it.
+
+**DEC-21 · CAPTURE AND CONNECTION GRADES ARE NOT COMBINED, AND R2's MECHANISM WAS WRONG WHILE
+ITS CONCLUSION WAS RIGHT.** Bob: *"A capture is the act of reading a document in. A connection
+is an edge between 2 or more pieces of information… They're different things. So why are those
+grades combined?"* A capture grade is a property of an INFORMATION object; a connection grade
+is a property of an EDGE. **A leg IS an edge pointing at a target, so one document leg carries
+BOTH grades** — which R2-e's own corrected example in `RECONCILED` §1.2 already showed, and
+which nobody noticed contradicted R2's own "evidentiary legs versus inferential legs" split.
+**Corrected for REC-12: two measurements over two POPULATIONS** — capture ranges over every
+DOCUMENT the conclusion reaches, connection over every EDGE it rests on. Unchanged and not to
+be re-opened: a connection's own grade is composed from `connections.a_grade`/`b_grade`, which
+is legitimate because both ends measure the same thing. **This confirms §4 Q6 independently** —
+a single shared threshold floor was never expressible.
+
+**DEC-19 · AN ATTESTATION MUST BE REVERSIBLE.** *"People make mistakes or misinterpret… (Though
+there may be a record of the attestation and reversal in the record.)"* Reversal is not erasure:
+a further ATTESTED act retracts the first and both stand, so the published bytes stay answerable
+and a reader who relied on them can see they were withdrawn. **The rung ladder's top TWO names
+are wrong, not just its top one** — `terminal` (*"cannot be walked back"*) has been stale since
+DEC-12 ruled a closed finding may be REOPENED, and nobody noticed. The distinguishing property
+is that an act **cannot be undone SILENTLY**, not that it cannot be undone. Affects O1, the
+publication ceremony, before it is built.
+
+**DEC-20 · ONLY A HUNCH BLOCKS PUBLICATION.** *"Not all bias needs to be cleared before a piece
+is published. The only bias type that must be clear before publication is hunches."* Plus:
+*"Bias is public and accompanies every published case produced under that bias."* The principle
+the blanket rule lacked: **bias debt is DISCLOSED, hunch debt is DISQUALIFYING — a hunch
+inflates a GRADE and ordinary bias only frames interpretation.** `op=publishpreflight` refuses
+`UNCLEARED_HUNCH` by name and refuses nothing else on bias grounds; the manifest must be SHOWN
+in the artifact, not merely cited. `BIO_Declared_Bias_v0_1.md`'s blocking paragraph is amended
+in place.
+
+**AND THE USER-TYPE LIST IS NOT ONE ARCHETYPE (D-156 amended).** Journalists, lawyers, city
+administrators, oversight bodies and any group working to improve government run instances of
+their own. **The consequence D-156 did not see: the same person can be both a user type and an
+audience** — they are two RELATIONSHIPS to a case, not two populations of people, so nothing in
+the system ever decides which kind someone "is".
+
+**TWO DRIFTS THIS SURFACED, both recorded:**
+
+- **D-160 · `RECONCILED.md` says `SUSPEND` 50 times and never `UNRATED`, which is canonical.**
+  `BIO_Case_Making_v0_1.md` renamed it after the reconciliation pass and said the rename *"is
+  not cosmetic"* — `SUSPEND` means the OPPOSITE in `SB-OUTPUT` §5.1, and `BUILD-ORDER`'s REC-12
+  says *"ship SUSPEND"* citing that file. RECONCILED's own R1-h calls that collision *"the
+  single most dangerous collision in the corpus"* and then adopted the dangerous word.
+  Mitigated by a dated amendment block at the head of §1.1; the 50 occurrences are deliberately
+  NOT rewritten, because rewriting a reconciliation record in place would hide that the
+  collision happened. **REC-12 must use UNRATED in the code, the copy and the test names.**
+- **D-159 · the DEC-18 amendment creates the opposite laundering path.** An ungraded leg now
+  costs nothing, so declining to grade an inconvenient leg is the cheapest way to keep it out
+  of the reckoning. Three defences already stand (every ungraded leg is named; the completeness
+  statement is authored and unprefilled; invariant 7). **A fourth should NOT be invented before
+  use shows one is needed** — that would be the same mistake as a global strength floor (§4 Q2).
+  WATCH, no task; re-raise once M10 has run with a real group.
+
+**Items affected: REC-12 (both DEC-18 and DEC-21 land in its comparator), REC-18, UI-17, UI-18,
+O1.** None is active, so nothing in flight is superseded. `BIO_Case_Making_v0_1.md` §R1/§R2,
+`BIO_Interaction_Constructs_v0_1.md` §A, `BIO_Declared_Bias_v0_1.md` and `RECONCILED` §1.1/§1.2
+all carry the reasoning; the review document is republished at its existing URL.
+
 ---
 
 Item format:
