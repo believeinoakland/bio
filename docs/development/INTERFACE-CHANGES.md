@@ -735,3 +735,15 @@ reversal if a later reader wants RECONCILED §3.1's rename literally.
   `AGREE` — UI-26 is the written consumer (queued); UI-13's stated limit narrows
   honestly when it lands.
 - **Version:** I3 5.8.0 → **5.9.0** in `INTERFACES.md`.
+
+## IC-17 · I3: login `detail` sentences + `vocabularies.resolutions` · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-39 — both login refusals gain
+  `detail` from one constant (codes untouched; the NO_SUCH_ROLE sentence is
+  deliberately arm-ambiguous so revocation stays unannounced), and `vocabularies`
+  gains `resolutions` by export-from-the-catalog (three readers, one array).
+  Additive.
+- **Consumers:** UI. CONDUCT answers per the IC-12 mechanics, naming the proxy:
+  `AGREE` — `teach()` renders the new sentences with no edit; the two suite riders
+  ride UI-25's batch.
+- **Version:** I3 5.9.0 → **5.10.0** in `INTERFACES.md`.
