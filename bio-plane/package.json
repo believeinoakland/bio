@@ -75,6 +75,7 @@
     "test:basis": "node test/basis.test.mjs",
     "test:strength": "node test/strength.test.mjs",
     "test:conclude": "node test/conclude.test.mjs",
+    "test:grounds": "node test/grounds.test.mjs",
     "test:publish": "node test/publish.test.mjs",
     "test:reopen": "node test/reopen.test.mjs",
     "test:divide": "node test/divide.test.mjs",

@@ -1,8 +1,18 @@
 /* NEGATIVE CONTROL: (run 2026-08-03, each broken ALONE and restored) (a) store.mjs promote: `const cycle = this.#basisCyclePath(bundleId, inqTargets)` -> `const cycle = null` -> 2 fail ("C resting on A is refused AT THE CLOSING WRITE", "the refused write projected NOTHING"), and a standalone probe confirmed op=promote ACCEPTS the two-node A->B->A close (both writes ok:true); (b) store.mjs promote: the projection insert loop condition `if (isInquiry)` -> `if (false && isInquiry)` -> the two-leg bundle reads an EMPTY basis and the suite fails from "both legs read back, in document order" (got []); (c) bio-checks.mjs checkInquiryBasis: the references[] subset arm `} else if (!refTargets.has(t)) {` -> `} else if (false && ...)` -> 3 fail here ("the catalog names the drift", "the WRITE refuses the same document" — the drift doc is ACCEPTED — and the polluted reverse index downstream) + 1 fail in check-firing.test.mjs naming C-6.3. Restored after each; 28 pass. */
 /* REC-11: inquiry_basis — the one genuinely new table, and basis recursion.
  * RECONCILED.md §3.1 (REC-11) is the design; DATA-MODEL.md §2.4.2 / D4 the
- * table; DEC-15 (hunch), DEC-23 (target stays an INFO-/INQ- id until D-164),
- * DEC-32 (single-basis arithmetic) the folded rulings.
+ * table; DEC-15 (hunch), DEC-23 (target stays an INFO-/INQ- id until D-164)
+ * the folded rulings.
+ *
+ * CORRECTED 2026-08-05 (REC-42), never exempted: this header named "DEC-32
+ * (single-basis arithmetic)" as a folded ruling, which was true while DEC-32
+ * was open and is wrong now that Bob has answered it. A leg may carry a GROUND
+ * — the branch of the argument it belongs to — and the table carries one
+ * nullable column for it, so the row shape asserted below GREW BY ONE FIELD
+ * and nothing else moved. Every assertion in this file is about a basis with no
+ * grounds and every one of them still holds unchanged, which is the property
+ * REC-42 was required to preserve rather than a coincidence: the grounds
+ * grammar, the arithmetic and the frozen structure are grounds.test.mjs's.
  *
  * What is asserted, each in the direction that fails:
  *   1. PROJECTION: an inquiry whose basis names one INFO- and one INQ- reads
@@ -160,6 +170,14 @@ console.log("--- 1. the projection: one INFO- leg, one INQ- leg, read back in or
     [b.legs[0].grade, b.legs[0].grade_axis], ["B", "connection"]);
   t("the hunch is visible as a hunch from the moment it is made (DEC-15)",
     [b.legs[0].grade_source, b.legs[0].at], ["hunch", "2026-08-03"]);
+  /* ADDED 2026-08-05 (REC-42). The row grew one column, `ground`, and the
+     assertion that matters here is what an UNGROUPED leg projects into it:
+     NULL, the implicit single ground, which is what keeps this whole file's
+     answers unchanged. A projection that invented a label would make a basis
+     nobody structured compose by maximum. The grouped case is
+     grounds.test.mjs's. */
+  t("a leg nobody grouped projects a NULL ground — the implicit single ground, never an invented one",
+    b.legs.map((l) => l.ground), [null, null]);
 }
 
 console.log("\n--- 2. the reverse index: which inquiries rest on this document — one lookup ---");

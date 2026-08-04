@@ -1130,6 +1130,30 @@ CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at)
 -- document" (E2, and REC-17's re-evaluation obligation) is ONE indexed lookup.
 -- Cleared in BOTH purge arms via the TABLES list (D-113); hygiene.test.mjs
 -- holds that list against this file.
+--
+-- REC-42 / DEC-32: the ground column IS THE RELATIONSHIP BETWEEN LEGS, one
+-- nullable column rather than a table because a leg belongs to exactly ONE
+-- ground and the leg row is already keyed (bundle_id, ord). Legs sharing a
+-- ground are AND-related (the basis is no stronger than the weakest of them);
+-- the grounds themselves are OR-related (the basis is as strong as its
+-- STRONGEST ground). NULL IS THE IMPLICIT SINGLE GROUND and it is the DEFAULT
+-- ON PURPOSE: every leg written before this column existed reads NULL, lands in
+-- one ground, and derives exactly the weakest-leg answer it derived before.
+-- Bob's ruling (DEC-32): "sometimes the weakest is the claim's strength, and
+-- other times it's not. The difference is really whether the relationship
+-- between legs is AND or OR."
+--
+-- THE ATTRIBUTION IS NOT PROJECTED HERE, and that is the deliberate half. A
+-- ground's claim to be INDEPENDENTLY SUFFICIENT is asserted per ground, by a
+-- named member, in bundle.md's grounds[] block -- one row per label carrying
+-- asserted_by and at. It is per (bundle_id, ground), so a column here would
+-- state it once per LEG: a second place for one fact to be written, which is
+-- what D-21 forbids and what the ordinal above exists to avoid. It is not a
+-- second TABLE either, because nothing asks the record a question keyed on it:
+-- the assertion is enforced at BOTH gates by one catalog function
+-- (checkInquiryBasis, REC-11's precedent) and frozen into the ratified bytes at
+-- publication, which is where a reader checks it. If a query ever needs "which
+-- grounds did this member assert", THAT is when the table is earned.
 CREATE TABLE IF NOT EXISTS inquiry_basis (
   bundle_id    TEXT NOT NULL,   -- the inquiry
   ord          INTEGER NOT NULL,-- position in basis[], so a leg is addressable
@@ -1141,6 +1165,7 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' (DEC-15)
   note         TEXT,
   at           TEXT,
+  ground       TEXT,            -- REC-42: the OR branch this leg belongs to. NULL = the implicit single ground (AND)
   PRIMARY KEY (bundle_id, ord)
 );
 CREATE INDEX IF NOT EXISTS inquiry_basis_target ON inquiry_basis(target_id);
