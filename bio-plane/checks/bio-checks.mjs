@@ -919,7 +919,12 @@ const INFO_ENUMS = {
   criticality: ['crucial', 'supporting'],
   source_status: ['unchanged', 'modified', 'removed']
 };
-const MONITOR_FREQ = ['hourly', 'daily', 'weekly', 'monthly', 'per_meeting', 'none'];
+/* EXPORTED for REC-26 (the `export` keyword is the whole change — sectionText's
+   precedent). The monitor-cadence consumer's interval table is keyed off THIS
+   array rather than a local copy of the words, so a frequency the catalog gains
+   cannot silently fall through to a default interval: the MAP RULE, applied to a
+   vocabulary the scheduler now reads. */
+export const MONITOR_FREQ = ['hourly', 'daily', 'weekly', 'monthly', 'per_meeting', 'none'];
 const CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
 
 async function checkInformationExtension(ctx, findings) {

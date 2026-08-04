@@ -31,6 +31,11 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             supersession never lands and cannot audit clean either. Before this
             item `supersedes` had no producer and no requirements at all. */
          BUNDLE_ID_RE, supersedesEdgeFindings,
+         /* REC-26: the monitoring frequency vocabulary. The cadence consumer's
+            interval table is keyed off the CATALOG's own closed set rather than
+            a local copy of the words — the MAP RULE — so a frequency the catalog
+            gains cannot fall through to a default interval unnoticed. */
+         MONITOR_FREQ,
          divisionDisclosureFindings } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -304,8 +309,12 @@ export class Store extends DurableObject {
        "every inquiry at B or better on the capture axis" must be a seek. The
        STATE columns are not indexed — they are read WITH a row, never filtered
        across the corpus, and an index nobody seeks on is cost with no reader. */
+    /* REC-26 added `monitor_enabled`: the cadence consumer asks "which documents
+       ask to be monitored" on EVERY reconcile of the one alarm, which without an
+       index is a full scan of the corpus on a question whose answer is a small
+       subset of it. */
     for (const c of ["schema_id", "produced_mode", "source_authority", "source_status",
-                     "monitor_frequency", "reeval_flag", "annotations_open",
+                     "monitor_enabled", "monitor_frequency", "reeval_flag", "annotations_open",
                      "inquiry_capture_strength", "inquiry_connection_strength"])
       this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
     this.sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles(fts_id)`);
@@ -1240,6 +1249,32 @@ export class Store extends DurableObject {
         wake: (now) => this.#queueRenotifyWake(now),
         tick: (now) => ({ queuerenotify: { expired: this.#queueRenotifyExpired(now),
                                            next: this.#queueRenotifyWake(now) } }) },
+      /* REC-26 / P-84 / M1: the MONITOR-CADENCE consumer — op=monitor's caller.
+         M1's clause "a changed source produces a monitor-tick" had NO producer:
+         op=monitor is mutating and caller-driven and nothing anywhere called it.
+         This is that caller, and it is the SEVENTH consumer on the one alarm,
+         registered exactly as SCHEDULER.md says a new consumer joins.
+
+         Its cadence is PER DOCUMENT and comes from `bundles.monitor_frequency` —
+         the column that has existed since the first projection and that nothing
+         has ever read (P-84). It holds NO global interval, and that is structural
+         rather than stylistic: one interval over a whole corpus is both wrong at
+         the top (a delisting is time-sensitive) and ruinous at the bottom (a 2010
+         ordinance re-fetched daily), and MACHINE-PROCESSES.md §5c measures the
+         difference as ~17,000 documents per host against ~200,000. Removing the
+         cadence read is negative control (b).
+
+         INTERVAL-consumer shape, like queue-renotify: due only when a document is
+         actually past its own next check, so it fires at its own moment and no
+         other's. Its wake is the earliest next-check across the monitored set, so
+         it SELF-TERMINATES — an instance with no SELF binding, no monitored
+         document, or only documents whose cadence this plane cannot compute holds
+         no alarm at all, which is the property REC-1 prized and the one the Free
+         tier the installer targets is paid for. */
+      { name: "monitor-cadence",
+        due:  (now) => this.#monitorCadencePlan(now).due.length > 0 ? now : null,
+        wake: (now) => this.#monitorCadenceWake(now),
+        tick: (now) => this.#monitorCadenceTick(now) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -1267,7 +1302,7 @@ export class Store extends DurableObject {
     const reg = this.#schedConsumers(probe);
     const grace = Store.SCHED_GRACE_MS;
     let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
-        queuerenotify = null; const probes = [];
+        queuerenotify = null, monitorcadence = null; const probes = [];
     for (const c of reg) {
       const d = c.due(now);
       if (d === null || d > now + grace) continue;
@@ -1286,6 +1321,10 @@ export class Store extends DurableObject {
          an unnamed consumer would be reported as a test probe, which is how a
          real clock disappears from the alarm's own account of itself. */
       else if (c.name === "queue-renotify") queuerenotify = r && r.queuerenotify;
+      /* REC-26, named for the same reason queue-renotify is: an unnamed consumer
+         is reported as a test probe, which is how a real clock disappears from
+         the alarm's own account of itself. */
+      else if (c.name === "monitor-cadence") monitorcadence = r && r.monitorcadence;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -1304,7 +1343,8 @@ export class Store extends DurableObject {
              ...(monitor ? { monitor } : {}),
              ...(connderive ? { connderive } : {}),
              ...(overduescan ? { overduescan } : {}),
-             ...(queuerenotify ? { queuerenotify } : {}) };
+             ...(queuerenotify ? { queuerenotify } : {}),
+             ...(monitorcadence ? { monitorcadence } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -7857,6 +7897,11 @@ export class Store extends DurableObject {
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
       tasks: n("tasks"), taskQueue: n("task_queue"), sourceReachability: n("source_reachability"),
+      /* REC-26: the monitoring consumers' idempotence state, reported so a purge
+         can PROVE it took them (D-113) and so an operator can see a tick that is
+         still open — a non-zero monitorTickEpoch means the last tick failed on
+         something and the next one will be its retry. */
+      monitorFired: n("monitor_fired"), monitorTickEpoch: n("monitor_tick_epoch"),
       /* FW-6: the subject registry's depth, reported so a whole-store purge can
          PROVE it cleared the registry rather than assert it (D-113). */
       entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
@@ -8584,6 +8629,14 @@ export class Store extends DurableObject {
            public surface resolving a serve against a row that has gone, and an
            index that outlives what it indexes is the D-113 leftover. */
         this.sql.exec(`DELETE FROM published_edges WHERE from_bundle=? OR to_bundle=?`, bundleId, bundleId);
+        /* REC-26 / D-113. The monitor-cadence consumer's fired-set is keyed on
+           `subject`, and for that consumer a subject IS a bundle id. Purging a
+           monitored bundle while leaving its key behind would leave a claim that
+           a document nobody holds was already checked this tick; if a later
+           bundle were allocated a colliding id it would inherit the skip. The
+           archive-monitor's subjects are ADDRESSES, so this DELETE matches none
+           of them, which is correct: an address outlives any one bundle. */
+        this.sql.exec(`DELETE FROM monitor_fired WHERE subject=?`, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
@@ -8627,6 +8680,16 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM tasks`);
         this.sql.exec(`DELETE FROM task_queue`);
         this.sql.exec(`DELETE FROM source_reachability`);
+        /* REC-26 / D-113. The monitoring consumers' in-flight tick state: the
+           fired-set and the open epoch. Both are derived from the corpus in the
+           sense that matters here — every subject is a bundle this purge just
+           removed or an address whose reachability row went with it on the line
+           above — so a whole-store purge that reported scope ALL while an open
+           epoch stood would leave the next tick believing it was RETRYING a tick
+           over documents that no longer exist. They are cleared together and in
+           this order: the fired rows, then the epoch that names them. */
+        this.sql.exec(`DELETE FROM monitor_fired`);
+        this.sql.exec(`DELETE FROM monitor_tick_epoch`);
         /* The capture machinery's own derived tables, found MISSING here on
            2026-07-31 when D-113 was closed as a class rather than an instance.
            Every one is derived from the corpus and every one predates the fix
@@ -10651,6 +10714,22 @@ export class Store extends DurableObject {
     return { recorded: true, address_norm: addressNorm, via: String(via || "direct") };
   }
 
+  /** The READ half of the above, added by REC-26. `observations` is not
+   *  bookkeeping — a run of them across an interval is the PRIMARY route by which
+   *  the record establishes that a link was contemporaneous (LINK-FIDELITY.md) —
+   *  and until now nothing could read the number back, which is why nothing could
+   *  notice a machine process inflating it. Deliberately not wired to a control-
+   *  plane op: it is reached over the Durable Object the way the suites reach
+   *  onAlarm and selectionCreate, so I3 is unchanged and no new caller-facing
+   *  surface is created for it. */
+  capturedLocators({ addressNorm = null } = {}) {
+    const rows = addressNorm
+      ? this.#rows(`SELECT * FROM captured_locators WHERE address_norm = ? ORDER BY via`, addressNorm)
+      : this.#rows(`SELECT * FROM captured_locators ORDER BY address_norm, via`);
+    return { address_norm: addressNorm, rows: rows.map((r) => ({ ...r })),
+             observations: rows.reduce((n, r) => n + r.observations, 0) };
+  }
+
   /** File the links a captured document made. Replaces this capture's rows
    *  rather than appending, because a capture's own links are a property of its
    *  bytes and do not change; a second filing is a re-run, not new information. */
@@ -11630,6 +11709,15 @@ export class Store extends DurableObject {
      and INVOKES; the counter and the capture stay where they already live. */
   async #monitorTick(now) {
     if (!this.#monitorConfigured()) return { monitor: { configured: false } };
+    /* NOT RE-ENTRANT — see #tickRunning. An alarm that fires while this tick is
+       awaiting a fetch must not run a second copy of it: the second copy has no
+       work to do (every subject is claimed) and would report a tick nobody
+       finished. It says so rather than returning a silently empty account. */
+    if (this.#tickRunning.has("archive-monitor"))
+      return { monitor: { configured: true, busy: true, checked: 0,
+                          eligible: [], fired: [], failed: [], skipped: [] } };
+    this.#tickRunning.add("archive-monitor");
+    try {
     const nowIso = Number.isFinite(now)
       ? new Date(now).toISOString().split(".")[0] + "Z"
       : new Date().toISOString().split(".")[0] + "Z";
@@ -11637,17 +11725,261 @@ export class Store extends DurableObject {
       `SELECT address_norm FROM source_reachability
         WHERE consecutive_failures >= ? ORDER BY first_failure_since LIMIT ?`,
       this.#monitorFloor(), Store.MONITOR_TICK_BATCH);
-    const eligible = [], fired = [], failed = [];
+    /* REC-26 / MACHINE-PROCESSES risk 2. The epoch is opened BEFORE the loop, so
+       every address fired in this tick shares one key, and a retry of a tick that
+       did not finish reuses it and skips what already landed. Without it the
+       retry re-fires the addresses that already succeeded, and each success
+       increments `observations` — which is the evidence the record uses to say a
+       link was contemporaneous. See #claimFire. */
+    const epoch = this.#openTickEpoch("archive-monitor", now, this.#monitorTickMs());
+    const eligible = [], fired = [], failed = [], skipped = [];
     for (const { address_norm } of rows) {
       const reach = this.sourceReachability({ addressNorm: address_norm, now: nowIso });
       if (!reach.fallback_eligible) continue;   // governed refusals excluded here, in the verdict (D-104)
       eligible.push(address_norm);
+      if (!this.#claimFire("archive-monitor", address_norm, epoch)) { skipped.push(address_norm); continue; }
       const r = await this.#fireArchiveFallback(address_norm);
       (r.ok ? fired : failed).push(r.ok
         ? { address: address_norm, grade: r.grade, hops: r.hops }
         : { address: address_norm, reason: r.reason });
     }
-    return { monitor: { configured: true, at: nowIso, checked: rows.length, eligible, fired, failed } };
+    /* A tick with nothing failed is FINISHED, so the epoch closes and the next
+       tick is a fresh check rather than a retry. A tick that failed on any
+       address keeps its epoch OPEN: the next fire is that tick's retry, it
+       re-attempts only what failed, and the successes are already keyed. */
+    if (!failed.length) this.#closeTickEpoch("archive-monitor", epoch);
+    return { monitor: { configured: true, at: nowIso, checked: rows.length,
+                        epoch, eligible, fired, failed, skipped } };
+    } finally { this.#tickRunning.delete("archive-monitor"); }
+  }
+
+  /* ==================================================================
+   *  REC-26: the IDEMPOTENCE KEY, and it is shared by both firing consumers.
+   *
+   *  `MACHINE-PROCESSES.md` risk 2, stated in full there and in short here: an
+   *  alarm retry re-runs a tick from the top, so an address the previous attempt
+   *  already fired is fired again. For the archive fallback that is not merely
+   *  wasted work — a successful archive acquire calls recordCapturedLocator,
+   *  which on conflict does `observations = observations + 1`, and a RUN of
+   *  observations across an interval is the PRIMARY route by which the record
+   *  establishes that a link was contemporaneous (LINK-FIDELITY.md). Three
+   *  retries of one observation therefore produce three observations, and the
+   *  record claims corroboration nobody produced. `CLAUDE.md`: "an equality or an
+   *  outcome that costs nothing to produce is not evidence." So this is not an
+   *  optimisation and not politeness to the Internet Archive (though it is that
+   *  too, and our appetite there is OURS — D-111); it is the rule, enforced
+   *  structurally.
+   *
+   *  The key is (consumer, subject, tick epoch), and the pattern is taskEnqueue's:
+   *  the producer writes the dedup row FIRST and the expensive act happens only on
+   *  a fresh key, so a subject fired and then lost to a throw still counts as
+   *  fired. `now` cannot be the epoch — a retry arrives with a new Date.now() —
+   *  so the epoch is REMEMBERED in monitor_tick_epoch and the presence of that row
+   *  means "a tick started and did not finish". The next tick reuses it and is
+   *  that tick's retry; a clean tick deletes it and the next cadence really does
+   *  re-check, which is what stops the key from becoming a permanent mute.
+   * ================================================================== */
+  /* MEASURED 2026-08-04, and it is the reason the guard below exists: a tick that
+     reaches op=acquire over env.SELF re-enters this same Durable Object, and that
+     nested acquire ENQUEUES an inbox task for an undetermined-authority capture,
+     which arms the drain one second out — so workerd fires the alarm UNDERNEATH
+     the tick that is still awaiting its own fetch. Two runs of the same consumer
+     then interleave. The first version of this key was wiped by exactly that: the
+     re-entrant run found every subject already claimed, saw nothing fail, and
+     "completed" a tick another run was still in the middle of. A tick is not
+     re-entrant, and saying so in memory is right for a Durable Object — one
+     instance, one isolate, the flag lives exactly as long as the tick does. */
+  #tickRunning = new Set();
+
+  #openTickEpoch(consumer, now, staleAfterMs) {
+    const open = this.#one(`SELECT epoch FROM monitor_tick_epoch WHERE consumer=?`, consumer);
+    /* An open tick is a RETRY only while it is FRESH. Work that keeps failing
+       would otherwise hold the epoch open forever and mute its own successes for
+       good — the key would stop being idempotence and start being amnesia. Past
+       one whole cadence the epoch is spent and the next fire is a genuinely new
+       check. Compared absolutely so a suite driving the clock backwards cannot
+       wedge it. */
+    if (open && Math.abs((Number.isFinite(now) ? now : Date.now()) - open.epoch) < staleAfterMs)
+      return open.epoch;
+    const epoch = Number.isFinite(now) ? Math.trunc(now) : Date.now();
+    this.sql.exec(
+      `INSERT INTO monitor_tick_epoch (consumer, epoch, opened_at) VALUES (?, ?, ?)
+       ON CONFLICT(consumer) DO UPDATE SET epoch=excluded.epoch, opened_at=excluded.opened_at`,
+      consumer, epoch, new Date(epoch).toISOString().split(".")[0] + "Z");
+    /* Any fired rows left from an older epoch are spent: the key only has to hold
+       WITHIN one tick, and a fired-set that accumulated across ticks would stop a
+       document ever being checked twice. */
+    this.sql.exec(`DELETE FROM monitor_fired WHERE consumer=? AND epoch<>?`, consumer, epoch);
+    return epoch;
+  }
+
+  #closeTickEpoch(consumer, epoch) {
+    this.sql.exec(`DELETE FROM monitor_tick_epoch WHERE consumer=? AND epoch=?`, consumer, epoch);
+    this.sql.exec(`DELETE FROM monitor_fired WHERE consumer=? AND epoch=?`, consumer, epoch);
+  }
+
+  /* True when THIS tick has not yet fired this subject, and it records the claim
+     in the same breath. The read and the write are one statement pair with no
+     await between them and the Durable Object serialises, so nothing can slip
+     between them; the write lands before the caller does anything expensive. */
+  #claimFire(consumer, subject, epoch) {
+    if (this.#one(`SELECT 1 x FROM monitor_fired WHERE consumer=? AND subject=? AND epoch=?`,
+                  consumer, subject, epoch)) return false;
+    this.sql.exec(
+      `INSERT INTO monitor_fired (consumer, subject, epoch, fired_at) VALUES (?, ?, ?, ?)`,
+      consumer, subject, epoch, new Date().toISOString().split(".")[0] + "Z");
+    return true;
+  }
+
+  /* ==================================================================
+   *  REC-26: MONITOR-CADENCE — op=monitor's caller, at each document's own pace.
+   *
+   *  The interval a document is checked at comes from ITS OWN
+   *  `monitoring.frequency`, projected into `bundles.monitor_frequency`. The
+   *  table below is keyed off the CATALOG's MONITOR_FREQ (imported, never
+   *  copied), so a frequency word the catalog gains has to be given an interval
+   *  here or it is UNSCHEDULED BY NAME — it can never quietly inherit a default,
+   *  which is the failure this consumer exists to avoid.
+   *
+   *  Two words map to no clock, and they are reported rather than approximated:
+   *    per_meeting  the cadence is a body's meeting schedule. This plane does not
+   *                 hold one, and inventing 'about a fortnight' would be the
+   *                 system stating a cadence it cannot derive. Undetermined is
+   *                 first-class and must be STATED (CLAUDE.md).
+   *    none         the document does not ask to be monitored on a clock at all.
+   *  A document with monitoring.enabled true and either of those is listed in the
+   *  tick's `unscheduled`, so an operator can see it is not being checked instead
+   *  of assuming it is.
+   *
+   *  STATED LIMIT of that reporting: `unscheduled` rides this consumer's own tick,
+   *  and the consumer only ticks when some OTHER document is due. On an instance
+   *  where every monitored document is per_meeting there is no wake, no alarm and
+   *  therefore no report — the documents are silently unchecked. That is honest
+   *  about the clock (we cannot compute their cadence) but not visible enough,
+   *  and the right home for it is a read a member can ask, not a machine tick.
+   *  Not built here: REC-26 is the CALLER, and a monitoring-status surface is E2's.
+   * ================================================================== */
+  static MONITOR_CADENCE_MS = {
+    hourly:       3600000,
+    daily:       86400000,
+    weekly:     604800000,
+    monthly:   2592000000,   // 30 days. The word names the interval; no ladder is implied.
+    per_meeting:      null,  // not a clock this plane can compute — stated, never guessed
+    none:             null,  // not monitored on a clock
+  };
+  /* Bounded like TASK_DRAIN_ALARM_BATCH and MONITOR_TICK_BATCH: 50 is the usable
+     external-subrequest budget measured for one invocation (MEASUREMENTS.md), and
+     each fire in this tick spends one. */
+  static MONITOR_CADENCE_BATCH = 50;
+  /* The floor between a wake and the next, so a document whose fire keeps failing
+     re-arms the alarm at a bounded pace instead of spinning it. The task drain's
+     coalescing delay, same reasoning. */
+  static MONITOR_CADENCE_DELAY_MS = 1000;
+
+  /* The CATALOG decides what a frequency word is before this table decides what
+     it means. A word the catalog does not know has no interval whatever this
+     object happens to hold under that key — which also means no inherited
+     property and no future rogue key can be read as a cadence. */
+  static monitorIntervalMs(frequency) {
+    if (!MONITOR_FREQ.includes(frequency)) return null;
+    const v = Store.MONITOR_CADENCE_MS[frequency];
+    return typeof v === "number" ? v : null;
+  }
+
+  /* What is due, what is next, and what has no computable cadence — one read, so
+     `due`, `wake` and `tick` cannot disagree about the same instant. */
+  #monitorCadencePlan(now) {
+    if (!this.#monitorConfigured()) return { due: [], next: null, unscheduled: [], monitored: 0 };
+    const due = [], unscheduled = [];
+    let next = null, monitored = 0;
+    for (const r of this.#rows(
+      `SELECT bundle_id, monitor_frequency, monitor_last_checked
+         FROM bundles WHERE monitor_enabled = 1`)) {
+      monitored++;
+      const iv = Store.monitorIntervalMs(r.monitor_frequency);
+      if (iv === null) {
+        unscheduled.push({ bundle: r.bundle_id, frequency: r.monitor_frequency ?? null,
+          reason: r.monitor_frequency === "per_meeting"
+            ? "cadence is a meeting schedule this plane does not hold"
+            : r.monitor_frequency === "none" || r.monitor_frequency == null
+              ? "no frequency declared"
+              : MONITOR_FREQ.includes(r.monitor_frequency)
+                ? "the cadence table gives this frequency no interval"
+                : "not a frequency the catalog knows" });
+        continue;
+      }
+      /* A monitored document that has NEVER been checked is due now: the record
+         has no idea whether its source still serves what was captured, and that
+         is the strongest case for asking rather than the weakest. */
+      const last = r.monitor_last_checked ? Date.parse(r.monitor_last_checked) : NaN;
+      const at = Number.isFinite(last) ? last + iv : 0;
+      if (at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at });
+      else if (next === null || at < next) next = at;
+    }
+    /* Longest-overdue first, then by id, so a batch-bounded tick starves nobody
+       and the same instant always produces the same batch. */
+    due.sort((a, b) => a.due_at - b.due_at || (a.bundle < b.bundle ? -1 : a.bundle > b.bundle ? 1 : 0));
+    return { due, next, unscheduled, monitored };
+  }
+
+  #monitorCadenceWake(now) {
+    const p = this.#monitorCadencePlan(now);
+    if (p.due.length) return now + Store.MONITOR_CADENCE_DELAY_MS;
+    return p.next;
+  }
+
+  async #monitorCadenceTick(now) {
+    if (!this.#monitorConfigured()) return { monitorcadence: { configured: false } };
+    /* NOT RE-ENTRANT, for the reason recorded at #tickRunning: op=monitor over
+       env.SELF re-enters this object, and an alarm armed by anything it does
+       would otherwise run a second copy of this tick underneath the first. */
+    if (this.#tickRunning.has("monitor-cadence"))
+      return { monitorcadence: { configured: true, busy: true, candidates: 0,
+                                 ticked: [], skipped: [], failed: [], unscheduled: [] } };
+    this.#tickRunning.add("monitor-cadence");
+    try {
+    const at = Number.isFinite(now)
+      ? new Date(now).toISOString().split(".")[0] + "Z"
+      : new Date().toISOString().split(".")[0] + "Z";
+    const plan = this.#monitorCadencePlan(now);
+    /* An open cadence tick is a retry only within the SHORTEST cadence this
+       plane schedules at: past that, a document is genuinely due again and the
+       key must not stand between it and its next check. */
+    const epoch = this.#openTickEpoch("monitor-cadence", now, Store.MONITOR_CADENCE_MS.hourly);
+    const ticked = [], skipped = [], failed = [];
+    for (const d of plan.due.slice(0, Store.MONITOR_CADENCE_BATCH)) {
+      if (!this.#claimFire("monitor-cadence", d.bundle, epoch)) { skipped.push(d.bundle); continue; }
+      const r = await this.#fireMonitorTick(d.bundle);
+      (r.ok ? ticked : failed).push(r.ok
+        ? { bundle: d.bundle, frequency: d.frequency, status: r.status, reeval_raised: r.reeval }
+        : { bundle: d.bundle, frequency: d.frequency, reason: r.reason });
+    }
+    if (!failed.length) this.#closeTickEpoch("monitor-cadence", epoch);
+    return { monitorcadence: { configured: true, at, epoch, monitored: plan.monitored,
+                               candidates: plan.due.length, next: plan.next,
+                               ticked, skipped, failed, unscheduled: plan.unscheduled } };
+    } finally { this.#tickRunning.delete("monitor-cadence"); }
+  }
+
+  /* Fire through the SAME op a caller uses, for CAP-3's reason: the governor, the
+     mechanical field-set envelope, the C-13.2 session entry and the escalation
+     ladder ("a tick raises a flag; what a change MEANS is not a mechanical
+     judgement") all run once, in one path that cannot drift. This consumer
+     supplies only a bundle id — every judgement in the tick is op=monitor's. */
+  async #fireMonitorTick(bundleId) {
+    const token = this.#monitorToken();
+    try {
+      const res = await this.env.SELF.fetch(
+        new Request(`https://self/api/?op=monitor&token=${encodeURIComponent(token)}`, {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ bundleId }),
+        }));
+      const out = await res.json().catch(() => null);
+      if (out && out.ok) return { ok: true, status: out.status ?? null, reeval: !!out.reeval_raised };
+      return { ok: false, reason: (out && (out.reason || out.error)) || `http ${res.status}` };
+    } catch (e) {
+      return { ok: false, reason: String(e && e.message || e) };
+    }
   }
 
   /* Fire the fallback through the SAME op a caller uses, so every fence in that
@@ -11826,7 +12158,23 @@ export class Store extends DurableObject {
        NAMED and asked for; an unnamed one is how this got here. */
     try {
       const map = {
-        promote: () => this.promote(body),
+        /* REC-26. promote() itself is UNCHANGED and stays synchronous — this
+           wrapper is the producer-side ARM for the monitor-cadence consumer, in
+           the shape SCHEDULER.md prescribes ("arm it from whatever producer
+           creates its work"). A document that newly asks to be monitored is that
+           work, and without an arm here an IDLE instance holds no alarm and would
+           never wake to check it: the self-terminating property has to be paid
+           for by the producer. Gated on the consumer being configured and on the
+           promoted bundle actually being monitored, so nothing else pays. Arming
+           only ever SCHEDULES; it writes no work. */
+        promote: async () => {
+          const r = this.promote(body);
+          if (r && r.ok && r.bundleId && this.#monitorConfigured()) {
+            const row = this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, r.bundleId);
+            if (row && row.monitor_enabled === 1) await this.#armScheduler();
+          }
+          return r;
+        },
         allocid: () => this.allocId(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file

@@ -1242,6 +1242,41 @@ CREATE TABLE IF NOT EXISTS published_edges (
   PRIMARY KEY (from_bundle, to_bundle, kind)
 );
 CREATE INDEX IF NOT EXISTS published_edges_to ON published_edges(to_bundle);
+-- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
+-- consumers that FIRE something (CAP-3's archive-monitor and REC-26's
+-- monitor-cadence). It exists because a retry is not free here: an archive
+-- fallback that succeeds calls recordCapturedLocator, which on conflict does
+-- observations = observations + 1, and a run of observations across an interval
+-- is the PRIMARY contemporaneity route (LINK-FIDELITY.md). So an alarm retry
+-- that re-fires an address that already succeeded MANUFACTURES CORROBORATION —
+-- three retries of one observation produce three observations. That is the
+-- standing rule "an equality or an outcome that costs nothing to produce is not
+-- evidence" landing in a table, not an optimisation.
+--
+-- One row per (consumer, subject) fired within one TICK EPOCH. The row is written
+-- BEFORE the expensive act — taskEnqueue's producer-first dedup pattern — so a
+-- subject that was fired and then lost to a throw is still recorded as fired.
+CREATE TABLE IF NOT EXISTS monitor_fired (
+  consumer  TEXT    NOT NULL,
+  subject   TEXT    NOT NULL,
+  epoch     INTEGER NOT NULL,
+  fired_at  TEXT    NOT NULL,
+  PRIMARY KEY (consumer, subject, epoch)
+);
+CREATE INDEX IF NOT EXISTS monitor_fired_epoch ON monitor_fired(consumer, epoch);
+
+-- The OPEN tick per consumer, and it is the half that makes the key above work
+-- across an alarm retry. A retry arrives with a NEW Date.now(), so now cannot
+-- identify the tick; the epoch has to be remembered. A row here means "a tick
+-- started and did not finish cleanly", so the next tick REUSES its epoch and is
+-- that tick's retry rather than a fresh one. It is deleted when a tick completes
+-- with nothing failed, which is what lets the NEXT cadence really re-check.
+CREATE TABLE IF NOT EXISTS monitor_tick_epoch (
+  consumer   TEXT PRIMARY KEY,
+  epoch      INTEGER NOT NULL,
+  opened_at  TEXT NOT NULL
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

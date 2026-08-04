@@ -35,6 +35,7 @@
     "test:entityregistry": "node test/entityregistry.test.mjs",
     "test:attest": "node test/attest.test.mjs",
     "test:mechanical": "node test/mechanical.test.mjs",
+    "test:monitorcadence": "node test/monitor-cadence.test.mjs",
     "test:audit": "node test/audit.test.mjs",
     "test:subresources": "node test/subresources.test.mjs",
     "test:governor": "node test/governor.test.mjs",
