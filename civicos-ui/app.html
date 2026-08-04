@@ -988,6 +988,7 @@ async function navBackDo(){
   if(!p){ await go("record", true); return; }
   if(p.type==="bundle") await openBundle(p.key, true);
   else if(p.type==="inquiry") await openInquiry(p.key, true);   // UI-11's route is a place you can come back to
+  else if(p.type==="project") await openProjectWorkspace(p.key, true);   // UI-16's, the same reason
   else {
     await go(p.key, true);
     if(p.key==="search" && p.q){
@@ -1033,7 +1034,11 @@ async function go(screen, fromNav){
   const R = {
     queue: renderQueue, home: renderQueue, tasks: renderQueue, proposals: renderQueue,
     record: renderRecord, search: renderSearchScreen, subjects: renderSubjectView, progressions: renderProgressions, inquiries: ()=>renderFiltered("inquiries","inquiry","Questions","Questions the group is working on, and what became of them: an open question, a finding once it has been answered, a case once it has been published. Deferred and dismissed questions are kept, never deleted."),
-    projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
+    /* UI-16: `renderFiltered`'s Projects ARM IS DELETED. A project row is not a
+       document row — it opens a WORKSPACE (`#project/<id>`), not the bundle
+       page — so the screen has a renderer of its own. `renderFiltered` itself
+       still serves Questions and is UI-21's to delete. */
+    projects: renderProjects,
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
   if(R[screen]) await R[screen]();
@@ -1165,6 +1170,22 @@ const GRADE_SOURCE_WORD = {
   capture:    "earned from the record's own capture of this document",
 };
 const STRENGTH_STATE_WORD = { graded: "graded", unrated: "UNRATED", undetermined: "undetermined" };
+/* UI-16 · THE PROJECT READINESS LADDER. `workproduct_state` is the project
+   extension's own field (C-2.9 names the four legal values; C-9.1 is what makes
+   a rung advance, and it advances on RECORDED EVALUATIONS — never on anything a
+   surface decides). The four values are mirrored here for the reason every table
+   above is mirrored, and check-semantics.mjs pins them against
+   `checkProjectExtension`'s own `WS` literal, read TEXTUALLY from the catalog
+   source because it is a local inside the check rather than an export — the same
+   pin `SCHEMA_OF` already takes over `knownSchemas`.
+   WHAT IS DELIBERATELY NOT MIRRORED: C-9.1's requirement arms. The workspace
+   shows WHICH rung the record declares and WHICH evaluations the record holds,
+   and states that only recording an evaluation moves it. Restating "this rung
+   needs a passing external compliance evaluation" here would be the surface
+   asserting an eligibility the plane computes — a judgement made here. */
+const WORKPRODUCT_STATES = ["draft", "internally_checked", "externally_compliant", "distributed"];
+const WORKPRODUCT_WORD = { draft: "Draft", internally_checked: "Internally checked",
+                           externally_compliant: "Externally compliant", distributed: "Distributed" };
 /*__CATALOG_END__*/
 function phaseOf(state){ return PHASE[state] || "inquiry"; }
 /* What to CALL a record on screen: an inquiry is named by its phase, everything
@@ -4905,6 +4926,459 @@ function routeFromHash(){
 }
 try{ window.addEventListener("hashchange", ()=>{ if(!INQ_HASH_LOCK) routeFromHash(); }); }catch(_){}
 /*__INQUIRY_PAGE_END__*/
+/*__PROJECT_WORKSPACE_START__*/
+/* ============================================================
+   UI-16 · E4 THE PROJECT WORKSPACE — and the BALLOT act's first call site.
+
+   D-134: a complete, tested BALLOT act has existed in this file since UI-3 and
+   NOTHING could reach it — `openBallotDialog` and `canBallot` were referenced
+   only by `act-ballot.test.mjs`. This region is the surface the ballot belongs
+   on, and the reason a project row now opens a WORKSPACE instead of the
+   document page: a project is a place work happens, not a document to read.
+
+   THE LINE THIS SURFACE HOLDS, and it is the one easiest to get wrong now that
+   the inquiry page has landed. A PROJECT IS A CONTAINER: membership, access
+   control, an objective, a work product. AN INQUIRY IS A CLAIM STRUCTURE:
+   a basis, two strengths, a conclusion, a falsifier. Merging them puts access
+   control on every question, so this page lists the inquiries and actions
+   inside the project and shows NO strength, NO grade and NO conclusion for any
+   of them. Where the line falls between "3 questions live here" and "one is at
+   grade C" was unresolved in the research; the CONTAINER side is taken, and the
+   harness asserts a grade letter cannot appear on this page at all.
+
+   WHAT MOVED HERE, AND WHY IT MOVED. The ownership arithmetic and the
+   two-owner divergence were on the MEMBERS screen, where there is no act:
+   showing a denominator where nobody can vote teaches that governance is
+   something you READ. They render here, beside the ballot that consumes them,
+   for the project the member is actually looking at — so `live` is that
+   project's own row and not a table with nothing under it.
+
+   WHAT WAS DELETED. The Members screen's capped 80-project client-side fan-out
+   (`memberOwnership`, one `op=projectparticipants` per project) is gone: this
+   page answers WHO IS WORKING ON THIS from ONE call, for the one project in
+   front of the member. And `renderFiltered`'s Projects arm is gone, because a
+   project row does not open a document.
+
+   THE THREE READS THAT DECIDE WHAT IS SHOWN, all of them the plane's:
+
+     op=projectparticipants  THE VISIBILITY READ, asked FIRST and alone. The
+       store answers NO_SUCH_PROJECT — in its own words — to anyone with no
+       participation row who is not an administrator, and 7.9 makes that the
+       SAME answer an absent project gets. So an uninvited member's workspace
+       renders that refusal and NOTHING else: no title, no objective, no
+       participant, no arithmetic, no control. This surface never decides that;
+       it asks, and renders what came back.
+
+     op=projectownerarith    THE DENOMINATOR, for THIS project (REC-30 made the
+       `live` arm gated, so an invisible project's live row is ownerMath(0) —
+       byte-identical to a nonexistent one). Never recomputed here.
+
+     op=backlinks            WHAT IS IN THE PROJECT, REC-25's gated reverse
+       read. Never a client-side walk.
+
+   THE INVITED-NOT-JOINED MEMBER sees the SKELETON and not the participant list.
+   The plane is explicit that this is the reader's to apply — `viewerPredicate`
+   says invited and joined "differ in how much of the project they see, which is
+   a per-FIELD distinction the reader applies; both can see that the project
+   exists, so both pass here". So the withholding is done HERE, and it is a
+   WITHHOLDING and never a refusal: the page says what it is not showing yet and
+   why, in its own voice, and claims nothing about what the record would answer.
+
+   DEC-8. NO REFUSAL RENDERED ON THIS PAGE WAS COMPUTED ON THIS PAGE. Every
+   roster act is sent, and whatever comes back that is a refusal is rendered
+   through `actRefusalHtml` — the plane's sentence, its code, unmodified. There
+   is no pre-flight here and there deliberately is none: the seven roster ops
+   are POSITION-enforced by the store (affordances.mjs says so in as many
+   words), the position the store judges is `by`, which the control plane stamps
+   from the session, and the only honest dry run of "would the store let me" is
+   the store. What this page DOES decide is which controls EXIST, and every one
+   of those rules is a PLANE-PUBLISHED FACT: my own row in
+   op=projectparticipants (owner / joined / invited), and op=whoami's
+   `capabilities` and `administer`. A capability a member does not hold is
+   ABSENT and never greyed (section 5, Q12).
+
+   Plane ops consumed (I3), never reshaped: op=projectparticipants,
+   op=projectownerarith, op=projectownerremove (through UI-3's ballot),
+   op=projectinvite, op=projectjoin, op=projectleave, op=projectremove,
+   op=projectowneradd, op=projectownerrescue, op=projectfork, op=list,
+   op=projection, op=image, op=backlinks, op=whoami.
+   ============================================================ */
+
+/* THE PROJECTS SCREEN. `op=list` is gated (REC-25), so a project this member
+   was never invited to is not in the answer — the screen shows what the record
+   shows this credential and never mentions a count of what it withheld. */
+async function renderProjects(){
+  $("#content").innerHTML = `<h1 class="rec">Projects</h1>
+    <p class="lede">A project is a workspace: a group of people, an objective, the questions and documents they are working on, and a work product that becomes ready one recorded evaluation at a time. Opening one opens the workspace, not a document.</p>
+    <div id="recrows-holder"><p class="count-line">Loading&hellip;</p></div>`;
+  try{
+    const list = (await loadRecord()).filter(b=>normalizeType(b.object_type)==="project");
+    const paint = ()=>{ $("#recrows-holder").innerHTML = listTable(list, false); wireProjectRows(); };
+    LIST_REPAINT = paint;
+    paint();
+  }catch(e){ $("#content").innerHTML = errPane(e); }
+}
+/* The one difference from `wireRows`, and it is the item: a project row opens
+   the WORKSPACE. */
+function wireProjectRows(){
+  $("#content").querySelectorAll("tr.row").forEach(r=>r.onclick=()=>openProjectWorkspace(r.dataset.id));
+}
+
+/* WHERE THIS CREDENTIAL STANDS IN THIS PROJECT, read off op=projectparticipants'
+   own rows and off op=whoami. Nothing here is inferred and nothing is a rule of
+   ours: `owner` and `state` are the store's fields for MY row, `administer` and
+   `capabilities` are what whoami published about this credential. */
+function projectPosition(parts, me){
+  const list = Array.isArray(parts) ? parts.filter(p=>p&&typeof p==="object") : [];
+  const mine = me ? (list.find(p=>p.handle===me) || null) : null;
+  const caps = (PLANE.me && PLANE.me.capabilities) || [];
+  return {
+    participants: list,
+    mine,
+    /* The two states are read EXACTLY, not as each other's negation. `leaving`
+       is a third state the store writes when a participant ASKS to leave (7.6),
+       and it is neither: a leaving member has seen the project and is not shown
+       the skeleton again, and holds no act until an owner acts on the request. */
+    joined:  !!(mine && mine.state==="joined"),
+    invited: !!(mine && mine.state==="invited"),
+    owner:   !!(mine && mine.owner),
+    /* An administrator with no row of their own reads every project (7.7) and
+       directs none of them; the ONE participation power they hold is 7.13's
+       rescue, and the store judges its condition. */
+    administers: !!(PLANE.me && PLANE.me.administer),
+    forks: caps.includes("create_projects"),
+    session: !!(PLANE.me && PLANE.me.session),
+  };
+}
+/* Q12. ONE sentence, surface-scoped and PLANE-SOURCED — op=whoami's `session`,
+   or the store's own `state` on my participation row. It narrates the
+   CREDENTIAL and its POSITION and never a control: nothing on this page is
+   greyed, nothing is described as unavailable, and no act is named that is not
+   offered. It renders only when this credential is offered nothing, because a
+   page with controls needs no explanation of the ones it does not have. */
+function projectCredentialSentence(pos, hasControls){
+  if(hasControls) return "";
+  if(!pos.session)
+    return `<p class="subj-note">This credential is not a member session, so the record puts it on no project.</p>`;
+  if(pos.mine)
+    return `<p class="subj-note">The record puts this account on this project as <b>${esc(String(pos.mine.state))}</b>.</p>`;
+  return `<p class="subj-note">The record puts this account on no row of this project.</p>`;
+}
+
+/* THE OBJECTIVE. C-2.9 requires it non-empty on every project, so an absent one
+   is a fact worth stating rather than a blank: the record either holds the
+   group's statement of what this project is for, or it does not, and nothing is
+   written in its place. */
+function projectObjectiveHtml(objective){
+  return objective
+    ? `<div class="card"><div class="prose"><p>${esc(objective)}</p></div></div>`
+    : `<div class="empty">This project's document carries no objective. Every project is required to state one, so this is a gap in the record and not a project without a purpose &mdash; nothing is written here on the group's behalf.</div>`;
+}
+
+/* THE READINESS LADDER. The rung is the RECORD'S — `workproduct_state` as the
+   project's document declares it — and the evaluations below it are the ones
+   the record HOLDS, rendered as the dated facts they are. This page advances
+   nothing and judges nothing: a rung moves when an evaluation is RECORDED, and
+   recording one is not an act this surface offers. Which rung an evaluation
+   would earn is the plane's arithmetic (C-9.1) and is deliberately not restated
+   here, because restating it would be this page asserting an eligibility it did
+   not compute. */
+function projectLadderHtml(ws, evals){
+  const declared = (ws===undefined || ws===null || ws==="") ? null : String(ws);
+  const known = declared!==null && WORKPRODUCT_STATES.includes(declared);
+  const rungs = WORKPRODUCT_STATES.map(s=>{
+    const on = known && s===declared;
+    return `<div class="pf-row ${on?"ok":"no"}"><span class="pf-mark">${on?"●":"○"}</span>`
+         + `<span class="pf-body"><span class="pf-title">${esc(WORKPRODUCT_WORD[s])}</span>`
+         + (on?`<span class="pf-need">Where the record says this work product stands.</span>`:``)
+         + `</span></div>`;
+  }).join("");
+  const head = declared===null
+    ? `<div class="empty">The record declares no work-product state for this project. That is an absence, not a claim that the work is unstarted.</div>`
+    : (known ? `` : `<div class="empty">The record declares a work-product state this surface does not recognise: <span class="mono">${esc(declared)}</span>. It is shown as itself rather than folded into a rung.</div>`);
+  const rows = (Array.isArray(evals)?evals:[]).filter(e=>e&&typeof e==="object");
+  const evalHtml = rows.length
+    ? `<div class="card">${rows.map(e=>`<div class="kv"><span class="k">${esc(String(e.kind||"—"))} &middot; ${esc(String(e.strictness||"—"))}</span><span class="v plain">${esc(String(e.result||"—"))}${e.timestamp?` &middot; ${esc(fmtWhenFull(e.timestamp))}`:""}${e.findings_ref?` &middot; findings: <span class="mono">${esc(String(e.findings_ref))}</span>`:""}</span></div>`).join("")}</div>`
+    : `<div class="empty">The record holds no evaluation of this work product yet. The ladder moves when one is recorded, and recording one is not something this page does.</div>`;
+  return `${head}<div class="card">${rungs}</div>
+    <h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">The evaluations the record holds</h3>
+    <p class="subj-note">Each one as it was recorded &mdash; what was evaluated, how strictly, what came of it, and when. The rung above advances on these and on nothing decided here.</p>
+    ${evalHtml}`;
+}
+
+/* WHO IS WORKING ON THIS — ONE op=projectparticipants call, for the project in
+   front of the member. The handles, their standing and who owns it are the
+   store's own row fields. */
+function projectParticipantsHtml(pos){
+  const list = pos.participants;
+  if(!list.length)
+    return `<div class="empty">The record lists nobody on this project.</div>`;
+  return `<table class="rec"><thead><tr><th>Handle</th><th>Standing</th><th>Owner</th></tr></thead><tbody>`
+    + list.map(p=>{
+        const you = pos.mine && p.handle===pos.mine.handle;
+        return `<tr><td class="ttl">${esc(p.handle)}${you?` <span class="mm-cover">(you)</span>`:""}</td>`
+          + `<td>${esc(String(p.state||"—"))}${p.comment?` <span class="mm-cover">${esc(String(p.comment))}</span>`:""}</td>`
+          + `<td>${p.owner?`<span class="chip elevated" title="An owner invites, removes, and votes on this project's ownership (Section 7).">owner</span>`:`<span class="mm-none">&mdash;</span>`}</td></tr>`;
+      }).join("")
+    + `</tbody></table>`;
+}
+
+/* THE OWNERSHIP ARITHMETIC, MOVED HERE FROM THE MEMBERS SCREEN. The denominator
+   is read STRAIGHT off op=projectownerarith's `live` row for THIS project
+   through UI-3's own `ballotDenominatorHtml`, and the two-owner divergence
+   through UI-3's own `ballotDivergenceHtml` — REUSED, never re-derived, because
+   a second copy of floor(n/2)+1 is a second copy that drifts. */
+function projectOwnershipHtml(arith){
+  if(!arith || !arith.live)
+    return `<div class="empty">The ownership arithmetic could not be read for this project with this credential.</div>`;
+  return ballotDenominatorHtml(arith.live, null)
+       + (Array.isArray(arith.table) ? ballotDivergenceHtml(arith.table) : "");
+}
+
+/* WHAT IS IN THIS PROJECT. A container's contents, and nothing about how strong
+   any of it is: type, state and title, which is what a container knows. The
+   grade, the strength and the conclusion of a question live on the QUESTION,
+   which is one click away — and the harness asserts none of them can appear
+   here. */
+function projectContentsHtml(refs, back){
+  const rows = [];
+  for(const r of (Array.isArray(refs)?refs:[])){
+    if(!r || !r.target) continue;
+    rows.push(`<div class="linkrow" onclick="openByType(${esc(JSON.stringify(String(r.target)))})"><span class="lt">${esc(String(r.target))}</span><span class="ln">this project ${esc(String(r.rel||"cites"))} it${r.status?` &middot; ${esc(String(r.status))}`:""}${r.note?` &middot; ${esc(String(r.note))}`:""}</span></div>`);
+  }
+  for(const b of (Array.isArray(back)?back:[])){
+    if(!b || !b.from) continue;
+    rows.push(`<div class="linkrow" onclick="openByType(${esc(JSON.stringify(String(b.from)))},${esc(JSON.stringify(String(b.from_type||"")))})"><span class="lt">${esc(String(b.from_title||b.from))}</span><span class="ln">${esc(typeLabel(b.from_type, b.from_state))} &middot; ${esc(String(b.rel||"cites"))} this project${b.note?` &middot; ${esc(String(b.note))}`:""}</span></div>`);
+  }
+  return rows.length
+    ? `<div class="card" style="padding:4px 18px">${rows.join("")}</div>`
+    : `<div class="empty">Nothing is in this project yet: it cites nothing and nothing in the record points at it.</div>`;
+}
+/* One click, the right surface: a question opens the QUESTION page, a project
+   opens its own workspace, everything else opens as a document. */
+function openByType(id, type){
+  const t = normalizeType(type||"");
+  if(t==="inquiry" || /^(INQ|FOCUS|PROB)-/.test(String(id))) return openInquiry(id);
+  if(t==="project" || /^PROJ-/.test(String(id))) return openProjectWorkspace(id);
+  return openBundle(id);
+}
+
+/* ---- THE SEVEN ROSTER OPS AND THEIR CALL SITES ----
+   One table, one dialog, one commit path. Each entry names the OP, the label,
+   the fields the op takes, and the PLANE-PUBLISHED POSITION that makes the
+   control exist. There is no pre-flight and no refusal text: the store judges
+   the position from the `by` the control plane stamps, and whatever it says
+   comes back through `actRefusalHtml` in its own words. */
+const ROSTER_ACTS = {
+  projectjoin: { label:"Join this project", op:"projectjoin", fields:[],
+    what:"Joining is selecting the checkbox: there is no acceptance ceremony, and it is what turns the skeleton you can see into the project's own record.",
+    where: p => p.invited },
+  projectleave: { label:"Ask to leave", op:"projectleave", fields:[["comment","A note, if you want one","optional"]],
+    what:"Unchecking the box is a REQUEST to leave. It does not remove you — an owner does that — and what it records is that you asked.",
+    where: p => p.joined },
+  projectinvite: { label:"Invite someone", op:"projectinvite", fields:[["handle","Their handle","required"]],
+    what:"An owner invites by handle. An invited member sees the project's skeleton until they join.",
+    where: p => p.owner },
+  projectremove: { label:"Remove a participant", op:"projectremove", fields:[["handle","Their handle","required"],["comment","A note, if you want one","optional"]],
+    what:"An owner removes a participant from the project. Ownership is not ended this way — that is the ballot.",
+    where: p => p.owner },
+  projectowneradd: { label:"Add an owner", op:"projectowneradd", fields:[["handle","Their handle","required"]],
+    what:"The sole owner may add a second alone. Every addition past that needs the agreement of ALL existing owners, and the record reports who has agreed and who has not.",
+    where: p => p.owner },
+  projectownerrescue: { label:"Add an owner to a stranded project", op:"projectownerrescue",
+    fields:[["handle","Their handle","required"],["reason","Your reason","required"]],
+    what:"The single exception to administrators holding no authority over projects. The record judges whether this project is stranded; this page does not, and does not guess.",
+    where: p => p.administers },
+  projectfork: { label:"Fork this project", op:"projectfork", fields:[["newId","The new project's id","required"],["title","Its name","required"]],
+    what:"A fork is a clone with a recorded origin. Participants are not copied.",
+    where: p => p.joined && p.forks },
+};
+
+let WORKSPACE = null;   // { id, title, pos, arith }
+
+/* The ballot's CALL SITE. It takes nothing: the project and its title come from
+   the workspace the member is looking at, which is what makes this a call site
+   and not a second way of typing the same arguments a test would. */
+function projectBallotGo(){
+  if(!WORKSPACE) return;
+  return openBallotDialog(WORKSPACE.id, WORKSPACE.title);
+}
+/* THE CONTROLS THAT EXIST, and nothing about the ones that do not. Every rule
+   below is a plane-published fact (my participation row, my capabilities, my
+   administer right); a control this credential holds no position for is ABSENT,
+   never present-and-refused and never greyed. */
+function projectRosterBarHtml(pos){
+  const btns = [];
+  for(const [id, a] of Object.entries(ROSTER_ACTS))
+    if(a.where(pos))
+      btns.push(`<button class="btn ghost" onclick="openRosterAct(${esc(JSON.stringify(id))})">${esc(a.label)}&hellip;</button>`);
+  /* UI-3's ballot, reached at last. `canBallot` is the act's own
+     session-shaped affordance and stays its author's; the POSITION is the
+     store's `owner` flag on my row. */
+  if(pos.owner && canBallot())
+    btns.push(`<button class="btn ghost" onclick="projectBallotGo()">Remove an owner&hellip;</button>`);
+  if(!btns.length) return "";
+  return `<div class="rv-bar" style="margin:8px 0 0;gap:8px">${btns.join("")}</div>`;
+}
+
+/* ONE dialog for all seven. The fields are the op's own parameters, EMPTY at
+   ship and never prefilled; the commit sends them and renders what came back. */
+let ROSTER_CTX = null;
+function openRosterAct(actId){
+  const a = ROSTER_ACTS[actId];
+  if(!a || !WORKSPACE) return;
+  ROSTER_CTX = { actId, projectId: WORKSPACE.id };
+  const flds = a.fields.map(([name,label,req])=>
+    `<label class="fld" for="ra-${esc(name)}">${esc(label)}</label>
+     <input class="txt" id="ra-${esc(name)}" autocomplete="off">`).join("");
+  $("#dlg").innerHTML =
+    `<h2>${esc(a.label)}</h2>
+     <p class="what">${esc(a.what)}</p>
+     <div class="dz-what"><span class="dz-ttl">${esc(WORKSPACE.title||WORKSPACE.id)}</span><span class="id">${esc(WORKSPACE.id)}</span></div>
+     ${flds}
+     <div id="ra-err" class="teach hidden"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
+       <button class="btn" id="ra-go" onclick="doRosterAct()">${esc(a.label)}</button></div>`;
+  $("#dlg-wrap").classList.remove("hidden");
+}
+async function doRosterAct(){
+  if(!ROSTER_CTX) return;
+  const a = ROSTER_ACTS[ROSTER_CTX.actId];
+  const params = { projectId: ROSTER_CTX.projectId };
+  for(const [name] of a.fields){
+    const el = $("#ra-"+name);
+    /* Sent as authored, including empty: the store decides what a missing
+       field means and says so in its own words. */
+    params[name] = el ? String(el.value||"") : "";
+  }
+  const go = $("#ra-go"); if(go){ go.disabled = true; go.textContent = "…"; }
+  const r = await actAsk(a.op, params);
+  if(!r.accepted){
+    const err = $("#ra-err");
+    if(err){ err.innerHTML = actRefusalHtml(r.refusal); err.classList.remove("hidden"); }
+    if(go){ go.disabled = false; go.textContent = a.label; }
+    return { refused:true, reason: r.refusal && r.refusal.reason };
+  }
+  RECORD_CACHE = null;            // participation or ownership changed
+  const res = r.result || {};
+  const rows = Object.keys(res).filter(k=>k!=="ok" && res[k]!==null && res[k]!==undefined)
+    .map(k=>`<div class="kv"><span class="k">${esc(k)}</span><span class="v plain">${esc(Array.isArray(res[k])?res[k].join(", "):String(res[k]))}</span></div>`).join("");
+  $("#dlg").innerHTML =
+    `<div class="dz-receipt"><div class="dz-rhead">Recorded.</div>
+       <p class="dz-rlede">What the record wrote, in its own fields.</p>
+       <div class="dz-rgrid">${rows}</div>
+       <div class="row-btns"><button class="btn" onclick="closeDialog();openProjectWorkspace(${esc(JSON.stringify(ROSTER_CTX.projectId))})">Done</button></div>
+     </div>`;
+  return res;
+}
+
+let PROJ_HASH_LOCK = false;
+async function openProjectWorkspace(id, fromNav){
+  if(!fromNav) navRemember();
+  CUR = { type:"project", key:id };
+  setActive("projects"); liveStop();
+  const crumb = `<p class="crumb"><a onclick="go('projects')">Projects</a> &rsaquo; <span>the workspace</span></p>`;
+  $("#content").innerHTML = `${crumb}<p class="count-line">Loading&hellip;</p>`;
+  try{
+    if(typeof location !== "undefined" && location.hash !== undefined && location.hash !== "#project/"+id){
+      PROJ_HASH_LOCK = true; try{ location.hash = "#project/"+id; }finally{ PROJ_HASH_LOCK = false; }
+    }
+  }catch(_){}
+  WORKSPACE = null;
+  try{
+    /* THE VISIBILITY READ, FIRST AND ALONE. 7.9: an uninvited member cannot see
+       that a project EXISTS, and the store answers them exactly what it answers
+       for a project that does not. Nothing else is asked until this clears, so
+       there is no second read whose timing, count or error could say that
+       something is there. */
+    const pp = await actAsk("projectparticipants", { projectId:id });
+    if(!pp.accepted){
+      $("#content").innerHTML = `${crumb}${actRefusalHtml(pp.refusal)}`;
+      return;
+    }
+    const me = (PLANE.me && PLANE.me.handle) || null;
+    const pos = projectPosition((pp.result||{}).participants, me);
+
+    const [img, proj] = await Promise.all([
+      getImage(id, true).catch(()=>null),
+      getProjection(id),
+    ]);
+    const { fm, body } = splitFm(typeof (img||{})["bundle.md"]==="string" ? img["bundle.md"] : "");
+    let fmj = null; try{ fmj = proj && proj.fm_json ? JSON.parse(proj.fm_json) : null; }catch(_){}
+    const title = fm.title || (proj&&proj.title) || id;
+    const state = fm.current_state || (proj&&proj.current_state) || vocabFor(FIRST_STATE, "project");
+    const objective = (fmj && typeof fmj.objective==="string" && fmj.objective.trim()) ? fmj.objective.trim() : "";
+    WORKSPACE = { id, title, pos };
+
+    /* WHAT IS IN IT, both directions, one gated read each and no walk. */
+    let back = null, backErr = null;
+    try{ back = await recR("backlinks", { target:id }); }catch(e){ backErr = e; }
+    const refs = (fmj && Array.isArray(fmj.references)) ? fmj.references : [];
+    const contents = backErr ? errPane(backErr)
+                             : projectContentsHtml(refs, (back && back.backlinks) || []);
+
+    const controls = projectRosterBarHtml(pos);
+    const header = `${crumb}
+      <div class="trow"><h1 class="rec">${esc(title)}</h1></div>
+      <p class="lede">Project &middot; <span class="mono">${esc(state)}</span></p>
+      ${projectCredentialSentence(pos, !!controls)}
+      <h2 class="sec">What this project is for</h2>
+      ${projectObjectiveHtml(objective)}`;
+
+    /* THE SKELETON (7.9). An invited member who has not joined sees that the
+       project exists, what it is for and what is in it, and NOT who is working
+       on it, the work product, or the ownership arithmetic. This is a
+       WITHHOLDING by this page, said plainly and in this page's own voice — it
+       asserts nothing about what the record would answer, and the one control
+       offered is the one that ends it. */
+    if(pos.invited){
+      $("#content").innerHTML = `${header}
+        <h2 class="sec">What is in this project</h2>${contents}
+        <h2 class="sec">Who is working on this</h2>
+        <p class="subj-note">You have been invited to this project and have not joined it. Until you do, this page shows you the project's skeleton &mdash; that it exists, what it is for, and what is in it &mdash; and does not show you who is working on it, the state of its work product, or how its ownership changes hands. Joining is one act and it is below.</p>
+        ${controls}`;
+      return;
+    }
+
+    /* THE DENOMINATOR, for THIS project. REC-30 gated the `live` arm, so an
+       invisible project answers ownerMath(0) and a nonexistent one answers the
+       same — this read cannot be used to find out that a project is there. */
+    let arith = null;
+    const ar = await actAsk("projectownerarith", { projectId:id });
+    if(ar.accepted) arith = ar.result || null;
+    if(WORKSPACE) WORKSPACE.arith = arith;
+
+    $("#content").innerHTML = `${header}
+      <h2 class="sec">How ready the work product is</h2>
+      <p class="subj-note">The rung below is the record's own, carried on this project's document. It moves when an evaluation is RECORDED against the work &mdash; not when anyone, here or elsewhere, judges that it should.</p>
+      ${projectLadderHtml(fmj && fmj.workproduct_state, fmj && fmj.evaluations)}
+      <h2 class="sec">What is in this project</h2>
+      <p class="subj-note">The questions, documents and actions this project carries. What each one RESTS ON, how strong it is and what it concluded live on the question itself, one click away: a project is a container with membership and access control, and a question is a claim structure &mdash; this page does not answer for the other.</p>
+      ${contents}
+      <h2 class="sec">Who is working on this</h2>
+      <p class="subj-note">Every participant of this project, read in one call from the record. Every participant sees the handles of all the others (Section 7.8).</p>
+      ${projectParticipantsHtml(pos)}
+      <h2 class="sec">How ownership changes hands</h2>
+      <p class="subj-note">Computed by the record for this project as it stands, and shown beside the act that uses it &mdash; a denominator with no act beside it teaches that governance is something you read.</p>
+      ${projectOwnershipHtml(arith)}
+      ${controls}`;
+  }catch(e){ $("#content").innerHTML = `${crumb}${errPane(e)}`; }
+}
+
+/* The route. `#project/<id>` is a real address: it survives a reload and can be
+   handed to another member — who gets the plane's answer for THEIR credential,
+   which for an uninvited member is that there is no such project. */
+function projectRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#project\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  openProjectWorkspace(m[1]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!PROJ_HASH_LOCK) projectRouteFromHash(); }); }catch(_){}
+/*__PROJECT_WORKSPACE_END__*/
+
 
 /*__CONCLUDE_ACT_START__*/
 /* ============================================================
@@ -6416,17 +6890,28 @@ function ballotPreflight({ live, owners, target, me, reason }){
    inventing a denominator. */
 let BALLOT_CTX = null;   // { projectId, projectTitle, owners:[handle], me, live, table }
 async function openBallotDialog(projectId, projectTitle){
-  let arith;
-  try{ arith = await rec("projectownerarith", { projectId }); }
-  catch(e){
+  /* D-173, CORRECTED 2026-08-04 by UI-16 when this dialog finally got a call
+     site. Both reads below went through `rec`, which returns the ENVELOPE —
+     every Durable-Object answer arrives as `{ok:true, result:<the store's own
+     return>}` — so `arith.live` and `pp.participants` were `undefined` against
+     the real plane and the dialog could not have worked once. And a store
+     REFUSAL is a VALUE inside that envelope, not a throw, so the `catch` arms
+     these reads used could never fire. `actAsk` is the one helper that opens
+     the envelope and carries a refusal back as a refusal, so both are taken
+     through it and the plane's own words are what render. act-ballot's mock
+     answered UNWRAPPED and therefore agreed with itself — corrected with the
+     surface, in the same turn. */
+  const ar = await actAsk("projectownerarith", { projectId });
+  if(!ar.accepted){
     $("#dlg").innerHTML = `<h2>Remove a project owner</h2>
-      <div class="teach">${ballotRefusalHtml(e)}</div>
+      <div class="teach">${actRefusalHtml(ar.refusal)}</div>
       <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Close</button></div>`;
     $("#dlg-wrap").classList.remove("hidden"); return;
   }
+  const arith = ar.result || {};
   let owners = [];
-  try{ const pp = await rec("projectparticipants", { projectId });
-       owners = (pp.participants||[]).filter(p=>p.owner).map(p=>p.handle); }catch(_){ owners = []; }
+  const pp = await actAsk("projectparticipants", { projectId });
+  if(pp.accepted) owners = ((pp.result||{}).participants||[]).filter(p=>p.owner).map(p=>p.handle);
   const me = (PLANE.me && PLANE.me.handle) || (PLANE.me && PLANE.me.member) || "";
   BALLOT_CTX = { projectId, projectTitle, owners, me, live:arith.live, table:arith.table };
   const first = owners.find(h=>h!==me) || owners[0] || "";
@@ -6505,23 +6990,29 @@ async function doBallot(){
     return { refused:true, reason:pf.refusal.reason };
   }
   if(go){ go.disabled = true; go.textContent = "…"; }
-  try{
-    // `by` is NOT sent — the plane stamps who is voting from the session.
-    const res = await rec("projectownerremove", { projectId: ctx.projectId, handle: target, reason });
+  /* D-173 again, and this one was the worse half: VOTES_SHORT is a store
+     REFUSAL, which arrives as a VALUE inside the envelope and never as a throw,
+     so the `catch` arm that rendered the running tally was UNREACHABLE against
+     the real plane — the one receipt this act exists to show. Read through
+     `actAsk`, where a refusal is a refusal. */
+  // `by` is NOT sent — the plane stamps who is voting from the session.
+  const a = await actAsk("projectownerremove", { projectId: ctx.projectId, handle: target, reason });
+  if(a.accepted){
     RECORD_CACHE = null;            // ownership changed
+    const res = a.result || {};
     ballotReceipt({ carried:true, res, target, reason, ctx });
     return res;
-  }catch(e){
-    if(e && e.reason==="VOTES_SHORT"){
-      // the vote WAS recorded; the ballot is open. Show the tally, not an error.
-      ballotReceipt({ carried:false, res:e, target, reason, ctx });
-      return { recorded:true, ...e };
-    }
-    if(go){ go.disabled=false; go.textContent = "Cast this vote"; }
-    if(err){ err.innerHTML = ballotRefusalHtml(e); err.classList.remove("hidden"); }
-    ballotValidate();
-    return { refused:true, reason:e && e.reason };
   }
+  const e = a.refusal || {};
+  if(e.reason==="VOTES_SHORT"){
+    // the vote WAS recorded; the ballot is open. Show the tally, not an error.
+    ballotReceipt({ carried:false, res:e, target, reason, ctx });
+    return { recorded:true, ...e };
+  }
+  if(go){ go.disabled=false; go.textContent = "Cast this vote"; }
+  if(err){ err.innerHTML = actRefusalHtml(e); err.classList.remove("hidden"); }
+  ballotValidate();
+  return { refused:true, reason:e.reason };
 }
 /* THE RECEIPT — what the plane returned, in the record's terms. The tally is
    read FROM the return (VOTES_SHORT have/need/deciders, or the carried
@@ -6565,12 +7056,11 @@ function ballotReceipt({ carried, res, target, reason, ctx }){
      </div>`;
 }
 /* A real plane refusal renders in the PLANE'S OWN VOICE, offenders named,
-   nothing written — the same rule as release and dispose. */
-function ballotRefusalHtml(e){
-  const head = esc([e && e.reason, e && e.error].filter(Boolean).join(" · ") || "The plane refused, and cast no vote.");
-  const detail = (e && e.detail) ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
-  return `<b>${head}</b>${detail}`;
-}
+   nothing written. DELETED 2026-08-04 by UI-16 and replaced by `actRefusalHtml`
+   at both call sites: `ballotRefusalHtml` composed a sentence of its own ("The
+   plane refused, and cast no vote") whenever the plane's answer carried no
+   words, which is precisely the shape DEC-8 forbids and which UI-12's plumbing
+   already solves in one place for every act. */
 
 async function renderMonitoring(){
   $("#content").innerHTML = `<h1 class="rec">Monitoring &amp; developments</h1><p class="lede">What changed, or needs a second look. A re-evaluate flag means something a document depends on moved; a monitored document is re-checked against its live source on a schedule.</p><div id="mon"><p class="count-line">Loading&hellip;</p></div>`;
@@ -6698,7 +7188,14 @@ function founderReconcileHtml(liveAdmins, rosterAdminRows){
   return `<p class="mm-reconcile">The count above includes <b>${unlisted}</b> administrator${unlisted===1?"":"s"} the roster does not list a row for: the founding administrator holds the group through the hosting account itself, so they carry no member entry and cannot be removed from inside the application. They are counted here because the vote count is honest about who exists, not only about who is listed.</p>`;
 }
 
-function governanceHtml(adminArith, ownerArith, rosterAdminRows){
+/* UI-16 DELETED the `ownerArith` half of this section — the project-ownership
+   divergence table — and MOVED it onto the project workspace, beside the ballot
+   that consumes it. It was rendered here over `op=projectownerarith` with NO
+   projectId, so its `live` row was null and the member was shown a denominator
+   for no project, on a screen carrying no act: showing a denominator where
+   nobody can vote teaches that governance is something you read. The table is
+   unchanged and still rendered by `ballotDivergenceHtml`; only its home moved. */
+function governanceHtml(adminArith, rosterAdminRows){
   let out = `<section class="mm-gov"><h2>How power changes hands here</h2>`
           + `<p class="mm-lede">These are the group&rsquo;s own rules, computed by the record. Nothing on this screen changes anything &mdash; it only shows you the arithmetic so you can check it yourself.</p>`;
   if(adminArith && adminArith.live){
@@ -6708,55 +7205,23 @@ function governanceHtml(adminArith, ownerArith, rosterAdminRows){
   } else {
     out += `<p class="mm-note">The administrator arithmetic could not be read with this account.</p>`;
   }
-  if(ownerArith && Array.isArray(ownerArith.table)){
-    out += `<div class="mm-sub">Project ownership follows the same rule, with one deliberate divergence:</div>`;
-    out += ballotDivergenceHtml(ownerArith.table);   // REUSED from UI-3
-  }
+  out += `<p class="mm-note">Project ownership follows the same rule with one deliberate divergence, and the arithmetic for it is shown on each project's own workspace &mdash; beside the ballot that uses it, for the project it is about.</p>`;
   return out + `</section>`;
 }
 
-/* PER-MEMBER PROJECT OWNERSHIP. op=memberlist does not carry which projects a
-   member owns, so it is answered by a BOUNDED fan-out over the record's project
-   bundles (op=projectparticipants each). It degrades HONESTLY: a project that
-   cannot be read is skipped rather than guessed, and if the projects cannot be
-   listed at all the roster says ownership could not be read rather than
-   implying nobody owns anything. A DELEGATION in CLAIMS.md proposes op=memberlist
-   carry an `owns` projection so this N+1 is not needed. */
-const MM_OWNERSHIP_CAP = 80;
-async function memberOwnership(){
-  let record;
-  try{ record = await loadRecord(); }
-  catch(_){ return { ok:false, owns:new Map() }; }
-  const projects = (record||[]).filter(h=>(h.object_type||h.type)==="project");
-  const owns = new Map();   // handle -> [{ id, title }]
-  let capped = false;
-  const slice = projects.slice(0, MM_OWNERSHIP_CAP);
-  if(projects.length > MM_OWNERSHIP_CAP) capped = true;
-  for(const p of slice){
-    const pid = p.bundle_id || p.id;
-    if(!pid) continue;
-    try{
-      const pp = await rec("projectparticipants", { projectId: pid });
-      for(const part of (pp.participants||[])){
-        if(!part.owner) continue;
-        const arr = owns.get(part.handle) || [];
-        arr.push({ id: pid, title: p.title || pid });
-        owns.set(part.handle, arr);
-      }
-    }catch(_){ /* a project this account cannot read is skipped, never guessed */ }
-  }
-  return { ok:true, owns, capped, projectCount: projects.length };
-}
-function memberOwnsHtml(m, ownedInfo){
-  if(!ownedInfo || !ownedInfo.ok)
-    return `<span class="mm-none" title="The list of projects could not be read with this account, so ownership is not shown rather than guessed.">not read</span>`;
-  const key = m.handle;
-  const owned = (key && ownedInfo.owns.get(key)) || [];
-  if(!owned.length) return `<span class="mm-none">&mdash;</span>`;
-  return owned.map(p=>`<span class="chip elevated" title="Owns this project: an owner invites, removes, and votes on its ownership (Section 7).">${esc(p.title)}</span>`).join(" ");
-}
-
-function rosterRow(m, ownedInfo){
+/* PER-MEMBER PROJECT OWNERSHIP — `MM_OWNERSHIP_CAP`, `memberOwnership` and
+   `memberOwnsHtml` DELETED 2026-08-04 by UI-16, along with the roster's `Owns`
+   column. They answered "which projects does each member own" with a CLIENT-SIDE
+   FAN-OUT: one `op=projectparticipants` per project bundle, capped at 80, on a
+   screen that is about members and not about any one project. WHY IT IS GONE
+   rather than tuned: (1) the question it answered is answered exactly, in ONE
+   call, on the project workspace, for the project the member is looking at;
+   (2) the cap made the answer silently partial past 80 projects, which is a
+   completeness claim the roster could not support; (3) it rebuilt, in the
+   browser, a cross-project participation view that REC-25 had just made the
+   plane's to decide. The DELEGATION proposing an `owns` projection on
+   op=memberlist is therefore withdrawn as unnecessary: nothing consumes it. */
+function rosterRow(m){
   const handle = m.handle || m.member_id || m.member || m.id || "";
   const cover  = m.cover || m.name || "";
   const pending = m.invite_pending ? ` <span class="chip collected" title="An invitation has been issued and not yet spent.">invite pending</span>` : "";
@@ -6765,7 +7230,6 @@ function rosterRow(m, ownedInfo){
     <td>${memberRoleBadge(m)}${pending}</td>
     <td>${memberStatusBadge(m)}</td>
     <td>${memberCapsHtml(m)}</td>
-    <td>${memberOwnsHtml(m, ownedInfo)}</td>
   </tr>`;
 }
 
@@ -6774,22 +7238,24 @@ async function renderMembers(){
     + `<p class="lede">Who holds power in this group, and the rules by which it changes hands. Members sign in with a handle and password; a cover is a label, not a legal name; a password can never publish, only a registered key can. This screen only SHOWS &mdash; adding or removing a member, or a key, happens elsewhere, as a decision the group can check.</p>`
     + `<div id="mm-gov"></div><h2 class="mm-rh">The roster</h2><div id="mm">Loading&hellip;</div>`;
   try{
-    /* Read the roster and the two arithmetic ops together; ownership fans out
-       over the projects. A failure in one does not blank the others. */
-    const [rosterR, adminR, ownerR, ownedInfo] = await Promise.all([
+    /* Read the roster and the administrator arithmetic together. A failure in
+       one does not blank the other.
+       D-173, CORRECTED 2026-08-04 by UI-16: `op=adminarith` was read through
+       `rec`, which returns the ENVELOPE, so `adminArith.live` was `undefined`
+       and this screen's whole governance panel rendered "the administrator
+       arithmetic could not be read with this account" against every real plane.
+       `recR` opens the envelope; op=memberlist beside it always did. */
+    const [rosterR, adminR] = await Promise.all([
       rec("memberlist").catch(e=>({ __err:e })),
-      rec("adminarith").catch(()=>null),
-      rec("projectownerarith").catch(()=>null),
-      memberOwnership().catch(()=>({ ok:false, owns:new Map() })),
+      recR("adminarith").catch(()=>null),
     ]);
     if(rosterR && rosterR.__err){ $("#mm").innerHTML = errPane(rosterR.__err); }
     const members = (rosterR && !rosterR.__err && (rosterR.result && (rosterR.result.members||rosterR.result))) || [];
     const rosterAdminRows = members.filter(m=>memberRole(m)==="admin" && (m.status?m.status==="active":true)).length;
-    $("#mm-gov").innerHTML = governanceHtml(adminR, ownerR, rosterAdminRows);
+    $("#mm-gov").innerHTML = governanceHtml(adminR, rosterAdminRows);
     if(!(rosterR && rosterR.__err)){
       $("#mm").innerHTML = members.length
-        ? `<table class="rec mm-roster"><thead><tr><th>Member</th><th>Class</th><th>Standing</th><th>May</th><th>Owns</th></tr></thead><tbody>${members.map(m=>rosterRow(m, ownedInfo)).join("")}</tbody></table>`
-          + (ownedInfo && ownedInfo.capped ? `<p class="mm-note">Ownership was read for the first ${MM_OWNERSHIP_CAP} of ${ownedInfo.projectCount} projects.</p>` : "")
+        ? `<table class="rec mm-roster"><thead><tr><th>Member</th><th>Class</th><th>Standing</th><th>May</th></tr></thead><tbody>${members.map(m=>rosterRow(m)).join("")}</tbody></table>`
         : `<div class="empty">No members listed, or this account cannot read the roster.</div>`;
     }
   }catch(e){ $("#mm").innerHTML = errPane(e); }
