@@ -1943,3 +1943,96 @@ actually FITS the CPU envelope in workerd, or that memory holds (a 3300×2550 RG
 frame is 33.6 MB against a 128 MB isolate). This entry measures the PLAN and nothing
 else. The engine's numbers are CPDF-12's to produce, on the runtime, in reference
 iterations — the `op=cpuprobe` pattern, because a Worker cannot time itself (D-56).
+
+## 2026-08-04, UI-31: the plane vocabulary standing on the PRE-AUTHENTICATION surfaces (evidence for DEC-49)
+
+DEC-49 asks who owns member-facing refusal wording. D-174's trigger fired when
+REC-41 gave `op=login` a refusal SENTENCE and UI-30 rendered it verbatim at the
+sign-in gate. Until this measurement the tension was UNMEASURED rather than
+accepted: UI-4's vocabulary guard and its siblings are each scoped to their own
+rendered surface and every one of those surfaces is behind a credential, so **no
+guard in this repository covered any pre-authentication surface at all**. This is
+what is actually there. It is evidence for a ruling, not an argument for one, and
+nothing in `app.html` was changed to produce it.
+
+**Instrument.** `civicos-ui/test/preauth-vocabulary.test.mjs`, in the harness
+`node civicos-ui/test/run.mjs` runs. It drives `app.html` in a VM with no
+credential and prints `PRE-AUTH VOCABULARY REPORT:` lines. Re-run it rather than
+reasoning about the numbers below.
+
+**What was walked**, and the walk is discovered rather than listed: the gate's own
+markup names its controls, `publishedRouteFromHash`'s own body names the addresses
+that resolve at load, and the sibling suites' own sweeps supply the terms.
+**12 surfaces, 10 scenarios, 33,412 characters** — the gate as served, its token
+panel, its address field, a refused sign-in, a sign-in against an unreachable
+plane, an empty token, the public record, the design preview, and both published
+addresses (`#published`, `#case/<id>`) resolved AT LOAD by `app.html`'s own
+top-level code for somebody holding nothing.
+
+**Subjects: 74 terms inherited from the sibling sweeps, plus two structural rules**
+(SCREAMING_SNAKE identifiers; bare 2–4 character acronyms that never appear in
+ordinary case on the same surface). Matching is substring matching, exactly as
+every sibling sweep matches, so `register` matches *registered*.
+
+**Result: 13 terms, on 5 of the 12 surfaces, 67 occurrences in the rendered HTML
+and 56 of them in text a member reads.**
+
+| Term | ×HTML (visible) | Owner | Where it comes from |
+| --- | --- | --- | --- |
+| `sha256` | 30 (26) | BOTH | plane on the case page; surface on the index and the case page |
+| `op=` | 12 (8) | BOTH | plane's `bytes`/`verification` pointers; surface's own verify links |
+| `manifest` | 7 (7) | INCIDENTAL | the case page, surface-authored |
+| `this instance` | 4 (4) | BOTH | the login refusal AND the case page's `detail`; also surface-authored |
+| `bundle.md` | 3 (3) | UNAVOIDABLE | the plane's `parts[].path` on the case page |
+| `handle` | 3 (1) | INCIDENTAL | the gate's own field label, "Member handle" |
+| `MEMBER_TOKEN` | 2 (1) | INCIDENTAL | the gate's own field LABEL, printed to a member |
+| `a salted derivation` | 1 (1) | UNAVOIDABLE | `Store.LOGIN_REFUSAL_DETAIL`, at the gate |
+| `CORS` | 1 (1) | INCIDENTAL | `teach()`'s unreachable-plane fallback, at the gate |
+| `its stored hash` | 1 (1) | UNAVOIDABLE | `Store.LOGIN_REFUSAL_DETAIL`, at the gate |
+| `no active credential` | 1 (1) | UNAVOIDABLE | `Store.LOGIN_REFUSAL_DETAIL`, at the gate |
+| `R2` | 1 (1) | INCIDENTAL | the design preview's own note |
+| `register` | 1 (1) | UNAVOIDABLE | `Store.LOGIN_REFUSAL_DETAIL` ("never registered") |
+
+**UNAVOIDABLE / INCIDENTAL is a statement about WHO WOULD HAVE TO ACT, not about
+whether a word is bad.** It is mechanical: each occurrence is located in the
+rendered HTML and attributed to the plane if it sits inside a run of text the
+plane supplied (raw or escaped) and to the surface otherwise. UNAVOIDABLE means
+plane-sourced — DEC-8 forbids this surface translating it or blanking it, so
+nothing UI can do removes it and only DEC-49 can. INCIDENTAL means the surface
+wrote the word and could word it differently tomorrow without touching a ruling.
+
+### The three things in this that bear on DEC-49
+
+1. **The refusal sentence is FIVE of the thirteen and is the only UNAVOIDABLE
+   group at the gate itself.** Everything else UNAVOIDABLE is on the published
+   case page, where the vocabulary is hashes and file paths a stranger needs in
+   order to verify without this instance's cooperation — which is the product
+   claim, not an accident of wording. So the wording question DEC-49 asks is
+   narrower than the count suggests: at the gate it is one constant.
+2. **More than half of what a member meets before authenticating is the SURFACE's
+   own vocabulary, not the plane's** — 8 of 13 terms are INCIDENTAL or have an
+   incidental half, including `MEMBER_TOKEN` printed as a field LABEL and `CORS`
+   and `R2` in prose. **Neither answer to DEC-49 touches any of them.** Answer (a)
+   rewords the plane; answer (b) licenses surfaces to translate what the plane
+   sent. A surface's OWN words are outside both, and if the ruling is expected to
+   fix what a member reads at the gate, that is a separate piece of work.
+3. **`this instance` arrives by both routes** — the plane says it in the refusal
+   and the case page's `detail`, and the surface also says it — so a ruling that
+   moves it in one place leaves it standing in the other.
+
+### What this does not establish
+
+The plane-sourced column is a LOWER BOUND on the two published ops. The login
+refusal is exact (read textually out of `bio-plane/src/store.mjs`, never typed),
+but `op=publishedmanifest` and `op=publishedcase` are driven from wire-shaped
+fixtures in the suite, so a live instance's `detail` sentences may carry terms
+these do not. The surface-authored column is exact everywhere: it is read off the
+shipped `app.html`. The acronym rule stops at four characters, because at five it
+reports emphasis (`SERVE`, `WHOLE`) more often than acronyms.
+
+**This measurement settles nothing about who owns the wording.** The guard REPORTS
+and does not fail, because a guard failing on a state Bob has not ruled on would
+leave the surface only the two moves DEC-8 forbids — compose a translation, or
+blank what the plane said. When DEC-49 is answered it becomes a failing arm by
+setting `REPORT_ONLY` to `false` at the arm; `UI31_ENFORCE=1` runs that arm today
+and it fails naming all thirteen terms with their sources.
