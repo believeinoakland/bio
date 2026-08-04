@@ -81,7 +81,25 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             the unreachable letter in its own letters — a FOURTH copy of the
             doctrine, which REC-48's scope had not counted — while the `why:`
             line directly above it already interpolated the ceiling. */
-         EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
+         EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
+         /* REC-46 (2026-08-04): the ONE machine-identity predicate, and the ONE
+            spelling of the stamp `index.mjs` writes. This file used to answer
+            "is this a machine" for itself, ELEVEN times, in two hand-typed
+            shapes — `!who || who === "member" || /^token:/.test(who)` at nine
+            act guards and `/^token:/.test(actor)` at two more — while the
+            catalog answered the same question a third way with a word list that
+            knew nothing of the prefix. That is D-164's "solve it once" with
+            three unsynchronised answers, and REC-45 measured what it cost: the
+            gate accepted `asserted_by: token:member`.
+            `isMachineStamp` is the NARROW question (did the control plane mint
+            this identity) and `isMachineIdentity` the whole one; the two task
+            acts take the narrow one deliberately, and the reason is at those
+            sites. `MACHINE_AUTHOR_PREFIX` replaces this class's own copy of the
+            literal, which a suite used to prove-by-parsing agreed with
+            index.mjs — it is now the same string rather than a proven-equal
+            one. */
+         isMachineIdentity, isMachineStamp,
+         MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
@@ -2561,7 +2579,7 @@ export class Store extends DurableObject {
         named, set refused whole. */
   release({ handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_RELEASE",
                detail: "the collected-to-verified transition is a named member's decision (Intake Doctrine "
                      + "section 4, C-18.1). A machine credential may read and may prepare the review packet, "
@@ -2733,7 +2751,7 @@ export class Store extends DurableObject {
    * is a promotion, and then it concludes like any other. */
   conclude({ target, conclusion = "", falsifier = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE",
                detail: "a conclusion is a named member's assertion about what the record shows. A machine "
                      + "credential may SURFACE a question, gather what it rests on and prepare the answer, "
@@ -2915,7 +2933,7 @@ export class Store extends DurableObject {
    * DERIVED on read (see #actionDerived) and what to do about it is the member's. */
   actionMove({ target, to, reason = "", resolution = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_MOVE_ACTION",
                detail: "moving an action is a named member's decision to reach outside this system, or to "
                      + "declare that reaching out is finished. A machine credential may prepare an action and "
@@ -3067,7 +3085,7 @@ export class Store extends DurableObject {
   actionCorrespond({ target, direction = "", at = "", medium = "", party = "",
                      artifactSha = "", account = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_CORRESPOND",
                detail: "a correspondence entry is a named member's statement that this exchange happened — "
                      + "and on the testimony arm it IS the evidence. A machine credential may capture bytes "
@@ -3370,7 +3388,7 @@ export class Store extends DurableObject {
    * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_REOPEN",
                detail: "reopening is a named member's judgement that a question the group set down has to "
                      + "be worked again. A machine credential may surface a question and pursue one, and "
@@ -3589,7 +3607,7 @@ export class Store extends DurableObject {
                 statement = "", excluded = null, subjectPosition = "",
                 subjectJustification = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_PUBLISH",
                detail: "publishing puts the group's name on a case. A machine credential may prepare one and "
                      + "may never author the completeness assertion or the position on putting it to its "
@@ -4088,7 +4106,7 @@ export class Store extends DurableObject {
    * — is refused rather than quietly given a state its contract never had. */
   divide({ target, reason = "", children = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_DIVIDE",
                detail: "dividing is a named member's judgement that the group's own question was malformed — "
                      + "that it was two questions — and that judgement carries a name. A machine credential "
@@ -4624,7 +4642,7 @@ export class Store extends DurableObject {
    */
   groundInquiry({ target, grounds, reason = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_GROUND",
                detail: "grouping is a named member's judgement that some of their reasons are enough on "
                      + "their own to carry their answer, and it is the one act in this record that makes a "
@@ -5034,7 +5052,7 @@ export class Store extends DurableObject {
      happen is a bar that gates while saying nothing about which axis it gates. */
   strengthBarSet({ group = null, capture = null, connection = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_DECLARE",
                detail: "the required evidentiary strength is the GROUP's declaration about its own work. A "
                      + "machine credential may not make it. Sign in as a member." };
@@ -9091,8 +9109,16 @@ export class Store extends DurableObject {
    *  writer, and it is what `capture-completed-unattended` reads. The literal
    *  lives at the trust boundary in index.mjs; this constant is the reader's
    *  copy, and the suite parses index.mjs's own source to prove the two agree
-   *  rather than trusting that they do. */
-  static QUEUE_MACHINE_AUTHOR_PREFIX = "token:";
+   *  rather than trusting that they do.
+   *
+   *  CORRECTED 2026-08-04 (REC-46), and the correction is the item's whole
+   *  argument in one line: there is no longer a reader's COPY to prove equal to
+   *  a writer's literal. Both are `MACHINE_AUTHOR_PREFIX`, imported from the
+   *  catalog, so the stamp and the read are the SAME STRING and cannot drift at
+   *  all. This alias stays because the name says what the value is FOR here —
+   *  the manifest-author read `capture-completed-unattended` walks — and
+   *  because the GLOB below is built from it. */
+  static QUEUE_MACHINE_AUTHOR_PREFIX = MACHINE_AUTHOR_PREFIX;
 
   /** One step UP the graph from a node: the edges an ancestor is reached by.
    *
@@ -14757,10 +14783,19 @@ export class Store extends DurableObject {
    *  on these two verbs the control plane stamps every machine credential
    *  `token:<class>` (never a bare class word), while the bare string "admin" is
    *  a LEGITIMATE actor here — it is ROOT_ADMIN's own session (`#isAdminMember`)
-   *  — so a bare-class arm would refuse the root administrator's browser. */
+   *  — so a bare-class arm would refuse the root administrator's browser.
+   *
+   *  REC-46 (2026-08-04): that difference SURVIVED the sweep rather than being
+   *  smoothed away, and it is the one site in this class that means something
+   *  narrower. These two verbs ask `isMachineStamp` — did the control plane
+   *  MINT this identity — while the nine act guards ask `isMachineIdentity`,
+   *  which additionally refuses a bare class word and a surface/AI name. Both
+   *  are derived from the SAME `MACHINE_STAMP_PREFIXES` in the catalog, so the
+   *  spelling still moves in one place and moves here too; what is deliberately
+   *  not shared is the bare-class arm, for the reason in the paragraph above. */
   taskForward({ id = null, to = null, actor = null, now = null } = {}) {
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
-    if (/^token:/.test(String(actor)))
+    if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
       return { ok: false, reason: "MACHINE_CANNOT_FORWARD",
                detail: "forwarding a task hands an obligation to a named person, and deciding who is "
                      + "better placed to answer it is a member's judgement. A machine credential may "
@@ -14804,7 +14839,7 @@ export class Store extends DurableObject {
    *  rather than discharging it. Nothing a drain does closes an obligation. */
   taskResolve({ id = null, actor = null, now = null } = {}) {
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
-    if (/^token:/.test(String(actor)))
+    if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
       return { ok: false, reason: "MACHINE_CANNOT_RESOLVE",
                detail: "resolving a task says the obligation the record raised has been answered, and "
                      + "that is a named member's act. A machine credential may surface a task, route it "

@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (RUN 2026-08-05, rec33-agent, FOUR arms; 56/56 green before and after, and src/index.mjs, src/query.mjs, src/store.mjs and src/livefire.mjs sha256-compared BYTE-IDENTICAL after every arm) (a) THE ITEM'S OWN — GRANT THE CLASS ONE OP BEYOND ITS TWO: add "daemon" to `purge`'s `classes` in src/index.mjs -> 3 FAIL, every one naming purge: the totality assertion (want ["acquire","monitor"] got ["acquire","monitor","purge"]), the named purge refusal, and the whole-table sweep (got ["purge"]) — and the daemon reaches the PURGE HANDLER, answering "purge requires confirm=<store>", one query parameter from emptying the live record. (b) THE INERT-CLASS ARM — drop `daemon` from viewerPredicate's class alternation in src/query.mjs -> 6 FAIL: op=monitor under the daemon credential answers for a bundle it cannot see, the tick does not land, no monitor-tick reaches the history — while the ADMIN tick and BOTH archive arms stay green, which is what makes it a viewer-gate failure and not an auth one. (c) THE CONFINEMENT ARM — guard the `cls === "daemon" && body?.via !== "archive.org"` refusal in op=acquire with `false &&` -> 2 FAIL and the daemon CAPTURES a document off the DIRECT arm (ok:true), which is the scope Bob ruled, gone. (d) THE FALLBACK ARM — make `#monitorToken()` in src/store.mjs return `this.env.DAEMON_TOKEN` alone -> 4 FAIL, the instance that has NOT been updated reporting its monitoring consumer unconfigured and firing nothing. ARM (d) ALSO CORRECTED THE INSTRUMENT: its first run THREW on `fired.monitor.fired.map` instead of failing — D-93 inside a negative control, readingname's arm (a) and REC-39's arm (f-a) again — so that read is guarded and the arm now reports all four. */
+/* NEGATIVE CONTROL: (RUN 2026-08-05, rec33-agent, FOUR arms; 56/56 green before and after, and src/index.mjs, src/query.mjs, src/store.mjs and src/livefire.mjs sha256-compared BYTE-IDENTICAL after every arm) (a) THE ITEM'S OWN — GRANT THE CLASS ONE OP BEYOND ITS TWO: add "daemon" to `purge`'s `classes` in src/index.mjs -> 3 FAIL, every one naming purge: the totality assertion (want ["acquire","monitor"] got ["acquire","monitor","purge"]), the named purge refusal, and the whole-table sweep (got ["purge"]) — and the daemon reaches the PURGE HANDLER, answering "purge requires confirm=<store>", one query parameter from emptying the live record. (b) THE INERT-CLASS ARM — drop `daemon` from viewerPredicate's class alternation in src/query.mjs -> 6 FAIL: op=monitor under the daemon credential answers for a bundle it cannot see, the tick does not land, no monitor-tick reaches the history — while the ADMIN tick and BOTH archive arms stay green, which is what makes it a viewer-gate failure and not an auth one. (c) THE CONFINEMENT ARM — guard the `cls === "daemon" && body?.via !== "archive.org"` refusal in op=acquire with `false &&` -> 2 FAIL and the daemon CAPTURES a document off the DIRECT arm (ok:true), which is the scope Bob ruled, gone. (d) THE FALLBACK ARM — make `#monitorToken()` in src/store.mjs return `this.env.DAEMON_TOKEN` alone -> 4 FAIL, the instance that has NOT been updated reporting its monitoring consumer unconfigured and firing nothing. ARM (d) ALSO CORRECTED THE INSTRUMENT: its first run THREW on `fired.monitor.fired.map` instead of failing — D-93 inside a negative control, readingname's arm (a) and REC-39's arm (f-a) again — so that read is guarded and the arm now reports all four. (ARM (b) RE-RUN 2026-08-04 by REC-46 against its CORRECTED pin, because that item replaced this suite's source-text match on `class:(admin|member|probe|daemon)` with an assertion on what `viewerPredicate` ANSWERS — a pin on the source would have gone red for a refactor that changed no answer, and green for a regex that recognised all four classes and then compiled DENY. Arm (b) still bites at exactly its recorded strength: `daemon` dropped from the alternation in src/query.mjs -> 50 pass, 6 FAIL, unchanged from the 2026-08-05 run; hygiene.test.mjs additionally fires its REC-46 stated-limit pin, because the parser and the mint have stopped being the same string. src/query.mjs restored byte-identically, sha256 208e8aa476a53bc5d678f816d85f58169259be1434dc5314df40f8f8d62d3a4e compared before and after; whole suite 56 pass.) */
 /* REC-33 / DEC-37: the DAEMON_TOKEN class — the UNATTENDED PATH, scoped.
  *
  * WHAT THIS CLOSES. Every monitor tick and every archive fallback on every
@@ -65,6 +65,9 @@ const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const INDEX_SRC = readFileSync(IDX, "utf8");
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
 const QUERY_SRC = readFileSync(fileURLToPath(new URL("../src/query.mjs", import.meta.url)), "utf8");
+/* REC-46: the compiler itself, so the class-recognition assertion below can ask
+   the FUNCTION what it answers instead of asking its source what it says. */
+import { viewerPredicate } from "../src/query.mjs";
 const LIVEFIRE_SRC = readFileSync(fileURLToPath(new URL("../src/livefire.mjs", import.meta.url)), "utf8");
 const TOKENS_SRC = readFileSync(fileURLToPath(new URL("../src/tokens.mjs", import.meta.url)), "utf8");
 
@@ -122,8 +125,24 @@ t("classify() recognises DAEMON_TOKEN, and through liveToken like every other cl
     + "which is exactly why PROBE_TOKEN was not the answer",
     /"daemon"/.test(body), false);
 }
+/* PIN CORRECTED 2026-08-04 (REC-46), never exempted, and the old one was weaker
+   than it looked. It matched the LITERAL TEXT `class:(admin|member|probe|daemon)`
+   in query.mjs's source, so it was a pin on how the recognition happens rather
+   than on whether it happens — it would have gone red for a refactor that kept
+   every answer identical, and green for a regex that recognised the four
+   classes and then compiled a DENY. REC-46 composed the `class:` prefix from
+   the catalog (one spelling for the mint and the parser), which is exactly such
+   a refactor. So this now asserts the ANSWER, which is what the sentence always
+   claimed: the daemon class compiles a view that can see something, and the
+   three other machine classes are unmoved beside it. A member still compiles
+   the participation filter, and an unrecognised viewer still fails closed —
+   both stated here, because "recognises class:daemon" is only worth asserting
+   if the function is still discriminating at all. */
 t("viewerPredicate recognises class:daemon (without it the class authenticates and can do nothing)",
-  /class:\(admin\|member\|probe\|daemon\)/.test(QUERY_SRC), true);
+  [viewerPredicate("class:daemon").scope, viewerPredicate("class:admin").scope,
+   viewerPredicate("class:member").scope, viewerPredicate("class:probe").scope,
+   viewerPredicate("member:carol").scope, viewerPredicate("class:nobody").scope],
+  ["member", "member", "member", "member", "participant", "DENY"]);
 t("#monitorToken reads DAEMON_TOKEN FIRST with the ADMIN_TOKEN fallback RETAINED",
   /return \(this\.env && \(this\.env\.DAEMON_TOKEN \|\| this\.env\.ADMIN_TOKEN\)\) \|\| null;/.test(STORE_SRC), true);
 t("livefire's token-hygiene sweep knows the new binding's name",

@@ -13,8 +13,18 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    reason — op=acquire STAMPS the direct-fetch capture grade, and the letter it
    stamps is the ceiling `checkEarnedLeg` enforces rather than a copy that
    happens to agree. One value, read where it is refused. */
+/* REC-46 (2026-08-04): the two prefixes this file STAMPS on a machine
+   credential now come from the catalog rather than being typed here twenty
+   times. This is the trust boundary and the mint, so it is where the value used
+   to live — but store.mjs held a copy of one of them and the catalog's gate
+   knew about NEITHER, which is how `asserted_by: token:member` reached the
+   record through op=promote (REC-45's measurement). One home, one spelling: a
+   refusal that reads one literal while the stamp writes another is exactly the
+   drift D-164 exists to stop. Nothing on the wire moves — the composed stamps
+   are character-identical while the prefixes are `token:` and `class:`. */
 import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
-         completenessFields, sectionText, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
+         completenessFields, sectionText, EARNED_CAPTURE_CEILING,
+         MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 /* REC-22 / DEC-34: the container serialiser. The manifest REC-14 writes carries
    a `layout` block that says how the parts assemble; this module reads it and
    writes the zip, so nothing about the container's shape is decided twice. */
@@ -1933,7 +1943,7 @@ export default {
       /* REC-25: the D-15 viewer stamp, server-side from the authenticated
          identity exactly as the passthrough reads take it below. An object the
          viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. */
-      const affViewer = viaSession ? `member:${sessMember}` : `class:${cls}`;
+      const affViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
       const facts = (await (await st.fetch(
         `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`)).json()).result;
       if (!facts || facts.ok !== true)
@@ -1983,7 +1993,7 @@ export default {
     if (op === "queue") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const inner = new URL("http://do/queue");
-      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
       inner.searchParams.set("member", viaSession ? sessMember : "");
       for (const k of ["now", "limit"]) {
         const v = url.searchParams.get(k);
@@ -3503,7 +3513,7 @@ export default {
       /* REC-25: the store's image read fails closed without a viewer. The
          monitor is a machine caller acting as itself, so it reads at its own
          credential's scope, which D-15 deliberately leaves unfiltered. */
-      const img = (await (await stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `class:${cls}`)}`)).json()).result;
+      const img = (await (await stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`)}`)).json()).result;
       if (!img || typeof img["bundle.md"] !== "string")
         return json({ ok: false, reason: "ABSENT", bundleId }, 404);
       const live = img["bundle.md"];
@@ -3670,7 +3680,7 @@ export default {
       /* REC-25: ratification reads at the RATIFIER'S scope — a bundle the
          caller may not see cannot be assembled for their signature, and the
          answer is the same ABSENT a hidden bundle would give anywhere else. */
-      const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `class:${cls}`);
+      const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
       const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`)).json()).result;
       const r2 = typeof env.CAPTURES?.head === "function";
       /* The catalog resolves references against the whole store, so it needs
@@ -4078,7 +4088,7 @@ export default {
        lost update — it makes the courtesy lock reachable by a named daemon.
        The store additionally refuses a null/blank actor by name, so a bypass of
        this stamp fails closed rather than tripping the NOT NULL constraint. */
-    if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `token:${cls}`);
+    if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* D-15: whose view a query compiles for is decided by the SERVER, from the
        credential that authenticated, and set AFTER the caller's parameters were
        copied so a caller-supplied `viewer` is overwritten rather than honoured.
@@ -4146,7 +4156,7 @@ export default {
         || op === "earnedbasis"
         || QUEUE_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
-      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
     /* D-157: WHETHER THIS CALLER ADMINISTERS, decided by the SERVER from the
        credential that authenticated, and set AFTER the caller's parameters were
@@ -4195,7 +4205,7 @@ export default {
        is worth nothing if the caller names the credential. */
     if (op === "select" || op === "selection" || op === "selectionlist" ||
         op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
-      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `class:${cls}`);
+      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* Who cited is part of the record, and citing writes a Session Log entry
        carrying the name. Stamped like every other authorship in this file: a
        browser cannot write history as someone else, and a machine credential
@@ -4213,7 +4223,7 @@ export default {
        makes a finding stronger. */
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op)
         || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op))
-      inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
        overwritten rather than honoured: "only an owner may remove" is worth
@@ -4221,7 +4231,7 @@ export default {
        plainly that it was a machine, which matches no participation row and no
        administrator, so it is refused by the store rather than let through. */
     if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
-      inner.searchParams.set("by", viaSession ? sessMember : `class:${cls}`);
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
     /* create_projects (section 5) and the 7.1 owner claim, in one place.
      *
@@ -4257,7 +4267,7 @@ export default {
            project. */
         delete b.author;
         if (viaSession) { b.author = sessMember; b.actorMemberId = sessMember; }
-        else b.author = `token:${cls}`;
+        else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({ ok: false, reason: "NOT_CAPABLE", op, needs: "create_projects",
@@ -4318,8 +4328,8 @@ export default {
     if ((op === "expertisedeclare" || op === "expertiseconfirm") && passBody) {
       try {
         const b = JSON.parse(passBody);
-        if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `class:${cls}`;
-        else b.by = viaSession ? sessMember : `class:${cls}`;
+        if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        else b.by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
@@ -4332,7 +4342,7 @@ export default {
     if ((op === "entitycreate" || op === "entityalias" || op === "relationdeclare") && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
@@ -4345,7 +4355,7 @@ export default {
     if ((op === "resolve" || op === "resolvetestify") && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.resolvedBy = viaSession ? sessMember : `class:${cls}`;
+        b.resolvedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
@@ -4359,7 +4369,7 @@ export default {
     if (op === "progressiondefine" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
@@ -4379,7 +4389,7 @@ export default {
     if (op === "thread" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.threadedBy = viaSession ? sessMember : `class:${cls}`;
+        b.threadedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
@@ -4392,7 +4402,7 @@ export default {
     if (op === "discharge" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
@@ -4406,14 +4416,14 @@ export default {
     if (op === "proposedispose" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.decidedBy = viaSession ? sessMember : `class:${cls}`;
+        b.decidedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
     if (op === "inboxresolve" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.by = viaSession ? sessMember : `token:${cls}`;
+        b.by = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
@@ -4433,7 +4443,7 @@ export default {
     if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain") && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.actor = viaSession ? sessMember : `token:${cls}`;
+        b.actor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
