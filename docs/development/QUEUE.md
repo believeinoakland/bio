@@ -274,6 +274,58 @@ must never be satisfied by words nobody in the importing group wrote.
 **Nothing in the bias doctrine needed changing to support any of this**, which is the
 strongest evidence the construct was right.
 
+### 2026-08-04 · BOB · DEC-46 — five bias corrections, and one of them OVERRULES yesterday's DEC-45
+
+**No contradiction existed, and that is the first finding.** Bob flagged *"bias debt must
+clear before publication"* against *"bias is integral to a published case"* as a conflict.
+**DEC-20 already ruled it on 2026-08-02, in his own words** — only a HUNCH blocks; ordinary
+declared bias is disclosed and TRAVELS. The recorded principle: *bias debt is DISCLOSED;
+hunch debt is DISQUALIFYING, because a hunch inflates a GRADE and ordinary bias only frames
+interpretation.* **But the author of the ruling re-read his own text as contradictory, which
+is the evidence that the VOCABULARY is broken** — `debt` means specifically *hunch* in that
+sentence and nothing says so. **D-188**, the D-156 class, free right now: no table, op or
+surface names either sense. Fix is a documentation pass — say HUNCH DEBT where the
+disqualifying rule is meant.
+
+**DEC-45's determination 2 is OVERRULED — import lands in a NEW PROJECT, not projectless.**
+I wrote that the travelling bias manifest preserves the source lens, so findings could arrive
+projectless. **It preserves the lens as a RECORD and does not make it USABLE — that is the
+half I missed.** The manifest is *"(bias bundle id, revision) plus a hash of the computed
+effective statement set"*, and those bundle ids belong to the SOURCE instance. The importing
+instance holds no such bundles, so the manifest alone is a **dangling reference**: it proves
+which lens was used and cannot re-run it. Regrade needs the STATEMENTS; statements live in
+bias bundles adopted at instance or project level; adopting a foreign group's bias at
+INSTANCE level would re-lens the entire instance. **So project level is the only correct
+home, and it must be a NEW project so an import cannot quietly alter an existing project's
+effective bias for work already in it.**
+
+This RECONCILES with DEC-45's per-finding association rather than discarding it — it makes
+it the second step:
+- **IMPORT** → a NEW project per DISTINCT source bias, carrying the imported lens intact so
+  regrade is computable locally. (Per distinct bias, because merging two source lenses into
+  one landing project would compute every later diff against a lens nobody ever used.)
+- **THEN** association of a finding with an EXISTING project is a separate authored act, and
+  that is where regrade fires and shows what moves.
+
+**Three more, all adopted:**
+- **The bias acknowledgement is AUTHORED AT EXPORT, never a pre-check checkbox** (Bob).
+  DEC-13's shape one construct over: the publisher authors it in the ceremony, fresh per
+  edition, never prefilled — beside the completeness statement and the subject position in
+  REC-14's publish block, and carrying the same negative control (a carried-forward
+  acknowledgement must FAIL). The manifest is COMPUTED and stamped; the ACKNOWLEDGEMENT is
+  AUTHORED. Two different things travelling together.
+- **REGRADE is a first-class member capability, not an import side effect** — comparing a
+  finding set's conclusions under two effective biases is valuable in its own right, and
+  import is merely one CALLER. Place it on the bias work, not inside M6. Its honest limit
+  travels with every use: it cannot synthesise the analysis a different group would have
+  written, so a clean diff means the analysis that EXISTS survives.
+- **A project's own bias must be VISIBLE on its surfaces** — **D-189**. MEASURED: the UI's
+  only notion of declared bias today is hunch legs (`app.html:12776`, verbatim: *"DECLARED
+  BIAS is the HUNCH legs and nothing else"*), and D-84 records that `object_type: bias` does
+  not exist in the catalogue so a bias bundle cannot be written at all. A requirement on
+  UNBUILT work — stating it now is what stops the project surfaces being built bias-blind and
+  retrofitted, which is the same reason the import ruling had to arrive before import does.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
@@ -776,7 +828,7 @@ behind-interface: I3
 depends-on: none
 accepts-when: `cd bio-plane && npm run test:battery` green with a suite authoring a partition through the op (asserted_by/at server-stamped and a caller's values ignored), a RESTRUCTURE refused without a reason and recorded with one when given, a machine credential refused by name, the same checkGrounds refusals firing through the act as through promote, and op=affordances publishing it; `npm run test:coverage` --strict exit 0; negative control — accept a caller-supplied asserted_by and the suite fails (an attribution the caller can hand us is one a caller can invent).
 added: 2026-08-04 · CONDUCT (REC-42's routed gap)
-landed: (merge on main, worker eece435) — the act on op=publish's stamping shape; asserted_by/at SERVER-STAMPED with the caller's values DISCARDED not overridden; the one checkGrounds function at both gates; machine refused by name; published through affordances. FIRST AUTHORSHIP vs RESTRUCTURE decided FROM THE RECORD, never from a parameter: first authorship iff the standing document carries no partition at all — everything else is a restructure and needs a reason, INCLUDING REMOVING one, because a caller who could declare 'this is my first time' would walk past the reason gate on every restructuring. Carry-forward is per group: an unchanged group keeps its existing asserted_by/at; a group whose membership MOVED becomes this member's assertion NOW — re-stamping everything would erase the one thing DEC-32 says the date is for. PROMPT warranted and published (division's argument one notch sharper: OR takes the maximum, so this is the ONE act that raises a grade with no new evidence), every clause mechanism this plane enforces, asserted clause by clause — and DEC-32 clause 1 honoured: neither the prompt nor the label says AND, OR, disjunction, branch, or the word ground. inquiryground.test.mjs 81; battery 97/97 (5327) with the +85 ATTRIBUTED not asserted and four sibling suites measured UNCHANGED against HEAD~1; hygiene 572; --strict exit 0, 130/130. NC RUN (make the act honour a caller-supplied attribution → 7 fail, all in one block, the stored bundle.md carrying an invented name, a 2020 backdate and a machine asserter — while every OTHER block stays green, which is why it would have been invisible in any other measurement). FOUR ITEMS ROUTED: REC-46 (the machine-identity predicate — checkGrounds refuses a word list and knows nothing of the token: prefix index.mjs actually stamps, so the hand-written door is half-open); DEC-46 (a grouped question cannot take a new leg — the route exists through this act, so nothing blocks); the operational-test wording RULED by CONDUCT to belong on the SURFACE per DEC-32's own assignment (noted on UI-27, no DEC needed); IC-19 recorded, I3 → 5.12.0.
+landed: (merge on main, worker eece435) — the act on op=publish's stamping shape; asserted_by/at SERVER-STAMPED with the caller's values DISCARDED not overridden; the one checkGrounds function at both gates; machine refused by name; published through affordances. FIRST AUTHORSHIP vs RESTRUCTURE decided FROM THE RECORD, never from a parameter: first authorship iff the standing document carries no partition at all — everything else is a restructure and needs a reason, INCLUDING REMOVING one, because a caller who could declare 'this is my first time' would walk past the reason gate on every restructuring. Carry-forward is per group: an unchanged group keeps its existing asserted_by/at; a group whose membership MOVED becomes this member's assertion NOW — re-stamping everything would erase the one thing DEC-32 says the date is for. PROMPT warranted and published (division's argument one notch sharper: OR takes the maximum, so this is the ONE act that raises a grade with no new evidence), every clause mechanism this plane enforces, asserted clause by clause — and DEC-32 clause 1 honoured: neither the prompt nor the label says AND, OR, disjunction, branch, or the word ground. inquiryground.test.mjs 81; battery 97/97 (5327) with the +85 ATTRIBUTED not asserted and four sibling suites measured UNCHANGED against HEAD~1; hygiene 572; --strict exit 0, 130/130. NC RUN (make the act honour a caller-supplied attribution → 7 fail, all in one block, the stored bundle.md carrying an invented name, a 2020 backdate and a machine asserter — while every OTHER block stays green, which is why it would have been invisible in any other measurement). FOUR ITEMS ROUTED: REC-46 (the machine-identity predicate — checkGrounds refuses a word list and knows nothing of the token: prefix index.mjs actually stamps, so the hand-written door is half-open); DEC-47 (a grouped question cannot take a new leg — renumbered from a colliding DEC-46; the route exists through this act, so nothing blocks); the operational-test wording RULED by CONDUCT to belong on the SURFACE per DEC-32's own assignment (noted on UI-27, no DEC needed); IC-19 recorded, I3 → 5.12.0.
 
 ### REC-46 · queued
 milestone: M9
