@@ -51,7 +51,13 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
    queue item and an op=affordances answer for the same subject and the same
    viewer cannot disagree. The act METADATA (needs/mode/rung) still composes at
    the control plane, where NEEDS, SESSION_OPS and RUNGS live. */
-import { DISPOSITIONS, REOPENABLE_FROM, deriveActs } from "./affordances.mjs";
+/* REC-35: and the intent layer's three closed vocabularies, on the SAME footing
+   as DISPOSITIONS — the refusals below are written here, the array is written
+   once there, and op=affordances publishes that same array. A kind this file
+   admits and the catalogue does not publish (or the reverse) is not reachable
+   by editing one place, which is the whole of the guarantee. */
+import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
+         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS } from "./affordances.mjs";
 /* REC-21: the queue's PERSONAL half. The CONDITION-kind vocabulary the mute
    fence refuses against, and the ONE admission decision the feed applies — pure,
    so the suite holds the rule directly rather than only through a Durable
@@ -5691,13 +5697,15 @@ export class Store extends DurableObject {
      serves (D-83): safeguard 4's four SUBJECT kinds, plus the framework's entity
      kinds (framework:248). Closed and validated at the write path, so introducing a
      kind outside it is a loud refusal rather than a silent new vocabulary -- the
-     spirit of safeguard 4, where introducing a new SUBJECT is a reviewed act. */
-  static #ENTITY_KINDS = new Set([
-    /* safeguard 4's SUBJECT kinds */ "source", "institution", "office", "movement",
-    /* the framework's entity kinds */ "person", "body", "ordinance", "parcel", "contract", "fund",
-  ]);
-  /* The three DECLARED-relation predicates safeguard 4 names, and only these. */
-  static #RELATION_KINDS = new Set(["proxy_for", "member_of", "overlaps"]);
+     spirit of safeguard 4, where introducing a new SUBJECT is a reviewed act.
+     REC-35: the ARRAY moved to affordances.mjs (DISPOSITIONS' arrangement, and
+     the reasoning for the direction is written there) and op=affordances now
+     publishes that same array. This is a lookup derived from it, not a copy:
+     there is no second list to fall out of step with the published one. */
+  static #ENTITY_KINDS = new Set(ENTITY_KINDS);
+  /* The three DECLARED-relation predicates safeguard 4 names, and only these.
+     REC-35: same arrangement -- one array, published and enforced. */
+  static #RELATION_KINDS = new Set(RELATION_KINDS);
 
   /* The case-folded, whitespace-collapsed form the alias reverse index keys on, so
      "City Clerk", "city clerk" and "  City   Clerk " are one lookup. */
@@ -6286,8 +6294,14 @@ export class Store extends DurableObject {
   }
 
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
-     crucial one -- a lawful skip needs an exception document (slice B). */
-  static #REQUIREDNESS = new Set(["always", "usually", "sometimes", "never", "unless_exception"]);
+     crucial one -- a lawful skip needs an exception document (slice B).
+     REC-35: the ARRAY moved to affordances.mjs and is published there; this is
+     the lookup derived from it. #REQUIRED_FIRES below is a DIFFERENT set and
+     deliberately did not move -- it is the policy of which requiredness values
+     fire a finding (DEC-9's, Bob's to rule), not the vocabulary a member may
+     declare, and publishing the two together would offer a surface a choice
+     that is not a choice. */
+  static #REQUIREDNESS = new Set(STAGE_REQUIREDNESS);
 
   /* op=progressiondefine: author a PROGRESSION DEFINITION as data -- an ordered set of
      stages carrying after / cardinality / interval / required-ness (framework 8.2's
@@ -6318,8 +6332,13 @@ export class Store extends DurableObject {
       if (!card) return { ok: false, reason: "NO_CARDINALITY", detail: `stage '${sk}' needs a cardinality (1, 0..1, 0..n)`, stage_key: sk };
       const req = typeof s.required === "string" ? s.required.trim() : "";
       if (!Store.#REQUIREDNESS.has(req))
+        /* REC-35: the five words were TRANSCRIBED into this sentence, which made
+           the refusal a third copy of the set — it would have kept naming a
+           vocabulary the store had stopped enforcing. Joined from the one array
+           now, and the "… one of a, b, c" shape is kept deliberately: it is the
+           shape every closed-vocabulary refusal in this file takes. */
         return { ok: false, reason: "BAD_REQUIRED", stage_key: sk,
-                 detail: `stage '${sk}' required must be one of always, usually, sometimes, never, unless_exception` };
+                 detail: `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", ") };
       norm.push({ stage_key: sk, stage_no: i + 1,
                   label: typeof s.label === "string" && s.label ? s.label : null,
                   after_stage: typeof s.after === "string" && s.after.trim() ? s.after.trim()

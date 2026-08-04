@@ -8184,20 +8184,39 @@ function subjConnectionsHtml(c){
    that the plane is the source of every option and every refusal a member is
    shown, by exactly two mechanisms — PUBLICATION (`op=affordances`) or a DRY
    RUN — and *"a surface may render a refusal it received; it may never compute
-   one."* Neither mechanism covers the intent layer today: `op=affordances`
-   publishes acts on BUNDLES and three object vocabularies (none of them this
-   layer's), and the dry-run family exists only for publication (REC-15). So:
+   one."* When this surface was written neither mechanism covered the intent
+   layer: `op=affordances` published acts on BUNDLES and three object
+   vocabularies (none of them this layer's), and the dry-run family exists only
+   for publication (REC-15). So:
 
      1. OPTIONS. `loadIntentVocab()` asks `op=affordances` FIRST and uses what
-        it publishes. For the three closed vocabularies the plane enforces but
-        does not yet publish — entity kind, relation kind, stage requiredness —
-        it asks THE OP ITSELF with a body the store refuses, and reads the legal
-        set out of the plane's own sentence ("… one of a, b, c"). No option and
-        no requirement is written down in this file. When the plane names none,
-        the control says so and offers nothing: an invented option is worse than
-        an absent one. A DELEGATION to RECORD (CLAIMS.md) asks for these three
-        in `VOCABULARIES`; the day they appear, arm 1 above takes them and the
-        probe retires with no change here.
+        it publishes. For a closed vocabulary the plane enforces but does not
+        publish it asks THE OP ITSELF with a body the store refuses, and reads
+        the legal set out of the plane's own sentence ("… one of a, b, c"). No
+        option and no requirement is written down in this file. When the plane
+        names none, the control says so and offers nothing: an invented option
+        is worse than an absent one.
+
+        UPDATED 2026-08-04 (REC-35 landed the delegation this paragraph asked
+        for): entity kind, relation kind and stage requiredness are ALL THREE
+        published now — `vocabularies.entity_kinds`, `.relation_kinds`,
+        `.stage_requiredness` — imported by the store from the one array it
+        enforces against, so arm 1 takes them and the refusal-parse below is
+        REACHED BY NOTHING. `intent-write.test.mjs` pins exactly that (source
+        `published` for all three, and the vocabulary load reaching no enforcing
+        op). Not one executable byte of this file changed for it, which is what
+        "the probe retires with no change here" meant.
+
+        THE PARSE ARM IS KEPT, and this is a decision rather than an oversight.
+        This surface is its OWN Worker and deploys independently of the plane it
+        proxies to (`worker.template.mjs`), so a UI ahead of its plane is a real
+        state — and the fallback is the difference between a member seeing the
+        controls and seeing "the record has not said". It is dead against any
+        plane that publishes, pinned dead by the harness, and the day a THIRD
+        vocabulary needs this treatment it is still here. Note what publication
+        bought even so: the parse arm stood on the store's WORDING, so those
+        three refusal sentences were load-bearing UI contract; they are not any
+        more.
 
      2. PRE-FLIGHT. Every one of these nine writes validates FAIL-CLOSED before
         its transaction opens, so a refused call writes NOTHING — the harness

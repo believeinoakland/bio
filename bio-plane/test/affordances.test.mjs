@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: STRUCTURAL, the item's own (REC-19) — add an op to NEEDS in src/index.mjs (e.g. `frobnicate: "contribute",`) WITHOUT adding it to the affordances derivation -> the totality assertion here fails NAMING `frobnicate` as the unpublished op; restored -> green. Recorded as run below in the suite header. */
+/* NEGATIVE CONTROL (REC-35, the vocabulary drift guard), three arms, all RUN 2026-08-04 and both source files restored byte-identical (sha256 verified): (a) in src/affordances.mjs replace `entity_kinds: ENTITY_KINDS` in VOCABULARIES with a literal copy of the same ten words -> "the three intent vocabularies … ARE the arrays" FAILS (45/46), and NOTE WHAT DOES NOT: the wire and the through-the-op assertions all PASS, because an identical copy agrees at zero cost — the identity pin is the whole of that control; (b) in src/store.mjs restore `static #ENTITY_KINDS = new Set([...ten literal words])` -> the no-literal-copy pin FAILS (45/46) and nothing else does, for the same reason; (c) the same literal PLUS one extra kind ("widget") -> the no-literal-copy pin AND "op=entitycreate REFUSES against exactly the published entity_kinds" both FAIL (44/46), naming the published list against the enforced one, and civicos-ui/test/intent-write.test.mjs fails with it (1 of 106) — the drift is caught from both ends. Restored -> 46/46. */
 /* op=affordances (REC-19, standing doctrine DEC-8): the plane publishes what may
  * be DONE to an object, so an act surface renders options it RECEIVED and never
  * computes one. whoami publishes capabilities, searchfields publishes the query
@@ -41,7 +42,8 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROMPT, deriveActs }
+import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROMPT, deriveActs,
+         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS }
   from "../src/affordances.mjs";
 import { ACTION_KINDS } from "../checks/bio-checks.mjs";
 
@@ -131,6 +133,35 @@ t("the published action_kind vocabulary IS the array C-2.10 enforces (one import
   VOCABULARIES.action_kind, ACTION_KINDS);
 t("action_kind is the seven-value suite",
   ACTION_KINDS, ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "other"]);
+
+/* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES, and this pair of assertions is
+   the drift guard itself rather than a description of it.
+
+   IDENTITY, not equality. `VOCABULARIES.entity_kinds === ENTITY_KINDS` asks
+   whether the published value IS the array, not whether it happens to have the
+   same words in it today. A literal copy pasted into VOCABULARIES would satisfy
+   any deep comparison on the day it was written and drift silently the day the
+   set changed — which is the entire failure this item exists to make
+   impossible, and is this suite's NEGATIVE CONTROL (a).
+
+   THE STORE SIDE, structurally: the enforcement must DERIVE from the same
+   import, so the pin is that the binding is imported and that no literal array
+   survives in the private statics for it to drift against. This is the
+   DISPOSITIONS pin above, applied to three more sets — and the behavioural half
+   (the store's own refusal, read through the op, listing exactly what is
+   published) is asserted further down where a live plane is available. */
+t("the three intent vocabularies published by op=affordances ARE the arrays, not copies of them",
+  [VOCABULARIES.entity_kinds === ENTITY_KINDS,
+   VOCABULARIES.relation_kinds === RELATION_KINDS,
+   VOCABULARIES.stage_requiredness === STAGE_REQUIREDNESS], [true, true, true]);
+t("the store ENFORCES the published arrays: store.mjs imports all three from affordances.mjs and keeps no literal copy",
+  [/import \{[^}]*\bENTITY_KINDS\b[^}]*\} from "\.\/affordances\.mjs"/s.test(storeSrc),
+   /import \{[^}]*\bRELATION_KINDS\b[^}]*\} from "\.\/affordances\.mjs"/s.test(storeSrc),
+   /import \{[^}]*\bSTAGE_REQUIREDNESS\b[^}]*\} from "\.\/affordances\.mjs"/s.test(storeSrc),
+   /static\s+#ENTITY_KINDS\s*=\s*new Set\(\[/.test(storeSrc),
+   /static\s+#RELATION_KINDS\s*=\s*new Set\(\[/.test(storeSrc),
+   /static\s+#REQUIREDNESS\s*=\s*new Set\(\[/.test(storeSrc)],
+  [true, true, true, false, false, false]);
 t("RUNGS carries EXACTLY the seven documented assignments — nothing invented (FW-14 assigns the rest)",
   Object.entries(RUNGS).sort(),
   [["attest", "attested"], ["dispose", "reasoned"], ["ratify", "attested"], ["reinstate", "reasoned"],
@@ -250,6 +281,51 @@ t("exactly one act carries a PROMPT, and it is the divide act's published wordin
 t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the seven action kinds",
   [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
   [["deferred", "dismissed"], 7]);
+
+/* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES OVER THE WIRE, and then held
+   against WHAT THE STORE ACTUALLY REFUSES.
+
+   The identity pin above proves the publication is the array. It cannot prove
+   the enforcement reads that array, because a private static is not visible
+   from here — so the second instrument asks the ENFORCING OPS THEMSELVES. Each
+   of the three writes its own refusal from the set it validates against, in the
+   "… one of a, b, c" shape every closed-vocabulary refusal in store.mjs takes,
+   and each is asked with the field that trips exactly that check. If the
+   publication and the enforcement ever hold different words, these three
+   assertions say so and name both lists — which is NEGATIVE CONTROL (b).
+
+   This is UI-13's own probe, kept and INVERTED: it was the surface's source of
+   options and is now a cross-check on the publication that replaced it. */
+const oneOf = (detail) => {
+  const m = /\bone of ([^.(]+)/.exec(String(detail || ""));
+  return m ? m[1].trim().split(/\s*,\s*/) : null;
+};
+const vocabRefusal = async (op, body) => rP(await POST(`op=${op}&token=mem-rec19`, body));
+const noKind    = await vocabRefusal("entitycreate", {});
+const badRel    = await vocabRefusal("relationdeclare", { relation: "__not_a_relation__" });
+const badReq    = await vocabRefusal("progressiondefine",
+  { progressionKey: "rec35-probe", label: "rec35 probe",
+    stages: [{ key: "s1", cardinality: "1", required: "__not_a_requiredness__" }] });
+t("the vocabularies reach a caller OVER THE WIRE, exactly as published",
+  [cat.result.vocabularies.entity_kinds, cat.result.vocabularies.relation_kinds,
+   cat.result.vocabularies.stage_requiredness],
+  [ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS]);
+t("op=entitycreate REFUSES against exactly the published entity_kinds (the store's own sentence, not a copy)",
+  [noKind.reason, oneOf(noKind.detail)], ["NO_KIND", cat.result.vocabularies.entity_kinds]);
+t("op=relationdeclare REFUSES against exactly the published relation_kinds",
+  [badRel.reason, oneOf(badRel.detail)], ["UNKNOWN_RELATION", cat.result.vocabularies.relation_kinds]);
+t("op=progressiondefine REFUSES against exactly the published stage_requiredness",
+  [badReq.reason, oneOf(badReq.detail)], ["BAD_REQUIRED", cat.result.vocabularies.stage_requiredness]);
+/* And the other direction, so the publication cannot be a SUPERSET the store
+   would then refuse (DEC-8's disagreement, in the shape that costs a member a
+   control that does not work): every published kind is ACCEPTED by the op. */
+const kindAccepted = [];
+for (const k of cat.result.vocabularies.entity_kinds) {
+  const r = rP(await POST(`op=entitycreate&token=mem-rec19`, { kind: k, label: `rec35 ${k}` }));
+  kindAccepted.push(r.ok === true);
+}
+t("every PUBLISHED entity kind is one op=entitycreate actually accepts — the publication is not a superset",
+  kindAccepted, cat.result.vocabularies.entity_kinds.map(() => true));
 /* CORRECTED 2026-08-04 (REC-14), never exempted. The old assertion said every
    act needs `contribute`, which was true while every act was a corpus-shaping
    one. `publish` is not: concluding says what the record shows, publishing puts
