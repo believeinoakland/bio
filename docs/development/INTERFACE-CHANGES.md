@@ -435,3 +435,16 @@ negative control breaks exactly that merge and fails naming it.
   it did so: `AGREE` — measured nil (`app.html` drives both verbs from a signed-in
   session only; `setup.mjs` calls neither).
 - **Version:** I3 4.1.0 → **5.0.0** in `INTERFACES.md` — major, the IC-3 standard.
+
+## IC-8 · I3: `op=reevaluations` + the acts' `reevaluation.raised` echo · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-17 adds one gated read
+  (`op=reevaluations`) and an additive `reevaluation` block on four acts' answers
+  (dispose-defer, reopen, inquirydivide, publish) echoing the obligation each act
+  just raised. `op=dispose` and `op=inquirydivide` additionally gain the `CITED`
+  refusal on a cited inquiry — a NEW refusal on existing ops, but one no landed
+  consumer could trigger (no fixture or surface disposes a cited inquiry), so
+  recorded additive with that measurement stated rather than assumed.
+- **Consumers:** UI (dormant). CONDUCT answers per step 3, in writing, naming that
+  it did so: `AGREE` — additive by inspection plus the measured nil on CITED.
+- **Version:** I3 5.0.0 → **5.1.0** in `INTERFACES.md`.
