@@ -3361,6 +3361,37 @@ recommendation: leave it out until a group asks. A container that exists because
   thought through — and DEC-34's header rules are written for a CASE.
 reversal cost: low; it is a capability to add, not one to unwind.
 
+### DEC-47 · open
+raised: 2026-08-04 · session BOB (from the read-through-cache design pass,
+  `STORE-AS-CACHE.md`)
+for: bob
+question: May an instance FETCH FROM A SOURCE NOBODY NAMED? Objective-driven acquisition
+  (L5) proposes areas to explore, and acting on a proposal means the instance reaches
+  hosts no member ever pointed it at. Every outward act the plane performs today touches
+  a source someone named; this would be the first that does not.
+why it is Bob's: effects on people outside the project. It changes what a group's
+  instance DOES in the world — a civic body's server sees traffic from a group that never
+  said it was coming, and the group's name is on it.
+provisional: nothing is built and nothing is blocked. L3 (observations) and L4's authored
+  half (member leads) are the near work and neither reaches a new host: a lead is a member
+  naming a source, which is the existing act with a better record around it.
+blocks: only L5, which is gated on the harvest-rate measurement anyway.
+alternative: every acquisition stays member-initiated — the plan PROPOSES and a member
+  authorises each fetch, so the instance never reaches a host on its own inference. Costs
+  throughput on exactly the exploratory work the capability exists for.
+recommendation: **acquire only on an authored act, and let the plan propose in bulk.** The
+  distinction that makes this cheap rather than limiting: monitoring and the archive
+  fallback RE-FETCH KNOWN SOURCES, which is why unattended operation was safe to rule for
+  M1; discovery reaches NEW ones, which is a different outward act wearing the same verb.
+  A member authorising a proposed SET is one act, not one per document, so the throughput
+  cost is small and the accountability is exact — every host BIO touched can name the
+  member who sent it there. The governor already paces per host and should bound
+  discovery more tightly than re-fetch, since a stranger's server has no relationship
+  with this instance.
+reversal cost: low now. High once instances are deployed and reaching hosts unattended:
+  the outward behaviour of every installed instance would have to be changed by an update,
+  and D-116's fleet-visibility problem means we could not enumerate who had taken it.
+
 ## Answered, awaiting enactment
 
 _(none)_

@@ -492,6 +492,78 @@ judgment, and nobody could later say whose.
    qualifier construct, and the research is independent evidence for solving it once.
    It stays PARKED until Bob reopens it; this document only records the corroboration.
 
+## THE MODEL, consolidated — six layers, and which of them exist
+
+Asked directly by Bob 2026-08-04: *"Do we have a model and architecture that we can build
+upon?"* **The model is settled and coherent. The architecture is one decomposition away,
+and this section is the part that was missing.**
+
+| Layer | What it is | State today |
+| --- | --- | --- |
+| **L0 · SOURCES** | the civic web, and the member's own knowledge (tips, shoe leather) | outside the system, by definition |
+| **L1 · ACQUISITION** | read-through entry: fetch, governor, archive fallback | **EXISTS** — `op=acquire`, the per-host governor, the two-hop archive chain |
+| **L2 · THE RECORD** | write-once, content-addressed bytes + provenance | **EXISTS** — register, `capture_sha`, R2, the provenance chain |
+| **L3 · OBSERVATIONS** | every LOOK, including the ones that returned nothing new | **MISSING** — the zero-payload record (WARC `revisit` shape) and the empty-search record |
+| **L4 · THE FRONTIER** | what is known-or-believed-to-exist and not held, with its state | **HALF EXISTS** — `deferred` links are the derived half; the AUTHORED half (leads) is absent (D-194) |
+| **L5 · PLANNING** | objective + context → proposed areas to explore | **MISSING** — and it is a PROPOSAL surface, never an actor |
+| **L6 · ANALYSIS** | inquiries, findings, basis, publication | **EXISTS ENTIRE** — this is what the rest serves |
+
+### The one architectural decision the whole thing rests on
+
+**THE RECORD AND THE OBSERVATION LOG ARE SEPARATE, WITH DIFFERENT LIFECYCLES.**
+
+- **L2, the record**, is write-once and content-addressed. A capture is bytes plus the
+  provenance of how they arrived. It never evicts, never updates, and a citation resolves
+  to it forever.
+- **L3, the observation log**, is append-only EVENTS ABOUT LOOKING: we fetched and it was
+  unchanged; we fetched and it had changed; we looked and it was gone; we looked and could
+  not tell; we searched for a thing a member named and found nothing.
+
+**Keeping them separate is what makes absence recordable without polluting the record.**
+Fold L3 into L2 and every failed look becomes either a phantom capture or nothing at all —
+which is exactly the dead end this document opened with (*archives record absence; caches
+retry it away*). It is also what lets a HIT be cheap: an observation that produced no new
+bytes costs one L3 row and zero L2 bytes, which is the WARC `revisit` economy.
+
+**And L3 plus L4 are the same table seen from two angles.** A frontier entry IS a thing
+sought together with its current state (`NEVER_LOOKED` · `LOOKED_ABSENT` ·
+`LOOKED_INDETERMINATE` · `PRESENT`) and the observation that last set it. The four-state
+model is not a separate feature; it is the frontier's state column.
+
+### What each new piece must carry, so a build session is not inventing shapes
+
+- **An OBSERVATION** — what was sought, when, by which actor class, the outcome state, the
+  authority behind the look (the lead, or the document the link came from), and a
+  back-reference to the capture if one resulted. The back-reference is load-bearing: WARC's
+  practice shows that omitting it silently loses which URL the bytes came from.
+- **A FRONTIER ENTRY** — the thing sought (a URL, or a DESCRIPTION when a member's lead
+  names something with no address yet), its source (derived-from-document, or
+  authored-by-member), `surfaced_by` (`agent` / `human`, the field already exists), and its
+  state.
+- **A PLAN PROPOSAL** — derived, LOOKING derived (D-82), awaiting an authored act (D-90),
+  and never itself an acquisition.
+- **THE LAST-VERIFIED FIELD** on a capture — held since T1, last verified T2, source
+  unreachable since T3. HTTP obsoleted the header that would have carried this; it must be
+  ours.
+
+### What must be MEASURED before any of it is built
+
+1. **The harvest rate**, on a real objective against Oakland's corpus. The
+   focused-crawling authors' own gate: below roughly 30–40% relevant, a focused crawler is
+   worse than an ordinary one. This decides whether L5 is worth building at all.
+2. **The DO storage curve per captured document**, against the 10 GB per-object ceiling
+   (D-190). Decides when the record must shard, and that is cheaper to know before L1 grows
+   by design.
+3. **Cost per miss in R2 Class A writes**, since egress is free and writes are the driver.
+
+### The order to build in
+
+L3 first (it is small, it makes absence recordable, and every other layer writes to it),
+then L4's authored half (D-194, designed WITH D-184 since both are member knowledge the
+record cannot hold), then measure, then L5 only if the harvest rate clears its gate.
+**L2 changes not at all**, which is the strongest evidence the framing is right: a
+reframing that required rewriting the record would have been the wrong reframing.
+
 ## The one-line version, for a reader who reads nothing else
 
 **Cloudflare's Always Online already made this exact substitution and documented the
