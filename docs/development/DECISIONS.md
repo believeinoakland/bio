@@ -3468,7 +3468,7 @@ NOTE: whichever way this goes, UI-31 (LANDED 2026-08-04) closed the measurement 
   UI-4's vocabulary guard covers no sign-in surface today, so this tension is currently
   UNMEASURED rather than accepted, and that part is mine and is not waiting on an answer.
 
-### DEC-48 · answered
+### DEC-48 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-44's report)
 for: bob
 question: A NON-CASE ratification no longer produces a container. REC-44 separated the
@@ -3520,7 +3520,7 @@ reversal cost: low now. High once instances are deployed and reaching hosts unat
   the outward behaviour of every installed instance would have to be changed by an update,
   and D-116's fleet-visibility problem means we could not enumerate who had taken it.
 
-### DEC-48 · open
+### DEC-54 · answered
 raised: 2026-08-04 · session BOB (Bob's question, after the search-completeness research)
 for: bob
 question: Are the differing STANDARDS OF EVIDENCE — across user types (lawyer, journalist,
