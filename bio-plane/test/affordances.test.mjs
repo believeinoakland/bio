@@ -176,7 +176,12 @@ const actnMd = (id) => [
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []",
-  "action_kind: cpra_request", "risk_tier: 1", "counterparty: City Clerk",
+  /* Superseded 2026-08-04 (REC-23/D-130): `counterparty: City Clerk` was a
+     legal flat string until C-2.10 made the field three-valued. The FACT this
+     fixture asserts is unchanged — this action is addressed to the City Clerk —
+     so it is corrected into the block that states it, not exempted. */
+  "action_kind: cpra_request", "risk_tier: 1",
+  "counterparty:", "  state: named", "  name: City Clerk",
   "---", "", "## Plan", "", "P.", "", "## Status", "", "## Correspondence", "",
   "## Session Log", "", "## Review Notes", "",
 ].join("\n");

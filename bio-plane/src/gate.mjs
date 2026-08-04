@@ -34,7 +34,12 @@
 
 import { checkBundle } from "../checks/bio-checks.mjs";
 
-export const CATALOG_VERSION = "1.19.0";
+/* 1.20.0 (REC-23/D-130): C-2.10's counterparty becomes a three-valued block.
+   A MINOR bump on REC-14's precedent (1.18.0 -> 1.19.0 also made the catalog
+   refuse documents that used to pass) — the catalog's own version records what
+   judged a bundle, and every ratification stamps it, so an action refused here
+   is distinguishable from one refused by 1.19.0 without reading this file. */
+export const CATALOG_VERSION = "1.20.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

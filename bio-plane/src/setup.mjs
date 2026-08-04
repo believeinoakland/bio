@@ -736,8 +736,20 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src)=>{
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if (type === "project") fm.push("objective: "+JSON.stringify(title));
+  /* D-130 / REC-23: the counterparty placeholder USED TO BE PUSHED HERE TOO.
+     D-130 named only civicos-ui/app.html:1752; this is the SECOND emission
+     site, it is the one conformance.test.mjs actually exercises, and leaving it
+     would have left the defect open on the installer's own intake page.
+     Nothing replaces it: the honest undetermined state requires an AUTHORED
+     basis, and a basis this function invented would be the same lie one field
+     down. The gate names the gap until a member fills it. action_kind and
+     risk_tier are placeholders of the same family and are left for the item
+     that gives the surface real controls (UI-15/UI-19).
+     (No backticks in this comment: it lives inside the SETUP_HTML template
+     literal, and a stray pair here parses fine under node --check and then
+     fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
   if (type === "action") fm.push(
-    "action_kind: other","risk_tier: 1","counterparty: to be named");
+    "action_kind: other","risk_tier: 1");
   fm.push("---","");
   const heads = HEADINGS[type] || ["## Summary"];
   const out = fm.slice();

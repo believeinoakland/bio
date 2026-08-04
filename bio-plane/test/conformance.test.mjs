@@ -192,6 +192,33 @@ console.log("\n--- the intake form writes conformant bundles ---");
     });
     const errs = findings.filter((x) => x.severity === "error");
     for (const x of errs.slice(0, 4)) console.log(`         ${type}: ${x.check} ${x.message.slice(0, 110)}`);
+    if (type === "action") {
+      /* Superseded 2026-08-04 (REC-23/D-130). This used to assert zero errors
+         for an action too, and it PASSED because mdFor wrote
+         `counterparty: to be named` and C-2.10 accepted any non-empty string.
+         The old assertion was therefore true of the bytes and false about the
+         record: what it certified as "conformant" was a bundle asserting a
+         counterparty nobody had. Corrected, never exempted — and deliberately
+         made SHARPER than "zero errors", because the one remaining finding is
+         the point of the item:
+           - the intake surface is still conformant in every other respect
+             (headings, core fields, action_kind, risk_tier, state legality),
+             so this still catches an intake regression the way it always did;
+           - the ONE error is C-2.10 naming the absent counterparty, which is
+             the honest state of a surface with no control to author one. The
+             machine will not invent a name and will not invent an
+             `undetermined` BASIS to get past its own gate — that is the
+             D-97 pressure this project removes rather than reproduces.
+         This assertion FLIPS BACK to zero errors when UI-19 gives the surface
+         the radio pair (a named counterparty, or undetermined with an authored
+         reason) and mdFor takes its values from the member. Until then, an
+         action bundle that gates clean is one whose counterparty a person
+         wrote. */
+      t("a new action bundle has exactly one error", errs.length, 1);
+      t("and it is C-2.10 naming the counterparty the surface cannot honestly author (UI-19 closes it)",
+        errs.length === 1 && errs[0].check === "C-2.10" && /counterparty block is missing/.test(errs[0].message), true);
+      continue;
+    }
     t(`a new ${type} bundle has zero errors`, errs.length, 0);
   }
 }

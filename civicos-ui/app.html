@@ -1749,7 +1749,20 @@ function mdFor(id, type, state, title, body, now, hasDoc, src){
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if(type === "project") fm.push("objective: "+JSON.stringify(title));
-  if(type === "action") fm.push("action_kind: other","risk_tier: 1","counterparty: to be named");
+  /* D-130 / REC-23: the counterparty placeholder USED TO BE PUSHED HERE, and it
+     satisfied C-2.10 by being a non-empty string — so every action this surface
+     wrote asserted a counterparty it did not have. Nothing replaces it, because
+     nothing here can: the honest `undetermined` state requires an AUTHORED
+     basis, and a basis this function invented would be the same lie one field
+     down. The gate now names the gap until a member fills it, and the control
+     that lets them fill it — the radio pair with no third option and no
+     default — is UI-19's. `action_kind` and `risk_tier` are placeholders too
+     and are UI-15's to replace; they are left deliberately, not overlooked.
+     (The literal string itself is deliberately not repeated in this comment:
+     counterparty.test.mjs asserts, over this file's SOURCE, that it appears
+     nowhere — so a future edit that pastes it back fails there rather than at
+     a ratification months later.) */
+  if(type === "action") fm.push("action_kind: other","risk_tier: 1");
   fm.push("---","");
   const out = fm.slice();
   (HEADINGS[type]||["## Summary"]).forEach((h,i)=>{ out.push(h,""); if(i===0) out.push(body,""); });

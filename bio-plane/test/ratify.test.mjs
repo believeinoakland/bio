@@ -159,8 +159,10 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* 1.17.0: C-19.1, the task inbox grammar (D-98). CORRECTED rather than
    loosened to a pattern match: the point of this assertion is that a
    ratification records WHICH catalog judged it, so a test that stopped
-   pinning the exact version would stop testing the thing it exists for. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.19.0)");
+   pinning the exact version would stop testing the thing it exists for.
+   1.20.0: C-2.10's three-valued counterparty (REC-23/D-130) — same correction,
+   same reason. */
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.20.0)");
 /* CORRECTED 2026-08-04 (REC-14), never exempted: the old count of 3 was right
    while a ratification published exactly the bundle's own parts. DEC-34 makes
    the published case a CONTAINER, so a fourth part now lands with every

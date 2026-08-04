@@ -25,6 +25,7 @@
     "test:signpage": "node test/signpage.test.mjs",
     "embed:sign": "node scripts/embed-signpage.mjs",
     "test:conformance": "node test/conformance.test.mjs",
+    "test:counterparty": "node test/counterparty.test.mjs",
     "test:gathering": "node test/gathering.test.mjs",
     "test:acquire": "node test/acquire.test.mjs",
     "test:profile": "node test/profile.test.mjs",
