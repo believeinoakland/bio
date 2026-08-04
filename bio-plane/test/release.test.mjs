@@ -107,15 +107,15 @@ const FULL = [
   { path: "data/dataset.json", text: DATASET, bytes: DATASET.length, sha256: sha(DATASET) },
   { path: "snapshots/capture.html", text: "<html/>", bytes: 7, sha256: sha("<html/>") },
 ];
-const docOf = async (id) => (await call(`/image?id=${id}`))["bundle.md"];
+const docOf = async (id) => (await call(`/image?id=${id}&viewer=class:member`))["bundle.md"];
 const errorsOf = async (id) => {
-  const files = new Map(Object.entries(await call(`/image?id=${id}`)));
+  const files = new Map(Object.entries(await call(`/image?id=${id}&viewer=class:member`)));
   const { findings } = await checkBundle({ folderName: id, files,
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
     resolveTarget: () => true });
   return findings.filter((x) => x.severity === "error").map((x) => x.check);
 };
-const stateOf = async (id) => (await call(`/projection?id=${id}`)).current_state;
+const stateOf = async (id) => (await call(`/projection?id=${id}&viewer=class:member`)).current_state;
 const select = async (ids) => (await call(`/select?${STAMP}`, { ids })).handle;
 const release = (h, q = "") =>
   call(`/release?handle=${h}&acknowledgment=${ACK}&mitigation=${MIT}&author=${AUTHOR}&${STAMP}${q}`);

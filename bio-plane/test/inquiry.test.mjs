@@ -163,13 +163,13 @@ const mkOn = (c) => (id, text, type, title) => c("/promote", {
 });
 const mk = mkOn(call);
 const errorsOf = async (id) => {
-  const files = new Map(Object.entries(await call(`/image?id=${id}`)));
+  const files = new Map(Object.entries(await call(`/image?id=${id}&viewer=class:member`) /* REC-25 fail-closed gate: direct-DO reads carry the viewer stamp the control plane would have applied */));
   const { findings } = await checkBundle({ folderName: id, files,
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
     resolveTarget: () => true });
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
-const projOf = async (id) => call(`/projection?id=${id}`);
+const projOf = async (id) => call(`/projection?id=${id}&viewer=class:member`);
 const select = async (ids) => (await call(`/select?${STAMP}`, { ids })).handle;
 const S = async (q) => call(`/search?${q}&${STAMP}`);
 
@@ -334,12 +334,12 @@ console.log("\n--- 6. the boot normaliser converts pre-REC-10 rows (site 2, exer
   const c1 = callOn(mf1);
   await mkOn(c1)(legacy, focusMd(legacy, { type: "problem", schema: "problem@1" }), "problem");
   t("the neutered build stored the legacy spelling raw",
-    (await c1(`/projection?id=${legacy}`)).object_type, "problem");
+    (await c1(`/projection?id=${legacy}&viewer=class:member`)).object_type, "problem");
   await mf1.dispose();
   const mf2 = mkMf(STORE_SRC);
   const c2 = callOn(mf2);
   t("one boot under the live build and the row is canonical",
-    (await c2(`/projection?id=${legacy}`)).object_type, "inquiry");
+    (await c2(`/projection?id=${legacy}&viewer=class:member`)).object_type, "inquiry");
   await mf2.dispose();
   rmSync(dir, { recursive: true, force: true });
 }

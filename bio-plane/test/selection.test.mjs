@@ -145,7 +145,7 @@ console.log("\n--- the two kinds answer a new match differently, which is the wh
 console.log("\n--- revision drift is detected and CLASSIFIED from the manifest ---");
 {
   const target = CORPUS[0];
-  const cur = (await call(`/projection?id=${target.id}`)).bundle_sha;
+  const cur = (await call(`/projection?id=${target.id}&viewer=class:member`)).bundle_sha;
   await promote({ ...target, body: "sewer fund record 0 bravo rewritten", updated: "2026-07-28T00:00:00Z" }, cur);
   const r = await call(`/selection?handle=${eh}&${VIEW}`);
   t("the revision is seen", r.drift.revised.length, 1);
@@ -159,7 +159,7 @@ console.log("\n--- revision drift is detected and CLASSIFIED from the manifest -
   /* A monitor tick and a member's rewrite are different events, and the manifest
      already records which is which, so drift is classified rather than lumped. */
   const target2 = CORPUS[1];
-  const cur2 = (await call(`/projection?id=${target2.id}`)).bundle_sha;
+  const cur2 = (await call(`/projection?id=${target2.id}&viewer=class:member`)).bundle_sha;
   await promote({ ...target2, body: "sewer fund record 1 alpha", updated: "2026-07-29T00:00:00Z" },
     cur2, "mechanical", "monitor-tick");
   const r2 = await call(`/selection?handle=${eh}&${VIEW}`);

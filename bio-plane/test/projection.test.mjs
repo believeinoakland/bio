@@ -154,7 +154,7 @@ await promote(PROB_ID, probMd, {
 });
 
 console.log("\n--- the projection carries every field the UX filters on ---");
-const p = (await call(`/projection?id=${INFO_ID}`)).result;
+const p = (await call(`/projection?id=${INFO_ID}&viewer=class:member`)).result;
 t("schema version is projected", p.schema_id, "information@2");
 t("produced_by.mode is projected", p.produced_mode, "interactive_chat");
 t("produced_by.capability_tier is projected", p.capability_tier, "standard");
@@ -180,7 +180,7 @@ t("and the whole frontmatter is kept for the per-schema tail", typeof p.fm_json,
 }
 
 console.log("\n--- the heterogeneous tail is queryable, not just stored ---");
-const prob = (await call(`/projection?id=${PROB_ID}`)).result;
+const prob = (await call(`/projection?id=${PROB_ID}&viewer=class:member`)).result;
 t("a problem projects its own produced_by", prob.produced_mode, "agent");
 t("fields no information bundle has are absent from the typed columns", prob.source_locator, null);
 {
@@ -188,7 +188,7 @@ t("fields no information bundle has are absent from the typed columns", prob.sou
   t("and present in the tail", fm.surfaced_by, "agent");
   t("including a nested per-type array", fm.recheck_triggers[0].text, "Revisit after the next budget cycle");
 }
-const q = (await call(`/projection?jsonPath=$.surfaced_by&jsonEquals=agent`)).result;
+const q = (await call(`/projection?jsonPath=$.surfaced_by&jsonEquals=agent&viewer=class:member`)).result;
 t("json_extract finds bundles by a field with no column", q.map((r) => r.bundle_id), [PROB_ID]);
 
 console.log("\n--- the projection is indexed, so a filter is a seek and not a scan ---");
@@ -210,7 +210,7 @@ await call("/promote", {
   files: [{ path: "bundle.md", text: infoMd2, bytes: infoMd2.length, sha256: sha(infoMd2) }],
   refs: [], register: [],
 });
-const p2 = (await call(`/projection?id=${INFO_ID}`)).result;
+const p2 = (await call(`/projection?id=${INFO_ID}&viewer=class:member`)).result;
 t("the revised source_status is projected", p2.source_status, "unchanged");
 t("the revised annotations_open is projected", p2.annotations_open, 0);
 
@@ -218,11 +218,11 @@ console.log("\n--- backfill: a row written before the columns existed is repaire
 /* Simulate a pre-0.15.0 row by clearing the projection, exactly as an older
    store would have it, then run the backfill the migration runs. */
 await call("/projectionclear", { bundleId: INFO_ID });
-const cleared = (await call(`/projection?id=${INFO_ID}`)).result;
+const cleared = (await call(`/projection?id=${INFO_ID}&viewer=class:member`)).result;
 t("the projection is genuinely empty first", [cleared.source_status, cleared.fm_json], [null, null]);
 const back = (await call("/reproject", {})).result;
 t("the backfill reports what it repaired", back.reprojected, 1);
-const p3 = (await call(`/projection?id=${INFO_ID}`)).result;
+const p3 = (await call(`/projection?id=${INFO_ID}&viewer=class:member`)).result;
 t("and the fields come back from bundle.md", p3.source_status, "unchanged");
 t("with the tail rebuilt too", JSON.parse(p3.fm_json).source.locator, "https://oaklandca.opengov.com");
 
@@ -234,7 +234,7 @@ const bad = await promote(badId, badMd, {
   current_state: "collected", created: "2026-07-19T00:00:00Z", last_updated: "2026-07-19T00:00:00Z",
 });
 t("the promotion still succeeds", bad.result.ok, true);
-const bp = (await call(`/projection?id=${badId}`)).result;
+const bp = (await call(`/projection?id=${badId}&viewer=class:member`)).result;
 t("and the unparseable fields are null rather than wrong", bp.source_status, null);
 
 await mf.dispose();

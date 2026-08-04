@@ -1526,3 +1526,47 @@ standing rule that an unmeasured content type is not written:
 per-item action result (the minutes' business, not the agenda's); the item
 shape of NON-Legistar agendas — the type's detect() is written to this
 publisher's shape and an unrecognised agenda falls to `generic`, honestly.
+
+## 2026-08-03, session RECORD (rec25-agent): the F-8 read-path leak, measured BEFORE and AFTER the D-15 stamp (REC-25)
+
+**Why measured.** `CAPABILITIES.md` marks F-8 as a DERIVATION FROM SOURCE, not a
+measurement. This is the measurement.
+
+**Instrument.** Miniflare over `bio-plane/src/index.mjs` — the control plane,
+a real caller's only route (D-43) — with the same fixture
+`test/gate-reads.test.mjs` now pins: four enrolled members (two admins, carol
+holding create_projects, dave holding contribute only), one shared information
+bundle, one shared problem, and `PROJ-2026-0001-secret` created by CAROL'S
+SESSION (so the plane stamps her as owner), citing the shared information.
+Every read below is DAVE'S identified session — a member never invited to the
+project. Probe script preserved in this session's scratchpad; the AFTER run is
+re-runnable forever as `npm run test:gate-reads`.
+
+**BEFORE (worktree commit f99a952, pre-fix), dave's session:**
+
+| op | answer |
+| --- | --- |
+| `op=list` | the project's FULL ROW: id, object_type, current_state, title, last_updated, bundle_sha |
+| `op=index` | the same row under `{id, ..., sha256}` |
+| `op=projection&id=PROJ…` | id, title, current_state (and the whole projected tail) |
+| `op=image&id=PROJ…` | **the entire document** — `bundle.md` text including the body ("Secret plan") |
+| `op=file&id=PROJ…&path=bundle.md` | the document text again (same class, found in passing; not in the item's five) |
+| `op=affordances&target=PROJ…` | target, object_type, current_state — existence and state |
+| `op=search` (control) | NO project hit — the one stamped path held, proving the gate itself was sound and only the stamping was partial |
+
+No plane-side backlink read existed; the UI rebuilt reverse edges client-side
+by walking every project's projection (`app.html` reverseRefs), i.e. through
+the leaking `op=projection` above.
+
+**AFTER (this item's commit):** all six ops above answer dave EXACTLY as they
+answer for a bundle that does not exist — asserted byte-identically
+(status + body) in `test/gate-reads.test.mjs` — the enumerations carry only
+the shared corpus with totals to match, `op=backlinks` (new) filters the
+citing project by the viewer's position, and owner/admin/machine scopes are
+unchanged. 36/36 assertions; battery and coverage figures in the suite run.
+
+**Posture note, measured not assumed:** the store now FAILS CLOSED on these
+paths — a read reaching the Durable Object without a server-stamped viewer
+gets the deny predicate (empty/absent), which is the same posture `op=search`
+has had since D-15 shipped. So the failure mode of a future missing stamp is
+an outage, never a leak; the suite's negative control runs BOTH arms.

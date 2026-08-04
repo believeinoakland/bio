@@ -216,8 +216,8 @@ console.log("\n--- 7.11: only an OWNER deactivates or reactivates, and the rule 
      check catalog already permits, and `closed` back to `investigating`, which
      is the one reverse transition it allows. Nothing is added to the state
      vocabulary. */
-  const state = async (id) => (await call(`/projection`)).find((r) => r.bundle_id === id).current_state;
-  const cur = async (id) => (await call(`/projection`)).find((r) => r.bundle_id === id).bundle_sha;
+  const state = async (id) => (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === id).current_state;
+  const cur = async (id) => (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === id).bundle_sha;
   const move = (id, to, reason, actor) => {
     const body = `---\nid: ${id}\nobject_type: project\ncurrent_state: ${to}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-02T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
     return { text: body, to, reason, actor };
@@ -292,7 +292,7 @@ console.log("\n--- 7.12: fork, and the three things that keep it from being an e
      edge: a fork with no provenance passed the assertion. Read the document and
      the projected refs instead. */
   {
-    const doc = (await call(`/image?id=PROJ-2026-0002-fork`))["bundle.md"] || "";
+    const doc = (await call(`/image?id=PROJ-2026-0002-fork&viewer=class:member`))["bundle.md"] || "";
     t("the clone's frontmatter carries a references block", /references:/.test(doc), true);
     t("with a derived_from edge, already in the closed vocabulary", /rel: derived_from/.test(doc), true);
     t("pointing at the origin", new RegExp(`target: ${P}`).test(doc), true);
@@ -331,7 +331,7 @@ console.log("\n--- 7.12: fork, and the three things that keep it from being an e
 
   /* A fork starts at the beginning of the lifecycle. Inheriting `matured` would
      claim a readiness the clone has not earned. */
-  const st = (await call(`/projection`)).find((r) => r.bundle_id === "PROJ-2026-0002-fork");
+  const st = (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === "PROJ-2026-0002-fork");
   t("the clone starts at the beginning of the lifecycle", st.current_state, "forming");
   t("and carries its own name", st.title, "Fork one");
 
@@ -364,7 +364,7 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
   /* Held across every lifecycle state. A deactivated project has not gone
      anywhere: it is still cited, and its name must still resolve to what was
      cited, or a later project silently inherits an earlier one's references. */
-  const cur = async (id) => (await call(`/projection`)).find((r) => r.bundle_id === id).bundle_sha;
+  const cur = async (id) => (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === id).bundle_sha;
   const doc2 = `---\nid: PROJ-2026-0105-f\nobject_type: project\ncurrent_state: closed\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-03T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
   await call("/promote", { bundleId: "PROJ-2026-0105-f", base: await cur("PROJ-2026-0105-f"),
     snapKey: "f-closed", author: "suite",
@@ -415,7 +415,7 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
     meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-05T00:00:00Z" } });
   t("a revision that omits the title carries the old one forward",
-    (await call(`/projection`)).find((r) => r.bundle_id === "PROJ-2026-0107-h").title, "Kept Name");
+    (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === "PROJ-2026-0107-h").title, "Kept Name");
   t("and the name is still held against a later collision",
     (await mkNamed("PROJ-2026-0108-i", "kept name")).reason, "NAME_TAKEN");
 }

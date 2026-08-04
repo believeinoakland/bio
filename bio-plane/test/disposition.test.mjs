@@ -143,12 +143,12 @@ const IDS = ["PROB-2026-0001-a", "PROB-2026-0002-b", "PROB-2026-0003-c"];
 for (const id of IDS) await mk(id, probMd(id), "problem");
 await mk("INFO-2026-0001-x", infoMd("INFO-2026-0001-x"), "information");
 
-const docOf = async (id) => (await call(`/image?id=${id}`))["bundle.md"];
+const docOf = async (id) => (await call(`/image?id=${id}&viewer=class:member`))["bundle.md"];
 /* checkBundle takes a files MAP and a folder name, and is async. Called the way
    cite.test.mjs calls it, so the two suites hold the catalog the same way. */
 const errorsOf = async (id) => {
   const files = new Map([["bundle.md", await docOf(id)]]);
-  const known = new Set((await call("/index")).bundles.map((b) => b.id));
+  const known = new Set((await call("/index?viewer=class:member")).bundles.map((b) => b.id));
   const { findings } = await checkBundle({ folderName: id, files, elidedPaths: new Set(),
     resolveTarget: (k) => known.has(k) });
   return findings.filter((f) => f.severity === "error").map((e) => `${e.check}: ${e.message}`);
@@ -157,7 +157,7 @@ const errorsOf = async (id) => {
    at 200 rows, so a scanning helper silently stops finding things exactly when
    the corpus gets big enough for the scale assertions to matter, and reports it
    as a crash rather than a miss. */
-const stateOf = async (id) => (await call(`/projection?id=${id}`)).current_state;
+const stateOf = async (id) => (await call(`/projection?id=${id}&viewer=class:member`)).current_state;
 const select = async (ids) => (await call(`/select?${STAMP}`, { ids })).handle;
 
 /* Standing lesson 4: the BEFORE check is what makes the after-check mean
@@ -314,7 +314,7 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
   /* Verify them the ordinary way, then retire. */
   for (const id of infoIds) {
     const doc = (await docOf(id)).replace("current_state: collected", "current_state: verified");
-    await call("/promote", { bundleId: id, base: (await call(`/projection?id=${id}`)).bundle_sha,
+    await call("/promote", { bundleId: id, base: (await call(`/projection?id=${id}&viewer=class:member`)).bundle_sha,
       snapKey: `${id}-verify`, author: "suite",
       files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
       meta: { object_type: "information", group: "believe-in-oakland", title: `Info ${id}`,
