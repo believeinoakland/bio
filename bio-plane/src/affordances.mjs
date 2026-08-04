@@ -84,6 +84,55 @@ export const DISPOSITIONS = ["deferred", "dismissed"];
  * drift this file exists to prevent. */
 export const REOPENABLE_FROM = [...DISPOSITIONS, "published"];
 
+/* REC-35, UI-13's delegation: THE INTENT LAYER'S THREE CLOSED VOCABULARIES, and
+ * they live HERE for the reason DISPOSITIONS does — one array, imported by the
+ * store that enforces it and published by the op a surface reads, so a set
+ * cannot be changed in one place and stay stale in the other.
+ *
+ * WHY THIS DIRECTION AND NOT THE OTHER. The obvious move is to export them from
+ * `store.mjs`, where the refusals are written. That is impossible and not merely
+ * unpleasant: `store.mjs` ALREADY imports this module (DISPOSITIONS,
+ * REOPENABLE_FROM, deriveActs), so publishing from there would close an import
+ * cycle — and this file's `VOCABULARIES` is a top-level object literal, so any
+ * module that reached `store.mjs` first would evaluate it while the store's
+ * bindings were still in the temporal dead zone and crash at load. The
+ * enforcement site keeps the refusal; the vocabulary keeps one home. That is
+ * exactly the arrangement REC-11 landed for DISPOSITIONS after the same
+ * question, and `bio-checks.mjs` is the same shape read from the other side
+ * (ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES live where their check runs and
+ * are imported into the publication above).
+ *
+ * WHAT THEY GATE, and why publishing them is not a convenience. Until this
+ * item, a surface offering a subject kind, a relation predicate or a stage's
+ * requiredness had no published set to read, so UI-13 harvested them out of the
+ * store's own refusal sentence ("… one of a, b, c") — a legitimate DEC-8
+ * reading, and a parser standing on the store's WORDING rather than on its
+ * DATA. Published, the wording is free to change again. */
+
+/* The union kind vocabulary, reconciled across the two doctrines this one axis
+ * serves (D-83): safeguard 4's four SUBJECT kinds, plus the framework's entity
+ * kinds (framework:248). Closed and validated at createEntity(), so introducing
+ * a kind outside it is a loud refusal rather than a silent new vocabulary —
+ * the spirit of safeguard 4, where introducing a new SUBJECT is a reviewed
+ * act. Ordered as the two doctrines contribute them, and the order is what a
+ * surface renders: it is a grouping a member can read, not an alphabetisation. */
+export const ENTITY_KINDS = [
+  /* safeguard 4's SUBJECT kinds */ "source", "institution", "office", "movement",
+  /* the framework's entity kinds */ "person", "body", "ordinance", "parcel", "contract", "fund",
+];
+
+/* The three DECLARED-relation predicates safeguard 4 names, and only these. A
+ * connection GRADE is not a relation kind and never appears here: a declared
+ * relation is constitutive, not evidentiary, and carries no grade (D-83). */
+export const RELATION_KINDS = ["proxy_for", "member_of", "overlaps"];
+
+/* The closed vocabulary of stage requiredness (framework 8.2). `unless_exception`
+ * is the crucial one — a lawful skip needs an exception document (FW-10), and
+ * WHICH of these fire a missing-predecessor finding is a separate policy set
+ * (`Store.#REQUIRED_FIRES`, DEC-9's) that deliberately does NOT live here: this
+ * is what a member may DECLARE, not what the record then does about it. */
+export const STAGE_REQUIREDNESS = ["always", "usually", "sometimes", "never", "unless_exception"];
+
 /* REC-16 / DEC-29(b): THE DIVIDE PROMPT'S WORDING, and it is an ACCEPTANCE
  * CLAUSE rather than copy.
  *
@@ -136,6 +185,19 @@ export const VOCABULARIES = {
      from the catalog function that enforces the set — there is one place these
      words live and it is not this file. */
   basis_roles: BASIS_ROLES,
+  /* REC-35, UI-13's delegation. The three closed vocabularies of the INTENT
+     layer — the entity registry's kinds, safeguard 4's declared-relation
+     predicates, and a progression stage's requiredness. They are published for
+     the same reason every set above is: a surface that had to keep its own copy
+     would be the surface deciding what a `movement` or an `unless_exception` is
+     called, and the write path would refuse a token the surface had just
+     offered. Each is the array store.mjs's own refusal validates against —
+     imported, never transcribed, so a kind added to the registry appears on
+     every surface on its next load and cannot be added to one without the
+     other. */
+  entity_kinds: ENTITY_KINDS,
+  relation_kinds: RELATION_KINDS,
+  stage_requiredness: STAGE_REQUIREDNESS,
 };
 
 /* The seven sourced rungs — BIO_Interaction_Constructs_v0_1.md via

@@ -30,20 +30,30 @@
  *   6. UI-4's subject view then renders NON-EMPTY for that entity.
  *
  * AND THE DEC-8 PROPERTIES, which are the reason this item exists at all:
- *   - every option on every control came from the plane (op=affordances first,
- *     then the op's own refusal), asserted against the store's OWN vocabularies
- *     parsed out of `bio-plane/src/store.mjs` — two independent instruments on
- *     one fact, the way check-semantics.mjs pins the catalog;
+ *   - every option on every control came from the plane. CORRECTED 2026-08-04
+ *     (REC-35): it was "op=affordances first, then the op's own refusal",
+ *     because when this suite was written the plane published none of these
+ *     three sets and the refusal-harvest was the only arm that could run. It
+ *     publishes all three now, so the assertion is that the options came from
+ *     the PUBLICATION and that the harvest arm was reached by nothing. The
+ *     second instrument — the same fact measured a different way, the shape
+ *     check-semantics.mjs pins the catalog with — is the ENFORCING OPS' own
+ *     refusals, read by this file directly off the real plane;
  *   - a PRE-FLIGHT WRITES NOTHING: after every pre-flight in this file the
  *     registry still contains nothing the pre-flights named;
  *   - the commit control is ABSENT while the plane refuses, and the refusal
  *     rendered is the plane's own words, never a sentence composed here;
  *   - Q12: a credential that cannot write sees NO control and ONE sentence.
  *
- * NEGATIVE CONTROL, two arms, BOTH RUN 2026-08-04 and both restored
- * byte-identical (sha256 of app.html compared before and after each arm; arm (a)
- * re-run last against the committed file,
- * 10975a570cb9cb33d24f7759cd714a66003204639ce5e0807d2a7da946fa92a3).
+ * NEGATIVE CONTROL, three arms, ALL RUN 2026-08-04 and each restored
+ * byte-identical (sha256 compared before and after each arm). Arms (a) and (b)
+ * were run by UI-13 against app.html at
+ * 10975a570cb9cb33d24f7759cd714a66003204639ce5e0807d2a7da946fa92a3; REC-35
+ * moved that sha to
+ * 337fe4915221756002e25bf5ab341a7a04a3756e6284c7fb2013a9e82e344720 by editing
+ * COMMENTS ONLY — the comment-stripped file is byte-identical across the item,
+ * measured, which is this item's zero-surface-change claim. Arm (c) is REC-35's
+ * own and touches bio-plane, not app.html.
  *
  *   (a) THE ITEM'S OWN CONTROL — render the declared relation WITH a grade
  *       badge. In app.html's `subjRelationsHtml`, add the line
@@ -64,6 +74,22 @@
  *       vocabulary is now wrong) the progression commit control never appears.
  *       Restored -> 104/104. This is the arm that proves the options are not
  *       transcribed anywhere in app.html.
+ *
+ *   (c) REC-35's, ADDED 2026-08-04 with the publication — MAKE THE PUBLICATION
+ *       AND THE ENFORCEMENT DISAGREE. In `bio-plane/src/store.mjs` restore the
+ *       literal `static #ENTITY_KINDS = new Set([...])` and add one kind the
+ *       catalogue does not publish (`"widget"`). RESULT: 1 of 106 assertions
+ *       FAILED — "the subject-kind options are the store's own closed
+ *       vocabulary, exactly" — and the plane's own affordances suite fails with
+ *       it (2 of 46). Restored -> 106/106, store.mjs sha256-verified identical.
+ *       THE INSTRUMENT FINDING, which is why this arm is worth its space: run
+ *       against the FIRST version of this file's corrected second instrument —
+ *       which parsed the arrays out of `affordances.mjs` — the same planted
+ *       divergence left this suite entirely GREEN, because the surface reads
+ *       the publication and the parser read the publication, so the two
+ *       "independent" instruments had become one. The second instrument now
+ *       asks the ENFORCING OPS, which is the only source that can disagree
+ *       with the publication at all.
  */
 import fs from "fs";
 import vm from "vm";
@@ -152,18 +178,44 @@ const BID_C = await seedDoc(SHA_C, [{ ref:"contract:C-2024-88", kind:"contract",
                                     { ref:"contract:ZZ-0000",   kind:"contract", key:"ZZ-0000",   label:"Recology Hauling Contract" }]);
 const BID_D = await seedDoc(SHA_D, [{ ref:"contract:QQ-9999", kind:"contract", key:"QQ-9999", label:"an unnamed hauling arrangement" }]);
 
-/* ---- the store's OWN closed vocabularies, parsed from its source. The SECOND
-   instrument on the DEC-8 property: whatever the surface offers must be exactly
-   what the enforcer holds, and neither list is written in app.html. ---- */
-const STORE_SRC = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
-function staticSet(name){
-  const m = new RegExp("static\\s+#" + name + "\\s*=\\s*new Set\\(\\[([\\s\\S]*?)\\]\\)").exec(STORE_SRC);
-  if(!m) throw new Error("could not read Store.#" + name + " out of store.mjs");
-  return [...m[1].matchAll(/"([a-z_][a-z0-9_]*)"/g)].map(x=>x[1]);
-}
-const STORE_ENTITY_KINDS   = staticSet("ENTITY_KINDS");
-const STORE_RELATION_KINDS = staticSet("RELATION_KINDS");
-const STORE_REQUIREDNESS   = staticSet("REQUIREDNESS");
+/* ---- the store's OWN closed vocabularies, read out of the ENFORCING OPS'
+   refusals by this file directly. The SECOND instrument on the DEC-8 property:
+   whatever the surface offers must be exactly what the enforcer holds, and
+   neither list is written in app.html.
+
+   CORRECTED 2026-08-04 (REC-35), never exempted, and the correction is a real
+   instrument change rather than a rename. This used to parse `Store.#ENTITY_KINDS`
+   and its two siblings out of `store.mjs`'s private statics, which was right
+   while the sets lived there. REC-35 published all three in `op=affordances`'
+   `VOCABULARIES`, so the ONE array now lives in `bio-plane/src/affordances.mjs`
+   and `store.mjs` derives its private statics from it (the DISPOSITIONS
+   arrangement; the direction is forced, because store.mjs already imports
+   affordances.mjs and the reverse would close an import cycle). The old parser
+   did not merely go stale — it THREW `could not read Store.#ENTITY_KINDS`,
+   which is the right behaviour for a pin whose subject moved and the reason it
+   is corrected here rather than relaxed.
+
+   WHY NOT SIMPLY REPOINT THE PARSER AT affordances.mjs, which was the first
+   attempt and is WRONG: the surface now reads its options from the publication,
+   and the publication IS that file, so the two instruments would share a source
+   and be one instrument wearing two hats — an equality that costs nothing.
+   MEASURED, not argued: with the parser repointed, a deliberate divergence
+   planted in `store.mjs` (a kind the store admits and the catalogue does not
+   publish) left this whole suite GREEN. Asking the ENFORCING OPS instead — the
+   real plane, in miniflare, the same probe UI-13 used as its source and this
+   file now uses as its check — makes the same divergence fail here. The plane's
+   own `affordances.test.mjs` holds the publication to the same ops from the
+   other side. ---- */
+const oneOf = (detail) => {
+  const m = /\bone of ([^.(]+)/.exec(String(detail||""));
+  if(!m) throw new Error("the store's refusal no longer names its set: " + detail);
+  return m[1].trim().split(/\s*,\s*/);
+};
+const STORE_ENTITY_KINDS   = oneOf((await post("entitycreate", {})).detail);
+const STORE_RELATION_KINDS = oneOf((await post("relationdeclare", { relation:"__nope__" })).detail);
+const STORE_REQUIREDNESS   = oneOf((await post("progressiondefine",
+  { progressionKey:"ui13-vocab-probe", label:"ui13 vocab probe",
+    stages:[{ key:"s1", cardinality:"1", required:"__nope__" }] })).detail);
 
 /* ---- the DOM stub: enough for innerHTML inspection and for reading field
    values back, the shape UI-4's harness established. ---- */
@@ -222,6 +274,7 @@ U.PLANE.me = { member:"m_alice", handle:"alice", session:true, administer:false,
    ============================================================ */
 console.log("\n--- the options and the requirements come from the plane, not from this file ---");
 await U.renderSubjectView();
+const AFTER_FIRST_RENDER = CALLED.slice();
 const V = U.INTENT_VOCAB;
 ok("the subject-kind options are the store's own closed vocabulary, exactly",
    JSON.stringify((V.sets.entity_kind||[]).slice().sort()) === JSON.stringify(STORE_ENTITY_KINDS.slice().sort()));
@@ -229,11 +282,36 @@ ok("the relation kinds offered are exactly the store's own set",
    JSON.stringify((V.sets.relation_kind||[]).slice().sort()) === JSON.stringify(STORE_RELATION_KINDS.slice().sort()));
 ok("the stage-requiredness options are exactly the store's own set",
    JSON.stringify((V.sets.stage_required||[]).slice().sort()) === JSON.stringify(STORE_REQUIREDNESS.slice().sort()));
-ok("every one of those sets was read FROM THE PLANE (published, or the op's own refusal)",
-   ["published","refusal"].includes(V.source.entity_kind) &&
-   ["published","refusal"].includes(V.source.relation_kind) &&
-   ["published","refusal"].includes(V.source.stage_required));
+/* CORRECTED 2026-08-04 (REC-35), never exempted, and the correction is the
+   delegation landing. This accepted EITHER source — "published, or the op's own
+   refusal" — because when UI-13 shipped, the plane enforced these three sets and
+   published none of them, so the refusal-harvest was the only arm that could
+   run and pinning `published` would have failed. REC-35 publishes all three in
+   `op=affordances`' VOCABULARIES, so arm 1 of `loadIntentVocab` now takes them
+   and the disjunction has stopped measuring anything: it would pass unchanged
+   if the publication silently disappeared and the surface fell back. Pinned to
+   `published`, which is the property the delegation was asked for. */
+ok("every one of those sets is read from the PUBLICATION — op=affordances, arm 1 (REC-35 landed)",
+   V.source.entity_kind === "published" &&
+   V.source.relation_kind === "published" &&
+   V.source.stage_required === "published");
 ok("op=affordances was asked FIRST, before any refusal was harvested", CALLED.includes("affordances"));
+/* AND THE PROBE IS DEAD, which is the other half of the delegation and the half
+   a source label cannot prove on its own. `loadIntentVocab`'s fallback arm asks
+   the ENFORCING OP with a body the store refuses and parses the legal set out of
+   the sentence; if it ran, the ops would appear here. Neither `relationdeclare`
+   nor `progressiondefine` is reached by anything else on this screen, and
+   `entitycreate` is reached exactly ONCE — by the entity pre-flight, which is a
+   different mechanism (INTENT_HOLD request-shaping) and CONDUCT's standing
+   ruling keeps it. A second `entitycreate` here would be the retired probe.
+   ZERO SURFACE CHANGE is the point: not one executable byte of app.html moved
+   for this: the fallback stayed exactly where UI-13 left it and simply stopped
+   being reached, which is what "the day they appear, arm 1 takes them" meant. */
+ok("the options probe is DEAD for all three: the vocabulary load reached no enforcing op",
+   !AFTER_FIRST_RENDER.includes("relationdeclare") && !AFTER_FIRST_RENDER.includes("progressiondefine")
+   && AFTER_FIRST_RENDER.filter(x=>x==="entitycreate").length === 1);
+ok("and no refusal sentence was harvested for any of the three (the parse arm never ran)",
+   V.words.entity_kind === "" && V.words.relation_kind === "" && V.words.stage_required === "");
 ok("the kind chooser renders the plane's options", /ordinance/.test(html("#subj-new")) && /Contract/.test(html("#subj-new")));
 
 /* ============================================================
