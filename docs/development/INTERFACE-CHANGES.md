@@ -359,3 +359,20 @@ negative control breaks exactly that merge and fails naming it.
 ### IC-2 · CONFIRM · 2026-08-03 · COFF-7 (PPTX hidden slides) — the kind vocabulary grows, the envelope does not change shape
 
 `pptx.mjs` adds ONE kind to the confirmed envelope: `{ kind:"hidden-slide", slide:<1-based | null when the deck order is unreadable>, part, source:<slide-shape ref | null> }` — the pptx analogue of xlsx's `hidden-sheet` (DEC-5): a slide whose bytes declare `show="0"` (read from BOTH the slide part's `<p:sld>` root, ECMA-376's home for CT_Slide@show, and the `sldIdLst` entry) is invisible in every presented form, still FULLY extracted (text, notes, links), and flagged here and in `text()`'s units, which gain `hidden` on `slides[]`/`speakerNotes[]` exactly as xlsx's `sheets[]` carry it. Same `{container, kinds[], items[], undetermined[], counts}` carriage; no field of the envelope itself changed.
+
+## IC-3 · I3: `NOT_PROBLEMS` → `NOT_INQUIRIES` on `op=dispose` · PROPOSED, ACCEPTED AND CHANGED 2026-08-03 (one act, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-10's type collapse renames
+  `op=dispose`'s refusal reason `NOT_PROBLEMS` to `NOT_INQUIRIES` (DATA-MODEL §2.7
+  change 13 — the member-facing vocabulary is inquiry now). **This is a RENAME of an
+  existing wire string, i.e. breaking for any consumer pinning it**, which is why it
+  gets a protocol entry rather than riding an additive bump.
+- **Consumers:** UI (dormant). CONDUCT answers on its behalf per step 3, in writing,
+  naming that it did so: `AGREE` — measured, not assumed: the UI's dispose path reads
+  the refusal's `reason` for display and pins no `NOT_PROBLEMS` literal in a
+  conditional; UI-10 (queued, now runnable) is the vocabulary catch-up item and
+  carries the rename's surface half. If a pinned literal surfaces when UI-10 runs,
+  it is corrected there, never exempted.
+- **Version:** I3 1.6.0 → **2.0.0** in `INTERFACES.md` — major, because a renamed
+  reason is a break by definition even when the measured consumer impact is nil;
+  calling it additive would teach the registry to lie.

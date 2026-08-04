@@ -1,5 +1,14 @@
 # Area RECORD: the store core, retrieval, and the scheduler
 
+> **Head note, 2026-08-03 (CONDUCT, the licensed supersession correction):** the
+> stand-up framing and plan section below are STALE — they end at REC-3 while
+> REC-1..10, REC-19, REC-25(active) and the M0 lane have all run. The area's
+> current plan is `QUEUE.md`'s RECORD section (the case-making run: next REC-11 →
+> REC-13 → REC-12 → REC-14, with scopes carrying every DEC reshape). A RECORD
+> worker should read its queue item and `research/RECONCILED.md` as authority;
+> this file's remaining value is the path/ownership notes. The next RECORD session
+> to close a turn should rewrite it as its own account.
+
 Written 2026-07-31 by session BOB, standing this area up. **It exists because the
 ground was already being edited with nobody owning it**: `store.mjs` is ~4,900 lines
 and only its link, capture, task and reachability functions were claimed, so the
