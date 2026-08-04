@@ -43,6 +43,11 @@ import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 
 let n = 0; const fails = [];
+/* A DOM stub only creates an element when it is QUERIED, so a section where the
+   surface never touched `#bl-err` (because the act returned before it could)
+   has no entry for it. Reading through H keeps "it was never written" and "it
+   was written empty" the same assertion, which is what these checks mean. */
+const H = (c, sel) => ((c.__els.get(sel)) || { _html:"" })._html;
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
 
 /* ---- the plane's OWN owner arithmetic, mirrored here ONLY to BUILD the mock
@@ -115,10 +120,19 @@ function makeCtx(plane){
   return ctx;
 }
 
-const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__pf=ballotPreflight;"
+/* CORRECTED 2026-08-05 (UI-22). `ballotPreflight` and `ballotValidate` no
+   longer exist under those names, and the rename is the correction: the
+   function computed a REFUSAL — a store reason code with a sentence written on
+   this surface attached to it — which UI-16 named the FOURTH pre-DEC-8 residue.
+   Its GATES were always right (they read `op=projectownerarith`'s live row) and
+   they survive as `ballotNeeds`, which answers only whether the act has what it
+   takes. No probe is available here: `projectOwnerRemove()` judges the TARGET
+   before the reason and WRITES the vote at the end of the same method, so a
+   probe carrying real values would cast the vote. Hence the no-refusal shape. */
+const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__pf=ballotNeeds;"
   + "globalThis.__den=ballotDenominator;globalThis.__denHtml=ballotDenominatorHtml;"
   + "globalThis.__divHtml=ballotDivergenceHtml;globalThis.__open=openBallotDialog;"
-  + "globalThis.__choose=ballotChoose;globalThis.__validate=ballotValidate;globalThis.__do=doBallot;"
+  + "globalThis.__choose=ballotChoose;globalThis.__validate=ballotPaint;globalThis.__do=doBallot;"
   + "globalThis.__ladder=weightLadderHtml;globalThis.__can=canBallot;";
 
 function boot(source, plane){
@@ -133,37 +147,49 @@ const SRC = appScript();
 const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
 
 /* ============================================================
-   THE PRE-FLIGHT is a pure function whose arithmetic gates READ the op's
-   computed `live` row — prove it directly first, at several owner counts.
+   WHAT THE ACT TAKES is a pure function whose arithmetic gates READ the op's
+   computed `live` row — prove it directly first, at several owner counts. The
+   assertions below are the SAME facts the old pre-flight asserted, moved off
+   `refusal.reason` (which this surface no longer composes) and onto whether the
+   act is READY and which requirement is outstanding.
    ============================================================ */
 {
   const ctx = boot(SRC, makePlane({ owners:FIVE }));
   const live5 = ownerMath(5);           // votesNeeded 3, eligible 4, targetMayVote false
   const P = extra => ctx.__pf({ live:live5, owners:FIVE, me:"alice", ...extra });
+  const outstanding = r => r.needs.filter(g=>!g.pass).map(g=>g.id);
 
-  ok("pre-flight: an empty reason WILL refuse (NO_REASON)",
-     P({ target:"bob", reason:"" }).refusal.reason==="NO_REASON");
-  ok("pre-flight: a reason authored against another owner clears every gate",
-     P({ target:"bob", reason:"stepped away months ago" }).ok===true);
-  ok("pre-flight: a target who is not an owner WILL refuse (NOT_AN_OWNER)",
-     P({ target:"stranger", reason:"x" }).refusal.reason==="NOT_AN_OWNER");
-  ok("pre-flight: at five owners, voting to remove YOURSELF WILL refuse (TARGET_CANNOT_VOTE)",
-     P({ target:"alice", reason:"x" }).refusal.reason==="TARGET_CANNOT_VOTE");
-  ok("pre-flight: a member who is not an owner WILL refuse (NOT_THE_OWNER)",
-     ctx.__pf({ live:live5, owners:FIVE, me:"nate", target:"bob", reason:"x" }).refusal.reason==="NOT_THE_OWNER");
+  ok("needs: an empty reason leaves the act NOT ready, with the reason outstanding",
+     P({ target:"bob", reason:"" }).ready===false && outstanding(P({ target:"bob", reason:"" })).includes("reason"));
+  ok("needs: a reason authored against another owner makes the act ready",
+     P({ target:"bob", reason:"stepped away months ago" }).ready===true);
+  ok("needs: a target who is not an owner leaves the target requirement outstanding",
+     outstanding(P({ target:"stranger", reason:"x" })).includes("target"));
+  ok("needs: at five owners, voting to remove YOURSELF is not a vote you may cast",
+     outstanding(P({ target:"alice", reason:"x" })).includes("vote"));
+  ok("needs: a member who is not an owner has the owner requirement outstanding",
+     outstanding(ctx.__pf({ live:live5, owners:FIVE, me:"nate", target:"bob", reason:"x" })).includes("owner"));
 
   /* LAST_OWNER comes straight from the op: possible=false at one owner. */
   const live1 = ownerMath(1);
-  ok("pre-flight: the last owner is not removable (LAST_OWNER, read from live.possible)",
-     ctx.__pf({ live:live1, owners:["alice"], me:"alice", target:"alice", reason:"x" }).refusal.reason==="LAST_OWNER");
+  const last = ctx.__pf({ live:live1, owners:["alice"], me:"alice", target:"alice", reason:"x" });
+  ok("needs: the last owner is not removable, read from live.possible", outstanding(last).includes("possible"));
+  ok("and the ONLY words beside that row are the arithmetic op's OWN `why`",
+     last.needs.find(g=>g.id==="possible").planeWords === ownerMath(1).why);
 
-  /* THE DIVERGENCE, proven at the pre-flight: at TWO owners the op says
-     targetMayVote=true, so removing YOURSELF is allowed where at five it is not. */
+  /* THE DIVERGENCE, proven here: at TWO owners the op says targetMayVote=true,
+     so removing YOURSELF is allowed where at five it is not. */
   const live2 = ownerMath(2);
-  ok("pre-flight: at TWO owners, voting to remove yourself is ALLOWED — the divergence",
-     ctx.__pf({ live:live2, owners:["alice","bob"], me:"alice", target:"alice", reason:"resigning" }).ok===true);
-  ok("pre-flight NEVER re-derives the threshold — it reads live.possible/targetMayVote",
+  ok("needs: at TWO owners, voting to remove yourself is ALLOWED — the divergence",
+     ctx.__pf({ live:live2, owners:["alice","bob"], me:"alice", target:"alice", reason:"resigning" }).ready===true);
+  ok("this function NEVER re-derives the threshold — it reads live.possible/targetMayVote",
      !/Math\.floor/.test(String(ctx.__pf)) && !/votesNeeded\s*=/.test(String(ctx.__pf)));
+  /* THE UI-22 PROPERTY, asserted structurally: it composes no refusal at all. */
+  ok("and it composes NO refusal — no reason code, no detail, nothing to word",
+     !/refusal/.test(String(ctx.__pf)) && !/detail\s*:/.test(String(ctx.__pf))
+     && P({ target:"bob", reason:"" }).refusal === undefined);
+  for(const code of ["NOT_THE_OWNER","NOT_AN_OWNER","NO_REASON","LAST_OWNER","TARGET_CANNOT_VOTE"])
+    ok(`the ballot surface names no ${code} refusal of its own`, !new RegExp(`reason:\\s*"${code}"`).test(SRC));
 }
 
 /* ============================================================
@@ -185,7 +211,7 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
   const plane = makePlane({ owners:FIVE });
   const ctx = boot(SRC, plane);
   await ctx.__open("PROJ-14", "The sewer contract case");
-  const dlg = ctx.__els.get("#dlg")._html;
+  const dlg = H(ctx,"#dlg");
 
   ok("the surface fetched the computed tally (op=projectownerarith)", plane.CALLS.some(c=>c.op==="projectownerarith"));
   ok("the surface fetched the owners to choose from (op=projectparticipants)", plane.CALLS.some(c=>c.op==="projectparticipants"));
@@ -209,30 +235,35 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
   /* CHOOSE + the pre-flight painted in the dialog */
   ok("CHOOSE: the dialog offers the owners as targets (bob, carol, …)", dlg.includes(">bob<") || dlg.includes("bob"));
   ok("CHOOSE: the member's own row is marked (you)", dlg.includes("(you)"));
-  const pf = ctx.__els.get("#bl-pf")._html;
-  ok("PRE-FLIGHT: the panel is painted before the act runs", /what it will refuse/i.test(pf));
-  ok("PRE-FLIGHT: with no reason yet, it shows the reason requirement", /Required/.test(pf));
-  ok("PRE-FLIGHT: the commit button is disabled until the pre-flight clears", ctx.__els.get("#bl-go").disabled===true);
-  ok("AUTHOR: the reason field is never prefilled (placeholder only)", dlg.includes("placeholder=") && dlg.includes("></textarea>"));
+  const pf = H(ctx,"#bl-pf");
+  ok("the panel states WHAT THE ACT TAKES, before the act runs", /What this act takes/i.test(pf));
+  ok("and it forecasts no refusal in this page's own words",
+     !/what it will refuse/i.test(pf) && !/Required, and never written for you/.test(pf)
+     && !/is refused until/i.test(pf) && !/nothing stands in the way/i.test(pf));
+  ok("THE COMMIT CONTROL IS ABSENT until the act has what it takes — not present and greyed",
+     !/id="bl-go"/.test(H(ctx,"#bl-commit")) && !/disabled/.test(H(ctx,"#bl-commit")));
+  ok("AUTHOR: the reason field is never prefilled, and carries no drafted placeholder",
+     dlg.includes("></textarea>") && !/id="bl-reason"[^>]*placeholder=/.test(dlg));
 }
 
 /* ============================================================
-   THE ACT REFUSES BEFORE IT RUNS — empty reason: op=projectownerremove is
-   NEVER sent (the surface refuses first).
+   THE ACT CANNOT RUN WITHOUT WHAT IT TAKES — and it says nothing about the
+   record while it cannot. op=projectownerremove is NEVER sent.
    ============================================================ */
 {
   const plane = makePlane({ owners:FIVE, removeResult:()=>({ ok:true, owner:false }) });
   const ctx = boot(SRC, plane);
   await ctx.__open("PROJ-14", "The sewer contract case");
   const r = await ctx.__do();                 // reason left empty
-  ok("empty-reason ballot returns refused (surface-side)", r && r.refused===true && r.reason==="NO_REASON");
-  ok("empty-reason ballot sent NO op=projectownerremove — refused BEFORE the plane",
-     !plane.CALLS.some(c=>c.op==="projectownerremove"));
-  ok("empty-reason ballot tells the member no vote was cast",
-     /no vote has been cast/i.test(ctx.__els.get("#bl-err")._html));
+  ok("with no reason there is no control, and a direct call casts nothing", r === undefined);
+  ok("empty-reason ballot sent NO op=projectownerremove", !plane.CALLS.some(c=>c.op==="projectownerremove"));
+  ok("and the surface wrote no refusal of its own while doing so",
+     !/no vote has been cast/i.test(H(ctx,"#bl-err"))
+     && !/won't run/i.test(H(ctx,"#dlg")));
 }
 
-/* the ARITHMETIC refusal is felt before running too: self-vote at 3+ owners */
+/* the ARITHMETIC requirement is felt before running too: self-vote at 3+ owners
+   leaves the act NOT ready, so no control exists and nothing is sent. */
 {
   const plane = makePlane({ owners:FIVE, removeResult:()=>({ ok:true }) });
   const ctx = boot(SRC, plane);
@@ -240,10 +271,36 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
   ctx.__choose("alice");                       // vote to remove myself, at five owners
   ctx.__els.get("#bl-reason").value = "I want out";
   ctx.__validate();
+  ok("self-vote at five owners leaves the act unready, so the control is ABSENT",
+     !/id="bl-go"/.test(H(ctx,"#bl-commit")));
   const r = await ctx.__do();
-  ok("self-vote at five owners is refused before running (TARGET_CANNOT_VOTE)",
-     r && r.refused===true && r.reason==="TARGET_CANNOT_VOTE");
   ok("and op=projectownerremove was never sent for it", !plane.CALLS.some(c=>c.op==="projectownerremove"));
+  ok("and nothing was worded about it here",
+     !/TARGET_CANNOT_VOTE/.test(H(ctx,"#dlg"))
+     && !/does not vote/.test(H(ctx,"#bl-err")));
+}
+
+/* ============================================================
+   A REFUSAL THE RECORD MAKES — the surface renders its sentence, verbatim,
+   and none of its own. This is the arm the no-refusal shape rests on: what the
+   probe cannot reach, the record words at commit time.
+   ============================================================ */
+const PLANE_NOT_THE_OWNER = "only an owner of this project votes on its ownership";
+{
+  const plane = makePlane({ owners:FIVE,
+    removeResult:()=>({ ok:false, reason:"NOT_THE_OWNER", detail:PLANE_NOT_THE_OWNER }) });
+  const ctx = boot(SRC, plane);
+  await ctx.__open("PROJ-14", "The sewer contract case");
+  ctx.__choose("bob");
+  ctx.__els.get("#bl-reason").value = "stepped away months ago";
+  ctx.__validate();
+  const r = await ctx.__do();
+  const err = H(ctx,"#bl-err");
+  ok("the record's OWN sentence is what renders", err.includes(PLANE_NOT_THE_OWNER));
+  ok("and its code is shown beside it, unmodified", err.includes("NOT_THE_OWNER"));
+  ok("the refused act reports the record's code back to its caller", r && r.reason==="NOT_THE_OWNER");
+  ok("no sentence of this surface's own accompanies it",
+     !/won't run/i.test(err) && !/no vote has been cast/i.test(err) && !/Only an owner of a project votes/.test(err));
 }
 
 /* ============================================================
@@ -260,8 +317,11 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
   ctx.__choose("bob");
   ctx.__els.get("#bl-reason").value = "Bob left the group in March";
   ctx.__validate();
-  ok("with a reason and a valid target, the pre-flight clears and the button enables",
-     ctx.__els.get("#bl-go").disabled===false);
+  /* CORRECTED 2026-08-05 (UI-22): the control is ABSENT until the act has what
+     it takes and then EXISTS — it is never rendered disabled, so there is no
+     `disabled` flag left to assert on. */
+  ok("with a reason and a valid target, the commit control EXISTS",
+     /id="bl-go"/.test(H(ctx,"#bl-commit")) && !/disabled/.test(H(ctx,"#bl-commit")));
   const r = await ctx.__do();
 
   const rm = plane.CALLS.find(c=>c.op==="projectownerremove");
@@ -271,7 +331,7 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
   ok("the browser never sends who is voting (`by` is the plane's server-side stamp)",
      rm && !("by" in rm.params) && !("author" in rm.params) && !("actor" in rm.params));
 
-  const rc = ctx.__els.get("#dlg")._html;
+  const rc = H(ctx,"#dlg");
   ok("RECEIPT: the vote is recorded, the ballot not yet decided", /Your vote is in/.test(rc));
   ok("RECEIPT: it shows the running tally FROM the op (1 of 2)", rc.includes("1 of 2"));
   ok("RECEIPT: it says what still must happen (1 more owner must vote)", /1 more owner must vote/.test(rc));
@@ -295,7 +355,7 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
   ctx.__els.get("#bl-reason").value = "Agreed handover of ownership";
   ctx.__validate();
   const r = await ctx.__do();
-  const rc = ctx.__els.get("#dlg")._html;
+  const rc = H(ctx,"#dlg");
   ok("CARRIED: the receipt confirms the removal carried", /Carried\./.test(rc));
   ok("CARRIED: it names who is no longer an owner", rc.includes("bob"));
   ok("CARRIED: it lists the deciders FROM the return", rc.includes("alice") && rc.includes("bob"));
@@ -315,7 +375,7 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
   const plane = makePlane({ owners:FIVE, removeResult:()=>({ ok:true }) });
   const ctx = boot(SRC, plane);
   await ctx.__open("PROJ-14", "The sewer contract case");
-  const chrome = ctx.__els.get("#dlg")._html + ctx.__els.get("#bl-pf")._html
+  const chrome = H(ctx,"#dlg") + H(ctx,"#bl-pf")
     + ctx.__ladder("reasoned","x") + ctx.__denHtml(ownerMath(5), null) + ctx.__divHtml(arithTable());
   for(const word of ["op=", "projectownerremove", "projectownerarith", "votesNeeded", "eligibleVoters",
                      "member_id", "VOTES_SHORT", "current_state", "capture_sha", "bundle.md"])
@@ -337,7 +397,7 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
   const planeNC = makePlane({ owners:FIVE });
   const ctxNC = boot(BROKEN, planeNC);
   await ctxNC.__open("PROJ-14", "The sewer contract case");
-  const dlgNC = ctxNC.__els.get("#dlg")._html;
+  const dlgNC = H(ctxNC,"#dlg");
   /* Scope to the DENOMINATOR panel's own "takes <b>N of M</b>" line — the
      divergence table also renders "3 of 5" (its n=5 row, straight from the op's
      `table`, a DIFFERENT §B wiring), so the break shows precisely in the
@@ -357,5 +417,38 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
      dlgOK.includes("takes <b>3 of 5</b>") && !dlgOK.includes("takes <b>99 of 5</b>"));
 }
 
+/* ============================================================
+   NEGATIVE CONTROL, SECOND ARM — THE ARM-(d) INSTRUMENT, added 2026-08-05 by
+   UI-22 and RUN. Restore what this item deleted: a `need:` SENTENCE on the
+   requirement rows, composed here, rendered where the record's own account
+   belongs. The reason CODES the record uses are untouched by the mutation — a
+   suite pinning only codes would be GREEN through it — so the assertion pins
+   the SENTENCE and names this surface as its author.
+   RUN 2026-08-05: 3 of 79 failed. Restored byte-identical.
+   ============================================================ */
+{
+  const BROKEN = SRC.replace(
+    '{ id:"reason", title:"A reason, in your words",          pass:why.length>0 },',
+    '{ id:"reason", title:"A reason, in your words", pass:why.length>0, planeWords:"Required, and never written for you. It is refused until you write one." },');
+  ok("NEG-CONTROL (arm d): the mutation actually changed the source", BROKEN !== SRC);
+  const ctxD = boot(BROKEN, makePlane({ owners:FIVE }));
+  await ctxD.__open("PROJ-14", "The sewer contract case");
+  const pfD = H(ctxD,"#bl-pf");
+  ok("NEG-CONTROL (arm d): a sentence this surface wrote now stands where only the record's account belongs",
+     /is refused until you write one/i.test(pfD));
+  ok("NEG-CONTROL (arm d): and the panel's own scan catches it",
+     /(is refused until|Required, and never written for you)/i.test(pfD));
+  /* control-of-the-control */
+  const ctxE = boot(SRC, makePlane({ owners:FIVE }));
+  await ctxE.__open("PROJ-14", "The sewer contract case");
+  ok("NEG-CONTROL (arm d) contrast: the intact panel carries no such sentence",
+     !/(is refused until|Required, and never written for you)/i.test(H(ctxE,"#bl-pf")));
+  /* And the ONE prose the intact panel does carry is the arithmetic op's own. */
+  const ctxF = boot(SRC, makePlane({ owners:["alice"] }));
+  await ctxF.__open("PROJ-14", "The sewer contract case");
+  ok("the only words the intact panel puts beside an outstanding requirement are the op's own `why`",
+     H(ctxF,"#bl-pf").includes(ownerMath(1).why));
+}
+
 if(fails.length){ console.error(`act-ballot: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`act-ballot: ${n} assertions, all green — choose · pre-flight refusal · authored reason · receipt · weight-ladder(reasoned) · DENOMINATOR from op · DIVERGENCE at two owners; negative control RUN`);
+console.log(`act-ballot: ${n} assertions, all green — choose · what the act TAKES (no refusal composed) · absent-not-greyed commit · plane-worded refusal · authored reason · receipt · ladder · DENOMINATOR from op · DIVERGENCE at two owners; negative controls RUN (denominator wiring · arm-(d) invented sentence)`);

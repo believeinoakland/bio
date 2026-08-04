@@ -101,6 +101,26 @@
  *       holds in production, and the surface's own fence is what this file is
  *       responsible for, because "the plane would have stopped me" is not a
  *       property of this file.
+ *
+ *   (d) UI-22, ADDED AND RUN 2026-08-05: BREAK THE TYPE ROUTING. Delete the two
+ *       lines in `queueOpen` that send a case to the surface its TYPE has:
+ *         `if(ty === "project") return openProjectWorkspace(id);`
+ *         `if(ty === "inquiry") return openInquiry(id);`
+ *       -> RUN: 2 of 133 failed, and both name the WRONG DESTINATION rather
+ *       than merely reporting that something changed — a project case lands on
+ *       `CUR.type === "bundle"` with the project's id as its key (the raw
+ *       document) instead of `#project/<id>`, and a question case the same.
+ *       ALSO RUN ON DISK against civicos-ui/app.html itself, not only in a VM,
+ *       because it is the arm the item's acceptance names: app.html's sha256
+ *       was 497bd9b79ce9e788a7aa1f4dc7a38d759b24ffdbc1ccfef639da8764de45ad9a
+ *       before and after, and the suite reported 4 of 133 FAILED — "a PROJECT
+ *       case reaches the workspace, at its own address", "an INQUIRY case
+ *       reaches the question page, at its own address", "and clicking it lands
+ *       on the workspace" (the WIRING arm, not only the function), plus the
+ *       in-VM arm's own "the mutation actually changed the source".
+ *       THE HARM is UI-16's measured UNBLOCKS half: the workspace and the
+ *       question page are both unreachable from the one screen a member starts
+ *       on, so DEC-10's grouping key groups things a member cannot travel to.
  */
 import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
@@ -294,15 +314,26 @@ function makeCtx(plane){
   /* querySelectorAll over the painted HTML, good enough to find the data-*
      handles the surface wires — which is what lets the harness CLICK a Retry or
      a Mute rather than calling the function behind it. */
+  /* WIDENED 2026-08-05 (UI-22): the stub used to copy only the ONE data-*
+     attribute the selector named, so a control carrying `data-open` AND
+     `data-type` arrived at the wiring with its type stripped — and a routing
+     test would then have proven only that the stub forgets things. It now
+     lifts EVERY data-* off the element the match sits inside, which is what a
+     browser hands the handler. */
   function findAll(sel){
     const m = /^#q \[data-([a-z]+)\]$/.exec(sel) || /^\[data-([a-z]+)="([^"]*)"\]$/.exec(sel);
     if(!m) return [];
     const attr = m[1];
     const host = els.get("#q"); if(!host) return [];
     const out = [];
-    for(const mm of host._html.matchAll(new RegExp(`data-${attr}="([^"]*)"`, "g"))){
-      if(m[2] !== undefined && m[2] !== mm[1]) continue;
-      const e = el(sel); e.dataset[attr] = mm[1];
+    for(const tag of host._html.matchAll(/<[a-z][^>]*>/g)){
+      const t = tag[0];
+      const own = [...t.matchAll(/data-([a-z]+)="([^"]*)"/g)];
+      const mine = own.find(a=>a[1] === attr);
+      if(!mine) continue;
+      if(m[2] !== undefined && m[2] !== mine[2]) continue;
+      const e = el(sel);
+      for(const a of own) e.dataset[a[1]] = a[2];
       out.push(e); wired.push(e);
     }
     return out;
@@ -327,7 +358,11 @@ const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__renderQueue=renderQueue;
   + "globalThis.__resolveTask=resolveTask;globalThis.__forwardTask=forwardTask;"
   + "globalThis.__queueRun=queueRun;globalThis.__FEEDS=QUEUE_FEEDS;globalThis.__RULE=QUEUE_ORDER_RULE;"
   + "globalThis.__mutableKinds=queueMutableKinds;globalThis.__order=queueOrder;"
-  + "globalThis.__seen=()=>QUEUE_SEEN;globalThis.__go=go;";
+  + "globalThis.__seen=()=>QUEUE_SEEN;globalThis.__go=go;"
+  /* UI-22: the routing chore. `__wire` re-runs the binding so a test can click
+     a case heading; `__open` is the one function every [data-open] goes
+     through, and `__cur` is where the surface says it has arrived. */
+  + "globalThis.__wire=queueWire;globalThis.__open=queueOpen;globalThis.__cur=()=>CUR;";
 
 const SRC = appScript();
 function boot(plane, me){
@@ -701,6 +736,72 @@ async function click(ctx, attr, value){
      && /id:"queue"/.test(SRC));
 }
 
+/* ===== (10) UI-22: WHERE A CASE HEADING GOES, AND IT IS NOT ONE PLACE =====
+   UI-16 measured the gap: every `[data-open]` in this region called
+   `openBundle`, so a queue row filed under a PROJECT opened the project's raw
+   document instead of the workspace UI-16 had just built, and a row filed under
+   a QUESTION opened its document instead of the question page UI-11 built.
+   Neither surface was reachable from the screen a member starts on. The type is
+   the RECORD's — `op=queue`'s ancestor rows carry it — and DEC-10 is what makes
+   the grouping key load-bearing enough to travel on. */
+{
+  const plane = makePlane({});
+  const ctx = boot(plane);
+  await ctx.__renderQueue();
+  const html = q(ctx);
+
+  /* The heading is an ADDRESS, and it carries the record's own type. */
+  ok("the PROJECT case heading is openable and carries the record's type",
+     /data-open="PROJ-2026-0001"[^>]*data-type="project"/.test(html));
+  ok("the INQUIRY case heading is openable and carries the record's type",
+     /data-open="INQ-2026-0001"[^>]*data-type="inquiry"/.test(html));
+  ok("a SUBJECT link carries no type, because the record published none for it — and is therefore a document",
+     /data-open="INFO-2026-0088"(?![^>]*data-type)/.test(html));
+
+  /* Drive the ONE function every wired control goes through. */
+  await ctx.__open("PROJ-2026-0001", "project");
+  ok("a PROJECT case reaches the workspace, at its own address",
+     ctx.location.hash === "#project/PROJ-2026-0001" && ctx.__cur().type === "project");
+  await ctx.__open("INQ-2026-0001", "inquiry");
+  ok("an INQUIRY case reaches the question page, at its own address",
+     ctx.location.hash === "#inquiry/INQ-2026-0001" && ctx.__cur().type === "inquiry");
+  await ctx.__open("INFO-2026-0088", "information");
+  ok("a DOCUMENT still opens the document", ctx.__cur().type === "bundle" && ctx.__cur().key === "INFO-2026-0088");
+  await ctx.__open("INFO-2026-0088", null);
+  ok("and so does a subject the record published no type for — nothing is inferred from the id's shape",
+     ctx.__cur().key === "INFO-2026-0088");
+
+  /* THE WIRING, not only the function behind it: the painted heading's own
+     handler is what must carry the type through. */
+  ctx.__wire();
+  const wiredCase = ctx.__wired.filter(e=>e.dataset.open === "PROJ-2026-0001" && e.dataset.type === "project");
+  ok("the painted PROJECT heading is WIRED with its type intact", wiredCase.length >= 1);
+  ctx.location.hash = "";
+  await wiredCase[0].onclick();
+  ok("and clicking it lands on the workspace", ctx.location.hash === "#project/PROJ-2026-0001");
+}
+
+/* ===== (10b) NEGATIVE CONTROL — BREAK THE TYPE ROUTING, RUN 2026-08-05 =====
+   Send every case to `openBundle` again, exactly as it was before this item,
+   and confirm the harness FAILS NAMING THE WRONG DESTINATION rather than going
+   quietly green. Restored byte-identical after. */
+{
+  const BROKEN = SRC.replace('  if(ty === "project") return openProjectWorkspace(id);\n  if(ty === "inquiry") return openInquiry(id);',
+                             '  /* NEGATIVE CONTROL: type routing removed */');
+  ok("NEG-CONTROL (routing): the mutation actually changed the source", BROKEN !== SRC);
+  const ctxNC = makeCtx(makePlane({}));
+  vm.runInContext(BROKEN + EXPORTS, ctxNC);
+  ctxNC.__PLANE.session = true;
+  ctxNC.__PLANE.me = { member:"m_alice", session:true, administer:false, capabilities:["contribute"] };
+  await ctxNC.__renderQueue();
+  await ctxNC.__open("PROJ-2026-0001", "project");
+  ok("NEG-CONTROL (routing): a PROJECT case no longer reaches the workspace — it lands on the DOCUMENT instead",
+     ctxNC.location.hash !== "#project/PROJ-2026-0001" && ctxNC.__cur().type === "bundle" && ctxNC.__cur().key === "PROJ-2026-0001");
+  await ctxNC.__open("INQ-2026-0001", "inquiry");
+  ok("NEG-CONTROL (routing): and an INQUIRY case no longer reaches the question page",
+     ctxNC.location.hash !== "#inquiry/INQ-2026-0001" && ctxNC.__cur().type === "bundle" && ctxNC.__cur().key === "INQ-2026-0001");
+}
+
 /* ============ the vocabulary guard, over every page rendered ============== */
 {
   const plane = makePlane({});
@@ -717,4 +818,4 @@ async function click(ctx, attr, value){
 }
 
 if(fails.length){ console.error(`queue: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`queue: ${n} assertions, all green — one surface over three, grouped by case, one event under two homes clearing everywhere with the resolver named, an ungrouped item, per-feed failure named and count-free, Retry scoped to the failed feed, the all-clear withheld, the ordering rule stated, and a mute that reaches conditions only`);
+console.log(`queue: ${n} assertions, all green — one surface over three, grouped by case, one event under two homes clearing everywhere with the resolver named, an ungrouped item, per-feed failure named and count-free, Retry scoped to the failed feed, the all-clear withheld, the ordering rule stated, a mute that reaches conditions only, and a case heading that travels BY TYPE to the workspace / the question page`);

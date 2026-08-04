@@ -260,6 +260,8 @@ h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px
 .q-muted{font-size:12.5px;color:var(--ink);background:var(--paper-2);border:var(--hair);border-radius:var(--r-2);padding:9px 11px;margin:0 0 18px;line-height:1.45}
 .q-case{margin:0 0 30px}
 .q-case>h2{font-family:var(--font-record);font-size:17px;font-weight:600;margin:0 0 4px;padding-bottom:6px;border-bottom:var(--hair)}
+.q-case-open{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.q-case-open:hover{text-decoration:underline}
 .q-case-kind{font-family:var(--font-fact);font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-left:8px}
 .q-case-meta{font-size:12px;color:var(--muted);margin:0 0 10px}
 .q-item{background:var(--sheet);border:var(--hair);padding:14px 16px;margin:0 0 12px;box-shadow:var(--e-2)}
@@ -788,11 +790,14 @@ function canRelease(){
   return !!(PLANE.session && PLANE.me && PLANE.me.session
             && (PLANE.me.capabilities||[]).includes("contribute"));
 }
-/* Disposition (defer/dismiss an inquiry) is capability-gated exactly like release:
-   op=dispose NEEDS `contribute` (bio-plane/src/index.mjs) and the store stamps
-   the author from the session, so a member without contribute gets no act
-   surface rather than one that fails on submit. Same shape as canRelease. */
-function canDispose(){ return canRelease(); }
+/* `canDispose` STOOD HERE and was DELETED on 2026-08-05 by UI-22. It restated
+   `op=dispose`'s NEEDS (`contribute`, read out of bio-plane/src/index.mjs) so
+   this surface could decide for itself whether the act was reachable. The
+   published act carries its own `needs` and `mode`, and `actReachable` reads
+   them — one function over the publication, rather than a copy per act that
+   goes stale the day a capability moves. `canRelease` above survives because
+   two callers outside the act surfaces still ask it (the unfinished-capture
+   banner and the review screen); it is on UI-23's sweep, not this item's. */
 
 /* ============================================================
    DATA: every op contract in one place, plus liveness.
@@ -896,6 +901,22 @@ async function boot(){
   PLANE.preview = false;
   const w = (await rec("whoami")).result || {};
   PLANE.me = w;
+  /* MEASURED DEFECT, FIXED 2026-08-05 BY UI-22, and it is a live one rather
+     than a tidy-up. `loadActSource()` — the one seam that reads
+     `op=affordances`' published VOCABULARIES — had NO CALLER anywhere in this
+     file. UI-12 built it, deleted the surface-side disposition array in favour
+     of it, and every harness that needed the set called `loadActSource` itself
+     in its own boot, so nothing went red. Against the real app `actVocab()`
+     therefore answered the empty set forever: the dispose dialog offered NO
+     disposition to choose, and the document page's disposition bar drew no
+     button. This is D-173's shape one layer up — a mock supplying what the
+     application never did — and it is exactly the "test through the op, verify
+     live" rule the repository has already paid for twice. Awaited here, before
+     the first screen paints, so no surface can render a control from a
+     vocabulary that has not arrived. It fails soft on its own (the loader
+     swallows and marks itself loaded), so a plane without the op degrades to
+     absent controls rather than a blank app. */
+  await loadActSource(true);
   buildRail(w);
   $("#m-handle").innerHTML = (w.session ? esc(w.handle || w.member || "member") : (w.tokenClass ? esc(w.tokenClass)+" token" : "connected")) + ' <span style="color:var(--muted)">&#9662;</span>';
   $("#m-grp").textContent = GROUP.name;
@@ -4383,47 +4404,85 @@ async function openBundle(id, fromNav){
       ${log.length?log.map(renderLogEntry).join(""):`<div class="empty">No promotions recorded yet.</div>`}
       ${revs.length?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:16px 0 6px">Earlier revisions, kept</h3><div id="diff-holder" data-open=""></div><div class="card">${revRowsHtml}</div>`:""}`, true);
 
-    /* --- release, after the reading --- */
+    /* --- THE ONE AFFORDANCES READ FOR THIS PAGE, taken BEFORE the three
+       sections below rather than after them (MOVED 2026-08-05 by UI-22). Until
+       this turn `relBar`, `dispBar` and `attestBar` each decided for itself
+       whether its control existed — from the document's type, its state, a
+       mirror of the catalog's edge table, and a surface-side capability rule —
+       and the affordances read happened afterwards, for the strip alone. That
+       is a pre-DEC-8 shape: a surface deciding what may be done. One read now
+       answers all four, and a section exists only where the record published
+       the act on THIS object as it stands. --- */
+    let docActs = { ok:false, refusal:{ reason:"NO_ANSWER", detail:"" }, acts:[] };
+    try{ docActs = await actsFor(id); }catch(_){}
+    const publishedHere = a => { const x = actNamed(docActs.acts, a); return (x && actReachable(x)) ? x : null; };
+    const docTitle = fm.title||(proj&&proj.title)||id;
+
+    /* --- release, after the reading. Published by `op=affordances` exactly
+       where the catalog's edge table offers `collected -> verified`, and the
+       CRUCIAL branch is gone: the plane publishes `release` on a crucial
+       document too (deliberately — affordances.mjs's release entry judges the
+       edge and not the criticality) and refuses it at commit as CRUCIAL_IN_BATCH
+       in its own words. The sentence that stood here was this surface's account
+       of that refusal, written before the act had a plane-published pre-flight
+       and before the co-attestation surface it apologised for existed. --- */
     let relBar = "";
-    if(otype==="information" && fm.current_state==="collected"){
-      if(fm.criticality==="crucial")
-        relBar = `<h2 class="sec">Release</h2><p class="rel-note" style="margin:0">This document is marked ${critChip("crucial")}. Verifying crucial material means checking its co-attestations, which is per-document work outside the release flow; that surface is not built yet.</p>`;
-      else if(canRelease())
-        relBar = `<h2 class="sec">Release</h2><div class="rv-bar" style="margin:0"><button class="btn" onclick="openReleaseDialog('${esc(id)}')">Release this document</button><span class="n">Moves it from collected to verified, in your name, on the permanent record.</span></div>`;
+    {
+      const act = publishedHere("release");
+      if(act)
+        relBar = `<h2 class="sec">Release</h2><div class="rv-bar" style="margin:0"><button class="btn" onclick="openReleaseDialog('${esc(id)}')">${esc(act.label)}</button><span class="n">Moves it from collected to verified, in your name, on the permanent record.</span></div>`;
     }
 
-    /* --- disposition, the first ACT: defer or dismiss an inquiry (UI-2) --- */
+    /* --- disposition, the first ACT: defer or dismiss an inquiry (UI-2).
+       The `elevated` arm is gone with the rest: `op=affordances` publishes
+       `dispose` if and only if the machine offers a disposition edge from where
+       this document actually stands, so an elevated question simply has no
+       section — an absent control asserts nothing about the record, and the
+       sentence that stood here asserted a great deal. --- */
     let dispBar = "";
-    if(normalizeType(otype) === "inquiry"){
-      const st = fm.current_state || (proj&&proj.current_state) || vocabFor(FIRST_STATE, otype);
-      const canMove = (disposeLegal(otype)[st]||[]).some(t=>dispositions().includes(t));
-      if(canDispose() && canMove){
-        /* Title/id/state cross the inline handler JSON-encoded and attribute-
+    {
+      const act = publishedHere("dispose");
+      if(act){
+        /* Title and id cross the inline handler JSON-encoded and attribute-
            escaped (a title may carry an apostrophe), the same way the release
-           flow passes its id set — never a bare-quoted string. */
-        const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(fm.title||(proj&&proj.title)||id)), jst = esc(JSON.stringify(st));
-        const jty = esc(JSON.stringify(otype||"inquiry"));
+           flow passes its id set — never a bare-quoted string. The STATE and
+           the TYPE no longer cross it at all: nothing downstream judges a move.
+           The tokens come from the published disposition vocabulary, so this
+           page names none of them. */
+        const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(docTitle));
+        const buttons = dispositions().map(d=>
+          `<button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${esc(JSON.stringify(d))})">${esc(disposeVerb(d))}&hellip;</button>`).join("");
         dispBar = `<h2 class="sec">Disposition</h2>
           <div class="rv-bar" style="margin:0;gap:8px">
-            <button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${jst},'deferred',${jty})">Defer&hellip;</button>
-            <button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${jst},'dismissed',${jty})">Dismiss&hellip;</button>
-            <span class="n">Deferring or dismissing is a reasoned act: reversible and kept, but it records why, in your name.</span>
+            ${buttons}
+            <span class="n">${esc(act.label)} &mdash; the record's own name for this act${act.rung?`, at <b>${esc(act.rung)}</b> weight`:""}. It records why, in your name.</span>
           </div>`;
-      } else if(canDispose() && st==="elevated"){
-        dispBar = `<h2 class="sec">Disposition</h2><p class="rel-note" style="margin:0">This question was carried into a project under the record's earlier vocabulary, so it can no longer be deferred or dismissed.</p>`;
       }
     }
 
     /* --- attestation, the fourth ACT: co-attest a held capture (UI-6). An
        information document that holds a capture can be co-attested: an
        independent timestamp raises it from Grade B toward evidentiary weight.
-       Capability-shaped like the other acts (contribute), and the button says
-       plainly what the act is and what it does not reach. --- */
+
+       THIS ONE COULD NOT JOIN THE OTHERS AND THE REASON IS THE PLANE'S, NOT A
+       SHORTCUT (measured 2026-08-05, UI-22). `attest` is a NON_ACT in
+       `affordances.mjs` — "capture-directed: co-attestation of a capture's
+       existence in time" — so `op=affordances` publishes no entry for it, no
+       label, no `needs` and no `rung`, on this object or on any other. That is
+       a deliberate doctrine (an act whose subject is a capture sha is not an
+       act on a bundle), not an omission, so there is nothing to read and no
+       amount of rewriting here can produce one. What this section CAN do is
+       take the no-refusal shape and stop deciding anything: the control exists
+       when the record hands back a capture to attest and the credential carries
+       what the op needs, and there is no branch, no sentence and no explanation
+       where it does not. The label and the rung remain this surface's own and
+       are the ONE residue this item leaves standing — raised as a DELEGATION to
+       RECORD in CLAIMS.md rather than papered over. --- */
     let attestBar = "";
-    if(otype==="information"){
+    {
       const capSha = primaryCaptureSha(img, fm);
       if(canAttest() && /^[0-9a-f]{64}$/.test(capSha||"")){
-        const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(fm.title||(proj&&proj.title)||id)),
+        const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(docTitle)),
               jsha = esc(JSON.stringify(capSha)), jloc = esc(JSON.stringify(loc||""));
         attestBar = `<h2 class="sec">Attestation</h2>
           <div class="rv-bar" style="margin:0;gap:8px">
@@ -4433,15 +4492,12 @@ async function openBundle(id, fromNav){
       }
     }
 
-    /* --- UI-20: THE PLANE-PUBLISHED ACT STRIP, and the last of the four acts
-       that had ops and no call sites. Everything above this line in openBundle
-       is a pre-DEC-8 bar that decides for itself whether its control exists;
-       this one asks `op=affordances` and renders what came back. `cite`,
-       `retire`, `sever` and `reinstate` have flows here, so they get controls;
-       an act the plane publishes that this page carries in a section of its own
-       is NAMED with where it lives (`elsewhere`, derived from which of those
-       bars actually rendered, never from a list written down); anything else is
-       named with no control at all.
+    /* --- UI-20: THE PLANE-PUBLISHED ACT STRIP. `cite`, `retire`, `sever` and
+       `reinstate` have flows here, so they get controls; an act the plane
+       publishes that this page carries in a section of its own is NAMED with
+       where it lives (`elsewhere`, derived from which of those bars actually
+       rendered, never from a list written down); anything else is named with no
+       control at all.
        The strip is built from what the plane answers, so a member who cannot
        reach an act sees NO control for it (Q12: one credential sentence, not a
        narration per button). */
@@ -4451,8 +4507,7 @@ async function openBundle(id, fromNav){
       if(relBar) elsewhere.push("release");
       if(dispBar) elsewhere.push("dispose");
       if(attestBar) elsewhere.push("attest");
-      const docActs = await actsFor(id);
-      docActBar = actBarHtml(id, fm.title||(proj&&proj.title)||id, docActs,
+      docActBar = actBarHtml(id, docTitle, docActs,
                              { noun, elsewhere }) + credentialSentence(PLANE.me, noun);
     }catch(_){ docActBar = ""; }
 
@@ -6525,26 +6580,51 @@ function releaseRefusal(e){
                    record of it.
    The act's WEIGHT-LADDER rung is shown: disposition is `reasoned`.
    Plane op consumed (I3): op=select (a one-inquiry enumerated selection)
-   then op=dispose(handle,to,reason). op=dispose has NO dry-run, so the
-   pre-flight is computed from the op's DECLARED refusal shape plus the
-   question's own known state — honest against what exists, never a guess.
+   then op=dispose(handle,to,reason).
+
+   THE PRE-FLIGHT WAS REBUILT ON 2026-08-05 BY UI-22, AND THE MEASUREMENT IS
+   THE WHOLE REASON. This flow was written before DEC-8 and before
+   `op=affordances` existed, so it COMPUTED its own NO_REASON, BAD_REASON,
+   NOT_A_DISPOSITION and ILLEGAL_TRANSITION and WORDED every one of them. The
+   paragraph that used to stand here said `op=dispose` has no dry-run and that
+   the refusals were therefore derived from the op's declared shape. That was
+   wrong, and UI-20's ORDERING RULE is what caught it: **the withheld-field
+   pre-flight works wherever the store judges the authored field BEFORE it
+   resolves the selection.** Read in `bio-plane/src/store.mjs` `dispose()` this
+   turn, the order is
+
+     BAD_TARGET_STATE -> NOT_A_DISPOSITION -> NO_REASON -> BAD_REASON
+       -> selectionResolve(handle) -> EMPTY_SELECTION -> NOT_INQUIRIES
+       -> ILLEGAL_TRANSITION -> CITED -> the write
+
+   which is retire's shape exactly: every field a member authors here is judged
+   before the handle is looked at. So this surface sends the member's chosen
+   token and their reason with the HANDLE WITHHELD, and a cleared check is
+   literally `NO_SUCH_SELECTION`. It writes nothing — with no selection there
+   is nothing to move — and an ACCEPTED probe would mean a disposition happened
+   where none was asked for, so it fails CLOSED.
+
+   WHAT THE PROBE CANNOT REACH, stated rather than papered over: everything
+   below `selectionResolve` turns on the OBJECT, and reaching it needs a call
+   that would COMMIT if the object happened to be fine. Those are pre-flighted
+   by PUBLICATION instead — `op=affordances` publishes `dispose` if and only if
+   the catalog's own edge table offers a disposition move for THIS document's
+   declared vocabulary, which is exactly NOT_INQUIRIES / ILLEGAL_TRANSITION —
+   and where the act is not published there is no control and no invented
+   sentence. `CITED` is the residue: the commit is absent until the fields are
+   filled, and if the plane refuses at commit time its words are what appear.
+   NOTHING here composes a refusal.
    ============================================================ */
 
-/* The legal moves come from the guarded CATALOG block, which mirrors the
-   catalog's STATES[type].edges — the SAME table op=dispose() imports (REC-10
-   replaced the store's literal second copy with that import, and this is the
-   surface's half of it). The type is NORMALIZED first, exactly as op=dispose()
-   normalizes the row before applying the machine — so a legacy `focus` or
-   `problem` row is pre-flighted against the same edges the plane will judge it
-   by, and `elevated`, which the inquiry machine has no entry for, is refused
-   here for the same reason it is refused there. Mirrored, not invented: the UI
-   pre-flights the same ILLEGAL_TRANSITION the store would refuse, so a stale
-   view is refused here rather than surfaced as a dead button.
-   `deferred->deferred` is absent in the catalog itself — a no-op move is a
-   refusal, because it usually means the view was taken before someone else
-   moved it. */
-const disposeLegal = (type) => vocabFor(STATE_EDGES, normalizeType(type || "inquiry")) || {};
-const DISPOSE_LEGAL = STATE_EDGES.inquiry;   // the machine every question minted today runs on
+/* `disposeLegal` and `DISPOSE_LEGAL` STOOD HERE and were DELETED on 2026-08-05
+   by UI-22. They mirrored the catalog's `STATES[type].edges` so this surface
+   could decide for itself whether an act was available and whether a move was
+   legal — the two questions `op=affordances` exists to answer. Both consumers
+   are gone: the pre-flight below asks the plane, and the document page's
+   disposition bar renders only what `op=affordances` published. `STATE_EDGES`
+   itself stays in the guarded CATALOG block, where it is the catalog's mirror
+   and check-semantics.mjs's subject; what is deleted is the surface reading it
+   as an ACT RULE. */
 /* THE DISPOSITION SET IS READ, NEVER WRITTEN HERE (UI-12). A two-element array
    of disposition tokens stood on this line, declared as a constant, and it was
    the last surface-side option map in this file — exactly what constraint C5
@@ -6556,8 +6636,15 @@ const DISPOSE_LEGAL = STATE_EDGES.inquiry;   // the machine every question minte
    a guess. The tokens are not spelled here even in prose: the harness's guard
    is a scan of this file, and a comment quoting the literal would defeat it. */
 const dispositions = () => actVocab("dispositions");
-const DISPOSE_REASON_MAX = 160;                    // Store.EDGE_REASON_MAX
-const DISPOSE_REASON_RULE = /["\\\r\n]/;           // the store's restricted-grammar rule
+/* `DISPOSE_REASON_MAX` (160, a copy of `Store.EDGE_REASON_MAX`) and
+   `DISPOSE_REASON_RULE` (a copy of the store's restricted-grammar regex) STOOD
+   HERE and were DELETED on 2026-08-05 by UI-22. They were the plane's own
+   grammar copied onto the surface so it could refuse BAD_REASON in words of its
+   own — and a copy of a rule is the copy that drifts. UI-20 already settled the
+   posture for the cite note: no length rule is restated on the page, and if the
+   record will not take what was written the record says so. The probe below
+   reaches BAD_REASON in the plane's words before the member commits, so nothing
+   is lost by not restating it. */
 /* THE MEMBER'S VERB for a published token, with a mechanical fallback so a
    token the plane publishes and this file has no verb for renders its own name
    opened up rather than a blank control. These are words, not the SET: what may
@@ -6566,37 +6653,22 @@ const DISPOSE_VERB_WORD = { deferred:"Defer", dismissed:"Dismiss" };
 const disposeVerb = t => DISPOSE_VERB_WORD[t] || humanKind(String(t||""));
 const disposeStateWord = t => String(t||"");
 
-/* THE PRE-FLIGHT — pure, so the harness can prove it. Given the question's
-   current state, the chosen disposition, and the reason authored so far,
-   it returns every gate the act must clear (for the panel) and the ONE
-   refusal that would fire first, in the plane's own checking order:
-   NOT_A_DISPOSITION -> NO_REASON (C-2.8) -> BAD_REASON -> ILLEGAL_TRANSITION.
-   `ok` is true only when nothing would refuse. */
-function disposePreflight({ state, to, reason, type }){
-  const why = String(reason == null ? "" : reason).trim();
-  const isDisp   = dispositions().includes(to);
-  const hasReason= why.length > 0;
-  const goodGrammar = !DISPOSE_REASON_RULE.test(why) && why.length <= DISPOSE_REASON_MAX;
-  const legalMove = (disposeLegal(type)[state] || []).includes(to);
-  const gates = [
-    { id:"reason", title:"A reason", pass:hasReason,
-      need:"Required, and never written for you. This act records your reason — WHY you defer or dismiss — in your name, on the permanent record, so the decision itself stays accountable and not just its outcome. It is refused until you write one." },
-    { id:"grammar", title:"Within the record's grammar", pass:!hasReason ? true : goodGrammar,
-      need:`At most ${DISPOSE_REASON_MAX} characters, and no quotation marks, backslashes, or line breaks: the reason is written verbatim into the record, whose format has no escapes.` },
-    { id:"move", title:"A move this question can make", pass:isDisp && legalMove,
-      need: !isDisp ? "Only deferring and dismissing are dispositions here; concluding a question is a different act, with its own requirements."
-          : state==="elevated" ? "This question was carried into a project under the record's earlier vocabulary, so it can no longer be deferred or dismissed."
-          : state===to ? `This question is already ${disposeStateWord(to)}. Someone may have moved it while this page was open; reopen it to see where it stands.`
-          : "That is not a move this question can make from where it stands now." },
-  ];
-  // The plane checks reason BEFORE it resolves the set, so NO_REASON/BAD_REASON
-  // outrank ILLEGAL_TRANSITION when more than one would fire.
-  let refusal = null;
-  if(!isDisp)               refusal = { reason:"NOT_A_DISPOSITION", detail:gates[2].need };
-  else if(!hasReason)       refusal = { reason:"NO_REASON",         detail:gates[0].need };
-  else if(!goodGrammar)     refusal = { reason:"BAD_REASON",        detail:gates[1].need };
-  else if(!legalMove)       refusal = { reason:"ILLEGAL_TRANSITION",detail:gates[2].need };
-  return { ok: refusal===null, gates, refusal };
+/* THE PRE-FLIGHT. One round trip, with `handle` withheld. `clear` means the
+   ONLY thing still outstanding is the field this surface itself withheld — so
+   the chosen token, the reason and its grammar have all been judged BY THE
+   PLANE and passed. An ACCEPTED pre-flight would mean a disposition happened
+   where none was asked for, so it fails CLOSED (UI-13's precedent, UI-12's
+   second use, UI-20's third, and this is the fourth). */
+async function disposeProbe(){
+  if(!DISPOSE) return;
+  const id = DISPOSE.id;
+  const a = await actAsk("dispose", { handle:"", to: DISPOSE.to, reason: DISPOSE.reason });
+  if(!DISPOSE || DISPOSE.id !== id) return;
+  DISPOSE.pf = a.accepted
+    ? { clear:false, refusal:{ reason:"PREFLIGHT_NOT_REFUSED",
+        detail:"The record accepted a check that was supposed to be incomplete. Nothing was committed from this surface." } }
+    : (a.refusal.reason === "NO_SUCH_SELECTION" ? { clear:true, refusal:null } : { clear:false, refusal:a.refusal });
+  disposePaint();
 }
 
 /* The WEIGHT LADDER, learned once and read everywhere. Not a construct — a
@@ -6617,118 +6689,116 @@ function weightLadderHtml(here, note){
     <p class="wl-note">${body}</p></div>`;
 }
 
-/* CHOOSE + PRE-FLIGHT + AUTHOR, in one dialog. Opened from the act bar on a
-   question's page for one chosen disposition; the member can still switch between
-   the two here (that is the CHOICE), and every switch re-runs the pre-flight. */
-let DISPOSE_CTX = null;   // { id, title, state, type }
-/* `type` defaults to the canonical spelling: a caller that does not name it is
-   asking about a question minted today, and the pre-flight then reads the
-   inquiry machine rather than guessing. */
-function openDisposeDialog(id, title, state, to, type){
-  DISPOSE_CTX = { id, title, state, type: type || "inquiry" };
+/* CHOOSE + PRE-FLIGHT + AUTHOR, in one dialog. Opened from the disposition bar
+   on a question's page for one chosen disposition; the member can still switch
+   between the published tokens here (that is the CHOICE), and every switch
+   re-asks the plane.
+
+   THE SIGNATURE LOST TWO ARGUMENTS on 2026-08-05 (UI-22). It used to take the
+   document's `state` and `type` so the surface could judge the move against its
+   own mirror of the state machine. Nothing here judges a move any more, so
+   nothing here needs them: `op=affordances` decides whether the bar exists at
+   all, and the plane decides the rest. */
+let DISPOSE = null;   // { id, title, to, reason, pf, busy }
+function openDisposeDialog(id, title, to){
+  DISPOSE = { id, title, to: to || dispositions()[0] || "", reason:"", pf:null, busy:false };
+  $("#dlg-wrap").classList.remove("hidden");
+  disposePaint();
+  return disposeProbe();
+}
+function disposeChoose(to){
+  if(!DISPOSE) return;
+  DISPOSE.to = to; DISPOSE.pf = null;
+  disposePaint();
+  return disposeProbe();
+}
+/* onchange, never oninput — one round trip per FINISHED field, which is
+   UI-12's rule for the same reason: a probe per keystroke asks the record to
+   judge a half-written sentence. */
+function disposeAuthor(v){
+  if(!DISPOSE) return;
+  DISPOSE.reason = v; DISPOSE.pf = null;
+  return disposeProbe();
+}
+/* THE COMMIT IS ABSENT WHILE THE PLANE REFUSES — never present-and-disabled.
+   What stands in its place is the plane's own refusal, verbatim. Nothing on
+   this panel is a sentence about what the record would do: the headings say
+   what a field IS, and every judgment on it is the record's. */
+function disposePaint(){
+  if(!DISPOSE) return;
+  const box = $("#dlg"); if(!box) return;
+  const to = DISPOSE.to;
   const choose = dispositions().map(d=>`<label class="dz-opt${d===to?" on":""}">
       <input type="radio" name="dz-to" value="${d}" ${d===to?"checked":""} onchange="disposeChoose(this.value)">
       <span class="dz-verb">${esc(disposeVerb(d))}</span>
-      <span class="dz-mean">${d==="deferred"
-        ? "Park it, with a reason. Kept, and returnable when the group is ready to look again."
-        : "Decline it, with a reason. Kept, never deleted, so the decision itself stays accountable."}</span>
     </label>`).join("");
-  $("#dlg").innerHTML =
+  const pf = DISPOSE.pf;
+  const commit = !pf ? `<div class="intent-pf"><div class="intent-ref-why">Asking the record what it would refuse&hellip;</div></div>`
+    : !pf.clear ? `<div class="intent-pf">${citeRefusalHtml(pf.refusal)}</div>`
+    : `<div class="intent-pf"><button class="btn" id="dz-go" onclick="doDispose()"${DISPOSE.busy?" disabled":""}>${esc(disposeVerb(to))}</button></div>`;
+  box.innerHTML =
     `<h2 id="dz-h">${esc(disposeVerb(to))} this question</h2>
-     <p class="what">Disposing a question moves its state and writes your reason into its permanent Session Log. It is reversible — a deferred or dismissed question is kept and can be picked back up — but it is never silent.</p>
-     <div class="dz-what"><span class="dz-ttl">${esc(title||id)}</span><span class="id">${esc(id)}</span></div>
+     <p class="what">Disposing a question moves its state and writes your reason into its permanent Session Log. It is reversible — a disposed question is kept and can be picked back up — but it is never silent.</p>
+     <div class="dz-what"><span class="dz-ttl">${esc(DISPOSE.title||DISPOSE.id)}</span><span class="id">${esc(DISPOSE.id)}</span></div>
+     <h3 class="cx-h">Which disposition</h3>
+     <p class="subj-note">Every token below is one the record publishes as a disposition. This page adds none and renames none.</p>
      <div class="dz-choose">${choose}</div>
-     <div class="dz-pf" id="dz-pf"><!-- pre-flight, painted by disposeValidate --></div>
-     <label class="fld" for="dz-reason">Your reason</label>
-     <textarea class="txt" id="dz-reason" maxlength="${DISPOSE_REASON_MAX}"
-       placeholder="e.g. Duplicates the audit already open under Project 14; nothing new to pursue here"
-       oninput="disposeValidate()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
-     <div class="cc" id="dz-cc">0 / ${DISPOSE_REASON_MAX}</div>
+     <h3 class="cx-h">Your reason</h3>
+     <p class="subj-note">In your words, and required. Nothing is drafted or suggested here, and no length rule is copied onto this page &mdash; if the record will not take what you wrote, the record says so in its own words.</p>
+     <textarea class="txt" id="dz-reason" rows="2"
+       onchange="disposeAuthor(this.value)" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
      ${weightLadderHtml("reasoned")}
-     <div id="dz-err" class="teach hidden"></div>
-     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
-       <button class="btn" id="dz-go" disabled onclick="doDispose()">${esc(disposeVerb(to))}</button></div>`;
-  $("#dz-go").dataset.to = to;
-  $("#dlg-wrap").classList.remove("hidden");
-  disposeValidate();
-  const r = $("#dz-reason"); if(r && r.focus) r.focus();
+     ${commit}
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+  const r = $("#dz-reason"); if(r) r.value = DISPOSE.reason;
 }
-function disposeChoose(to){
-  const go = $("#dz-go"); if(go) go.dataset.to = to;
-  const h = $("#dz-h"); if(h) h.textContent = `${disposeVerb(to)} this question`;
-  $("#dlg").querySelectorAll(".dz-opt").forEach(o=>{
-    const on = o.querySelector("input").value===to; o.classList.toggle("on", on);
-  });
-  disposeValidate();
-}
-/* Paint the pre-flight from the current choice + reason, and gate the commit
-   button on it. The panel is the point: it shows what WILL refuse and why,
-   before the act runs. */
-function disposeValidate(){
-  if(!DISPOSE_CTX) return;
-  const go = $("#dz-go"); const to = go ? go.dataset.to : "deferred";
-  const el = $("#dz-reason"); const reason = el ? el.value : "";
-  const pf = disposePreflight({ state: DISPOSE_CTX.state, to, reason, type: DISPOSE_CTX.type });
-  const cc = $("#dz-cc");
-  if(cc){
-    const bad = reason.trim() && DISPOSE_REASON_RULE.test(reason);
-    cc.textContent = bad ? "no quotation marks, backslashes, or line breaks — written verbatim into the record" : `${reason.length} / ${DISPOSE_REASON_MAX}`;
-    cc.classList.toggle("bad", !!bad);
-  }
-  const pane = $("#dz-pf");
-  if(pane){
-    const rows = pf.gates.map(g=>`<div class="pf-row ${g.pass?"ok":"no"}">
-        <span class="pf-mark">${g.pass?"✓":"✗"}</span>
-        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
-      </div>`).join("");
-    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
-      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. This act is ready.</div>` : "");
-  }
-  if(go) go.disabled = !pf.ok;
-}
-/* COMMIT. The pre-flight runs ONE more time here as the real gate: if the act
-   WOULD be refused — no reason authored above all — the SURFACE refuses it and
-   never reaches the plane, so the C-2.8 requirement is felt before the request
-   is even sent. (Removing this early return is the harness's negative control:
-   an empty-reason act would then be sent to the plane.) Only a clean pre-flight
-   builds the one-inquiry selection and disposes it. */
+/* COMMIT. There is no second surface-side gate here and there used to be one:
+   the early return that refused the act BEFORE the plane was reached, in the
+   surface's own words. It is gone. The control only exists when the plane's own
+   probe came back clear, and everything the record still refuses — the object
+   arms the probe cannot reach — comes back in the record's words. */
 async function doDispose(){
-  if(!DISPOSE_CTX) return;
-  const go = $("#dz-go"); const to = go ? go.dataset.to : "deferred";
-  const el = $("#dz-reason"); const reason = el ? String(el.value||"").trim() : "";
-  const err = $("#dz-err"); if(err) err.classList.add("hidden");
-  const pf = disposePreflight({ state: DISPOSE_CTX.state, to, reason, type: DISPOSE_CTX.type });
-  if(!pf.ok){                       // the surface refuses, before the plane
-    // The pre-flight speaks in the member's words (its `detail`), not the
-    // plane's code — the plane is never even reached, so there is no plane
-    // voice to render verbatim here. The §J verbatim passthrough is for a
-    // real plane refusal (the catch below), exactly as release does it.
-    if(err){ err.innerHTML = `<b>This act won't run yet — and nothing has been written.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
-    disposeValidate();
-    return { refused:true, reason:pf.refusal.reason };
-  }
-  if(go){ go.disabled = true; go.textContent = "…"; }
+  if(!DISPOSE || DISPOSE.busy) return;
+  const id = DISPOSE.id, to = DISPOSE.to;
+  DISPOSE.busy = true; disposePaint();
   try{
-    const sel = await recPost("select", { ids:[DISPOSE_CTX.id] }, { kind:"enumerated" });
-    const res = await rec("dispose", { handle: sel.handle, to, reason });
+    /* D-173, AND IT IS A CLASS not an instance (measured 2026-08-05, UI-22).
+       `recPost` returns the ENVELOPE — the control plane answers
+       `{ok:true, result:{…}, store, tokenClass}` for every passthrough op,
+       op=select included (index.mjs's one `json({ ...body, store, tokenClass })`
+       return) — so `selEnv.handle` is `undefined` against the real plane and
+       this act would send no selection at all. It was invisible because every
+       harness mock answered UNWRAPPED and therefore agreed with the bug. Read
+       through the envelope here; the FOUR other selection-backed call sites
+       (cite, retire, sever/reinstate, release) have the same line and are
+       UI-23's sweep, named in this item's report rather than reached into. */
+    const selEnv = await recPost("select", { ids:[id] }, { kind:"enumerated" });
+    const sel = (selEnv && selEnv.result !== undefined) ? selEnv.result : selEnv;
+    const a = await actAsk("dispose", { handle: sel.handle, to, reason: DISPOSE.reason });
+    if(!DISPOSE || DISPOSE.id !== id) return;
+    DISPOSE.busy = false;
+    if(!a.accepted){ DISPOSE.pf = { clear:false, refusal:a.refusal }; disposePaint(); return { refused:true, reason:a.refusal.reason }; }
     RECORD_CACHE = null;            // this question's state moved; the cache is stale
-    disposeReceipt(res, DISPOSE_CTX);
-    return res;
+    disposeReceipt(a.result, DISPOSE);
+    return a.result;
   }catch(e){
-    if(err){ err.innerHTML = disposeRefusalHtml(e); err.classList.remove("hidden"); }
-    if(go){ go.disabled=false; go.textContent = disposeVerb(to); }
-    disposeValidate();
+    if(!DISPOSE) return;
+    DISPOSE.busy = false;
+    DISPOSE.pf = { clear:false, refusal:(e && typeof e === "object" && (e.reason||e.detail||e.error)) ? e : { reason:"NO_ANSWER", detail:String(e) } };
+    disposePaint();
     return { refused:true, reason:e && e.reason };
   }
 }
 /* THE RECEIPT — what the plane returned, in the record's terms: the act
    happened, here is the record of it. */
 function disposeReceipt(res, ctx){
-  const to = res.to || "deferred";
+  /* The token the RECORD says it wrote. The fallback is what THIS surface sent
+     — never a literal token, which is what stood here until 2026-08-05. */
+  const to = (res && res.to) || (ctx && ctx.to) || "";
   const ids = Array.isArray(res.disposed) && res.disposed.length ? res.disposed : [ctx.id];
   $("#dlg").innerHTML =
     `<div class="dz-receipt">
-       <div class="dz-rhead">${esc(disposeStateWord(to)==="deferred"?"Deferred.":"Dismissed.")}</div>
+       <div class="dz-rhead">${esc(humanKind(disposeStateWord(to)))}.</div>
        <p class="dz-rlede">The plane recorded the act. It now reads as <span class="chip ${esc(to)}">${esc(to)}</span> in the record, and its Session Log carries your name and your reason. It is kept, and can be re-triaged.</p>
        <div class="dz-rgrid">
          <div class="kv"><span class="k">Question</span><span class="v">${esc((ctx&&ctx.title)||ids[0])} <span class="id">${esc(ids[0])}</span></span></div>
@@ -6740,19 +6810,14 @@ function disposeReceipt(res, ctx){
      </div>`;
 }
 function disposeDone(id){ closeDialog(); RECORD_CACHE = null; if(id) openBundle(id); }
-/* A refusal renders in the PLANE'S OWN VOICE, offenders named, nothing written
-   — the same rule as release. For the surface-side pre-flight refusal the
-   `detail` is the surface's member-facing account of the same rule. */
-function disposeRefusalHtml(e){
-  const head = esc([e.reason, e.error].filter(Boolean).join(" · ") || "The plane refused, and wrote nothing.");
-  const detail = e.detail ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
-  let off = "";
-  if(Array.isArray(e.offenders) && e.offenders.length){
-    off = `<ul class="offenders">` + e.offenders.map(o=> typeof o==="string"
-      ? `<li>${esc(o)}</li>` : `<li>${esc(o.id||JSON.stringify(o))}${o.from?` — currently ${esc(o.from)}`:""}</li>`).join("") + `</ul>`;
-  }
-  return `<b>${head}</b>${detail}${off}`;
-}
+/* `disposeRefusalHtml` STOOD HERE and was DELETED on 2026-08-05 by UI-22. Its
+   last clause was the giveaway — "for the surface-side pre-flight refusal the
+   `detail` is the surface's member-facing account of the same rule" — which is
+   a refusal written here, wearing the plane's markup. There is no surface-side
+   refusal left in this flow, and what remains (the plane's sentence plus the
+   plane's own `offenders` / `path` fields, spelled out rather than summarised)
+   is exactly what UI-20's `citeRefusalHtml` already does. One renderer, reused,
+   rather than a second copy of it. */
 
 /* ============================================================
    UI-3 — THE SECOND ACT: a BALLOT (project owner removal, section 7.10),
@@ -6853,35 +6918,56 @@ function ballotDivergenceHtml(table){
        -> TARGET_CANNOT_VOTE (I am the target and live.targetMayVote is false).
    The running tally (who has already voted) is server state the surface cannot
    see, so it is NOT a gate here — it returns on the receipt. */
-function ballotPreflight({ live, owners, target, me, reason }){
+/* CORRECTED 2026-08-05 BY UI-22, AND THE CORRECTION IS EXACTLY THE SENTENCES.
+   UI-16 named this the FOURTH pre-DEC-8 residue and was precise about which
+   half was wrong: the GATES are right and stay, because every one of them
+   reads a fact the plane computed — `live.possible` and `live.targetMayVote`
+   come off `op=projectownerarith`'s live row, and the owner list off
+   `op=projectparticipants`. What was wrong was that each gate also carried a
+   `need:` SENTENCE this surface wrote, and the function then composed a
+   REFUSAL out of those sentences with the store's reason codes attached. A
+   correct code with an invented sentence is precisely what DEC-8 forbids, and
+   it is what a suite pinning only the code would never catch.
+
+   SO THIS IS NOW `ballotNeeds`: it answers whether the act has what it takes,
+   and NOTHING ELSE. No refusal, no `detail`, no sentence about the record.
+   Each row is a REQUIREMENT stated as a requirement — a heading over a field,
+   not a judgment about this member — and where the plane has published its own
+   words for one (`live.why`, the arithmetic's own account of why a removal
+   cannot be carried at this size) those words are rendered and no others.
+
+   WHY NOT A PROBE, measured in `bio-plane/src/store.mjs` `projectOwnerRemove()`
+   this turn. Its order is
+
+     NO_SUCH_PROJECT -> NOT_A_PROJECT -> NOT_THE_OWNER -> NO_SUCH_HANDLE
+       -> NOT_AN_OWNER -> NO_REASON -> LAST_OWNER -> TARGET_CANNOT_VOTE
+       -> ALREADY_VOTED -> THE VOTE IS WRITTEN
+
+   and UI-20's ORDERING RULE rules it out: the TARGET is judged before the
+   reason, so withholding the target reaches nothing the member wrote, and
+   withholding the reason stops short of the two arithmetic arms. There is no
+   field that is both withholdable and last. A vote is also not a state move
+   that fails closed — the write is the second-to-last statement in the method —
+   so a probe carrying a real target and a real reason WOULD CAST THE VOTE.
+   That settles it: the no-refusal shape, the commit ABSENT until the act has
+   what it needs, and every judgment the record's own. */
+function ballotNeeds({ live, owners, target, me, reason }){
   const why = String(reason==null?"":reason).trim();
   const list = Array.isArray(owners)?owners:[];
-  const iAmOwner    = list.includes(me);
-  const targetOwner = !!target && list.includes(target);
-  const hasReason   = why.length>0;
-  const iAmTarget   = !!target && target===me;
-  const possible      = !!(live && live.possible);       // FROM the arithmetic op
-  const targetMayVote = !!(live && live.targetMayVote);  // FROM the arithmetic op
-  const gates = [
-    { id:"owner", title:"You are an owner of this project", pass:iAmOwner,
-      need:"Only an owner of a project votes on its ownership." },
-    { id:"target", title:"The person named is an owner", pass:targetOwner,
-      need: !target ? "Choose which owner this removal is about."
-                    : "That person is not an owner of this project, so there is no ownership to remove." },
-    { id:"reason", title:"A reason", pass:hasReason,
-      need:"Required, and never written for you. Your reason is kept in your name in this project's ownership history, so the decision itself stays accountable and not only its outcome." },
-    { id:"possible", title:"This removal is possible at this size", pass:possible,
-      need: (live && live.why) ? live.why : "the removal cannot be carried at this number of owners." },
-    { id:"vote", title:"This is a vote you may cast", pass:!(iAmTarget && !targetMayVote),
-      need:"At three or more owners the person being removed is counted but does not vote. At exactly two owners they must — that is the divergence, and it is why you can end your own ownership at two but not at three." },
+  const iAmTarget = !!target && target===me;
+  const needs = [
+    { id:"owner",  title:"You are an owner of this project", pass:list.includes(me) },
+    { id:"target", title:"An owner is named",                pass:!!target && list.includes(target) },
+    { id:"reason", title:"A reason, in your words",          pass:why.length>0 },
+    /* THE PLANE'S OWN WORDS, where it published them. `why` is the arithmetic
+       op's account of what this project's size permits; it is rendered verbatim
+       and nothing stands in for it when it is absent. */
+    { id:"possible", title:"This removal is possible at this size",
+      pass:!!(live && live.possible), planeWords:(live && live.why) || "" },
+    { id:"vote", title:"This is a vote you may cast",
+      pass:!(iAmTarget && !(live && live.targetMayVote)), planeWords:(live && live.why) || "" },
   ];
-  let refusal = null;
-  if(!iAmOwner)                        refusal = { reason:"NOT_THE_OWNER",     detail:gates[0].need };
-  else if(!targetOwner)                refusal = { reason:"NOT_AN_OWNER",      detail:gates[1].need };
-  else if(!hasReason)                  refusal = { reason:"NO_REASON",         detail:gates[2].need };
-  else if(!possible)                   refusal = { reason:"LAST_OWNER",        detail:gates[3].need };
-  else if(iAmTarget && !targetMayVote) refusal = { reason:"TARGET_CANNOT_VOTE",detail:gates[4].need };
-  return { ok: refusal===null, gates, refusal };
+  return { ready: needs.every(g=>g.pass), needs };
 }
 
 /* CHOOSE + DENOMINATOR + DIVERGENCE + PRE-FLIGHT + AUTHOR, in one dialog.
@@ -6929,47 +7015,52 @@ async function openBallotDialog(projectId, projectTitle){
      <div class="dz-choose">${choose}</div>
      ${ballotDenominatorHtml(BALLOT_CTX.live, null)}
      ${ballotDivergenceHtml(BALLOT_CTX.table)}
-     <div class="dz-pf" id="bl-pf"><!-- pre-flight, painted by ballotValidate --></div>
+     <div class="dz-pf" id="bl-pf"><!-- what the act takes, painted by ballotPaint --></div>
      <label class="fld" for="bl-reason">Your reason</label>
+     <p class="subj-note">In your words, and required. Nothing is drafted or suggested here.</p>
      <textarea class="txt" id="bl-reason"
-       placeholder="e.g. Stepped away from the project months ago; ownership should reflect who is doing the work"
-       oninput="ballotValidate()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+       oninput="ballotPaint()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
      <div class="cc" id="bl-cc"></div>
      ${weightLadderHtml("reasoned", `Removing an owner is <b>reasoned</b>, and it is <b>ours</b> not mine: it carries a reason in my name, and it only takes effect once enough owners have voted the same way — a tally you can check, never a silent approval.`)}
      <div id="bl-err" class="teach hidden"></div>
-     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
-       <button class="btn" id="bl-go" disabled onclick="doBallot()">Cast this vote</button></div>`;
-  const go = $("#bl-go"); if(go) go.dataset.target = first;
+     <div class="intent-pf" id="bl-commit" data-target="${esc(first)}"></div>
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
   $("#dlg-wrap").classList.remove("hidden");
-  ballotValidate();
+  ballotPaint();
 }
 function ballotChoose(target){
-  const go = $("#bl-go"); if(go) go.dataset.target = target;
+  const holder = $("#bl-commit"); if(holder) holder.dataset.target = target;
   $("#dlg").querySelectorAll(".dz-opt").forEach(o=>{
     const on = o.querySelector("input").value===target; o.classList.toggle("on", on);
   });
-  ballotValidate();
+  ballotPaint();
 }
-/* Paint the pre-flight from the current target + reason, and gate the commit
-   button on it — the panel shows what WILL refuse and why, before the act
-   runs. The denominator panel does not change with the target (it is a
+/* Paint what the act still NEEDS from the current target + reason, and make the
+   commit control EXIST or NOT EXIST on it. The panel is a checklist of
+   requirements, not a forecast of refusals: every row states what the act
+   takes, and the only prose that ever appears beside one is the arithmetic op's
+   own `why`. The denominator panel does not change with the target (it is a
    property of the ballot's SIZE, read from the op), so it is not repainted. */
-function ballotValidate(){
+function ballotPaint(){
   if(!BALLOT_CTX) return;
-  const go = $("#bl-go"); const target = go ? go.dataset.target : "";
+  const holder = $("#bl-commit");
+  const target = (holder && holder.dataset.target) || "";
   const el = $("#bl-reason"); const reason = el ? el.value : "";
-  const pf = ballotPreflight({ live:BALLOT_CTX.live, owners:BALLOT_CTX.owners, target, me:BALLOT_CTX.me, reason });
+  const nd = ballotNeeds({ live:BALLOT_CTX.live, owners:BALLOT_CTX.owners, target, me:BALLOT_CTX.me, reason });
   const cc = $("#bl-cc"); if(cc) cc.textContent = `${String(reason||"").length} characters`;
   const pane = $("#bl-pf");
   if(pane){
-    const rows = pf.gates.map(g=>`<div class="pf-row ${g.pass?"ok":"no"}">
+    const rows = nd.needs.map(g=>`<div class="pf-row ${g.pass?"ok":"no"}">
         <span class="pf-mark">${g.pass?"✓":"✗"}</span>
-        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
+        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${(!g.pass && g.planeWords)?`<span class="pf-need">${esc(g.planeWords)}</span>`:""}</span>
       </div>`).join("");
-    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
-      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. Your vote is ready to cast.</div>` : "");
+    pane.innerHTML = `<div class="pf-cap">What this act takes</div>${rows}`;
   }
-  if(go) go.disabled = !pf.ok;
+  /* ABSENT, never present-and-greyed. Nothing is asserted about the record by
+     an absent control; a greyed one asserts that the record would say no. */
+  if(holder)
+    holder.innerHTML = nd.ready
+      ? `<button class="btn" id="bl-go" onclick="doBallot()">Cast this vote</button>` : "";
 }
 /* COMMIT. The pre-flight runs ONCE MORE here as the real gate: an act that
    WOULD be refused — no reason, or a vote this member may not cast — is refused
@@ -6980,16 +7071,23 @@ function ballotValidate(){
 async function doBallot(){
   if(!BALLOT_CTX) return;
   const ctx = BALLOT_CTX;
-  const go = $("#bl-go"); const target = go ? go.dataset.target : "";
+  const holder = $("#bl-commit"); const target = (holder && holder.dataset.target) || "";
   const el = $("#bl-reason"); const reason = el ? String(el.value||"").trim() : "";
+  /* The `doEdgeAct` guard, for the same reason it exists there: where there is
+     no probe, the commit function will not run an act the member has not
+     finished supplying. It RETURNS — silently, casting nothing and saying
+     nothing — because the control that calls it does not exist yet. It asks
+     THE SAME function the panel asks, so the guard and the control can never
+     disagree, and it composes nothing: `ready` is a boolean, not a refusal. */
+  if(!ballotNeeds({ live:ctx.live, owners:ctx.owners, target, me:ctx.me, reason }).ready) return;
   const err = $("#bl-err"); if(err) err.classList.add("hidden");
-  const pf = ballotPreflight({ live:ctx.live, owners:ctx.owners, target, me:ctx.me, reason });
-  if(!pf.ok){                       // the surface refuses, before the plane
-    if(err){ err.innerHTML = `<b>This ballot won't run yet — and no vote has been cast.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
-    ballotValidate();
-    return { refused:true, reason:pf.refusal.reason };
-  }
-  if(go){ go.disabled = true; go.textContent = "…"; }
+  /* THE SURFACE-SIDE GATE THAT STOOD HERE IS GONE (UI-22, 2026-08-05). It ran
+     the pre-flight a second time and refused the act in this page's own words
+     before the plane was reached. The control that calls this function does not
+     exist until the act has what it takes, so there is nothing left for a
+     second gate to catch that an absent control has not already prevented — and
+     everything else is the record's to refuse, in the record's words. */
+  const go = $("#bl-go"); if(go){ go.disabled = true; go.textContent = "…"; }
   /* D-173 again, and this one was the worse half: VOTES_SHORT is a store
      REFUSAL, which arrives as a VALUE inside the envelope and never as a throw,
      so the `catch` arm that rendered the running tally was UNREACHABLE against
@@ -7009,9 +7107,8 @@ async function doBallot(){
     ballotReceipt({ carried:false, res:e, target, reason, ctx });
     return { recorded:true, ...e };
   }
-  if(go){ go.disabled=false; go.textContent = "Cast this vote"; }
   if(err){ err.innerHTML = actRefusalHtml(e); err.classList.remove("hidden"); }
-  ballotValidate();
+  ballotPaint();                    // repaints the commit control from scratch
   return { refused:true, reason:e.reason };
 }
 /* THE RECEIPT — what the plane returned, in the record's terms. The tally is
@@ -7846,8 +7943,13 @@ function queueGroupHtml(g, notices){
   const a = g.ancestor || {};
   const terminal = a.terminal === true ? " &middot; closed"
                  : a.terminal === null ? " &middot; whether it is closed is undetermined" : "";
+  /* THE CASE HEADING IS AN ADDRESS (UI-22). It carries the ancestor's own
+     `type`, so the row travels to the surface that type has — a project to its
+     workspace, a question to its page — rather than to whatever `openBundle`
+     would have shown for both. */
   return `<section class="q-case" data-case="${esc(g.id)}">
-    <h2>${esc(a.title || g.id)}<span class="q-case-kind">${esc(typeLabel(a.type, a.state))}</span></h2>
+    <h2><button class="tlink q-case-open" data-open="${esc(g.id)}" data-type="${esc(a.type||"")}"
+      title="opens this case where the record keeps it">${esc(a.title || g.id)}</button><span class="q-case-kind">${esc(typeLabel(a.type, a.state))}</span></h2>
     <p class="q-case-meta"><span class="mono">${esc(g.id)}</span>${a.state?` &middot; ${esc(a.state)}`:""}${terminal}</p>
     ${queueMuteHtml(g)}
     ${(notices||[]).map(queueNoticeHtml).join("")}
@@ -7855,8 +7957,31 @@ function queueGroupHtml(g, notices){
   </section>`;
 }
 
+/* ---- WHERE AN ITEM POINTS, AND IT IS NOT ONE PLACE (UI-22, 2026-08-05) ----
+   Every `[data-open]` in this region used to call `openBundle`, so a queue row
+   filed under a PROJECT opened the project's raw document and a row filed under
+   a QUESTION opened the question's document — never the workspace UI-16 built
+   and never the question page UI-11 built. Neither surface was reachable from
+   the one screen a member starts on, which is UI-16's measured UNBLOCKS half.
+
+   The type is the RECORD'S, not this page's guess: `op=queue`'s ancestor rows
+   carry `type` (store.mjs `#queueAncestors`, normalized through the catalog's
+   own map), which is the same `type` the group heading already renders with.
+   Where the record published no type — a queue item's `subject` carries an id
+   and a kind but no object type — the destination is the document, which is
+   what a bundle id always addresses; nothing is inferred from the id's shape.
+
+   DEC-10's grouping key is what this makes load-bearing: a case heading is now
+   an address, so the key the plane grouped by is the key a member travels on. */
+function queueOpen(id, type){
+  if(!id) return;
+  const ty = type ? normalizeType(type) : null;
+  if(ty === "project") return openProjectWorkspace(id);
+  if(ty === "inquiry") return openInquiry(id);
+  return openBundle(id);
+}
 function queueWire(){
-  document.querySelectorAll("#q [data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
+  document.querySelectorAll("#q [data-open]").forEach(b=>b.onclick=()=>queueOpen(b.dataset.open, b.dataset.type));
   document.querySelectorAll("#q [data-res]").forEach(b=>b.onclick=()=>resolveTask(b.dataset.res));
   document.querySelectorAll("#q [data-fwd]").forEach(b=>b.onclick=()=>openForward(b.dataset.fwd));
   document.querySelectorAll("#q [data-retry]").forEach(b=>b.onclick=()=>queueRetry(b.dataset.retry));
@@ -9256,136 +9381,144 @@ let PROPOSALS_LAST = [];
    ============================================================ */
 function canProposalAct(){ return canContribute(); }   // authoring is a member's act (op=promote / op=proposedispose need contribute)
 
-/* ---- DEFER / DISMISS: an authored disposition with a required reason ---- */
-const PROP_DISPOSE_VERB = { deferred:"Defer", dismissed:"Dismiss" };
-const PROP_DISPOSE_DONE = { deferred:"deferred", dismissed:"dismissed" };
+/* ---- DEFER / DISMISS: an authored disposition with a required reason ----
 
-/* THE PRE-FLIGHT — pure, so the harness can prove it. A proposal has no state
-   machine (there is no illegal transition between defer and dismiss), so the gates
-   are the two that make a disposition accountable: a reason (required, never
-   prefilled) within the record's grammar. Order mirrors the store's dispose:
-   NO_REASON -> BAD_REASON. */
-function proposalDisposePreflight({ to, reason }){
-  const why = String(reason == null ? "" : reason).trim();
-  const isDisp = ["deferred", "dismissed"].includes(to);
-  const hasReason = why.length > 0;
-  const goodGrammar = !DISPOSE_REASON_RULE.test(why) && why.length <= DISPOSE_REASON_MAX;
-  const gates = [
-    { id:"reason", title:"A reason", pass:hasReason,
-      need:"Required, and never written for you. This records WHY you defer or dismiss the record's question, in your name, so the decision itself stays accountable and not only its outcome. It is refused until you write one." },
-    { id:"grammar", title:"Within the record's grammar", pass:!hasReason ? true : goodGrammar,
-      need:`At most ${DISPOSE_REASON_MAX} characters, and no quotation marks, backslashes, or line breaks: the reason is written verbatim into the record.` },
-  ];
-  let refusal = null;
-  if(!isDisp)           refusal = { reason:"NOT_A_DISPOSITION", detail:"Only deferring and dismissing are dispositions here." };
-  else if(!hasReason)   refusal = { reason:"NO_REASON",  detail:gates[0].need };
-  else if(!goodGrammar) refusal = { reason:"BAD_REASON", detail:gates[1].need };
-  return { ok: refusal === null, gates, refusal };
-}
+   REBUILT 2026-08-05 BY UI-22, and the measurement is why it took a different
+   shape from the dispose flow's. `PROP_DISPOSE_VERB` and `PROP_DISPOSE_DONE`
+   stood here as two surface-side maps from a disposition token to a word, and
+   `proposalDisposePreflight` computed and WORDED its own NOT_A_DISPOSITION,
+   NO_REASON and BAD_REASON over a literal two-element token array. All of it is
+   a pre-DEC-8 shape.
 
-let PROP_ACT_CTX = null;   // { key, proposal, to }
+   THE VERBS were the easy half and needed no delegation: `op=proposedispose`
+   imports the SAME published `DISPOSITIONS` array `op=dispose` does (REC-11's
+   folded chore), so the SET is `dispositions()` and the WORD is UI-12's
+   `disposeVerb` — one member-facing verb table serving both surfaces, and a
+   token this file has no verb for renders its own name opened up rather than a
+   blank control.
+
+   THE PRE-FLIGHT HAD NO PROBE AVAILABLE TO IT, measured in
+   `bio-plane/src/store.mjs` `proposeDispose()` this turn. Its order is
+
+     NO_KEY -> NO_STAGE -> NOT_A_DISPOSITION -> NO_REASON -> BAD_REASON
+       -> NO_DECIDER -> NO_SUCH_PROGRESSION -> BAD_STAGE -> the write
+
+   and UI-20's ORDERING RULE decides it: the withheld-field pre-flight works
+   only where the store judges the authored field BEFORE it resolves the
+   subject, and here the subject — the progression key and the stage key — is
+   judged FIRST. Withholding either returns NO_KEY or NO_STAGE having looked at
+   nothing the member wrote; the decider is stamped server-side and cannot be
+   withheld at all. No field is left to withhold, so there is no probe, and
+   inventing a plane dry-run op for a NON_ACT is not a delegation this item is
+   owed.
+
+   So this takes THE NO-REFUSAL SHAPE — UI-22's stated preference, and the same
+   shape `cite`, `sever` and `reinstate` already carry: the commit control is
+   ABSENT until the member has chosen a published token and written a reason, an
+   absent control asserts nothing about the record, and everything that survives
+   to the commit is WORDED BY THE PLANE. `op=proposedispose` is a NON_ACT, so
+   there is no publication half to lean on and none is pretended; what makes the
+   absence honest is that nothing is claimed by it. */
+
+let PROP_ACT = null;   // { key, proposal, to, reason, refusal, busy }
 function openProposalAct(key, to){
   const p = PROPOSALS_LAST.find(x => x.key === key);
   if(!p) return;
-  PROP_ACT_CTX = { key, proposal:p, to };
-  const choose = ["deferred", "dismissed"].map(d => `<label class="dz-opt${d===to?" on":""}">
-      <input type="radio" name="pa-to" value="${d}" ${d===to?"checked":""} onchange="proposalActChoose(this.value)">
-      <span class="dz-verb">${esc(PROP_DISPOSE_VERB[d])}</span>
-      <span class="dz-mean">${d==="deferred"
-        ? "Park the question, with a reason. Kept, and returnable when the group is ready to look again."
-        : "Decline the question, with a reason. Kept, never deleted, so the decision itself stays accountable."}</span>
-    </label>`).join("");
-  $("#dlg").innerHTML =
-    `<h2 id="pa-h">${esc(PROP_DISPOSE_VERB[to])} this proposal</h2>
-     <p class="what">A proposal is the record's question, not yours yet. Deferring or dismissing it records your reason on the record; it is reversible — a deferred or dismissed proposal is kept — but never silent, and it neither adopts nor edits anything.</p>
-     <div class="prop-context"><div class="pc-cap">The record's question, as it stands</div>${esc(proposalContext(PROP_ACT_CTX.proposal))}</div>
-     <div class="dz-choose">${choose}</div>
-     <div class="dz-pf" id="pa-pf"></div>
-     <label class="fld" for="pa-reason">Your reason</label>
-     <textarea class="txt" id="pa-reason" maxlength="${DISPOSE_REASON_MAX}"
-       placeholder="e.g. These awards are below the solicitation threshold, so no RFP was required"
-       oninput="proposalActValidate()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
-     <div class="cc" id="pa-cc">0 / ${DISPOSE_REASON_MAX}</div>
-     ${weightLadderHtml("reasoned", `Deferring or dismissing a proposal is <b>reasoned</b>: it is kept and returnable, so it can be undone — but it never happens silently, because it carries a reason that goes on the record as your own words.`)}
-     <div id="pa-err" class="teach hidden"></div>
-     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
-       <button class="btn" id="pa-go" disabled onclick="doProposalDispose()">${esc(PROP_DISPOSE_VERB[to])}</button></div>`;
-  $("#pa-go").dataset.to = to;
+  PROP_ACT = { key, proposal:p, to: to || dispositions()[0] || "", reason:"", refusal:null, busy:false };
   $("#dlg-wrap").classList.remove("hidden");
-  proposalActValidate();
-  const r = $("#pa-reason"); if(r && r.focus) r.focus();
+  proposalActPaint();
 }
 function proposalActChoose(to){
-  PROP_ACT_CTX && (PROP_ACT_CTX.to = to);
-  const go = $("#pa-go"); if(go) go.dataset.to = to;
-  const h = $("#pa-h"); if(h) h.textContent = `${PROP_DISPOSE_VERB[to]} this proposal`;
-  $("#dlg").querySelectorAll(".dz-opt").forEach(o => o.classList.toggle("on", o.querySelector("input").value === to));
-  proposalActValidate();
+  if(!PROP_ACT) return;
+  PROP_ACT.to = to; PROP_ACT.refusal = null;
+  proposalActPaint();
 }
-function proposalActValidate(){
-  if(!PROP_ACT_CTX) return;
-  const go = $("#pa-go"); const to = go ? go.dataset.to : "deferred";
-  const el = $("#pa-reason"); const reason = el ? el.value : "";
-  const pf = proposalDisposePreflight({ to, reason });
-  const cc = $("#pa-cc");
-  if(cc){
-    const bad = reason.trim() && DISPOSE_REASON_RULE.test(reason);
-    cc.textContent = bad ? "no quotation marks, backslashes, or line breaks — written verbatim" : `${reason.length} / ${DISPOSE_REASON_MAX}`;
-    cc.classList.toggle("bad", !!bad);
-  }
-  const pane = $("#pa-pf");
-  if(pane){
-    const rows = pf.gates.map(g => `<div class="pf-row ${g.pass?"ok":"no"}">
-        <span class="pf-mark">${g.pass?"✓":"✗"}</span>
-        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
-      </div>`).join("");
-    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
-      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. This act is ready.</div>` : "");
-  }
-  if(go) go.disabled = !pf.ok;
+function proposalActAuthor(v){
+  if(!PROP_ACT) return;
+  PROP_ACT.reason = v; PROP_ACT.refusal = null;
+  proposalActPaint();
 }
-/* COMMIT. The pre-flight runs once more as the real gate: an empty reason above
-   all is refused IN THE SURFACE and never reaches the plane. Only a clean
-   pre-flight records the disposition — through the delegated op=proposedispose,
-   because a proposal is not an inquiry bundle and op=dispose cannot take it. Absent
-   that op, the plane answers "unknown op" and the surface says the record cannot
-   yet keep a proposal's disposition, having written nothing. (Removing the early
-   return is this suite's negative control on the reason gate.) */
+function proposalActPaint(){
+  if(!PROP_ACT) return;
+  const box = $("#dlg"); if(!box) return;
+  const to = PROP_ACT.to;
+  const choose = dispositions().map(d => `<label class="dz-opt${d===to?" on":""}">
+      <input type="radio" name="pa-to" value="${d}" ${d===to?"checked":""} onchange="proposalActChoose(this.value)">
+      <span class="dz-verb">${esc(disposeVerb(d))}</span>
+    </label>`).join("");
+  /* ABSENT, never present-and-greyed, and it judges nothing about the record:
+     it appears once the member has supplied what the act takes. */
+  const commit = (to && PROP_ACT.reason.trim())
+    ? `<div class="intent-pf"><button class="btn" id="pa-go" onclick="doProposalDispose()"${PROP_ACT.busy?" disabled":""}>${esc(disposeVerb(to))}</button></div>` : "";
+  box.innerHTML =
+    `<h2 id="pa-h">${esc(disposeVerb(to))} this proposal</h2>
+     <p class="what">A proposal is the record's question, not yours yet. Deferring or dismissing it records your reason on the record; it is reversible — a disposed proposal is kept — but never silent, and it neither adopts nor edits anything.</p>
+     <div class="prop-context"><div class="pc-cap">The record's question, as it stands</div>${esc(proposalContext(PROP_ACT.proposal))}</div>
+     <h3 class="cx-h">Which disposition</h3>
+     <p class="subj-note">Every token below is one the record publishes as a disposition. This page adds none and renames none.</p>
+     <div class="dz-choose">${choose}</div>
+     <h3 class="cx-h">Your reason</h3>
+     <p class="subj-note">In your words, and required. Nothing is drafted or suggested here, and no length rule is copied onto this page &mdash; if the record will not take what you wrote, the record says so in its own words.</p>
+     <textarea class="txt" id="pa-reason" rows="2"
+       onchange="proposalActAuthor(this.value)" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+     ${weightLadderHtml("reasoned", `Deferring or dismissing a proposal is <b>reasoned</b>: it is kept and returnable, so it can be undone — but it never happens silently, because it carries a reason that goes on the record as your own words.`)}
+     ${PROP_ACT.refusal?`<div class="intent-pf">${citeRefusalHtml(PROP_ACT.refusal)}</div>`:""}
+     ${commit}
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+  const r = $("#pa-reason"); if(r) r.value = PROP_ACT.reason;
+}
+/* COMMIT. The surface-side gate that stood here — the early return refusing the
+   act in this page's own words before the plane was reached — is gone with the
+   pre-flight that fed it. The control exists only once the member has supplied
+   what the act takes, and every refusal comes back in the record's words.
+   THE ONE SENTENCE THIS FUNCTION STILL WRITES is about the SURFACE'S OWN
+   SITUATION and not about the record's rules: an op this build does not expose
+   is a fact about which plane answered, which no refusal of the record's can
+   state. It is deliberately kept and deliberately narrow. */
 async function doProposalDispose(){
-  if(!PROP_ACT_CTX) return;
-  const go = $("#pa-go"); const to = go ? go.dataset.to : "deferred";
-  const el = $("#pa-reason"); const reason = el ? String(el.value||"").trim() : "";
-  const err = $("#pa-err"); if(err) err.classList.add("hidden");
-  const pf = proposalDisposePreflight({ to, reason });
-  if(!pf.ok){                       // the surface refuses, before the plane
-    if(err){ err.innerHTML = `<b>This act won't run yet — and nothing has been written.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
-    proposalActValidate();
-    return { refused:true, reason:pf.refusal.reason };
-  }
-  if(go){ go.disabled = true; go.textContent = "…"; }
+  /* The same guard `doEdgeAct` carries, and for the same reason: where there is
+     no probe, the commit function will not run an act the member has not
+     finished supplying. It RETURNS — silently, writing nothing and saying
+     nothing — because the control that calls it does not exist yet, and a
+     sentence here would be a refusal composed on the surface. */
+  if(!PROP_ACT || PROP_ACT.busy || !PROP_ACT.to || !PROP_ACT.reason.trim()) return;
+  const key = PROP_ACT.key, to = PROP_ACT.to, reason = PROP_ACT.reason.trim();
+  PROP_ACT.busy = true; PROP_ACT.refusal = null; proposalActPaint();
   try{
-    const res = await recPost("proposedispose", { key: PROP_ACT_CTX.key, to, reason });
-    proposalDisposeReceipt(res, PROP_ACT_CTX, to, reason);
-    return res;
+    const res = await recPost("proposedispose", { key, to, reason });
+    if(!PROP_ACT || PROP_ACT.key !== key) return;
+    PROP_ACT.busy = false;
+    const out = (res && res.result !== undefined) ? res.result : res;
+    if(out && out.ok === false){ PROP_ACT.refusal = out; proposalActPaint(); return { refused:true, reason: out.reason }; }
+    proposalDisposeReceipt(out, PROP_ACT, to, reason);
+    return out;
   }catch(e){
-    // The delegated disposition op is not on the plane yet — say so, having written nothing.
-    const gap = e && /unknown op/i.test(String(e.error || e.reason || ""));
-    if(err){
-      err.innerHTML = gap
-        ? `<b>The record cannot yet keep a proposal's disposition — nothing was written.</b><div style="margin-top:4px">A proposal is not a question in the record, so it cannot be disposed the way one is. Recording that a member deferred or dismissed the record's own question (and ageing it, per the aggregation discipline) needs an op RECORD does not expose yet (<span class="mono">op=proposedispose</span>). Your reason was not lost — it simply has nowhere to be stored until that lands.</div>`
-        : proposalRefusalHtml(e);
-      err.classList.remove("hidden");
-    }
-    if(go){ go.disabled=false; go.textContent = PROP_DISPOSE_VERB[to]; }
-    proposalActValidate();
-    return { refused:true, reason: e && (e.reason || e.error), gap:!!gap };
+    if(!PROP_ACT) return;
+    PROP_ACT.busy = false;
+    /* D-173: `recPost` throws the ENVELOPE, and a store refusal lives INSIDE it
+       as `result`. Reading `e.reason` off the envelope finds nothing and turns
+       every real refusal into "no answer" — the exact shape of the defect UI-16
+       found in three other places. Opened here, so the record's own words are
+       what render. */
+    const inner = (e && typeof e === "object" && e.result !== undefined) ? e.result : e;
+    const gap = !!(e && /unknown op/i.test(String((e && e.error) || (inner && inner.error) || "")));
+    PROP_ACT.refusal = gap
+      ? { reason:"NO_SUCH_OP_HERE",
+          detail:"This build of the record does not expose the op this act runs through, so nothing was sent and nothing was written. That is a fact about which plane answered, not a rule the record applied." }
+      : ((inner && typeof inner === "object" && (inner.reason||inner.detail||inner.error)) ? inner : { reason:"NO_ANSWER", detail:String(e) });
+    proposalActPaint();
+    return { refused:true, reason: (inner && (inner.reason || inner.error)), gap };
   }
 }
 function proposalDisposeReceipt(res, ctx, to, reason){
-  const done = PROP_DISPOSE_DONE[(res && res.to) || to] || to;
+  /* The token the RECORD says it wrote, preferred over the one this page sent,
+     and rendered through the published verb table. `PROP_DISPOSE_DONE` — a
+     surface-side map from token to past participle — was deleted with the rest
+     on 2026-08-05; the heading now reads the record's own token opened up. */
+  const done = String((res && res.to) || to || "");
   $("#dlg").innerHTML =
     `<div class="dz-receipt">
-       <div class="dz-rhead">${esc(done==="deferred"?"Deferred.":"Dismissed.")}</div>
+       <div class="dz-rhead">${esc(humanKind(disposeStateWord(done)))}.</div>
        <p class="dz-rlede">The record kept the proposal and recorded your act. It carries your name and your reason; it is kept, never deleted, and can be re-triaged. The record's question stands answered by a person, not silently dropped.</p>
        <div class="dz-rgrid">
          <div class="kv"><span class="k">Proposal</span><span class="v">${esc(proposalContext(ctx.proposal))}</span></div>
@@ -9396,11 +9529,12 @@ function proposalDisposeReceipt(res, ctx, to, reason){
        <div class="row-btns"><button class="btn" onclick="closeDialog();renderQueue()">Done</button></div>
      </div>`;
 }
-function proposalRefusalHtml(e){
-  const head = esc([e && e.reason, e && e.error].filter(Boolean).join(" · ") || "The plane refused, and wrote nothing.");
-  const detail = e && e.detail ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
-  return `<b>${head}</b>${detail}`;
-}
+/* `proposalRefusalHtml` STOOD HERE and was DELETED on 2026-08-05 by UI-22 when
+   its last caller went. It carried a default sentence of its own — "The plane
+   refused, and wrote nothing" — for the case where the record said nothing,
+   which is a sentence about the record written here. `actRefusalHtml` (through
+   `citeRefusalHtml`) is the one renderer, and its default says only that the
+   record said nothing further. */
 
 /* ---- ADOPT: author an INQUIRY from the proposal (op=promote). This is the
    affordance that is FULLY reachable, and the one where "derived informs, authored

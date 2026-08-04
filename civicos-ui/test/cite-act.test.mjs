@@ -604,11 +604,14 @@ function namedIn(h, id, key){
 
 /* ============ (0) STRUCTURAL: NO REFUSAL OF THIS SURFACE'S OWN ============ */
 /* SCOPED TO THIS ITEM'S REGION, and the scope is stated rather than quietly
-   chosen. `disposePreflight` (UI-2, built before DEC-8 and before
-   op=affordances existed) still COMPUTES and WORDS its own NO_REASON /
-   BAD_REASON / ILLEGAL_TRANSITION elsewhere in the file; that is UI-22's ground
-   and is reported here rather than asserted away. Everything between the two
-   region markers below is this item's, and it names no refusal of its own. */
+   chosen. CORRECTED 2026-08-05 (UI-22), never exempted: this note used to say
+   that `disposePreflight` still computed and worded its own NO_REASON /
+   BAD_REASON / ILLEGAL_TRANSITION elsewhere in the file, reported here rather
+   than asserted away. UI-22 closed it — the function is deleted and the flow
+   asks the plane with the handle withheld (act-dispose.test.mjs carries the
+   proof) — so the exception is gone and the scoping is now about REGION
+   OWNERSHIP alone. Everything between the two region markers below is this
+   item's, and it names no refusal of its own. */
 const REGION = APP.slice(APP.indexOf("/*__CITE_ACT_START__*/"), APP.indexOf("/*__CITE_ACT_END__*/"));
 ok("the cite region exists and is marked", REGION.length > 2000);
 /* Every reason code the four acts refuse with belongs to the plane. The ONLY
@@ -630,9 +633,14 @@ ok("the ONE reason code the cite region knows is the field retire withholds, and
 /* SCOPED to the four acts this item gives call sites to. `Co-attest this
    capture` IS spelled in app.html — it is UI-6's own dialog heading, written
    before op=affordances existed and driven by a surface-side bar rather than by
-   a published act. That is the same residue class UI-22 holds and it is
-   reported here rather than asserted away; the four acts below carry no label
-   of their own anywhere in the file. */
+   a published act. UPDATED 2026-08-05 (UI-22), and the update is a MEASUREMENT
+   rather than a deferral: `attest` is a NON_ACT in affordances.mjs, deliberately
+   ("capture-directed: co-attestation of a capture's existence in time"), so the
+   plane publishes NO label, NO `needs` and NO `rung` for it on any object and
+   there is nothing here to read. UI-22 rewired that bar's AVAILABILITY onto the
+   record's own facts and left the label as the ONE standing residue, raised as
+   a DELEGATION to RECORD rather than papered over. The four acts below, which
+   the plane does publish, carry no label of their own anywhere in the file. */
 for(const a of [PUBLISHED.cite, PUBLISHED.sever, PUBLISHED.reinstate])
   ok(`the published label "${a.label}" is nowhere in app.html`, !APP.includes(a.label));
 ok("and no label of this surface's own is rendered for a published act",
