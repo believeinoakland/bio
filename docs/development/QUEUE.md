@@ -863,6 +863,22 @@ same commit. DEC-32 stays open while Bob weighs the grounds model.
 - **AUDIENCES.md H4** — DEC-31's bound rule: addressed renderings carry hash, date, author
   and both floors in-band; record the extension beside H4 at enactment.
 
+### 2026-08-03 · BOB · SESSION GOING DORMANT — thread paused by Bob; one open decision; nothing in flight
+
+Bob paused the case-making thread: *"far enough along… put all of this aside for a time and
+turn our focus elsewhere."* The BOB session goes DORMANT (not closed) with a clean, pushed
+tree in the main checkout; it writes nothing while dormant, and on resumption it will
+fetch/rebase and re-read this file and DECISIONS.md before acting. A NEW session Bob starts
+for other design areas will run in its own worktree per DEC-3 and hand its decompositions
+through this inbox like any other.
+
+- **DEC-32 is the sole open register entry** (clarified twice in place; the falsifier-count
+  test now carries the design). No provisional blocks anything.
+- **S11's state inventory and D-164's content-extent design are PARKED, not queued** — do
+  not wait on them; they resume when Bob reopens the thread.
+- The enactment backlog stands at 30; nothing in this entry adds to it beyond the two
+  entries above.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on

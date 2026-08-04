@@ -2237,6 +2237,25 @@ recommendation: ADOPT PLURALITY, shaped as GROUNDS rather than claim-objects: on
   conclusions disagreeing.
 reversal cost: low now, while `inquiry_basis` is unbuilt. Rising after: once grounds exist,
   renderings and citations will hang off their labels.
+CLARIFIED 2026-08-03 by Bob, twice, and the entry stays OPEN pending his read of the answers:
+  (1) *"You talk about grounds, but what that really is is multiple claims."* **CONCEDED —
+  semantically each ground IS a claim: the same proposition asserted on a distinct basis.**
+  What the grounds shape refuses is not claim-plurality; it is separate OBJECT IDENTITY for
+  each claim inside the finding. The sharpened test this exchange produced, which is the
+  useful residue: **count the falsifiers.** If the parallel supports assert the SAME
+  proposition, they share ONE falsifier — that is plurality inside one finding, whatever the
+  surface vocabulary calls it (calling them "claims" on screen is fine). If they assert
+  DIFFERENT propositions (*the regulations do not forbid it* vs *the constitution
+  affirmatively grants it*), each has its OWN falsifier — and a thing with its own falsifier
+  is an inquiry, so that case is composition (recursion, already answered), with the
+  published rendering free to present the family together.
+  (2) He asked for the weakest-leg rule to be justified by example — answered in session with
+  the conjunctive/disjunctive distinction: weakest-leg is right when every leg is
+  load-bearing (the reader must be able to check every link the claim NEEDS, so the claim's
+  checkability is its least-checkable necessary link); his utility example is the case where
+  legs are NOT all necessary (independent sufficient bases), which is exactly why the flat
+  model needs this decision. One rule, two shapes: min over necessary legs, max over
+  independently sufficient bases.
 
 ### DEC-33 · answered
 raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)

@@ -564,6 +564,12 @@ ground's strength with the regulatory ground beside it, where today's weakest-le
 hold the whole finding down and push the member toward division. A suspended leg suspends its
 ground; the finding suspends only when every ground is (DEC-18's pattern, one level up).
 Contradiction (§4 Q14) stays separate: grounds agree on the conclusion. Awaiting Bob.
+**CLARIFIED AGAIN 2026-08-03 (Bob): "what that really is is multiple claims" — conceded;
+each ground IS a claim, the same proposition on a distinct basis. The test that now carries
+the design: COUNT THE FALSIFIERS. One proposition, one falsifier, several independent bases
+→ plurality inside one finding (DEC-32's shape, whatever the surface calls the parts).
+Different propositions → different falsifiers → separate inquiries, composed by recursion,
+rendered together. DEC-32 remains open.**
 
 
 ## THE ACTION PLAN — mapped 2026-08-03, not yet in the review document

@@ -52,104 +52,78 @@ Kickoff: session BOB.
 
 Read CLAUDE.md, then docs/development/kickoffs/BOB.md, and follow it.
 
-State of play, 2026-08-03, after a long review session with Bob on the study document.
+State of play, 2026-08-03 END OF DAY. The case-making / study thread is PAUSED BY BOB:
+"we're far enough along in the definition of the requirements, journey, processes, UX, and
+data model that we can put all of this aside for a time and turn our focus elsewhere."
+Do not resume that thread unless Bob does. The prior session went DORMANT, not closed.
 
 YOUR FIRST JOB IS THE STANDING ONE: read DECISIONS.md and surface every `open` entry.
-**There are NONE.** 27 decisions, 25 answered, 2 DEFERRED with named triggers. An empty
-open list is the healthy state and is worth one line. CONDUCT owes 24 enactments; that is
-its loop, not yours to chase.
+**There is ONE: DEC-32** — may one finding hold several parallel claims. Read it IN PLACE
+before saying anything about it; it carries two clarifications from Bob and a sharpened
+test (COUNT THE FALSIFIERS: same proposition, one falsifier, several independent bases ->
+plurality inside one finding; different propositions -> different falsifiers -> separate
+inquiries composed by recursion). Bob also asked for and received the weakest-leg
+justification: min over NECESSARY legs, max over INDEPENDENTLY SUFFICIENT bases — one rule,
+two shapes. DEC-32 awaits his read of that answer.
 
-**WHAT BOB SAID HE WANTS NEXT: "go through the open decisions to try to tackle them."
-Take that as the DEFERRALS AND THE OPEN QUESTIONS, because the DEC open list is empty.**
-Precisely, and read each in place before working it:
-  - DEC-2 deferred - a group's ROOT OF TRUST. Trigger: a BIO instance running with
-    MULTIPLE MEMBERS, so custody can be observed rather than guessed. Do not pre-empt it.
-  - DEC-25 deferred - is any part of an ACTION PLAN published? Running: never published.
-    **It carries a constraint that binds whoever answers it: groups write candidly in plans
-    BECAUSE plans are private, so a reversal can only apply PROSPECTIVELY, to plans written
-    after the change, with the group told first.**
-  - RECONCILED.md section 4, SEVEN still open: Q7, Q8, Q10 (all division residuals - Q7 and
-    Q10 are Bob's, Q8 is a DEC that REC-16 should raise), Q9 (the `undetermined` split),
-    Q12, Q13 (both minor), Q14 (three structural, incl. contradiction held inside ONE
-    inquiry, which is undesigned and honestly so).
-  - **NOT open, and do not re-open: Q1, Q2, Q3, Q4, Q5, Q6, Q11.** All settled, marked in
-    place in RECONCILED with the ruling that settled each. Q1-Q4 were still listed as open
-    until 2026-08-03 and were corrected then; if you find another stale one, fix it the same
-    way - mark it settled, keep the original text below as history, never rewrite it.
-  - Design questions that are NOT DECs and are genuinely live: whether one finding may hold
-    SEVERAL PARALLEL CLAIMS (Bob's overlapping-utility example, leaning toward plurality -
-    in BIO_Case_Making_v0_1.md); D-164 the content-extent primitive; D-165 action
-    preconditions (deferred, derivation path named).
+**Register state: 34 decisions.** 30 answered awaiting CONDUCT's enactment (its loop, not
+yours to chase), 3 DEFERRED with named triggers — DEC-2 (root of trust; trigger: a real
+multi-member instance), DEC-25 (plan publication; trigger: a group asks; any reversal is
+PROSPECTIVE ONLY), DEC-31 (addressed non-public delivery; trigger: the first group that
+asks; the in-band rule is BOUND NOW — hash, date, author, both floors inside any addressed
+rendering).
 
-WHAT THIS SESSION SETTLED - ten decisions, DEC-18 to DEC-27. Read them; most reshape
-earlier work rather than adding to it.
-  - **DEC-18** an ungraded leg is INERT: contributes nothing, costs nothing, stays NAMED.
-    UNRATED survives only where NO leg is graded. This is NOT what RECONCILED 1.1 R1-h
-    refused - R1-h refused drawing support from a leg that paid nothing.
-  - **DEC-21** capture and connection grades are NOT combined, and R2's MECHANISM was wrong
-    while its conclusion was right: a leg IS an edge, so ONE document leg carries BOTH.
-    Two measurements over two POPULATIONS, not one over two kinds of leg.
-  - **DEC-23** CONTENT is the unit the record points at; a whole document is its widest
-    extent. Legs, citations and connections all address content. **D-164: L3 CONTENT is a
-    named layer with NO OBJECT - the twin of the L7 finding - and it supersedes the framing
-    of D-161, D-163 and D-123, which are one missing primitive seen three times.**
-  - **DEC-19** publishing IS irreversible; correction always moves FORWARD.
-  - **DEC-20** only a HUNCH blocks publication; other bias is disclosed and travels.
-  - **DEC-22** a hunch is any ASSUMPTION, including an unsupported claim, which is a
-    standing OBJECTIVE the system may pursue. Search covers CONTENT AND CLAIMS.
-  - **DEC-26** planning from unestablished findings is legitimate; the gate is at the ACT,
-    not the reasoning; the safeguard is LABELLING (established / short of the standard /
-    hypothetical).
-  - **DEC-24** the machine may do the looking; the member does the concluding. Four roles
-    (extract, pursue, find, check) and four bounds. **Amended: rule 1 has a second half -
-    the machine must SHOW ITS WORK, because a name on reasoning you cannot see is a rubber
-    stamp.**
-  - **DEC-27** the ASSISTANT: a prompt on every surface. Permissive - it may do anything
-    that does not break the rules, and the line is AUTHORSHIP not writing. It is NOT a
-    member, so the record names it separately from whoever directed it. Multi-step work is
-    a WIZARD that opens the surface owning each step. **It holds no copy of the rules; it
-    asks the plane, like every other surface (DEC-8), so it introduces NO new trust
-    boundary.**
-  - **DEC-17 amended** - the GROUP sets the default required strength a project starts from.
-  - New surfaces named, not drawn: **S11 the action plan**, **S12 the assistant**.
-    S11 is specifiable now EXCEPT the system answering the backward question (D-165).
+WHAT THE CLOSING TURNS SETTLED (2026-08-03, all in DECISIONS.md; read before touching
+anything they govern):
+  - **DEC-28** `divided` is a terminal STATE, not a disposition (session).
+  - **DEC-29** division: one authored reason + total disclosure stands; the divide prompt
+    stays and its wording must state the disclosure (Bob).
+  - **DEC-30** division is author-scoped; concluding needs NO ballot — one name on every
+    judgment (Bob).
+  - **DEC-33** the publication ceremony PROCESS is deferred (Bob); UI-17 and REC-15 deferred,
+    an S8 PLACEHOLDER ships instead; REC-14/REC-22/UI-18 are NOT the process and stay.
+  - **DEC-34** the published case is a CONTAINER (zip + signed hash manifest + editions)
+    reduced also to PDF renderings, every page brazened with case/edition/authors/bias/
+    floors/hash. **The guarantee is TAMPER-EVIDENCE (answer-by-hash), never tamper-proofing
+    — PDF write-protect flags are advisory and must never be presented as the guarantee.**
+  - RECONCILED §4 is fully resolved except Q14's contradiction bullet (undesigned, honestly)
+    and Q14's intent-axis bullet (RECORD's call at build): Q8 -> DEC-28, Q9/Q12/Q13 settled
+    by design pass in place, Q7 -> DEC-29, Q10 -> DEC-30, delivery -> DEC-31.
+  - **S4 ruling of note: the finder fans out BOTH retrieval routes and only the cross-seam
+    FILTERED INTERSECTION is refused** (truncated-list intersection under-reports invisibly;
+    the fix is the plane-side join, HOLE-4). Bob likes the design.
 
-THE REVIEW DOCUMENT. Published for Bob at
-    https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef
-**Its SOURCE IS NOW IN THE REPO: docs/development/research/review-document.html.** Edit
-that file, verify, then publish it - do NOT reconstruct it by fetching the artifact.
-**To publish you MUST pass `url:` or a new URL is minted and Bob's link silently breaks.**
-Publishing is pre-approved in .claude/settings.json; it will not prompt.
+PARKED WORK, in order, waiting for Bob to reopen the thread:
+  1. **S11 state inventory** — specifiable NOW; the walkthrough is in
+     BIO_Case_Making_v0_1.md §6-6b (nothing gates it; DEC-25/D-165 only remove affordances).
+  2. **D-164 the content-extent primitive** — ruled by DEC-23, undesigned; folds
+     D-161/D-163/D-123. Solve ONCE.
 
-**Verify diagrams before publishing - this is a loop, not advice:**
-    MERMAID_DIR=<dir with mermaid@11.15.0 + jsdom> node tools/mermaid-check.mjs \
-      docs/development/research/review-document.html
-A block that fails to parse renders as an ERROR BOX on the page and the READER finds it.
-The tool carries its own negative control and install line.
-
-**NOTATION IS SETTLED AND BOB REJECTED TWO DRAFTS THAT IGNORED IT.** Structure ->
-`classDiagram` (`*--` composition, `-->` association, `<|--` is-a). Lifecycle ->
-`stateDiagram-v2`, edges labelled with the ACT that causes them. NEVER mix a structural and
-a behavioural model in one picture, and never hand-roll arrow semantics in a flowchart.
-To check APPEARANCE, build a local replica harness served by preview_start and screenshot
-it in both themes - the in-app browser CANNOT reach claude.ai or any external origin
-(navigations hang 300s with zero network requests; localhost is pre-approved).
-
-**HOW BOB REVIEWS, and it is the most useful thing in this block.** He reads as a reader
-who has not lived in the repo, and he is right nearly every time. Recurring corrections:
-terms used before they are defined; a word with a precise meaning used loosely elsewhere
-(`publish` for what the server tells the screen was one); examples that assume the model
-("the member is on the transfer inquiry"); and diagrams whose edges mean four things at
-once. **When he asks a question, ANSWER IT - do not just apply it.** Several of his
-questions ("why are those grades combined?", "is a citation a connection?") exposed real
-defects that only surfaced because the answer was worked out rather than accepted.
-
-**Do not guess. Do not be lazy.** His words, twice. Measure with python (the shell's grep
-is ugrep with -I and silently skips bio-plane/src/store.mjs on a NUL byte, D-131); read the
-repo rather than recalling it. **On 2026-08-03 a full reconciliation found TEN decisions
-missing from the document's Part 4** while their consequences sat in the body - drift
-accumulates fast when a document is patched incrementally, so re-read it against the
-register periodically rather than trusting the last patch.
+SESSION MECHANICS, unchanged and still binding:
+  - One session per tree (DEC-3). The dormant session sits in the MAIN checkout with a
+    clean, pushed tree; a NEW session takes `claude --worktree <NAME>`. On ANY resumption:
+    `git worktree list`, fetch/rebase, and re-read DECISIONS.md + QUEUE.md — CONDUCT may
+    have enacted 30 entries meanwhile and the world will have moved.
+  - The review document: source at docs/development/research/review-document.html, published
+    at https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef — edit the file,
+    verify, republish **passing `url:` or Bob's link silently breaks**. Favicon in use: 📋
+    (keep it stable). Verify diagrams first, every time:
+        MERMAID_DIR=/tmp/mmcheck node tools/mermaid-check.mjs \
+          docs/development/research/review-document.html
+    (install line is in the tool header if /tmp/mmcheck is gone). The in-app browser cannot
+    reach claude.ai; verify appearance via a localhost replica (launch.json `mmpreview`) and
+    content via WebFetch. Screenshots of the 50k-px page can come back blank — verify by DOM.
+  - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges
+    labelled with the ACT; never mix, never hand-roll arrow semantics. Bob rejected two
+    drafts that ignored this.
+  - HOW BOB REVIEWS: as a reader who has not lived in the repo. Terms before definitions,
+    precise words used loosely, examples assuming the model, overloaded edges. **When he
+    asks a question, ANSWER IT — worked, not deflected.** His questions keep exposing real
+    defects ("what that really is is multiple claims" produced the falsifier-count test;
+    "why are those grades combined?" produced DEC-21).
+  - Do not guess. Do not be lazy. Measure with python (ugrep skips store.mjs on a NUL byte,
+    D-131); read the repo rather than recalling it; re-read the review document against the
+    register periodically — ten decisions went missing from Part 4 once.
 
 Run `node tools/plancheck.mjs` before any handoff.
 ```
