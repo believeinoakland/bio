@@ -410,10 +410,16 @@ input.ck:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:
 .dz-receipt .dz-rhead{font-weight:700;font-size:17px;margin:2px 0 6px}
 .dz-rlede{font-size:13.5px;color:var(--ink-soft);margin:0 0 12px;max-width:58ch}
 .dz-rgrid{display:flex;flex-direction:column;gap:1px;border:var(--hair);border-radius:var(--r-2);overflow:hidden}
-/* UI-6 the ATTESTATION: the honesty fence — what co-attestation does, and cannot */
+/* UI-6 the ATTESTATION: the honesty fence — the PUBLISHED wording, rendered.
+   `.az-honesty .az-cannot b` stood here until 2026-08-04 (UI-32) and is DELETED
+   rather than re-pointed: it coloured the label of a "Cannot:" paragraph this
+   surface used to WRITE, and UI-28 stopped writing it — the block is now the
+   record's own sentence split by shape into `.az-part`, so the selector matched
+   nothing. Re-aiming it at `.az-part b` would be a styling decision inside
+   UI-28's region rather than the removal of dead source, so it is not made
+   here. `.az-honesty p` above still applies and is what styles the parts. */
 .az-honesty{border:var(--hair);border-left:3px solid var(--signal);border-radius:var(--r-2);padding:10px 13px;margin:12px 0 4px;background:var(--tint-note)}
 .az-honesty p{font-size:12.5px;color:var(--ink-soft);margin:6px 0 0}
-.az-honesty .az-cannot b{color:var(--signal-dk)}
 .az-planenote{font-size:12px;color:var(--muted);margin:10px 0 0;font-style:italic}
 .dz-opt.az-off{opacity:.55}
 /* UI-3 the BALLOT: the two properties the ballot type adds — a checkable DENOMINATOR and the two-owner DIVERGENCE */
@@ -12389,11 +12395,16 @@ function attestRefusalHtml(e){
    what this credential is. A machine class can capture and cannot release, and
    the surface says which is which rather than leaving a member to discover it.
 
-   The grade is stated before anything is written, in the plane's own terms.
-   Grade B is what a Worker can honestly produce: the bytes as fetched, hashed
-   at receipt, with the locator and the instant. Grade A needs a chain-of-custody
-   web archive this surface cannot make, and claiming it would be the one thing
-   the grading scheme exists to prevent.
+   NO CAPTURE GRADE IS STATED IN THIS REGION, and that is the 2026-08-04
+   correction (UI-32), not an omission. This paragraph used to spell both of the
+   capture axis's letters in its own words, and so did the teach block it
+   described — the FOURTH hand-written statement of a doctrine the plane owns
+   and COMPOSES, from `EARNED_CAPTURE_CEILING` in bio-plane/checks/bio-checks.mjs
+   (the constant `checkEarnedLeg` actually refuses a leg against) and the
+   sentences in bio-plane/src/affordances.mjs. A copy here agreed with the rule
+   at zero cost and would have gone on agreeing right up until the rule moved.
+   What this surface now says to a member about to capture something is on
+   `renderAdd`'s teach block, and the whole reasoning is written there.
    ============================================================ */
 /* One vocabulary. `inquiry` replaces `focus` here — the type a question is
    written as, whatever phase it later reaches.
@@ -12634,6 +12645,58 @@ function addActRepaint(){
   addValidate();
 }
 
+/* WHAT THIS FORM TELLS A MEMBER ABOUT THE CAPTURE IT IS ABOUT TO MAKE — and it
+   states NO grade, which is UI-32's decision (2026-08-04) and is recorded here
+   rather than left to be re-derived.
+
+   WHAT STOOD HERE. A teach block opening "<b>Grade B.</b>" and closing
+   "co-attestation is what raises B toward evidentiary weight" — the record's
+   capture doctrine, spelled in this surface's own letters, at a site whose act
+   is not co-attestation. REC-43 made the attest fence a FUNCTION of the enforced
+   ceiling; REC-48 did the same for op=acquire's note and found a fourth
+   statement while sweeping for the class; UI-28 found this one. It is the same
+   defect three times over: a copy that agrees at zero cost today, in front of a
+   member, about how much the record may claim.
+
+   TWO TREATMENTS WERE AVAILABLE AND THE SECOND IS THE ONE THAT FITS.
+
+   NOT `ATTEST_FENCE`, and this is REC-48's rule rather than a preference: a
+   different act speaking to a different reader is not the same sentence. The
+   fence is the prompt on the `attest` ACT and its first job is to answer "what
+   question does co-attestation answer?" for somebody DECIDING whether to do it
+   (DEC-39). Nobody is deciding that here. Pasting it in would put a second
+   account of co-attestation in front of a member who has not been offered one.
+
+   NOT op=acquire's `note` EITHER, for two reasons, and the second is the one
+   that would have been easy to get wrong. (i) It is not available at this
+   moment: the note is a RECEIPT the plane hands back over bytes it has already
+   received, and this block paints BEFORE the address is even typed, so there is
+   nothing published for this instant to render. Nothing else on `capture_acts`
+   carries the doctrine either — `attest` carries the fence and `monitor`
+   carries no prompt at all. (ii) Rendering the receipt's note to a MEMBER, as
+   opposed to the caller it was written for, is a question about which surface
+   owns the fence, and REC-48 recorded at `acquireGradeNote` that this is a
+   ruling and not an edit to make quietly. So it is raised, not taken.
+
+   WHAT IS LEFT IS WHAT THIS SITE'S OWN READER ACTUALLY NEEDS, and it turns out
+   to be a smaller thing than a grade: what the plane will DO with the address,
+   which of those things are recorded as separate claims, and what none of it
+   settles. A letter here was never only a copy of doctrine — it was a
+   PREDICTION. The capture does not exist yet. Whether the supporting files
+   arrive whole, whether an archive answers, what the source actually serves:
+   none of it is known while this paragraph is on the screen, so a grade stated
+   here is this surface promising an outcome the plane has not reached. The
+   grade reaches the member the way every other grade in this application does —
+   INTERPOLATED from the value the record published, on the document itself,
+   after there is a capture to grade. */
+const ADD_CAPTURE_TEACH = `<div class="teach" style="margin-top:14px"><b>What gets recorded.</b> The plane
+        fetches what the address serves at that moment, hashes the bytes as they arrive, and records the
+        address, the instant it was retrieved and who you say issued it as three separate claims rather
+        than one. What none of that settles is whether the document is true, or whether its issuer is the
+        right one to have asked &mdash; those stay open questions for the record to work on. How much the
+        capture itself is worth as evidence is the record's own determination, and the document will say
+        so, in the record's words, once there is a capture to judge.</div>`;
+
 async function renderAdd(){
   setActive("");
   addActReset();
@@ -12679,10 +12742,7 @@ async function renderAdd(){
       <input class="txt" id="a-auth" placeholder="e.g. City of Oakland, Public Works Department" oninput="addValidate()">
       <label class="ckline"><input type="checkbox" id="a-subs" checked> Fetch the page's stylesheets and images too, so it can be shown as the source served it</label>
       <label class="ckline"><input type="checkbox" id="a-arch"> Ask a public archive to mirror it as well</label>
-      <div class="teach" style="margin-top:14px"><b>Grade B.</b> The bytes as the plane fetched them,
-        hashed at receipt, with the address and the instant recorded. That is what this surface can
-        honestly claim. Grade A needs a chain-of-custody web archive, which a Worker cannot produce,
-        and co-attestation is what raises B toward evidentiary weight.</div>
+      ${ADD_CAPTURE_TEACH}
     </div>
     ${addActionPaneHtml()}
     <div id="a-err" class="teach hidden"></div>
@@ -12726,7 +12786,13 @@ function addValidate(){
   else if(t === "information" && loc && !/^https:\/\//i.test(loc)) why = "The address must be https on a public site.";
   else if(t === "information" && loc && !auth) why = "Say who issued the document as well as where it lives.";
   else if(!act.ok) why = act.why;
-  else why = loc ? `It will be captured at ${vocabFor(FIRST_STATE, t)}, Grade B, and appear in the record for review.`
+  /* THE LETTER CAME OUT OF THIS LINE TOO (2026-08-04, UI-32), and it was the
+     sharper of the two: the teach block at least described a rule, while this
+     told a member what grade a capture that HAS NOT HAPPENED will carry. The
+     state is a different matter and stays — `FIRST_STATE` is the catalog's and
+     the form is what decides it, so the surface knows that answer. It does not
+     know the grade, and the record says it on the document. */
+  else why = loc ? `It will be captured at ${vocabFor(FIRST_STATE, t)} and appear in the record for review.`
                  : `It will be written at ${vocabFor(FIRST_STATE, t)}, with no document attached.`;
   const go = $("#a-go"), n = $("#a-n");
   const ready = !!(title && body && act.ok && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
