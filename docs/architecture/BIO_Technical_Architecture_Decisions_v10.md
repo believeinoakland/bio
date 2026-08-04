@@ -1793,7 +1793,12 @@ default conflict rule; instance statements may be LOCKED against project
 override (the remedy for a project that objects is another instance). Every
 work product cites a bias manifest as part of its evidentiary record;
 publication carries it. Changing bias marks existing analysis with BIAS DEBT,
-batchable, and debt blocks workproduct_state advancement and ratification.
+batchable, and ~~debt blocks workproduct_state advancement and ratification~~
+**— AMENDED 2026-08-02 by Bob (DEC-20); struck here 2026-08-05 (D-188). Ordinary
+bias debt is DISCLOSED and blocks NEITHER workproduct_state advancement NOR
+ratification; it travels with the published case so a reader can weigh it. Only
+an uncleared HUNCH refuses publication, by name. As written, this sentence said
+the opposite of the doctrine, which is the confusion D-188 records.**
 Conclusions are graded on how they follow only from evidence and analysis
 UNDER THE DECLARED BIAS IN FORCE, consumed by the argument evaluations that
 already gate work products. The full construct definition, including the

@@ -1146,12 +1146,19 @@ is the whole of the assistant's obligation.
 
 ### Bias debt and the ageing machinery are the same shape
 
-Bias debt says: the lens changed, so this analysis owes a re-run, and it may not
-advance or be ratified until the debt is settled. §8.2's temporal expectations say: this
-stage is due and has not arrived. Both are an obligation with a clock, attached to an
-object, blocking a state transition, and settleable in batches. They should share
-mechanism rather than growing two schedulers, and Step 7 of the plan is where that is
-decided.
+Bias debt says: the lens changed, so this analysis owes a re-run. §8.2's temporal
+expectations say: this stage is due and has not arrived. Both are an obligation with a
+clock, attached to an object, and settleable in batches. They should share mechanism
+rather than growing two schedulers, and Step 7 of the plan is where that is decided.
+
+> **CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"and it may not advance or be
+> ratified until the debt is settled"*, and listed *blocking a state transition* among
+> the shared properties. **Ordinary bias debt blocks nothing** — it is DISCLOSED and
+> travels with the work; only an uncleared HUNCH refuses publication. **The shared shape
+> D-86 identified survives untouched**, because blocking was never the load-bearing part
+> of it: an obligation with a clock, attached to an object, settleable in batches is
+> still one mechanism with two consumers. What differs is what each consumer DOES when
+> the clock runs out — the temporal half blocks, the bias half surfaces.
 
 ## 13.1 Evidence accrues to bias statements
 

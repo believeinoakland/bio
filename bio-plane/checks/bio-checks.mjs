@@ -2746,8 +2746,11 @@ function checkGrounds(fm, legs, findings) {
  *                    chain-of-custody web archive is out of a Worker's reach
  *                    and is not claimed (CAPTURE-FIDELITY.md, R2-e/R2-g).
  *    - `testimony`   a MEMBER'S act, always D, author and date carried.
- *    - `hunch`       a member's act, authored above D, bias debt until cleared
+ *    - `hunch`       a member's act, authored above D, HUNCH DEBT until cleared
  *                    (DEC-15) — and the earned path is what it is cleared INTO.
+ *                    D-188: HUNCH debt, not "bias debt". Ordinary bias debt is
+ *                    DISCLOSED and travels; the hunch is the kind that refuses
+ *                    publication (DEC-20).
  *
  *  THE SUBJECT-ENTITY PRICE IS REAL AND IS STATED (DEC-15). An inquiry that
  *  names no subject entity has no A/B/C available to it on the connection axis.
