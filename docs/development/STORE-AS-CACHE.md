@@ -574,14 +574,58 @@ document-axis work throughout. Corrected:
   not read; we have read them and derived no connection. The member's next move differs in
   each case, and today the record cannot tell them apart.
 
+### FOUR LEVELS, SEARCHED IN ANY ORDER — Bob's correction to the section below
+
+The paragraph below said exploratory services *"rest on the MEANING axis, not the document
+axis"* and called the document axis plumbing. **Bob corrected it 2026-08-04 and the
+correction is load-bearing:**
+
+> *"Be careful about assuming that when an AI goes looking for something that the set of
+> meaning, content, and documents are complete. Making that assumption will short-circuit
+> the exploration and discovery processes from which new material is found. In the end,
+> all FOUR levels (meaning, content, documents, the internet) may need to be searched in
+> order to find what's needed."*
+
+**So the axes are not a hierarchy to be exhausted from the top, and THE INTERNET IS THE
+FOURTH LEVEL rather than something outside the model.** The earlier table put SOURCES
+outside the system by definition; that was the same mistake in another place. A search
+begins wherever it begins and may descend or ascend:
+
+| Level | Searched by | What a miss here means |
+| --- | --- | --- |
+| **MEANING** | the meaning-layer reads (route 2) | nothing has been derived — which may only mean nothing was extracted |
+| **CONTENT** | extraction over bytes held | nothing was extracted — which may only mean the document was never read |
+| **DOCUMENTS** | the query compiler (route 1) | we hold nothing — which may only mean nobody looked |
+| **THE INTERNET** | acquisition, and the member's own shoe leather | it is not there, or we have not found where it is |
+
+**Read that column downward and it is one sentence: absence at any level is not evidence
+of absence at the next.** It is the costs-nothing rule walked down a ladder, and it is why
+a missing-information answer must name its level — a member's next move is completely
+different in each row.
+
+**And the same searching process drives all four** (Bob, same exchange): *"just as the
+data store's document set updates and grows when an objective goes searching for answers,
+it's this same searching process… that causes content to be identified from documents and
+content connections made. And the same is true of meaning."* So discovery is not a
+pipeline with a document stage that completes and hands on. One process, four altitudes,
+running concurrently and feeding each other.
+
 ### Where AI actually sits, given the above
 
-Bob's exploratory/discovery services rest on the MEANING axis, not the document axis. The
-document axis is plumbing — fetch, hash, store. **What an AI overview reads is content and
-meaning**, and both are behind route 2, which no query surface reaches. So the ordering
-consequence is blunt: **an AI overview built on route 1 today would be reading titles,
-frontmatter and five text columns and calling it understanding.** The extraction and
-connection work is not a prerequisite in the scheduling sense; it is the SUBJECT MATTER.
+**PARTLY SUPERSEDED by the four-level correction above — kept because one half of it
+stands and the other half is the mistake worth seeing.**
+
+WHAT STANDS: **an AI overview built on route 1 today would be reading titles, frontmatter
+and five text columns and calling it understanding.** Content and meaning are behind
+route 2, which no query surface reaches, so the extraction and connection work is not a
+prerequisite in the scheduling sense — it is the SUBJECT MATTER.
+
+WHAT WAS WRONG: this first said the services *"rest on the MEANING axis, not the document
+axis"* and called the document axis *"plumbing"*. That framing assumes the lower levels
+are already complete and merely need reading, which is exactly the short-circuit Bob
+named. An assistant that finds nothing in meaning must be able to conclude *nothing has
+been derived yet* and go down — to content, to documents, and out to the internet — rather
+than report an empty answer as a finding.
 
 ## THE EARLIER SIX-LAYER TABLE — document-axis only, kept as the acquisition half
 
