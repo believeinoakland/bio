@@ -2568,7 +2568,8 @@ for CONDUCT to enact: no code change — record the ruling against REC-20's
   `out_of_view` behaviour so a later session does not read it as an unresolved
   tension and "fix" it toward silence. Add the scope reconciliation above to
   `BIO_Interaction_Constructs_v0_1.md`'s QUEUE section beside DEC-16's doctrine.
-enacted:
+enacted: 2026-08-04 · CONDUCT — no code change (the shipped behaviour stands); the ruling recorded against REC-20's landed line and the identity-vs-completeness scope reconciliation added to BIO_Interaction_Constructs_v0_1.md's QUEUE section beside DEC-16's doctrine, so a later session cannot read the tension as unresolved. Reasoning in this entry and that section.
+
 ### DEC-37 · answered
 raised: 2026-08-04 · CONDUCT (lifted from DIST-1's report)
 for: bob
@@ -2618,7 +2619,8 @@ for CONDUCT to enact: unblock REC-33; rename its `MONITOR_TOKEN` to `DAEMON_TOKE
   throughout, with the two-consumer reasoning above recorded at `classify()` so the
   next unattended consumer knows the class is the PATH and not the verb; sequence the
   plane's recognition of the class BEFORE the installer binds it (DIST-1).
-enacted:
+enacted: 2026-08-04 · CONDUCT — REC-33 unblocked and renamed to Bob's DAEMON_TOKEN (the class is the unattended path; scoped to its two verbs, widened by decision), ADMIN_TOKEN fallback kept, DIST-1's never-bind-an-unclassifiable-token constraint carried as binding; the installer half stays a follow-on DIST item behind REC-33's landing. Reasoning in this entry and REC-33's scope.
+
 ### DEC-39 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-38's report)
 for: bob

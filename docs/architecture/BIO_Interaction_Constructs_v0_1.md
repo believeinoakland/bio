@@ -147,6 +147,16 @@ Four properties follow, and each reuses a rule that already exists:
   ancestor set is `undetermined` rather than notifying a silently truncated one. A
   truncated notification set is indistinguishable from nobody caring.
 
+**RULED 2026-08-04 (DEC-36): an INVISIBLE ancestor in the set is stated as an
+incompleteness and disclosed as nothing else.** D-15 §7.9 ("not its existence") and the
+truncation-honesty rule above pointed opposite ways on one bit, and Bob reconciled them
+BY SCOPE rather than one overriding the other: **D-15 governs IDENTITY and DETAIL
+(absolute — no id, no title, no state, no count), DEC-16 governs COMPLETENESS (the fact
+that something is missing is stated, never the thing itself).** The member learns their
+item participates in something not visible to them, and nothing more. This is the
+shipped `out_of_view` behaviour (REC-20), confirmed — a later session must not read the
+tension as unresolved and "fix" it toward silence.
+
 | **ACT** | *doing something to a record or a set.* One motion: choose, see what it will refuse and why BEFORE it runs, author the reason, get a receipt. Ballots are acts whose status shows a tally; bulk is the same act scoped to a selection. |
 | **THE RUNG LADDER** (renamed from "weight" 2026-08-01 — see the collision note below) | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). Orthogonal to it, an act applied to a SET carries one of three application modes: `refuse` (all-or-nothing), `report` (proceeds, says what moved), or `per-item` (each succeeds independently or is RETAINED WITH A REASON). See `NOTIFICATIONS.md`. |
 | **UNDETERMINED** | a display primitive, identical in all six places it appears. |
