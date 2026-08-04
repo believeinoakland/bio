@@ -2407,6 +2407,29 @@ reversal cost: low before any corpus is transcribed; after that, re-running unde
   different service produces different claims and every leg resting on the old ones
   keeps naming the old service — which is by design, but makes switching noisy.
 
+### DEC-36 · open
+raised: 2026-08-03 · CONDUCT (lifted from REC-20's report — the worker built the instruction and named the tension)
+for: bob
+question: When a queue item's ancestor set includes a case the member CANNOT SEE, the
+  contract reports the set `undetermined` with reason `out_of_view` — no id, no title,
+  no state, no count. But the fact of incompleteness is itself an EXISTENCE SIGNAL:
+  the member learns that something they cannot see sits above their item. D-15 §7.9
+  says an uninvited member does not see a project "not its existence"; DEC-16 says a
+  silently shorter set is indistinguishable from nobody caring. The two rules point
+  opposite ways on this one bit. Which yields?
+why it is Bob's: doctrine — the collision of two of his own rulings, and it decides
+  what an uninvited member can INFER about the group's private structure.
+provisional: as shipped by REC-20 — the fact of incompleteness only (DEC-16's
+  honesty), never any identifying detail or count (D-15's fence). The member learns
+  "your item participates in something not visible to you" and nothing else.
+alternative: full D-15 silence — the ancestor set simply omits invisible cases and
+  reports `determined`, indistinguishable from a complete set.
+recommendation: keep the shipped behaviour. The existence bit leaks structure only in
+  the aggregate and only to members already invited to SOMETHING touching the item;
+  full silence resurrects DEC-16's named failure (a truncated set reading as a
+  complete one) on the exact surface members open by habit. If Bob rules the other
+  way, reversal is one predicate and migrates nothing.
+reversal cost: one predicate, no migration, no stored state either way.
 ## Answered, awaiting enactment
 
 _(none)_
