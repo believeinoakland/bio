@@ -51,6 +51,18 @@ const PROJ = { bundle_id:"INFO-X", object_type:"information", group_id:"believe-
  monitor_last_checked:"2026-07-27T12:00:00Z", reeval_flag:0, annotations_open:0, fm_json:null };
 const CITER = { bundle_id:"PROJ-1", object_type:"project", title:"Sewer franchise diversion", current_state:"forming", last_updated:"2026-07-20" };
 const CITER_PROJ = { bundle_id:"PROJ-1", fm_json: JSON.stringify({references:[{rel:"cites",target:"INFO-X",status:"confirmed",note:"the budgeted transfers"}]}) };
+/* CORRECTED 2026-08-05 (UI-21). The "Cited by" section used to be built by
+   `reverseRefs`, a CLIENT-SIDE walk over `op=list` + `op=projection` — which is
+   why this file's mock had to hand the surface a citing project's `fm_json` and
+   let the browser index it. That function is DELETED; the page reads
+   `op=backlinks`, REC-25's gated reverse index, whose rows carry the citing
+   object's own `from_title` / `from_type` / `from_state` / `status` / `note`.
+   The old fixture is not exempted, it is superseded: `CITER_PROJ` is still used
+   by the projection reads below, and the reverse edge is now answered by the op
+   that actually answers it, in the shape the plane sends. */
+const BACKLINKS = { ok:true, target:"INFO-X", backlinks:[
+  { from:"PROJ-1", from_type:"project", from_title:"Sewer franchise diversion",
+    from_state:"forming", rel:"cites", status:"confirmed", note:"the budgeted transfers" }]};
 const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date,RegExp,Promise,Uint8Array,Uint16Array,Map,Set,TextEncoder,crypto:webcrypto,
  Blob:class{}, IntersectionObserver:undefined,
  setInterval:()=>1,clearInterval(){},setTimeout:fn=>{fn();return 1},requestAnimationFrame:fn=>fn(),
@@ -62,6 +74,7 @@ const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date
    const reply=o=>({ok:true,json:async()=>o});
    if(op==="image") return reply({ok:true,result:IMG});
    if(op==="projection") return reply({ok:true,result:q.get("id")==="PROJ-1"?CITER_PROJ:PROJ});
+   if(op==="backlinks") return reply({ok:true,result:BACKLINKS});
    if(op==="list") return reply({ok:true,result:[CITER,{bundle_id:"INFO-X",object_type:"information",title:"t",current_state:"verified",last_updated:"2026-07-20"}]});
    return reply({ok:true,result:{}});
  }};
@@ -156,6 +169,7 @@ console.log("harness8: full document page renders with every element present");
         if(op==="image") return reply({ ok:true, result:IMG });
         if(op==="projection") return reply({ ok:true, result: p.get("id")==="PROJ-1" ? CITER_PROJ : PROJ });
         if(op==="list") return reply({ ok:true, result:[CITER] });
+        if(op==="backlinks") return reply({ ok:true, result:BACKLINKS });
         /* THE ENVELOPE the plane really sends, and the acts the record
            publishes for THIS object as it stands. */
         if(op==="affordances") return reply({ ok:true, result:{ target:p.get("target"),
