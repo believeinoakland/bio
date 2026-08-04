@@ -932,7 +932,7 @@ added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
 
 ### FW-14 · queued
 milestone: M8
-scope: **Assign the weight-ladder rung to every mutating op, or state that it has none.** As `BUILD-ORDER.md` §2 (FW-14), carried per `RECONCILED.md` §3.3 (its derivation method already yields C-7's answer). **DEC-19 as amended** — the ladder's top rung reads **IRREVERSIBLE** with the correction path beside it: publishing is the one irreversible act; correction always moves FORWARD (a new edition, a withdrawal as another attested act, both standing); the distinguishing property of `attested` acts below it is that they cannot be undone SILENTLY, not that they cannot be undone. Derive rungs from what the code already enforces; raise a DEC for any genuinely ambiguous op rather than choosing.
+scope: **Assign the weight-ladder rung to every mutating op, or state that it has none.** As `BUILD-ORDER.md` §2 (FW-14), carried per `RECONCILED.md` §3.3 (its derivation method already yields C-7's answer). **DEC-19 as amended** — the ladder's top rung reads **IRREVERSIBLE** with the correction path beside it: publishing is the one irreversible act; correction always moves FORWARD (a new edition, a withdrawal as another attested act, both standing); the distinguishing property of `attested` acts below it is that they cannot be undone SILENTLY, not that they cannot be undone. Derive rungs from what the code already enforces; raise a DEC for any genuinely ambiguous op rather than choosing. Rider 2026-08-04 (UI-17a's landing): when RUNGS.publish is assigned (DEC-19: IRREVERSIBLE, the top rung), UI-17a's entry-point section reads the rung off the act instead of carrying it as surface copy — one read swap, asserted.
 behind-interface: I3
 depends-on: REC-19
 accepts-when: as `BUILD-ORDER.md` §2 (FW-14); plus the published rung vocabulary names `irreversible` at the top and no op publishes a rung its store behaviour contradicts; negative control — assign `reversible` to `op=retire` and the suite fails.
@@ -1133,13 +1133,14 @@ depends-on: REC-15, UI-11
 accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance reason appearing in step 3's panel fails the harness.
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
 
-### UI-17a · queued
+### UI-17a · done
 milestone: M10
 scope: **The publication entry point — the placeholder DEC-33 ships in UI-17's place.** A small surface stating what publication IS (the irreversible act, editions, what a published case promises — DEC-19's corrected top rung) and that publication currently runs THROUGH THE OPERATOR; no ceremony controls, no signing, no preflight. Q12's rule: narration is surface-scoped and plane-sourced (one sentence from `whoami`); controls are never narrated and never greyed — absent, not disabled.
 behind-interface: I3
 depends-on: UI-11
 accepts-when: `node civicos-ui/test/run.mjs` green with a harness where the entry point renders the statement and offers NO ceremony control of any kind; a read-only credential sees the same surface with one whoami-sourced sentence; negative control — render a sign/preflight control, or grey a control instead of omitting it, and the harness fails.
 added: 2026-08-03 · CONDUCT (DEC-33's placeholder)
+landed: (merge on main, worker 6ee25f0) — the entry point renders iff op=affordances publishes the act; the strip names it under the producer's own label ('Publish (author the case)', never re-worded) and routes at the explanation; NO ACT_FLOW entry, nothing calls op=publish (asserted on the wire AND by driving actGo directly); the statement (irreversible, editions, correction-moves-forward, operator-run per DEC-33/DEC-19) renders IDENTICALLY for every credential — proved string-for-string, because it is a statement about the record, not a control. publication-entry 112; harness 29 suites + both guards; battery byte-identical (the no-plane-file evidence). NCs RUN x3 with two instrument findings kept (a greyed control is invisible from the credential it isn't greyed for — the read-only arm is not redundant; actGo returns synchronously, so counting calls on the next line measured nothing — a microtask drain made the arm honest). FOLLOW-UP attached to FW-14's scope: the plane publishes rung: null for publish while DEC-19 names it THE irreversible act — when FW-14 assigns RUNGS.publish, this section reads the rung off the act instead of stating it as copy.
 
 ### UI-18 · queued
 milestone: M10
