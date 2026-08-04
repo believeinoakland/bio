@@ -3679,7 +3679,7 @@ enacted: 2026-08-04 · CONDUCT — recorded as SCOPE rather than built, exactly 
   Reasoning in this entry; `research/SEARCH-COMPLETENESS.md` carries the countable/
   uncountable finding, and `BIO_Declared_Bias_v0_1.md` takes the adoption-is-authored rule.
 
-### DEC-55 · open
+### DEC-55 · answered
 raised: 2026-08-04 · session BOB (Bob's question on integrating skilled AIs)
 for: bob
 question: How do skilled AIs integrate into the BIO workflow, given the requirement that the
@@ -3811,6 +3811,61 @@ reversal cost: low now, nothing is built. High once an assistant ships against t
   - **Unattended operation is legitimate** — CONDUCT is the existence proof — and is bounded by
     the same two things that bound it here: the endpoint surface, and DEC-47's separate question
     about reaching sources nobody named, which is about EGRESS and not about AI.
+response: **AI-SPECIFIC TOKENS, AND TASK-SPECIFIC ONES.** Bob, 2026-08-04: *"True, an AI must
+  never travel on a member's own token. We create AI specific tokens, and perhaps AI task
+  specific tokens, for those purposes."* That settles the one point the withdrawn
+  recommendation got right, and extends it: confinement is per FUNCTION, not merely per
+  machine-ness.
+  five determinations, mine under delegation, and the first resolves the tension in *perhaps*:
+  1. **ONE `ai` CLASS CARRYING A TASK SCOPE — not a class per task.** The two pressures are
+     real and pull opposite ways: least privilege wants many credentials (DEC-24's four roles
+     have genuinely different reach — EXTRACT writes content, PURSUE/FIND only read and
+     propose, CHECK only reads and raises, the DEC-54 policy role touches configuration), while
+     the auth surface is deliberately narrow and DEC-37 recorded that the three-token
+     narrowness *"reads as doctrine."* A class per task resolves it in the direction that
+     multiplies `classify()` without bound. **The plane already has the two-dimensional answer:
+     `scopeFor(cls, url)` confines probe class to the `scratch` namespace BY REFUSING** — class
+     plus scope, with the scope enforced at the gate. An `ai` class with a declared task scope
+     is that shape reused, and it gives per-function confinement at the cost of one class.
+  2. **THE TASK SCOPE IS DECLARED IN THE RECORD, NOT IN A SETTINGS ROW.** DEC-17's reasoning,
+     transplanted: a settings row *"would be a way to change the standard with nothing to read
+     afterwards."* What an AI credential may reach is exactly the kind of thing that must be
+     amendable only as an authored, dated, on-the-record act.
+  3. **MINTING AN AI TOKEN IS A MEMBER ACT, NEVER AN AI ACT.** If an agent can request a
+     broader token, the scoping is theatre. This is the never-prefill pattern applied to
+     capability rather than to text.
+  4. **THE RECORD NAMES THE TOKEN IDENTITY AND THE PRINCIPAL BEHIND IT.** Following the
+     previous turn's distinction: an ORGANISATION-scoped key acts for the group with no
+     individual behind it; a MEMBER-scoped key is attributable to that member. Both are
+     legitimate and they carry different accountability, so an act must say which — never the
+     token's value, which `tokens.mjs` already denylists on publication.
+  5. **THE EXISTING MACHINE FENCES GENERALISE TO THE NEW CLASS BY CONSTRUCTION, AND THAT IS
+     TRUE ONLY BECAUSE OF A REFACTOR THAT LANDED TODAY.** VERIFIED against source: until REC-46
+     (2026-08-04) `store.mjs` answered *"is this a machine"* for itself **eleven times in two
+     hand-typed shapes** (`!who || who === "member" || /^token:/.test(who)` at nine act guards,
+     `/^token:/.test(actor)` at two more) while the catalog answered it a third way with a word
+     list *"that knew nothing of the prefix"* — and REC-45 measured the cost: *"the gate
+     accepted `asserted_by: token:member`."* REC-46 collapsed them into one predicate over the
+     `token:<class>` stamp. **So a token stamping `token:ai` is caught by every
+     `MACHINE_CANNOT_*` refusal automatically.** Had this been asked a day earlier it would
+     have meant editing eleven sites and probably missing one. **The negative control is
+     therefore cheap and mandatory: mint an `ai`-class credential and assert that
+     `MACHINE_CANNOT_PUBLISH`, `_CONCLUDE`, `_RELEASE`, `_REOPEN`, `_CORRESPOND`,
+     `_MOVE_ACTION` and D-151's resolve/forward refusals each fire BY NAME** — and that
+     removing the predicate makes them all pass.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry (the corrected architecture and the token model); DEC-24
+  carries the boundary and the four roles; DEC-54 carries the policy role's extra constraint.
+for CONDUCT to enact: DESIGN AHEAD — no AI reaches the plane today and nothing is corrected.
+  Record as scope on the assistant work (DEC-27, S12): mint the `ai` class in `classify()` on
+  the DEC-37 precedent; give it a declared task scope enforced at the gate in `scopeFor`'s
+  shape; token minting is a member act; the act records the token identity and whether the
+  principal is the organisation or a member; and the negative control above ships with the
+  class, not after it. **Sequence the CHECK role first** — DEC-24 calls it *"the role most
+  worth building"* because the threat model is self-directed overclaiming, and it is also the
+  safest to build, since a role that only reads and raises needs the narrowest scope of the
+  four.
+enacted:
 
 ## Answered, awaiting enactment
 
