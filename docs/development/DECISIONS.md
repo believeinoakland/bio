@@ -3290,6 +3290,27 @@ recommendation: leaning to the shipped refusal, because the whole point of the
 reversal cost: low either way — one predicate at the cite path plus the suites that
   pin it.
 
+### DEC-48 · open
+raised: 2026-08-04 · CONDUCT (lifted from REC-44's report)
+for: bob
+question: A NON-CASE ratification no longer produces a container. REC-44 separated the
+  altitudes, and DEC-34's container is the PUBLISHED CASE's — an information bundle is
+  not a case, so manufacturing a container for one was D-187's conflation a level down.
+  Should a group be able to get a portable, hash-verifiable zip of a single captured
+  DOCUMENT (not a case)?
+why it is Bob's: it is a capability question about what a group can carry out of the
+  system — the sovereignty promise's neighbourhood — not a refactor.
+provisional: as shipped — no container for a non-case ratification. The bytes stay
+  answerable BY HASH, and op=publishedcase still answers for such a bundle as what it
+  is (caseId: null, no scope, no completeness), so nothing is lost except the zip.
+alternative: name a document-container capability deliberately (its own manifest
+  format and its own header rules), rather than keeping one as a side effect of a
+  shape that turned out to be wrong.
+recommendation: leave it out until a group asks. A container that exists because a
+  code path used to make one is exactly the kind of artifact whose rules nobody has
+  thought through — and DEC-34's header rules are written for a CASE.
+reversal cost: low; it is a capability to add, not one to unwind.
+
 ## Answered, awaiting enactment
 
 _(none)_
