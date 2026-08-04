@@ -20,7 +20,7 @@ import { serialiseContainer, containerEntries } from "./container.mjs";
    never copied); `needs` and `mode` are composed HERE from NEEDS and
    SESSION_OPS, the tables that actually gate the call, so the publication and
    the gate cannot drift. */
-import { ACTS, RUNGS, VOCABULARIES, deriveActs } from "./affordances.mjs";
+import { ACTS, RUNGS, VOCABULARIES, CAPTURE_ACTS, deriveActs } from "./affordances.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
@@ -1173,8 +1173,15 @@ const NEEDS = {
    than left to the client for DEC-8's reason — a surface renders what it
    received — and it is on the act rather than in a separate table so a surface
    that has the control necessarily has the sentence that must accompany it. */
+/* REC-38: `weight ?? null`, and the null is STATED rather than the key being
+   dropped — this file's own rule for `rung` one line down, applied to the one
+   other declared field. Every entry in ACTS carries a weight, so nothing about
+   the act catalogue changes; CAPTURE_ACTS entries carry none, because a capture
+   act is not selection-backed and there is no set-application weight to report.
+   Omitting the key would let a surface read `undefined` and guess; publishing
+   null says the record has no such number for this act. */
 const decorateAct = (a) => ({
-  id: a.id, label: a.label, weight: a.weight,
+  id: a.id, label: a.label, weight: a.weight ?? null,
   needs: NEEDS[a.id] ?? null,
   mode: SESSION_OPS.member.has(a.id) ? "session"
       : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
@@ -1748,8 +1755,11 @@ export default {
           target: null,
           catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
           vocabularies: VOCABULARIES,
+          capture_acts: CAPTURE_ACTS.map(decorate),
           detail: "pass target=<bundle id> for the acts available on that object right now; "
-                + "rung is null wherever no document assigns one (FW-14 assigns them)",
+                + "rung is null wherever no document assigns one (FW-14 assigns them); "
+                + "capture_acts are keyed by a capture sha rather than by a bundle, so they are "
+                + "published with their metadata and never derived against an object's state",
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));
@@ -1768,6 +1778,16 @@ export default {
         current_state: facts.current_state,
         acts: deriveActs(facts).map(decorate),
         vocabularies: VOCABULARIES,
+        /* REC-38. The SAME block the no-target catalogue answers, and it is
+           deliberately NOT filtered by this target: a capture act's subject is
+           a capture sha, and whether one is attestable turns on the bytes being
+           in the store — a fact `affordanceFacts` does not carry and this
+           handler must not guess at. So this is metadata a surface RENDERS
+           beside a capture it already holds, never a derivation about this
+           object; deriving one here would be the publication disagreeing with
+           op=attest's own NO_SUCH_CAPTURE. The reasoning is on CAPTURE_ACTS,
+           where both consumers of the distinction read it. */
+        capture_acts: CAPTURE_ACTS.map(decorate),
       }, store: storeName, tokenClass: cls }, 200);
     }
 
