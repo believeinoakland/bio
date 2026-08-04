@@ -10,20 +10,53 @@
 // Constants (spec v1.1)
 // ---------------------------------------------------------------------------
 
-export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-export const ANN_ID_RE = /^(INFO|PROB|FOCUS|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
+export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+export const ANN_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
 export const FILENAME_RE = /^[A-Za-z0-9._-]+$/;
 export const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 
-/* The construct formerly named Problem is FOCUS (Bob's directive,
-   2026-07-27). History is append-only and is not rewritten, so `problem` and
-   its literals remain LEGAL LEGACY ALIASES wherever they already exist, and
-   the catalog judges a document by its NORMALIZED type. PROB- ids may carry
-   either spelling, because a bundle's id is immutable while its frontmatter
-   modernizes on promotion. */
-export const OBJECT_TYPES = { INFO: 'information', PROB: 'focus', FOCUS: 'focus', PROJ: 'project', ACTN: 'action' };
-export const LEGACY_TYPE_ALIASES = { problem: 'focus' };
+/* The construct formerly named Problem, then FOCUS, is the INQUIRY (REC-10;
+   RECONCILED.md is the design). History is append-only and is not rewritten,
+   so `problem` and `focus` and their literals remain LEGAL LEGACY ALIASES
+   wherever they already exist, and the catalog judges a document by its
+   NORMALIZED type. PROB-/FOCUS- ids may carry any spelling, because a
+   bundle's id is immutable while its frontmatter modernizes on promotion.
+   The alias map is FLATTENED, never chained: normalizeType is a single
+   lookup, so problem points straight at inquiry rather than at focus. */
+export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inquiry', INQ: 'inquiry', PROJ: 'project', ACTN: 'action' };
+export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };
 export const normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
+
+/* C-16 (RECONCILED §2.2): an inquiry has ONE authored field, the question;
+   a title is a RENDERING of it and is never separately authored. THE
+   DERIVATION RULE, stated once so every writer and the projection produce
+   the same bytes: the title is the FIRST NON-EMPTY LINE of the question,
+   whitespace-collapsed; beyond 120 characters it is cut at the last word
+   boundary before 120 and an ellipsis is appended, so a cut is visible as
+   a cut rather than reading as a silently different sentence. The first
+   line, because a question is authored as one line and elaboration under
+   it must not retitle the record. Pure and closure-free on purpose: the
+   setup page embeds this function's source verbatim, so the client and
+   the store cannot drift. */
+export const INQUIRY_TITLE_MAX = 120;
+export const deriveInquiryTitle = (question) => {
+  const line = String(question == null ? '' : question)
+    .split('\n').map((s) => s.trim()).find((s) => s !== '') || '';
+  const flat = line.replace(/\s+/g, ' ');
+  if (flat === '') return null;
+  if (flat.length <= 120) return flat;
+  const cut = flat.slice(0, 120);
+  const at = cut.lastIndexOf(' ');
+  return (at > 0 ? cut.slice(0, at) : cut) + '…';
+};
+/* The `## Question` section of an inquiry's bundle.md, for the projection's
+   use of the rule above. Returns '' when the document has no such section
+   (every legacy focus/problem document), so callers fall back to the title
+   the document already carries instead of inventing one. */
+export const inquiryQuestionOf = (markdown) => {
+  const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec('\n' + String(markdown == null ? '' : markdown));
+  return m ? m[1] : '';
+};
 
 /** Universal core fields (spec 3.1). */
 export const CORE_FIELDS = [
@@ -38,14 +71,39 @@ export const FORBIDDEN_ALIASES = {
   verdict: 'current_state', type: 'object_type', updated: 'last_updated', modified: 'last_updated'
 };
 
-/** Literal heading constants per type (spec Section 4). */
+/** Literal heading constants per type (spec Section 4).
+ *
+ * The inquiry collapse CHANGED this vocabulary, unlike the problem→focus
+ * rename which kept it: a legacy focus/problem document carries the heading
+ * set it was authored under, and append-only means it keeps validating
+ * against that set forever (a rename that invalidated the past would be a
+ * purge wearing a new name — focus.test.mjs's own words). So the legacy
+ * spellings keep their own entries HERE as the record of the old contract,
+ * `problem` pointing at the SAME array as `focus` so the two cannot drift,
+ * and vocabFor below judges a document by its DECLARED spelling first with
+ * the NORMALIZED type as the fallback. */
 export const HEADINGS = {
   information: ['## Summary', '## Provenance Notes', '## Session Log', '## Review Notes'],
+  inquiry: ['## Question', '## What It Rests On', '## Conclusion', '## What Would Falsify This', '## Session Log', '## Review Notes'],
   focus: ['## Statement', '## Why It Matters', '## Open Questions', '## Session Log', '## Review Notes'],
-  problem: ['## Statement', '## Why It Matters', '## Open Questions', '## Session Log', '## Review Notes'],
   project: ['## Thesis Summary', '## Open Questions', '## Ruled Out', '## Session Log', '## Review Notes'],
   action: ['## Plan', '## Status', '## Correspondence', '## Session Log', '## Review Notes']
 };
+/* One legacy vocabulary, two spellings: same object, so no drift. */
+HEADINGS.problem = HEADINGS.focus;
+
+/* THE type-keyed vocabulary lookup (REC-10, normalisation site 1 of 4).
+ * Membership questions go through normalizeType (C-2.5); vocabulary
+ * questions — which heading set, which state machine — resolve the
+ * DECLARED spelling first, because the collapse changed those vocabularies
+ * and a legacy document is judged by the contract it was written under,
+ * then fall back to the normalized type, so a canonical document and any
+ * future alias whose vocabulary did not change need no duplicate keys.
+ * checkHeadings and checkStateLegality MUST look up through this rather
+ * than raw table[ot]: the second rename left them un-normalized and
+ * patched with duplicate keys, and DATA-MODEL.md §2.7 measured what that
+ * costs a third name. */
+export const vocabFor = (table, t) => table[t] !== undefined ? table[t] : table[normalizeType(t)];
 
 /** Legal states and transition edges per type (spec Section 4; edge set is catalog-versioned). */
 export const STATES = {
@@ -53,6 +111,28 @@ export const STATES = {
     legal: ['collected', 'verified', 'retired'],
     edges: { collected: ['verified'], verified: ['retired'], retired: [] }
   },
+  /* The INQUIRY machine (REC-10). `open`, `deferred` and `dismissed` ONLY
+     this turn: `concluded`, `published` and `divided` arrive with REC-13/14/16
+     TOGETHER WITH their entry requirements, so no state is ever legal before
+     its gate exists. `surfaced` is a LEGAL ALIAS of `open` (DATA-MODEL §2.7's
+     recommendation): rewriting it would invent an authored fact and set
+     current_state disagreeing with the document's own state_history (C-4.2),
+     so it stays legal, appears wherever `open` appears, and the drift stays
+     visible. `open` is legal[0] deliberately — setup.mjs derives FIRST_STATE
+     from it. */
+  inquiry: {
+    legal: ['open', 'deferred', 'dismissed', 'surfaced'],
+    edges: {
+      open: ['deferred', 'dismissed'],
+      surfaced: ['deferred', 'dismissed'],
+      deferred: ['open', 'surfaced', 'dismissed'],
+      dismissed: ['open', 'surfaced', 'deferred']
+    }
+  },
+  /* The LEGACY focus machine, kept whole (elevated included) because a
+     legacy focus/problem document validates against the vocabulary it was
+     authored under — see the HEADINGS note. Nothing produces these states
+     anymore; op=dispose runs on the inquiry machine above. */
   focus: {
     legal: ['surfaced', 'elevated', 'deferred', 'dismissed'],
     edges: {
@@ -395,7 +475,9 @@ function checkReevalPending(ctx, findings) {
 
 function checkHeadings(ctx, findings) {
   const ot = ctx.fm?.object_type;
-  const required = HEADINGS[ot];
+  /* Normalisation site 1 (REC-10): through the catalog's own alias
+     machinery, never a raw table lookup patched with duplicate keys. */
+  const required = vocabFor(HEADINGS, ot);
   if (!required) return; // type invalid; C-2.5 already fired
   const present = (ctx.body.match(/^## .*$/gm) || []).map(h => h.trimEnd());
   for (const h of required) {
@@ -408,7 +490,10 @@ function checkHeadings(ctx, findings) {
 
 function checkStateLegality(ctx, findings) {
   const ot = ctx.fm?.object_type;
-  const spec = STATES[ot];
+  /* Normalisation site 1 (REC-10), same as checkHeadings: the second rename
+     patched this lookup with STATES.problem = STATES.focus instead of
+     normalising, and DATA-MODEL.md §2.7 measured what that costs. */
+  const spec = vocabFor(STATES, ot);
   if (!spec) return;
   const cur = ctx.fm.current_state;
   if (!spec.legal.includes(cur)) {
@@ -1025,8 +1110,10 @@ function checkReferences(ctx, findings) {
       }
     }
   }
-  // required edges (locally verifiable)
-  if (normalizeType(ctx.fm?.object_type) === 'focus' && ctx.fm.current_state === 'elevated') {
+  // required edges (locally verifiable). 'inquiry' because normalizeType now
+  // maps both legacy spellings there (REC-10); only a legacy document can be
+  // in state 'elevated', so this arm fires for legacy bundles alone.
+  if (normalizeType(ctx.fm?.object_type) === 'inquiry' && ctx.fm.current_state === 'elevated') {
     if (!refs.some(r => r && r.rel === 'elevated_into')) {
       findings.push(f('C-6.3', 'error', "an elevated Problem must carry at least one 'elevated_into' reference"));
     }
@@ -1171,9 +1258,12 @@ function checkHistoryCoherence(ctx, findings) {
   }
 }
 
-/** C-15: recheck coverage on Focuses, all dispositions. */
+/** C-15: recheck coverage on inquiries (né Focuses), all dispositions.
+ *  The comparison is against 'inquiry' because normalizeType now maps both
+ *  legacy spellings there — left at 'focus' this check would silently stop
+ *  firing for every document, old and new. */
 function checkRecheckCoverage(ctx, findings) {
-  if (normalizeType(ctx.fm?.object_type) !== 'focus') return;
+  if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
   const rts = Array.isArray(ctx.fm.recheck_triggers) ? ctx.fm.recheck_triggers : [];
   if (rts.length === 0) {
     findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));
@@ -1196,8 +1286,12 @@ function checkRecheckCoverage(ctx, findings) {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-function checkFocusExtension(ctx, findings) {
-  if (normalizeType(ctx.fm?.object_type) !== 'focus') return;
+/* C-2.8, renamed from checkFocusExtension by REC-10. Keeps surfaced_by and
+   disposition_reason exactly as the focus contract had them; the per-state
+   entry requirements (conclusion, falsifier, basis, completeness, division)
+   arrive with REC-13/14/16 TOGETHER WITH their states. */
+function checkInquiryExtension(ctx, findings) {
+  if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
   const fm = ctx.fm;
   if (!['agent', 'human'].includes(fm.surfaced_by)) {
     findings.push(f('C-2.8', 'error', `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
@@ -2807,7 +2901,9 @@ export async function checkBundle(input, opts = {}) {
     nowMs: input.nowMs,
     maxPackageAgeDays: input.maxPackageAgeDays ?? 14,
     maxReevalAgeDays: input.maxReevalAgeDays ?? 30,
-    knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'focus@1', 'problem@1', 'project@1', 'action@1'],
+    /* inquiry@1 joins; focus@1 and problem@1 STAY KNOWN forever — schema
+       stamps are document truth in append-only history (REC-10). */
+    knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'inquiry@1', 'focus@1', 'problem@1', 'project@1', 'action@1'],
     resolveTarget: input.resolveTarget,
     // D2.3: the key registry, injected exactly like resolveTarget. Absent
     // is legal and means pre-migration behavior; absent WITH a
@@ -2841,7 +2937,7 @@ export async function checkBundle(input, opts = {}) {
     await checkMechanicalConformance(ctx, findings);
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
-    checkFocusExtension(ctx, findings);
+    checkInquiryExtension(ctx, findings);
     checkProjectExtension(ctx, findings);
     checkActionExtension(ctx, findings);
     checkCitationRegister(ctx, findings);

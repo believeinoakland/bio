@@ -12,7 +12,7 @@
  * immediately so it cannot linger in the address bar or history entry.
  */
 
-import { STATES, HEADINGS } from "../checks/bio-checks.mjs";
+import { STATES, HEADINGS, deriveInquiryTitle } from "../checks/bio-checks.mjs";
 
 /* The intake form obeys the check catalog's own tables rather than a copy of
    them. Injected at module load, so a catalog change moves the UI with it and
@@ -217,13 +217,13 @@ table.rec tr.row:hover td{background:#F6F7F2}
   <label for="n-type">What kind of thing is this?</label>
   <select id="n-type">
     <option value="information">Information</option>
-    <option value="focus">Focus</option>
+    <option value="inquiry">Question</option>
     <option value="project">Project</option>
     <option value="action">Action</option>
   </select>
-  <label for="n-title">Title</label>
+  <label for="n-title" id="n-title-label">Title</label>
   <input id="n-title" placeholder="what this is about">
-  <label for="n-body">What do you know?</label>
+  <label for="n-body" id="n-body-label">What do you know?</label>
   <textarea id="n-body" rows="14" placeholder="Write it plainly. Markdown headings and lists work."></textarea>
   <div id="n-src">
     <div class="card">
@@ -491,7 +491,7 @@ const rec = async (op, params={})=>{
   return r.json();
 };
 const escH = (x)=>String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-const TYPES = [["information","Information"],["focus","Focuses"],["project","Projects"],["action","Actions"]];
+const TYPES = [["information","Information"],["inquiry","Questions"],["project","Projects"],["action","Actions"]];
 const fmtWhen = (iso)=>{ const d=new Date(iso); return isNaN(d)?escH(iso):d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
 const chip = (st)=>'<span class="chip '+escH(st)+'">'+escH(st)+"</span>";
 
@@ -671,7 +671,7 @@ function ratifyWhy(r){
    Authorship is stamped by the server from the session, so nothing typed
    here can claim to be someone else. */
 const NL = String.fromCharCode(10);
-const PREFIX = { information:"INFO", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
+const PREFIX = { information:"INFO", inquiry:"INQ", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
 /* From the check catalog, not from memory. */
 const FIRST_STATE = ${FIRST_STATE_JSON};
 const HEADINGS = ${HEADINGS_JSON};
@@ -686,7 +686,7 @@ const HEADINGS = ${HEADINGS_JSON};
    describes captured DOCUMENTS. The moment a document IS captured the bundle is
    @2 and carries the register, which is the honest distinction rather than a
    version preference. */
-const SCHEMA_OF = { information:"information@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
+const SCHEMA_OF = { information:"information@1", inquiry:"inquiry@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
 const schemaFor = (type, hasDoc)=> type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
 const post = async (op, body)=>{
   const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
@@ -732,7 +732,7 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src)=>{
     ...(src && src.content_hash ? ["content_hash: sha256:"+src.content_hash] : []),
     "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
     "monitoring:","  enabled: false","  frequency: none");
-  if (type === "focus" || type === "problem") fm.push(
+  if (type === "inquiry" || type === "focus" || type === "problem") fm.push(
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if (type === "project") fm.push("objective: "+JSON.stringify(title));
@@ -788,12 +788,30 @@ function acquireWhy(a){
 }
 
 /* ---- create ---- */
-$("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; show("#s-new"); });
+/* C-16: a Question has ONE authored field, the question itself. No Title
+   control and no second gating field: the title is DERIVED from the question
+   (the rule lives in the check catalog and is embedded verbatim below, so
+   this page and the store's projection cannot drift), and a gate that
+   pressures a member into writing what they do not know is a bug in the
+   gate. */
+const deriveInquiryTitle = ${deriveInquiryTitle.toString()};
+const syncNewForm = ()=>{
+  const isQ = $("#n-type").value === "inquiry";
+  $("#n-title").hidden = isQ; $("#n-title-label").hidden = isQ;
+  $("#n-body-label").textContent = isQ ? "What do you want to know?" : "What do you know?";
+};
+$("#n-type").addEventListener("change", syncNewForm);
+$("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; syncNewForm(); show("#s-new"); });
 $("#n-save").addEventListener("click", async ()=>{
   const e = $("#n-err"); e.textContent = "";
-  const type = $("#n-type").value, title = $("#n-title").value.trim(), body = $("#n-body").value.trim();
-  if (!title) { e.textContent = "Give it a title."; return; }
-  if (!body) { e.textContent = "Write something in the body."; return; }
+  const type = $("#n-type").value, body = $("#n-body").value.trim();
+  const title = type === "inquiry" ? (deriveInquiryTitle(body) || "") : $("#n-title").value.trim();
+  if (type === "inquiry") {
+    if (!body) { e.textContent = "Ask the question."; return; }
+  } else {
+    if (!title) { e.textContent = "Give it a title."; return; }
+    if (!body) { e.textContent = "Write something in the body."; return; }
+  }
   $("#n-save").disabled = true;
   try {
     const year = String(new Date().getFullYear());

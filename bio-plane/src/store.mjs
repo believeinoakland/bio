@@ -3,7 +3,13 @@ import { DurableObject } from "cloudflare:workers";
    with the same code that later checks them, so the store's projection and the
    checker's view cannot disagree about what the document says. */
 import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_FIELD_SETS,
-         checkBundle, createSha256, isPublicHttpsLocator } from "../checks/bio-checks.mjs";
+         checkBundle, createSha256, isPublicHttpsLocator,
+         /* REC-10: the type mapping and the inquiry state machine come from
+            the catalog, so the store's view and the checker's view cannot
+            disagree (the same reason this file already imports the catalog's
+            parser); the title derivation is C-16's ONE rule, stated once. */
+         normalizeType, LEGACY_TYPE_ALIASES, STATES,
+         deriveInquiryTitle, inquiryQuestionOf } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
@@ -187,11 +193,15 @@ export class Store extends DurableObject {
     const bundleCols = [...this.sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name);
     if (bundleCols.includes("classification"))
       this.sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
-    /* The Focus rename (Bob's directive, 2026-07-27). The projection is
-       DERIVED, so it is the layer the design normalizes: frontmatter in
-       append-only history keeps whatever spelling it was written with, and
-       every projection row says `focus`. Idempotent by construction. */
-    this.sql.exec(`UPDATE bundles SET object_type='focus' WHERE object_type='problem'`);
+    /* The type renames (problem→focus 2026-07-27, focus→inquiry REC-10).
+       Normalisation site 2 of 4. The projection is DERIVED, so it is the
+       layer the design normalizes: frontmatter in append-only history keeps
+       whatever spelling it was written with, and every projection row says
+       the canonical type. GENERATED from the catalog's own alias map rather
+       than restated, so a fourth name is one catalog entry and zero edits
+       here. Idempotent by construction. */
+    for (const [legacy, canonical] of Object.entries(LEGACY_TYPE_ALIASES))
+      this.sql.exec(`UPDATE bundles SET object_type=? WHERE object_type=?`, canonical, legacy);
     /* Indexed because probe 2 recorded the difference in the query PLAN, not
        only the latency: without an index a filter is a full table scan whose
        cost grows with the corpus, and at 20,000 rows a scan is still fast
@@ -1545,11 +1555,12 @@ export class Store extends DurableObject {
       from: ["severed"], to: "confirmed", verb: "Reinstated", resultKey: "reinstated" });
   }
 
-  /* S-11 step 3: bulk disposition of Problems, weight `refuse`.
+  /* S-11 step 3: bulk disposition of inquiries (né Problems, né Focuses),
+   * weight `refuse`.
    *
    * The first selection-backed action to move an OBJECT's state rather than an
    * edge's. Steps 1 and 2 edited a Project's `references` block; this edits
-   * `current_state` on each selected Problem, which is heavier: an edge is a
+   * `current_state` on each selected inquiry, which is heavier: an edge is a
    * claim about a relationship, and a state is a claim about where the group's
    * thinking has got to.
    *
@@ -1557,11 +1568,10 @@ export class Store extends DurableObject {
    * set moves or none of it does, because a half-run bulk state change leaves
    * the operator unable to know which half ran.
    *
-   * ONLY `deferred` AND `dismissed`. `elevated` is a legal Problem state and is
-   * deliberately not reachable here: elevating a Problem into a Project writes
-   * an `elevated_into` edge and a Project bundle, and doing it as a bulk state
-   * flip would produce Problems claiming to be elevated into nothing. Refused by
-   * name rather than by omission, so the operator learns why.
+   * ONLY `deferred` AND `dismissed`. Every other inquiry state is entered by
+   * its own act with its own entry requirements (REC-13/14/16 bring them),
+   * never by a bulk state flip. Refused by name rather than by omission, so
+   * the operator learns why.
    *
    * THE REASON IS NOT POLITENESS. C-2.8 requires a non-empty
    * `disposition_reason` for both target states, so a disposition without one
@@ -1569,22 +1579,21 @@ export class Store extends DurableObject {
    * between refusing a write and writing something that fails its own checks. */
   dispose({ handle, to, reason = "", viewer = null, owner = null, author = null } = {}) {
     const DISPOSITIONS = ["deferred", "dismissed"];
-    const FOCUS_STATES = ["surfaced", "elevated", "deferred", "dismissed"];
-    /* Legal transitions, from the catalog's own table rather than a second copy
-       of it. deferred->deferred is absent, which is what makes a stale view a
-       refusal rather than a silent no-op. */
-    const LEGAL = { surfaced: ["elevated", "deferred", "dismissed"],
-                    deferred: ["surfaced", "elevated", "dismissed"],
-                    dismissed: ["surfaced", "elevated", "deferred"],
-                    elevated: [] };
+    /* Legal transitions, IMPORTED from the catalog's own table (REC-10). The
+       comment here used to claim exactly that over a literal second copy of
+       the machine; DATA-MODEL.md §2.7 caught the claim being false, and this
+       import is what makes it true. deferred->deferred is absent, which is
+       what makes a stale view a refusal rather than a silent no-op. */
+    const INQUIRY_STATES = STATES.inquiry.legal;
+    const LEGAL = STATES.inquiry.edges;
 
-    if (!FOCUS_STATES.includes(to))
-      return { ok: false, reason: "BAD_TARGET_STATE", to, legal: FOCUS_STATES,
-               detail: `a Problem's state is one of ${FOCUS_STATES.join(", ")}` };
+    if (!INQUIRY_STATES.includes(to))
+      return { ok: false, reason: "BAD_TARGET_STATE", to, legal: INQUIRY_STATES,
+               detail: `an inquiry's state is one of ${INQUIRY_STATES.join(", ")}` };
     if (!DISPOSITIONS.includes(to))
       return { ok: false, reason: "NOT_A_DISPOSITION", to, dispositions: DISPOSITIONS,
-               detail: "elevating a Problem writes an elevated_into edge and a Project bundle, so it is not "
-                     + "a bulk state flip. Only deferring and dismissing are dispositions." };
+               detail: "only deferring and dismissing are dispositions: every other inquiry state is "
+                     + "entered by its own act, with its own entry requirements, never by a bulk state flip." };
 
     const why = String(reason ?? "").trim();
     if (!why)
@@ -1608,13 +1617,19 @@ export class Store extends DurableObject {
     const offenders = [], illegal = [];
     for (const id of sel.members) {
       const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (!b || !["focus", "problem"].includes(b.object_type)) { offenders.push(id); continue; }
+      /* Judged by the NORMALIZED type through the catalog's own map, so a
+         legacy `focus` or `problem` row (should one predate the boot
+         normaliser) and a canonical `inquiry` row answer the same way. */
+      if (!b || normalizeType(b.object_type) !== "inquiry") { offenders.push(id); continue; }
       if (!(LEGAL[b.current_state] || []).includes(to)) illegal.push({ id, from: b.current_state });
     }
     if (offenders.length)
-      return { ok: false, reason: "NOT_PROBLEMS", offenders: offenders.sort(),
-               detail: "disposition moves a Problem's state, and this selection carries something else. "
-                     + "The set is refused whole rather than narrowed to the Problems in it." };
+      /* NOT_INQUIRIES, né NOT_PROBLEMS: REC-10's one wire change inside this
+         op (DATA-MODEL §2.7 change 13 — the refusal stops naming a construct
+         that no longer exists). */
+      return { ok: false, reason: "NOT_INQUIRIES", offenders: offenders.sort(),
+               detail: "disposition moves an inquiry's state, and this selection carries something else. "
+                     + "The set is refused whole rather than narrowed to the inquiries in it." };
     if (illegal.length)
       return { ok: false, reason: "ILLEGAL_TRANSITION", to, offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
                detail: "these are not legal moves in the catalog's state table. A move to the state "
@@ -1628,7 +1643,7 @@ export class Store extends DurableObject {
       const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!liveMd || liveMd.content === null)
         return { ok: false, reason: "NO_DOCUMENT", bundleId: id,
-                 detail: "this Problem has no readable bundle.md, so its state cannot be moved" };
+                 detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
       let text = liveMd.content;
       /* C-4.2: prior_state obliges a state_history ENTRY. Naming where a state
          came from without recording the transition leaves the document asserting
@@ -1678,7 +1693,7 @@ export class Store extends DurableObject {
         author: author || "member",
         files: [{ path: "bundle.md", text, bytes: bytes.length,
                   sha256: createSha256().update(bytes).hex() }, ...carried],
-        meta: { object_type: "focus", group: fm.group || "believe-in-oakland", title: fm.title,
+        meta: { object_type: "inquiry", group: fm.group || "believe-in-oakland", title: fm.title,
                 current_state: to, prior_state: cur.current_state,
                 created: fm.created, last_updated: when,
                 criticality: fm.criticality ?? null },
@@ -2518,7 +2533,11 @@ export class Store extends DurableObject {
   listBundles(filter = {}) {
     let q = `SELECT bundle_id, object_type, current_state, title, last_updated, bundle_sha FROM bundles`;
     const w = [], a = [];
-    if (filter.type) { w.push(`object_type=?`); a.push(filter.type); }
+    /* The projection stores canonical types only (boot normaliser + promote),
+       so a legacy `focus`/`problem` filter value is honoured through the
+       catalog's own map rather than answered with an empty page — the same
+       courtesy query.mjs extends to `type:` filters (REC-10). */
+    if (filter.type) { w.push(`object_type=?`); a.push(normalizeType(filter.type)); }
     if (filter.state) { w.push(`current_state=?`); a.push(filter.state); }
     if (filter.after) { w.push(`bundle_id > ?`); a.push(filter.after); }
     if (w.length) q += ` WHERE ` + w.join(" AND ");
@@ -2795,6 +2814,22 @@ export class Store extends DurableObject {
       const newSha = files.find(f => f.path === "bundle.md")?.sha256;
       if (!newSha) return { ok: false, reason: "NO_BUNDLE_MD" };
 
+      /* Normalisation site 3 of 4 (REC-10): the projected type goes through
+         the CATALOG'S OWN normalizeType rather than an inline restatement of
+         it, so the store's view and the checker's view cannot disagree — the
+         same reason this file imports the catalog's parser. */
+      const projectedType = normalizeType(meta.object_type);
+      /* C-16: an inquiry's title is DERIVED from its `## Question` section
+         and never separately authored — deriveInquiryTitle (the catalog
+         holds the one rule) over the document being promoted, with the
+         caller's meta.title honoured only when the document carries no
+         question (every legacy focus/problem document, whose title WAS
+         authored under the old contract). */
+      const mdForTitle = files.find((x) => x.path === "bundle.md");
+      const projectedTitle = (projectedType === "inquiry"
+        ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? meta.title
+        : meta.title);
+
       this.sql.exec(
         `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
          VALUES (?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
@@ -2804,7 +2839,7 @@ export class Store extends DurableObject {
            last_updated=excluded.last_updated, criticality=excluded.criticality,
            bundle_sha=excluded.bundle_sha,
            row_version=bundles.row_version+1`,
-        bundleId, meta.object_type === "problem" ? "focus" : meta.object_type, meta.group, meta.title, meta.current_state, meta.prior_state ?? null,
+        bundleId, projectedType, meta.group, projectedTitle, meta.current_state, meta.prior_state ?? null,
         meta.created, meta.last_updated, meta.criticality ?? null, newSha, bundleId);
 
       /* Projected from the document, every promotion, so the table is a view of

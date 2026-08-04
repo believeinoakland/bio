@@ -9,7 +9,7 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    public hosts only, no credentials in the authority, no bare IPs, no localhost.
    It is the one bound between a member typing a URL and this Worker fetching it,
    so it must be the same function the checker uses on the queue. */
-import { isPublicHttpsLocator, parseFrontmatter, createSha256 } from "../checks/bio-checks.mjs";
+import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType } from "../checks/bio-checks.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
@@ -2951,7 +2951,11 @@ export default {
            what becomes the bundle_sha, so overwriting a caller's `agent` claim
            on a session write cannot smuggle a false attribution past the gate. */
         if (b.base === null && b.meta
-            && (b.meta.object_type === "focus" || b.meta.object_type === "problem")
+            /* Through the catalog's normalizeType (REC-10), so the canonical
+               `inquiry` spelling and both legacy spellings all get the D-78
+               restamp — hand-listed spellings here is how the last rename
+               made a check silently stop firing. */
+            && normalizeType(b.meta.object_type) === "inquiry"
             && Array.isArray(b.files)) {
           const bm = b.files.find((f) => f && f.path === "bundle.md" && typeof f.text === "string");
           if (bm) {

@@ -26,7 +26,9 @@ import { join, relative, sep } from "node:path";
 import { createHash } from "node:crypto";
 
 const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-const TYPE_ROOTS = ["information", "focuses", "problems", "projects", "actions"];
+/* "inquiries" joins (REC-10); "focuses" and "problems" stay forever, because
+   an exported corpus keeps the folder names it was exported under. */
+const TYPE_ROOTS = ["information", "inquiries", "focuses", "problems", "projects", "actions"];
 const SNAP_RE = /^(.+)_(\d{8}T\d{6}Z)_([0-9a-f]{8})(\.[^.]+)$/;
 
 const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
