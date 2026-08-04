@@ -57,7 +57,14 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          RESOLUTIONS,
          ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, respondsToEdgeFindings, consequenceState,
-         divisionDisclosureFindings } from "../checks/bio-checks.mjs";
+         divisionDisclosureFindings,
+         /* REC-43 / DEC-39: the capture-axis ceiling, which used to be a static
+            field on this class and now lives beside `checkEarnedLeg` — the arm
+            that REFUSES a leg claiming more than it — so that the published
+            co-attestation fence can be composed from the same value without
+            closing an import cycle through affordances.mjs. The reasoning is
+            at the declaration, where all three readers can see it. */
+         EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
@@ -7902,14 +7909,17 @@ export class Store extends DurableObject {
     return row && row.inquiry_subject_entity ? row.inquiry_subject_entity : null;
   }
 
-  /* THE CAPTURE-AXIS CEILING, and it is doctrine rather than a tuning knob.
-     "Grade B is what a direct capture by this instance is worth; it is not
-     Grade A and this surface will not say it is" (SB-EVIDENCE 908-910, R2-g
-     CONFORMS). Grade A needs a chain-of-custody web archive, which
-     CAPTURE-FIDELITY.md states plainly is out of a Worker's reach and is NOT
-     CLAIMED. So the earned capture grade tops out at B, and the day a group can
-     produce a WACZ this is one arm, not a redesign. */
-  static EARNED_CAPTURE_CEILING = "B";
+  /* THE CAPTURE-AXIS CEILING is doctrine rather than a tuning knob, and as of
+     REC-43 / DEC-39 it is DECLARED IN THE CHECK CATALOG rather than here.
+     `static EARNED_CAPTURE_CEILING = "B"` stood on this line until 2026-08-04
+     and the value is unchanged; what moved is WHERE it is written, so that the
+     published co-attestation fence can be composed from it (affordances.mjs
+     cannot import this file — this file imports IT). The doctrine, the reason
+     for the direction and the derivation of the unreachable letter above it are
+     all at the declaration in `checks/bio-checks.mjs`, beside `checkEarnedLeg`,
+     which is the arm that refuses a leg claiming more than this. This class
+     keeps no copy: a second literal "B" here is precisely the drift the move
+     exists to prevent, and the affordances suite pins its absence. */
 
   /** The earned registry for one inquiry over one set of basis targets.
    *
@@ -7995,9 +8005,9 @@ export class Store extends DurableObject {
            discouraged); a weaker letter is the member's account of a poorer
            route and stays theirs. */
         mode: "ceiling",
-        grade: Store.EARNED_CAPTURE_CEILING, captures: r.n,
+        grade: EARNED_CAPTURE_CEILING, captures: r.n,
         why: `${r.bundle_id} holds ${r.n} capture(s) in the record, so the strongest capture grade it can `
-           + `earn is ${Store.EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
+           + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
            + `receipt.`,
         ceiling: `Grade A is not reachable on the capture axis at all: it needs a chain-of-custody web `
                + `archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).` };

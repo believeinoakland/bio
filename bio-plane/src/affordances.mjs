@@ -54,6 +54,11 @@
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
          CORRESPONDENCE_DIRECTIONS, RESOLUTIONS,
+         /* REC-43 / DEC-39. The two letters the co-attestation fence states are
+            the RULE's own, imported from where the refusal that enforces it is
+            computed, so the sentence a member reads and the grade the gate will
+            accept cannot drift. See ATTEST_FENCE below. */
+         EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
          normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
@@ -220,6 +225,76 @@ export const GROUND_PROMPT =
   + "their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the "
   + "weakest one.";
 
+/* REC-43 / DEC-39, on REC-16's mechanism exactly: THE CO-ATTESTATION HONESTY
+ * FENCE. Third prompt, and the first whose WORDS ARE NOT THIS FILE'S.
+ *
+ * THE SENTENCE IS BOB'S AND IS TAKEN VERBATIM from the DEC-39 entry. It is not
+ * paraphrased, not tightened, and not improved, and that is a rule about this
+ * string rather than a courtesy: DEC-39 rules that the fence states GRADE
+ * DOCTRINE — what an attestation is worth — so a session rewording it would be
+ * a session amending doctrine at a keyboard. If it is wrong, it is amended in
+ * DECISIONS.md and this string follows; the drift guards below are built so
+ * that a change made HERE and nowhere else is visible rather than silent.
+ *
+ * THE ONE STRUCTURAL ACCOMMODATION, stated rather than smoothed away. DEC-39
+ * renders the wording as a markdown blockquote: three parts, each opened by a
+ * bold label, with the question in the first part italicised. `prompt` is a
+ * plain string in the published act shape (DIVIDE_PROMPT and GROUND_PROMPT are
+ * both single prose strings), so the `**`/`*` markers and the blockquote's line
+ * breaks — which are the DECISIONS.md file's RENDERING and not part of the
+ * sentence — are not carried. Every WORD, its order, its punctuation and its
+ * capitalisation (`TRUE`) are unchanged, and the deliberate three-part shape
+ * survives in the three labels the ruling itself wrote. Nothing was added.
+ *
+ * WHAT THE RULING CORRECTS, because it is the reason the sentence exists and a
+ * later reader must not trim it back to the old one. The surface's wording said
+ * what co-attestation DOES ("raises Grade B toward evidentiary weight") and what
+ * it CANNOT do ("never reaches Grade A") and never said WHAT QUESTION IT
+ * ANSWERS — so a reader reaches for it to solve a DIRECTNESS problem it has
+ * nothing to do with. Bob's own trial example was a coroner's courtroom
+ * testimony held only as a newspaper account: it READ like the co-attestation
+ * case and is not one. The first part is what the old sentence omitted, the
+ * second is that misreading, the third is the existing fence unchanged.
+ *
+ * IT LIVES HERE for DEC-8's reason, unchanged from the two prompts above: a
+ * surface renders what it RECEIVED and never composes a prompt of its own. The
+ * surface authored this sentence until this item (`ATTEST_YIELDS_GRADE` in
+ * civicos-ui/app.html), which DEC-39 calls the last member-facing claim about
+ * the record's semantics that the record did not own; UI-28 renders the
+ * publication and stops writing one.
+ *
+ * AND THE TWO GRADE LETTERS ARE COMPOSED FROM THE RULE, WHICH IS THE WHOLE
+ * POINT OF THE ITEM. `Grade B` and `Grade A` are not typed here: the ceiling is
+ * `EARNED_CAPTURE_CEILING`, imported from `checks/bio-checks.mjs` where
+ * `checkEarnedLeg` refuses a leg claiming more than it, and the unreachable
+ * letter is read out of `BASIS_GRADES` as the rank immediately above it. So the
+ * published sentence is a FUNCTION of the enforced rule rather than a copy that
+ * happens to agree with it today — REC-35's finding restated on a sentence
+ * instead of an array, and an identical copy would agree at zero cost, which is
+ * why the affordances suite's drift guard is STRUCTURAL as well as behavioural.
+ *
+ * IT REFUSES TO COMPOSE A SENTENCE IT CANNOT MAKE TRUE. If the ceiling were
+ * ever raised to the strongest grade there would be no unreachable letter, and
+ * "it never reaches Grade null" is worse than no fence at all. That is a load
+ * failure, not a fallback: the module fails to evaluate and the whole plane
+ * fails to start, which is the only honest outcome for a doctrine string whose
+ * doctrine has moved out from under it. */
+export const attestFence = (ceiling, unreachable) => {
+  if (!ceiling || !unreachable)
+    throw new Error("the co-attestation fence states a ceiling AND the grade above it (DEC-39); "
+                  + "with no grade above the ceiling the sentence cannot be composed truthfully");
+  return "What co-attestation answers: when did these bytes exist? It asks an independent timestamp "
+       + "authority to record that this capture's exact bytes existed no later than a fixed instant. "
+       + "What it does not answer: whether the document is TRUE, whether its source is authoritative, "
+       + "or how close it stands to the fact you are citing it for. A secondhand report that is "
+       + "co-attested is still a secondhand report. "
+       + `What it is worth: it strengthens a Grade ${ceiling} capture toward evidentiary weight. It `
+       + `never reaches Grade ${unreachable} — that needs a chain-of-custody web archive this surface `
+       + "cannot produce.";
+};
+
+export const ATTEST_FENCE = attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
+
 /* The object vocabularies, published the way op=searchfields publishes the
  * query language, so a surface never keeps a copy. action_kind is the check
  * catalogue's own C-2.10 suite, imported from the module that enforces it. */
@@ -355,17 +430,30 @@ export const RUNGS = {
  * reason begins `capture-directed:` appears here, and nothing else does — so a
  * third capture-directed op cannot ship with no label either.
  *
- * NO PROMPT, deliberately. The co-attestation honesty fence ("this raises a
- * Grade B capture TOWARD evidentiary weight and never reaches Grade A") is a
- * real candidate for DEC-29(b)'s `prompt` treatment, and it is NOT invented
- * here: no ruling attaches it to the act, the surface's own sentence is not a
- * source, and guessing at one is what RUNGS refuses two blocks up. */
+ * A PROMPT NOW, AND THE PARAGRAPH THIS REPLACES WAS RIGHT WHEN IT WAS WRITTEN.
+ * CORRECTED 2026-08-04 by REC-43 / DEC-39, stated rather than quietly reworded
+ * because the reasoning it recorded is the reasoning that produced the ruling.
+ * REC-38 wrote here that `attest` carries NO PROMPT deliberately — that the
+ * co-attestation honesty fence was "a real candidate for DEC-29(b)'s `prompt`
+ * treatment" but was NOT invented here, because no ruling attached it to the
+ * act, the surface's own sentence is not a source, and guessing at one is what
+ * RUNGS refuses two blocks up. That refusal was correct and it is what routed
+ * the question to Bob. DEC-39 answered it — PUBLISH IT, AND IT MUST STATE THE
+ * QUESTION CO-ATTESTATION ANSWERS — so the act now carries `ATTEST_FENCE`, whose
+ * words are Bob's and whose two grade letters are the enforced rule's. Nothing
+ * about the RUNGS reasoning changes: `rung` here is still the sourced
+ * `attested` and no rung is guessed anywhere in this file. */
 export const CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
      attestor: the plane asks an independent timestamp authority and stores what
      it returns. The object is THE CAPTURE and the label says so — attesting the
      bundle would be the claim we cannot make. */
-  { id: "attest", label: "Co-attest this capture" },
+  /* THE FENCE RIDES THE ACT (DEC-39, on DEC-29(b)/REC-16's mechanism): every
+     surface that can offer co-attestation receives the wording that must
+     accompany it, so the sentence cannot appear in one client and not another.
+     The words are Bob's and the grade letters are the enforced rule's — the
+     reasoning is on ATTEST_FENCE itself, where both consumers read it. */
+  { id: "attest", label: "Co-attest this capture", prompt: ATTEST_FENCE },
   /* op=monitor. One tick: re-fetch the source's locator and compare what it
      serves NOW against the bytes the provenance register says were captured
      from it. The label names the comparison rather than promising a watch — a
