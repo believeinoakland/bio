@@ -20,6 +20,12 @@ export const ORDER = [
   "docprofile/handlers/conservative.mjs",
   "docprofile/doctypes/index.mjs",
   "docprofile/doctypes/meeting-calendar.mjs",
+  /* FW-15's second measured content type. It was added to the package and to
+     doctypes/registry.mjs and NOT here, so the flattened copy registered a
+     symbol it had never defined — a ReferenceError in the runtime and in every
+     UI harness at once, which is what the drift check had been reporting since
+     it landed. A doctype the registry imports MUST be listed here. */
+  "docprofile/doctypes/meeting-agenda.mjs",
   "docprofile/doctypes/generic.mjs",
   "docprofile/doctypes/registry.mjs",
   "docprofile/pipeline.mjs",

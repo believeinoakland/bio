@@ -4,15 +4,15 @@
  * Drives the ONE MOTION the construct names, through the plane's op=select +
  * op=dispose (I3), and proves each of the four steps plus the weight-ladder
  * position:
- *   1 CHOOSE      defer / dismiss this focus (the two dispositions).
+ *   1 CHOOSE      defer / dismiss this question (the two dispositions).
  *   2 PRE-FLIGHT  see WHAT IT WILL REFUSE and WHY *before* it runs — the C-2.8
  *                 reason requirement, the reason grammar, and the legal-move
  *                 gate, computed from the op's declared refusal shape + the
- *                 focus's known state (op=dispose has no dry-run).
+ *                 question's known state (op=dispose has no dry-run).
  *   3 AUTHOR      the reason — REQUIRED, and NEVER prefilled.
  *   4 RECEIPT     what the plane returned (the act happened; here is the record).
  *
- * accepts-when (QUEUE UI-2): disposing a focus WITH an authored reason succeeds
+ * accepts-when (QUEUE UI-2): disposing a question WITH an authored reason succeeds
  * and yields a receipt (op=select then op=dispose called, receipt rendered from
  * the plane's return); the act is REFUSED with the reason shown when the reason
  * is absent, AND op=dispose is never called — the surface refuses before the
@@ -28,6 +28,9 @@
  * assertions flip). Restored source -> green.
  */
 import vm from "vm"; import { webcrypto } from "crypto";
+/* The catalog itself, so the surface's mirrored state machine is pinned to the
+   table op=dispose() imports rather than to a literal in this file (UI-10). */
+import { STATES } from "../../bio-plane/checks/bio-checks.mjs";
 import { appScript } from "./extract.mjs";
 
 let n = 0; const fails = [];
@@ -85,7 +88,8 @@ function makeCtx(plane){
 const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__pf=disposePreflight;"
   + "globalThis.__open=openDisposeDialog;globalThis.__validate=disposeValidate;"
   + "globalThis.__choose=disposeChoose;globalThis.__do=doDispose;"
-  + "globalThis.__ladder=weightLadderHtml;globalThis.__LEGAL=DISPOSE_LEGAL;";
+  + "globalThis.__ladder=weightLadderHtml;globalThis.__LEGAL=DISPOSE_LEGAL;"
+  + "globalThis.__legalFor=disposeLegal;";
 
 function boot(source, plane){
   const ctx = makeCtx(plane);
@@ -113,14 +117,34 @@ const pfLong = ctx.__pf({ state:"surfaced", to:"deferred", reason:"x".repeat(161
 ok("pre-flight: an over-long reason WILL refuse (grammar)", pfLong.ok===false && pfLong.refusal.reason==="BAD_REASON");
 /* the legal-move gate, mirrored from the plane's own table */
 const pfElev = ctx.__pf({ state:"elevated", to:"deferred", reason:"ok reason" });
-ok("pre-flight: an elevated focus cannot be disposed (ILLEGAL_TRANSITION)", pfElev.ok===false && pfElev.refusal.reason==="ILLEGAL_TRANSITION");
+ok("pre-flight: an elevated question cannot be disposed (ILLEGAL_TRANSITION)", pfElev.ok===false && pfElev.refusal.reason==="ILLEGAL_TRANSITION");
 const pfSame = ctx.__pf({ state:"deferred", to:"deferred", reason:"ok reason" });
 ok("pre-flight: a no-op move (already deferred) is refused, not silently accepted", pfSame.ok===false && pfSame.refusal.reason==="ILLEGAL_TRANSITION");
 ok("pre-flight: reason outranks the move gate, as the plane checks it (order)",
    ctx.__pf({ state:"elevated", to:"deferred", reason:"" }).refusal.reason==="NO_REASON");
-/* the mirrored table matches the plane's four states */
-ok("the legal-transition table mirrors the plane (surfaced can defer & dismiss)",
-   ctx.__LEGAL.surfaced.includes("deferred") && ctx.__LEGAL.surfaced.includes("dismissed") && ctx.__LEGAL.elevated.length===0);
+/* CORRECTED 2026-08-04 (UI-10). The old assertion pinned the surface's table
+   against the FOCUS machine by hand — `elevated.length===0` and nothing else —
+   which is a literal restating a literal, and it went on passing while REC-10
+   collapsed the construct into the INQUIRY and REC-13/14/16 added concluded,
+   published and divided beneath it. The pin now goes to the CATALOG, which is
+   the same table op=dispose() imports, so a machine change moves both sides or
+   fails here. */
+ok("the surface's legal-transition table IS the catalog's inquiry machine",
+   JSON.stringify(ctx.__LEGAL) === JSON.stringify(STATES.inquiry.edges));
+ok("an open question can be deferred and dismissed, under either spelling of open",
+   ["open","surfaced"].every(st => ctx.__LEGAL[st].includes("deferred") && ctx.__LEGAL[st].includes("dismissed")));
+ok("a divided question is terminal", ctx.__LEGAL.divided.length===0);
+/* A bundle written under EITHER legacy name is pre-flighted against the SAME
+   machine, because that is what the store does: op=dispose() normalizes the
+   row's type and then applies STATES.inquiry.edges to it, so a surface that
+   pre-flighted a `focus` row against the old focus machine would be honest
+   about a refusal the plane does not make. `elevated` has no entry in the
+   inquiry machine and is refused for exactly that reason. */
+for(const spelling of ["focus","problem",null])
+  ok(`a ${spelling||"bundle naming no type"} row is pre-flighted against the inquiry machine, as op=dispose reads it`,
+     JSON.stringify(ctx.__legalFor(spelling)) === JSON.stringify(STATES.inquiry.edges));
+ok("and `elevated`, which the inquiry machine does not have, is therefore refused",
+   ctx.__legalFor("focus").elevated === undefined && pfElev.refusal.reason==="ILLEGAL_TRANSITION");
 
 /* ============================================================
    THE WEIGHT LADDER — dispose sits on `reasoned`.
@@ -137,7 +161,7 @@ ctx.__open("FOCUS-2026-0004", "Why did the sewer contract skip competitive bid?"
 const els = ctx.__els;
 const dlg0 = els.get("#dlg")._html;
 ok("CHOOSE: the dialog offers both dispositions (defer & dismiss)", dlg0.includes("Defer") && dlg0.includes("Dismiss"));
-ok("CHOOSE: the chosen disposition names the focus by title", dlg0.includes("Why did the sewer contract skip competitive bid?"));
+ok("CHOOSE: the chosen disposition names the question by title", dlg0.includes("Why did the sewer contract skip competitive bid?"));
 const pf0 = els.get("#dz-pf")._html;
 ok("PRE-FLIGHT: the panel is painted before the act runs", /what it will refuse/i.test(pf0));
 ok("PRE-FLIGHT: with no reason yet, it shows the reason requirement", /Required/.test(pf0));

@@ -31,6 +31,9 @@
  */
 import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+/* The catalog, so what ADOPT writes is pinned to the type and first state the
+   plane itself would accept rather than to a literal in this file (UI-10). */
+import { STATES } from "../../bio-plane/checks/bio-checks.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -48,7 +51,10 @@ function makePlane(opts){
     let body = null; try{ body = o && o.body ? JSON.parse(o.body) : null; }catch(_){}
     CALLS.push({ op, method:(o&&o.method)||"GET", body,
       params:Object.fromEntries(url.searchParams.entries()) });
-    if(op==="allocid") return R({ result:{ id:"FOCUS-2026-" + String(++seq).padStart(4,"0") } });
+    /* The stub mints under the prefix the SURFACE asks for, so a surface that
+       asked for the retired prefix would be visible here rather than papered
+       over by a fixture that always answers FOCUS- (UI-10). */
+    if(op==="allocid") return R({ result:{ id:(url.searchParams.get("prefix")||"INQ") + "-2026-" + String(++seq).padStart(4,"0") } });
     if(op==="promote") return R({ result:{ ok:true, bundle_id:(body&&body.bundleId) } });
     if(op==="proposedispose"){
       if(opts.noDisposeOp) return { ok:false, json:async()=>({ ok:false, error:"unknown op" }) };
@@ -90,7 +96,7 @@ const EXPORTS = ";globalThis.__PLANE=PLANE;"
   + "globalThis.__q=proposalQuestion;globalThis.__pfDisp=proposalDisposePreflight;globalThis.__pfAdopt=proposalAdoptPreflight;"
   + "globalThis.__openAct=openProposalAct;globalThis.__actVal=proposalActValidate;globalThis.__doDisp=doProposalDispose;"
   + "globalThis.__openAdopt=openProposalAdopt;globalThis.__adoptVal=proposalAdoptValidate;globalThis.__doAdopt=doProposalAdopt;"
-  + "globalThis.__setProps=(a)=>{PROPOSALS_LAST=a;};";
+  + "globalThis.__setProps=(a)=>{PROPOSALS_LAST=a;};globalThis.__ADOPT_KINDS=PROP_ADOPT_KINDS;";
 
 function boot(source, plane){
   const ctx = makeCtx(plane);
@@ -227,18 +233,35 @@ ok("GAP: the surface says the record cannot yet keep a proposal's disposition (n
    /cannot yet keep a proposal.s disposition/i.test(ctxNo.__els.get("#pa-err")._html) && /proposedispose/.test(ctxNo.__els.get("#pa-err")._html));
 
 /* ============================================================
-   ADOPT — author a focus in the member's OWN words; the plane stamps surfaced_by.
+   ADOPT — author an INQUIRY in the member's OWN words; the plane stamps
+   surfaced_by.
+
+   CORRECTED 2026-08-04 (UI-10). Every assertion below used to author `focus`,
+   because this surface offered "Focus" and "Problem" as two things a proposal
+   could become. They were one type wearing two spellings and the display
+   collapsed them anyway (SB-EVIDENCE A-f), so REC-10 collapsed the construct
+   and this item removed the choice: a proposal is adopted into an `inquiry`,
+   full stop. The legacy spellings are asserted below to STILL clear the kind
+   gate, because the record is append-only and a caller may still name one.
    ============================================================ */
-const paEmpty = ctx.__pfAdopt({ kind:"focus", title:"", statement:"", canContribute:true });
-ok("ADOPT pre-flight: an unwritten focus is refused — a title and a statement are REQUIRED",
+const paEmpty = ctx.__pfAdopt({ kind:"inquiry", title:"", statement:"", canContribute:true });
+ok("ADOPT pre-flight: an unwritten question is refused — a title and a statement are REQUIRED",
    paEmpty.ok===false && (paEmpty.refusal.reason==="NO_TITLE"));
-const paNoStmt = ctx.__pfAdopt({ kind:"focus", title:"why no bids?", statement:"", canContribute:true });
+const paNoStmt = ctx.__pfAdopt({ kind:"inquiry", title:"why no bids?", statement:"", canContribute:true });
 ok("ADOPT pre-flight: a title without a statement is refused (the statement is the member's judgment)",
    paNoStmt.ok===false && paNoStmt.refusal.reason==="NO_STATEMENT");
-const paNoCap = ctx.__pfAdopt({ kind:"focus", title:"t", statement:"s", canContribute:false });
+const paNoCap = ctx.__pfAdopt({ kind:"inquiry", title:"t", statement:"s", canContribute:false });
 ok("ADOPT pre-flight: a credential without contribute cannot author (NO_CONTRIBUTE)", paNoCap.refusal.reason==="NO_CONTRIBUTE");
-const paGood = ctx.__pfAdopt({ kind:"focus", title:"t", statement:"s", canContribute:true });
+const paGood = ctx.__pfAdopt({ kind:"inquiry", title:"t", statement:"s", canContribute:true });
 ok("ADOPT pre-flight: an authored title and statement clear the gates", paGood.ok===true);
+for(const legacy of ["focus","problem"])
+  ok(`ADOPT pre-flight: the legacy spelling '${legacy}' still clears the kind gate (append-only)`,
+     ctx.__pfAdopt({ kind:legacy, title:"t", statement:"s", canContribute:true }).ok===true);
+ok("ADOPT pre-flight: something that is not a question at all is refused BY NAME",
+   ctx.__pfAdopt({ kind:"project", title:"t", statement:"s", canContribute:true }).refusal.reason==="BAD_KIND");
+/* The member is never asked to choose between two words for one thing. */
+ok("ADOPT offers exactly ONE kind, so there is no wrong choice to make",
+   ctx.__ADOPT_KINDS.length===1 && ctx.__ADOPT_KINDS[0][0]==="inquiry");
 
 ctx.__setProps(props);
 ctx.__openAdopt(solic.key);
@@ -259,14 +282,16 @@ const before2 = plane.CALLS.length;
 const ra = await ctx.__doAdopt();
 const promoteCall = plane.CALLS.slice(before2).find(c=>c.op==="promote");
 ok("ADOPT authors through op=promote", !!promoteCall);
-ok("ADOPT writes a FOCUS bundle (the question becomes a member's focus)", promoteCall.body.meta.object_type==="focus");
+ok("ADOPT writes an INQUIRY bundle (the record's question becomes the member's)", promoteCall.body.meta.object_type==="inquiry");
+ok("and it is written at the state the catalog calls first for an inquiry",
+   promoteCall.body.meta.current_state===STATES.inquiry.legal[0]);
 ok("ADOPT carries the member's AUTHORED title, not the machine's question",
    promoteCall.body.meta.title==="Why did these three hauling contracts skip competitive bidding?");
 const md = (promoteCall.body.files||[]).find(f=>f.path==="bundle.md").text;
 ok("ADOPT's bundle.md carries the member's statement, in their own words", md.includes("Three contracts to the same kind of vendor"));
 ok("ADOPT: the browser NEVER sends surfaced_by — the plane stamps it from the session (REC-3)",
    !md.includes("surfaced_by: agent") && !/"surfaced_by"/.test(JSON.stringify(promoteCall.body.meta)));
-ok("ADOPT succeeded and returned the new focus id", ra && ra.ok===true && /^FOCUS-2026/.test(ra.id));
+ok("ADOPT succeeded and returned the new INQ- id", ra && ra.ok===true && /^INQ-2026/.test(ra.id));
 const arc = els.get("#dlg")._html;
 ok("ADOPT receipt states surfaced_by human — a person judged it worth pursuing", /surfaced_by: human/.test(arc));
 
