@@ -10475,9 +10475,26 @@ async function relationGo(){
 }
 
 /* (4) op=resolve — the candidate documents are the PLANE'S: every captured
-   document whose reading carries a reference spelled exactly like one of this
-   subject's names (op=readingref, one call per name). The surface proposes
-   nothing the record has not already read out of a document. */
+   document whose reading recorded a NAME that corresponds to one of this
+   subject's names (op=readingname, ONE call, entity=). The surface proposes
+   nothing the record has not already read out of a document.
+
+   UI-26 REPLACED A LOOP HERE, and the two reads are not the same read, which is
+   the thing to know before anybody "restores" the old one. It used to call
+   op=readingref once per registered name, and op=readingref matches the
+   REFERENCE STRING — so it answered only for a subject registered under a name
+   that is itself a raw `kind:key`, and §8.1's grade-C tier (a document that
+   mentions the subject BY NAME) was unreachable from every surface. REC-36
+   built the reverse read: op=readingname walks every registered name into the
+   plane's own index of the names its readings recorded, in ONE statement, with
+   the alias join on the plane's side. MEASURED CONSEQUENCE, and it is stated on
+   the page rather than left to be inferred: a document whose reading recorded a
+   name that does NOT carry this subject's name is no longer offered even when
+   its raw reference happens to be spelled like one of the subject's names. That
+   is a narrower list, which is the safe direction, and the note below says so.
+   The measurement that decided op=readingname's shape is MEASUREMENTS.md
+   2026-08-04 (REC-36); the sentence in `note` is that bound in a member's
+   words and must move if the bound moves. */
 async function resolvePreflight(){
   const d = { captureSha: INTENT_SUBJ.chosen || "" };
   INTENT_SUBJ.pf.resolve = await intentPreflight("resolve", d);
@@ -10489,33 +10506,66 @@ async function resolvePreflight(){
 async function loadResolveCandidates(){
   const out = $("#res-cands"); if(!out) return;
   const e = INTENT_SUBJ.entity;
-  const names = (e && e.aliases || []).map(a=>a.alias);
   const seen = new Map();
-  for(const n of names){
-    let docs = [];
-    try{ docs = (await recR("readingref", { ref:n })).documents || []; }catch(_){ docs = []; }
-    for(const d of docs) if(!seen.has(d.capture_sha)) seen.set(d.capture_sha, d);
-  }
+  /* ONE call. The alias join is the PLANE'S — it walks every name the subject is
+     registered under into its own term index in one statement — so nothing here
+     loops over names and nothing here knows how the join is done. */
+  let ans = {};
+  try{ ans = (await recR("readingname", { entity:(e&&e.entity_id)||"" })) || {}; }catch(_){ ans = {}; }
+  /* The answer carries one candidate per document AND reference, ordered with
+     the stronger correspondence first, so first-wins on the capture leaves each
+     document showing the strongest way it corresponded.
+     NOTHING IS FILTERED HERE. The read is gated in the plane in the STRONGER of
+     the two postures (REC-30/REC-36): a document a member may not open has its
+     ROW withheld in SQL, not its bundle reference redacted, because a candidate
+     that cannot be opened is not a candidate and a nameless row still discloses
+     that a document naming their subject sits somewhere they were not invited.
+     So this surface renders exactly what it was answered — a client-side filter
+     here would be a second, weaker gate that could only ever disagree. */
+  for(const d of (ans.documents||[])) if(!seen.has(d.capture_sha)) seen.set(d.capture_sha, d);
   /* And the documents already resolved to this subject, so a member can run the
      recogniser again after registering a new name — a grade is IMPROVABLE, and a
      C becomes an A the moment the record can match an identifier. */
   let already = [];
   try{ already = (await recR("concerns", { id:(e&&e.entity_id) })).documents || []; }catch(_){ already = []; }
-  for(const d of already) if(!seen.has(d.capture_sha)) seen.set(d.capture_sha, d);
+  for(const d of already) if(!seen.has(d.capture_sha)) seen.set(d.capture_sha, { ...d, already_resolved:true });
   INTENT_SUBJ.docs = [...seen.values()];
-  /* WHAT THIS LIST IS AND IS NOT, said plainly rather than left to be inferred:
-     the record can look up a document by a reference spelled exactly like one of
-     this subject's names. It cannot look one up by a name that merely CORRESPONDS
-     — there is no such index — so a document that only mentions this subject in
-     passing is not here. Its absence is a limit of the lookup, not a statement
-     that no such document exists. */
-  const note = `<p class="subj-note">These are the documents whose references are spelled exactly like one of this subject&rsquo;s names, plus the ones already resolved to it. A document that mentions this subject only by a name in passing cannot be looked up this way, and its absence here says nothing about whether it exists.</p>`;
+  /* WHAT THIS LIST IS AND IS NOT, said plainly rather than left to be inferred,
+     and NARROWED by UI-26 rather than deleted. The old sentence said a document
+     mentioning this subject only by a name in passing "cannot be looked up this
+     way", which stopped being true of the plane the day REC-36 landed. What
+     replaces it is the bound that is actually left, MEASURED and not guessed
+     (MEASUREMENTS.md 2026-08-04, REC-36, instrument test/label-variance-probe.mjs):
+     the match is on the recorded name's WORDS after case and punctuation are
+     normalised; it runs through every registered name, which is the only thing
+     that reaches an abbreviation, because no normalisation of spelling gets from
+     OPD to Oakland Police Department (measured: 7 label hits by short form, 0 by
+     full name); and accents are DELIBERATELY not folded, because a false fold
+     puts a WRONG subject on a document and the conservative direction is the one
+     that does not assert. An unstated bound reads as completeness, which is why
+     the sentence states one and never claims the list is all there is. */
+  const unusable = (ans.names_unusable||[]);
+  const unusableNote = unusable.length
+    ? ` ${unusable.length===1?"One name":`${unusable.length} names`} this subject is registered under &mdash; ${unusable.map(x=>`&ldquo;${esc(x)}&rdquo;`).join(", ")} &mdash; ${unusable.length===1?"has":"have"} no word in ${unusable.length===1?"it":"them"} to look anything up by, so nothing was looked up under ${unusable.length===1?"it":"them"}.`
+    : "";
+  const note = `<p class="subj-note">These are the documents whose readings recorded a name that carries every word of one of this subject&rsquo;s names, plus the ones already resolved to it. What that lookup reaches, so this list is not read as the whole of what exists: it ignores capitalisation and punctuation; it tries every name this subject is registered under, which is the only way a document that writes just an abbreviation is ever reached &mdash; register the abbreviation as one of this subject&rsquo;s names and it will be; and it does <b>not</b> ignore accents, so &ldquo;Protege&rdquo; will not find &ldquo;Prot&eacute;g&eacute;&rdquo;, because putting the wrong subject on a document is the costlier mistake. A document that names this subject in words its reading did not record, or under a spelling none of its registered names reaches, or by an identifier and no name at all, is not here &mdash; and none of those absences says anything about whether such a document exists.${unusableNote}</p>`;
   if(!INTENT_SUBJ.docs.length){
-    out.innerHTML = note + `<div class="empty">No captured document carries a reference spelled like one of this subject&rsquo;s names.</div>`;
+    out.innerHTML = note + `<div class="empty">No captured document&rsquo;s reading records a name that corresponds to one of this subject&rsquo;s names.</div>`;
     return;
   }
+  /* HOW each candidate corresponded is the plane's word, not a judgement made
+     here: `name` is the recorded name BEING this subject's name, and
+     `name_in_label` is this subject's name sitting inside a longer one — the
+     weaker of the two, and the tier this control offers for the first time. A
+     member picking a document is told which they are being offered. */
+  const how = (d) =>
+    d.correspondence === "name"       ? ` &mdash; its reading names &ldquo;${esc(d.label)}&rdquo;, which is this subject&rsquo;s name`
+  : d.correspondence === "name_in_label" ? ` &mdash; its reading names &ldquo;${esc(d.label)}&rdquo;, which carries this subject&rsquo;s name &ldquo;${esc(d.matched_alias||"")}&rdquo;`
+  : d.already_resolved                ? ` &mdash; already resolved to this subject`
+  : d.ref                             ? ` &mdash; names ${esc(d.ref)}`
+  : "";
   out.innerHTML = note + INTENT_SUBJ.docs.map(d=>
-    `<button class="intent-pick" onclick="resolvePick('${esc(d.capture_sha)}')">${esc(d.bundle_id || ("a capture "+String(d.capture_sha).slice(0,12)+"…"))}${d.ref?" &mdash; names "+esc(d.ref):""}</button>`).join("");
+    `<button class="intent-pick" onclick="resolvePick('${esc(d.capture_sha)}')">${esc(d.bundle_id || ("a capture "+String(d.capture_sha).slice(0,12)+"…"))}${how(d)}</button>`).join("");
 }
 async function resolvePick(sha){
   INTENT_SUBJ.chosen = sha;
