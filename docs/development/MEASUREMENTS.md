@@ -1570,3 +1570,65 @@ paths — a read reaching the Durable Object without a server-stamped viewer
 gets the deny predicate (empty/absent), which is the same posture `op=search`
 has had since D-15 shipped. So the failure mode of a future missing stamp is
 an outage, never a leak; the suite's negative control runs BOTH arms.
+
+## 2026-08-04, session RECORD (rec36-agent): how `reading_refs.label` actually varies against a subject's names (REC-36)
+
+**Why measured.** REC-36's queue item names a real fork — a normalised-label
+INDEX against an alias-JOINed read — and says MEASURE FIRST. The two are not
+interchangeable, and choosing by intuition is how a lookup ships that answers
+nothing on a real document while passing every synthetic test written to agree
+with it.
+
+**Instrument.** `bio-plane/test/label-variance-probe.mjs`, re-runnable
+(`node test/label-variance-probe.mjs`). It reads the ONE real captured document
+this repository holds — `test/fixtures/legistar-agenda-1425405.pdf`,
+oakland.legistar.com `View.ashx?M=A&ID=1425405`, the *Rules & Legislation
+Committee supplemental agenda for 2026-07-16, fetched 2026-08-03, 276,421 bytes,
+33 pages — through the PLANE'S OWN Tier-1 extraction (`src/pdfstructure.mjs`,
+60,865 chars decoded / 45 undetermined) and the REAL reader (`docprofile`'s
+`meeting_agenda` doctype, detected `certain`). The 41 labels below are the exact
+strings `#writeReadings` persists; nothing is a fixture written to agree. The
+probe names are taken FROM the document (its body name, its `From:` offices, and
+the counterparties and places its item titles name), because a hand-written probe
+set measures the author's imagination.
+
+**THE CORPUS IS ONE DOCUMENT, ONE DOCTYPE, ONE INSTITUTION, and that is stated
+rather than papered over.** It is too thin to characterise a DISTRIBUTION of
+name-spelling variance, and this measurement claims no distribution. What n=41
+does settle is the SHAPE question, because finding 1 is not a sampling artefact —
+it is a fact about what a label IS in this corpus.
+
+| # | finding | measured |
+| --- | --- | --- |
+| 1 | **A subject name is NEVER the whole label.** The label is the document ITEM's title (the agenda's `Subject:` line), not a name. | **0** whole-label matches, over 33 names x 41 labels, after case-fold + whitespace-collapse |
+| 2 | The name, where present, is **EMBEDDED in a longer title** — and every-term-present finds exactly what substring finds, so the indexable form loses nothing | substring **15**, all-terms-present **15**, over the same 33x41 |
+| 3 | **Abbreviations are reachable by NO normalisation of spelling.** `OPD`, `HUD`, `REAP`, `CSBG`, `MOU` appear in labels; their full names appear in none | 7 label hits by short form, **0** by full name |
+| 4 | **Case varies for one name inside one document** — so case-folding is measured-necessary, not assumed | `City of Oakland` 36, `City Of Oakland` 14, in the same document |
+| 5 | The same office is spelled **three ways in one document** (`Office Of The City Administrator`, `… And Council President Jenkins`, `Office Of The Mayor And The City Administrators Office`) | 3 of 20 distinct `From:` values |
+| 6 | **Labels are truncated at the source's line wrap** — a label can end on `And`, `For` or a comma, so a name in the tail is simply not in the stored label | **3/41** end mid-phrase |
+| 7 | Punctuation is ordinary and varied; a diacritic occurs, and case-folding does not fold it | comma 7/41, hyphen 7/41, digit 12/41, ALLCAPS token 17/41, non-ASCII **1/41** (`Mentor-Protégé`) |
+| 8 | A normalised-term projection of the label is cheap | 2 / 8 / 12 terms per label (min/median/max); **305 rows** for this whole document |
+
+**WHAT THE MEASUREMENT DECIDED, and the reasoning, so nobody re-derives it.**
+Finding 1 kills the normalised-label index ON ITS OWN: keying the whole label and
+looking a name up answers **nothing** on the only real document we hold. Finding
+3 kills a pure normalisation approach in the other direction: no amount of
+case-folding, punctuation-stripping or diacritic-folding reaches
+`Oakland Police Department` from `OPD` — only a REGISTERED ALIAS does. So the
+shape is **both, and neither alone**: an INDEX on the label's normalised TERMS
+(not on the whole label, which measured 0), read through an ALIAS JOIN (the
+registry's names walked into that index, because the abbreviation class lives
+only there). Finding 2 says the indexable form costs nothing against the scan it
+replaces; finding 8 says the projection is cheap. Findings 4-7 are what the
+tokeniser must actually handle, and each has an assertion in
+`test/readingname.test.mjs` rather than a promise here.
+
+**Adjacent, and NOT measured here (D-74 stays open).** D-74's Oakland
+shared-identifier spaces are the neighbouring question — which identifiers
+Oakland reuses ACROSS systems, converting a progression from Grade C to Grade B.
+This measurement is about the §8.1 grade-C tier itself (a NAME correspondence
+inside one system) and moves D-74 not at all. One observation is worth carrying
+to whoever takes D-74: the Legistar file number (`26-0910`) is on **41/41** items
+here, alone on its line, and is already the A/B tier's key — so the D-74 question
+for this institution is not whether Legistar has a stable identifier but whether
+the finance and procurement systems carry the SAME one.

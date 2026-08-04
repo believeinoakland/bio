@@ -567,6 +567,14 @@ export class Store extends DurableObject {
        rather than timing out on one. */
     this.#backfillProjection(500);
 
+    /* REC-36: the same for the name index. A store promoted before
+       `reading_ref_terms` existed holds readings whose labels index nothing, and
+       an EMPTY index is indistinguishable from "no document mentions this
+       subject" — which is the answer that would be silently wrong. Cheaper than
+       the projection backfill because it re-reads no document: the labels are
+       already persisted on reading_refs. */
+    this.#backfillRefTerms(500);
+
     /* REC-17: the same backfill for the supersession reverse index, and it is
        NOT bounded by a page count because it cannot be. It is bounded by the
        number of `supersedes` EDGES in the store, which is the number of
@@ -6332,8 +6340,12 @@ export class Store extends DurableObject {
       const reading = doc && doc.reading;
       if (typeof sha !== "string" || !sha || !reading || typeof reading !== "object") continue;
       const entities = Array.isArray(reading.entities) ? reading.entities : [];
-      /* Replace, so a re-promotion carries no orphan references. */
+      /* Replace, so a re-promotion carries no orphan references. REC-36's term
+         projection goes with them: it is derived from `label`, so a stale term
+         row would keep offering a document as a candidate for a name its revised
+         reading no longer carries. */
       this.sql.exec(`DELETE FROM reading_refs WHERE capture_sha=?`, sha);
+      this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, sha);
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
          VALUES (?,?,?,?,?,?,?,?)`,
@@ -6356,8 +6368,62 @@ export class Store extends DurableObject {
           e.kind == null ? null : String(e.kind),
           e.key == null ? null : String(e.key),
           e.label == null ? null : String(e.label));
+        /* REC-36: the name index, written in the SAME transaction as the row it
+           projects, exactly as the row is a projection of the document (D-21).
+           A label the reader did not carry produces no terms and no rows -- an
+           absent label is an absent name, never an empty one that matches. */
+        if (e.label != null)
+          for (const term of Store.#labelTerms(e.label))
+            this.sql.exec(
+              `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,term) VALUES (?,?,?,?)`,
+              sha, bundleId, ref, term);
       }
     }
+  }
+
+  /* REC-36: the bounded backfill for the name index on a store that already
+     holds readings. The terms derive from `reading_refs.label`, which is already
+     persisted, so no document has to be re-read -- unlike the projection
+     backfill, which needs the bundle's files. A reference is stale if it has a
+     label and no term row; one that legitimately produces no terms (an empty or
+     punctuation-only label) is skipped by the label test rather than being
+     retried on every construction forever. Bounded per pass for the same reason
+     #backfillProjection is: a Durable Object has a CPU budget and a large store
+     finishes over successive constructions. */
+  #backfillRefTerms(limit) {
+    const stale = this.#rows(
+      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.label
+         FROM reading_refs rr
+        WHERE rr.label IS NOT NULL AND rr.label <> ''
+          AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+                           WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)
+        ORDER BY rr.capture_sha, rr.ref LIMIT ?`, limit);
+    let n = 0;
+    for (const r of stale) {
+      const terms = Store.#labelTerms(r.label);
+      if (!terms.length) continue;
+      for (const term of terms)
+        this.sql.exec(
+          `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,term) VALUES (?,?,?,?)`,
+          r.capture_sha, r.bundle_id, r.ref, term);
+      n++;
+    }
+    return { indexed: n, examined: stale.length };
+  }
+
+  /** Test and repair support, on `projectionClear`/`reproject`'s precedent
+   *  exactly: clear the name index so a reference looks like it predates the
+   *  table, and re-derive it. A backfill nothing can exercise is a repair path
+   *  nobody has ever run — which is the state the projection backfill was in
+   *  before its own pair existed. DO-only; no control-plane op reaches these. */
+  readingTermsClear({ captureSha = null } = {}) {
+    if (captureSha) this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, captureSha);
+    else this.sql.exec(`DELETE FROM reading_ref_terms`);
+    return { ok: true, cleared: captureSha || "ALL",
+             remaining: this.#one(`SELECT count(*) c FROM reading_ref_terms`).c };
+  }
+  reindexNames({ limit = 500 } = {}) {
+    return { ok: true, ...this.#backfillRefTerms(limit) };
   }
 
   /* CONSTRUCTS Step 3 read side: the reading of one captured document, by its
@@ -6402,6 +6468,145 @@ export class Store extends DurableObject {
                ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type })) };
   }
 
+  /** REC-36: THE REVERSE READ FOR A NAME-ONLY MENTION — every captured document
+   *  whose reading NAMES this subject, where the source assigned no reference the
+   *  registry already answers to. This is the framework section 8.1 GRADE-C tier
+   *  made reachable: `documentsByReference` above answers on the source's own
+   *  identifier (the A and B tiers), and until this read existed a document that
+   *  mentioned a subject only by name could not be asked for at all. UI-13's
+   *  resolve control stated that limit on the surface in so many words; this is
+   *  what narrows it.
+   *
+   *  IT OFFERS CANDIDATES AND ESTABLISHES NOTHING. No resolution is written, no
+   *  grade is minted, and the answer says how each candidate corresponded so a
+   *  member confirms rather than accepts. The recogniser (`#recognise`) remains
+   *  the only thing that grades, and a C there is still "plausible, never
+   *  established".
+   *
+   *  THE SHAPE IS THE MEASUREMENT'S, not a preference (MEASUREMENTS.md
+   *  2026-08-04, REC-36; instrument `test/label-variance-probe.mjs`):
+   *
+   *    ALIAS-JOINED, because 7 label hits on the real corpus were ABBREVIATIONS
+   *    (OPD, HUD, REAP, CSBG, MOU) whose full names appeared in NO label. No
+   *    normalisation of spelling reaches "Oakland Police Department" from "OPD";
+   *    only a name somebody REGISTERED does. So the read walks the registry's own
+   *    aliases into the corpus rather than taking a name string from a caller.
+   *
+   *    OVER A TERM INDEX and not a normalised whole-label column, because a
+   *    subject name was the whole label in 0 of 41 measured labels: the label is
+   *    the document item's TITLE and the name sits inside it. Requiring every
+   *    term of an alias found exactly what a substring scan found (15), so the
+   *    indexable form gives up nothing.
+   *
+   *  ONE STATEMENT PER ALIAS, grouped rather than INTERSECTed, and D-36 is the
+   *  reason: a compound SELECT may have about FIVE terms in workerd, so an alias
+   *  of six words expressed as six INTERSECT arms would meet an undocumented
+   *  ceiling on somebody's live instance. `term IN (...)` with a HAVING count is
+   *  one indexed lookup and binds one variable per term, well inside the other
+   *  ceiling, with #labelTerms capping the count.
+   *
+   *  GATED, AND THE ROW IS WITHHELD — not redacted. This is the OTHER shape of
+   *  the D-15 posture (see the gate's own header): `documentsByReference` answers
+   *  a question ABOUT A CAPTURE and merely points back at a bundle, so it keeps
+   *  the row and nulls the reference. A CANDIDATE LIST is a question about which
+   *  documents a member may act on — a candidate you cannot open is not a
+   *  candidate, and offering a nameless one still discloses that a document
+   *  mentioning your subject sits in a project you were not invited to. So the
+   *  gate is `#bundleGate` in SQL at the lookup, and NO count of what was
+   *  withheld is reported, because that count is the leak. */
+  documentsNamingEntity({ entityId = null, limit = 100, viewer = null } = {}) {
+    if (typeof entityId !== "string" || !entityId)
+      return { ok: false, reason: "NO_ENTITY",
+        detail: "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). "
+              + "It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates." };
+    const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
+    if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId,
+      detail: "no such entity is registered, so it has no names to look documents up by" };
+    const aliases = this.#rows(
+      `SELECT alias, alias_norm, canonical FROM entity_aliases WHERE entity_id=? ORDER BY canonical DESC, alias_norm`,
+      entityId);
+    const cap = Math.max(1, Math.min(Number(limit) || 100, 500));
+    const gate = this.#bundleGate("t.bundle_id", viewer);
+    /* One candidate per captured document + reference, carrying the STRONGEST
+       correspondence any of the subject's names made with it. A document reached
+       by two aliases is one candidate, not two. */
+    const found = new Map();
+    /* A name that normalises to nothing (punctuation only) can look up nothing,
+       and that is STATED rather than silently dropped: an alias contributing no
+       terms is a fact about the registry entry, and a member who wonders why a
+       document is missing should be able to see it. */
+    const unusable = [];
+    for (const a of aliases) {
+      const terms = Store.#labelTerms(a.alias);
+      if (!terms.length) { unusable.push(a.alias); continue; }
+      const rows = this.#rows(
+        `SELECT t.capture_sha, t.ref, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
+           FROM reading_ref_terms t
+           JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref
+           LEFT JOIN readings r ON r.capture_sha = t.capture_sha
+          WHERE t.term IN (${terms.map(() => "?").join(",")}) AND (${gate.sql})
+          GROUP BY t.capture_sha, t.ref
+         HAVING COUNT(DISTINCT t.term) = ?
+          ORDER BY t.bundle_id, t.capture_sha, t.ref
+          LIMIT ?`,
+        ...terms, ...gate.args, terms.length, cap);
+      for (const r of rows) {
+        /* HOW it corresponded, said plainly, because the two are not the same
+           claim. `name` is the whole label being this name — what the recogniser
+           already reaches at grade C. `name_in_label` is the name appearing
+           INSIDE a longer title, which is the tier this read adds and the weaker
+           of the two; a member sees which they are being offered. */
+        const whole = Store.#normAlias(r.label) === a.alias_norm;
+        const cand = {
+          capture_sha: r.capture_sha, bundle_id: r.bundle_id, ref: r.ref,
+          kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
+          matched_alias: a.alias, canonical_name: !!a.canonical,
+          correspondence: whole ? "name" : "name_in_label",
+          detail: whole
+            ? `this document's reading labels the reference '${r.label}', which is this subject's name '${a.alias}'`
+            : `this document's reading labels the reference '${r.label}', which carries every word of this subject's name '${a.alias}'`,
+        };
+        const k = `${r.capture_sha}\u0000${r.ref}`;   /* D-131: the separator is the ESCAPE, never the raw byte */
+        const prev = found.get(k);
+        if (!prev || (prev.correspondence === "name_in_label" && whole)) found.set(k, cand);
+      }
+    }
+    const documents = [...found.values()].sort((x, y) =>
+      (x.correspondence === y.correspondence ? 0 : x.correspondence === "name" ? -1 : 1)
+      || String(x.bundle_id).localeCompare(String(y.bundle_id))
+      || String(x.capture_sha).localeCompare(String(y.capture_sha))
+      || String(x.ref).localeCompare(String(y.ref))).slice(0, cap);
+    return {
+      ok: true, entity_id: ent.entity_id, entity_label: ent.label, entity_kind: ent.kind,
+      names_used: aliases.length - unusable.length, names_unusable: unusable,
+      count: documents.length, documents,
+      /* Said on every answer, empty or not, because an empty candidate list is
+         the one a member is most likely to read as "no such document exists". */
+      detail: "these are CANDIDATES, not resolutions: a document whose reading names this subject, offered for a "
+            + "member to confirm. A name correspondence is section 8.1's grade C — plausible, never established. "
+            + "A document that mentions this subject in words the reading did not record as a label is still not "
+            + "here, and its absence says nothing about whether it exists.",
+    };
+  }
+
+  /** REC-36: EXPLAIN QUERY PLAN for the name lookup, so a test can assert the
+   *  term index is USED rather than trusting that creating it was enough — the
+   *  `projectionPlan` precedent, and the reason it exists there applies here
+   *  doubly: this read replaces a scan, and a scan that still passes every
+   *  assertion is exactly the defect nobody would notice until the corpus grew. */
+  readingNamePlan(terms = ["oakland", "police"]) {
+    const t = Array.isArray(terms) && terms.length ? terms.slice(0, 24) : ["oakland"];
+    return {
+      terms: t,
+      plan: this.#rows(
+        `EXPLAIN QUERY PLAN
+         SELECT t.capture_sha, t.ref FROM reading_ref_terms t
+          WHERE t.term IN (${t.map(() => "?").join(",")})
+          GROUP BY t.capture_sha, t.ref HAVING COUNT(DISTINCT t.term) = ?`,
+        ...t, t.length).map((r) => r.detail),
+    };
+  }
+
   /* ---- CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis ----
    *
    * The framework's third registry, and the bias doctrine's safeguard-4 subject
@@ -6443,6 +6648,31 @@ export class Store extends DurableObject {
   }
   static #cleanLabel(s) {
     return String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
+  }
+
+  /* REC-36: the TERMS of a name or a label, for the name index. THROUGH
+     #normAlias and nothing else -- the term projection and the alias index must
+     fold identically or the join between them silently stops matching, which is
+     the failure nothing would report. Splitting on non-letter/non-digit is what
+     handles the punctuation the corpus actually carries (MEASUREMENTS.md
+     2026-08-04: comma 7/41, hyphen 7/41, and a diacritic in 1/41 -- the diacritic
+     is DELIBERATELY not folded, see below).
+
+     WHY NO DIACRITIC FOLDING. "Mentor-Protege" would then match "Mentor-Protégé",
+     which is usually what a reader wants -- and it would ALSO fold names that are
+     genuinely different in languages where the accent is the distinction. This is
+     a CANDIDATE list a member confirms, so a miss costs a member a search and a
+     false fold costs the record a wrong subject on a document. The conservative
+     direction is the one that does not put a name on a document. Measured at
+     1/41; if a real corpus makes it common the change is this one function and a
+     dated assertion, which is why it lives here and not in a tokenizer's flags.
+
+     CAPPED at 24 terms. D-36's ceilings are real and undocumented (about 100
+     bound variables), and the read below binds one variable per term: an alias
+     that would bind more than this is truncated rather than allowed to meet a
+     limit at run time on somebody's live instance. The measured maximum is 12. */
+  static #labelTerms(s) {
+    return [...new Set(Store.#normAlias(s).split(/[^\p{L}\p{N}]+/u).filter(Boolean))].slice(0, 24);
   }
 
   /* Create a registry entry, with its canonical label seeded as an alias so the
@@ -10057,8 +10287,16 @@ export class Store extends DurableObject {
        captured reply INTO a purged action goes with `refs`, and a leg elsewhere
        that targets it stays honestly unresolvable, the same way refs to a purged
        bundle read as C-6.2 findings rather than silently vanishing. */
+    /* REC-36: `reading_ref_terms` is the name index — one row per normalised term
+       of a reading_refs label — and is DERIVED from that row, carrying bundle_id
+       for the same reason. It clears in BOTH arms with the refs it projects. If
+       it did not, a whole-store purge would report scope ALL while a purged
+       document went on being offered as a candidate for a subject's name, which
+       is D-113's silent leftover in its most misleading form: the record would
+       name a document it no longer holds. hygiene.test.mjs holds this list
+       against schema.mjs. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
-                    "readings", "reading_refs", "resolutions", "progression_instances",
+                    "readings", "reading_refs", "reading_ref_terms", "resolutions", "progression_instances",
                     "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
                     "action_basis", "correspondence"];
     const before = this.stats();
@@ -13790,6 +14028,20 @@ export class Store extends DurableObject {
            bundle back-reference is withheld rather than the answer refused. */
         reading: () => this.readingFor(url.searchParams.get("sha256"), url.searchParams.get("viewer")),
         readingref: () => this.documentsByReference(url.searchParams.get("ref"), url.searchParams.get("viewer")),
+        /* REC-36: the same reverse question asked by NAME rather than by the
+           source's own reference — section 8.1's grade-C tier. Entity-driven, so
+           the registry's aliases do the matching; the viewer stamp is the same
+           server-stamped one, and here it WITHHOLDS THE ROW (a candidate the
+           viewer cannot open is not a candidate). */
+        readingname: () => this.documentsNamingEntity({
+          entityId: url.searchParams.get("entity"),
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer"),
+        }),
+        readingnameplan: () => this.readingNamePlan(
+          (url.searchParams.get("terms") || "").split(",").map((s) => s.trim()).filter(Boolean)),
+        readingtermsclear: () => this.readingTermsClear(body || {}),
+        reindexnames: () => this.reindexNames(body || {}),
         /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY. Create an entity
            (with inline aliases), attach an alias, declare a constitutive relation;
            read an entity BY KEY, entities BY ALIAS, and one relation by id. A

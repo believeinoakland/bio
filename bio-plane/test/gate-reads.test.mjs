@@ -649,6 +649,19 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     queue: "REC-30: the obligation's subject and the finding's bundles (the case set was gated at birth)",
     reading: "REC-30: the bundle back-reference on a capture's reading",
     readingref: "REC-30: the bundle back-reference on the reverse reference index",
+    /* REC-36's read, classified by the item that adds it (2026-08-04,
+       rec36-agent). It is the FIRST reading read to take the WITHHOLD-THE-ROW
+       shape rather than the redact-the-reference one, and the distinction is
+       worth stating because its two siblings above take the other. */
+    readingname: "REC-36: the CANDIDATE list for a name-only mention, and it takes the STRONGER of this "
+      + "sweep's two postures — the ROW is withheld in SQL at the lookup (#bundleGate), not the bundle "
+      + "reference redacted. op=reading and op=readingref answer questions ABOUT A CAPTURE and merely point "
+      + "back at where it is filed, so their rows stand with the reference nulled. This read's rows ARE the "
+      + "offer: a candidate a member cannot open is not a candidate, and a nameless one would still disclose "
+      + "that a document naming their subject sits in a project they were not invited to. No count of the "
+      + "withheld is reported, because that count is the leak (op=backlinks' rule). The section 8.1 grade a "
+      + "resolution later earns is NOT reader-dependent and nothing here makes it so: this read writes "
+      + "nothing and grades nothing.",
     resolutions: "REC-30: the bundle back-reference on a resolution",
     concerns: "REC-30: the bundle back-reference on the reverse index",
     connections: "REC-30: both ends' bundle back-references, independently",
