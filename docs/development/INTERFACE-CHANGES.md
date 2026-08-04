@@ -674,3 +674,19 @@ published vocabulary; `NOT_A_PROJECT` narrows permissively and keeps its name).
 I5 unchanged — no schema change of any kind. RECORD does not bump
 `INTERFACES.md` itself: this entry is the proposal, and the registry edit is
 CONDUCT's at integration.
+
+### IC-12 · RESPONSES · 2026-08-04
+
+- **UI: `AGREE` — answered by CONDUCT for the area** (its one live session, UI-16,
+  runs on the project-workspace region and does not own the cite surface; the
+  IC-1/IC-11 step-3 mechanics, named as proxy). Grounds: purely additive on the wire
+  (new arm, new refusals, no renamed string — the worker's own NOT_A_PROJECT
+  restraint is the I3 2.0.0 standard applied); UI-20's surface consumed the widened
+  act with zero edits, byte-identical app.html, which is the acceptance measured
+  rather than promised. The two additive surface items ride UI-21's scope.
+
+### IC-12 · RESOLUTION · 2026-08-04 · ACCEPTED AND CHANGED
+
+Landed at integration; I3 5.4.0 → **5.5.0**. The reason-code judgement (keep the old
+names, add NOT_CITABLE where reuse would lie) stands with its recorded one-string
+reversal if a later reader wants RECONCILED §3.1's rename literally.

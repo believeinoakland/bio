@@ -1025,6 +1025,8 @@ accepts-when: `cd bio-plane && npm run test:battery` green with a suite citing a
 landed: left for CONDUCT.
 released:
 
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker d3f8126). Verified: battery 92/92 (4852), --strict 126/126, harness green with app.html byte-untouched. IC-12 answered AGREE for UI (proxy, named) and CHANGED at I3 5.5.0; the delegation folded into UI-21. The widen decision and reason-code restraint accepted with their recorded reversals. No DEC.
+
 ## DELEGATION 2026-08-04 RECORD → UI
 from: rec37-agent / REC-37 (cite-to-inquiry — the plane half of the record-becomes-a-case edge)
 need: two things in `civicos-ui/app.html`, both ADDITIVE, neither urgent enough to break anything today. (1) `citeCandidates()` (~:5474) filters the record's own `object_type` to `project`, so a QUESTION is never offered as a citing object — `op=affordances` now publishes `cite` for `["information","project","inquiry"]` and the plane accepts a question as the citing object, so the filter should admit an inquiry as a citing END while still excluding the information end it was really written for. (2) the cite flow sends no `role`, so a cite onto a question reaches the plane and is refused `NO_ROLE`; the flow needs the role control, offered from the PUBLISHED vocabulary (`op=affordances` → `vocabularies.basis_roles`) and never from a surface-side copy.
