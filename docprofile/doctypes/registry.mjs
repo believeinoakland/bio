@@ -15,12 +15,18 @@
  * the prompt to go and measure. */
 import { makeRegistry } from "../recogniser.mjs";
 import meetingCalendar from "./meeting-calendar.mjs";
+import meetingAgenda from "./meeting-agenda.mjs";
 import generic from "./generic.mjs";
 
 /* generic carries `fallback: true`, so the shared registry returns it when nothing
    detects — same mechanism as the conservative handler on the stack axis. */
 const types = makeRegistry();
 types.register(meetingCalendar);
+/* meeting_agenda (FW-15) is the SECOND measured type, written from a real
+   Legistar agenda packet's Tier-1 text — the first content type reached through
+   text a non-HTML container produced, which is the FORMAT-axis uniformity claim
+   exercised on the content axis. */
+types.register(meetingAgenda);
 types.register(generic);
 
 export function doctypes() { return types.all(); }
@@ -32,5 +38,5 @@ export function doctypeFor(ctx) {
   return { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered };
 }
 
-export { meetingCalendar, generic };
+export { meetingCalendar, meetingAgenda, generic };
 export * from "./index.mjs";

@@ -36,7 +36,7 @@ import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./
    implementation of the three normalisation digests, never a second copy — and
    `CONFIDENCE` (the single ladder) to gate whether a normalised digest can be
    trusted to assert two documents are the same substance. */
-import { identify, doctypeFor, profileRecord, digests, CONFIDENCE } from "../../docprofile/registry.mjs";
+import { identify, doctypeFor, profileRecord, digests, CONFIDENCE, readText } from "../../docprofile/registry.mjs";
 
 /* The plane's identity to a source, in one place because it was in three and
    they had drifted: `bio-acquire` on capture, `bio-monitor` on monitoring, both
@@ -2257,14 +2257,109 @@ export default {
             basis: `the ${docType.type.key} reader could not parse this document (${String(e && e.message || e)}), so nothing is claimed about its entities`,
           };
         }
-      } else {
+      } else if (profileText) {
+        /* Read as text, but the resolved type declares no reader. Unchanged
+           from FW-5 (read_from_text mirrors whether a READER ran, as before). */
         reading = {
           content_type: docType.type.key, reader_version: docType.type.version ?? null,
           read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
-          basis: !profileText
-            ? `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`
-            : `the ${docType.type.key} content type declares no reader, so this document has no reading`,
+          basis: `the ${docType.type.key} content type declares no reader, so this document has no reading`,
         };
+      } else {
+        /* FW-15: THE L2→L3 WIRE. The document was not read as text at intake
+           (a PDF, an office container — any non-textual single-part capture),
+           but the FORMAT axis (COFF-1) may know how to produce its TEXT, and
+           the intent layer runs over TEXT from anywhere: docprofile's ONE
+           entry point (readText) takes I2's text field — whatever tier or
+           container produced it — and runs identify()/doctypeFor()/parse()
+           over it, so op=acquire produces a reading for a PDF exactly as it
+           does for an HTML page.
+
+           The honesty rules ride the entry point and are recorded here:
+           a tier that could not decode SAYS SO; text-undetermined is a FAILED
+           reading (found:false, the producer's own markers named), never a
+           fabricated one; a PARTIAL decode reads only with the shortfall
+           STATED on the basis. Tier 1 runs in-plane; the pdf-worker (I6) is
+           consulted through the same measured predicate op=pdfstructure uses
+           (needsTier2: Tier 1 got essentially nothing) when the binding
+           exists. OCR is NOT here (CPDF-10): a document with no text layer
+           stays honestly unread. */
+        let wired = null, wiredTier = null;
+        const fmt = profile.format && profile.format.format;
+        if (!multipart && fmt && fmt !== "undetermined") {
+          try {
+            const entry = getFormat(fmt);
+            if (entry && (typeof entry.text === "function" || typeof entry.structure === "function")) {
+              const wobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+              const wbytes = wobj ? new Uint8Array(await wobj.arrayBuffer()) : null;
+              let i2text = null;
+              if (wbytes && typeof entry.text === "function") {
+                /* The office shape: text() takes parts (or bytes — the entries
+                   accept both) and returns the I2 text shape, including the
+                   pageless paragraphs[] degenerate form (I2 1.1.0). */
+                const parts = typeof entry.parts === "function" ? await entry.parts(wbytes) : wbytes;
+                const tt = await entry.text(parts);
+                if (tt && tt.ok !== false) { i2text = tt; wiredTier = 1; }
+              } else if (wbytes && typeof entry.structure === "function") {
+                /* The PDF shape: Tier-1 text rides structure()'s own I2 object
+                   (pdfstructure.mjs's do-not-fork rule). */
+                const st = await entry.structure(wbytes);
+                if (st && st.ok) {
+                  i2text = st.text || null; wiredTier = 1;
+                  if (env.PDF_WORKER && needsTier2(i2text)) {
+                    try {
+                      const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
+                        method: "POST", headers: { "content-type": "application/json" },
+                        body: JSON.stringify({ capture_sha: sha, store: storeName }),
+                      });
+                      const t2 = await r.json();
+                      if (r.ok && t2 && t2.ok && t2.text) { i2text = t2.text; wiredTier = 2; }
+                    } catch { /* member unavailable: Tier 1's honest answer stands */ }
+                  }
+                }
+              }
+              if (i2text) wired = readText(i2text, { headers: profHeaders,
+                locator: documentAddress, content_type: ct || null, at: retrieved });
+            }
+          } catch { /* a wire failure must not fail the capture: fall through to
+                       the honest no-reading below */ }
+        }
+        if (wired && wired.determined) {
+          const { entities: wiredEntities, ...wrest } = (wired.parsed || {});
+          const wfacts = (wrest && typeof wrest.facts === "object" && Object.keys(wrest).length === 1)
+            ? wrest.facts : wrest;
+          const entities = wired.parse_error ? [] : readEntities(wiredEntities);
+          const wtype = wired.doctype.type;
+          reading = {
+            content_type: wtype.key, reader_version: wtype.version ?? null,
+            read_from_text: true, found: entities.length > 0,
+            entities, facts: wired.parse_error ? {} : (wfacts || {}), at: retrieved,
+            /* D-152's provenance rule, applied from day one: this text came out
+               of the document's own text LAYER (never OCR), by which tier, from
+               which container. Distinguishable everywhere the reading is shown. */
+            text_source: "layer", text_tier: wiredTier, text_container: fmt,
+            basis: wired.parse_error
+              ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities`
+              : (entities.length
+                  ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} text-layer text (tier ${wiredTier}); ${wired.why}`
+                  : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`),
+          };
+        } else if (wired) {
+          /* text-undetermined: a FAILED reading, recorded as such — the tier
+             that could not decode says so, and no refs are invented. */
+          reading = {
+            content_type: docType.type.key, reader_version: docType.type.version ?? null,
+            read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
+            text_source: "layer", text_tier: wiredTier, text_container: fmt,
+            basis: wired.why,
+          };
+        } else {
+          reading = {
+            content_type: docType.type.key, reader_version: docType.type.version ?? null,
+            read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
+            basis: `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`,
+          };
+        }
       }
 
       /* The shape C-18.1 requires, assembled here so the caller does not have to

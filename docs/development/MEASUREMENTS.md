@@ -1489,3 +1489,40 @@ invocation is borderline on today's proxy), and the page-to-pixels path (scan
 images are DCT/CCITT/JBIG2 streams; pdf.js's renderer wants a canvas workerd
 does not have — the renderer item CPDF-9's placement was to name goes with
 that gate, not before it).
+
+## 2026-08-03, session FRAMEWORK (fw15-agent): the ITEM SHAPE of a real Legistar agenda packet's Tier-1 text (FW-15's meeting_agenda doctype)
+
+**Instrument.** The real Oakland agenda packet the CPDF-5 corpus already measured
+for decode coverage — `oakland.legistar.com/View.ashx?M=A&ID=1425405&GUID=
+86B6D25C-4D38-4101-BD37-13DF930A7950` (the *Rules & Legislation Committee
+supplemental agenda for 2026-07-16) — re-fetched 2026-08-03 (276,421 bytes,
+byte count identical to the 2026-07-31 fetch; sha256
+`16cb1adf6d35116dbc475ae39ac1757f28cd549e7ff5b7f6d5bb7c660503570c`, now
+committed as `bio-plane/test/fixtures/legistar-agenda-1425405.pdf`), Tier-1
+text via `extractPdfStructure(bytes).text` in node v26.5.0: 33 pages, 60,865
+chars, 45 undetermined code points (unmapped), matching the recorded CPDF-5 row.
+
+**What the text's STRUCTURE is** — the facts the `meeting_agenda` content type
+(docprofile/doctypes/meeting-agenda.mjs, FW-15) is written from, per the
+standing rule that an unmeasured content type is not written:
+
+- **41 legislation file numbers**, each `\d{2}-\d{4}` ALONE ON ITS OWN LINE,
+  each exactly once (grep over the extracted text). These are Legistar's own
+  stable file ids — the entity keys.
+- **37 `Subject:` blocks and 37 `Recommendation:` labels** (equal counts). The
+  `Subject:`/`From:` labels sit on their own line with the VALUE on the next
+  line; `Recommendation:` runs inline on its own line.
+- **The item number (`2`, `3.1` … `3.29`) sits on its own line immediately
+  before the file-number line.** Section items (e.g. "Determination Of Schedule
+  Of Outstanding Committee Items" / `2` / `26-0844`) carry NO Subject block;
+  their heading is the nearest substantive line above the item number.
+- **Page furniture repeats and can interleave an item at a page break**:
+  `Page N`, `City of Oakland`, `Printed on …`, the meeting date line, the body
+  name (`*Rules & Legislation Committee`), the ` Agenda - SUPPLEMENTAL` banner.
+- **The meeting date is the first line** (`Thursday, July 16, 2026`); the body
+  name repeats as a header with a leading `*`.
+
+**What was NOT established** (and the doctype therefore does not claim): any
+per-item action result (the minutes' business, not the agenda's); the item
+shape of NON-Legistar agendas — the type's detect() is written to this
+publisher's shape and an unrecognised agenda falls to `generic`, honestly.
