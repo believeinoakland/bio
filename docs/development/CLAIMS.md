@@ -805,6 +805,8 @@ expected: QUEUE.md REC-26 / BUILD-ORDER.md §2 (REC-26) — the two live M1 gaps
 accepts-when: cd bio-plane && npm run test:battery green with a time-pinned suite (virtual `now` driven into onAlarm, the scheduler.test.mjs precedent, anchored on the last_checked op=monitor actually wrote) where a changed source produces a monitor-tick with NO operator action, a re-fire of an already-succeeded address does NOT increment `observations`, and an instance with no monitoring configured holds no alarm; the SELF binding asserted present in wrangler.jsonc with account_id still pinned; npm run test:coverage --strict exit 0. NEGATIVE CONTROLS run, recorded in the suite's NEGATIVE CONTROL line and restored after each — (a) remove the idempotence key and a retry inflates `observations`; (b) remove the cadence read and every document is checked at one global interval. The `npx wrangler deployments list` half of the item's acceptance is a DEPLOY-time check and is GATED to Bob; not attempted here. No push — CONDUCT integrates; landed: left for CONDUCT.
 released:
 
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker 02e1358). Verified: battery 89/89 (4690), --strict exit 0, 124/124 ops, hygiene 59/59. D-172 recorded (the reentrancy find); the DIST delegation routed onto DIST's queue backlog; RECORD drained and dormant. No DEC.
+
 ## DELEGATION 2026-08-04 RECORD → DIST
 from: rec26-agent / REC-26 (the installer-template half of the `env.SELF` binding)
 need: `newgroup/src/index.mjs` must provision a SELF service binding on every installed instance, in BOTH upload paths. THE INSTANCE NAME IS THE WORKER NAME, and the installer already holds it as `slug`, so nothing further need be asked of the group. Exactly:
