@@ -525,7 +525,8 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-42 burner invitations half built | RECORD | M7 |
 | D-50 name uniqueness absent from the catalog | RECORD | M7 |
 | D-52 export recorded, nobody notified | RECORD | M7 |
-| D-54 installer ignores the Workers plan | DIST | M2 |
+| D-54 installer must REQUIRE and verify Workers Paid (DEC-42) | DIST | M7 · was M2/"detect"; character changed 2026-08-04 |
+| D-185 free-tier frugality now defends limits no supported instance runs under (DEC-42) | CAPTURE · DIST | M7 · settle with D-54 |
 | D-57 self-reference reported as a change | CAPTURE | M3 |
 | D-59 `contemporaneous` never observed | CAPTURE | M3 |
 | D-60 / D-69 docprofile unadopted | FRAMEWORK → CAPTURE | M3 |

@@ -120,6 +120,66 @@ _(drained by CONDUCT 2026-08-04 — DEC-35's answer: the premise reframed (the s
 
 _(drained by CONDUCT 2026-08-04 — the calibration-drift entry: D-183 acknowledged (the chain records the ENGINE, the grade rests on a MEASUREMENT, nothing links them — one field wide); the calibration construct enqueued as CPDF-13 (RENUMBERED from the entry's CPDF-12, which collided with the renderer item CONDUCT allocated and pushed earlier the same day — the established collision protocol, later allocation moves), engine-generic per the D-164 lesson, the asymmetric drift handler and the changelog-may-only-accelerate rule carried verbatim, deps CPDF-11. CPDF-11 unchanged, still running. No entries outstanding.)_
 
+### 2026-08-04 · BOB · DEC-42 — WORKERS PAID IS NOW A REQUIREMENT; the OCR placement changes and D-54 changes character
+
+**Bob has reversed the standing ruling** *"Workers Paid is an optimisation, never a
+requirement"*, on an inventory rather than on the OCR result: an instance already needs
+a Cloudflare account and a payment method, and R2 already bills past its free allowance,
+so the honest change is **$0/month + a card → $5/month + a card**, not free → paid.
+*"Okay, that's the reality."* Full reasoning and the what-the-$5-buys table in
+DECISIONS.md **DEC-42**.
+
+**A CORRECTION I OWE THE RECORD, made in DEC-42 rather than quietly:** I previously
+reported WASM OCR as ruled out on bundle size. That was true only of the two placements
+DEC-35 named (in-plane, and inside the existing pdf-worker). CPDF-9's measurement plainly
+records that **a dedicated third fleet member FITS** — 2.72 MB gzip standalone, or 0.72 MB
+with the language model read from R2. Tesseract was never blocked on size. It was blocked
+on CPU (~17–54M reference-iterations per page against a Free kill window of ~40–42M), and
+**Paid moves that line from 10 ms to 30 s**.
+
+**Which matters because of what tesseract SCORED (CPDF-9, measured): 99.96% character
+accuracy, 90/90 digits, ZERO minted digits** — it is the floor every other candidate is
+scored against — and it is a CLASSIC engine, so it supplies the per-word confidence and
+coordinates DEC-35 named as constraints and Moondream measurably failed (2 of 24
+box-checks; a confident box for a figure not on the page).
+
+**Four things to enact.** Documents carrying the superseded ruling are already corrected
+in this session's commits (`CAPTURE-SCALING.md` — superseded in place with its original
+reasoning kept; `CLIENT-RENDERED.md`; `kickoffs/CAPTURE.md`; `DEBT.md`).
+`CIVICOS_UI_STATE.md`'s entry is dated history and is deliberately NOT rewritten.
+
+1. **D-54 CHANGES CHARACTER, and it is now M7's sharpest item.** The installer no longer
+   merely DETECTS the Workers plan — it **REQUIRES Paid, verifies it, and refuses to
+   complete honestly** rather than installing something quietly degraded. Refusing IS the
+   fix; a warning is not, because the D-106 failure it guards against is a group getting
+   something quietly different from every description of it.
+2. **CPDF-12 is RE-SCOPED AGAIN, and it gets cheaper.** The renderer and the composed-shape
+   probe are no longer the in-account route's only hope. Measure the **TESSERACT FLEET
+   MEMBER FIRST** — a DEPLOYED wasm CPU probe walked in reference iterations under Paid,
+   which is CPDF-9's own stated caveat (*"authoritative Worker CPU needs a deployed wasm
+   probe"*; its node-proxy figures are CPU-ORDER only). Memory is also unmeasured there — a
+   3300×2550 RGBA frame is 33.6 MB against the isolate's 128 MB.
+   **AND ONE OBSERVATION THAT MAY REMOVE THE RENDERER ENTIRELY, to be verified not
+   assumed:** on the measured exhibit each page is ONE full-page embedded image (JPEG
+   `DCTDecode`, CCITT G4 `CCITTFaxDecode`). For the image-only class — which is what OCR
+   is FOR — that means **image EXTRACTION, not page rasterisation**. Check it across the
+   corpus before building a renderer; if it holds, CPDF-12's expensive half is a JPEG
+   pass-through plus a CCITT G4 decoder.
+3. **CPDF-10's placement becomes in-account tesseract**, pending that probe. The external
+   tier stays UNFUNDED and Azure DI Read remains the named fallback (DEC-35 unchanged in
+   its preference order — this simply makes the in-account option a good one).
+4. **D-185 is new and must not be lost**: the free-tier frugality code now defends against
+   limits no supported instance runs under. **Do NOT delete it** — resumable sessions, the
+   calibrated ceiling and capture-across-ticks are cheap to keep, expensive to rebuild, and
+   still decide whether a heavy first capture completes under Paid. What must be settled in
+   writing is that the project stops believing it is free-tier-viable while nothing
+   exercises that path.
+
+**BLOCKED UNTIL BOB UPGRADES THE ACCOUNT:** only the DEPLOYED probe in (2). The account was
+measured as Workers FREE on 2026-07-31 and the upgrade is the one act only Bob can perform;
+it has been named to him. Items (1), (3) and (4) are enactable now, and the tesseract
+placement decision does not wait on the probe — the probe sizes it.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
