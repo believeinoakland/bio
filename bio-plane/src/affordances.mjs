@@ -226,6 +226,18 @@ export const NON_ACTS = {
      buttons live ON, and the acts it offers per item are THIS file's own
      derivation, carried into the feed rather than restated there. */
   queue: "read: the member's own feed, keyed by member — not an act on an object; the acts it offers per item ARE this derivation",
+  /* REC-21, and this classification is DOCTRINE rather than bookkeeping. These
+     two are NON_ACTS not merely because their subject is a (member, case) row
+     instead of a bundle, but because publishing them here is precisely the
+     failure D-125 names: this list is what a surface renders as the controls
+     beside an object, so an entry here would put "mute" on the same strip as
+     dispose, retire and sever — one control for a personal preference and a
+     record act, which is the thing that must never happen. The mute control
+     belongs to the QUEUE ENTRY (UI-14 renders it there), not to the object, and
+     the vocabulary of what may be muted is published by the refusal and by
+     op=queue's own `mute` block, never by a surface-side map. */
+  queuemute: "personal state, keyed (member, case): a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
+  queuesnooze: "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)",
 };
 
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));
