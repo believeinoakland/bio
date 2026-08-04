@@ -2291,6 +2291,41 @@ RULED IN PART 2026-08-03 by Bob — THE ARITHMETIC IS SETTLED: *"The simple trut
   distinct propositions (the falsifier-count test), which awaits Bob's confirmation. Any
   build touching REC-12's strength derivation must model the AND/OR relationship from the
   start; a flat implicit-AND basis is now known to be wrong.
+RECOMMENDATION SHARPENED 2026-08-04, at Bob's request ("you're more tuned into the place
+  of falsifiers — what's your recommendation, and why?"). **ADOPT THE FALSIFIER-COUNT TEST,
+  and the reason is that it is not a second rule beside the AND/OR arithmetic — it IS that
+  arithmetic, read from the other side.** Strength composes: MIN over AND legs, MAX over OR
+  branches (Bob's ruling). Refutation composes DUALLY: to refute an AND chain you break ANY
+  ONE necessary link; to refute an OR set you must break EVERY branch. Those are De Morgan
+  duals, so the falsifier count is not an extra judgment a member must make — it is entailed
+  by the AND/OR relationship they have already declared. One rule, two faces.
+  **AND THAT DISSOLVES THE APPARENT PROBLEM WITH BOB'S OWN EXAMPLE.** The clarification
+  worried that "the regulations do not forbid it" and "the constitution affirmatively grants
+  it" are different propositions with different falsifiers, which would route the utility
+  example to separate inquiries — the outcome the example was raised to resist. Under the
+  dual, it does not: an OR-composed finding has ONE falsifier, and it is COMPOUND —
+  *every ground fails*. Compound is not plural. It is finite, checkable, and each branch is
+  nameable, which is exactly what a falsifier has to be. So the utility example is ONE
+  finding, as Bob leaned, and the falsifier test agrees rather than overriding him.
+  **THE OPERATIONAL TEST, stated so a member can apply it without this reasoning:** *would
+  refuting this ground alone change the conclusion?* If NO — the other ground still carries
+  it — the grounds are OR-related and live inside one finding. If YES, the leg was necessary
+  (AND) all along. **And the test for separate OBJECT IDENTITY is CITABILITY: does anything
+  need to cite this part ALONE?** Identity exists so a thing can be referenced; a ground no
+  leg will ever cite by itself does not need an id, and giving it one rebuilds the
+  multiplicity D-127's collapse removed. When a member genuinely needs to cite *the
+  constitution grants it* on its own — in another inquiry, for another conclusion — that is
+  the signal it was always its own inquiry, and recursion (already answered) composes it.
+  **THE HAZARD TO NAME, because the ruling creates it:** OR takes the MAX, so a member has a
+  standing incentive to bundle a weak ground beside a strong one and publish at the strong
+  one's grade. Three things already contain it and no new machinery is needed: *independently
+  sufficient* is an AUTHORED judgment carrying the member's name (the same accountability
+  shape as the conclusion itself); the compound falsifier is the check, because a member who
+  cannot state a falsifier requiring EVERY branch to fail has not got OR-related branches;
+  and each ground's legs stay visible, so a reader tests sufficiency rather than taking it.
+  What I would NOT do: mint a separate falsifier per ground. It reads as more honest and is
+  less — it converts one checkable compound falsifier into several partial ones, none of
+  which refutes the finding, and a reader who breaks one would reasonably believe they had.
 
 ### DEC-33 · answered
 raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)
