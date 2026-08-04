@@ -141,6 +141,13 @@ That moves onto the item as `accepts-when:`. An item is done when:
 2. The item's own `accepts-when:` command passes.
 3. The negative control for whatever it added has been RUN, and its result is
    recorded in the suite's `NEGATIVE CONTROL:` line.
+3a. **A rule enforced in N places carries an assertion at EACH place.** REC-24's
+   correspondence control initially PASSED its first suite draft: the op refused
+   malformed input before the document was ever written, so the catalog arm and the
+   write arm sat untested behind the op's own refusal — neutering them changed
+   nothing the suite could see. Test through the op AND at each enforcement layer
+   the op fronts; a control that breaks one layer must fail against that layer's
+   own assertion, not be absorbed by an earlier gate. (2026-08-04.)
 4. `npm run test:coverage` shows no NEW unreached op and no new undeclared control.
    A change that adds an op adds a control-plane assertion for it in the same turn.
 5. For anything destructive or security-sensitive, CONDUCT re-runs the control
