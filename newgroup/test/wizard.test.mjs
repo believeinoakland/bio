@@ -9,6 +9,17 @@
  *   - refused R2 degrades to a working install with no bucket bindings
  *   - an update keeps the instance's bindings and carries no migration
  *   - a state mismatch stops everything before the token endpoint is touched
+ *   - both upload paths bind SELF, so a deployed instance's monitoring is armed
+ *
+ * NEGATIVE CONTROL: delete the `selfBinding(slug)` line from `uploadUpdate`'s
+ * bindings in src/index.mjs -> the update block fails on "SELF bound on update
+ * too, arming monitoring on copies installed before it existed" (the
+ * already-installed instance that would never receive SELF) and on "the update's
+ * SELF is a service binding" -> 101 passed, 2 failed. Deleting the
+ * `opts.noSelf ? [] : [selfBinding(slug)]` line from `uploadInstall` instead ->
+ * 98 passed, 5 failed (both install SELF assertions, plus the whole degrade
+ * block, because there is no longer anything for Cloudflare to refuse).
+ * BOTH RUN 2026-08-04, restored 103/103 green after each.
  */
 import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
@@ -179,6 +190,14 @@ console.log("\n--- install: the whole conversation ---");
   t("secrets are long", secrets.every((s) => s.text.length >= 40), true);
   t("secrets are distinct", new Set(secrets.map((s) => s.text)).size, 3);
   t("no secret is a published value", secrets.some((s) => s.text === PUBLISHED), false);
+  /* REC-26: without this binding the plane's #monitorConfigured() is false and
+     both monitoring consumers hold no alarm — the instance never re-checks a
+     document it was asked to monitor. The target is the instance's OWN worker,
+     which is the slug (D-102), so a wrong target here would point one group's
+     monitoring at another group's copy. */
+  const self = meta.bindings.find((b) => b.name === "SELF");
+  t("SELF is a service binding", self?.type, "service");
+  t("SELF targets this instance's own worker, not a fixed name", self?.service, "oak-watch");
   t("both buckets bound when R2 succeeded",
     meta.bindings.filter((b) => b.type === "r2_bucket").map((b) => b.bucket_name).sort(),
     ["bio-captures", "bio-published"]);
@@ -238,6 +257,47 @@ console.log("\n--- install: no card means a friendly stop, and nothing installed
   t("it names the exact next step", body.includes("add a card or PayPal"), true);
   t("it says nothing needs cleaning up", body.includes("nothing to clean up"), true);
   t("no credentials were minted into the page", body.includes(String.raw`id="out-boot"`), false);
+  t("no token in output", body.includes(TOK), false);
+  globalThis.fetch = realFetch;
+}
+
+/* ---- install where Cloudflare refuses the self-binding ---- */
+console.log("\n--- install: a refused SELF binding costs the monitoring, never the copy ---");
+{
+  /* An install PUT names a service binding to the script that same PUT creates.
+     Whether Cloudflare accepts that self-reference cannot be established without
+     a real install, and a real install is deploy-gated — so this block pins the
+     BEHAVIOUR under refusal rather than pretending to know the answer. */
+  const { cookie, state } = await begin("shy-town");
+  const calls = script([
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A4", name: "Shy" }]) },
+    { m: (u) => u.includes("/scripts/shy-town/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/shy-town") && mth === "PUT",
+      f: async (u, init) => {
+        const meta = JSON.parse(await init.body.get("metadata").text());
+        return meta.bindings.some((b) => b.type === "service")
+          ? cferr("binding SELF refers to a service that does not exist", 400, 10021)
+          : cfok({ id: "shy-town" });
+      } },
+    { m: (u, mth) => u.endsWith("/scripts/shy-town/subdomain") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "shy" }) },
+    { m: (u) => u.startsWith("https://shy-town.shy.workers.dev/"),
+      f: () => jres({ ok: true, bindings: { STORE: true } }) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  const puts = calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/shy-town"));
+  t("the refused upload is retried exactly once", puts.length, 2);
+  const retry = puts[1] ? await metadataOf(puts[1]) : { bindings: [] };
+  t("the retry drops ONLY the service binding", retry.bindings.some((b) => b.type === "service"), false);
+  t("the retry still carries the store, the secrets and the storage",
+    [retry.bindings.some((b) => b.type === "durable_object_namespace"),
+     retry.bindings.filter((b) => b.type === "secret_text").length,
+     retry.bindings.filter((b) => b.type === "r2_bucket").length,
+     "migrations" in retry], [true, 3, 2, true]);
+  t("the group still gets a working copy", body.includes("out-boot"), true);
+  t("the page says what was left out and how to get it", body.includes("was refused by Cloudflare"), true);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
 }
@@ -362,6 +422,20 @@ console.log("\n--- update: keeps everything, carries no migration ---");
   t("INSTANCE_NAME bound on update too, healing unnamed copies",
     meta.bindings.find((b) => b.name === "INSTANCE_NAME")?.text, "oak-watch");
   t("no new secrets generated", meta.bindings.some((b) => b.type === "secret_text"), false);
+  /* REC-26, and this is the assertion the whole update half exists for: every
+     copy installed before the SELF binding existed is running with its
+     monitoring consumers dormant RIGHT NOW. Nothing reaches those instances
+     except an update, and an update only heals what it binds EXPLICITLY —
+     keep_bindings inherits, and there is nothing to inherit. */
+  const selfUp = meta.bindings.find((b) => b.name === "SELF");
+  t("SELF bound on update too, arming monitoring on copies installed before it existed",
+    selfUp?.service, "oak-watch");
+  t("the update's SELF is a service binding", selfUp?.type, "service");
+  /* "service" is deliberately NOT in keep_bindings: the explicit binding above
+     is what heals an older copy, and inheritance cannot create what was never
+     there. If that binding is ever dropped, "service" must be added here or an
+     update DELETES a working instance's binding. */
+  t("keep_bindings does not inherit service bindings", meta.keep_bindings.includes("service"), false);
   t("the page says passwords and record are untouched", body.includes("exactly as they were"), true);
   t("with the repository unreachable, the update says the built-in was used", body.includes("was not reachable"), true);
   t("no token in output", body.includes(TOK), false);
