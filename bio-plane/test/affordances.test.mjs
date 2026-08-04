@@ -6,6 +6,12 @@
    (d2) THE SAME LITERAL PLUS ONE EXTRA KIND ("widget") -> THREE FAIL (60/63) and they name both lists: the identity pin, the over-the-wire pin, and "the write path REFUSES a basis leg against exactly the published action_basis_kinds" — the publication is caught as a SUPERSET of what the store will accept, which is the DEC-8 disagreement in the shape that costs a member a control that does not work;
    (e) THE CAPTURE-DIRECTED TOTALITY — delete the `monitor` entry from CAPTURE_ACTS, leaving its NON_ACTS reason untouched -> "every capture-directed NON_ACT has published metadata … both directions" FAILS naming ["monitor"], which is the guard that makes `attest`'s six-item history (correct, sourced, unreachable since REC-19) unable to repeat for a third op.
    Restored -> 63/63. */
+/* NEGATIVE CONTROL (REC-39, the four RESOLUTIONS — the LAST action-loop set to get a published home), FOUR arms, all RUN 2026-08-05, every file restored BYTE-IDENTICAL (sha256 compared before and after each: src/affordances.mjs 753aa75b…, src/store.mjs 84801ad6…, checks/bio-checks.mjs eaa05176…):
+   (e) THE PUBLICATION AS A LITERAL COPY — in src/affordances.mjs replace `resolutions: RESOLUTIONS` with `["complied","denied","escalated","withdrawn"]` -> the identity pin FAILS (68/69) and NOTHING ELSE DOES: the wire pin, both op=actionmove pins and the C-2.10 pin all PASS, because an identical copy agrees at zero cost. REC-35's finding, third restatement, and the identity pin is the whole of this control;
+   (e2) THE SAME LITERAL PLUS ONE EXTRA WORD ("widget") -> FIVE FAIL (64/69) and they name both lists in four different instruments: the identity pin, the over-the-wire pin, `op=actionmove` refusing against a set that no longer matches what it publishes as `legal`, the not-a-superset arm (the published word the act will NOT accept — the shape that costs UI-19's chooser an option that does not work), and C-2.10's own sentence on the document that landed;
+   (e3) RESTORE THE STORE'S LOCAL COPY — splice `const RESOLUTIONS = ["complied","denied","escalated","withdrawn"];` back into `actionMove()` above `const res = …`, which is the exact state REC-39 found -> the no-literal-copy pin FAILS (68/69) and nothing else does, because a shadowing copy of the same four words behaves identically until the day the catalogue changes. That is why the pin is structural and not behavioural;
+   (e4) RESTORE THE CATALOGUE'S INLINE COPY — put `['complied','denied','escalated','withdrawn']` and its hand-written sentence back into checkActionExtension -> the same no-literal-copy pin FAILS (68/69), from the other enforcement site. Both copies are pinned dead BY NAME so the found state cannot be re-entered from either end.
+   Restored -> 69/69. */
 /* op=affordances (REC-19, standing doctrine DEC-8): the plane publishes what may
  * be DONE to an object, so an act surface renders options it RECEIVED and never
  * computes one. whoami publishes capabilities, searchfields publishes the query
@@ -51,7 +57,8 @@ import { createHash } from "node:crypto";
 import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROMPT, deriveActs,
          ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, CAPTURE_ACTS }
   from "../src/affordances.mjs";
-import { ACTION_KINDS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS } from "../checks/bio-checks.mjs";
+import { ACTION_KINDS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
+         RESOLUTIONS } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -188,6 +195,32 @@ t("RUNGS carries EXACTLY the seven documented assignments — nothing invented (
 t("the two action-loop vocabularies published by op=affordances ARE the catalog's own arrays, not copies",
   [VOCABULARIES.action_basis_kinds === ACTION_BASIS_KINDS,
    VOCABULARIES.correspondence_directions === CORRESPONDENCE_DIRECTIONS], [true, true]);
+
+/* REC-39 — THE FOUR RESOLUTIONS, the LAST of the action loop's closed sets to
+   get a published home, and the pin is the REC-35 one for the REC-35 reason.
+   Identity and not equality: a literal copy of ["complied","denied",
+   "escalated","withdrawn"] satisfies every deep comparison the day it is
+   written, which is this suite's NEGATIVE CONTROL (e).
+
+   THE STRUCTURAL HALF IS WIDER HERE THAN FOR ANY SET ABOVE, because this
+   vocabulary was written out TWICE and published nowhere: an inline literal in
+   `bio-checks.mjs`'s C-2.10 arm, and a local `const RESOLUTIONS` inside
+   `store.mjs actionMove()`. Both copies are pinned dead by name — a regex over
+   each source for the four words appearing as an array literal — so the state
+   REC-39 found cannot be re-entered from either side. The three readers are the
+   catalogue's finding, the act's refusal and the publication; the behavioural
+   half (each enforcement site's own sentence, read through the op, listing
+   exactly what is published) is asserted further down where a plane is live. */
+t("the four RESOLUTIONS published by op=affordances ARE the catalog's own array, not a copy",
+  VOCABULARIES.resolutions === RESOLUTIONS, true);
+t("neither enforcement site keeps a literal copy of the four resolutions any more",
+  [/import \{[^}]*\bRESOLUTIONS\b[^}]*\} from "\.\.\/checks\/bio-checks\.mjs"/s.test(storeSrc),
+   /\[\s*["']complied["']\s*,\s*["']denied["']\s*,\s*["']escalated["']\s*,\s*["']withdrawn["']\s*\]/
+     .test(storeSrc.replace(/\/\*[\s\S]*?\*\//g, "")),
+   /\[\s*["']complied["']\s*,\s*["']denied["']\s*,\s*["']escalated["']\s*,\s*["']withdrawn["']\s*\]/g
+     .exec(readFileSync(new URL("../checks/bio-checks.mjs", import.meta.url), "utf8")
+       .replace(/\/\*[\s\S]*?\*\//g, "").replace(/export const RESOLUTIONS[^;]+;/, "")) !== null],
+  [true, false, false]);
 
 /* REC-38 — THE CAPTURE-DIRECTED ACTS' METADATA (UI-22's delegation), and these
    four assertions are the shape decision made structural.
@@ -434,6 +467,8 @@ t("every sourced rung now reaches a member EXCEPT ratify, whose pre-flight is RE
 t("the two action-loop vocabularies reach a caller OVER THE WIRE, exactly as published",
   [cat.result.vocabularies.action_basis_kinds, cat.result.vocabularies.correspondence_directions],
   [ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS]);
+t("the four resolutions reach a caller OVER THE WIRE, exactly as the catalogue holds them (REC-39)",
+  cat.result.vocabularies.resolutions, RESOLUTIONS);
 /* CORRECTED 2026-08-04 (REC-14), never exempted. The old assertion said every
    act needs `contribute`, which was true while every act was a corpus-shaping
    one. `publish` is not: concluding says what the record shows, publishing puts
@@ -654,6 +689,69 @@ t("op=actioncorrespond REFUSES against exactly the published correspondence_dire
   [badDir.reason, badDir.legal, oneOfColon(badDir.detail)],
   ["BAD_DIRECTION", cat.result.vocabularies.correspondence_directions,
    cat.result.vocabularies.correspondence_directions]);
+
+/* REC-39 — THE FOUR RESOLUTIONS HELD AGAINST BOTH ENFORCEMENT SITES, the REC-38
+   instrument above applied to the set that had no publication at all until this
+   item. The identity pin proves the PUBLICATION is the catalogue's array; it
+   cannot see whether the two enforcers read that same array, and here there
+   were two of them holding two hand-written copies. So each is asked with the
+   input that trips exactly its check and its OWN sentence is compared against
+   what was published.
+
+   THE TWO SITES ARE DIFFERENT LAYERS, deliberately, and both matter to a
+   member. `op=actionmove` refuses NO_RESOLUTION at OP TIME and publishes
+   `legal:` with it — that list is what UI-19's chooser renders, so a drift there
+   costs the member a control offering words the plane will not take. C-2.10
+   judges the DOCUMENT that lands, so a drift there lets a bundle audit dirty
+   forever over a word the act happily accepted. One array is the only thing
+   that keeps those two answers the same. */
+const ACTV = "ACTN-2026-0003-rec39";
+await promote(ACTV, actnMd(ACTV).replace("current_state: planned", "current_state: active"),
+              "action", "active");
+const noRes = rP(await GET(`op=actionmove&token=${RUTH}&target=${encodeURIComponent(ACTV)}`
+  + `&to=resolved&reason=${encodeURIComponent("the clerk answered in full")}`));
+t("op=actionmove REFUSES against exactly the published resolutions, and publishes the legal set with it",
+  [noRes.reason, noRes.legal, oneOfColon(noRes.detail)],
+  ["NO_RESOLUTION", cat.result.vocabularies.resolutions, cat.result.vocabularies.resolutions]);
+/* And the other direction, because a set published as a SUPERSET of what the
+   act accepts is the failure that costs a member a control that does not work:
+   every published word is one the act actually takes. Each move is made on its
+   own action so no move is judged from a state a previous one left behind. */
+const resolutionAccepted = [];
+for (const r of cat.result.vocabularies.resolutions) {
+  const id = `ACTN-2026-0004-rec39${r.slice(0, 3)}`;
+  await promote(id, actnMd(id).replace("current_state: planned", "current_state: active"),
+                "action", "active");
+  const mv = rP(await GET(`op=actionmove&token=${RUTH}&target=${encodeURIComponent(id)}`
+    + `&to=resolved&resolution=${r}&reason=${encodeURIComponent("the clerk answered in full")}`));
+  resolutionAccepted.push(mv.ok === true && mv.resolution === r);
+}
+t("every published resolution is one op=actionmove ACCEPTS (the publication is not a superset)",
+  resolutionAccepted, cat.result.vocabularies.resolutions.map(() => true));
+/* C-2.10's own sentence, the second enforcement site, read off a document that
+   LANDED carrying a resolution the catalogue does not know. The finding is the
+   catalogue's and its list is derived from the same array — before this item the
+   sentence transcribed the four words a second time inside the statement that
+   tested them. */
+const BADRES = "ACTN-2026-0005-rec39";
+const badResMd = actnMd(BADRES)
+  .replace("current_state: planned", "current_state: resolved")
+  .replace("action_kind: cpra_request", "action_kind: cpra_request\nresolution: __not_a_resolution__");
+await promote(BADRES, badResMd, "action", "resolved");
+/* Read through op=audit, which is the sweep that runs the catalogue over what
+   LANDED — the "audit clean before you call anything done" gate — rather than by
+   calling checkBundle in this process, for the reason stated above the
+   correspondence assertion: a function this harness imports proves nothing about
+   what a caller meets. `after` is set one character short of this bundle's id so
+   the single-row page is this document and no other. */
+const badResAudit = rP(await GET(
+  `op=audit&token=mem-rec19&after=${encodeURIComponent("ACTN-2026-0005-rec3")}&limit=1`));
+const resFinding = (badResAudit.offenders?.[0]?.errors || [])
+  .find((e) => /requires resolution in/.test(e.detail || ""));
+t("C-2.10 REFUSES against exactly the published resolutions, in the catalogue's own sentence",
+  [badResAudit.offenders?.[0]?.bundleId, resFinding?.check,
+   (/\bin:\s*([^.(]+)/.exec(resFinding?.detail || "")?.[1] || "").trim().split(/\s*,\s*/)],
+  [BADRES, "C-2.10", cat.result.vocabularies.resolutions]);
 
 /* ----------------------------------------- rung honesty across everything */
 console.log("\n--- rung honesty: null wherever no document assigns one ---");
