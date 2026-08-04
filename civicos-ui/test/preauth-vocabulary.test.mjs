@@ -216,6 +216,44 @@
  *       naming `verification.detail` and DEC-8. The gap was found by running the
  *       control rather than by reading the file, which is the whole argument for
  *       running it.
+ *
+ * ============================================================================
+ * WHAT UI-34 DID TO THIS FILE, 2026-08-04. IT CHANGED THE MEASUREMENT BASIS,
+ * AND THAT IS THE POINT RATHER THAN A SIDE EFFECT.
+ * ============================================================================
+ * Everything above counted over TEN scenarios. It now counts over ELEVEN, and a
+ * reader comparing this file's numbers to UI-31's or UI-33's must know that.
+ *
+ * WHY. `pubVerifyPanel()` renders a whole pre-authentication pane — the
+ * verification claim this product rests on, addressed to somebody holding
+ * nothing — and NO SCENARIO DROVE IT. The reason is structural and is the real
+ * finding: walk 1 discovers pre-authentication controls by reading `#gate`'s
+ * markup, and that control is on `#pub`'s rail. The published space is entered
+ * with no credential; its masthead's own links were discovered by NOTHING. So a
+ * whole uncredentialed surface sat outside the measurement, and UI-33 could
+ * reword its words without moving a number here — which it did, and said so.
+ * WHAT WAS ADDED. **WALK 1b**, which reads the published masthead's own inline
+ * handlers the way walk 1 reads the gate's ids, plus the cross-check that every
+ * one of them must be driven; **one scenario**, `published-verify-panel`; and
+ * **one REACH assertion** pinning that it rendered its own subject. A third link
+ * on that rail now fails this file until somebody opens it (arm (i)).
+ * WHAT ELSE WAS ADDED, AND IT IS THE LARGER OF THE TWO. **DEC-49'S SUBJECT IS
+ * NOW PINNED** — the eight plane-sourced rows, by TERM and by SOURCE, in
+ * `DEC49_SUBJECT` beside the report. The hard constraint every item working on
+ * these surfaces inherits is "leave every plane-sourced term exactly as it is",
+ * and until now it was verified by a worker reading a report and writing the
+ * result into a landing. That is a check done carefully once and skipped the
+ * third time. It is machine-checked now, and it earns its place immediately:
+ * arms (a3), (b), (c), (f) and (g) all trip it, and (g) — the DEC-8 overstep on
+ * the case page that UI-33 needed a bespoke reach assertion to catch — is now
+ * caught GENERICALLY, by name, without anybody having anticipated that field.
+ * THE READING, BEFORE AND AFTER, both carried into MEASUREMENTS.md with the date
+ * and this file as the instrument: 10 scenarios -> 11; 33,535 -> 34,375
+ * characters; 9 terms -> 9 terms; 55 -> 57 occurrences; 45 -> 47 visible. THE
+ * WHOLE DELTA IS ONE ROW: `sha256` x30 (26 visible) -> x32 (28), on its
+ * SURFACE-authored half, from the verify pane's own two sentences. **EVERY
+ * PLANE-SOURCED ROW IS UNCHANGED IN NUMBER AND IN SOURCE**, which is now
+ * asserted rather than observed.
  */
 import vm from "vm"; import fs from "fs"; import path from "path";
 import { webcrypto } from "crypto";
@@ -283,6 +321,39 @@ ok("WALK 1 REACH: six of them are BOUND to a handler and are therefore entry poi
    + "found [" + BOUND.join(", ") + "]",
    BOUND.length === 6
    && ["g-base","g-preview","g-pub","g-signin","g-token-go","g-token-toggle"].every(id => BOUND.includes(id)));
+
+/* ============================================================
+   WALK 1b — THE PUBLISHED SPACE'S OWN CONTROLS (ADDED BY UI-34, 2026-08-04)
+   ============================================================
+   THE GATE IS NOT THE ONLY PRE-AUTHENTICATION SURFACE WITH CONTROLS, AND UNTIL
+   THIS WALK NOTHING SAID SO. `#pub` is entered with no credential — that is the
+   product claim — and its masthead carries its own links, served as static
+   markup with inline handlers, reachable by a stranger who has signed in to
+   nothing. Walk 1 reads `#gate` and only `#gate`, so those controls were
+   discovered by NOBODY, and the consequence was measurable: `pubVerifyPanel()`
+   renders an entire pre-authentication pane and **no scenario drove it**. UI-33
+   reworded that pane's own words anyway — same stranger, same screen — and said
+   so at the site, because adding a scenario would have moved UI-31's measurement
+   basis mid-flight while DEC-49 is being answered against it. UI-34 is where that
+   move is made deliberately and reported before and after.
+   The controls are DISCOVERED the way the gate's are, from the served markup's
+   own inline handlers rather than from a list here, so a third link on that rail
+   fails this file until some scenario opens it. */
+function pubMasthead(){
+  const start = APP_SRC.indexOf('<div class="pub-mast">');
+  if(start < 0) return "";
+  let i = start, depth = 0, m;
+  const tag = /<\/?div\b[^>]*>/g; tag.lastIndex = start;
+  while((m = tag.exec(APP_SRC))){ depth += m[0][1] === "/" ? -1 : 1; i = m.index + m[0].length; if(!depth) break; }
+  return depth === 0 ? APP_SRC.slice(start, i) : "";
+}
+const PUBMAST = pubMasthead();
+const PUB_CONTROLS = [...new Set([...PUBMAST.matchAll(/onclick="([A-Za-z0-9_]+)\(\)"/g)].map(x => x[1]))].sort();
+ok("WALK 1b REACH: the published masthead was extracted from app.html and is the real thing",
+   PUBMAST.length > 200 && PUBMAST.includes('id="p-gname"') && PUBMAST.includes("</div>"));
+ok("WALK 1b REACH: it declares exactly the uncredentialed controls this walk has classified — found ["
+   + PUB_CONTROLS.join(", ") + "] (a third link on that rail must be driven before this passes)",
+   PUB_CONTROLS.length === 2 && ["pubList","pubVerifyPanel"].every(f => PUB_CONTROLS.includes(f)));
 
 /* ============================================================
    WALK 2 — THE ADDRESSES THAT RESOLVE FOR SOMEBODY HOLDING NOTHING
@@ -484,7 +555,10 @@ function makeCtx(plane, hash){
 const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__signIn=signIn;globalThis.__previewShell=previewShell;"
   + "globalThis.__enterPublished=enterPublished;globalThis.__tokenConnect=tokenConnect;"
   + "globalThis.__toggleToken=()=>$(\"#g-token-toggle\").onclick();"
-  + "globalThis.__setBase=v=>$(\"#g-base\").oninput({target:{value:v}});";
+  + "globalThis.__setBase=v=>$(\"#g-base\").oninput({target:{value:v}});"
+  /* UI-34: the published rail's second link, so walk 1b's control can be driven
+     through the function the markup itself names. */
+  + "globalThis.__pubVerifyPanel=pubVerifyPanel;";
 
 function load(plane, hash){
   const ctx = makeCtx(plane, hash);
@@ -516,7 +590,7 @@ const SCENARIOS = [];
 async function scenario(key, label, spec){
   if(HIDE === key) return;                       // NEGATIVE CONTROL (a)
   const rec = { key, label, controls:spec.controls || [], address:spec.address || null,
-                surfaces:new Map(), said:[] };
+                pubControls:spec.pubControls || [], surfaces:new Map(), said:[] };
   const plane = makePlane(spec.mode);
   const ctx = load(plane, spec.hash || "");
   if(spec.drive) await spec.drive(ctx, plane);
@@ -594,9 +668,11 @@ await scenario("empty-token", "connect pressed with no token", {
   drive:async(ctx)=>{ await ctx.__tokenConnect(); },
 });
 
-/* 7 THE PUBLIC RECORD — reached with NO credential, which is the product claim. */
+/* 7 THE PUBLIC RECORD — reached with NO credential, which is the product claim.
+   `enterPublished()` calls the rail's own `pubList()`, so that control is driven
+   here rather than by a second scenario doing the same thing. */
 await scenario("public-record", "the published record, entered with no credential", {
-  controls:["g-pub"],
+  controls:["g-pub"], pubControls:["pubList"],
   drive:async(ctx)=>{ ctx.__enterPublished(); await settle(); },
 });
 
@@ -618,13 +694,37 @@ await scenario("case-address-at-load", "a published case address, opened by a st
   drive:async()=>{ await settle(); },
 });
 
+/* 11 THE VERIFY PANE, opened from the published rail by somebody holding
+   nothing — ADDED BY UI-34, 2026-08-04, AND IT MOVES THIS FILE'S MEASUREMENT
+   BASIS ON PURPOSE.
+   WHY IT WAS MISSING. `pubVerifyPanel()` renders a whole pre-authentication pane
+   — "Check this without us", the sha256 paragraph, the verification claim this
+   product rests on — and until walk 1b existed nothing in this file could
+   discover it, because walk 1 reads `#gate` and this control is on `#pub`'s
+   rail. So the surface a stranger reaches by clicking "Verify" was never
+   measured, and UI-33 could reword its words without moving a number here.
+   WHY UI-33 LEFT IT ALONE AND UI-34 DOES NOT. Adding a scenario ENLARGES the
+   walk, which changes what "13 terms" and then "9 terms" were counted over — and
+   DEC-49 is being answered against exactly that count. Changing the basis inside
+   an item whose subject was the wording would have made the two indistinguishable
+   in the report. It is changed here instead, alone, with the reading taken
+   BEFORE and AFTER and both carried into MEASUREMENTS.md, so the change to the
+   basis is visible rather than silent. THE NEW BASIS IS 11 SCENARIOS.
+   IT ENTERS WITH `fromNav`, which is faithful and also isolates the delta: the
+   rail is reachable however the member arrived, and skipping the index re-render
+   means every occurrence this scenario adds is the verify pane's own. */
+await scenario("published-verify-panel", "the Verify pane, opened from the published rail by a stranger", {
+  controls:[], pubControls:["pubVerifyPanel"],
+  drive:async(ctx)=>{ ctx.__enterPublished(true); ctx.__pubVerifyPanel(); await settle(); },
+});
+
 /* ============================================================
    REACH — asserted, because a walk that covers nothing passes everything
    ============================================================ */
 const KEYS = SCENARIOS.map(s => s.key);
 const EXPECT_KEYS = ["gate-as-served","token-panel","plane-address","refused-signin","unreachable-plane",
                      "empty-token","public-record","design-preview","published-address-at-load",
-                     "case-address-at-load"];
+                     "case-address-at-load","published-verify-panel"];
 {
   const missing = EXPECT_KEYS.filter(k => !KEYS.includes(k));
   ok("REACH: every pre-authentication scenario was driven — MISSING: "
@@ -640,6 +740,18 @@ const EXPECT_KEYS = ["gate-as-served","token-panel","plane-address","refused-sig
   const uncovered = BOUND.filter(id => !driven.has(id));
   ok("REACH: every BOUND gate control is driven by a scenario — UNCOVERED: "
      + (uncovered.length ? uncovered.join(", ") : "none, all " + BOUND.length),
+     uncovered.length === 0);
+}
+/* AND THE SAME FOR THE PUBLISHED RAIL (UI-34). This is the arm that would have
+   caught `pubVerifyPanel` from the day walk 1b existed: a control served on an
+   uncredentialed surface that no scenario opens is a pre-authentication pane
+   nobody is measuring. */
+{
+  const driven = new Set(SCENARIOS.flatMap(s => s.pubControls));
+  const uncovered = PUB_CONTROLS.filter(f => !driven.has(f));
+  ok("REACH: every control the PUBLISHED masthead serves to an uncredentialed reader is driven by a "
+     + "scenario — UNCOVERED: " + (uncovered.length ? uncovered.join(", ") : "none, all "
+     + PUB_CONTROLS.length + " [" + PUB_CONTROLS.join(", ") + "]"),
      uncovered.length === 0);
 }
 /* And the same for walk 2's address shapes: each shape the load-time router
@@ -751,6 +863,18 @@ if(S("case-address-at-load"))
      + "received and may never compose or translate it)",
      !!CASE_ANSWER.verification.detail
      && textOf("case-address-at-load", "#pub-body").includes(esc(CASE_ANSWER.verification.detail)));
+/* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the
+   product's verification CLAIM, addressed to somebody holding nothing, and it is
+   this surface's OWN prose throughout — no plane string reaches it, which is why
+   it can be reworded at all and why UI-33 could. The marker is the pane's own
+   headline rather than a term from the sweep, so this arm cannot be satisfied by
+   the very words it exists to make measurable. */
+if(S("published-verify-panel"))
+  ok("REACH: the Verify pane opened from the published rail with NO credential, rendered its own subject, "
+     + "and asked the plane nothing",
+     /Check this without us/.test(textOf("published-verify-panel", "#pub-body"))
+     && /Verifying what you are reading/.test(textOf("published-verify-panel", "#pub-body"))
+     && S("published-verify-panel").calls.every(c => c.token === null));
 /* And the walk is not thin: a harvest of a few hundred characters would satisfy
    every assertion above while measuring almost nothing. */
 {
@@ -984,6 +1108,56 @@ for(const [term, e] of ordered){
 }
 
 /* ============================================================
+   DEC-49'S SUBJECT, PINNED — ADDED BY UI-34, 2026-08-04
+   ============================================================
+   THE HARD CONSTRAINT EVERY ITEM ON THESE SURFACES INHERITS IS "LEAVE EVERY
+   PLANE-SOURCED TERM EXACTLY AS IT IS", AND UNTIL NOW IT WAS CHECKED BY HAND.
+   UI-33 verified it row by row and wrote the result into its landing; that is a
+   worker reading a report, which is exactly the kind of check that is done
+   carefully once and skipped the third time. DEC-49 is open with Bob and its
+   subject is these eight rows, so any movement in them is a FAILURE of whatever
+   item moved them and not a result — and a failure has to be MACHINE-CHECKED to
+   be one.
+   WHAT IS PINNED, AND WHY IT IS THE SET AND NOT THE COUNTS. The counts move for
+   an honest reason: enlarging the walk (this item enlarges it by one scenario)
+   can render a plane string on one more surface. What must never move without
+   somebody deciding to move it is WHICH TERMS the plane puts in front of an
+   unauthenticated reader and WHERE they arrive — that is the subject Bob is
+   answering against. So the term set and each term's plane SOURCES are pinned,
+   and BOTH differences are named: a row that DISAPPEARED is a surface having
+   edited or blanked what the plane said (DEC-8's overstep, and the shape arms
+   (f) and (g) exercise); a row that APPEARED enlarges the ruling's subject and
+   Bob has to be told. Neither is allowed to happen quietly.
+   A SCENARIO ADDED LATER WILL LAND HERE, and that is the design: adding one is a
+   change to the measurement basis, it belongs in MEASUREMENTS.md with its date,
+   and this arm is what makes a session state it rather than absorb it. */
+const DEC49_SUBJECT = {
+  "sha256":              ["case-address-at-load #pub-body"],
+  "op=":                 ["case-address-at-load #pub-body"],
+  "bundle.md":           ["case-address-at-load #pub-body"],
+  "this instance":       ["case-address-at-load #pub-body", "refused-signin #g-err"],
+  "a salted derivation": ["refused-signin #g-err"],
+  "its stored hash":     ["refused-signin #g-err"],
+  "no active credential":["refused-signin #g-err"],
+  "register":            ["refused-signin #g-err"],
+};
+{
+  const now = {};
+  for(const [term, e] of byTerm) if(e.plane.size) now[term] = [...e.plane].sort();
+  const gone    = Object.keys(DEC49_SUBJECT).filter(t => !now[t]);
+  const arrived = Object.keys(now).filter(t => !DEC49_SUBJECT[t]);
+  const moved   = Object.keys(now).filter(t => DEC49_SUBJECT[t]
+                    && DEC49_SUBJECT[t].slice().sort().join(" | ") !== now[t].join(" | "));
+  ok("DEC-49'S SUBJECT HAS NOT MOVED — the PLANE-SOURCED rows are the same " + Object.keys(DEC49_SUBJECT).length
+     + " terms arriving from the same places. VANISHED (a surface edited or blanked what the plane said, "
+     + "which DEC-8 forbids): [" + (gone.join(", ") || "none") + "] · NEWLY REACHING AN UNAUTHENTICATED "
+     + "READER (the ruling's subject grew and Bob must be told): [" + (arrived.join(", ") || "none")
+     + "] · ARRIVING FROM SOMEWHERE ELSE: [" + (moved.map(t => t + " {" + now[t].join(", ") + "}").join(" · ")
+     || "none") + "]",
+     gone.length === 0 && arrived.length === 0 && moved.length === 0);
+}
+
+/* ============================================================
    THE REPORTING ARM — and the one line that makes it a failing arm
    ============================================================
    DEC-49 is OPEN. Until it is answered, a guard that FAILED here would leave the
@@ -1011,4 +1185,4 @@ const REPORT_ONLY = !process.env.UI31_ENFORCE;
 }
 
 if(fails.length){ console.error(`preauth-vocabulary: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half, which no answer to DEC-49 would have touched: 13 terms -> 9, with all EIGHT plane-sourced rows unchanged in number and in source; NEGATIVE CONTROL: RUN, seven arms — (a) UI31_HIDE=<scenario> hides a member-facing surface from the walk and the harness fails NAMING what it stopped covering (three hidings run, 2/30, 3/31, 3/30) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 4/32 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 1/32 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/32 naming all nine (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 9 terms to 10 naming the gate as the author, 32/32 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 2/32 FAIL: the REACH arm names the act and the ATTRIBUTION arm names the consequence, three plane terms flipping UNAVOIDABLE -> INCIDENTAL and a fourth vanishing (g) the same overstep on the case page, verification.detail rendered through .replace("this instance","this group") — 31/31 GREEN before UI-33's added REACH assertion and 1/32 FAIL after, which is the gap that arm found and closed — app.html restored byte-identically after every on-disk arm, sha256 eaca866f… before and after`);
+console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, the VERIFY PANE opened from the published rail, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, THE PUBLISHED MASTHEAD'S OWN CONTROLS, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); DEC-49'S SUBJECT — the eight plane-sourced rows — PINNED BY TERM AND BY SOURCE, so any movement in them FAILS rather than being reported (UI-34: the hard constraint every item on these surfaces inherits was checked by hand until now); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half: 13 terms -> 9, all EIGHT plane-sourced rows unchanged. UI-34 (2026-08-04) ENLARGED THE BASIS BY ONE SCENARIO, deliberately and alone: 10 scenarios -> 11, 33,535 -> 34,375 characters, 55 -> 57 occurrences and 45 -> 47 visible, the whole delta being 'sha256' x30(26) -> x32(28) on its SURFACE half from the verify pane's own prose, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE; NEGATIVE CONTROL: RUN, nine arms, all re-run against the FINAL file — (a) UI31_HIDE=<scenario> hides a member-facing surface and the harness fails NAMING what it stopped covering (three hidings: public-record 3/35 now also naming pubList uncovered, design-preview 3/36, case-address-at-load 4/35 which ALSO trips the DEC-49 subject arm with sha256, op= and bundle.md VANISHED) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 5/37 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 2/37 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/37 naming all nine (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 9 terms to 10 naming the gate as the author, 37/37 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 3/37 FAIL: the REACH arm names the act, the ATTRIBUTION arm names the consequence, and the DEC-49 SUBJECT arm names all four terms that VANISHED (g) the same overstep on the case page, verification.detail through .replace("this instance","this group") — 2/37 FAIL, the subject arm reporting 'this instance' now ARRIVING only from refused-signin #g-err, so the class UI-33 had to pin with a bespoke reach assertion is now caught generically (h) UI-34'S OWN — UI31_HIDE=published-verify-panel, 2/37 naming the scenario and pubVerifyPanel as an uncredentialed control nobody drives, which is the state this file was in before this item (i) UI-34'S SECOND — a THIRD link planted on the published rail, 2/37 naming pubExpandForPrint in walk 1b and as undriven, so a new control on that rail cannot arrive unmeasured — app.html restored byte-identically after every on-disk arm, sha256 64fc94c6… before and after`);

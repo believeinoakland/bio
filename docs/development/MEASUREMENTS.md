@@ -2104,3 +2104,107 @@ Also measured in passing and NOT acted on: `op=publishedcase`'s top-level `detai
 is rendered NOWHERE for a case that was FOUND (`app.html` prints it only on the
 not-found and not-a-case branches). Whether a found case should show the plane's
 own one-line description is a rendering question inside UI-29's ground.
+
+**SUPERSEDED IN PART BY UI-34, 2026-08-04 — see the next entry, and the part
+superseded is the BASIS rather than a number.** The reading above was taken over
+TEN scenarios. UI-34 added an eleventh (`pubVerifyPanel`, a pre-authentication
+pane no scenario drove) so the walk is larger, and the counts below this line are
+therefore not comparable term-for-term with the ones above it. The TERM SET is
+identical at nine, and **every plane-sourced row is unchanged in number and in
+source**, so nothing this entry supplied to DEC-49 is invalidated — only the
+occurrence totals and the character count it was measured over.
+
+## 2026-08-04, UI-34: the same instrument over a LARGER BASIS — one pre-authentication surface that no scenario drove
+
+**This entry exists because the BASIS moved, and a measurement whose basis moves
+silently is worse than no measurement.** DEC-49 is being answered against the two
+readings above. UI-33 found a pre-authentication surface outside them, reworded
+its words, and deliberately did NOT add a scenario, because enlarging the walk
+inside an item whose subject was wording would have made the two changes
+indistinguishable in the report. UI-34 makes the move on its own, with the
+reading taken before and after.
+
+**Instrument.** `civicos-ui/test/preauth-vocabulary.test.mjs`, unchanged in how it
+measures: walk 3's term harvest, `planeRanges`, `countIn`, the HITS loop, the
+report and `REPORT_ONLY` are byte-for-byte the same computation. What changed is
+what it walks. Run it rather than reasoning about the numbers below; it is in the
+harness `node civicos-ui/test/run.mjs` runs.
+
+**THE SURFACE THAT WAS MISSING, AND WHY NOBODY HAD NOTICED.** `pubVerifyPanel()`
+renders the pane a stranger reaches by clicking "Verify" on the published rail —
+"Check this without us", the sha256 paragraph, the tamper-EVIDENT claim this
+whole product rests on. It is reached with NO credential. UI-31's walk discovers
+pre-authentication controls by reading `#gate`'s own markup, and this control is
+on `#pub`'s masthead: **the published space's own links were discovered by
+nothing at all.** That is a class, not one omission — the published space is
+entered without a credential by design, and until now only its BODY was measured,
+never its controls.
+
+**THE NEW BASIS.** 11 scenarios, up from 10. 12 surfaces (unchanged). 34,375
+characters, up from 33,535. 74 inherited terms plus two structural rules
+(unchanged). Walk 1b now reads the published masthead's inline handlers the way
+walk 1 reads the gate's ids, and every one must be driven by a scenario — so a
+third link on that rail fails the suite until somebody opens it.
+
+**Result: 9 terms -> 9 terms. 4 surfaces -> 4. 55 occurrences -> 57; 45 visible -> 47.**
+
+| Term | before (10 scenarios) | after (11 scenarios) | Change |
+| --- | --- | --- | --- |
+| `sha256` | 30 (26) BOTH | **32 (28) BOTH** | +2, ALL of it SURFACE-authored, from the verify pane's own two sentences; its plane source list is identical |
+| `op=` | 12 (8) BOTH | 12 (8) BOTH | unchanged |
+| `bundle.md` | 3 (3) UNAVOIDABLE | 3 (3) | unchanged |
+| `this instance` | 3 (3) UNAVOIDABLE | 3 (3) | unchanged |
+| `handle` | 3 (1) INCIDENTAL | 3 (1) INCIDENTAL | unchanged — **KEPT product-wide by decision, see below** |
+| `a salted derivation` | 1 (1) UNAVOIDABLE | 1 (1) | unchanged |
+| `its stored hash` | 1 (1) UNAVOIDABLE | 1 (1) | unchanged |
+| `no active credential` | 1 (1) UNAVOIDABLE | 1 (1) | unchanged |
+| `register` | 1 (1) UNAVOIDABLE | 1 (1) | unchanged |
+
+**THE WHOLE DELTA IS ONE ROW AND IT IS SURFACE-AUTHORED.** The verify pane writes
+`sha256` twice in text a member reads; no plane string reaches that pane at all,
+which is why UI-33 was able to reword it under DEC-8 in the first place.
+**EVERY PLANE-SOURCED ROW IS UNCHANGED IN NUMBER AND IN SOURCE**, and that is no
+longer a claim a worker checked by hand: `DEC49_SUBJECT` in the instrument pins
+the eight rows by TERM and by SOURCE, and any movement in them FAILS the suite,
+naming what vanished, what newly arrived, and what now arrives from somewhere
+else. The hard constraint every item on these surfaces inherits — leave every
+plane-sourced term exactly as it is — is machine-checked from this date.
+
+That pin earned its place immediately. The DEC-8 overstep UI-33 caught only by
+adding a bespoke reach assertion for one named field (`verification.detail`
+rendered through a `.replace`) is now caught GENERICALLY: the same mutation makes
+the subject arm report `this instance` arriving only from the gate, with nobody
+having had to anticipate the field.
+
+**WHAT THIS DOES NOT ESTABLISH**, and it is UI-31's limit unchanged: the
+plane-sourced column for the two published ops is a LOWER BOUND, because those
+answers are wire-shaped fixtures rather than a live instance's. The new scenario
+does not change that — it drives no op at all; the pane is entirely this
+surface's own prose.
+
+### The `handle` decision, recorded here because the measurement is where it will be re-opened
+
+UI-31 measured `handle` at the gate and classed it INCIDENTAL. UI-33 kept it and
+routed the product-wide question. **UI-34 answered it: KEPT, product-wide**, with
+the four-part argument recorded in `civicos-ui/app.html` at the gate, where a
+reader meets the word. In short: it is the PLANE's field name, a declared
+parameter of thirteen `store.mjs` methods, so a surface-only rename would give
+the product two names for one field and moving the wire is an I3 change; every
+candidate replacement is wrong and two collide with the `member`/`cover`
+distinction the members screen depends on; unlike the four terms UI-33 closed it
+is vocabulary the audience already holds rather than our implementation leaking;
+and the word's genuine overloading — the selection lease is also a `handle` on
+the wire — is already solved by never printing it, which a rename here would undo.
+
+**Measured while deciding, and it is the number that matters most here: there are
+NINE member-visible sites, not eight.** A careful read of `app.html` produced
+eight. The ninth — `projectParticipantsHtml`'s column header, `<th>Handle</th>` —
+was found by RUNNING the complete-rename control, which failed with one word left
+standing on the project workspace. A bare capitalised word in a table header is
+invisible to an inventory keyed on the phrasings a person searches for, and it is
+precisely the site a rename would have left behind. **A new instrument,
+`civicos-ui/test/identifier-vocabulary.test.mjs`, now asserts that every
+member-visible site naming that identifier uses the SAME word — and pins no value
+at all**, so it enforces "everywhere or nowhere" rather than "handle". Renaming
+all nine keeps it green (measured, twice, in two capitalisations); renaming some
+fails naming the ones that did not move.
