@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-08-04, rec32-agent) LEAVE A RESOLVED CONDITION RENDERING — in src/store.mjs's `#conditionsGovernorHolding`, bind the cool-off comparison to the epoch instead of to the read's own instant: change ``SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`, now)) {`` to ``... ORDER BY host`, 0)) {`` (the derivation then reports every host that has EVER been held, which is precisely what a STORED condition row would do once its fact resolved and nothing came back to clear it) -> the assertion "the hold expires and the condition is gone from CAROL's, DAVE's and RUTH's feeds at once" FAILS, naming the stale item three times: got [["CONDITION::governor-holding-host::www.oaklandca.gov"],[same],[same]] against []. Every other assertion still passes, which is the finding: a condition that renders after its fact resolved looks EXACTLY like a live one to every surface, to every member at once, and only a clause that resolves the fact and looks again can tell them apart. Restored, 50 pass. */
+/* NEGATIVE CONTROL: (run 2026-08-04, rec32-agent) LEAVE A RESOLVED CONDITION RENDERING — in src/store.mjs's `#conditionsGovernorHolding`, bind the cool-off comparison to the epoch instead of to the read's own instant: change ``SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`, now)) {`` to ``... ORDER BY host`, 0)) {`` (the derivation then reports every host that has EVER been held, which is precisely what a STORED condition row would do once its fact resolved and nothing came back to clear it) -> the assertion "the hold expires and the condition is gone from CAROL's, DAVE's and RUTH's feeds at once" FAILS, naming the stale item three times: got [["CONDITION::governor-holding-host::www.oaklandca.gov"],[same],[same]] against []. Every other assertion still passes, which is the finding: a condition that renders after its fact resolved looks EXACTLY like a live one to every surface, to every member at once, and only a clause that resolves the fact and looks again can tell them apart. Restored, 50 pass. (run 2026-08-04, REC-46) THE MACHINE-WRITER PREFIX IS NO LONGER A COPY PROVEN EQUAL TO AN ORIGINAL, so the pin that compared two hand-typed literals was CORRECTED at the site rather than exempted: both index.mjs and store.mjs now interpolate `MACHINE_AUTHOR_PREFIX` from checks/bio-checks.mjs. ARM: move that constant from `token:` to `bot:` in the catalog ALONE -> 49 pass, 2 FAIL, and the two are exactly the ones that SHOULD fire on a doctrine move — the D-61 basis reads `bot:member` where it pins the wire value `token:member`, and "the machine writer is NAMED and never anonymous" reports the stamp moved — while the composition pins stay GREEN, because they assert that neither file spells a prefix of its own and that is still true. Under the SAME arm the D-61 condition still FIRES and still resolves, which is the point: the store's GLOB and index.mjs's stamp moved together because they are one string now. checks/bio-checks.mjs restored byte-identically, sha256 df71cf184664e696a1ccbb6e4311dbb468443c7185093fa6cff8b972ebfc584e compared before and after; whole suite 51 pass. */
 /* REC-32 / HOLE-1: the FIRST CONDITION generator, and the first read in which
  * the mute machinery does anything to a live item.
  *
@@ -61,6 +61,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { QUEUE_CONDITION_KINDS, classOfKind } from "../src/queuestate.mjs";
+/* REC-46: the ONE machine-author prefix, so this suite asserts the composition
+   rather than restating the literal it used to compare against itself. */
+import { MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
@@ -480,10 +483,37 @@ t("they store nothing and write nothing: the whole block is SELECT-only",
   /INSERT|UPDATE |DELETE/.test(REGION), false);
 /* The machine-writer literal is stamped at the trust boundary in index.mjs and
    READ here; a drift between the two would make the D-61 condition silently
-   stop firing, which is the failure mode nobody would notice. */
+   stop firing, which is the failure mode nobody would notice.
+
+   PIN CORRECTED 2026-08-04 (REC-46), never exempted, and the correction is the
+   whole point of that item rather than bookkeeping. This assertion used to
+   match TWO HAND-TYPED LITERALS and check that they said the same thing — a
+   copy proven equal to its original, which is the best a proof-by-parsing can
+   do and is still weaker than not having a copy. REC-46 made both sites
+   interpolate `MACHINE_AUTHOR_PREFIX` from `checks/bio-checks.mjs`, so there is
+   now ONE string and nothing left to agree. What is worth pinning changed with
+   it: that NEITHER site spells a prefix of its own any more (the drift cannot
+   be reintroduced quietly), and that the value the store actually reads at
+   RUNTIME is the catalog's — asserted against the imported constant rather than
+   against a typed "token:", so a moved prefix moves this assertion too instead
+   of failing it. */
 t("the prefix this store reads is the one index.mjs actually stamps on an unattended write",
-  [/token:\$\{cls\}/.test(INDEX_SRC),
-   /QUEUE_MACHINE_AUTHOR_PREFIX\s*=\s*"token:"/.test(STORE_SRC)], [true, true]);
+  [/\$\{MACHINE_AUTHOR_PREFIX\}\$\{cls\}/.test(INDEX_SRC),
+   /token:\$\{cls\}/.test(INDEX_SRC),
+   /QUEUE_MACHINE_AUTHOR_PREFIX\s*=\s*MACHINE_AUTHOR_PREFIX;/.test(STORE_SRC),
+   /QUEUE_MACHINE_AUTHOR_PREFIX\s*=\s*["']/.test(STORE_SRC)],
+  [true, false, true, false]);
+/* And the binding both sites resolve to, read from the catalog itself rather
+   than described: `store.mjs` cannot be imported here (it pulls
+   `cloudflare:workers`), so the two source pins above are joined by the fact
+   that each file IMPORTS the symbol — a name that resolves to nothing would
+   throw at module load, which is the runtime half the suite already gets by
+   booting the worker for every other assertion in this file. The constant's
+   SHAPE is asserted, never its value: this suite does not restate the prefix. */
+t("and both files take that name from the catalog, which is what makes them one string",
+  [/MACHINE_AUTHOR_PREFIX[\s,}]/.test(STORE_SRC), /MACHINE_AUTHOR_PREFIX[\s,}]/.test(INDEX_SRC),
+   typeof MACHINE_AUTHOR_PREFIX === "string", MACHINE_AUTHOR_PREFIX.length > 0],
+  [true, true, true, true]);
 t("the feed REPORTS and never mutates: reading it twice returns the same items",
   (await queueOf(dave)).items.map((i) => i.id), qAll.items.map((i) => i.id));
 

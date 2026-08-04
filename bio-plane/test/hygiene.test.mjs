@@ -5,7 +5,20 @@
    (run 2026-08-04, REC-48) THE SWEEP THAT SAYS NO SURFACE SPELLS A CAPTURE GRADE LETTER, three arms, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/index.mjs 16cf4e2f..., src/store.mjs 7c1ed3aa..., src/cdx.mjs a9e5912c..., checks/bio-checks.mjs d8da7b9d...); whole = 369 pass. Each arm ALSO reports what the suite that OWNS the mutated sentence did, because that contrast is the point.
    (i) THE THIRD STATEMENT PUT BACK — replace `note: ACQUIRE_GRADE_NOTE,` in src/index.mjs with the sentence hand-typed -> 367 pass, 2 FAIL, detector (A) and detector (B) both naming `index.mjs:1822 "Grade B"` and `"Grade A"`, WHILE acquire.test.mjs STAYS 79/79 GREEN. A copy identical to the composition satisfies every behavioural and wire assertion at zero cost; only this sweep can see it, which is why it exists one altitude above the three suites that own the sentences.
    (ii) THE FOURTH STATEMENT PUT BACK — hand-type `Grade A` into op=earnedbasis's `ceiling:` sentence in src/store.mjs -> 367 pass, 2 FAIL naming `store.mjs:5191 "Grade A"`, WHILE earnedbasis.test.mjs STAYS 54/54 GREEN. Same shape on the sentence REC-48's own scope had not counted, which is how it was found.
-   (iii) A FIFTH STATEMENT, WRITTEN LOWERCASE, IN A MODULE NOTHING ELSE GUARDS — append `export const __FIFTH = "a replay capture is grade b: bytes as the archive served them.";` to src/cdx.mjs -> 368 pass, 1 FAIL, and it is detector (B) alone: `cdx.mjs:121 "grade b"`. DETECTOR (A) IS SILENT. That is the arm that earns (B) its existence rather than arguing for it — (A) matches the doctrine's capitalised term and a new statement need not use it. Ran under the ceiling-moved-to-C arm too, where (B) additionally reports `store.mjs:4587 "grade C"`: predicted in the block's own comment, and correct rather than noise — a tree in which one letter carries two doctrines has become ambiguous to a reader. */
+   (iii) A FIFTH STATEMENT, WRITTEN LOWERCASE, IN A MODULE NOTHING ELSE GUARDS — append `export const __FIFTH = "a replay capture is grade b: bytes as the archive served them.";` to src/cdx.mjs -> 368 pass, 1 FAIL, and it is detector (B) alone: `cdx.mjs:121 "grade b"`. DETECTOR (A) IS SILENT. That is the arm that earns (B) its existence rather than arguing for it — (A) matches the doctrine's capitalised term and a new statement need not use it. Ran under the ceiling-moved-to-C arm too, where (B) additionally reports `store.mjs:4587 "grade C"`: predicted in the block's own comment, and correct rather than noise — a tree in which one letter carries two doctrines has become ambiguous to a reader.
+   REC-51's FIVE ARMS, FOLDED IN HERE 2026-08-04 BY REC-46 on REC-51's own written instruction. They were recorded at the assertion site because M0-9 held this block at the time and not one byte of it could be touched; M0-9 has landed, so they are back where the register reads them. Verbatim as run, whole suite 378 pass, every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/store.mjs 6bd3c5fc…, checks/bio-checks.mjs d8da7b9d…), all arms re-run against the final file.
+   (a) THE FOURTH MEASUREMENT OF THE ZERO-COST COPY, on a fourth subject — hand-type `{ A: 4, B: 3, C: 2, D: 1 }` back over the derived rank map -> hygiene 376/2, (C) naming `store.mjs:4776` and the derivation pin failing beside it, WHILE resolution 39/0, connection 41/0, strength 42/0, publish 77/0, search 164/0 and earnedbasis 54/0 ALL STAY GREEN. An identical copy satisfies every behavioural assertion in the battery at zero cost; only the structural pin bites.
+   (b) THE ACCEPTS-WHEN'S OWN, against the PRE-FIX tree with 'E' added to BASIS_GRADES in the catalog ALONE -> hygiene 376/2 and (C) NAMES ALL FOUR that did not follow, by file and line: store.mjs:3185, :3200, :3236 and :4775. THE REST OF THE ARM IS THE POINT: with the catalog moved and all four copies stale, publish 77/0, resolution 39/0, strength 42/0, basis 29/0 and earnedbasis 54/0 ARE ALL STILL GREEN — the drift is completely silent behaviourally. (C) named them WITH the catalog already moved, which a value-comparing detector could not have done.
+   (c) the same letter added to the catalog ALONE against the FIXED tree -> hygiene 378/0, the rank deriving to {A:5,B:4,C:3,D:2,E:1} and op=strengthbar's refusal composing to "…A, B, C, D, E, or null" with nothing edited. THE DIFFERENCE BETWEEN (b) AND (c) IS THE ITEM.
+   (d) the stated limit's own literal deleted from store.mjs -> hygiene 376/2: the load-bearing (C) assertion fails on an EMPTY found set and the prefix pin fails on its length guard, so the limit cannot rot away unnoticed either.
+   (e) REACH C0's own, and it guards all three detectors: `mkdir src/subdir-probe` -> hygiene 377/1, the flat-directory assertion failing and NAMING the directory while every other assertion stays green — precisely the danger, since a module in that directory would be swept by nothing at all. `rmdir` restored it and `git status src/` confirmed nothing stray.
+   (run 2026-08-04, REC-46) ONE MACHINE-IDENTITY PREDICATE — SIX ARMS, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (checks/bio-checks.mjs df71cf18…, src/store.mjs 5163d61b…, src/index.mjs 3d3aa9dd…, src/query.mjs 208e8aa4…); whole = this suite 417 pass. THE DEFECT MEASURED FIRST, THROUGH THE OP, before anything was written: `asserted_by: token:member`, `class:member` and `TOKEN:member` all PASSED op=promote's gate — grounds.test.mjs 65 pass, 3 FAIL — because `checkGrounds` asked a WORD LIST that knew nothing of the two spellings index.mjs itself stamps.
+   (a) THE ITEM'S OWN — restore the local word list at ONE site, `checkGrounds`' `asserted_by` guard back to `NON_MEMBER_AUTHORS.includes(String(r.asserted_by).toLowerCase())` -> hygiene 414/3, and ALL THREE detectors name it: (D1a) and (D1b) report `checks/bio-checks.mjs:1721` with the offending guard quoted in full, and (D2b) reports `NON_MEMBER_AUTHORS: 3 total` against the expected 2. Behaviourally only grounds.test.mjs moves (65/3, the three minted spellings walking back through), while inquiryground 81/0, publish 77/0, divide 82/0 and release 31/0 stay GREEN — a site that consults the vocabulary directly is invisible everywhere except here.
+   (b) THE ZERO-COST COPY, MEASURED A FIFTH TIME ON A FIFTH SUBJECT — restore the pre-fix guard `if (!who || who === "member" || /^token:/.test(who))` at ONE store site (groundInquiry) -> hygiene 415/2 naming `src/store.mjs:2908` under both (D1a) and (D1b), WHILE grounds 68/0, inquiryground 81/0 and affordances 78/0 ARE ALL GREEN. The hand-typed guard agrees with the predicate exactly today, so no behavioural assertion in the battery can see it; only the structural pin bites. That is the fifth independent measurement of REC-43's finding and the reason the drift assertion is structural.
+   (c) WIDEN THE PREDICATE IN ITS ONE HOME AND WATCH EVERY SITE FOLLOW — add `'butler'` to `NON_MEMBER_AUTHORS` in checks/bio-checks.mjs ALONE, no other edit anywhere. BEFORE: an actor named `butler` gets PAST all eleven store guards (each op then refuses on its own missing argument — NO_ACKNOWLEDGMENT, NO_CONCLUSION, BAD_DIRECTION, NO_REASON, NO_REASON, NO_STATEMENT, NO_REASON, NO_PARTITION, ACCEPTED, NO_SUCH_TASK, NO_SUCH_TASK). AFTER: NINE of them refuse it BY NAME — MACHINE_CANNOT_RELEASE / _CONCLUDE / _CORRESPOND / _MOVE_ACTION / _REOPEN / _PUBLISH / _DIVIDE / _GROUND / _DECLARE — and the gate refuses `asserted_by: butler` too, with nothing edited outside the catalog. The two task verbs deliberately do NOT move, because they take the NARROW predicate for ROOT_ADMIN's sake, and that documented difference is visible in the same measurement rather than argued about. hygiene 417/0 and grounds 68/0 throughout: the detectors do not care what counts as a machine, which is the property (d) then depends on.
+   (d) MOVE THE MINTED PREFIX ITSELF — `MACHINE_AUTHOR_PREFIX` from `token:` to `bot:` in the catalog ALONE. The whole plane follows in one instant: `bot:member` is refused BY NAME at all ELEVEN guards including both task verbs, and `token:member` walks past all eleven — the mint, the eleven refusals, the D-61 unattended-writer GLOB and the gate all moved together because they are now one string. hygiene STAYS 417/0, which is the proof the detectors are blind to the value the control moves (REC-51's REACH C3, reproduced on this subject). What DOES fail is exactly what should: queue-conditions 49/2 (the D-61 basis reads `bot:member` where it pins `token:member`, and "the machine writer is NAMED" reports the stamp moved), unattended-lease 19/3, task-machine 23/9 and grounds 66/2 — every one of them a suite pinning the wire VALUE, which is MEANT to fail on a doctrine move so a session corrects it deliberately (REC-50's pattern).
+   (e) THE DIFFERENCE BETWEEN (b) AND (d), WHICH IS THE ITEM — the pre-fix guard restored at groundInquiry AND the prefix moved to `bot:` -> `bot:member`, a real minted machine credential, GROUNDS AN INQUIRY: ten sites refuse it by name and `inquiryground` answers NO_PARTITION, i.e. it got past the machine guard entirely. hygiene 415/2 names the site; inquiryground 79/2. A copy that is free in (b) is a hole in (e), and nothing but the structural pin stands between the two.
+   (f) REACH R0's own, extended to the SECOND tree this sweep walks: `mkdir checks/subdir-probe` -> hygiene 416/1, the flat-directory assertion failing and NAMING the directory. REC-51 closed this gap for `src/`; the walk written here is a second walk and would have reopened it, so it is asserted for both roots. `rmdir` restored it, 417 pass, `git status` clean. */
 /* Suite hygiene: the guard against a battery that wastes hours.
  *
  * Negative-control detail: remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.)
@@ -40,7 +53,18 @@ import { join } from "node:path";
    array currently holds, so the control (which moves the catalog) cannot deafen
    it. Merged with M0-9's import by CONDUCT at integration 2026-08-04: both
    items landed in this file in the same hour and both imports are load-bearing. */
-import { BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
+/* REC-46 (2026-08-04): the ONE machine-identity predicate and the vocabularies
+   it owns. Imported for the ANSWER-SET assertions, which are value-based ON
+   PURPOSE and are the "every existing machine refusal unchanged" half of that
+   item. The two SOURCE detectors below are deliberately blind to every one of
+   these values — see the block comment at the sweep. */
+import { BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
+         isMachineIdentity, isMachineStamp, NON_MEMBER_AUTHORS, ACTOR_CLASSES,
+         MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
+         MACHINE_STAMP_PREFIXES } from "../checks/bio-checks.mjs";
+/* REC-46: the viewer compiler, so the STATED LIMIT below can pin what the
+   function ANSWERS rather than what its source says. */
+import { viewerPredicate } from "../src/query.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -707,58 +731,362 @@ console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
      /['"][A-Z]['"]/.test(rankInit?.[1] ?? "")],
     [true, false]);
 
-  /* REC-51'S CONTROL ARMS, IN FULL AND AS ACTUALLY RUN. They belong in this
-     file's header block, which the concurrent item M0-9 holds; not one byte of
-     it was touched, so they are recorded here instead and the marker token is
-     deliberately NOT spelled, so neither coverage.mjs's detector nor M0-9's
-     widened replacement reads this as a second declaration. TO BE FOLDED INTO
-     THE HEADER AT M0-9's INTEGRATION.
-     Every file restored BYTE-IDENTICALLY after each arm, sha256 compared before
-     and after (src/store.mjs 6bd3c5fc…, checks/bio-checks.mjs d8da7b9d… — the
-     same catalog digest REC-48 and REC-50 each recorded). ALL ARMS RE-RUN
-     AGAINST THE FINAL FILE, so the counts below name the file that carries them.
-     Whole suite = 378 pass, which is 369 + 9 and the entire assertion delta this
-     item adds to the battery (5453 -> 5462; no other suite moved).
-     (a) THE ITEM'S OWN, and the FOURTH measurement of the zero-cost copy, on a
-         fourth subject: hand-type `{ A: 4, B: 3, C: 2, D: 1 }` back over the
-         derived rank map -> hygiene 376/2, (C) naming `store.mjs:4776 { A: 4,
-         B: 3, C: 2, D: 1 }` and the derivation pin failing beside it, WHILE
-         every suite that consumes the rank stays GREEN: resolution 39/0,
-         connection 41/0, strength 42/0, publish 77/0, search 164/0,
-         earnedbasis 54/0. An identical copy satisfies every behavioural
-         assertion in the battery at zero cost; only the structural pin bites.
-     (b) THE ACCEPTS-WHEN'S OWN CONTROL, run against the PRE-FIX tree (all four
-         copies hand-typed back exactly as they stood on main) with 'E' added to
-         BASIS_GRADES in checks/bio-checks.mjs ALONE -> hygiene 376/2, and (C)
-         NAMES ALL FOUR PLACES THAT DID NOT FOLLOW by file and line:
-         store.mjs:3185, :3200 and :3236 (the array copies) and store.mjs:4775
-         (the rank map). THE REST OF THIS ARM IS THE POINT OF THE ITEM: with the
-         catalog moved and all four copies stale, publish 77/0, resolution 39/0,
-         strength 42/0, basis 29/0 and earnedbasis 54/0 ARE ALL STILL GREEN. The
-         drift is completely silent behaviourally. Nothing but this sweep sees it.
-         Note also that (C) named them WITH the catalog already moved — a
-         detector that compared literals to BASIS_GRADES would have gone deaf at
-         exactly this moment, which is why (C) matches a shape (REACH C3).
-     (c) The same letter added to the catalog ALONE against the FIXED tree ->
-         hygiene 378/0, publish 77/0, strength 42/0. The rank map derived itself
-         to { A: 5, B: 4, C: 3, D: 2, E: 1 } and op=strengthbar's refusal composed
-         itself to "…must be one of A, B, C, D, E, or null" with nothing edited;
-         (C) still names only the stated limit, and the prefix pin stays GREEN
-         because an APPENDED letter leaves the machine-mintable subset a prefix —
-         the undetermined question is not answered by the derivation, which is
-         the honest outcome. THE DIFFERENCE BETWEEN (b) AND (c) IS THE ITEM.
-     (d) Delete the stated limit's own literal from store.mjs -> hygiene 376/2:
-         the load-bearing (C) assertion fails naming an EMPTY found set against
-         the expected one, and the prefix pin fails on its own length guard. The
-         limit cannot rot away unnoticed either, which is the difference between
-         a stated limit and an exemption.
-     (e) REACH C0's own control, and it guards ALL THREE detectors rather than
-         only (C): `mkdir src/subdir-probe` -> hygiene 377/1, the flat-directory
-         assertion failing and NAMING the directory, while every other assertion
-         in the block stays green — which is precisely the danger, since a module
-         placed in that directory would be swept by nothing at all and the sweep
-         would go on reporting a clean tree. `rmdir` restored it, 378 pass, and
-         `git status src/` confirmed no stray path was left behind. */
+  /* REC-51'S CONTROL ARMS were recorded HERE, at the assertion site, because the
+     concurrent item M0-9 held this file's `NEGATIVE CONTROL:` header at the time
+     and not one byte of it could be touched. M0-9 has LANDED, so REC-46 FOLDED
+     THEM INTO THAT HEADER on 2026-08-04 — verbatim as run, on the written
+     instruction REC-51 left here for exactly this moment. They are deliberately
+     NOT duplicated here: two copies of a control record drift apart, which is the
+     defect this whole line of items exists to close, one altitude up. */
+}
+
+/* ==================================================================== *
+ * ONE MACHINE-IDENTITY PREDICATE (REC-46, out of REC-45's measurement).
+ *
+ * WHAT WENT WRONG, AND IT IS THE MAP RULE AT AN ALTITUDE THE OTHER SWEEPS
+ * DO NOT REACH. This plane had THREE unrelated answers to "is this a person":
+ * the catalog's `NON_MEMBER_AUTHORS` word list, the `token:` prefix store.mjs
+ * refused BY SHAPE at eleven guards, and `ACTOR_CLASSES`. None knew what the
+ * others knew, so `checkGrounds` — which asked only the word list — accepted
+ * `asserted_by: token:member`, THE VERY SPELLING index.mjs stamps, while
+ * refusing the same claim for saying `agent`. Measured through op=promote
+ * before the fix: three minted spellings, three passes.
+ *
+ * WHY THIS IS A NEW BLOCK AND NOT A FOURTH DETECTOR ON THE ONE ABOVE.
+ * (A)/(B)/(C) all have a LEXICAL subject — a letter beside a word, or an array
+ * of letters — and their precision comes from that anchor. A machine identity
+ * has no such anchor: `word:${x}`, `/^word:/` and `["a","b"].includes(x)` are
+ * ordinary constructs this tree writes 60-odd times for formats, part ids,
+ * frontmatter keys and status vocabularies. MEASURED, not assumed: a
+ * shape-only sweep for those three forms over src/ and checks/ returns 62 hits
+ * and every one of them is innocent. A detector that noisy gets weakened until
+ * it finds nothing, which is the failure mode UI-32 recorded one tree over.
+ *
+ * SO THE SUBJECT IS THE ASKING SITE, NOT THE VOCABULARY, and that is what
+ * makes both detectors below BLIND TO THE CURRENT VALUE — REC-51's REACH C3,
+ * one subject over, and it matters more here because the negative control MOVES
+ * the prefix. A detector that looked for the string `token:` would go deaf at
+ * exactly the moment a stale `/^token:/` copy became dangerous.
+ *
+ * (D1) EVERY MACHINE REFUSAL IS DECIDED BY THE PREDICATE. A site is found by
+ * the refusal it EMITS — the one thing a site that has drifted still has — and
+ * its GUARD is then required to call the predicate and to contain no local
+ * identity decision of its own (no regex literal, no `.includes(`, no
+ * `.startsWith(`, no string equality). Nothing in it names a prefix, a class
+ * word or an AI identity.
+ *
+ * (D2) EACH IDENTITY VOCABULARY HAS EXACTLY ONE READER. `NON_MEMBER_AUTHORS`
+ * and `ACTOR_CLASSES` may be read only inside the predicate that owns them. A
+ * site that goes back to consulting a vocabulary directly fails here by name
+ * even if its guard still looks tidy — and a site that hand-types the words
+ * instead fails (D1)(b). The two arms are useless apart, which is why both run.
+ *
+ * A STATED LIMIT, HELD RATHER THAN EXEMPTED, and it is a finding rather than a
+ * gap: `viewerPredicate` in src/query.mjs is NOT rewired and is NOT swept here.
+ * It asks the same words of the same spelling and answers a DIFFERENT question
+ * — not "is this a machine, and therefore refused" but "whose view does this
+ * credential compile for", and its answer for a machine is a PERMISSION
+ * (unfiltered scope), not a refusal. Widening it to `isMachineIdentity` would
+ * change who may see the group's thinking, which is a ruling and not a sweep.
+ * What it DOES share is the spelling, imported, and that is pinned below as a
+ * RELATION — the parser recognises what the mint writes — which asserts no
+ * value and so is not a ruling either (REC-50/REC-51's pattern).
+ * ==================================================================== */
+console.log("\n--- one machine-identity predicate, and every asking site reads it (REC-46) ---");
+{
+  const roots = ["src", "checks"];
+  const files = roots.flatMap((r) => readdirSync(join(DIR, "..", r))
+    .filter((n) => n.endsWith(".mjs")).sort().map((n) => `${r}/${n}`));
+  const raw = new Map(files.map((f) => [f, readFileSync(join(DIR, "..", f), "utf8")]));
+  const uncomment = (s) => s
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^[ \t]*\/\/.*$/gm, "")
+    .replace(/^[ \t]*--.*$/gm, "");
+
+  /* THE ANCHORS: what a machine-refusal site EMITS. The store names its
+     refusals; the catalog states them in the finding's own sentence. Neither is
+     a copy of the predicate, so a site that stopped calling the predicate is
+     still in this set — which is the whole reason the anchor is the emitted
+     refusal rather than the call. */
+  const ANCHORS = [
+    /reason:\s*"MACHINE_CANNOT_[A-Z_]+"/g,          /* store.mjs's eleven act guards */
+    /is not a named member/g,                        /* the catalog's C-2.8 findings */
+    /never a surface or AI identity/g,               /* C-18.1 release authority */
+    /a surface or AI identity, never a release author/g,  /* C-18.8 signed release */
+    /const memberRelease =/g,                        /* C-18.1's fence, the NEGATED ask */
+  ];
+  /* A LOCAL IDENTITY DECISION: the four shapes a guard would use if it decided
+     for itself. None of them names a value, so moving the vocabulary or the
+     prefix cannot deafen this.
+
+     THE STRING-EQUALITY ARM IS NARROWED, and the narrowing is MEASURED rather
+     than aesthetic — it fired on two correct guards before it was written.
+     `typeof x !== 'string'` and `x.trim() === ''` are SHAPE tests (is there a
+     value here at all), not identity tests, and they must stay: absent is not
+     machine, so every asking site keeps its own blank arm. So the arm matches
+     equality against a NON-EMPTY string literal that is not a `typeof` name —
+     still blind to every identity value, since it names none of them. */
+  const TYPEOF = "string|number|boolean|object|undefined|function|symbol|bigint";
+  const LOCAL = [[/\/\^[^/\n]+\//, "a regex literal"], [/\.includes\s*\(/, "an .includes( test"],
+                 [/\.startsWith\s*\(/, "a .startsWith( test"],
+                 [new RegExp(`[!=]==\\s*(['"\`])(?!(?:${TYPEOF})\\1)(?:\\\\.|(?!\\1).)+\\1`),
+                  "a string equality"]];
+  const CALLS = /\bisMachine(Identity|Stamp)\s*\(/;
+
+  /* The guard that produces an anchor: the nearest preceding line that OPENS a
+     decision, within a short lookback. Deliberately short — a guard that is not
+     within eight lines of the refusal it produces is a site this instrument
+     cannot honestly speak about, and it is reported as unresolved rather than
+     silently passed, because an anchor that resolved to nothing would make this
+     whole sweep quieter the more it drifted. */
+  const guardFor = (text, idx) => {
+    const lines = text.split("\n");
+    const at = text.slice(0, idx).split("\n").length - 1;      /* 0-based */
+    for (let i = at; i >= Math.max(0, at - 8); i--) {
+      if (!/^\s*(if\s*\(|const memberRelease\s*=)/.test(lines[i])) continue;
+      /* Read the guard WHOLE. The one this item corrected at `checkGrounds` is
+         written across two lines, and a one-line reader would have taken its
+         first half — reporting the type test and never seeing the predicate
+         call, which is an instrument that lies in the ACCUSING direction. It
+         extends until the parens balance, and never more than six lines. */
+      let depth = 0, src = "";
+      for (let j = i; j <= Math.min(lines.length - 1, i + 6); j++) {
+        src += (j === i ? lines[j] : " " + lines[j].trim());
+        for (const c of lines[j]) { if (c === "(") depth++; else if (c === ")") depth--; }
+        if (depth <= 0) break;
+      }
+      return { line: i + 1, src };
+    }
+    return null;
+  };
+  const sites = [];
+  for (const f of files) {
+    const text = uncomment(raw.get(f));
+    for (const re of ANCHORS) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        const g = guardFor(text, m.index);
+        sites.push({ f, at: text.slice(0, m.index).split("\n").length, what: m[0], guard: g });
+      }
+    }
+  }
+
+  /* REACH R0, and it guards BOTH detectors: the two walks do not descend, and
+     `src/` and `checks/` are flat today. REC-51 found this gap in the sweep
+     above and closed it there; the same walk written a second time would have
+     reopened it, so it is asserted here too rather than assumed to be somebody
+     else's problem. */
+  for (const r of roots)
+    t(`the ${r} walk's flat-directory assumption still holds (nothing escapes either detector)`,
+      readdirSync(join(DIR, "..", r), { withFileTypes: true })
+        .filter((e) => e.isDirectory()).map((e) => e.name), []);
+
+  /* REACH R1: the walk found both trees, and by name the three modules that
+     carry this question. A rename moving one out fails here rather than leaving
+     the sweep quietly guarding less. */
+  t("the walk reaches both trees, not one of them",
+    [files.some((f) => f.startsWith("src/")), files.some((f) => f.startsWith("checks/")),
+     files.length >= 20], [true, true, true]);
+  for (const named of ["src/store.mjs", "src/index.mjs", "checks/bio-checks.mjs"])
+    t(`the walk includes ${named}, which asks or answers the question`, files.includes(named), true);
+
+  /* REACH R2: the anchors FOUND something, in BOTH trees, and every one of them
+     resolved to a guard. An anchor set that matched nothing would make (D1)
+     vacuously green — the covered-on-paper failure this project has hit six
+     times — and an anchor that resolved to no guard would be silently dropped
+     from the subject, which is the same failure one step in. */
+  const unresolved = sites.filter((s) => !s.guard).map((s) => `${s.f}:${s.at} ${s.what}`);
+  t(`every machine-refusal anchor resolves to the guard that produces it (unresolved: ${JSON.stringify(unresolved)})`,
+    unresolved, []);
+  t(`the anchors find refusal sites in BOTH trees (${sites.length} sites: ${
+      JSON.stringify(Object.entries(sites.reduce((a, s) => ((a[s.f] = (a[s.f] || 0) + 1), a), {})))})`,
+    [sites.length >= 12,
+     sites.some((s) => s.f.startsWith("src/")), sites.some((s) => s.f.startsWith("checks/"))],
+    [true, true, true]);
+
+  /* REACH R3: the two halves of (D1) RECOGNISE what they claim to, on hand-
+     written specimens — the guard as it stood before this item at both shapes,
+     and the guard as it stands now. This is a specimen test and says so; the
+     empirical proof is the negative control, which runs the real pre-fix guard
+     back into the real tree and gets it named by file and line. */
+  const before9 = `    if (!who || who === "member" || /^token:/.test(who))`;
+  const before2 = `    if (/^token:/.test(String(actor)))`;
+  const beforeC = `  if (!a || NON_MEMBER_AUTHORS.includes(a)) {`;
+  const after9  = `    if (!who || isMachineIdentity(who))`;
+  t("(D1) recognises all three pre-fix guard shapes as deciding locally, and the composed one as not",
+    [LOCAL.some(([re]) => re.test(before9)), LOCAL.some(([re]) => re.test(before2)),
+     LOCAL.some(([re]) => re.test(beforeC)), LOCAL.some(([re]) => re.test(after9)),
+     CALLS.test(before9), CALLS.test(after9)],
+    [true, true, true, false, false, true]);
+
+  /* REACH R4: (D1) is BLIND to what counts as a machine today. The same guard
+     written against a different prefix, a different class word and a different
+     word list is caught identically — which is what makes the negative control
+     that MOVES the vocabulary mean something. */
+  t("(D1) names a locally-deciding guard whatever vocabulary it decides against",
+    [LOCAL.some(([re]) => re.test(`if (!who || who === "bot" || /^bot:/.test(who))`)),
+     LOCAL.some(([re]) => re.test(`if (["butler","valet"].includes(who))`)),
+     LOCAL.some(([re]) => re.test(`if (String(who).startsWith(PREFIX))`))],
+    [true, true, true]);
+
+  /* THE LOAD-BEARING ASSERTIONS. */
+  const notCalling = sites.filter((s) => s.guard && !CALLS.test(s.guard.src))
+    .map((s) => `${s.f}:${s.guard.line} ${s.guard.src.trim()}`);
+  t(`(D1a) every machine refusal in the plane is decided by the one predicate (found deciding otherwise: ${JSON.stringify(notCalling)})`,
+    notCalling, []);
+
+  const deciding = sites.filter((s) => s.guard)
+    .flatMap((s) => LOCAL.filter(([re]) => re.test(s.guard.src))
+      .map(([, name]) => `${s.f}:${s.guard.line} ${name}: ${s.guard.src.trim()}`));
+  t(`(D1b) and no such guard decides identity locally (found: ${JSON.stringify(deciding)})`,
+    deciding, []);
+
+  /* (D2). The declaration line itself is excluded by matching only occurrences
+     that are not preceded by `export const` — a vocabulary must be declarable
+     where it lives. Everything else is a READER, and there may be exactly one
+     region of readers: the predicate's own body. */
+  const VOCABS = ["NON_MEMBER_AUTHORS", "ACTOR_CLASSES"];
+  const outsiders = [];
+  for (const f of files) {
+    if (f === "checks/bio-checks.mjs") continue;
+    const text = uncomment(raw.get(f));
+    for (const v of VOCABS) if (new RegExp(`\\b${v}\\b`).test(text)) outsiders.push(`${f} reads ${v}`);
+  }
+  t(`(D2a) no module outside the catalog reads an identity vocabulary directly (found: ${JSON.stringify(outsiders)})`,
+    outsiders, []);
+
+  const cat = uncomment(raw.get("checks/bio-checks.mjs"));
+  const predBody = cat.slice(cat.indexOf("export function isMachineStamp"));
+  const predEnd = predBody.indexOf("\n}", predBody.indexOf("export function isMachineIdentity")) + 2;
+  const inside = predBody.slice(0, predEnd);
+  const insideOk = predEnd > 2;
+  t("the predicate's own body is extractable at all (the extraction is not silently empty)",
+    [insideOk, CALLS.test(inside) || /isMachineStamp/.test(inside)], [true, true]);
+  const catReaders = VOCABS.map((v) => {
+    const all = (cat.match(new RegExp(`\\b${v}\\b`, "g")) || []).length;
+    const declared = (cat.match(new RegExp(`export const ${v}\\b`, "g")) || []).length;
+    const inPredicate = (inside.match(new RegExp(`\\b${v}\\b`, "g")) || []).length;
+    return `${v}: ${all} total, ${declared} declaration, ${inPredicate} in the predicate`;
+  });
+  /* (D2b), AND THE SECOND READER OF `ACTOR_CLASSES` IS A DIFFERENT QUESTION,
+     LEFT ALONE WITH ITS DIFFERENCE STATED rather than collapsed into the
+     predicate — the judgement REC-51 made about the machine-mintable subset,
+     one subject over. C-18.1 reads that array to validate a DECLARED FIELD
+     (`provenance.documents[].capture.actor_class`) against the closed set of
+     values it may take. That is a vocabulary-membership question about a value
+     the record CARRIES, not an identity question about who is ACTING, and its
+     finding says so in its own words ("is not one of"). The overlap is real —
+     the three class words are exactly the bare words the predicate refuses when
+     one stands where a person's name belongs — and it is an overlap of VALUES,
+     not of questions. Collapsing them would make the check refuse a legitimate
+     declared `actor_class: daemon` on every sweep-origin capture in the record.
+     So the count is pinned EXACTLY, with the second reader named: a THIRD
+     reader fails here by name, and the second one cannot rot away either. */
+  t(`(D2b) inside the catalog each identity vocabulary is DECLARED once and READ once by the predicate — ACTOR_CLASSES' second reader is C-18.1's DECLARED-FIELD check and is a different question, named here so a THIRD reader fails (${JSON.stringify(catReaders)})`,
+    catReaders, ["NON_MEMBER_AUTHORS: 2 total, 1 declaration, 1 in the predicate",
+                 "ACTOR_CLASSES: 4 total, 1 declaration, 1 in the predicate"]);
+  t("and that second reader is still asking the DECLARED-FIELD question, not an identity one",
+    [/actor_class '\$\{cap\.actor_class\}' is not one of/.test(cat),
+     /!ACTOR_CLASSES\.includes\(cap\.actor_class\)/.test(cat)], [true, true]);
+
+  /* THE ANSWER SET, AND IT IS THE "EVERY EXISTING MACHINE REFUSAL UNCHANGED"
+     HALF OF THIS ITEM — asserted rather than assumed. Every value the three old
+     ways refused is still refused, the two minted spellings that used to walk
+     through are now refused too, and the things that were never machines are
+     still not. A widening or a narrowing of the predicate fails HERE by name,
+     which is what makes the second negative control (widen it in its one home)
+     legible instead of merely green. */
+  const REFUSED = [...NON_MEMBER_AUTHORS, ...ACTOR_CLASSES,
+                   `${MACHINE_AUTHOR_PREFIX}member`, `${MACHINE_AUTHOR_PREFIX}probe`,
+                   `${MACHINE_AUTHOR_PREFIX}admin`, `${MACHINE_AUTHOR_PREFIX}daemon`,
+                   `${MACHINE_CLASS_PREFIX}member`, `${MACHINE_CLASS_PREFIX}daemon`,
+                   `${MACHINE_AUTHOR_PREFIX}member`.toUpperCase(), ` ${MACHINE_CLASS_PREFIX}probe `];
+  t(`every identity this plane treats as a machine is refused by the one predicate (${REFUSED.length} of them)`,
+    REFUSED.filter((w) => !isMachineIdentity(w)), []);
+  /* The complement, and it costs nothing to produce is exactly why it is here:
+     a predicate that answered TRUE for everything would satisfy the line above
+     perfectly. "admin" is in this list on purpose — it is ROOT_ADMIN's own
+     session on the two task verbs, and refusing it would lock the root
+     administrator out of forwarding and resolving. */
+  const ADMITTED = ["carol", "dave", "mem-rec46", "admin", "Bob Krause", "member:carol", "", null];
+  t("and a named person, an id, ROOT_ADMIN's bare session and an ABSENT identity are all NOT machines",
+    ADMITTED.filter((w) => isMachineIdentity(w)), []);
+  /* ABSENT IS NOT MACHINE, stated as its own assertion because it is a doctrine
+     line and not an implementation detail: undetermined is first-class, so the
+     predicate must not let a caller's silence be reported as a machine. Every
+     asking site keeps its own `!who` arm for that reason. */
+  t("an absent identity answers FALSE — nobody said and a machine said are different findings",
+    [isMachineIdentity(null), isMachineIdentity(""), isMachineIdentity("   "),
+     isMachineStamp(null), isMachineStamp("")], [false, false, false, false, false]);
+  /* THE NARROW PREDICATE IS NARROWER, asserted so the two cannot be collapsed
+     by a later reader who notices they overlap — REC-48's pin on op=acquire's
+     note not being ATTEST_FENCE, at a different altitude. */
+  t("the NARROW predicate is strictly narrower: it takes the minted stamps and nothing else",
+    [isMachineStamp(`${MACHINE_AUTHOR_PREFIX}probe`), isMachineStamp(`${MACHINE_CLASS_PREFIX}probe`),
+     isMachineStamp("daemon"), isMachineStamp("member"), isMachineStamp("claude"),
+     MACHINE_STAMP_PREFIXES.every((p) => isMachineIdentity(`${p}x`))],
+    [true, true, false, false, false, true]);
+
+  /* THE STATED LIMIT, PINNED AS A RELATION AND NOT AS A VALUE (REC-50/REC-51's
+     pattern). `viewerPredicate` is left asking its own question; what is pinned
+     is that it still recognises WHAT THE MINT WRITES. That asserts no value —
+     move the prefix and both sides move together — and it fails by name the day
+     the parser and the stamp stop being the same string, which is the one way
+     this deliberate difference could turn into a defect. */
+  const QUERY_SRC = uncomment(raw.get("src/query.mjs"));
+  t("viewerPredicate recognises the prefix the control plane MINTS, and takes it from the same place",
+    [viewerPredicate(`${MACHINE_CLASS_PREFIX}daemon`).scope,
+     viewerPredicate(`${MACHINE_CLASS_PREFIX}member`).scope,
+     /MACHINE_CLASS_PREFIX/.test(QUERY_SRC),
+     new RegExp(`["'\`]${MACHINE_CLASS_PREFIX}`).test(QUERY_SRC)],
+    ["member", "member", true, false]);
+  /* And that it is still DISCRIMINATING — a parser that answered `member` for
+     everything would satisfy the two scopes above at zero cost. */
+  t("and it still refuses what the mint does not write",
+    [viewerPredicate(`${MACHINE_AUTHOR_PREFIX}member`).scope,
+     viewerPredicate(`${MACHINE_CLASS_PREFIX}nobody`).scope,
+     viewerPredicate("member:carol").scope],
+    ["DENY", "DENY", "participant"]);
+
+  /* REACH R5: BOTH detectors fire in EVERY file's own stripped text, as a DELTA
+     against that file's own count and NEVER against an absolute. REC-48 shipped
+     the absolute version of this assertion and had to correct it because the
+     file already carried hits; REC-51 hit the same thing; UI-32 hit it a third
+     time. store.mjs and bio-checks.mjs both already carry sites, so this suite
+     would reproduce that defect verbatim if it compared to 1. */
+  const PLANT_D1 = '\nif (String(who).startsWith("bot:")) return { ok: false, reason: "MACHINE_CANNOT_PLANT" };\n';
+  const deafD1 = files.filter((f) => {
+    const s = uncomment(raw.get(f));
+    const count = (txt) => {
+      let n = 0;
+      const re = /reason:\s*"MACHINE_CANNOT_[A-Z_]+"/g;
+      let m;
+      while ((m = re.exec(txt)) !== null) {
+        const g = guardFor(txt, m.index);
+        if (g && LOCAL.some(([r]) => r.test(g.src))) n++;
+      }
+      return n;
+    };
+    return count(s + PLANT_D1) !== count(s) + 1;
+  });
+  t(`(D1) fires in all ${files.length} files' own stripped text (deaf: ${JSON.stringify(deafD1)})`,
+    deafD1, []);
+
+  const PLANT_D2 = "\nconst __reachD2 = NON_MEMBER_AUTHORS.length;\n";
+  const deafD2 = files.filter((f) => {
+    const s = uncomment(raw.get(f));
+    const n = (txt) => (txt.match(/\bNON_MEMBER_AUTHORS\b/g) || []).length;
+    return n(s + PLANT_D2) !== n(s) + 1;
+  });
+  t(`(D2) fires in all ${files.length} files' own stripped text (deaf: ${JSON.stringify(deafD2)})`,
+    deafD2, []);
+
+  /* REC-46'S CONTROL ARMS are recorded in this suite's own `NEGATIVE CONTROL:`
+     header block at the top of the file, where the register reads them — M0-9
+     has LANDED, so the block REC-50 and REC-51 could not write into is writable
+     again, and REC-51's arms have been folded into it in this same turn on the
+     written instruction it left. */
 }
 
 /* ---- the negative-control REGISTER's own detector, asserted (M0-9) ----------

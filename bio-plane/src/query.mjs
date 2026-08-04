@@ -101,7 +101,14 @@ export const FIELDS = {
 /* The text columns of the FTS5 table, in table order. `meta` carries the
    flattened frontmatter so a bare term finds a value no column projects, which
    is what makes the per-schema tail searchable without a schema per version. */
-import { parseFrontmatter, normalizeType } from "../checks/bio-checks.mjs";
+/* REC-46 (2026-08-04): the machine-credential prefix `viewerPredicate` below
+   recognises is the one the control plane STAMPS, imported rather than typed a
+   third time. This function is NOT one of the eleven refusal sites that item
+   rewired and is deliberately left asking its own question — see the note at
+   `viewerPredicate` — but the SPELLING is the same spelling, and a viewer
+   parser that stopped recognising what index.mjs mints would fail closed on
+   every machine read at once. So the string moves in one place. */
+import { parseFrontmatter, normalizeType, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 
 export const FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 
@@ -164,9 +171,25 @@ export const GATE_MARK = "/*viewer-gate*/";
    refused: an inner URL that lies about who is asking is the impostor hole
    REC-29 closed, and it would have put a second, disagreeing answer to "who is
    this" one function away from the only one that is allowed to exist. */
+/* REC-46 AND WHAT IT DELIBERATELY DID NOT DO HERE. That item put ONE
+   machine-identity predicate in the catalog and rewired eleven refusal sites to
+   it. This function is NOT one of them and was left alone with its difference
+   stated, which is the finding rather than an omission: every one of those
+   eleven answers "is this a machine, and therefore REFUSED"; this one answers
+   "whose view does this credential compile for", and its answer for a machine
+   is a PERMISSION — scope `member`, unfiltered — not a refusal. Rewiring it to
+   `isMachineIdentity` would widen what compiles unfiltered from the four
+   TOKEN CLASSES to every bare class word and every surface/AI name in
+   `NON_MEMBER_AUTHORS`, which is a ruling about who may see the group's
+   thinking and is not a sweep. The vocabulary below is the token classes and is
+   a different set from `ACTOR_CLASSES` for the same reason.
+   What IS shared is the SPELLING, imported above, because index.mjs mints it
+   and a parser reading a different literal would fail closed on every machine
+   read at once. */
 export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
-  const m = /^(class:(admin|member|probe|daemon)|member:([A-Za-z0-9._:-]{1,128})|admin)$/.exec(v);
+  const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = new RegExp(`^(${CLS}(admin|member|probe|daemon)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
   if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY" };
 
   /* D-15 SATISFIED HERE, and nowhere else. Membership Architecture 7.9.

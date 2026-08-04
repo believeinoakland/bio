@@ -1111,8 +1111,82 @@ export function sectionText(body, heading) {
  *  engagement layer adds per-member credentials (intake doctrine 4a). */
 export const NON_MEMBER_AUTHORS = ['claude', 'pwa-client', 'daemon', 'sweep', 'session', 'accelerator', 'apps-script', 'system', 'agent', 'ai'];
 const CAPTURE_GRADES = ['A', 'B', 'C'];
-const ACTOR_CLASSES = ['daemon', 'session', 'member'];
+/** The three actor classes a capture may DECLARE (C-18.1). Exported since
+ *  REC-46 because a bare class word standing where a person's name belongs is
+ *  one of the three ways this plane used to ask "is this a machine" — see
+ *  `isMachineIdentity` below. The CHECK that reads it is still asking a
+ *  different question (is this a legal value of a declared field), and that
+ *  difference is stated at the site. */
+export const ACTOR_CLASSES = ['daemon', 'session', 'member'];
 const ORIGIN_KINDS = ['named_request', 'sweep', 'member'];
+
+/* ===================================================================== *
+ * THE MACHINE-IDENTITY PREDICATE (REC-46, out of REC-45's measurement).
+ *
+ * THE DEFECT THIS CLOSES, measured through op=promote before it was written:
+ * this plane had THREE unrelated ways of asking "is this a person" — the word
+ * list above, the `token:` prefix `store.mjs` refused BY SHAPE, and
+ * `ACTOR_CLASSES` — and NONE of them knew the whole answer. `checkGrounds`
+ * asked only the word list, so `asserted_by: token:member` PASSED the
+ * hand-written door while the identical claim was refused for saying `agent`.
+ * A word list that a new class silently escapes is the shape to remove, not to
+ * extend, so there is now ONE predicate and every asking site reads it.
+ *
+ * A SECOND MINTED SPELLING, found by sweeping for the class rather than
+ * trusting the routed count of three: `index.mjs` stamps `token:<class>` on
+ * AUTHORSHIP fields (author, actor, by) and `class:<class>` on OWNERSHIP and
+ * viewer fields, at twenty sites between them. The word list knew neither.
+ * Closing only the routed one would have left the same hole one spelling over.
+ *
+ * WHY THE MINT COMPOSES FROM HERE TOO. The prefixes are the CONTROL PLANE's
+ * own vocabulary, and a refusal that reads one literal while the stamp writes
+ * another is precisely the drift D-164 exists to stop. index.mjs, store.mjs and
+ * query.mjs all already import this module, so the stamp and the refusal are
+ * now the same two strings and cannot disagree at all.
+ *
+ * TWO PREDICATES, AT TWO STRENGTHS, AND THE NARROWER ONE IS NOT AN OVERSIGHT.
+ * `isMachineStamp` answers "did the control plane mint this identity", by
+ * SHAPE. `isMachineIdentity` answers the full question and is `isMachineStamp`
+ * OR a bare class word OR a surface/AI identity. `taskForward`/`taskResolve`
+ * (REC-28, D-151) deliberately take the NARROW one: on those two verbs the
+ * bare string "admin" is a LEGITIMATE actor — it is ROOT_ADMIN's own session —
+ * so the bare-class arm would refuse the root administrator's browser. That
+ * difference is real, it is documented at those two sites, and it is not
+ * collapsed. Both still derive from the ONE set of prefixes, so moving what
+ * counts as a minted machine identity moves those two sites as well.
+ *
+ * ABSENT IS NOT MACHINE. An empty or missing identity answers FALSE here and
+ * every caller keeps its own `!who` arm, because "nobody said" and "a machine
+ * said" are different findings and undetermined is first-class (CLAUDE.md).
+ * ===================================================================== */
+
+/** The prefix the control plane stamps on an AUTHORSHIP field (author, actor,
+ *  `by`) for a machine credential — a NAMED machine identity rather than an
+ *  anonymous one, which is what lets an unattended writer act at all (D-61). */
+export const MACHINE_AUTHOR_PREFIX = 'token:';
+/** The prefix it stamps on an OWNERSHIP or VIEWER field (viewer, owner, by,
+ *  declaredBy, resolvedBy, threadedBy, memberId, decidedBy). */
+export const MACHINE_CLASS_PREFIX = 'class:';
+/** Every spelling this plane mints for a machine. A new one is added HERE and
+ *  every refusal, every stamp and every sweep follows it. */
+export const MACHINE_STAMP_PREFIXES = [MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX];
+
+/** Did the CONTROL PLANE mint this identity? Case-folded deliberately: at the
+ *  store the value is server-stamped and the fold changes nothing, while at the
+ *  gate the value is hand-written by a caller and `Token:member` is the same
+ *  claim as `token:member`. */
+export function isMachineStamp(who) {
+  const s = String(who ?? '').trim().toLowerCase();
+  return s !== '' && MACHINE_STAMP_PREFIXES.some((p) => s.startsWith(p));
+}
+
+/** Is this identity a machine rather than a named person? The whole question,
+ *  in one place. Returns FALSE for an absent identity — see the block above. */
+export function isMachineIdentity(who) {
+  const s = String(who ?? '').trim().toLowerCase();
+  if (s === '') return false;
+  return isMachineStamp(s) || ACTOR_CLASSES.includes(s) || NON_MEMBER_AUTHORS.includes(s);
+}
 
 /** C-18.1: intake provenance register shape, release authority, and the
  *  ratification fence (sweep intake lands at collected, never higher). */
@@ -1254,7 +1328,9 @@ function checkReleaseAuthority(ctx, findings) {
   const releases = hist.filter(e => e && e.from_state === 'collected' && e.to_state === 'verified');
   for (const e of releases) {
     const a = String(e.author || '').toLowerCase();
-    if (!a || NON_MEMBER_AUTHORS.includes(a)) {
+    /* REC-46: one predicate. The word list was one of three answers to this
+       question and knew nothing of the two spellings the control plane mints. */
+    if (!a || isMachineIdentity(a)) {
       findings.push(f('C-18.1', 'error', `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
         ['a named member re-makes the release decision and records the transition under their identity', 'return the bundle to collected pending member ratification']));
     }
@@ -1263,7 +1339,10 @@ function checkReleaseAuthority(ctx, findings) {
   // (doctrine Section 4). Verified, now or ever, requires a member-authored
   // release transition.
   const everVerified = ctx.fm.current_state === 'verified' || hist.some(e => e && e.to_state === 'verified');
-  const memberRelease = releases.some(e => { const a = String(e.author || '').toLowerCase(); return a && !NON_MEMBER_AUTHORS.includes(a); });
+  /* REC-46: the same predicate NEGATED — the one site in this family that asks
+     whether a person DID act rather than whether a machine did. It must move
+     with its complement above or the fence and the refusal disagree. */
+  const memberRelease = releases.some(e => { const a = String(e.author || '').toLowerCase(); return a && !isMachineIdentity(a); });
   if (sweepOrigin && everVerified && !memberRelease) {
     findings.push(f('C-18.1', 'error', 'sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)',
       ['set current_state to collected pending ratification', 'a named member ratifies and records the collected -> verified transition']));
@@ -1827,7 +1906,11 @@ function checkDividedExtension(fm, findings) {
     findings.push(f('C-2.8', 'error', 'division requires a non-empty reason: the reason belongs to the ACT (DEC-28), and a restructuring nobody accounted for is indistinguishable from one nobody should have made',
       ['author the reason the question was two questions']));
   }
-  if (typeof d.apportioned_by !== 'string' || d.apportioned_by.trim() === '' || NON_MEMBER_AUTHORS.includes(String(d.apportioned_by).toLowerCase())) {
+  /* REC-46: one predicate, and the blank arm stays its own — absent is not
+     machine, and "nobody apportioned" is a different finding from "a machine
+     did". `isMachineIdentity` answers false for blank precisely so this reads
+     as it always has. */
+  if (typeof d.apportioned_by !== 'string' || d.apportioned_by.trim() === '' || isMachineIdentity(d.apportioned_by)) {
     findings.push(f('C-2.8', 'error', `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
   }
   if (!ISO_TS_RE.test(String(d.at || ''))) {
@@ -2494,8 +2577,12 @@ function checkGrounds(fm, legs, findings) {
       return;
     }
     declared.set(label, i);
+    /* REC-46 — THE SITE THE ITEM WAS ROUTED FOR. This asked the word list
+       alone, so `token:member` (and `class:member`) reached the record here
+       while `agent` was refused. It now asks the one predicate, and so does
+       every other site that asks the same question. */
     if (typeof r.asserted_by !== 'string' || r.asserted_by.trim() === ''
-        || NON_MEMBER_AUTHORS.includes(String(r.asserted_by).toLowerCase())) {
+        || isMachineIdentity(r.asserted_by)) {
       findings.push(f('C-2.8', 'error', `grounds[${i}].asserted_by '${r.asserted_by}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's`,
         ['name the member asserting that this ground is independently sufficient']));
     }
@@ -4570,7 +4657,10 @@ async function checkReleaseSignature(ctx, findings) {
         ['record the release under one identity']));
       continue;
     }
-    if (NON_MEMBER_AUTHORS.includes(author.toLowerCase())) {
+    /* REC-46: one predicate. A signed release is the strongest attribution
+       this record holds, so it is the last place a minted spelling should have
+       been able to stand in for a person. */
+    if (isMachineIdentity(author)) {
       findings.push(f('C-18.8', 'error', `release at ${e.timestamp} is authored by '${author}', a surface or AI identity, never a release author`));
       continue;
     }
