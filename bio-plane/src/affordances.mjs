@@ -84,6 +84,38 @@ export const DISPOSITIONS = ["deferred", "dismissed"];
  * drift this file exists to prevent. */
 export const REOPENABLE_FROM = [...DISPOSITIONS, "published"];
 
+/* REC-16 / DEC-29(b): THE DIVIDE PROMPT'S WORDING, and it is an ACCEPTANCE
+ * CLAUSE rather than copy.
+ *
+ * Bob's ruling keeps the contextual prompt — the moment the weakest leg is
+ * named is the moment a member can actually act on the structure — and attaches
+ * ONE requirement instead of a timing rule: *"the prompt's wording must state
+ * the disclosure — that the other question stays on the record and the
+ * published child will name it — so what is offered is visibly honesty, not
+ * concealment."* The hazard it answers is real and specific: division's visible
+ * effect is a HIGHER publishable strength, so a surface offering it beside a
+ * weak leg is a surface proposing an act that makes the member's case look
+ * stronger, and that is only legitimate because nothing leaves the record.
+ *
+ * IT LIVES HERE, not in a surface, for DEC-8's reason exactly: a surface
+ * renders what it RECEIVED. A prompt that stated the disclosure in one client
+ * and not in another would be the forbidden surface-side map, one layer up from
+ * the act list this file already publishes. Published on the act, so every
+ * surface that can offer the act has the wording that must accompany it, and
+ * the suite asserts the string.
+ *
+ * WHAT IT MUST SAY, and each clause is load-bearing: that NOTHING IS DROPPED
+ * (every leg gets a home, including one that cuts against you — the apportionment
+ * refuses to lose a leg, which is why division cannot do severance's work at a
+ * discount); that THE OTHER QUESTION STAYS ON THE RECORD; and that A PUBLISHED
+ * CHILD NAMES ITS PARENT AND ITS SIBLINGS to its readers. */
+export const DIVIDE_PROMPT =
+  "Dividing does not remove anything. Every leg this question rests on gets a home on one of the "
+  + "children — including any leg that cuts against you — and this question stays on the record as the "
+  + "divided parent, recording where each leg went. Each child names this parent and every sibling, and "
+  + "when a child is published it names them to its readers. If you mean to drop material rather than "
+  + "re-home it, sever it with a reason instead.";
+
 /* The object vocabularies, published the way op=searchfields publishes the
  * query language, so a surface never keeps a copy. action_kind is the check
  * catalogue's own C-2.10 suite, imported from the module that enforces it. */
@@ -218,6 +250,31 @@ export const ACTS = [
      caller's parameters will pass. */
   { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("published") },
+  /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
+     `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
+     `single`, conclude's precedent: one question is divided at a time.
+     WHY THE BASIS COUNT IS PART OF THE DERIVATION AND NOT A DETAIL. The
+     apportionment refuses to lose a leg and refuses to leave a child with
+     nothing, so a question resting on ZERO legs cannot be divided at all —
+     there is nothing to apportion, both children would inherit nothing, and the
+     store refuses it NO_APPORTIONMENT. Publishing the act there would be
+     precisely the DEC-8 disagreement: a pre-flight offering a control the
+     refusal it fronts would then decline. ONE leg IS enough, and deliberately:
+     two different questions may rest on the same document, and R4 permits a leg
+     to land on one child or on BOTH.
+     NO RUNG: no document assigns division one, and RUNGS carries only the seven
+     that are sourced. It is tempting to write `terminal` here because the
+     parent never moves again — but the parent is corrected FORWARD into its
+     children rather than ended, which is not what the ladder's `terminal` says,
+     and guessing at the difference is exactly what this file refuses. FW-14
+     owns the assignment.
+     THE PROMPT rides the act (DEC-29(b)): every surface that can offer division
+     receives the wording that must accompany it, because a surface renders what
+     it received and never composes a prompt of its own. */
+  { id: "inquirydivide", label: "Divide (split this question)", weight: "single", types: ["inquiry"],
+    prompt: DIVIDE_PROMPT,
+    applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("divided")
+                     && (f.basis_legs ?? 0) >= 1 },
   /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
      because the store's own guards are type-only on both: any information
      bundle may be cited (cite checks NOT_INFORMATION and nothing about state —

@@ -176,15 +176,44 @@ export const STATES = {
      `published -> published` is not an edge either: a new edition is entered
      through `open`, so the state_history a reader checks shows the reopening
      that produced it rather than a case that mutated in place. */
+  /* REC-16 / DEC-28: `divided` joins, and it IS TERMINAL. It is a STATE and not
+     a disposition, and the line between the two families is not terminality —
+     `deferred` and `dismissed` are terminal-ish too — it is WHAT THE WORD
+     CLAIMS ABOUT THE QUESTION. A disposition is a member's judgment about a
+     well-formed question and the question survives it unchanged; `divided` says
+     the QUESTION ITSELF was malformed, it was two questions, and the parent is
+     corrected FORWARD into its children. That is DEC-19's shape and the
+     supersession family, not the declination family. Its reason belongs to the
+     ACT and `disposition_reason` is untouched.
+
+     ENTERED FROM `open` (and its `surfaced` alias) AND FROM `concluded`, and
+     NOT FROM `published` — the store refuses that one BY NAME
+     (PUBLISHED_CANNOT_DIVIDE) rather than as a generic illegal move, because
+     the two are different statements: an EDITION says the case continues, a
+     DIVISION says the parent was malformed, and a signed edition cannot be
+     retroactively declared malformed without erasing what a reader relied on.
+     DEC-12 changed publishing; it did not change this.
+
+     DELIBERATELY NOT ADDED: `deferred|dismissed -> divided`. A question the
+     group set DOWN is picked back up first (op=reopen), exactly as concluding
+     one is — the machine already carries those edges, and dividing something
+     nobody is working on would make the disposition a state nothing can be
+     reasoned about from.
+
+     TERMINAL, and structurally so rather than by policy: the parent's legs are
+     OWNED by its children now, and un-dividing would be the record changing its
+     mind in silence. `divided: []` is that fact, and it is what makes the
+     children's `supersedes` edges the only forward path. */
   inquiry: {
-    legal: ['open', 'deferred', 'dismissed', 'surfaced', 'concluded', 'published'],
+    legal: ['open', 'deferred', 'dismissed', 'surfaced', 'concluded', 'published', 'divided'],
     edges: {
-      open: ['deferred', 'dismissed', 'concluded'],
-      surfaced: ['deferred', 'dismissed', 'concluded'],
+      open: ['deferred', 'dismissed', 'concluded', 'divided'],
+      surfaced: ['deferred', 'dismissed', 'concluded', 'divided'],
       deferred: ['open', 'surfaced', 'dismissed'],
       dismissed: ['open', 'surfaced', 'deferred'],
-      concluded: ['open', 'surfaced', 'deferred', 'dismissed', 'published'],
-      published: ['open', 'surfaced']
+      concluded: ['open', 'surfaced', 'deferred', 'dismissed', 'published', 'divided'],
+      published: ['open', 'surfaced'],
+      divided: []
     }
   },
   /* The LEGACY focus machine, kept whole (elevated included) because a
@@ -1197,6 +1226,114 @@ function checkReferences(ctx, findings) {
     const hasDist = [...ctx.files.keys()].some(p => p.startsWith('distributions/'));
     if (!hasDist) findings.push(f('C-6.3', 'error', 'workproduct_state is distributed but distributions/ is empty'));
   }
+  /* REC-16: `supersedes` gains requirements, the way `links_to` has them. Both
+     arms are consulted HERE and by the store's promote write path, the
+     checkInquiryBasis precedent, so a malformed supersession never lands and
+     cannot audit clean either. */
+  supersedesEdgeFindings(ctx.fm, findings);
+  divisionDisclosureFindings(ctx.fm, findings);
+}
+
+/** REC-16: WHAT A `supersedes` EDGE MUST CARRY.
+ *
+ *  Verified this pass and it is the reason this arm exists: before this item
+ *  `supersedes` had ZERO occurrences in `store.mjs` and no producer at all.
+ *  Membership of REL_VOCAB meant only that C-6.1 would not refuse the string —
+ *  it never meant the edge was governed. So the first producer arrives together
+ *  with the requirements, the way every state in the inquiry machine has
+ *  arrived together with its entry requirements.
+ *
+ *  A REASON, because supersession is the heaviest member relation in the
+ *  vocabulary: it says *this question replaced that one*, and an unexplained
+ *  replacement is a change nobody can check. `links_to` is the precedent for
+ *  requirements riding a rel; `sever with reason` is the precedent for the
+ *  reason itself — the catalog already refuses moving an edge with no account.
+ *
+ *  A RESOLVABLE TARGET is the other half and is enforced in two places by
+ *  construction rather than by agreement: C-6.2's resolver arm above catches it
+ *  wherever a resolver is injected, and the store resolves it directly at the
+ *  write. A supersedes edge to nothing points a reader at a question that does
+ *  not exist, which is worse than no edge — it asserts a lineage. */
+export function supersedesEdgeFindings(fm, findings) {
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  refs.forEach((r, i) => {
+    if (!r || typeof r !== 'object' || r.rel !== 'supersedes') return;
+    if (typeof r.reason !== 'string' || r.reason.trim() === '') {
+      findings.push(f('C-6.1', 'error', `references[${i}] is a supersedes edge with no reason: supersession says this question replaced that one, and a replacement with no account of why cannot be checked by anyone`,
+        ['author the reason this supersedes its target', 'or use relates_to, which claims nothing about replacement']));
+    }
+    if (typeof r.target !== 'string' || !BUNDLE_ID_RE.test(r.target)) {
+      findings.push(f('C-6.1', 'error', `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
+    }
+  });
+}
+
+/** REC-16 / R4: THE DISCLOSURE, and it is this item's point rather than a
+ *  detail.
+ *
+ *  A child of a division records its PARENT id AND its SIBLING ids, authored in
+ *  `bundle.md` and projected through the ordinary promote path — the frontmatter
+ *  keys REC-14 RESERVED (`division_parent`, `division_siblings`) with no
+ *  producer, so the published shape would not change under readers once cases
+ *  existed. This item is the producer.
+ *
+ *  THE REASONING INVERTS THE ARGUMENT FOR DIVISION. Division was justified as
+ *  the mechanism that stops weakest-link composition forcing a member to
+ *  overclaim or stay silent. The abuse is the SAME mechanism: dividing is a
+ *  cheaper way to shed a finding that cuts against you than severing it, and a
+ *  published child that discloses neither parent nor siblings defeats invariant
+ *  7 with a housekeeping operation. A reader who can see one half of a divided
+ *  inquiry must be able to see that the other half EXISTS.
+ *
+ *  WHAT THIS FUNCTION CAN AND CANNOT SEE. It is pure over one document, so it
+ *  holds the disclosure's SHAPE: a supersedes edge and the division keys agree
+ *  with each other, the sibling list is present and non-empty, and it names
+ *  neither the child itself nor its parent. Whether the list is COMPLETE — every
+ *  sibling of that division and not merely one — cannot be answered from the
+ *  child alone; the store answers it at the write against the parent's own
+ *  `division.into`, and refuses NO_SIBLING_DISCLOSURE. Both halves are needed:
+ *  this one makes an incoherent child impossible to author, and that one makes a
+ *  quietly incomplete one impossible to land. */
+export function divisionDisclosureFindings(fm, findings) {
+  /* SCOPED TO AN INQUIRY SUPERSEDING AN INQUIRY, which is the division shape and
+     today the only shape supersession has: this item is `supersedes`'s first
+     producer, and division is what it produces. An information object
+     superseding another information object is a different claim about a
+     different kind of thing, and it is governed by the edge requirements above
+     (a reason and a resolvable target) without a disclosure it has nothing to
+     disclose. If a later item gives INQUIRY supersession a second producer, this
+     is the arm it has to argue with rather than route around — and the escape
+     that already exists is `relates_to`, which claims no replacement at all. */
+  if (normalizeType(fm?.object_type) !== 'inquiry') return;
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  const supers = refs.filter((r) => r && typeof r === 'object' && r.rel === 'supersedes'
+    && typeof r.target === 'string'
+    && normalizeType(OBJECT_TYPES[r.target.split('-')[0]]) === 'inquiry');
+  const parent = typeof fm?.division_parent === 'string' && fm.division_parent !== 'null' ? fm.division_parent : null;
+  const sibsRaw = fm?.division_siblings;
+  const sibs = Array.isArray(sibsRaw) ? sibsRaw.filter((x) => typeof x === 'string' && x !== '') : null;
+
+  if (!parent && supers.length === 0) return;   // nothing to disclose, nothing claimed
+
+  if (supers.length && !parent) {
+    findings.push(f('C-6.1', 'error', `this document carries a supersedes edge to ${supers[0].target} and declares no division_parent: a question that superseded another discloses which division it came out of, so a reader who can see one half can see that the other half exists (R4)`,
+      ['set division_parent to the inquiry this was divided out of', 'or sever the supersedes edge']));
+  }
+  if (parent && !supers.some((r) => r.target === parent)) {
+    findings.push(f('C-6.1', 'error', `division_parent names ${parent} with no supersedes edge to it: the disclosure and the edge are two views of one fact and cannot disagree`,
+      [`add a references[] entry {rel: supersedes, target: ${parent}} with its reason`]));
+  }
+  if (!parent) return;
+  if (sibs === null || sibs.length === 0) {
+    findings.push(f('C-6.1', 'error', `division_parent names ${parent} and division_siblings is ${sibs === null ? 'absent' : 'empty'}: a division produces at least two questions, so a child of one always has at least one sibling to name — NO_SIBLING_DISCLOSURE`,
+      ['name every OTHER child of this division in division_siblings']));
+    return;
+  }
+  for (const s of sibs) {
+    if (!BUNDLE_ID_RE.test(s)) findings.push(f('C-6.1', 'error', `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical bundle id`));
+    if (s === parent) findings.push(f('C-6.1', 'error', `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
+    if (typeof fm.id === 'string' && s === fm.id) findings.push(f('C-6.1', 'error', `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
+  }
 }
 
 /** C-12: history manifest coherence and snapshot accounting. */
@@ -1430,7 +1567,108 @@ function checkInquiryExtension(ctx, findings) {
      THE EDITION (DEC-12) is what makes the whole thing safe: edition 2 does not
      overwrite edition 1, it joins it. */
   if (fm.current_state === 'published') checkPublishedExtension(fm, findings);
+  /* REC-16: the `divided` ENTRY REQUIREMENTS, on the same principle again — a
+     state is not a label a document may wear. What `divided` claims is that
+     this question was two questions and that every leg it rested on now lives
+     on a child, so the document has to be able to carry BOTH halves of that:
+     the division itself, and the account of where every leg went. */
+  if (fm.current_state === 'divided') checkDividedExtension(fm, findings);
   checkInquiryBasis(fm, findings, ctx.publishedRegistry);
+}
+
+/** REC-16 / DEC-28 / R4: what a `divided` parent must be able to say.
+ *
+ *  TWO TOP-LEVEL KEYS, and the split is forced by the restricted frontmatter
+ *  grammar rather than chosen: a block is a map of scalars or an array of
+ *  objects, never a map holding an array of objects. So `division` is the map
+ *  (the act: into, apportioned_by, at, reason) and `division_apportionment` is
+ *  the array (the account: one row per leg, naming the child it went to) —
+ *  exactly the shape REC-14's `completeness` / `completeness_excluded` pair
+ *  takes, for exactly the same reason.
+ *
+ *  WHY THE APPORTIONMENT IS A GATE AND NOT MERELY AN OP BEHAVIOUR. R4's whole
+ *  argument is that division and severance do not substitute, because
+ *  *"every leg gets a home… Neither is not"*: severance REMOVES material from a
+ *  question, division only RE-HOMES all of it. The abuse it blocks is that
+ *  dividing would otherwise be a cheaper way to shed a finding that CUTS
+ *  AGAINST you than severing it. That protection is worth nothing if it lives
+ *  only in the op — a hand-written document could then wear `divided` while
+ *  quietly dropping the inconvenient leg — so the requirement is that EVERY
+ *  ORD in basis[] is accounted for. Ord, not target: duplicate targets are
+ *  legal by design (D4 — one document, two legs), and keying on the target
+ *  would let one row discharge two legs.
+ *
+ *  NO PER-LEG REASON (DEC-29). One authored reason for the whole division; the
+ *  per-leg judgment is recorded per leg IN THE APPORTIONMENT ITSELF, and the
+ *  counterweight to the friction asymmetry with severance is DISCLOSURE, not
+ *  ceremony. Nothing here should be read as an invitation to add one. */
+function checkDividedExtension(fm, findings) {
+  const d = (typeof fm.division === 'object' && fm.division && !Array.isArray(fm.division)) ? fm.division : null;
+  if (!d) {
+    findings.push(f('C-2.8', 'error', 'divided state requires a division block: a question recorded as divided with no account of the division is a state change wearing a correction\'s clothes',
+      ['divide through op=inquirydivide, which authors the block and stamps who apportioned and when',
+       'or move the inquiry back to open']));
+    return;
+  }
+  const into = Array.isArray(d.into) ? d.into.filter((x) => typeof x === 'string') : [];
+  if (into.length < 2) {
+    findings.push(f('C-2.8', 'error', `division.into names ${into.length} child inquir${into.length === 1 ? 'y' : 'ies'}: a division produces at least TWO questions, because one is a rename and zero is a deletion`,
+      ['name every child the question was divided into']));
+  }
+  for (const id of into) {
+    if (!BUNDLE_ID_RE.test(id)) findings.push(f('C-2.8', 'error', `division.into names '${String(id).slice(0, 40)}', which is not a canonical bundle id`));
+  }
+  if (new Set(into).size !== into.length) {
+    findings.push(f('C-2.8', 'error', 'division.into names the same child twice: a leg apportioned to a child named twice has one home, not two'));
+  }
+  if (typeof d.reason !== 'string' || d.reason.trim() === '') {
+    findings.push(f('C-2.8', 'error', 'division requires a non-empty reason: the reason belongs to the ACT (DEC-28), and a restructuring nobody accounted for is indistinguishable from one nobody should have made',
+      ['author the reason the question was two questions']));
+  }
+  if (typeof d.apportioned_by !== 'string' || d.apportioned_by.trim() === '' || NON_MEMBER_AUTHORS.includes(String(d.apportioned_by).toLowerCase())) {
+    findings.push(f('C-2.8', 'error', `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
+  }
+  if (!ISO_TS_RE.test(String(d.at || ''))) {
+    findings.push(f('C-2.8', 'error', `division requires 'at' as an ISO timestamp (got '${d.at}')`));
+  }
+  /* THE ACCOUNT. Every leg the parent rested on, including — and this is the
+     abuse R4 blocks — every leg whose role is `cuts_against`. */
+  const legs = Array.isArray(fm.basis) ? fm.basis : [];
+  const rows = Array.isArray(fm.division_apportionment) ? fm.division_apportionment : null;
+  if (!rows) {
+    findings.push(f('C-2.8', 'error', 'divided state requires a division_apportionment field: the parent records WHERE EVERY LEG WENT, because dividing must not be a cheaper way to shed a finding that cuts against you than severing it (R4)',
+      ['author one apportionment row per basis leg, naming the child it went to']));
+    return;
+  }
+  const homes = new Map();            // ord -> Set(child)
+  rows.forEach((r, i) => {
+    if (!r || typeof r !== 'object') { findings.push(f('C-2.8', 'error', `division_apportionment[${i}] is not an object`)); return; }
+    if (!Number.isInteger(r.ord) || r.ord < 0 || r.ord >= legs.length) {
+      findings.push(f('C-2.8', 'error', `division_apportionment[${i}].ord '${r.ord}' does not name a leg of this inquiry's basis (0..${legs.length - 1}): a leg is addressed by its ORDINAL, because one document legitimately carries two legs (D4)`));
+      return;
+    }
+    if (typeof r.to !== 'string' || !into.includes(r.to)) {
+      findings.push(f('C-2.8', 'error', `division_apportionment[${i}].to '${r.to}' is not one of the children named in division.into: a leg's home is a child of THIS division`));
+      return;
+    }
+    const leg = legs[r.ord];
+    if (leg && typeof leg === 'object' && typeof r.target === 'string' && r.target !== leg.target) {
+      findings.push(f('C-2.8', 'error', `division_apportionment[${i}] names target '${r.target}' at ord ${r.ord}, where the basis carries '${leg.target}': the account and the basis are two views of one document and cannot disagree`));
+    }
+    if (!homes.has(r.ord)) homes.set(r.ord, new Set());
+    homes.get(r.ord).add(r.to);
+  });
+  const orphans = [];
+  for (let i = 0; i < legs.length; i++) if (!homes.has(i)) orphans.push(i);
+  if (orphans.length) {
+    const cutting = orphans.filter((i) => legs[i] && legs[i].role === 'cuts_against');
+    findings.push(f('C-2.8', 'error', `basis leg${orphans.length === 1 ? '' : 's'} ${orphans.join(', ')} ${orphans.length === 1 ? 'has' : 'have'} no home in the apportionment${cutting.length ? ` (including ${cutting.length} that cut${cutting.length === 1 ? 's' : ''} AGAINST this inquiry)` : ''}: every leg gets a home on a child, because division RE-HOMES material and only severance REMOVES it (R4)`,
+      ['apportion the remaining leg(s) to a child', 'or sever them with a reason, which is the act that removes material']));
+  }
+  const empty = into.filter((c) => ![...homes.values()].some((s) => s.has(c)));
+  if (empty.length) {
+    findings.push(f('C-2.8', 'error', `division.into names ${empty.join(', ')}, which received no leg of the parent's basis: a child that inherits nothing is a new question, not a half of this one`));
+  }
 }
 
 /** REC-14 / DEC-13: the group's position on putting the case to its subject.
