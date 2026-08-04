@@ -760,6 +760,14 @@ depends-on: none
 accepts-when: `cd bio-plane && npm run test:battery` green with the attest act publishing its prompt asserted equal to the enforcement's own wording; `npm run test:coverage` --strict exit 0; negative control — publish the fence as a literal copy and the drift assertion fails.
 added: 2026-08-04 · CONDUCT (DEC-39's enactment)
 
+### REC-44 · queued
+milestone: M10
+scope: **A PUBLISHED CASE HOLDS MULTIPLE FINDINGS — DEC-44, and it CORRECTS DONE ITEMS (REC-14, REC-22, UI-18).** The one-inquiry-per-case shape was never chosen; it was assumed by every item in the chain (D-187). (a) `published_bundles`' (bundle_id, edition) key needs a CASE IDENTITY distinct from a bundle id, plus the case→findings MEMBERSHIP. (b) The container's `case`/`parts[]` carry EVERY member finding. (c) `publishCase` takes a SET and its one-case refusal string is rewritten. (d) C-21.1's completeness check and the new scope statement are **per CASE per edition**; C-21.2's per-axis inheritance stays **per FINDING** — the two live at different altitudes and must not be collapsed. (e) NOTHING IS IN PRODUCTION (every instance is a development instance), so this is a SCHEMA CORRECTION, not a migration — say so in the commit rather than building migration machinery nobody needs. Correct every landed pin in publish/publishedcase/reeval suites with dated reasons, never exempt.
+behind-interface: I5
+depends-on: none
+accepts-when: `cd bio-plane && npm run test:battery` green with a case of two findings published as one edition, both findings' frozen pairs readable, the completeness statement authored per case per edition and the inheritance checked per finding; `npm run test:hygiene` green; `npm run test:coverage` --strict exit 0; **the negative control the suites cannot have today** — publish a case of two findings whose strengths DIFFER and the harness must FAIL if any surface, rendering or export presents a single case-level strength.
+added: 2026-08-04 · CONDUCT (DEC-44's enactment — corrects REC-14/REC-22/UI-18)
+
 ### CPDF-1 · done
 milestone: M2
 scope: D-91 phase-2 measurement — unpdf bundle size and node-proxy extraction cost.
@@ -1546,6 +1554,14 @@ behind-interface: I3
 depends-on: REC-43
 accepts-when: `node civicos-ui/test/run.mjs` green with the fence rendered from the publication (asserted against the plane's export, not a copy) and no local constant remaining; negative control — restore the hand-written constant and the harness fails naming the copy; the retargeted control still fails on any Grade A claim.
 added: 2026-08-04 · CONDUCT (DEC-39's UI half)
+
+### UI-29 · queued
+milestone: M10
+scope: **The published case renders its FINDINGS, not one finding (DEC-44's surface half).** UI-18 renders a single inquiry as the case; a case is a SET. Every member finding gets its own frozen pair, its own basis chain, its own falsifier — and **no surface, rendering, print or export may present a single case-level strength** (that is DEC-44's negative control, and it is the misrepresentation this ruling closes: two findings of different strength collapsed into one letter is the composition R2 forbids arriving at case altitude). The completeness statement and scope statement render per case per edition; inheritance renders per finding. Correct UI-18's single-inquiry pins with dated reasons, never exempt.
+behind-interface: I3
+depends-on: REC-44
+accepts-when: `node civicos-ui/test/run.mjs` green with a two-finding case rendering both pairs distinctly, the per-case completeness and per-finding inheritance in their right places, and print/export carrying the same; negative control — present one case-level strength anywhere (screen, print, export) and the harness fails naming it.
+added: 2026-08-04 · CONDUCT (DEC-44's surface half)
 
 ### UI-21 · done
 milestone: M8

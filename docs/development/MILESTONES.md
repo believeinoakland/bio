@@ -310,6 +310,19 @@ plan for R2 growth, the free tier's storage ceiling, retention, or a second copy
 while one budget book measured 39.6MB · D-9 (`registerAudit` cannot tell *captured*
 from *unbacked* because it never looks in R2) · D-45 (an unbacked register entry is
 refused at ratify, not at promote — default is to leave it).
+> **THE IMPORT HALF, scoped 2026-08-04 by DEC-45 (design-ahead; import is UNBUILT, so
+> this is scope on this rung, not a correction to anything).** A published case imported
+> elsewhere is a FINDING and gets no inherited standing (DEC-40's determination 4). The
+> path: findings arrive **projectless**, carrying the source's bias manifest AS A FACT;
+> a destination is offered PER FINDING (an existing project · a new project the member
+> authors · none); the projectless lens is **STATED**, never implied; choosing a
+> destination runs **REGRADE against that destination's effective bias** and shows the
+> structured diff WITH ITS CAUSAL CHAIN **before** the association is committed; the
+> regrade's honest limit is displayed WITH the diff, never buried. **The import may not
+> author a project objective or a bias statement on the member's behalf** — the
+> never-prefill rule, and C-2.9's non-empty `objective` must never be satisfied by words
+> nobody in the importing group wrote.
+
 **Areas:** RECORD, DIST.
 **Depends on:** nothing technically. **Sequenced last among the unblocked milestones,
 2026-07-31, and the reason is worth stating** so it is not read as neglect: WARC and

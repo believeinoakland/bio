@@ -3026,8 +3026,7 @@ for CONDUCT to enact: this reshapes DONE items (REC-14, REC-22, UI-18) and is a
   suites cannot have today: publish a case of two findings whose strengths differ, and the
   harness must FAIL if any surface, rendering or export presents a single case-level
   strength.
-enacted:
-
+enacted: 2026-08-04 · CONDUCT — recorded AS A CORRECTION, not new scope: REC-44 (the case identity distinct from a bundle id, the case→findings membership, the container carrying every member finding, publishCase taking a SET with its one-case refusal rewritten, C-21.1 per CASE per edition while C-21.2 stays per FINDING, and the schema-correction-not-migration note since nothing is in production) and UI-29 (the surface renders findings, plural — no single case-level strength anywhere, which is R2's forbidden composition arriving at case altitude). DEC-44's own negative control carried verbatim onto both items. REC-14/REC-22/UI-18's landed lines stand as the record of what was built before the shape was chosen. Reasoning in this entry, D-187 and QUEUE.md (REC-44/UI-29).
 ### DEC-45 · answered
 raised: 2026-08-04 · session BOB (Bob's question, after DEC-44)
 for: bob
@@ -3162,8 +3161,7 @@ for CONDUCT to enact: import is UNBUILT and this is design-ahead, so it lands as
   import may not author a project objective or a bias statement on the member's behalf
   (the never-prefill rule, and C-2.9's non-empty `objective` must never be satisfied by
   words nobody in the importing group wrote).
-enacted:
-
+enacted: 2026-08-04 · CONDUCT — landed as SCOPE on M6's interchange half in MILESTONES.md (import is unbuilt; design-ahead, not a correction), carrying the whole path verbatim: findings arrive projectless with the source's bias manifest as a fact, a destination offered per finding, the projectless lens STATED, regrade against the destination's effective bias with the structured diff and its causal chain shown BEFORE the association commits, the regrade's honest limit displayed with the diff, and the never-prefill bar on authoring an objective or bias statement (C-2.9 must never be satisfied by words nobody in the importing group wrote). DEC-40's determination 4 (an imported case is a finding with no inherited standing) sits with it. Reasoning in this entry and MILESTONES M6.
 ## Answered, awaiting enactment
 
 _(none)_
