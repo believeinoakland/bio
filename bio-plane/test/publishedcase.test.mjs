@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (REC-22's two, each broken ALONE and restored; 96 pass when whole) (a) THE published_shas GUARD IS REMOVED — in src/index.mjs op=publishedbytes replace `if (!v || !v.published) return notFound();` with `if (false) return notFound();` -> 93 pass, 3 FAIL: the working-corpus capture sha PLANTED at bio/published/<sha> STREAMS 200 to an anonymous caller carrying its bytes, and "a hash that was never ratified answers exactly as one that never existed" reports a 200 against a 404. The bucket boundary does NOT catch it: the guard is the authority on what is published, and the bucket only holds what somebody put there. (b) THE NAME-ONLY EDGE IS ADMITTED TO THE SERVED SET, two arms, because the classification and the restriction are two different rules and each is breakable alone. (b1) at the CLASSIFICATION — in src/index.mjs's edges[] change the two division arms from `disclosure: "name"` to `disclosure: "serve"` -> 89 pass, 7 FAIL: the published child names NEITHER its parent NOR its sibling (both are dropped by the store's restriction, since neither is published), so R4's disclosure vanishes from the exact surface R4 was written for, and the published sibling moves into serves[] carrying a bundle_sha an anonymous caller can fetch — named while serving neither becomes served. (b2) at the RESTRICTION — in src/store.mjs #publishEdges replace `if (!nameOnly && !this.#one(` with `if (false && !nameOnly && !this.#one(` -> 94 pass, 2 FAIL: the published graph admits SERVE edges into working material (the terminal parent and the unpublished sibling), and "every served edge names a published edition" fails naming them. Restore after each. ALL RUN 2026-08-04 (rec22-agent), measured exactly as recorded here. */
+/* NEGATIVE CONTROL: (REC-22's three arms, each broken ALONE and restored; 72 pass when whole; ALL RUN 2026-08-04, rec22-agent, and the numbers below are what they MEASURED) (a) THE published_shas GUARD IS REMOVED — in src/index.mjs op=publishedbytes replace `if (!v || !v.published) return notFound();` with `if (false) return notFound();` -> 70 pass, 2 FAIL: the object PLANTED in the published bucket that no published_shas row names STREAMS 200 to an anonymous caller and the assertion reports the working capture's own sha where it wanted a 404. NOTE WHAT ELSE THIS MEASURED, because it is the reason block 3 has an adversary in it at all: "a working capture that was never ratified is not reachable" STILL PASSES under the broken guard, because the working corpus lives under <store>/captures/ and the published corpus under <store>/published/ — the key is not there to fetch. BUILD-ORDER's wording ("a working-corpus capture sha streams") is therefore unreachable by removing the guard alone, and what the guard actually defends is anything in the published bucket that ratification did not put there. (b) THE NAME-ONLY EDGE IS ADMITTED TO THE SERVED SET, two arms, because the classification and the restriction are two different rules and each is breakable alone. (b1) at the CLASSIFICATION — in src/index.mjs's edges[] change the two division arms from `disclosure: "name"` to `disclosure: "serve"` -> 69 pass, 3 FAIL: the published child names NEITHER its parent NOR its sibling, because the store's restriction then drops both (neither is published) — R4's disclosure vanishes from the exact surface R4 was written for, which is RECONCILED R4-e reproduced. (b2) at the RESTRICTION — in src/store.mjs #publishEdges replace `if (!nameOnly && !this.#one(` with `if (false && !nameOnly && !this.#one(` -> 71 pass, 1 FAIL naming all three working targets admitted as SERVE edges, the terminal parent among them (supersedes -> INQ-...-mixed): the published graph starts asserting it can serve material that was never published. (b2) FAILED TO FAIL ON THE FIRST RUN and that is why unresolved[] exists: serves[] was empty either way, so "every served edge names a published edition" passed on an empty list — an outcome that costs nothing to produce. The store now REPORTS an edge it classified servable and cannot resolve instead of dropping it, and the control bites. Restore after each. */
 /* REC-22: `op=publishedcase` and `op=publishedbytes` — the public read path, over EDITIONS.
  *
  * This is the surface a STRANGER meets, and the only one in the plane that
@@ -19,7 +19,7 @@
  *   a basis leg the surface can only NAME says so, and the container is
  *   tamper-EVIDENT and never claimed tamper-proof (DEC-34).
  *
- * THREE THINGS THIS SUITE MEASURED THAT ARE WORTH THE NEXT SESSION'S TIME:
+ * FOUR THINGS THIS SUITE MEASURED THAT ARE WORTH THE NEXT SESSION'S TIME:
  *
  *   1. THE published_shas GUARD IS NOT REDUNDANT WITH THE BUCKET FENCE, and it
  *      took building the adversary to show it. The working corpus lives under
@@ -46,6 +46,13 @@
  *      reader (ooxml.mjs's readContainer/readPart, which verify each member's
  *      length AND its CRC-32 against the central directory), so what this plane
  *      writes and what it reads agree by construction rather than by agreement.
+ *   4. AN EMPTY SERVED SET SATISFIES "EVERY SERVED EDGE IS PUBLISHED" WHETHER
+ *      THE RESTRICTION HOLDS OR WAS NEVER APPLIED, and the negative control
+ *      found that rather than review. Block 6's second edge assertion reads
+ *      `unresolved[]` — the store reporting an edge it classified servable and
+ *      cannot resolve — because that is the only thing in the answer that MOVES
+ *      when the write-time restriction is broken. The first version of the
+ *      control passed, which is what a control is for.
  *
  * Every assertion that ratifies signs a real `bio-ratify` statement with stock
  * ssh-keygen, so this suite SKIPS LOUDLY WITH A NAMED REASON when ssh-keygen is
@@ -382,12 +389,23 @@ console.log("\n--- 3. op=publishedbytes: answer by hash, never by path, and the 
      published_shas can, and it does. */
   const bucket = await mf.getR2Bucket("PUBLISHED");
   await bucket.put(`bio/published/${WORKING_SHA}`, WORKING);
-  const planted = await anonBytes(`sha256=${WORKING_SHA}`);
+  /* Read DEFENSIVELY. The negative control for this block removes the guard, and
+     what then comes back is the working capture's BYTES — so a suite that
+     assumed JSON would crash here and report a parse error where the finding is
+     "an anonymous caller just received unratified bytes". That has to be
+     legible as what it is (publish.test.mjs's precedent, same reason). */
+  const readAnswer = async (r) => {
+    const raw = new Uint8Array(await r.arrayBuffer());
+    let body = null;
+    try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
+    return { status: r.status, reason: body?.reason ?? null, detail: body?.detail ?? null,
+             served: body === null ? sha(raw) : null };
+  };
+  const planted = await readAnswer(await anonBytes(`sha256=${WORKING_SHA}`));
   t("an object in the PUBLISHED bucket that no published_shas row names is STILL not servable",
-    [planted.status, (await planted.json()).reason], [404, "NOT_FOUND"]);
+    [planted.status, planted.reason, planted.served], [404, "NOT_FOUND", null]);
   t("the table is the authority on what was published; the bucket only holds what somebody put there",
-    (await (await anonBytes(`sha256=${WORKING_SHA}`)).json()).detail.includes("never existed are the same answer"),
-    true);
+    planted.detail?.includes("never existed are the same answer") ?? planted.served, true);
 }
 
 /* ============================================ 4. DEC-34: the container, serialised */
@@ -541,6 +559,14 @@ console.log("\n--- 6. R4: a published child NAMES its parent and its siblings an
     c.division.detail.includes("the other half exists"), true);
   t("EVERY served edge names a bundle with a published edition — the restriction, asserted from the public side",
     c.serves.filter((e) => !Number.isInteger(e.edition)), []);
+  /* THE RESTRICTION AT THE WRITE, which the assertion above cannot reach: an
+     empty serves[] satisfies "every served edge is published" whether the
+     restriction holds or was never applied, and an outcome that costs nothing to
+     produce is not evidence. unresolved[] is the store REPORTING an edge it
+     classified servable and cannot resolve — empty when the restriction holds,
+     and naming the working targets the moment it does not. */
+  t("and NO edge is classified servable with nothing published behind it, on the child or on the case",
+    [c.unresolved, (await anonCase(`id=${CASE}`)).unresolved], [[], []]);
 
   const parentSha = await shaOf(PARENT), sibSha = await shaOf(KID_B);
   const [ps, ss] = [await anonBytes(`sha256=${parentSha}`), await anonBytes(`sha256=${sibSha}`)];

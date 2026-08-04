@@ -9402,7 +9402,7 @@ export class Store extends DurableObject {
        state, no sha, nothing fetchable. The two are separate arrays rather than
        one array with a flag, because a renderer that forgets to read a flag
        renders a leak, and one that iterates the wrong array renders nothing. */
-    const serves = [], names = [];
+    const serves = [], names = [], unresolved = [];
     for (const e of this.#rows(
       `SELECT to_bundle, kind, disclosure FROM published_edges WHERE from_bundle=? ORDER BY kind, to_bundle`,
       row.bundle_id)) {
@@ -9410,7 +9410,17 @@ export class Store extends DurableObject {
       const t = this.#one(
         `SELECT edition, title, bundle_sha, manifest_sha, ratified_at FROM published_bundles
          WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, e.to_bundle);
-      if (!t) continue;   // published then purged: an edge with nothing behind it serves nothing
+      /* A SERVE edge with nothing published behind it is a CONTRADICTION in the
+         index and is REPORTED rather than swallowed. Silently dropping it would
+         make the write-time restriction untestable from here — an assertion that
+         no served edge names working material would pass on an empty list, which
+         is an outcome that costs nothing to produce. It discloses nothing new:
+         every row of this table comes from this case's OWN ratified bundle.md,
+         which any caller can fetch by hash, so the id is already public in the
+         bytes the group signed. The honest cause is a target published and later
+         purged; the dishonest one is the restriction having been broken, and the
+         suite's negative control is exactly that. */
+      if (!t) { unresolved.push({ to: e.to_bundle, kind: e.kind }); continue; }
       serves.push({ to: e.to_bundle, kind: e.kind, edition: t.edition, title: t.title,
                     bundle_sha: t.bundle_sha, manifest_sha: t.manifest_sha, ratified_at: t.ratified_at });
     }
@@ -9435,7 +9445,11 @@ export class Store extends DurableObject {
                (p) => ({ path: p.path, sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null })),
              editions: editions.map((e) => e.edition), edition_index: editions,
              latest_edition: editions.length ? editions[editions.length - 1].edition : row.edition,
-             serves, names, division };
+             serves, names, unresolved, division,
+             graph_detail: "serves[] is what this surface may hand over — every entry names a published "
+                         + "edition. names[] is what it may only NAME. unresolved[] is an edge classified "
+                         + "servable at publication with no published edition behind it now, stated rather "
+                         + "than dropped; it should be empty." };
   }
 
   /* REC-22: which of these ids have a published edition, and what each one FROZE
