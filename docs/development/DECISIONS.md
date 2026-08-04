@@ -3436,6 +3436,16 @@ what reversing costs: little today and more each release. Two constants carry th
   unchanged in number and source; nothing vanished. This growth was made visible on
   purpose: UI-34 built a guard pinning the subject by term and by source, and UI-36 was
   required to update it deliberately and name every new row rather than re-baseline it.
+  **UI-37 then added, 2026-08-04: one new SOURCE on `sha256` (a refusal from `op=verify`
+  now rendered instead of swallowed), no new term — AND TWO PIECES OF PLANE WORDING THE
+  INSTRUMENT CANNOT SEE, itemised here because they are yours and no guard will surface
+  them: the plane's `unknown op` refusal now renders on THREE pre-authentication surfaces,
+  and the store's `NOT_PUBLISHED` sentence now renders whole at a case address.** Neither
+  contains any of the 74 inherited terms nor trips either structural rule, so the count
+  above understates your subject by exactly these two. They arrived because UI-37 closed
+  a defect where the surface told a stranger the record held nothing when the plane had
+  merely declined to answer — rendering the plane's own words was the only honest fix
+  available under DEC-8, which is worth knowing when you weigh answer (a) against (b).
   (Earlier readings, for the record: 13 terms / 5 surfaces / 56 at UI-31; 9 / 4 / 47 after
   UI-33 and UI-34 closed the surface-authored half.)** — down from
   13 on 5 surfaces and 56 occurrences at UI-31's first reading, because UI-33 closed the
