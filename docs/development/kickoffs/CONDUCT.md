@@ -17,6 +17,12 @@ making a change another session must know about.**
    for it and its top item is runnable (status `queued`, depends-on all `done`),
    spawn a worktree-isolated worker for that ONE item, with a self-contained
    kickoff that points at the area's kickoff doc and names the exact scope.
+   **Workers spawn on Opus 5 (`claude-opus-5`), PINNED AT SPAWN** (Bob's
+   operational directive, 2026-08-03): `--model claude-opus-5` on a CLI spawn,
+   the model parameter on any other spawn surface — set per worker, never left
+   to the machine's default. If a specific item proves beyond an Opus 5 worker,
+   escalating that ONE worker's model is a tactical call under the never-block
+   rule; the default is Opus 5.
 2. **When a worker reports:** VERIFY (full battery from the main checkout;
    re-run the negative control yourself for anything touching destructive or
    security-sensitive code), then INTEGRATE on `main` (fetch-rebase; resolve
