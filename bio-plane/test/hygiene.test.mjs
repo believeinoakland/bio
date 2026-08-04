@@ -237,6 +237,16 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     bootstrap:            "one-row claim state; whether the instance has been claimed, not corpus data",
     members:              "the roster; membership is identity, not derived from captured documents",
     signers:              "registered signing keys; identity, not corpus-derived",
+    /* REC-14 / DEC-17. The GROUP's declared default required strength: a
+       standing declaration about the standard the group holds its own work to,
+       authored before the work and dated, exactly like the roster and the
+       signing keys beside it. It is not derived from any captured document and
+       no bundle_id appears in it, so a whole-store purge that cleared it would
+       silently lower the bar on everything published afterwards. A project's
+       OWN bar is not here at all: it is authored frontmatter on the project's
+       bundle.md and is purged with that bundle, which is correct — the project
+       is gone, and so is the standard it set for itself. */
+    group_strength_bar:   "the group's declared default required evidentiary strength (DEC-17); a standing governance declaration about the group's own work, authored and dated like the roster, not derived from any document",
     published_bundles:    "public ratified projection; kept verifiable forever by doctrine, not torn down with the working store",
     published_shas:       "append-only published hashes; a hash once published stays verifiable forever (schema doctrine)",
     inbox:                "quarantined public intake; inbound submissions awaiting review, explicitly not the record and not corpus-derived",

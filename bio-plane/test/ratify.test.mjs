@@ -160,9 +160,20 @@ t("attested by the key's member", rat.attestor, "sparky");
    loosened to a pattern match: the point of this assertion is that a
    ratification records WHICH catalog judged it, so a test that stopped
    pinning the exact version would stop testing the thing it exists for. */
-t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.18.0)");
-t("bundle, file, and capture published", rat.published.shas, 3);
-t("all bytes copied to the published bucket", rat.published.copied, 3);
+t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.19.0)");
+/* CORRECTED 2026-08-04 (REC-14), never exempted: the old count of 3 was right
+   while a ratification published exactly the bundle's own parts. DEC-34 makes
+   the published case a CONTAINER, so a fourth part now lands with every
+   ratification -- MANIFEST.json, the signed hash manifest over every other
+   part. It is content-addressed and copied like the rest, deliberately: its
+   sha is in published_shas so any copy of the container anywhere can be
+   checked against this instance by hash, which is the whole of what
+   "tamper-evident" means here. */
+t("bundle, file, capture AND the container manifest published", rat.published.shas, 4);
+t("all bytes copied to the published bucket", rat.published.copied, 4);
+t("the manifest is answerable by its own hash, like every other part",
+  rat.container.parts >= 3 && /^[0-9a-f]{64}$/.test(rat.container.manifest_sha), true);
+t("an information bundle ratifies at edition 1 and names no case edition", rat.edition, 1);
 
 console.log("\n--- doorbell 7a: anyone can verify, and only ratified answers yes ---");
 const v = await GET(`op=verify&sha256=${LIVE}`);

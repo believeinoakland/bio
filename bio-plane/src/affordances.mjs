@@ -47,7 +47,7 @@
  * nothing operates it until REC-24, and an empty list is the true answer.
  */
 
-import { STATES, ACTION_KINDS, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
+import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -66,6 +66,12 @@ export const DISPOSITIONS = ["deferred", "dismissed"];
 export const VOCABULARIES = {
   action_kind: ACTION_KINDS,
   dispositions: DISPOSITIONS,
+  /* REC-14 / DEC-13. Published so a ceremony surface never keeps its own copy
+     of the three positions. WHICH position a group takes gates NOTHING —
+     nothing in the plane reads it, and a group that deliberately gave no notice
+     publishes exactly as one that sought comment and printed the reply. What is
+     gated is that the position is declared and justified. */
+  subject_positions: SUBJECT_POSITIONS,
 };
 
 /* The seven sourced rungs — BIO_Interaction_Constructs_v0_1.md via
@@ -140,6 +146,25 @@ export const ACTS = [
      machine permits the move, not that this caller's parameters will pass. */
   { id: "conclude", label: "Conclude", weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("concluded") },
+  /* REC-14. An inquiry whose machine offers the `published` edge — which is
+     `concluded` and nothing else, because a material set cannot be asserted
+     over a question with no conclusion. Weight `single`, conclude's precedent:
+     one case is published at a time and there is no set to apply.
+
+     NO RUNG, and this one is worth stating rather than passing over: publishing
+     feels like the most `attested` act in the system, and `ratify` IS assigned
+     that rung by Constructs:275. But this act is not the attestation — it
+     AUTHORS the bytes that are then attested, and no document assigns it a
+     rung. Inventing "attested" here because it sits next to ratify is exactly
+     the guessing this file refuses; FW-14 owns the assignment.
+
+     The entry requirements (the completeness statement, the exclusion FIELD,
+     the declared and justified subject position) and C-21.1's freshness check
+     are ACT-TIME refusals the store words itself — the release precedent:
+     publishing the act says the state machine permits the move, not that this
+     caller's parameters will pass. */
+  { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("published") },
   /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
      because the store's own guards are type-only on both: any information
      bundle may be cited (cite checks NOT_INFORMATION and nothing about state —
@@ -193,6 +218,13 @@ export const NON_ACTS = {
   /* Inbox and publication. */
   inboxresolve: "inbox disposition, keyed by knock id",
   ratify: "publication: its pre-flight is the deferred op=publishpreflight (REC-15), because the refusal turns on gate state a surface cannot see",
+  /* REC-14 / DEC-17. Its subject is the GROUP's own declaration about the
+     standard its work is held to — authored before the work, about their own
+     intentions — so there is no object in any state for it to appear beside. A
+     project's override is not an op at all: it is authored frontmatter on the
+     project's bundle.md, which is what makes lowering a bar an on-the-record
+     act rather than a settings change with nothing to read afterwards. */
+  strengthbar: "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader",
   /* Selection lifecycle: a selection is the caller's own server-side snapshot. */
   select: "selection lifecycle, owned by the credential that made it",
   selectionrelease: "selection lifecycle, owned by the credential that made it",

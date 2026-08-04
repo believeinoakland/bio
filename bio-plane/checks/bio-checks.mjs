@@ -92,6 +92,24 @@ export const HEADINGS = {
 /* One legacy vocabulary, two spellings: same object, so no drift. */
 HEADINGS.problem = HEADINGS.focus;
 
+/* REC-14: headings that are CANONICAL for a type but required only in a
+ * particular STATE. `## What This Excludes` is the completeness assertion's
+ * home in the body, and C-3.1 refuses BOTH a missing required heading AND an
+ * unexpected one — so until it is in the canonical set the exclusion cannot be
+ * written at all, and once it is REQUIRED everywhere every open inquiry in the
+ * corpus would carry an empty one.
+ *
+ * An empty heading on a question nobody has published is exactly the checkbox
+ * C-21.1 exists to refuse, one layer down: it would make the canonical shape of
+ * an inquiry include a promise it has not made. So the heading is PERMITTED in
+ * every state (it can be drafted before publication, which is what the
+ * ceremony's ordering needs — authoring the exclusion changes the sha, so it
+ * cannot be written after the signature) and REQUIRED in `published`. */
+export const HEADINGS_WHEN = {
+  inquiry: [{ heading: '## What This Excludes', states: ['published'] }]
+};
+HEADINGS_WHEN.problem = HEADINGS_WHEN.focus = [];
+
 /* THE type-keyed vocabulary lookup (REC-10, normalisation site 1 of 4).
  * Membership questions go through normalizeType (C-2.5); vocabulary
  * questions — which heading set, which state machine — resolve the
@@ -135,14 +153,38 @@ export const STATES = {
      machine already carries deferred/dismissed -> open for exactly that.
      `concluded -> surfaced` follows the table's own convention, where every
      existing edge into `open` names the alias beside it. */
+  /* REC-14 / DEC-12: `published` joins, and it is NOT TERMINAL. It is
+     reachable ONLY from `concluded` — a material set cannot be asserted over a
+     question with no conclusion — and it leaves ONLY to `open` (and its
+     `surfaced` alias), which is DEC-12's reopening: *"A closed finding can be
+     reopened, and a published case can be revised, though when republished,
+     the edition number must be incremented and the case treated as a separate
+     document."*
+
+     REOPENING DOES NOT UNPUBLISH, and this table is where that survives. The
+     inquiry's STATE and its PUBLICATION HISTORY are two different records: the
+     edges here move the working document, and published_bundles keeps every
+     edition with its own signature, attestor, time and gate version forever.
+     A revision therefore costs the full ceremony — published -> open ->
+     concluded -> published at edition 2 — because each edition is a separate
+     document that carries its own conclusion, its own falsifier and its own
+     freshly authored completeness (C-21.1).
+
+     DELIBERATELY NOT ADDED: `published -> deferred|dismissed`. Ageing is what
+     happens to a finding NOBODY published (D-79); a published case cannot
+     quietly stop being worked on, because it is already out in the world.
+     `published -> published` is not an edge either: a new edition is entered
+     through `open`, so the state_history a reader checks shows the reopening
+     that produced it rather than a case that mutated in place. */
   inquiry: {
-    legal: ['open', 'deferred', 'dismissed', 'surfaced', 'concluded'],
+    legal: ['open', 'deferred', 'dismissed', 'surfaced', 'concluded', 'published'],
     edges: {
       open: ['deferred', 'dismissed', 'concluded'],
       surfaced: ['deferred', 'dismissed', 'concluded'],
       deferred: ['open', 'surfaced', 'dismissed'],
       dismissed: ['open', 'surfaced', 'deferred'],
-      concluded: ['open', 'surfaced', 'deferred', 'dismissed']
+      concluded: ['open', 'surfaced', 'deferred', 'dismissed', 'published'],
+      published: ['open', 'surfaced']
     }
   },
   /* The LEGACY focus machine, kept whole (elevated included) because a
@@ -501,12 +543,21 @@ function checkHeadings(ctx, findings) {
      machinery, never a raw table lookup patched with duplicate keys. */
   const required = vocabFor(HEADINGS, ot);
   if (!required) return; // type invalid; C-2.5 already fired
+  /* REC-14: the state-conditional canon. Permitted in every state, required in
+     the states that name it — read through vocabFor like the base set, so a
+     legacy focus/problem document is judged by its own contract here too. */
+  const conditional = vocabFor(HEADINGS_WHEN, ot) || [];
+  const canonical = [...required, ...conditional.map(c => c.heading)];
   const present = (ctx.body.match(/^## .*$/gm) || []).map(h => h.trimEnd());
   for (const h of required) {
     if (!present.includes(h)) findings.push(f('C-3.1', 'error', `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
   }
+  for (const c of conditional) {
+    if (c.states.includes(ctx.fm?.current_state) && !present.includes(c.heading))
+      findings.push(f('C-3.1', 'error', `required heading '${c.heading}' is missing: the ${ctx.fm?.current_state} state carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
+  }
   for (const h of present) {
-    if (!required.includes(h)) findings.push(f('C-3.1', 'error', `heading '${h}' is not in the canonical set for ${ot}`, ['rename to the canonical heading, preserving body']));
+    if (!canonical.includes(h)) findings.push(f('C-3.1', 'error', `heading '${h}' is not in the canonical set for ${ot}`, ['rename to the canonical heading, preserving body']));
   }
 }
 
@@ -1356,7 +1407,205 @@ function checkInquiryExtension(ctx, findings) {
         ['add a basis[] leg naming what the conclusion rests on, and the same target in references[]']));
     }
   }
-  checkInquiryBasis(fm, findings);
+  /* REC-14: the `published` ENTRY REQUIREMENTS, on the same principle as
+     `concluded` above — a state is not a label a document may wear, it is a
+     claim the document has to be able to carry. Everything here is authored by
+     the group and stamped INTO the bytes that get signed, so what the case says
+     about its own limits is inside the hash forever.
+
+     THE COMPLETENESS BLOCK (C-9, DEC-13). A statement of what the case does not
+     cover; an EXCLUSION LIST that may legitimately be EMPTY but whose FIELD may
+     not be ABSENT (an empty list is a claim — we left nothing out — and silence
+     is not); and the group's POSITION ON PUTTING THE CASE TO ITS SUBJECT with
+     its JUSTIFICATION. DEC-13 is exact about what that last one gates: the
+     position must be DECLARED AND JUSTIFIED, NEVER that contact happened and
+     NEVER that the answer was favourable. So all three positions below pass
+     identically and nothing anywhere reads which one it is.
+
+     THE FROZEN PAIR (DEC-21/R2) and THE DECLARED BAR (DEC-17 as amended), side
+     by side and never composed: what this case reached on each axis, beside
+     what the group said in advance it required. An ABSENT bar gates nothing and
+     is STATED as absent — an absent bar is not a bar of zero.
+
+     THE EDITION (DEC-12) is what makes the whole thing safe: edition 2 does not
+     overwrite edition 1, it joins it. */
+  if (fm.current_state === 'published') checkPublishedExtension(fm, findings);
+  checkInquiryBasis(fm, findings, ctx.publishedRegistry);
+}
+
+/** REC-14 / DEC-13: the group's position on putting the case to its subject.
+ *  EXPORTED so op=affordances publishes it and no surface keeps a copy.
+ *  The gate is that the position is declared and justified; WHICH position it
+ *  is gates nothing, here or anywhere — a group facing a non-supportive body
+ *  may have real cause not to give notice, and what is refused is being silent
+ *  about having chosen. */
+export const SUBJECT_POSITIONS = ['sought_and_answered', 'sought_no_answer', 'not_sought'];
+export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
+
+/** REC-14: the three ASSERTED fields of a completeness block, in one place so
+ *  the gate (C-21.1), the store's own pre-flight and the frozen projection all
+ *  compare the same thing.
+ *
+ *  `author` and `at` are deliberately NOT here. They are STAMPS: `at` is the
+ *  server's clock and always differs, so comparing it is an equality that costs
+ *  nothing to produce, and `author` may legitimately be the same member twice —
+ *  requiring it to change would be requiring a different person to sign the
+ *  next edition. `subject_position` is not here either: it is a vocabulary
+ *  choice, and a group whose position has not changed must not be pushed into
+ *  changing it. What must be authored FRESH is what is ASSERTED — the
+ *  statement, the justification for the position, and the exclusion list. */
+export function completenessFields(fm) {
+  const c = (fm && typeof fm.completeness === 'object' && fm.completeness) || {};
+  const rows = Array.isArray(fm?.completeness_excluded) ? fm.completeness_excluded : [];
+  return {
+    statement: typeof c.statement === 'string' ? c.statement : null,
+    subject_justification: typeof c.subject_justification === 'string' ? c.subject_justification : null,
+    excluded: JSON.stringify(rows.map((r) => [
+      r && typeof r.target === 'string' ? r.target : null,
+      r && typeof r.description === 'string' ? r.description : '',
+      r && typeof r.reason === 'string' ? r.reason : ''])),
+  };
+}
+
+function checkPublishedExtension(fm, findings) {
+  const e = fm.edition;
+  if (!Number.isInteger(e) || e < 1) {
+    findings.push(f('C-2.8', 'error', `published state requires an integer edition of 1 or more (got '${e}'): an edition is what makes a revision safe — edition 2 does not overwrite edition 1, it joins it (DEC-12)`,
+      ['publish through op=publish, which stamps the edition from the published record']));
+  }
+  const c = (typeof fm.completeness === 'object' && fm.completeness) || null;
+  if (!c) {
+    findings.push(f('C-2.8', 'error', 'published state requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything',
+      ['author completeness.statement and the exclusion list, or move the inquiry back to concluded']));
+  } else {
+    if (typeof c.statement !== 'string' || c.statement.trim() === '') {
+      findings.push(f('C-2.8', 'error', 'published state requires a non-empty completeness.statement'));
+    }
+    if (typeof c.author !== 'string' || c.author.trim() === '') {
+      findings.push(f('C-2.8', 'error', 'published state requires completeness.author: the completeness assertion is a named member\'s claim about the limits of this case'));
+    }
+    if (!ISO_TS_RE.test(String(c.at || ''))) {
+      findings.push(f('C-2.8', 'error', `published state requires completeness.at as an ISO timestamp (got '${c.at}')`));
+    }
+    /* DEC-13. The gate is the DECLARATION, never the act: every position below
+       passes, and nothing reads which one it is. */
+    if (!SUBJECT_POSITIONS.includes(c.subject_position)) {
+      findings.push(f('C-2.8', 'error', `published state requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(', ')} (got '${c.subject_position}'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)`,
+        ['declare the group\'s position on putting this case to its subject']));
+    }
+    if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '') {
+      findings.push(f('C-2.8', 'error', 'published state requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse. A group that sought comment says so and prints what came back; a group that deliberately did not says so and says why, and a reader weighs that justification exactly as they weigh any other declared bias (DEC-13)',
+        ['justify the position — including a deliberate decision not to give notice']));
+    }
+  }
+  /* C-9. The FIELD may not be absent; the LIST may legitimately be empty. */
+  if (!Array.isArray(fm.completeness_excluded)) {
+    findings.push(f('C-2.8', 'error', 'published state requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal — an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse',
+      ['author completeness_excluded, empty if nothing was excluded']));
+  } else {
+    fm.completeness_excluded.forEach((r, i) => {
+      if (!r || typeof r !== 'object') {
+        findings.push(f('C-2.8', 'error', `completeness_excluded[${i}] is not an object`));
+        return;
+      }
+      const named = typeof r.target === 'string' && BUNDLE_ID_RE.test(r.target);
+      const prose = typeof r.description === 'string' && r.description.trim() !== '';
+      /* RECONCILED C-9: target OR prose, NEVER NEITHER. An exclusion may
+         legitimately name something not in the record — an outstanding records
+         request has no id to point at — so a required target would force the
+         member to invent a referent or to say nothing. */
+      if (!named && !prose) {
+        findings.push(f('C-2.8', 'error', `completeness_excluded[${i}] names neither a target nor a description: every exclusion row carries a target id OR prose, never neither`,
+          ['name the excluded bundle by id', 'or describe what was excluded in prose']));
+      }
+      if (typeof r.reason !== 'string' || r.reason.trim() === '') {
+        findings.push(f('C-2.8', 'error', `completeness_excluded[${i}] carries no reason: WHAT was left out and WHY are two statements and one does not stand in for the other`));
+      }
+    });
+  }
+  /* R2/DEC-21: BOTH axis objects, frozen, and never composed into one letter.
+     The STATE is what keeps `unrated` (nothing on this axis is graded)
+     distinguishable from `undetermined` (the walk hit its depth bound) — two
+     different frozen facts that a single nullable grade could not tell apart,
+     and C-21.2 compares against the right one. */
+  const axes = Array.isArray(fm.published_strength) ? fm.published_strength : null;
+  if (!axes || axes.length !== 2 || !['capture', 'connection'].every((a) => axes.some((x) => x && x.axis === a))) {
+    findings.push(f('C-2.8', 'error', 'published state requires published_strength carrying BOTH axes, capture and connection: a case does not have "a strength", it has two, and composing them into one letter is the substitution R2 forbids',
+      ['publish through op=publish, which stamps both frozen axis objects into the bytes']));
+  } else {
+    for (const a of axes) {
+      if (!STRENGTH_STATES.includes(a.state)) {
+        findings.push(f('C-2.8', 'error', `published_strength.${a.axis} state '${a.state}' is not one of: ${STRENGTH_STATES.join(', ')}`));
+      } else if (a.state === 'graded' && !BASIS_GRADES.includes(a.grade)) {
+        findings.push(f('C-2.8', 'error', `published_strength.${a.axis} is graded but carries no grade`));
+      } else if (a.state !== 'graded' && a.grade != null) {
+        findings.push(f('C-2.8', 'error', `published_strength.${a.axis} is ${a.state} and still carries grade '${a.grade}': ${a.state === 'unrated' ? 'UNRATED is not a low score, it is nothing established on this axis' : 'undetermined is what we do not know, not a grade'}`));
+      }
+    }
+  }
+  /* DEC-17 as amended. The bar the GROUP set for its own work, stamped beside
+     what the case reached. Absent gates nothing and must SAY so. */
+  const rq = (typeof fm.required_strength === 'object' && fm.required_strength) || null;
+  if (!rq || typeof rq.declared !== 'boolean') {
+    findings.push(f('C-2.8', 'error', 'published state requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength it reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17)',
+      ['declare the group default with op=strengthbar, or publish with the bar stated absent']));
+  } else if (rq.declared) {
+    for (const axis of ['capture', 'connection']) {
+      if (!BASIS_GRADES.includes(rq[axis])) {
+        findings.push(f('C-2.8', 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')} — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
+      }
+    }
+  }
+}
+
+/** REC-14 / C-21.1: THE COMPLETENESS GATE. On `published`, no ASSERTED field of
+ *  the completeness block was carried forward byte-identical from the PREVIOUS
+ *  EDITION — because a gate that only checks PRESENCE is a checkbox, and a
+ *  completeness claim carried forward unchanged is exactly the checkbox this
+ *  gate exists to refuse (DEC-12: *"the exclusion statement is authored fresh
+ *  per edition under C-21.1's byte-check"*).
+ *
+ *  Compared against HISTORY the way C-5 and C-12 compare live against history —
+ *  but against the previous RATIFIED EDITION rather than the previous snapshot,
+ *  which is the only comparison DEC-12 makes meaningful: a document may be
+ *  promoted twenty times between editions, and what the reader was given is the
+ *  edition, not the twentieth promotion.
+ *
+ *  The prior edition arrives INJECTED (the releaseRegistry precedent), because
+ *  the checker is a pure function over a filesystem and the published
+ *  projection is not in the bundle. An absent registry means the caller cannot
+ *  see the published record — the migrate tool and the cli — and this cannot
+ *  fire; the gate and the store's write path both inject it, so on every path a
+ *  real caller has, it does. */
+function checkCompletenessFreshness(ctx, findings) {
+  if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
+  if (ctx.fm?.current_state !== 'published') return;
+  const reg = ctx.publishedRegistry;
+  if (!reg) return;
+  const mine = reg[ctx.fm.id];
+  if (!mine || !mine.editions) return;
+  /* The previous edition is the highest ratified one BELOW this document's own
+     edition: this edition is not in the projection until it is ratified, and a
+     re-ratification of the same edition is refused elsewhere by name. */
+  const prior = Object.values(mine.editions)
+    .filter((x) => Number(x.edition) < Number(ctx.fm.edition))
+    .sort((a, b) => Number(b.edition) - Number(a.edition))[0];
+  if (!prior || !prior.completeness) return;   // edition 1 has nothing to be fresh against
+  const now = completenessFields(ctx.fm);
+  const was = prior.completeness;
+  const LABEL = {
+    statement: 'completeness.statement',
+    subject_justification: 'completeness.subject_justification',
+    excluded: 'completeness_excluded',
+  };
+  for (const k of Object.keys(LABEL)) {
+    if (now[k] != null && was[k] != null && now[k] === was[k]) {
+      findings.push(f('C-21.1', 'error',
+        `${LABEL[k]} is byte-identical to edition ${prior.edition}'s: a completeness claim carried forward unchanged is a checkbox, and this gate exists to refuse it. Every edition is a SEPARATE DOCUMENT and states its own limits in its own words, as of its own date (DEC-12, C-21.1)`,
+        [`author ${LABEL[k]} fresh for edition ${ctx.fm.edition}`,
+         'if nothing about the limits changed, say that AS OF THIS EDITION rather than reprinting the last one']));
+    }
+  }
 }
 
 /* REC-11: the basis leg vocabularies, exported so op=affordances can publish
@@ -1369,7 +1618,10 @@ function checkInquiryExtension(ctx, findings) {
 export const BASIS_ROLES = ['supports', 'cuts_against'];
 export const BASIS_GRADES = ['A', 'B', 'C', 'D'];
 export const GRADE_AXES = ['capture', 'connection'];
-export const GRADE_SOURCES = ['resolution', 'testimony', 'hunch'];
+/* 'inherited' joins with REC-14: a leg resting on a PUBLISHED case does not
+   earn its grade and does not author it — it takes the grade that case froze
+   when the group signed it, on the same axis, and says so. */
+export const GRADE_SOURCES = ['resolution', 'testimony', 'hunch', 'inherited'];
 
 /* REC-11: the basis[] leg grammar, ONE function consulted by BOTH the checker
  * (via checkInquiryExtension above) and the store's op=promote write path —
@@ -1391,7 +1643,7 @@ export const GRADE_SOURCES = ['resolution', 'testimony', 'hunch'];
  * permitted above D). Duplicate targets are LEGAL by design — D4: a basis
  * legitimately cites one document for two legs, which is why this table has
  * an ordinal and refs could not carry it. */
-export function checkInquiryBasis(fm, findings) {
+export function checkInquiryBasis(fm, findings, publishedRegistry) {
   const legs = fm?.basis;
   if (legs === undefined || legs === null) return;   // no basis is a legal open inquiry
   if (!Array.isArray(legs)) {
@@ -1456,6 +1708,80 @@ export function checkInquiryBasis(fm, findings) {
     if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
       findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
     }
+    checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
+  }
+}
+
+/** REC-14 / C-21.2: THE INHERITANCE RULE, PER AXIS.
+ *
+ *  A case built on a case cannot be stronger than the case beneath it. So a
+ *  basis leg whose target is a PUBLISHED inquiry carries grade_source
+ *  'inherited', NAMES THE EDITION it rests on, and carries a grade no stronger
+ *  than that edition's FROZEN strength ON THE SAME AXIS — refused if stronger
+ *  on either axis, and the two are compared independently.
+ *
+ *  PER AXIS IS THE WHOLE OF IT (RECONCILED R2-j). A single scalar comparison
+ *  would let a case inherit an A CONNECTION grade from a case whose A was a
+ *  CAPTURE grade — two incommensurable measurements over two different
+ *  populations, laundered through one letter. The frozen pair is stamped in the
+ *  published bytes as two axis OBJECTS for exactly this reason, and the axis
+ *  the leg selects is its own recorded grade_axis.
+ *
+ *  AN UNRATED OR UNDETERMINED AXIS ADMITS NO GRADE AT ALL, and the two say
+ *  different things. UNRATED means nothing on that axis was ever established —
+ *  a grade inherited from it would be invented outright. UNDETERMINED means the
+ *  walk could not finish, so what lies beneath is UNKNOWN rather than absent,
+ *  and a grade taken from it would be a claim about material nobody has seen.
+ *
+ *  THE EDITION DOES NOT SILENTLY FOLLOW (DEC-12). A leg citing edition 1 keeps
+ *  citing edition 1 when edition 2 appears; REC-17's re-evaluation obligation
+ *  surfaces the newer edition and the MEMBER decides. Nothing recomputes a
+ *  strength on their behalf, because the strength was not changed for them. */
+function checkInheritedLeg(leg, i, graded, registry, findings) {
+  const target = typeof leg.target === 'string' ? leg.target : null;
+  const pub = registry && target ? registry[target] : null;
+  if (leg.grade_source === 'inherited' && !pub) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source 'inherited' but its target ${registry ? 'is not a published case' : 'cannot be checked against the published record here'}: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else`,
+      ['cite a published case and name its edition', 'or state where this grade actually came from']));
+    return;
+  }
+  if (!pub) return;                       // not a published target: nothing to inherit
+  if (!graded) {
+    /* Legal and deliberately so: an ungraded leg is INERT (DEC-18) — present,
+       named, not yet load-bearing. What it may not do is CLAIM inheritance,
+       because inheriting nothing is not inheritance. */
+    if (leg.grade_source === 'inherited') {
+      findings.push(f('C-2.8', 'error', `basis[${i}] claims 'inherited' with no grade: a leg resting on a published case may state no grade at all — undetermined, stated — but it may not claim to have inherited one`));
+    }
+    return;
+  }
+  if (leg.grade_source !== 'inherited') {
+    findings.push(f('C-21.2', 'error', `basis[${i}] carries a grade of its own on a PUBLISHED case (${target}): a leg resting on a published case inherits that case's frozen strength and says so with grade_source 'inherited'. A case built on a case cannot be stronger than the case beneath it`,
+      [`set grade_source: inherited and target_edition on basis[${i}]`]));
+    return;
+  }
+  const ed = leg.target_edition;
+  if (!Number.isInteger(ed)) {
+    findings.push(f('C-21.2', 'error', `basis[${i}] inherits from ${target} without naming an edition: every edition is a SEPARATE DOCUMENT with its own frozen strength, so an unnamed edition leaves the inheritance rule nothing fixed to compare against (DEC-12)`,
+      [`add target_edition to basis[${i}]`]));
+    return;
+  }
+  const frozen = pub.editions ? pub.editions[String(ed)] : null;
+  if (!frozen) {
+    findings.push(f('C-21.2', 'error', `basis[${i}] names edition ${ed} of ${target}, which is not in the published record (published editions: ${pub.editions ? Object.keys(pub.editions).join(', ') || 'none' : 'none'})`));
+    return;
+  }
+  const axis = leg.grade_axis;
+  if (axis !== 'capture' && axis !== 'connection') return;   // C-2.8 named it already
+  const on = frozen[axis];
+  if (!on || on.state !== 'graded') {
+    findings.push(f('C-21.2', 'error', `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose ${axis} axis is ${on ? on.state.toUpperCase() : 'ABSENT'}: ${on && on.state === 'unrated' ? 'nothing on that axis was ever established there, so a grade taken from it would be invented outright' : 'what lies beneath is unknown rather than absent, so a grade taken from it would be a claim about material nobody has seen'}`,
+      [`state no grade on basis[${i}] — undetermined, stated, is the honest answer`]));
+    return;
+  }
+  if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(on.grade)) {
+    findings.push(f('C-21.2', 'error', `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose frozen ${axis} strength is ${on.grade}: a case built on a case cannot be stronger than the case beneath it, and the comparison is PER AXIS — this leg's ${axis} grade against that edition's ${axis} grade, never against a composed letter`,
+      [`set basis[${i}].grade to ${on.grade}, the frozen ${axis} strength of that edition`]));
   }
 }
 
@@ -3066,6 +3392,17 @@ export async function checkBundle(input, opts = {}) {
     // is legal and means pre-migration behavior; absent WITH a
     // post-migration release is an error, never a skip.
     releaseRegistry: input.releaseRegistry || null,
+    /* REC-14: the published projection, injected exactly like releaseRegistry
+       and for the same reason — the checker is a pure function over a
+       filesystem, and what OTHER cases were published (and at which editions,
+       with which frozen pair) is not in this bundle. Shape:
+         { <bundleId>: { latest: n, editions: { "1": {edition, completeness,
+             capture: {state, grade}, connection: {state, grade}} } } }
+       Absent means the caller cannot see the published record (the cli, the
+       migrate tool) and C-21.1/C-21.2 cannot fire. Every path a real caller
+       has — the ratification gate and the store's own write path — injects it,
+       which is what keeps the absence from being a way through. */
+    publishedRegistry: input.publishedRegistry || null,
     sha512: input.sha512 || null,
     fm: null,
     body: ''
@@ -3095,6 +3432,7 @@ export async function checkBundle(input, opts = {}) {
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
     checkInquiryExtension(ctx, findings);
+    checkCompletenessFreshness(ctx, findings);
     checkProjectExtension(ctx, findings);
     checkActionExtension(ctx, findings);
     checkCitationRegister(ctx, findings);

@@ -174,14 +174,45 @@ CREATE TABLE IF NOT EXISTS signers (
 -- query from these tables can never leak working material. published_shas
 -- is append-only across re-ratifications: a hash once published stays
 -- verifiable forever, which is what a document holder needs.
+--
+-- REC-14 / DEC-12: KEYED (bundle_id, edition) AND APPENDING. The table used
+-- to be keyed on bundle_id and to UPSERT, so re-ratifying destroyed the prior
+-- signature, attestor, time and gate version (D-144) while published_shas
+-- accumulated -- the code split against itself, and neither branch of the
+-- terminality question. Bob's ruling makes the append RIGHT and the upsert
+-- merely not yet edition-aware: an edition is a SEPARATE DOCUMENT, edition 2
+-- joins edition 1 rather than overwriting it, and a reader who relied on
+-- edition 1's hash is not betrayed because edition 1 still answers, still
+-- carries its own attestation and its own date, and still says what it said.
+--
+-- title is the ONE deliberate divergence from DATA-MODEL.md 2.4.4, so the
+-- public index is not N+1. The four frozen columns after it are what the
+-- group SIGNED, kept beside the signature rather than only inside the bytes:
+-- completeness is the assertion C-21.1 compares the NEXT edition against
+-- (a gate that only checks presence IS a checkbox, and the comparison must
+-- not depend on R2 or on a history snapshot surviving); strength is BOTH
+-- frozen axis objects (never two letters -- unrated and undetermined are
+-- different frozen facts, and C-21.2 compares per axis against the right
+-- one); required is DEC-17's declared bar as it stood, null meaning ABSENT
+-- and gating nothing; manifest is DEC-34's signed hash manifest over every
+-- part of the container, with its own sha in manifest_sha so any copy of the
+-- container anywhere can be checked against this instance.
 CREATE TABLE IF NOT EXISTS published_bundles (
-  bundle_id       TEXT PRIMARY KEY,
+  bundle_id       TEXT NOT NULL,
+  edition         INTEGER NOT NULL,
+  title           TEXT,
   bundle_sha      TEXT NOT NULL,
   ratified_at     TEXT NOT NULL,
   attestor_key    TEXT NOT NULL,
   attestor_member TEXT,
   gate_version    TEXT NOT NULL,
-  sig_armored     TEXT NOT NULL
+  sig_armored     TEXT NOT NULL,
+  completeness    TEXT,
+  strength        TEXT,
+  required        TEXT,
+  manifest_sha    TEXT,
+  manifest        TEXT,
+  PRIMARY KEY (bundle_id, edition)
 );
 CREATE TABLE IF NOT EXISTS published_shas (
   sha256    TEXT NOT NULL,
@@ -1117,6 +1148,58 @@ CREATE TABLE IF NOT EXISTS queue_state (
 );
 CREATE INDEX IF NOT EXISTS queue_state_member ON queue_state(member_id);
 CREATE INDEX IF NOT EXISTS queue_state_case ON queue_state(case_id);
+-- REC-14 / C-9: what a published case says it does NOT cover. A projection of
+-- the completeness_excluded[] block in bundle.md, exactly as inquiry_basis is
+-- of basis[] -- the BYTES make the assertion storable and signable, and only
+-- this INDEXED projection makes it AUDITABLE. "Which published cases excluded
+-- this document" is invariant 7's only mechanical enforcement point at the
+-- case level, and without the index on target_id it cannot be asked at all.
+--
+-- target_id is NULLABLE and every row carries target_id OR prose, NEVER
+-- NEITHER (RECONCILED C-9, the capture-or-testify structure REC-24 uses for
+-- correspondence). An exclusion may legitimately name something that is not in
+-- the record -- "a records request to the City Clerk is still outstanding" is
+-- a real exclusion with no id to point at -- so a NOT NULL target would force
+-- the member to either invent a referent or say nothing. description and
+-- reason are both NOT NULL: WHAT was left out and WHY are two different
+-- statements and one does not stand in for the other.
+--
+-- edition is the edition of the document this projection was taken from, so an
+-- auditor reading a row knows which assertion it is. It is NOT in the key: the
+-- bytes hold every edition's assertion forever, and this table holds the LIVE
+-- document's, re-projected whole on every promotion like every other
+-- projection here. Cleared in BOTH purge arms (D-113).
+CREATE TABLE IF NOT EXISTS inquiry_exclusions (
+  bundle_id   TEXT NOT NULL,
+  ord         INTEGER NOT NULL,
+  edition     INTEGER,
+  target_id   TEXT,
+  description TEXT NOT NULL,
+  reason      TEXT NOT NULL,
+  author      TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS inquiry_exclusions_target ON inquiry_exclusions(target_id);
+-- REC-14 / DEC-17 as amended: the GROUP's default required evidentiary
+-- strength, which a project may then override in its own bundle.md. A PAIR
+-- (capture, connection) per R2 and never a scalar, because a single letter
+-- would re-collapse the two axes in the one field a reader is most likely to
+-- quote.
+--
+-- It is a DECLARATION BY THE GROUP ABOUT ITS OWN WORK, not a system rule and
+-- not a property of any reader: nobody's standard is set by who they are
+-- (AUDIENCES 5). An ABSENT declaration gates nothing and the published case
+-- SAYS SO -- an absent bar is not a bar of zero and must never render as one.
+-- Governance, not corpus: like members and signers it survives a whole-store
+-- purge, and hygiene.test.mjs carries that exemption with its reason.
+CREATE TABLE IF NOT EXISTS group_strength_bar (
+  group_id   TEXT PRIMARY KEY,
+  capture    TEXT,
+  connection TEXT,
+  author     TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

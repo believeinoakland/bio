@@ -209,16 +209,29 @@ const cat = await affordances(null);
    catalogue then — and correcting it rather than loosening it is the point:
    this assertion exists so a published act cannot appear or vanish without a
    turn saying so, and a `>= 6` would have made it stop doing that. */
-t("no target -> the whole catalogue: seven acts, each with id/label/weight/needs/mode/rung",
+/* CORRECTED 2026-08-04 (REC-14), never exempted: the count is the point of
+   this assertion — a published act may not appear or vanish without a turn
+   saying so — so it MOVES to eight with `publish` rather than being loosened
+   to a >=, which is exactly what the note above warns against. */
+t("no target -> the whole catalogue: eight acts, each with id/label/weight/needs/mode/rung",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung"].every((k) => k in a))],
-  [true, 7, true]);
+  [true, 8, true]);
 t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the seven action kinds",
   [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
   [["deferred", "dismissed"], 7]);
-t("every act needs `contribute` and is session-reachable — composed from NEEDS and SESSION_OPS, not asserted by hand",
+/* CORRECTED 2026-08-04 (REC-14), never exempted. The old assertion said every
+   act needs `contribute`, which was true while every act was a corpus-shaping
+   one. `publish` is not: concluding says what the record shows, publishing puts
+   the group's name on it and states in the group's voice what it does not cover
+   and whether it was put to its subject — that is the PUBLICATION surface, the
+   same capability op=ratify carries, and a member who may not publish may not
+   author the case either. Still composed rather than hand-listed: `mode` comes
+   from SESSION_OPS for every act, and exactly one act names the other
+   capability. */
+t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one",
   cat.result.catalog.map((a) => [a.needs, a.mode]),
-  cat.result.catalog.map(() => ["contribute", "session"]));
+  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : "contribute", "session"]));
 t("rung is DECLARED: cite is null (no document assigns one — FW-14's, not ours), retire is terminal",
   [cat.result.catalog.find((a) => a.id === "cite").rung,
    cat.result.catalog.find((a) => a.id === "retire").rung], [null, "terminal"]);

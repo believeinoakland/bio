@@ -34,13 +34,13 @@
 
 import { checkBundle } from "../checks/bio-checks.mjs";
 
-export const CATALOG_VERSION = "1.18.0";
+export const CATALOG_VERSION = "1.19.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
 
-export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry }) {
+export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry, publishedRegistry }) {
   const files = new Map(), elided = new Set();
   for (const [path, v] of Object.entries(image || {})) {
     if (typeof v === "string") files.set(path, v);
@@ -55,6 +55,14 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
     sha512: async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b)),
     resolveTarget: (id) => knownIds.has(id),
     releaseRegistry: releaseRegistry || null,
+    /* REC-14: the published projection, supplied by the store (gateFacts) for
+       the bundle being gated and for every target its basis names. C-21.1 and
+       C-21.2 are the two checks in the catalog that cannot be answered from
+       the bundle alone: what the PREVIOUS EDITION of this case asserted, and
+       what strength the case beneath this one FROZE when the group signed it.
+       Passing null here does not soften the gate, it blinds it -- so it is
+       threaded from the one place that has the rows. */
+    publishedRegistry: publishedRegistry || null,
   });
 
   const errors = findings
