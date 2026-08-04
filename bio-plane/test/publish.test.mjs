@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (REC-14's four, each broken ALONE and restored; 70 pass when whole) (a) C-21.1 IS A CHECKBOX — in checks/bio-checks.mjs checkCompletenessFreshness replace `if (now[k] != null && was[k] != null && now[k] === was[k]) {` with `if (false) {`, AND in src/store.mjs publishCase() replace the matching `if (now[k] != null && prior.completeness[k] != null && ...)` with `if (false)` -> 65 pass, 5 FAIL: the headline "a second edition carrying edition 2's STATEMENT verbatim is REFUSED" reports `undefined` because op=publish ACCEPTED it and the edition landed, the next two then report ILLEGAL_TRANSITION (the case is already published on a carried-forward assertion), and "the CATALOG names C-21.1" reports 0 — the gate finds nothing wrong with that document either, so nothing downstream would ever notice. Both halves must go together, as REC-13 found: breaking one alone leaves the other refusing. (b) THE AXES COMPOSED, two variants, because which probe flips depends on which scalar the bug composes. (b1) checkInheritedLeg `const on = frozen[axis]` -> `const on = frozen.capture` -> 69 pass, 1 FAIL: PROBE 2 (inheriting CONNECTION B from a case whose frozen connection is C) is ACCEPTED, got [true,null,[]] where [false,"BASIS_REFUSED",["C-21.2"]] was wanted. (b2) compose to the WEAKEST letter instead (`const on = worst(frozen.capture, frozen.connection)`) -> 69 pass, 1 FAIL, the OPPOSITE one: PROBE 3, the LEGAL leg inheriting capture B at the frozen capture grade, is REFUSED. Two "must refuse" probes alone would have missed (b2) entirely; the four probes are why either variant is caught. (c) THE UPSERT RETURNS — in src/store.mjs publish() replace `ON CONFLICT(bundle_id,edition) DO NOTHING` with an UPDATE of every column, force `const ed = 1`, and guard both edition refusals with `if (false)` -> 61 pass, 9 FAIL: "edition 1 KEEPS its own signature" reports edition 2's sha in edition 1's row, "BOTH editions are readable" reports ONE row, and "edition 1's completeness statement is still exactly what was signed" reports edition 2's statement. D-144 reproduced exactly — a reader who relied on edition 1's attestation finds edition 2's in its place. Restore after each. */
+/* NEGATIVE CONTROL: (REC-14's four, each broken ALONE and restored; 73 pass when whole) (a) C-21.1 IS A CHECKBOX — in checks/bio-checks.mjs checkCompletenessFreshness replace `if (now[k] != null && was[k] != null && now[k] === was[k]) {` with `if (false) {`, AND in src/store.mjs publishCase() replace the matching `if (now[k] != null && prior.completeness[k] != null && ...)` with `if (false)` -> 65 pass, 5 FAIL: the headline "a second edition carrying edition 2's STATEMENT verbatim is REFUSED" reports `undefined` because op=publish ACCEPTED it and the edition landed, the next two then report ILLEGAL_TRANSITION (the case is already published on a carried-forward assertion), and "the CATALOG names C-21.1" reports 0 — the gate finds nothing wrong with that document either, so nothing downstream would ever notice. Both halves must go together, as REC-13 found: breaking one alone leaves the other refusing. (b) THE AXES COMPOSED, two variants, because which probe flips depends on which scalar the bug composes. (b1) checkInheritedLeg `const on = frozen[axis]` -> `const on = frozen.capture` -> 69 pass, 1 FAIL: PROBE 2 (inheriting CONNECTION B from a case whose frozen connection is C) is ACCEPTED, got [true,null,[]] where [false,"BASIS_REFUSED",["C-21.2"]] was wanted. (b2) compose to the WEAKEST letter instead (`const on = worst(frozen.capture, frozen.connection)`) -> 69 pass, 1 FAIL, the OPPOSITE one: PROBE 3, the LEGAL leg inheriting capture B at the frozen capture grade, is REFUSED. Two "must refuse" probes alone would have missed (b2) entirely; the four probes are why either variant is caught. (c) THE UPSERT RETURNS — in src/store.mjs publish() replace `ON CONFLICT(bundle_id,edition) DO NOTHING` with an UPDATE of every column, force `const ed = 1`, and guard both edition refusals with `if (false)` -> 61 pass, 9 FAIL: "edition 1 KEEPS its own signature" reports edition 2's sha in edition 1's row, "BOTH editions are readable" reports ONE row, and "edition 1's completeness statement is still exactly what was signed" reports edition 2's statement. D-144 reproduced exactly — a reader who relied on edition 1's attestation finds edition 2's in its place. (d) THE MIGRATION LOSES THE RECORD — in src/store.mjs #migrate delete the `INSERT INTO published_bundles ... SELECT ... FROM published_bundles_preeditions` copy-forward -> 72 pass, 1 FAIL: "the legacy row SURVIVES the re-key" reports 0 editions, i.e. every case a group had already published, with its signature and its attestor, gone at the next boot. Restore after each. */
 /* REC-14: the `published` state — EDITIONS, the completeness assertion, and the
  * gates that stop it being a checkbox.
  *
@@ -73,6 +73,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkBundle, STATES, SUBJECT_POSITIONS } from "../checks/bio-checks.mjs";
+import { SCHEMA } from "../src/schema.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- publish ---");
@@ -628,6 +629,80 @@ console.log("\n--- 8. C-9: an exclusion names a document OR says it in prose, an
     rows.map((r) => [r.bundle_id, r.edition >= 1]), [[INQ_CASE, true]]);
   t("a prose-only row is NOT reachable by target and is not lost either: it lives in the case's own bytes",
     (await imageOf(INQ_CASE)).includes("2019 council minutes"), true);
+}
+
+/* ================================ 9. the RE-KEY, against a store that already has rows */
+console.log("\n--- 9. an EXISTING store migrates: every ratified row survives as edition 1 ---");
+{
+  /* published_bundles is the ONE table in this item whose shape changed while
+     it already holds rows a reader may be relying on. It is not derived and it
+     may never be dropped and re-derived, which is what the two tables in
+     #migrate's rebuild list are allowed to do — so this block drives the actual
+     upgrade: a store is booted on the OLD schema, given a ratified row, and
+     then reloaded on the new one. Nothing else in the battery exercises a
+     schema migration, and an untested migration of the published projection is
+     the one defect in this item that would be unrecoverable.
+
+     NEGATIVE CONTROL for this block: remove the INSERT ... SELECT copy-forward
+     in src/store.mjs #migrate (the block guarded on PRAGMA
+     table_info(published_bundles_preeditions)) -> "the legacy row survives"
+     reports 0 editions: every case the group had already published, with its
+     signature and its attestor, silently gone at the next boot. Run 2026-08-04,
+     measured exactly that; restored. */
+  const OLD_PB = `CREATE TABLE IF NOT EXISTS published_bundles (
+  bundle_id       TEXT PRIMARY KEY,
+  bundle_sha      TEXT NOT NULL,
+  ratified_at     TEXT NOT NULL,
+  attestor_key    TEXT NOT NULL,
+  attestor_member TEXT,
+  gate_version    TEXT NOT NULL,
+  sig_armored     TEXT NOT NULL
+)`;
+  const from = SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_bundles");
+  const OLD_SCHEMA = SCHEMA.slice(0, from) + OLD_PB + SCHEMA.slice(SCHEMA.indexOf(");", from) + 1);
+  t("the fixture really is the OLD shape: no edition column anywhere in its published_bundles",
+    /published_bundles[\s\S]{0,400}edition/.test(OLD_SCHEMA), false);
+
+  /* A subclass with ONE raw route, the strength-cycle-probe precedent: the row
+     has to be written in the old column set, which the current committer
+     cannot produce. */
+  const PROBE = `
+import { Store } from "./store.mjs";
+export class ProbeStore extends Store {
+  async fetch(req) {
+    const url = new URL(req.url);
+    if (url.pathname === "/rawpublished") {
+      this.sql.exec("INSERT INTO published_bundles (bundle_id,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored) VALUES (?,?,?,?,?,?,?)",
+        url.searchParams.get("id"), "legacysha", "2026-01-01T00:00:00Z", "LEGACYKEY", "bob",
+        "plane-gate/0.9", "-----BEGIN SSH SIGNATURE-----legacy");
+      return Response.json({ result: { ok: true } });
+    }
+    return super.fetch(req);
+  }
+}
+export default { fetch(req, env) { return env.STORE.get(env.STORE.idFromName("bio")).fetch(req); } };
+`;
+  const opts = (schema) => ({
+    modules: true, script: PROBE, modulesRoot: "/",
+    scriptPath: fileURLToPath(new URL("../src/publish-migration-probe.mjs", import.meta.url)),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "ProbeStore", useSQLite: true } },
+    bindings: schema ? { SCHEMA: schema } : {},
+  });
+  const mfm = new Miniflare(opts(OLD_SCHEMA));
+  const dial = async (path) => (await (await mfm.dispatchFetch("http://x" + path)).json()).result;
+  const LEGACY = "INQ-2026-0001-legacy";
+  await dial(`/rawpublished?id=${LEGACY}`);
+  await mfm.setOptions(opts(null));            // same storage, the CURRENT schema
+  const eds = await dial(`/publishededitions?id=${LEGACY}`);
+  t("the legacy row SURVIVES the re-key, as edition 1, with its signature, attestor, time and gate version",
+    [eds.editions.length, eds.editions[0]?.edition, eds.editions[0]?.bundle_sha,
+     eds.editions[0]?.attestor_member, eds.editions[0]?.gate_version],
+    [1, 1, "legacysha", "bob", "plane-gate/0.9"]);
+  t("and the frozen columns are NULL rather than invented: nothing was ever signed for them",
+    [eds.editions[0]?.completeness, eds.editions[0]?.strength, eds.editions[0]?.required],
+    [null, null, null]);
+  await mfm.dispose();
 }
 
 await mf.dispose();
