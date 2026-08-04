@@ -266,7 +266,7 @@ footer{
     <div class="stat"><b>94</b><span>processes catalogued</span></div>
     <div class="stat"><b>23</b><span>of those work today</span></div>
     <div class="stat"><b>36</b><span>build items queued</span></div>
-    <div class="stat"><b>5</b><span>questions still open · 4 with a recommendation on the table</span></div>
+    <div class="stat"><b>2</b><span>questions still open · 1 with a recommendation on the table</span></div>
   </div>
 
   </header>
@@ -298,7 +298,7 @@ footer{
   <div class="navhead">3 · Absences</div>
   <a href="#gaps">What is missing</a>
   <div class="navhead">4 · Settled &amp; open</div>
-  <a href="#decisions">28 decisions</a>
+  <a href="#decisions">34 decisions</a>
   <a href="#open">Still open</a>
   <div class="navhead">5 · Next</div>
   <a href="#order">Build order</a>
@@ -2100,11 +2100,11 @@ flowchart BT
 <div class="parthead">
   <div class="pnum">Part 4</div>
   <h2>Settled, and still open</h2>
-  <p>Twenty-eight decisions taken, two deliberately deferred, and the questions nobody should close by guessing — four of them now carried as register entries with a worked recommendation, awaiting your answer.</p>
+  <p>Thirty decisions taken, three deliberately deferred with named triggers, one open with a recommendation on the table, and the question nobody should close by guessing.</p>
 </div>
 
 <section id="decisions">
-  <h2><span class="tag">Settled</span>Twenty-eight decisions settled; four raised and open, each with a recommendation</h2>
+  <h2><span class="tag">Settled</span>Thirty decisions settled, three deferred, one open</h2>
   <p class="lede">
     Decisions reach this register when they are genuinely the architect's: doctrine about what
     the record may claim, risk carrying his name, or effects on people outside the project.
@@ -2113,13 +2113,15 @@ flowchart BT
     an open question never stops work.
   </p>
   <p>
-    <strong>Two are deferred rather than answered</strong>, each with a named condition that
+    <strong>Three are deferred rather than answered</strong>, each with a named condition that
     reopens it: what a group's root of trust should be, held until a real instance runs with
-    several members and the answer can be observed rather than guessed; and whether any part of
-    an action plan is ever published. The second carries a constraint worth stating here,
-    because it binds whoever answers it: groups will write candidly in plans <em>because</em>
-    plans are private, so if that ever changes it can only apply to plans written afterwards,
-    with the group told first.
+    several members and the answer can be observed rather than guessed; whether any part of
+    an action plan is ever published; and what a case sent confidentially to one recipient is,
+    held until the first group actually asks. The second carries a constraint worth stating
+    here, because it binds whoever answers it: groups will write candidly in plans
+    <em>because</em> plans are private, so if that ever changes it can only apply to plans
+    written afterwards, with the group told first. The third binds one rule already: an
+    addressed rendering carries its hash, date, author and floors inside itself.
   </p>
   <p>
     The register below is grouped by what each settles, not by the order they were taken.
@@ -2255,11 +2257,41 @@ flowchart BT
     <p class="da">A terminal <em>state</em>, not a disposition. Setting a question aside — deferring it, dismissing it — is a judgement about a well-formed question, which survives the judgement unchanged. Division says the question itself was malformed and corrects it forward into its children, the same direction every correction moves. The divided original stays on the record, names where every piece of evidence went, and can never quietly come back.</p></div>
     <div class="dstat"><span class="chip built">session</span></div>
   </div>
+  <div class="dec">
+    <div class="dnum">DEC-29</div>
+    <div><p class="dq">Division costs one reason where severing costs one per leg — and it is offered at the moment it would raise the member's strength. Keep either?</p>
+    <p class="da">Keep both. Division cannot do severance's work at a discount, because it may not drop a leg — only re-home all of them in the open, with the published half naming its sibling. And the prompt stays, required to say exactly that: the other question remains on the record.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-30</div>
+    <div><p class="dq">Who may divide a question, and does concluding need a vote?</p>
+    <p class="da">Any contributor may divide, with the act attributed — owner-only would let an owner block an honest de-escalation. No vote on concluding: one name on every judgement. Disagreement expressed before the act is a veto; on the record after it, it is evidence.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-33</div>
+    <div><p class="dq">When is the publication ceremony built?</p>
+    <p class="da">Deferred — the process is very involved, and a placeholder surface ships in its place: an entry point that says what publication is and that it currently runs through the group's operator. The server-side publication machinery, the public read path and the reader's page are not the process and stay queued.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-34</div>
+    <div><p class="dq">What is the published-case artifact, physically?</p>
+    <p class="da">A bundle-like container — a zip of the case with a signed manifest — reduced also to a set of PDF renderings that survive outside the workflow. Every PDF page carries the case, edition, authors, declared bias, both floors, the hash and where to verify it, so a page separated from its document still names what it is. The protection is tamper-<em>evidence</em>, not tamper-proofing: any copy anywhere can be checked against the record by its hash, which needs nobody's cooperation — a stronger property than a write-protect flag any free tool can strip.</p></div>
+    <div class="dstat"><span class="chip open">architect</span></div>
+  </div>
   <h4 style="margin-top:var(--s5)">Deferred, with a named trigger</h4>
   <div class="dec">
     <div class="dnum">DEC-25</div>
     <div><p class="dq">Is any part of an action plan published?</p>
     <p class="da">Deferred, running as never-published. A group’s deliberation is the most sensitive material the system will hold and what an opponent would most want; what a reader legitimately needs is already covered by an action’s outcome becoming evidence, and by the published position on contacting the subject.</p></div>
+    <div class="dstat"><span class="chip open">deferred</span></div>
+  </div>
+  <div class="dec">
+    <div class="dnum">DEC-31</div>
+    <div><p class="dq">A case sent to one recipient and not published — what is it?</p>
+    <p class="da">Deferred until the first group actually asks, per the line “settled by the first lawyer, not by argument.” One rule binds now, because it cannot be applied retroactively: anything addressed and sent out carries its hash, date, author and both floors inside itself, so what the recipient acted on stays checkable.</p></div>
     <div class="dstat"><span class="chip open">deferred</span></div>
   </div>
   <h4 style="margin-top:var(--s5)">Settled without needing a ruling, and earlier rulings</h4>
@@ -2298,21 +2330,6 @@ flowchart BT
           <td><strong>May one finding rest on several parallel bodies of support?</strong> <span class="chip open">DEC-32</span></td>
           <td>Your utility example: one question, answered independently by the regulations and by the constitution. Forcing it into two questions splits an answer a reader needs whole. Recommended: <em>grounds</em> — one conclusion, several named groups of evidence, each asserted independently sufficient, with your name on that judgement. The strength becomes the strongest sufficient ground rather than the weakest leg overall, so a weaker alternative ground no longer drags the finding down — which also removes one of the two honest reasons a member reaches for division today.</td>
           <td>The architect — recommendation on the table</td>
-        </tr>
-        <tr>
-          <td><strong>Division's two residuals: its cost, and the moment it is offered</strong> <span class="chip open">DEC-29</span></td>
-          <td>Severing costs a reason per leg; dividing costs one reason for the act. And the screen offers “Divide this…” at the exact moment the weakest leg is holding the member's strength down. Recommended: keep both — division cannot do severance's work at a discount because it may not drop a leg, only re-home all of them in the open; and the prompt must state that the other question stays on the record and the published half will name it.</td>
-          <td>The architect — recommendation on the table</td>
-        </tr>
-        <tr>
-          <td><strong>Who may divide a question, and does concluding need a vote?</strong> <span class="chip open">DEC-30</span></td>
-          <td>Recommended: any contributor may divide, with the act attributed, because owner-only would let an owner block an honest de-escalation; and no vote on concluding — one name on every judgement. Disagreement expressed before the act is a veto; on the record after it, it is evidence.</td>
-          <td>The architect — recommendation on the table</td>
-        </tr>
-        <tr>
-          <td><strong>A case sent to one recipient and not published</strong> <span class="chip open">DEC-31</span></td>
-          <td>An oversight referral is on neither side of the publication fence, and a rendering somebody acted on has become a record needing a hash, a date and an author. Provisionally modelled as an action. Recommended: defer until the first group actually asks — but bind one rule now, because it cannot be applied retroactively: anything addressed and sent out carries its hash, date, author and both floors inside itself, so what the recipient acted on stays checkable.</td>
-          <td>The architect — and “settled by the first lawyer, not by argument”</td>
         </tr>
         <tr>
           <td><strong>Can two pieces of evidence contradicting each other be held inside one question?</strong></td>

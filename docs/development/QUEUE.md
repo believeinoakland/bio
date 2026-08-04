@@ -839,6 +839,30 @@ bind the in-band rendering rule now), DEC-32 (plurality as GROUNDS — note this
 adopted, touches REC-11/REC-12's strength arithmetic: disjunctive over grounds, weakest leg
 within a ground).
 
+### 2026-08-03 · BOB · Bob's answers: DEC-29/30 adopted, DEC-31 deferred-and-bound, S8 deferred (DEC-33), S9's artifact form ruled (DEC-34)
+
+All recorded in `DECISIONS.md`; RECONCILED §4 and the review document are updated in the
+same commit. DEC-32 stays open while Bob weighs the grounds model.
+
+**RESHAPES EXISTING ITEMS:**
+- **REC-16** — DEC-29/30 answered: one authored reason per division stands; the divide
+  prompt's wording must state the disclosure (acceptance clause); author-scoped is now
+  SETTLED, not provisional. With DEC-28 last entry, REC-16's decision surface is complete.
+- **REC-13** — DEC-30: conclude gains no owner gate and no ballot.
+- **UI-17 and REC-15 are DEFERRED** — DEC-33, Bob's ruling: the publication ceremony process
+  is deferred; a small placeholder item ships in UI-17's place (entry point stating what
+  publication is and that it runs through the operator for now — Q12's surface-scoped
+  narration). REC-14, REC-22 and UI-18 are NOT the process and stay queued. Correct any
+  kickoff naming UI-17 as next-up.
+- **REC-14 / REC-22 / UI-18** — DEC-34: the published case is a CONTAINER (zip of the case
+  bundle + signed hash manifest + editions over the container) reduced also to PDF
+  renderings; every PDF page carries case id, edition, authors, declared bias, both floors,
+  hash and verification pointer (H4 made unavoidable). Tamper-EVIDENT via answer-by-hash,
+  never claimed tamper-proof. Negative control on the rendering item: a page without the
+  header fails the harness.
+- **AUDIENCES.md H4** — DEC-31's bound rule: addressed renderings carry hash, date, author
+  and both floors in-band; record the extension beside H4 at enactment.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on

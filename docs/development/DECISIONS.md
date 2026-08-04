@@ -2084,7 +2084,7 @@ for CONDUCT to enact: a scope note on REC-16 — `divided` ships as a terminal S
   `op=inquirydivide`, its reason is the act's reason, and `disposition_reason` is untouched.
   Nothing else changes; SB-CORE already drew it this way.
 
-### DEC-29 · open
+### DEC-29 · answered
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q7 — CRITIQUE D-7's two halves R4 does not
   reach)
 for: bob
@@ -2116,6 +2116,16 @@ recommendation: KEEP BOTH, on one observation the register did not yet contain: 
   offered is visibly honesty, not concealment. (DEC-26's principle, one construct over: the
   gate is at the act, not at the reasoning that led there.)
 reversal cost: low both ways until REC-16 ships; (b)'s wording clause is a UI string.
+response: **RECOMMENDATION ADOPTED.** Bob, 2026-08-03: *"I'll follow your recommendation."*
+  (a) One authored reason for the whole division stands; the disclosure, not per-leg friction,
+  is the counterweight — division cannot do severance's work at a discount because no leg may
+  be dropped. (b) The divide prompt stays at the moment the weakest leg is named, and its
+  wording MUST state the disclosure: the other question stays on the record and the published
+  child will name it.
+decided: 2026-08-03 · Bob
+reasoning recorded in: this entry (the recommendation carries the full argument).
+for CONDUCT to enact: REC-16 gains the prompt-wording clause as an acceptance item; RECONCILED
+  §4 Q7 marked settled by this entry.
 
 ### DEC-30 · open
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q10 — four files, one question)
@@ -2142,8 +2152,17 @@ recommendation: AUTHOR-SCOPED division and NO BALLOT on concluding, with the sam
 reversal cost: asymmetric, and it favours this branch: adding a ballot later is additive;
   removing one later takes away a protection someone relied on. Author-scoping likewise
   reverses to a predicate on the act if practice shows abuse.
+response: **RECOMMENDATION ADOPTED.** Bob, 2026-08-03: *"I'll follow your recommendation."*
+  Division is author-scoped — any `contribute` holder, act attributed — and concluding needs
+  no ballot: one name on every judgment, with disagreement expressed through reopening,
+  propagation and contradiction-finding, on the record, after the act.
+decided: 2026-08-03 · Bob
+reasoning recorded in: this entry.
+for CONDUCT to enact: REC-16 ships author-scoped as already planned, now settled rather than
+  provisional; REC-13's conclude path gains no owner gate and no ballot. RECONCILED §4 Q10
+  marked settled by this entry.
 
-### DEC-31 · open
+### DEC-31 · deferred
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q14 third bullet; AUDIENCES rows 13–14)
 for: bob
 question: What is ADDRESSED NON-PUBLIC DELIVERY — a case sent to one recipient (a confidential
@@ -2171,6 +2190,19 @@ recommendation: DEFER with a named trigger, and bind ONE constraint now. AUDIENC
   done after.
 reversal cost: the deferral costs nothing (the action-model provisional blocks nothing); the
   in-band constraint is a rendering rule, cheap now, impossible retroactively.
+response: **DEFERRED, per the recommendation.** Bob, 2026-08-03: *"I'll follow your
+  recommendation to defer."* The recommendation was defer-plus-bind, so BOTH halves are in
+  force: the delivery construct waits for its trigger, and the in-band rule binds NOW — any
+  rendering that leaves the instance addressed to someone carries its hash, date, author and
+  both threshold floors inside itself. The rule costs nothing before the construct exists and
+  cannot be applied retroactively after.
+trigger: the first group that asks to send a case to a named recipient without publishing it.
+decided: 2026-08-03 · Bob
+reasoning recorded in: this entry; the in-band extension belongs beside H4 in AUDIENCES.md.
+for CONDUCT to enact: record the H4 extension (addressed renderings carry hash, date, author
+  and both floors in-band) in AUDIENCES.md §8's rule, so the first session to build any
+  outward rendering inherits it. RECONCILED §4 Q14's delivery bullet marked deferred by this
+  entry.
 
 ### DEC-32 · open
 raised: 2026-08-03 · session BOB (Bob's overlapping-utility example,
@@ -2205,6 +2237,89 @@ recommendation: ADOPT PLURALITY, shaped as GROUNDS rather than claim-objects: on
   conclusions disagreeing.
 reversal cost: low now, while `inquiry_basis` is unbuilt. Rising after: once grounds exist,
   renderings and citations will hang off their labels.
+
+### DEC-33 · answered
+raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)
+for: bob
+question: When is the publication ceremony — the five-step member-facing process — built?
+why it is Bob's: priority, on the heaviest act in the system.
+provisional: publishing exists only in the operator's page; no member-facing process.
+blocks: nothing — the deferral IS the answer.
+alternative: build the ceremony on the existing chain order (REC-14 → REC-22 → UI-18, with
+  UI-17 the ceremony surface).
+recommendation: n/a — raised already answered.
+reversal cost: none; deferring surface work is the cheap branch by construction.
+response: **THE PROCESS IS DEFERRED; A PLACEHOLDER SURFACE SHIPS IN ITS PLACE.** Bob,
+  2026-08-03: *"The publication process is very involved. Defer anything related to the
+  process, though create a placeholder surface."*
+  THIS SESSION'S SCOPE DETERMINATION, which is tactical and mine: "the process" is the
+  MEMBER-FACING CEREMONY and its process-specific supports — **UI-17 (the five-step ceremony)
+  and REC-15 (`op=publishpreflight`, the ceremony's dry-run) are deferred.** The PLANE's
+  publication machinery is NOT the process and stays queued: REC-14 (publish + editions)
+  carries DEC-12/DEC-19 doctrine, REC-22 is the public read path, and UI-18 is the READER's
+  page — all needed by S9 whatever the ceremony looks like, and all reachable today through
+  the operator's page, which remains the publishing route in the meantime. The PLACEHOLDER:
+  S8 exists as an entry point that states what publication is, that the ceremony is coming,
+  and that publishing currently runs through the group's operator — honest narration of an
+  absent capability, surface-scoped, exactly the Q12 rule.
+  RE-ENTRY CONDITION, named so nobody re-raises early: the chain through UI-18 has landed and
+  a group needs to publish without its operator.
+decided: 2026-08-03 · Bob
+reasoning recorded in: this entry.
+for CONDUCT to enact: UI-17 and REC-15 move to DEFERRED with this entry as the reason; a
+  small UI item for the S8 placeholder is added where UI-17 sat; REC-14/REC-22/UI-18 are
+  unaffected. Kickoffs naming UI-17 as next-up must be corrected in the same pass.
+
+### DEC-34 · answered
+raised: 2026-08-03 · Bob, in session (on S9, the published case)
+for: bob
+question: What IS the published-case artifact, physically?
+why it is Bob's: doctrine — the form of the thing a stranger checks; risk carrying the
+  group's name on every copy that circulates.
+provisional: none existed; S9 had "no data path" and no artifact form.
+blocks: none.
+alternative: HTML-only serving from the instance, no portable artifact.
+recommendation: n/a — raised already answered.
+reversal cost: low until REC-14/REC-22 build to it; the artifact form shapes both.
+response: **A PROTECTED BUNDLE-LIKE CONTAINER, REDUCED ALSO TO A SET OF PDF RENDERINGS THAT
+  SURVIVE OUTSIDE THE WORKFLOW.** Bob, 2026-08-03: *"I envision a published case as a
+  protected zip. A bundle-like object. But this bundle must also be reduced to a set of pdf
+  documents. But the pdfs are just renderings of the bundle accessible outside the CivicOS
+  workflow. So they must be write protected and brazened with unavoidable info about the
+  case, the author, bias, edition #, TOC, etc."*
+  this session's determinations, which follow from the ruling and are mine:
+  - **"PROTECTED" MEANS TAMPER-EVIDENT, NOT TAMPER-PROOF, and the record must never claim
+    otherwise.** A PDF's write-protection flag is advisory — any free tool strips it — and
+    zip passwords either use broken encryption or lock out the stranger S9 exists to serve
+    ("read it, check it, print it — without our cooperation"). Claiming write-protection as
+    the guarantee would be the record claiming more than it can support. What actually
+    protects: (1) the container carries a MANIFEST of the hash of every part, itself signed
+    by the group's published key; (2) each PDF's hash is in `published_shas`, so any copy
+    anywhere can be checked against the instance — the existing answer-by-hash mechanism,
+    extended to renderings; (3) the write-protect flag is ALSO set, as friction for honest
+    users, never as the claim. A modified copy is not prevented; it is DETECTABLE by anyone,
+    which is the stronger property because it needs no DRM and no cooperation.
+  - **THE BRAZENING IS H4 MADE UNAVOIDABLE, and it goes on every page, not a cover sheet.**
+    H4 already rules that qualifiers travel inside the artifact in every rendering because
+    files get forwarded. Bob's list lands as a running header/footer on EVERY page of every
+    PDF: case id and title, edition number (DEC-12), the authors, the declared bias
+    (DEC-20 — it travels), both threshold floors of the stance rendered (Q6), the artifact
+    hash, and where to verify it. A page separated from its document still names what it is.
+    The TOC is the container's manifest rendered readable: every part, every PDF, every hash.
+  - **THE ZIP IS THE BUNDLE'S PORTABLE FORM, not a new object.** A published case is already
+    a bundle (documents + attachments + history); the container is that bundle serialised
+    with its renderings beside it. One artifact, two audiences: the zip for whoever will
+    verify structurally, the PDFs for whoever will read, print and forward. Editions
+    (DEC-12) apply to the container as a whole — a new edition is a new container with a new
+    hash, and earlier editions keep answering.
+decided: 2026-08-03 · Bob
+reasoning recorded in: this entry; the artifact form belongs in AUDIENCES.md beside H4 and
+  in REC-14/REC-22's scope when CONDUCT enacts.
+for CONDUCT to enact: REC-14 gains the container form (manifest + signature + editions over
+  the container); REC-22 serves the container and its parts by hash; UI-18 renders from it;
+  a rendering item gains the every-page brazening as an acceptance clause with the negative
+  control "a page rendered without the header fails the harness". Sequencing unchanged —
+  this shapes items already queued rather than adding one.
 
 ## Answered, awaiting enactment
 

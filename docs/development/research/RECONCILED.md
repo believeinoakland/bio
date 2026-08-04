@@ -1329,10 +1329,10 @@ by DEC-28 — `divided` is a terminal STATE, not a disposition), **Q9** (the des
 sub-question required — the third line takes one of three closed forms, below), **Q12** (narration
 is SURFACE-scoped and plane-sourced; controls are never narrated and never greyed) and **Q13**
 (longest-waiting first is the RULE, not a proxy). Each carries its reasoning in place below, with
-the original text kept as history. **The questions that are Bob's are now carried as register
-entries rather than as list rows: Q7 → DEC-29, Q10 → DEC-30, Q14's delivery bullet → DEC-31, and
-the parallel-claims question from `BIO_Case_Making_v0_1.md` → DEC-32** — each with a worked
-recommendation, awaiting his answer. Q14's other two bullets stay as they are: the contradiction
+the original text kept as history. **The questions that are Bob's were carried as register
+entries and are now resolved: Q7 → DEC-29 (answered), Q10 → DEC-30 (answered), Q14's delivery
+bullet → DEC-31 (deferred, trigger named, in-band rule bound). The parallel-claims question →
+DEC-32, still open while Bob weighs the grounds model.** Q14's other two bullets stay as they are: the contradiction
 shape has no consumer and stays honestly undesigned; the intent-axis projection is a RECORD-area
 call at build time.
 
@@ -1504,10 +1504,10 @@ suspending leg is kept and named either way.
 **Build consequence:** UI-18's threshold selector. No change to its data path, as the question
 anticipated.
 
-**Q7 · RAISED AS DEC-29, 2026-08-03** — with a worked recommendation (keep both: the
-apportionment table's refusal to drop a leg means division cannot do severance's work at a
-discount, so cost parity defends nothing; the prompt stays, required to state the disclosure).
-Awaiting Bob. Original text follows.
+**Q7 · SETTLED by DEC-29 (Bob, 2026-08-03).** Both halves kept: one authored reason plus total
+disclosure — division cannot do severance's work at a discount because no leg may be dropped —
+and the divide prompt stays, its wording required to state that the other question remains on
+the record and the published child will name it. Original text follows as history.
 
 *Was:* **Division's residuals after R4: the friction asymmetry, and the timing.** *(= `CRITIQUE`
 D-7's two halves R4 does not reach.)* (a) Severing one leg costs one reason for that leg; dividing
@@ -1562,9 +1562,9 @@ R1 (N-8):** a SUSPENDED axis has no retry semantics — looking again will not s
 grading the leg will — so the third line needs a form for that case, and no session should invent
 it in passing.
 
-**Q10 · RAISED AS DEC-30, 2026-08-03** — with a worked recommendation (author-scoped, no ballot;
-one name on every judgment, and dissent-before-the-act is a veto while dissent-on-the-record is
-evidence). Awaiting Bob. Original text follows.
+**Q10 · SETTLED by DEC-30 (Bob, 2026-08-03).** Author-scoped division, no ballot on concluding —
+one name on every judgment; dissent before the act is a veto, dissent on the record after it is
+evidence. Original text follows as history.
 
 *Was:* **Is division owner-scoped or author-scoped, and does concluding need a ballot when a project
 has multiple owners?** *(= `SB-CORE` §5, `CAPABILITIES` §4, `SB-OUTPUT` §5.8, `BUILD-ORDER` §1.4 —
@@ -1656,9 +1656,9 @@ none is reachable:
   14): a case sent to one recipient and not published is on neither side of the two-bucket fence, and
   a rendering someone acted on has become a record needing a hash, a date and an author. Both are
   Bob's; both are designed-as-an-`action` provisionally; `AUDIENCES.md` says the second is
-  *"settled by the first lawyer, not by argument."* **RAISED AS DEC-31, 2026-08-03**, with the
-  recommendation to defer on a named trigger while binding the in-band rule (hash, date, author,
-  both floors travel inside any addressed rendering) now. Awaiting Bob.
+  *"settled by the first lawyer, not by argument."* **DEFERRED by DEC-31 (Bob, 2026-08-03)**,
+  with the trigger named (the first group that asks) and the in-band rule BOUND NOW: hash,
+  date, author and both threshold floors travel inside any addressed rendering.
 - The **`surfaced → open` mapping** for existing focus bundles (`DATA-MODEL` §2.7) is NOT on this
   list: REC-10 already carries the recommended answer (keep `surfaced` as a legal alias) with its
   reason, and that is a decision taken, not a question open.
