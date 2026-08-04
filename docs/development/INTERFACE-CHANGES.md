@@ -422,3 +422,16 @@ negative control breaks exactly that merge and fails naming it.
   it did so: `AGREE` — additive by inspection, and the prompt mechanism is DEC-8's
   own pattern (plane-sourced wording) extended to pre-act disclosure.
 - **Version:** I3 4.0.0 → **4.1.0** in `INTERFACES.md` — minor, genuinely additive.
+
+## IC-7 · I3: the task verbs refuse machine credentials · PROPOSED, ACCEPTED AND CHANGED 2026-08-03 (one act, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-28/D-151 — `probe` is removed
+  from `taskforward`/`taskresolve`'s classes, and two new named refusals
+  (`MACHINE_CANNOT_FORWARD`, `MACHINE_CANNOT_RESOLVE`) now refuse every
+  machine-credential actor (`token:*`) on both verbs, including `MEMBER_TOKEN` and
+  `ADMIN_TOKEN` calls that were previously admitted. **BREAKING for machine
+  callers**; no session is affected.
+- **Consumers:** UI (dormant). CONDUCT answers per step 3, in writing, naming that
+  it did so: `AGREE` — measured nil (`app.html` drives both verbs from a signed-in
+  session only; `setup.mjs` calls neither).
+- **Version:** I3 4.1.0 → **5.0.0** in `INTERFACES.md` — major, the IC-3 standard.

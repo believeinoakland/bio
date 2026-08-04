@@ -100,6 +100,7 @@ Reading the columns:
 | `archivelookup` | 268 | admin · member · probe | — | any session of an admitted class | no | — | — |
 | `tasks` | 269 | admin · member · probe | — | any session of an admitted class | no | — | — |
 | `taskdrain` | 270 | admin · member · probe | **— (absent)** | **no session** | **yes** | *unassigned* | — |
+> *(Amendment, 2026-08-03 — REC-28/D-151: the rows below for `taskforward`/`taskresolve` are stale; probe left their classes and every `token:*` actor is refused by name at the act. A dated snapshot gets an amendment, not a rewrite.)*
 | `taskforward` | 271 | admin · member · probe | *null, stated* | member + admin | **yes** | *unassigned* | — |
 | `taskresolve` | 272 | admin · member · probe | *null, stated* | member + admin | **yes** | *unassigned* | — |
 | `export` | 278 | admin | **— (absent)** | **no session** | **yes** | *unassigned* | — |
