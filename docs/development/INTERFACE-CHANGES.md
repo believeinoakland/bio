@@ -774,6 +774,39 @@ reversal if a later reader wants RECONCILED §3.1's rename literally.
 
 ---
 
+## IC-21 · I3: `op=publish` requires an authored bias acknowledgement · PROPOSED, RESPONSES, ACCEPTED, CHANGING, CHANGED AND SETTLED 2026-08-04 (REC-47)
+
+- **Interface:** I3 (plane → UI), **6.0.0 STABLE** → **7.0.0**
+- **Proposer and owner to land it:** `RECORD` (session rec47-agent), from REC-47 / DEC-46 (a)
+- **Consumers to answer per `INTERFACES.md`:** `UI`, `DIST`, and every content area
+  that needs its work reachable
+
+**PROPOSED.** `op=publish` gains a REQUIRED parameter — the authored bias acknowledgement
+the case was produced under — plus two named refusals, `NO_BIAS_ACKNOWLEDGEMENT` and
+`BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD`, and extends `CASE_ASSERTION_DIVERGED`. It is a
+BREAK by definition: a caller that publishes today is refused tomorrow. I5 is additive
+(one column on `published_cases`, beside scope and completeness); the container format
+moves `bio-case-container/2` → `/3` so a reader can tell "declared nothing" from
+"predates the field".
+
+**RESPONSES.** UI is DORMANT for this change and **CONDUCT ANSWERED ON ITS BEHALF, IN
+WRITING, NAMING THAT IT DID SO** (the protocol's step 3, not a formality). The proxy
+answer is ACCEPT, on three grounds. (i) DEC-46 (a) is a ruling already made and this is
+its enactment, not a proposal to weigh. (ii) The measured impact on the surface is a
+publish path that must now collect one authored sentence per edition — real work, but
+work the completeness statement's own path already does beside it, so no new shape is
+imposed on the UI. (iii) Refusing it would leave a published case unable to carry the
+bias it was produced under, which DEC-20 requires to TRAVEL with every published case.
+CONDUCT is not the UI area and this answer is a proxy: a UI item that finds the surface
+cost materially higher than stated should say so and reopen, and that is not a
+concession — it is the reason the proxy is recorded rather than assumed.
+
+**RESOLUTION: ACCEPTED.** MAJOR, on IC-3's settled reasoning that recording a break as
+additive because nobody happened to be reading it would teach this registry to lie.
+
+**CHANGING → CHANGED → SETTLED 2026-08-04**, landed on `main` by CONDUCT with the battery
+at 98/98 (5567), hygiene 650, `--strict` exit 0 at 130/130 ops and 272 arms.
+
 ## IC-20 · I3: `op=bootstrap` stops answering `roles`, and `op=login`'s two refusal codes become one · PROPOSED, RESPONSES, ACCEPTED, CHANGING, CHANGED AND SETTLED 2026-08-05 (REC-41)
 
 - **Interface:** I3 (plane → UI), **5.12.0 STABLE**

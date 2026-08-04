@@ -3669,7 +3669,15 @@ for CONDUCT to enact: this is DESIGN AHEAD — bias bundles do not exist (D-84) 
   authored and attributed, never installed; (d) the adopted policy is pinned with source,
   date and hash, and a published case names the version it was held to. Sequence behind
   D-84.
-enacted:
+enacted: 2026-08-04 · CONDUCT — recorded as SCOPE rather than built, exactly as the ruling
+  directs: bias bundles do not exist (D-84) and `required_strength` is unbuilt (D-155), so
+  there is nothing to correct and nothing to queue yet, and enqueueing an item against an
+  absent construct would be the kind of runnable-looking work that cannot run. All four
+  determinations are written onto **D-84's row**, which is the row whose closer must read
+  them and the only place they can arrive in time — a design recorded only in this register
+  reaches the person who already knows it. Sequenced behind D-84 as the ruling says.
+  Reasoning in this entry; `research/SEARCH-COMPLETENESS.md` carries the countable/
+  uncountable finding, and `BIO_Declared_Bias_v0_1.md` takes the adoption-is-authored rule.
 
 ### DEC-55 · open
 raised: 2026-08-04 · session BOB (Bob's question on integrating skilled AIs)
