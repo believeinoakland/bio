@@ -550,7 +550,7 @@ accepts-when: `cd bio-plane && npm run test:battery` green with HTML and PDF
   and the battery fails.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
 
-### COFF-2 · queued
+### COFF-2 · done
 milestone: M2
 scope: **The OOXML container reader — pure module, ZERO dependency** (measured:
   `deflate-raw` round-trips in workerd; `MEASUREMENTS.md` 2026-08-03 backfill).
@@ -574,6 +574,7 @@ accepts-when: battery green with fixture round-trips for all three flavours; a
   negative control — neuter the flavour discrimination and the suite fails on
   the plain-ZIP assertion.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: 7404f21 (worker a20e3ec) — bio-plane/src/ooxml.mjs, pure zero-dependency (CD-as-authority walk, deflate-raw inflate with length+crc32 verified, OPC name normalization, [Content_Types].xml flavour gate requiring declared type AND part present, uniform .rels walker, core-props extraction, size-guard with NAMED 32 MiB provisional for COFF-6). ooxml.test.mjs 97/97 hermetic; battery 68/68 (3301); --strict exit 0. NC RUN (neuter flavour discrimination → 13/97 fail incl. plain-ZIP). Vocabulary note for COFF-1's I7 confirmation: format "zip" (no [Content_Types].xml) vs "undetermined"+why is a deliberate split — confirm or amend when writing I7 from code.
 
 ### COFF-3 · queued
 milestone: M2
