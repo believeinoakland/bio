@@ -116,74 +116,7 @@ exception recorded. In-flight Fable 5 workers land rather than respawn (nothing 
 gained by killing near-done work); every spawn from this drain forward pins
 `claude-opus-5`. No entries outstanding.)_
 
-### 2026-08-04 · BOB · DEC-35 ANSWERED — OCR goes IN-ACCOUNT if it measures up; one new item, and CPDF-10's acceptance changes
-
-**DEC-35 is answered and the premise was reframed before it was answered.** Bob asked
-whether Cloudflare has a service worth considering *"from the perspective of a new
-instance setting up"* — and it exposed a defect in the survey CONDUCT's entry rests
-on: the survey optimised for THIS instance, while the product is SOVEREIGN INSTANCES.
-Workers AI now carries **Moondream 3.1**, an OCR-capable vision model returning
-coordinates, on the `env.AI` binding, inside the Free plan. Every instance already has
-a Cloudflare account by construction; an external service makes every future group
-open, fund and hold a credential for a second vendor. Full reasoning in DECISIONS.md
-DEC-35 and `research/OCR-SERVICE-SURVEY.md` (new Cloudflare section).
-
-**NOTHING IS FUNDED.** No external account is opened pending the measurement below.
-Azure DI Read stays the primary EXTERNAL candidate, as the escalation/fallback tier.
-
-    ### CPDF-11 · queued
-    milestone: M2
-    scope: **Measure Moondream 3.1 (Workers AI, `env.AI`) as the IN-ACCOUNT OCR path —
-      measurement-only, commits no product code, holds no slot, costs nothing to run
-      (no account, no credential, no signup).** Against the SAME ground-truthed Oakland
-      exhibit and instrument CPDF-9 used, so the numbers are comparable line for line.
-      Four things, and the last two carry more weight here than for any classic engine
-      because Moondream is GENERATIVE and its failure mode is text that looks better
-      than its input:
-      (a) **Accuracy** against the measured local-tesseract floor — 99.96% character
-      accuracy, 90/90 digits, ZERO minted digits (MEASUREMENTS.md 2026-08-03). Digits
-      are where OCR fails and where human checking fails too (DEC-4).
-      (b) **Coordinates VERIFIED, not assumed** — the model claims bounding boxes;
-      confirm they ALIGN with the text they are returned for, because the image-region
-      anchor is what lets a reader check a claim against pixels and an attester testify
-      to it. This is the one non-negotiable structural requirement.
-      (c) **The blank-page negative control, weighted heavily** — a blank and a
-      noise-only page must yield NOTHING, never plausible text. An engine that
-      hallucinates on noise is the one failure mode that would put invented text in the
-      record.
-      (d) **The degradation ladder — this is the new measurement and it decides the
-      confidence question.** Feed progressively degraded regions of the ground-truthed
-      page and score whether the model REFUSES (says illegible / returns nothing) or
-      INVENTS. Only measured refusal-reliability licenses structured self-refusal as a
-      per-region trigger. **Do NOT ask the model for a confidence score and threshold
-      it** — a self-reported number treated as calibrated is the costs-nothing-to-
-      produce class and is FORBIDDEN by DEC-35.
-      Record in `MEASUREMENTS.md` with date and instrument; state the recommended
-      transcription-fidelity CAP for this engine (DEC-4: no machine mints the grade, and
-      the measurement sets the ceiling).
-    behind-interface: none — it commits no code
-    depends-on: none
-    accepts-when: `MEASUREMENTS.md` carries character accuracy, digit accuracy, minted-
-      digit count, coordinate-alignment verdict, blank/noise-page result and the
-      degradation-ladder refuse-vs-invent table — each with date and instrument — plus a
-      stated recommended cap and a GO/NO-GO on the in-account path; negative control —
-      the blank page and the noise page, run and reported, with any non-empty output
-      reported as a FAILURE of the path rather than a curiosity.
-    added: 2026-08-04 · BOB
-
-**CPDF-10's acceptance CHANGES when you next scope it**, per DEC-35: "per-region
-confidence" becomes **"per-region confidence WHERE THE ENGINE SUPPLIES IT; otherwise a
-stated `confidence: none` in the chain, with the fidelity cap set by measurement."**
-The provenance-chain rule and the image-region anchor are UNCHANGED and remain
-non-negotiable. If CPDF-11 returns GO, the in-account path becomes CPDF-10's default
-placement and the external service becomes its escalation tier — which is the chain
-shape DEC-4's amendment already anticipated, not a new mechanism.
-
-**AND THE DANGLING DEPENDENCY IS NOW LOAD-BEARING:** CPDF-10 still depends on CPDF-8,
-which exists nowhere (flagged 2026-08-03, still open). Moondream consumes PIXELS, so
-the page-to-image renderer that CPDF-8 was probably meant to name is now on the
-critical path for the in-account route as well as the external one. Naming it is
-yours.
+_(drained by CONDUCT 2026-08-04 — DEC-35's answer: the premise reframed (the survey optimised for THIS instance; the product is sovereign instances), Moondream 3.1 on env.AI is the in-account candidate, NOTHING FUNDED, Azure DI Read the external escalation tier. CPDF-11 moved into CONTENT-PDF below and spawned out of band (measurement, no slot). CPDF-10's scope re-based on the ruling in place. The renderer note enacted: the dangling-CPDF-8 flag in the entry was stale (corrected to COFF-1 on 2026-08-03) but its SUBSTANCE is live — Moondream consumes pixels, so the page-to-image renderer is now named as CPDF-12, queued behind CPDF-11's verdict. DEC-35's enacted line filled. No entries outstanding.)_
 
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
@@ -683,9 +616,9 @@ landed: (merge on main, worker 3ec9a41) — MEASUREMENTS.md 2026-08-03 + probe b
 
 ### CPDF-10 · queued
 milestone: M2
-scope: **The Tier-3 OCR path, behind whatever placement CPDF-9's measurement permits.** PLACEMENT SETTLED BY THE MEASUREMENT (2026-08-03, CONDUCT enacting): in-plane and pdf-worker are RULED OUT by bundle size; build against the EXTERNAL SERVICE first (the chain pins service identity + date; the local engine's 99.96%/100%-digits is the accuracy floor a service must beat), with a dedicated ocr-worker fleet member as the preferred end-state GATED on a deployed workerd CPU probe and the page-to-pixels renderer (neither exists; do not pre-build). NO AI post-processing in the DEFAULT chain — the one observed error class ($→5 minting a digit) is exactly what an AI cleanup would silently 'fix'; the ai() chain step stays available, never default. D-152, DEC-4 as twice amended. THE PROVENANCE RULE IS THE ITEM, not the engine: **`text_source` records a CHAIN, not a token** — `pixels → ocr(engine, version) → ai(function, version) → attested(member, date, extent)` — each step naming what performed it, and **each step can only weaken the claim, never strengthen it** (an AI that cleans a garbled line produced more READABLE text, not more RELIABLE text; the hazard of this capability is output that looks better than its input — do not let the chain collapse to a single label). A text LAYER is itself an unverified transcription (`pdfstructure.mjs` already decodes through the file's own `/ToUnicode` map), so **the ceiling is VERIFIED AGAINST THE RENDERED IMAGE, reachable from both paths**: member attestation is offered on a text layer too, SCOPED to what was actually checked (a leg citing outside the attested extent does not inherit it); the chain is still recorded — verification supersedes it as grade determinant, never as record. Attestation is a member act refusable to a machine credential. Transcription fidelity BOUNDS the capture axis (weakest link of byte provenance and fidelity) — no third scale, no new machinery. A basis leg resting on OCR'd text carries its image region (page + rect); OCR never raises a capture grade; a low-confidence region reads `undetermined`, never a best guess. Text reaches the READING path via FW-15's wire.
+scope: **The Tier-3 OCR path, behind whatever placement CPDF-9's measurement permits.** PLACEMENT RE-BASED BY DEC-35 (2026-08-04, superseding the 2026-08-03 service-first note): in-plane and pdf-worker stay RULED OUT by bundle size; the IN-ACCOUNT path (Moondream 3.1 over env.AI) is the DEFAULT pending CPDF-11's GO — sovereign instances must not need a second vendor account (the D-115 class); the EXTERNAL service (Azure DI Read primary) is the ESCALATION tier or the fallback on NO-GO; NOTHING FUNDED. Per-region confidence becomes confidence-WHERE-SUPPLIED, else a stated confidence: none in the chain with the fidelity cap set by measurement; pseudo-confidence (a self-reported number thresholded as calibrated) FORBIDDEN as the costs-nothing class; measured self-refusal (CPDF-11's degradation ladder) is the only earnable per-region trigger. The provenance chain and the image-region anchor UNCHANGED, non-negotiable. Deps gain CPDF-11 and (on GO) CPDF-12. D-152, DEC-4 as twice amended. THE PROVENANCE RULE IS THE ITEM, not the engine: **`text_source` records a CHAIN, not a token** — `pixels → ocr(engine, version) → ai(function, version) → attested(member, date, extent)` — each step naming what performed it, and **each step can only weaken the claim, never strengthen it** (an AI that cleans a garbled line produced more READABLE text, not more RELIABLE text; the hazard of this capability is output that looks better than its input — do not let the chain collapse to a single label). A text LAYER is itself an unverified transcription (`pdfstructure.mjs` already decodes through the file's own `/ToUnicode` map), so **the ceiling is VERIFIED AGAINST THE RENDERED IMAGE, reachable from both paths**: member attestation is offered on a text layer too, SCOPED to what was actually checked (a leg citing outside the attested extent does not inherit it); the chain is still recorded — verification supersedes it as grade determinant, never as record. Attestation is a member act refusable to a machine credential. Transcription fidelity BOUNDS the capture axis (weakest link of byte provenance and fidelity) — no third scale, no new machinery. A basis leg resting on OCR'd text carries its image region (page + rect); OCR never raises a capture grade; a low-confidence region reads `undetermined`, never a best guess. Text reaches the READING path via FW-15's wire.
 behind-interface: I2
-depends-on: CPDF-9, COFF-1 (dependency corrected 2026-08-03: the handover's "CPDF-8" was RECONCILED §3.3's name for the FORMAT registry, carried as COFF-1. The page-to-pixels rendering path BOB flagged as the other candidate reading is real but is DECIDED by CPDF-9's placement measurement — an external-service placement needs no renderer; an in-plane or fleet placement does — so the renderer item is named when that recommendation lands, not pre-built.)
+depends-on: CPDF-9, COFF-1, CPDF-11, CPDF-12-on-GO (dependency corrected 2026-08-03: the handover's "CPDF-8" was RECONCILED §3.3's name for the FORMAT registry, carried as COFF-1. The page-to-pixels rendering path BOB flagged as the other candidate reading is real but is DECIDED by CPDF-9's placement measurement — an external-service placement needs no renderer; an in-plane or fleet placement does — so the renderer item is named when that recommendation lands, not pre-built.)
 accepts-when: `cd bio-plane && npm run test:battery` green with a real image-only Oakland PDF yielding text whose `text_source` chain names each step with per-region confidence and reaching `reading_refs`, while a text-layer PDF yields its own honest chain and the two are distinguishable in the projection, the index and an export; an attestation is refused to a machine credential and scoped to its extent; negative control — strip the `text_source` marker and the suite fails naming an OCR'd document indistinguishable from a published text layer; drop the confidence floor so a garbled region emits a best guess and the suite fails; collapse the chain to one label and the suite fails.
 added: 2026-08-01 · BOB · amended 2026-08-02 ×2 · enqueued 2026-08-03 · CONDUCT
 
@@ -857,6 +790,54 @@ depends-on: COFF-5
 accepts-when: `cd bio-plane && npm run test:battery` green with a fixture deck whose hidden slide is extracted AND flagged (kind `hidden-slide`, text units marked) while visible slides are not; `npm run test:coverage` --strict exit 0; negative control — strip the flag and the suite fails naming a hidden slide indistinguishable from a visible one.
 added: 2026-08-03 · CONDUCT (from COFF-5's report)
 landed: (merge on main, worker 7eb9d84) — envelope kind hidden-slide; the hidden slide extracted IN FULL (text, notes, links) and flagged everywhere (envelope item + hidden mark on every text unit; an orphan notes unit's mark honestly null). FACTUAL CORRECTION accepted at integration: this item's scope located show="0" on the sldIdLst entry; ECMA-376 puts it on CT_Slide (the p:sld root — where PowerPoint's Hide Slide writes it); the worker read BOTH locations and reading only the queued one would have missed every real hidden slide. Considered choice accepted: hidden text stays in `document` beside the flag (the xlsx hidden-sheet precedent — the record holds what the file holds; included AND flagged). formats-pptx 110 assertions; battery 72/72 (3652); --strict exit 0. NC RUN (neuter the declaresNotShown funnel → 8/110 fail by name; restored). IC-2 vocabulary CONFIRM appended, envelope shape unchanged.
+
+### CPDF-11 · queued
+milestone: M2
+scope: **Measure Moondream 3.1 (Workers AI, `env.AI`) as the IN-ACCOUNT OCR path —
+  measurement-only, commits no product code, holds no slot, costs nothing to run
+  (no account, no credential, no signup).** Against the SAME ground-truthed Oakland
+  exhibit and instrument CPDF-9 used, so the numbers are comparable line for line.
+  Four things, and the last two carry more weight here than for any classic engine
+  because Moondream is GENERATIVE and its failure mode is text that looks better
+  than its input:
+  (a) **Accuracy** against the measured local-tesseract floor — 99.96% character
+  accuracy, 90/90 digits, ZERO minted digits (MEASUREMENTS.md 2026-08-03). Digits
+  are where OCR fails and where human checking fails too (DEC-4).
+  (b) **Coordinates VERIFIED, not assumed** — the model claims bounding boxes;
+  confirm they ALIGN with the text they are returned for, because the image-region
+  anchor is what lets a reader check a claim against pixels and an attester testify
+  to it. This is the one non-negotiable structural requirement.
+  (c) **The blank-page negative control, weighted heavily** — a blank and a
+  noise-only page must yield NOTHING, never plausible text. An engine that
+  hallucinates on noise is the one failure mode that would put invented text in the
+  record.
+  (d) **The degradation ladder — this is the new measurement and it decides the
+  confidence question.** Feed progressively degraded regions of the ground-truthed
+  page and score whether the model REFUSES (says illegible / returns nothing) or
+  INVENTS. Only measured refusal-reliability licenses structured self-refusal as a
+  per-region trigger. **Do NOT ask the model for a confidence score and threshold
+  it** — a self-reported number treated as calibrated is the costs-nothing-to-
+  produce class and is FORBIDDEN by DEC-35.
+  Record in `MEASUREMENTS.md` with date and instrument; state the recommended
+  transcription-fidelity CAP for this engine (DEC-4: no machine mints the grade, and
+  the measurement sets the ceiling).
+behind-interface: none — it commits no code
+depends-on: none
+accepts-when: `MEASUREMENTS.md` carries character accuracy, digit accuracy, minted-
+  digit count, coordinate-alignment verdict, blank/noise-page result and the
+  degradation-ladder refuse-vs-invent table — each with date and instrument — plus a
+  stated recommended cap and a GO/NO-GO on the in-account path; negative control —
+  the blank page and the noise page, run and reported, with any non-empty output
+  reported as a FAILURE of the path rather than a curiosity.
+added: 2026-08-04 · BOB
+
+### CPDF-12 · queued
+milestone: M2
+scope: **The page-to-pixels renderer — named at last (the substance of two dangling-dependency flags).** Moondream consumes IMAGES, so the in-account OCR route needs a PDF page rendered to pixels; nothing in Workers renders one today (pdf.js needs a canvas — CPDF-9's finding). Scope decided by CPDF-11's verdict: on GO, build the renderer at whatever placement its own bundle/CPU measurement permits (measure first — the CPDF-9 pattern; a fleet member is the likely shape, I6); on NO-GO, RE-SCOPE — the external tier takes PDF bytes directly and this item shrinks to whatever the escalation tier needs (possibly nothing; say so and close it rather than building a renderer nobody consumes).
+behind-interface: I6
+depends-on: CPDF-11
+accepts-when: (on GO) a real scanned Oakland page rendered to pixels in-account at measured cost, the measurement in MEASUREMENTS.md first; battery green; --strict exit 0; negative control — a page that cannot be rendered yields a stated failure, never a blank image passed onward as content. (On NO-GO) the item closed with the re-scope reasoning recorded.
+added: 2026-08-04 · CONDUCT (DEC-35's enactment; the renderer flags' substance)
 
 ## CAPTURE — DORMANT.
 CAP-3 runs OUT OF BAND: it touches only CAPTURE's own paths and contends with neither

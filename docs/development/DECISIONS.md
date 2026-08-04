@@ -2446,7 +2446,7 @@ for CONDUCT to enact: queue CPDF-11 (in the BOB INBOX 2026-08-04); fund no exter
   confidence" to "per-region confidence WHERE THE ENGINE SUPPLIES IT; a stated
   `confidence: none` in the chain otherwise, with the fidelity cap set by
   measurement" — the provenance-chain and image-region requirements are unchanged.
-enacted:
+enacted: 2026-08-04 · CONDUCT — the inbox entry drained: CPDF-11 queued and spawned out of band (measurement, no slot, nothing funded); CPDF-10's placement re-based in place (in-account default pending GO; external the escalation tier; confidence-where-supplied with the forbidden pseudo-confidence and the earnable measured self-refusal recorded); the renderer named as CPDF-12 behind CPDF-11's verdict. Reasoning in DEC-35 itself, research/OCR-SERVICE-SURVEY.md's Cloudflare section, and QUEUE.md (CPDF-10/11/12).
 
 ### DEC-36 · open
 raised: 2026-08-03 · CONDUCT (lifted from REC-20's report — the worker built the instruction and named the tension)
