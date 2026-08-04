@@ -403,6 +403,12 @@ export const NON_ACTS = {
      belongs to the QUEUE ENTRY (UI-14 renders it there), not to the object, and
      the vocabulary of what may be muted is published by the refusal and by
      op=queue's own `mute` block, never by a surface-side map. */
+  /* REC-34. A READ, and one whose subject is a QUESTION rather than an act on
+     it: op=inquirystrength answers what an inquiry's basis derives to, and no
+     surface renders an "inquirystrength" button beside a bundle — it is the
+     PANEL those buttons sit under (UI-11's strength panel, UI-12's live
+     preview). op=queue's classification exactly, one altitude down. */
+  inquirystrength: "read: the derived pair for one question — the panel the acts are rendered under, never an act on an object",
   queuemute: "personal state, keyed (member, case): a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
   queuesnooze: "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)",
 };
