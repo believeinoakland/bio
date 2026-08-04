@@ -136,14 +136,26 @@ async function render(scriptSrc, bundleId){
   function mockFetch(u){
     const q = new URL(u, "https://x.test").searchParams; const op = q.get("op");
     const reply = o => ({ ok:true, json:async()=>o });
+    /* CORRECTED 2026-08-05 (UI-23), never exempted. `resolutions`,
+       `connections`, `captureprogressions` and `entity` were answered
+       UNWRAPPED — the fixtures above are the STORE'S OWN returns, and the store
+       is not what the browser talks to. All four reach the surface through
+       index.mjs's generic passthrough, so the wire shape is
+       `{ok:true, result:<fixture>, store, tokenClass}`. `image`, `projection`
+       and `list` in the same mock were already wrapped, which is why this suite
+       proved those reads and not these four. `op=links` STAYS FLAT and that is
+       correct, not an oversight: index.mjs answers it in its own handler with
+       `json({ok:true, ...r.result})` — see check-mock-envelope.mjs's FLAT_OPS,
+       which fails if a flat op is ever answered wrapped. */
+    const wrap = o => reply({ ok:true, result:o, store:"bio", tokenClass:"member" });
     if(op==="image")      return reply({ ok:true, result: IMG[q.get("id")] || {} });
     if(op==="projection") return reply({ ok:true, result: PROJ[q.get("id")] || {} });
     if(op==="list")       return reply({ ok:true, result: LIST });
     if(op==="links")      return reply({ ok:true, links: [] });
-    if(op==="resolutions")        return reply(RESOLUTIONS[q.get("sha256")] || { ok:true, resolutions:[] });
-    if(op==="connections")        return reply(CONNECTIONS[q.get("sha256")] || { ok:true, connections:[] });
-    if(op==="captureprogressions")return reply(CAPPROG[q.get("sha256")] || { ok:true, instances:[] });
-    if(op==="entity")     return reply(ENTITY[q.get("id")] || { ok:true, found:false, entity:null });
+    if(op==="resolutions")        return wrap(RESOLUTIONS[q.get("sha256")] || { ok:true, resolutions:[] });
+    if(op==="connections")        return wrap(CONNECTIONS[q.get("sha256")] || { ok:true, connections:[] });
+    if(op==="captureprogressions")return wrap(CAPPROG[q.get("sha256")] || { ok:true, instances:[] });
+    if(op==="entity")     return wrap(ENTITY[q.get("id")] || { ok:true, found:false, entity:null });
     return reply({ ok:true, result:{} });
   }
   const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,
@@ -223,13 +235,15 @@ async function renderNoProg(bundleId){
     location:{ protocol:"https:" }, history:{ pushState(){}, back(){} },
     localStorage:{ getItem:()=>null, setItem(){} }, window:{ addEventListener(){}, open:()=>null },
     fetch: async u => { const q=new URL(u,"https://x.test").searchParams, op=q.get("op"); const reply=o=>({ok:true,json:async()=>o});
+      // Wrapped 2026-08-05 (UI-23) for the same reason as the mock above.
+      const wrap = o => reply({ ok:true, result:o, store:"bio", tokenClass:"member" });
       if(op==="image") return reply({ok:true,result:IMG[q.get("id")]||{}});
       if(op==="projection") return reply({ok:true,result:PROJ[q.get("id")]||{}});
       if(op==="list") return reply({ok:true,result:LIST});
       if(op==="links") return reply({ok:true,links:[]});
-      if(op==="resolutions") return reply(RESOLUTIONS[q.get("sha256")]||{ok:true,resolutions:[]});
-      if(op==="connections") return reply(CONNECTIONS[q.get("sha256")]||{ok:true,connections:[]});
-      if(op==="entity") return reply(ENTITY[q.get("id")]||{ok:true,found:false,entity:null});
+      if(op==="resolutions") return wrap(RESOLUTIONS[q.get("sha256")]||{ok:true,resolutions:[]});
+      if(op==="connections") return wrap(CONNECTIONS[q.get("sha256")]||{ok:true,connections:[]});
+      if(op==="entity") return wrap(ENTITY[q.get("id")]||{ok:true,found:false,entity:null});
       if(op==="captureprogressions") return { ok:true, json:async()=>({ ok:false, error:"unknown op captureprogressions" }) };
       return reply({ok:true,result:{}}); } };
   ctx.globalThis = ctx; vm.createContext(ctx);
