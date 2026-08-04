@@ -523,7 +523,7 @@ one act). NAMING NOTE, so no reader hunts for ghosts: `RECONCILED.md` §3.3 list
 same work as "CPDF-8 (the FORMAT registry)" and "CAP-5 (the OOXML container)" — those
 names were never enqueued; COFF-1 and COFF-2 are the items.
 
-### COFF-1 · queued
+### COFF-1 · done
 milestone: M2
 scope: **The FORMAT registry, with HTML and PDF moved onto it — the D-70 test, and
   NO new capability.** New `bio-plane/src/formats.mjs`: one entry per format in
@@ -549,6 +549,7 @@ accepts-when: `cd bio-plane && npm run test:battery` green with HTML and PDF
   the registry and `op=pdfstructure` fails NAMING the format as unregistered,
   and the battery fails.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: (merge on main, worker 9593f71) — bio-plane/src/formats.mjs: registry with magic-bytes-first enforced BY THE REGISTRY (two-pass detectFormat); HTML_CT guard and op=pdfstructure moved onto it (outputs pinned byte-identical); additive profile.format stamp (I1 1.3.0). formats.test.mjs 35 assertions incl. the stub-format D-70 evidence; battery 68/68 pre-merge, 69/69 (3338) with COFF-2 on main; --strict exit 0. NC RUN (unregister pdf → 501 FORMAT_UNREGISTERED by name, battery 65/68; restored). I7 CONFIRMED 1.0.0 from as-built code (detect the only required fn; explicit nulls are statements). D-70 CLOSED — a new format costs one registry entry; §9's cost table is real.
 
 ### COFF-2 · done
 milestone: M2
