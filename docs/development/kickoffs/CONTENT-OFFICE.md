@@ -42,6 +42,45 @@ element-reference union: `pdf-page` / `sheet-cell` / `slide-shape` / `doc-para` 
 - Registry entries: `detect(bytes, contentType)` / `parts` / `structure` / `text`
   per I7.
 
+## What COFF-1 left you (2026-08-03 — read before COFF-2/3/4/5)
+
+- **The registry EXISTS and I7 is CONFIRMED 1.0.0 from the code** — read
+  `bio-plane/src/formats.mjs` (the shape doc is its header) and the "Confirmed
+  shape" section of `INTERFACES.md` I7, not the old 0.1.0 paper shape. The
+  as-built corrections: `detect` is the only REQUIRED function (`parts`/
+  `structure`/`text` are explicit `null` when a format has nothing for the
+  slot, and the null is a statement); magic-bytes-first is enforced by the
+  REGISTRY (detectFormat runs two passes — all entries bytes-only, then all
+  entries content-type-only), so your entry's `detect(bytes, null)` must
+  answer on bytes and `detect(null, ct)` on content type, separately; no
+  match is a stated `{format:"undetermined"}`, never null.
+- **Adding a format is ONE `registerFormat()` call in formats.mjs** — proven
+  by the stub assertion in `bio-plane/test/formats.test.mjs` (the D-70
+  evidence; D-70 is closed on it). Do not add format branches in index.mjs;
+  if you think you need one, the registry entry is wrong.
+- **op=pdfstructure asks for "pdf" BY NAME** (`getFormat("pdf")`, 501
+  `FORMAT_UNREGISTERED` naming the format when absent). A future generic
+  structure op would detect-then-dispatch instead; that is a new op, not a
+  change to this one.
+- **profile.format (I1 1.3.0, §4c)**: op=acquire stamps `detectFormat`'s
+  result verbatim. When FW-3's text read-back is absent (a PDF, and your
+  OOXML captures too — `application/*zip*` types fail the FW-3 textual-ct
+  regex), the stamp range-reads the FIRST KiB from R2 for magic bytes. Your
+  OOXML detect will see 1024 bytes at this site: `PK\x03\x04` fits, but
+  `[Content_Types].xml` does NOT — so acquire-time detection of docx/xlsx/
+  pptx can honestly answer at most a ZIP-level signal from this seam, and the
+  flavour discrimination belongs in `parts()`/COFF-2 where the whole
+  container is in hand. Decide the confidence ladder for that split
+  deliberately (a `PK` sniff alone must NOT claim `certain` docx — a renamed
+  plain ZIP is not a .docx).
+- **Miniflare quirk**: R2 `get(key, {range})` with `length` past the object
+  end works; the profile stamp already bounds by `Math.min(1024, total)`.
+- **Battery baseline after COFF-1**: 68 suites, 3240 assertions,
+  `test:coverage --strict` 108/108 ops. `formats.test.mjs` holds the pinned
+  registry behaviour — extend it rather than forking a second registry suite
+  for entries you add (or add `formats-<fmt>.test.mjs` per the paths list;
+  either way add the `test:` script to `bio-plane/package.json`).
+
 ## Verification
 
 The standing gate (`VERIFICATION.md`): `cd bio-plane && npm run test:battery` — every

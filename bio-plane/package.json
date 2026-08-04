@@ -36,6 +36,7 @@
     "test:audit": "node test/audit.test.mjs",
     "test:subresources": "node test/subresources.test.mjs",
     "test:governor": "node test/governor.test.mjs",
+    "test:formats": "node test/formats.test.mjs",
     "test:ooxml": "node test/ooxml.test.mjs",
     "test:pdfstructure": "node test/pdfstructure.test.mjs",
     "test:pdfstructure-op": "node test/pdfstructure-op.test.mjs",
