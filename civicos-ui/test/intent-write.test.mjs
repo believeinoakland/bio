@@ -45,8 +45,32 @@
  *     rendered is the plane's own words, never a sentence composed here;
  *   - Q12: a credential that cannot write sees NO control and ONE sentence.
  *
- * NEGATIVE CONTROL, three arms, ALL RUN 2026-08-04 and each restored
- * byte-identical (sha256 compared before and after each arm). Arms (a) and (b)
+ * UI-26 ADDED THE READ THIS FILE'S RESOLVE ARM RUNS ON, 2026-08-04. The control
+ * called `op=readingref` ONCE PER REGISTERED NAME; it now makes ONE
+ * `op=readingname` call with `entity=`, and the alias join is the plane's
+ * (REC-36). Three properties are new here and each has its own arm below (d)-(f):
+ * the N-call loop is GONE, asserted by counting; a NEAR-NAME candidate — §8.1's
+ * grade-C tier — is offered from this control for the first time; and an
+ * uninvited member's list OMITS an invisible document, because the plane
+ * withholds the ROW and this surface filters nothing.
+ *
+ * AND THE ONE CORRECTION, never an exemption, because it is a real narrowing and
+ * hiding it would be the defect: `op=readingref` matched the REFERENCE STRING,
+ * `op=readingname` matches THE NAME A READING RECORDED. So BID_A — whose
+ * reference is spelled exactly like one of this subject's names but whose
+ * recorded name carries none of them — is no longer offered, and the assertion
+ * that it IS offered has become an assertion that it is NOT, beside an assertion
+ * that the page SAYS SO. What follows it is the point: the bound is a bound on
+ * THE LOOKUP and not on the record, so registering the name the reading actually
+ * recorded brings the document back within reach at the same Grade A, and that
+ * is DRIVEN rather than claimed.
+ *
+ * NEGATIVE CONTROL, six arms, (a)-(c) RUN 2026-08-04 by UI-13/REC-35 and
+ * (d)-(f) RUN 2026-08-04 by UI-26, each restored byte-identical (sha256
+ * compared before and after each arm; UI-26's baselines are app.html
+ * aa5bdc2f83e94f298cbff92838106773df1bb92e6ef877684194220d6688d0eb and this
+ * file 0f6deb191645cebc89de4a2f4b4d4e09f3afc55a3b630fe77547f106c0eb36f6).
+ * Arms (a) and (b)
  * were run by UI-13 against app.html at
  * 10975a570cb9cb33d24f7759cd714a66003204639ce5e0807d2a7da946fa92a3; REC-35
  * moved that sha to
@@ -90,13 +114,60 @@
  *       "independent" instruments had become one. The second instrument now
  *       asks the ENFORCING OPS, which is the only source that can disagree
  *       with the publication at all.
+ *
+ *   (d) UI-26's FIRST — RESTORE THE PER-ALIAS LOOP. In app.html's
+ *       `loadResolveCandidates`, put the old loop back in place of the single
+ *       call: `const names = (e && e.aliases || []).map(a=>a.alias);` then
+ *       `for(const n of names){ ... await recR("readingref", { ref:n }) ... }`.
+ *       RESULT: **14 of 129 assertions FAILED**, and they NAME THE OP: "op=
+ *       readingref is not called at all", "the candidate documents came from
+ *       ONE call", "the whole control costs two calls" — plus the near-name
+ *       candidate and BOTH correspondence renderings vanishing, the identifier
+ *       bound inverting, the gate arm losing its subject in both directions,
+ *       and all four COVERAGE assertions, which is the arm-B line moving back.
+ *       Restored -> 129/129, app.html sha256-verified identical.
+ *
+ *   (e) UI-26's SECOND — DROP THE NARROWED SENTENCE. In `loadResolveCandidates`
+ *       cut everything in `note` after "plus the ones already resolved to it."
+ *       so the list is offered with NO bound stated at all. RESULT: **6 of 129
+ *       assertions FAILED** — all four clauses of the measured bound, the
+ *       never-implies-completeness clause, and the identifier bound the page
+ *       has to say out loud.
+ *       AND THE FINDING, kept because it is the whole reason this arm exists:
+ *       the assertion that FORBIDS completeness WORDS ("every document", "all
+ *       the documents", "complete") STAYED GREEN over the stripped sentence.
+ *       An unstated bound uses no completeness word and reads as completeness
+ *       anyway, so a suite that policed the vocabulary would have called the
+ *       stripped sentence correct. Only the clause-by-clause assertions catch
+ *       it, which is why the bound is asserted as four separate claims and not
+ *       as one string (UI-21's lesson at a new altitude).
+ *       Restored -> 129/129, app.html sha256-verified identical.
+ *
+ *   (f) UI-26's THIRD, over the INSTRUMENT rather than the subject — can the
+ *       gate arm reach its subject at all? In this file, drive the second
+ *       `asMember(...)` with `CAROL` instead of `DAVE`, so the "uninvited"
+ *       list is the invited one. RESULT: **2 of 125 assertions FAILED** (run
+ *       with UI26_PROBE_CHILD=1, so the coverage arm does not spawn a child) —
+ *       "DAVE, NEVER INVITED, IS NOT" and "it is absent as a document, not as a
+ *       nameless row". The arm reaches its subject; a sweep that cannot is not
+ *       a sweep (UI-21's finding, applied before it could cost anything).
+ *       Restored -> 125/125, this file sha256-verified identical.
  */
 import fs from "fs";
+import os from "os";
+import path from "path";
 import vm from "vm";
+import { execFileSync } from "child_process";
 import { webcrypto, createHash } from "crypto";
 import { createRequire } from "node:module";
-import { pathToFileURL } from "node:url";
+import { pathToFileURL, fileURLToPath } from "node:url";
 import { appScript } from "./extract.mjs";
+
+/* UI-26. This file re-runs ITSELF under the envelope guard's own probe to
+   measure arm B's coverage (section 4c). The child does the driving and skips
+   the arm that would spawn another one — auth-surface.test.mjs's precedent. */
+const SELF = fileURLToPath(import.meta.url);
+const CHILD = process.env.UI26_PROBE_CHILD || "";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -141,9 +212,13 @@ const get  = async (op, qs, tok="mem-ui13") => rP(await (await mf.dispatchFetch(
    progression suite seeds them. ---- */
 const NOW = "2026-07-24T00:00:00Z";
 let bseq = 0;
-const bundleMd = (id) => [
-  "---", `id: ${id}`, "object_type: information", "schema: information@1",
-  `title: "Doc ${id}"`, "current_state: collected", "prior_state: null",
+/* UI-26 gave this a TYPE. A project bundle is the only way to file a capture
+   somewhere a member has not been invited, which is what the gate arm is
+   about; every existing caller passes nothing and gets the information bundle
+   it always got, byte for byte. */
+const bundleMd = (id, type = "information") => [
+  "---", `id: ${id}`, `object_type: ${type}`, `schema: ${type}@1`,
+  `title: "Doc ${id}"`, `current_state: ${type === "project" ? "forming" : "collected"}`, "prior_state: null",
   `created: ${NOW}`, `last_updated: ${NOW}`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []",
@@ -154,29 +229,63 @@ const bundleMd = (id) => [
   "## Summary", "", "A procurement document.", "", "## Provenance Notes", "",
   "## Session Log", "", "## Review Notes", "",
 ].join("\n");
-async function seedDoc(captureSha, entities){
-  const id = `INFO-2026-${String(++bseq).padStart(4,"0")}-ui13`;
-  const md = bundleMd(id);
+async function seedDoc(captureSha, entities, { type = "information", tok = "mem-ui13" } = {}){
+  const id = `${type === "project" ? "PROJ" : "INFO"}-2026-${String(++bseq).padStart(4,"0")}-ui13`;
+  const md = bundleMd(id, type);
   const doc = { capture:{ sha256:captureSha, encoding:"binary", bytes:10 },
                 reading:{ content_type:"meeting_calendar", reader_version:1, found:entities.length>0, at:NOW, entities } };
   const prov = JSON.stringify({ documents:[doc] });
-  await post("promote", {
+  const r = await post("promote", {
     bundleId:id, base:null, snapKey:"20260724T010000Z_aaaa1111", author:"ui13",
-    meta:{ object_type:"information", group:"believe-in-oakland", title:`Doc ${id}`,
-           current_state:"collected", created:NOW, last_updated:NOW },
+    meta:{ object_type:type, group:"believe-in-oakland", title:`Doc ${id}`,
+           current_state: type === "project" ? "forming" : "collected", created:NOW, last_updated:NOW },
     files:[ { path:"bundle.md", text:md, bytes:md.length, sha256:sha(md) },
             { path:"data/provenance.json", text:prov, bytes:prov.length, sha256:sha(prov) } ],
     register:[],
-  });
+  }, tok);
+  if(r && r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   return id;
 }
+
+/* ---- UI-26: REAL ENROLLED MEMBERS, because op=readingname is GATED and a
+   class token cannot show a gate. 4.2/4.3 require the first two roster members
+   to be administrators; CAROL then owns a project (her session promotes it, so
+   the plane stamps her the owner) and DAVE is the member never invited to it.
+   This is readingname.test.mjs's own arrangement, on the surface side. ---- */
+const member = async (id, caps, role = "member") => {
+  const add = await post("memberadd", { memberId:id, cover:`cover for ${id}`, role, capabilities:caps }, "adm-ui13");
+  if(!add || !add.invite) throw new Error(`memberadd ${id}: ${JSON.stringify(add)}`);
+  const en = await post("enroll", { invite:add.invite, handle:id, password:`${id}-passphrase-1` });
+  if(!en || !en.ok) throw new Error(`enroll ${id}: ${JSON.stringify(en)}`);
+  const lg = await post("login", { role:`member:${id}`, password:`${id}-passphrase-1` });
+  if(!lg || !lg.token) throw new Error(`login ${id}: ${JSON.stringify(lg)}`);
+  return lg.token;
+};
+await member("ruth", ["contribute"], "admin");
+await member("gus",  ["contribute"], "admin");
+const CAROL = await member("carol", ["contribute", "create_projects"]);
+const DAVE  = await member("dave",  ["contribute"]);
+
 const SHA_A = sha("ui13-solicitation");   // names the contract by its own identifier -> grade A
 const SHA_C = sha("ui13-award");          // names it by identifier AND by name -> A and C rows
 const SHA_D = sha("ui13-contract");       // names nothing the registry knows -> unresolved, then testimony
+/* UI-26's two additions. SHA_N is the GRADE-C TIER this control could not offer
+   before REC-36: the subject's name sits INSIDE a longer recorded name, with the
+   case and the punctuation varying, which is exactly what MEASUREMENTS.md
+   2026-08-04 measured as the ordinary case (a subject name was the whole
+   recorded name in 0 of 41). SHA_S is the same tier filed inside CAROL's
+   project, which DAVE is never invited to. */
+const SHA_N = sha("ui13-amendment");      // the name INSIDE a longer one -> the grade-C tier
+const SHA_S = sha("ui13-secret");         // the same tier, filed where dave cannot look
 const BID_A = await seedDoc(SHA_A, [{ ref:"contract:C-2024-88", kind:"contract", key:"C-2024-88", label:"the anticipated Recology contract" }]);
 const BID_C = await seedDoc(SHA_C, [{ ref:"contract:C-2024-88", kind:"contract", key:"C-2024-88", label:"Recology award" },
                                     { ref:"contract:ZZ-0000",   kind:"contract", key:"ZZ-0000",   label:"Recology Hauling Contract" }]);
 const BID_D = await seedDoc(SHA_D, [{ ref:"contract:QQ-9999", kind:"contract", key:"QQ-9999", label:"an unnamed hauling arrangement" }]);
+const BID_N = await seedDoc(SHA_N, [{ ref:"contract:ZZ-0001", kind:"contract", key:"ZZ-0001",
+                                      label:"Amendment To The Recology Hauling Contract, Second" }]);
+const BID_S = await seedDoc(SHA_S, [{ ref:"contract:ZZ-0002", kind:"contract", key:"ZZ-0002",
+                                      label:"Settlement Under The Recology Hauling Contract" }],
+                            { type:"project", tok:CAROL });
 
 /* ---- the store's OWN closed vocabularies, read out of the ENFORCING OPS'
    refusals by this file directly. The SECOND instrument on the DEC-8 property:
@@ -406,10 +515,85 @@ ok("the plane's own relation row has no grade FIELD at all — the table has no 
    4. op=resolve — the recogniser's own grades, a C flagged, never established.
    ============================================================ */
 console.log("\n--- op=resolve: the record's grades, and a Grade C that never reads as established ---");
+const beforeCands = CALLED.length;
 await U.loadResolveCandidates();
-ok("the candidate documents came from the plane's reverse index", CALLED.includes("readingref"));
-ok("the document that names this subject by its own identifier is offered", html("#res-cands").includes(BID_A));
-ok("the list says plainly what it cannot look up", /only by a name in passing/.test(html("#res-cands")));
+const candCalls = CALLED.slice(beforeCands);
+const cands = html("#res-cands");
+
+/* UI-26. THE N-CALL LOOP IS GONE, and this is the assertion that says so rather
+   than a comment claiming it: the surface used to call op=readingref ONCE PER
+   REGISTERED NAME, and this subject has three. */
+ok("the candidate documents came from ONE call to the plane's name index",
+   candCalls.filter(o => o === "readingname").length === 1);
+ok("THE N-CALL LOOP IS GONE: op=readingref is not called at all, by this or any other handler",
+   !CALLED.includes("readingref"));
+ok("and the only other read is the already-resolved one, so the whole control costs two calls",
+   candCalls.filter(o => o !== "readingname" && o !== "concerns").length === 0);
+
+/* THE TIER THIS CONTROL COULD NOT OFFER BEFORE: the subject's name inside a
+   longer recorded one, which MEASUREMENTS.md 2026-08-04 measured as the ordinary
+   case (0 of 41 recorded names WERE a subject name; 15 of them contained one). */
+ok("A NEAR-NAME CANDIDATE IS OFFERED — the grade-C tier, reachable from this control for the first time",
+   cands.includes(BID_N));
+ok("and it is offered as the WEAKER correspondence, saying whose name it carries",
+   /carries this subject&rsquo;s name/.test(cands));
+ok("the document whose recorded name IS this subject's name is offered as the stronger one",
+   cands.includes(BID_C) && /which is this subject&rsquo;s name/.test(cands));
+ok("a document naming nothing the registry knows is not offered", !cands.includes(BID_D));
+
+/* CORRECTED 2026-08-04 (UI-26), never exempted, and the correction is the item.
+   This used to assert that BID_A — whose REFERENCE STRING is spelled exactly
+   like one of this subject's names — is offered, and it was right while the
+   control called op=readingref, which matches the reference string. op=readingname
+   matches the NAME A READING RECORDED, and BID_A's recorded name is "the
+   anticipated Recology contract", which carries no registered name of this
+   subject. So BID_A is NOT offered any more. That is a real narrowing, it is the
+   safe direction (a shorter list, never a longer one), and the page STATES it —
+   which is the next assertion, and the reason this arm is a correction rather
+   than a deletion. */
+ok("THE BOUND, MEASURED NOT ASSUMED: a document known only by an identifier is no longer offered",
+   !cands.includes(BID_A));
+ok("and the page SAYS SO, in the member's own terms, rather than leaving the absence to be inferred",
+   /by an identifier and no name at all, is not here/.test(cands));
+
+/* THE NARROWED SENTENCE. Asserted as its FOUR SEPARATE CLAIMS and not as one
+   string, because UI-21's finding was that a wording check passes over a
+   sentence that has quietly stopped being true. Each of these is a fact
+   MEASUREMENTS.md 2026-08-04 settled, and if the plane's bound moves, the one
+   that moved is the one that fails here. */
+ok("the old sentence is GONE — it stopped being true of the plane the day REC-36 landed",
+   !/only by a name in passing/.test(cands));
+ok("the narrowed sentence states the normalisation: capitalisation and punctuation are ignored",
+   /ignores capitalisation and punctuation/.test(cands));
+ok("it states the ALIAS JOIN, and why it is the only thing that reaches an abbreviation",
+   /tries every name this subject is registered under/.test(cands) && /abbreviation/.test(cands));
+ok("it states that ACCENTS ARE NOT FOLDED, which is the deliberate conservative direction",
+   /not<\/b> ignore accents/.test(cands) && /Prot&eacute;g&eacute;/.test(cands));
+ok("AND IT NEVER IMPLIES COMPLETENESS: an absence is said to say nothing about what exists",
+   /says anything about whether such a document exists/.test(cands));
+ok("nothing in the note claims the list is everything the record holds",
+   !/every document/i.test(cands) && !/all the documents/i.test(cands) && !/complete/i.test(cands));
+
+/* AND THE BOUND IS A BOUND ON THE LOOKUP, NOT ON THE RECORD. That distinction is
+   the whole reason the sentence above is worth writing, and it is DRIVEN here
+   rather than asserted: register the name the reading actually recorded, and the
+   document the lookup could not reach is offered — at the same Grade A it always
+   deserved, because the grade comes from the reference the plane reads out of the
+   document and never from how the member found it. This is the improvability
+   doctrine `loadResolveCandidates` has always carried in a comment, made
+   reachable from the control for the first time. */
+$$("#alias-in").value = "anticipated Recology contract";
+await U.aliasPreflight();
+await U.aliasGo();
+const beforeWiden = CALLED.length;
+await U.loadResolveCandidates();
+const widenCalls = CALLED.slice(beforeWiden);
+const widened = html("#res-cands");
+ok("registering the name a reading recorded brings the document it names within reach",
+   widened.includes(BID_A));
+ok("and a FOURTH name costs no extra call: the alias join is the plane's, not a loop here",
+   widenCalls.filter(o => o === "readingname").length === 1 && !widenCalls.includes("readingref"));
+
 await U.resolvePick(SHA_A);
 ok("with a document chosen, the resolve commit appears", /res-go/.test(html("#res-pf")));
 await U.resolveGo();
@@ -425,6 +609,58 @@ ok("the same document's name-only reference resolved at Grade C", resC.includes(
 ok("a Grade C is NEVER shown as established", !resC.includes("Grade C · established"));
 ok("the C says plausible, not established", /Plausible, not established/.test(resC));
 ok("no D was minted by the machine anywhere in a resolve receipt", !/Grade D/.test(resC));
+
+/* ------------------------------------------------------------------
+   4b. UI-26 — THE GATE. The op withholds the ROW; the surface renders what it
+   was answered and filters nothing.
+   ------------------------------------------------------------------ */
+console.log("\n--- an uninvited member's candidate list OMITS the invisible document ---");
+const asMember = async (tok) => { U.PLANE.token = tok; await U.loadResolveCandidates(); return html("#res-cands"); };
+const carolSees = await asMember(CAROL);
+const daveSees  = await asMember(DAVE);
+U.PLANE.token = "mem-ui13";
+ok("carol, who owns the project the capture is filed in, is offered it", carolSees.includes(BID_S));
+ok("DAVE, NEVER INVITED, IS NOT — the document is absent from his list entirely", !daveSees.includes(BID_S));
+ok("and it is absent as a document, not as a nameless row: no capture of it is offered either",
+   !daveSees.includes(SHA_S));
+ok("dave is still offered the shared near-name document, so the empty space is the GATE and not an empty read",
+   daveSees.includes(BID_N));
+ok("nothing tells dave that something was withheld — the count that would leak is never rendered",
+   !/withheld/i.test(daveSees) && !/not shown/i.test(daveSees));
+
+/* ------------------------------------------------------------------
+   4c. UI-26 — THE ARM-B COVERAGE LINE, MEASURED.
+   ------------------------------------------------------------------
+   UI-26's accepts-when is that the envelope guard's arm B now covers
+   op=readingname. Arm B is only as wide as the harness, so "covers" means: when
+   this suite runs under the guard's probe, the probe SEES the op and sees it
+   WRAPPED. That is measured here by re-running this file under
+   `test/envelope-probe.mjs` — the guard's own instrument, loaded the guard's own
+   way — rather than by reading a number off a log, which is a claim about a log.
+   The line MOVED in both directions and both are asserted: readingname joined it
+   and readingref left it, and the second half is what would catch a restored
+   loop that somebody left running beside the new call. */
+if(!CHILD){
+  const probe = new URL("./envelope-probe.mjs", import.meta.url).pathname;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ui26-probe-"));
+  const out = path.join(dir, "probe.json");
+  let ran = true;
+  try{
+    execFileSync("node", ["--import", "file://" + probe, SELF],
+      { stdio:"pipe", env:{ ...process.env, UI_ENVELOPE_PROBE_OUT: out, UI26_PROBE_CHILD:"1" } });
+  }catch(_){ ran = false; }
+  let data = { calls:0, ops:[] };
+  try{ data = JSON.parse(fs.readFileSync(out, "utf8")); }catch(_){}
+  try{ fs.rmSync(dir, { recursive:true, force:true }); }catch(_){}
+  const row = id => (data.ops||[]).find(o => o.op === id) || null;
+  ok("COVERAGE: this suite runs clean under the guard's own probe", ran);
+  ok("COVERAGE: the probe observed op=readingname — arm B's line MOVED to include it",
+     !!row("readingname") && (row("readingname").wrapped + row("readingname").flat) > 0);
+  ok("COVERAGE: it is answered WRAPPED, which is what arm B judges it against",
+     !!row("readingname") && row("readingname").flat === 0);
+  ok("COVERAGE: op=readingref LEFT the line — the one suite that ever drove it no longer answers it at all",
+     !row("readingref"));
+}
 
 /* ============================================================
    5. op=resolvetestify — the ONLY path to a D, and the machine never mints one.
@@ -597,5 +833,5 @@ ok("nothing is greyed: there is no disabled control anywhere on either surface",
 U.PLANE.me = { member:"m_alice", handle:"alice", session:true, administer:false, capabilities:["contribute"] };
 
 if(fails.length){ console.error(`intent-write: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`intent-write: ${n} assertions, all green — nine intent ops with call sites, every option and refusal plane-sourced, commit absent while refused, a declared relation with no grade, a Grade C never established, and D only by testimony`);
+console.log(`intent-write: ${n} assertions, all green — nine intent ops with call sites, every option and refusal plane-sourced, commit absent while refused, a declared relation with no grade, a Grade C never established, D only by testimony · and UI-26: ONE op=readingname call where a per-name loop was, the grade-C near-name tier offered for the first time, the measured bound stated in four clauses, an uninvited member's list omitting the invisible document, and arm B's coverage line measured at the guard's own probe`);
 process.exit(0);
