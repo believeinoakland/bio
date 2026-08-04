@@ -30,6 +30,7 @@
     "test:profile": "node test/profile.test.mjs",
     "test:framework-digest-audit": "node test/framework-digest-audit.test.mjs",
     "test:reading": "node test/reading.test.mjs",
+    "test:reading-wire": "node test/reading-wire.test.mjs",
     "test:entityregistry": "node test/entityregistry.test.mjs",
     "test:attest": "node test/attest.test.mjs",
     "test:mechanical": "node test/mechanical.test.mjs",

@@ -23,5 +23,6 @@ export * from "./recogniser.mjs";
 export * from "./events.mjs";
 export * from "./index.mjs";
 export * from "./pipeline.mjs";
+export * from "./readtext.mjs";
 export * from "./doctypes/registry.mjs";
 export { default as meetingCalendarType } from "./doctypes/meeting-calendar.mjs";

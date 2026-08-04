@@ -44,6 +44,12 @@ export const EVENTS = {
   scheduled:         { significance: SIGNIFICANCE.ROUTINE },
   agenda_published:  { significance: SIGNIFICANCE.ROUTINE },
   minutes_published: { significance: SIGNIFICANCE.ROUTINE },
+  /* the meeting_agenda type (FW-15): an item of legislation removed from a
+     published agenda is the quiet-substitution class; its wording moving is
+     worth showing; items arriving is what a supplemental agenda is */
+  item_pulled:       { significance: SIGNIFICANCE.EVENT },
+  item_changed:      { significance: SIGNIFICANCE.NOTICE },
+  item_added:        { significance: SIGNIFICANCE.ROUTINE },
 };
 
 /** Build an event, drawing its significance from the catalogue so the grade lives in
