@@ -3356,10 +3356,29 @@ export default {
        answer rather than an unfiltered one. (op=affordances takes the same
        stamp in its own handler above; op=search and the edge/state actions
        were stamped from the first commit.) */
+    /* REC-30: the sweep of what REC-25 left. REC-25 stamped the reads ADDRESSED
+       to a bundle; these are the reads addressed to something else that NAME a
+       bundle on the way past — op=dangling (measured: a project citing a
+       nonexistent target handed an uninvited member its own id), the task inbox
+       and its refers_to filter, the recogniser and progression reads and the
+       two write-echoes that read an instance back, and the two paging integrity
+       sweeps whose findings name bundles. Every one fails closed in the store on
+       an absent stamp, so removing an op from this list withholds an answer and
+       never widens one. `op=queue` and `op=affordances` take the same stamp in
+       their own handlers above. */
+    const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "resolutions",
+                                "concerns", "connections", "instance", "exceptions", "thread",
+                                "discharge", "audit", "searchindexcheck", "projectownerarith",
+                                /* REC-14's read, swept at the merge: its bar report NAMES the
+                                   projects that declared the bar, which is §7.9's reverse-edge
+                                   walk arriving by a new door. The VALUE stays whole for every
+                                   reader (DEC-17) — only the names are withheld. */
+                                "strengthbarof"];
     if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
         || STATE_ACTIONS.includes(op)
         || op === "list" || op === "index" || op === "projection" || op === "image"
-        || op === "file" || op === "backlinks" || op === "excludedby" || QUEUE_ACTIONS.includes(op)) {
+        || op === "file" || op === "backlinks" || op === "excludedby" || QUEUE_ACTIONS.includes(op)
+        || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
     /* D-157: WHETHER THIS CALLER ADMINISTERS, decided by the SERVER from the

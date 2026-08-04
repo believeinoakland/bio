@@ -57,7 +57,12 @@ const makeMf = (delayMs) => new Miniflare({
 
 const doOn = (obj) => ({
   post: async (op, body) => (await obj.fetch(`http://x/${op}`, { method: "POST", body: JSON.stringify(body) })).json(),
-  get: async (path) => (await obj.fetch(`http://x/${path}`)).json(),
+  /* REC-30: op=tasks fails closed on an absent viewer (a task's `refers_to` is a
+     bundle id and the D-15 predicate governs which rows may be named). A direct-DO
+     suite stands in for a machine credential — D-15's own carve-out — so it stamps
+     class:member; unstamped, these reads are empty and assert nothing. */
+  get: async (path) =>
+    (await obj.fetch(`http://x/${path}${path.includes("?") ? "&" : "?"}viewer=class:member`)).json(),
 });
 const promoteBundle = (post) => post("promote", {
   bundleId: BUNDLE, base: null, snapKey: "20260731T120000Z_inbox", author: "ruth",

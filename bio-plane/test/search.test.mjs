@@ -108,6 +108,13 @@ const raw = async (p, body) => (await (await mf.dispatchFetch("http://x" + p,
   body ? { method: "POST", body: JSON.stringify(body) } : {})).json());
 const call = async (p, body) => (await raw(p, body)).result;
 const S = (qs) => call("/search?viewer=class:member&" + qs);
+/* REC-30: op=searchindexcheck's `findings` NAME bundles, so its page carries the
+   D-15 predicate and fails closed on an absent viewer. This suite drives the
+   Durable Object directly and so stands in for a machine credential — no person
+   behind it, no participation to check, which is D-15's own carve-out — and
+   stamps class:member exactly as the /search reads above already do. Unstamped
+   the checker sees an empty corpus and reports `ok` about nothing. */
+const IDXCHK = (qs = "") => call(`/searchindexcheck?viewer=class:member${qs ? "&" + qs : ""}`);
 
 const bundleMd = (b) => `---
 id: ${b.id}
@@ -168,7 +175,7 @@ console.log("\n--- a creation is indexed inside its own transaction ---");
   t("bundle C promotes", (await promote(C)).ok, true);
   const st = await call("/stats");
   t("three bundles, three index rows", [st.bundles, st.indexed], [3, 3]);
-  const chk = await call("/searchindexcheck");
+  const chk = await IDXCHK();
   t("the index agrees with the corpus", chk.ok, true);
   t("with nothing keyless and nothing orphaned", [chk.counts.keyed, chk.orphans.length], [3, 0]);
   t("a term in the body is found", (await S("q=transferred&facets=none")).hits.map((h) => h.bundle_id), [A.id]);
@@ -187,7 +194,7 @@ console.log("\n--- an inline document beyond bundle.md is part of the text surfa
   t("the revision lands", r.ok, true);
   t("a word only present in analysis.md is searchable",
     (await S("q=comptroller&facets=none")).hits.map((h) => h.bundle_id), [C.id]);
-  t("and the index still agrees with the corpus", (await call("/searchindexcheck")).ok, true);
+  t("and the index still agrees with the corpus", (await IDXCHK()).ok, true);
 }
 
 console.log("\n--- a revision replaces its index row, so the index cannot lag the document ---");
@@ -204,7 +211,7 @@ console.log("\n--- a revision replaces its index row, so the index cannot lag th
     (await S("q=reconciliation&facets=none")).hits.map((h) => h.bundle_id), [B.id]);
   t("the old title no longer matches", (await S("q=title:anomaly&facets=none")).total, 0);
   t("the index row count did not grow", (await call("/stats")).indexed, 3);
-  t("and the checker still agrees", (await call("/searchindexcheck")).ok, true);
+  t("and the checker still agrees", (await IDXCHK()).ok, true);
 }
 
 console.log("\n--- the divergence checker can say no: a deliberately broken index ---");
@@ -213,7 +220,7 @@ console.log("\n--- the divergence checker can say no: a deliberately broken inde
      require the checker to name what is wrong. */
   t("clearing one bundle's derived state reports what it cleared",
     (await call("/projectionclear", { bundleId: A.id })).scope, A.id);
-  const chk = await call("/searchindexcheck");
+  const chk = await IDXCHK();
   t("the checker refuses to pass", chk.ok, false);
   t("and names the bundle and the reason",
     chk.findings.map((f) => [f.bundleId, f.finding]), [[A.id, "NO_FTS_ID"]]);
@@ -221,7 +228,7 @@ console.log("\n--- the divergence checker can say no: a deliberately broken inde
   t("the broken bundle is unfindable while the index is broken", (await S("q=transferred&facets=none")).total, 0);
   const rep = await call("/reproject", {});
   t("repair reports what it rebuilt", [rep.reprojected, rep.reindexed, rep.remaining], [1, 1, 0]);
-  t("the checker passes again", (await call("/searchindexcheck")).ok, true);
+  t("the checker passes again", (await IDXCHK()).ok, true);
   t("and the bundle is findable again", (await S("q=transferred&facets=none")).total, 1);
 }
 
@@ -240,7 +247,7 @@ console.log("\n--- a purge takes its index row with it, so a key cannot be inher
   await promote({ ...A, id: heir, title: "The next record", body: "This mentions marimba once.", updated: "2026-07-24T00:00:00Z" });
   t("the next bundle inherits nothing", (await S("q=xylophone&facets=none")).total, 0);
   t("and carries its own text", (await S("q=marimba&facets=none")).hits.map((h) => h.bundle_id), [heir]);
-  t("with no orphan left anywhere", (await call("/searchindexcheck")).orphans, []);
+  t("with no orphan left anywhere", (await IDXCHK()).orphans, []);
   await call(`/purge?bundleId=${heir}`);
 }
 
@@ -474,7 +481,7 @@ const corpus = [];
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
   const st = await call("/stats");
   t(`${N} bundles promoted with their index rows in ${secs}s`, [st.bundles, st.indexed], [N, N]);
-  const chk = await call(`/searchindexcheck?limit=1000`);
+  const chk = await IDXCHK("limit=1000");
   t("the index agrees with the corpus at this size", [chk.ok, chk.checked], [true, N]);
 }
 
