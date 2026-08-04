@@ -3322,7 +3322,21 @@ recommendation: (a). The refusal is the plane's statement about what it did, and
   provisional is honest but it is not what a member should read at a sign-in gate.
 what reversing costs: little today and more each release. Two constants carry these
   sentences now; every act that learns a refusal detail adds one.
-NOTE: whichever way this goes, UI-31 (queued) closes the measurement gap meanwhile —
+**THE MEASUREMENT IS NOW IN, and this question should be answered against it rather than
+  against an impression — `MEASUREMENTS.md`, "2026-08-04, UI-31: the plane vocabulary standing
+  on the PRE-AUTHENTICATION surfaces". Headline: 12 surfaces and 10 scenarios walked, 13 terms
+  standing on 5 surfaces, 56 occurrences in text a member actually reads. Two findings change
+  the shape of the question. (1) FIVE of the thirteen are the login refusal sentence, and they
+  are the only plane-sourced group AT THE GATE — everything else plane-sourced is hashes and
+  file paths on the published case page, which is the verification claim rather than incidental
+  wording. So the ruling's real subject is smaller than it looked. (2) EIGHT of the thirteen are
+  the SURFACE'S OWN words — `MEMBER_TOKEN` as a printed field label, `CORS` and `R2` in prose —
+  and NEITHER answer moves any of them: (a) rewords the plane, (b) licenses surfaces to translate
+  what the plane SENT, and a surface's own vocabulary is outside both. If the intent is "fix what
+  a member reads before signing in", this ruling alone will not do it; UI-33 is queued for that
+  half and is not waiting on you. Also worth knowing: `this instance` arrives by BOTH routes, so
+  a ruling that moves it in one place leaves it standing in the other.**
+NOTE: whichever way this goes, UI-31 (LANDED 2026-08-04) closed the measurement gap meanwhile —
   UI-4's vocabulary guard covers no sign-in surface today, so this tension is currently
   UNMEASURED rather than accepted, and that part is mine and is not waiting on an answer.
 
