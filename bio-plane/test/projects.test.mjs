@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) skip the D-15 participant filter in query.mjs viewerPredicate (make the member branch return the unfiltered `1=1` gate for every identified member, not just machine credentials) so an uninvited member sees projects -> 3 assertions fail (dave sees the secret project, its existence leaks, and it does not vanish when he leaves); restored, 102 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) skip the D-15 participant filter in query.mjs viewerPredicate (make the member branch return the unfiltered `1=1` gate for every identified member, not just machine credentials) so an uninvited member sees projects -> 3 assertions fail (dave sees the secret project, its existence leaks, and it does not vanish when he leaves); restored, 102 pass (now 114 with the REC-27 purge section). (run 2026-08-03, REC-27/D-137) remove the purge's two project_participants DELETEs from store.mjs (leaving projectRemove's) -> 4 assertions fail in the purge section (the per-bundle removed count, the stats delta, the whole-store survivor count, and the removed report); restored, 114 pass. */
 /* Project participation and the three visibility positions.
  * Membership Architecture section 7, and D-15.
  *
@@ -483,6 +483,49 @@ console.log("\n--- negative controls ---");
 {
   t("the filter can still say yes", (await visible("member:carol")).length > 0, true);
   t("and an unrecognised viewer sees nothing at all", (await visible("nonsense")).length, 0);
+}
+
+console.log("\n--- REC-27 / D-137: a purge takes the participation graph with the corpus ---");
+{
+  /* project_participants and project_owner_votes are keyed on project_id, which
+     IS a bundle id — created by hand in the DO constructor, so for three
+     releases the D-113 hygiene check could not see them and a whole-store purge
+     REPORTED SCOPE ALL while the entire participation graph stood. These
+     assertions hold the fix at the behaviour, not just at the source scan. */
+  const stats = () => call(`/stats`);
+
+  /* Leave a PENDING owner vote so the whole-store purge has a vote row to prove
+     it cleared: the stranded project has two active owners, and one owner's
+     removal vote at two is deliberately not enough (7.10). */
+  const pend = await call(`/projectownerremove?projectId=PROJ-2026-0200-stranded&handle=dave&by=carol&reason=${encodeURIComponent("left pending on purpose")}`);
+  t("a pending owner vote is on the books", pend.reason, "VOTES_SHORT");
+  const s0 = await stats();
+  t("participants are counted before the purge", s0.projectParticipants > 0, true);
+  t("and so is the pending vote", s0.projectOwnerVotes > 0, true);
+
+  /* PER-BUNDLE: purging ONE project takes ITS participant rows and no others.
+     PROJ-2026-0002-fork has exactly one participant, dave, its owner. */
+  const p1 = await call(`/purge?bundleId=PROJ-2026-0002-fork`);
+  t("a per-bundle purge names its scope", p1.scope, "PROJ-2026-0002-fork");
+  t("and reports the participant row it took", p1.removed.projectParticipants, 1);
+  const s1 = await stats();
+  t("exactly one participant row went with the project", s0.projectParticipants - s1.projectParticipants, 1);
+  t("other projects' participants are untouched",
+    (await call(`/projectparticipants?projectId=PROJ-2026-0200-stranded&by=dave`)).participants.length > 0, true);
+
+  /* WHOLE-STORE: scope ALL leaves NO participation graph standing. Before
+     REC-27 both counts survived this call — the exact D-113 silent-leftover. */
+  const pAll = await call(`/purge`);
+  t("a whole-store purge reports scope ALL", pAll.scope, "ALL");
+  const s2 = await stats();
+  t("no participant row survives it", s2.projectParticipants, 0);
+  t("no owner vote survives it", s2.projectOwnerVotes, 0);
+  t("and the purge result itself proves what it took",
+    [pAll.removed.projectParticipants > 0, pAll.removed.projectOwnerVotes > 0], [true, true]);
+  /* The roster is NOT corpus: membership survives a data purge (it is exempt in
+     the hygiene allowlist, with the reason stated there). */
+  t("the roster itself survives, because membership is identity, not corpus",
+    (await call(`/memberlist`)).members.length > 0, true);
 }
 
 await mf.dispose();

@@ -3830,7 +3830,10 @@ export class Store extends DurableObject {
       const cs = typeof p.captureSha === "string" ? p.captureSha.trim()
                : (typeof p.capture_sha === "string" ? p.capture_sha.trim() : "");
       if (!cs) return { ok: false, reason: "NO_CAPTURE", stage_key: sk, detail: `placement for '${sk}' names no capture sha` };
-      const dup = sk + " " + cs;
+      /* NUL cannot occur in a stage key or a sha, so the pair key is unambiguous.
+         Written as the ESCAPE, never a raw byte: one raw NUL here made this whole
+         file read as BINARY to grep, which then silently matched nothing (D-131). */
+      const dup = sk + "\u0000" + cs;
       if (seen.has(dup)) return { ok: false, reason: "DUPLICATE_PLACEMENT", stage_key: sk, capture_sha: cs,
         detail: `the same document is placed at '${sk}' twice` };
       seen.add(dup);
@@ -4468,6 +4471,12 @@ export class Store extends DurableObject {
          PROVE it cleared the aged decisions (D-113) and an operator can see how many of the
          record's own questions a member has deferred or dismissed. */
       proposalDispositions: n("proposal_dispositions"),
+      /* REC-27 / D-137: the participation graph and the pending owner-governance
+         votes, reported so a purge can PROVE it took them (both are keyed on
+         project_id, a bundle id, and were the silent-leftover the D-113 check
+         could not see). */
+      projectParticipants: n("project_participants"),
+      projectOwnerVotes: n("project_owner_votes"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -4532,6 +4541,16 @@ export class Store extends DurableObject {
            when EITHER end's bundle is purged, so the reverse-index connection cannot
            outlive a document it joined (D-113). */
         this.sql.exec(`DELETE FROM connections WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
+        /* REC-27 / D-137. Participation and owner-governance votes are keyed on
+           project_id, and a project_id IS a bundle id, so they are cleared in the
+           per-bundle arm too: purging a project bundle and leaving its participant
+           rows would orphan the participation graph against a project that no
+           longer exists — the D-113 silent-leftover in the two tables the D-113
+           check could not see (they are created in the DO constructor, not in
+           schema.mjs). For a non-project bundleId these DELETEs match no rows and
+           change nothing. hygiene.test.mjs holds this list against BOTH files now. */
+        this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
+        this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
@@ -4543,6 +4562,16 @@ export class Store extends DurableObject {
            ever picked. */
         this.sql.exec(`DELETE FROM selection_items`);
         this.sql.exec(`DELETE FROM selections`);
+        /* REC-27 / D-137. The participation graph and the owner-governance votes
+           are keyed on project_id — a bundle id — so a whole-store purge that
+           reported scope ALL while the entire participation graph stood was
+           exactly the D-113 silent-leftover, in tables the D-113 check could not
+           see because they are created by hand in the DO constructor rather than
+           in schema.mjs. Cleared here with the corpus; the roster itself
+           (members, member_expertise, admin_votes) survives, because membership
+           is identity and not derived from captured documents. */
+        this.sql.exec(`DELETE FROM project_participants`);
+        this.sql.exec(`DELETE FROM project_owner_votes`);
         /* D-113. Everything else derived from the corpus, and the reason this
            list must be extended whenever a derived table is added: a purge that
            reports scope "ALL" and leaves rows behind is worse than one that
@@ -4647,7 +4676,11 @@ export class Store extends DurableObject {
                  /* REC-5 / D-122: the pending connection-derive dirt a whole-store purge took (D-113). */
                  connectionDirty: d("connectionDirty"),
                  /* REC-7 / D-79: the aged proposal dispositions a whole-store purge took (D-113). */
-                 proposalDispositions: d("proposalDispositions") },
+                 proposalDispositions: d("proposalDispositions"),
+                 /* REC-27 / D-137: the participation graph and pending owner votes a purge
+                    took — per-bundle for a project bundle, everything for scope ALL. */
+                 projectParticipants: d("projectParticipants"),
+                 projectOwnerVotes: d("projectOwnerVotes") },
     };
   }
 
