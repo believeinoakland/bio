@@ -1277,6 +1277,97 @@ CREATE TABLE IF NOT EXISTS monitor_tick_epoch (
   opened_at  TEXT NOT NULL
 );
 
+-- REC-24 (a): WHY AN ACTION EXISTS, and it is DELIBERATELY inquiry_basis's
+-- shape rather than a new one. Read from the action it is *why we are asking*;
+-- read from the case it is *what we did about it*. One table, one grammar, one
+-- projection discipline: a projection of the action document's own
+-- action_basis[] block, re-projected WHOLE on every promotion, never a second
+-- place the relationship is stated (D-21).
+--
+-- kind is 'rests_on' (this action is built on that finding) or 'advances'
+-- (this action pursues that question). TWO kinds and not one, because the
+-- difference is what DEC-13 rides on: a request_for_comment names THE SPECIFIC
+-- INQUIRIES IT DISCLOSED as advances legs, so "we contacted them" and "we put
+-- these four claims to them" are different rows in the record rather than the
+-- same sentence. The Columbia review of Rolling Stone identified a comment
+-- request made WITHOUT SPECIFICS as the central failure; this column is where
+-- the specifics live.
+--
+-- It is ALSO where DEC-14's outcome/impact line is drawn. A recorded
+-- consequence is an OUTCOME by default and needs nothing here; promoting it to
+-- an IMPACT claim requires a rests_on leg pointing at evidence that is NOT
+-- our own action and NOT a document this action's own correspondence produced.
+-- Absent that, the claim is RECORDED and its state is unproven — a stated
+-- state on the R1 shape, never a fifth grade and never a low one.
+--
+-- action_basis_target is the reverse index: "which actions rest on this
+-- finding" is ONE indexed lookup, exactly as inquiry_basis_target is for
+-- questions. Cleared in BOTH purge arms via the TABLES list (D-113);
+-- hygiene.test.mjs holds that list against this file.
+CREATE TABLE IF NOT EXISTS action_basis (
+  bundle_id   TEXT NOT NULL,   -- the action
+  ord         INTEGER NOT NULL,-- position in action_basis[], so a leg is addressable
+  target_id   TEXT NOT NULL,   -- an INFO- or an INQ-/PROB-/FOCUS- bundle
+  target_type TEXT NOT NULL,   -- denormalised from the id prefix through the catalog's map
+  kind        TEXT NOT NULL,   -- 'rests_on' | 'advances'
+  note        TEXT,
+  at          TEXT,            -- the document's own authored date, never a server stamp
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS action_basis_target ON action_basis(target_id);
+CREATE INDEX IF NOT EXISTS action_basis_bundle ON action_basis(bundle_id);
+
+-- REC-24 (b): THE CORRESPONDENCE LEDGER — what we sent, what came back, and
+-- what did NOT come back. A projection of a new frontmatter correspondence[]
+-- block exactly as refs is of references[]: re-projected whole on every
+-- promotion, appended to by op=actioncorrespond and NEVER rewritten, because a
+-- correspondence entry that changed is itself a fact rather than a correction.
+--
+-- THE CAPTURE-OR-TESTIFY CHOICE IS STRUCTURAL, and it is the reason two of
+-- these columns are nullable rather than one being NOT NULL. An entry carries
+-- either an artifact_sha that resolves in register — the bytes, hashed, the
+-- thing we can prove later — OR an account with an author, which is a
+-- member's dated testimony that this exchange happened. NEVER NEITHER (an
+-- entry standing for nothing) and NEVER BOTH (bytes and a paraphrase of the
+-- same exchange competing to be the record; DEC-13 is explicit that what comes
+-- back is CAPTURED, not summarised). C-2.10 enforces the choice over the
+-- document and promote enforces the RESOLUTION of the sha, which only the store
+-- can see. This is inquiry_exclusions' target-or-prose structure one construct
+-- over.
+--
+-- direction is 'sent', 'received', or 'no_response'. The third is not a
+-- bookkeeping convenience: DEC-13 rules that a refusal to reply is a dated
+-- first-party fact about the body and frequently the more useful one, so it is
+-- RECORDED with its date rather than left as an absence a reader has to infer.
+-- A no_response entry is testimony by construction — there are no bytes to
+-- hash when nothing arrived — and takes the account/author arm.
+--
+-- author is SERVER-STAMPED at index.mjs from the authenticated session, like
+-- every other authorship in this plane: who put a testimonial account on the
+-- record is part of the record, and a caller naming it would be a caller
+-- signing as somebody else. recorded_at is when the entry was written; at is
+-- when the exchange HAPPENED, and they are different facts.
+--
+-- artifact_bundle_id is resolved from the register at projection time, so the
+-- ledger can name the INFO- bundle a captured reply became without the document
+-- restating it. Cleared in BOTH purge arms via the TABLES list (D-113).
+CREATE TABLE IF NOT EXISTS correspondence (
+  bundle_id          TEXT NOT NULL,   -- the action
+  ord                INTEGER NOT NULL,-- position in correspondence[], append-only
+  direction          TEXT NOT NULL,   -- 'sent' | 'received' | 'no_response'
+  at                 TEXT NOT NULL,   -- when the exchange happened (authored)
+  medium             TEXT,
+  party              TEXT,
+  artifact_bundle_id TEXT,            -- resolved from register, NULL for testimony
+  artifact_sha       TEXT,            -- the capture, XOR account/author below
+  account            TEXT,
+  author             TEXT,            -- server-stamped, required with account
+  recorded_at        TEXT,
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS correspondence_artifact ON correspondence(artifact_sha);
+CREATE INDEX IF NOT EXISTS correspondence_bundle ON correspondence(bundle_id);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

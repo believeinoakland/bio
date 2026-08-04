@@ -256,7 +256,39 @@ STATES.problem = STATES.focus;
  *  (REC-19): the plane publishes these so a surface never keeps a copy, and
  *  checkActionExtension consumes this same array, so the gate and the
  *  publication cannot drift apart. */
-export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'other'];
+/* DEC-13 adds `request_for_comment` as the EIGHTH kind, and it is the one kind
+ * in this array with an extra entry requirement attached (below). Bob's ruling
+ * is that what is required is not the contact but the group's DECLARED,
+ * JUSTIFIED POSITION on it — so this kind is never forced on anybody. What it
+ * is forced to do is CARRY SPECIFICS when it is used: the Columbia Journalism
+ * School review of Rolling Stone identified a comment request made WITHOUT
+ * SPECIFICS as the central failure, so "we contacted them" and "we put these
+ * four claims to them" must be different rows in this record. */
+export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'request_for_comment', 'other'];
+
+/* REC-24 (a): the two kinds a leg of an action's basis may carry. Exported for
+ * the same reason ACTION_KINDS is — op=affordances publishes it and the store
+ * projects against it, so the gate and the publication read ONE array. */
+export const ACTION_BASIS_KINDS = ['rests_on', 'advances'];
+
+/* REC-24 (b): the three directions a correspondence entry may carry.
+ * `no_response` is the one that is easy to leave out and must not be: DEC-13
+ * rules a refusal to reply a dated first-party fact about the body, and
+ * frequently the more useful one. */
+export const CORRESPONDENCE_DIRECTIONS = ['sent', 'received', 'no_response'];
+
+/* DEC-13's SOURCED PRECEDENT for a response window, carried as a citation and
+ * NOT as an enforced range. GAO's own protocols under GAGAS/Yellow Book give an
+ * audited agency 7 to 30 calendar days on a draft. What this catalog enforces is
+ * that the window is AUTHORED by the group with a basis — the same shape a
+ * progression's declared due-by takes — because a constant this project invented
+ * would be this project asserting a deadline nobody agreed to. The numbers are
+ * here so a surface can SHOW the precedent while the member chooses. */
+export const RFC_RESPONSE_WINDOW_PRECEDENT = {
+  min_days: 7, max_days: 30,
+  source: 'GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft)',
+  enforced: false,
+};
 
 /** D-130 / REC-23: the counterparty is THREE-VALUED, and the shape is `source`'s.
  *
@@ -1007,7 +1039,18 @@ async function checkInformationExtension(ctx, findings) {
    *
    * A member may PROMOTE an observed links_to into a cites, which is a member's
    act and is recorded as one. That promotion is the point of holding it. */
-const REL_VOCAB = ['cites', 'relates_to', 'elevated_into', 'initiates', 'derived_from', 'supersedes', 'corroborates', 'links_to'];
+/* REC-24 (g) adds `responds_to`, and it arrives WITH A PRODUCER AND A CONSUMER
+   because REC-16 already paid for the alternative: `supersedes` sat in this
+   array for weeks with zero occurrences in store.mjs, and membership of the
+   vocabulary meant only that C-6.1 would not refuse the string. So the edge
+   arrives governed. It is written by op=actioncorrespond onto the CAPTURED
+   REPLY — the response document points back at the action, which is the
+   direction SB-OUTPUT's A10 row names — and it is read by op=projection's
+   derived action block, which answers "what responded to this action" as one
+   indexed lookup over refs_target. Its requirement (below) is that the target
+   is an ACTION: an edge saying "this is a response" that points at a question
+   or a document asserts a correspondence that never happened. */
+const REL_VOCAB = ['cites', 'relates_to', 'elevated_into', 'initiates', 'derived_from', 'supersedes', 'corroborates', 'links_to', 'responds_to'];
 /* Source-asserted relations. Not a member's claim, so surfaces that count what a
    group has said about its material must exclude them, and a corroboration count
    that included them would be counting the source agreeing with itself. */
@@ -1300,6 +1343,10 @@ function checkReferences(ctx, findings) {
      checkInquiryBasis precedent, so a malformed supersession never lands and
      cannot audit clean either. */
   supersedesEdgeFindings(ctx.fm, findings);
+  /* REC-24 (g): the new relation is governed at the same seam as the last one,
+     so a responds_to edge neither lands nor audits clean when it points at
+     something that cannot have been asked. */
+  respondsToEdgeFindings(ctx.fm, findings);
   divisionDisclosureFindings(ctx.fm, findings);
 }
 
@@ -1333,6 +1380,42 @@ export function supersedesEdgeFindings(fm, findings) {
     }
     if (typeof r.target !== 'string' || !BUNDLE_ID_RE.test(r.target)) {
       findings.push(f('C-6.1', 'error', `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
+    }
+  });
+}
+
+/** REC-24 (g): WHAT A `responds_to` EDGE MUST CARRY, written as
+ *  supersedesEdgeFindings' twin and for its stated reason — the first PRODUCER
+ *  of a relation arrives together with the relation's requirements, so the
+ *  vocabulary never holds a member that means nothing.
+ *
+ *  ONE requirement, and it is the only one that is a fact about the bytes: the
+ *  target is an ACTION id. The edge asserts "this document is what came back
+ *  when we asked", and an edge of that name pointing at a question or at
+ *  another document asserts a correspondence that never happened — the same
+ *  class as a supersedes edge to nothing, which asserts a lineage. Resolution
+ *  of the target in the store is enforced at the write, where a resolver exists
+ *  (the supersedes precedent, for the same reason).
+ *
+ *  NO REASON IS REQUIRED, deliberately, and the asymmetry with `supersedes` is
+ *  the point rather than an omission. Supersession is a member's JUDGEMENT that
+ *  one question replaced another, and an unexplained replacement cannot be
+ *  checked. A responds_to edge is not a judgement at all: it records that a
+ *  document arrived in answer to an ask, and op=actioncorrespond writes it from
+ *  a correspondence entry that already carries the date, the medium, the party
+ *  and either the hash or the named account. Demanding prose on top of that
+ *  would be asking a member to justify a fact the ledger already holds. */
+export function respondsToEdgeFindings(fm, findings) {
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  refs.forEach((r, i) => {
+    if (!r || typeof r !== 'object' || r.rel !== 'responds_to') return;
+    const target = typeof r.target === 'string' ? r.target : '';
+    if (!BUNDLE_ID_RE.test(target) || OBJECT_TYPES[target.split('-')[0]] !== 'action') {
+      findings.push(f('C-6.1', 'error',
+        `references[${i}] is a responds_to edge whose target '${String(r.target).slice(0, 40)}' is not an ACTION: `
+        + `this edge says "this is what came back when we asked", so it points at the ask`,
+        ['point the edge at the ACTN- bundle whose correspondence this answers',
+         'or use relates_to, which claims nothing about an exchange']));
     }
   });
 }
@@ -2504,9 +2587,226 @@ function checkCounterparty(fm, findings) {
   }
 }
 
+/** REC-24 (a): the action's basis legs, and DEC-13's specificity requirement.
+ *
+ *  Exported so the STORE runs this same function at the write (the
+ *  checkInquiryBasis precedent), which is what stops a malformed basis landing
+ *  and auditing clean at the same time.
+ *
+ *  WHAT IT HOLDS. A leg names a target that is a canonical id, and a kind from
+ *  the closed pair. A leg may NOT point at an action: an action resting on an
+ *  action is our own work cited as the reason for our own work, which is the
+ *  circularity DEC-14 spends its whole ruling refusing, and it is cheaper to
+ *  refuse the shape than to detect the claim later.
+ *
+ *  AND DEC-13'S ONE HARD REQUIREMENT: a `request_for_comment` NAMES THE
+ *  SPECIFIC INQUIRIES IT DISCLOSED, as `advances` legs. Zero inquiries is
+ *  refused BY NAME, because that is exactly the ask the Columbia review found
+ *  at the centre of the Rolling Stone failure — a comment request with no
+ *  specifics, which looks like diligence in the record and gave the subject
+ *  nothing to answer. The kind is `advances` and not `rests_on` on purpose:
+ *  putting a claim to its subject PURSUES that question, and the reply may
+ *  change the answer (DEC-13: "the response may change the case, and that is
+ *  the point"). A finding the request is BUILT ON is a rests_on leg and may sit
+ *  beside it; it is not what was disclosed.
+ *
+ *  THE WINDOW IS AUTHORED, AND ITS RANGE IS NOT ENFORCED. A request_for_comment
+ *  carries at least one clock[] entry — the response window — and C-11.1
+ *  already requires every clock entry to carry a basis (the statute, order or
+ *  commitment the date derives from). RFC_RESPONSE_WINDOW_PRECEDENT carries
+ *  GAO's 7-30 days as a CITATION for a surface to show; nothing here compares a
+ *  date against it, because a window this project invented would be this
+ *  project asserting a deadline nobody agreed to. */
+export function actionBasisFindings(fm, findings) {
+  const legs = Array.isArray(fm?.action_basis) ? fm.action_basis : [];
+  const REPAIRS = ['point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)'];
+  legs.forEach((l, i) => {
+    if (!l || typeof l !== 'object' || Array.isArray(l)) {
+      findings.push(f('C-2.10', 'error', `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
+      return;
+    }
+    const target = typeof l.target === 'string' ? l.target : '';
+    if (!BUNDLE_ID_RE.test(target)) {
+      findings.push(f('C-2.10', 'error',
+        `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical bundle id`, REPAIRS));
+    } else if (OBJECT_TYPES[target.split('-')[0]] === 'action') {
+      findings.push(f('C-2.10', 'error',
+        `action_basis[${i}].target '${target}' is an ACTION: an action does not rest on our own action. `
+        + `Evidence for what we did is evidence somebody else produced (DEC-14)`,
+        ['point the leg at the finding or the question, not at another action']));
+    }
+    if (!ACTION_BASIS_KINDS.includes(l.kind)) {
+      findings.push(f('C-2.10', 'error',
+        `action_basis[${i}].kind '${l.kind}' is not one of: ${ACTION_BASIS_KINDS.join(', ')}`, REPAIRS));
+    }
+  });
+
+  if (fm?.action_kind === 'request_for_comment') {
+    const disclosed = legs.filter((l) => l && typeof l === 'object' && l.kind === 'advances'
+      && typeof l.target === 'string' && BUNDLE_ID_RE.test(l.target)
+      && OBJECT_TYPES[l.target.split('-')[0]] === 'inquiry');
+    if (!disclosed.length) {
+      findings.push(f('C-2.10', 'error',
+        'a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, '
+        + 'as action_basis legs of kind advances. "We contacted them" and "we put these four claims to them" are '
+        + 'different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)',
+        ['add an action_basis leg with kind: advances for each inquiry disclosed in the request']));
+    }
+    const clock = Array.isArray(fm.clock) ? fm.clock : [];
+    if (!clock.length) {
+      findings.push(f('C-2.10', 'error',
+        'a request_for_comment states the response window it gave, as a clock[] entry with its own basis. '
+        + `The window is AUTHORED by the group; ${RFC_RESPONSE_WINDOW_PRECEDENT.source} is the precedent to `
+        + 'reason from and is not a constant this record enforces (DEC-13)',
+        ['add a clock[] entry: the date the response was due, and the basis it derives from']));
+    }
+  }
+}
+
+/** REC-24 (b): the correspondence ledger, and the CAPTURE-OR-TESTIFY choice
+ *  made structural.
+ *
+ *  Exported and run by the store at the write, like actionBasisFindings above.
+ *
+ *  THE RULE, and why NEITHER and BOTH are both refused. An entry carries either
+ *  an `artifact_sha` — bytes we hashed and can produce later — or an `account`
+ *  with an `author`, a named member's dated testimony that the exchange
+ *  happened. NEITHER is an entry that stands for nothing: it asserts a
+ *  correspondence and offers no way to check it, which is the overclaiming
+ *  class this record exists to catch. BOTH is the subtler one and DEC-13 rules
+ *  it directly — what comes back is CAPTURED, not summarised — so an entry may
+ *  not carry the bytes AND a paraphrase of them, because the paraphrase is what
+ *  a reader would quote and the bytes are what the group can defend.
+ *
+ *  THE SHA'S SHAPE IS CHECKED HERE AND ITS RESOLUTION IS NOT, stated rather
+ *  than implied: this catalog is a pure function over one document, and the
+ *  only resolver injected into it answers for BUNDLE ids. Whether the hash
+ *  names a real capture is a fact about the `register` table, so promote
+ *  enforces it — the REC-23 entity_id precedent, one construct over.
+ *
+ *  `author` IS SERVER-STAMPED and this check only requires its PRESENCE. A
+ *  document carrying an account with no author is refused; a document carrying
+ *  a FALSE author is not something a pure check can see, and index.mjs
+ *  overwriting the field is what makes it true. */
+export function correspondenceFindings(fm, findings) {
+  const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
+  entries.forEach((e, i) => {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) {
+      findings.push(f('C-2.10', 'error', `correspondence[${i}] is not an entry block`));
+      return;
+    }
+    if (!CORRESPONDENCE_DIRECTIONS.includes(e.direction)) {
+      findings.push(f('C-2.10', 'error',
+        `correspondence[${i}].direction '${e.direction}' is not one of: ${CORRESPONDENCE_DIRECTIONS.join(', ')}`,
+        ['record a non-response as direction: no_response with the date it was due (DEC-13)']));
+    }
+    if (!DATE_RE.test(String(e.at ?? '').slice(0, 10))) {
+      findings.push(f('C-2.10', 'error',
+        `correspondence[${i}].at '${String(e.at).slice(0, 40)}' is not a date: an entry in this ledger is `
+        + 'dated, including a non-response, which is dated by when the reply was due'));
+    }
+    const sha = typeof e.artifact_sha === 'string' ? e.artifact_sha.trim() : '';
+    const account = typeof e.account === 'string' ? e.account.trim() : '';
+    const author = typeof e.author === 'string' ? e.author.trim() : '';
+    const CHOICE = [
+      'capture the artifact and record its sha256 (op=capture), or',
+      'record a named account: account with the member who is testifying to it',
+    ];
+    if (sha && account) {
+      findings.push(f('C-2.10', 'error',
+        `correspondence[${i}] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not `
+        + 'summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a '
+        + 'reader would quote instead', CHOICE));
+    } else if (!sha && !account) {
+      findings.push(f('C-2.10', 'error',
+        `correspondence[${i}] carries NEITHER an artifact_sha nor an account: it asserts an exchange and `
+        + 'offers no way to check that it happened', CHOICE));
+    } else if (sha) {
+      if (!CONTENT_HASH_RE.test(sha) && !/^[0-9a-f]{64}$/i.test(sha)) {
+        findings.push(f('C-2.10', 'error',
+          `correspondence[${i}].artifact_sha '${sha.slice(0, 24)}' is not a sha256 hash`));
+      }
+      if (e.direction === 'no_response') {
+        findings.push(f('C-2.10', 'error',
+          `correspondence[${i}] is a no_response carrying an artifact_sha: nothing arrived, so there are no `
+          + 'bytes to hash. A non-response is recorded as a named account with its date (DEC-13)',
+          ['record the non-response as an account: what was due, when, and that nothing came']));
+      }
+    } else if (!author) {
+      findings.push(f('C-2.10', 'error',
+        `correspondence[${i}] carries an account with no author: testimony is somebody's, and an unattributed `
+        + 'account is a claim nobody stands behind'));
+    }
+  });
+}
+
+/** DEC-14: what an action's recorded consequence CLAIMS, derived rather than
+ *  asserted — a pure function over one document, so the store, the catalog and
+ *  any read agree by construction instead of by convention.
+ *
+ *  THE LINE IS STRUCTURAL AND AT THE WRITE PATH, which is the ruling's own
+ *  wording. An action's recorded consequence is an OUTCOME by default: a dated,
+ *  capturable, first-party fact about the body — a hearing convened, a study
+ *  commissioned — that requires no causal claim at all and is carried at full
+ *  strength. Promoting it to an IMPACT claim requires a `rests_on` leg pointing
+ *  at evidence that is NOT OUR OWN ACTION: a council member's statement naming
+ *  the report, a staff memo referencing it, a hearing record. What is refused
+ *  is impact asserted from SEQUENCE ALONE, which is precisely the claim this
+ *  record would refuse from a public body.
+ *
+ *  AND IT IS NOT A REFUSAL. `unproven` is a STATED STATE on R1's shape — no
+ *  computed strength on this axis, and it names why — never a fifth grade and
+ *  never a low one, because a low grade would say we established it weakly.
+ *  So an impact claim with no outside evidence LANDS, and lands saying what it
+ *  is. The machine never mints the stronger one (grade_source's discipline).
+ *
+ *  WHY A DOCUMENT THIS ACTION'S OWN CORRESPONDENCE PRODUCED DOES NOT COUNT: a
+ *  reply we elicited is our own action's output. It is excellent evidence about
+ *  the BODY (its non-response is fully claimable, DEC-13) and it is no evidence
+ *  at all that our asking CAUSED anything — those are different claims and only
+ *  one of them is about us. */
+export function consequenceState(fm) {
+  const c = fm?.consequence;
+  if (!c || typeof c !== 'object' || Array.isArray(c)) return null;
+  const claim = c.claim === 'impact' ? 'impact' : 'outcome';
+  const description = typeof c.description === 'string' ? c.description.trim() : '';
+  const at = typeof c.at === 'string' ? c.at.trim() : '';
+  if (claim === 'outcome') {
+    return { claim, state: 'recorded', determined: true, grade: null, evidence: [],
+             description, at,
+             detail: 'OUTCOME: a dated first-party fact about the body, carried at full strength. It makes no '
+                   + 'causal claim, so there is nothing here to establish (DEC-14).' };
+  }
+  /* Our own correspondence's artifacts: elicited by this action, so they are its
+     output and not outside evidence for it. */
+  const ownArtifacts = new Set((Array.isArray(fm.correspondence) ? fm.correspondence : [])
+    .map((e) => (e && typeof e === 'object' && typeof e.artifact_bundle_id === 'string') ? e.artifact_bundle_id : null)
+    .filter(Boolean));
+  const evidence = (Array.isArray(fm.action_basis) ? fm.action_basis : [])
+    .filter((l) => l && typeof l === 'object' && l.kind === 'rests_on'
+                && typeof l.target === 'string' && BUNDLE_ID_RE.test(l.target)
+                && OBJECT_TYPES[l.target.split('-')[0]] !== 'action'
+                && !ownArtifacts.has(l.target))
+    .map((l) => l.target);
+  if (!evidence.length) {
+    return { claim, state: 'unproven', determined: false, grade: null, evidence: [],
+             description, at,
+             detail: 'UNPROVEN: this action claims IMPACT and rests on no evidence outside our own action, so '
+                   + 'the causal link is asserted from sequence alone. That is not a low score and not a '
+                   + 'failure — it is what we have not established. Cite something outside us (a statement '
+                   + 'naming the report, a staff memo, a hearing record) and it becomes a claim like any '
+                   + 'other (DEC-14).' };
+  }
+  return { claim, state: 'established', determined: true, grade: null, evidence,
+           description, at,
+           detail: `IMPACT rests on evidence that is not our own action: ${evidence.join(', ')}.` };
+}
+
 function checkActionExtension(ctx, findings) {
   if (ctx.fm?.object_type !== 'action') return;
   const fm = ctx.fm;
+  actionBasisFindings(fm, findings);
+  correspondenceFindings(fm, findings);
   /* The suite lives at module level as ACTION_KINDS (exported for REC-19's
      op=affordances) so the gate and the publication read one array. */
   if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not in the suite`));

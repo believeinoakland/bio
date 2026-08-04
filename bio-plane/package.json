@@ -78,6 +78,7 @@
     "test:publish": "node test/publish.test.mjs",
     "test:reopen": "node test/reopen.test.mjs",
     "test:divide": "node test/divide.test.mjs",
+    "test:action-loop": "node test/action-loop.test.mjs",
     "test:reevaluation": "node test/reevaluation.test.mjs",
     "test:publishedcase": "node test/publishedcase.test.mjs",
     "test:gate-reads": "node test/gate-reads.test.mjs",
