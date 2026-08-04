@@ -13657,11 +13657,20 @@ function pubDivisionHtml(f){
    the CASE's and answers on `cases[]`. A surface that went on parsing the old
    column would have rendered "carries no frozen strength pair" for every case on
    every real instance, which is a lie that looks like modesty.
+
+   CORRECTED AGAIN 2026-08-05 (REC-49), and this one is the durable fix rather
+   than a second patch of the same hole: **A MEMBER'S PAIR IS READ OFF THAT
+   MEMBER'S OWN RATIFIED ROW**, never out of the case's container manifest. Two
+   reasons, and the first is a truthfulness defect the earlier reading could not
+   avoid. (1) The container does not exist until the LAST member of an edition
+   ratifies, so reading pairs out of it meant every case in the awaiting window
+   — potentially days — showed no pairs at all, while its ratified members had
+   signed, frozen pairs the plane was holding the whole time. (2) The manifest is
+   a COPY made at assembly; `published_bundles.strength` is the member's own
+   signed, ratified pair, which is the thing a reader is entitled to and the
+   nearest source to the signature. Nothing is composed either way: one pair per
+   member, each named, and never a pair for the case (DEC-44).
    ============================================================ */
-function pubManifestOf(row){
-  try{ return typeof row.manifest === "string" ? JSON.parse(row.manifest) : (row.manifest || null); }
-  catch(_){ return null; }
-}
 async function pubList(fromNav){
   PUB.id = null; PUB.edition = null;
   if(!fromNav) pubSetHash("#published");
@@ -13688,10 +13697,19 @@ async function pubList(fromNav){
     for(const cs of cases){
       const roster = members.filter((m) => m.case_id === cs.case_id && Number(m.edition) === Number(cs.edition))
                             .sort((a, b) => Number(a.ord) - Number(b.ord));
-      const man = pubManifestOf(cs);
-      const manFind = new Map();
-      for(const f of (man && Array.isArray(man.findings)) ? man.findings : []) manFind.set(f.bundle_id, f);
       const waiting = roster.filter((m) => !byId.has(m.bundle_id + "@" + cs.edition));
+      /* WHETHER THE EDITION IS FINISHED IS THE PLANE'S OWN RECORDED FACT, not
+         one derived here: the container is assembled the instant the last member
+         ratifies, so `manifest_sha` is the edition's completion, full stop.
+         CORRECTED 2026-08-05 (REC-49): this was read off `waiting.length` alone,
+         which is the roster's answer to a question the roster cannot answer. The
+         container is recorded by the CONTROL PLANE after the last ratification
+         returns, so "every declared member has ratified" and "the container
+         exists" are two facts and the gap between them is reachable. In it, the
+         old reading drew the row as ratified and printed `container
+         sha256:&hellip;` with nothing in front of the ellipsis — a container
+         hash for a container that does not exist. */
+      const assembled = !!cs.manifest_sha;
       const latest = Number(top.get(cs.case_id) || cs.edition);
       const sup = Number(cs.edition) < latest
         ? `<span class="served no">superseded by edition ${esc(String(latest))}, which is a separate document — every pair on this row is edition ${esc(String(cs.edition))}'s own</span>`
@@ -13701,10 +13719,14 @@ async function pubList(fromNav){
          and two members may have been held to different standards. */
       const findingRows = roster.map((m) => {
         const row = byId.get(m.bundle_id + "@" + cs.edition);
-        const mf = manFind.get(m.bundle_id) || null;
-        const pair = pubPair({ strength: mf && mf.strength });
-        const bar = mf && mf.required_strength && mf.required_strength.declared === true
-          ? `bar: ${esc(AXIS_SHORT.capture)} ${esc(mf.required_strength.capture || "not set")} · ${esc(AXIS_SHORT.connection)} ${esc(mf.required_strength.connection || "not set")}`
+        /* THE MEMBER'S OWN RATIFIED ROW IS THE SOURCE (REC-49). `row.strength`
+           and `row.required` are the pair and the bar frozen into the bytes that
+           member signed — the same two the case page reads and the same two the
+           container copies at assembly. Read here, they answer in the awaiting
+           window as well as after it. */
+        const pair = pubPair(row);
+        const bar = row && row.required && row.required.declared === true
+          ? `bar: ${esc(AXIS_SHORT.capture)} ${esc(row.required.capture || "not set")} · ${esc(AXIS_SHORT.connection)} ${esc(row.required.connection || "not set")}`
           : `bar: none declared`;
         /* A MEMBER BLOCK IS A SECTION AND CARRIES `data-findingsec`, THE SAME
            MARK THE CASE PAGE'S FINDING PAGES CARRY. One altitude mechanism, not
@@ -13714,18 +13736,28 @@ async function pubList(fromNav){
            both. A second mechanism here would be a second thing to forget. */
         if(!row)
           return `<section class="pub-member" data-member="awaiting" data-findingsec="${esc(m.bundle_id)}" data-leg="${esc(m.bundle_id)}"><span class="mono">${esc(m.bundle_id)}</span> — DECLARED AND NOT YET RATIFIED. Nothing of it is served or described here.</section>`;
+        /* THE NO-PAIR SENTENCE, CORRECTED 2026-08-05 (REC-49) AND NOT EXEMPTED.
+           UI-29 wrote it honestly for the shape it had: the pair came out of the
+           container manifest, so the only reason a ratified member could lack
+           one was that the container was not assembled yet, and the sentence
+           said so. The pair now comes from the member's own ratified row, which
+           exists the moment that member ratifies — so the old sentence would
+           have been REACHED in a state where it was false, blaming an
+           unassembled container for a pair the plane simply never published.
+           What it says now is the only thing still true when it is reached:
+           this ratified member has no frozen pair on the record at all. */
         return `<section class="pub-member" data-member="ratified" data-findingsec="${esc(m.bundle_id)}" data-leg="${esc(m.bundle_id)}"><span class="mono">${esc(m.bundle_id)}</span> &middot; ${esc(row.title || "untitled")}
           <div style="margin-top:5px">${pair
             ? pubPairBadges(pair, m.bundle_id)
-            : `<span class="subj-how" data-nopair="${esc(m.bundle_id)}">This finding's frozen pair travels in the case container, which is not assembled for this edition yet. It is on the case page, read from that finding's own signed bytes; no pair is composed for it here.</span>`}</div>
+            : `<span class="subj-how" data-nopair="${esc(m.bundle_id)}">The published record carries no frozen strength pair for this ratified member: nothing was established on either axis at the edition it was ratified in. That is a fact about the record and not a gap in this page, and no pair is composed for it here.</span>`}</div>
           <div class="m">${bar}</div></section>`;
       }).join("");
-      rows.push(`<div class="pf" data-caserow="${esc(cs.case_id)}" data-caseedition="${waiting.length ? "awaiting" : "complete"}" onclick="pubOpen('${esc(cs.case_id)}', ${esc(String(cs.edition))})">
+      rows.push(`<div class="pf" data-caserow="${esc(cs.case_id)}" data-caseedition="${assembled ? "complete" : "awaiting"}" onclick="pubOpen('${esc(cs.case_id)}', ${esc(String(cs.edition))})">
         <div class="t">${esc(cs.scope || cs.case_id)}</div>
         <div class="m">${esc(cs.case_id)} &middot; edition ${esc(String(cs.edition))} &middot; ${
-          waiting.length
-            ? `NOT FINISHED YET: ${esc(String(roster.length - waiting.length))} of ${esc(String(roster.length))} declared findings ratified, and the container is not assembled`
-            : `ratified ${esc(String(cs.ratified_at || "").slice(0, 10))} &middot; container sha256:${esc(String(cs.manifest_sha || "").slice(0, 16))}&hellip;`}</div>
+          assembled
+            ? `ratified ${esc(String(cs.ratified_at || "").slice(0, 10))} &middot; container sha256:${esc(String(cs.manifest_sha || "").slice(0, 16))}&hellip;`
+            : `NOT FINISHED YET: ${esc(String(roster.length - waiting.length))} of ${esc(String(roster.length))} declared findings ratified, and the container is not assembled`}</div>
         <div class="m">A case of ${esc(String(roster.length))} finding${roster.length === 1 ? "" : "s"}. Each carries its own pair of strengths; there is no strength for the case.</div>
         ${findingRows}
         <div class="m">${sup}</div>
@@ -13735,10 +13767,21 @@ async function pubList(fromNav){
        are said to be exactly that rather than dropped or dressed up as one. */
     for(const p of pub){
       if(inCase.has(p.bundle_id + "@" + p.edition)) continue;
+      /* CORRECTED 2026-08-05 (REC-49), NOT EXEMPTED. UI-29 stated four absences
+         here in one breath and three of them are structural — a loose bundle
+         genuinely has no case identity, no scope statement and no completeness
+         assertion, because all three are properties of a CASE. The fourth was
+         not: a frozen pair belongs to the FINDING, so a ratified bundle can
+         perfectly well carry one while belonging to no case, and the sentence
+         would then have understated exactly what this item exists to stop. The
+         three absences are still stated flatly; the pair is now read off the row
+         and shown when it is there. */
+      const loose = pubPair(p);
       rows.push(`<div class="pf" data-caserow="" data-notacase="${esc(p.bundle_id)}" onclick="pubOpen('${esc(p.bundle_id)}', ${esc(String(p.edition))})">
         <div class="t">${esc(p.title || p.bundle_id)}</div>
         <div class="m">${esc(p.bundle_id)} &middot; edition ${esc(String(p.edition))} &middot; ratified ${esc((p.ratified_at || "").slice(0, 10))} &middot; sha256:${esc((p.bundle_sha || "").slice(0, 16))}&hellip;</div>
-        <div class="m"><span class="subj-how">These are ratified bytes that are not a member of any published case: no case identity, no scope statement, no completeness assertion and no frozen strength pair. None of them is invented here. The bytes are verifiable by hash exactly as any other ratified bytes are.</span></div>
+        ${loose ? `<section class="pub-member" data-member="ratified" data-findingsec="${esc(p.bundle_id)}" data-leg="${esc(p.bundle_id)}">${pubPairBadges(loose, p.bundle_id)}</section>` : ""}
+        <div class="m"><span class="subj-how">These are ratified bytes that are not a member of any published case: no case identity, no scope statement and no completeness assertion. None of them is invented here${loose ? `, and the pair above is this finding's own, read from the bytes it signed` : `, and the published record carries no frozen strength pair for it either`}. The bytes are verifiable by hash exactly as any other ratified bytes are.</span></div>
       </div>`);
     }
     $("#pl").innerHTML = rows.length ? rows.join("")

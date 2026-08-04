@@ -1,23 +1,27 @@
-/* NEGATIVE CONTROL: (THIRTEEN ARMS. (m) and (m2) are UI-29's and (m) is BOB'S OWN, carried verbatim off DEC-44 onto this surface; (n) and (o) are UI-29's other two; UI-18's eight and UI-27's two are kept, RE-POINTED where UI-29 moved their subject, and ALL RE-RUN against the final file so every count below agrees with the file it names. Each arm is broken ALONE and `civicos-ui/app.html` is restored BYTE-IDENTICALLY — sha256 compared before and after every arm and equal to 8ebc32a4a2a3ba76dd956e97eded33551c1394e6c744ce1bd16213a8184788f3 each time. The suite is 191 assertions whole; the counts are what each arm MEASURED, RUN 2026-08-04 by ui29-agent.)
- *   (m) A SINGLE CASE-LEVEL STRENGTH, ON THE SCREEN, IN PRINT AND IN THE EXPORT — UI-29 / DEC-44, and it is BOB'S OWN CONTROL. In `pubCaseHtml`, add one composed pair at case altitude: `${findings.length ? pubPairBadges(pubPair(findings[0]), pubCaseId(c)) : ""}` directly after the `<h1>` on page 1. RUN: 183 pass, 8 FAIL. The complement sweep NAMES what it found — "a pub-grade strength mark | a pub-grade strength mark | a data-axis attribute | a data-axis attribute | axis-and-letter text: Documents D | axis-and-letter text: Links C" — on the default rendering, on a filtered one, on the awaiting case, on the one-finding case and on the loose bundle; the OWNERSHIP assertion names `CASE-2026-0001` as an owner no finding of this case answers to; the mark/section tally disagrees; and the poisoned-answer block fires because the same code path draws it.
+/* NEGATIVE CONTROL: (SEVENTEEN ARMS. (m) and (m2) are UI-29's and (m) is BOB'S OWN, carried verbatim off DEC-44 onto this surface; (n) and (o) are UI-29's other two; UI-18's eight and UI-27's two are kept, RE-POINTED where UI-29 moved their subject; (p)-(s) are REC-49's. ALL SEVENTEEN RE-RUN 2026-08-05 by rec49-agent against the final file, so every count below agrees with the file it names: the thirteen earlier arms reproduced their FAIL counts EXACTLY, and the only one that moved is (c), which gained one and gained it for a reason recorded on its own line. Each arm is broken ALONE and `civicos-ui/app.html` is restored BYTE-IDENTICALLY — sha256 compared before and after every arm and equal to 2ed5beb2f6dda14e9c2193130ffc817b67b03029f82788e47c1d234f71f67de4 each time. The suite is 196 assertions whole; the counts are what each arm MEASURED. The pass counts moved with the suite (191 -> 196), which is why they were re-measured rather than adjusted on paper.)
+ *   (m) A SINGLE CASE-LEVEL STRENGTH, ON THE SCREEN, IN PRINT AND IN THE EXPORT — UI-29 / DEC-44, and it is BOB'S OWN CONTROL. In `pubCaseHtml`, add one composed pair at case altitude: `${findings.length ? pubPairBadges(pubPair(findings[0]), pubCaseId(c)) : ""}` directly after the `<h1>` on page 1. RUN: 188 pass, 8 FAIL (re-run 2026-08-05; 183 -> 188 pass, FAIL count unchanged). The complement sweep NAMES what it found — "a pub-grade strength mark | a pub-grade strength mark | a data-axis attribute | a data-axis attribute | axis-and-letter text: Documents D | axis-and-letter text: Links C" — on the default rendering, on a filtered one, on the awaiting case, on the one-finding case and on the loose bundle; the OWNERSHIP assertion names `CASE-2026-0001` as an owner no finding of this case answers to; the mark/section tally disagrees; and the poisoned-answer block fires because the same code path draws it.
  *       WHAT THIS ARM MEASURED, AND IT IS THE REASON THE INSTRUMENT HAS THIS SHAPE: **EVERY PER-FINDING ASSERTION STAYS GREEN.** Both findings still render both of their own pairs, both declared bars, both bases, both falsifiers, both divisions; every value this suite demanded before is still delivered. The surface goes on answering correctly and ADDITIONALLY answers wrongly. REC-44 measured exactly this one altitude down (its control (a): blocks 1-4 entirely green under the same defect), which is why this control is a STRUCTURAL SWEEP OVER WHOLE RESPONSES — the complement of the finding sections, swept on the screen, on the printed artifact and on the exported container — and never a value comparison. A value comparison passes.
- *   (m2) THE SAME BUG WHERE THE COMPLEMENT SWEEP CANNOT SEE IT. Put the composed case pair INSIDE a finding's pages instead — in `pubFindingPages`, add `${pair ? pubPairBadges(pair, pubCaseId(c)) : ""}` to page (b). RUN: 190 pass, 1 FAIL. The complement sweep is SILENT by construction (the marks are inside a finding section) and the OWNERSHIP assertion is the only thing that bites: a strength mark must name a finding this case actually has, or a finding one of its legs cites, and the case identity is neither. Two instruments, and either arm alone would have left the other defect invisible — arm (c)'s lesson at a new altitude.
- *   (n) THE `awaiting` WINDOW HIDDEN — in `pubStateHtml`, `if(true) return "";` before the incomplete branch. RUN: 186 pass, 5 FAIL — the incomplete edition renders no state at all, the reader is not told that 1 of 2 declared findings is missing, the "not an error" sentence and the reason the window exists both go, and the awaiting member is not named. The page still LOOKS perfect: the finding that landed is real, its strength is the plane's own, and the only thing wrong with it is what it does not say. DEC-40 arm (i)'s shape at a new altitude, and the reason the state is stated in BOTH directions.
- *   (o) THE COMPLETENESS ASSERTION RENDERED PER FINDING — add `${esc(c.completeness.statement)}` to `pubFindingPages` page (a) and empty it out of `pubCaseHtml`'s p2. RUN: 190 pass, 1 FAIL, and ONE is the point: the statement is still on the page, still verbatim, still from the signed bytes — it is at the WRONG ALTITUDE, repeated once per member, where it reads as each finding's own claim about what IT left out. It is the CASE's, made once for the edition (DEC-44 (d), C-21.1's altitude). Only an assertion that reads the two altitudes apart can see it.
- *   (a) A DETERMINING LEG DROPPED AT A THRESHOLD — RE-POINTED 2026-08-04 (UI-29): unchanged in kind, but `pubQualifiers` now takes a FINDING. Change the graded arm's guard to `if(false && a.state === "graded" && a.weakest != null){`. RUN: 187 pass, 4 FAIL — finding 1's connection-determining leg dropped at the connection floors, its capture-determining leg dropped at the capture floors, both gone at the strictest pair, and the artifact's own sentence about why a qualifier survives gone with them. The reader is shown a frozen strength and no leg that could have produced it (D-8/C-15). NOTE WHAT IT DOES NOT BREAK: finding 2's UNRATED-axis qualifiers survive, because they come from `pubQualifiers`' OTHER arm — two protections, and this arm reaches one.
+ *   (m2) THE SAME BUG WHERE THE COMPLEMENT SWEEP CANNOT SEE IT. Put the composed case pair INSIDE a finding's pages instead — in `pubFindingPages`, add `${pair ? pubPairBadges(pair, pubCaseId(c)) : ""}` to page (b). RUN: 195 pass, 1 FAIL (re-run 2026-08-05). The complement sweep is SILENT by construction (the marks are inside a finding section) and the OWNERSHIP assertion is the only thing that bites: a strength mark must name a finding this case actually has, or a finding one of its legs cites, and the case identity is neither. Two instruments, and either arm alone would have left the other defect invisible — arm (c)'s lesson at a new altitude.
+ *   (n) THE `awaiting` WINDOW HIDDEN — in `pubStateHtml`, `if(true) return "";` before the incomplete branch. RUN: 191 pass, 5 FAIL (re-run 2026-08-05) — the incomplete edition renders no state at all, the reader is not told that 1 of 2 declared findings is missing, the "not an error" sentence and the reason the window exists both go, and the awaiting member is not named. The page still LOOKS perfect: the finding that landed is real, its strength is the plane's own, and the only thing wrong with it is what it does not say. DEC-40 arm (i)'s shape at a new altitude, and the reason the state is stated in BOTH directions.
+ *   (o) THE COMPLETENESS ASSERTION RENDERED PER FINDING — add `${esc(c.completeness.statement)}` to `pubFindingPages` page (a) and empty it out of `pubCaseHtml`'s p2. RUN: 195 pass, 1 FAIL (re-run 2026-08-05), and ONE is the point: the statement is still on the page, still verbatim, still from the signed bytes — it is at the WRONG ALTITUDE, repeated once per member, where it reads as each finding's own claim about what IT left out. It is the CASE's, made once for the edition (DEC-44 (d), C-21.1's altitude). Only an assertion that reads the two altitudes apart can see it.
+ *   (a) A DETERMINING LEG DROPPED AT A THRESHOLD — RE-POINTED 2026-08-04 (UI-29): unchanged in kind, but `pubQualifiers` now takes a FINDING. Change the graded arm's guard to `if(false && a.state === "graded" && a.weakest != null){`. RUN: 192 pass, 4 FAIL (re-run 2026-08-05) — finding 1's connection-determining leg dropped at the connection floors, its capture-determining leg dropped at the capture floors, both gone at the strictest pair, and the artifact's own sentence about why a qualifier survives gone with them. The reader is shown a frozen strength and no leg that could have produced it (D-8/C-15). NOTE WHAT IT DOES NOT BREAK: finding 2's UNRATED-axis qualifiers survive, because they come from `pubQualifiers`' OTHER arm — two protections, and this arm reaches one.
  *       AND THIS ARM CORRECTED THE SUITE, which is the most useful thing it ever did. On its first run (UI-18) it fired only 3, because three assertions read `t.includes(<leg id>)` over the stripped page — and A DROPPED LEG IS STILL NAMED, in the dropped list two inches lower, which is the whole rule. `pubLegHtml` marks the kept set `data-kept` and the dropped list `data-dropped`, the assertions read the two sets apart, and UI-29 added `data-of` so they read them apart PER FINDING as well — with two findings on one page, "the id is in the kept set" is true if EITHER kept it.
- *   (b) A PUBLISHED FINDING WITH NO PARENT NAMED — in `pubDivisionHtml`, disable the parent line (`${false ? …}`). RUN: 190 pass, 1 FAIL, naming the division disclosure. ONE, and the count is the point: the siblings, the never-served sentence and the whole rest of the finding's pages still read perfectly, so nothing about the page LOOKS wrong — R4's disclosure is exactly the kind of absence a reader cannot notice.
- *   (c) A FINDING'S TWO STRENGTHS COMPOSED INTO ONE LETTER, INCLUDING IN PRINT — in `pubPairBadges`, return one mark carrying the stronger grade. RUN: 185 pass, 6 FAIL — the index rows lose the connection half, both findings' own pair rows lose it, the UNRATED axis stops reading UNRATED, and the awaiting case's landed finding loses it too.
+ *   (b) A PUBLISHED FINDING WITH NO PARENT NAMED — in `pubDivisionHtml`, disable the parent line (`${false ? …}`). RUN: 195 pass, 1 FAIL (re-run 2026-08-05), naming the division disclosure. ONE, and the count is the point: the siblings, the never-served sentence and the whole rest of the finding's pages still read perfectly, so nothing about the page LOOKS wrong — R4's disclosure is exactly the kind of absence a reader cannot notice.
+ *   (c) A FINDING'S TWO STRENGTHS COMPOSED INTO ONE LETTER, INCLUDING IN PRINT — in `pubPairBadges`, return one mark carrying the stronger grade. RUN: 189 pass, 7 FAIL (re-run 2026-08-05: 185 -> 189 pass and 6 -> 7 FAIL) — the index rows lose the connection half, both findings' own pair rows lose it, the UNRATED axis stops reading UNRATED, and the awaiting case's landed finding loses it too. THE SEVENTH IS REC-49'S AND IT WIDENS THIS ARM'S REACH: the awaiting edition's ratified member now shows its own pair ON THE INDEX, so a composition into one letter is caught in the awaiting window as well as outside it — where before REC-49 there was no pair on that row for a composition to damage.
  *       THE OLD FINDING, KEPT: "mark count and axis count agree" STAYS GREEN, because the composed mark still carries a `data-axis`. The obvious instrument calls a single composed letter correct; only the PAIRED assertions fire. Do not weaken those into a count.
  *       AND A NEW ONE, MEASURED BY THIS ARM WHILE UI-29 WAS BEING WRITTEN: the first version of "finding 1 shows its pair" read `Links C` off finding 1's PAGES and stayed GREEN under the composition, because a LEG of finding 1 is graded connection C and prints its own mark two inches lower. That is UI-18 arm (a)'s outcome-that-costs-nothing in a new place. The frozen pair is now read out of the `pub-axisrow` that NAMES the finding, and the arm was re-run against the corrected instrument: 4 failures became 6.
- *   (d) ONE FLOOR APPLIED TO BOTH AXES — in `readerFloors`, read every axis off the same value (`const v = f.capture;`). RUN: 186 pass, 5 FAIL — a reader's pair no longer needs both axes, a half pair draws a case instead of refusing, the `none`/real split stops naming `none` where the reader said `none`, and DEC-40's filter line names one floor twice. R2's forbidden composition performed by arithmetic.
- *   (e) ONE AXIS LEFT UNCONSTRAINED — in `readerFloors`, default a missing or unknown value instead of refusing (`if(!FLOOR_VALUES.includes(v)){ out[ax] = "none"; continue; }`). RUN: 189 pass, 2 FAIL — the resolver accepts half a pair, and the half-pair rendering that must not be drawn is drawn. The surface refusing to draw is the shipped answer; the harness failing is the statement that such a rendering may not be shipped, because an unstated floor reads as a satisfied one.
- *   (f) A `none` FLOOR OMITTED FROM THE RENDERING — in `pubInbandHtml`, wrap the capture floor line as `${floors && floors.capture === "none" ? "" : `<div>…</div>`}`. RUN: 189 pass, 2 FAIL — the in-band block stops naming the floor it applied to the documents axis, in both the unfiltered and the mixed rendering. TWO, and every other assertion including the DEC-34 header's floor line stays green, because the header names the floors from a different function: an omission in ONE of the two places both floors are printed is invisible to any check that reads only the other.
- *   (g) A PAGE-SHAPED ARTIFACT WITHOUT THE DEC-34 HEADER — in `pubPage`, return `<section class="pub-page"${at}>${inner}</section>`. RUN: 173 pass, 18 FAIL: page count and header count disagree, the per-page facts sweep finds none of the facts on any page, the finding/case altitude hashes go, the filter line count falls in both directions, the awaiting window leaves every header, the verification pointer goes with it, and the edition a reader is on stops being stated at all. This is DEC-34's negative control seam, which `bio-plane/test/publishedcase.test.mjs` deliberately left unplaced because the plane produces no pages to put a header on. It is placed here.
- *   (h) THE IN-BAND BLOCK HIDDEN IN PRINT — add `.pub-inband{display:none}` inside app.html's `@media print{…}` block. RUN: 190 pass, 1 FAIL, naming the hiding rule. The print arm refuses ANY hiding rule rather than protecting a list of selectors, because the moment a stylesheet is allowed to hide one thing the argument for hiding the next is already written — and a qualifier that survives on screen and vanishes on paper is the forbidden compression performed by CSS.
- *   (i) STRIP THE FILTER LINE FROM A FILTERED RENDERING — in `dec34Header`, delete the whole `<span class="f"><b>What this is</b> ${pubFilterHtml(floors, "filterline")}</span>` line. RUN: 187 pass, 4 FAIL — the per-page count of filter lines falls short in BOTH directions, and neither rendering's DEC-34 header carries the line any more. THIS IS THE ARM DEC-40 EXISTS FOR: a filtered page indistinguishable from the case is the misrepresentation vector, and it is the one defect that leaves the page looking perfect — every leg it kept is real, every strength on it is the plane's own, and the only thing wrong with it is what it does not say.
- *   (j) PRESENT A FILTERED RENDERING AS THE CASE — in `pubRenderingName`, return `"THE WHOLE CASE, UNFILTERED"` unconditionally. RUN: 188 pass, 3 FAIL — the filtered rendering is no longer named as a view the reader constructed, the footer's rendering hash is described as the case, and the stripped-text sweep loses the statement.
+ *   (d) ONE FLOOR APPLIED TO BOTH AXES — in `readerFloors`, read every axis off the same value (`const v = f.capture;`). RUN: 191 pass, 5 FAIL (re-run 2026-08-05) — a reader's pair no longer needs both axes, a half pair draws a case instead of refusing, the `none`/real split stops naming `none` where the reader said `none`, and DEC-40's filter line names one floor twice. R2's forbidden composition performed by arithmetic.
+ *   (e) ONE AXIS LEFT UNCONSTRAINED — in `readerFloors`, default a missing or unknown value instead of refusing (`if(!FLOOR_VALUES.includes(v)){ out[ax] = "none"; continue; }`). RUN: 194 pass, 2 FAIL (re-run 2026-08-05) — the resolver accepts half a pair, and the half-pair rendering that must not be drawn is drawn. The surface refusing to draw is the shipped answer; the harness failing is the statement that such a rendering may not be shipped, because an unstated floor reads as a satisfied one.
+ *   (f) A `none` FLOOR OMITTED FROM THE RENDERING — in `pubInbandHtml`, wrap the capture floor line as `${floors && floors.capture === "none" ? "" : `<div>…</div>`}`. RUN: 194 pass, 2 FAIL (re-run 2026-08-05) — the in-band block stops naming the floor it applied to the documents axis, in both the unfiltered and the mixed rendering. TWO, and every other assertion including the DEC-34 header's floor line stays green, because the header names the floors from a different function: an omission in ONE of the two places both floors are printed is invisible to any check that reads only the other.
+ *   (g) A PAGE-SHAPED ARTIFACT WITHOUT THE DEC-34 HEADER — in `pubPage`, return `<section class="pub-page"${at}>${inner}</section>`. RUN: 178 pass, 18 FAIL (re-run 2026-08-05): page count and header count disagree, the per-page facts sweep finds none of the facts on any page, the finding/case altitude hashes go, the filter line count falls in both directions, the awaiting window leaves every header, the verification pointer goes with it, and the edition a reader is on stops being stated at all. This is DEC-34's negative control seam, which `bio-plane/test/publishedcase.test.mjs` deliberately left unplaced because the plane produces no pages to put a header on. It is placed here.
+ *   (h) THE IN-BAND BLOCK HIDDEN IN PRINT — add `.pub-inband{display:none}` inside app.html's `@media print{…}` block. RUN: 195 pass, 1 FAIL (re-run 2026-08-05), naming the hiding rule. The print arm refuses ANY hiding rule rather than protecting a list of selectors, because the moment a stylesheet is allowed to hide one thing the argument for hiding the next is already written — and a qualifier that survives on screen and vanishes on paper is the forbidden compression performed by CSS.
+ *   (i) STRIP THE FILTER LINE FROM A FILTERED RENDERING — in `dec34Header`, delete the whole `<span class="f"><b>What this is</b> ${pubFilterHtml(floors, "filterline")}</span>` line. RUN: 192 pass, 4 FAIL (re-run 2026-08-05) — the per-page count of filter lines falls short in BOTH directions, and neither rendering's DEC-34 header carries the line any more. THIS IS THE ARM DEC-40 EXISTS FOR: a filtered page indistinguishable from the case is the misrepresentation vector, and it is the one defect that leaves the page looking perfect — every leg it kept is real, every strength on it is the plane's own, and the only thing wrong with it is what it does not say.
+ *   (j) PRESENT A FILTERED RENDERING AS THE CASE — in `pubRenderingName`, return `"THE WHOLE CASE, UNFILTERED"` unconditionally. RUN: 193 pass, 3 FAIL (re-run 2026-08-05) — the filtered rendering is no longer named as a view the reader constructed, the footer's rendering hash is described as the case, and the stripped-text sweep loses the statement.
  *       AND THE ARM MEASURED SOMETHING WORTH KEEPING, in arm (c)'s exact shape one altitude up: the `data-filter="reader"` MARKS STAYED CORRECT on every page, because they are computed from `pubFiltered` and not from the sentence. Only the assertions that read the WORDS fired. Do not weaken the word assertions into the mark count.
+ *   (p) THE PAIR READ BACK OUT OF THE CASE CONTAINER MANIFEST — REC-49's own, and it restores the state the item closes. In `pubList`, replace `const pair = pubPair(row);` with a read of the case row's manifest: `const pair = cs.manifest ? pubPair((JSON.parse(cs.manifest).findings || []).find((f) => f.bundle_id === m.bundle_id)) : null;`. RUN: 194 pass, 2 FAIL. The awaiting edition's RATIFIED member loses its pair entirely — the container it would have been read from is not assembled and will not be until the last member lands, which on a live instance is days — and the edition whose container was never recorded loses its member's pair with it. NOTE WHAT STAYS GREEN: every complete case still renders both findings' pairs, both bars and every letter this suite demanded before. The surface goes on answering correctly for the cases that finished and stops answering for the ones that have not, which is exactly why the fixture carries an awaiting edition with a ratified member in it.
+ *   (q) UI-29'S HONEST-FOR-NOW SENTENCE RESTORED WHERE IT IS NO LONGER TRUE — put back "This finding's frozen pair travels in the case container, which is not assembled for this edition yet." RUN: 194 pass, 2 FAIL. The sentence is reached by a RATIFIED member the plane holds no pair for, and it blames an unassembled container for a pair that was simply never published. AND THE ARM MEASURED WHY THE FIXTURE HAD TO GROW: on its first run it fired ZERO. The assertion that the old sentence is absent from the page passes for free when nothing renders the branch, which is the outcome-that-costs-nothing shape — so the awaiting edition gained a THIRD declared member, ratified and with `strength: null`, and only then does the arm bite.
+ *   (r) A LOOSE RATIFIED FINDING TOLD IT HAS NO PAIR WHILE IT IS HOLDING ONE — in `pubList`'s not-a-case branch, delete the `${loose ? …pubPairBadges…}` section. RUN: 195 pass, 1 FAIL. UI-29 stated four absences of a loose row in one breath and three of them are structural (a case identity, a scope statement and a completeness assertion are properties of a CASE); the fourth is not, because a frozen pair belongs to the FINDING. The row now says which of the two it is.
+ *   (s) COMPLETENESS READ OFF THE ROSTER AGAIN — in `pubList`, replace `const assembled = !!cs.manifest_sha;` with `const assembled = !waiting.length;`. RUN: 195 pass, 1 FAIL. The container is recorded by the control plane AFTER the last ratification returns, so "every declared member ratified" and "the container exists" are two facts; in the gap the roster reading draws the row as ratified and prints `container sha256:` with nothing in front of the ellipsis.
  * Restore after each. The arms are scripted and re-runnable in one step; each is a single unique string replacement in `civicos-ui/app.html`, quoted above with its site.
  */
 /* UI-18 · O2 THE PUBLISHED CASE, AS UI-29 CORRECTS IT — the surface UI-PLAN
@@ -123,9 +127,13 @@ const FIND_S = "INQ-2026-4200";
 const CASE_WAIT = "CASE-2026-0003";          // an edition inside the `awaiting` window
 const FIND_C = "INQ-2026-4301";
 const FIND_D = "INQ-2026-4302";              // declared, not yet ratified
+const FIND_E = "INQ-2026-4303";              // REC-49: RATIFIED, and the plane holds NO frozen pair for it
+const CASE_STUCK = "CASE-2026-0004";         // REC-49: every member ratified, container NOT recorded
+const FIND_K = "INQ-2026-4401";
 const PARENT = "INQ-2026-4000";
 const SIBLING = "INQ-2026-4103";
 const INFO = "INFO-2026-8001";               // ratified bytes that are in NO case
+const LOOSE_FIND = "INQ-2026-4500";          // REC-49: a ratified FINDING in no case — it still has a pair
 
 const A1 = "a".repeat(64), A2 = "b".repeat(64);          // FIND_A's bundle sha, editions 1 and 2
 const B1 = "c".repeat(64), B2 = "d".repeat(64);          // FIND_B's
@@ -134,6 +142,8 @@ const CAP_SHA = "0".repeat(64), DOC_SHA = "1".repeat(64);
 const S_SHA = "2".repeat(64), S_MAN = "3".repeat(64);
 const C_SHA = "4".repeat(64);
 const INFO_SHA = "5".repeat(64);
+const LOOSE_SHA = "6".repeat(64);
+const E_SHA = "7".repeat(64), K_SHA = "8".repeat(64);
 
 const L_CAP_B = INFO;               // capture B, supports, SERVED
 const L_CAP_D = "INFO-2026-8002";   // capture D, supports, NAMED — FIND_A's capture DETERMINING leg
@@ -397,22 +407,67 @@ const LOOSE = {
    container's manifest is the CASE's and lives on `cases[]`), and there is a
    `caseMembers[]` roster. A surface that went on parsing the old column would
    render "carries no frozen strength pair" for every case on every real
-   instance, which is a lie that looks like modesty. */
+   instance, which is a lie that looks like modesty.
+
+   CORRECTED 2026-08-05 (REC-49), AND THE MOCK WAS THE PROBLEM AS MUCH AS THE
+   SURFACE, so it is corrected at the site and never exempted (D-173: a UI mock
+   must answer the WIRE SHAPE). It hand-answered bundle rows with no `strength`
+   and no `required` — which was the plane's shape and was the defect: during the
+   awaiting window a case has no container manifest, so THERE WAS NOWHERE AT ALL
+   for a ratified member's pair to come from and the index showed none, for
+   potentially days, while the plane held every one of them. `publishedManifest()`
+   now selects the member's own `strength`/`required` off `published_bundles` —
+   the pair frozen into the bytes that member signed — and the rows here say so.
+   MEASURED against the plane rather than invented: the real answer parses both
+   columns, so they arrive as objects and not as JSON strings. */
 const PUB_ROWS = [
   { bundle_id:FIND_A, edition:1, title:"Was the sewer transfer authorised?", bundle_sha:A1,
-    ratified_at:"2026-07-01T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0" },
+    ratified_at:"2026-07-01T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0",
+    strength:PAIR_A, required:BAR_ABSENT },
   { bundle_id:FIND_B, edition:1, title:"Who approved the transfer?", bundle_sha:B1,
-    ratified_at:"2026-07-01T10:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0" },
+    ratified_at:"2026-07-01T10:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
+    strength:PAIR_B, required:BAR_DECLARED },
   { bundle_id:FIND_A, edition:2, title:"Was the sewer transfer authorised?", bundle_sha:A2,
-    ratified_at:"2026-07-20T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0" },
+    ratified_at:"2026-07-20T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0",
+    strength:PAIR_A, required:BAR_ABSENT },
   { bundle_id:FIND_B, edition:2, title:"Who approved the transfer?", bundle_sha:B2,
-    ratified_at:"2026-07-20T10:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0" },
+    ratified_at:"2026-07-20T10:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
+    strength:PAIR_B, required:BAR_DECLARED },
   { bundle_id:FIND_S, edition:1, title:"Was the lease extended without a vote?", bundle_sha:S_SHA,
-    ratified_at:"2026-07-05T09:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0" },
+    ratified_at:"2026-07-05T09:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
+    strength:PAIR_A, required:BAR_DECLARED },
+  /* THE RATIFIED MEMBER OF THE AWAITING CASE, and it is the whole point of the
+     window: it signed its pair and the container that would carry a copy does
+     not exist. */
   { bundle_id:FIND_C, edition:1, title:"Who owns the vendor?", bundle_sha:C_SHA,
-    ratified_at:"2026-07-28T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0" },
+    ratified_at:"2026-07-28T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0",
+    strength:PAIR_B, required:BAR_ABSENT },
+  /* A LOOSE RATIFIED BUNDLE THAT NEVER HAD A PAIR — an information bundle is not
+     a finding and derives none. `strength: null` is what the plane answers, and
+     it is NOT the same fact as "the container is not assembled yet". */
   { bundle_id:INFO, edition:1, title:"The transfer memo", bundle_sha:INFO_SHA,
-    ratified_at:"2026-06-01T00:00:00Z", attestor_key:"CCCC", gate_version:"1.20.0" },
+    ratified_at:"2026-06-01T00:00:00Z", attestor_key:"CCCC", gate_version:"1.20.0",
+    strength:null, required:null },
+  /* AND A LOOSE RATIFIED FINDING THAT DOES HAVE ONE. A frozen pair belongs to the
+     FINDING, so belonging to no case costs a bundle its case identity, its scope
+     and its completeness assertion — and not its pair. The index used to state
+     all four absences in one breath, which understated this row. */
+  { bundle_id:LOOSE_FIND, edition:1, title:"Did the vendor register a lobbyist?", bundle_sha:LOOSE_SHA,
+    ratified_at:"2026-06-15T00:00:00Z", attestor_key:"CCCC", gate_version:"1.20.0",
+    strength:PAIR_B, required:BAR_ABSENT },
+  /* A RATIFIED CASE MEMBER FOR WHICH THE PLANE HOLDS NO PAIR. `strength` is
+     nullable on `published_bundles` and a document ratified through the
+     hand-written promote door carries whatever it was ratified with — so this
+     is the ONE state in which the surface's no-pair sentence is reached, and
+     without a row in it the sentence would be unexercised wording that any
+     future edit could make false without a single assertion moving. */
+  { bundle_id:FIND_E, edition:1, title:"Which officer signed the release?", bundle_sha:E_SHA,
+    ratified_at:"2026-07-29T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0",
+    strength:null, required:null },
+  /* THE MEMBER OF THE EDITION WHOSE CONTAINER WAS NEVER RECORDED. */
+  { bundle_id:FIND_K, edition:1, title:"Was the contract amended after award?", bundle_sha:K_SHA,
+    ratified_at:"2026-07-30T09:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
+    strength:PAIR_A, required:BAR_ABSENT },
 ];
 const manOf = (caseId, ed, rows) => JSON.stringify({ format:"bio-case-container/2", case:caseId, edition:ed,
   findings:rows });
@@ -426,13 +481,23 @@ const CASE_ROWS = [
   { case_id:CASE_SOLO, edition:1, scope:SOLO.scope, ratified_at:"2026-07-05T09:00:00Z", manifest_sha:S_MAN,
     manifest: manOf(CASE_SOLO, 1, [ { bundle_id:FIND_S, strength:PAIR_A, required_strength:BAR_DECLARED } ]) },
   { case_id:CASE_WAIT, edition:1, scope:WAITING.scope, ratified_at:null, manifest_sha:null, manifest:null },
+  /* REC-49: EVERY DECLARED MEMBER HAS RATIFIED AND THERE IS STILL NO CONTAINER.
+     The container is recorded by the CONTROL PLANE after the last ratification
+     returns, so "the roster is complete" and "the container exists" are two
+     facts and the gap between them is reachable — an R2 outage is enough. A
+     surface reading completeness off the roster prints a container hash for a
+     container that is not there. */
+  { case_id:CASE_STUCK, edition:1, scope:"Whether the amendment was made after award.",
+    ratified_at:"2026-07-30T09:00:00Z", manifest_sha:null, manifest:null },
 ];
 const CASE_MEMBERS = [
   { case_id:CASE, edition:1, ord:0, bundle_id:FIND_A }, { case_id:CASE, edition:1, ord:1, bundle_id:FIND_B },
   { case_id:CASE, edition:2, ord:0, bundle_id:FIND_A }, { case_id:CASE, edition:2, ord:1, bundle_id:FIND_B },
   { case_id:CASE_SOLO, edition:1, ord:0, bundle_id:FIND_S },
   { case_id:CASE_WAIT, edition:1, ord:0, bundle_id:FIND_C },
-  { case_id:CASE_WAIT, edition:1, ord:1, bundle_id:FIND_D },
+  { case_id:CASE_WAIT, edition:1, ord:1, bundle_id:FIND_E },
+  { case_id:CASE_WAIT, edition:1, ord:2, bundle_id:FIND_D },
+  { case_id:CASE_STUCK, edition:1, ord:0, bundle_id:FIND_K },
 ];
 
 const PUBLISHED_SHAS = new Map([
@@ -662,8 +727,14 @@ const idx = list();
 ok("the index answers a caller holding NO credential of any kind", idx.length > 0 && !/Loading/.test(idx));
 {
   const rows = idx.split('<div class="pf"').slice(1);
+  /* CORRECTED 2026-08-05 (REC-49), never exempted: 5 -> 6. A SIXTH row joined the
+     fixture rather than the surface changing — a ratified FINDING that is in no
+     case, which is the row the old "no frozen strength pair" sentence understated
+     (a pair belongs to a finding; belonging to no case costs it a case identity,
+     a scope and a completeness assertion, and not its pair). The four CASE rows
+     are unchanged. */
   ok("the index enumerates CASE EDITIONS — two editions of the two-finding case, one each of the others",
-     rows.length === 5 && (idx.match(/data-caserow="CASE-/g) || []).length === 4);
+     rows.length === 7 && (idx.match(/data-caserow="CASE-/g) || []).length === 5);
   const e1 = rows[0], e2 = rows[1];
   ok("a case row names the CASE identity and its edition, and the identity is not any member's bundle id",
      e1.includes(CASE) && /edition 1/.test(e1) && !e1.includes("data-caserow=\"" + FIND_A));
@@ -687,17 +758,67 @@ ok("the index answers a caller holding NO credential of any kind", idx.length > 
   ok("the case's own SCOPE statement is what titles the row — the case's words, not a finding's title",
      strip(e1).includes("Whether the FY2024 sewer fund transfer was authorised"));
   const wait = rows.find(r => /data-caseedition="awaiting"/.test(r));
+  /* CORRECTED 2026-08-05 (REC-49), never exempted: 1 of 2 -> 2 of 3. The
+     awaiting edition gained a THIRD declared member — ratified, and with no
+     frozen pair on the record — so that the surface's no-pair sentence is
+     actually REACHED by a test rather than being wording nobody exercises. The
+     rule the assertion states is unchanged: how many of how many, and no
+     container. */
   ok("an edition still being ratified says so ON THE INDEX: how many of how many landed, and no container",
-     !!wait && /NOT FINISHED YET: 1 of 2 declared findings ratified/.test(strip(wait))
+     !!wait && /NOT FINISHED YET: 2 of 3 declared findings ratified/.test(strip(wait))
      && /the container is not assembled/.test(strip(wait)));
   ok("and the declared member that has not ratified is NAMED there and nothing of it is described",
      !!wait && /data-member="awaiting" data-findingsec="INQ-2026-4302"/.test(wait)
      && /DECLARED AND NOT YET RATIFIED/.test(strip(wait))
      && !/data-axis=/.test(wait.slice(wait.indexOf('data-member="awaiting"'))));
-  const loose = rows.find(r => /data-notacase=/.test(r));
+  /* REC-49: THE AWAITING WINDOW SHOWS THE PAIRS IT HONESTLY HAS. Its ratified
+     member signed a pair; the container that would carry a copy does not exist
+     and will not for as long as the last member takes. This is CONDUCT's
+     determination as a standing assertion — and the wording pin beside it is
+     what stops the surface drifting back to reading a manifest that is null. */
+  ok("REC-49: the ratified member of an AWAITING edition shows its own frozen pair, with no container to read one from",
+     !!wait && /data-member="ratified" data-findingsec="INQ-2026-4301"/.test(wait)
+     && /class="pub-axisrow" data-finding="INQ-2026-4301"/.test(wait)
+     && (wait.match(/data-axis="capture"/g) || []).length === 1
+     && (wait.match(/data-axis="connection"/g) || []).length === 1
+     && CASE_ROWS.find(c => c.case_id === CASE_WAIT).manifest === null);
+  /* AND THE NO-PAIR SENTENCE IS REACHED, which is the only way to assert what it
+     says. Its subject is the ratified member the plane holds no pair for — NOT
+     the container, which is what UI-29's wording blamed and what stopped being
+     true when the pair moved to the member's own row. An assertion that the old
+     sentence is absent from the page passes for free if nothing ever renders the
+     branch: that is the outcome-that-costs-nothing shape, and it is why this
+     edition carries a third member rather than two. */
+  ok("REC-49: a RATIFIED member the plane holds no pair for is told THAT, and not that a container is missing",
+     !!wait && /data-nopair="INQ-2026-4303"/.test(wait)
+     && /The published record carries no frozen strength pair for this ratified member/.test(strip(wait))
+     && /nothing was established on either axis/.test(strip(wait)));
+  ok("and no member of that edition is told its pair is merely waiting on a container — that sentence is gone",
+     !/travels in the case container/.test(idx) && !/not assembled for this edition yet/.test(idx));
+  /* REC-49: THE ROSTER CANNOT ANSWER FOR THE CONTAINER. Every declared member of
+     this edition has ratified and the container was never recorded; a surface
+     reading completeness off "nothing is waiting" prints `container sha256:` with
+     nothing in front of the ellipsis. */
+  const stuck = rows.find(r => /data-caserow="CASE-2026-0004"/.test(r));
+  ok("REC-49: an edition whose members all ratified but whose container was never recorded is NOT called ratified",
+     !!stuck && /data-caseedition="awaiting"/.test(stuck)
+     && /NOT FINISHED YET: 1 of 1 declared findings ratified/.test(strip(stuck))
+     && !/container sha256/.test(strip(stuck))
+     && /class="pub-axisrow" data-finding="INQ-2026-4401"/.test(stuck));
+  const loose = rows.find(r => /data-notacase="INFO-2026-8001"/.test(r));
   ok("a published bundle that is NOT a member of any case says exactly that, and no pair is invented for it",
      !!loose && /not a member of any published case/.test(strip(loose))
-     && !/data-axis=/.test(loose));
+     && !/data-axis=/.test(loose)
+     && /carries no frozen strength pair for it either/.test(strip(loose)));
+  /* REC-49: THE SAME SENTENCE MUST NOT BE SAID OF A ROW THAT DOES HAVE ONE.
+     "No frozen strength pair" was asserted of every loose row in one breath with
+     three absences that really are structural; this one is not. */
+  const looseFind = rows.find(r => /data-notacase="INQ-2026-4500"/.test(r));
+  ok("REC-49: a ratified FINDING in no case still shows ITS OWN pair, and is not told it has none",
+     !!looseFind && /class="pub-axisrow" data-finding="INQ-2026-4500"/.test(looseFind)
+     && (looseFind.match(/data-axis="capture"/g) || []).length === 1
+     && !/carries no frozen strength pair/.test(strip(looseFind))
+     && /no case identity, no scope statement and no completeness assertion/.test(strip(looseFind)));
   /* THE INDEX IS THE PLACE A READER QUOTES FROM, so the same structural sweep
      runs here, over the same complement: everything outside the marked member
      blocks. A letter that survives here is a letter attached to a CASE. */
@@ -707,12 +828,18 @@ ok("the index answers a caller holding NO credential of any kind", idx.length > 
 }
 ok("the index went to op=publishedmanifest and to nothing else",
    WIRE.length === 1 && WIRE[0].op === "publishedmanifest");
-/* THE PAIRS CAME OUT OF THE CASE ROW'S MANIFEST COLUMN, WHICH IS A JSON STRING,
-   and REC-44 MOVED IT: the bundle rows carry no manifest column at all now. A
-   surface still parsing the old one would say "no frozen strength pair" for
-   every case on every real instance. */
-ok("the pairs are parsed out of the CASE row's manifest column, which the plane hands over as a string",
-   typeof CASE_ROWS[0].manifest === "string" && PUB_ROWS[0].manifest === undefined
+/* CORRECTED 2026-08-05 (REC-49) AND NOT EXEMPTED, because the rule it pinned
+   changed and the old pin was right about the shape and wrong about the source.
+   UI-29 pinned that the index parses its pairs OUT OF THE CASE ROW'S MANIFEST
+   COLUMN — true then, and the reason the awaiting window showed no pairs at all:
+   the manifest is written when the LAST member ratifies, so a case still
+   collecting signatures had nowhere for a pair to come from. The pair is now
+   read off the MEMBER'S OWN RATIFIED ROW, which exists from that member's own
+   ratification. The manifest column is still there and is still the case's own
+   record of what it carried; it is simply not what a strength is read from. */
+ok("REC-49: a member's pair is read off ITS OWN ratified row, not out of the case's container manifest",
+   Array.isArray(PUB_ROWS[0].strength) && PUB_ROWS[0].manifest === undefined
+   && typeof CASE_ROWS[0].manifest === "string"
    && /Documents D/.test(idx) && /Links C/.test(idx));
 
 /* ============ 2. THE CASE — ITS FINDINGS, PLURAL, AT none/none ============ */
