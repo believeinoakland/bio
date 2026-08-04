@@ -1052,7 +1052,6 @@ released:
 
 released: 2026-08-04 — landed on main by CONDUCT (merge of worker b88fd8f). Verified: harness 26 suites green, battery 92/92 (4852) combined with REC-37. ballotPreflight and the routing gap folded into UI-22; the D-173 class sweep queued as UI-23; the withdrawn delegation accepted. No DEC.
 
-<<<<<<< HEAD
 ## CLAIM 2026-08-04 RECORD
 session: rec35-agent (worktree agent-abca1989293b6f3fa)
 opened: 2026-08-05T00:20:00Z
@@ -1067,7 +1066,6 @@ landed: left for CONDUCT.
 released:
 
 released: 2026-08-04 — landed on main by CONDUCT (merge of worker 329d44d). Verified: battery 92/92 (4859), harness 26 suites green, --strict 126/126. The TDZ-forced direction accepted as the DISPOSITIONS precedent; the probe-as-check reasoning accepted; the instrument repoint (enforcing ops' own refusals) accepted. IC-13, I3 → 5.6.0. No DEC.
-=======
 ## CLAIM 2026-08-05 UI
 session: ui22-agent (worktree agent-ac71cc066ab28f2d8)
 opened: 2026-08-05T00:30:00Z
@@ -1098,4 +1096,3 @@ measured, so nobody re-derives it: `RUNGS.attest = "attested"` ALREADY EXISTS in
 do NOT: fold `attest` into `ACTS`. The NON_ACTS entry states a real distinction — an act whose subject is a capture sha is not an act on a bundle — and collapsing it would make `op=affordances?target=<bundle>` publish an act that is not about that bundle, which is the pre-flight-disagreeing-with-the-refusal failure DEC-8 exists to forbid.
 also worth knowing: this leaves `attestPreflight` (NO_STORAGE / BAD_SHA / NO_SUCH_CAPTURE, computed and worded on the surface) standing as a FIFTH residue of the same class — deliberately out of UI-22's scope, which was the BAR and not the dialog, and named here so it is queued rather than discovered again.
 status: open
->>>>>>> worktree-agent-ac71cc066ab28f2d8
