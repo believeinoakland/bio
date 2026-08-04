@@ -206,6 +206,27 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .subj-note{font-size:12.5px;color:var(--muted);max-width:var(--measure-work);margin:0 0 14px;line-height:1.5}
 .subj-conn .ends{font-size:13.5px;color:var(--ink);margin-bottom:3px}
 .subj-conn .weaker{font-size:12px;color:var(--muted)}
+/* UI-13: the intent layer's write controls (Subjects + Progressions). A refusal
+   is rendered as the plane worded it; a commit control is ABSENT while the
+   plane refuses, so there is no disabled state to style. */
+.intent-narr{font-size:12.5px;color:var(--muted);max-width:var(--measure-work);margin:0 0 16px;line-height:1.5}
+.intent-box{background:var(--sheet);border:var(--hair);margin:0 0 14px;box-shadow:var(--e-2)}
+.intent-box>summary{font-family:var(--font-fact);font-size:13.5px;font-weight:600;color:var(--ink);padding:12px 16px;cursor:pointer}
+.intent-body{padding:0 16px 16px}
+.intent-lede{font-size:12.5px;color:var(--muted);max-width:var(--measure-work);margin:0 0 12px;line-height:1.5}
+.intent-lab{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;line-height:1.45}
+.intent-in,.intent-ta,.intent-sel{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--rule);border-radius:var(--r-2);background:#fff;width:100%;max-width:520px;box-sizing:border-box}
+.intent-ta{resize:vertical}
+.intent-go{font:inherit;font-size:13px;padding:8px 14px;margin-top:10px;border-radius:var(--r-2);border:1px solid var(--verdigris-dk);background:var(--verdigris);color:var(--sheet);cursor:pointer}
+.intent-pick{font:inherit;font-size:13px;padding:6px 11px;margin:6px 6px 0 0;border-radius:var(--r-2);border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);cursor:pointer;text-align:left}
+.intent-ref{margin-top:10px;padding:9px 12px;border-left:2px solid #d6a48c;background:var(--tint-note);border-radius:var(--r-2)}
+.intent-ref-why{font-size:12.5px;color:var(--ink);line-height:1.5}
+.intent-ref-code{font-size:11px;color:var(--muted);margin-top:4px}
+.intent-ok{margin-top:10px;padding:9px 12px;border-left:2px solid #8fb79a;background:#e2ede3;border-radius:var(--r-2);font-size:12.5px;line-height:1.5}
+.intent-chosen{font-size:12.5px;color:var(--ink);margin-top:6px}
+.intent-sub{margin-top:14px;padding-top:10px;border-top:1px solid var(--rule)}
+.intent-sub h3{font-family:var(--font-fact);font-size:13px;font-weight:600;color:var(--ink);margin:0}
+.intent-sec{margin-top:8px}
 /* UI-9: a progression finding under an instance the document sits in */
 .docprog-finding{margin:8px 0 0;padding:8px 11px;border-left:2px solid var(--rule);background:var(--paper-2);border-radius:var(--r-2)}
 .docprog-finding.overdue{border-left-color:#d6a48c;background:var(--tint-note)}
@@ -707,6 +728,26 @@ async function rec(op, params={}){
   if(!r.ok || j.ok===false) throw j;
   return j;
 }
+/* THE STORE'S OWN ANSWER, with the envelope opened.
+   Every op the Durable Object answers comes back WRAPPED — `{ok:true, result:
+   <the store's own return>}` — and the control plane adds `store` and
+   `tokenClass` around that (bio-plane/src/index.mjs, the passthrough; store.mjs's
+   dispatch, `Response.json({ ok:true, result: await map[op]() })`). A read that
+   forgets to open the envelope sees `undefined` for every field it wants and
+   renders a perfectly honest-looking EMPTY surface.
+   D-173, found 2026-08-04 by UI-13 driving UI-4's subject view against the REAL
+   plane for the first time: `lookupSubject`, `showEntity` and UI-9's
+   `docKnowsPanel` all read `r.entities` / `r.found` / `r.resolutions` off the
+   envelope, so on a live instance the Subjects screen answered "No subject in
+   the registry is known by …" for every subject that WAS in the registry, and
+   the document page's whole "what the record knows" panel was blank. Both
+   suites passed, because both mocks answered UNWRAPPED — a mock agreeing with
+   itself agrees on nothing (CLAUDE.md). The mocks are corrected, and this
+   helper exists so the next reader cannot repeat it. */
+async function recR(op, params={}){
+  const j = await rec(op, params);
+  return (j && j.result !== undefined) ? j.result : j;
+}
 async function recPost(op, body, params={}){
   const q = new URLSearchParams({ op, ...(PLANE.token?{token:PLANE.token}:{}), ...params });
   const r = await fetch(`${PLANE.base}/api/?${q}`,
@@ -853,6 +894,7 @@ const RAIL = [
   {id:"proposals",icon:"i-focus",    label:"Proposals"},
   {id:"search",   icon:"i-search",   label:"Search"},
   {id:"subjects", icon:"i-focus",    label:"Subjects"},
+  {id:"progressions",icon:"i-monitor",label:"Progressions"},
   {id:"inquiries",icon:"i-focus",    label:"Questions"},
   {id:"projects", icon:"i-projects", label:"Projects"},
   {id:"review",   icon:"i-review",   label:"Review"},
@@ -891,7 +933,7 @@ function navLabel(p){
   if(!p) return "";
   if(p.type==="bundle") return "the document";
   if(p.type==="inquiry") return "the question";
-  const t = {record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  const t = {record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -941,14 +983,14 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={home:"Home",record:"The record",tasks:"Tasks",proposals:"Proposals",search:"Search",subjects:"Subjects",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={home:"Home",record:"The record",tasks:"Tasks",proposals:"Proposals",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","inquiries","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
     return;
   }
   const R = {
-    home: renderHome, record: renderRecord, tasks: renderTasks, proposals: renderProposals, search: renderSearchScreen, subjects: renderSubjectView, inquiries: ()=>renderFiltered("inquiries","inquiry","Questions","Questions the group is working on, and what became of them: an open question, a finding once it has been answered, a case once it has been published. Deferred and dismissed questions are kept, never deleted."),
+    home: renderHome, record: renderRecord, tasks: renderTasks, proposals: renderProposals, search: renderSearchScreen, subjects: renderSubjectView, progressions: renderProgressions, inquiries: ()=>renderFiltered("inquiries","inquiry","Questions","Questions the group is working on, and what became of them: an open question, a finding once it has been answered, a case once it has been published. Deferred and dismissed questions are kept, never deleted."),
     projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
@@ -6059,12 +6101,19 @@ async function renderSubjectView(){
   setActive("subjects");
   const c = $("#content");
   c.innerHTML = `<h1 class="rec">Subjects</h1><p class="lede">What the record knows about a subject — a source, an office, an ordinance, a person. Find one by name and see its declared relations, every document that concerns it, and how strongly each concern was established.</p>
+    ${intentNarrationHtml()}
     <div class="subj-search">
       <input id="subj-q" placeholder="e.g. Sheng Thao, or an entity id (ENT-…)" onkeydown="if(event.key==='Enter')lookupSubject()">
       <button onclick="lookupSubject()">Find</button>
     </div>
-    <div id="subj-res"></div>`;
+    <div id="subj-new"></div>
+    <div id="subj-res"></div>
+    <div id="subj-acts"></div>`;
   const el = $("#subj-q"); if(el && el.focus) el.focus();
+  /* UI-13: the register-a-subject control. Painted after the search box and
+     ABOVE the read panes, and absent entirely for a credential that cannot
+     write (Q12: controls are never greyed and never narrated). */
+  await renderSubjectNew();
 }
 
 /* Look up a subject. An ENT- id reads directly (op=entity); anything else is a
@@ -6077,7 +6126,7 @@ async function lookupSubject(){
   if(res) res.innerHTML = `<p class="count-line">Looking&hellip;</p>`;
   try{
     if(/^ENT-/i.test(q)){ await showEntity(q); return; }
-    const r = await rec("entitybyalias", { alias:q });
+    const r = await recR("entitybyalias", { alias:q });
     const ents = r.entities || [];
     if(ents.length === 0){
       if(res) res.innerHTML = `<div class="empty">No subject in the registry is known by “${esc(q)}”. The registry holds only subjects a member has declared; a name that is not here has not been entered yet.</div>`;
@@ -6094,13 +6143,13 @@ async function lookupSubject(){
 /* Paint one subject: the entity + its declared relations, then the documents that
    concern it (op=concerns) with honest grades, then the graded connections among
    them (op=connections). Reads all three; writes nothing. */
-async function showEntity(entityId, known){
+async function showEntity(entityId, known, skipActs){
   const res = $("#subj-res");
   if(res) res.innerHTML = `<p class="count-line">Loading the subject&hellip;</p>`;
   try{
     let entity = known || null;
     if(!entity){
-      const r = await rec("entity", { id:entityId });
+      const r = await recR("entity", { id:entityId });
       if(!r.found || !r.entity){
         if(res) res.innerHTML = `<div class="empty">No subject with id ${esc(entityId)} is in the registry.</div>`;
         return;
@@ -6109,14 +6158,21 @@ async function showEntity(entityId, known){
     }
     /* The reverse index, and the connections among what it returns. */
     let concerns = { documents:[] }, connections = { connections:[] };
-    try{ concerns = await rec("concerns", { id:entityId }); }catch(_){ concerns = { documents:[], _err:true }; }
-    try{ connections = await rec("connections", { id:entityId }); }catch(_){ connections = { connections:[] }; }
+    try{ concerns = await recR("concerns", { id:entityId }); }catch(_){ concerns = { documents:[], _err:true }; }
+    try{ connections = await recR("connections", { id:entityId }); }catch(_){ connections = { connections:[] }; }
     if(res) res.innerHTML =
         subjEntityHtml(entity)
       + subjRelationsHtml(entity)
       + subjConcernsHtml(concerns)
       + subjConnectionsHtml(connections);
     document.querySelectorAll("#subj-res [data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
+    /* UI-13: the acts on this subject, in their own container BELOW the read
+       panes, so the read surface UI-4 owns is untouched by the write half.
+       `skipActs` is how an act REFRESHES the read panes after it lands without
+       repainting itself out of existence — the receipt the plane just gave the
+       member has to survive the refresh it causes. */
+    INTENT_SUBJ.entity = entity;
+    if(!skipActs) await renderSubjectActs(entity);
   }catch(e){ if(res) res.innerHTML = errPane(e); }
 }
 
@@ -6200,6 +6256,772 @@ function subjConnectionsHtml(c){
 }
 
 /* ============================================================
+   UI-13: THE WRITE SURFACE FOR THE INTENT LAYER — nine ops, and until this
+   block existed, zero callers anywhere in this file.
+
+   `LAYERS.md:201`, THE ACCESS FACT: *"Every write op in this layer is
+   unreachable from every surface… A member cannot declare how an institution
+   is supposed to work."* And `:279` names the false belief this corrects —
+   "the entity axis waits on a member populating it" is wrong; REC-5 already
+   makes connections self-derive. WHAT WAS MISSING IS A WRITE SURFACE, NOT A
+   MECHANISM. Nine landed queue items rendered empty for exactly this reason.
+
+   The nine, and where each is reached:
+     on a SUBJECT (the Subjects screen)  entitycreate · entityalias ·
+                                         relationdeclare · resolve ·
+                                         resolvetestify · connect
+     on a PROGRESSION (the new screen)   progressiondefine · thread · discharge
+
+   WHAT THE PLANE ENFORCES STRUCTURALLY, AND WHAT THIS SURFACE THEREFORE DOES:
+
+     - A DECLARED RELATION carries a justification and a citation and NO GRADE.
+       It is CONSTITUTIVE, not evidentiary (D-83), and `entity_relations` has no
+       grade column at all — `schema.mjs` refuses the category error by having
+       nowhere to put the answer. So the declare control asks for justification
+       and citation, offers NO grade field, and the relation renders through
+       `subjRelationsHtml`, which emits no badge. That is the item's negative
+       control: put a grade badge on a declared relation and the harness fails.
+
+     - A GRADE C RESOLUTION IS FLAGGED FOR CONFIRMATION and is never shown as
+       established. Every grade rendered on these surfaces goes through UI-4's
+       `subjGradeBadge` with the plane's own established / needs_confirmation
+       flags — no second copy of that judgement exists here.
+
+     - `resolvetestify` IS THE ONLY PATH TO A D AND THE MACHINE NEVER MINTS ONE.
+       The recogniser grades A, B or C and stops. So the testify control offers
+       no grade choice either: the grade is D BY BEING TESTIMONY, the plane says
+       so in `grade_declared`, and the surface repeats the plane's word.
+
+   DEC-8, AND HOW IT IS HONOURED HERE WITH NO SURFACE-SIDE MAP. The rule is
+   that the plane is the source of every option and every refusal a member is
+   shown, by exactly two mechanisms — PUBLICATION (`op=affordances`) or a DRY
+   RUN — and *"a surface may render a refusal it received; it may never compute
+   one."* Neither mechanism covers the intent layer today: `op=affordances`
+   publishes acts on BUNDLES and three object vocabularies (none of them this
+   layer's), and the dry-run family exists only for publication (REC-15). So:
+
+     1. OPTIONS. `loadIntentVocab()` asks `op=affordances` FIRST and uses what
+        it publishes. For the three closed vocabularies the plane enforces but
+        does not yet publish — entity kind, relation kind, stage requiredness —
+        it asks THE OP ITSELF with a body the store refuses, and reads the legal
+        set out of the plane's own sentence ("… one of a, b, c"). No option and
+        no requirement is written down in this file. When the plane names none,
+        the control says so and offers nothing: an invented option is worse than
+        an absent one. A DELEGATION to RECORD (CLAIMS.md) asks for these three
+        in `VOCABULARIES`; the day they appear, arm 1 above takes them and the
+        probe retires with no change here.
+
+     2. PRE-FLIGHT. Every one of these nine writes validates FAIL-CLOSED before
+        its transaction opens, so a refused call writes NOTHING — the harness
+        asserts exactly that (the registry is still empty after N pre-flights).
+        That makes the OP ITSELF the dry run: `intentPreflight` sends the
+        member's whole draft with ONE field replaced by a value the store cannot
+        accept — the field it checks LAST — and the plane answers with its own
+        first outstanding refusal, in its own order and its own words. The
+        surface reads exactly one thing off that answer: whether the outstanding
+        refusal is the one IT caused. If it is, everything else has cleared and
+        the commit control is rendered. If it is not, the commit control is
+        ABSENT — not greyed — and the plane's refusal stands in its place.
+
+        The only thing this file knows is WHICH FIELD IT WITHHELD (INTENT_HOLD,
+        a request-shaping table, not an option or a rule). It knows no
+        requirement, no order and no wording; all three are the plane's.
+
+        AND IT COSTS A ROUND TRIP, so the fields bind on `onchange` and not on
+        `oninput`: a pre-flight per KEYSTROKE would be a request to the Durable
+        Object per keystroke, which is a real cost paid for a slightly livelier
+        control. The pre-flight runs when a field is finished, and after every
+        choice from a plane-published list.
+
+   Q12: the read-only narration is SURFACE-SCOPED and PLANE-SOURCED — one
+   sentence, from what `whoami` answered, said once. Controls are never
+   narrated and never greyed: a credential that cannot write sees no write
+   control at all, exactly as `buildRail` treats an absent capability.
+   ============================================================ */
+
+const INTENT_PROBE = "__preflight__";
+
+/* The plane's answer to a write, REFUSAL INCLUDED. The Durable Object wraps
+   every answer as {ok:true, result:<the store's own return>}, and a refusal IS
+   a return — {ok:false, reason, detail} — so a refusal arrives here as a value
+   rather than as a throw. This is the ONE place that distinction is made.
+   Nothing below ever decides that something would be refused: it asks. */
+async function intentAsk(op, body){
+  let r;
+  try{
+    const j = await recPost(op, body||{});
+    r = (j && j.result !== undefined) ? j.result : j;
+  }catch(e){
+    r = (e && typeof e === "object" && e.result !== undefined) ? e.result : e;
+    if(!r || typeof r !== "object") r = { ok:false, reason:"NO_ANSWER", detail:String(r) };
+  }
+  return (r && r.ok === false) ? { accepted:false, refusal:r } : { accepted:true, result:r };
+}
+
+/* A refusal, in the PLANE'S OWN WORDS and never re-worded here. The refusals
+   teach: they name the requirement, and the requirement is the record's. */
+function intentRefusalHtml(r){
+  if(!r) return "";
+  const words = r.detail || r.error || "";
+  return `<div class="intent-ref"><div class="intent-ref-why">${esc(words || "The record refused this and said nothing further.")}</div>`
+    + (r.reason ? `<div class="intent-ref-code mono">${esc(r.reason)}</div>` : "")
+    + `</div>`;
+}
+
+/* The legal set, read out of the plane's own sentence. Every closed vocabulary
+   in this layer is written into its refusal the same way — "… one of a, b, c" —
+   because the store composes the detail from the set it enforces. Parsed, never
+   transcribed: a set that changes in the store changes here on the next load. */
+function intentOptionsFrom(detail){
+  const m = /\bone of ([^.(]+)/.exec(String(detail||""));
+  if(!m) return null;
+  const opts = m[1].split(",").map(s=>s.trim().replace(/^(?:and|or)\s+/,""))
+    .filter(s=>/^[a-z][a-z0-9_]*$/.test(s));
+  return opts.length ? opts : null;
+}
+
+/* The vocabularies, loaded once per session: PUBLISHED first, and the op's own
+   refusal only where the plane publishes nothing. `sets[name] === null` means
+   the plane named no set — the control then offers nothing and says why. */
+const INTENT_VOCAB = { loaded:false, sets:{}, source:{}, words:{} };
+async function loadIntentVocab(force){
+  if(INTENT_VOCAB.loaded && !force) return INTENT_VOCAB;
+  let pub = {};
+  try{ pub = ((await rec("affordances")).result || {}).vocabularies || {}; }catch(_){ pub = {}; }
+  const take = async (name, publishedAs, op, probe) => {
+    if(Array.isArray(pub[publishedAs]) && pub[publishedAs].length){
+      INTENT_VOCAB.sets[name] = pub[publishedAs].slice();
+      INTENT_VOCAB.source[name] = "published";
+      INTENT_VOCAB.words[name] = "";
+      return;
+    }
+    const a = await intentAsk(op, probe);
+    const opts = a.accepted ? null : intentOptionsFrom(a.refusal.detail);
+    INTENT_VOCAB.sets[name] = opts;
+    INTENT_VOCAB.source[name] = opts ? "refusal" : "unavailable";
+    INTENT_VOCAB.words[name] = a.accepted ? "" : (a.refusal.detail || "");
+  };
+  await take("entity_kind", "entity_kinds", "entitycreate", {});
+  await take("relation_kind", "relation_kinds", "relationdeclare", {});
+  await take("stage_required", "stage_requiredness", "progressiondefine",
+             { progressionKey:INTENT_PROBE, label:INTENT_PROBE, stages:[{ key:INTENT_PROBE, cardinality:"1" }] });
+  INTENT_VOCAB.loaded = true;
+  return INTENT_VOCAB;
+}
+/* A chooser over a plane-published set. The option's VALUE is the plane's own
+   token; its label is that token with its underscores opened, which is a
+   mechanical transform and not a table of member-facing names. */
+function intentChooser(id, name, what){
+  const opts = INTENT_VOCAB.sets[name];
+  if(!opts || !opts.length)
+    return `<div class="empty">The record has not said which ${esc(what)} it accepts, so this surface offers none rather than inventing one.</div>`;
+  return `<select id="${id}" class="intent-sel"><option value="">Choose one&hellip;</option>`
+    + opts.map(o=>`<option value="${esc(o)}">${esc(humanKind(o))}</option>`).join("")
+    + `</select>`;
+}
+
+/* WHICH FIELD EACH PRE-FLIGHT WITHHOLDS, and what the plane then answers when
+   everything else has cleared. This is request shaping — it holds no option, no
+   wording and no rule. The store's check ORDER is what makes each choice work:
+   the withheld field is the LAST thing that op looks at, so every other
+   requirement has already been judged by the plane when its refusal comes back.
+     entitycreate      label            (kind is judged first)
+     entityalias       alias
+     relationdeclare   the other end    (kind, justification, citation first)
+     resolve           the document
+     resolvetestify    the subject      (document, reference, basis first)
+     connect           the subject
+     progressiondefine one extra stage  (every real stage judged first)
+     thread            one extra placement
+     discharge         the document     (reason, citation, stage first) */
+const INTENT_HOLD = {
+  entitycreate:     { body:d=>({ ...d, label:"" }),                  expects:r=>r.reason==="NO_LABEL" },
+  entityalias:      { body:d=>({ ...d, alias:"" }),                  expects:r=>r.reason==="NO_ALIAS" },
+  relationdeclare:  { body:d=>({ ...d, toEntity:INTENT_PROBE }),     expects:r=>r.reason==="NO_SUCH_ENTITY" && r.end==="to" },
+  resolve:          { body:d=>({ ...d, captureSha:"" }),             expects:r=>r.reason==="NO_SHA" },
+  resolvetestify:   { body:d=>({ ...d, entityId:INTENT_PROBE }),     expects:r=>r.reason==="NO_SUCH_ENTITY" },
+  connect:          { body:d=>({ ...d, entityId:"" }),               expects:r=>r.reason==="NO_ENTITY" },
+  progressiondefine:{ body:d=>({ ...d, stages:[...(d.stages||[]),
+                        { key:INTENT_PROBE, cardinality:"1",
+                          required:(INTENT_VOCAB.sets.stage_required||[])[0], after:INTENT_PROBE+"-after" }] }),
+                      expects:r=>r.reason==="UNKNOWN_AFTER" && r.stage_key===INTENT_PROBE },
+  thread:           { body:d=>({ ...d, placements:[...(d.placements||[]),
+                        { stage:INTENT_PROBE, captureSha:INTENT_PROBE }] }),
+                      expects:r=>r.reason==="BAD_STAGE" && r.stage_key===INTENT_PROBE },
+  discharge:        { body:d=>({ ...d, captureSha:INTENT_PROBE }),   expects:r=>r.reason==="NOT_CONCERNED" && r.capture_sha===INTENT_PROBE },
+};
+
+/* THE PRE-FLIGHT. Asks the op, with the withheld field, and returns the plane's
+   answer. `clear` means the ONLY thing still outstanding is the field this
+   surface itself withheld — every other requirement was judged and passed by
+   the plane. An accepted pre-flight would mean a write happened where none was
+   asked for, so it fails CLOSED and says so rather than showing a commit. */
+async function intentPreflight(op, draft){
+  const hold = INTENT_HOLD[op];
+  const a = await intentAsk(op, hold.body(draft));
+  if(a.accepted)
+    return { clear:false, refusal:{ reason:"PREFLIGHT_NOT_REFUSED",
+      detail:"The record accepted a check that was supposed to be incomplete. Nothing was committed from this surface." } };
+  return hold.expects(a.refusal) ? { clear:true, refusal:null } : { clear:false, refusal:a.refusal };
+}
+/* The pre-flight pane: the plane's refusal, or the commit control. The commit
+   control is ABSENT while the plane refuses — never present-and-disabled. */
+function intentPane(pf, supplied, commitHtml, waitingFor){
+  if(!pf) return `<div class="intent-pf"></div>`;
+  if(!pf.clear) return `<div class="intent-pf">${intentRefusalHtml(pf.refusal)}</div>`;
+  if(!supplied) return `<div class="intent-pf"><div class="intent-ref-why">${esc(waitingFor)}</div></div>`;
+  return `<div class="intent-pf">${commitHtml}</div>`;
+}
+function intentReceiptHtml(lines){
+  return `<div class="intent-ok">${lines.map(l=>`<div>${l}</div>`).join("")}</div>`;
+}
+
+/* Q12. ONE sentence, surface-scoped, from what whoami answered. Controls are
+   never narrated: a credential that cannot write sees none at all. */
+function canIntentWrite(){ return canRelease(); }
+function intentNarrationHtml(){
+  if(canIntentWrite()) return "";
+  const me = PLANE.me || {};
+  const named = me.handle || me.member || null;
+  return `<p class="intent-narr">${named ? esc(named)+" is signed in with a credential that reads" : "This credential reads"} the record and does not add to it, so nothing here offers to change it.</p>`;
+}
+
+/* ---------- (1) REGISTER A SUBJECT — op=entitycreate ---------- */
+const INTENT_NEW = { pf:null };
+async function renderSubjectNew(){
+  const box = $("#subj-new"); if(!box) return;
+  if(!canIntentWrite()){ box.innerHTML = ""; return; }
+  await loadIntentVocab();
+  box.innerHTML = `<details class="intent-box" id="subj-new-box"><summary>Register a subject the record does not know yet</summary>
+    <div class="intent-body">
+      <p class="intent-lede">A subject is a thing the record is about — an office, an ordinance, a contract, a person. Registering one is what lets the record recognise it in documents; nothing is claimed about it by registering it.</p>
+      <label class="intent-lab">What kind of subject is it?</label>
+      ${intentChooser("ent-kind","entity_kind","kinds of subject")}
+      <label class="intent-lab">What is it called?</label>
+      <input id="ent-label" class="intent-in" placeholder="e.g. Office of the City Auditor" onchange="entityPreflight()">
+      <label class="intent-lab">Any other names it answers to, one per line — an identifier the source uses is the most useful thing you can put here.</label>
+      <textarea id="ent-aliases" class="intent-ta" rows="3"></textarea>
+      <div id="ent-pf"></div>
+    </div></details>`;
+  const sel = $("#ent-kind"); if(sel) sel.onchange = () => entityPreflight();
+  await entityPreflight();
+}
+function entityDraft(){
+  const aliases = (($("#ent-aliases") && $("#ent-aliases").value) || "").split("\n").map(s=>s.trim()).filter(Boolean);
+  return { kind: ($("#ent-kind") && $("#ent-kind").value) || "",
+           label: (($("#ent-label") && $("#ent-label").value) || "").trim(), aliases };
+}
+async function entityPreflight(){
+  const d = entityDraft();
+  INTENT_NEW.pf = await intentPreflight("entitycreate", d);
+  const pane = $("#ent-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(INTENT_NEW.pf, !!d.label,
+    `<button class="intent-go" id="ent-go" onclick="entityCreateGo()">Register this subject</button>`,
+    "Give the subject a name and the record will take it.");
+}
+async function entityCreateGo(){
+  const d = entityDraft();
+  const a = await intentAsk("entitycreate", d);
+  const pane = $("#ent-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  const r = a.result;
+  pane.innerHTML = intentReceiptHtml([
+    `<b>${esc(r.label)}</b> is now in the registry as ${esc(humanKind(r.kind))}.`,
+    `It answers to ${esc(String(r.alias_count))} ${r.alias_count===1?"name":"names"}, its own included.`,
+  ]);
+  const q = $("#subj-q"); if(q) q.value = r.label;
+  await showEntity(r.entity_id);
+}
+
+/* ---------- (2)-(6) THE ACTS ON ONE SUBJECT ----------
+   Painted into #subj-acts, BELOW the read panes UI-4 owns, so the read surface
+   is untouched by anything here. */
+const INTENT_SUBJ = { entity:null, other:null, docs:null, chosen:null, refs:null, pf:{} };
+async function renderSubjectActs(entity){
+  const box = $("#subj-acts"); if(!box) return;
+  INTENT_SUBJ.entity = entity; INTENT_SUBJ.other = null; INTENT_SUBJ.chosen = null; INTENT_SUBJ.refs = null;
+  if(!canIntentWrite()){ box.innerHTML = ""; return; }
+  await loadIntentVocab();
+  box.innerHTML =
+    `<section class="tsec intent-sec"><h2>What you can add about this subject</h2>`
+    + `<details class="intent-box"><summary>Add another name it answers to</summary><div class="intent-body">
+         <p class="intent-lede">A name here is how the record recognises this subject in a document. An identifier the source itself uses is the strongest kind.</p>
+         <input id="alias-in" class="intent-in" placeholder="e.g. contract:C-2024-88" onchange="aliasPreflight()">
+         <div id="alias-pf"></div></div></details>`
+    + `<details class="intent-box"><summary>Declare how this subject relates to another</summary><div class="intent-body">
+         <p class="intent-lede">A declared relation is the group fixing what its own terms mean — a constitutive statement, not evidence. It carries a justification and a citation, like a pattern statement, and it carries no A&ndash;D grade: it is not a connection to be graded.</p>
+         <label class="intent-lab">How does it relate?</label>
+         ${intentChooser("rel-kind","relation_kind","relations")}
+         <label class="intent-lab">To which subject? Give a name the record already knows.</label>
+         <div class="subj-search"><input id="rel-other" class="intent-in" placeholder="e.g. Office of the City Auditor">
+           <button onclick="relationFindOther()">Find</button></div>
+         <div id="rel-other-out"></div>
+         <label class="intent-lab">Why is this so?</label>
+         <textarea id="rel-just" class="intent-ta" rows="3" onchange="relationPreflight()"></textarea>
+         <label class="intent-lab">Where is that written down?</label>
+         <input id="rel-cite" class="intent-in" placeholder="e.g. City Charter Art. IV §400" onchange="relationPreflight()">
+         <div id="rel-pf"></div></div></details>`
+    + `<details class="intent-box"><summary>Resolve the documents that mention this subject</summary><div class="intent-body">
+         <p class="intent-lede">The record reads a reference out of every captured document. Resolving one says which subject that reference is. The record decides how strongly &mdash; a shared identifier, or only a corresponding name &mdash; and it never records testimony on its own.</p>
+         <button class="intent-go" onclick="loadResolveCandidates()">Find documents that name this subject</button>
+         <div id="res-cands"></div>
+         <div id="res-pf"></div>
+         <div id="testify-box"></div></div></details>`
+    + `<details class="intent-box"><summary>Derive the connections among those documents</summary><div class="intent-body">
+         <p class="intent-lede">Two documents that concern this subject are connected. The record works the connections out for itself and grades each one the weaker of its two ends.</p>
+         <div id="conn-pf"></div></div></details>`
+    + `</section>`;
+  const sel = $("#rel-kind"); if(sel) sel.onchange = () => relationPreflight();
+  await aliasPreflight();
+  await relationPreflight();
+  await connectPreflight();
+  await resolvePreflight();
+}
+
+/* (2) op=entityalias */
+function aliasDraft(){
+  return { entityId: (INTENT_SUBJ.entity && INTENT_SUBJ.entity.entity_id) || "",
+           alias: (($("#alias-in") && $("#alias-in").value) || "").trim() };
+}
+async function aliasPreflight(){
+  const d = aliasDraft();
+  INTENT_SUBJ.pf.alias = await intentPreflight("entityalias", d);
+  const pane = $("#alias-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(INTENT_SUBJ.pf.alias, !!d.alias,
+    `<button class="intent-go" id="alias-go" onclick="aliasGo()">Add this name</button>`,
+    "Type the name and the record will take it.");
+}
+async function aliasGo(){
+  const a = await intentAsk("entityalias", aliasDraft());
+  const pane = $("#alias-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  pane.innerHTML = intentReceiptHtml([`This subject now also answers to <b>${esc(a.result.alias)}</b>.`]);
+  await showEntity(INTENT_SUBJ.entity.entity_id, null, true);
+}
+
+/* (3) op=relationdeclare — the other end is found through the plane, never
+   typed as an id: a relation names two REGISTERED subjects. */
+async function relationFindOther(){
+  const out = $("#rel-other-out"); if(!out) return;
+  const q = (($("#rel-other") && $("#rel-other").value) || "").trim();
+  INTENT_SUBJ.other = null;
+  if(!q){ out.innerHTML = ""; await relationPreflight(); return; }
+  let ents = [];
+  try{ ents = (await recR("entitybyalias", { alias:q })).entities || []; }catch(_){ ents = []; }
+  if(!ents.length){
+    out.innerHTML = `<div class="empty">No subject in the registry is known by &ldquo;${esc(q)}&rdquo;. Register it first, and the relation can name it.</div>`;
+  }else if(ents.length === 1){
+    INTENT_SUBJ.other = ents[0];
+    out.innerHTML = `<div class="intent-chosen">Relating to <b>${esc(ents[0].label)}</b> &mdash; ${esc(humanKind(ents[0].kind))}.</div>`;
+  }else{
+    out.innerHTML = `<div class="intent-chosen">&ldquo;${esc(q)}&rdquo; names ${ents.length} subjects. Choose one:</div>`
+      + ents.map(e=>`<button class="intent-pick" onclick="relationPickOther('${esc(e.entity_id)}')">${esc(e.label)} &mdash; ${esc(humanKind(e.kind))}</button>`).join("");
+  }
+  await relationPreflight();
+}
+async function relationPickOther(id){
+  try{
+    const r = await recR("entity", { id });
+    if(r.found && r.entity){
+      INTENT_SUBJ.other = r.entity;
+      const out = $("#rel-other-out");
+      if(out) out.innerHTML = `<div class="intent-chosen">Relating to <b>${esc(r.entity.label)}</b> &mdash; ${esc(humanKind(r.entity.kind))}.</div>`;
+    }
+  }catch(_){}
+  await relationPreflight();
+}
+function relationDraft(){
+  return { fromEntity: (INTENT_SUBJ.entity && INTENT_SUBJ.entity.entity_id) || "",
+           toEntity: (INTENT_SUBJ.other && INTENT_SUBJ.other.entity_id) || "",
+           relation: ($("#rel-kind") && $("#rel-kind").value) || "",
+           justification: (($("#rel-just") && $("#rel-just").value) || "").trim(),
+           citation: (($("#rel-cite") && $("#rel-cite").value) || "").trim() };
+}
+async function relationPreflight(){
+  const d = relationDraft();
+  INTENT_SUBJ.pf.relation = await intentPreflight("relationdeclare", d);
+  const pane = $("#rel-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(INTENT_SUBJ.pf.relation, !!d.toEntity,
+    `<button class="intent-go" id="rel-go" onclick="relationGo()">Declare this relation</button>`,
+    "Name the other subject and the record will take it.");
+}
+async function relationGo(){
+  const a = await intentAsk("relationdeclare", relationDraft());
+  const pane = $("#rel-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  const r = a.result;
+  /* The receipt says what the plane recorded, and a declared relation has no
+     grade to say: there is no grade in `r` because there is no grade column. */
+  pane.innerHTML = intentReceiptHtml([
+    `Declared: <b>${esc(INTENT_SUBJ.entity.label)}</b> ${esc(String(r.relation).replace(/_/g," "))} <b>${esc((INTENT_SUBJ.other&&INTENT_SUBJ.other.label)||r.to_entity)}</b>.`,
+    `A constitutive statement, not evidence &mdash; it carries its justification and its citation and no grade.`,
+  ]);
+  await showEntity(INTENT_SUBJ.entity.entity_id, null, true);
+}
+
+/* (4) op=resolve — the candidate documents are the PLANE'S: every captured
+   document whose reading carries a reference spelled exactly like one of this
+   subject's names (op=readingref, one call per name). The surface proposes
+   nothing the record has not already read out of a document. */
+async function resolvePreflight(){
+  const d = { captureSha: INTENT_SUBJ.chosen || "" };
+  INTENT_SUBJ.pf.resolve = await intentPreflight("resolve", d);
+  const pane = $("#res-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(INTENT_SUBJ.pf.resolve, !!INTENT_SUBJ.chosen,
+    `<button class="intent-go" id="res-go" onclick="resolveGo()">Resolve this document&rsquo;s references to this subject</button>`,
+    "Choose a document and the record will read its references.");
+}
+async function loadResolveCandidates(){
+  const out = $("#res-cands"); if(!out) return;
+  const e = INTENT_SUBJ.entity;
+  const names = (e && e.aliases || []).map(a=>a.alias);
+  const seen = new Map();
+  for(const n of names){
+    let docs = [];
+    try{ docs = (await recR("readingref", { ref:n })).documents || []; }catch(_){ docs = []; }
+    for(const d of docs) if(!seen.has(d.capture_sha)) seen.set(d.capture_sha, d);
+  }
+  /* And the documents already resolved to this subject, so a member can run the
+     recogniser again after registering a new name — a grade is IMPROVABLE, and a
+     C becomes an A the moment the record can match an identifier. */
+  let already = [];
+  try{ already = (await recR("concerns", { id:(e&&e.entity_id) })).documents || []; }catch(_){ already = []; }
+  for(const d of already) if(!seen.has(d.capture_sha)) seen.set(d.capture_sha, d);
+  INTENT_SUBJ.docs = [...seen.values()];
+  /* WHAT THIS LIST IS AND IS NOT, said plainly rather than left to be inferred:
+     the record can look up a document by a reference spelled exactly like one of
+     this subject's names. It cannot look one up by a name that merely CORRESPONDS
+     — there is no such index — so a document that only mentions this subject in
+     passing is not here. Its absence is a limit of the lookup, not a statement
+     that no such document exists. */
+  const note = `<p class="subj-note">These are the documents whose references are spelled exactly like one of this subject&rsquo;s names, plus the ones already resolved to it. A document that mentions this subject only by a name in passing cannot be looked up this way, and its absence here says nothing about whether it exists.</p>`;
+  if(!INTENT_SUBJ.docs.length){
+    out.innerHTML = note + `<div class="empty">No captured document carries a reference spelled like one of this subject&rsquo;s names.</div>`;
+    return;
+  }
+  out.innerHTML = note + INTENT_SUBJ.docs.map(d=>
+    `<button class="intent-pick" onclick="resolvePick('${esc(d.capture_sha)}')">${esc(d.bundle_id || ("a capture "+String(d.capture_sha).slice(0,12)+"…"))}${d.ref?" &mdash; names "+esc(d.ref):""}</button>`).join("");
+}
+async function resolvePick(sha){
+  INTENT_SUBJ.chosen = sha;
+  await resolvePreflight();
+  await renderTestify();
+}
+async function resolveGo(){
+  const a = await intentAsk("resolve", { captureSha: INTENT_SUBJ.chosen });
+  const pane = $("#res-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  const r = a.result;
+  /* Every grade below is the plane's, rendered through UI-4's badge with the
+     plane's own established / needs_confirmation flags. */
+  const rows = (r.resolved||[]).map(m=>
+    `<div class="subj-doc"><div class="top"><span>${esc(m.ref)}</span>${subjGradeBadge(m.grade, m.established, m.needs_confirmation)}</div></div>`).join("");
+  const un = (r.unresolved||[]).map(u=>
+    `<div class="subj-doc"><div class="top"><span>${esc(u.ref)}</span><span class="subj-grade g-unconf">not resolved</span></div>
+     <div class="subj-how">This reference matched no registered subject. It is left unresolved rather than forced onto one.</div></div>`).join("");
+  pane.innerHTML = intentReceiptHtml([`The record read ${esc(String(r.references))} ${r.references===1?"reference":"references"} in this document.`]) + rows + un;
+  await renderTestify();
+  await showEntity(INTENT_SUBJ.entity.entity_id, null, true);
+}
+
+/* (5) op=resolvetestify — THE ONLY PATH TO A GRADE D, and the machine never
+   mints one. No grade is offered here because there is no grade to choose: the
+   plane returns `grade_declared` and the surface repeats it. */
+async function renderTestify(){
+  const box = $("#testify-box"); if(!box) return;
+  if(!INTENT_SUBJ.chosen){ box.innerHTML = ""; return; }
+  let refs = [];
+  try{
+    const rd = await recR("reading", { sha256: INTENT_SUBJ.chosen });
+    refs = ((rd && rd.reading) || {}).entities || [];
+  }catch(_){ refs = []; }
+  INTENT_SUBJ.refs = refs;
+  box.innerHTML = `<div class="intent-sub"><h3>Or testify that it concerns this subject</h3>
+    <p class="intent-lede">If you know a reference in this document is this subject but nothing in the document says so, you can say so yourself. That is testimony: it carries your name and the date, and the record never produces it on its own.</p>
+    ${refs.length ? `<label class="intent-lab">Which reference?</label><select id="tst-ref" class="intent-sel"><option value="">Choose one&hellip;</option>`
+      + refs.map(r=>`<option value="${esc(r.ref)}">${esc(r.ref)}${r.label?" &mdash; "+esc(r.label):""}</option>`).join("") + `</select>`
+      : `<div class="empty">The record read no references out of this document, so there is nothing to testify about.</div>`}
+    <label class="intent-lab">On what basis?</label>
+    <textarea id="tst-basis" class="intent-ta" rows="3" onchange="testifyPreflight()"></textarea>
+    <div id="tst-pf"></div></div>`;
+  const sel = $("#tst-ref"); if(sel) sel.onchange = () => testifyPreflight();
+  await testifyPreflight();
+}
+function testifyDraft(){
+  return { captureSha: INTENT_SUBJ.chosen || "",
+           ref: ($("#tst-ref") && $("#tst-ref").value) || "",
+           entityId: (INTENT_SUBJ.entity && INTENT_SUBJ.entity.entity_id) || "",
+           basis: (($("#tst-basis") && $("#tst-basis").value) || "").trim() };
+}
+async function testifyPreflight(){
+  const d = testifyDraft();
+  INTENT_SUBJ.pf.testify = await intentPreflight("resolvetestify", d);
+  const pane = $("#tst-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(INTENT_SUBJ.pf.testify, !!d.entityId,
+    `<button class="intent-go" id="tst-go" onclick="testifyGo()">Record this as my testimony</button>`,
+    "Open a subject and the record will take it.");
+}
+async function testifyGo(){
+  const a = await intentAsk("resolvetestify", testifyDraft());
+  const pane = $("#tst-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  const r = a.result;
+  pane.innerHTML = intentReceiptHtml([`Recorded as testimony.`])
+    + `<div class="subj-doc"><div class="top"><span>${esc(r.ref)}</span>${subjGradeBadge(r.grade, r.established, r.needs_confirmation)}</div></div>`;
+  await showEntity(INTENT_SUBJ.entity.entity_id, null, true);
+}
+
+/* (6) op=connect */
+async function connectPreflight(){
+  const d = { entityId: (INTENT_SUBJ.entity && INTENT_SUBJ.entity.entity_id) || "" };
+  INTENT_SUBJ.pf.connect = await intentPreflight("connect", d);
+  const pane = $("#conn-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(INTENT_SUBJ.pf.connect, !!d.entityId,
+    `<button class="intent-go" id="conn-go" onclick="connectGo()">Work out the connections</button>`,
+    "Open a subject and the record will work them out.");
+}
+async function connectGo(){
+  const a = await intentAsk("connect", { entityId: INTENT_SUBJ.entity.entity_id });
+  const pane = $("#conn-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  const r = a.result;
+  pane.innerHTML = intentReceiptHtml([
+    `The record derived ${esc(String(r.count!=null?r.count:(r.connections||[]).length))} ${(r.count===1)?"connection":"connections"} among the documents that concern this subject.`]);
+  await showEntity(INTENT_SUBJ.entity.entity_id, null, true);
+}
+
+/* ============================================================
+   UI-13, THE SECOND SURFACE: PROGRESSIONS — how something is SUPPOSED to go,
+   declared as data, and what actually happened threaded through it.
+
+   A progression definition is a member's CLAIM about how an institution ought
+   to behave (framework §8.1 note 3): an ordered set of stages, each with how
+   often it is expected and whether it may lawfully be skipped. An INSTANCE is
+   real captured documents threaded through those stages by a subject — and
+   only documents that RESOLVE to that subject may be threaded, which is the
+   plane's rule and its refusal, not this surface's.
+
+   The instance's grade is the WEAKEST connection along the chain and its
+   findings are derived ON READ; both come from the plane and neither is
+   computed here. A required stage with no document is a finding; a required
+   stage with an exception document is DISCHARGED, which is a different thing
+   and the record shows why.
+   ============================================================ */
+const PROG = { draft:{ stages:[] }, def:null, entity:null, instance:null, place:{}, pf:{} };
+async function renderProgressions(){
+  setActive("progressions");
+  const c = $("#content");
+  c.innerHTML = `<h1 class="rec">Progressions</h1>
+    <p class="lede">How something is supposed to go &mdash; a meeting that owes an agenda and then minutes, a purchase that owes a solicitation before an award. Declare the shape once, then thread what actually happened through it and see what is missing.</p>
+    ${intentNarrationHtml()}
+    <div id="prog-new"></div>
+    <div id="prog-read"></div>`;
+  await renderProgressionNew();
+  renderProgressionRead();
+}
+async function renderProgressionNew(){
+  const box = $("#prog-new"); if(!box) return;
+  if(!canIntentWrite()){ box.innerHTML = ""; return; }
+  await loadIntentVocab();
+  if(!PROG.draft.stages.length) PROG.draft.stages = [{},{}];
+  box.innerHTML = `<details class="intent-box" open><summary>Declare how something is supposed to go</summary><div class="intent-body">
+    <label class="intent-lab">A short key for it, one word.</label>
+    <input id="pg-key" class="intent-in" placeholder="e.g. procurement" onchange="progDefinePreflight()">
+    <label class="intent-lab">What is it called?</label>
+    <input id="pg-label" class="intent-in" placeholder="e.g. How a purchase is supposed to go" onchange="progDefinePreflight()">
+    <div id="pg-stages">${PROG.draft.stages.map((s,i)=>progStageHtml(i)).join("")}</div>
+    <button class="intent-pick" onclick="progAddStage()">Add another stage</button>
+    <div id="pg-pf"></div></div></details>`;
+  for(let i=0;i<PROG.draft.stages.length;i++){
+    const sel = $("#pg-st-"+i+"-req"); if(sel) sel.onchange = () => progDefinePreflight();
+  }
+  await progDefinePreflight();
+}
+function progStageHtml(i){
+  return `<div class="intent-sub"><h3>Stage ${i+1}</h3>
+    <label class="intent-lab">A short key for the stage.</label>
+    <input id="pg-st-${i}-key" class="intent-in" onchange="progDefinePreflight()">
+    <label class="intent-lab">What is it called?</label>
+    <input id="pg-st-${i}-label" class="intent-in" onchange="progDefinePreflight()">
+    <label class="intent-lab">How many documents does this stage take? The record accepts whatever you write; 1, 0..1 and 0..n are the usual answers.</label>
+    <input id="pg-st-${i}-card" class="intent-in" onchange="progDefinePreflight()">
+    <label class="intent-lab">Which stage does it come after? Leave empty for the first one.</label>
+    <input id="pg-st-${i}-after" class="intent-in" onchange="progDefinePreflight()">
+    <label class="intent-lab">Is it expected?</label>
+    ${intentChooser("pg-st-"+i+"-req","stage_required","answers about whether a stage is expected")}</div>`;
+}
+async function progAddStage(){ PROG.draft.stages.push({}); await renderProgressionNew(); }
+function progDefineDraft(){
+  const stages = PROG.draft.stages.map((_,i)=>({
+    key: (($("#pg-st-"+i+"-key") && $("#pg-st-"+i+"-key").value) || "").trim(),
+    label: (($("#pg-st-"+i+"-label") && $("#pg-st-"+i+"-label").value) || "").trim(),
+    cardinality: (($("#pg-st-"+i+"-card") && $("#pg-st-"+i+"-card").value) || "").trim(),
+    after: (($("#pg-st-"+i+"-after") && $("#pg-st-"+i+"-after").value) || "").trim(),
+    required: ($("#pg-st-"+i+"-req") && $("#pg-st-"+i+"-req").value) || "",
+  }));
+  return { progressionKey: (($("#pg-key") && $("#pg-key").value) || "").trim(),
+           label: (($("#pg-label") && $("#pg-label").value) || "").trim(), stages };
+}
+async function progDefinePreflight(){
+  const d = progDefineDraft();
+  PROG.pf.define = await intentPreflight("progressiondefine", d);
+  const pane = $("#pg-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(PROG.pf.define, d.stages.length > 0,
+    `<button class="intent-go" id="pg-go" onclick="progDefineGo()">Declare this progression</button>`,
+    "Name at least one stage and the record will take it.");
+}
+async function progDefineGo(){
+  const a = await intentAsk("progressiondefine", progDefineDraft());
+  const pane = $("#pg-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  const r = a.result;
+  pane.innerHTML = intentReceiptHtml([
+    `<b>${esc(r.label)}</b> is declared, in ${esc(String(r.stage_count))} ${r.stage_count===1?"stage":"stages"}.`,
+    `It says how this is supposed to go. Nothing is claimed to have happened yet.`]);
+  const k = $("#pg-look-key"); if(k) k.value = r.progression_key;
+}
+
+/* ---- reading one progression, and threading a subject through it ---- */
+function renderProgressionRead(){
+  const box = $("#prog-read"); if(!box) return;
+  box.innerHTML = `<section class="tsec intent-sec"><h2>What actually happened</h2>
+    <p class="subj-note">Thread the documents the record holds through a progression, by the subject that runs through them. Only a document the record has already resolved to that subject can be threaded on it &mdash; that rule is the record&rsquo;s, and it is what keeps an instance from being assembled out of wishes.</p>
+    <div class="subj-search">
+      <input id="pg-look-key" class="intent-in" placeholder="the progression&rsquo;s key">
+      <input id="pg-look-subj" class="intent-in" placeholder="the subject&rsquo;s name">
+      <button onclick="progLoad()">Open</button>
+    </div>
+    <div id="pg-inst"></div>`;
+}
+async function progLoad(){
+  const out = $("#pg-inst"); if(!out) return;
+  const key = (($("#pg-look-key") && $("#pg-look-key").value) || "").trim();
+  const name = (($("#pg-look-subj") && $("#pg-look-subj").value) || "").trim();
+  PROG.def = null; PROG.entity = null; PROG.instance = null; PROG.place = {};
+  let def = null;
+  try{ def = await recR("progression", { key }); }catch(_){ def = null; }
+  if(!def || def.found === false){
+    out.innerHTML = `<div class="empty">No progression is declared under that key. Declare it first and it can be threaded.</div>`;
+    return;
+  }
+  PROG.def = def;
+  let ents = [];
+  try{ ents = (await recR("entitybyalias", { alias:name })).entities || []; }catch(_){ ents = []; }
+  if(!ents.length){
+    out.innerHTML = `<div class="empty">No subject in the registry is known by &ldquo;${esc(name)}&rdquo;. A progression is threaded by a subject the record knows.</div>`;
+    return;
+  }
+  PROG.entity = ents[0];
+  await progPaintInstance();
+}
+async function progPaintInstance(){
+  const out = $("#pg-inst"); if(!out) return;
+  let inst = null, docs = [];
+  try{ inst = await recR("instance", { key: PROG.def.progression_key, id: PROG.entity.entity_id }); }catch(_){ inst = null; }
+  try{ docs = (await recR("concerns", { id: PROG.entity.entity_id })).documents || []; }catch(_){ docs = []; }
+  PROG.instance = inst; PROG.docs = docs;
+  const stages = (inst && inst.found && inst.stages && inst.stages.length) ? inst.stages : (PROG.def.stages||[]).map(s=>({
+    stage_key:s.stage_key, label:s.label, required:s.required, present:false, documents:[], discharged:false, exceptions:[] }));
+  const gradeLine = (inst && inst.grade)
+    ? `<div class="top">${subjGradeBadge(inst.grade, inst.grade==="A"||inst.grade==="B", inst.grade==="C")}</div>
+       <div class="weaker">The chain is graded the weakest link along it &mdash; the record works that out on every read.</div>`
+    : `<div class="weaker">The record states no grade for this chain: fewer than two stages carry a document, so there is no connection to grade. Undetermined, and said so.</div>`;
+  out.innerHTML = `<div class="subj-ent"><div class="kind">${esc(humanKind(PROG.entity.kind))}</div>
+      <h2>${esc(PROG.def.label)} &mdash; ${esc(PROG.entity.label)}</h2>${gradeLine}</div>`
+    + stages.map(s=>{
+        const st = s.present ? `${s.document_count||s.documents.length} on the record`
+          : (s.discharged ? "missing, and lawfully so" : "nothing on the record");
+        return `<div class="subj-doc"><div class="top"><span><b>${esc(s.label||s.stage_key)}</b> &mdash; ${esc(st)}</span>
+          ${s.present && s.grade ? subjGradeBadge(s.grade, s.grade==="A"||s.grade==="B", s.grade==="C") : ""}</div>
+          ${(s.exceptions||[]).map(x=>`<div class="subj-just">Skipped lawfully: ${esc(x.reason)}</div><div class="subj-cite">Cited: ${esc(x.citation)}</div>`).join("")}</div>`;
+      }).join("")
+    + ((inst && inst.findings || []).map(f=>
+        `<div class="subj-doc"><div class="top"><span>${esc(f.detail || f.finding || "a stage the record expected is missing")}</span></div></div>`).join(""))
+    + (canIntentWrite() ? progThreadHtml(stages, docs) : "");
+  if(canIntentWrite()){
+    for(const s of stages){
+      const sel = $("#pg-th-"+s.stage_key); if(sel) sel.onchange = () => progThreadPreflight();
+    }
+    const ds = $("#pg-dis-stage"); if(ds) ds.onchange = () => dischargePreflight();
+    const dd = $("#pg-dis-doc"); if(dd) dd.onchange = () => dischargePreflight();
+    await progThreadPreflight();
+    await dischargePreflight();
+  }
+}
+function progDocOptions(docs){
+  return `<option value="">Nothing at this stage</option>`
+    + docs.map(d=>`<option value="${esc(d.capture_sha)}">${esc(d.bundle_id || ("a capture "+String(d.capture_sha).slice(0,12)+"…"))}</option>`).join("");
+}
+function progThreadHtml(stages, docs){
+  return `<details class="intent-box" open><summary>Thread the documents through it</summary><div class="intent-body">
+      ${docs.length ? "" : `<div class="empty">The record has resolved no document to this subject yet, so there is nothing to thread. Resolve one on the Subjects screen first.</div>`}
+      ${stages.map(s=>`<label class="intent-lab">${esc(s.label||s.stage_key)}</label>
+        <select id="pg-th-${esc(s.stage_key)}" class="intent-sel">${progDocOptions(docs)}</select>`).join("")}
+      <div id="pg-th-pf"></div></div></details>
+    <details class="intent-box"><summary>Record why a stage is lawfully missing</summary><div class="intent-body">
+      <p class="intent-lede">A stage that is supposed to be there and is not is a finding. If the skip was lawful, the document that says so goes here, and the record shows the skip as discharged rather than as a gap.</p>
+      <label class="intent-lab">Which stage?</label>
+      <select id="pg-dis-stage" class="intent-sel"><option value="">Choose one&hellip;</option>
+        ${stages.map(s=>`<option value="${esc(s.stage_key)}">${esc(s.label||s.stage_key)}</option>`).join("")}</select>
+      <label class="intent-lab">Which document says the skip was lawful?</label>
+      <select id="pg-dis-doc" class="intent-sel">${progDocOptions(docs)}</select>
+      <label class="intent-lab">Why may it lawfully be missing?</label>
+      <textarea id="pg-dis-reason" class="intent-ta" rows="3" onchange="dischargePreflight()"></textarea>
+      <label class="intent-lab">Where is that written down?</label>
+      <input id="pg-dis-cite" class="intent-in" onchange="dischargePreflight()">
+      <div id="pg-dis-pf"></div></div></details>`;
+}
+function progThreadDraft(){
+  const placements = [];
+  for(const s of ((PROG.instance && PROG.instance.stages && PROG.instance.stages.length) ? PROG.instance.stages : (PROG.def.stages||[]))){
+    const k = s.stage_key;
+    const el = $("#pg-th-"+k);
+    const v = (el && el.value) || "";
+    if(v) placements.push({ stage:k, captureSha:v });
+  }
+  return { progressionKey: PROG.def ? PROG.def.progression_key : "",
+           entityId: PROG.entity ? PROG.entity.entity_id : "", placements };
+}
+async function progThreadPreflight(){
+  const d = progThreadDraft();
+  PROG.pf.thread = await intentPreflight("thread", d);
+  const pane = $("#pg-th-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(PROG.pf.thread, d.placements.length > 0,
+    `<button class="intent-go" id="pg-th-go" onclick="progThreadGo()">Thread these documents</button>`,
+    "Put a document at a stage and the record will take it.");
+}
+async function progThreadGo(){
+  const a = await intentAsk("thread", progThreadDraft());
+  const pane = $("#pg-th-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  pane.innerHTML = intentReceiptHtml([`${esc(String(a.result.threaded))} ${a.result.threaded===1?"document is":"documents are"} threaded through this progression.`]);
+  await progPaintInstance();
+}
+function dischargeDraft(){
+  return { progressionKey: PROG.def ? PROG.def.progression_key : "",
+           entityId: PROG.entity ? PROG.entity.entity_id : "",
+           stageKey: ($("#pg-dis-stage") && $("#pg-dis-stage").value) || "",
+           captureSha: ($("#pg-dis-doc") && $("#pg-dis-doc").value) || "",
+           reason: (($("#pg-dis-reason") && $("#pg-dis-reason").value) || "").trim(),
+           citation: (($("#pg-dis-cite") && $("#pg-dis-cite").value) || "").trim() };
+}
+async function dischargePreflight(){
+  const d = dischargeDraft();
+  PROG.pf.discharge = await intentPreflight("discharge", d);
+  const pane = $("#pg-dis-pf"); if(!pane) return;
+  pane.innerHTML = intentPane(PROG.pf.discharge, !!d.captureSha,
+    `<button class="intent-go" id="pg-dis-go" onclick="dischargeGo()">Record this exception</button>`,
+    "Choose the document that says so and the record will take it.");
+}
+async function dischargeGo(){
+  const a = await intentAsk("discharge", dischargeDraft());
+  const pane = $("#pg-dis-pf"); if(!pane) return;
+  if(!a.accepted){ pane.innerHTML = intentRefusalHtml(a.refusal); return; }
+  pane.innerHTML = intentReceiptHtml([`Recorded. The record now shows that stage as lawfully skipped, with the reason and the citation, rather than as a gap.`]);
+  await progPaintInstance();
+}
+
+/* ============================================================
    UI-9: THE DOCUMENT'S PLACE IN THE ACCOUNTABILITY WEB — "what the record
    knows about THIS document" (CONSTRUCTS Step 8, PRESENTATION, the
    document-page half; UI-4 is the per-SUBJECT half). On the open document
@@ -6240,7 +7062,7 @@ async function docEntityLabel(entityId){
   if(!entityId) return null;
   if(DOC_ENT_CACHE.has(entityId)) return DOC_ENT_CACHE.get(entityId);
   let v = null;
-  try{ const r = await rec("entity", { id:entityId }); if(r && r.found && r.entity) v = { label:r.entity.label, kind:r.entity.kind }; }catch(_){}
+  try{ const r = await recR("entity", { id:entityId }); if(r && r.found && r.entity) v = { label:r.entity.label, kind:r.entity.kind }; }catch(_){}
   DOC_ENT_CACHE.set(entityId, v); return v;
 }
 
@@ -6259,8 +7081,8 @@ function docFindingOverdue(f){ return !!f && f.kind === "overdue_successor"; }
 async function docKnowsPanel(captureSha){
   if(!captureSha) return "";   // no primary capture on this bundle: nothing per-document to say
   let resolutions = null, connections = null;
-  try{ resolutions = await rec("resolutions", { sha256:captureSha }); }catch(_){ resolutions = { _err:true }; }
-  try{ connections = await rec("connections", { sha256:captureSha }); }catch(_){ connections = { _err:true }; }
+  try{ resolutions = await recR("resolutions", { sha256:captureSha }); }catch(_){ resolutions = { _err:true }; }
+  try{ connections = await recR("connections", { sha256:captureSha }); }catch(_){ connections = { _err:true }; }
   const prog = await docProgressions(captureSha);
   /* pre-resolve subject labels for the resolutions rows (bounded, deduped) */
   const labels = new Map();
@@ -6369,7 +7191,7 @@ function docInstanceHtml(inst){
    invented findings. Mirrors UI-5's loadProposals exactly. */
 async function docProgressions(captureSha){
   let raw;
-  try{ raw = await rec("captureprogressions", { sha256:captureSha }); }
+  try{ raw = await recR("captureprogressions", { sha256:captureSha }); }
   catch(e){
     if(e && /unknown op/i.test(String(e.error || e.reason || ""))) return { gap:true, reason:"no-op" };
     return { _err:true };

@@ -8,3 +8,8 @@
 # Personal, per-machine permission approvals. Project rules live in
 # .claude/settings.json and ARE committed.
 .claude/settings.local.json
+
+# miniflare's own cache directory. It is created wherever a suite that drives
+# the REAL plane is run from — bio-plane/ has always had one, and UI-13's
+# intent-write harness makes one under civicos-ui/ too. Never part of the tree.
+.wrangler/

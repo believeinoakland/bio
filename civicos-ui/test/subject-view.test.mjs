@@ -71,7 +71,20 @@ const CONNECTIONS = { ok:true, entity_id:"ENT-1", capture_sha:null, count:1,
 function mockFetch(u, opts){
   const url = new URL(u, "https://plane.test");
   const op = url.searchParams.get("op");
-  const R = o => ({ ok:true, json:async()=>o });
+  /* CORRECTED 2026-08-04 (UI-13), and the old spelling is why this needed
+     correcting rather than exempting. This mock used to answer
+       { ok:true, json:async()=>o }
+     — the store's return at the TOP LEVEL — and the real plane never answers
+     that shape: the Durable Object wraps every answer as {ok:true, result:<the
+     store's return>} and the control plane adds store/tokenClass around it. So
+     the surface's `r.entities` / `r.found` reads agreed with this mock and with
+     nothing else, and against a live plane the Subjects screen answered "No
+     subject in the registry is known by …" for every subject that WAS in it
+     (D-173). The mock now answers the ENVELOPE the plane actually sends, and
+     app.html reads it through `recR`. `civicos-ui/test/intent-write.test.mjs`
+     drives the same surface against the REAL plane in miniflare, which is what
+     found this; a mock agreeing with itself agrees on nothing. */
+  const R = o => ({ ok:true, json:async()=>({ ok:true, result:o, store:"bio", tokenClass:"member" }) });
   CALLS.push({ op, alias:url.searchParams.get("alias"), id:url.searchParams.get("id") });
   if(op==="entitybyalias"){
     const norm = (url.searchParams.get("alias")||"").trim().toLowerCase();
