@@ -745,8 +745,30 @@ const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B
 
 const $ = s => document.querySelector(s);
 const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+/* The UNTOKENED transport, for the two endpoints reached before a session
+   exists: `op=login` and `op=publishedmanifest`. It is `rec`'s sibling and it
+   carries the same hazard, so it has the same seam — see `apiR` below. */
 const api = (op, body) => fetch(`${PLANE.base}/api/?op=${encodeURIComponent(op)}`,
   body ? {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)} : undefined).then(r=>r.json());
+/* D-173's SIXTH INSTANCE, FOUND AND FIXED 2026-08-05 (UI-23) while sweeping the
+   sibling helpers, and it was live: `signIn` read `l.token` straight off
+   `api("login")`. `op=login` is answered by the Durable Object's own dispatch
+   (`Response.json({ok:true, result: await map[op]()})`) and index.mjs hands
+   that back VERBATIM (`json(await r.json())`), so the wire shape is
+   `{ok:true, result:{ok:true, role, token, expires}}` and `l.token` was
+   `undefined` for every correct password. The refusal half was worse: a wrong
+   password comes back as `{ok:true, result:{ok:false, reason:"BAD_PASSWORD"}}`,
+   so `l.ok===false` never fired either and the gate showed the member the
+   ENVELOPE instead of the record's own reason. No harness reaches `signIn` or
+   `pubList` at all, which is why five sweeps had not found it — arm A of
+   `check-mock-envelope.mjs` is what finds this class without a harness.
+   `op=publishedmanifest` is wrapped too (index.mjs re-wraps it explicitly) and
+   `pubList` was already reading `r.result.published` correctly; it goes through
+   the seam now so no site is left deciding for itself. */
+async function apiR(op, body){
+  const j = await api(op, body);
+  return (j && j.result !== undefined) ? j.result : j;
+}
 async function rec(op, params={}){
   const q = new URLSearchParams({ op, ...(PLANE.token?{token:PLANE.token}:{}), ...params });
   const r = await fetch(`${PLANE.base}/api/?${q}`);
@@ -769,7 +791,30 @@ async function rec(op, params={}){
    the document page's whole "what the record knows" panel was blank. Both
    suites passed, because both mocks answered UNWRAPPED — a mock agreeing with
    itself agrees on nothing (CLAUDE.md). The mocks are corrected, and this
-   helper exists so the next reader cannot repeat it. */
+   helper exists so the next reader cannot repeat it.
+
+   THE CLASS, CLOSED 2026-08-05 (UI-23). Nine instances across four items were
+   not nine bugs; they were one defect with nine addresses, and the reason it
+   kept reappearing is that opening the envelope was a thing each CALL SITE had
+   to remember. So the rule is now STRUCTURAL and not a habit:
+
+     `rec` and `recPost` are PRIVATE to the four seams below — `recR`,
+     `recPostR`, `actAsk` and `intentAsk` — and `api`, the untokened sibling
+     above, is private to `apiR`. Nothing else in this file may call any of the
+     three transports, and `civicos-ui/check-mock-envelope.mjs` fails the
+     harness if anything does.
+
+   The seams are shape-AGNOSTIC on purpose. Most ops reach the browser through
+   the control plane's generic passthrough, which returns
+   `{ok:true, result:<the store's own return>, store, tokenClass}`; a handful —
+   `links`, `acquire`, `attest`, `monitor`, `archivelookup`, `linkproject`,
+   `governorstate`, `governorconfig` — have their own handler in index.mjs that
+   FLATTENS (`json({ok:true, ...r.result})`), so there is no `result` to open.
+   `recR` returns `j.result` when there is one and `j` when there is not, which
+   is correct for both and is why no call site needs to know which kind it has.
+   A mock, on the other hand, MUST know: answering a wrapped op flat (or a flat
+   op wrapped) is the failure D-173 named, and the guard checks every suite's
+   answers against that map at runtime. */
 async function recR(op, params={}){
   const j = await rec(op, params);
   return (j && j.result !== undefined) ? j.result : j;
@@ -781,6 +826,17 @@ async function recPost(op, body, params={}){
   const j = await r.json().catch(()=>({ok:false,error:"the plane did not return JSON"}));
   if(!r.ok || j.ok===false) throw j;
   return j;
+}
+/* The POST twin of `recR`, and it exists because five of the six sites that
+   read a field off an envelope were POSTs — `op=select`'s `handle`, four times
+   over. A write that reads its own answer needs the envelope opened exactly as
+   a read does. Refusals are unchanged: a STORE refusal arrives as a value
+   inside the envelope and is returned here for the caller to render (that is
+   what `actAsk`/`intentAsk` build on); a CONTROL-PLANE refusal throws, and the
+   throw is flat, which is why catch blocks read `e.reason` directly. */
+async function recPostR(op, body, params={}){
+  const j = await recPost(op, body, params);
+  return (j && j.result !== undefined) ? j.result : j;
 }
 /* The one place the UI decides whether the release affordance EXISTS.
    Capability-shaped (a capability a session lacks is absent, not greyed), and
@@ -807,13 +863,13 @@ const PROJ_CACHE = new Map();    // bundle_id -> op=projection result (or null)
 let REVREF_CACHE = null;         // target_id -> [{from, fromTitle, rel, status, note}]
 async function getImage(id, force){
   if(!force && IMG_CACHE.has(id)) return IMG_CACHE.get(id);
-  const r = (await rec("image",{id})).result;
+  const r = await recR("image",{id});
   IMG_CACHE.set(id, r); return r;
 }
 async function getProjection(id){
   if(PROJ_CACHE.has(id)) return PROJ_CACHE.get(id);
   let p = null;
-  try{ p = (await rec("projection",{id})).result || null; }catch(_){ p = null; }
+  try{ p = (await recR("projection",{id})) || null; }catch(_){ p = null; }
   PROJ_CACHE.set(id, p); return p;
 }
 /* Reverse citations, computed client-side: walk the projections of every
@@ -883,7 +939,7 @@ async function signIn(){
   $("#g-err").classList.add("hidden"); $("#g-signin").disabled = true;
   try{
     const role = $("#g-handle").value.trim();
-    const l = await api("login", { role, password: $("#g-pw").value });
+    const l = await apiR("login", { role, password: $("#g-pw").value });
     if(!l || l.ok===false || !l.token){ teach($("#g-err"), l||{}); return; }
     PLANE.token = l.token; PLANE.session = true;
     await boot();
@@ -899,7 +955,7 @@ async function tokenConnect(){
 
 async function boot(){
   PLANE.preview = false;
-  const w = (await rec("whoami")).result || {};
+  const w = (await recR("whoami")) || {};
   PLANE.me = w;
   /* MEASURED DEFECT, FIXED 2026-08-05 BY UI-22, and it is a live one rather
      than a tidy-up. `loadActSource()` — the one seam that reads
@@ -1068,7 +1124,7 @@ async function go(screen, fromNav){
 /* ---------- Record (op=list) ---------- */
 async function loadRecord(force){
   if(RECORD_CACHE && !force) return RECORD_CACHE;
-  RECORD_CACHE = (await rec("list")).result || [];
+  RECORD_CACHE = (await recR("list")) || [];
   return RECORD_CACHE;
 }
 /* ============================================================
@@ -3879,7 +3935,12 @@ let LINKS_OPEN = {};   // partition -> showing all
 async function linksFor(captureSha){
   if(!captureSha) return null;
   try{
-    const r = await rec("links", { capture: captureSha });
+    /* `op=links` is one of the FLAT ops — index.mjs answers it in its own
+       handler with `json({ok:true, ...r.result})` — so there is no envelope to
+       open here and never was. It goes through the seam anyway (UI-23): the
+       rule is that no call site decides which shape it has, because a site that
+       decides is a site that can decide wrong. */
+    const r = await recR("links", { capture: captureSha });
     return (r && Array.isArray(r.links)) ? r : null;
   }catch(_){ return null; }
 }
@@ -4122,7 +4183,7 @@ async function continueCapture(id){
     for(;;){
       ticks++;
       say(`<p style="margin:0">Pass ${ticks}: fetching what is outstanding&hellip;</p>`);
-      acq = await recPost("acquire", { locator, authority, subresources: true, ...(session?{continue:session}:{}) });
+      acq = await recPostR("acquire", { locator, authority, subresources: true, ...(session?{continue:session}:{}) });
       if(!acq.document) return stop(esc(acquireWhy(acq)));
 
       /* THE FENCE, checked on the first pass and every pass after. The primary
@@ -4222,8 +4283,8 @@ async function reviseWithCapture(id, img, acq, mergedManifest){
   const snap = acq.snapshot || {};
   const doc = acq.document;
   if(!doc || !snap.manifest_sha256) return { ok:false, why:"The plane returned no manifest for the completed capture." };
-  const lease = await rec("lease", { id });
-  const base = lease && lease.result ? lease.result.base : (lease && lease.base);
+  const lease = await recR("lease", { id });
+  const base = lease && lease.base;
   const now = new Date().toISOString().split(".")[0] + "Z";
   const text = typeof img["bundle.md"]==="string" ? img["bundle.md"] : "";
   const { fm } = splitFm(text);
@@ -4267,16 +4328,15 @@ async function reviseWithCapture(id, img, acq, mergedManifest){
      never were: they are named on the same register document as renditions,
      which is what C-18.1's renditions arm expects and what keeps one capture
      hash from appearing under two register entries (C-18.3). */
-  const r = await recPost("promote", {
+  const res = await recPostR("promote", {
     bundleId: id, base, snapKey: stamp(), author: who,
     meta: { object_type: fm.object_type||"information", group:"believe-in-oakland",
             title: fm.title||id, current_state: fm.current_state,
             created: fm.created||now, last_updated: now },
     files, register: [],
   });
-  const res = r.result || r;
   if(res && res.ok) return { ok:true };
-  const why = (res && res.reason) || r.error || "unknown";
+  const why = (res && (res.reason || res.error)) || "unknown";
   if(why === "FILES_DROPPED")
     return { ok:false, why:`Recording it would have removed files this bundle holds (${(res.paths||[]).join(", ")}). Nothing was written.` };
   if(why === "CAS_STALE" || why === "STALE")
@@ -4927,7 +4987,7 @@ async function openInquiry(id, fromNav){
     let back = null, backErr = null, actsR = null;
     try{
       const [b, a] = await Promise.all([
-        rec("backlinks",{target:id}).then(r=>r.result||null, e=>{ backErr = e; return null; }),
+        recR("backlinks",{target:id}).then(r=>r||null, e=>{ backErr = e; return null; }),
         actsFor(id),
       ]);
       back = b; actsR = a;
@@ -6061,7 +6121,14 @@ async function doCite(){
        are never re-derived. */
     let handle = CITE.handle;
     if(!handle){
-      const s = await recPost("select", { ids: CITE.ids }, { kind:"enumerated" });
+      /* D-173, CORRECTED 2026-08-05 (UI-23). This read `s.handle` off the
+         ENVELOPE — `op=select` goes through index.mjs's generic passthrough,
+         which answers `{ok:true, result:{handle,…}, store, tokenClass}` — so
+         against the real plane `handle` was `undefined` and `op=cite` was sent
+         no selection at all. The suite did not catch it because cite-act's own
+         `select` mock answered UNWRAPPED and therefore agreed with the bug;
+         the mock is corrected in the same turn. */
+      const s = await recPostR("select", { ids: CITE.ids }, { kind:"enumerated" });
       handle = s.handle;
     }
     const a = await actAsk("cite", { project: CITE.target, handle, note: CITE.note });
@@ -6196,7 +6263,8 @@ async function doRetire(){
   const id = RETIRE.id;
   RETIRE.busy = true; retirePaint();
   try{
-    const s = await recPost("select", { ids:[id] }, { kind:"enumerated" });
+    // D-173, CORRECTED 2026-08-05 (UI-23): the handle was read off the envelope.
+    const s = await recPostR("select", { ids:[id] }, { kind:"enumerated" });
     const a = await actAsk("retire", { handle: s.handle, reason: RETIRE.reason });
     if(!RETIRE || RETIRE.id !== id) return;
     RETIRE.busy = false;
@@ -6274,7 +6342,8 @@ async function doEdgeAct(){
   const id = EDGE.id;
   EDGE.busy = true; EDGE.refusal = null; edgePaint();
   try{
-    const s = await recPost("select", { ids:[id] }, { kind:"enumerated" });
+    // D-173, CORRECTED 2026-08-05 (UI-23): the handle was read off the envelope.
+    const s = await recPostR("select", { ids:[id] }, { kind:"enumerated" });
     const a = await actAsk(EDGE.act.id, { project: EDGE.project, handle: s.handle, reason: EDGE.reason });
     if(!EDGE || EDGE.id !== id) return;
     EDGE.busy = false;
@@ -6391,7 +6460,7 @@ async function runSearch(fromNav){
   $("#s-res").innerHTML = `<p class="count-line">Searching&hellip;</p>`;
   try{
     let rows;
-    try{ const r = await rec("search",{q:fq}); rows = r.result && (r.result.hits||r.result.results||r.result.bundles||r.result.rows); }catch(_){ rows=null; }
+    try{ const r = await recR("search",{q:fq}); rows = r && (r.hits||r.results||r.bundles||r.rows); }catch(_){ rows=null; }
     if(!rows){ // fall back to a client filter over op=list so search always answers
       const list = await loadRecord(); const ql=q.toLowerCase();
       rows = list.filter(b=>(b.title||"").toLowerCase().includes(ql)||(b.bundle_id||"").toLowerCase().includes(ql));
@@ -6412,8 +6481,8 @@ async function loadReviewRows(){
      If search cannot answer, fall back to op=list with criticality unknown; the
      plane still refuses a crucial selection and the refusal renders verbatim. */
   try{
-    const r = await rec("search",{q:"type:information state:collected", limit:"500", facets:"none"});
-    const hits = r.result && r.result.hits;
+    const r = await recR("search",{q:"type:information state:collected", limit:"500", facets:"none"});
+    const hits = r && r.hits;
     if(Array.isArray(hits)) return hits;
   }catch(_){}
   return (await loadRecord(true)).filter(b=>b.object_type==="information"&&b.current_state==="collected")
@@ -6530,12 +6599,17 @@ async function doRelease(ids){
   const btn = $("#rel-go"); btn.disabled = true; btn.textContent = "Releasing\u2026";
   const err = $("#rel-err"); err.classList.add("hidden");
   try{
-    const sel = await recPost("select", {ids}, {kind:"enumerated"});
-    const rel = await rec("release", {handle: sel.handle, acknowledgment: ack, mitigation: mit});
+    /* D-173, CORRECTED 2026-08-05 (UI-23), and this site carried the defect
+       TWICE: `sel.handle` off the envelope (so the release named no selection)
+       and `rel.released` off the envelope below (so the receipt fell back to
+       the ids the browser had asked about rather than the ids the plane says
+       it moved — a receipt reporting the request instead of the outcome). */
+    const sel = await recPostR("select", {ids}, {kind:"enumerated"});
+    const rel = await recR("release", {handle: sel.handle, acknowledgment: ack, mitigation: mit});
     closeDialog();
     RECORD_CACHE = null;                       // states moved; the cache is stale
     await go("review");
-    const done = rel.released || ids;
+    const done = (rel && rel.released) || ids;
     $("#rv").insertAdjacentHTML("afterbegin",
       `<div class="card" style="border-left:3px solid var(--verdigris)">
          <div style="font-weight:600;margin-bottom:4px">${done.length===1?"Released.":`Released ${done.length} documents.`}</div>
@@ -6771,9 +6845,12 @@ async function doDispose(){
        harness mock answered UNWRAPPED and therefore agreed with the bug. Read
        through the envelope here; the FOUR other selection-backed call sites
        (cite, retire, sever/reinstate, release) have the same line and are
-       UI-23's sweep, named in this item's report rather than reached into. */
-    const selEnv = await recPost("select", { ids:[id] }, { kind:"enumerated" });
-    const sel = (selEnv && selEnv.result !== undefined) ? selEnv.result : selEnv;
+       UI-23's sweep, named in this item's report rather than reached into.
+       UI-23 CLOSED IT, 2026-08-05: all four are swept, and the per-site unwrap
+       that stood here is gone — the envelope is opened ONCE, in `recPostR`, and
+       `check-mock-envelope.mjs` now fails the harness if any site calls `rec` /
+       `recPost` directly again. */
+    const sel = await recPostR("select", { ids:[id] }, { kind:"enumerated" });
     const a = await actAsk("dispose", { handle: sel.handle, to, reason: DISPOSE.reason });
     if(!DISPOSE || DISPOSE.id !== id) return;
     DISPOSE.busy = false;
@@ -7163,7 +7240,7 @@ async function renderMonitoring(){
   $("#content").innerHTML = `<h1 class="rec">Monitoring &amp; developments</h1><p class="lede">What changed, or needs a second look. A re-evaluate flag means something a document depends on moved; a monitored document is re-checked against its live source on a schedule.</p><div id="mon"><p class="count-line">Loading&hellip;</p></div>`;
   try{
     let hits = [];
-    try{ const r = await rec("search",{q:"", limit:"500", facets:"none"}); hits = (r.result&&r.result.hits)||[]; }catch(_){ hits = []; }
+    try{ const r = await recR("search",{q:"", limit:"500", facets:"none"}); hits = (r&&r.hits)||[]; }catch(_){ hits = []; }
     if(!hits.length) hits = await loadRecord();
     const flagged = hits.filter(h=>h.reeval_flag);
     const watched = hits.filter(h=>h.monitor_enabled && !h.reeval_flag);
@@ -7343,11 +7420,11 @@ async function renderMembers(){
        arithmetic could not be read with this account" against every real plane.
        `recR` opens the envelope; op=memberlist beside it always did. */
     const [rosterR, adminR] = await Promise.all([
-      rec("memberlist").catch(e=>({ __err:e })),
+      recR("memberlist").catch(e=>({ __err:e })),
       recR("adminarith").catch(()=>null),
     ]);
     if(rosterR && rosterR.__err){ $("#mm").innerHTML = errPane(rosterR.__err); }
-    const members = (rosterR && !rosterR.__err && (rosterR.result && (rosterR.result.members||rosterR.result))) || [];
+    const members = (rosterR && !rosterR.__err && (rosterR.members||rosterR)) || [];
     const rosterAdminRows = members.filter(m=>memberRole(m)==="admin" && (m.status?m.status==="active":true)).length;
     $("#mm-gov").innerHTML = governanceHtml(adminR, rosterAdminRows);
     if(!(rosterR && rosterR.__err)){
@@ -7786,8 +7863,7 @@ async function queueMuteCase(caseId){
   try{
     const g = (QUEUE_GROUPS||[]).find(x => x.id === caseId);
     const kinds = queueMutableKinds(g ? g.items : []);
-    const r = await recPost("queuemute", { case: caseId, kinds });
-    const res = (r && r.result !== undefined) ? r.result : r;
+    const res = await recPostR("queuemute", { case: caseId, kinds });
     if(res && res.ok === false){ if(host) host.textContent = queueReason(res); return; }
     await queueRun(["queue"]);
   }catch(e){ if(host) host.textContent = queueReason(e); }
@@ -8010,7 +8086,7 @@ let TASKS_BUSY = false;
 async function resolveTask(id){
   if(TASKS_BUSY) return; TASKS_BUSY = true;
   try{
-    await recPost("taskresolve", { id });
+    await recPostR("taskresolve", { id });
     await queueRun(QUEUE_FEEDS.map(f=>f.id));
   }catch(e){ taskErr(id, e); }
   finally{ TASKS_BUSY = false; }
@@ -8021,7 +8097,7 @@ async function resolveTask(id){
 async function forwardTask(id, to){
   if(TASKS_BUSY) return; TASKS_BUSY = true;
   try{
-    await recPost("taskforward", { id, to });
+    await recPostR("taskforward", { id, to });
     await queueRun(QUEUE_FEEDS.map(f=>f.id));
   }catch(e){ taskErr(id, e); }
   finally{ TASKS_BUSY = false; }
@@ -8032,7 +8108,7 @@ async function openForward(id){
   const host = document.querySelector(`#q [data-acts="${id}"]`);
   if(!host) return;
   let members = [];
-  try{ const r = await rec("memberlist"); members = (r.result && (r.result.members||r.result)) || []; }
+  try{ const r = await recR("memberlist"); members = (r && (r.members||r)) || []; }
   catch(e){ taskErr(id, { reason:"This account cannot read the member roster, so it cannot choose who to forward to." }); return; }
   const t = QUEUE_ITEMS.get(String(id));
   const opts = members
@@ -8419,7 +8495,7 @@ const INTENT_VOCAB = { loaded:false, sets:{}, source:{}, words:{} };
 async function loadIntentVocab(force){
   if(INTENT_VOCAB.loaded && !force) return INTENT_VOCAB;
   let pub = {};
-  try{ pub = ((await rec("affordances")).result || {}).vocabularies || {}; }catch(_){ pub = {}; }
+  try{ pub = ((await recR("affordances")) || {}).vocabularies || {}; }catch(_){ pub = {}; }
   const take = async (name, publishedAs, op, probe) => {
     if(Array.isArray(pub[publishedAs]) && pub[publishedAs].length){
       INTENT_VOCAB.sets[name] = pub[publishedAs].slice();
@@ -9485,10 +9561,9 @@ async function doProposalDispose(){
   const key = PROP_ACT.key, to = PROP_ACT.to, reason = PROP_ACT.reason.trim();
   PROP_ACT.busy = true; PROP_ACT.refusal = null; proposalActPaint();
   try{
-    const res = await recPost("proposedispose", { key, to, reason });
+    const out = await recPostR("proposedispose", { key, to, reason });
     if(!PROP_ACT || PROP_ACT.key !== key) return;
     PROP_ACT.busy = false;
-    const out = (res && res.result !== undefined) ? res.result : res;
     if(out && out.ok === false){ PROP_ACT.refusal = out; proposalActPaint(); return { refused:true, reason: out.reason }; }
     proposalDisposeReceipt(out, PROP_ACT, to, reason);
     return out;
@@ -9654,8 +9729,8 @@ async function doProposalAdopt(){
   const go = $("#ad-go"); if(go){ go.disabled = true; go.textContent = "…"; }
   try{
     const now = new Date().toISOString().split(".")[0] + "Z";
-    const a = await rec("allocid", { prefix: vocabFor(PREFIX, kind), year: String(new Date().getFullYear()) });
-    const stem = (a.result && a.result.id) || a.id;
+    const a = await recR("allocid", { prefix: vocabFor(PREFIX, kind), year: String(new Date().getFullYear()) });
+    const stem = a && a.id;
     const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const p = PROP_ADOPT_CTX.proposal;
     const body = statement + NL + NL
@@ -9665,15 +9740,14 @@ async function doProposalAdopt(){
     const text = mdFor(id, kind, vocabFor(FIRST_STATE, kind), title, body, now, false, null);
     const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
     const files = await docFiles(text, null, await sha256Text(text), null);
-    const r = await recPost("promote", {
+    const res = await recPostR("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: who,
       meta: { object_type: kind, group:"believe-in-oakland", title,
               current_state: vocabFor(FIRST_STATE, kind), created: now, last_updated: now },
       files, register: registerFor(null),
     });
-    const res = r.result || r;
     if(!res || res.ok === false){
-      const why = (res && res.reason) || r.error || "unknown";
+      const why = (res && (res.reason || res.error)) || "unknown";
       if(err){ err.innerHTML = why === "GATE_REFUSED"
         ? `<b>The checks refused this bundle: ${esc((res.findings||[]).map(f=>f.check).join(", "))}. Nothing was written.</b>`
         : `<b>Refused: ${esc(why)}. Nothing was written.</b>`; err.classList.remove("hidden"); }
@@ -9903,7 +9977,15 @@ async function doAttest(){
   const go = $("#az-go"); if(go){ go.disabled = true; go.textContent = "…"; }
   const body = { sha256: ATTEST_CTX.sha, ...(ATTEST_CTX.archive ? { archive:true, locator: ATTEST_CTX.locator } : {}) };
   try{
-    const res = await recPost("attest", body);
+    /* `op=attest` is a FLAT op (index.mjs answers it in its own handler with a
+       literal object, not through the passthrough), so there is no envelope
+       here. It goes through the seam anyway — UI-23's structural rule — and
+       `recPostR` returns the answer unchanged when there is no `result`.
+       NOTE for whoever takes REC-38's rider: `attestPreflight`'s SENTENCES are
+       still the surface's own and are the fifth pre-DEC-8 residue. They are
+       deliberately untouched here, because the plane publishes no label or
+       `needs` for a capture-directed act to read yet. */
+    const res = await recPostR("attest", body);
     attestReceipt(res, ATTEST_CTX);
     return res;
   }catch(e){
@@ -10169,7 +10251,7 @@ async function addGo(){
       if(wantArch || doc){
         addSay(`<p class="count-line">Asking for a timestamp over the capture&hellip;</p>`);
         try{
-          const att = await recPost("attest", { sha256: doc.capture.sha256, locator: loc, archive: wantArch });
+          const att = await recPostR("attest", { sha256: doc.capture.sha256, locator: loc, archive: wantArch });
           doc.attestation_attempts = att.attempts || [];
           if(att.attestation) doc.attestations = [att.attestation];
           if(att.archive) doc.co_archive = att.archive;
@@ -10178,8 +10260,8 @@ async function addGo(){
     }
     addSay(`<p class="count-line">Writing it into the record&hellip;</p>`);
     const now = new Date().toISOString().split(".")[0] + "Z";
-    const a = await rec("allocid", { prefix: vocabFor(PREFIX, type), year: String(new Date().getFullYear()) });
-    const stem = (a.result && a.result.id) || a.id;
+    const a = await recR("allocid", { prefix: vocabFor(PREFIX, type), year: String(new Date().getFullYear()) });
+    const stem = a && a.id;
     const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const bodyText = CHANGED_FROM
       ? body + NL + NL + "The record already holds an earlier capture of this same address ("
@@ -10205,15 +10287,14 @@ async function addGo(){
         files.push({ path:"data/snapshot-manifest.json", text:t, bytes:t.length, sha256: await sha256Text(t) });
       }
     }
-    const r = await recPost("promote", {
+    const res = await recPostR("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: who,
       meta: { object_type: type, group:"believe-in-oakland", title,
               current_state: vocabFor(FIRST_STATE, type), created: now, last_updated: now },
       files, register: registerFor(doc),
     });
-    const res = r.result || r;
     if(!res || res.ok === false){
-      const why = (res && res.reason) || r.error || "unknown";
+      const why = (res && (res.reason || res.error)) || "unknown";
       addSay("");
       addErr(why === "GATE_REFUSED"
         ? `The checks refused this bundle: ${esc((res.findings||[]).map(f=>f.check).join(", "))}. Nothing was written.`
@@ -10253,8 +10334,8 @@ const digestOf = async (b) => {
 async function heldMatch(sha256, locator, contentType, name){
   const search = async (q) => {
     try{
-      const r = await rec("search", { q });
-      const hits = (r.result && (r.result.hits || r.result)) || r.hits || [];
+      const r = await recR("search", { q });
+      const hits = (r && (r.hits || r)) || [];
       return Array.isArray(hits) ? hits : [];
     }catch(_){ return []; }
   };
@@ -10302,7 +10383,7 @@ async function addCapture(locator, authority, wantSubs){
       ? `<p class="count-line">Fetching the document from the source&hellip;</p>`
       : `<p class="count-line">Collecting the rest of the page&hellip;</p>`);
     try{
-      acq = await recPost("acquire", { locator, authority, ...(wantSubs?{subresources:true}:{}), ...(session?{continue:session}:{}) });
+      acq = await recPostR("acquire", { locator, authority, ...(wantSubs?{subresources:true}:{}), ...(session?{continue:session}:{}) });
     }catch(e){ return { ok:false, why: acquireWhy(e) }; }
     if(!acq.document) return { ok:false, why: acquireWhy(acq) };
     const snap = acq.snapshot || null;
@@ -10395,8 +10476,8 @@ async function pubList(){
   const body = $("#pub-body");
   body.innerHTML = `<div class="eyebrow">The published record</div><p class="pub-lead">Ratified case files, readable and verifiable by anyone.</p><div class="pub-list" id="pl">Loading&hellip;</div>`;
   try{
-    const r = await api("publishedmanifest");
-    const pub = (r.result&&r.result.published)||[];
+    const r = await apiR("publishedmanifest");
+    const pub = (r&&r.published)||[];
     $("#pl").innerHTML = pub.length
       ? pub.map(p=>`<div class="pf" onclick="pubOpen('${esc(p.bundle_id)}')"><div class="t">${esc(p.title||p.bundle_id)}</div><div class="m">${esc(p.bundle_id)} · ratified ${esc((p.ratified_at||"").slice(0,10))} · sha256:${esc((p.bundle_sha||"").slice(0,16))}…</div></div>`).join("")
       : `<div class="empty">This group has not published any case files yet. When it ratifies one, it appears here, and anyone can verify it against its published hash without the group's cooperation.</div>`;

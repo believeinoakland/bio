@@ -417,10 +417,19 @@ function mockFetch(u, opts){
     return W({ ok:true, target:p.target, backlinks:out });
   }
   if(op === "select"){
+    /* CORRECTED 2026-08-05 (UI-23), never exempted. This answered `R({ok:true,
+       handle, …})` — UNWRAPPED — and so agreed with the defect in `doCite`,
+       which read `s.handle` straight off the answer. `op=select` has no
+       dedicated handler in index.mjs, so it comes back through the generic
+       passthrough as `{ok:true, result:{handle,…}, store, tokenClass}`: against
+       the real plane the handle was `undefined` and `op=cite` was sent no
+       selection at all, while these 131 assertions stayed green. The mock now
+       answers the wire shape, which is what makes the corrected `recPostR` read
+       provable — and what makes re-introducing the old read FAIL here. */
     const ids = Array.isArray(body && body.ids) ? body.ids : [];
     const handle = `SEL-${++SEL_SEQ}`;
     SELECTIONS[handle] = { handle, ids: ids.slice() };
-    return R({ ok:true, handle, kind:"enumerated", n:ids.length });
+    return W({ handle, kind:"enumerated", n:ids.length });
   }
   if(op === "cite"){
     /* THE STORE'S OWN ORDER (store.mjs cite()), mirrored exactly — REC-37's

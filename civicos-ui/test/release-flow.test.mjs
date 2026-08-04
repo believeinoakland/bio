@@ -16,16 +16,28 @@ const ctx = {
     const u = new URL(url, "https://x.test"); const op = u.searchParams.get("op");
     CALLS.push({op, params:Object.fromEntries(u.searchParams), method:(init&&init.method)||"GET", body:init&&init.body?JSON.parse(init.body):null});
     const reply = o => ({ ok:true, json: async()=>o });
+    /* CORRECTED 2026-08-05 (UI-23), never exempted. `select` and `release` were
+       answered UNWRAPPED here while `search`, `list` and `whoami` below were
+       already wrapped — the suite carried both shapes and the two that were
+       wrong were exactly the two the release flow READS a field off. Neither op
+       has a dedicated handler in index.mjs, so both come back through the
+       generic passthrough as `{ok:true, result:{…}, store, tokenClass}`: on the
+       real plane `sel.handle` was `undefined` (the release named no selection)
+       and `rel.released` was `undefined` (the receipt silently fell back to the
+       ids the browser had asked about, reporting the REQUEST as the outcome).
+       A refusal stays flat, and correctly so: a control-plane refusal really is
+       `{ok:false, …}` with no envelope, and `rec`/`recPost` throw it. */
+    const wrap = o => reply({ ok:true, result:o, store:"bio", tokenClass:"member" });
     if(op==="select"){
       const b = CALLS[CALLS.length-1].body;
       if(!b || !Array.isArray(b.ids) || !b.ids.length) return reply({ok:false, reason:"EMPTY"});
-      return reply({ok:true, handle:"sel-abc123", kind:"enumerated", n:b.ids.length});
+      return wrap({handle:"sel-abc123", kind:"enumerated", n:b.ids.length});
     }
     if(op==="release"){
       const p = CALLS[CALLS.length-1].params;
       if(!p.acknowledgment) return reply({ok:false, reason:"NO_ACKNOWLEDGMENT", detail:"..."});
       if(p.handle!=="sel-abc123") return reply({ok:false, reason:"NO_SUCH_SELECTION"});
-      return reply({ok:true, released:["INFO-1","INFO-2"], acknowledgment:p.acknowledgment, mitigation:p.mitigation});
+      return wrap({released:["INFO-1","INFO-2"], acknowledgment:p.acknowledgment, mitigation:p.mitigation});
     }
     if(op==="search") return reply({ok:true, result:{hits:[
       {bundle_id:"INFO-1",title:"Doc one",object_type:"information",current_state:"collected",last_updated:"2026-07-20",criticality:"routine"},
