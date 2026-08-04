@@ -1,3 +1,5 @@
+> **SUPERSEDED — see `RECONCILED.md`, which is THE DESIGN where this file disagrees with it (2026-08-03, CONDUCT).**
+
 # SB-CORE — storyboards for the three core surfaces: QUEUE · ACT · INQUIRY PAGE
 
 Written 2026-08-01 (design pass). **This is DESIGN, not measurement.** Where a surface

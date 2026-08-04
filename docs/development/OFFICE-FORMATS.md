@@ -179,8 +179,10 @@ picked.
    carry tracked changes, comments, notes, hidden sheets or formulas. That measurement
    sizes step 6 and answers the legacy-format question at the same time.
 6. **The evidentiary extras** — formulas beside values, tracked changes, comments,
-   notes, hidden sheets — gated on the Bob decision below, since surfacing them is
-   where the disclosure question lives.
+   notes, hidden sheets. UNGATED as of DEC-5 (Bob, 2026-08-01: surface it all — who
+   edited a document and when IS evidence) and no longer a follow-on: it runs
+   alongside steps 3–4, which is how the COFF-3/4/5 items carry it. Scope is PUBLIC
+   records; restricted material is D-124's deferred half, with its own trigger.
 
 Steps 1 and 2 are the ones with architectural consequence. Steps 3 and 4 are
 mechanical once they exist, which is the whole argument for doing 1 first.

@@ -1,3 +1,5 @@
+> **SUPERSEDED — see `RECONCILED.md`, which is THE DESIGN where this file disagrees with it (2026-08-03, CONDUCT). Note §5.1's `SUSPEND` means the OPPOSITE of the ruled behaviour — `UNRATED` is canonical (D-160).**
+
 # SB-OUTPUT — storyboards for the three OUTPUT surfaces
 
 Written 2026-08-01 (research pass, Round B). **None of these three surfaces

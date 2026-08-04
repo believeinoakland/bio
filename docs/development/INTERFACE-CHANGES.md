@@ -125,3 +125,42 @@ Still PROPOSED; the response owed is unchanged (FRAMEWORK answers, or CONDUCT an
 on its behalf in writing, naming that it did so). The 2026-08-03 BOB INBOX entry asks
 CONDUCT to resolve this, since three format entries (COFF-3/4/5) build against the
 resolved union.
+
+### RESPONSES · 2026-08-03 · to the proposal AS AMENDED (including `doc-para`)
+
+- **FRAMEWORK: `AGREE` — answered on its behalf by CONDUCT, in writing, per protocol
+  step 3.** FRAMEWORK is dormant (its FW-1…FW-10 run is done and its slot released; no
+  live session can answer), so this is recorded as CONDUCT answering FOR the area,
+  never as the area agreeing. The grounds are drawn from FRAMEWORK's own recorded
+  confirmation of I2 1.0.0 (`INTERFACES.md`), not invented here: (1) the `pdf-page`
+  arm keeps `page`/`rect` byte-for-byte, so the container-agnostic partition/wrapper
+  contract FRAMEWORK consumes is untouched and existing consumers migrate by adding a
+  discriminator check, not by reshaping; (2) the required `kind` discriminator
+  converts the silent-misread failure (`source.page` reading `undefined` on a
+  sheet-cell source) into a loud one — the failure asymmetry FRAMEWORK named as the
+  property it cannot do without; (3) `kind` + required `ref` keeps per-container
+  parsing at the producer and display honest, the searchfields drift lesson the
+  proposal cites. **The `doc-para` amendment is covered by the same answer and is
+  RIGHT on its own terms**: a DOCX has no pages in its bytes, so a page reference
+  would claim what the capture does not hold — the paragraph index is the honest
+  anchor, and the optional `run` (producer artifact, never author structure) follows
+  the same never-invent discipline. On "What this does not settle": the proxy answer
+  is to go NO further now — `kind` + `ref` is the right minimal leaf, per the
+  constraint below.
+- **Constraint recorded with the agreement — D-164 (DEC-23), which postdates the
+  proposal.** The addressable CONTENT EXTENT is one primitive seen three times
+  (D-123/this change, D-161, D-163) and is to be solved ONCE. This union is that
+  primitive's per-container LEAF — the same tags a leg, a connection and a citation
+  will use to point inside a document — so no implementer forks a second reference
+  vocabulary. The proposal's own "What this does not settle" section already shaped
+  for this (subsuming later costs a `kind`, not a break); the content-extent design
+  itself stays PARKED with Bob's paused case-making thread, and this entry constrains
+  its leaf shape without pre-empting it.
+
+### RESOLUTION · 2026-08-03 · ACCEPTED (as amended)
+
+Sole consumer agreed, by proxy, named above. When FRAMEWORK next wakes it may re-open
+this with a COUNTER before the version bumps — which is why CHANGING is not entered
+now. The registry entry stays 1.0.0 STABLE until the first item that emits a
+non-`pdf-page` `source` (COFF-3/4/5, whichever lands first) enters CHANGING here,
+lands, and bumps the version; COFF-1 and COFF-2 emit no `source` and do not wait.

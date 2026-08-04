@@ -260,7 +260,10 @@ D-67 (connections emitted and discarded) · D-72 (connections have no grade) · 
 (the table models a pair, the domain needs a chain) · D-74 (Oakland's shared
 identifiers — the highest value-per-hour measurement available) · D-75, D-76 (the
 framework and the object catalogue have never been connected; aspiration and goal do
-not exist) · CONSTRUCTS Steps 3, 4, 5, 5a.
+not exist) · CONSTRUCTS Steps 3, 4, 5, 5a · office-document metadata as a first-class
+ENTITY-AXIS INPUT (DEC-5: creator/lastModifiedBy/tracked-change attribution are
+"the actions of people and departments" — readings resolved ACROSS documents, not a
+per-document curiosity; the COFF items extract it, this rung consumes it).
 **Areas:** FRAMEWORK, RECORD (schema and the ageing mechanism).
 **Depends on:** M3.
 

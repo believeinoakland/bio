@@ -1,3 +1,5 @@
+> **SUPERSEDED — see `RECONCILED.md`, which is THE DESIGN where this file disagrees with it (2026-08-03, CONDUCT). Take build items from RECONCILED §3, never from §2 here: eleven items below instruct behaviour the resolutions refuse (REC-12's "ship SUSPEND" is the sharpest — D-160).**
+
 # BUILD-ORDER — where bottom-up and top-down meet, and what to build next
 
 Written 2026-08-01 (research pass, Round C). This file **reconciles** the bottom-up

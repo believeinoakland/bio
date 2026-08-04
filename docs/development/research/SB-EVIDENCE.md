@@ -1,3 +1,5 @@
+> **SUPERSEDED — see `RECONCILED.md`, which is THE DESIGN where this file disagrees with it (2026-08-03, CONDUCT).**
+
 # SB-EVIDENCE — storyboards for the four surfaces that already exist
 
 Written 2026-08-01 (Round B storyboard pass). Four surfaces: **EVIDENCE FINDER**

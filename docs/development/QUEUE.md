@@ -25,26 +25,29 @@ landing marks it `done`.
 - **CAP-2 landed** (39a0e1b) and is marked done here; CONDUCT paused before recording
   it.
 
-**The two slots are RECORD and FRAMEWORK**, decided 2026-07-31 by session BOB (Bob's
-standing instruction: activation is tactical and rests on dependency knowledge this
-session holds and he does not).
+**BOTH slots are CONTENT-OFFICE**, decided 2026-08-03: Bob confirmed office formats
+as the current focus the same day he paused the case-making thread, and his
+decomposition names COFF-1 ∥ COFF-2 as "the two behavioural slots" — disjoint files,
+genuinely independent. Enacted 2026-08-03 by CONDUCT:
 
-- **RECORD, for REC-1, the scheduler.** It is the highest-value unblocked item on the
-  board and it is time-critical in a way the others are not: CAP-2 has just made the
-  Durable Object alarm serve a SECOND consumer, and CAP-3 queues a third. Every
-  consumer added before the shape is decided makes deciding it more expensive, and
-  this is the one item where waiting has a compounding cost.
-- **FRAMEWORK, for FW-2 (D-68).** It blocks M3 AND M4, the two largest milestones, it
-  contends with nothing, and it is a refactor that SHRINKS the codebase — so it gets
-  cheaper the earlier it runs and dearer the longer M4's constructs accumulate on top
-  of seven unreconciled vocabularies.
+- **Slot 1 · CONTENT-OFFICE, COFF-1** — the FORMAT registry, HTML and PDF moved onto
+  it. The D-70 uniformity test, and the step that must precede the format entries or
+  they are built twice.
+- **Slot 2 · CONTENT-OFFICE, COFF-2** — the OOXML container reader, a pure
+  zero-dependency module. Builds against I7 on paper; independent of COFF-1's landing.
+- Wave 2 is COFF-3/4/5 (mutually independent; two slots against three items —
+  recommended order XLSX → DOCX → PPTX by evidentiary density; final sequencing is
+  CONDUCT's). All three additionally wait on IC-1 RESOLVED — done 2026-08-03, see
+  `INTERFACE-CHANGES.md`.
+- **The case-making run (REC-10 → REC-19 → REC-11 → …, the 2026-08-01 handover order)
+  stays QUEUED under a now-DORMANT RECORD**, first in line when a slot frees or Bob
+  reopens the thread. Its activation order inside RECORD is unchanged; DEC-8's
+  no-act-surface-before-REC-19 doctrine stands.
 
-**CAP-3 and CPDF-7 run out of band, and do not hold a slot** (`ORCHESTRATION.md`, the
-concurrency rule). CPDF-7 commits no code at all — it is the Free-tier measurement
-that decides whether the whole pdf-worker path is central or marginal, so it should
-run EARLY and its cost is one worker. CAP-3 touches only CAPTURE's own paths and
-contends with neither active area. **The M0 lane likewise does not hold a slot**:
-CONDUCT drains one M0 item whenever it has integration capacity between area items.
+**Measurement-only and test-estate items hold no slot** (`ORCHESTRATION.md`): COFF-6
+(the office-corpus measurement — sets COFF-2's bound, runs IMMEDIATELY), CPDF-9 (the
+OCR measurement — gates CPDF-10's whole design, run early) and REC-27/M0-lane work
+run out of band whenever CONDUCT has integration capacity between area items.
 
 ---
 
@@ -68,732 +71,16 @@ _(drained by CONDUCT 2026-07-31: M8 (a member can reach what the record holds) i
 
 _(drained by CONDUCT 2026-07-31: `BIO_Interaction_Constructs_v0_1.md` governs M8 — five INTERACTION constructs (not the CONTENT `CONSTRUCTS.md`), TASK the attention layer pointing at the acts. Recorded for when UI activates: scope M8's first item as the TASK CONSTRUCT (not "the tasks screen"), build order T→J→B(+S)→P→A per MILESTONES. UI stays dormant; no queue item superseded.)_
 
-### 2026-07-31 · BOB · office formats researched; the FIRST item is not a parser
+_(drained by CONDUCT 2026-08-03 — the 2026-07-31 office-formats directive: `INTERFACE-CHANGES.md` already existed with IC-1 PROPOSED; CONDUCT answered on dormant FRAMEWORK's behalf in writing and IC-1 is RESOLUTION: ACCEPTED (protocol step 3). The FORMAT-registry-first order is enqueued as COFF-1 → COFF-2 (BOB's 2026-08-03 decomposition, which carries RECONCILED §3.3's CPDF-8/CAP-5 namings); the evidentiary extras are IN scope per DEC-5.)_
 
-`docs/development/OFFICE-FORMATS.md` is new (D-121, D-122, D-123, DEC-5). Spreadsheet,
-Word-format and presentation support, researched at Bob's direction. Read it before
-scoping any of it; three things matter for the queue.
-
-**1. It is ONE container, not three formats.** OOXML is a ZIP of XML parts and ODF is
-the same shape. MEASURED in workerd this turn: `DecompressionStream("deflate-raw")`
-exists and round-trips, so the container needs no dependency. Office text is XML text
-nodes — easier than PDF, no glyph problem, **no Tier 2 and no fleet member**.
-
-**2. The first item is the FORMAT REGISTRY, with HTML and PDF moved onto it — not a
-`.docx` parser.** Dispatch today is two mechanisms (`HTML_CT` at acquire time, a
-separate `op=pdfstructure` at read time); three more formats makes five special cases
-across two. The framework specifies a uniform recogniser plus a per-axis registry and
-names FORMAT as a candidate axis, and D-70 says the uniformity claim is untested
-because no third axis has ever been added. Adding formats before the registry means
-building them twice.
-
-**3. It needs `INTERFACE-CHANGES.md`, which does not exist.** I2's element reference is
-`{page, rect}`; a sheet's is `{sheet, cell}` and a slide's is `{slide, shape}`. That is
-a change to a shape FRAMEWORK builds against, so it uses the change protocol — and the
-protocol file has deliberately never been written. Expect to write it as part of the
-work. FRAMEWORK is dormant, so **you answer on its behalf in writing** (protocol step
-3).
-
-Nothing here supersedes a queue item or stops a worker. DEC-5 blocks only step 6 (the
-evidentiary extras); steps 1–5 are unaffected.
-
-### 2026-08-01 · BOB · THE CASE-MAKING BUILD ORDER — 36 items, and the two rungs are now in MILESTONES
-
-The queue is empty (44 done, 0 runnable) and this is what refills it. A sixteen-file
-research study landed in `docs/development/research/`. **Read `RECONCILED.md` and treat it
-as THE DESIGN.** It resolves 38 contradictions across the corpus and re-derives the build
-order; where it and `BUILD-ORDER.md` / `SB-CORE.md` / `SB-EVIDENCE.md` / `SB-OUTPUT.md`
-disagree, RECONCILED wins and those four are history. `RECONCILED.md:12-16` names the one
-thing that needs doing about that and it is CONDUCT's: **a one-line pointer at the top of
-each of the four**, because a reader who opens one directly still reads superseded text.
-
-**1 · THE GATE IS CLEARED.** `plancheck` refused a queue naming a milestone the ladder does
-not define, and the case-making rungs did not exist. **M9 and M10 are now in
-`MILESTONES.md`**, with the dependency graph, the placement table and the superseded
-activation note updated in the same pass. M9's acceptance carries RECONCILED's R2
-correction (BOTH strengths, capture and connection, each naming its own weakest leg, never
-composed into one letter). Verified: `node tools/plancheck.mjs` now reports M9 and M10 as
-known rungs awaiting items. **Nothing else blocks queueing.**
-
-Twenty-seven debt rows from the study had no placement, which `MILESTONES.md`'s own
-preamble forbids; all are placed, D-127 included. D-150's disposition token said `M6` and
-is corrected to `M10` — it was written when the ladder had no rung above M8.
-
-**2 · THE ITEMS.** 36 — the 35 in `RECONCILED.md` §3 (17 changed by the resolutions, 18
-carried forward verbatim from `BUILD-ORDER.md` §2, listed at §3.3 so you can confirm they
-were checked rather than skipped), plus **REC-28** below. Each is queue-format already:
-milestone, scope, behind-interface, depends-on, an `accepts-when` that is a command, and a
-negative control. **Take them from RECONCILED §3 and not from BUILD-ORDER §2** — eleven
-items in BUILD-ORDER instruct a worker to build behaviour the resolutions REFUSE, and
-REC-12 is the sharpest: it says *"reuse `#weakerGrade` unchanged"* and *"ship SUSPEND"*
-where SUSPEND means the OPPOSITE thing in the ruling and in the file it cites. A worker
-reading BUILD-ORDER in good faith builds the refused behaviour.
-
-**3 · ACTIVATION ORDER — decided by this session, and it is a handover, not a request.**
-Eight items depend on nothing, so the constraint is worker slots, not dependencies.
-
-- **Slot 1 · RECORD, REC-10** — the `inquiry` type. It unblocks 21 of the other 34
-  transitively, three surfaces that cannot exist without it, and it heads the longest chain
-  (REC-10 → 11 → 13 → 14 → 22 → UI-18, six deep). Every day it waits is a day added to the
-  end.
-- **Slot 2 · RECORD, REC-19** — `op=affordances`. Second, not later, and the reason is a
-  compounding cost: every act surface built before it accrues a forbidden surface-side
-  option map that must then be deleted. **No act surface is built before REC-19 exists** —
-  this is now doctrine, not preference (DEC-8, below).
-- After those: REC-11 and REC-13 in the claim run; REC-25 rose in practical priority
-  (four dependents now, and it gates the surface every member opens by habit); REC-27 is
-  the hygiene floor and wants to run before the four items that each add a table.
-- **If only one slot is ever free**, the order is REC-10 → REC-19 → REC-11 → REC-13 →
-  REC-12 → REC-14. REC-19 moves to second precisely because a single worker otherwise
-  reaches UI-12 with no affordances op and takes the third copy of the map.
-
-**4 · ONE NEW ITEM, from DEC-7.**
-
-    ### REC-28 · queued
-    milestone: M8
-    scope: **D-151 — a machine credential can RESOLVE an unassigned task, so an obligation
-      can be closed with no member act.** VERIFIED: `#refuseNotYours` (`store.mjs:6943-6946`)
-      allows the moment `assignee === "unassigned"`, before it looks at the caller, and
-      `taskforward`/`taskresolve` carry `"probe"` in `classes` (`index.mjs:271-272`). Refuse
-      at the ACT and not at the fence, on the `MACHINE_CANNOT_RELEASE` precedent
-      (`store.mjs:1857-1861`): add `MACHINE_CANNOT_RESOLVE` and `MACHINE_CANNOT_FORWARD`,
-      remove `"probe"` from the two ops' `classes`, and correct `#refuseNotYours`'s comment,
-      which today states a guarantee the code does not make. KEEP the fence — it answers *is
-      this THIS member's task* and the act refusal answers *is this a person at all*. Leave
-      `taskdrain` alone: draining is not resolving.
-    behind-interface: I3
-    depends-on: none
-    accepts-when: `cd bio-plane && npm run test:battery` green with a suite where a
-      `token:probe` credential is refused BY NAME on both verbs for an unassigned task, the
-      assignee still succeeds, and an admin member still succeeds; `npm run test:coverage`
-      --strict exit 0; negative control — remove the act-level refusal and the probe resolves
-      an unassigned task while every existing task assertion still passes, which is the state
-      today.
-    added: 2026-08-01 · BOB
-
-**5 · WHAT THE FOUR ANSWERED DECISIONS CHANGE FOR THE QUEUE.** DEC-6, DEC-7, DEC-8 and
-DEC-9 are answered in `DECISIONS.md` by this session; each carries its own
-`for CONDUCT to enact:` line and only two reach the queue.
-
-- **DEC-8 is the one that touches items.** The ACT pre-flight is PLANE-SOURCED always — a
-  surface may render a refusal it received from the plane and may never compute one. Two
-  mechanisms: publication (`op=affordances`) by default, a dry-run op
-  (`op=publishpreflight`) when the refusal turns on state the surface cannot see. **Add to
-  the acceptance of UI-12, UI-14, UI-16, UI-19 and UI-20: "renders no refusal it computed
-  itself."** UI-10's D-138 half — make `check-semantics.mjs` actually read
-  `bio-checks.mjs` — is what keeps the interim honest, and it is not optional: the guard
-  that was cited as protecting the existing mirror does not read the authority it claims to
-  check.
-- **DEC-7 produces REC-28** above. DEC-6 and DEC-9 produce no queue work at all; both
-  confirm behaviour that already ships, and both are recorded so a later session does not
-  quietly reverse them.
-
-**6 · TWO WARNINGS THE STUDY EARNED, both cheap and both already paid for once.**
-`RECONCILED.md` §4 lists 14 open questions with what each blocks — **three are now DEC
-entries (DEC-15 Q4, DEC-16 Q3, DEC-17 Q2) and none blocks an item**, because each ships a
-provisional that invents nothing: REC-18 stays `blocked`, REC-20 ships the `case` column
-unpopulated, and R1 already supplies the honest half of Q2. And **use python for counts,
-not `grep`** — the shell's grep is ugrep with `-I`, and one raw NUL byte at
-`store.mjs:3833` makes the repo's largest source file silently invisible to it (D-131,
-closed by REC-27). Every research pass in this study made at least one sharp claim that
-did not survive checking.
-
-Nothing here stops a worker; the board was empty. Nothing is superseded except the
-`MILESTONES.md` activation note, which is corrected in place and marked as history.
-
-### 2026-08-01 · BOB · SIX RULINGS FROM BOB — read this BEFORE queueing REC-14, REC-15 or REC-18
-
-Bob answered six of the seven open decisions the same day the build order was handed over.
-**Four of them change items in that handover**, and two of those change items that were
-about to be queued. Nothing here supersedes an item or stops a worker — the board is still
-being filled — but REC-14's scope is materially different from what §3 of `RECONCILED.md`
-describes, so **this entry outranks the build order where they disagree** and a worker
-taking REC-14, REC-15, REC-18 or CPDF-work must read it. Full reasoning per ruling is in
-`DECISIONS.md`; the debt rows are D-152 to D-155.
-
-**A · DEC-12 — `published` IS NOT TERMINAL. Editions.** *"A closed finding can be reopened,
-and a published case can be revised, though when republished, the edition number must be
-incremented and the case treated as a separate document."*
-
-- **REC-14** — drop terminality. `edition` becomes required frontmatter on a `published`
-  inquiry and is stamped into the ratified bytes. `published_bundles` is re-keyed
-  `(bundle_id, edition)` and APPENDS. **This closes D-144 as a feature rather than fixing
-  it as a defect** — the file was split against itself (`published_shas` appends,
-  `published_bundles` upserts) and under this ruling the append was always right. Every
-  edition keeps its own signature, attestor, time and gate version. `concluded → open` is
-  legal; reopening does NOT unpublish, and editions already published stay published.
-- **A basis leg citing a published case NAMES ITS EDITION**, or C-21.2's inheritance rule
-  has no fixed thing to compare against. A leg citing edition 1 keeps citing edition 1 —
-  it does not silently follow. **REC-17** already has the right shape for the rest: a newer
-  edition SURFACES the re-evaluation obligation and recomputes nothing on the member's
-  behalf.
-- **REC-22 / UI-18** — `publishedList()` enumerates editions rather than one row per
-  bundle; a hash resolves to its edition; prior editions stay readable.
-- **REC-16 is UNCHANGED: `PUBLISHED_CANNOT_DIVIDE` stands.** Division says the parent was
-  malformed and does not continue; an edition says the case continues and is corrected.
-  Do not collapse them because revisability arrived.
-- The completeness statement is authored FRESH per edition under C-21.1's byte-check.
-- `RECONCILED.md` §4 Q1 is CLOSED and §0's "not decided by this file" now is.
-
-**B · DEC-15 — the HUNCH. A new `grade_source`, and it unblocks REC-18.** A hunch is
-temporary declared bias: a connection grade authored ahead of its evidence, high enough to
-make otherwise disconnected evidence traversable. It is BIAS DEBT and must clear before
-publication. Doctrine is in `BIO_Declared_Bias_v0_1.md`, in the Bias debt section, because
-**the gate already existed there** — *"a work product carrying bias debt cannot advance its
-workproduct_state or be ratified for publication until the debt is settled."*
-
-- **REC-11** — `grade_source` admits `hunch` beside `resolution` and `testimony`; author
-  and date required. It is the only authored grade permitted above D.
-- **REC-12** — a hunch grade **composes normally** and is NEVER treated as `undetermined`.
-  R1 suspends an axis when a grade is ABSENT; a hunch grade is present and asserted, and
-  treating it as undetermined would destroy the traversability the ruling exists to create.
-- **REC-15** — refuse `UNCLEARED_HUNCH`, naming every leg, in the same list as
-  `NO_SIGNERS`. Before any signature exists.
-- **REC-18 IS NO LONGER `blocked` ON A RULING** — only on UI-13's registry write surface.
-  Its scope narrows: build the EARNED path (`grade_source: 'resolution'`) as the thing a
-  hunch is cleared INTO. The D1(a)-versus-D1(b) fork is closed; they were two phases of one
-  lifecycle, not two answers.
-- **UI-11 / UI-12** — a hunch leg is visibly a hunch from the moment it is made, not
-  disclosed at publication; the strength panel says the case cannot publish while one
-  stands. The failure this invites is a hunch quietly ageing into a fact.
-- Manifest registration needs `object_type: bias` (D-84, M4) and is sequenced behind it.
-  The leg-level source and the refusal ship with the claim layer. Say so in the report so
-  nobody concludes the bias half was dropped.
-
-**C · DEC-17 — a project declares the strength its work requires.**
-
-- `project` frontmatter gains `required_strength{capture, connection}` — **a PAIR per R2**,
-  because a scalar re-collapses the two axes in the one field a reader will quote. C-2.9
-  already requires a non-empty `objective` on the same object; the check goes beside it.
-- **REC-15** refuses `BELOW_PROJECT_STRENGTH` naming the axis. **REC-14** stamps the
-  declared bar into the ratified bytes beside the derived strength, so a reader sees both
-  in one frozen artifact. **UI-18** renders them together, prominently.
-- A project with no declared bar gates nothing and the case SAYS so — an absent bar is not
-  a bar of zero and must not render as one. An inquiry outside any project inherits none.
-
-**D · DEC-13 — the subject's response, and the gate is the DECLARATION not the act.**
-
-- **REC-14** — the completeness block gains the group's position on putting the case to its
-  subject: authored, justified, never prefilled, carried inside the artifact as declared
-  bias. **The gate at ratification is that the position is declared and justified — never
-  that contact happened and never that the answer was favourable.** A group with cause not
-  to give notice says so and says why; a reader weighs it like any other declared bias.
-- **REC-24** — `action_kind` gains `request_for_comment`, and it **names the specific
-  inquiries it disclosed**. This is not decoration: the Columbia review of Rolling Stone
-  found a comment request made *without specifics* was the central failure, so *"we
-  contacted them"* and *"we put these four claims to them"* must be different rows. The
-  window is authored by the group; 7–30 calendar days is GAO's sourced precedent, not a
-  constant we invent. What comes back is CAPTURED, not summarised, and a non-response is
-  recorded with its date.
-- **UI-17** — the ceremony gains the stage, ordered BEFORE signing, since authoring it
-  changes the sha.
-- D-153 records that `research/AUDIENCES.md` H4/H6 are corrected from hazards to the
-  required workflow. **The pass is deliberately NOT edited** — same treatment RECONCILED
-  gave the storyboards. Add the pointer when you add the other four.
-
-**E · DEC-14 — impact claims are unproven absent outside evidence.** REC-24's consequence
-half only. An `action`'s recorded consequence is an OUTCOME by default (a hearing convened,
-a study commissioned — ProPublica's own *"outcomes short of impact"*), which is a dated
-first-party fact needing no causal claim. Promoting it to an IMPACT claim requires a basis
-leg pointing at evidence that is **not our own action**. Unproven is a stated state on the
-R1 shape, never a fifth grade and never a low one. No new item; a constraint on a queued
-one.
-
-**F · DEC-4 — OCR is IN, and it needs a measurement first. TWO NEW ITEMS.**
-
-    ### CPDF-9 · queued
-    milestone: M2
-    scope: **Measure whether OCR is reachable at all, before anything is designed.** D-152.
-      Bob overruled the accept-the-limit recommendation: image-only PDFs must be extracted
-      AND investigated for meaningful content. Unknown and gating: a WASM OCR engine's
-      bundle size against the Worker limit, its CPU against the isolate ceiling (D-36,
-      D-56), and its accuracy on a REAL Oakland scanned exhibit rather than a clean
-      synthetic. Three placements to decide between and the measurement decides it: in-plane
-      Tier 1, the pdf-worker fleet member (I6), or an external service. COMMITS NO PRODUCT
-      CODE. Record in `MEASUREMENTS.md` with date and instrument — a vendor's documentation
-      is a claim, not a measurement, and three archive-design claims already failed here.
-    behind-interface: none — it commits no code
-    depends-on: none
-    accepts-when: `MEASUREMENTS.md` carries bundle size, CPU per page and character accuracy
-      on a named real scanned Oakland document, each with date and instrument, and a stated
-      recommendation between the three placements; negative control — run the same engine on
-      a BLANK page and confirm it yields nothing rather than plausible text, because an OCR
-      engine that hallucinates on noise is the one failure mode that would put invented text
-      in the record.
-    added: 2026-08-01 · BOB
-
-    ### CPDF-10 · queued
-    milestone: M2
-    scope: **The Tier-3 OCR path, behind whatever placement CPDF-9's measurement permits.**
-      D-152. THE PROVENANCE RULE IS THE ITEM, not the engine: extracted text carries
-      `text_source: 'layer'`, OCR carries `text_source: 'ocr'` with engine, version and
-      per-region confidence, and the two are distinguishable everywhere the text is shown,
-      cited, indexed or exported. **A basis leg resting on OCR'd text carries its image
-      region (page + rect)** so a reader checks the claim against the pixels rather than
-      against our transcription — the same discipline as answering by hash. OCR NEVER raises
-      a capture grade. A low-confidence region reads `undetermined` rather than a best guess
-      — the mojibake rule one layer up, and the reason this capability cannot become an
-      overclaiming defect. Text reaches the READING path via FW-15's wire, not merely a text
-      field, or the class is captured, readable and still ungraphed.
-    behind-interface: I2
-    depends-on: CPDF-9, CPDF-8
-    accepts-when: `cd bio-plane && npm run test:battery` green with a real image-only Oakland
-      PDF yielding text marked `text_source: 'ocr'` with per-region confidence and reaching
-      `reading_refs`, while a text-layer PDF still yields `text_source: 'layer'` and the two
-      are distinguishable in the projection, the index and an export; negative control —
-      strip the `text_source` marker and the suite fails naming an OCR'd document
-      indistinguishable from a published text layer, AND drop the confidence floor so a
-      garbled region emits a best guess and the suite fails.
-    added: 2026-08-01 · BOB
-
-FW-15's acceptance also gains an OCR'd document reaching `reading_refs`, and D-91's PDF-text
-arc gains the image-only branch.
-
-**ONE THING STILL OPEN AND IT BLOCKS NOTHING.** DEC-16 (the queue's grouping key under
-nesting) is with Bob with the context he asked for. REC-20 continues to ship the `case`
-column unpopulated, every item ungrouped, nothing invented — which is the provisional and is
-correct regardless of the answer.
-
-### 2026-08-02 · BOB · TWO AMENDMENTS — CPDF-9/10 widen, and "audience" splits in two
-
-**A · DEC-4 amended by Bob. CPDF-9 measures FOUR placements, not three, and the GRADE is
-decided.** *"These capabilities may not fit into an OCR-specific worker… another alternative
-would be to use a reliable web service… the OCR fidelity may necessitate that further post
-processing by a BIO resident AI function may be required in some cases. In any case, the
-generated output will need to be assessed and graded."*
-
-- **CPDF-9's placement set becomes: in-plane · the pdf-worker fleet member (I6) · an external
-  SERVICE · a service-plus-AI-post-processing chain.** The service is a first-class candidate,
-  not a fallback. **Price its distinct cost:** the transcription becomes a claim by a third
-  party we cannot re-run identically once they change their model, so the record names the
-  service identity and the date exactly as it names an engine and a version. A transcription
-  is only checkable if you can say who made it. No confidentiality issue (public records,
-  DEC-5), and this is not D-94's egress question — we are sending a document out, not
-  fetching one.
-- **CPDF-10: `text_source` records a CHAIN, not a token** — `pixels → ocr(engine,version) →
-  ai(function,version)` — and each step names what performed it. **Each step can only weaken
-  the claim, never strengthen it.** An AI that cleans up a garbled line has produced more
-  READABLE text, not more RELIABLE text, and the hazard of this whole capability is that its
-  output looks better than its input. Do not let the chain collapse to a single label.
-- **THE GRADE, decided, and it does NOT mint a third axis.** R2 was hard-won and a third scale
-  would be paid for on every surface. Transcription fidelity **bounds the CAPTURE axis**: that
-  axis already asks *how well do we know this is what the source published*, and for an
-  image-only PDF, byte provenance does not answer it — a second step sits between the source
-  and the claim. So a leg resting on derived text takes the weakest link of (byte provenance,
-  transcription fidelity). Existing discipline, no new machinery.
-- **NO MACHINE MINTS THE TRANSCRIPTION GRADE** — the recogniser precedent
-  (`schema.mjs:739-743`, *"the RECOGNISER never mints a D"*). Machine OCR and AI correction are
-  both capped below a ceiling CPDF-9's measurement sets. **A member who checks a transcription
-  against the image is TESTIFYING** (`resolvetestify`, with author, date and accountability),
-  and that is the only route to the top of the scale. This is what makes CPDF-10's image-region
-  anchor load-bearing rather than nice: a member cannot testify to a transcription whose pixels
-  they cannot see.
-- Grade VALUES wait on CPDF-9. The doctrine above does not, and stating it now is what stops
-  the measurement being read as permission.
-
-**B · D-156 — "AUDIENCE" NAMES TWO THINGS, and this is caught before it reaches the code.**
-Named by Bob 2026-08-02. In requirements gathering it means **user types** — people who use
-BIO. About a published case it means **the readers and consumers of that case**. Verified:
-`research/AUDIENCES.md` enumerates *"eight audiences"* mixing both — an administrator or
-lawyer READING A CASE is the second sense, *"the publisher's own future members"* and the
-primary archetype are the first — and `archetype` occurs twice in the file.
-
-- **Adopted: `AUDIENCE` = readers/consumers of a published case. `USER TYPE` (or `ARCHETYPE`
-  where a document already uses it) = the requirements sense.**
-- **Renderings and thresholds vary by AUDIENCE; capabilities, journeys and surfaces vary by
-  USER TYPE; neither ever reaches ratification.** That last clause is `AUDIENCES.md` §5's
-  constraint, unchanged — but it stops being a warning against a temptation and becomes a
-  definition, because the temptation only existed while one list held both senses.
-- **This is the D-68 / D-8 vocabulary class, and it is free right now.** No surface, table or
-  op names either concept, so the correction costs documents and no migration. It will not stay
-  free — UI-18's threshold selector is the first thing that would name it. Affected:
-  `research/AUDIENCES.md`, `research/JOURNEY-PRIMARY.md`, `UI-PLAN.md`,
-  `research/CAPABILITIES.md`. Research passes take the pointer, not an edit.
-
-### 2026-08-02 · BOB · DEC-16 ANSWERED — the queue has NO open decisions left, and REC-20's state moves
-
-**DEC-16 is ruled: every ancestor is told, and one member's resolution settles it for all.**
-`DECISIONS.md` carries the reasoning; `BIO_Interaction_Constructs_v0_1.md`'s QUEUE section
-carries the doctrine beside DEC-10's. **The `DECISIONS.md` open list is now EMPTY**, which is
-the healthy state and needs no action.
-
-**THE LOAD-BEARING CHANGE, and it is a shape change rather than a rule: the unit of state is
-the EVENT, not the (member, case) entry.** One state, N homes. REC-20 was scoped assuming the
-queue item carries the state; it does not. This is what makes every-ancestor safe rather than a
-flood — the objection to it assumed N copies each handled separately, and there are none.
-DEC-10's *one standing entry per (member, case)* survives intact: an event appearing in several
-entries does not create several entries.
-
-- **REC-20** — `case` is populated with **every ancestor**, over a walk that inherits **R3's
-  depth bound**; an exhausted walk reports the ancestor set `undetermined` rather than notifying
-  a silently truncated one, because a truncated set is indistinguishable from nobody caring.
-  Item state reads from the event. The unpopulated-column provisional is now retired.
-- **REC-21** — the mute stays personal and structurally distinct from resolution, and this
-  matters MORE now, not less: one member's resolution clears another member's queue, so the
-  boundary between a record act and a preference is the thing standing between that and a
-  silent disappearance.
-- **UI-14** — one event renders under several cases; resolving once clears all of them; a
-  member who did not resolve it sees **resolved by X on this date**, never a gap.
-- **AND THE RULE THAT KEEPS SHARED RESOLUTION HONEST, which a build session will not derive on
-  its own: an act that CHANGES the record is itself an event.** Resolving by looking and finding
-  nothing changed correctly clears it for everyone. Resolving by regrading a leg, severing it or
-  re-capturing clears it and immediately raises its own event, which propagates the same way.
-  Without this, a resolver at one altitude silently hides a change from the member who most
-  needs it. No new machinery — it is the ordinary consequence loop, and it must be asserted.
-- Any member who can see the case and holds `contribute` may resolve, attributed. Not only the
-  connection's author, whose absence would strand it (DEC-7's unassigned reasoning). A machine
-  credential may not (D-151).
-
-**ALSO, DEC-4 amended once more — attestation reaches the top of the scale, and the scale's top
-was never "has a text layer".** CPDF-9/CPDF-10 change again:
-
-- **A TEXT LAYER IS ITSELF AN UNVERIFIED TRANSCRIPTION**, and `pdfstructure.mjs` already says
-  so: Tier-1 text is decoded *"through the font's /ToUnicode CMap"*, and a font with no
-  `/ToUnicode` yields `undetermined` naming the font. The text is a mapping THE FILE SUPPLIES.
-  The common sharp case: a scanned document run through the publisher's own OCR and saved as a
-  *searchable PDF* HAS a text layer, and that layer is somebody else's unverified OCR — which we
-  would otherwise grade as authoritative publisher text while grading our own OCR of the same
-  pixels as derived.
-- **So the ceiling is VERIFIED AGAINST THE RENDERED IMAGE, reachable from both paths**, and
-  member attestation is offered on a TEXT LAYER too, not only on OCR output. Yes, attestation
-  raises OCR-derived text to parity — with three constraints: it is **SCOPED to what was
-  actually checked** and a leg citing outside the attested extent does not inherit it; the
-  **chain is still recorded** (`pixels → ocr → ai → attested(member, date, extent)`), because
-  verification supersedes the chain as the grade determinant and never as the record; and
-  routine rubber-stamping is the failure mode, so it is a member act refusable to a machine
-  credential and CPDF-9 measures where human checking actually fails — **digits**, which is
-  where OCR fails and where skimming fails too.
-- **CPDF-9 gains one cheap measurement:** detect whether a PDF's text layer was itself
-  machine-generated (producer metadata routinely names the scanner or OCR software), so the
-  record can say *this came from the publisher's own OCR*. Nothing looks today.
-
-
-### 2026-08-02 · BOB · Q5, Q6 and Q11 settled without a ruling — plus TWO MEASURED DEFECTS, one of them doctrine-touching
-
-`DECISIONS.md` has **no open entries** and this entry raises none. Three of RECONCILED §4's
-remaining open questions are closed by the work each one asked for — two design passes and one
-measurement — and each carries its reasoning in place in `research/RECONCILED.md` §4, with the
-affected item scopes in §3 updated in the same pass. Nothing here needs Bob.
-
-**Q5 — the completeness panel is RE-KEYED, and UI-17's no-panel provisional is retired.** The
-permitted-assembly boundary is not timing and not breadth, it is the KEY: an assembly is permitted
-when keyed on the SUBJECT being written about, and performs generation by SELECTION when keyed on
-the ANSWER-SHAPE of the question the surface is asking. Both fixes previously on offer varied
-timing or breadth and left the key untouched. **UI-17 step 3 now ships the field, the C-9 picker
-AND a panel of the case's own BASIS LEGS** — whose content is the COMPLEMENT of the field's and so
-cannot be transcribed. New negative control: any prior deferral/dismissal/severance reason
-appearing in step 3's panel fails the harness.
-
-**Q6 — a threshold over a pair is a NAMED STANCE resolving to a PAIR OF INDEPENDENT FLOORS.** Not
-one value applied to both axes (they move independently by audience: a lawyer needs both high, a
-government administrator holds the authoritative copy and relaxes capture, media need capture high
-and hedge connection in the verb), and not one named axis with the other unconstrained — **that
-second form is the more dangerous, because it admits arbitrary weakness SILENTLY**, which is R2's
-forbidden composition performed by omission. Both floors are stated in-band per H4; a floor of
-`none` is legitimate and must render explicitly, because an unstated floor reads as a satisfied
-one; a SUSPENDED axis satisfies only `none`. **Affects UI-18's threshold selector only, not its
-data path.**
-
-**Q11 — MEASURED, and the answer is YES.** `op=signerlist` is reachable by an ordinary member's
-SESSION and returns the whole list unfiltered (`member_id`, `status`), byte-identical to the
-`ADMIN_TOKEN` view; `op=whoami` gives the caller its own member id. So the per-member pre-flight is
-computable client-side with no new op. **Read-the-source trap worth naming: `signerlist` is in
-neither `SESSION_OPS.member` nor `SESSION_OPS.admin`, which looks like a refusal and is not one** —
-that gate is applied only to MUTATING ops. C-4's instance-wide `NO_SIGNERS` wording in UI-17 is
-UNCHANGED and stays; the per-member pre-flight is an ADDITION to it, not a replacement, until D-158
-closes. Instrument and figures in `MEASUREMENTS.md`.
-
-**TWO DEFECTS FOUND WHILE MEASURING. Both are measured, not reasoned, and neither needs a ruling —
-the design already decided both.**
-
-- **D-157 · `op=memberlist` hands the cover↔handle PAIRING to ordinary members and to
-  `MEMBER_TOKEN`.** `BIO_Membership_Architecture_v1.md` §3 and `v2` §3, identical: *"Only
-  administrators see cover and handle together."* MEASURED: an ordinary member session
-  (`administer: false`) and the shared `MEMBER_TOKEN` each receive `handle = cover` for every
-  member on the LIVE `bio` store. This is the anti-deanonymisation mechanism — the schema comment
-  says the split exists *"precisely so that a roster seized or subpoenaed does not deanonymise the
-  group."* **The source contradicts itself in three places**: `index.mjs:407` grants
-  `["admin","member","probe"]` while the comment eight lines below says *"All admin-only"*, and
-  `store.mjs:5810` says *"Every op that reaches this is admin-only at the control plane."*
-  **`PROBE_TOKEN` is NOT exposed** — `scopeFor` confines probe class to `scratch`, a different DO
-  with its own member table; that half was measured before it was claimed, and it is the claim that
-  would otherwise have been wrong. **The fix is a PROJECTION, not a refusal:** §3 also says
-  *"Members and the public see handles"*, so a member legitimately needs the handle roster and must
-  not receive `cover`. **`test/members.test.mjs:192` asserts the current behaviour** (*"machine
-  member token reads the roster"*) **and must be CORRECTED, never exempted** (`CLAUDE.md`), with a
-  comment saying why the old assertion was wrong. Negative control: a non-admin caller receiving a
-  `cover` field at all. Milestone M7. **No queue item covers this today.**
-- **D-158 · a signing key registered for a member who never ENROLLED reads `active` on
-  `op=signerlist` and is refused by `op=ratify`.** `signerList()` reads `signers` alone;
-  `gateFacts()` joins `members` and requires both active. Revocation agrees only because
-  `memberSet` CASCADES; there is no cascade for the never-enrolled case, and `signerAdd` checks
-  only that the member exists. Two candidate fixes, and the second is preferable: join `members` in
-  `signerList()`, or refuse `signerAdd` for a member who has not enrolled — the join is smaller but
-  leaves a row that means nothing, while refusing at write keeps the table honest and is the shape
-  `signerAdd`'s existing `NO_SUCH_MEMBER` check already reaches for. Whichever ships, assert the
-  other view against it. Milestone M10, and it bounds **REC-15/UI-17**'s per-member pre-flight.
-
-**No in-flight work is superseded.** UI-17 and UI-18 are `queued`, not active, so these scope
-changes cost nothing. Whether D-157 earns a slot is CONDUCT's call; this session's read is that it
-is small, self-contained, and the only one of the two that touches a person outside the project.
-
-**One documentation correction landed in the same pass:** UI-17's scope pointed at *"§4 Q8"* for
-the panel's permitted replacement; the panel question is **Q5** (Q8 is `divided` state-vs-disposition).
-Fixed in place.
-
-
-### 2026-08-02 · BOB · Bob's review of the study document — FIVE DOCTRINE CHANGES, and two drifts they exposed
-
-Bob reviewed Part 0 of the published study document and fifteen corrections came back. Ten
-were prose. **Five changed the design**, and they are recorded as DEC-18 through DEC-21 with
-their reasoning in the documents that now carry it. `DECISIONS.md` has **no open entries** —
-these arrived answered.
-
-**DEC-18 · AN UNGRADED LEG IS INERT, NOT UNRATING. This changes REC-12's comparator and every
-surface that renders a strength.** *"An ungraded leg doesn't contribute to a conclusion, but if
-there are other graded legs, then it doesn't suspend the conclusion either."* **This is NOT the
-behaviour `RECONCILED` §1.1 R1-h refused, and a build session will get this wrong if it reads
-only R1-h.** R1-h refused grading on the determined legs *while the ungraded leg still counted
-as part of what the conclusion rested on* — support drawn from a leg that paid nothing. The
-amendment removes the support as well as the cost: an ungraded leg is not weighed, does not
-floor, does not unrate, and sits in the basis NAMED as not yet load-bearing. **UNRATED survives
-as the boundary case** where no leg is graded. **Every ungraded leg is named, one or many** —
-that clause is load-bearing and must not be dropped. The comparator must EXCLUDE a null leg
-from the population rather than rank it anywhere in it.
-
-**DEC-21 · CAPTURE AND CONNECTION GRADES ARE NOT COMBINED, AND R2's MECHANISM WAS WRONG WHILE
-ITS CONCLUSION WAS RIGHT.** Bob: *"A capture is the act of reading a document in. A connection
-is an edge between 2 or more pieces of information… They're different things. So why are those
-grades combined?"* A capture grade is a property of an INFORMATION object; a connection grade
-is a property of an EDGE. **A leg IS an edge pointing at a target, so one document leg carries
-BOTH grades** — which R2-e's own corrected example in `RECONCILED` §1.2 already showed, and
-which nobody noticed contradicted R2's own "evidentiary legs versus inferential legs" split.
-**Corrected for REC-12: two measurements over two POPULATIONS** — capture ranges over every
-DOCUMENT the conclusion reaches, connection over every EDGE it rests on. Unchanged and not to
-be re-opened: a connection's own grade is composed from `connections.a_grade`/`b_grade`, which
-is legitimate because both ends measure the same thing. **This confirms §4 Q6 independently** —
-a single shared threshold floor was never expressible.
-
-**DEC-19 · AN ATTESTATION MUST BE REVERSIBLE.** *"People make mistakes or misinterpret… (Though
-there may be a record of the attestation and reversal in the record.)"* Reversal is not erasure:
-a further ATTESTED act retracts the first and both stand, so the published bytes stay answerable
-and a reader who relied on them can see they were withdrawn. **The rung ladder's top TWO names
-are wrong, not just its top one** — `terminal` (*"cannot be walked back"*) has been stale since
-DEC-12 ruled a closed finding may be REOPENED, and nobody noticed. The distinguishing property
-is that an act **cannot be undone SILENTLY**, not that it cannot be undone. Affects O1, the
-publication ceremony, before it is built.
-
-**DEC-20 · ONLY A HUNCH BLOCKS PUBLICATION.** *"Not all bias needs to be cleared before a piece
-is published. The only bias type that must be clear before publication is hunches."* Plus:
-*"Bias is public and accompanies every published case produced under that bias."* The principle
-the blanket rule lacked: **bias debt is DISCLOSED, hunch debt is DISQUALIFYING — a hunch
-inflates a GRADE and ordinary bias only frames interpretation.** `op=publishpreflight` refuses
-`UNCLEARED_HUNCH` by name and refuses nothing else on bias grounds; the manifest must be SHOWN
-in the artifact, not merely cited. `BIO_Declared_Bias_v0_1.md`'s blocking paragraph is amended
-in place.
-
-**AND THE USER-TYPE LIST IS NOT ONE ARCHETYPE (D-156 amended).** Journalists, lawyers, city
-administrators, oversight bodies and any group working to improve government run instances of
-their own. **The consequence D-156 did not see: the same person can be both a user type and an
-audience** — they are two RELATIONSHIPS to a case, not two populations of people, so nothing in
-the system ever decides which kind someone "is".
-
-**TWO DRIFTS THIS SURFACED, both recorded:**
-
-- **D-160 · `RECONCILED.md` says `SUSPEND` 50 times and never `UNRATED`, which is canonical.**
-  `BIO_Case_Making_v0_1.md` renamed it after the reconciliation pass and said the rename *"is
-  not cosmetic"* — `SUSPEND` means the OPPOSITE in `SB-OUTPUT` §5.1, and `BUILD-ORDER`'s REC-12
-  says *"ship SUSPEND"* citing that file. RECONCILED's own R1-h calls that collision *"the
-  single most dangerous collision in the corpus"* and then adopted the dangerous word.
-  Mitigated by a dated amendment block at the head of §1.1; the 50 occurrences are deliberately
-  NOT rewritten, because rewriting a reconciliation record in place would hide that the
-  collision happened. **REC-12 must use UNRATED in the code, the copy and the test names.**
-- **D-159 · the DEC-18 amendment creates the opposite laundering path.** An ungraded leg now
-  costs nothing, so declining to grade an inconvenient leg is the cheapest way to keep it out
-  of the reckoning. Three defences already stand (every ungraded leg is named; the completeness
-  statement is authored and unprefilled; invariant 7). **A fourth should NOT be invented before
-  use shows one is needed** — that would be the same mistake as a global strength floor (§4 Q2).
-  WATCH, no task; re-raise once M10 has run with a real group.
-
-**Items affected: REC-12 (both DEC-18 and DEC-21 land in its comparator), REC-18, UI-17, UI-18,
-O1.** None is active, so nothing in flight is superseded. `BIO_Case_Making_v0_1.md` §R1/§R2,
-`BIO_Interaction_Constructs_v0_1.md` §A, `BIO_Declared_Bias_v0_1.md` and `RECONCILED` §1.1/§1.2
-all carry the reasoning; the review document is republished at its existing URL.
-
-
-### 2026-08-03 · BOB · Review round three: the hunch widens (DEC-22), two amendments, and the review document rebuilt as current-state
-
-Bob is mid-review of the study document; his round-three corrections carry design content.
-All recorded; nothing here is open. **His review continues — decomposition of the new
-construct work waits until it completes**, so expect one more entry rather than acting on
-partial scope.
-
-**DEC-22 (new, answered) · A HUNCH IS AN ASSUMPTION, an unsupported claim is one, and it is
-a STANDING OBJECTIVE.** The member journey to support: create an inquiry, immediately add one
-or more claims nothing yet supports; the system recognises each unsupported claim as an
-objective it can pursue on the member's behalf; legs arrive from the member's searching and
-the system's pursuit, supporting AND cutting against, both kept. The search covers CONTENT
-and CLAIMS — documents and concluded inquiries both. Consequences named in the entry:
-REC-13's entry conditions (a claim may exist with no legs), the queue/objectives design, the
-S4 evidence-finder scope, and the PRECISE statement of the "less narrative" line — a machine
-choosing what a member should look into stays REFUSED; a machine pursuing a claim the member
-authored is directed by the member's own words and lands under DISCOVERING.
-
-**DEC-17 amended · THE GROUP SETS THE DEFAULT required strength; each project may override;
-every published case discloses the declaration beside the strength reached.** The published
-consequence: a reader building on another group's case sees the standard it was held to and
-the bias it was produced under, and may need to bolster it to their own standard.
-
-**DEC-19 amended · the property's honest name is IRREVERSIBLE.** Publishing is the one
-irreversible act — a published edition can never be unpublished. The mechanism is unchanged:
-correction is always possible and always moves FORWARD (new edition, all editions stand; a
-withdrawal is another attested act, both stand; removing a finding's claim rescinds it to an
-inquiry). "Reversible with a record" overclaimed; the rung ladder's top rung reads
-irreversible again with the correction path beside it.
-
-**Composition question sharpened, still open** (`BIO_Case_Making_v0_1.md`): multiple claims
-per finding means PARALLEL claims — two independent grounds answering one question (Bob's
-overlapping-utility example, recorded there) — not sub-claims. Leaning toward plurality;
-nothing built either way.
-
-**Terminology measured, not changed: LEG stays, BASIS stays, with strict roles.** Bob asked
-whether "basis" should replace "leg" throughout (don't guess). Measured: the corpus has ~542
-leg uses and ~346 basis uses, and `basis` is ALREADY two things — the SET a claim rests on
-(`inquiry_basis`, "the basis graph is acyclic") and a COLUMN on four shipped tables
-(`connections`, `resolutions`, `link_verdicts`, `reuse_verdicts`) holding the textual
-justification for a grade or verdict. Renaming leg→basis gives one word three jobs and
-destroys the set/element distinction R1/R2 depend on ("the weakest leg", "every ungraded leg
-is named"). Ruled by this session under the delegation: **basis = the whole; leg = one
-element; the pairing is stated in the review document's vocabulary.**
-
-**The review document is republished as CURRENT-STATE ONLY** (Bob: repo carries the history;
-the document should not). Revision notes, amendment trailers and closed-on-date framing are
-gone; three settled questions folded into the decisions section present-tense. Also: the
-reference tree drops the Target abstraction (a leg points at a document or another inquiry,
-drawn as two associations — even a careful reader misread the generalization triangle as
-containment); the publication-bar note now carries DEC-17 correctly instead of overclaiming
-uniformity; the journey lede matches the redrawn diagram; an ACT walkthrough with its side
-effects; the assumption-first journey in Part 0.
-
-
-### 2026-08-03 · BOB · CONTENT becomes the unit the record points at (DEC-23), and AI enters the system definition (DEC-24)
-
-Review round four. Two rulings, both structural, both landing before anything is built against
-the old shape. Bob's review continues; decomposition still waits for it to finish.
-
-**DEC-23 · A LEG POINTS AT CONTENT, NOT AT A DOCUMENT — and a whole document is simply content's
-widest extent.** Bob had said this three times before this session read it correctly. Content is
-a piece of information extracted from a document: a passage, a table, a figure, or the whole
-thing. **The consequence for the object model:** a leg points at CONTENT or at another inquiry;
-a **connection relates two pieces of CONTENT**; a citation points at CONTENT. Content carries
-its EXTENT and HOW IT WAS EXTRACTED (publisher text layer / machine reading / OCR / member
-transcription), the second never hidden per DEC-4. Capture grade stays on the DOCUMENT.
-
-**AND IT EXPOSES A SECOND MISSING LAYER, recorded as D-164.** The study's headline finding is
-that **L7 (claim) is a named layer with no object**. **L3 (CONTENT) is a second one and nobody
-noticed.** Extraction already exists — `readings`, `reading_refs`, and `resolutions` keyed
-`(capture_sha, ref, entity_id)` with its own grade — and **nothing in the system can point at
-any of it.** The record knows a reference sits at a place in a document and cannot let a claim
-cite it. The two absences fail together, because a claim citing a passage is what neither can
-express.
-
-**D-164 SUPERSEDES THE FRAMING OF D-161, D-163 AND D-123.** All three are the same missing
-primitive seen three times: a connection discarding the anchor `resolutions` already holds; a
-citation unable to point inside a document; I2's element reference being PDF-shaped where office
-formats need a per-container form. **Solve the addressable content extent ONCE.** Solving them
-separately builds it three times and guarantees drift. This is a scoping change for whoever takes
-the D-123 work.
-
-**DEC-24 · THE MACHINE MAY DO THE LOOKING; THE MEMBER DOES THE CONCLUDING.** AI is part of the
-system definition now, not a later addition. **Four roles on the path verbs:** EXTRACT
-(discovering — document → content, and resolve what it names); PURSUE (discovering — an
-unsupported claim is a standing objective, DEC-22, returning candidates that support AND cut
-against); FIND (exploring — search across **both content and claims**, documents and concluded
-inquiries alike); CHECK (across all — read the record ADVERSARIALLY over a project, an inquiry,
-a claim, an extraction or a search, and RAISE what it finds). An AI may also research an inquiry
-with no claims, or one below its project's declared required strength; both are objectives of the
-same kind.
-
-**The boundary is four rules, and a build session must not soften any of them:** (1) the machine
-PROPOSES, the member AUTHORS — every role returns candidates, and a candidate enters the record
-only through a member act, which is what preserves authored-never-prefilled for the conclusion,
-the reason, the falsifier and the completeness statement; (2) the machine MAY NOT CHOOSE THE
-QUESTION — it works objectives the member set, which is why the empty EXPLORING machine-driver
-row stays empty as a design position; (3) machine work is LABELLED AND GRADED as machine work —
-extend `produced_by`, never present machine-read text as publisher text (DEC-4), and a
-machine-proposed connection is a HUNCH carrying bias debt until earned; (4) a CHECKER RAISES,
-NEVER RESOLVES — an adversarial pass produces a queue item, not a record change, and no machine
-credential performs the attested act.
-
-**Deliberately NOT designed:** which model serves which role, candidate ranking and presentation,
-what an objective costs to run, how a check expresses confidence. Roles and boundary are the
-definition; architecture is later.
-
-**Terminology, measured and settled (no change):** BASIS is already two things in shipped code —
-the SET a claim rests on (`inquiry_basis`, "the basis graph is a DAG") and a **justification
-column on four tables** (`connections`, `resolutions`, `link_verdicts`, `reuse_verdicts`) holding
-strings like *"both documents concern Sewer Fund; grade is the weaker of the two ends"* and *"the
-record holds no capture of this address"*. Renaming leg→basis would give one word three jobs and
-destroy the set/element distinction R1 and R2 depend on. **basis = the whole; leg = one element.**
-
-
-### 2026-08-03 · BOB · SESSION CLOSING — ten decisions, two new surfaces, and a corrected §4
-
-The BOB session that ran 2026-08-02/03 is closing. Everything below is already recorded in
-`DECISIONS.md`, `DEBT.md`, the design documents and the review document; this entry is the
-index CONDUCT drains from. **`DECISIONS.md` has NO open entries** — 27 total, 25 answered,
-2 deferred with named triggers. **24 await enactment**, which is the largest backlog this
-register has carried; several reshape existing queue items rather than adding new ones.
-
-**RESHAPES AN EXISTING ITEM — read these before taking the item:**
-- **REC-12** is hit twice. DEC-18 (an ungraded leg is INERT — excluded from the population,
-  not ranked in it) and DEC-21 (two measurements over two POPULATIONS — a leg IS an edge, so
-  one document leg carries BOTH grades). A session reading only `RECONCILED` §1.1 R1-h would
-  build the refused behaviour.
-- **REC-11 / REC-18** — DEC-23: a leg points at CONTENT, not a document.
-- **UI-17 / UI-18** — the Q5 panel re-keying, the Q6 threshold pair, DEC-18's naming rule.
-- **REC-15 / UI-17** — D-158 bounds the per-member signing-key pre-flight.
-- **O1** — DEC-19: publishing is irreversible and correction moves forward.
-- **`op=publishpreflight`** — DEC-20: refuses `UNCLEARED_HUNCH` and nothing else on bias
-  grounds; the manifest must be SHOWN in the artifact, not merely cited.
-- **REC-13** — DEC-22: a claim may exist with NO legs, and is a standing objective.
-- **D-123's scope changed** — D-164 supersedes its framing. D-161, D-163 and D-123 are one
-  missing primitive seen three times (an addressable content extent). **Solve it once.**
-
-**NEW WORK, not yet decomposed — this is the real handoff:**
-- **The content-extent primitive (D-164).** L3 CONTENT is a named layer with no object, the
-  twin of the L7 finding. Extraction exists (`readings`, `reading_refs`, `resolutions`) and
-  nothing can point at any of it.
-- **The machine's four roles (DEC-24)** — extract, pursue, find, check — and the four bounds,
-  including rule 1's second half: the machine must SHOW ITS WORK.
-- **S11 THE ACTION PLAN.** Specifiable now EXCEPT the backward question (D-165, deferred with
-  its derivation path named). Resources are an attached open list, deliberately not a schema.
-- **S12 THE ASSISTANT** (DEC-27) — and its wizard, which is how multi-step work happens when
-  the assistant cannot perform authored acts. It holds no copy of the rules; it asks the
-  plane, so it is bound by DEC-8 and adds no new trust boundary.
-
-**A CORRECTION TO A PLANNING SURFACE, which matters for anyone reading §4:**
-`RECONCILED.md` §4 listed **Q1, Q2, Q3 and Q4 as OPEN** when all four had been settled by
-DEC-12, DEC-17, DEC-16 and DEC-15 respectively. Corrected 2026-08-03 — each is marked
-SETTLED in place with the ruling that settled it, and the original text kept below as
-history rather than rewritten. **All of Tier 1 is now closed.** Seven remain open across
-Tiers 2 and 3 (Q7, Q8, Q9, Q10, Q12, Q13, Q14).
-
-**AND ONE PROCESS NOTE WORTH KEEPING.** The review document's source is now committed at
-`docs/development/research/review-document.html` — it previously existed only in a session
-scratchpad and was reconstructed by fetching the artifact, so it had no history and no
-owner. `tools/mermaid-check.mjs` parses every diagram with the real mermaid parser and
-carries its own negative control. A full reconciliation on 2026-08-03 found **ten decisions
-missing from that document's Part 4** while their consequences sat in the body: incremental
-patching drifts, and the fix is to re-read against the register rather than trust the last
-patch.
+_(drained by CONDUCT 2026-08-03 — the 2026-08-01 case-making build order and every subsequent BOB entry through the 2026-08-03 session-dormancy note: all 35 RECONCILED §3 items plus REC-28, CPDF-9 and CPDF-10 are enqueued below with every DEC reshape folded into the item scopes (DEC-12/13/14 → REC-14/REC-24; DEC-15 → REC-11/12/15/18, UI-11; DEC-16 → REC-20/21, UI-14; DEC-17+amendment → REC-14, UI-18; DEC-18/21 + D-160 → REC-12, UI-11; DEC-19+amendment → FW-14, UI-17/17a; DEC-20 → REC-15; DEC-22 → REC-13; DEC-23/D-164 → REC-11/18 provisionals + IC-1's constraint; DEC-24 recorded as doctrine on REC-13's pursue path; DEC-28/29/30 → REC-16, REC-13; DEC-31 → UI-18; DEC-33 → REC-15/UI-17 blocked, UI-17a queued; DEC-34 → REC-14/REC-22/UI-18; DEC-4 as twice amended → CPDF-9/CPDF-10, FW-15). The superseded pointers sit atop BUILD-ORDER/SB-CORE/SB-EVIDENCE/SB-OUTPUT and the corrected-by-rulings pointer atop AUDIENCES.md. D-157 is enqueued as REC-29 (CONDUCT's slot call: small, self-contained, touches people outside the project); D-158 is recorded on REC-15's deferred scope. Activation: both slots RECORD — REC-10 then REC-19, per the handover's order. S11's state inventory and D-164's content-extent design stay PARKED with Bob's paused thread, deliberately not queued. DEC-32 remains the sole open register entry; its provisional (no grounds machinery) is noted on REC-11/REC-12. No entries outstanding.)_
 
 ---
 
 Item format:
 
     ### <ID> · <queued | active | done | blocked | superseded>
-    milestone:        <M0 … M7>
+    milestone:        <M0 … M10>
     scope:            <bounded description of the one piece>
     behind-interface: <I1 … I6 | none — what makes it independent>
     depends-on:       <IDs, or none>
@@ -808,270 +95,15 @@ showing no new unreached op.
 
 ---
 
-### 2026-08-03 · BOB · The open list worked: one decided (DEC-28), four raised for Bob (DEC-29–32), three settled by design pass
-
-Bob's directive was to go through the open questions. Everything is recorded in
-`DECISIONS.md`, `RECONCILED.md` §4 (in place, originals kept as history) and the review
-document (republished to the same URL). No in-flight work is superseded and nothing is
-blocked; the queue impact is scope notes, not new items.
-
-**RESHAPES AN EXISTING ITEM:**
-- **REC-16** — DEC-28 (answered, session): `divided` is a TERMINAL STATE, not a disposition.
-  It ships written by `op=inquirydivide`, its reason is the ACT's reason, and
-  `disposition_reason` is untouched. This was the explicit decision RECONCILED required so
-  REC-16 does not ship it silently. DEC-29 and DEC-30 (open, Bob's) also land on REC-16 when
-  answered — division's reason cost and prompt wording, and its actor scope — but both
-  provisionals match what REC-16 already ships, so REC-16 need not wait.
-- **UI-14** — Q13 settled: within a class, LONGEST-WAITING FIRST is the RULE, not a proxy;
-  acceptance gains "the ordering rule is stated on the surface".
-- **Every UI item rendering `undetermined`** — Q9 settled: the C-14 three-line shape's third
-  line comes from a CLOSED SET of three forms (could-not-determine / positively-none /
-  suspended-axis), selected by plane-published facts; the split field itself is RECORD's to
-  name at build (D-129). Negative control: a free-text third line fails the harness.
-- **Every UI item with a read-only credential view** — Q12 settled: narration is
-  SURFACE-scoped and plane-sourced (one sentence from `whoami`), controls are NEVER narrated
-  and never greyed. Acceptance clause for UI-12/14/16/17/18/20 class items.
-
-**OPEN FOR BOB, each with a worked recommendation in the register — no queue impact until
-answered:** DEC-29 (division's residual cost + the divide-prompt), DEC-30 (author-scoped
-division, no ballot on concluding), DEC-31 (addressed non-public delivery — defer on trigger,
-bind the in-band rendering rule now), DEC-32 (plurality as GROUNDS — note this one, if
-adopted, touches REC-11/REC-12's strength arithmetic: disjunctive over grounds, weakest leg
-within a ground).
-
-### 2026-08-03 · BOB · Bob's answers: DEC-29/30 adopted, DEC-31 deferred-and-bound, S8 deferred (DEC-33), S9's artifact form ruled (DEC-34)
-
-All recorded in `DECISIONS.md`; RECONCILED §4 and the review document are updated in the
-same commit. DEC-32 stays open while Bob weighs the grounds model.
-
-**RESHAPES EXISTING ITEMS:**
-- **REC-16** — DEC-29/30 answered: one authored reason per division stands; the divide
-  prompt's wording must state the disclosure (acceptance clause); author-scoped is now
-  SETTLED, not provisional. With DEC-28 last entry, REC-16's decision surface is complete.
-- **REC-13** — DEC-30: conclude gains no owner gate and no ballot.
-- **UI-17 and REC-15 are DEFERRED** — DEC-33, Bob's ruling: the publication ceremony process
-  is deferred; a small placeholder item ships in UI-17's place (entry point stating what
-  publication is and that it runs through the operator for now — Q12's surface-scoped
-  narration). REC-14, REC-22 and UI-18 are NOT the process and stay queued. Correct any
-  kickoff naming UI-17 as next-up.
-- **REC-14 / REC-22 / UI-18** — DEC-34: the published case is a CONTAINER (zip of the case
-  bundle + signed hash manifest + editions over the container) reduced also to PDF
-  renderings; every PDF page carries case id, edition, authors, declared bias, both floors,
-  hash and verification pointer (H4 made unavoidable). Tamper-EVIDENT via answer-by-hash,
-  never claimed tamper-proof. Negative control on the rendering item: a page without the
-  header fails the harness.
-- **AUDIENCES.md H4** — DEC-31's bound rule: addressed renderings carry hash, date, author
-  and both floors in-band; record the extension beside H4 at enactment.
-
-### 2026-08-03 · BOB · SESSION GOING DORMANT — thread paused by Bob; one open decision; nothing in flight
-
-Bob paused the case-making thread: *"far enough along… put all of this aside for a time and
-turn our focus elsewhere."* The BOB session goes DORMANT (not closed) with a clean, pushed
-tree in the main checkout; it writes nothing while dormant, and on resumption it will
-fetch/rebase and re-read this file and DECISIONS.md before acting. A NEW session Bob starts
-for other design areas will run in its own worktree per DEC-3 and hand its decompositions
-through this inbox like any other.
-
-- **DEC-32 is the sole open register entry** (clarified twice in place; the falsifier-count
-  test now carries the design). No provisional blocks anything.
-- **S11's state inventory and D-164's content-extent design are PARKED, not queued** — do
-  not wait on them; they resume when Bob reopens the thread.
-- The enactment backlog stands at 30; nothing in this entry adds to it beyond the two
-  entries above.
-
-### 2026-08-03 · BOB · OFFICE FORMATS: the M2 development plan — six items, a new area, one protocol act
-
-Bob confirmed the focus and the plan 2026-08-03: XLSX/DOCX/PPTX content extraction,
-decomposed for maximum parallel development. Everything below rests on rulings already
-made — DEC-5 (surface it all: the evidentiary extras are in scope from the start, not
-a follow-on), the registry-first shape (`OFFICE-FORMATS.md` and the 2026-07-31 inbox
-entry above), and D-70's untested-uniformity warning, which COFF-1 exists to answer
-with evidence. **No new DEC entries**; the open list still holds only DEC-32, which
-touches none of this.
-
-**Done by BOB in this same commit, so you do not re-do it:** I7 (the FORMAT-registry
-entry contract) registered PROVISIONAL in `INTERFACES.md`, written from the framework
-§4 design deliberately so COFF-1 and COFF-2 can build against it in parallel; IC-1
-AMENDED with the `doc-para` kind (the proposal had omitted DOCX's element reference);
-the 2026-07-31 deflate-raw measurement backfilled into `MEASUREMENTS.md`;
-`kickoffs/CONTENT-PDF.md` corrected (its op-dispatch text is superseded by COFF-1);
-D-121's placement row in `MILESTONES.md` updated to name these items.
-
-**1 · THE PROTOCOL ACT, AND IT GATES ONLY WAVE 2: resolve IC-1 (as amended).**
-FRAMEWORK answers if staffed; otherwise you answer on its behalf IN WRITING, naming
-that you did so (protocol step 3). COFF-1 and COFF-2 do not wait on it — neither
-emits a `source`. COFF-3/4/5 do. **D-164's content-extent primitive stays PARKED and
-is NOT reopened by this**: IC-1 was shaped so that primitive can subsume it later at
-the cost of a `kind`, not a break (its own "What this does not settle" section says
-exactly this).
-
-**2 · A NEW AREA: CONTENT-OFFICE.** Owns the OOXML container reader and the office
-format entries (`bio-plane/src/ooxml.mjs`, the per-format entry modules, their
-tests), and builds the FORMAT registry (COFF-1). Registry ownership rests with it for
-now, with the same promotion trigger as the I3 note in `kickoffs/CONTENT-PDF.md`: if
-registry ownership becomes a cross-area bottleneck, promote it then — do not
-pre-build. Activation is yours; the kickoff is written at activation (one act,
-ORCHESTRATION rule 7), and COFF-1's claim must NAME the two dispatch touchpoints it
-moves (`index.mjs`'s acquire-time `HTML_CT` site and the read-time `op=pdfstructure`
-dispatch) — CAPTURE and CONTENT-PDF are both dormant, so that is a claim with a note
-rather than a live delegation.
-
-**3 · THE ITEMS — all M2. The waves are the parallelism:** COFF-6 immediately (out of
-band, measurement-only, holds no slot — the CPDF-5/7 pattern); COFF-1 ∥ COFF-2
-(disjoint files, the two behavioural slots); then COFF-3/4/5, mutually independent —
-recommended order **XLSX → DOCX → PPTX**, by evidentiary density under DEC-5
-(formulas, then tracked changes, then speaker notes). Two slots against three items:
-sequencing within the wave is yours.
-
-    ### COFF-1 · queued
-    milestone: M2
-    scope: **The FORMAT registry, with HTML and PDF moved onto it — the D-70 test, and
-      NO new capability.** New `bio-plane/src/formats.mjs`: one entry per format in
-      I7's shape; detection by magic bytes first, content type second. Move BOTH
-      existing dispatch mechanisms onto it: the acquire-time `HTML_CT` guard
-      (`index.mjs:1836` — detection consults the registry; the subresource branch
-      stays HTML-only in behaviour) and the read-time `op=pdfstructure` dispatch
-      (`index.mjs:1417` — the op survives, byte-identical output, routed through the
-      registry entry; `pdfstructure.mjs` becomes the PDF entry). Stamp what detect()
-      found into the capture's profile ADDITIVELY (I1 §4c gains a `format` field —
-      the FW-3/FW-4 additive precedent: minor version bump in the registry in the
-      same turn, no protocol case, consumers that ignore it keep working). Then
-      CONFIRM I7 from the code as built — the contract was written from design,
-      deliberately, and the code wins on drift. Update D-70's row with the verdict:
-      if a new format costs a registry entry, §9's cost table is real.
-    behind-interface: I7
-    depends-on: none
-    accepts-when: `cd bio-plane && npm run test:battery` green with HTML and PDF
-      outputs pinned unchanged (the existing suites are the pin); a TEST-ONLY stub
-      format registers and is reachable through detect→structure with ZERO edits
-      outside the registry — that assertion is the D-70 evidence; `npm run
-      test:coverage` --strict exit 0; negative control — delete the PDF entry from
-      the registry and `op=pdfstructure` fails NAMING the format as unregistered,
-      and the battery fails.
-    added: 2026-08-03 · BOB
-
-    ### COFF-2 · queued
-    milestone: M2
-    scope: **The OOXML container reader — pure module, ZERO dependency** (measured:
-      `deflate-raw` round-trips in workerd; `MEASUREMENTS.md` 2026-08-03 backfill).
-      `bio-plane/src/ooxml.mjs`: central-directory walk; member inflate via
-      `DecompressionStream("deflate-raw")`; part lookup by name;
-      `[Content_Types].xml` parse and flavour discrimination (docx/xlsx/pptx vs an
-      arbitrary ZIP a body might also publish); the uniform `_rels/*.rels` walker
-      (`TargetMode="External"` → outbound, shared by all three formats and ODF);
-      `docProps/core.xml` metadata extraction (creator, lastModifiedBy, revision
-      count, instants — evidentiary per DEC-5); size-guard plumbing (the bound is a
-      NAMED PROVISIONAL constant until COFF-6 measures it; over bound →
-      `text-undetermined` with the reason, NEVER silent truncation). ODF is DESIGNED
-      FOR (the part-map is a parameter), not built. Builds against I7 on paper —
-      independent of COFF-1's landing.
-    behind-interface: I7
-    depends-on: none
-    accepts-when: battery green with fixture round-trips for all three flavours; a
-      plain ZIP is NOT identified as OOXML, and a renamed one is caught by
-      magic-bytes-plus-parts rather than extension or content type; a truncated
-      central directory yields a stated `undetermined`, never a silent partial;
-      negative control — neuter the flavour discrimination and the suite fails on
-      the plain-ZIP assertion.
-    added: 2026-08-03 · BOB
-
-    ### COFF-3 · queued
-    milestone: M2
-    scope: **The XLSX registry entry.** Structure:
-      `xl/worksheets/_rels/sheetN.xml.rels` → I2 partitions through the ONE
-      `linkWrapper` (parity with HTML/PDF asserted, as `pdfstructure.test.mjs` pins
-      it); defined names and cross-sheet refs → `anchor`; `xl/embeddings/` →
-      `intra`; element references `{kind:"sheet-cell"}` per resolved IC-1. Text:
-      `xl/sharedStrings.xml` + sheet `<v>` values. THE EVIDENTIARY CORE (DEC-5):
-      the `<f>` FORMULA held BESIDE its cached `<v>` value, distinguishable
-      everywhere the text is shown, cited or indexed — the derivation is frequently
-      the finding, and every rendered form of the sheet destroys it; hidden rows,
-      columns and SHEETS emitted flagged hidden (a hidden sheet is a first-class
-      finding invisible in every rendered form). Extras land under ONE shared I2
-      extension envelope: the FIRST of COFF-3/4/5 to land files it against I2 as
-      IC-2 from as-built code (the I1 write-from-code precedent), the other two
-      confirm rather than invent variants.
-    behind-interface: I2
-    depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (a protocol state, not an item —
-      §1 above)
-    accepts-when: battery green with a real Oakland workbook fixture yielding
-      cell-referenced links, formulas beside values, and a hidden sheet flagged; an
-      over-bound workbook → `text-undetermined` named; negative control — collapse
-      `<f>` into `<v>` and the suite fails naming the formula/value distinction,
-      AND strip the hidden flag and the suite fails.
-    added: 2026-08-03 · BOB
-
-    ### COFF-4 · queued
-    milestone: M2
-    scope: **The DOCX registry entry.** Structure: `word/_rels/document.xml.rels` →
-      partitions through `linkWrapper`; bookmarks → `anchor`; `word/embeddings/` →
-      `intra`; element references `{kind:"doc-para"}` per resolved IC-1 (paragraph
-      0-based required, run optional — run boundaries are producer artifacts; the
-      paragraph is what a person is shown). Text: `<w:t>` runs in body order. THE
-      EVIDENTIARY CORE (DEC-5): tracked changes — `w:ins`/`w:del` with AUTHOR, DATE
-      and the SUPERSEDED WORDING — and `word/comments.xml` with author and date;
-      both are evidence a published PDF is specifically designed to remove. Extras
-      under the shared envelope (IC-2 rule as in COFF-3).
-    behind-interface: I2
-    depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (§1 above)
-    accepts-when: battery green with a real Oakland DOCX fixture yielding
-      paragraph-referenced links and a tracked change carrying author, date and the
-      superseded wording; an unreadable part → stated `undetermined`; negative
-      control — drop the superseded wording from the `w:del` emit and the suite
-      fails naming it.
-    added: 2026-08-03 · BOB
-
-    ### COFF-5 · queued
-    milestone: M2
-    scope: **The PPTX registry entry.** Structure:
-      `ppt/slides/_rels/slideN.xml.rels` → partitions through `linkWrapper`; slide
-      refs → `anchor`; `ppt/embeddings/` → `intra`; element references
-      `{kind:"slide-shape"}` per resolved IC-1. Text: `<a:t>` runs per slide. THE
-      EVIDENTIARY CORE (DEC-5): `notesSlide` speaker notes — routinely more candid
-      than the slide — emitted per slide and distinguishable from slide text
-      everywhere shown, cited or indexed. Extras under the shared envelope (IC-2
-      rule as in COFF-3).
-    behind-interface: I2
-    depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (§1 above)
-    accepts-when: battery green with a real Oakland deck fixture yielding
-      slide+shape references and speaker notes distinguishable from slide text;
-      negative control — merge notes into slide text and the suite fails naming the
-      distinction.
-    added: 2026-08-03 · BOB
-
-    ### COFF-6 · queued
-    milestone: M2
-    scope: **Measure the real Oakland office corpus BEFORE the bounds and deferrals
-      harden — measurement-only, commits no product code, holds no slot (the
-      CPDF-5/7 pattern), runs immediately.** On real documents from Oakland's
-      orbit: size distribution (SETS the extraction bound COFF-2 ships
-      provisionally — the bound is measured, never picked); link density; frequency
-      of formulas, tracked changes, comments, speaker notes and hidden sheets
-      (sizes the evidentiary value actually present in this corpus); legacy
-      `.doc`/`.xls`/`.ppt` (OLE2) prevalence — the EMPIRICAL answer to the
-      legacy-format question, which stays deferred with this measurement as its
-      trigger; ODF prevalence (COFF-2 designs for it; this decides whether it is
-      ever built). Record in `MEASUREMENTS.md` with date and instrument.
-    behind-interface: none — it commits no code
-    depends-on: none
-    accepts-when: `MEASUREMENTS.md` carries the size distribution with a stated
-      recommended bound, the per-artefact frequency table, and the legacy/ODF
-      prevalence counts, each with date and instrument, plus a stated
-      recommendation on the legacy deferral; negative control — include one file
-      that is a renamed plain ZIP masquerading as `.xlsx` and confirm the
-      instrument reports it as NOT OOXML rather than counting it.
-    added: 2026-08-03 · BOB
-
-**4 · A DANGLING DEPENDENCY TO FIX WHEN YOU DRAIN: CPDF-10 depends on CPDF-8, which
-does not exist** — not in this file, not anywhere in the repository (checked
-2026-08-03, python over the tree). As written, CPDF-10 can never become runnable. The
-likeliest intent is a page-rendering path — OCR consumes PIXELS, and nothing today
-renders a PDF page to an image — but naming the missing item is yours; flagged, not
-fixed, because the queue body is yours.
-
-Nothing here stops a worker and nothing supersedes a queue item. Superseded TEXT:
-`kickoffs/CONTENT-PDF.md`'s dispatch description and its "op question" section,
-corrected by BOB in this same commit.
+_(drained by CONDUCT 2026-08-03 — the office-formats development plan: CONTENT-OFFICE
+activated with both slots (COFF-1 ∥ COFF-2), COFF-3/4/5 queued behind them and IC-1,
+COFF-6 out of band immediately; the area section below carries the six items verbatim
+and the kickoff is written in the same act. IC-1 AS AMENDED (incl. `doc-para`) is
+RESOLVED — CONDUCT answered AGREE on dormant FRAMEWORK's behalf in writing,
+`INTERFACE-CHANGES.md` (protocol step 3). The dangling CPDF-10 dependency is fixed in
+place: the handover's "CPDF-8" was RECONCILED §3.3's name for the FORMAT registry, now
+COFF-1; the page-rendering question is decided by CPDF-9's placement measurement and
+the renderer item is named when that lands. No entries outstanding.)_
 
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
@@ -1144,11 +176,13 @@ landed: 1605dba — pipeline-e2e.test.mjs (53 assertions) drives the WHOLE M4 ax
 
 ---
 
-## RECORD — ACTIVE (new area, unstaffed — claim it first)
+## RECORD — DORMANT (pre-seeded with the case-making run; first in line when a slot frees)
 
 Owns the store core and retrieval (`PARALLELISM.md`). Claim it in `CLAIMS.md` before
 editing; `store.mjs` is ~4,900 lines and CAPTURE holds its link/capture/task/
-reachability functions, so name paths precisely.
+reachability functions, so name paths precisely. On promotion the run order is the
+2026-08-01 handover's: REC-10, then REC-19 (two workers on DISJOINT claims — the type
+catalog/state sites vs the new read op), then REC-11 → REC-13 → REC-12 → REC-14.
 
 ### REC-1 · done
 milestone: M1
@@ -1232,6 +266,166 @@ landed: 54d671a — op=captureprogressions&sha256=<cap>: maps a capture to the p
 
 ---
 
+### REC-10 · queued
+milestone: M9
+scope: **The `inquiry` TYPE — the schema change, not eleven features.** As `BUILD-ORDER.md` §2 (REC-10), carried with one addition from `research/RECONCILED.md` §3.2 (C-16): **the inquiry has ONE authored field, the question** — no separate Title, no submit-gating "What do you know?"; `bundles.title` is DERIVED from `## Question` and never separately authored, and the derivation rule is named explicitly in the item's commit. Everything else per BUILD-ORDER: `OBJECT_TYPES` gains `INQ`, `PROB`/`FOCUS` remap via flattened `LEGACY_TYPE_ALIASES`, `HEADINGS.inquiry`, `knownSchemas` gains `inquiry@1` keeping `focus@1`/`problem@1`, `STATES.inquiry.legal` is `['open','deferred','dismissed']` ONLY this turn (later states arrive WITH their gates), `surfaced` stays a legal alias of `open`, all FOUR normalisation sites fixed in the same turn, `op=dispose`'s second state-machine copy imports from the catalog. No new table, no new op, no UI.
+behind-interface: I5
+depends-on: none
+accepts-when: `cd bio-plane && npm run test:battery` green with a new `inquiry.test.mjs` carrying the three `focus.test.mjs` blocks (canonical `INQ-` works · a legacy `FOCUS-`/`PROB-` bundle still validates · the projection normalises all three to `inquiry`); a member creating a question through either entry point gets an object with the same required fields and no path asks for a title; `npm run test:coverage` --strict exit 0; negative control — remove ONE of the four normalisation sites and the suite fails naming that site's disagreement.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-11 · queued
+milestone: M9
+scope: **`inquiry_basis` — the one genuinely new table, and basis recursion.** As `research/RECONCILED.md` §3.1 (REC-11), which is THE DESIGN over `BUILD-ORDER.md` §2's text: the leg records its AXIS (single `grade_axis ∈ capture|connection` column — the shape RECONCILED's own reasoning decides, a leg asserts one grade for one reason; recorded here rather than DEC'd because the repository answers it); the basis graph is a DAG enforced at WRITE, refusal names the cycle path; `grade` NULLABLE, NULL means undetermined and STATED. Post-reconciliation rulings folded in: **DEC-15** — `grade_source` admits `hunch` beside `resolution` and `testimony`, author and date required; it is the only authored grade permitted above D and is BIAS DEBT until cleared (`BIO_Declared_Bias_v0_1.md`). **DEC-23** — a leg points at CONTENT or at another inquiry, not "at a document"; the addressable content-extent primitive (D-164) is PARKED with Bob's thread, so the provisional is: `target_id` stays an `INFO-`/`INQ-` id and the content-extent leaf arrives with D-164's design — build no second reference vocabulary meanwhile (IC-1's constraint). **DEC-32 (open)** — the grounds model may later touch this table's shape; provisional is the current single-basis arithmetic, no plurality machinery.
+behind-interface: I5
+depends-on: REC-10
+accepts-when: as `RECONCILED.md` §3.1 (REC-11) — battery green with an inquiry citing itself refused by name, a three-node cycle refused at the closing write with the path named, a connection-axis grade on an `INFO-` target reading back with its axis intact; plus a `hunch` leg refusing a missing author or date by name; `npm run test:hygiene` green (table in purge); negative control — remove the cycle check and `op=promote` accepts A→B→A; drop the projection write and a two-leg `bundle.md` reads an empty basis.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-12 · queued
+milestone: M9
+scope: **STRENGTH at inquiry altitude — a PAIR over two POPULATIONS, over a bounded DAG.** As `research/RECONCILED.md` §3.1 (REC-12), the most-changed item, read WITH the §1.1 amendment block, and reshaped twice since by Bob: **DEC-21** — capture and connection are TWO MEASUREMENTS OVER TWO POPULATIONS: capture ranges over every DOCUMENT the conclusion reaches, connection over every EDGE it rests on; a leg IS an edge, so one document leg carries BOTH grades — never "evidentiary legs vs inferential legs". **DEC-18** — an ungraded leg is INERT, not unrating: excluded from the population entirely (not weighed, does not floor, does not unrate), named and visible as not yet load-bearing; **UNRATED survives as the boundary case** where NO leg is graded; every ungraded leg is named, one or many. **D-160** — the word is `UNRATED` in the code, the copy and the test names; `SUSPEND` means the opposite in `SB-OUTPUT` §5.1 and must not appear. **DEC-15** — a hunch grade composes NORMALLY, never treated as undetermined. Unchanged from RECONCILED: `#weakerGrade` MUST NOT be reused (its `|| 0` ranks unknown below D — short-circuit null before any rank comparison, and correct the `store.mjs:3441-3443` comment saying why the old intent was wrong); the walk carries R3's depth bound whose exhaustion reports `undetermined` naming the depth; projection is a CACHE per-axis, never the authority. **DEC-32 (open)** — grounds-model provisional as REC-11.
+behind-interface: I5
+depends-on: REC-11
+accepts-when: as `RECONCILED.md` §3.1 (REC-12) — battery green with (a) a mixed basis reading TWO strengths each naming its own weakest leg and no code path producing a composed letter, (b) an inquiry leg inheriting another inquiry's pair per axis, (c) one NULL-graded leg EXCLUDED from its axis's population while named as not load-bearing (DEC-18 — the axis still reads from its graded legs), an all-ungraded basis reading UNRATED, (d) an over-depth chain reporting `undetermined` naming the depth; coverage --strict exit 0. Negative controls — force strongest-leg composition and the weak-link assertions fail; pass a null grade into the rank comparison and the suite fails because the chain reads below D; compose across the axes and the suite fails naming them; remove the depth bound and a store-constructed cycle does not terminate; rank an ungraded leg anywhere in the population and the suite fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-13 · queued
+milestone: M9
+scope: **The `concluded` state, its entry requirements, and `op=conclude`.** As `BUILD-ORDER.md` §2 (REC-13), carried forward per `RECONCILED.md` §3.3, with two rulings folded in: **DEC-22** — a claim may exist with NO legs; an `open` inquiry's unsupported claim is a STANDING OBJECTIVE the system may pursue on the member's behalf (the machine PURSUES what the member authored — DEC-24 discovering; it never chooses the question). `concluded`'s entry requirements are unchanged (non-empty conclusion, non-empty falsifier, `basis.length >= 1`). **DEC-30** — conclude gains NO owner gate and NO ballot; any `contribute` holder, act attributed. Refusals as BUILD-ORDER: `NO_CONCLUSION`, `NO_FALSIFIER`, `NO_BASIS`, `MACHINE_CANNOT_CONCLUDE`.
+behind-interface: I3
+depends-on: REC-11
+accepts-when: as `BUILD-ORDER.md` §2 (REC-13) — battery green concluding through `op=conclude` and refusing each missing requirement and a machine credential by name; coverage --strict reaches the op; plus an `open` inquiry with zero legs is legal and readable; negative control — remove the `falsifier` requirement and an inquiry concludes with nothing that would falsify it.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-14 · queued
+milestone: M10
+scope: **The `published` state — EDITIONS, the completeness assertion, and the gates that stop it being a checkbox.** As `research/RECONCILED.md` §3.1 (REC-14) with the terminality branch OVERRULED and three additions, all Bob's: **DEC-12** — `published` is NOT terminal. `edition` is required frontmatter on a `published` inquiry, stamped into the ratified bytes; `published_bundles` is re-keyed `(bundle_id, edition)` and APPENDS — this closes D-144 as a feature (the appending `published_shas` was always right); every edition keeps its own signature, attestor, time and gate version; `concluded → open` is legal; reopening does NOT unpublish and published editions stay published; a basis leg citing a published case NAMES ITS EDITION and does not silently follow (C-21.2 compares against that edition's frozen pair, per-axis as RECONCILED). The completeness statement is authored FRESH per edition under C-21.1's byte-check. **DEC-13** — the completeness block gains the group's POSITION ON PUTTING THE CASE TO ITS SUBJECT: authored, justified, never prefilled, carried in the artifact as declared bias; the gate is that the position is DECLARED AND JUSTIFIED — never that contact happened, never that the answer was favourable. **DEC-17 as amended** — the GROUP declares default `required_strength{capture, connection}` (a PAIR, per R2), each project may override; the declared bar is stamped into the ratified bytes BESIDE the derived strengths; an absent bar gates nothing and the case SAYS so. **DEC-34** — the published case is a CONTAINER: zip of the case bundle + signed hash manifest, editions over the container, reduced also to PDF renderings (the page-header rule lands on REC-22/UI-18). C-9's nameable `inquiry_exclusions` and R4's reserved division disclosure as RECONCILED.
+behind-interface: I5
+depends-on: REC-12, REC-13
+accepts-when: as `RECONCILED.md` §3.1 (REC-14), re-based on editions — battery green publishing a concluded inquiry at edition 1, republishing at edition 2 with BOTH editions readable and separately signed, refusing a republish that does not increment `edition`, refusing byte-identical completeness across editions (C-21.1), and refusing per-axis over-strong inheritance (C-21.2, both axes independently); a published inquiry reopens to `open` without unpublishing; hygiene green (`inquiry_exclusions` in purge). Negative controls — C-21.1 passes a carried-forward completeness and the gate is a checkbox; a single scalar C-21.2 comparison passes both axis probes and the axes were composed; upsert `published_bundles` and edition 1's signature is gone.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-15 · blocked
+milestone: M10
+scope: **`op=publishpreflight` — the ceremony's ordering argument in one op. DEFERRED by DEC-33** (Bob, 2026-08-03: the publication ceremony process is deferred; publication runs through the operator for now). Trigger: Bob reopens the case-making thread. Recorded for when it wakes, so the deferral loses nothing: base scope as `BUILD-ORDER.md` §2 (REC-15) with `RECONCILED.md` §3.2's C-4 correction (`NO_SIGNERS` is INSTANCE-WIDE — the refusal detail must never say "for you", D-57); **DEC-15** — refuse `UNCLEARED_HUNCH` naming every hunch leg, in the same list as `NO_SIGNERS`, before any signature exists; **DEC-20** — only a hunch blocks publication on bias grounds; ordinary bias is DISCLOSED (the manifest SHOWN in the artifact, not merely cited) and refused on nothing; **DEC-17** — refuse `BELOW_PROJECT_STRENGTH` naming the axis; **D-158** bounds the per-member signing-key pre-flight (a signer row for a never-enrolled member reads `active` and is refused by ratify — fix at `signerAdd` write, assert the other view); §4 Q11 measured YES — `op=signerlist` + `op=whoami` make the per-member pre-flight computable client-side, an ADDITION to instance-wide `NO_SIGNERS`, not a replacement, until D-158 closes.
+behind-interface: I3
+depends-on: REC-14
+accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and `BELOW_PROJECT_STRENGTH` naming the axis, each BEFORE any signature exists, writing nothing; negative control — attach per-member wording to the instance-wide `NO_SIGNERS` and the suite fails; clear a hunch and the refusal disappears without any other state change.
+added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+
+### REC-16 · queued
+milestone: M10
+scope: **`divided` and `op=inquirydivide` — supersession gets its first producer.** As `research/RECONCILED.md` §3.1 (REC-16): R4's disclosure is the point — each child records its PARENT id AND its SIBLING ids in `bundle.md`, projected through promote; C-6.1's `supersedes` requirements include the sibling set; `NO_SIBLING_DISCLOSURE` on a child that omits it; NO per-leg reason. Decision surface now COMPLETE: **DEC-28** — `divided` is a TERMINAL STATE, not a disposition; written by `op=inquirydivide`; its reason is the ACT's reason; `disposition_reason` untouched. **DEC-29** — one authored reason per division STANDS (no per-leg cost), and the divide PROMPT's wording must state the disclosure the division will make — an acceptance clause, not advice. **DEC-30** — author-scoped (any `contribute` holder, act attributed) is SETTLED, not provisional. Refusals as BUILD-ORDER plus `NO_SIBLING_DISCLOSURE`; `PUBLISHED_CANNOT_DIVIDE` stands (DEC-12 changed publishing, not division — an edition says the case continues; a division says the parent was malformed).
+behind-interface: I3
+depends-on: REC-13
+accepts-when: as `RECONCILED.md` §3.1 (REC-16) — battery green dividing a concluded inquiry into two children each naming parent AND every sibling, the parent recording where every leg went including every `cuts_against` leg, a `published` inquiry refusing `PUBLISHED_CANNOT_DIVIDE`; the divide surface/prompt text states the disclosure (asserted as a string the harness checks); negative control — publish a child omitting a sibling and the suite fails; remove the C-6.1 `supersedes` requirement and a child supersedes with no reason and an unresolvable target.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-17 · queued
+milestone: M10
+scope: **P-64 — the re-evaluation obligation, as a query and not a flag, WIDENED to the walk-back edges.** As `research/RECONCILED.md` §3.2 (REC-17): reuse `reeval_flag`/`reeval_since`/`reeval_source`; **terminal acts on a cited inquiry REFUSE with `CITED`** (dismiss, divide — listing offenders, document-path remedy wording); **reversible acts RAISE the obligation** (defer, reopen), exactly as supersession does; no new mechanism, no new refusal name; REC-11's reverse index makes both one lookup. **DEC-12 note** — a newer EDITION of a cited case SURFACES the re-evaluation obligation on its dependents and recomputes nothing on the member's behalf; a leg keeps citing the edition it names.
+behind-interface: I5
+depends-on: REC-16
+accepts-when: as `RECONCILED.md` §3.2 (REC-17) — battery green where superseding (or republishing at a new edition) makes every dependent inquiry surface the obligation naming the moved leg and both strengths without altering any strength; dismissing a cited inquiry refuses `CITED` naming offenders; deferring succeeds and raises the obligation; negative control — permit a dismiss on a cited inquiry and a published case's basis panel names an abandoned question while its frozen strength still reads.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-18 · blocked
+milestone: M9
+scope: **Earned basis grades — `grade_source: 'resolution'` from `resolutions`.** As `research/RECONCILED.md` §3.1 (REC-18), with the blocker HALVED and then halved again: R2 ships the capture half with REC-11/REC-12 (a document leg's capture grade comes from the capture record, never authored); **DEC-15 closed the D1(a)/D1(b) fork** — they are two phases of one lifecycle, and this item builds the EARNED path (`grade_source: 'resolution'`) as the thing a hunch is cleared INTO. **Still blocked on UI-13 alone**: the registry has no write surface, so every instance would hold an empty registry and no A/B/C reachable by any leg. **DEC-23** — the leg's target is CONTENT (provisional per REC-11's note until D-164 resumes).
+behind-interface: I5
+depends-on: REC-11, UI-13
+accepts-when: as `RECONCILED.md` §3.1 (REC-18) — a document leg resolving to the subject entity at grade A carries `grade_source: 'resolution'`; a member's testimony carries `'testimony'` and D, recordable at no other grade; a hunch cleared by resolution reads `'resolution'` with the hunch's bias debt settled; a leg's capture grade comes from the capture record and is never authored; negative control — accept a caller-supplied A on a testimony leg and the suite fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-19 · queued
+milestone: M8
+scope: **`op=affordances` — publish what the plane already knows about what may be done.** As `BUILD-ORDER.md` §2 (REC-19), carried forward per `RECONCILED.md` §3.3 (already publishes `rung` and `weight` distinctly, C-6). Standing doctrine, **DEC-8**: the ACT pre-flight is PLANE-SOURCED always — a surface may render a refusal it received and may never compute one; publication (this op) by default, a dry-run op (`op=publishpreflight`, deferred with REC-15) where the refusal turns on state the surface cannot see; **no act surface is built before this op exists.** Returns `[{id, label, weight, needs, mode, rung}]` derived from the `NEEDS` map, the catalogue's legal-edge table (exported, not copied), set-application weight and `SESSION_OPS`; publishes the object vocabularies (`action_kind` values, disposition set) the way `searchfields` publishes the query language; `rung: null` where no document assigns one — FW-14 assigns them, nothing here invents 50.
+behind-interface: I3
+depends-on: none
+accepts-when: as `BUILD-ORDER.md` §2 (REC-19) — battery green where `op=affordances` for a `collected` information bundle returns exactly the acts the plane would permit (and NOT `retire` for one carrying a live `cites` edge), each with its `needs`, `rung: null` for unassigned ops; coverage --strict reaches the op; negative control — add an op to `NEEDS` without the affordances derivation and the suite fails naming the unpublished op.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-20 · queued
+milestone: M8
+scope: **`op=queue` — the item contract, with `class` and `case`.** As `research/RECONCILED.md` §3.2 (REC-20) — the grouping read GATED before the grouping exists (the queue is the one surface every member opens by habit; D-15 §7.9) — with the P-88 restriction RETIRED by **DEC-16**: `case` is populated with **EVERY ANCESTOR**, over a walk inheriting R3's depth bound; an exhausted walk reports the ancestor set `undetermined` rather than silently truncating. **The unit of state is the EVENT, not the (member, case) entry** — one state, N homes; an event appearing under several entries does not create several entries (DEC-10's one-standing-entry rule survives intact); item state reads from the event. CONDITION stays DEFERRED and named in the report, not stubbed.
+behind-interface: I3
+depends-on: REC-10, REC-19, REC-25
+accepts-when: as `BUILD-ORDER.md` §2 (REC-20) re-based on DEC-16 — battery green where `op=queue` returns an OBLIGATION and an aggregated FINDING each carrying `class`, `options[]` from the affordances derivation, and `case` holding EVERY ancestor for a nested item; an over-depth ancestor walk reports `undetermined`; resolving the event once clears it from every entry; negative control — key state on (member, case) and a second ancestor shows a stale unresolved copy, and the suite fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-21 · queued
+milestone: M8
+scope: **`queue_state` — the personal half, kept structurally distinct from the record half.** As `research/RECONCILED.md` §3.2 (REC-21): `muted_kinds` may contain CONDITION kinds ONLY (an OBLIGATION on a muted case still reaches the member — `tasks` carries no per-member mute, so the record must not go on believing a question reached a person it cannot reach). **DEC-16 raises the stakes**: one member's resolution clears other members' queues, so the mute/resolve boundary is what stands between shared resolution and silent disappearance — and **an act that CHANGES the record is itself an event** that propagates the same way (resolve-by-regrading raises its own event; resolve-by-looking clears correctly for everyone). No new machinery; assert it.
+behind-interface: I5
+depends-on: REC-20
+accepts-when: as `BUILD-ORDER.md` §2 (REC-21) — battery green where muting hides present CONDITION kinds from that member only, a second member is unchanged, a NEW kind still surfaces, no `tasks` row or bundle written; plus an OBLIGATION on a muted case still appears in that member's queue; a record-changing resolution raises its own event reaching every ancestor entry; negative control — route the mute through `proposedispose` and the suite fails (a preference entered the record); let `muted_kinds` accept an OBLIGATION kind and the suite fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-22 · queued
+milestone: M10
+scope: **`op=publishedcase` and `op=publishedbytes` — the public read path, over EDITIONS.** As `research/RECONCILED.md` §3.1 (REC-22): `published_edges` restricted to targets the surface may SERVE, with a division's parent/sibling ids admitted as edges it may only NAME; `op=publishedcase` returns BOTH frozen strengths and any suspension with its named leg. **DEC-12** — `publishedList()` enumerates EDITIONS rather than one row per bundle; a hash resolves to ITS edition; prior editions stay readable and separately verifiable. **DEC-34** — the served artifact is the CONTAINER (case bundle + signed hash manifest, editions over the container) reduced also to PDF renderings; **every PDF page carries case id, edition, authors, declared bias, both floors, hash and verification pointer** — tamper-EVIDENT via answer-by-hash, never claimed tamper-proof.
+behind-interface: I3
+depends-on: REC-14, REC-16
+accepts-when: as `RECONCILED.md` §3.1 (REC-22) — battery green: an anonymous caller gets the case and its bytes and nothing from the working ops; a never-ratified sha 404s identically to a nonexistent one; a published child's page names parent and siblings serving neither; edition 1 stays fetchable and verifiable after edition 2 publishes; a PDF page rendering without the header block fails the harness (DEC-34's negative control); negative control — admit a name-only edge to the served set and a working bundle streams to an anonymous caller.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-23 · queued
+milestone: M7
+scope: **D-130 — the counterparty becomes three-valued, and C-2.10 stops accepting a placeholder.** As `BUILD-ORDER.md` §2 (REC-23), carried forward verbatim per `RECONCILED.md` §3.3: `counterparty: {state: named|undetermined, name, entity_id?, basis}` on `source`'s shape; refuse `undetermined` with empty basis, `named` with empty name, and the literal `to be named`; no counterparty table (a second subject registry is where a structural prior by role would eventually live). UI half is UI-19.
+behind-interface: I5
+depends-on: none
+accepts-when: as `BUILD-ORDER.md` §2 (REC-23); negative control — accept any non-empty string again and the placeholder passes, restoring D-130.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-24 · queued
+milestone: M10
+scope: **The action loop — `action_basis`, `correspondence`, and the two ops that operate an object nothing operates.** As `BUILD-ORDER.md` §2 (REC-24), carried per `RECONCILED.md` §3.3 (reads the edge table from the catalogue, C-5), with two rulings folded in: **DEC-13** — `action_kind` gains `request_for_comment`, and it **names the specific inquiries it disclosed** ("we contacted them" and "we put these four claims to them" are different rows — the Columbia/Rolling Stone finding); the response window is authored by the group (7–30 calendar days is GAO's sourced precedent, not an invented constant); what comes back is CAPTURED, not summarised; a non-response is recorded with its date. **DEC-14** — an action's recorded consequence is an OUTCOME by default (dated first-party fact, no causal claim); promoting it to an IMPACT claim requires a basis leg pointing at evidence that is NOT our own action; unproven is a STATED state on the R1 shape, never a fifth grade and never a low one.
+behind-interface: I5
+depends-on: REC-13, REC-23
+accepts-when: as `BUILD-ORDER.md` §2 (REC-24) — the end-to-end action drive, capture-or-testify structural on `correspondence`, no second edge-table copy — plus: a `request_for_comment` naming zero inquiries is refused by name; an impact claim with no non-self evidence leg is recorded `unproven` and rendered as stated, not graded; negative control — as BUILD-ORDER, plus promote an outcome to impact on the action's own evidence and the suite fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-25 · queued
+milestone: M7
+scope: **F-8 / D-135 / D-141 — the D-15 viewer gate stamped on ALL read paths.** As `BUILD-ORDER.md` §2 (REC-25), carried forward verbatim per `RECONCILED.md` §3.3; unchanged in scope and now depended on by REC-20, UI-14, UI-16 and UI-21 — it gates the surface every member opens by habit. Run the F-8 probe FIRST and record it in `MEASUREMENTS.md` with date and instrument.
+behind-interface: I3
+depends-on: none
+accepts-when: as `BUILD-ORDER.md` §2 (REC-25); negative control — remove the stamp from `op=list` alone and the suite names `op=list` as the leak.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-26 · queued
+milestone: M1
+scope: **The two live M1 gaps — `env.SELF` bound nowhere, `op=monitor` with no caller.** As `BUILD-ORDER.md` §2 (REC-26), carried forward verbatim per `RECONCILED.md` §3.3. The installer-template half is a DELEGATION to DIST (`newgroup/**` is out of bounds), raised in `CLAIMS.md` by the worker, not edited directly. The idempotence key is not optional — a retry that increments `observations` manufactures corroboration.
+behind-interface: I5
+depends-on: none
+accepts-when: as `BUILD-ORDER.md` §2 (REC-26); negative control — remove the idempotence key and a retry inflates `observations`; remove the cadence read and every document is checked at one global interval.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-27 · queued
+milestone: M0
+scope: **D-137 / D-131 — close the D-113 class for the eight tables it cannot see.** As `BUILD-ORDER.md` §2 (REC-27), carried forward verbatim per `RECONCILED.md` §3.3. Runs in the M0 lane (holds no slot) and wants to land BEFORE REC-11/REC-14/REC-21/REC-24 each add a table. Same turn: D-131's NUL byte at `store.mjs:3833`.
+behind-interface: none
+depends-on: none
+accepts-when: as `BUILD-ORDER.md` §2 (REC-27) — `npm run test:hygiene` reports 52 of 52 tables covered, `grep -c "CREATE TABLE" bio-plane/src/store.mjs` non-zero without `-a`; negative control — remove `project_participants` from the purge list and the hygiene suite names it, which today it cannot.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-28 · queued
+milestone: M8
+scope: **D-151 — a machine credential can RESOLVE an unassigned task, so an obligation can be closed with no member act.** VERIFIED: `#refuseNotYours` (`store.mjs:6943-6946`) allows the moment `assignee === "unassigned"`, before it looks at the caller, and `taskforward`/`taskresolve` carry `"probe"` in `classes` (`index.mjs:271-272`). Refuse at the ACT and not at the fence, on the `MACHINE_CANNOT_RELEASE` precedent (`store.mjs:1857-1861`): add `MACHINE_CANNOT_RESOLVE` and `MACHINE_CANNOT_FORWARD`, remove `"probe"` from the two ops' `classes`, and correct `#refuseNotYours`'s comment, which today states a guarantee the code does not make. KEEP the fence — it answers *is this THIS member's task* and the act refusal answers *is this a person at all*. Leave `taskdrain` alone: draining is not resolving.
+behind-interface: I3
+depends-on: none
+accepts-when: `cd bio-plane && npm run test:battery` green with a suite where a `token:probe` credential is refused BY NAME on both verbs for an unassigned task, the assignee still succeeds, and an admin member still succeeds; `npm run test:coverage` --strict exit 0; negative control — remove the act-level refusal and the probe resolves an unassigned task while every existing task assertion still passes, which is the state today.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### REC-29 · queued
+milestone: M7
+scope: **D-157 — `op=memberlist` hands the cover↔handle pairing to ordinary members and to `MEMBER_TOKEN`.** MEASURED (2026-08-02, BOB session, live `bio` store): an ordinary member session (`administer: false`) and the shared `MEMBER_TOKEN` each receive `handle = cover` for every member, against `BIO_Membership_Architecture` v1 §3 / v2 §3 ("Only administrators see cover and handle together") — the anti-deanonymisation mechanism, so this is the rare defect touching people OUTSIDE the project. **The fix is a PROJECTION, not a refusal**: members and the public legitimately need the handle roster and must not receive `cover`. Correct the three self-contradicting source sites (`index.mjs:407` grants `["admin","member","probe"]` under a comment saying "All admin-only"; `store.mjs:5810`). `PROBE_TOKEN` is NOT exposed (`scopeFor` confines probe to `scratch`) — measured, do not re-litigate. **`test/members.test.mjs:192` asserts the current behaviour and must be CORRECTED, never exempted** (`CLAUDE.md`), with a comment saying why the old assertion was wrong.
+behind-interface: I3
+depends-on: none
+accepts-when: `cd bio-plane && npm run test:battery` green with a suite where an admin receives cover and handle together, while an ordinary member session and `MEMBER_TOKEN` receive handles with NO `cover` field present at all; coverage --strict exit 0; negative control — restore the old projection and the suite fails naming the non-admin caller that received `cover`.
+added: 2026-08-03 · CONDUCT (from D-157, BOB session measurement)
+
 ## CONTENT-PDF — DORMANT, restructured by the topology decision.
 CPDF-7 runs OUT OF BAND (measurement-only, holds no slot) and should run early: it
 decides whether the pdf-worker path is central or marginal.
@@ -1299,6 +493,176 @@ landed:
 
 ---
 
+### CPDF-9 · queued
+milestone: M2
+scope: **Measure whether OCR is reachable at all, before anything is designed.** D-152, DEC-4 as twice amended. Bob overruled the accept-the-limit recommendation: image-only PDFs must be extracted AND investigated for meaningful content. Unknown and gating: a WASM OCR engine's bundle size against the Worker limit, its CPU against the isolate ceiling (D-36, D-56), and its accuracy on a REAL Oakland scanned exhibit rather than a clean synthetic. **FOUR placements to decide between** — in-plane Tier 1 · the pdf-worker fleet member (I6) · an external SERVICE (a first-class candidate, not a fallback; price its distinct cost: the transcription becomes a third-party claim we cannot re-run once they change their model, so the record names the service identity and date exactly as it names an engine and version) · a service-plus-AI-post-processing chain. **Measure DIGITS specifically** — where OCR fails and where human skimming fails too, which is what the attestation ceiling turns on. **One cheap extra measurement**: detect whether a PDF's text layer was itself machine-generated (producer metadata routinely names the scanner or OCR software) — nothing looks today, and a publisher's own OCR saved as a searchable PDF is somebody else's unverified transcription (DEC-4's third amendment). Grade VALUES wait on this measurement; the doctrine (fidelity bounds the CAPTURE axis; no machine mints the grade; member attestation is the only route to the top) is already stated and the measurement must not be read as permission. COMMITS NO PRODUCT CODE; holds no slot. Record in `MEASUREMENTS.md` with date and instrument.
+behind-interface: none — it commits no code
+depends-on: none
+accepts-when: `MEASUREMENTS.md` carries bundle size, CPU per page and character accuracy (digits called out separately) on a named real scanned Oakland document, each with date and instrument, the text-layer-provenance detection result, and a stated recommendation across the FOUR placements; negative control — run the same engine on a BLANK page and confirm it yields nothing rather than plausible text, because an OCR engine that hallucinates on noise is the one failure mode that would put invented text in the record.
+added: 2026-08-01 · BOB · amended 2026-08-02 ×2 · enqueued 2026-08-03 · CONDUCT
+
+### CPDF-10 · queued
+milestone: M2
+scope: **The Tier-3 OCR path, behind whatever placement CPDF-9's measurement permits.** D-152, DEC-4 as twice amended. THE PROVENANCE RULE IS THE ITEM, not the engine: **`text_source` records a CHAIN, not a token** — `pixels → ocr(engine, version) → ai(function, version) → attested(member, date, extent)` — each step naming what performed it, and **each step can only weaken the claim, never strengthen it** (an AI that cleans a garbled line produced more READABLE text, not more RELIABLE text; the hazard of this capability is output that looks better than its input — do not let the chain collapse to a single label). A text LAYER is itself an unverified transcription (`pdfstructure.mjs` already decodes through the file's own `/ToUnicode` map), so **the ceiling is VERIFIED AGAINST THE RENDERED IMAGE, reachable from both paths**: member attestation is offered on a text layer too, SCOPED to what was actually checked (a leg citing outside the attested extent does not inherit it); the chain is still recorded — verification supersedes it as grade determinant, never as record. Attestation is a member act refusable to a machine credential. Transcription fidelity BOUNDS the capture axis (weakest link of byte provenance and fidelity) — no third scale, no new machinery. A basis leg resting on OCR'd text carries its image region (page + rect); OCR never raises a capture grade; a low-confidence region reads `undetermined`, never a best guess. Text reaches the READING path via FW-15's wire.
+behind-interface: I2
+depends-on: CPDF-9, COFF-1 (dependency corrected 2026-08-03: the handover's "CPDF-8" was RECONCILED §3.3's name for the FORMAT registry, carried as COFF-1. The page-to-pixels rendering path BOB flagged as the other candidate reading is real but is DECIDED by CPDF-9's placement measurement — an external-service placement needs no renderer; an in-plane or fleet placement does — so the renderer item is named when that recommendation lands, not pre-built.)
+accepts-when: `cd bio-plane && npm run test:battery` green with a real image-only Oakland PDF yielding text whose `text_source` chain names each step with per-region confidence and reaching `reading_refs`, while a text-layer PDF yields its own honest chain and the two are distinguishable in the projection, the index and an export; an attestation is refused to a machine credential and scoped to its extent; negative control — strip the `text_source` marker and the suite fails naming an OCR'd document indistinguishable from a published text layer; drop the confidence floor so a garbled region emits a best guess and the suite fails; collapse the chain to one label and the suite fails.
+added: 2026-08-01 · BOB · amended 2026-08-02 ×2 · enqueued 2026-08-03 · CONDUCT
+
+## CONTENT-OFFICE — ACTIVE (holds BOTH worker slots; activated 2026-08-03 by CONDUCT)
+
+New area, from BOB's 2026-08-03 office-formats decomposition. Owns the OOXML container
+reader and the office format entries (`bio-plane/src/ooxml.mjs`, `bio-plane/src/formats.mjs`,
+the per-format entry modules, their tests), and builds the FORMAT registry (COFF-1).
+Registry ownership rests here for now; promote it only if it becomes a cross-area
+bottleneck. COFF-1's claim must NAME the two dispatch touchpoints it moves
+(`index.mjs`'s acquire-time `HTML_CT` site and the read-time `op=pdfstructure`
+dispatch) — CAPTURE and CONTENT-PDF are both dormant, so that is a claim with a note,
+not a live delegation. Kickoff: `kickoffs/CONTENT-OFFICE.md` (written at activation,
+one act). NAMING NOTE, so no reader hunts for ghosts: `RECONCILED.md` §3.3 lists this
+same work as "CPDF-8 (the FORMAT registry)" and "CAP-5 (the OOXML container)" — those
+names were never enqueued; COFF-1 and COFF-2 are the items.
+
+### COFF-1 · queued
+milestone: M2
+scope: **The FORMAT registry, with HTML and PDF moved onto it — the D-70 test, and
+  NO new capability.** New `bio-plane/src/formats.mjs`: one entry per format in
+  I7's shape; detection by magic bytes first, content type second. Move BOTH
+  existing dispatch mechanisms onto it: the acquire-time `HTML_CT` guard
+  (`index.mjs:1836` — detection consults the registry; the subresource branch
+  stays HTML-only in behaviour) and the read-time `op=pdfstructure` dispatch
+  (`index.mjs:1417` — the op survives, byte-identical output, routed through the
+  registry entry; `pdfstructure.mjs` becomes the PDF entry). Stamp what detect()
+  found into the capture's profile ADDITIVELY (I1 §4c gains a `format` field —
+  the FW-3/FW-4 additive precedent: minor version bump in the registry in the
+  same turn, no protocol case, consumers that ignore it keep working). Then
+  CONFIRM I7 from the code as built — the contract was written from design,
+  deliberately, and the code wins on drift. Update D-70's row with the verdict:
+  if a new format costs a registry entry, §9's cost table is real.
+behind-interface: I7
+depends-on: none
+accepts-when: `cd bio-plane && npm run test:battery` green with HTML and PDF
+  outputs pinned unchanged (the existing suites are the pin); a TEST-ONLY stub
+  format registers and is reachable through detect→structure with ZERO edits
+  outside the registry — that assertion is the D-70 evidence; `npm run
+  test:coverage` --strict exit 0; negative control — delete the PDF entry from
+  the registry and `op=pdfstructure` fails NAMING the format as unregistered,
+  and the battery fails.
+added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### COFF-2 · queued
+milestone: M2
+scope: **The OOXML container reader — pure module, ZERO dependency** (measured:
+  `deflate-raw` round-trips in workerd; `MEASUREMENTS.md` 2026-08-03 backfill).
+  `bio-plane/src/ooxml.mjs`: central-directory walk; member inflate via
+  `DecompressionStream("deflate-raw")`; part lookup by name;
+  `[Content_Types].xml` parse and flavour discrimination (docx/xlsx/pptx vs an
+  arbitrary ZIP a body might also publish); the uniform `_rels/*.rels` walker
+  (`TargetMode="External"` → outbound, shared by all three formats and ODF);
+  `docProps/core.xml` metadata extraction (creator, lastModifiedBy, revision
+  count, instants — evidentiary per DEC-5); size-guard plumbing (the bound is a
+  NAMED PROVISIONAL constant until COFF-6 measures it; over bound →
+  `text-undetermined` with the reason, NEVER silent truncation). ODF is DESIGNED
+  FOR (the part-map is a parameter), not built. Builds against I7 on paper —
+  independent of COFF-1's landing.
+behind-interface: I7
+depends-on: none
+accepts-when: battery green with fixture round-trips for all three flavours; a
+  plain ZIP is NOT identified as OOXML, and a renamed one is caught by
+  magic-bytes-plus-parts rather than extension or content type; a truncated
+  central directory yields a stated `undetermined`, never a silent partial;
+  negative control — neuter the flavour discrimination and the suite fails on
+  the plain-ZIP assertion.
+added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### COFF-3 · queued
+milestone: M2
+scope: **The XLSX registry entry.** Structure:
+  `xl/worksheets/_rels/sheetN.xml.rels` → I2 partitions through the ONE
+  `linkWrapper` (parity with HTML/PDF asserted, as `pdfstructure.test.mjs` pins
+  it); defined names and cross-sheet refs → `anchor`; `xl/embeddings/` →
+  `intra`; element references `{kind:"sheet-cell"}` per resolved IC-1. Text:
+  `xl/sharedStrings.xml` + sheet `<v>` values. THE EVIDENTIARY CORE (DEC-5):
+  the `<f>` FORMULA held BESIDE its cached `<v>` value, distinguishable
+  everywhere the text is shown, cited or indexed — the derivation is frequently
+  the finding, and every rendered form of the sheet destroys it; hidden rows,
+  columns and SHEETS emitted flagged hidden (a hidden sheet is a first-class
+  finding invisible in every rendered form). Extras land under ONE shared I2
+  extension envelope: the FIRST of COFF-3/4/5 to land files it against I2 as
+  IC-2 from as-built code (the I1 write-from-code precedent), the other two
+  confirm rather than invent variants.
+behind-interface: I2
+depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (a protocol state, not an item —
+  §1 above)
+accepts-when: battery green with a real Oakland workbook fixture yielding
+  cell-referenced links, formulas beside values, and a hidden sheet flagged; an
+  over-bound workbook → `text-undetermined` named; negative control — collapse
+  `<f>` into `<v>` and the suite fails naming the formula/value distinction,
+  AND strip the hidden flag and the suite fails.
+added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### COFF-4 · queued
+milestone: M2
+scope: **The DOCX registry entry.** Structure: `word/_rels/document.xml.rels` →
+  partitions through `linkWrapper`; bookmarks → `anchor`; `word/embeddings/` →
+  `intra`; element references `{kind:"doc-para"}` per resolved IC-1 (paragraph
+  0-based required, run optional — run boundaries are producer artifacts; the
+  paragraph is what a person is shown). Text: `<w:t>` runs in body order. THE
+  EVIDENTIARY CORE (DEC-5): tracked changes — `w:ins`/`w:del` with AUTHOR, DATE
+  and the SUPERSEDED WORDING — and `word/comments.xml` with author and date;
+  both are evidence a published PDF is specifically designed to remove. Extras
+  under the shared envelope (IC-2 rule as in COFF-3).
+behind-interface: I2
+depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (§1 above)
+accepts-when: battery green with a real Oakland DOCX fixture yielding
+  paragraph-referenced links and a tracked change carrying author, date and the
+  superseded wording; an unreadable part → stated `undetermined`; negative
+  control — drop the superseded wording from the `w:del` emit and the suite
+  fails naming it.
+added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### COFF-5 · queued
+milestone: M2
+scope: **The PPTX registry entry.** Structure:
+  `ppt/slides/_rels/slideN.xml.rels` → partitions through `linkWrapper`; slide
+  refs → `anchor`; `ppt/embeddings/` → `intra`; element references
+  `{kind:"slide-shape"}` per resolved IC-1. Text: `<a:t>` runs per slide. THE
+  EVIDENTIARY CORE (DEC-5): `notesSlide` speaker notes — routinely more candid
+  than the slide — emitted per slide and distinguishable from slide text
+  everywhere shown, cited or indexed. Extras under the shared envelope (IC-2
+  rule as in COFF-3).
+behind-interface: I2
+depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (§1 above)
+accepts-when: battery green with a real Oakland deck fixture yielding
+  slide+shape references and speaker notes distinguishable from slide text;
+  negative control — merge notes into slide text and the suite fails naming the
+  distinction.
+added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### COFF-6 · queued
+milestone: M2
+scope: **Measure the real Oakland office corpus BEFORE the bounds and deferrals
+  harden — measurement-only, commits no product code, holds no slot (the
+  CPDF-5/7 pattern), runs immediately.** On real documents from Oakland's
+  orbit: size distribution (SETS the extraction bound COFF-2 ships
+  provisionally — the bound is measured, never picked); link density; frequency
+  of formulas, tracked changes, comments, speaker notes and hidden sheets
+  (sizes the evidentiary value actually present in this corpus); legacy
+  `.doc`/`.xls`/`.ppt` (OLE2) prevalence — the EMPIRICAL answer to the
+  legacy-format question, which stays deferred with this measurement as its
+  trigger; ODF prevalence (COFF-2 designs for it; this decides whether it is
+  ever built). Record in `MEASUREMENTS.md` with date and instrument.
+behind-interface: none — it commits no code
+depends-on: none
+accepts-when: `MEASUREMENTS.md` carries the size distribution with a stated
+  recommended bound, the per-artefact frequency table, and the legacy/ODF
+  prevalence counts, each with date and instrument, plus a stated
+  recommendation on the legacy deferral; negative control — include one file
+  that is a renamed plain ZIP masquerading as `.xlsx` and confirm the
+  instrument reports it as NOT OOXML rather than counting it.
+added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+
+
 ## CAPTURE — DORMANT.
 CAP-3 runs OUT OF BAND: it touches only CAPTURE's own paths and contends with neither
 active area. CAP-4 is decided and queued behind it.
@@ -1339,7 +703,7 @@ landed: c7c57c9 — (a) post-hoc reuse verdicts on the change-case (zero request
 
 ---
 
-## FRAMEWORK — ACTIVE (it BLOCKS two milestones)
+## FRAMEWORK — DORMANT (pre-seeded; promoted when a RECORD slot frees)
 
 ### FW-2 · done
 milestone: M3
@@ -1433,6 +797,30 @@ landed: 93c9601 — EXCEPTION DOCUMENTS that discharge a lawful skip. New table 
 
 ---
 
+### FW-13 · queued
+milestone: M9
+scope: **Decide `data/citations.json` / C-8.1 — retire, or bind.** As `BUILD-ORDER.md` §2 (FW-13), carried forward verbatim per `RECONCILED.md` §3.3. Doing neither is not an option; correct the superseded check, never exempt it.
+behind-interface: none — the check catalogue and one debt row
+depends-on: REC-11
+accepts-when: as `BUILD-ORDER.md` §2 (FW-13); negative control — leave both claim structures live and unrelated, and the hygiene assertion fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### FW-14 · queued
+milestone: M8
+scope: **Assign the weight-ladder rung to every mutating op, or state that it has none.** As `BUILD-ORDER.md` §2 (FW-14), carried per `RECONCILED.md` §3.3 (its derivation method already yields C-7's answer). **DEC-19 as amended** — the ladder's top rung reads **IRREVERSIBLE** with the correction path beside it: publishing is the one irreversible act; correction always moves FORWARD (a new edition, a withdrawal as another attested act, both standing); the distinguishing property of `attested` acts below it is that they cannot be undone SILENTLY, not that they cannot be undone. Derive rungs from what the code already enforces; raise a DEC for any genuinely ambiguous op rather than choosing.
+behind-interface: I3
+depends-on: REC-19
+accepts-when: as `BUILD-ORDER.md` §2 (FW-14); plus the published rung vocabulary names `irreversible` at the top and no op publishes a rung its store behaviour contradicts; negative control — assign `reversible` to `op=retire` and the suite fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### FW-15 · queued
+milestone: M3
+scope: **The L2→L3 wire — a PDF's text becomes a reading.** As `BUILD-ORDER.md` §2 (FW-15), carried forward verbatim per `RECONCILED.md` §3.3. From DEC-4's amendments: when CPDF-10 lands, this item's acceptance ALSO covers an OCR'd document reaching `reading_refs` (the clause activates with CPDF-10; the wire itself does not wait for it).
+behind-interface: I2
+depends-on: none
+accepts-when: as `BUILD-ORDER.md` §2 (FW-15) — a real Oakland agenda PDF with decodable Tier-1 text produces `readings` + `reading_refs`; an `undetermined` text yields a FAILED reading (`found: false`), never invented refs; negative control — bypass the wire and a document known to name three entities reads zero `reading_refs`.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
 ## CONTENT-HTML — DORMANT
 Not yet carvable; see `kickoffs/CONTENT-HTML.md`. D-64 waits on the rendered-capture
 path, NOT on a doctrine ruling: D-55's doctrine was ruled by Bob (third-party script
@@ -1449,7 +837,7 @@ drift class returns multiplied), D-107 (no scripted installer deploy with read-b
 D-54 (the installer does not detect the Workers plan). Activate when a fleet member is
 close to shipping, and not after it ships.
 
-## UI — ACTIVE (M8, activated 2026-07-31 by CONDUCT: M0 lane complete, a slot free)
+## UI — DORMANT (pre-seeded with the case-making surfaces; its UI-1…UI-9 run is done; promoted when a RECORD slot frees)
 `civicos-ui/**`; the member surfaces of M8, per `UI-PLAN.md` and the interaction
 constructs **v0.2** (`BIO_Interaction_Constructs_v0_1.md` — the count came down to TWO
 constructs + a weight ladder + the TASK/QUEUE attention layer; MILESTONES M8 build-order:
@@ -1538,3 +926,107 @@ depends-on: none
 accepts-when: `civicos-ui/test/run.mjs` green with a document-page test showing the document's resolved entities (Grade C as unconfirmed), its graded connections, its progression membership, and an overdue-successor note when one exists (and none when not); negative control — render a Grade C resolution as established, OR an overdue note when nothing is overdue, and the test fails.
 added: 2026-07-31 · CONDUCT
 landed: e2e05e4 — CONSTRUCTS Step 8 PRESENTATION (document-page half): a "what the record knows about this document" panel on openBundle. LIVE over existing ops: (1) the ENTITIES it resolves to (op=resolutions by capture_sha) at their §8.1 grade via UI-4's subjGradeBadge (Grade C "plausible, not established", never fact) + bounded op=entity fan-out for labels (falls back to raw ref, never invents); (2) what it CONNECTS to (op=connections by capture_sha, weaker-end grade). PENDING a delegated op (items 3-4): progression membership + overdue — NO op maps a capture→its instances (op=instance needs (progression_key,entity_id); op=proposals carries no capture_sha; overdue lives ONLY in proposalsFeed) → degrades to a named on-screen gap. Overdue read from REC-8's overdue_successor kind + op's overdue_by_ms (undated→silent). civicos-ui 22 harnesses (document-structure 38). Plane battery untouched. NC RUN (force overdue-true → note appears when nothing overdue). DELEGATION UI→RECORD op=captureprogressions → REC-9. CASE FILE deferred (Step 8 other half).
+
+### UI-10 · queued
+milestone: M9
+scope: **The type in the UI, and the drift guard made real.** As `BUILD-ORDER.md` §2 (UI-10), carried forward verbatim per `RECONCILED.md` §3.3. The member-facing names are inquiry / finding / case BY PHASE, derived from `current_state`, never stored twice. **The D-138 half is NOT optional (DEC-8)**: `check-semantics.mjs` claims to guard drift and never reads `bio-checks.mjs` — make the guard real (import and compare `PREFIX`/`FIRST_STATE`/`HEADINGS`/`SCHEMA_OF`); it is what keeps the interim honest until every surface reads the plane.
+behind-interface: I3
+depends-on: REC-10
+accepts-when: as `BUILD-ORDER.md` §2 (UI-10) — `node civicos-ui/test/run.mjs` green with `check-semantics.mjs` now reading `bio-checks.mjs`; negative control — change `HEADINGS.inquiry` in `bio-checks.mjs` alone and `check-semantics.mjs` FAILS naming the drift, which today it cannot.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-11 · queued
+milestone: M9
+scope: **S3 THE INQUIRY PAGE, read-only.** As `research/RECONCILED.md` §3.1 (UI-11): TWO strengths, never one — each naming its own weakest leg, no score/percentage/average/bar, no rendering reducing them to one letter; the UNDETERMINED primitive is the shared three-line component (C-14). Reshaped since: **DEC-18** — an ungraded leg renders as INERT: named and visible as *not yet load-bearing*, excluded from the population, never suspending an axis that has graded legs; **UNRATED** is the boundary case when no leg is graded, and `UNRATED` is the word (D-160). **DEC-15** — a hunch leg is VISIBLY a hunch from the moment it is made, not disclosed at publication; the strength panel states the case cannot publish while one stands (the failure this invites is a hunch quietly ageing into a fact). **Q9 (settled)** — the three-line shape's third line comes from a CLOSED SET of three forms (could-not-determine / positively-none / suspended-axis), selected by plane-published facts; a free-text third line fails the harness. **Q12 (settled)** — read-only credential narration is surface-scoped and plane-sourced (one sentence from `whoami`); controls are never narrated, never greyed.
+behind-interface: I3
+depends-on: REC-12, UI-10
+accepts-when: as `RECONCILED.md` §3.1 (UI-11) — harness green with a mixed basis reading two strengths naming two legs; a `cuts_against` leg counted on its own axis; an ungraded leg named as not load-bearing while its axis still reads from graded legs; an all-ungraded basis reading UNRATED; a hunch leg visibly marked with the cannot-publish note. Negative controls — one composed letter fails; averaging fails; rendering an ungraded-but-others-graded basis as suspended fails; a free-text third line on the undetermined primitive fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-12 · queued
+milestone: M9
+scope: **S3's act bar — CONCLUDE, through the ACT construct, options read from the plane.** As `research/RECONCILED.md` §3.1 (UI-12): the live strength preview renders the PAIR — a Grade C capture drops the capture axis visibly and leaves connection alone (the one mechanism that teaches R2 without prose). **DEC-8 acceptance clause: renders no refusal it computed itself** — every refusal rendered is one the plane returned. Q12's narration clause applies. DELETE `DISPOSITIONS` in the same turn.
+behind-interface: I3
+depends-on: REC-13, REC-19, UI-11
+accepts-when: as `RECONCILED.md` §3.1 (UI-12) — every option and rung from `op=affordances` (assert `DISPOSITIONS` gone), pair-preview moving one axis only, plane-reason refusal on empty falsifier, and NO refusal string originating in the surface; negative controls — surface-side option map fails; prefilled conclusion fails; one composed letter in the preview fails; a surface-computed refusal fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-13 · queued
+milestone: M8
+scope: **A WRITE SURFACE for the intent layer — nine ops, zero callers.** As `BUILD-ORDER.md` §2 (UI-13), carried forward verbatim per `RECONCILED.md` §3.3. Unblocks REC-18's earned grades — the only thing still blocking it.
+behind-interface: I3
+depends-on: REC-19
+accepts-when: as `BUILD-ORDER.md` §2 (UI-13); negative control — render a declared relation with a grade badge and the harness fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-14 · queued
+milestone: M8
+scope: **S1 THE QUEUE — three screens become one.** As `research/RECONCILED.md` §3.2 (UI-14): mute control reads "Mute conditions on this case" and reaches CONDITION items only; the capture-honesty vocabulary correction; the shared three-line primitive. Reshaped since: **DEC-16** — one EVENT renders under several cases (every ancestor); resolving once clears all of them; a member who did not resolve it sees *resolved by X on this date*, never a gap. **Q13 (settled)** — within a class, LONGEST-WAITING FIRST is the RULE, not a proxy, and the ordering rule is STATED on the surface. **DEC-8** — renders no refusal it computed itself. **Q12** narration clause.
+behind-interface: I3
+depends-on: REC-20, UI-10, REC-25
+accepts-when: as `RECONCILED.md` §3.2 (UI-14) — an OBLIGATION and an aggregated FINDING grouped under one case, one event under two ancestor cases clearing everywhere on one resolution with the resolver named, an ungrouped item, a named per-feed failure with no count, Retry re-running only the failed feed, the all-clear withheld while one feed pends, and the ordering rule stated on the surface; negative controls — a count for a failed feed fails; a resolved event leaving a stale copy under a second ancestor fails; mute hiding an OBLIGATION fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-15 · queued
+milestone: M8
+scope: **E3 ADD — the two worst live defects in the member UI, plus F-6 and F-7.** As `BUILD-ORDER.md` §2 (UI-15), carried forward verbatim per `RECONCILED.md` §3.3 (C-11 resolves to "ships absent", which is what it already does).
+behind-interface: I3
+depends-on: REC-23
+accepts-when: as `BUILD-ORDER.md` §2 (UI-15); negative control — remove the `ADD_TICKS` declaration and the harness reproduces the raw ReferenceError.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-16 · queued
+milestone: M8
+scope: **E4 PROJECT WORKSPACE — the ballot act finally gets a call site.** As `BUILD-ORDER.md` §2 (UI-16), carried forward verbatim per `RECONCILED.md` §3.3; the workspace lists inquiries and actions and shows NO strength, NO grade, NO conclusion — take the container side. **DEC-8** — renders no refusal it computed itself. **Q12** narration clause.
+behind-interface: I3
+depends-on: REC-19, REC-25
+accepts-when: as `BUILD-ORDER.md` §2 (UI-16); plus no refusal string originates in the surface; negative control — render an inquiry's grade in the workspace and the harness fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-17 · blocked
+milestone: M10
+scope: **O1 THE PUBLICATION CEREMONY — DEFERRED by DEC-33** (Bob, 2026-08-03: the process is deferred; publication runs through the operator for now; UI-17a ships in its place). Trigger: Bob reopens the case-making thread. Recorded for when it wakes: base scope as `research/RECONCILED.md` §3.1 (UI-17) — the pair shown in step 2, the C-9 picker, the Q5 re-keyed basis-leg panel (an assembly keyed on the SUBJECT is permitted; keyed on the ANSWER-SHAPE it performs generation by selection — the panel shows the case's own basis legs, the COMPLEMENT of the field's content), instance-wide `NO_SIGNERS` wording — plus **DEC-19 as amended** (publishing is IRREVERSIBLE; correction moves forward; the ceremony states this) and **DEC-13** (the subject-position stage, ordered BEFORE signing since authoring it changes the sha). D-158 bounds the per-member pre-flight.
+behind-interface: I3
+depends-on: REC-15, UI-11
+accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance reason appearing in step 3's panel fails the harness.
+added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+
+### UI-17a · queued
+milestone: M10
+scope: **The publication entry point — the placeholder DEC-33 ships in UI-17's place.** A small surface stating what publication IS (the irreversible act, editions, what a published case promises — DEC-19's corrected top rung) and that publication currently runs THROUGH THE OPERATOR; no ceremony controls, no signing, no preflight. Q12's rule: narration is surface-scoped and plane-sourced (one sentence from `whoami`); controls are never narrated and never greyed — absent, not disabled.
+behind-interface: I3
+depends-on: UI-11
+accepts-when: `node civicos-ui/test/run.mjs` green with a harness where the entry point renders the statement and offers NO ceremony control of any kind; a read-only credential sees the same surface with one whoami-sourced sentence; negative control — render a sign/preflight control, or grey a control instead of omitting it, and the harness fails.
+added: 2026-08-03 · CONDUCT (DEC-33's placeholder)
+
+### UI-18 · queued
+milestone: M10
+scope: **O2 THE PUBLISHED CASE — the reason the rest exists.** As `research/RECONCILED.md` §3.1 (UI-18): both strengths everywhere including the index row; a published child NAMES its parent and siblings (serve neither); a threshold may not drop a determining or suspending leg; **Q6 (settled)** — the threshold selector is a NAMED STANCE resolving to a PAIR OF INDEPENDENT FLOORS, evaluated conjunctively, both floors stated in-band, a floor of `none` rendered explicitly, a suspended axis satisfying only `none`. Reshaped since: **DEC-17 as amended** — the case discloses the DECLARED required-strength bar beside the strength reached, prominently (a reader building on another group's case sees the standard it was held to); an absent bar renders as absent, never as zero. **DEC-34** — the surface serves the CONTAINER and its PDF renderings; every PDF page carries case id, edition, authors, declared bias, both floors, hash and verification pointer (H4 made unavoidable; tamper-EVIDENT, never claimed tamper-proof). **DEC-31's bound rule** — addressed renderings carry hash, date, author and both floors in-band. **DEC-18/D-160** — ungraded legs named as not load-bearing; UNRATED vocabulary. **Q12** narration clause.
+behind-interface: I3
+depends-on: REC-22, UI-17a, REC-16
+accepts-when: as `RECONCILED.md` §3.1 (UI-18) — plus a rendering names BOTH floors it applied including any `none`; the declared bar renders beside the reached strength and an absent bar renders as absent; a PDF page without the DEC-34 header fails the harness. Negative controls — drop a determining leg at a threshold fails; child with no parent named fails; one composed letter anywhere including print fails; one floor applied to both axes, an unconstrained axis, or an omitted `none` floor fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-19 · queued
+milestone: M10
+scope: **O3 THE ACTION PAGE — the outward ask, and what came back.** As `BUILD-ORDER.md` §2 (UI-19), carried per `RECONCILED.md` §3.3 (already refuses from the catalogue's edge table), with REC-24's DEC-13/DEC-14 additions surfacing here: `request_for_comment` names the inquiries it disclosed; an outcome is dated first-party fact and an impact claim renders its non-self evidence leg or renders `unproven` as a stated state. **DEC-8** — renders no refusal it computed itself.
+behind-interface: I3
+depends-on: REC-24, UI-11
+accepts-when: as `BUILD-ORDER.md` §2 (UI-19); plus no refusal string originates in the surface; negative control — render an overdue note when nothing is overdue and the harness fails; prefill the counterparty basis and it fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-20 · queued
+milestone: M9
+scope: **`op=cite` gets its caller — the never-built U9 half.** As `research/RECONCILED.md` §3.1 (UI-20): the pre-flight checks every member is CITABLE (`information` OR `inquiry` — `NOT_INFORMATION` is the wrong check now) and that no member would close a cycle, naming the path; the rung is `reversible` from the plane (C-7 verified), note optional, `BAD_NOTE` over 200 chars. **DEC-8** — renders no refusal it computed itself; the pre-flight renders plane-sourced results. **Q12** narration clause. Also `retire`/`sever`/`reinstate` call sites on the document page, each with its rung from `op=affordances`.
+behind-interface: I3
+depends-on: REC-11, REC-19, UI-11
+accepts-when: as `RECONCILED.md` §3.1 (UI-20) — citing an `INQ-` onto an inquiry succeeds; a cycle-closing cite refused before it runs naming the path; the note optional and bounded; negative controls — as RECONCILED, plus remove the cycle check from the pre-flight and the harness reaches the plane with a cyclic cite.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+
+### UI-21 · queued
+milestone: M8
+scope: **E1 THE EVIDENCE FINDER — one finder, two NAMED routes, the intersection refused rather than approximated.** As `BUILD-ORDER.md` §2 (UI-21), carried forward verbatim per `RECONCILED.md` §3.3. **Q12** narration clause.
+behind-interface: I3
+depends-on: REC-25, UI-13
+accepts-when: as `BUILD-ORDER.md` §2 (UI-21) — two routes with separate counts and an overlap figure, the cross-seam query refused with two runnable alternatives, `SEARCH_SCOPES` gone; negative control — present a combined total across the two routes and the harness fails.
+added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT

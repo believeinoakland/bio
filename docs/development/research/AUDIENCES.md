@@ -1,3 +1,5 @@
+> **CORRECTED BY LATER RULINGS — read with: DEC-13 (H4/H6 are the REQUIRED workflow, not hazards); D-156 as amended by DEC-21's session (AUDIENCE = readers/consumers of a published case; USER TYPE/ARCHETYPE = the requirements sense — this file's "eight audiences" mixes both, and the same person can be both); DEC-31 (addressed renderings carry hash, date, author and both floors in-band, extending H4). The pass itself is deliberately not edited (2026-08-03, CONDUCT).**
+
 # Audiences: where the non-primary journeys diverge, and whether the divergence is a rendering
 
 Written 2026-08-01 as a design pass for `architecture/BIO_Case_Making_v0_1.md` (D-127),
