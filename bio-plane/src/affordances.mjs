@@ -53,7 +53,8 @@
  */
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
-         CORRESPONDENCE_DIRECTIONS, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
+         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS,
+         normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -221,6 +222,24 @@ export const VOCABULARIES = {
      direction `action_kind` and `basis_roles` above already take. One array. */
   action_basis_kinds: ACTION_BASIS_KINDS,
   correspondence_directions: CORRESPONDENCE_DIRECTIONS,
+  /* REC-39, UI-24's second measured gap and the LAST of the action loop's closed
+     sets to reach here. How an action ENDED: C-2.10 requires one of these four
+     the moment an action's state is `resolved`, and `op=actionmove` refuses
+     NO_RESOLUTION without one.
+     WHY PUBLISHING IT IS NOT A CONVENIENCE, and the shape of the gap is worth
+     keeping: the words were reachable before this — out of the `legal` list on
+     op=actionmove's own NO_RESOLUTION refusal, which is what UI-19's chooser
+     reads — so the option set was a property of a REFUSAL rather than of the
+     record. A surface could not offer a resolution until the plane had already
+     told the member no, and a set that only exists inside a refusal cannot be
+     rendered anywhere a refusal has not happened. Published, it is a fact about
+     what an action may be, available to a surface that is merely describing the
+     act.
+     Imported from `bio-checks.mjs` where C-2.10's own finding validates against
+     it and where store.mjs's NO_RESOLUTION refusal reads its `legal` list — the
+     same direction `action_kind`, `basis_roles`, `action_basis_kinds` and
+     `correspondence_directions` above already take. One array, three readers. */
+  resolutions: RESOLUTIONS,
 };
 
 /* The seven sourced rungs — BIO_Interaction_Constructs_v0_1.md via

@@ -48,6 +48,13 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             outcome/impact line, computed by one function so the write path, the
             read and the gate cannot disagree about whether a claim is proven;
             `respondsToEdgeFindings` governs the relation REC-24 (g) produces. */
+         /* REC-39: the four RESOLUTIONS, imported for the reason every
+            vocabulary above is. `actionMove()` held a local literal copy of
+            them, pinned to nothing — the exact arrangement REC-11 unwound for
+            DISPOSITIONS — while op=affordances published no set at all. One
+            array now: this act's refusal, C-2.10's finding and the published
+            vocabulary cannot disagree about how an action may end. */
+         RESOLUTIONS,
          ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, respondsToEdgeFindings, consequenceState,
          divisionDisclosureFindings } from "../checks/bio-checks.mjs";
@@ -2841,10 +2848,19 @@ export class Store extends DurableObject {
    * cost of that copy was that the publication and the refusal could disagree
    * about what was legal. So legality here comes from `vocabFor(STATES, …)` over
    * the DECLARED object_type — the MAP RULE, sixth consulting site — and this
-   * method contains no state list of its own. Grep it: the only strings from the
-   * action vocabulary in this file below are the four RESOLUTIONS, which are
-   * C-2.10's and are imported nowhere because they are checked by the catalog
-   * itself a moment later (see the resolution arm).
+   * method contains no state list of its own. Grep it: NO string from the action
+   * vocabulary appears in this method at all.
+   *
+   * CORRECTED 2026-08-05 (REC-39), and the old sentence is worth keeping as the
+   * receipt: it read "the only strings from the action vocabulary in this file
+   * below are the four RESOLUTIONS, which are C-2.10's and are imported nowhere
+   * because they are checked by the catalog itself a moment later". Every clause
+   * was true and the conclusion was wrong. Being re-checked downstream makes a
+   * copy HARMLESS at the write; it does not make it one array. The refusal this
+   * method returns carries `legal:` — the option set a surface renders — so the
+   * copy was load-bearing on the way OUT even though it was redundant on the way
+   * in, and a word changed in the catalog would have left this act offering the
+   * old one. RESOLUTIONS is imported now.
    *
    * THE REASON IS REQUIRED AND NEVER PREFILLED, op=reopen's rule and for its
    * reason: an action moving is the group deciding to send something outside the
@@ -2919,8 +2935,12 @@ export class Store extends DurableObject {
     /* C-2.10's entry requirement for `resolved`, checked BEFORE anything moves so
        this op never mints a bundle the catalog immediately rejects (conclude's
        fourth property). The four words are the catalog's; they are compared
-       here and enforced again by C-2.10 on the document that lands. */
-    const RESOLUTIONS = ["complied", "denied", "escalated", "withdrawn"];
+       here and enforced again by C-2.10 on the document that lands.
+       REC-39: they are now IMPORTED rather than transcribed. The line that
+       stood here was a local literal copy, and the comment above it said the
+       words were the catalog's while the array was this file's — which is the
+       DISPOSITIONS arrangement REC-11 unwound, and it survived here because
+       nothing published the set, so nothing could pin the two identical. */
     const res = String(resolution ?? "").trim();
     if (to === "resolved" && !RESOLUTIONS.includes(res))
       return { ok: false, reason: "NO_RESOLUTION", target, legal: RESOLUTIONS,
@@ -10575,15 +10595,68 @@ export class Store extends DurableObject {
     return { ok: true, role };
   }
 
+  /* THE WORDS A REFUSED SIGN-IN IS GIVEN, REC-39, and they live in ONE place
+     because the SAME NO_SUCH_ROLE is returned from two arms — here, where no
+     credential row exists, and in the DO dispatch's `login:` wrapper, where a
+     credential exists and the member is not active. Two sentences would tell
+     those two arms apart at a glance, and telling them apart is exactly what
+     that wrapper exists to prevent.
+
+     D-57'S RULE, WHICH IS WHAT THESE SENTENCES ARE FOR. D-57 is a refusal whose
+     BASIS was false about the caller's own material — a self-reference reported
+     as a change — printed to a member verbatim because a surface renders the
+     plane's words rather than paraphrasing them. So a refusal detail must state
+     what THE MECHANISM FOUND and must never make a claim about who is asking.
+     Neither sentence below says "you", advises, or characterises the attempt:
+     one says a credential exists and the supplied password does not derive its
+     stored hash; the other says this instance holds no ACTIVE credential under
+     that role. Both are checkable statements about the store.
+
+     WHY THE NO_SUCH_ROLE SENTENCE SAYS "ACTIVE" AND NOT "NO SUCH ROLE". The
+     obvious wording — "no role by that name is registered here" — is FALSE for
+     the revoked member, whose credential row is still there and whose sign-in is
+     refused by the wrapper. Writing the obvious sentence would have made
+     revocation distinguishable from never-having-existed in prose while the
+     reason code kept them identical, which is the enrollment rule (a spent, a
+     wrong and a never-existent invitation answer alike) broken by a comment.
+     "No active credential" is exactly true of both arms and separates neither,
+     and the sentence SAYS that it does not separate them rather than leaving a
+     reader to assume it does.
+
+     DISTINGUISHABLE FROM BAD_PASSWORD, DELIBERATELY, and it discloses nothing.
+     The two reason CODES have always been distinct and three suites pin them, so
+     a detail sentence changes no attacker's ability to enumerate. What settles it
+     is a measurement rather than a preference: `op=bootstrap` is `classes: null`
+     — unauthenticated, no token — and answers with `roles`, every role holding a
+     credential and the date each password was last set. The role list is already
+     handed to any stranger in one call, more completely and more cheaply than
+     login probing could ever assemble it, so collapsing these two would defend
+     nothing while making the store say less than it knows. That the disclosure
+     exists at all is a separate question, raised for CONDUCT and NOT assumed
+     here: if op=bootstrap's roster is closed, this reasoning is the thing to
+     re-open, and it is written down for that reason. */
+  static LOGIN_REFUSAL_DETAIL = {
+    NO_SUCH_ROLE:
+      "this instance holds no active credential under that role. A role that was never registered and one "
+      + "whose membership is no longer active are the same answer here, deliberately: which of the two it "
+      + "is, the record does not say.",
+    BAD_PASSWORD:
+      "a credential is stored under that role and the password supplied does not derive its stored hash. "
+      + "The password itself is never kept — only a salted derivation of it — so this is the only comparison "
+      + "there is to make. No session was issued and nothing was written.",
+  };
+
   /* Exchanges a password for a bearer token so the password does not travel on
      every later request. Constant-time comparison is not meaningful over a
      network round trip at this granularity, but the derived-hash compare avoids
      ever holding the password beyond this call. */
   async login({ role = "admin", password, ttlSeconds = 43200 } = {}) {
     const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
-    if (!c) return { ok: false, reason: "NO_SUCH_ROLE" };
+    if (!c) return { ok: false, reason: "NO_SUCH_ROLE",
+                     detail: Store.LOGIN_REFUSAL_DETAIL.NO_SUCH_ROLE };
     const got = await Store.#derive(String(password ?? ""), c.salt, c.iterations);
-    if (got !== c.hash) return { ok: false, reason: "BAD_PASSWORD" };
+    if (got !== c.hash) return { ok: false, reason: "BAD_PASSWORD",
+                                 detail: Store.LOGIN_REFUSAL_DETAIL.BAD_PASSWORD };
     const token = Store.#rand(32);
     const expires = Date.now() + ttlSeconds * 1000;
     this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
@@ -14302,11 +14375,19 @@ export class Store extends DurableObject {
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
         login: async () => {
           /* A member login is refused unless the member is active, so
-             revocation closes the front door as well as the sessions. */
+             revocation closes the front door as well as the sessions.
+             REC-39: the detail is the SAME STRING login() itself returns, taken
+             from the one constant, because this arm's whole purpose is to be
+             indistinguishable from the missing-credential arm. A sentence
+             written here — however true of this branch — would announce that a
+             credential exists and the member was removed, which is the fact the
+             shared reason code withholds. The suite pins the two byte-equal. */
           const role = body?.role || "admin";
           if (role.startsWith("member:")) {
             const m = this.#one(`SELECT status FROM members WHERE member_id=?`, role.slice(7));
-            if (!m || m.status !== "active") return { ok: false, reason: "NO_SUCH_ROLE" };
+            if (!m || m.status !== "active")
+              return { ok: false, reason: "NO_SUCH_ROLE",
+                       detail: Store.LOGIN_REFUSAL_DETAIL.NO_SUCH_ROLE };
           }
           return this.login(body || {});
         },
