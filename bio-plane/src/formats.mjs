@@ -44,6 +44,7 @@
  */
 
 import { extractPdfStructure } from "./pdfstructure.mjs";
+import { docxEntry } from "./docx.mjs";
 
 /* Registration order is dispatch order within a pass: the first entry whose
    detect() answers wins that pass. Kept insertion-ordered by Map. */
@@ -188,3 +189,9 @@ registerFormat({
      would be a fork of exactly the kind that rule exists to prevent. */
   text: null,
 });
+
+/* docx.mjs IS the DOCX entry (COFF-4): detect's confidence ladder, the parts
+   walk over ooxml.mjs, I2 structure through the ONE linkWrapper with
+   {kind:"doc-para"} references (IC-1), <w:t> text in body order, and the
+   DEC-5 evidentiary envelope (tracked changes, comments, core properties). */
+registerFormat(docxEntry);
