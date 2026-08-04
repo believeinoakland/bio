@@ -172,8 +172,16 @@ console.log("\n--- 2. the reverse index: which inquiries rest on this document â
     (await restson(INQ_LEAF)).dependents.map((d) => d.bundle_id), [INQ_MAIN]);
   t("the lookup is INDEXED: schema declares inquiry_basis_target over target_id",
     /CREATE INDEX IF NOT EXISTS inquiry_basis_target ON inquiry_basis\(target_id\);/.test(SCHEMA_SRC), true);
+  /* CORRECTED 2026-08-04 (REC-12), never exempted. The old form sliced from
+     `restingOn(targetId)` all the way to `/* Eviction`, which is a REGION of the
+     file and not a FUNCTION: any method later added between the two changed its
+     answer while its subject was untouched. REC-12 added the strength derivation
+     there and this went red for a reason that had nothing to do with restingOn
+     still being one lookup. The slice now ends at restingOn's own closing brace,
+     so the assertion measures what its label says. */
   t("and it is ONE lookup: restingOn runs a single statement against inquiry_basis, no walk",
-    (STORE_SRC.slice(STORE_SRC.indexOf("restingOn(targetId)"), STORE_SRC.indexOf("/* Eviction"))
+    (STORE_SRC.slice(STORE_SRC.indexOf("restingOn(targetId)"),
+                     STORE_SRC.indexOf("\n  }", STORE_SRC.indexOf("restingOn(targetId)")))
       .match(/FROM inquiry_basis/g) || []).length, 1);
 }
 

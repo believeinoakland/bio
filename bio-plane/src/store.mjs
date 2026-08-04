@@ -196,6 +196,22 @@ export class Store extends DurableObject {
          the engine may change is an index that can silently point at the wrong
          document. */
       ["bundles", "fts_id", "INTEGER"],
+      /* REC-12: the derived strength PAIR, cached per axis. TWO grade columns
+         and never one, because a single cached letter is exactly the composed
+         scalar DEC-21 forbids and a column is where one would grow. The STATE
+         column beside each grade is what tells `unrated` (DEC-18's boundary
+         case — nothing on this axis is graded) from `undetermined` (R3 — the
+         walk hit its depth bound) from "never projected", which one nullable
+         grade column cannot do. Additive and nullable: a bundle that is not an
+         inquiry simply has none, and an inquiry promoted before these existed
+         has none until its next promotion re-derives them. THE COLUMN IS A
+         CACHE AND strengthOf() IS THE AUTHORITY — a stored strength goes stale
+         the moment a leg beneath it is raised. */
+      ["bundles", "inquiry_capture_strength", "TEXT"],
+      ["bundles", "inquiry_capture_state", "TEXT"],
+      ["bundles", "inquiry_connection_strength", "TEXT"],
+      ["bundles", "inquiry_connection_state", "TEXT"],
+      ["bundles", "inquiry_basis_count", "INTEGER"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -226,8 +242,13 @@ export class Store extends DurableObject {
        only the latency: without an index a filter is a full table scan whose
        cost grows with the corpus, and at 20,000 rows a scan is still fast
        enough to look like success. */
+    /* REC-12's two axis columns are indexed for the same reason the rest are:
+       "every inquiry at B or better on the capture axis" must be a seek. The
+       STATE columns are not indexed — they are read WITH a row, never filtered
+       across the corpus, and an index nobody seeks on is cost with no reader. */
     for (const c of ["schema_id", "produced_mode", "source_authority", "source_status",
-                     "monitor_frequency", "reeval_flag", "annotations_open"])
+                     "monitor_frequency", "reeval_flag", "annotations_open",
+                     "inquiry_capture_strength", "inquiry_connection_strength"])
       this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
     this.sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles(fts_id)`);
 
@@ -3295,6 +3316,13 @@ export class Store extends DurableObject {
             leg.date != null ? String(leg.date) : null);
         }
       }
+      /* REC-12: re-derive this inquiry's per-axis strength CACHE from the legs
+         just projected, in the SAME transaction, so the cache can never be a
+         revision behind the basis it summarises. It is still only a cache: a
+         leg raised in an inquiry BENEATH this one does not re-promote this
+         document, so the columns go stale by design and strengthOf() is what
+         anything needing the truth calls. */
+      this.#writeStrengthProjection(bundleId, isInquiry);
 
       for (const c of register)
         this.sql.exec(
@@ -3917,7 +3945,30 @@ export class Store extends DurableObject {
 
   /* The weaker of two section-8.1 grades by rank (A strongest .. D weakest): a connection
      is no stronger than its weaker end, because a case is only as strong as its weakest
-     link (framework 8.1). Reuses the resolution grade rank so the two axes cannot drift. */
+     link (framework 8.1).
+
+     CORRECTED 2026-08-04 (REC-12, RECONCILED.md §1.1 R1-m). The comment here used to end
+     "Reuses the resolution grade rank so the two axes cannot drift", and THAT SENTENCE WAS
+     WRONG IN BOTH HALVES — it stated as a design INTENT the two things R1 and R2 forbid,
+     which is why it is corrected rather than deleted (CLAUDE.md: correct a superseded claim
+     and say why the old one was wrong).
+
+       (1) "so the two axes cannot drift" wanted capture and connection to share one rank.
+           R2/DEC-21 rules the opposite: they are two measurements over two POPULATIONS —
+           capture over every DOCUMENT a conclusion reaches, connection over every EDGE it
+           rests on — and nothing may average, mix or collapse them. Two scales that cannot
+           drift apart are two scales that have been made one, which is the collapse itself.
+       (2) `|| 0` ranks an UNKNOWN grade BELOW D, i.e. below a member's signed testimony.
+           A null is the ABSENCE of a grade, not a weak one, and the two must not share a
+           rank (R1). Under DEC-18 an ungraded leg is INERT — excluded from the population
+           entirely — so a null must be short-circuited BEFORE any rank comparison happens.
+
+     WHAT THIS FUNCTION IS STILL FOR, unchanged and legitimate: composing a CONNECTION's own
+     grade from its two ends (`connections.a_grade`/`b_grade`) — how each end resolved to the
+     shared entity. Both ends measure the same kind of thing on the same scale, and neither
+     is ever null here (the resolver never stores one), so nothing above applies to its
+     callers. REC-12's inquiry-altitude derivation does NOT and MUST NOT reuse it; it carries
+     its own #weakestOf, per axis, with the null short-circuited first. */
   static #weakerGrade(g1, g2) {
     return (Store.#GRADE_RANK[g1] || 0) <= (Store.#GRADE_RANK[g2] || 0) ? g1 : g2;
   }
@@ -5386,6 +5437,286 @@ export class Store extends DurableObject {
       `SELECT bundle_id, ord, role, grade, grade_axis, grade_source
        FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, targetId);
     return { ok: true, targetId, dependents };
+  }
+
+  /* =======================================================================
+   * REC-12: STRENGTH at inquiry altitude — a PAIR over two POPULATIONS, over
+   * a bounded DAG. RECONCILED.md §3.1 (REC-12), read with §1.1's amendment
+   * block and §1.2's; DEC-21, DEC-18, D-160, DEC-15 and R1/R2/R3 folded in.
+   *
+   * TWO MEASUREMENTS OVER TWO POPULATIONS (DEC-21), and this is the whole
+   * shape of it:
+   *
+   *   CAPTURE     ranges over every DOCUMENT the conclusion reaches, and
+   *               answers "how well do we know these are the bytes the body
+   *               published?"
+   *   CONNECTION  ranges over every EDGE the conclusion rests on, and answers
+   *               "how well established are the relationships this reasoning
+   *               uses?"
+   *
+   * A LEG IS AN EDGE POINTING AT A TARGET, so one document leg carries BOTH
+   * grades: the edge's own connection grade, and the capture grade of the
+   * document it reaches. There is no such thing here as an "evidentiary leg"
+   * versus an "inferential leg" — that split cannot survive its own worked
+   * example (RECONCILED §1.2 R2-e), and DEC-21 replaced it. The leg records
+   * WHICH AXIS its grade is on (REC-11's grade_axis, because the axis is NOT
+   * derivable from target_type), so the axis field is what admits a leg to a
+   * population, and one letter is never admitted to both.
+   *
+   * REPORTED SIDE BY SIDE, WHICH IS NOT COMPOSITION. Nothing averages, mixes
+   * or collapses the two, and NO CALLER MAY REDUCE THE PAIR TO ONE LETTER —
+   * there is deliberately no code path in this file that produces a single
+   * composed grade for an inquiry, and the returned shape has no scalar for a
+   * caller to reach for.
+   *
+   * AN UNGRADED LEG IS INERT, NOT UNRATING (DEC-18). It is excluded from the
+   * population entirely: not weighed, not averaged, it does not floor and it
+   * does not unrate. It sits in the basis NAMED and visible as a leg that is
+   * present and not yet load-bearing, and EVERY ungraded leg is named, one or
+   * many — which is what keeps "inert" from meaning "invisible". UNRATED is
+   * the BOUNDARY CASE: an axis with no graded member at all rests on nothing
+   * established and reads UNRATED, naming all of them. THE WORD IS `UNRATED`
+   * (D-160). The word this behaviour used to be called is RETIRED and is not
+   * written anywhere in this derivation, its copy or its tests — not even to
+   * warn about it — because in SB-OUTPUT §5.1 it names the OPPOSITE behaviour
+   * (grade on the determined legs, note the ungraded one), so a worker who
+   * found it here in good faith would build the laundering R1 forbids. D-160
+   * is the ruling; strength.test.mjs holds this file to it.
+   *
+   * A HUNCH COMPOSES NORMALLY (DEC-15). grade_source 'hunch' is an ASSERTED
+   * grade, present and load-bearing, never treated as undetermined; it is
+   * reported on the member so a surface (and REC-15's pre-flight) can see the
+   * bias debt without the arithmetic pretending the grade is absent.
+   *
+   * DERIVE ON READ. The bundles columns this writes are a CACHE and never the
+   * authority: a stored strength goes stale the moment a leg is raised, and
+   * `resolutions` grades are explicitly improvable.
+   *
+   * SINGLE-BASIS ARITHMETIC (DEC-32, still open): the basis is one flat
+   * conjunction of legs, so an axis is its weakest load-bearing member. No
+   * grounds, no OR-branches, no plurality machinery is built here — when
+   * DEC-32 closes, the shape it adds is a partition ABOVE this function, and
+   * this stays the within-branch rule. */
+
+  /* Named once so no site spells an axis and none can drift. */
+  static STRENGTH_AXES = ["capture", "connection"];
+
+  /* R1, THE ARITHMETIC HALF of the two defences (#axisResult holds the naming
+     half, and they are deliberately separable so each has its own negative
+     control). The weakest member of one axis's population by #GRADE_RANK.
+
+     THE NULL IS SHORT-CIRCUITED HERE, BEFORE ANY RANK COMPARISON HAPPENS.
+     #weakerGrade must NOT be reused for this: its `|| 0` ranks an unknown
+     below grade D — below a member's signed testimony — and a null is the
+     absence of a grade, not a weak one. It also composes on one shared rank
+     across both axes, which R2 forbids; this function is called ONCE PER
+     AXIS over that axis's own population and can therefore never mix them. */
+  static #weakestOf(members) {
+    let weakest = null;
+    for (const m of members) {
+      if (m.grade == null) continue;
+      if (weakest === null || Store.#GRADE_RANK[m.grade] < Store.#GRADE_RANK[weakest.grade]) weakest = m;
+    }
+    return weakest;
+  }
+
+  /* What a member of a population looks like when it is NAMED — for the
+     weakest leg, and for every leg that is not load-bearing. A leg is
+     addressable by (bundle_id, ord), which is what REC-11's ord is for. */
+  static #namedMember(m) {
+    return { bundle_id: m.bundle_id, ord: m.ord, target_id: m.target_id, role: m.role,
+             grade: m.grade ?? null, grade_source: m.grade_source ?? null, via: m.via,
+             ...(m.inherited_from ? { inherited_from: m.inherited_from } : {}),
+             ...(m.through ? { through: m.through } : {}),
+             ...(m.why ? { why: m.why } : {}) };
+  }
+
+  /* One axis's answer, from its own population. Three states and no fourth:
+       graded       — the axis rests on at least one graded member; the grade
+                      is the weakest of them and that member is NAMED.
+       unrated      — no member of this axis carries a grade (DEC-18's
+                      boundary case). Not a low score and not a failure.
+       undetermined — the walk could not finish a branch within its depth
+                      bound (R3). UNKNOWN is not ABSENT: an unfinished branch
+                      might be weaker than everything we can see, so the axis
+                      states that it has no computed strength and names the
+                      depth. R1's shape, not an error. */
+  static #axisResult(axis, members, exhausted) {
+    /* DEFENCE 2 of 2, the NAMING half of DEC-18: membership of the load-bearing
+       population is decided HERE, by the presence of a grade, and the inert
+       members are named rather than dropped. Breaking this alone leaves the
+       arithmetic right and the record dishonest, which is why it has its own
+       negative control.
+
+       THE TWO DEFENCES SHARE ONE INVARIANT and are deliberately not made
+       independent of it: `loadBearing` is non-empty EXACTLY when #weakestOf can
+       find a member, because both ask `grade != null`. So breaking either one
+       is LOUD — the graded branch below dereferences the weakest it was
+       promised, and an axis that claims a load-bearing population it cannot
+       describe fails at the write rather than publishing a strength nobody can
+       check. A defensive fallback here would turn that into a quiet wrong
+       answer, which is the failure mode this record cares about most. */
+    const isLoadBearing = (m) => m.grade != null;
+    const inert = members.filter((m) => !isLoadBearing(m)).map(Store.#namedMember);
+    const loadBearing = members.filter(isLoadBearing);
+    if (exhausted.length) {
+      return { axis, state: "undetermined", grade: null, determined: false,
+               weakest: null, load_bearing: loadBearing.length, population: members.length,
+               not_load_bearing: inert,
+               depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
+               undetermined_at: exhausted.map(Store.#namedMember),
+               detail: `this ${axis} axis has NO computed strength: the basis walk reached its `
+                     + `depth bound of ${Store.QUEUE_ANCESTOR_DEPTH} at `
+                     + `${exhausted.map((e) => e.target_id).join(", ")}, so what lies below is `
+                     + `unknown rather than absent. This is what we do not know, not a low score.` };
+    }
+    if (!loadBearing.length) {
+      return { axis, state: "unrated", grade: null, determined: false,
+               weakest: null, load_bearing: 0, population: members.length,
+               not_load_bearing: inert, depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
+               detail: members.length
+                 ? `UNRATED on ${axis}: no leg on this axis carries an established grade, so this `
+                 + `conclusion rests on nothing established here. Not load-bearing: `
+                 + `${inert.map((m) => m.target_id).join(", ")}.`
+                 : `UNRATED on ${axis}: this inquiry rests on nothing on this axis.` };
+    }
+    /* Called over the FULL population, not over the pre-filtered one, so the
+       null short-circuit in #weakestOf is genuinely load-bearing rather than
+       decorative — two independent defences, each one breakable on its own. */
+    const w = Store.#weakestOf(members);
+    return { axis, state: "graded", grade: w.grade, determined: true,
+             weakest: Store.#namedMember(w), load_bearing: loadBearing.length,
+             population: members.length, not_load_bearing: inert,
+             depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
+             detail: `${axis} ${w.grade} — no stronger than the weakest ${axis} it rests on, `
+                   + `which is ${w.target_id}`
+                   + (w.through ? ` (through ${w.through})` : "")
+                   + `. ${inert.length ? `Present and not yet load-bearing: `
+                   + `${inert.map((m) => m.target_id).join(", ")}.` : ""}`.trimEnd() };
+  }
+
+  /* The walk. Reads REC-11's projection through basisFor() — the read seam —
+     and carries R3's DEPTH BOUND, which is REC-20's EXPORTED
+     Store.QUEUE_ANCESTOR_DEPTH and not a second constant: one bound for the
+     ancestor walk and this one, so the two cannot answer at different depths
+     for the same store.
+
+     THERE IS DELIBERATELY NO VISITED SET AND NO MEMO. The bound is the only
+     thing that makes this terminate, which is exactly what R3 asks for: a
+     cycle costs a bounded walk and reports `undetermined`, and the negative
+     control (remove the bound, feed it a store-constructed cycle) is real
+     rather than masked by a cache. REC-11 refuses a cycle at the WRITE, so a
+     cycle can only reach here if something wrote around that guard. */
+  #strengthWalk(bundleId, depth, bound) {
+    const legs = this.basisFor(bundleId).legs ?? [];
+    const members = { capture: [], connection: [] };
+    const exhausted = { capture: [], connection: [] };
+    for (const leg of legs) {
+      /* MAP RULE: the type consultation goes through the catalog's own
+         normalizeType, never a raw key and never a local alias copy. */
+      const isInquiry = normalizeType(leg.target_type) === "inquiry";
+      const site = { bundle_id: bundleId, ord: leg.ord, target_id: leg.target_id,
+                     role: leg.role, grade_source: leg.grade_source ?? null };
+      /* THE LEG'S OWN GRADE, admitted to the population of the axis it is
+         RECORDED ON (R2-b: the axis is the leg's own fact, not a function of
+         target_type). A leg carrying a connection grade is inert on capture
+         and says so; that is not a defect, it is the two populations being
+         two.
+
+         A leg's ROLE is carried on the member and NEVER composed: a
+         cuts_against leg is an edge the conclusion rests on and it stays in
+         the population, because invariant 7 exists to stop a rendering
+         quietly dropping it. */
+      for (const axis of Store.STRENGTH_AXES) {
+        const onAxis = leg.grade_axis === axis;
+        /* CAPTURE ranges over DOCUMENTS (DEC-21). An inquiry is not a
+           document, so a capture grade authored on an INQ- leg has no
+           referent — it is named as not load-bearing rather than silently
+           setting this axis, which would be a strength claimed about no
+           document at all. REC-11's write-time check does not refuse it
+           today; reported as a finding rather than invented here. */
+        const noReferent = axis === "capture" && isInquiry;
+        if (noReferent && !onAxis) continue;
+        members[axis].push({ ...site, via: "leg",
+          grade: onAxis && !noReferent ? (leg.grade ?? null) : null,
+          why: noReferent
+            ? `the target is an inquiry, not a document, so a capture grade on this leg has no referent`
+            : leg.grade == null ? `the leg carries no grade`
+            : onAxis ? null
+            : `the leg's grade is on the ${leg.grade_axis} axis` });
+      }
+      if (!isInquiry) continue;
+      /* RECURSION: a leg to another inquiry contributes THAT INQUIRY'S DERIVED
+         PAIR, PER AXIS — capture into capture, connection into connection,
+         never crossed. The weakest leg it names is carried up with it, so the
+         leg a reader is sent to check is the ACTUAL one and not the hop. */
+      if (depth + 1 > bound) {
+        for (const axis of Store.STRENGTH_AXES)
+          exhausted[axis].push({ ...site, via: "inherited", grade: null,
+            why: `the walk reached its depth bound of ${bound} here` });
+        continue;
+      }
+      const sub = this.#strengthWalk(leg.target_id, depth + 1, bound);
+      for (const axis of Store.STRENGTH_AXES) {
+        const s = sub[axis];
+        if (s.state === "undetermined") {
+          exhausted[axis].push({ ...site, via: "inherited", grade: null,
+            why: `${leg.target_id} is undetermined on ${axis}: ${s.detail}` });
+          continue;
+        }
+        members[axis].push({ ...site, via: "inherited", grade: s.grade,
+          inherited_from: leg.target_id,
+          /* The named weakest leg travels with the grade: a reader checking
+             this case is sent to the leg that actually sets it. */
+          through: s.weakest ? s.weakest.target_id : null,
+          why: s.grade == null
+            ? `${leg.target_id} is UNRATED on ${axis}, so it is not load-bearing here`
+            : null });
+      }
+    }
+    return { capture: Store.#axisResult("capture", members.capture, exhausted.capture),
+             connection: Store.#axisResult("connection", members.connection, exhausted.connection) };
+  }
+
+  /** REC-12: the derived PAIR for one inquiry, computed on read.
+   *
+   *  Returns { capture, connection } as two independent axis answers and NO
+   *  scalar: there is nothing here for a caller to render as "the strength",
+   *  because a case does not have one. */
+  strengthOf(bundleId) {
+    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
+    const bound = Store.QUEUE_ANCESTOR_DEPTH;
+    const pair = this.#strengthWalk(bundleId, 0, bound);
+    return { ok: true, bundleId, depth_bound: bound,
+             capture: pair.capture, connection: pair.connection };
+  }
+
+  /* REC-12: the projection CACHE, per axis, written inside promote's
+     transaction right after the inquiry_basis projection it derives from.
+
+     A CACHE AND NEVER THE AUTHORITY, and the distinction is not decoration: a
+     stored strength goes stale the moment a leg anywhere beneath it is raised
+     (`resolutions` grades are explicitly IMPROVABLE, and an inquiry this one
+     rests on can be re-promoted without touching this row). It exists so that
+     "every inquiry at B or better on an axis" is an indexed query rather than
+     a scan of every basis in the store; anything that must be RIGHT calls
+     strengthOf().
+
+     PER AXIS, in two columns and never one: a single cached letter is exactly
+     the composed scalar DEC-21 forbids, and a column is where one would grow.
+     The STATE column beside each grade is what keeps `unrated` distinguishable
+     from `undetermined` and both distinguishable from "never projected", which
+     one nullable grade column cannot do. */
+  #writeStrengthProjection(bundleId, isInquiry) {
+    if (!isInquiry) return null;
+    const s = this.strengthOf(bundleId);
+    const n = this.#one(`SELECT count(*) AS c FROM inquiry_basis WHERE bundle_id=?`, bundleId).c;
+    this.sql.exec(
+      `UPDATE bundles SET inquiry_capture_strength=?, inquiry_capture_state=?,
+              inquiry_connection_strength=?, inquiry_connection_state=?, inquiry_basis_count=?
+         WHERE bundle_id=?`,
+      s.capture.grade, s.capture.state, s.connection.grade, s.connection.state, n, bundleId);
+    return s;
   }
 
   /* Eviction. The store is append-only by doctrine, so removal is deliberate,
@@ -8312,6 +8643,12 @@ export class Store extends DurableObject {
            surfaces. */
         basis: () => this.basisFor(url.searchParams.get("id")),
         restson: () => this.restingOn(url.searchParams.get("id")),
+        /* REC-12: the derived strength PAIR, on read. A DO-internal read of
+           the same class as basis/restson — REC-14 stamps this pair into the
+           ratified bytes and REC-22 serves it, and those are the items that
+           give it a control-plane surface. Answers TWO axis objects and no
+           scalar: there is nothing here for a caller to reduce to one letter. */
+        strength: () => this.strengthOf(url.searchParams.get("id")),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),
