@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: (run 2026-08-03, rec25-agent) TWO arms, both required because the store FAILS CLOSED. (a) Remove `op === "list"` from the viewer-stamp condition in src/index.mjs (the REC-25 stamp block) -> 6 assertions fail, ALL naming op=list, across every viewer (empty answers: a missing stamp is an outage, never a leak — the doctrinal failure mode). (b) Neuter the DO gate instead — in src/store.mjs listBundles, replace the gate predicate with 1=1 -> 3 assertions fail naming op=list as THE LEAK (dave receives the project row). Restored -> 36 pass. Detail below. */
+/* NEGATIVE CONTROL (REC-30, run 2026-08-03, rec30-agent): THREE arms, one per mechanism the sweep added, each restored after running. (a) THE ITEM'S OWN — restore the dangling leak: in src/store.mjs danglingRefs, change the WHERE to `AND (1=1 OR ${seen.sql})` -> 3 assertions fail NAMING op=dangling, and the got carries PROJ-2026-0001-secret (the citing project's id, the measured leak) -> restored, 96 pass. (b) THE FAIL-CLOSED ARM — delete "dangling" from REC30_VIEWER_READS in src/index.mjs -> 5 assertions fail naming op=dangling, every answer EMPTY for every viewer including the machine credential (a missing stamp is an outage, never a leak) AND the impostor assertion flips, proving the caller-supplied `viewer=class:member` is HONOURED the moment the server stops overwriting it — REC-29's carried lesson, demonstrated. (c) THE BACK-REFERENCE ARM — neuter the projection: make src/store.mjs's #bundleRedactor return the identity (`return (id) => id ?? null;` as its first line) -> 8 assertions fail across op=reading, op=readingref, op=resolutions, op=concerns, op=connections, op=instance and op=exceptions, every one of them handing the uninvited member the secret project's id -> restored, 96 pass. */
 /* REC-25 / F-8 / D-135 / D-141: the D-15 viewer gate stamped on ALL read paths.
  *
  * WHAT THIS CLOSES. index.mjs stamped the viewer for op=search, op=select and
@@ -26,6 +27,23 @@
  *     which rebuilt the leak by walking every project's projection. The
  *     citing bundle is filtered by the VIEWER'S position; an invisible target
  *     answers NO_SUCH_BUNDLE exactly as an absent one.
+ *
+ * WHAT REC-30 ADDS (the sweep of the reads REC-25 did not address):
+ *   - every REMAINING read op is swept against the same predicate, through the
+ *     same single compilation point, and the leak the item was written from —
+ *     op=dangling naming a citing project — is closed and controlled for;
+ *   - the rule the sweep applies is stated once at the section head below: the
+ *     ROW is withheld where the bundle is its subject, the REFERENCE alone where
+ *     the row is about a capture or an entity, and the DERIVATION never changes
+ *     with the reader;
+ *   - every read op in the OPS table is CLASSIFIED, gated or deliberately
+ *     ungated with its reason, and the classification is asserted structurally,
+ *     so a read op added later fails this suite until somebody answers for it;
+ *   - REC-29's carried lesson: every gate-like store parameter is asserted
+ *     SERVER-STAMPED, because the passthrough copies each caller parameter into
+ *     the inner URL and any gate driven by one is an impostor hole otherwise;
+ *   - the DO envelope's `ms` field is gone at its source, and this suite's own
+ *     client-side strip is CORRECTED away rather than exempted.
  *
  * NEGATIVE CONTROL RUN 2026-08-03 (rec25-agent), both arms:
  *   (a) stamp removed from op=list alone -> 6 assertions failed, all naming
@@ -59,16 +77,20 @@ const t = (label, got, want) => {
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 /* Reads keep status AND body: the no-disclosure assertions compare both, so a
-   refusal that says the right thing with the wrong code cannot pass. The DO
-   envelope's `ms` timing field is stripped BEFORE comparison — it measures the
-   wall clock, not the answer, and a 0ms-vs-1ms pair made the byte-identical
-   assertions flake (~1 run in 20, observed while running the negative
-   control). Everything else in the answer is compared exactly. */
+   refusal that says the right thing with the wrong code cannot pass. Everything
+   in the answer is compared exactly.
+
+   CORRECTED BY REC-30, never exempted: this helper used to `delete body.ms`
+   before comparing. The strip was right about the hazard and wrong about where
+   to fix it — the DO envelope's `ms` measured the wall clock, not the answer, so
+   a 0ms-vs-1ms pair made "hidden and absent answer byte-identically" flake about
+   one run in twenty, and every future byte-comparison would have inherited the
+   same trap. REC-30 removed the field at its source (store.mjs's DO envelope);
+   nothing read it. So the strip is gone and the assertions below compare the
+   WHOLE answer — and the `ms` assertions further down hold the plane to it. */
 const GET = async (q) => {
   const r = await mf.dispatchFetch(`http://x/api/?${q}`);
-  const body = await r.json();
-  delete body.ms;
-  return { status: r.status, body };
+  return { status: r.status, body: await r.json() };
 };
 const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json();
@@ -87,11 +109,25 @@ const member = async (id, caps, role = "member") => {
 };
 
 const md = (id, type, refs = "") => `---\nid: ${id}\nobject_type: ${type}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n${refs}---\n\n## Summary\n\nSecret plan.\n`;
-const mk = async (id, type, tok, refs = "") => {
+/* REC-30 extends the fixture: a bundle may now also carry a CAPTURE — registered
+   (so the task consumer can resolve an event back to it) and read (so FW-5's
+   provenance reading lands in `readings`/`reading_refs`, which is what the whole
+   recogniser and progression axis is built on). Everything REC-25 asserted is
+   unchanged by it: the same three bundles, the same bundle.md. */
+const mk = async (id, type, tok, refs = "", capture = null) => {
   const text = md(id, type, refs);
+  const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
+  const register = [];
+  if (capture) {
+    const prov = JSON.stringify({ documents: [{
+      capture: { sha256: capture.sha, encoding: "binary", bytes: 10 },
+      reading: { content_type: "meeting_calendar", reader_version: 1, found: true,
+                 at: "2026-07-01T00:00:00Z", entities: capture.entities } }] });
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    register.push({ sha256: capture.sha, path: "captures/doc.pdf", encoding: "binary", bytes: 10 });
+  }
   const r = await POST(`op=promote&token=${tok}`, {
-    bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
-    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+    bundleId: id, base: null, snapKey: `${id}-new`, author: "suite", files, register,
     meta: { object_type: type, group: "believe-in-oakland", title: id,
             current_state: type === "project" ? "forming" : "collected",
             created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
@@ -113,13 +149,30 @@ const PROJ = "PROJ-2026-0001-secret";
 const MISSING = "PROJ-2026-9999-none";   // never created: the no-disclosure yardstick
 const SHARED = [INFO, PROB];
 
-await mk(INFO, "information", "mem-rec25");
+/* REC-30: two references whose targets DO NOT EXIST, one on the shared evidence
+   and one on the secret project. This is the measured leak the item names —
+   op=dangling reported the CITING bundle, so a project that cited a target
+   which was never created handed an uninvited member its own id. The shared
+   one is the control: dave must still receive it, or a passing suite would only
+   be proving that the answer was emptied. */
+const PHANTOM_I = "INFO-2026-9999-phantom";
+const PHANTOM_P = "PROB-2026-9999-phantom";
+const dangle = (target) => `  - target: ${target}\n    rel: cites\n    status: confirmed\n    note: not yet captured\n`;
+/* The capture each bundle files, and the entity reference its reading carries.
+   Both documents name the SAME contract, which is what makes them resolve to one
+   registry entity, connect to each other, and thread into one progression. */
+const ISHA = sha("rec30-shared-capture");
+const PSHA = sha("rec30-secret-capture");
+const REF = { ref: "contract:C-2026-30", kind: "contract", key: "C-2026-30", label: "hauling contract" };
+
+await mk(INFO, "information", "mem-rec25", `references:\n${dangle(PHANTOM_I)}`, { sha: ISHA, entities: [REF] });
 await mk(PROB, "problem", "mem-rec25");
 /* The project cites the shared evidence in its own frontmatter — `cites` lives
    on the citing object — so the reverse edge INTO the information is exactly
    the edge 7.9 says must be filtered by the viewer's position. */
 await mk(PROJ, "project", carol,
-  `references:\n  - target: ${INFO}\n    rel: cites\n    status: confirmed\n    note: evidence\n`);
+  `references:\n  - target: ${INFO}\n    rel: cites\n    status: confirmed\n    note: evidence\n${dangle(PHANTOM_P)}`,
+  { sha: PSHA, entities: [REF] });
 
 const ids = (r) => (r.body.result || []).map((b) => b.bundle_id).sort();
 
@@ -234,6 +287,359 @@ console.log("\n--- a machine credential is not filtered: D-15's own deliberate c
     ids(await GET(`op=list&token=mem-rec25`)).includes(PROJ), true);
   const b = await GET(`op=backlinks&token=mem-rec25&target=${INFO}`);
   t("op=backlinks under MEMBER_TOKEN shows the edge", b.body.result.backlinks.map((x) => x.from), [PROJ]);
+}
+
+/* ========================================================================== *
+ *  REC-30 · THE POSTURE SWEEP OF THE REMAINING READ SURFACES
+ *
+ *  REC-25 gated the reads ADDRESSED to a bundle. This is the sweep of the reads
+ *  addressed to something else — a dangling edge, a task, a capture, an entity,
+ *  a progression — that NAME a bundle on the way past. op=dangling was the
+ *  measured one; the rest had never been asked the question.
+ *
+ *  THE RULE, one sentence, and it is what the store's own comments say:
+ *  a read never NAMES a bundle the viewer may not see. Where the bundle IS the
+ *  row's subject the ROW is withheld (op=backlinks' posture: no count of what
+ *  was withheld, because that count is the leak). Where the bundle is a BACK-
+ *  REFERENCE on a row about a capture or an entity, the reference alone is
+ *  withheld and the row stands — its capture sha, its grade and every
+ *  derivation over it are the RECORD's facts, and a record that got stronger
+ *  for the uninvited would be claiming more than it can support, which is worse
+ *  than the leak being closed.
+ * ========================================================================== */
+
+/* ---------------------------------------------------------------- fixture 2
+   The framework axis, built through the real chain (FW-5 reading -> FW-6 entity
+   -> FW-7 resolution -> FW-8 connection -> FW-9 instance -> FW-10 discharge) so
+   every table that carries a bundle_id carries the SECRET PROJECT's, beside the
+   shared evidence's. Built under the machine credential, which is unfiltered by
+   design, so the store genuinely holds the rows the reads must not disclose. */
+const ent = await POST("op=entitycreate&token=mem-rec25",
+  { kind: "contract", label: "Hauling Contract C-2026-30",
+    aliases: ["contract:C-2026-30", "Hauling Contract C-2026-30"] });
+const ENT = ent.result.entity_id;
+if (!ENT) throw new Error(`entitycreate: ${JSON.stringify(ent)}`);
+for (const s of [ISHA, PSHA]) {
+  const r = await POST(`op=resolve&token=mem-rec25`, { captureSha: s });
+  if (!r.result?.resolved?.length) throw new Error(`resolve ${s}: ${JSON.stringify(r)}`);
+}
+const conn = await POST(`op=connect&token=mem-rec25`, { entityId: ENT });
+if (!conn.result?.count) throw new Error(`connect: ${JSON.stringify(conn)}`);
+const prog = await POST("op=progressiondefine&token=mem-rec25", {
+  progressionKey: "sweep", label: "Sweep",
+  stages: [
+    { key: "need", label: "staff report", cardinality: "0..n", required: "sometimes" },
+    { key: "award", label: "council resolution", after: "need", cardinality: "1", required: "always" },
+    { key: "contract", label: "signed agreement", after: "award", cardinality: "1", required: "always" },
+    /* missing, required and NOT discharged — the one open finding, so op=queue
+       has a real FINDING item to carry subjects on. */
+    { key: "closeout", label: "closeout report", after: "contract", cardinality: "1", required: "always" },
+  ] });
+if (!prog.result?.ok) throw new Error(`progressiondefine: ${JSON.stringify(prog)}`);
+const thr = await POST("op=thread&token=mem-rec25", {
+  progressionKey: "sweep", entityId: ENT,
+  placements: [{ stage: "need", captureSha: ISHA }, { stage: "award", captureSha: PSHA }] });
+if (!thr.result?.ok) throw new Error(`thread: ${JSON.stringify(thr)}`);
+/* the SECRET project's capture discharges the missing `contract` stage, so
+   progression_exceptions carries its bundle id too. */
+const dis = await POST("op=discharge&token=mem-rec25", {
+  progressionKey: "sweep", entityId: ENT, stage: "contract", captureSha: PSHA,
+  reason: "the contract was executed under a standing agreement",
+  citation: "council rule 5.2" });
+if (!dis.result?.ok) throw new Error(`discharge: ${JSON.stringify(dis)}`);
+
+/* Two tasks, one per bundle. The producer reaches the queue only through the
+   Durable Object (there is deliberately no control-plane enqueue), so the
+   events are put there directly and drained through the real op. The secret
+   project's task is then FORWARDED to dave: a routed obligation about a project
+   he was never invited to is exactly the case op=queue has to withhold. */
+const ns = await mf.getDurableObjectNamespace("STORE");
+const doStub = ns.get(ns.idFromName("bio"));
+for (const [s, subj] of [[ISHA, "https://example.gov/shared.pdf"], [PSHA, "https://example.gov/secret.pdf"]])
+  await doStub.fetch("http://x/taskenqueue", { method: "POST", body: JSON.stringify({
+    kind: "authority-undetermined", captureSha: s, subject: subj, locator: subj,
+    at: "2026-07-02T00:00:00Z" }) });
+const drained = await POST("op=taskdrain&token=mem-rec25", { limit: 10 });
+if (drained.result?.created?.length !== 2) throw new Error(`taskdrain: ${JSON.stringify(drained)}`);
+const secretTask = drained.result.created.find((c) => c.refers_to === PROJ).id;
+const sharedTask = drained.result.created.find((c) => c.refers_to === INFO).id;
+const fwd = await POST(`op=taskforward&token=${ruth}`, { id: secretTask, to: "dave" });
+if (!fwd.result?.ok) throw new Error(`taskforward: ${JSON.stringify(fwd)}`);
+
+console.log("\n--- op=dangling: THE MEASURED LEAK — a project that cited a target that does not exist ---");
+{
+  const d = await GET(`op=dangling&token=${dave}`);
+  const cite = (r) => (r.body.result.dangling || []).map((x) => [x.bundle_id, x.target_id]);
+  t("the uninvited member still receives the shared corpus's dangling edge",
+    cite(d), [[INFO, PHANTOM_I]]);
+  t("and op=dangling does not name the project", JSON.stringify(d.body).includes(PROJ), false);
+  t("no field counts what was withheld — that count IS the leak",
+    Object.keys(d.body.result).sort(), ["dangling"]);
+  t("the owner sees both edges", (await GET(`op=dangling&token=${carol}`)).body.result.dangling.length, 2);
+  t("the administrator sees both (7.3)", (await GET(`op=dangling&token=${ruth}`)).body.result.dangling.length, 2);
+  t("a machine credential is not filtered (D-15's carve-out)",
+    (await GET(`op=dangling&token=mem-rec25`)).body.result.dangling.length, 2);
+}
+
+console.log("\n--- op=tasks: a task's refers_to IS a bundle id ---");
+{
+  const mine = await GET(`op=tasks&token=${dave}`);
+  t("the uninvited member's inbox carries only the task about shared evidence",
+    mine.body.result.tasks.map((x) => x.refers_to), [INFO]);
+  t("and the counts count what he may see, not what exists",
+    mine.body.result.counts.open + mine.body.result.counts.forwarded, 1);
+  const [hid, abs] = [await GET(`op=tasks&token=${dave}&refers=${PROJ}`),
+                      await GET(`op=tasks&token=${dave}&refers=${MISSING}`)];
+  t("asking BY the hidden bundle answers exactly as asking by an absent one", hid, abs);
+  t("the owner's inbox carries both", (await GET(`op=tasks&token=${carol}`)).body.result.tasks.length, 2);
+  t("a machine credential is not filtered",
+    (await GET(`op=tasks&token=mem-rec25`)).body.result.tasks.length, 2);
+}
+
+console.log("\n--- op=queue: the OBLIGATION's subject and the FINDING's bundles ---");
+{
+  const q = await GET(`op=queue&token=${dave}`);
+  t("the obligation forwarded to him about an invisible project is not in his feed",
+    q.body.result.items.some((i) => i.id === secretTask), false);
+  t("and nothing in the feed names the project", JSON.stringify(q.body).includes(PROJ), false);
+  const finding = q.body.result.items.find((i) => i.class === "FINDING");
+  t("the FINDING still reaches him — it is the RECORD's question, not a project's",
+    !!finding, true);
+  t("but the bundles behind it name only what he may see",
+    finding.subject.bundles, [INFO]);
+  const qc = await GET(`op=queue&token=${carol}`);
+  t("the owner's feed carries the same finding naming BOTH bundles",
+    qc.body.result.items.find((i) => i.class === "FINDING").subject.bundles.sort(), [INFO, PROJ].sort());
+  /* the machine credential's whole-live-set view: the obligation about the
+     project is intact in the record — it was withheld from a reader, not lost. */
+  t("a machine credential's feed still carries the obligation about the project",
+    (await GET(`op=queue&token=mem-rec25`)).body.result.items
+      .some((i) => i.class === "OBLIGATION" && i.subject.id === PROJ), true);
+}
+
+console.log("\n--- the capture-addressed reads: the row stands, the back-reference is withheld ---");
+{
+  const r = await GET(`op=reading&token=${dave}&sha256=${PSHA}`);
+  t("op=reading still answers the reading of a capture filed in a hidden project",
+    [r.body.result.found, r.body.result.entity_count], [true, 1]);
+  t("but it does not name the bundle", r.body.result.bundle_id, null);
+  t("the owner gets the back-reference",
+    (await GET(`op=reading&token=${carol}&sha256=${PSHA}`)).body.result.bundle_id, PROJ);
+  const rr = await GET(`op=readingref&token=${dave}&ref=${encodeURIComponent(REF.ref)}`);
+  t("the reverse index still returns BOTH documents — a count of captures is not identity",
+    rr.body.result.count, 2);
+  t("and names only the visible bundle",
+    rr.body.result.documents.map((d) => d.bundle_id).sort(), [INFO, null]);
+  const res = await GET(`op=resolutions&token=${dave}&sha256=${PSHA}`);
+  t("op=resolutions keeps the resolution and its grade, and withholds the bundle",
+    [res.body.result.count, res.body.result.resolutions[0].grade, res.body.result.resolutions[0].bundle_id],
+    [1, "A", null]);
+  const con = await GET(`op=concerns&token=${dave}&id=${ENT}`);
+  t("op=concerns names no hidden bundle", JSON.stringify(con.body).includes(PROJ), false);
+  t("and still reports both documents that concern the entity", con.body.result.count, 2);
+  const cx = await GET(`op=connections&token=${dave}&id=${ENT}`);
+  t("op=connections keeps the connection and its weaker-end grade",
+    [cx.body.result.count, cx.body.result.connections[0].grade], [1, "A"]);
+  t("and names only the end he may see",
+    [cx.body.result.connections[0].a_bundle_id, cx.body.result.connections[0].b_bundle_id].sort(),
+    [INFO, null]);
+}
+
+console.log("\n--- op=instance / op=exceptions: the DERIVATION is the record's, identical for both ---");
+{
+  const dv = (await GET(`op=instance&token=${dave}&key=sweep&id=${ENT}`)).body.result;
+  const cl = (await GET(`op=instance&token=${carol}&key=sweep&id=${ENT}`)).body.result;
+  t("op=instance does not name the hidden bundle to the uninvited member",
+    JSON.stringify(dv).includes(PROJ), false);
+  t("the grade, the placed count and the finding count are IDENTICAL for both readers",
+    [dv.grade, dv.placed_count, dv.finding_count, dv.discharge_count],
+    [cl.grade, cl.placed_count, cl.finding_count, cl.discharge_count]);
+  t("the award stage still reports its document and its grade, with the id withheld",
+    dv.stages.filter((s) => s.stage_key === "award")
+      .map((s) => [s.document_count, s.documents[0].capture_sha, s.documents[0].bundle_id]),
+    [[1, PSHA, null]]);
+  t("and the owner sees the same document WITH its bundle",
+    cl.stages.find((s) => s.stage_key === "award").documents[0].bundle_id, PROJ);
+  const ex = await GET(`op=exceptions&token=${dave}&key=sweep&id=${ENT}`);
+  t("op=exceptions keeps the discharge, its reason and its citation",
+    [ex.body.result.exception_count, ex.body.result.exceptions[0].reason.slice(0, 3)], [1, "the"]);
+  t("and withholds the discharging document's bundle", ex.body.result.exceptions[0].bundle_id, null);
+  t("the owner sees it", (await GET(`op=exceptions&token=${carol}&key=sweep&id=${ENT}`))
+    .body.result.exceptions[0].bundle_id, PROJ);
+}
+
+console.log("\n--- the two paging integrity sweeps: their findings NAME bundles ---");
+{
+  const a = await GET(`op=audit&token=${dave}`);
+  t("op=audit's total counts what the viewer may see (REC-25's rule for a paged total)",
+    a.body.result.total, 2);
+  t("and it names no hidden bundle", JSON.stringify(a.body).includes(PROJ), false);
+  t("the owner's audit covers three", (await GET(`op=audit&token=${carol}`)).body.result.total, 3);
+  const s = await GET(`op=searchindexcheck&token=${dave}`);
+  t("op=searchindexcheck checks only what the viewer may see",
+    [s.body.result.checked, s.body.result.counts.bundles], [2, 2]);
+  t("and names no hidden bundle", JSON.stringify(s.body).includes(PROJ), false);
+  t("a machine credential still checks the whole corpus — the operator view the token exists for",
+    (await GET(`op=searchindexcheck&token=mem-rec25`)).body.result.counts.bundles, 3);
+}
+
+console.log("\n--- op=projectownerarith: an owner count IS existence ---");
+{
+  const [hid, abs] = [await GET(`op=projectownerarith&token=${dave}&projectId=${PROJ}`),
+                      await GET(`op=projectownerarith&token=${dave}&projectId=${MISSING}`)];
+  t("a hidden project's live arithmetic is byte-identical to a project that does not exist",
+    { ...hid, body: { ...hid.body, result: { ...hid.body.result, projectId: "X" } } },
+    { ...abs, body: { ...abs.body, result: { ...abs.body.result, projectId: "X" } } });
+  t("the owner is told the truth about her own project",
+    (await GET(`op=projectownerarith&token=${carol}&projectId=${PROJ}`)).body.result.live.owners, 1);
+}
+
+console.log("\n--- REC-29's inherited lesson: EVERY gate-like store param is SERVER-STAMPED ---");
+/* The passthrough copies every caller parameter into the inner URL, so any
+   store-side gate driven by a param is an impostor hole unless the control plane
+   OVERWRITES it after the copy. REC-29 measured this on `administer`; this is the
+   audit of the whole set, one assertion per param, in members.test.mjs's shape
+   ("a member cannot stamp itself an administrator"). Each pair asks the same
+   question: dave supplies the parameter that would make him someone else, and
+   the answer must be the one he gets without it. */
+{
+  const plain = await GET(`op=list&token=${dave}`);
+  t("`viewer`: a caller cannot compile a query for somebody else's position",
+    await GET(`op=list&token=${dave}&viewer=class:admin`), plain);
+  t("`viewer` on the swept reads either: op=dangling under a forged class:member",
+    (await GET(`op=dangling&token=${dave}&viewer=class:member`)).body.result.dangling.map((x) => x.bundle_id),
+    [INFO]);
+  t("`administer` (D-157): a member cannot stamp itself an administrator",
+    (await GET(`op=memberlist&token=${dave}&administer=1`)).body.result.members.some((m) => "cover" in m), false);
+  t("`member`: a caller cannot read another member's queue",
+    (await GET(`op=queue&token=${dave}&member=carol`)).body.result.member, "dave");
+  t("`owner`: a caller cannot claim another member's selections",
+    (await GET(`op=selectionlist&token=${dave}&owner=member:carol`)).body.result.selections.length, 0);
+  t("`by`: a caller cannot act on a project roster as somebody else",
+    (await GET(`op=projectparticipants&token=${dave}&projectId=${PROJ}&by=carol`)).body.result.reason,
+    "NO_SUCH_PROJECT");
+  const lease = await GET(`op=lease&token=${dave}&id=${INFO}&actor=carol`);
+  t("`actor`: a lease is taken by the caller, never by the name they send",
+    lease.body.result.actor ?? lease.body.result.holder, "dave");
+  const cited = await POST(`op=cite&token=${carol}&project=${PROJ}&handle=none&author=dave`);
+  t("`author`: an authorship a caller can address to someone else is not authorship",
+    /dave/.test(JSON.stringify(cited)), false);
+}
+
+console.log("\n--- the DO envelope's `ms` is gone at the SOURCE, not stripped at the reader ---");
+{
+  const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  t("store.mjs's DO envelope no longer mints a timing field",
+    /ok:\s*true,\s*ms:/.test(store), false);
+  for (const q of [`op=list&token=${dave}`, `op=dangling&token=${dave}`, `op=tasks&token=${dave}`,
+                   `op=projection&token=${dave}&id=${INFO}`, `op=stats&token=mem-rec25`])
+    t(`no control-plane response carries ms: ${q.split("&")[0]}`,
+      "ms" in (await GET(q)).body, false);
+}
+
+/* ------------------------------------------------------------------------- *
+ *  THE DELIBERATELY UNGATED READS, AND WHY — recorded here rather than in a
+ *  document, because a rule that is not in the loop the reader runs is not a
+ *  rule. The assertion below is STRUCTURAL: it parses index.mjs's OPS table and
+ *  requires EVERY read op to be in one of the two lists. A read op added later
+ *  fails this suite until somebody classifies it, which is the whole point —
+ *  REC-25's leak existed because six read ops were added over months and nobody
+ *  was ever asked the question.
+ *
+ *  (COORDINATION: REC-14 runs concurrently and owns the published/ratify/state
+ *  ground. If it lands read ops after this, they will be unclassified and this
+ *  assertion will name them at ITS integration. That is the mechanism working:
+ *  classify each one gated or ungated-with-a-reason.)
+ * ------------------------------------------------------------------------- */
+console.log("\n--- every read op is classified: gated, or ungated for a stated reason ---");
+{
+  const src = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
+  const from = src.indexOf("const OPS");
+  const reads = [];
+  for (const m of src.slice(from).matchAll(/^\s{2}([a-z0-9_]+):\s*\{([^}]*)\}/gm)) {
+    const spec = m[2].replace(/\s+/g, " ");
+    if (/classes:/.test(spec) && /mutating: false/.test(spec)) reads.push(m[1]);
+  }
+  t("the OPS table still has a read surface to sweep", reads.length > 40, true);
+
+  /* GATED: the answer is filtered or projected by the D-15 predicate, through
+     query.mjs's one compilation point. */
+  const GATED = {
+    list: "REC-25", index: "REC-25", projection: "REC-25", image: "REC-25", file: "REC-25",
+    search: "the first gated read", backlinks: "REC-25", affordances: "REC-25",
+    selection: "viewer + owner, both server-stamped",
+    selectionlist: "owner, server-stamped: a selection is readable only by the credential that made it",
+    dangling: "REC-30: the citing bundle is the row's subject",
+    tasks: "REC-30: refers_to is a bundle id",
+    queue: "REC-30: the obligation's subject and the finding's bundles (the case set was gated at birth)",
+    reading: "REC-30: the bundle back-reference on a capture's reading",
+    readingref: "REC-30: the bundle back-reference on the reverse reference index",
+    resolutions: "REC-30: the bundle back-reference on a resolution",
+    concerns: "REC-30: the bundle back-reference on the reverse index",
+    connections: "REC-30: both ends' bundle back-references, independently",
+    instance: "REC-30: the threaded documents' back-references; the derivation is reader-independent",
+    exceptions: "REC-30: the discharging document's back-reference",
+    audit: "REC-30: offenders name bundles, and the paged total is REC-25's rule",
+    searchindexcheck: "REC-30: findings name bundles",
+    projectownerarith: "REC-30: an owner count is existence",
+    projectparticipants: "7.8, gated by PARTICIPATION on the server-stamped `by`: a non-participant "
+      + "is told what a nonexistent project would tell them",
+  };
+
+  /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
+  const UNGATED = {
+    /* the published projection — REC-22's class, credential-free BY DESIGN */
+    publishedlist: "PUBLISHED PROJECTION: reads published_bundles and never the working corpus. "
+      + "Publishing is a deliberate ratified act; gating it would gate the thing the doorbell exists "
+      + "to serve. REC-22's ops join this class and this sweep must not pre-gate them.",
+    publishedmanifest: "PUBLISHED PROJECTION: verifiable by anyone with ssh-keygen and the doorbell, "
+      + "without this instance's cooperation. Nothing unpublished appears, by construction.",
+    verify: "PUBLISHED PROJECTION: answers only from published_shas — a hash never ratified is "
+      + "indistinguishable from one that never existed.",
+    /* names no bundle: there is no identity in the answer to gate */
+    stats: "COUNTS ONLY, an operator surface. A count that names nothing is not identity — and the "
+      + "counts REC-25 did gate were the TOTALS OF AN ENUMERATION, where a total bigger than the "
+      + "list says something is hidden. These enumerate nothing.",
+    selftest: "the plane's own wiring; names no bundle.",
+    searchfields: "the projected field vocabulary; names no bundle.",
+    whoami: "what THIS caller is and may do; names no bundle.",
+    memberlist: "the handle roster (REC-29's projection governs cover, not bundles); names no bundle.",
+    adminarith: "section 4.7 arithmetic over the ADMIN roster; names no bundle.",
+    expertiselist: "declared expertise, a member fact; names no bundle.",
+    inbox: "the doorbell inbox — material submitted from OUTSIDE, filed against no bundle.",
+    inboxget: "one such submission; filed against no bundle.",
+    links: "outbound links by capture sha and inbound by address; names no bundle.",
+    sourcereach: "reachability of a document ADDRESS; names no bundle.",
+    archivelookup: "a CDX lookup against an external archive; names no bundle.",
+    pdfstructure: "the structure of a captured PDF, by sha; names no bundle.",
+    runtime: "measured runtime observations; names no bundle.",
+    governorstate: "per-HOST fetch accounting; names no bundle.",
+    signerlist: "the active signer set; names no bundle.",
+    exportlog: "who exported and when — an export can never happen silently; names no bundle.",
+    progression: "a progression DEFINITION: a member's constitutive claim about how an institution "
+      + "ought to behave. It names stages, not documents.",
+    proposals: "the DERIVED findings feed. Aggregated per (progression, stage) over entities and "
+      + "carries NO bundle id — op=queue is where a finding acquires subjects, and that is gated.",
+    captureprogressions: "which progressions a CAPTURE sits in, by sha: progression keys, entity "
+      + "labels, stages and findings. Carries no bundle id.",
+    entity: "the subject registry: an entity, its kind and its label.",
+    entitybyalias: "the subject registry, resolved by one of an entity's aliases.",
+    relation: "a declared constitutive relation between two entities.",
+    /* class-fenced or scratch-confined: there is no member session to filter */
+    registeraudit: "CLASS-FENCED to admin and probe (no member class), so no member session reaches "
+      + "it; probe is confined by scopeFor to the scratch namespace, a different Durable Object.",
+    /* the pre-auth surface */
+    bootstrap: "PRE-AUTH: answers whether this instance has been claimed. Never reaches the store's "
+      + "gated reads.",
+    login: "PRE-AUTH: exchanges a password for a session.",
+    invitelook: "PRE-AUTH: reads one invite by its own secret.",
+  };
+
+  const unclassified = reads.filter((op) => !(op in GATED) && !(op in UNGATED));
+  t("EVERY read op is classified — an unclassified one is named here", unclassified, []);
+  t("every ungated op states a reason",
+    Object.entries(UNGATED).filter(([, why]) => typeof why !== "string" || why.length < 20).map(([k]) => k), []);
+  t("no op is in both lists", Object.keys(GATED).filter((k) => k in UNGATED), []);
 }
 
 console.log("\n--- invitation flips visibility (7.4), through the same ops ---");

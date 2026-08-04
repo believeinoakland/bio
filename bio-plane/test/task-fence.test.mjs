@@ -51,7 +51,12 @@ try {
   const obj = stub.get(stub.idFromName("bio"));
   const doPost = async (op, body) => (await obj.fetch(`http://x/${op}`,
     { method: "POST", body: JSON.stringify(body) })).json();
-  const doGet = async (path) => (await obj.fetch(`http://x/${path}`)).json();
+  /* REC-30: op=tasks fails closed on an absent viewer (a task's `refers_to` is a
+     bundle id and the D-15 predicate governs which rows may be named). A direct-DO
+     suite stands in for a machine credential — D-15's own carve-out — so it stamps
+     class:member; unstamped, these reads are empty and assert nothing. */
+  const doGet = async (path) =>
+    (await obj.fetch(`http://x/${path}${path.includes("?") ? "&" : "?"}viewer=class:member`)).json();
   const rowOf = async (id) => (await doGet("tasks")).result.tasks.find((x) => x.id === id);
 
   /* Create a task by the only route the producer has (enqueue at the DO), file

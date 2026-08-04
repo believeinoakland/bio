@@ -165,7 +165,15 @@ try {
   const obj = stub.get(id);
   const doPost = async (op, body) =>
     (await obj.fetch(`http://x/${op}`, { method: "POST", body: JSON.stringify(body) })).json();
-  const doGet = async (path) => (await obj.fetch(`http://x/${path}`)).json();
+  /* REC-30: a DIRECT-DO read carries no control-plane stamp, and op=tasks now
+     FAILS CLOSED on an absent viewer — a task's `refers_to` is a bundle id, so
+     the D-15 predicate governs which task rows an answer may name. A suite
+     driving the Durable Object directly stands in for a MACHINE credential (no
+     person behind it, no participation to check), which is D-15's own deliberate
+     carve-out, so it stamps `class:member`. Without the stamp these reads come
+     back empty and the suite silently tests nothing. */
+  const doGet = async (path) =>
+    (await obj.fetch(`http://x/${path}${path.includes("?") ? "&" : "?"}viewer=class:member`)).json();
 
   const SHA_A = "a".repeat(64);
   const e1 = (await doPost("taskenqueue", {

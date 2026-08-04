@@ -725,10 +725,16 @@ export class Store extends DurableObject {
    *  which is the only thing that can tell the difference between an index that
    *  cannot diverge and one that has not diverged yet. Paginated and resumable
    *  by cursor, the same shape as the conformance audit. */
-  searchIndexCheck({ after = "", limit = 200 } = {}) {
+  searchIndexCheck({ after = "", limit = 200, viewer = null } = {}) {
     const cap = Math.max(1, Math.min(1000, Math.floor(Number(limit) || 200)));
+    /* REC-30: every `findings` row NAMES a bundle, so the page it is derived
+       from carries the D-15 predicate. `orphans` are index rowids no bundle
+       claims — they name nothing by definition and stay whole, which is what
+       makes the orphan check still worth running from any credential. */
+    const gate = viewerPredicate(viewer);
     const rows = this.#rows(
-      `SELECT bundle_id, fts_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`, after, cap);
+      `SELECT b.bundle_id, b.fts_id FROM bundles b WHERE b.bundle_id > ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
+      after, ...gate.args, cap);
     const findings = [];
     for (const r of rows) {
       if (r.fts_id === null || r.fts_id === undefined) {
@@ -756,9 +762,15 @@ export class Store extends DurableObject {
     const last = rows.length ? rows[rows.length - 1].bundle_id : null;
     return {
       checked: rows.length, findings, orphans,
-      counts: { bundles: this.#one(`SELECT count(*) c FROM bundles`).c,
+      /* `bundles` and `keyed` are the totals of the enumeration above and are
+         gated with it (REC-25: a total bigger than the pages says something is
+         hidden). `indexed` counts INDEX rows, which is the substrate side of the
+         parity this op exists to check and the number the orphan finding is read
+         against — a count that names nothing is not identity. */
+      counts: { bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
                 indexed: this.#one(`SELECT count(*) c FROM bundles_fts`).c,
-                keyed: this.#one(`SELECT count(*) c FROM bundles WHERE fts_id IS NOT NULL`).c },
+                keyed: this.#one(`SELECT count(*) c FROM bundles b WHERE b.fts_id IS NOT NULL AND (${gate.sql})`,
+                                 ...gate.args).c },
       cursor: rows.length === cap ? last : null,
       ok: findings.length === 0 && orphans.length === 0,
     };
@@ -2948,11 +2960,23 @@ export class Store extends DurableObject {
    * assertions see them, byte checks skip them, and capture integrity was proven
    * at write time by the capture op rather than re-proven here.
    */
-  async auditPass({ after = "", limit = 200 } = {}) {
+  async auditPass({ after = "", limit = 200, viewer = null } = {}) {
     const cap = Math.max(1, Math.min(1000, Number(limit) || 200));
+    /* REC-30: `known` stays the WHOLE corpus and never leaves this method. It is
+       the checker's answer to "does this reference resolve", and filtering it
+       would manufacture dangling-reference findings out of a viewer's position —
+       a false claim about the record, which is worse than the leak. The store is
+       a legitimate whole-corpus reader internally (REC-25's own posture for
+       #queueAncestors' existence probe); what is gated is what LEAVES. */
     const known = new Set(this.#rows(`SELECT bundle_id FROM bundles`).map((r) => r.bundle_id));
+    /* The PAGE is gated, so `offenders` — the only place this answer names a
+       bundle — can only ever name one the viewer may see. `total` is gated with
+       it for REC-25's reason: a total larger than the pages says something is
+       being withheld, which is half the leak. */
+    const gate = viewerPredicate(viewer);
     const page = this.#rows(
-      `SELECT bundle_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`, after, cap);
+      `SELECT b.bundle_id FROM bundles b WHERE b.bundle_id > ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
+      after, ...gate.args, cap);
     const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
     const te = new TextEncoder();
     const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
@@ -2984,7 +3008,7 @@ export class Store extends DurableObject {
     return {
       ok: true, checked: page.length, clean, withErrors, tally, offenders,
       cursor: page.length === cap ? last : null,
-      total: known.size,
+      total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n,
     };
   }
 
@@ -3121,6 +3145,95 @@ export class Store extends DurableObject {
                        bundleId, ...gate.args);
   }
 
+  /* ======================= REC-30 · the posture sweep ======================
+   *
+   * REC-25 stamped the D-15 gate onto every read that is ADDRESSED to a bundle.
+   * What was left were the reads addressed to something ELSE — a capture, an
+   * entity, a task, a reference, a dangling edge — that name a bundle on the way
+   * past. `op=dangling` was the measured one (a project citing a nonexistent
+   * target put the PROJECT's id in an uninvited member's hands), and the same
+   * shape runs through the task inbox, the queue's subjects, the recogniser and
+   * progression reads, and the two paging integrity sweeps.
+   *
+   * ONE COMPILATION POINT, still. Both helpers below take their predicate from
+   * query.mjs's `viewerPredicate` and neither restates it — including its two
+   * arms that are easy to get wrong by hand: the MACHINE CARVE-OUT (a machine
+   * credential has no person behind it and is deliberately not filtered) and the
+   * FAIL-CLOSED deny (an absent or unrecognised viewer sees nothing, so a
+   * missing control-plane stamp is an outage and never a leak).
+   *
+   * TWO SHAPES, because the reads are two shapes:
+   *
+   *   the row IS ABOUT the bundle  ->  the ROW is withheld (`#bundleGate`, in
+   *     SQL). A dangling edge, a task, a queue obligation: withhold the row and
+   *     report no count of what was withheld, because that count is the leak.
+   *     This is op=backlinks' own posture, landed by REC-25.
+   *
+   *   the row is about a CAPTURE or an ENTITY and merely POINTS BACK at the
+   *     bundle the document lives in  ->  the REFERENCE alone is withheld
+   *     (`#bundleRedactor`, in JS). The row stands, and so do its capture sha,
+   *     its grade and every derivation over it: those are the RECORD's facts and
+   *     they must not change with the reader. A grade that got stronger because
+   *     someone was not invited to a project would be the record claiming more
+   *     than it can support, which is worse than the leak we are closing.
+   *
+   * WHAT IS DELIBERATELY UNGATED is listed, with its reason, in
+   * `test/gate-reads.test.mjs`. It is a shorter list than it looks: the
+   * published projection is credential-free BY DESIGN, an op fenced to the admin
+   * and probe classes has no member session to filter, and a COUNT THAT NAMES
+   * NOTHING is not identity. */
+
+  /** The D-15 predicate over a column that HOLDS a bundle id, as a WHERE term.
+   *
+   *  `FROM bundles b` and not `FROM bundles`: viewerPredicate compiles over the
+   *  alias `b`, which is REC-25's landed lesson and the reason this subquery
+   *  binds the alias rather than the table name.
+   *
+   *  A NULL column names no bundle and so discloses nothing: it passes. A column
+   *  naming a bundle that is GONE does not, and that is the fail-closed arm — a
+   *  row pointing at something the store cannot show is withheld rather than
+   *  answered for.
+   *
+   *  THE COLUMN MUST BE QUALIFIED, and this refuses an unqualified one rather
+   *  than trusting a caller to remember. Found by the suite: inside the EXISTS
+   *  subquery a bare `bundle_id` resolves against `bundles` — the INNER table —
+   *  so `b.bundle_id = bundle_id` is `b.bundle_id = b.bundle_id`, a gate that
+   *  passes every row while looking exactly like a gate. The failure is silent
+   *  and it is the whole class this sweep exists to close, so it is a throw. */
+  #bundleGate(col, viewer) {
+    if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
+      throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}). `
+        + "An unqualified name binds to `bundles` inside the gate's own subquery and passes everything.");
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
+    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
+    return {
+      sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
+              WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
+      args: gate.args,
+    };
+  }
+
+  /** The same question asked of ONE id, for the answers this store assembles in
+   *  JavaScript rather than in SQL. Returns a function that passes a visible id
+   *  through and answers `null` for one the viewer may not see; a row that names
+   *  NO bundle is left alone, because it discloses nothing to begin with.
+   *  Memoised per call site: a progression instance asks about the same handful
+   *  of bundles many times over. */
+  #bundleRedactor(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return (id) => id ?? null;        // machine: not filtered
+    if (gate.scope === "DENY") return (id) => (id ? null : id ?? null);   // fail closed
+    const memo = new Map();
+    return (id) => {
+      if (!id) return id ?? null;
+      if (!memo.has(id))
+        memo.set(id, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+                                 id, ...gate.args));
+      return memo.get(id) ? id : null;
+    };
+  }
+
   /** REC-25: the plane-side gated BACKLINK read — every edge INTO a bundle,
    *  with the citing bundle filtered by the VIEWER'S position (Membership
    *  Architecture 7.9: derived reverse edges into projects are filtered by the
@@ -3167,11 +3280,26 @@ export class Store extends DurableObject {
     return { ok: true, target, backlinks: out };
   }
 
-  /** C-6.2: every reference whose target does not exist. A join, not a scan. */
-  danglingRefs() {
+  /** C-6.2: every reference whose target does not exist. A join, not a scan.
+   *
+   *  REC-30, and this is the leak the item was written from: the row NAMES THE
+   *  CITING BUNDLE, so a project that cited a target which does not exist handed
+   *  its own id to any member who asked — the one thing 7.9 says an uninvited
+   *  member must not learn. The citing bundle is the row's subject, so an
+   *  invisible one withholds the whole row (op=backlinks' posture) and no count
+   *  of what was withheld is reported, because that count is the leak.
+   *
+   *  The TARGET is deliberately not gated: by construction it names a bundle
+   *  that does not exist, and there is nothing about a nonexistent id to hide.
+   *
+   *  The join must alias the dangling-target probe to something other than `b`:
+   *  `b` belongs to viewerPredicate, and the gate's own subquery binds it. */
+  danglingRefs(viewer = null) {
+    const seen = this.#bundleGate("r.bundle_id", viewer);
     return this.#rows(
       `SELECT r.bundle_id, r.target_id FROM refs r
-       LEFT JOIN bundles b ON b.bundle_id=r.target_id WHERE b.bundle_id IS NULL`);
+       LEFT JOIN bundles tgt ON tgt.bundle_id=r.target_id
+       WHERE tgt.bundle_id IS NULL AND (${seen.sql})`, ...seen.args);
   }
 
   /** Streaming whole-store pass. Peak memory is one image, measured at 37KB,
@@ -3663,7 +3791,7 @@ export class Store extends DurableObject {
   /* CONSTRUCTS Step 3 read side: the reading of one captured document, by its
      capture identity (register.capture_sha). Returns the stored reading —
      entities[] + document facts — or found:false when the store holds none. */
-  readingFor(captureSha) {
+  readingFor(captureSha, viewer = null) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "a reading is read by its capture sha256" };
     const row = this.#one(
@@ -3672,7 +3800,12 @@ export class Store extends DurableObject {
     if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
     let reading = null;
     try { reading = JSON.parse(row.reading); } catch { /* a malformed stored reading is surfaced as null */ }
-    return { ok: true, found: true, capture_sha: row.capture_sha, bundle_id: row.bundle_id,
+    /* REC-30: the reading is OF A CAPTURE and is addressed by its sha — the
+       bundle id is the back-reference to where that capture is filed, and it is
+       withheld when it names a bundle this viewer may not see. The reading
+       itself is the document's own content and is not a project's property. */
+    return { ok: true, found: true, capture_sha: row.capture_sha,
+             bundle_id: this.#bundleRedactor(viewer)(row.bundle_id),
              content_type: row.content_type, reader_version: row.reader_version,
              reader_found: !!row.found, entity_count: row.entity_count, at: row.at, reading };
   }
@@ -3681,15 +3814,19 @@ export class Store extends DurableObject {
      carries this entity reference. The reference is matched AS IT APPEARS — the
      raw kind:key — and is NOT resolved to a canonical entity, so two documents
      that name the same source id land together without any identity model. */
-  documentsByReference(ref) {
+  documentsByReference(ref, viewer = null) {
     if (typeof ref !== "string" || !ref)
       return { ok: true, ref: typeof ref === "string" ? ref : null, count: 0, documents: [] };
     const rows = this.#rows(
       `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label, r.content_type
          FROM reading_refs rr LEFT JOIN readings r ON r.capture_sha = rr.capture_sha
         WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha`, ref);
+    /* REC-30: the reverse index answers WHICH DOCUMENTS carry a reference — a
+       fact about captures. The bundle back-reference is withheld where the
+       viewer may not see the bundle; `count` counts documents, not names. */
+    const keep = this.#bundleRedactor(viewer);
     return { ok: true, ref, count: rows.length,
-             documents: rows.map((r) => ({ capture_sha: r.capture_sha, bundle_id: r.bundle_id,
+             documents: rows.map((r) => ({ capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
                ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type })) };
   }
 
@@ -4108,21 +4245,30 @@ export class Store extends DurableObject {
 
   /* The read-side view of a resolution: established and needs_confirmation are surfaced
      explicitly from the grade so a caller cannot misread a C as established. */
-  #resolutionView(r) {
-    return { capture_sha: r.capture_sha, bundle_id: r.bundle_id, ref: r.ref, entity_id: r.entity_id,
+  /* REC-30: `keep` is the D-15 back-reference projection (`#bundleRedactor`),
+     passed in by the caller so one resolution list asks the store once per
+     distinct bundle. Absent — the DO-internal callers that are legitimate
+     whole-corpus readers — nothing is withheld. */
+  #resolutionView(r, keep = null) {
+    return { capture_sha: r.capture_sha, bundle_id: keep ? keep(r.bundle_id) : r.bundle_id,
+             ref: r.ref, entity_id: r.entity_id,
              grade: r.grade, established: !!r.established, needs_confirmation: r.grade === "C",
              method: r.method, basis: r.basis, raised_from: r.raised_from, resolved_by: r.resolved_by, at: r.at };
   }
 
   /* op=resolutions: every resolution the recogniser (or a member's testimony) recorded
      for one captured document, by its capture sha. */
-  resolutionsForCapture({ captureSha } = {}) {
+  resolutionsForCapture({ captureSha, viewer = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "resolutions are read for a captured document, by its capture sha256" };
     const rows = this.#rows(
       `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
          FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id`, captureSha);
-    return { ok: true, capture_sha: captureSha, count: rows.length, resolutions: rows.map((r) => this.#resolutionView(r)) };
+    /* REC-30: a resolution is a fact about a CAPTURE's reference and an entity;
+       the bundle back-reference takes the D-15 projection. */
+    const keep = this.#bundleRedactor(viewer);
+    return { ok: true, capture_sha: captureSha, count: rows.length,
+             resolutions: rows.map((r) => this.#resolutionView(r, keep)) };
   }
 
   /* op=concerns: THE REVERSE INDEX -- every document (capture, with its bundle) that
@@ -4132,9 +4278,14 @@ export class Store extends DurableObject {
      X" means a reference in the document resolved to X itself, not to a proxy of X.
      Each document reports the STRONGEST grade any of its references resolved to X at,
      with established/needs_confirmation surfaced so a C is never presented as settled. */
-  documentsConcerning({ entityId } = {}) {
+  documentsConcerning({ entityId, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "the reverse index answers by entity id (op=concerns&id=ENT-...)" };
+    /* REC-30: "which documents concern this subject" is the framework's single
+       largest saving and it is about CAPTURES — the strongest grade each one
+       resolved at is the record's, identical for every reader. Only the bundle
+       back-reference takes the D-15 projection. */
+    const keep = this.#bundleRedactor(viewer);
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const rows = this.#rows(
       `SELECT capture_sha, bundle_id, ref, grade, method, established, at
@@ -4144,7 +4295,7 @@ export class Store extends DurableObject {
     for (const r of rows) {
       const cur = byCapture.get(r.capture_sha);
       if (!cur || Store.#GRADE_RANK[r.grade] > Store.#GRADE_RANK[cur.grade]) {
-        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, ref: r.ref,
+        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id), ref: r.ref,
           grade: r.grade, established: !!r.established, needs_confirmation: r.grade === "C", method: r.method, at: r.at });
       }
     }
@@ -4274,7 +4425,7 @@ export class Store extends DurableObject {
      subject) or by capture sha (every connection this document is an end of, either side).
      established and needs_confirmation come from the WEAKER grade, so a caller can never
      read a connection resting on a C as settled. */
-  connectionsFor({ entityId = null, captureSha = null } = {}) {
+  connectionsFor({ entityId = null, captureSha = null, viewer = null } = {}) {
     let rows;
     if (entityId) {
       rows = this.#rows(
@@ -4285,8 +4436,16 @@ export class Store extends DurableObject {
     } else {
       return { ok: false, reason: "NO_KEY", detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" };
     }
+    /* REC-30: a connection is between two CAPTURES through one entity, and its
+       grade is the weaker of its two ends — the record's own, not the reader's.
+       Both bundle back-references take the D-15 projection, INDEPENDENTLY: a
+       connection with one visible end and one invisible one still says what it
+       says, and names only the end it may. */
+    const keep = this.#bundleRedactor(viewer);
     return { ok: true, entity_id: entityId, capture_sha: captureSha, count: rows.length,
-             connections: rows.map((r) => this.#connectionView(r)) };
+             connections: rows.map((r) => ({
+               ...this.#connectionView(r),
+               a_bundle_id: keep(r.a_bundle_id), b_bundle_id: keep(r.b_bundle_id) })) };
   }
 
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
@@ -4551,7 +4710,7 @@ export class Store extends DurableObject {
      judgment, so threaded_by is stamped server-side. Re-threading REPLACES the instance's
      placements (an instance is editable, like a definition). Returns the assembled instance
      -- grade and findings derived. */
-  async threadInstance({ progressionKey, entityId, placements, threadedBy = null } = {}) {
+  async threadInstance({ progressionKey, entityId, placements, threadedBy = null, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
       return { ok: false, reason: "NO_KEY", detail: "a progression instance names its definition by key (op=thread)" };
     const key = progressionKey.trim();
@@ -4605,7 +4764,10 @@ export class Store extends DurableObject {
            VALUES (?,?,?,?,?,?,?,?)`,
           key, eid, p.stage_key, p.capture_sha, p.bundle_id, p.grade, by, at);
     });
-    const inst = this.#assembleInstance(key, eid);
+    /* REC-30: the echo a write returns is a READ, and it goes through the same
+       projection op=instance does — a caller must not learn from a write's
+       receipt what the read would withhold. */
+    const inst = this.#redactInstance(this.#assembleInstance(key, eid), viewer);
     /* REC-8: a newly threaded instance may create a FUTURE overdue deadline (a placed, dated
        predecessor with a required successor still absent). ARM the reconciling alarm so the
        overdue-scan consumer wakes at that deadline — the producer/consumer split REC-5 established
@@ -4617,15 +4779,49 @@ export class Store extends DurableObject {
     return { ...inst, threaded: norm.length, threaded_by: by, at };
   }
 
+  /** REC-30: the D-15 predicate over an ASSEMBLED instance, applied at the ANSWER
+   *  and never inside the derivation.
+   *
+   *  A progression instance is the record's own reading of how an institution
+   *  behaved. Its grade is the weakest connection along the chain and its
+   *  findings are what the chain is missing — facts about the WORLD, derived
+   *  from every threaded document, and they must be the same for every reader.
+   *  Deriving them over a viewer-filtered document set would make the record
+   *  stronger for the uninvited than for the invited, which is exactly the
+   *  overclaim doctrine forbids.
+   *
+   *  So the whole derivation stands and only the BACK-REFERENCES are withheld:
+   *  each threaded document keeps its capture sha (a capture identity is not a
+   *  project identity) and loses the id of the bundle it lives in when that
+   *  bundle is one this viewer may not see. `document_count` counts documents,
+   *  not names, and stays honest. */
+  #redactInstance(inst, viewer) {
+    if (!inst || inst.ok !== true) return inst;
+    const keep = this.#bundleRedactor(viewer);
+    const doc = (d) => ({ ...d, bundle_id: keep(d.bundle_id) });
+    return {
+      ...inst,
+      ...(Array.isArray(inst.stages) ? { stages: inst.stages.map((s) => ({
+        ...s,
+        documents: Array.isArray(s.documents) ? s.documents.map(doc) : s.documents,
+        exceptions: Array.isArray(s.exceptions) ? s.exceptions.map(doc) : s.exceptions,
+      })) } : {}),
+      ...(Array.isArray(inst.discharges) ? { discharges: inst.discharges.map((d) => ({
+        ...d,
+        documents: Array.isArray(d.documents) ? d.documents.map(doc) : d.documents,
+      })) } : {}),
+    };
+  }
+
   /* op=instance: read a progression INSTANCE -- the documents threaded through a definition
      by an entity, with the instance grade (the weakest connection along the chain) and the
      missing-predecessor findings, all DERIVED on read from the CURRENT definition. */
-  readInstance({ progressionKey, entityId } = {}) {
+  readInstance({ progressionKey, entityId, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
       return { ok: false, reason: "NO_KEY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)" };
-    return this.#assembleInstance(progressionKey.trim(), entityId.trim());
+    return this.#redactInstance(this.#assembleInstance(progressionKey.trim(), entityId.trim()), viewer);
   }
 
   /* op=discharge (FW-10): record an EXCEPTION DOCUMENT that discharges a lawful SKIP -- a real
@@ -4646,7 +4842,7 @@ export class Store extends DurableObject {
      never a "discharged" flag that could go stale against the live placements. Re-recording the
      same document at the same stage UPSERTS (an exception is editable data); recording it at a
      different stage or from a different document ADDS (a stage may be discharged by several). */
-  dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null } = {}) {
+  dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
       return { ok: false, reason: "NO_KEY", detail: "an exception document names its progression by key (op=discharge)" };
     const key = progressionKey.trim();
@@ -4691,7 +4887,8 @@ export class Store extends DurableObject {
     /* return the reassembled instance so the caller sees the discharge take effect ON READ --
        the stage moves from a missing-predecessor finding to a discharged state (when it was in
        fact missing-and-required). */
-    const inst = this.#assembleInstance(key, eid);
+    /* REC-30: the write's echo is a read and takes op=instance's projection. */
+    const inst = this.#redactInstance(this.#assembleInstance(key, eid), viewer);
     return { ...inst, discharged_stage: sk, exception_document: cs, reason: rsn.slice(0, 4000),
              citation: cite.slice(0, 2000), declared_by: by, at };
   }
@@ -4700,15 +4897,24 @@ export class Store extends DurableObject {
      -- the raw discharge rows, including any that discharge nothing (a stage that is not missing),
      so the record is auditable. The instance read (op=instance) shows which discharges APPLY as
      "discharged" states; this shows every exception recorded, applied or not. */
-  readExceptions({ progressionKey, entityId } = {}) {
+  readExceptions({ progressionKey, entityId, viewer = null } = {}) {
     if (typeof progressionKey !== "string" || !progressionKey.trim())
       return { ok: false, reason: "NO_KEY", detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" };
     if (typeof entityId !== "string" || !entityId.trim())
       return { ok: false, reason: "NO_ENTITY", detail: "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)" };
     const key = progressionKey.trim(), eid = entityId.trim();
+    /* REC-30: the row's subject is the DISCHARGE — why a required stage may
+       lawfully be missing — and its bundle_id is a back-reference to where the
+       discharging capture lives. The discharge stays visible to every member (a
+       skip whose justification only some readers could see would be a record
+       that says different things to different people); the back-reference is
+       withheld when it names a bundle this viewer may not see, and
+       exception_count counts discharges, not names. */
+    const keep = this.#bundleRedactor(viewer);
     const exceptions = this.#rows(
       `SELECT stage_key, capture_sha, bundle_id, reason, citation, declared_by, at FROM progression_exceptions
-         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`, key, eid);
+         WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`, key, eid)
+      .map((r) => ({ ...r, bundle_id: keep(r.bundle_id) }));
     return { ok: true, progression_key: key, entity_id: eid, exception_count: exceptions.length, exceptions };
   }
 
@@ -5322,9 +5528,20 @@ export class Store extends DurableObject {
     const me = typeof member === "string" && member.trim() ? member.trim() : null;
     const items = [];
 
-    /* ---------------------------------------------------- OBLIGATION · tasks */
+    /* ---------------------------------------------------- OBLIGATION · tasks
+       REC-30: the CASE set was gated from birth (#queueAncestors) but the
+       SUBJECT was not, and an obligation's subject is a bundle id — with the
+       task's `subject_text` beside it. An item about a bundle this viewer may
+       not see is withheld whole, the same posture op=tasks now takes: an
+       obligation nobody may be told about is not an obligation this feed can
+       carry, and a routed task on an invisible project reaches its assignee,
+       who by construction can see it. Withheld silently and with no count, for
+       the reason `mute` states its own suppressions and this cannot: a count
+       here would say a project exists. */
+    const taskSeen = this.#bundleGate("tk.refers_to", viewer);
     for (const row of this.#rows(
-      `SELECT * FROM tasks ORDER BY created DESC, id LIMIT ?`, cap * 2)) {
+      `SELECT tk.* FROM tasks tk WHERE (${taskSeen.sql}) ORDER BY tk.created DESC, tk.id LIMIT ?`,
+      ...taskSeen.args, cap * 2)) {
       if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
       const subject = row.refers_to;
       /* The homes are derived FIRST and the event's state is asked ONCE, for
@@ -5369,13 +5586,24 @@ export class Store extends DurableObject {
        DEC-16's shape from the producer rather than needing a gate here: one
        op=proposedispose clears the finding under every case it appears in. */
     const feed = this.proposalsFeed(nowMs);
+    /* REC-30: the FINDING's subject bundles are read straight out of
+       progression_instances and were published unfiltered — a project whose
+       document is threaded into a progression named itself here. The FINDING
+       itself stands for every member: it is the RECORD's own question about a
+       progression stage, derived from the whole corpus, and it must not change
+       shape with the reader. What is withheld is which BUNDLES sit behind it —
+       and, with them, the acts offered on those bundles, since #queueOptions
+       and #queueAncestors both take the viewer and would answer nothing for
+       them anyway. */
+    const findingSeen = this.#bundleGate("pi.bundle_id", viewer);
     for (const p of feed.proposals) {
       const subjects = [];
       for (const inst of p.instances)
         for (const r of this.#rows(
-          `SELECT DISTINCT bundle_id FROM progression_instances
-            WHERE progression_key=? AND entity_id=? ORDER BY bundle_id`,
-          p.progression_key, inst.entity_id))
+          `SELECT DISTINCT pi.bundle_id FROM progression_instances pi
+            WHERE pi.progression_key=? AND pi.entity_id=? AND (${findingSeen.sql})
+            ORDER BY pi.bundle_id`,
+          p.progression_key, inst.entity_id, ...findingSeen.args))
           if (!subjects.includes(r.bundle_id)) subjects.push(r.bundle_id);
       items.push({
         id: `FINDING::${p.key}`,
@@ -7332,10 +7560,20 @@ export class Store extends DurableObject {
              why: "a majority of all owners, the target counted in the denominator and not voting" };
   }
 
-  projectOwnerArithmetic({ projectId } = {}) {
+  /** REC-30: the TABLE is arithmetic and belongs to everyone. The LIVE arm reads
+   *  a named project's owner count, and an owner count is existence: asking for
+   *  a project nobody invited you to would have answered `owners: 3` where an
+   *  invented id answers `owners: 0`, which is precisely the "not even that it
+   *  exists" 7.9 forbids. Gated through the ONE compilation point (`#viewerSees`,
+   *  which is false for an absent bundle AND for an invisible one), so an
+   *  invisible project now answers exactly what a nonexistent one answers —
+   *  ownerMath(0) — rather than a refusal that would itself be a signal. */
+  projectOwnerArithmetic({ projectId, viewer = null } = {}) {
     const table = [];
     for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9]) table.push(Store.ownerMath(n));
-    const live = projectId ? Store.ownerMath(this.#owners(projectId).length) : null;
+    const live = projectId
+      ? Store.ownerMath(this.#viewerSees(projectId, viewer) ? this.#owners(projectId).length : 0)
+      : null;
     return { ok: true, table, live, projectId: projectId ?? null };
   }
 
@@ -8746,23 +8984,39 @@ export class Store extends DurableObject {
   }
 
   /** Read the inbox. Filterable by assignee and status, because the first thing
-   *  a member wants is their own open work. */
-  taskList({ assignee = null, status = null, refersTo = null, limit = 200 } = {}) {
+   *  a member wants is their own open work.
+   *
+   *  REC-30: a task's `refers_to` IS a bundle id (taskDrain writes the registering
+   *  bundle's), and the row's whole subject is that bundle — its `subject_text`
+   *  describes the document, and `refersTo` lets a caller ASK about one. So the
+   *  D-15 predicate withholds the row, not a field, and it governs the `tasks`
+   *  filter too: an uninvited member asking `refers=<a hidden project>` gets the
+   *  same empty answer as for a bundle that does not exist.
+   *
+   *  The three task COUNTS are gated with the rows for REC-25's reason: a count
+   *  bigger than the list says something is hidden, which is half the leak.
+   *  `queued` is not — `task_queue` rows carry a capture sha and no bundle, so
+   *  the number names nothing. */
+  taskList({ assignee = null, status = null, refersTo = null, limit = 200, viewer = null } = {}) {
     const cap = Math.max(1, Math.min(1000, Math.floor(Number(limit) || 200)));
-    const where = [], args = [];
-    if (assignee) { where.push("assignee = ?"); args.push(assignee); }
-    if (status) { where.push("status = ?"); args.push(status); }
-    if (refersTo) { where.push("refers_to = ?"); args.push(refersTo); }
+    /* `tk.` and not a bare column: see #bundleGate's refusal. */
+    const seen = this.#bundleGate("tk.refers_to", viewer);
+    const where = [`(${seen.sql})`], args = [...seen.args];
+    if (assignee) { where.push("tk.assignee = ?"); args.push(assignee); }
+    if (status) { where.push("tk.status = ?"); args.push(status); }
+    if (refersTo) { where.push("tk.refers_to = ?"); args.push(refersTo); }
     const rows = this.#rows(
-      `SELECT * FROM tasks ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY created DESC, id LIMIT ?`,
+      `SELECT tk.* FROM tasks tk WHERE ${where.join(" AND ")} ORDER BY tk.created DESC, tk.id LIMIT ?`,
       ...args, cap);
+    const n = (st) => this.#one(
+      `SELECT count(*) c FROM tasks tk WHERE tk.status=? AND (${seen.sql})`, st, ...seen.args).c;
     return {
       ok: true,
       tasks: rows.map((r) => this.#taskOf(r)),
       counts: {
-        open: this.#one(`SELECT count(*) c FROM tasks WHERE status='open'`).c,
-        forwarded: this.#one(`SELECT count(*) c FROM tasks WHERE status='forwarded'`).c,
-        resolved: this.#one(`SELECT count(*) c FROM tasks WHERE status='resolved'`).c,
+        open: n("open"),
+        forwarded: n("forwarded"),
+        resolved: n("resolved"),
         queued: this.#one(`SELECT count(*) c FROM task_queue`).c,
       },
     };
@@ -9182,7 +9436,15 @@ export class Store extends DurableObject {
         }
       }
     }
-    const t = Date.now();
+    /* REC-30: the envelope carried an `ms` wall-clock field and NOTHING read it.
+       It was spread into every control-plane response, where it was two things
+       and neither of them good: a timing signal about work the caller did not
+       ask about, and a standing hazard for the byte-comparison assertions the
+       D-15 posture rests on — REC-25's suite had to strip it client-side because
+       a 0ms-vs-1ms pair made "hidden and absent answer identically" flake about
+       one run in twenty. Removed at the SOURCE, which retires the hazard instead
+       of documenting it. If a caller ever genuinely needs the timing, it must be
+       NAMED and asked for; an unnamed one is how this got here. */
     try {
       const map = {
         promote: () => this.promote(body),
@@ -9236,8 +9498,11 @@ export class Store extends DurableObject {
                                                   sourceCapture: url.searchParams.get("capture") }),
         /* CONSTRUCTS Step 3 (FW-5): read a captured document's reading by capture
            sha, and the reverse index by raw entity reference. */
-        reading: () => this.readingFor(url.searchParams.get("sha256")),
-        readingref: () => this.documentsByReference(url.searchParams.get("ref")),
+        /* REC-30: `viewer` is stamped by the control plane, never read from a
+           caller's own parameters there, and an absent one fails closed — the
+           bundle back-reference is withheld rather than the answer refused. */
+        reading: () => this.readingFor(url.searchParams.get("sha256"), url.searchParams.get("viewer")),
+        readingref: () => this.documentsByReference(url.searchParams.get("ref"), url.searchParams.get("viewer")),
         /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY. Create an entity
            (with inline aliases), attach an alias, declare a constitutive relation;
            read an entity BY KEY, entities BY ALIAS, and one relation by id. A
@@ -9256,8 +9521,10 @@ export class Store extends DurableObject {
            concerns an entity, by joining on entity_id (never through a relation). */
         resolve: () => this.resolveReferences(body || {}),
         resolvetestify: () => this.testifyResolution(body || {}),
-        resolutions: () => this.resolutionsForCapture({ captureSha: url.searchParams.get("sha256") }),
-        concerns: () => this.documentsConcerning({ entityId: url.searchParams.get("id") }),
+        resolutions: () => this.resolutionsForCapture({ captureSha: url.searchParams.get("sha256"),
+                                                        viewer: url.searchParams.get("viewer") }),
+        concerns: () => this.documentsConcerning({ entityId: url.searchParams.get("id"),
+                                                   viewer: url.searchParams.get("viewer") }),
         /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA carrying a GRADE (the
            two-node base case of a progression), and the PROGRESSION DEFINITION as data.
            connect DERIVES the connections among the documents that concern one entity,
@@ -9266,7 +9533,8 @@ export class Store extends DurableObject {
            set (both example progressions expressible as rows); progression reads one. */
         connect: () => this.deriveConnections(body || { entityId: url.searchParams.get("id") }),
         connections: () => this.connectionsFor({ entityId: url.searchParams.get("id"),
-                                                 captureSha: url.searchParams.get("sha256") }),
+                                                 captureSha: url.searchParams.get("sha256"),
+                                                 viewer: url.searchParams.get("viewer") }),
         progressiondefine: () => this.defineProgression(body || {}),
         progression: () => this.readProgression({ progressionKey: url.searchParams.get("key") }),
         /* CONSTRUCTS Step 5, SLICE B (FW-9): PROGRESSION INSTANCES and the MISSING-PREDECESSOR
@@ -9274,17 +9542,19 @@ export class Store extends DurableObject {
            a threading entity (only documents that resolve to it, FW-7), stamping threaded_by
            below; op=instance reads the instance with its grade (the weakest connection along
            the N-stage chain, D-73) and its missing-predecessor findings, derived on read. */
-        thread: () => this.threadInstance(body || {}),
+        thread: () => this.threadInstance({ ...(body || {}), viewer: url.searchParams.get("viewer") }),
         instance: () => this.readInstance({ progressionKey: url.searchParams.get("key"),
-                                            entityId: url.searchParams.get("id") }),
+                                            entityId: url.searchParams.get("id"),
+                                            viewer: url.searchParams.get("viewer") }),
         /* CONSTRUCTS Step 5, SLICE C (FW-10): EXCEPTION DOCUMENTS that discharge a lawful skip.
            op=discharge records an exception document (a real captured document resolving to the
            threading entity, naming the stage it discharges, carrying reason + citation), stamping
            declared_by below; op=instance then renders that stage as a "discharged" state rather
            than a missing-predecessor finding. op=exceptions reads the raw discharge rows. */
-        discharge: () => this.dischargeStage(body || {}),
+        discharge: () => this.dischargeStage({ ...(body || {}), viewer: url.searchParams.get("viewer") }),
         exceptions: () => this.readExceptions({ progressionKey: url.searchParams.get("key"),
-                                                entityId: url.searchParams.get("id") }),
+                                                entityId: url.searchParams.get("id"),
+                                                viewer: url.searchParams.get("viewer") }),
         /* REC-6: op=proposals, the DISCOVERY feed for derived findings (UI-5's delegation). A
            read-time walk of every progression instance for its missing-predecessor findings,
            D-79-aggregated per (progression_key, stage_key). Reports, never mutates. */
@@ -9357,7 +9627,8 @@ export class Store extends DurableObject {
         tasks: () => this.taskList({ assignee: url.searchParams.get("assignee"),
                                      status: url.searchParams.get("status"),
                                      refersTo: url.searchParams.get("refers"),
-                                     limit: url.searchParams.get("limit") }),
+                                     limit: url.searchParams.get("limit"),
+                                     viewer: url.searchParams.get("viewer") }),
         taskforward: () => this.taskForward(body || {}),
         taskresolve: () => this.taskResolve(body || {}),
         governoradmit: () => this.governorAdmit(body || { host: url.searchParams.get("host") }),
@@ -9458,11 +9729,12 @@ export class Store extends DurableObject {
         searchindexcheck: () => this.searchIndexCheck({
           after: url.searchParams.get("after") || "",
           limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer"),
         }),
         projectionplan: () => this.projectionPlan(),
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
-        dangling: () => ({ dangling: this.danglingRefs() }),
+        dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
         stats: () => this.stats(),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
@@ -9504,7 +9776,8 @@ export class Store extends DurableObject {
         projectownerrescue: () => this.projectOwnerRescue({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
           reason: url.searchParams.get("reason") }),
-        projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId") }),
+        projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId"),
+                                                               viewer: url.searchParams.get("viewer") }),
         retire: () => this.retire({ handle: url.searchParams.get("handle"),
           reason: url.searchParams.get("reason"),
           viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),
@@ -9558,7 +9831,8 @@ export class Store extends DurableObject {
         signerset: () => this.signerSet(body || {}),
         gatefacts: () => this.gateFacts(url.searchParams.get("id")),
         audit: () => this.auditPass({ after: url.searchParams.get("after") || "",
-                                      limit: url.searchParams.get("limit") }),
+                                      limit: url.searchParams.get("limit"),
+                                      viewer: url.searchParams.get("viewer") }),
         publish: () => this.publish(body || {}),
         verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
         publishedlist: () => this.publishedList(),
@@ -9571,7 +9845,7 @@ export class Store extends DurableObject {
         purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") }),
       };
       if (!map[op]) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
-      return Response.json({ ok: true, ms: Date.now() - t, result: await map[op]() });
+      return Response.json({ ok: true, result: await map[op]() });
     } catch (e) {
       return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 });
     }
