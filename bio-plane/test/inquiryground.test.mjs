@@ -503,7 +503,11 @@ console.log("\n--- 7. removing a grouping is a restructure; and the states that 
   await GET(`op=conclude&token=${CAROL}&target=${INQ_PUB}`
     + `&conclusion=${encodeURIComponent("The transfer rested on a memo nobody adopted.")}`
     + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer.")}`);
+  /* REC-44 / DEC-44 (2026-08-04): `scope` is authored per case per edition and
+     required. Nothing else in this block moves — a published case still refuses
+     restructuring by name, at whatever arity the case has. */
   const pub = await POST(`op=publish&token=${CAROL}`, { target: INQ_PUB,
+    scope: "Whether the FY2024 transfer rested on anything the Council adopted.",
     statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",
     excluded: [], subjectPosition: "sought_and_answered",
     subjectJustification: "We put the claims to the City Administrator on 2026-06-20 and printed the reply." });

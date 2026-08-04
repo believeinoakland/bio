@@ -45,7 +45,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
 
-export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry, publishedRegistry, earnedRegistry }) {
+export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry,
+                                publishedRegistry, publishedCaseRegistry, earnedRegistry }) {
   const files = new Map(), elided = new Set();
   for (const [path, v] of Object.entries(image || {})) {
     if (typeof v === "string") files.set(path, v);
@@ -68,6 +69,12 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        Passing null here does not soften the gate, it blinds it -- so it is
        threaded from the one place that has the rows. */
     publishedRegistry: publishedRegistry || null,
+    /* REC-44: and C-21.1's fact at CASE altitude -- what the PREVIOUS EDITION
+       OF THIS CASE asserted about its own limits. A case is a container over
+       one or more findings (DEC-44), so this cannot be read off the finding
+       being gated and arrives in its own registry. Passing null blinds C-21.1
+       exactly as passing null above blinds C-21.2. */
+    publishedCaseRegistry: publishedCaseRegistry || null,
     /* REC-18: what each basis target EARNS, supplied by the store (gateFacts)
        for the bundle being gated. The third fact the catalog cannot answer from
        the bundle alone -- an EARNED grade is computed from `resolutions` and the

@@ -164,18 +164,24 @@ t("attested by the key's member", rat.attestor, "sparky");
    1.20.0: C-2.10's three-valued counterparty (REC-23/D-130) — same correction,
    same reason. */
 t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.20.0)");
-/* CORRECTED 2026-08-04 (REC-14), never exempted: the old count of 3 was right
-   while a ratification published exactly the bundle's own parts. DEC-34 makes
-   the published case a CONTAINER, so a fourth part now lands with every
-   ratification -- MANIFEST.json, the signed hash manifest over every other
-   part. It is content-addressed and copied like the rest, deliberately: its
-   sha is in published_shas so any copy of the container anywhere can be
-   checked against this instance by hash, which is the whole of what
-   "tamper-evident" means here. */
-t("bundle, file, capture AND the container manifest published", rat.published.shas, 4);
-t("all bytes copied to the published bucket", rat.published.copied, 4);
-t("the manifest is answerable by its own hash, like every other part",
-  rat.container.parts >= 3 && /^[0-9a-f]{64}$/.test(rat.container.manifest_sha), true);
+/* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
+   3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
+   and now returns. REC-14's reasoning was right about the container and wrong
+   about whose it is: DEC-34's container is the PUBLISHED CASE's, and a case is a
+   container over one or more FINDINGS (DEC-44). THIS bundle is an INFORMATION
+   bundle. It is not a finding, it is in no case, and manufacturing a
+   "case container" for it was the same conflation D-187 records one level down
+   -- the record calling something a case because the tables could not tell the
+   difference. So a non-case ratification publishes exactly its own parts, its
+   bytes stay individually answerable by hash through op=publishedbytes and
+   op=verify (asserted immediately below, unchanged), and NO container is
+   claimed for material that is not a case. The container assertions live in
+   publishedcase.test.mjs, where there is a case to have one. */
+t("bundle, file and capture published -- and NO container, because an information bundle is not a case",
+  rat.published.shas, 3);
+t("all bytes copied to the published bucket", rat.published.copied, 3);
+t("no container is manufactured for material that is not a published case (DEC-44)",
+  [rat.container, "caseId" in rat], [null, false]);
 t("an information bundle ratifies at edition 1 and names no case edition", rat.edition, 1);
 
 console.log("\n--- doorbell 7a: anyone can verify, and only ratified answers yes ---");

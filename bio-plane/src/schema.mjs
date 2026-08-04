@@ -186,17 +186,43 @@ CREATE TABLE IF NOT EXISTS signers (
 -- carries its own attestation and its own date, and still says what it said.
 --
 -- title is the ONE deliberate divergence from DATA-MODEL.md 2.4.4, so the
--- public index is not N+1. The four frozen columns after it are what the
--- group SIGNED, kept beside the signature rather than only inside the bytes:
--- completeness is the assertion C-21.1 compares the NEXT edition against
--- (a gate that only checks presence IS a checkbox, and the comparison must
--- not depend on R2 or on a history snapshot surviving); strength is BOTH
--- frozen axis objects (never two letters -- unrated and undetermined are
--- different frozen facts, and C-21.2 compares per axis against the right
--- one); required is DEC-17's declared bar as it stood, null meaning ABSENT
--- and gating nothing; manifest is DEC-34's signed hash manifest over every
--- part of the container, with its own sha in manifest_sha so any copy of the
--- container anywhere can be checked against this instance.
+-- public index is not N+1. The frozen columns after it are what the group
+-- SIGNED, kept beside the signature rather than only inside the bytes:
+-- strength is BOTH frozen axis objects (never two letters -- unrated and
+-- undetermined are different frozen facts, and C-21.2 compares per axis
+-- against the right one); required is DEC-17's declared bar as it stood,
+-- null meaning ABSENT and gating nothing.
+--
+-- REC-44 / DEC-44 / D-187: THIS ROW IS A **FINDING**, NOT A CASE, and the
+-- correction is that it was only ever a case by assumption. A published case
+-- is a CONTAINER OVER ONE OR MORE FINDINGS scoped to the project's own
+-- question; the FINDING stays the unit of truth and the CASE becomes the unit
+-- of publication. So THREE things left this table and went to
+-- published_cases, and each one left for the same reason -- it is a fact
+-- about the CASE and would otherwise be stated once per member finding, which
+-- is D-21's second place to state one fact:
+--   completeness  the assertion C-21.1 compares the next edition against.
+--                 C-21.1 is now PER CASE PER EDITION; C-21.2's per-axis
+--                 inheritance stays PER FINDING and reads strength below.
+--                 The two live at different altitudes and collapsing them is
+--                 exactly what DEC-44 forbids.
+--   manifest      DEC-34's signed hash manifest, which now describes the
+--   manifest_sha  WHOLE case -- every member finding's parts, every member's
+--                 own signature -- because a stranger holding the container
+--                 must be able to check every finding the case rests on
+--                 without contacting this instance (DEC-44 determination 3).
+-- edition here IS the CASE edition the finding was published in, not a
+-- number of its own: editions are over the CONTAINER (DEC-12, unchanged by
+-- DEC-44 and given its natural home by it).
+--
+-- parts is WHAT THIS SIGNED EDITION OF THIS FINDING CONSISTS OF -- the path,
+-- sha256, kind and byte length of every file, as hashed at ratification. It is
+-- a column rather than a query over published_shas because published_shas is
+-- append-only ACROSS editions on purpose (a hash once published answers
+-- forever), so it cannot say which parts belong to WHICH edition, and the case
+-- container needs exactly that: assembling edition N of a case means gathering
+-- edition N's parts from every member, including members ratified minutes
+-- earlier. Nothing else holds it.
 CREATE TABLE IF NOT EXISTS published_bundles (
   bundle_id       TEXT NOT NULL,
   edition         INTEGER NOT NULL,
@@ -207,11 +233,9 @@ CREATE TABLE IF NOT EXISTS published_bundles (
   attestor_member TEXT,
   gate_version    TEXT NOT NULL,
   sig_armored     TEXT NOT NULL,
-  completeness    TEXT,
   strength        TEXT,
   required        TEXT,
-  manifest_sha    TEXT,
-  manifest        TEXT,
+  parts           TEXT,
   PRIMARY KEY (bundle_id, edition)
 );
 CREATE TABLE IF NOT EXISTS published_shas (
@@ -1305,6 +1329,72 @@ CREATE TABLE IF NOT EXISTS published_edges (
   PRIMARY KEY (from_bundle, to_bundle, kind)
 );
 CREATE INDEX IF NOT EXISTS published_edges_to ON published_edges(to_bundle);
+-- REC-44 / DEC-44 / D-187: THE PUBLISHED CASE, which is the object this record
+-- always meant and never had. A case is a CONTAINER OVER ONE OR MORE FINDINGS,
+-- scoped to the project's own question. Before this table a case WAS an
+-- inquiry, and nobody chose that: it was assumed by every item in the chain,
+-- and DEC-32 closed the only escape (a parent inquiry citing children would
+-- collapse several propositions into one conclusion with one falsifier, the
+-- overclaim DEC-32 exists to prevent).
+--
+-- THE IDENTITY IS DISTINCT FROM A BUNDLE ID, ALWAYS, including for the
+-- one-finding case DEC-44 determination 5 keeps legal. Reusing the member's
+-- bundle id when there happens to be one member is exactly the conflation
+-- D-187 records: it would make ?id= ambiguous at the public read path and it
+-- would make the shape depend on the arity, so the degenerate case would stop
+-- being degenerate the moment a second finding joined. The id is minted by
+-- op=publish (CASE-<year>-<seq>, through allocId like every other minted
+-- identifier) and then CARRIED IN THE SIGNED BYTES of every member finding, so
+-- a case identity can never be claimed at the commit that was not inside the
+-- hash the member signed -- the rule DEC-12 already imposes on the edition.
+--
+-- WHAT IS AUTHORED HERE, and both are authored per CASE per EDITION:
+--   scope         DEC-44 determination 2 -- Bob's "sufficient scope to address
+--                 all issues that brought the various inquiries together".
+--                 NEVER derived from the findings' titles. It sits BESIDE the
+--                 completeness assertion and does not replace it: completeness
+--                 says what was left OUT, scope says what the case is ABOUT,
+--                 and a reader needs both because they are not the same claim.
+--   completeness  REC-14's assertion, moved up one altitude. C-21.1's
+--                 byte-check compares THIS against the previous edition of
+--                 THIS CASE. The scope statement is deliberately NOT under
+--                 that byte-check, and the reasoning is at C-21.1's site.
+--
+-- ratified_at is NULL until the edition is COMPLETE -- until every member
+-- finding has been ratified. That is a real state and it is stated rather than
+-- hidden: each finding carries its own signature over its own bytes (the
+-- finding is the unit of truth), so a case edition exists from the first
+-- ratification and can only be SERVED as a container once the last one lands.
+CREATE TABLE IF NOT EXISTS published_cases (
+  case_id      TEXT NOT NULL,
+  edition      INTEGER NOT NULL,
+  scope        TEXT,
+  completeness TEXT,
+  opened       TEXT NOT NULL,
+  ratified_at  TEXT,
+  manifest_sha TEXT,
+  manifest     TEXT,
+  PRIMARY KEY (case_id, edition)
+);
+-- The case -> findings MEMBERSHIP, as DECLARED in every member's own ratified
+-- bytes. published_bundles holds the RATIFIED SUBSET; this holds the whole set,
+-- and the difference between them is what "this edition is not complete yet"
+-- means. That difference is also why this is a TABLE rather than a derived
+-- query over published_bundles, and it earns itself on the D4/REC-42 test
+-- twice over: it needs an ORDINAL (the order the member published the findings
+-- in is the order the container's parts[] and every rendering take, and it is
+-- authored rather than alphabetical), and it answers a query keyed on it in
+-- BOTH directions -- "which findings are in this case edition" (assembling the
+-- container) and "which case does this finding belong to" (the public read
+-- path resolving a finding id, which is why bundle_id is indexed).
+CREATE TABLE IF NOT EXISTS published_case_members (
+  case_id   TEXT NOT NULL,
+  edition   INTEGER NOT NULL,
+  ord       INTEGER NOT NULL,
+  bundle_id TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS published_case_members_bundle ON published_case_members(bundle_id);
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
 -- consumers that FIRE something (CAP-3's archive-monitor and REC-26's
 -- monitor-cadence). It exists because a retry is not free here: an archive

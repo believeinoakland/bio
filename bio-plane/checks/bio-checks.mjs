@@ -1938,6 +1938,36 @@ function checkPublishedExtension(fm, findings) {
         ['justify the position — including a deliberate decision not to give notice']));
     }
   }
+  /* REC-44 / DEC-44: THE CASE THIS FINDING WAS PUBLISHED IN, in the bytes the
+     member signs. All three are required on `published`, and each closes a
+     different hole:
+       case_id        without it a published finding names no case, so C-21.1
+                      has nothing to be fresh against and the container has no
+                      identity to be an edition OF.
+       case_scope     DEC-44 determination 2. AUTHORED and never prefilled —
+                      this is the arm that fits the claim, since a scope may
+                      legitimately be unchanged between editions and a
+                      byte-check on it would pressure a member into inventing a
+                      difference (see checkCompletenessFreshness).
+       case_findings  DEC-44 determination 3. The roster is inside every
+                      member's own signed bytes, so a stranger holding ONE
+                      finding can see what else the case rests on, and the
+                      ratify committer can refuse two members who disagree
+                      about the set instead of silently reconciling them. */
+  if (typeof fm.case_id !== 'string' || fm.case_id.trim() === '' || fm.case_id === 'null') {
+    findings.push(f('C-2.8', 'error', 'published state requires case_id: a published case is a CONTAINER over one or more findings (DEC-44), and a finding published into no case has no edition, no scope and nothing for C-21.1 to hold it to',
+      ['publish through op=publish, which mints or carries the case identity and stamps it into the bytes']));
+  }
+  if (typeof fm.case_scope !== 'string' || fm.case_scope.trim() === '') {
+    findings.push(f('C-2.8', 'error', 'published state requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
+      ['author the case scope on op=publish']));
+  }
+  if (!Array.isArray(fm.case_findings) || !fm.case_findings.length) {
+    findings.push(f('C-2.8', 'error', 'published state requires case_findings naming every finding in this case: a stranger holding this document must be able to see what else the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)',
+      ['publish through op=publish, which writes the roster into every member\'s bytes']));
+  } else if (typeof fm.id === 'string' && !fm.case_findings.includes(fm.id)) {
+    findings.push(f('C-2.8', 'error', `case_findings does not include this document (${fm.id}): a finding that is not a member of the case it names cannot be published into it`));
+  }
   /* C-9. The FIELD may not be absent; the LIST may legitimately be empty. */
   if (!Array.isArray(fm.completeness_excluded)) {
     findings.push(f('C-2.8', 'error', 'published state requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal — an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse',
@@ -2060,9 +2090,33 @@ function checkPublishedExtension(fm, findings) {
 function checkCompletenessFreshness(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
   if (ctx.fm?.current_state !== 'published') return;
-  const reg = ctx.publishedRegistry;
+  /* REC-44 / DEC-44: PER CASE PER EDITION, and the altitude is the correction.
+     The completeness assertion belongs to the CASE — the container over one or
+     more findings — so the comparison is against the previous edition of THAT
+     CASE, read from a registry of its own. Reading it off the finding was right
+     while a case WAS one inquiry and is wrong now: two findings published in
+     one edition state ONE completeness claim between them, so a per-finding
+     comparison would ask the same question twice and, worse, would let a case
+     reprint edition 1's limits under a finding that had not published before.
+     C-21.2's per-axis inheritance stays PER FINDING (checkInheritedLeg, over
+     ctx.publishedRegistry, untouched): the two live at different altitudes and
+     collapsing them is the mistake this whole item exists to undo.
+
+     THE SCOPE STATEMENT IS DELIBERATELY NOT UNDER THIS BYTE-CHECK, and that is
+     a judgement rather than an omission. Completeness is edition-specific by
+     nature — what this edition left out, as of its date — so reprinting it is
+     evidence nobody looked. A case's SCOPE is the project's question, and it
+     legitimately does not move between editions when a finding is revised;
+     requiring it to change every edition would pressure a member into inventing
+     a difference, and "a gate that pressures someone into inventing one is a
+     bug in the gate" is CLAUDE.md's sentence about exactly this shape. It is
+     REQUIRED and never prefilled (checkPublishedExtension), which is the arm
+     that fits the claim it makes. */
+  const reg = ctx.publishedCaseRegistry;
   if (!reg) return;
-  const mine = reg[ctx.fm.id];
+  const cid = typeof ctx.fm.case_id === 'string' && ctx.fm.case_id !== 'null' ? ctx.fm.case_id : null;
+  if (!cid) return;
+  const mine = reg[cid];
   if (!mine || !mine.editions) return;
   /* The previous edition is the highest ratified one BELOW this document's own
      edition: this edition is not in the projection until it is ratified, and a
@@ -4559,6 +4613,19 @@ export async function checkBundle(input, opts = {}) {
        has — the ratification gate and the store's own write path — injects it,
        which is what keeps the absence from being a way through. */
     publishedRegistry: input.publishedRegistry || null,
+    /* REC-44 / DEC-44: the CASE-altitude half of the same fact, injected on the
+       same terms and separated for the reason DEC-44 gives — a case is a
+       CONTAINER over one or more findings, so what the previous edition of THIS
+       CASE asserted about its limits is not a fact about any one finding.
+       Shape:
+         { <caseId>: { latest: n, editions: { "1": {edition, scope,
+             completeness, ratified_at} } } }
+       Absent means the caller cannot see the published record (the cli, the
+       migrate tool) and C-21.1 cannot fire; every path a real caller has
+       injects it. Kept SEPARATE from publishedRegistry deliberately: one
+       registry serving both altitudes is how the collapse this item corrects
+       happened in the first place. */
+    publishedCaseRegistry: input.publishedCaseRegistry || null,
     /* REC-18: the second fact the catalog cannot get from the bundle, and it is
        injected on exactly the same terms and for the same reason. What
        `resolutions` holds about this bundle's basis targets, and what `register`

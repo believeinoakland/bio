@@ -108,7 +108,14 @@ const anonJson = async (q) => (await anonRaw(q)).json();
 const anonCase = async (args) => rP(await anonJson(`op=publishedcase&${args}`));
 const anonBytes = async (args) => await anonRaw(`op=publishedbytes&${args}`);
 
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`, body));
+/* REC-44 / DEC-44 (2026-08-04): op=publish now requires an authored `scope` —
+   a published case is a CONTAINER over one or more FINDINGS and states what
+   brought them together. The helper supplies a default so every assertion below
+   goes on measuring what it was written to measure; the NEW rule is asserted on
+   its own, by name, rather than by these calls happening to omit the field.
+   A body that sets `scope` (or `scope: ""`, to drive the refusal) wins. */
+const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
+  { scope: "Whether the signature question was properly handled, on the documents in hand.", ...body }));
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
@@ -311,8 +318,20 @@ const MANIFEST1 = rat1.container.manifest_sha;
 console.log("\n--- 1. an anonymous caller reads the case, and NOTHING of the working record ---");
 {
   const c = await anonCase(`id=${CASE}`);
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44. This surface answers with a CASE,
+     which is a container over one or more FINDINGS — it used to answer with a
+     bundle id because a case was assumed to be exactly one inquiry, and nobody
+     ever chose that (D-187). A FINDING's id still resolves, because a stranger
+     handed one finding must be able to reach the case the group put its name
+     on; the answer says which finding was asked for and carries every member. */
   t("op=publishedcase answers a caller holding NO credential of any kind",
-    [c.ok, c.bundleId, c.edition], [true, CASE, 1]);
+    [c.ok, c.caseId === e1.caseId, c.asked, c.edition], [true, true, CASE, 1]);
+  t("the case identity is its OWN, distinct from any finding's bundle id",
+    [/^CASE-\d{4}-\d{4}$/.test(c.caseId), c.caseId !== CASE], [true, true]);
+  t("and the answer carries the FINDINGS, plural, with the asked-for one among them",
+    c.findings.map((x) => x.bundle_id), [CASE]);
+  t("there is NO case-level strength anywhere in the answer: one letter over a case is R2's forbidden composition",
+    "strength" in c, false);
   t("and it answers the LATEST edition by default", c.latest_edition, 1);
   /* The contrast is the whole safety argument: the SAME caller, the same
      instance, the same moment. */
@@ -340,49 +359,62 @@ console.log("\n--- 1. an anonymous caller reads the case, and NOTHING of the wor
 console.log("\n--- 2. both frozen axes, the declared bar beside them, and the body from the SAME bytes (D-1) ---");
 {
   const c = await anonCase(`id=${CASE}`);
-  t("BOTH frozen axis objects come back — never one letter, and never a composed score",
-    c.strength.map((a) => [a.axis, a.state, a.grade]),
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44: every claim in this block is a claim
+     about a FINDING — the frozen pair, the declared bar, the signature, the
+     rendered body, the basis — and it is read from findings[] rather than from
+     the top of the answer. Not one value is loosened; the altitude is fixed.
+     The FINDING is the unit of truth and the CASE is the unit of publication,
+     which is precisely the distinction DEC-44 makes. */
+  const f0 = c.findings[0];
+  t("BOTH frozen axis objects come back PER FINDING — never one letter, and never a composed score",
+    f0.strength.map((a) => [a.axis, a.state, a.grade]),
     [["capture", "graded", "B"], ["connection", "graded", "C"]]);
   t("each axis carries its OWN weakest leg and its own sentence",
-    [c.strength[0].weakest, c.strength[1].weakest, c.strength[0].detail.includes("capture B")],
+    [f0.strength[0].weakest, f0.strength[1].weakest, f0.strength[0].detail.includes("capture B")],
     [INFO_CAP, INFO_CONN, true]);
   t("DEC-17's declared bar is beside them, and an ABSENT bar says absent rather than reading as zero",
-    [c.required.declared, c.required.source, c.required.detail.includes("not a bar of zero")],
+    [f0.required.declared, f0.required.source, f0.required.detail.includes("not a bar of zero")],
     [false, "none", true]);
-  t("the attestation is public: attestor, key, gate version and the armored signature itself",
-    [c.attestor.member, /^[A-Za-z0-9+/=]+$/.test(c.attestor.key_b64), typeof c.gate_version,
-     c.sig_armored.startsWith("-----BEGIN SSH SIGNATURE-----")], ["vera", true, "string", true]);
-  t("the body is rendered FROM THE EDITION'S OWN BYTES, named by the sha the signature covers (D-1)",
-    [c.body.state, c.body.from_sha], ["published", SHA1]);
+  t("the attestation is public and PER FINDING: attestor, key, gate version and the armored signature itself",
+    [f0.attestor.member, /^[A-Za-z0-9+/=]+$/.test(f0.attestor.key_b64), typeof f0.gate_version,
+     f0.sig_armored.startsWith("-----BEGIN SSH SIGNATURE-----")], ["vera", true, "string", true]);
+  t("the body is rendered FROM THE FINDING'S OWN BYTES, named by the sha the signature covers (D-1)",
+    [f0.body.state, f0.body.from_sha], ["published", SHA1]);
   /* The document says its conclusion in TWO places and they are not the same
      statement: op=conclude authors the gated claim into the frontmatter, and the
      canonical headings carry the prose beside it. Both come back, labelled,
      because returning one would either drop what the gate holds the case to or
      drop the account a person reads. */
   t("the conclusion and the falsifier of record come back as AUTHORED, which is what the gate holds",
-    [c.body.authored.conclusion, c.body.authored.falsifier.startsWith("An adopted resolution")],
+    [f0.body.authored.conclusion, f0.body.authored.falsifier.startsWith("An adopted resolution")],
     ["The transfer rests on a memo nobody adopted.", true]);
   t("and the canonical sections are parsed out of the signed bytes beside them",
-    [typeof c.body.conclusion, c.body.question.includes("Was the sewer transfer authorised?"),
-     c.body.excludes.includes("FY2023 comparison memo")], ["string", true, true]);
+    [typeof f0.body.conclusion, f0.body.question.includes("Was the sewer transfer authorised?"),
+     f0.body.excludes.includes("FY2023 comparison memo")], ["string", true, true]);
   t("the completeness assertion travels with its position and its justification (DEC-13)",
     [c.completeness.statement, c.completeness.subject_position, c.completeness.author],
     [STMT1, "sought_and_answered", "vera"]);
-  t("the file manifest states every part with its sha AND its bytes, the capture included",
-    c.files.filter((f) => f.kind === "capture").map((f) => [f.path, f.sha256, f.bytes]),
-    [["snapshots/memo.bin", CAP_SHA, CAPTURE.length]]);
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44: the container carries EVERY member
+     finding, so a part's path inside it is NAMESPACED BY FINDING. That is
+     forced rather than chosen — every finding carries a `bundle.md`, and a flat
+     parts[] would have two members claiming one path, which is an archive
+     saying two things about one name. `finding` names the member it belongs to
+     so a reader never has to parse the path to find out. */
+  t("the file manifest states every part with its sha AND its bytes, namespaced by the finding it belongs to",
+    c.files.filter((f) => f.kind === "capture").map((f) => [f.path, f.finding, f.sha256, f.bytes]),
+    [[`${CASE}/snapshots/memo.bin`, CASE, CAP_SHA, CAPTURE.length]]);
   t("and every part of it is answerable by hash",
     c.files.every((f) => /^[0-9a-f]{64}$/.test(f.sha256)), true);
   t("the verification pointers are PUBLISHED, so a reader is not told to work out how to check us",
-    [c.verification.bytes.includes(SHA1), c.verification.container.includes(MANIFEST1),
+    [c.verification.findings[0].bytes.includes(SHA1), c.verification.container.includes(MANIFEST1),
      c.verification.detail.includes("tamper-EVIDENT")], [true, true, true]);
   t("and the claim is tamper-EVIDENT, never tamper-proof — the word 'prevent' appears only as a denial",
     /Nothing here prevents a modified copy/.test(c.verification.detail), true);
   t("a basis leg on UNPUBLISHED material is NAMED and not served, and says which it is",
-    c.basis.map((l) => [l.target, l.served, l.grade, l.grade_axis]),
+    f0.basis.map((l) => [l.target, l.served, l.grade, l.grade_axis]),
     [[INFO_CAP, false, "B", "capture"], [INFO_CONN, false, "C", "connection"]]);
   t("and the naming is stated in words, not left to a boolean nobody renders",
-    c.basis[0].detail.includes("can hand over nothing of it"), true);
+    f0.basis[0].detail.includes("can hand over nothing of it"), true);
 }
 
 /* ================================================== 3. bytes, BY HASH and only by hash */
@@ -444,8 +476,23 @@ console.log("\n--- 4. DEC-34: the container is a zip, served by the MANIFEST's h
 {
   const m = await anonBytes(`sha256=${MANIFEST1}`);
   const manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(await m.arrayBuffer())));
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44. The format is version 2 and the
+     change is the item: `case` is the CASE identity rather than a bundle id,
+     `findings[]` carries every member with its OWN signature and its OWN frozen
+     pair, and there is NO top-level strength — one letter over a case is R2's
+     forbidden composition arriving at case altitude. DEC-34's properties are
+     unchanged and are still asserted below: every part by sha256, the manifest
+     answerable by its own hash, tamper-EVIDENT and never tamper-proof. */
   t("the manifest itself answers by its own hash, to anyone",
-    [m.status, manifest.format, manifest.case, manifest.edition], [200, "bio-case-container/1", CASE, 1]);
+    [m.status, manifest.format, manifest.case, manifest.edition],
+    [200, "bio-case-container/2", e1.caseId, 1]);
+  t("the manifest names the case's SCOPE and carries EVERY finding, each with its own signature and its own pair",
+    [typeof manifest.scope, manifest.findings.map((x) => x.bundle_id),
+     manifest.findings.every((x) => x.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----")),
+     manifest.findings.every((x) => Array.isArray(x.strength) && x.strength.length === 2)],
+    ["string", [CASE], true, true]);
+  t("and the manifest states NO case-level strength: composing findings into one letter is what R2 forbids",
+    "strength" in manifest, false);
 
   const z = await anonBytes(`sha256=${MANIFEST1}&format=zip`);
   const zipBytes = new Uint8Array(await z.arrayBuffer());
@@ -462,13 +509,15 @@ console.log("\n--- 4. DEC-34: the container is a zip, served by the MANIFEST's h
   t("the plane's own container reader walks it: a real central directory, not a blob we called a zip",
     [c.ok, c.count >= 3], [true, true]);
   const names = c.entries.map((e) => e.name);
+  /* CORRECTED 2026-08-04, REC-44: the root is the CASE's directory and each
+     part sits under its own finding inside it — <case>/<finding>/<path>. */
   t("MANIFEST.json is at the ROOT and every part sits under the case's own directory (the layout block)",
-    [names[0], names.slice(1).every((n) => n.startsWith(`${CASE}/`))], ["MANIFEST.json", true]);
+    [names[0], names.slice(1).every((n) => n.startsWith(`${manifest.case}/`))], ["MANIFEST.json", true]);
   t("the parts are the manifest's parts, at their own paths",
-    names.slice(1).sort(), manifest.parts.map((p) => `${CASE}/${p.path}`).sort());
+    names.slice(1).sort(), manifest.parts.map((p) => `${manifest.case}/${p.path}`).sort());
   let mismatched = [];
   for (const p of manifest.parts) {
-    const got = await readPart(zipBytes, c, `${CASE}/${p.path}`);
+    const got = await readPart(zipBytes, c, `${manifest.case}/${p.path}`);
     if (!got.ok || sha(got.bytes) !== p.sha256) mismatched.push(p.path);
   }
   t("EVERY part in the container hashes to what the manifest says it does, CRC-checked on the way out",
@@ -522,12 +571,15 @@ console.log("\n--- 5. DEC-12: edition 2 publishes and edition 1 stays fetchable 
   t("edition 2 publishes and ratifies", [e2.ok, e2.edition, rat2.ok, rat2.edition], [true, 2, true, 2]);
 
   const latest = await anonCase(`id=${CASE}`);
-  t("a bundle id alone now answers with edition 2", [latest.edition, latest.bundle_sha], [2, SHA2]);
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44: a bundle sha belongs to a FINDING, so
+     it is read from findings[]. The claim — a bare id answers with the latest
+     edition — is unchanged. */
+  t("a bundle id alone now answers with edition 2", [latest.edition, latest.findings[0].bundle_sha], [2, SHA2]);
   t("and it names every edition, so a reader holding an older hash learns a newer one exists",
     latest.editions, [1, 2]);
   const byHash = await anonCase(`sha256=${SHA1}`);
   t("A HASH RESOLVES TO ITS OWN EDITION, never to the current one (DEC-12)",
-    [byHash.edition, byHash.bundle_sha, byHash.completeness.statement], [1, SHA1, STMT1]);
+    [byHash.edition, byHash.findings[0].bundle_sha, byHash.completeness.statement], [1, SHA1, STMT1]);
   t("edition 1 is still reachable by number too, and still says what it said",
     (await anonCase(`id=${CASE}&edition=1`)).completeness.statement, STMT1);
   t("edition 1's BYTES are still fetchable after edition 2 lands",
@@ -535,16 +587,22 @@ console.log("\n--- 5. DEC-12: edition 2 publishes and edition 1 stays fetchable 
   t("and still VERIFIABLE through the doorbell, which is what 'edition 1 answers forever' means",
     rP(await anonJson(`op=verify&sha256=${SHA1}`)).published, true);
   t("each edition keeps its OWN signature and its own attestation",
-    [byHash.sig_armored !== latest.sig_armored, byHash.ratified_at !== latest.ratified_at], [true, true]);
+    [byHash.findings[0].sig_armored !== latest.findings[0].sig_armored,
+     byHash.ratified_at !== latest.ratified_at], [true, true]);
   t("each edition has its own CONTAINER, and edition 1's still assembles",
     [byHash.manifest_sha !== latest.manifest_sha,
      (await anonBytes(`sha256=${byHash.manifest_sha}&format=zip`)).status], [true, 200]);
-  t("both editions state their frozen pair and their declared bar, per edition",
-    [byHash.strength.map((a) => a.grade), latest.strength.map((a) => a.grade),
-     byHash.required.declared, latest.required.declared],
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44: per edition AND per finding. The
+     frozen pair, the declared bar and the rendered body all belong to the
+     FINDING; what belongs to the edition is the case's own completeness
+     assertion, asserted above. */
+  t("both editions state their frozen pair and their declared bar, per edition and per finding",
+    [byHash.findings[0].strength.map((a) => a.grade), latest.findings[0].strength.map((a) => a.grade),
+     byHash.findings[0].required.declared, latest.findings[0].required.declared],
     [["B", "C"], ["B", "C"], false, false]);
   t("and the body of edition 1 is edition 1's body, not the current document's",
-    [byHash.body.from_sha, byHash.body.conclusion.includes("comparison memo confirms")], [SHA1, false]);
+    [byHash.findings[0].body.from_sha,
+     byHash.findings[0].body.conclusion.includes("comparison memo confirms")], [SHA1, false]);
 }
 
 /* ================================ 6. R4: named, and served to nobody */
@@ -580,16 +638,21 @@ console.log("\n--- 6. R4: a published child NAMES its parent and its siblings an
   if (!ratK.ok) throw new Error(`ratify child: ${JSON.stringify(ratK)}`);
 
   const c = await anonCase(`id=${KID_A}`);
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44: R4's disclosure is a statement about
+     a particular FINDING's question — which question was split, and into what —
+     so the graph is read per finding and is deliberately NOT merged across a
+     case's members. Merging would attribute one finding's parent to another. */
+  const kid = c.findings[0];
   t("the published child NAMES its parent and every sibling",
-    [c.division.parent, c.division.siblings], [PARENT, [KID_B]]);
+    [kid.division.parent, kid.division.siblings], [PARENT, [KID_B]]);
   t("and SERVES neither: nothing in the served set is the parent or the sibling",
-    c.serves.filter((e) => e.to === PARENT || e.to === KID_B), []);
+    kid.serves.filter((e) => e.to === PARENT || e.to === KID_B), []);
   t("a name-only edge carries an id and a kind and NOTHING else — no title, no state, no sha",
-    [...new Set(c.names.map((n) => Object.keys(n).sort().join(",")))], ["kind,to"]);
+    [...new Set(kid.names.map((n) => Object.keys(n).sort().join(",")))], ["kind,to"]);
   t("the disclosure states WHY it is a name and not a door",
-    c.division.detail.includes("the other half exists"), true);
+    kid.division.detail.includes("the other half exists"), true);
   t("EVERY served edge names a bundle with a published edition — the restriction, asserted from the public side",
-    c.serves.filter((e) => !Number.isInteger(e.edition)), []);
+    kid.serves.filter((e) => !Number.isInteger(e.edition)), []);
   /* THE RESTRICTION AT THE WRITE, which the assertion above cannot reach: an
      empty serves[] satisfies "every served edge is published" whether the
      restriction holds or was never applied, and an outcome that costs nothing to
@@ -597,7 +660,7 @@ console.log("\n--- 6. R4: a published child NAMES its parent and its siblings an
      classified servable and cannot resolve — empty when the restriction holds,
      and naming the working targets the moment it does not. */
   t("and NO edge is classified servable with nothing published behind it, on the child or on the case",
-    [c.unresolved, (await anonCase(`id=${CASE}`)).unresolved], [[], []]);
+    [kid.unresolved, (await anonCase(`id=${CASE}`)).findings.flatMap((x) => x.unresolved)], [[], []]);
 
   const parentSha = await shaOf(PARENT), sibSha = await shaOf(KID_B);
   const [ps, ss] = [await anonBytes(`sha256=${parentSha}`), await anonBytes(`sha256=${sibSha}`)];
@@ -612,10 +675,10 @@ console.log("\n--- 6. R4: a published child NAMES its parent and its siblings an
      record: the published graph has no state column to leak, and this asserts it
      over the edges rather than over the prose. */
   t("no edge carries a state, a title or a sha for anything the surface may only NAME",
-    [...new Set([...c.names, ...(c.division.parent ? [{ to: c.division.parent }] : [])]
+    [...new Set([...kid.names, ...(kid.division.parent ? [{ to: kid.division.parent }] : [])]
       .flatMap((n) => Object.keys(n)))].sort(), ["kind", "to"]);
   t("every value in the name-only set is an id or a kind — there is no state in it to leak",
-    c.names.flatMap((n) => Object.values(n)).filter((v) => ![PARENT, KID_B, "division_parent", "division_sibling"].includes(v)),
+    kid.names.flatMap((n) => Object.values(n)).filter((v) => ![PARENT, KID_B, "division_parent", "division_sibling"].includes(v)),
     []);
 }
 

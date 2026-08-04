@@ -572,13 +572,22 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
     + `&conclusion=${encodeURIComponent("The transfer was authorised.")}`
     + `&falsifier=${encodeURIComponent("A charter provision or a code section forbidding it.")}`);
   t("the case concludes", c.ok, true);
+  /* REC-44 / DEC-44 (2026-08-04): `scope` is authored per case per edition and
+     required — what brought these findings together. The rest of this block is
+     unchanged; the frozen PER-FINDING pair is what it measures and DEC-44 leaves
+     that altitude exactly where REC-42 put it. */
   const pub = await POST(`op=publish&token=${CAROL}`, { target: CASE,
+    scope: "Whether the FY2024 transfer was authorised.",
     statement: "This case covers the authorisation question on the documents in hand.",
     excluded: [], subjectPosition: "sought_and_answered",
     subjectJustification: "We put the question to the Clerk and they answered in writing." });
   t("it publishes at edition 1", [pub.ok, pub.edition], [true, 1]);
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44: the frozen pair belongs to the
+     FINDING, so it is read from findings[]. REC-42's arithmetic is untouched —
+     the composed answer is still MAX over independently sufficient grounds and
+     MIN over necessary legs, per axis — and the values demanded are the same. */
   t("the FROZEN PAIR carries the composed answer — the strongest ground, not the weakest leg",
-    pub.strength.map((a) => [a.axis, a.state, a.grade]),
+    pub.findings[0].strength.map((a) => [a.axis, a.state, a.grade]),
     [["capture", "graded", "B"], ["connection", "graded", "A"]]);
 
   const md = (await GET(`op=image&token=${CAROL}&id=${CASE}`))["bundle.md"];
@@ -618,6 +627,7 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
     + `&conclusion=${encodeURIComponent("The transfer was authorised.")}`
     + `&falsifier=${encodeURIComponent("A charter provision forbidding it.")}`);
   const pub2 = await POST(`op=publish&token=${CAROL}`, { target: PLAIN,
+    scope: "Whether the transfer was authorised, on the two documents named.",
     statement: "This case covers the authorisation question on the two documents named.",
     excluded: [], subjectPosition: "not_sought",
     subjectJustification: "Notice would let the record be revised before it is captured; we say so." });
@@ -630,7 +640,7 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
        earnedRegistry: await GET(`op=earnedbasis&token=${CAROL}&id=${PLAIN}`) })).findings
        .filter((x) => x.severity === "error").length], [true, false, 0]);
   t("and its frozen pair is the WEAKEST LEG on both axes, which is what an ungrouped case is worth",
-    pub2.strength.map((a) => [a.axis, a.grade]), [["capture", "C"], ["connection", "C"]]);
+    pub2.findings[0].strength.map((a) => [a.axis, a.grade]), [["capture", "C"], ["connection", "C"]]);
 }
 
 await mf.dispose();
