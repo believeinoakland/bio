@@ -3028,6 +3028,58 @@ for CONDUCT to enact: this reshapes DONE items (REC-14, REC-22, UI-18) and is a
   strength.
 enacted:
 
+### DEC-45 · open
+raised: 2026-08-04 · session BOB (Bob's question, after DEC-44)
+for: bob
+question: Is a case IMPORT always performed in the context of a project — an existing one,
+  or one created as part of the import? Or do imported findings arrive projectless, with
+  project membership a separate authored act?
+why it is Bob's: doctrine — whether one group's framing of why a set of findings belong
+  together may become another group's objective without that group authoring it. It is the
+  declared-bias / never-prefill neighbourhood, and it decides what importing MEANS.
+**MEASURED FIRST, because the question sounded like it had a built answer and does not:**
+  - **IMPORT DOES NOT EXIST.** No `op=import` anywhere in the plane. The only references
+    are DEC-41's *import-only* artifact class and DEC-40's pointer at *"whoever builds
+    IMPORT (M6's interchange half)"*. So nothing is being corrected here — this is design
+    ahead of the build, which is the cheap moment.
+  - **AN INQUIRY MAY ALREADY EXIST OUTSIDE ANY PROJECT.** DEC-17, verbatim: *"An inquiry
+    outside any project has no bar and inherits none."* So requiring a project at import
+    would INVENT a constraint the model does not otherwise carry.
+  - **PROJECT MEMBERSHIP IS ALREADY A SEPARATE EDGE ACT** — `linkproject` is in
+    `EDGE_ACTIONS` beside cite/sever/reinstate (`index.mjs:791`), i.e. creating an object
+    and placing it in a project are two acts today, not one.
+provisional: nothing is blocked; import is unbuilt, so both shapes remain free.
+alternative: import always lands in a project, creating one from the case's scope statement
+  when the member does not name an existing one.
+recommendation: **IMPORT DOES NOT REQUIRE A PROJECT AND MUST NOT CREATE ONE AUTOMATICALLY.**
+  The argument is not convenience, it is whose words they are. **DEC-44 gives the case an
+  AUTHORED SCOPE STATEMENT — the exporting group's account of what brought those inquiries
+  together FOR THEM.** Minting a project from it would install another group's framing as
+  the importing group's own objective, unauthored, which is precisely the prefill this
+  project forbids on every justified transition. C-2.9 already requires a non-empty
+  `objective` on a project; auto-creating one would satisfy that check with words nobody in
+  the importing group wrote.
+  so the shape I recommend:
+  1. **The findings arrive as FINDINGS, projectless by default** (DEC-44 as it corrects
+     DEC-40 det. 4), each re-graded in its new context, none inheriting standing.
+  2. **The case's scope statement, edition, signature, hash and the exporting group's
+     identity arrive as FACTS ABOUT the imported material** — recorded, displayed, checkable,
+     and never converted into the importing instance's own objective or bias declaration.
+  3. **Placing imported findings in a project is a SEPARATE authored act**, which is what
+     `linkproject` already is. A member who wants a project creates one and authors its own
+     objective — their words, their name.
+  4. **THE SOURCE'S `required_strength` BAR DOES NOT TRAVEL AS A BAR.** DEC-17 makes the bar
+     a property of the project doing the work; an imported finding is held to the IMPORTING
+     project's bar if it joins one, and to none if it does not. The exporting group's bar is
+     a fact about how the finding was made — shown, never binding here. Inheriting it would
+     let one group set another's standard, which is the inversion DEC-17 exists to prevent.
+  5. **Re-publication is the importing group's own case**, with their scope statement and
+     their bar; the provenance (this finding came from group X's case Y, edition N, hash H)
+     travels as a checkable fact, and DEC-12's edition-naming rule already covers citing it.
+reversal cost: nil now (import is unbuilt). Rising sharply once an import path mints
+  projects, because auto-authored objectives would then exist in the record and be
+  indistinguishable from member-authored ones without an audit.
+
 ## Answered, awaiting enactment
 
 _(none)_
