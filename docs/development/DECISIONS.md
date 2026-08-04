@@ -3754,6 +3754,63 @@ recommendation: **THE SUBSCRIPTION CONSTRAINT IS NOT A BILLING DETAIL — IT DEC
 reversal cost: low now, nothing is built. High once an assistant ships against the member's own
   session, because the fences would have to be re-established against callers already relying on
   them.
+**RECOMMENDATION SUBSTANTIALLY WITHDRAWN AND CORRECTED 2026-08-04, by Bob, who unbundled four
+  assumptions I had baked in. Three were wrong. Kept visible rather than rewritten, because the
+  reasoning that produced them is the thing to avoid repeating.**
+  1. **WRONG — "a Claude subscription is a person's entitlement, so the AI cannot live in the
+     plane."** Bob: *"there was a means to get a Claude API key for non-profit uses. (Cityside
+     is a non-profit.)… The organization running the instance can have a Claude account with an
+     API key. But so can individual members, who would have their own unique API keys."* So the
+     credential can be the ORGANISATION's or a MEMBER's, and neither forces member-side
+     execution. **This project is developed open-source on a non-profit basis; instances used
+     in a for-profit environment bring an account that fits their use.** That is the cost model
+     and it belongs in the record.
+  2. **WRONG, AND REFUTED BY THE THING WRITING THIS ENTRY — "the instance cannot do AI work
+     unattended."** Bob: *"Claude Code is a distributed application. The AI portion runs on
+     Anthropic servers, while the tools run on the user's machine… CONDUCT has been running and
+     spawning sessions for over 24 hours straight. It runs unattended. **That's the kind of
+     setup called for by BIO.**"* An agentic AI holding tools against defined endpoints is
+     exactly what CONDUCT is, and it has been integrating and pushing to this repository for a
+     day. The claim was not merely unproven, it was contradicted by the session that made it.
+  3. **WRONG — "member-side gives provenance a named person behind it."** Bob: *"The Cloudflare
+     server has been capturing documents and assigning provenance from day 1. When needed, it
+     puts a fence around captures that need to be ratified."* Server-assigned provenance is
+     shipped and works. The argument was weak, and it inverts: **an AI acting THROUGH the
+     plane's own endpoints has BETTER provenance than one acting outside them**, because the
+     plane observes the act instead of taking a caller's word for it (D-112).
+  4. **THE SECURITY CONCERN SURVIVES, AND BOB SUPPLIES THE PATTERN THAT ANSWERS IT.** He recalls
+     BIO's Google Drive / App Script origins: the Drive MCP forbade Claude modifying, moving or
+     deleting files, and *"we got around those restrictions (safely!) by developing an App Script
+     webapp with carefully defined and implemented endpoints that did… services that could be
+     trusted."* **The generalisable rule: you do not make an AI safe by trusting it to behave —
+     you make it safe by exposing only endpoints that are safe to call. THE ENDPOINT SURFACE IS
+     THE FENCE.** That is confinement by REFUSAL rather than by convention, which this plane
+     already implements: `scopeFor` confines probe class to `scratch` by refusing, and 120 op
+     declarations carry per-op `classes`.
+  **AND HIS SECOND POINTER IS THE COORDINATION HALF: what this session is doing right now.** BOB
+  cannot write CONDUCT's queue body; it appends to the `BOB INBOX` and CONDUCT drains it —
+  disjoint regions, sole writers, producer/consumer. **The AI integration should take the same
+  shape: the AI writes into a region it owns, and the authoritative party drains it.** That is
+  already proven in this repository, under load, between two AI sessions, for a day.
+  **CORRECTED RECOMMENDATION — the AI is an AGENT against a defined endpoint surface, in the
+  CONDUCT pattern, not an embedded component and not a member-side-only client:**
+  - **It holds its own credential** — organisation-scoped or member-scoped — and the plane
+    CLASSIFIES it. The two carry different accountability and both are legitimate: an org key
+    acts for the group (`surfaced_by: agent`, no individual behind it); a member key acts for
+    that member and is attributable to them. The record should say which.
+  - **Its reach is decided by the op registry, not by instruction.** Give the class a set of
+    ops; the existing gate does the work. This is the App Script lesson expressed in machinery
+    BIO already has.
+  - **The existing machine fences keep firing** — `MACHINE_CANNOT_CONCLUDE` / `_RELEASE` /
+    `_PUBLISH` / `_CORRESPOND` / `_MOVE_ACTION`, D-151's resolve-and-forward refusals. **The one
+    point from the withdrawn recommendation that STANDS is why**: those fences assume machine
+    callers are DISTINGUISHABLE, so the AI must never travel on a member's own token. Give it a
+    class, and the fences hold by construction.
+  - **It proposes into a region it owns and a member drains it** (the inbox pattern), which is
+    DEC-24's *machine proposes, member authors* given a concrete mechanism rather than a rule.
+  - **Unattended operation is legitimate** — CONDUCT is the existence proof — and is bounded by
+    the same two things that bound it here: the endpoint surface, and DEC-47's separate question
+    about reaching sources nobody named, which is about EGRESS and not about AI.
 
 ## Answered, awaiting enactment
 
