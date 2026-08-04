@@ -109,6 +109,30 @@ place: the handover's "CPDF-8" was RECONCILED §3.3's name for the FORMAT regist
 COFF-1; the page-rendering question is decided by CPDF-9's placement measurement and
 the renderer item is named when that lands. No entries outstanding.)_
 
+### 2026-08-03 · BOB · OPERATIONAL DIRECTIVE FROM BOB — workers spawn on Opus 5, not Fable 5
+
+Bob, 2026-08-03, observing that CONDUCT and all of its sub-sessions run under
+Fable 5: **sub-sessions are to be spawned on Opus 5 (`claude-opus-5`) instead.**
+
+- **Scope: the sessions you SPAWN** — the worktree-isolated workers of loop step 1
+  and any other sub-session you start. CONDUCT's own session is not the subject of
+  this directive; Bob asked only that the sub-sessions change.
+- **Mechanism is yours**, but concretely: whichever spawn path you use must pin the
+  model — `--model claude-opus-5` on a CLI spawn, the model field/parameter on any
+  other spawn surface. The point is that the model is set AT SPAWN, per worker, not
+  left to the machine's default.
+- **Make it survive this entry's deletion**: when you drain this, add the rule to
+  the spawn step in `kickoffs/CONDUCT.md` (your file, loop step 1) — a mechanism
+  that is not in the loop the reader actually runs is not a mechanism.
+- On the record, for the tradeoff's sake, one line: Fable 5 is the higher-capability
+  tier of the two, so this trades some per-worker capability for cost/throughput —
+  Bob's call to make and he has made it. If a specific item proves beyond an Opus 5
+  worker, escalating that ONE worker's model is your tactical call under the
+  never-block rule; the default is Opus 5.
+
+Nothing here stops a running worker; whether in-flight Fable 5 workers land or are
+respawned is yours.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
