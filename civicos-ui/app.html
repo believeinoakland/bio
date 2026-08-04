@@ -4326,7 +4326,7 @@ async function openBundle(id, fromNav){
     let dispBar = "";
     if(normalizeType(otype) === "inquiry"){
       const st = fm.current_state || (proj&&proj.current_state) || vocabFor(FIRST_STATE, otype);
-      const canMove = (disposeLegal(otype)[st]||[]).some(t=>DISPOSITIONS.includes(t));
+      const canMove = (disposeLegal(otype)[st]||[]).some(t=>dispositions().includes(t));
       if(canDispose() && canMove){
         /* Title/id/state cross the inline handler JSON-encoded and attribute-
            escaped (a title may carry an apostrophe), the same way the release
@@ -4421,6 +4421,96 @@ function strataGo(a, id){
   el.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
+/*__ACT_SOURCE_START__*/
+/* ============================================================
+   DEC-8's PUBLICATION MECHANISM, READ AT ONE SEAM (UI-12).
+
+   *"The plane is the source of every option and every refusal a member is
+   shown … a surface may render a refusal it received; it may never compute
+   one."* `op=affordances` is that source and this is the only place in this
+   file that asks it. Two shapes, both the plane's:
+
+     op=affordances               the whole act catalogue and the object
+                                  VOCABULARIES — the shape a surface loads once
+                                  (op=searchfields' precedent)
+     op=affordances?target=<id>   the acts available on THAT object AS IT
+                                  STANDS, each with the producer's own `label`,
+                                  `weight`, `needs`, `mode`, `rung` and
+                                  `prompt`
+
+   WHAT THIS FILE MAY KNOW, and it is deliberately almost nothing: the NAME of
+   an op whose flow it implements (request shaping, UI-13's INTENT_HOLD
+   precedent — it names no option, no label, no rung, no order and no rule).
+   Every act id, every label, every rung, every disposition token and every
+   member-facing word for them is READ, and when the plane names none the
+   control is ABSENT and the surface says so rather than inventing one. That is
+   why the surface-side disposition array — the option map C5 forbids and the
+   last one in this file — was deleted by this item rather than moved.
+   ============================================================ */
+const ACT_SOURCE = { loaded:false, catalog:null, vocab:null };
+async function loadActSource(force){
+  if(ACT_SOURCE.loaded && !force) return ACT_SOURCE;
+  try{
+    const r = await recR("affordances");
+    ACT_SOURCE.catalog = Array.isArray(r && r.catalog) ? r.catalog : null;
+    ACT_SOURCE.vocab   = (r && r.vocabularies && typeof r.vocabularies === "object") ? r.vocabularies : null;
+  }catch(_){ ACT_SOURCE.catalog = null; ACT_SOURCE.vocab = null; }
+  ACT_SOURCE.loaded = true;
+  return ACT_SOURCE;
+}
+/* A published vocabulary, or THE EMPTY SET. There is no literal fallback and
+   there must not be: a set the plane did not name is a set this surface does
+   not know, and offering an invented option is worse than offering none. */
+function actVocab(name){
+  const v = ACT_SOURCE.vocab && ACT_SOURCE.vocab[name];
+  return Array.isArray(v) ? v : [];
+}
+
+/* THE PLANE'S ANSWER, REFUSAL INCLUDED, in one place (UI-13's `intentAsk`, the
+   same reasoning at a different layer). The Durable Object wraps every answer
+   as `{ok:true, result:<the store's own return>}` and a refusal IS a return —
+   `{ok:false, reason, detail}` — so a refusal arrives as a VALUE. The control
+   plane's own refusals (a bad token, an unknown op) arrive as a THROW. Both are
+   the plane's words; neither is composed here. Nothing below ever decides that
+   something WOULD be refused: it asks, and renders what came back. */
+async function actAsk(op, params){
+  let r;
+  try{
+    const j = await rec(op, params || {});
+    r = (j && j.result !== undefined) ? j.result : j;
+  }catch(e){
+    r = (e && typeof e === "object" && e.result !== undefined) ? e.result : e;
+    if(!r || typeof r !== "object") r = { ok:false, reason:"NO_ANSWER", detail:String(r) };
+  }
+  return (r && r.ok === false) ? { accepted:false, refusal:r } : { accepted:true, result:r };
+}
+/* A refusal, IN THE PLANE'S OWN WORDS and never re-worded here. DEC-8's
+   acceptance clause for this item is that every refusal string rendered is one
+   the plane returned — so this function has no default sentence of its own
+   beyond stating that the record said nothing further. */
+function actRefusalHtml(r){
+  if(!r) return "";
+  const words = r.detail || r.error || "";
+  return `<div class="intent-ref"><div class="intent-ref-why">${esc(words || "The record refused this and said nothing further.")}</div>`
+    + (r.reason ? `<div class="intent-ref-code mono">${esc(r.reason)}</div>` : "")
+    + `</div>`;
+}
+/* The acts the plane publishes for ONE object as it stands. A refusal (an
+   object this credential may not see answers NO_SUCH_BUNDLE, identical to an
+   absent one) is carried back whole so the caller renders the plane's words. */
+async function actsFor(target){
+  const a = await actAsk("affordances", { target });
+  if(!a.accepted) return { ok:false, refusal:a.refusal, acts:[] };
+  const r = a.result || {};
+  return { ok:true, acts: Array.isArray(r.acts) ? r.acts : [],
+           current_state: r.current_state ?? null, object_type: r.object_type ?? null };
+}
+/* One published act, found by the op NAME whose flow this surface implements.
+   The name is the only thing known here; the label, the weight, the rung and
+   the prompt all come back on the act itself and are rendered unmodified. */
+function actNamed(acts, id){ return (acts||[]).find(a=>a && a.id === id) || null; }
+/*__ACT_SOURCE_END__*/
+
 /*__INQUIRY_PAGE_START__*/
 /* ============================================================
    S3 · THE INQUIRY PAGE (UI-11), READ-ONLY.
@@ -4442,8 +4532,12 @@ function strataGo(a, id){
      - compose the two strengths into one letter, average them, score them,
        or draw a bar. There is no arithmetic over grades anywhere in this
        region; the only grade values rendered are ones the plane published.
-     - render an act, an option, or a refusal. NO ACT BAR THIS TURN (UI-12
-       adds it), so there is no surface-side option map to delete later.
+     - compute an option or a refusal. UI-12 ADDED THE ACT BAR (the paragraph
+       that used to stand here said "NO ACT BAR THIS TURN", which was true of
+       UI-11 and is no longer true of this file). The rule it was protecting is
+       unchanged and now has a region of its own: every act, label and rung
+       comes from `op=affordances` through `__ACT_SOURCE__` above, and there is
+       still no surface-side option map anywhere below.
      - decide settledness from a letter.
 
    THE PAIR, AND THE MEASURED GAP — read this before wiring anything to it.
@@ -4679,9 +4773,18 @@ async function openInquiry(id, fromNav){
     const falsifyHeading = headingLike(otype, /falsif/i);
     const falsifyText = mdSectionOf(body, falsifyHeading);
 
-    /* WHAT RELIES ON THIS — REC-25's gated reverse read, never a walk here. */
-    let back = null, backErr = null;
-    try{ back = (await rec("backlinks",{target:id})).result || null; }catch(e){ backErr = e; }
+    /* WHAT RELIES ON THIS — REC-25's gated reverse read, never a walk here.
+       WHAT CAN BE DONE HERE — UI-12's act bar, from op=affordances. Both are
+       plane reads and they are asked together. */
+    let back = null, backErr = null, actsR = null;
+    try{
+      const [b, a] = await Promise.all([
+        rec("backlinks",{target:id}).then(r=>r.result||null, e=>{ backErr = e; return null; }),
+        actsFor(id),
+      ]);
+      back = b; actsR = a;
+    }catch(e){ backErr = backErr || e; }
+    CONCLUDE_ACTS = (actsR && actsR.ok) ? actsR.acts : [];
     const rels = (back && Array.isArray(back.backlinks)) ? back.backlinks : [];
 
     const questionPane = questionText
@@ -4707,6 +4810,7 @@ async function openInquiry(id, fromNav){
       <p class="subj-note">Every leg the question rests on, in the order it was recorded, with what it does to the conclusion and how its grade was established. A leg that cuts against the conclusion is a leg like any other and is counted on its own axis exactly as a supporting one is — the record keeps what it found, not only what it hoped for.</p>
       ${legsPane}
       ${strengthPanels(pair, legs)}
+      ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR)}
       <h2 class="sec">What would falsify it</h2>
       ${falsifyText
         ? `<div class="card"><div class="prose">${mdLite(falsifyText)}</div></div>`
@@ -4729,6 +4833,406 @@ function routeFromHash(){
 }
 try{ window.addEventListener("hashchange", ()=>{ if(!INQ_HASH_LOCK) routeFromHash(); }); }catch(_){}
 /*__INQUIRY_PAGE_END__*/
+
+/*__CONCLUDE_ACT_START__*/
+/* ============================================================
+   S3's ACT BAR, AND THE CONCLUDE FLOW (UI-12).
+
+   The first act surface built AFTER `op=affordances` exists, and therefore the
+   first that keeps NO surface-side map of any kind. The ONE motion, per the
+   interaction construct:
+
+     CHOOSE    the acts come from `op=affordances?target=`, rendered with the
+               PRODUCER'S OWN `label` and `rung`. Never re-labelled, never
+               re-ordered by a rule of ours, never added to. An act the plane
+               did not publish does not appear; an act it published and this
+               surface cannot yet carry is NAMED with no control beside it,
+               because a control that cannot work is §5's present-and-refused.
+
+     PRE-FLIGHT what the act will refuse and WHY, before it runs, IN THE STORE'S
+               OWN ORDER — and every word of it is the store's. See THE WITHHELD
+               FIELD below. The commit control is ABSENT while the plane
+               refuses, never present-and-disabled.
+
+     AUTHOR    the conclusion field is EMPTY, always. No placeholder, no
+               template, no draft, no suggestion, and no length rule copied out
+               of the plane — the plane refuses BAD_CONCLUSION in its own words
+               if it must. HARD 2's constraint 1 is absolute: a justification
+               the system wrote, read later as the member's own act, is a
+               fabricated attribution.
+
+     RECEIPT   the plane's own transition (`from` -> `to`) and the
+               SERVER-STAMPED actor (`author`), which the control plane sets
+               from the session and overwrites if a caller supplies it.
+
+   THE WITHHELD FIELD, and why it is `target`. `op=conclude` validates
+   FAIL-CLOSED before its transaction opens, so a refused call writes nothing —
+   which makes the OP ITSELF the dry run (UI-13's mechanism, DEC-8's admitted
+   second source). This surface sends the member's whole draft with ONE field
+   replaced by a value the store cannot accept, and reads exactly one thing off
+   the answer: whether the outstanding refusal is the one IT caused. The store's
+   order is
+
+     MACHINE_CANNOT_CONCLUDE -> NO_CONCLUSION -> NO_FALSIFIER
+       -> BAD_CONCLUSION / BAD_FALSIFIER -> NO_TARGET
+       -> NO_SUCH_BUNDLE -> NOT_AN_INQUIRY -> NO_DOCUMENT
+       -> ILLEGAL_TRANSITION -> NO_BASIS
+
+   so `target` is the LAST field a caller supplies that the store looks at, and
+   everything after it is derived from the target rather than sent. Withholding
+   it means every requirement this surface can put in front of the member has
+   already been judged BY THE PLANE when the answer comes back, and a cleared
+   pre-flight is the literal string `NO_TARGET`. It writes nothing: with no
+   target there is no bundle to move, and the harness asserts no `promote` and
+   no accepted `conclude` ever reaches the plane during a pre-flight.
+
+   WHAT THE PROBE CANNOT REACH, stated rather than papered over: the four
+   refusals BELOW `NO_TARGET` in that order turn on the object, and reaching
+   them needs a call that would COMMIT if the object happened to be fine. So
+   they are pre-flighted by ABSENCE and by publication instead — `op=affordances`
+   publishes `conclude` if and only if the catalog's own edge table offers the
+   `concluded` move for THIS document's declared vocabulary (which is exactly
+   NO_SUCH_BUNDLE / NOT_AN_INQUIRY / ILLEGAL_TRANSITION), and where the act is
+   not published there is no control and no invented sentence. NO_BASIS is the
+   residue: it is visible in the plane's own strength answer (an axis that rests
+   on nothing says so, in the plane's words), the commit is absent, and if the
+   plane refuses it at commit time anyway its words are what appear. NOTHING
+   here composes a refusal — DEC-8's acceptance clause for this item.
+
+   HARD 2's TWO REDUCTIONS, and they are the largest available in the journey.
+
+     (1) THE BASIS BECOMES A SELECTION. The member picks from the legs already
+         recorded on the question; they do not compose. The same selection is
+         what names the falsifier, which is HARD 2's third bullet — *"which of
+         these legs, if it went the other way, breaks this?"* is answerable by
+         pointing at one's own material.
+
+     (2) THE STRENGTH CONSEQUENCE RENDERS LIVE, AND IT RENDERS THE PAIR. Via
+         `op=inquirystrength` (REC-34), re-asked on every selection. A Grade C
+         CAPTURE leg drops the capture axis visibly and leaves the connection
+         axis alone — watching the two move independently is the only mechanism
+         in this design that teaches R2 to a non-technical member without prose,
+         and a single composed letter would teach the substitution R2 forbids.
+
+         AND EVERY WORD OF THE CONSEQUENCE IS THE PLANE'S. The surface performs
+         NO arithmetic over grades — no minimum, no average, no comparison. It
+         asks the plane what the question reads at, and for each SELECTED leg it
+         renders what the plane's own answer says about that leg ON THAT AXIS:
+         the leg is the axis's named `weakest` (so the plane's grade and the
+         plane's sentence stand), or it is in the plane's `not_load_bearing`
+         list with the plane's own `why`, or in `undetermined_at` with its own,
+         or the plane singles it out on that axis at all and this surface
+         says nothing about it there. A leg that carries a capture grade is
+         inert on connection and the PLANE is what says so.
+
+   THE COST, and the call is made here rather than left implicit. REC-34
+   measured `op=inquirystrength` at ~0.8ms/call with NO memo by design, and
+   named FAN-OUT rather than depth as the thing to watch. So: the preview is
+   PER-SELECTION and NOT debounced — a selection is a discrete finished action,
+   not a keystroke — and one selection change issues 1 + N reads (the question,
+   plus each selected leg asked for its OWN pair), ALL IN PARALLEL, so the cost
+   is one round trip's latency and N+1 Durable Object reads. Nothing is cached
+   between repaints: a memo here would be a surface caching a value REC-34
+   deliberately refused to cache, and the whole point of a LIVE preview is that
+   a leg re-graded under the member's feet moves it. The TEXT fields bind on
+   `onchange` and never on `oninput`, UI-13's rule and for its reason: a
+   pre-flight per keystroke is a Durable Object request per keystroke.
+
+   Q12: narration is SURFACE-scoped and PLANE-SOURCED, said once. Controls are
+   never narrated and never greyed — a credential that cannot reach the act sees
+   no control at all, decided from the published act's own `needs` and `mode`
+   rather than from a rule written here.
+   ============================================================ */
+
+/* WHETHER THIS CREDENTIAL CAN REACH A PUBLISHED ACT, from the act's OWN gate
+   fields. `needs` is the capability the control plane's NEEDS table gates the
+   call with; `mode` is "session" when SESSION_OPS requires an identified member
+   (which is also why the store can refuse a machine credential by the shape of
+   its author stamp). Both travel on the act. No capability name and no session
+   rule is written down here. */
+function actReachable(act){
+  const me = PLANE.me || {};
+  if(!act) return false;
+  if(act.mode === "session" && !(PLANE.session && me.session)) return false;
+  if(act.mode === "admin-session" && !(PLANE.session && me.session && me.administer)) return false;
+  if(act.needs && !((me.capabilities||[]).includes(act.needs))) return false;
+  return true;
+}
+
+/* THE LADDER, rendered from the act's DECLARED rung. `rung` is null wherever no
+   document assigns one (7 of 57 mutating ops have a source; FW-14 assigns the
+   rest), and `conclude` is one of the ones with none. A null rung renders the
+   ladder with NOTHING marked and says the record declares no weight — it is not
+   rendered as the lightest rung, and a rung is not guessed here because a rung
+   is a promise to a member about reversibility. */
+function actRungHtml(act){
+  if(act && act.rung)
+    return weightLadderHtml(act.rung,
+      `The record declares this act <b>${esc(act.rung)}</b>. That is the record's own word for how heavy it is, not this page's.`);
+  return weightLadderHtml(null,
+    `The record declares no weight for this act yet, so none is marked above. That is an absence and not a reassurance: it does not mean the act is light.`);
+}
+
+/* WHICH ACTS THIS SURFACE CAN CARRY. Not an option map and not a filter over
+   what may be done: the plane decides that and this page renders every act it
+   published. This says only which of them have a CALL SITE here, so an act
+   without one is named rather than given a control that cannot work. */
+const ACT_FLOW = { conclude: (id, title, act) => openConclude(id, title, act) };
+
+function actBarHtml(id, title, r){
+  if(!r) return "";
+  if(!r.ok)
+    /* The plane refused the question about this object. Its words, verbatim. */
+    return `<h2 class="sec">What can be done here</h2>${actRefusalHtml(r.refusal)}`;
+  const acts = r.acts || [];
+  if(!acts.length)
+    return `<h2 class="sec">What can be done here</h2>
+      <div class="empty">The record publishes no act on this question as it stands.</div>`;
+  const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(title||id));
+  const withFlow = acts.filter(a=>ACT_FLOW[a.id] && actReachable(a));
+  const named    = acts.filter(a=>!(ACT_FLOW[a.id] && actReachable(a)));
+  const buttons = withFlow.map(a=>
+    `<button class="btn ghost" onclick="actGo(${esc(JSON.stringify(a.id))},${jid},${jt})">${esc(a.label)}&hellip;</button>`).join("");
+  /* An act the record publishes that this surface cannot carry is NAMED with no
+     control, using the producer's own label — never re-worded and never
+     silently dropped, because an act nobody can see is an act nobody remembers
+     asking for. */
+  const rest = named.length
+    ? `<p class="subj-note">The record also publishes ${named.map(a=>`<b>${esc(a.label)}</b>`).join(", ")} on this question. ${named.length===1?"It is":"They are"} not carried on this page.</p>`
+    : "";
+  return `<h2 class="sec">What can be done here</h2>
+    <p class="subj-note">Every act below is one the record publishes for this question as it stands, under the record's own name for it. This page adds none and renames none.</p>
+    ${buttons?`<div class="rv-bar" style="margin:0;gap:8px">${buttons}</div>`:""}
+    ${rest}`;
+}
+function actGo(actId, id, title){
+  const act = actNamed(CONCLUDE_ACTS, actId);
+  const flow = ACT_FLOW[actId];
+  if(act && flow) flow(id, title, act);
+}
+let CONCLUDE_ACTS = [];      // the acts the plane published for the open question
+
+/* ---- THE LIVE PAIR: ONE SEAM, exactly as `inquiryPair` is ONE seam ----
+   `op=inquirystrength` answers with the SAME axis-object shape REC-14 freezes
+   into a published case, with one difference: `weakest` is the named member
+   object rather than an id. So the pair is adapted here and rendered by
+   `axisPanel` — the very function UI-11 already uses for the frozen pair — so
+   the live preview and the published page cannot drift into two renderings of
+   the same thing. This adapts a SHAPE. It computes nothing. */
+function liveAxis(a){
+  if(!a || typeof a !== "object") return null;
+  return { ...a, weakest: (a.weakest && a.weakest.target_id) ? a.weakest.target_id : null };
+}
+async function livePair(id){
+  const a = await actAsk("inquirystrength", { id });
+  if(!a.accepted) return { ok:false, refusal:a.refusal };
+  const r = a.result || {};
+  const out = {};
+  for(const ax of GRADE_AXES) out[ax] = liveAxis(r[ax]);
+  return (out.capture && out.connection) ? { ok:true, pair:out, raw:r } : { ok:false, refusal:null };
+}
+
+/* WHAT THE PLANE SAYS ABOUT ONE SELECTED LEG ON ONE AXIS, and nothing else.
+   Three places the plane may name a leg on an axis, and a fourth case where it
+   names it nowhere — in which case this renders NOTHING rather than a sentence
+   of its own. There is no comparison here and no minimum: the grade shown when
+   the leg IS the axis's weakest is the axis's own published grade. */
+function legConsequence(axisRaw, target){
+  if(!axisRaw) return "";
+  const w = axisRaw.weakest;
+  if(w && w.target_id === target)
+    return `<div class="subj-how"><span class="subj-grade ${w.grade_source==="hunch"?"g-unconf":"g-est"}">Grade ${esc(axisRaw.grade)}</span> ${esc(axisRaw.detail||"")}</div>`;
+  const inert = (axisRaw.not_load_bearing||[]).find(m=>m && m.target_id === target);
+  if(inert) return `<div class="subj-how">${esc(inert.why || "")}</div>`;
+  const un = (axisRaw.undetermined_at||[]).find(m=>m && m.target_id === target);
+  if(un) return `<div class="subj-how">${esc(un.why || "")}</div>`;
+  return "";
+}
+
+let CONCL = null;
+/* { id, title, act, legs, pair, raw, pairErr, legPairs:{id->answer}, sel:[],
+     conclusion, falsifierText, pf, receipt, busy } */
+
+/* THE FALSIFIER, COMPOSED FROM THE MEMBER'S OWN TWO INPUTS AND NOTHING ELSE:
+   the ids they selected, in the order the record holds them, and the words they
+   typed. The separator is a separator; there is no connective sentence, because
+   a sentence written here and read later as the member's falsifier is the
+   fabricated attribution HARD 2 forbids. What will be recorded is shown to them
+   verbatim before they commit. */
+function concludeFalsifier(){
+  if(!CONCL) return "";
+  const ids = CONCL.sel.slice();
+  const txt = String(CONCL.falsifierText||"").trim();
+  return [ids.join(", "), txt].filter(Boolean).join(" · ");
+}
+
+async function openConclude(id, title, act){
+  CONCL = { id, title, act, legs:[], pair:null, raw:null, pairErr:null, legPairs:{},
+            sel:[], conclusion:"", falsifierText:"", pf:null, receipt:null, busy:false };
+  $("#dlg").innerHTML = `<h2>${esc(act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
+  $("#dlg-wrap").classList.remove("hidden");
+  /* The legs come from the plane's OWN parse of the document's frontmatter
+     (op=projection's fm_json), the same read UI-11's page takes. */
+  try{
+    const proj = await getProjection(id);
+    let fmj = null; try{ fmj = proj && proj.fm_json ? JSON.parse(proj.fm_json) : null; }catch(_){}
+    CONCL.legs = (fmj && Array.isArray(fmj.basis)) ? fmj.basis.filter(l=>l && typeof l==="object") : [];
+  }catch(_){ CONCL.legs = []; }
+  await concludeRefresh();
+}
+
+/* THE LIVE READ. Re-asked on every selection, never memoised, and fanned out in
+   PARALLEL: the question's own pair, plus each SELECTED leg asked for its own.
+   1 + N reads per selection change, one round trip of latency. */
+async function concludeRefresh(){
+  if(!CONCL) return;
+  const id = CONCL.id, sel = CONCL.sel.slice();
+  const [q, ...legs] = await Promise.all([ livePair(id), ...sel.map(t=>livePair(t)) ]);
+  if(!CONCL || CONCL.id !== id) return;
+  CONCL.pair = q.ok ? q.pair : null; CONCL.raw = q.ok ? q.raw : null;
+  CONCL.pairErr = q.ok ? null : q.refusal;
+  CONCL.legPairs = {};
+  sel.forEach((t,i)=>{ CONCL.legPairs[t] = legs[i]; });
+  await concludePreflight();
+}
+
+/* THE PRE-FLIGHT. One round trip, with `target` withheld. `clear` means the
+   ONLY thing still outstanding is the field this surface itself withheld — so
+   the conclusion, the falsifier, their grammar and the member's own credential
+   have all been judged BY THE PLANE and passed. An ACCEPTED pre-flight would
+   mean a write happened where none was asked for, so it fails CLOSED. */
+async function concludePreflight(){
+  if(!CONCL) return;
+  const id = CONCL.id;
+  const a = await actAsk("conclude", { target:"", conclusion: CONCL.conclusion,
+                                       falsifier: concludeFalsifier() });
+  if(!CONCL || CONCL.id !== id) return;
+  CONCL.pf = a.accepted
+    ? { clear:false, refusal:{ reason:"PREFLIGHT_NOT_REFUSED",
+        detail:"The record accepted a check that was supposed to be incomplete. Nothing was committed from this surface." } }
+    : (a.refusal.reason === "NO_TARGET" ? { clear:true, refusal:null } : { clear:false, refusal:a.refusal });
+  concludePaint();
+}
+
+function concludeToggle(target){
+  if(!CONCL) return;
+  const at = CONCL.sel.indexOf(target);
+  if(at === -1) CONCL.sel.push(target); else CONCL.sel.splice(at,1);
+  concludePaint();               // the selection is immediate; the plane's answer follows
+  return concludeRefresh();
+}
+function concludeAuthor(which, v){
+  if(!CONCL) return;
+  if(which === "conclusion") CONCL.conclusion = v; else CONCL.falsifierText = v;
+  return concludePreflight();    // onchange, never oninput — one round trip per finished field
+}
+
+function concludePaint(){
+  if(!CONCL) return;
+  const box = $("#dlg"); if(!box) return;
+  const act = CONCL.act;
+  if(CONCL.receipt){ box.innerHTML = concludeReceiptHtml(CONCL.receipt); return; }
+
+  /* WHAT IT RESTS ON — a SELECTION over the legs the record already holds. */
+  const legRows = CONCL.legs.length ? CONCL.legs.map(l=>{
+    const t = String(l.target||"");
+    const on = CONCL.sel.includes(t);
+    const lp = CONCL.legPairs[t];
+    /* What the plane says about the leg ITSELF when it is asked — its own pair
+       when it is a question, its own refusal when it is not. Its words. */
+    const own = !on ? "" : !lp ? `<div class="subj-how">Asking the record about this leg&hellip;</div>`
+      : lp.ok
+        ? `<div class="subj-how">${GRADE_AXES.map(ax=>`${esc(AXIS_SHORT[ax])}: ${lp.pair[ax] && lp.pair[ax].grade ? `<span class="subj-grade g-est">Grade ${esc(lp.pair[ax].grade)}</span>` : esc(STRENGTH_STATE_WORD[lp.pair[ax] && lp.pair[ax].state] || "no state published")}`).join(" &middot; ")}</div>`
+        : (lp.refusal ? `<div class="subj-how">${esc(lp.refusal.detail || lp.refusal.error || "")}</div>` : "");
+    return `<label class="dz-opt${on?" on":""}">
+      <input type="checkbox" ${on?"checked":""} onchange="concludeToggle(${esc(JSON.stringify(t))})">
+      <span class="dz-verb mono">${esc(t)}</span>
+      <span class="dz-mean">${esc(ROLE_WORD[l.role] || "is recorded against this")}${l.grade_axis?` &middot; graded on the ${esc((AXIS_SHORT[l.grade_axis]||"").toLowerCase())} axis`:""}</span>
+      ${own}</label>`;
+  }).join("") : `<div class="empty">This question rests on nothing yet, so there is nothing to point at.</div>`;
+
+  /* THE LIVE PAIR — two axes, always, each from its own axis object, rendered
+     by the same function the published page uses. Under each axis, what the
+     plane says about each SELECTED leg ON THAT AXIS. */
+  const preview = CONCL.pairErr
+    ? actRefusalHtml(CONCL.pairErr)
+    : !CONCL.pair
+      ? `<div class="empty">The record has not answered what this question reads at, and this page computes nothing in its place.</div>`
+      : GRADE_AXES.map(ax=>{
+          const sel = CONCL.sel.map(t=>{
+            const c = legConsequence(CONCL.raw ? CONCL.raw[ax] : null, t);
+            return c ? `<div class="card cx-leg" style="margin:0 0 8px"><div class="kv"><span class="k mono">${esc(t)}</span></div>${c}</div>` : "";
+          }).join("");
+          const cut = (CONCL.raw && CONCL.raw[ax] && CONCL.raw[ax].out_of_view)
+            ? `<div class="subj-how">This answer names less than the record holds: something it rests on is outside what this credential may see.</div>` : "";
+          return axisPanel(ax, CONCL.pair[ax], CONCL.legs) + cut
+               + (sel ? `<div class="cx-sel">${sel}</div>` : "");
+        }).join("");
+
+  const fals = concludeFalsifier();
+  const pf = CONCL.pf;
+  /* THE COMMIT IS ABSENT WHILE THE PLANE REFUSES — never present-and-disabled.
+     What stands in its place is the plane's own refusal, verbatim. */
+  const commit = !pf ? `<div class="intent-pf"><div class="intent-ref-why">Asking the record what it would refuse&hellip;</div></div>`
+    : !pf.clear ? `<div class="intent-pf">${actRefusalHtml(pf.refusal)}</div>`
+    : `<div class="intent-pf"><button class="btn" id="cx-go" onclick="doConclude()"${CONCL.busy?" disabled":""}>${esc(act.label)}</button></div>`;
+
+  box.innerHTML = `<h2>${esc(act.label)}</h2>
+    <p class="what">This act answers one question, in your name, on the permanent record. What you write below is written verbatim into the question's own document and its Session Log.</p>
+    <div class="dz-what"><span class="dz-ttl">${esc(CONCL.title||CONCL.id)}</span><span class="id">${esc(CONCL.id)}</span></div>
+    ${act.prompt?`<div class="teach" style="margin:8px 0">${esc(act.prompt)}</div>`:""}
+
+    <h3 class="cx-h">What it rests on</h3>
+    <p class="subj-note">Pick from what the record already holds. Nothing here is composed for you, and picking a leg does not add one: these are the legs already recorded on this question.</p>
+    <div class="dz-choose">${legRows}</div>
+
+    <h3 class="cx-h">What that reads at, as you pick</h3>
+    <p class="subj-note">Two strengths, never one, and they are never combined. Each is read from the record fresh; this page does no arithmetic over grades and shows no number the record did not answer with.</p>
+    ${preview}
+
+    <h3 class="cx-h">What would falsify it</h3>
+    <p class="subj-note">Which of those legs, if it went the other way, breaks this? The ones you picked above are named here. Add anything that cannot be said by pointing.</p>
+    <textarea class="txt" id="cx-fals" rows="3" onchange="concludeAuthor('falsifier', this.value)"></textarea>
+    <div class="cc">${fals ? `Recorded verbatim as: <span class="mono">${esc(fals)}</span>` : "Nothing yet. The record refuses a conclusion that says nothing would overturn it."}</div>
+
+    <h3 class="cx-h">Your conclusion</h3>
+    <p class="subj-note">In your words. Nothing is drafted, suggested, or filled in here, and nothing will be.</p>
+    <textarea class="txt" id="cx-concl" rows="4" onchange="concludeAuthor('conclusion', this.value)"></textarea>
+
+    ${actRungHtml(act)}
+    ${commit}
+    <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+  /* The fields are re-hydrated from state rather than from the markup, so a
+     repaint never re-writes what the member typed and the conclusion box is
+     never given a value this surface chose. */
+  const c = $("#cx-concl"); if(c) c.value = CONCL.conclusion;
+  const f = $("#cx-fals");  if(f) f.value = CONCL.falsifierText;
+}
+
+async function doConclude(){
+  if(!CONCL || CONCL.busy) return;
+  CONCL.busy = true; concludePaint();
+  const a = await actAsk("conclude", { target: CONCL.id, conclusion: CONCL.conclusion,
+                                       falsifier: concludeFalsifier() });
+  if(!CONCL) return;
+  CONCL.busy = false;
+  if(!a.accepted){ CONCL.pf = { clear:false, refusal:a.refusal }; concludePaint(); return; }
+  CONCL.receipt = a.result;
+  concludePaint();
+}
+
+/* THE RECEIPT: the plane's own transition and the SERVER-STAMPED actor. Not one
+   word of it is this page's account of what happened. */
+function concludeReceiptHtml(r){
+  return `<h2>Concluded</h2>
+    <div class="intent-ok">
+      <div>The record moved <span class="mono">${esc(r.target||"")}</span> from <b>${esc(r.from||"")}</b> to <b>${esc(r.to||"")}</b>.</div>
+      <div>Recorded against <b>${esc(r.author||"")}</b>${r.at?` on <span class="mono">${esc(r.at)}</span>`:""} &mdash; the record's own stamp, not this page's.</div>
+      ${r.basis_legs!=null?`<div>It rests on ${esc(String(r.basis_legs))} leg${r.basis_legs===1?"":"s"}.</div>`:""}
+    </div>
+    <div class="row-btns"><button class="btn" onclick="closeDialog();openInquiry(${esc(JSON.stringify(String(r.target||"")))})">Back to the question</button></div>`;
+}
+/*__CONCLUDE_ACT_END__*/
 
 /* ---------- Search (op=search) ---------- */
 async function backFromEmptySearch(){
@@ -4994,11 +5498,26 @@ function releaseRefusal(e){
    moved it. */
 const disposeLegal = (type) => vocabFor(STATE_EDGES, normalizeType(type || "inquiry")) || {};
 const DISPOSE_LEGAL = STATE_EDGES.inquiry;   // the machine every question minted today runs on
-const DISPOSITIONS = ["deferred", "dismissed"];   // the two the UI offers (op=dispose's DISPOSITIONS)
+/* THE DISPOSITION SET IS READ, NEVER WRITTEN HERE (UI-12). A two-element array
+   of disposition tokens stood on this line, declared as a constant, and it was
+   the last surface-side option map in this file — exactly what constraint C5
+   forbids and what DEC-8 moved to the plane. REC-11 made `affordances.mjs`'s
+   exported array the ONE array on the plane side (op=dispose imports it rather
+   than keeping a literal copy); this is the surface's half of the same move.
+   The set now comes from `op=affordances`' published `vocabularies.dispositions`,
+   and when the plane has named none the control is ABSENT rather than backed by
+   a guess. The tokens are not spelled here even in prose: the harness's guard
+   is a scan of this file, and a comment quoting the literal would defeat it. */
+const dispositions = () => actVocab("dispositions");
 const DISPOSE_REASON_MAX = 160;                    // Store.EDGE_REASON_MAX
 const DISPOSE_REASON_RULE = /["\\\r\n]/;           // the store's restricted-grammar rule
-const DISPOSE_VERB = { deferred:"Defer", dismissed:"Dismiss" };
-const DISPOSE_DONE = { deferred:"deferred", dismissed:"dismissed" };
+/* THE MEMBER'S VERB for a published token, with a mechanical fallback so a
+   token the plane publishes and this file has no verb for renders its own name
+   opened up rather than a blank control. These are words, not the SET: what may
+   be done is the plane's answer above, and nothing here can add to it. */
+const DISPOSE_VERB_WORD = { deferred:"Defer", dismissed:"Dismiss" };
+const disposeVerb = t => DISPOSE_VERB_WORD[t] || humanKind(String(t||""));
+const disposeStateWord = t => String(t||"");
 
 /* THE PRE-FLIGHT — pure, so the harness can prove it. Given the question's
    current state, the chosen disposition, and the reason authored so far,
@@ -5008,7 +5527,7 @@ const DISPOSE_DONE = { deferred:"deferred", dismissed:"dismissed" };
    `ok` is true only when nothing would refuse. */
 function disposePreflight({ state, to, reason, type }){
   const why = String(reason == null ? "" : reason).trim();
-  const isDisp   = DISPOSITIONS.includes(to);
+  const isDisp   = dispositions().includes(to);
   const hasReason= why.length > 0;
   const goodGrammar = !DISPOSE_REASON_RULE.test(why) && why.length <= DISPOSE_REASON_MAX;
   const legalMove = (disposeLegal(type)[state] || []).includes(to);
@@ -5020,7 +5539,7 @@ function disposePreflight({ state, to, reason, type }){
     { id:"move", title:"A move this question can make", pass:isDisp && legalMove,
       need: !isDisp ? "Only deferring and dismissing are dispositions here; concluding a question is a different act, with its own requirements."
           : state==="elevated" ? "This question was carried into a project under the record's earlier vocabulary, so it can no longer be deferred or dismissed."
-          : state===to ? `This question is already ${DISPOSE_DONE[to]}. Someone may have moved it while this page was open; reopen it to see where it stands.`
+          : state===to ? `This question is already ${disposeStateWord(to)}. Someone may have moved it while this page was open; reopen it to see where it stands.`
           : "That is not a move this question can make from where it stands now." },
   ];
   // The plane checks reason BEFORE it resolves the set, so NO_REASON/BAD_REASON
@@ -5060,15 +5579,15 @@ let DISPOSE_CTX = null;   // { id, title, state, type }
    inquiry machine rather than guessing. */
 function openDisposeDialog(id, title, state, to, type){
   DISPOSE_CTX = { id, title, state, type: type || "inquiry" };
-  const choose = DISPOSITIONS.map(d=>`<label class="dz-opt${d===to?" on":""}">
+  const choose = dispositions().map(d=>`<label class="dz-opt${d===to?" on":""}">
       <input type="radio" name="dz-to" value="${d}" ${d===to?"checked":""} onchange="disposeChoose(this.value)">
-      <span class="dz-verb">${esc(DISPOSE_VERB[d])}</span>
+      <span class="dz-verb">${esc(disposeVerb(d))}</span>
       <span class="dz-mean">${d==="deferred"
         ? "Park it, with a reason. Kept, and returnable when the group is ready to look again."
         : "Decline it, with a reason. Kept, never deleted, so the decision itself stays accountable."}</span>
     </label>`).join("");
   $("#dlg").innerHTML =
-    `<h2 id="dz-h">${esc(DISPOSE_VERB[to])} this question</h2>
+    `<h2 id="dz-h">${esc(disposeVerb(to))} this question</h2>
      <p class="what">Disposing a question moves its state and writes your reason into its permanent Session Log. It is reversible — a deferred or dismissed question is kept and can be picked back up — but it is never silent.</p>
      <div class="dz-what"><span class="dz-ttl">${esc(title||id)}</span><span class="id">${esc(id)}</span></div>
      <div class="dz-choose">${choose}</div>
@@ -5081,7 +5600,7 @@ function openDisposeDialog(id, title, state, to, type){
      ${weightLadderHtml("reasoned")}
      <div id="dz-err" class="teach hidden"></div>
      <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
-       <button class="btn" id="dz-go" disabled onclick="doDispose()">${esc(DISPOSE_VERB[to])}</button></div>`;
+       <button class="btn" id="dz-go" disabled onclick="doDispose()">${esc(disposeVerb(to))}</button></div>`;
   $("#dz-go").dataset.to = to;
   $("#dlg-wrap").classList.remove("hidden");
   disposeValidate();
@@ -5089,7 +5608,7 @@ function openDisposeDialog(id, title, state, to, type){
 }
 function disposeChoose(to){
   const go = $("#dz-go"); if(go) go.dataset.to = to;
-  const h = $("#dz-h"); if(h) h.textContent = `${DISPOSE_VERB[to]} this question`;
+  const h = $("#dz-h"); if(h) h.textContent = `${disposeVerb(to)} this question`;
   $("#dlg").querySelectorAll(".dz-opt").forEach(o=>{
     const on = o.querySelector("input").value===to; o.classList.toggle("on", on);
   });
@@ -5150,7 +5669,7 @@ async function doDispose(){
     return res;
   }catch(e){
     if(err){ err.innerHTML = disposeRefusalHtml(e); err.classList.remove("hidden"); }
-    if(go){ go.disabled=false; go.textContent = DISPOSE_VERB[to]; }
+    if(go){ go.disabled=false; go.textContent = disposeVerb(to); }
     disposeValidate();
     return { refused:true, reason:e && e.reason };
   }
@@ -5162,7 +5681,7 @@ function disposeReceipt(res, ctx){
   const ids = Array.isArray(res.disposed) && res.disposed.length ? res.disposed : [ctx.id];
   $("#dlg").innerHTML =
     `<div class="dz-receipt">
-       <div class="dz-rhead">${esc(DISPOSE_DONE[to]==="deferred"?"Deferred.":"Dismissed.")}</div>
+       <div class="dz-rhead">${esc(disposeStateWord(to)==="deferred"?"Deferred.":"Dismissed.")}</div>
        <p class="dz-rlede">The plane recorded the act. It now reads as <span class="chip ${esc(to)}">${esc(to)}</span> in the record, and its Session Log carries your name and your reason. It is kept, and can be re-triaged.</p>
        <div class="dz-rgrid">
          <div class="kv"><span class="k">Question</span><span class="v">${esc((ctx&&ctx.title)||ids[0])} <span class="id">${esc(ids[0])}</span></span></div>
