@@ -392,13 +392,14 @@ depends-on: REC-13, REC-23
 accepts-when: as `BUILD-ORDER.md` §2 (REC-24) — the end-to-end action drive, capture-or-testify structural on `correspondence`, no second edge-table copy — plus: a `request_for_comment` naming zero inquiries is refused by name; an impact claim with no non-self evidence leg is recorded `unproven` and rendered as stated, not graded; negative control — as BUILD-ORDER, plus promote an outcome to impact on the action's own evidence and the suite fails.
 added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
 
-### REC-25 · queued
+### REC-25 · done
 milestone: M7
 scope: **F-8 / D-135 / D-141 — the D-15 viewer gate stamped on ALL read paths.** As `BUILD-ORDER.md` §2 (REC-25), carried forward verbatim per `RECONCILED.md` §3.3; unchanged in scope and now depended on by REC-20, UI-14, UI-16 and UI-21 — it gates the surface every member opens by habit. Run the F-8 probe FIRST and record it in `MEASUREMENTS.md` with date and instrument. Scope amendment 2026-08-03 (REC-19's landing): `op=affordances` JOINS the stamp list — it reveals a bundle's existence and state to any member, the same posture as `op=list`, so the item's four bypassing ops are now five.
 behind-interface: I3
 depends-on: none
 accepts-when: as `BUILD-ORDER.md` §2 (REC-25); negative control — remove the stamp from `op=list` alone and the suite names `op=list` as the leak.
 added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: (merge on main, worker cdccf79) — the F-8 probe run FIRST and recorded in MEASUREMENTS.md: BEFORE, an uninvited member received a secret project's full row from op=list/op=index, the projected tail from op=projection, THE ENTIRE DOCUMENT BODY from op=image and op=file, and existence+state from op=affordances; only op=search was gated. AFTER, all answer byte-identically to a bundle that does not exist. The stamp extended to list/index/projection/image/FILE/backlinks (op=file leaked identically and was not in the item's five — gated in the same turn, the title says ALL read paths) + affordances in its handler; the store side FAILS CLOSED through query.mjs's ONE viewerPredicate compilation point (an unstamped read is an outage, never a leak — livefire's canary broke loudly and took the stamp, the posture working). NEW op=backlinks: reverse edges filtered by the viewer's position (§7.9) — the read that lets UI-21 delete the client-side reverseRefs walk. gate-reads.test.mjs 36 assertions; battery 75/75 (3813) after CONDUCT stamped inquiry.test.mjs's direct-DO reads at the merge seam (the suite postdates REC-25's branch — same class as the ten suites the worker stamped); --strict exit 0, 110/110 ops. NCs RE-RUN BY CONDUCT (security-sensitive): arm (a) unstamp op=list → 6 failures naming op=list, every answer EMPTY; arm (b) leak listBundles' gate to 1=1 → 3 failures naming op=list as THE LEAK; both restored, battery green. Residual same-class reads (op=dangling, tasks?refersTo, progression reads) + the ms-envelope fingerprint queued as REC-30.
 
 ### REC-26 · queued
 milestone: M1
@@ -432,6 +433,14 @@ behind-interface: I3
 depends-on: none
 accepts-when: `cd bio-plane && npm run test:battery` green with a suite where an admin receives cover and handle together, while an ordinary member session and `MEMBER_TOKEN` receive handles with NO `cover` field present at all; coverage --strict exit 0; negative control — restore the old projection and the suite fails naming the non-admin caller that received `cover`.
 added: 2026-08-03 · CONDUCT (from D-157, BOB session measurement)
+
+### REC-30 · queued
+milestone: M7
+scope: **The D-15 posture sweep of the remaining read surfaces.** From REC-25's landing: op=dangling can name a citing project's id when a project cites a nonexistent target; `tasks?refersTo` and the progression reads (proposals/instance/captureprogressions/connections and kin) have never been checked against the viewer posture; and the DO envelope's `ms` field is spread into every control-plane response — a minor timing/fingerprint surface and a standing byte-comparison hazard (strip it at the passthrough or justify keeping it). Sweep every remaining read op against the D-15 predicate through query.mjs's ONE compilation point, fail-closed, gating what leaks and RECORDING (in the suite) what is deliberately ungated and why (the published ops are credential-free BY DESIGN — REC-22's class must not get gated by this sweep when it lands). MAP RULE applies (vocabFor/normalizeType, never a raw key).
+behind-interface: I3
+depends-on: REC-25
+accepts-when: `cd bio-plane && npm run test:battery` green with a suite where an uninvited member gets no project identity from ANY read op (dangling included), each deliberately-ungated op listed in the suite with its stated reason, and no control-plane response carrying `ms`; `npm run test:coverage` --strict exit 0; negative control — restore the dangling leak and the suite names op=dangling.
+added: 2026-08-03 · CONDUCT (from REC-25's report)
 
 ## CONTENT-PDF — DORMANT, restructured by the topology decision.
 CPDF-7 runs OUT OF BAND (measurement-only, holds no slot) and should run early: it
