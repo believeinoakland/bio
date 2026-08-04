@@ -605,7 +605,7 @@ accepts-when: battery green with a real Oakland workbook fixture yielding
   AND strip the hidden flag and the suite fails.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
 
-### COFF-4 · queued
+### COFF-4 · done
 milestone: M2
 scope: **The DOCX registry entry.** Structure: `word/_rels/document.xml.rels` →
   partitions through `linkWrapper`; bookmarks → `anchor`; `word/embeddings/` →
@@ -624,6 +624,7 @@ accepts-when: battery green with a real Oakland DOCX fixture yielding
   control — drop the superseded wording from the `w:del` emit and the suite
   fails naming it.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: (merge on main, worker 64e2238) — bio-plane/src/docx.mjs on ooxml.mjs primitives; paragraph-referenced links ({kind:"doc-para", ref, para, run}) with wrappers byte-identical to linkWrapper; tracked changes carry author, date and the SUPERSEDED WORDING (excluded from text — the document as served — held attributed in the envelope); comments with author/date; unreadable parts stated ({part, why}), never invented. formats-docx.test.mjs 82 assertions; battery 70/70 (3459); --strict exit 0. NC RUN (drop superseded wording → 2/82 fail by name; restored). IC-2 FILED first-lander (the evidentiary envelope + pageless text.paragraphs form); CONDUCT proxy-answered AGREE for dormant FRAMEWORK, RESOLUTION ACCEPTED, and applied the ONE version bump I2 1.0.0 → 1.1.0 covering IC-1 (CHANGED — the source union) and IC-2 together. Detect ladder: bare PK at the 1 KiB seam answers null; certainty is architecturally impossible before inflation.
 
 ### COFF-5 · queued
 milestone: M2

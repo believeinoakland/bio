@@ -252,3 +252,45 @@ version bump (with IC-1's, per its RESOLUTION: the first landed non-`pdf-page`
 producer triggers CHANGING→CHANGED) is CONDUCT's to apply at integration, since
 two workers landing concurrently cannot both bump one version line. COFF-3 and
 COFF-5 CONFIRM here when they land.
+
+### IC-1 · CHANGING → CHANGED · 2026-08-03 · at COFF-4's integration
+
+The first non-`pdf-page` producer landed: the DOCX registry entry (`docx.mjs`,
+COFF-4) emits `{kind:"doc-para", ref, para, run}` sources through I2's LinkRecords.
+Per this proposal's RESOLUTION, CONDUCT applies the version bump at integration:
+**I2 1.0.0 → 1.1.0 in `INTERFACES.md`** — additive; the `pdf-page` arm is
+byte-identical to 1.0.0's `{page, rect}` plus the two required tag fields, and every
+existing consumer reads on. CHANGING and CHANGED collapse into one entry because the
+landing and the bump are one integration act; nothing was ever built against a
+half-changed shape. SETTLED for the sole consumer: FRAMEWORK is dormant and has
+nothing to migrate (the change is additive; its recorded 1.0.0 confirmation reads
+unchanged on the `pdf-page` arm) — recorded by CONDUCT as proxy, the IC-1 precedent.
+COFF-3 (`sheet-cell`) and COFF-5 (`slide-shape`) emit further arms of the SAME
+resolved union and need no further protocol act — they CONFIRM here when they land.
+
+### IC-2 · RESPONSES · 2026-08-03
+
+- **FRAMEWORK: `AGREE` — answered on its behalf by CONDUCT, in writing, per
+  protocol step 3** (dormant; the IC-1 precedent — recorded as CONDUCT answering
+  FOR the area, never as the area agreeing). Grounds from FRAMEWORK's own 1.0.0
+  confirmation: (1) the envelope is a NEW top-level sibling field mirroring the
+  `links[]`/`counts` pattern FRAMEWORK already consumes — nothing existing is
+  reshaped, and C-18.1-style tolerance means a reader that ignores `evidentiary`
+  sees 1.0.0; (2) every item carries a required `kind` tag and an IC-1 `source`,
+  so the discriminate-don't-guess property FRAMEWORK named as load-bearing holds
+  here too; (3) `undetermined[{part, why}]` keeps the failure asymmetry first-class
+  — an unreadable part is stated, never silently absent. The pageless
+  `text.paragraphs[]` degenerate form filed alongside is accepted on the same
+  grounds: a DOCX has no pages in its bytes, and inventing `pages[]` would claim
+  what the capture does not hold.
+
+### IC-2 · RESOLUTION · 2026-08-03 · ACCEPTED — and CHANGED in the same act
+
+Sole consumer agreed (by proxy, named above). The implementing item landed in the
+same integration (COFF-4), so RESOLUTION and CHANGED collapse as IC-1's did: the
+shape is in `docx.mjs` and pinned by `formats-docx.test.mjs`, and the version bump
+is carried in **I2 1.1.0** (one bump covers IC-1's union and IC-2's envelope — one
+integration, one version line). COFF-3 and COFF-5 CONFIRM the envelope from their
+own as-built code when they land, inventing no variants; a drift is a COUNTER here,
+not a silent fork. When FRAMEWORK next wakes it may re-open either entry before
+building against 1.1.0.

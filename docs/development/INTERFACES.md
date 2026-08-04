@@ -302,12 +302,26 @@ is written here.
 
 - **ID:** I2
 - **Owner:** `FRAMEWORK` (currently dormant)
-- **Version:** 1.0.0 — **STABLE**, CONFIRMED by the consumer's owner FRAMEWORK
+- **Version:** 1.1.0 (1.0.0 — **STABLE**, CONFIRMED by the consumer's owner FRAMEWORK
   (session framework-agent-2, FW-1) 2026-07-31. Supersedes the provisional 0.1.0
   producer-proposed 2026-07-31 from CONTENT-PDF's as-built output (plane 0.55.0),
   written from the code that emits it rather than as anyone would like it, exactly
   as I1 was — and the extended text+tier shape (CPDF-4/CPDF-6/I6) confirmed with it.
-- **Producers:** `CONTENT-PDF` (live), `CONTENT-HTML` (dormant)
+  1.1.0 2026-08-03, COFF-4's integration — ADDITIVE, two changes under one bump,
+  both through the protocol: **(a) IC-1 as amended, CHANGED** — `source` is a
+  tagged union `{kind:"pdf-page"|"sheet-cell"|"slide-shape"|"doc-para"|"dom", ref,
+  …per-kind fields} | null`; the `pdf-page` arm carries 1.0.0's `{page, rect}`
+  byte-identical plus the two required tag fields, so a consumer reading only
+  `{page, rect}` keeps working and a consumer must discriminate on `kind` for any
+  other arm. **(b) IC-2, CHANGED** — the structure object gains one additive
+  top-level `evidentiary` envelope (the DEC-5 extras: tracked changes with
+  author/date/superseded wording, comments, formulas beside values, hidden
+  rows/columns/sheets, docProps metadata) — `{container, kinds[], items[] (required
+  `kind` tag + IC-1 `source`), undetermined[{part, why}], counts}` — plus the
+  pageless text degenerate form `text.paragraphs[]` (`{para, ref:"¶N", text}`)
+  where a container has no pages in its bytes. A reader ignoring both sees 1.0.0.
+  Producers of further container arms CONFIRM at IC-2, inventing no variants.)
+- **Producers:** `CONTENT-PDF` (live), `CONTENT-HTML` (dormant), `CONTENT-OFFICE` (live — the office-format entries)
 - **Consumer:** `FRAMEWORK` (dormant)
 - **Status:** STABLE. FRAMEWORK, the consumer, confirms the shape serves what it
   must do — identify a document's CONTENT and INTENT — WITHOUT a shape change. The
