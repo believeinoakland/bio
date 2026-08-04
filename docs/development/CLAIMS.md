@@ -1111,3 +1111,5 @@ expected: QUEUE.md REC-24 / `BUILD-ORDER.md` §2 (REC-24) (a)-(g), with DEC-13 (
 accepts-when: as QUEUE.md REC-24. NEGATIVE CONTROLS run and recorded in the suite's `NEGATIVE CONTROL:` line; restored after each. No push - CONDUCT integrates.
 landed: left for CONDUCT.
 released:
+
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker 52f2976). Verified: battery 93/93 (4942), hygiene 61/61, --strict 128/128. The three-places rule added to VERIFICATION.md; D-180 recorded; both judgements accepted; IC-14, I3 → 5.7.0. No DEC.

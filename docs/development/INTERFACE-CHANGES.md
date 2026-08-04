@@ -700,3 +700,16 @@ reversal if a later reader wants RECONCILED §3.1's rename literally.
   — the consumer was written for the published form (UI-13) and took it with zero
   executable-byte change, measured.
 - **Version:** I3 5.5.0 → **5.6.0** in `INTERFACES.md`.
+
+## IC-14 · I3: the action loop's surface · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-24 — op=actionmove and
+  op=actioncorrespond (contribute; machine refused by shape), the derived `action`
+  block on op=projection's single-bundle answer (basis, correspondence, clock_next,
+  clock_overdue + clock_overdue_cached, as_of, consequence, responses), and the new
+  refusals (RESPONDS_TO_REFUSED, MACHINE_CANNOT_MOVE_ACTION/CORRESPOND, the
+  request_for_comment specificity refusal). Additive; no existing string changed.
+- **Consumers:** UI. CONDUCT answers per the IC-12 mechanics, naming the proxy:
+  `AGREE` — UI-19 is the written consumer and renders unproven as STATED, never a
+  grade (DEC-14's clause riding the item).
+- **Version:** I3 5.6.0 → **5.7.0** in `INTERFACES.md`.
