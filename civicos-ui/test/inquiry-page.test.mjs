@@ -20,7 +20,11 @@
  *       facts — a free-text third line renders NOTHING;
  *   (7) a read-only credential sees the WHOLE page with exactly ONE
  *       whoami-sourced sentence, and no control is narrated or greyed (Q12) —
- *       there is no act bar at all this turn;
+ *       CORRECTED 2026-08-04 by UI-12, which added the act bar: the clause used
+ *       to end "there is no act bar at all this turn", which was true of UI-11
+ *       and is no longer true of the file. What this suite still owns is that a
+ *       credential which cannot act is offered NO control, while the acts the
+ *       record publishes are still NAMED to it;
  *   (8) the CRUMB renders first and survives every state INCLUDING the error
  *       (the errPane correction), and `#inquiry/<id>` is a real route.
  *
@@ -189,6 +193,26 @@ function mockFetch(u){
   }
   if(op==="backlinks")
     return R({ ok:true, result:{ ok:true, target, backlinks:BACKLINKS[target]||[] } });
+  /* ADDED 2026-08-04 by UI-12, which put the ACT BAR on this page. The page now
+     asks op=affordances for what the record publishes on the question, so this
+     mock must answer it — a page driven against a plane that has no such op is
+     a page in a state that cannot occur. The acts below are the plane's, in the
+     producer's shape (index.mjs decorateAct); the FLOW they drive is
+     conclude-act.test.mjs's subject, and what THIS suite still owns is that a
+     read-only credential is offered no control at all (Q12). */
+  if(op==="affordances"){
+    if(!target) return R({ ok:true, result:{ target:null, catalog:[],
+      vocabularies:{ dispositions:["deferred","dismissed"] } } });
+    const d = DOCS[target];
+    if(!d) return R({ ok:true, result:{ ok:false, reason:"NO_SUCH_BUNDLE", target } });
+    return R({ ok:true, result:{ target, object_type:d.type||"inquiry", current_state:d.state,
+      acts: (d.type==="information") ? [] : [
+        { id:"conclude", label:"Conclude", weight:"single", needs:"contribute",
+          mode:"session", rung:null, prompt:null },
+        { id:"dispose", label:"Dispose (defer or dismiss)", weight:"refuse", needs:"contribute",
+          mode:"session", rung:"reasoned", prompt:null }],
+      vocabularies:{ dispositions:["deferred","dismissed"] } } });
+  }
   if(op==="image"||op==="list") return R({ ok:true, result:[] });
   return R({ ok:false, error:"unexpected op "+op });
 }
@@ -389,13 +413,26 @@ ok("a read-only credential sees the WHOLE page — both strengths",
 ok("a read-only credential sees the WHOLE page — what relies on it", ro.includes("The marina money"));
 ok("no control is greyed", !/disabled/.test(ro));
 ok("no control is narrated per-control", !/you (can|may) not|not permitted|insufficient/i.test(ro));
-/* NO ACT BAR THIS TURN, and therefore no surface-side option map. */
-ok("the page renders no act control at all", !/<button/.test(ro));
-ok("the page names no act", !/Conclude|Defer|Dismiss|Publish this|Divide/.test(ro));
+/* CORRECTED 2026-08-04 by UI-12. The two assertions that stood here said the
+   page renders NO act control and names NO act, which was UI-11's whole turn
+   and is superseded: UI-12 added the act bar. THE RULE THEY WERE PROTECTING IS
+   UNCHANGED and is what they now assert — a credential that cannot act is
+   offered NO control at all, absent rather than greyed and never narrated
+   per-control (Q12). It still NAMES what the record publishes, because an act a
+   reader cannot see is an act nobody remembers asking for, and naming is not
+   offering. The old form is not exempted anywhere; it was wrong about the file
+   as it now stands. */
+ok("a read-only credential is offered NO act control at all", !/<button/.test(ro));
+ok("no control is greyed instead of omitted", !/disabled/.test(ro));
+ok("the acts the record publishes are still NAMED to a reader",
+   /Conclude/.test(ro) && /Dispose \(defer or dismiss\)/.test(ro));
 ctx.__PLANE.me = { member:"m_alice", session:true, administer:false, capabilities:["contribute"] };
 const acting = await open("INQ-2026-0001");
 ok("a credential that can act is told nothing about it", !acting.includes(SENT));
-ok("the page still renders no act control for a contribute holder (UI-12 adds it)", !/<button/.test(acting));
+ok("a credential that CAN act is offered the control, under the producer's own label",
+   /<button[^>]*onclick="actGo\(/.test(acting) && acting.includes("Conclude"));
+ok("and the act bar adds no act the plane did not publish",
+   (acting.match(/actGo\(/g)||[]).length === 1);
 
 /* ============ (8) THE CRUMB SURVIVES EVERY STATE, AND THE ROUTE IS REAL ============ */
 const missing = await open("INQ-NOPE");

@@ -50,6 +50,21 @@ function makePlane(){
       const ids = (body && Array.isArray(body.ids)) ? body.ids : [];
       return R({ ok:true, handle:"sel_"+ids.join("_"), kind:"enumerated", n:ids.length, expires:"2026-08-01T00:10:00Z" });
     }
+    /* CORRECTED 2026-08-04 (UI-12), and it is a correction and not an
+       exemption. `const DISPOSITIONS = ["deferred","dismissed"]` was deleted
+       from app.html this turn: it was the last surface-side option map in the
+       file, which is what constraint C5 forbids and what DEC-8 moved to the
+       plane. The set is now read from `op=affordances`' published
+       `vocabularies.dispositions` — REC-11 made that array the ONE array on the
+       plane side (op=dispose imports it rather than keeping a literal copy) and
+       this is the surface's half of the same move. So this mock must answer the
+       op, in the ENVELOPE the plane really sends (`{ok:true, result:{…}}` —
+       D-173's lesson: a mock answering unwrapped is a mock agreeing with
+       itself). The two tokens below are the plane's own published set. */
+    if(op==="affordances"){
+      return R({ ok:true, result:{ target:null, catalog:[],
+        vocabularies:{ dispositions:["deferred","dismissed"] } } });
+    }
     if(op==="dispose"){
       const to = url.searchParams.get("to");
       const reason = String(url.searchParams.get("reason")||"").trim();
@@ -89,19 +104,40 @@ const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__pf=disposePreflight;"
   + "globalThis.__open=openDisposeDialog;globalThis.__validate=disposeValidate;"
   + "globalThis.__choose=disposeChoose;globalThis.__do=doDispose;"
   + "globalThis.__ladder=weightLadderHtml;globalThis.__LEGAL=DISPOSE_LEGAL;"
-  + "globalThis.__legalFor=disposeLegal;";
+  + "globalThis.__legalFor=disposeLegal;"
+  /* UI-12: the published set and the one seam that loads it. */
+  + "globalThis.__loadActSource=loadActSource;globalThis.__dispositions=dispositions;";
 
-function boot(source, plane){
+/* UI-12: the dispositions are LOADED before the surface is driven, because they
+   are the plane's answer now and not a literal. `boot` is therefore async —
+   every caller awaits it, and a surface driven before the load offers nothing
+   at all, which is the behaviour the item wants and which the assertion just
+   below proves rather than assumes. */
+async function boot(source, plane){
   const ctx = makeCtx(plane);
   vm.runInContext(source + EXPORTS, ctx);
   ctx.__PLANE.session = true;
   ctx.__PLANE.me = { member:"m_alice", session:true, administer:false, capabilities:["contribute"] };
+  await ctx.__loadActSource(true);
   return ctx;
 }
 
 const SRC = appScript();
 const plane = makePlane();
-const ctx = boot(SRC, plane);
+
+/* THE SET IS THE PLANE'S, and this is the instrument that says so: before the
+   published answer is loaded there is NO disposition to offer, so a reintroduced
+   surface-side literal would make this assertion impossible to fail. */
+{
+  const probeCtx = makeCtx(makePlane());
+  vm.runInContext(SRC + EXPORTS, probeCtx);
+  ok("before op=affordances answers, the surface knows NO disposition — the set is not written down here",
+     probeCtx.__dispositions().length === 0);
+}
+const ctx = await boot(SRC, plane);
+ok("the dispositions the surface offers are exactly the ones op=affordances published",
+   JSON.stringify(ctx.__dispositions()) === JSON.stringify(["deferred","dismissed"]));
+ok("op=affordances was actually asked", plane.CALLS.some(c=>c.op==="affordances"));
 
 /* ============================================================
    THE PRE-FLIGHT is a pure function — prove it directly first.
@@ -208,7 +244,7 @@ ok("the successful act returned the plane's receipt object", r2 && r2.ok===true 
 /* ============================================================
    CHOOSE is live: switching to dismiss re-runs the pre-flight.
    ============================================================ */
-const plane2 = makePlane(); const ctx2 = boot(SRC, plane2);
+const plane2 = makePlane(); const ctx2 = await boot(SRC, plane2);
 ctx2.__open("FOCUS-2026-0009", "A second question", "surfaced", "deferred");
 ctx2.__choose("dismissed");
 ctx2.__els.get("#dz-reason").value = "Out of scope for this record";
@@ -240,7 +276,7 @@ for(const word of ["op=", "op=dispose", "handle", "sel_", "selection", "current_
 const BROKEN = SRC.replace(/if\(!pf\.ok\)\{\s*\/\/ the surface refuses, before the plane/,
                            "if(false){ // NEGATIVE CONTROL: reason-required pre-flight gate removed");
 ok("the negative-control mutation actually changed the source", BROKEN !== SRC);
-const planeNC = makePlane(); const ctxNC = boot(BROKEN, planeNC);
+const planeNC = makePlane(); const ctxNC = await boot(BROKEN, planeNC);
 ctxNC.__open("FOCUS-2026-0004", "sewer", "surfaced", "deferred");
 /* leave the reason EMPTY, then commit */
 await ctxNC.__do();
