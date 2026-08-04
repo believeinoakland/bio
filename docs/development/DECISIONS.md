@@ -2556,6 +2556,52 @@ recommendation: publish it via the prompt mechanism REC-16 built (one act publis
   be his.
 reversal cost: nil before publication; after, the usual wording-migration (the
   drift guard names it).
+### DEC-40 · open
+raised: 2026-08-04 · CONDUCT (lifted from UI-18's report)
+for: bob
+question: The published-case THRESHOLD STANCES — the named set a reader picks from,
+  each resolving to a pair of independent floors (Q6's settled form). Q6 settled the
+  FORM, not the SET, and a published stance name is a thing readers will quote back
+  at us. What is the set, what are its labels, what are its floor pairs?
+why it is Bob's: published member- and public-facing wording that encodes floor
+  VALUES — how strong a case must be for a given use — which is doctrine wearing a
+  menu.
+provisional: UI-18's four doing-labelled stances (AUDIENCES §0 forbids who-labels):
+  Reading the whole case (none/none) · Citing this in a filing (A/A) · Checking this
+  against records you already hold (none/B) · Quoting this in something you publish
+  (B/none). The labels are a doctrine consequence; the floor values are a worker's
+  judgement; both are one edit to change.
+alternative: ship no named stances — only the raw pair-of-floors control. Rejected
+  as the provisional because Q6's own reasoning says the reader picks a STANCE.
+recommendation: confirm or amend the four; the floor values are the part most worth
+  his eye (A/A for a filing may be right or may be unreachable in practice).
+reversal cost: one edit while unpublicised; after real readers quote a stance name,
+  renames are noisy.
+
+### DEC-41 · open
+raised: 2026-08-04 · CONDUCT (lifted from UI-18's report)
+for: bob
+question: DEC-34 says the published case is "reduced also to PDF renderings". The
+  browser-side rendering now exists with the per-page header enforced, and
+  print-to-PDF from it produces a compliant document — but NOTHING produces a
+  server-side PDF that joins the container's parts[] (the manifest's layout.note
+  reserves the join; the plane's suite asserts no page-shaped artifact is produced
+  there). Does the CONTAINER need to carry a rendering, or does the browser path
+  satisfy the ruling?
+why it is Bob's: it is his artifact-form ruling's scope — what a downloaded
+  container IS — and a server-side PDF renderer in workerd is a real build (the
+  CPDF-12 renderer neighbourhood) his call should precede.
+provisional: the container ships without a rendering; the browser rendering carries
+  the header rule; the layout.note keeps the join reserved so the shape does not
+  change under readers if the answer is yes.
+alternative: build the server-side renderer (likely a fleet member) so every
+  container carries its PDF — cost is the renderer CPDF-12's measurement would
+  partially price.
+recommendation: the browser path likely satisfies the ruling's INTENT (a reader can
+  produce a compliant PDF from the artifact), but "the container carries its own
+  rendering" is a stronger claim about a forwarded file — genuinely his to weigh.
+reversal cost: none while the join stays reserved.
+
 ## Answered, awaiting enactment
 
 _(none)_
