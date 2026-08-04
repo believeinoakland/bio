@@ -411,6 +411,17 @@ const OPS = {
      of arrays and a query string cannot express one honestly (op=publish's
      precedent exactly). */
   inquirydivide:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-45: AUTHORING THE GROUNDS PARTITION on an inquiry (DEC-32). Conclude's
+     class list for conclude's reason — a machine class REACHES it and is
+     refused by the store (MACHINE_CANNOT_GROUND) rather than being absent, fail
+     closed, because "these reasons are enough on their own" is a member's
+     authored judgement about their own argument and the rule is about who the
+     caller IS. One `target`, like conclude, reopen and inquirydivide: one
+     question's structure is authored at a time. The PARTITION arrives in the
+     POST body because it is an array of objects each holding an array of
+     ordinals, which a query string cannot express honestly — op=publish's and
+     op=inquirydivide's precedent exactly. */
+  inquiryground:   { classes: ["admin", "member", "probe"],      mutating: true  },
   /* REC-24 (c)/(d): THE TWO OPS THAT OPERATE AN ACTION — the first ops in this
      table whose subject is an action at all. `STATES.action` has carried five
      states and seven edges since the catalog was written and nothing wrote them,
@@ -834,6 +845,28 @@ const ACTION_ACTIONS = ["actionmove", "actioncorrespond"];
    bar; you cannot do it quietly" — so it takes the author stamp without being a
    state action on any object. */
 const DECLARATION_ACTIONS = ["strengthbar"];
+/* REC-45 / DEC-32: AUTHORING THE STRUCTURE of an inquiry's basis. Its own array
+   and NOT folded into STATE_ACTIONS, on the same reasoning REC-24 wrote for
+   ACTION_ACTIONS and for the same benefit: it moves NO state. An inquiry that
+   was `open` before it was grouped is `open` after, and a reader of an array
+   called STATE_ACTIONS that contained this op would be reading a list whose
+   name had stopped being true. What it needs is what that array CONFERS minus
+   one thing — both SESSION_OPS lists, the server-side viewer stamp and the
+   server-side author stamp — and `owner` is inert for it anyway (it is not
+   selection-backed: one question's structure is authored at a time).
+
+   THE AUTHOR STAMP IS THE STRICTEST INSTANCE IN THIS FILE OF THE RULE IT
+   SHARES WITH `publish`, and REC-45 exists partly to say so. Grouping is the
+   ONE act in the record that makes a finding STRONGER — OR takes the maximum —
+   and what it writes into the document is a NAME and a DATE against the claim
+   "these reasons were enough on their own". A caller who could supply that name
+   could put somebody else's signature on an overclaim, and a caller who could
+   supply the date could make a structure authored AFTER a strength was seen
+   look like one authored before it, which is precisely the distinction DEC-32
+   requires a reader to be able to draw. So the store DELETES any caller-supplied
+   `asserted_by`/`at` on every row before stamping — the op=promote
+   `ownerMemberId` discipline — and this stamp is where the name comes from. */
+const STRUCTURE_ACTIONS = ["inquiryground"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue"];
@@ -919,13 +952,13 @@ const SESSION_OPS = {
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
-                   ...DECLARATION_ACTIONS]),
+                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
-                   ...DECLARATION_ACTIONS, "memberadd", "memberset",
+                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
 
@@ -1004,6 +1037,32 @@ const NEEDS = {
      conclude's and reopen's are, because capabilities gate SESSIONS and the
      rule here is about who a session IS. */
   inquirydivide:    "contribute",
+  /* REC-45: GROUPING RIDES `contribute` and NO NEW CAPABILITY TOKEN IS MINTED,
+     which the item states and which the reasoning above already settles.
+     Membership §5's four rights are the whole set and a fifth would need §5
+     reopened; there is nothing here a fifth would express that `contribute`
+     does not, because authoring the structure of a basis is a corpus write on a
+     question and a view-only member does not perform one.
+
+     THE ARGUMENT FOR A NARROWER GATE IS REAL AND IS REJECTED, and it is worth
+     stating because this act raises a grade. One could argue that the act which
+     makes a finding STRONGER deserves `publish`'s right, or an owner's. It
+     would be the wrong mechanism twice over. First, `publish` gates the
+     PUBLICATION, which is where a stronger grade actually reaches a reader, and
+     it is untouched: a member may group their reasons all day and nothing
+     leaves the record until somebody with `publish` authors a case. Second — and
+     this is DEC-30's argument arriving from the other side — grouping is also
+     the only route BACK to an ungrouped basis, so an owner-only gate would let
+     an owner hold a structure in place that another member can see is an
+     overclaim, and DE-ESCALATION MUST NEVER REQUIRE PERMISSION FROM SOMEONE
+     WHOSE INCENTIVE MAY RUN THE OTHER WAY. What bounds misuse here is not a
+     gate: it is the NAME on every group, the legs staying visible under it, and
+     the frozen per-group breakdown a reader checks (DEC-32's three
+     containments). The named-member requirement is enforced by the store on the
+     author stamp, as release's, conclude's, reopen's and inquirydivide's are,
+     because capabilities gate SESSIONS and the rule here is about who a session
+     IS. */
+  inquiryground:    "contribute",
   /* REC-24: BOTH ACTION OPS RIDE `contribute`, and NO NEW CAPABILITY TOKEN is
      minted — the item says so and the reasoning is the one every act above
      already runs on. Membership §5's four rights are the whole set; a fifth
@@ -3934,6 +3993,10 @@ export default {
            before they write it, so an action the caller may not see refuses
            NO_SUCH_BUNDLE identically to an absent one. */
         || ACTION_ACTIONS.includes(op)
+        /* REC-45: it reads the inquiry behind the fail-closed gate before it
+           rewrites it, so a question the caller may not see refuses
+           NO_SUCH_BUNDLE identically to an absent one. */
+        || STRUCTURE_ACTIONS.includes(op)
         || op === "list" || op === "index" || op === "projection" || op === "image"
         || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations"
         /* REC-34: the gated read of the derived pair. Its subject is a bundle
@@ -4010,8 +4073,12 @@ export default {
        happened" is the whole of what the record holds when there are no bytes —
        so a caller naming it would be a caller signing somebody else's name to a
        claim about a real party outside this system. */
+    /* REC-45 joins them, and the reasoning is on STRUCTURE_ACTIONS above: the
+       name this stamps is the name that goes against "these reasons were enough
+       on their own", which is the one authored judgement in the record that
+       makes a finding stronger. */
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op)
-        || DECLARATION_ACTIONS.includes(op))
+        || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op))
       inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is

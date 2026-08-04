@@ -86,6 +86,7 @@
     "test:queue": "node test/queue.test.mjs",
     "test:queue-state": "node test/queue-state.test.mjs",
     "test:queue-conditions": "node test/queue-conditions.test.mjs",
+    "test:inquiryground": "node test/inquiryground.test.mjs",
     "test:battery": "node scripts/battery.mjs",
     "test:coverage": "node scripts/coverage.mjs --strict"
   },

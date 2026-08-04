@@ -55,7 +55,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROMPT, deriveActs,
+import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROMPT, GROUND_PROMPT, deriveActs,
          ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, CAPTURE_ACTS }
   from "../src/affordances.mjs";
 import { ACTION_KINDS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
@@ -358,19 +358,39 @@ const cat = await affordances(null);
 /* CORRECTED 2026-08-05 (REC-24): TWELVE. The count is the totality check's
    companion — every op in NEEDS is an act here or a NON_ACT with a reason — so
    it moves whenever an object-directed op is added, and REC-24 added two. */
-t("no target -> the whole catalogue: twelve acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-08-04 (REC-45): THIRTEEN, with `inquiryground` — the act that
+   AUTHORS the grounds partition REC-42 built and left with no producer. The
+   count is corrected and not loosened, for the reason every note above gives:
+   this assertion exists so a published act cannot appear or vanish without a
+   turn saying so, and a `>=` would have made it stop doing that. */
+t("no target -> the whole catalogue: thirteen acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 12, true]);
+  [true, 13, true]);
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
-   null for every act no ruling attaches one to, and for `inquirydivide` it is
-   the published wording — so a surface that has the control necessarily has the
-   sentence that must accompany it. The clause-by-clause assertion lives in
-   divide.test.mjs; what this one holds is that the catalogue publishes it at
-   all and invents one nowhere else. */
-t("exactly one act carries a PROMPT, and it is the divide act's published wording (DEC-29(b))",
-  cat.result.catalog.filter((a) => a.prompt !== null).map((a) => [a.id, a.prompt === DIVIDE_PROMPT]),
-  [["inquirydivide", true]]);
+   null for every act no ruling attaches one to, and where a ruling does attach
+   one it is the PUBLISHED constant — so a surface that has the control
+   necessarily has the sentence that must accompany it. The clause-by-clause
+   assertions live in divide.test.mjs and inquiryground.test.mjs; what this one
+   holds is that the catalogue publishes each prompt from the module that owns
+   it and invents one nowhere else. */
+/* CORRECTED 2026-08-04 (REC-45), and the old assertion was SUPERSEDED rather
+   than wrong: "exactly ONE act carries a prompt" was true when REC-16 wrote it
+   and was doing real work — it caught a prompt appearing on an act no ruling
+   had attached one to. REC-45 attaches a second, on DEC-29(b)'s own mechanism
+   and for the hazard one notch sharper than division's (OR takes the MAXIMUM,
+   so grouping is the one act that raises a grade with no new evidence). The
+   fix is NOT to loosen this to "at least one": the assertion is rewritten to
+   name EVERY act that carries a prompt and pin each to its own published
+   constant, so an unattached prompt still fails and a prompt drifting from the
+   module that owns it fails too. */
+t("every act that carries a PROMPT carries its own published wording, and no other act invents one (DEC-29(b))",
+  cat.result.catalog.filter((a) => a.prompt !== null).map((a) => a.id).sort(),
+  ["inquirydivide", "inquiryground"]);
+t("and each is the constant from the module that owns it, never a copy",
+  [cat.result.catalog.find((a) => a.id === "inquirydivide").prompt === DIVIDE_PROMPT,
+   cat.result.catalog.find((a) => a.id === "inquiryground").prompt === GROUND_PROMPT],
+  [true, true]);
 /* CORRECTED 2026-08-05 (REC-24): eight kinds, for the reason stated at the
    ACTION_KINDS pin above. */
 t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the eight action kinds",
