@@ -406,6 +406,16 @@ const OPS = {
      project's projection. Working corpus, so member class and above; the
      viewer is stamped server-side below like every retrieval read. */
   backlinks:  { classes: ["admin", "member", "probe"],           mutating: false },
+  /* REC-17 / P-64: the RE-EVALUATION OBLIGATION, derived on read. Which
+     inquiries rest on something that has MOVED — superseded, republished at a
+     new edition, deferred, reopened or dismissed — as a query over REC-11's
+     reverse index and the supersession reverse column, never a stored flag and
+     never a verdict computed from strength. Working corpus, so member class and
+     above; the viewer is stamped server-side below like every retrieval read.
+     NO `NEEDS` ENTRY, deliberately and on op=governorstate's precedent: a read
+     carries no working capability, so REC-19's NEEDS/NON_ACTS totality neither
+     gains nor loses a row. */
+  reevaluations: { classes: ["admin", "member", "probe"],        mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -3413,7 +3423,8 @@ export default {
     if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
         || STATE_ACTIONS.includes(op)
         || op === "list" || op === "index" || op === "projection" || op === "image"
-        || op === "file" || op === "backlinks" || op === "excludedby" || QUEUE_ACTIONS.includes(op)
+        || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations"
+        || QUEUE_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
