@@ -7,7 +7,7 @@
  * runtime instrument could have seen: `signIn` read `l.token` off `api("login")`
  * — off the ENVELOPE — so **member sign-in by password had never worked against
  * a real plane**, from the day it was written. The refusal half was worse: a
- * wrong password arrives as `{ok:true, result:{ok:false, reason:"BAD_PASSWORD"}}`,
+ * wrong password arrives as `{ok:true, result:{ok:false, reason:…, detail:…}}`,
  * so `l.ok === false` never fired either and the gate showed the member the
  * envelope instead of the record's own reason. It was found by the STATIC arm of
  * `check-mock-envelope.mjs`, because arm B — the runtime one, which watches what
@@ -38,10 +38,22 @@
  *     `op=affordances` -> the published vocabularies, the gate closed, the
  *     working space opened, and the queue asked for.
  *
- *   3 SIGN IN, BAD PASSWORD — the plane's refusal, rendered as the plane's, with
- *     the arm-(d) instrument over it: a right reason code accompanied by a
- *     sentence this surface wrote FAILS. Nothing is written, no session is
- *     marked, and `boot()` is never entered.
+ *   3 SIGN IN, REFUSED — the plane's refusal, rendered as the plane's, with the
+ *     composed-wording instrument over it (UI-13's arm (d)): a sentence this
+ *     surface wrote FAILS even when the reason code sitting beside it is right.
+ *     Nothing is written, no session is marked, and `boot()` is never entered.
+ *     **WHAT THE PLANE ANSWERS HERE CHANGED UNDER THIS SUITE**, and the
+ *     correction is at `PLANE_WORDS` below: REC-41 collapsed the two refusal
+ *     codes into one and added the `detail` SENTENCE the plane never had, so the
+ *     gate renders the sentence and this file reads it OUT OF THE PLANE rather
+ *     than holding a copy of it.
+ *
+ *   3b NO RETIRED LOGIN CODE SURVIVES ANYWHERE UNDER `civicos-ui/` — a
+ *     source-level sweep over every file in the package, because the way this
+ *     defect came back would be a stale copy in a file no harness runs (it had
+ *     already happened twice: this suite's own mock and a comment in
+ *     `app.html`). A retired wire string is not a naming preference: matching on
+ *     one is matching on something the plane cannot send.
  *
  *   4 THE PUBLISHED LIST — `pubList` against `op=publishedmanifest`, which
  *     `index.mjs` re-wraps explicitly (`json({ok:true, result:(await
@@ -57,52 +69,87 @@
  *     own output that `login` and `publishedmanifest` are now observed, and
  *     observed WRAPPED. Measured, in the loop the reader runs.
  *
- * THE MOCKS ANSWER THE WIRE SHAPE, from birth. `op=login` and
- * `op=publishedmanifest` are both WRAPPED — neither is in the guard's FLAT list,
- * and this file asserts that rather than assuming it, so the day either grows a
- * flattening handler in `index.mjs` this suite fails instead of drifting.
+ * THE MOCKS ANSWER THE WIRE SHAPE. `op=login` and `op=publishedmanifest` are
+ * both WRAPPED — neither is in the guard's FLAT list, and this file asserts that
+ * rather than assuming it, so the day either grows a flattening handler in
+ * `index.mjs` this suite fails instead of drifting.
  *
- * NEGATIVE CONTROL, THREE ARMS, EACH RUN MECHANICALLY BELOW in its own VM
- * context built from a mutated copy of the source — nothing on disk is touched
- * by those, so there is no restore to get wrong — AND EACH ALSO RUN ONCE ON
- * DISK, 2026-08-05, which is the run that answers "does the LOOP THE READER
- * RUNS fail". Both files restored byte-identical (sha256 compared before and
- * after: app.html
- * c007d20035cc25febf7e75bb0a9711fa398e3899c855b1fbb2df4e18551dd2a8, this file
- * b10d0a811e42988ee77e4acf805a5c8023697b2f07415ba18e79599014c9f0e9):
+ * AND THE ENVELOPE IS NOT THE ONLY WAY A MOCK CAN BE WRONG — UI-30, 2026-08-04,
+ * and it is this file's own correction rather than someone else's. This suite
+ * shipped saying the mocks answer the wire shape "from birth", and it was true
+ * of the SHAPE and false of the CONTENT: the refusal branch hand-answered a
+ * reason code, and when REC-41 retired that code the suite stayed 62/62 GREEN
+ * while asserting against something the plane cannot produce. A copy that
+ * agrees with the plane at zero cost is not evidence (CLAUDE.md), and the
+ * envelope guard cannot see this class — it judges shape, not content. So the
+ * refusal's wording is now READ OUT OF `bio-plane/src/store.mjs`, and a
+ * source-level sweep keeps the retired codes out of the whole package. The
+ * corrected reasoning is at `PLANE_WORDS` below, where the old one stood.
  *
- *   (a) BREAK THE TOKEN READ — `apiR`, the untokened transport's seam, stops
- *       opening the envelope (`return (j && j.result !== undefined) ? j.result :
- *       j;` -> `return j;`, spliced INSIDE `apiR`'s own body). That is D-173's
- *       sixth instance restored exactly.
- *       ON-DISK RUN: **26 of 62 assertions FAIL** — the token, the session, the
+ * NEGATIVE CONTROL, FOUR ARMS. Arms (a)-(c) are ALSO run mechanically below in
+ * their own VM context built from a mutated copy of the source — nothing on
+ * disk is touched by those, so there is no restore to get wrong. EVERY ARM WAS
+ * ALSO RUN ONCE ON DISK, 2026-08-04 (UI-30), against the FINAL file, which is
+ * the run that answers "does the LOOP THE READER RUNS fail" — and the counts
+ * below are that run's. Only `app.html` is ever mutated (arm (c) needs no
+ * mutation at all, see below), and it was restored BYTE-IDENTICAL after each
+ * arm: sha256 3788ef1bf9b3424eeafbf8d651687e01b0cd5025a1ae3065a5307a94f4043b28
+ * before and after all four.
+ *
+ *   (a) BREAK THE TOKEN READ — `apiR` and `apiQ`, the untokened transports'
+ *       seams, stop opening the envelope (`return (j && j.result !== undefined)
+ *       ? j.result : j;` -> `return j;`, spliced INSIDE each function's own
+ *       body). That is D-173's sixth instance restored exactly.
+ *       ON-DISK RUN: **27 of 71 assertions FAIL** — the token, the session, the
  *       authentication of every op after it, all fifteen of `boot()`'s, the
- *       record's own reason at the gate, and both published-list rows. THE
- *       POINT OF THE ARM: the identical edit could not fail ANYTHING yesterday,
- *       because nothing in this repository ran these two paths.
+ *       record's own sentence at the gate, and both published-list rows. THE
+ *       POINT OF THE ARM: the identical edit could not fail ANYTHING before
+ *       UI-24, because nothing in this repository ran these two paths.
  *       SPLICED INSIDE THE FUNCTION BODY DELIBERATELY — `recR` and `recPostR`
  *       carry a byte-identical line and both come EARLIER in the file, so a
  *       plain string replace mutates the wrong seam and reports green. That is
  *       UI-22's measured instrument finding, applied rather than re-learned.
  *
- *   (b) THE ARM-(d) INSTRUMENT — the refusal branch renders a sentence this
- *       surface wrote instead of what the plane returned. The reason CODE is
- *       still correct, so a suite pinning only the code stays green; the residue
- *       scan is what fires.
+ *   (b) THE COMPOSED-WORDING INSTRUMENT — the refusal branch renders a sentence
+ *       this surface wrote. RETARGETED 2026-08-04 (UI-30) to the shape REC-41
+ *       landed, and the retarget made it SHARPER: the mutation now prints the
+ *       plane's own reason CODE and then adds prose of its own, so it looks
+ *       more faithful than the surface that shipped and every code-shaped
+ *       assertion is green against it. Only subtracting what the plane said and
+ *       reading the remainder can see it.
+ *       ON-DISK RUN: **6 of 71 FAIL** — the sentence missing, the code exposed
+ *       to a member, the residue scan naming the surface as author, and the
+ *       three control/contrast assertions that ride with them.
  *
  *   (c) UNWRAP THE LOGIN MOCK — the guard's own arm. In the in-VM half a child
  *       process drives this suite with a login mock that answers flat and the
  *       probe records it flat against a wire map that says WRAPPED.
- *       ON-DISK RUN, and it is the receipt for why arm B exists at all:
- *       `node check-mock-envelope.mjs` exits 1 with
+ *       ON-DISK RUN, and it is the receipt for why arm B exists at all. The
+ *       mutation is reached through this file's own `UI24_FLAT_LOGIN` switch
+ *       rather than by editing the mock, so NOTHING IS WRITTEN TO DISK and the
+ *       arm is re-runnable in one step: `UI24_FLAT_LOGIN=1 node
+ *       check-mock-envelope.mjs` exits 1 with
  *         FAIL: auth-surface.test.mjs answers op=login UNWRAPPED (2 of 2
  *         answers; top-level keys ["ok","role","token","expires"]) …
  *       naming the suite and the op — WHILE THE SURFACE ASSERTIONS IN THIS FILE
  *       ALL STAY GREEN, because a flat answer happens to put `token` where the
- *       correct read looks. Only 4 assertions move, and every one of them is a
- *       control or a coverage assertion rather than a claim about the surface.
- *       A mock shaped like the bug proves nothing, and this file cannot tell on
- *       its own; the guard can.
+ *       correct read looks. `UI24_FLAT_LOGIN=1 node test/auth-surface.test.mjs`
+ *       moves only 4 of 71, and every one of them is a control or a coverage
+ *       assertion rather than a claim about the surface. A mock shaped like the
+ *       bug proves nothing, and this file cannot tell on its own; the guard can.
+ *
+ *   (d) RESTORE A RETIRED LOGIN CODE — UI-30's own, and the arm that answers
+ *       "could a stale copy come back silently". One of the two codes REC-41
+ *       retired is put back into the `app.html` comment that used to spell it.
+ *       ON-DISK RUN: **2 of 71 FAIL**, and the first NAMES both the file and
+ *       the string it found: `NO RETIRED LOGIN CODE survives anywhere under
+ *       civicos-ui/ — app.html still carries …`. The second is the probe child
+ *       re-running this suite, which fails with it.
+ *       THERE IS NO IN-VM HALF FOR THIS ARM AND THAT IS NOT AN OMISSION: the
+ *       sweep's subject is what is ON DISK in this package, so an arm run
+ *       against a mutated string in memory would be measuring a different
+ *       thing. The mutation is the smallest one that reproduces the defect this
+ *       item found — a retired wire string surviving in a file no harness runs.
  *
  * Run alone: `node test/auth-surface.test.mjs`.
  */
@@ -154,18 +201,131 @@ const MANIFEST = {
         + "this reads the published projection and never the working corpus.",
 };
 
-/* THE PLANE'S OWN WORDS FOR A REFUSED LOGIN, and there is a finding in how
-   short this list is: `store.mjs login()` answers `{ok:false, reason:
-   "NO_SUCH_ROLE"}` and `{ok:false, reason:"BAD_PASSWORD"}` and NOTHING ELSE —
-   no `detail`, no sentence. So the honest thing for the gate to render is the
-   reason, and that is what it renders. It is NOT this file's business to supply
-   the missing sentence, and it is not `app.html`'s either: a surface may render
-   a refusal it received and may never compose one (DEC-8). The gap is real and
-   is raised for CONDUCT rather than closed here with an invention. */
-const PLANE_WORDS = {
-  BAD_PASSWORD: "BAD_PASSWORD",
-  NO_SUCH_ROLE: "NO_SUCH_ROLE",
-};
+/* THE PLANE'S OWN WORDS FOR A REFUSED LOGIN — READ FROM THE PLANE, NOT TYPED.
+   ==========================================================================
+   CORRECTED 2026-08-04 (UI-30), AND THE OLD VERSION WAS WRONG IN BOTH HALVES
+   RATHER THAN MERELY OUT OF DATE. It read:
+
+     `store.mjs login()` answers [the two now-retired reason codes, spelled out
+     here as string literals] and NOTHING ELSE — no `detail`, no sentence. So
+     the honest thing for the gate to render is the reason … The gap is real and
+     is raised for CONDUCT rather than closed here with an invention.
+
+   (The two codes are described rather than quoted, here and everywhere below.
+   The sweep at the end of this section is what keeps them out of this package,
+   and a file that enforces an absence cannot be an instance of it.)
+
+   (1) THE CODES ARE GONE. REC-41 (landed on main, I3 6.0.0) collapsed both into
+       ONE, `SIGN_IN_REFUSED`, because with `op=bootstrap`'s roster closed a
+       distinguishable refusal is the enumeration surface that replaces it. So
+       from that landing until this correction THIS SUITE WAS 62/62 GREEN
+       AGAINST A SHAPE THE PLANE CANNOT PRODUCE: the mock hand-answered a
+       retired code and every assertion about "the record's own reason" was
+       satisfied by the mock agreeing with itself. That is D-173's class exactly
+       — a UI mock must answer the WIRE shape — and CLAUDE.md's rule is to
+       CORRECT the assertion with a dated reason, never exempt it.
+
+   (2) THE GAP THIS COMMENT RAISED FOR CONDUCT IS CLOSED, BY THE PLANE, WHICH IS
+       THE ONLY PLACE IT COULD HAVE BEEN CLOSED. `op=login` now carries a
+       `detail` SENTENCE beside the code, from `Store.LOGIN_REFUSAL_DETAIL`. The
+       reasoning the old comment reached for is unchanged and is why this is not
+       a reversal: a surface may render a refusal it RECEIVED and may never
+       compose one (DEC-8). Nothing was invented here or in `app.html`; the
+       plane learned to say it, and the gate now renders what it says instead of
+       showing a member a machine code to decode.
+
+   AND THE SENTENCE IS READ OUT OF `store.mjs`, never copied into this file.
+   REC-43 measured, for the fourth time in this project, that a hand-typed copy
+   agrees with its source at ZERO COST and leaves every behavioural assertion
+   green while the two drift — which is the very defect this correction is
+   cleaning up, one layer over. `store.mjs` cannot be imported here (it opens
+   with `import … from "cloudflare:workers"` and only workerd provides that), so
+   it is read TEXTUALLY, the way `check-semantics.mjs` already reads it. That
+   extraction is itself asserted below: an extraction that silently yields ""
+   would make every `includes()` in this file trivially true, which is the same
+   costless equality wearing different clothes. */
+const STORE_SRC = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+function planeLoginRefusal(){
+  const block = /static LOGIN_REFUSAL_DETAIL = \{\n([\s\S]*?)\n {2}\};/.exec(STORE_SRC);
+  if(!block) return null;
+  const out = {};
+  /* One entry per `KEY:` at the constant's own indentation; a value is the
+     concatenated string literals that follow it, joined the way the source
+     joins them with `+`. */
+  for(const part of block[1].split(/^ {4}(?=[A-Z_]+:)/m)){
+    const k = /^([A-Z_]+):/.exec(part);
+    if(!k) continue;
+    const lits = [...part.slice(k[0].length).matchAll(/"((?:[^"\\]|\\.)*)"/g)]
+      .map(m => JSON.parse('"' + m[1] + '"'));
+    if(lits.length) out[k[1]] = lits.join("");
+  }
+  return out;
+}
+const REFUSAL = planeLoginRefusal();
+const REFUSAL_CODE = REFUSAL ? Object.keys(REFUSAL)[0] : "";
+const REFUSAL_SENTENCE = REFUSAL ? REFUSAL[REFUSAL_CODE] : "";
+
+ok("the plane's login-refusal constant is readable from here", !!REFUSAL && !!REFUSAL_CODE);
+ok("ONE code and ONE sentence — a second entry means the refusals split again and this suite must be re-read, not re-pointed",
+   !!REFUSAL && Object.keys(REFUSAL).length === 1);
+/* The extraction is REAL prose, not an empty string or a fragment. Without
+   this, a regex that stopped matching would hand every assertion below a free
+   pass. */
+ok("and the sentence extracted is a whole sentence rather than an empty read",
+   REFUSAL_SENTENCE.length > 200 && /^[a-z].*\.$/s.test(REFUSAL_SENTENCE)
+   && !REFUSAL_SENTENCE.includes('"') && !/\s\+\s/.test(REFUSAL_SENTENCE));
+/* AND EVERY REFUSAL ARM IN THE PLANE PAIRS THE CODE WITH THE SENTENCE. Reading
+   the constant proves the sentence exists; this proves it is what `op=login`
+   actually returns — including the DO dispatch's own wrapper arm, which refuses
+   before `login()` is ever reached. An arm that answered the code bare would
+   send this gate back to rendering a machine code with nothing to say. */
+{
+  const codes = [...STORE_SRC.matchAll(new RegExp(`reason: "${REFUSAL_CODE}"`, "g"))].length;
+  const paired = [...STORE_SRC.matchAll(
+    new RegExp(`reason: "${REFUSAL_CODE}",\\s*detail: Store\\.LOGIN_REFUSAL_DETAIL\\.${REFUSAL_CODE}`, "g"))].length;
+  ok("the plane refuses a sign-in in more than one place, so the pairing is worth asserting", codes >= 2);
+  ok("EVERY arm that answers the refusal code answers the sentence with it — none is left bare",
+     codes > 0 && paired === codes);
+}
+
+/* Everything the plane said about this refusal, in one list, so the residue
+   scan below can subtract ALL of it before asking whether what remains reads
+   like a refusal this surface wrote. */
+const PLANE_WORDS = [REFUSAL_CODE, REFUSAL_SENTENCE];
+
+/* ---- NO RETIRED LOGIN CODE SURVIVES ANYWHERE UNDER `civicos-ui/` ----------
+   A source-level sweep, because the runtime assertions above can only see the
+   paths this harness drives, and the way this defect came back would be a copy
+   sitting in a file nobody runs — which is exactly where BOTH of the instances
+   UI-30 found were sitting (this suite's mock, and a worked example inside an
+   `app.html` comment). Matching on a retired wire string is not a naming
+   preference: it is matching on something the plane cannot send.
+   THE NAMES ARE ASSEMBLED FROM PIECES so that the file enforcing the absence is
+   not itself an instance of what it forbids — a sweep that finds itself either
+   fails forever or gets weakened into a sweep that finds nothing. */
+const RETIRED_LOGIN_CODES = [["BAD", "PASSWORD"], ["NO", "SUCH", "ROLE"]].map(p => p.join("_"));
+{
+  const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+  const walk = d => fs.readdirSync(d, { withFileTypes:true }).flatMap(e => {
+    if(e.name === "node_modules" || e.name.startsWith(".")) return [];
+    const p = path.join(d, e.name);
+    return e.isDirectory() ? walk(p) : [p];
+  });
+  const files = walk(root);
+  /* A walk that reached nothing would pass silently, so it is measured. */
+  ok("the sweep reads the whole package, including the surface and this suite",
+     files.length > 20 && files.includes(path.join(root, "app.html")) && files.includes(SELF));
+  const found = [];
+  for(const f of files){
+    let src = ""; try{ src = fs.readFileSync(f, "utf8"); }catch(_){ continue; }
+    for(const code of RETIRED_LOGIN_CODES){
+      if(src.includes(code)) found.push(path.relative(root, f) + " still carries " + code);
+    }
+  }
+  ok("NO RETIRED LOGIN CODE survives anywhere under civicos-ui/ — "
+     + (found.length ? found.join(" · ") : "none, over " + files.length + " files"),
+     found.length === 0);
+}
 
 /* THE ACT CATALOGUE `boot()` loads. Only the fields boot's own path touches. */
 const AFFORDANCES = {
@@ -206,7 +366,10 @@ function makePlane(mode){
          a success is. That is the whole shape D-173's sixth instance missed. */
       const inner = (body && body.password === GOOD_PW)
         ? { ok:true, role:"member:m_alice", token:TOKEN, expires: 1785000000000 }
-        : { ok:false, reason:"BAD_PASSWORD" };
+        /* CORRECTED 2026-08-04 (UI-30): the refusal is the ONE code REC-41 left
+           and the SENTENCE it now carries, both read out of `store.mjs` above
+           rather than typed here. */
+        : { ok:false, reason:REFUSAL_CODE, detail:REFUSAL_SENTENCE };
       /* NEGATIVE CONTROL (c): the mock answers the one shape the plane never
          sends. Reached only when this file is re-run by its own arm. */
       return opts.flatLogin ? R({ ok:true, ...inner }) : W(inner);
@@ -340,7 +503,7 @@ ok("with no address in the bar the member lands on the queue", plane.CALLS.some(
 ok("the queue screen painted", /The queue/.test(E(ctx, "#content")._html));
 
 /* ============================================================
-   (3) BAD PASSWORD — the plane's refusal, in the plane's words
+   (3) A REFUSED SIGN-IN — the plane's refusal, in the plane's words
    ============================================================ */
 const planeB = makePlane();
 const ctxB = boot(SRC, planeB);
@@ -353,14 +516,26 @@ ok("a refused login marks NO session", ctxB.__PLANE.session !== true);
 ok("a refused login NEVER enters boot() — no op is sent after it",
    planeB.CALLS.filter(c=>c.op!=="login").length === 0);
 ok("the gate stays open", !E(ctxB, "#gate").classList.contains("hidden"));
-ok("the member is shown the RECORD'S OWN reason", H(ctxB).includes(PLANE_WORDS.BAD_PASSWORD));
+/* CORRECTED 2026-08-04 (UI-30). This assertion used to pin the retired reason
+   CODE, and it passed on a mock that answered a code the plane had stopped
+   emitting. What the gate owes a member is the plane's SENTENCE, word for word
+   and whole — `includes` over the entire sentence, so a truncation or a
+   re-wording is a failure and not a near miss. */
+ok("the member is shown the RECORD'S OWN SENTENCE, whole and word for word",
+   REFUSAL_SENTENCE.length > 0 && H(ctxB).includes(REFUSAL_SENTENCE));
+/* AND THE MACHINE CODE IS NOT WHAT A MEMBER READS. The plane sends it and the
+   surface received it; rendering the sentence INSTEAD is a selection between two
+   things the plane said, which is not a composition. `SIGN_IN_REFUSED` printed
+   at a sign-in gate is vocabulary a member is being made to decode. */
+ok("and NOT the machine code that rode with it — nothing here is left for a member to decode",
+   !!REFUSAL_CODE && !H(ctxB).includes(REFUSAL_CODE));
 ok("and the error is actually visible", !E(ctxB, "#g-err").classList.contains("hidden"));
 
-/* THE ARM-(d) INSTRUMENT for this site. The gate MINUS the plane's own words
-   must contain no sentence that reads as a refusal — a correct reason code with
-   a sentence this surface wrote is what DEC-8 forbids and what a code-only
-   assertion cannot see. */
-const residue = h => Object.values(PLANE_WORDS).reduce((acc,w)=>acc.split(w).join(" "), String(h));
+/* THE COMPOSED-WORDING INSTRUMENT for this site (UI-13's arm (d)). The gate
+   MINUS the plane's own words must contain no sentence that reads as a refusal
+   — a correct reason code with a sentence this surface wrote is what DEC-8
+   forbids and what a code-only assertion cannot see. */
+const residue = h => PLANE_WORDS.reduce((acc,w)=>acc.split(w).join(" "), String(h));
 const REFUSAL_PROSE =
   /(not correct|incorrect|try again|check your|wrong password|does not match|could not sign|couldn't sign|please )/i;
 ok("no sentence at the gate that is not the record's own reads as a refusal",
@@ -531,8 +706,8 @@ if(!CHILD){
     E(c2, "#g-handle").value = "member:m_alice";
     E(c2, "#g-pw").value = "not the password";
     await c2.__signIn();
-    ok("NEG-CONTROL (a): and a WRONG password no longer meets the record's reason",
-       !H(c2).includes(PLANE_WORDS.BAD_PASSWORD));
+    ok("NEG-CONTROL (a): and a WRONG password no longer meets the record's own sentence",
+       !H(c2).includes(REFUSAL_SENTENCE));
     /* And the published list goes silently empty — the honest-looking blank
        screen D-173 is named for. */
     const p3 = makePlane();
@@ -546,14 +721,21 @@ if(!CHILD){
      ctx.__PLANE.token===TOKEN && tokened.every(c=>c.token===TOKEN)
      && MANIFEST.published.every(p=>pl.includes(p.bundle_id)));
 
-  /* (b) THE ARM-(d) INSTRUMENT: the gate words the refusal itself. The reason
-     CODE is not even sent to the member here — which is the point: an invented
-     sentence is what a member reads, and a suite pinning `l.ok===false` alone
-     would call this correct. */
+  /* (b) THE COMPOSED-WORDING INSTRUMENT: the gate words the refusal itself.
+     RETARGETED 2026-08-04 (UI-30) TO THE NEW SHAPE, and the retargeting made
+     the arm sharper rather than merely current. It used to print an invented
+     sentence and nothing else; now it prints the plane's REASON CODE — which is
+     correct, which is what the plane sent, and which is what the gate rendered
+     for the whole of this suite's previous life — and then adds a sentence of
+     its own. So the mutation is a surface that looks MORE faithful than the one
+     that shipped, and every code-shaped assertion in this file is green against
+     it. Only subtracting what the plane said and reading the remainder can see
+     it. That is the whole point of keeping this arm through the change: if
+     `app.html` ever starts composing wording of its own, this fires. */
   {
     const src = SRC.replace(
-      'if(!l || l.ok===false || !l.token){ teach($("#g-err"), l||{}); return; }',
-      'if(!l || l.ok===false || !l.token){ const e=$("#g-err"); e.innerHTML="That password is not correct. Try again, or ask an administrator to reset it."; e.classList.remove("hidden"); return; }');
+      'if(!l || l.ok===false || !l.token){ teach($("#g-err"), l && l.detail ? { detail:l.detail } : (l||{})); return; }',
+      'if(!l || l.ok===false || !l.token){ const e=$("#g-err"); e.innerHTML=esc(String((l&&l.reason)||"")) + " — that password is not correct. Try again, or ask an administrator to reset it."; e.classList.remove("hidden"); return; }');
     ok("NEG-CONTROL (b): the mutation actually changed the source", src !== SRC);
     const p = makePlane();
     const c = boot(src, p);
@@ -562,12 +744,14 @@ if(!CHILD){
     await c.__signIn();
     ok("NEG-CONTROL (b): the sign-in is still REFUSED — a code-only suite is green here",
        !c.__PLANE.token && c.__PLANE.session !== true);
-    ok("NEG-CONTROL (b): but the record's own reason is GONE", !H(c).includes(PLANE_WORDS.BAD_PASSWORD));
+    ok("NEG-CONTROL (b): and the plane's own CODE is still on the page, so a suite pinning the code is green too",
+       H(c).includes(REFUSAL_CODE));
+    ok("NEG-CONTROL (b): but the record's own SENTENCE is GONE", !H(c).includes(REFUSAL_SENTENCE));
     ok("NEG-CONTROL (b): and the residue scan names the SURFACE as the author of what stands there",
        REFUSAL_PROSE.test(residue(H(c))));
   }
-  ok("NEG-CONTROL (b) contrast: the intact gate renders the record's reason and no invented sentence",
-     H(ctxB).includes(PLANE_WORDS.BAD_PASSWORD) && !REFUSAL_PROSE.test(residue(H(ctxB))));
+  ok("NEG-CONTROL (b) contrast: the intact gate renders the record's own sentence and no invented one",
+     H(ctxB).includes(REFUSAL_SENTENCE) && !REFUSAL_PROSE.test(residue(H(ctxB))));
 
   /* (c) UNWRAP THE LOGIN MOCK — the guard's own arm, measured at the probe.
      A mock that answers `op=login` flat is exactly the input
@@ -583,4 +767,4 @@ if(!CHILD){
 }
 
 if(fails.length){ console.error(`auth-surface: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`auth-surface: ${n} assertions, all green — sign-in through the wrapped shape · the token off \`result\` · every op after it authenticated · boot() driven for the first time · BAD_PASSWORD in the record's own words (arm-(d)) · pubList uncredentialed against the published projection · arm-B coverage MEASURED at the probe; negative controls RUN (a) the token read broken (b) right code + invented sentence (c) the login mock unwrapped`);
+console.log(`auth-surface: ${n} assertions, all green — sign-in through the wrapped shape · the token off \`result\` · every op after it authenticated · boot() driven for the first time · the refusal SENTENCE read out of store.mjs and rendered whole, with the code no member has to decode · no retired login code anywhere under civicos-ui/ · pubList uncredentialed against the published projection · arm-B coverage MEASURED at the probe; negative controls RUN (a) the token read broken (b) right code + invented sentence (c) the login mock unwrapped (d) a retired code restored on disk`);
