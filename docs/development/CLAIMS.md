@@ -1010,3 +1010,5 @@ expected: QUEUE.md UI-15 / `BUILD-ORDER.md` §2 (UI-15) — D-132 (`ADD_TICKS` u
 accepts-when: `node civicos-ui/test/run.mjs` green with an add harness driving a capture that hits the ceiling and rendering the A4 choice (record as unfinished / write nothing, with "recording it as complete is not on offer"), and `grep -c "ADD_TICKS" civicos-ui/app.html` matching its declaration count; the project and action options asserted ABSENT per their rules; `cd bio-plane && npm run test:battery` stays green. NEGATIVE CONTROL run and recorded in the harness's `NEGATIVE CONTROL:` line — remove the `ADD_TICKS` declaration and the harness reproduces the raw ReferenceError. No push — CONDUCT integrates.
 landed: left for CONDUCT.
 released:
+
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker d397ab5). Verified: harness 25 suites green, battery 91/91 (4802). The A4 reconciliation accepted (the handover's own acceptance outranks the July deletion, and the rebuilt frame asks the record question); the state doc amended D-160-style; the no-action-intake consequence named on the landed line. No DEC.

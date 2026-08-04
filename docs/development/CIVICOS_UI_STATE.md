@@ -1,5 +1,20 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+> **Amendment, 2026-08-04 (CONDUCT, at UI-15's integration — the D-160 pattern: a
+> dated record gets an amendment, not a rewrite).** The v33 entry below records the
+> 2026-07-30 ruling that deleted the ceiling-choice frames ("ALL THREE ARE GONE").
+> UI-15 (QUEUE, landed 2026-08-04) REBUILT the A4 frame under the 2026-08-01
+> case-making handover, whose own BOB-authored acceptance requires it — and the
+> rebuilt frame is NOT the one the ruling deleted: the old frame explained the
+> platform limit and asked the member to arbitrate it; the new one classifies the
+> complication, never names the ceiling (the capture-honesty vocabulary guard is
+> asserted over the frame's HTML), and asks only the record question — what may the
+> record claim about a capture missing part of itself — the same class as A7's
+> grade-C archive choice, which the ruling left standing. Do NOT delete the frame on
+> the strength of the entry below; if Bob reads the rebuild as re-litigating his
+> correction, reversal is one function body and three assertions (recorded on
+> UI-15's landed line).
+
 v33, 2026-07-31 session, thread CAPTURE, continuation. FIVE RELEASES, 0.49.0
 through 0.53.0, each signed, deployed byte-identical, tagged and live-verified.
 op=audit 31/31 clean throughout and the real record untouched: every live proof
