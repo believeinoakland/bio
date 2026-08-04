@@ -673,6 +673,20 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "record's own facts in that row — the source, the date, both derived strengths — stand unchanged "
       + "for every reader: a derivation that got weaker or stronger with the reader would be the record "
       + "claiming something different to different people, which is worse than the leak.",
+    /* REC-34's read, classified by the item that adds it (2026-08-04,
+       rec34-agent). op=reevaluations' posture is the model and both of the
+       sweep's shapes appear here too, with one addition the earlier reads did
+       not need. */
+    inquirystrength: "REC-34: the OWNING INQUIRY is the answer's SUBJECT, so an inquiry the viewer may "
+      + "not see is WITHHELD WHOLE and byte-identically to an absent one (op=backlinks' posture, no count). "
+      + "The ids NAMED INSIDE a visible answer — weakest, not_load_bearing[], undetermined_at[] and their "
+      + "inherited_from/through — are back-references and are REDACTED to null while every RECORD fact "
+      + "stands unchanged for every reader: the axis, the grade, the state, the role, the counts and the "
+      + "depth bound, because a derivation that got weaker or stronger with the reader would be the record "
+      + "claiming something different to different people. AND THE PROSE IS SWEPT with the same predicate, "
+      + "which is REC-14's measured leak shape (ids interpolated into a detail sentence) and is worse here: "
+      + "an inherited-undetermined leg's `why` embeds the sub-walk's detail, naming where the walk stopped "
+      + "several levels down — ids no field in the answer holds. The withholding is stated without a count.",
     strengthbarof: "REC-30 at the merge: #requiredStrengthFor reports `projects: [...]` and interpolates "
       + "the same ids into its detail — §7.9's reverse-edge walk arriving by a new door. The bar VALUE is "
       + "deliberately NOT gated (DEC-17: it is never set by who a reader is, and op=publish stamps it from "

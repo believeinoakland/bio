@@ -434,6 +434,18 @@ const OPS = {
      carries no working capability, so REC-19's NEEDS/NON_ACTS totality neither
      gains nor loses a row. */
   reevaluations: { classes: ["admin", "member", "probe"],        mutating: false },
+  /* REC-34: REC-12's derived PAIR for one inquiry, GATED — UI-11's delegation
+     and UI-12's hard blocker. It answers from `strengthOf()`, the authority,
+     and never from the five cached columns (a stale cache must not impersonate
+     the derivation). Working corpus, so member class and above, exactly as
+     op=backlinks and op=reevaluations are: the pair is what a member reading a
+     question needs in order to weigh it, and fencing it to admin would fence a
+     member off the one number the whole page is about. The viewer is stamped
+     server-side below like every retrieval read. It carries a NEEDS entry of
+     null rather than no entry at all — op=queue's precedent, not
+     op=reevaluations' — so REC-19's totality guard SEES the op and its
+     NON_ACTS row states why a read is not an act on an object. */
+  inquirystrength: { classes: ["admin", "member", "probe"],      mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1052,6 +1064,19 @@ const NEEDS = {
      NEEDS is either a published act or a NAMED non-act, and op=queue is named
      in NON_ACTS with its reason. */
   queue:            null,
+  /* REC-34: reading the derived pair carries NO working capability, on op=queue's
+     reasoning exactly — the question is not "may this member contribute" but "what
+     does this question rest on", and a view-only member holds it precisely as a
+     contributor does; weighing a case is what viewing IS. It is non-mutating, so
+     SESSION_OPS does not gate it either, and what bounds it is the D-15 viewer
+     stamp rather than section 5. The entry exists rather than being absent so
+     REC-19's totality guard can SEE it: an op in NEEDS is either a published act
+     or a NAMED non-act, and op=inquirystrength is named in NON_ACTS with its
+     reason. (op=reevaluations' precedent — no entry at all — is the other legal
+     shape for a read; this one is taken because the op is a SURFACE a member acts
+     from, and a read that is silently absent from both registries is exactly how
+     REC-25's six ungated reads accumulated.) */
+  inquirystrength:  null,
   /* REC-21 / D-125: NO CAPABILITY, and the reason IS the doctrine rather than a
      convenience. `contribute` is the corpus-shaping surface — it is what
      separates a member who may change what the record says from one who may only
@@ -3703,6 +3728,11 @@ export default {
         || STATE_ACTIONS.includes(op)
         || op === "list" || op === "index" || op === "projection" || op === "image"
         || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations"
+        /* REC-34: the gated read of the derived pair. Its subject is a bundle
+           and its answer NAMES bundles in fields AND in prose, so it is stamped
+           with every other retrieval read; the store fails closed on an absent
+           stamp and withholds the answer as an absent bundle's. */
+        || op === "inquirystrength"
         || QUEUE_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);

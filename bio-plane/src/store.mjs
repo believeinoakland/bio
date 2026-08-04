@@ -8490,6 +8490,158 @@ export class Store extends DurableObject {
              capture: pair.capture, connection: pair.connection };
   }
 
+  /* ===================== REC-34 · the gated read of the pair ==============
+   *
+   * UI-11 measured the gap and UI-12 is hard-blocked on it: `strengthOf()` is
+   * the AUTHORITY and it derives inside the Durable Object, but no
+   * control-plane op served it for a WORKING inquiry. `/strength` and `/basis`
+   * are the DO-internal class (REC-11's precedent) and are not in index.mjs's
+   * OPS whitelist; `op=projection` and `op=search` carry neither the five
+   * cached columns nor a way to tell UNRATED from `undetermined`, which is the
+   * exact DEC-18 distinction a surface has to render.
+   *
+   * THREE THINGS MAKE IT MORE THAN AN OPS-TABLE LINE.
+   *
+   * 1. IT ANSWERS FROM `strengthOf()` AND NEVER FROM THE CACHED COLUMNS. The
+   *    five `inquiry_*` columns are a CACHE that goes stale the moment a leg
+   *    ANYWHERE BENEATH the inquiry is re-graded — REC-12's own comment says
+   *    so, and its suite proves the staleness deliberately. A read that served
+   *    the columns would let a stale row impersonate the derivation, showing a
+   *    member a strength the record no longer derives. This function therefore
+   *    calls the derivation and touches no column; the suite's negative control
+   *    is exactly the swap, and it fails on the raised-leg assertion.
+   *
+   * 2. THE VIEWER GATE, in REC-30's two shapes and through the same ONE
+   *    compilation point (`#viewerSees` / `#bundleRedactor`, both taking their
+   *    predicate from query.mjs's `viewerPredicate` and neither restating it):
+   *
+   *      the OWNING INQUIRY is the answer's SUBJECT, so an inquiry the viewer
+   *      may not see is WITHHELD WHOLE, byte-identically to one that does not
+   *      exist. No count, no "something is hidden" — op=backlinks' posture.
+   *
+   *      an id NAMED INSIDE a visible answer is a BACK-REFERENCE and is
+   *      REDACTED to null while every RECORD FACT in that answer stands
+   *      unchanged: the axis, the grade, the state, the role, the counts, the
+   *      depth bound. This is op=reevaluations' posture and the reason for it
+   *      is doctrine rather than symmetry — a derivation that got weaker or
+   *      stronger with the reader would be the record claiming something
+   *      different to different people, which is worse than the leak.
+   *
+   *    AND THE PROSE IS SWEPT, not just the fields. `detail` and `why` SPELL
+   *    THE IDS OUT in sentences, and one of them carries ids that appear
+   *    NOWHERE in this answer's structured fields: an inherited-undetermined
+   *    leg's `why` embeds the sub-walk's whole `detail`, which names where the
+   *    walk stopped several levels down. That is REC-14's measured leak shape
+   *    exactly (`#requiredStrengthFor` interpolated the same project ids into
+   *    its prose that its `projects` array named), so the sweep runs over every
+   *    string in the answer and not over the id fields alone.
+   *
+   * 3. WHAT IS *NOT* READER-DEPENDENT, stated because the residual is real.
+   *    Today `viewerPredicate` filters PROJECT bundles and nothing else — the
+   *    evidence corpus is shared BY DESIGN (7.9) — and C-2.8 refuses a basis
+   *    leg whose target is anything but information or inquiry. So for a
+   *    recognised viewer the redaction below can bite in exactly two ways: an
+   *    id naming a bundle that is GONE (fail closed, the same arm
+   *    `#bundleGate` takes), and a PROJECT-typed target that the write refuses
+   *    today but an APPEND-ONLY history can still hold — the same reason
+   *    #strengthWalk keeps its no-referent arm rather than throwing. The
+   *    mechanism is built and proved against both, because it takes its
+   *    predicate from the one compilation point and therefore inherits
+   *    whatever participation scoping lands there next, and because a read
+   *    that has to grow a gate later is a read that ships ungated first. */
+
+  /** REC-34: `op=inquirystrength` — REC-12's derived pair, gated.
+   *
+   *  Answers `{ capture, connection }` VERBATIM from `strengthOf()` and no
+   *  scalar. `unrated` and `undetermined` are two different states of the
+   *  `state` field and stay two here (DEC-18): the cached columns could not
+   *  tell them apart and that is half of why this op exists. */
+  inquiryStrength({ id = null, viewer = null } = {}) {
+    if (!id) return { ok: false, reason: "NO_ID",
+      detail: "the derived pair is asked of one inquiry: pass id=<bundle id>" };
+    /* THE SUBJECT ROW. An invisible inquiry and an absent one answer the same
+       bytes, deliberately: a distinguishable refusal is the disclosure. */
+    if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    /* MAP RULE: the type consultation goes through the catalog's normalizeType,
+       never a raw key and never a local alias copy — a legacy-spelled inquiry
+       must not take the refusing arm. Refused rather than answered UNRATED
+       because a document HAS no basis and no pair: answering "unrated" for one
+       would be the record stating a strength about a thing that cannot carry
+       one, which is DEC-21's no-referent argument in the other direction. The
+       refusal is reachable only AFTER visibility, so it discloses nothing. */
+    const row = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+    const ty = normalizeType(row?.object_type);
+    if (ty !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: ty ?? null,
+        detail: `${id} is a ${ty ?? "bundle"}, not an inquiry. The derived pair is a property of a `
+              + `question and what it rests on; a document has no basis to derive one from.` };
+    const s = this.strengthOf(id);           /* THE AUTHORITY. Never the columns. */
+    if (!s.ok) return s;
+    const keep = this.#bundleRedactor(viewer);
+    return { ok: true, target: id, depth_bound: s.depth_bound,
+             capture: Store.#redactAxis(s.capture, keep),
+             connection: Store.#redactAxis(s.connection, keep) };
+  }
+
+  /* Every field of a named member (#namedMember's shape) that HOLDS a bundle
+     id. `bundle_id` is the inquiry the leg is authored on, `target_id` what the
+     leg rests on, and `inherited_from`/`through` the sub-inquiry a pair came
+     from and the actual leg it named. `ord`, `role`, `grade`, `grade_source`,
+     `via` and `axis` are RECORD FACTS and are never touched. */
+  static #MEMBER_ID_FIELDS = ["bundle_id", "target_id", "inherited_from", "through"];
+
+  /* A bundle id AS IT APPEARS IN A SENTENCE. DERIVED from the catalog's own
+     BUNDLE_ID_RE by dropping its anchors rather than restated as a second
+     pattern — REC-12's depth-bound lesson applied to a regex: two spellings of
+     "what a bundle id looks like" are two answers waiting to disagree, and the
+     one that drifts here fails OPEN. The suite asserts the derivation. */
+  static #ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
+
+  /* One axis object, with the ids the viewer may not see withheld and every
+     record fact left exactly as the derivation produced it.
+
+     RETURNS THE ORIGINAL OBJECT when nothing is withheld — not a copy — so
+     "byte-equal to strengthOf()'s answer" is a property of the code and not of
+     a key order that happened to survive a rebuild. */
+  static #redactAxis(axis, keep) {
+    let touched = false;
+    const member = (m) => {
+      let out = m;
+      for (const f of Store.#MEMBER_ID_FIELDS) {
+        if (m[f] == null || keep(m[f]) !== null) continue;
+        if (out === m) out = { ...m };
+        out[f] = null;
+        touched = true;
+      }
+      return out;
+    };
+    /* THE PROSE SWEEP. Every id-shaped token in a sentence is asked the same
+       question the fields are, because `why` can carry an id from several
+       levels down that no field in this answer holds. Stated, never silently
+       dropped: the sentence says an object was withheld and names none. */
+    const prose = (v) => typeof v !== "string" ? v : v.replace(Store.#ID_IN_PROSE, (m) => {
+      if (keep(m) !== null) return m;
+      touched = true;
+      return "an object you may not see";
+    });
+    const named = (m) => {
+      const r = member(m);
+      const w = prose(r.why ?? null);
+      if (w === (r.why ?? null)) return r;
+      return { ...r, why: w };
+    };
+    const out = { ...axis,
+      weakest: axis.weakest ? named(axis.weakest) : axis.weakest,
+      not_load_bearing: (axis.not_load_bearing ?? []).map(named),
+      ...(axis.undetermined_at ? { undetermined_at: axis.undetermined_at.map(named) } : {}),
+      detail: prose(axis.detail) };
+    /* No count of what was withheld — the count is the leak (REC-25's rule,
+       #queueAncestors' `out_of_view` posture, strengthBarOf's exactly). The
+       FLAG says the answer names less than the record holds, so a surface can
+       say so rather than presenting a redacted list as a complete one. */
+    return touched ? { ...out, out_of_view: true } : axis;
+  }
+
   /* REC-12: the projection CACHE, per axis, written inside promote's
      transaction right after the inquiry_basis projection it derives from.
 
@@ -12225,6 +12377,16 @@ export class Store extends DurableObject {
            give it a control-plane surface. Answers TWO axis objects and no
            scalar: there is nothing here for a caller to reduce to one letter. */
         strength: () => this.strengthOf(url.searchParams.get("id")),
+        /* REC-34: the SAME pair, GATED, and the one a control-plane caller
+           reaches. `viewer` is stamped by the control plane and never read
+           from a caller's own parameters there; an absent one fails closed in
+           `#viewerSees`, so a missing stamp withholds the answer rather than
+           widening it. The ungated `strength` route above stays DO-internal
+           (REC-11's basis/restson class) — it is what op=publish and
+           op=reevaluations derive from, where there is no reader to be
+           dependent on. */
+        inquirystrength: () => this.inquiryStrength({ id: url.searchParams.get("id"),
+                                                      viewer: url.searchParams.get("viewer") }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),
