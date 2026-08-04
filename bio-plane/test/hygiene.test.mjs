@@ -1,4 +1,9 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. */
+/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. Three arms in full below, each RUN. */
+/* REC-48's THREE ARMS, in full:
+   (run 2026-08-04, REC-48) THE SWEEP THAT SAYS NO SURFACE SPELLS A CAPTURE GRADE LETTER, three arms, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/index.mjs 16cf4e2f..., src/store.mjs 7c1ed3aa..., src/cdx.mjs a9e5912c..., checks/bio-checks.mjs d8da7b9d...); whole = 369 pass. Each arm ALSO reports what the suite that OWNS the mutated sentence did, because that contrast is the point.
+   (i) THE THIRD STATEMENT PUT BACK — replace `note: ACQUIRE_GRADE_NOTE,` in src/index.mjs with the sentence hand-typed -> 367 pass, 2 FAIL, detector (A) and detector (B) both naming `index.mjs:1822 "Grade B"` and `"Grade A"`, WHILE acquire.test.mjs STAYS 79/79 GREEN. A copy identical to the composition satisfies every behavioural and wire assertion at zero cost; only this sweep can see it, which is why it exists one altitude above the three suites that own the sentences.
+   (ii) THE FOURTH STATEMENT PUT BACK — hand-type `Grade A` into op=earnedbasis's `ceiling:` sentence in src/store.mjs -> 367 pass, 2 FAIL naming `store.mjs:5191 "Grade A"`, WHILE earnedbasis.test.mjs STAYS 54/54 GREEN. Same shape on the sentence REC-48's own scope had not counted, which is how it was found.
+   (iii) A FIFTH STATEMENT, WRITTEN LOWERCASE, IN A MODULE NOTHING ELSE GUARDS — append `export const __FIFTH = "a replay capture is grade b: bytes as the archive served them.";` to src/cdx.mjs -> 368 pass, 1 FAIL, and it is detector (B) alone: `cdx.mjs:121 "grade b"`. DETECTOR (A) IS SILENT. That is the arm that earns (B) its existence rather than arguing for it — (A) matches the doctrine's capitalised term and a new statement need not use it. Ran under the ceiling-moved-to-C arm too, where (B) additionally reports `store.mjs:4587 "grade C"`: predicted in the block's own comment, and correct rather than noise — a tree in which one letter carries two doctrines has become ambiguous to a reader. */
 /* Suite hygiene: the guard against a battery that wastes hours.
  *
  * Negative-control detail: remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.)
@@ -24,6 +29,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+/* REC-48: the capture rule's two letters, from the enforcement point that
+   refuses a leg claiming more than the ceiling. This suite states them no more
+   than the plane does — the sweep below is narrowed BY the rule, not beside it. */
+import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 let pass = 0, fail = 0;
@@ -333,6 +342,166 @@ console.log("\n--- no source file carries a raw control byte (D-131) ---");
     }
     t(`${f} carries no raw control byte`, badAt, -1);
   }
+}
+
+/* REC-48 (2026-08-04). NO SURFACE SPELLS A CAPTURE GRADE LETTER.
+ *
+ * The capture-grade doctrine — what a direct capture by this instance earns,
+ * and which letter above it this plane cannot produce — was written out in its
+ * own letters in FOUR places: the surface's `ATTEST_YIELDS_GRADE` (REC-43/DEC-39
+ * moved it to a composed publication), `op=acquire`'s `note`, `op=earnedbasis`'s
+ * `ceiling` sentence, and the one enforcement point that is allowed to hold the
+ * value. Each copy agreed with the rule ON THE DAY IT WAS TYPED and would go on
+ * agreeing at zero cost until the day the rule moved, which is the one day the
+ * agreement mattered. REC-43 measured exactly that: a hand-typed copy identical
+ * to the composition left every behavioural and wire assertion in the
+ * affordances suite green, and only a structural pin could see it.
+ *
+ * So this is the structural pin, one altitude up from the three suites that own
+ * the individual sentences: the LETTER may not appear beside the word in any
+ * module of the plane. A fifth statement is then not something a reviewer has to
+ * notice — it fails here, by file and by line, at the moment it is written.
+ *
+ * WHAT IT SWEEPS AND WHAT IT DOES NOT. Comments are excluded, in the three
+ * comment forms this tree writes: JS block comments (the overwhelming majority
+ * here), JS line comments and the `--` lines inside schema.mjs's SQL literal.
+ * A comment reaches no reader — it cannot overclaim to a member, which is the
+ * subject — and several comments must go on quoting the doctrine and the old
+ * wording verbatim in order to explain why the letters are composed at all;
+ * excluding them is the difference between a rule and an exemption list. The
+ * line-comment strips are anchored to the START of a line ON PURPOSE: an
+ * unanchored `//` strip would eat everything after `https:` inside a string
+ * literal, which would make this sweep quietly reach LESS than it claims, and a
+ * sweep that reaches less than it claims is the failure UI-30 found in an
+ * instrument and REC-49 found in an arm that first fired zero.
+ *
+ * TWO DETECTORS, AND THE SECOND EXISTS BECAUSE THE FIRST HAS A LOOPHOLE.
+ * (A) `Grade <LETTER>` with a capital G — the doctrine's own capitalised term,
+ * which is how every capture-grade statement in this tree has ever written it.
+ * That is the sweep REC-48's accepts-when names, and it must read ZERO.
+ * (B) the same match CASE-INSENSITIVELY, restricted to the two letters the
+ * capture rule actually owns — `EARNED_CAPTURE_CEILING` and the derived
+ * `UNREACHABLE_CAPTURE_GRADE`, imported, never typed here either. (A) alone
+ * would let a new statement through as lowercase `grade b`; (B) closes that for
+ * exactly the letters that can overclaim, and takes its subject FROM the rule so
+ * it cannot drift from it.
+ *
+ * WHY (B) IS NOT SIMPLY (A) CASE-INSENSITIVE, measured rather than assumed. Five
+ * sentences in store.mjs spell a lowercase connection-axis letter — "section
+ * 8.1's grade C", "grade D is recorded testimony", "testimony at grade D". Those
+ * are a DIFFERENT doctrine on a different axis, they have no exported constant
+ * to compose from (checkEarnedLeg types testimony's 'D' at the enforcement point
+ * itself), and giving them one is a doctrine act rather than a sweep. They are
+ * therefore OUT OF THIS SWEEP'S SUBJECT and are NOT exempted from it — a stated
+ * limit rather than an allowlist, and it is routed rather than buried. The same
+ * block also shows why no letter-near-the-word rule can ever be complete for all
+ * axes: it says "no leg of it earns an A/B/C connection grade", with the letters
+ * on the wrong side of the word, and matching prose in both directions is
+ * unbounded. The capture axis CAN be complete, because it owns exactly two
+ * letters and both are exported.
+ * One consequence of (B) taking its letters from the rule, stated so it is not
+ * read later as a defect: if the capture ceiling were ever MOVED onto a letter
+ * the connection-axis prose also spells, (B) fires on that prose. That is the
+ * correct answer, not noise — a tree where one letter means two doctrines has
+ * become ambiguous to a reader and somebody should look at it.
+ *
+ * ITS OWN REACH IS ASSERTED BELOW FOUR WAYS, because a walk that covers nothing
+ * passes everything: the file list is non-trivial and names the modules that
+ * carry the doctrine; the detector fires on a planted control IN EVERY FILE'S
+ * OWN STRIPPED TEXT, so no file is silently skipped; the same detector over the
+ * RAW sources DOES find matches, proving the walk reaches the very lines where
+ * the doctrine is discussed and that only the comment strip stands between it
+ * and a hit; and the two emitted doctrine SENTENCES survive the strip intact, so
+ * the strip cannot have swallowed the region a spelled letter would appear in. */
+console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
+{
+  const srcDir = join(DIR, "..", "src");
+  const files = readdirSync(srcDir).filter((n) => n.endsWith(".mjs")).sort();
+  const raw = new Map(files.map((f) => [f, readFileSync(join(srcDir, f), "utf8")]));
+
+  const uncomment = (s) => s
+    .replace(/\/\*[\s\S]*?\*\//g, "")   /* JS block comment */
+    .replace(/^[ \t]*\/\/.*$/gm, "")    /* JS line comment, ANCHORED — see above */
+    .replace(/^[ \t]*--.*$/gm, "");     /* SQL line comment inside the schema literal */
+
+  /* The word, then whitespace, then a lone capital letter. Deliberately wider
+     than A-D: an invented "Grade E" is the same defect and must fail here too.
+     `(?![A-Za-z0-9_])` keeps `#weakerGrade`, `instanceGrade` and "Grade states
+     HOW it was matched" out of it — a letter that continues into a word is a
+     word, not a grade. `only` narrows detector (B) to the rule's own letters. */
+  const spelled = (text, { anyCase = false, only = null } = {}) => {
+    const hits = [];
+    const re = new RegExp("\\bGrade\\s+([A-Z])(?![A-Za-z0-9_])", anyCase ? "gi" : "g");
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      if (only && !only.includes(m[1].toUpperCase())) continue;
+      hits.push({ line: text.slice(0, m.index).split("\n").length, what: m[0] });
+    }
+    return hits;
+  };
+  /* Taken from the enforcement point, never typed: this file states the rule's
+     letters no more than the plane does. */
+  const RULE_LETTERS = [EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE];
+
+  /* REACH 1: the walk found the tree, and the modules that carry the doctrine
+     are in it by name. A rename that moved one of them out would fail here
+     rather than leaving this sweep quietly guarding a smaller tree. */
+  t("the src walk reaches a whole tree, not a file or two", files.length >= 20, true);
+  for (const named of ["affordances.mjs", "index.mjs", "store.mjs", "schema.mjs"])
+    t(`the walk includes ${named}, which states or enforces the doctrine`, files.includes(named), true);
+  t("every file walked was actually read", files.filter((f) => raw.get(f).length > 0).length, files.length);
+
+  /* REACH 2: the detector fires, in EVERY file's own stripped text. Planting the
+     control per file rather than once proves the per-file scan is executed —
+     a loop that skipped a file would pass a single global control. It is
+     measured as a DELTA against that file's own count, not against 1: an
+     absolute count would conflate "the detector is deaf here" with "this file
+     already has hits", which is the state every negative-control arm below puts
+     one file into, and the reach assertion must go on saying only what it means. */
+  const PLANT = '\nconst __reach = "Grade Z";\n';
+  const deaf = files.filter((f) => {
+    const stripped = uncomment(raw.get(f));
+    return spelled(stripped + PLANT).length !== spelled(stripped).length + 1;
+  });
+  t(`the detector fires in all ${files.length} files' own stripped text (deaf: ${JSON.stringify(deaf)})`,
+    deaf, []);
+
+  /* REACH 3: over the RAW sources the same detector DOES match — so the walk
+     reaches the very lines where the doctrine is written about, and the comment
+     strip is the only thing between this sweep and a hit. If this ever goes to
+     zero the sweep has stopped reading anything that mentions the subject, and
+     its silence would mean nothing. */
+  const rawHits = files.flatMap((f) => spelled(raw.get(f)).map((h) => `${f}:${h.line}`));
+  t(`the same detector matches the doctrine's own prose in the raw sources (${rawHits.length} in ${new Set(rawHits.map((h) => h.split(":")[0])).size} files)`,
+    rawHits.length >= 4 && new Set(rawHits.map((h) => h.split(":")[0])).size >= 2, true);
+
+  /* REACH 4: the strip leaves the EMITTED doctrine sentences standing. These are
+     the exact two strings a spelled letter would appear in, so if the stripper
+     had swallowed them the sweep would be silent for the worst possible reason. */
+  t("the strip leaves op=acquire's note in affordances.mjs standing",
+    uncomment(raw.get("affordances.mjs")).includes("bytes as fetched, hashed at receipt"), true);
+  t("the strip leaves op=earnedbasis's ceiling sentence in store.mjs standing",
+    uncomment(raw.get("store.mjs")).includes("is not reachable on the capture axis at all"), true);
+
+  /* REACH 5: the rule's own two letters are readable and distinct, so detector
+     (B) is narrowed to something real. A `null` unreachable grade would make (B)
+     silently look for one letter instead of two. */
+  t("detector (B) takes two distinct letters from the enforced rule",
+    [RULE_LETTERS.length, RULE_LETTERS.every((g) => /^[A-Z]$/.test(g || "")),
+     EARNED_CAPTURE_CEILING !== UNREACHABLE_CAPTURE_GRADE],
+    [2, true, true]);
+
+  /* THE LOAD-BEARING ASSERTIONS. */
+  const offendersA = files.flatMap((f) =>
+    spelled(uncomment(raw.get(f))).map((h) => `${f}:${h.line} ${JSON.stringify(h.what)}`));
+  t(`(A) no module of the plane spells "Grade <letter>" outside a comment (found: ${JSON.stringify(offendersA)})`,
+    offendersA, []);
+
+  const offendersB = files.flatMap((f) =>
+    spelled(uncomment(raw.get(f)), { anyCase: true, only: RULE_LETTERS })
+      .map((h) => `${f}:${h.line} ${JSON.stringify(h.what)}`));
+  t(`(B) no module spells the capture rule's own letters (${RULE_LETTERS.join("/")}) beside "grade", in any case (found: ${JSON.stringify(offendersB)})`,
+    offendersB, []);
 }
 
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);

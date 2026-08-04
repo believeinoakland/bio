@@ -295,6 +295,53 @@ export const attestFence = (ceiling, unreachable) => {
 
 export const ATTEST_FENCE = attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 
+/* op=acquire's `note` — the THIRD hand-written statement of the same doctrine,
+ * closed by REC-48 (2026-08-04) on exactly REC-43's mechanism and deliberately
+ * NOT on REC-43's sentence.
+ *
+ * IT IS NOT THE ATTEST FENCE AND MUST NOT BE REPLACED BY IT. Different act,
+ * different reader, different moment. `ATTEST_FENCE` is the prompt on the
+ * `attest` ACT: it is read by a member who is DECIDING whether to co-attest,
+ * which is why DEC-39 made it answer "what question does this answer?" before
+ * anything else. This string is the RECEIPT op=acquire hands back to a caller
+ * who has just received bytes and is not deciding anything — it states what the
+ * capture it just made is worth, in one line, beside the capture's own
+ * `grade` field. Widening it into a second fence would put two accounts of
+ * co-attestation in front of one member; narrowing the fence to this would lose
+ * the part the ruling exists to add. They say different things ON PURPOSE.
+ *
+ * THE WORDING IS UNCHANGED BY THIS ITEM, and that is a judgement rather than a
+ * default. Its third clause ("co-attestation raises <ceiling> toward evidentiary
+ * weight") is the same claim as the fence's own third part ("it strengthens a
+ * Grade <ceiling> capture toward evidentiary weight"), so the note states a
+ * SUBSET of ruled wording and cannot overclaim relative to it. What DEC-39
+ * corrected was a surface presenting that clause AS the co-attestation decision
+ * prompt with nothing else beside it; this is not that surface, and the full
+ * fence is one op=affordances call away on the act that does decide. If a later
+ * reading finds the receipt is where members actually form the belief, that is
+ * a ruling about which surface owns the fence, not an edit to make here quietly.
+ *
+ * THE TWO LETTERS ARE COMPOSED, WHICH IS THE ITEM. `Grade B` and `Grade A` were
+ * typed here in their own letters until 2026-08-04, a third copy that agreed
+ * with the rule at zero cost; both now come from the enforcement point, and the
+ * composed string is character-identical to the literal it replaced while the
+ * ceiling stands at B — which is the point, since a change of doctrine is
+ * exactly when a copy stops agreeing and this stops being a copy.
+ *
+ * IT REFUSES TO COMPOSE A SENTENCE IT CANNOT MAKE TRUE, for `attestFence`'s
+ * reason and with its consequence: a load failure that stops the plane, never a
+ * fallback that ships "Grade null needs a chain-of-custody web archive". */
+export const acquireGradeNote = (ceiling, unreachable) => {
+  if (!ceiling || !unreachable)
+    throw new Error("op=acquire's note states what this surface earns AND the grade above it; "
+                  + "with no grade above the ceiling the sentence cannot be composed truthfully");
+  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a `
+       + "chain-of-custody web archive, which this surface cannot produce. Co-attestation raises "
+       + `${ceiling} toward evidentiary weight.`;
+};
+
+export const ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
+
 /* The object vocabularies, published the way op=searchfields publishes the
  * query language, so a surface never keeps a copy. action_kind is the check
  * catalogue's own C-2.10 suite, imported from the module that enforces it. */

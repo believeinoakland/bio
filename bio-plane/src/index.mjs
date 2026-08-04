@@ -20,7 +20,13 @@ import { serialiseContainer, containerEntries } from "./container.mjs";
    never copied); `needs` and `mode` are composed HERE from NEEDS and
    SESSION_OPS, the tables that actually gate the call, so the publication and
    the gate cannot drift. */
-import { ACTS, RUNGS, VOCABULARIES, CAPTURE_ACTS, deriveActs } from "./affordances.mjs";
+/* REC-48 / DEC-39: op=acquire's `note` is COMPOSED from the enforced capture
+   ceiling rather than spelled here. It is not the attest fence and is not
+   `ATTEST_FENCE` — a different act, a different reader — but it states the same
+   doctrine, so its two grade letters come from the same place the refusal reads
+   them. The reasoning is on `acquireGradeNote` itself, beside the fence. */
+import { ACTS, RUNGS, VOCABULARIES, CAPTURE_ACTS, deriveActs,
+         ACQUIRE_GRADE_NOTE } from "./affordances.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
@@ -3336,7 +3342,7 @@ export default {
           },
         } : {}),
         ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
-        note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
+        note: ACQUIRE_GRADE_NOTE,
         store: storeName, tokenClass: cls,
       }, 200);
     }

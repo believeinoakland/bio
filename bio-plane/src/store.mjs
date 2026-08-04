@@ -63,8 +63,14 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             that REFUSES a leg claiming more than it — so that the published
             co-attestation fence can be composed from the same value without
             closing an import cycle through affordances.mjs. The reasoning is
-            at the declaration, where all three readers can see it. */
-         EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
+            at the declaration, where all three readers can see it.
+
+            REC-48 (2026-08-04) adds UNREACHABLE_CAPTURE_GRADE beside it for the
+            same reason one layer on: op=earnedbasis's `ceiling` sentence spelled
+            the unreachable letter in its own letters — a FOURTH copy of the
+            doctrine, which REC-48's scope had not counted — while the `why:`
+            line directly above it already interpolated the ceiling. */
+         EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
@@ -8191,8 +8197,13 @@ export class Store extends DurableObject {
         why: `${r.bundle_id} holds ${r.n} capture(s) in the record, so the strongest capture grade it can `
            + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
            + `receipt.`,
-        ceiling: `Grade A is not reachable on the capture axis at all: it needs a chain-of-custody web `
-               + `archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).` };
+        /* The unreachable letter is DERIVED, never typed (REC-48): it is the rank
+           immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
+           checkEarnedLeg compares this leg against, so the sentence a member reads
+           and the refusal that enforces it cannot say different things. */
+        ceiling: `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it `
+               + `needs a chain-of-custody web archive, which this plane cannot produce and does not `
+               + `claim (CAPTURE-FIDELITY.md).` };
     }
     return out;
   }
