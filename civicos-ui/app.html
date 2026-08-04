@@ -13389,11 +13389,18 @@ function dec34Header(c, floors, f){
   const hash = f ? { attr: String(f.bundle_sha || ""),
                      html: `sha256:${esc(String(f.bundle_sha || ""))} (this finding's own signed bytes)` }
                  : pubCaseHashLine(c);
+  /* THE VERIFICATION POINTER, and in the `awaiting` window it points at what
+     CAN be checked rather than at a hash that does not exist. A case with no
+     container has nothing to verify AS A CASE; every finding that landed is
+     verifiable by its own hash right now, and saying so is the honest form of
+     the field rather than printing a placeholder a reader would try. */
   const verify = f
     ? `op=publishedbytes&sha256=${esc(String(f.bundle_sha || ""))}`
-    : esc((c.verification && c.verification.manifest) || "op=verify&sha256=<the hash above>");
+    : (c.verification && c.verification.manifest)
+      ? esc(c.verification.manifest)
+      : `no container to check yet &mdash; each ratified finding answers for its own bytes at op=publishedbytes&amp;sha256=&lt;that finding's hash&gt;`;
   return `<div class="dec34" data-dec34="1" data-hash="${esc(hash.attr)}">
-    <span class="f"><b>Case</b> ${esc(caseId || "NONE — these bytes are not a member of any published case")} &middot; <b>Edition</b> ${esc(String(c.edition))} of ${esc(String(c.latest_edition))} &middot; ${esc((c.ratified_at || "not yet — this edition is still being ratified").slice(0, 40))}</span>
+    <span class="f"><b>Case</b> ${esc(caseId || "NONE — these bytes are not a member of any published case")} &middot; <b>Edition</b> ${esc(String(c.edition))} of ${esc(String(c.latest_edition))} &middot; ${esc(c.ratified_at ? String(c.ratified_at).slice(0, 10) : "not yet ratified")}</span>
     <span class="f"><b>${f ? "Finding" : "Findings"}</b> ${f ? esc(String(f.bundle_id)) : esc(pubRoster(c).map((m) => m.id + (m.ratified ? "" : " (awaiting)")).join(", ") || "none")}</span>
     <span class="f"><b>Edition state</b> ${esc(pubEditionStateWord(c))}</span>
     <span class="f"><b>Authors</b> ${esc(f ? pubAuthors(f) : pubCaseAuthors(c))}</span>
