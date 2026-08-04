@@ -3613,7 +3613,8 @@ export class Store extends DurableObject {
    * the working document moves. */
   publishCase({ target = null, targets = null, caseId = null, scope = "",
                 statement = "", excluded = null, subjectPosition = "",
-                subjectJustification = "", viewer = null, author = null } = {}) {
+                subjectJustification = "", biasAcknowledgement = "",
+                viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_PUBLISH",
@@ -3654,6 +3655,14 @@ export class Store extends DurableObject {
        are not the same claim, which is why this sits beside the completeness
        block rather than replacing it. */
     const scp = String(scope ?? "").trim();
+    /* REC-47 / DEC-46 (a). AUTHORED, like the three above it and unlike
+       everything the server stamps below. A published case carries the bias it
+       was produced under as a FACT A READER WEIGHS — DEC-20: ordinary declared
+       bias is DISCLOSED and travels with every published case; only an
+       uncleared HUNCH disqualifies, and that is publishpreflight's refusal, not
+       this act's. Nothing here reads WHICH bias is named, exactly as nothing
+       reads which subject position was declared. */
+    const back = String(biasAcknowledgement ?? "").trim();
     if (!stmt)
       return { ok: false, reason: "NO_STATEMENT",
                detail: "a published case states what it does NOT cover. A case silent about its own limits is "
@@ -3684,6 +3693,18 @@ export class Store extends DurableObject {
                      + "question the case as a whole answers. It is authored by the group and never derived "
                      + "from the findings' titles: a scope this plane wrote is not a scope the group made "
                      + "(DEC-44). Completeness says what the case left OUT; scope says what it is ABOUT." };
+    /* REC-47 goes LAST for REC-44's own reason, one item on: a caller who omits
+       several fields learns about the ones they have been asked for since
+       earlier items before the field this item added, so an existing caller's
+       diagnosis does not change under them. */
+    if (!back)
+      return { ok: false, reason: "NO_BIAS_ACKNOWLEDGEMENT",
+               detail: "a published case carries the bias it was produced under, as a fact the reader weighs. "
+                     + "Acknowledge it here, in the ceremony, fresh for this edition — a pre-flight checkbox "
+                     + "would be the checkbox this gate exists to refuse (DEC-46). This is a DISCLOSURE and "
+                     + "never a bar: declaring a bias does not stop a case being published, and nothing here "
+                     + "reads WHICH bias you name (DEC-20). The only bias that disqualifies is an uncleared "
+                     + "HUNCH, and that is refused by name before any signature exists." };
     const rows = [];
     for (let i = 0; i < excluded.length; i++) {
       const r = excluded[i];
@@ -3712,6 +3733,7 @@ export class Store extends DurableObject {
        parser cannot read back — refused by name rather than silently mangled.
        conclude()'s rule, at this act's own lengths. */
     for (const [name, v] of [["statement", stmt], ["subject_justification", just], ["scope", scp],
+                             ["bias_acknowledgement", back],
                              ...rows.flatMap((r, i) => [[`excluded[${i}].description`, r.description],
                                                         [`excluded[${i}].reason`, r.reason]])]) {
       if (v.length > Store.COMPLETENESS_MAX || /["\\\r\n]/.test(v))
@@ -3815,23 +3837,40 @@ export class Store extends DurableObject {
        edition. The scope statement is deliberately NOT in this comparison; the
        reasoning is at checkCompletenessFreshness in the catalog. */
     const priorCase = this.#one(
-      `SELECT edition, completeness FROM published_cases
+      `SELECT edition, completeness, bias_acknowledgement FROM published_cases
        WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
       theCase, edition);
     const priorCompleteness = priorCase && priorCase.completeness ? JSON.parse(priorCase.completeness) : null;
     if (priorCompleteness) {
-      const now = completenessFields({ completeness: { statement: stmt, subject_justification: just },
-                                       completeness_excluded: rows });
+      /* REC-47: the acknowledgement joins the SAME comparison here, mirroring
+         the catalog's arm exactly — one gate, both sides, and the reasoning for
+         why bias is byte-checked while scope is not lives at
+         checkCompletenessFreshness rather than being restated here. */
+      const now = { ...completenessFields({ completeness: { statement: stmt, subject_justification: just },
+                                            completeness_excluded: rows }),
+                    bias_acknowledgement: back };
+      const was = { ...priorCompleteness, bias_acknowledgement: priorCase.bias_acknowledgement ?? null };
       const LABEL = { statement: "statement", subject_justification: "the subject-position justification",
-                      excluded: "the exclusion list" };
+                      excluded: "the exclusion list", bias_acknowledgement: "the bias acknowledgement" };
+      /* TWO refusal NAMES, because they are two claims. A caller who reprinted
+         their limits and a caller who reprinted their acknowledgement of bias
+         have made different mistakes, and one name for both would tell neither
+         of them which. The CHECK is C-21.1 in both cases. */
+      const REASON = { bias_acknowledgement: "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD" };
+      const WHY = { bias_acknowledgement:
+        `An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and `
+        + `never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. `
+        + `The lens itself may well be unchanged — what must be fresh is what it means for THIS edition's `
+        + `findings. Say that, as of this edition. Declaring a bias never blocks publication (DEC-20).` };
       for (const k of Object.keys(LABEL))
-        if (now[k] != null && priorCompleteness[k] != null && now[k] === priorCompleteness[k])
-          return { ok: false, reason: "COMPLETENESS_CARRIED_FORWARD", field: k, edition,
-                   caseId: theCase, prior: priorCase.edition,
-                   detail: `${LABEL[k]} is byte-identical to edition ${priorCase.edition}'s. A completeness claim `
-                         + `carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every `
-                         + `edition is a separate document and states its own limits in its own words, as of `
-                         + `its own date. If nothing about the limits changed, say THAT, as of this edition.` };
+        if (now[k] != null && was[k] != null && now[k] === was[k])
+          return { ok: false, reason: REASON[k] || "COMPLETENESS_CARRIED_FORWARD", field: k, edition,
+                   check: "C-21.1", caseId: theCase, prior: priorCase.edition,
+                   detail: `${LABEL[k]} is byte-identical to edition ${priorCase.edition}'s. ${WHY[k]
+                         || `A completeness claim carried forward unchanged is a checkbox, and C-21.1 exists to `
+                          + `refuse it: every edition is a separate document and states its own limits in its `
+                          + `own words, as of its own date. If nothing about the limits changed, say THAT, as `
+                          + `of this edition.`}` };
     }
 
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
@@ -3883,6 +3922,18 @@ export class Store extends DurableObject {
        sets are refused instead of silently reconciled. */
     text = Store.#setOrAddScalar(text, "case_id", theCase);
     text = Store.#setOrAddScalar(text, "case_scope", `"${Store.#fmSafe(scp)}"`);
+    /* REC-47 / DEC-46 (a): INTO THE BYTES THE MEMBER SIGNS, for the same reason
+       the case identity and the scope are — a stranger holding ONE finding must
+       be able to read the bias the case was produced under without contacting
+       this instance, which is the whole premise the portable container exists
+       for (S9). An acknowledgement that lived only in this instance's tables
+       would be a disclosure the reader who most needs it cannot reach, and one
+       this plane could revise after the fact with no signature to contradict
+       it. It is written into EVERY member and not one designated one, exactly
+       as case_scope and case_findings are, and the ratify committer refuses two
+       members who signed different acknowledgements rather than reconciling
+       them. */
+    text = Store.#setOrAddScalar(text, "bias_acknowledgement", `"${Store.#fmSafe(back)}"`);
     text = Store.#setOrAddScalar(text, "case_findings", `[${roster}]`);
     text = Store.#setOrAddBlock(text, "completeness", [
       `  statement: "${stmt}"`,
@@ -4042,6 +4093,11 @@ export class Store extends DurableObject {
              ...(written.length === 1 ? { target: written[0].target, bundleSha: written[0].bundleSha,
                                           from: written[0].from } : {}),
              scope: scp,
+             /* REC-47: BESIDE the completeness block, not inside it. The lens
+                and the limits are two claims (DEC-46), and nesting one in the
+                other is the collapse REC-44 spent an item undoing one altitude
+                down. */
+             bias_acknowledgement: back,
              completeness: { statement: stmt, subject_position: pos, subject_justification: just,
                              author: who, at: when, excluded: rows.length },
              author: who, at: when, weight: "single",
@@ -10756,7 +10812,11 @@ export class Store extends DurableObject {
    * A HUNCH COMPOSES NORMALLY (DEC-15). grade_source 'hunch' is an ASSERTED
    * grade, present and load-bearing, never treated as undetermined; it is
    * reported on the member so a surface (and REC-15's pre-flight) can see the
-   * bias debt without the arithmetic pretending the grade is absent.
+   * HUNCH DEBT without the arithmetic pretending the grade is absent. (D-188 /
+   * DEC-46 (d): HUNCH debt, not "bias debt" — a hunch is the one kind that
+   * DISQUALIFIES publication; ordinary bias debt is DISCLOSED and travels with
+   * the case. This is the field the pre-flight reads to refuse UNCLEARED_HUNCH,
+   * so the disqualifying sense is the one meant here and it is now said.)
    *
    * DERIVE ON READ. The bundles columns this writes are a CACHE and never the
    * authority: a stored strength goes stale the moment a leg is raised, and
@@ -12544,15 +12604,20 @@ export class Store extends DurableObject {
          carries the container's manifest, its own hash and the scope. A
          reconstruction needs both, and conflating them is what D-187 records. */
       cases: this.#rows(
-        `SELECT case_id, edition, scope, ratified_at, manifest_sha, manifest FROM published_cases
-         ORDER BY case_id, edition`),
+        /* REC-47: the acknowledgement is on the PUBLIC index too, and that is
+           the point of it — a reader reconstructing the record from this op
+           alone must be able to see the bias each case edition was produced
+           under without asking us for it. */
+        `SELECT case_id, edition, scope, bias_acknowledgement, ratified_at, manifest_sha, manifest
+         FROM published_cases ORDER BY case_id, edition`),
       caseMembers: this.#rows(
         `SELECT case_id, edition, ord, bundle_id FROM published_case_members
          ORDER BY case_id, edition, ord`),
       shas: this.#rows(
         `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
       altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE "
-               + "has a scope, a completeness assertion, editions and a container; it has no strength, and "
+               + "has a scope, a completeness assertion, a bias acknowledgement, editions and a container; "
+               + "it has no strength, and "
                + "composing its members' pairs into one letter would be a claim the evidence does not "
                + "support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET "
                + "RATIFIED: it has no pair because nothing has been signed for it, which is a state of the "
@@ -13230,7 +13295,8 @@ export class Store extends DurableObject {
      revision. */
   publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas,
             edition, title, completeness, strength, required, edges,
-            caseId = null, caseScope = null, caseFindings = null, group = null } = {}) {
+            caseId = null, caseScope = null, caseFindings = null, caseBiasAck = null,
+            group = null } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
     return this.ctx.storage.transactionSync(() => {
@@ -13282,20 +13348,31 @@ export class Store extends DurableObject {
           return { ok: false, reason: "CASE_ROSTER_EXCLUDES_SELF", bundleId, caseId, roster,
                    detail: `${bundleId} names case ${caseId} but is not in the roster its own bytes carry. A `
                          + `finding that is not a member of the case it claims cannot be placed in it.` };
-        const cRow = this.#one(`SELECT scope, completeness FROM published_cases WHERE case_id=? AND edition=?`,
-                               caseId, ed);
+        const cRow = this.#one(
+          `SELECT scope, completeness, bias_acknowledgement FROM published_cases WHERE case_id=? AND edition=?`,
+          caseId, ed);
         const cScope = caseScope ?? null;
         const cComp = completeness ? JSON.stringify(completeness) : null;
+        /* REC-47: the acknowledgement is committed from the RATIFIED BYTES like
+           the scope beside it and out of nothing else, and it is under the SAME
+           divergence refusal. Two members who signed different acknowledgements
+           of the bias their shared case was produced under have not published
+           one case, and reconciling that silently would let the record show a
+           disclosure only one of them made. */
+        const cBias = caseBiasAck ?? null;
         if (cRow) {
-          if ((cRow.scope ?? null) !== cScope || (cRow.completeness ?? null) !== cComp)
+          if ((cRow.scope ?? null) !== cScope || (cRow.completeness ?? null) !== cComp
+              || (cRow.bias_acknowledgement ?? null) !== cBias)
             return { ok: false, reason: "CASE_ASSERTION_DIVERGED", bundleId, caseId, edition: ed,
-                     detail: `this finding's signed bytes state a different scope or completeness assertion for `
-                           + `case ${caseId} edition ${ed} than the members already ratified into it. A case `
-                           + `edition asserts ONE scope and ONE completeness claim, and every member signed it.` };
+                     detail: `this finding's signed bytes state a different scope, completeness assertion or `
+                           + `bias acknowledgement for case ${caseId} edition ${ed} than the members already `
+                           + `ratified into it. A case edition asserts ONE scope, ONE completeness claim and `
+                           + `ONE acknowledgement of the bias it was produced under, and every member signed it.` };
         } else {
           this.sql.exec(
-            `INSERT INTO published_cases (case_id,edition,scope,completeness,opened) VALUES (?,?,?,?,?)`,
-            caseId, ed, cScope, cComp, now);
+            `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,opened)
+             VALUES (?,?,?,?,?,?)`,
+            caseId, ed, cScope, cComp, cBias, now);
         }
         const declared = this.#rows(
           `SELECT ord, bundle_id FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
@@ -13349,7 +13426,7 @@ export class Store extends DurableObject {
      in particular NO case-level strength, because there is no such thing —
      every member's frozen PAIR travels with that member. */
   #caseEditionState(caseId, ed, group = null) {
-    const c = this.#one(`SELECT scope, completeness, opened, ratified_at, manifest_sha
+    const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, opened, ratified_at, manifest_sha
                          FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
     if (!c) return null;
     const roster = this.#rows(
@@ -13379,6 +13456,11 @@ export class Store extends DurableObject {
     }
     return { caseId, edition: ed, group: group ?? null,
              scope: c.scope ?? null,
+             /* REC-47 / DEC-46 (a): the bias the case was produced under travels
+                with it, on every surface that serves the case block. DEC-20 is
+                the reason it is a plain disclosure here and not a verdict —
+                the reader weighs it; this plane never does. */
+             bias_acknowledgement: c.bias_acknowledgement ?? null,
              completeness: c.completeness ? JSON.parse(c.completeness) : null,
              opened: c.opened, ratified_at: c.ratified_at ?? null,
              manifest_sha: c.manifest_sha ?? null,
@@ -13516,7 +13598,8 @@ export class Store extends DurableObject {
     return { ok: true, bundleId, editions: rows.map((r) => {
       const cid = this.#caseOf(r.bundle_id, r.edition);
       const c = cid ? this.#one(
-        `SELECT scope, completeness, manifest_sha FROM published_cases WHERE case_id=? AND edition=?`,
+        `SELECT scope, completeness, bias_acknowledgement, manifest_sha
+         FROM published_cases WHERE case_id=? AND edition=?`,
         cid, r.edition) : null;
       return { ...r, case_id: cid,
                /* The container's manifest is the CASE edition's, so it is
@@ -13524,6 +13607,7 @@ export class Store extends DurableObject {
                   naming every member finding's parts. */
                manifest_sha: c ? (c.manifest_sha ?? null) : null,
                scope: c ? (c.scope ?? null) : null,
+               bias_acknowledgement: c ? (c.bias_acknowledgement ?? null) : null,
                completeness: c && c.completeness ? JSON.parse(c.completeness) : null,
                strength: r.strength ? JSON.parse(r.strength) : null,
                required: r.required ? JSON.parse(r.required) : null };
@@ -13668,6 +13752,7 @@ export class Store extends DurableObject {
       ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
     return { ok: true, caseId: theCase, edition: ed, scope: state.scope,
+             bias_acknowledgement: state.bias_acknowledgement ?? null,
              completeness: state.completeness, ratified_at: state.ratified_at, opened: state.opened,
              complete: state.complete, awaiting: state.awaiting,
              ...(asked ? { asked } : {}),
@@ -13680,9 +13765,11 @@ export class Store extends DurableObject {
              latest_edition: editions.length ? editions[editions.length - 1].edition : ed,
              case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
                         + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
-                        + "the case carries the scope that brought them together and the completeness "
-                        + "assertion. There is deliberately no case-level strength: composing two findings' "
-                        + "strengths into one letter is the substitution R2 forbids.",
+                        + "the case carries the scope that brought them together, the completeness "
+                        + "assertion, and the group's acknowledgement of the bias the case was produced "
+                        + "under — the last of these is a DISCLOSURE the reader weighs, never a verdict this "
+                        + "plane reached (DEC-20, DEC-46). There is deliberately no case-level strength: "
+                        + "composing two findings' strengths into one letter is the substitution R2 forbids.",
              graph_detail: "each finding's serves[] is what this surface may hand over — every entry names a "
                          + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
                          + "classified servable at publication with no published edition behind it now, stated "
@@ -13700,7 +13787,14 @@ export class Store extends DurableObject {
               sig_armored, strength, required, parts
        FROM published_bundles WHERE bundle_id=? AND edition=?`, bundleId, ed);
     if (!r) return null;
+    /* REC-47: `bias_acknowledgement: null` for the same reason `scope` and
+       `completeness` are null here — a ratified bundle that is not a case makes
+       no case-level assertion, and inventing one would be the exact claim
+       DEC-44 corrects. Stated as null rather than omitted, so a renderer sees
+       "no such assertion" rather than a missing key it might read as absence of
+       bias. */
     return { caseId: null, edition: ed, scope: null, completeness: null,
+             bias_acknowledgement: null,
              opened: r.ratified_at, ratified_at: r.ratified_at, manifest_sha: null,
              complete: true, awaiting: [],
              findings: [{ ord: 0, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,
@@ -13710,9 +13804,10 @@ export class Store extends DurableObject {
                           required: r.required ? JSON.parse(r.required) : null,
                           parts: r.parts ? JSON.parse(r.parts) : [] }],
              detail: "this is a RATIFIED BUNDLE that is not a member of any published case: it was never "
-                   + "published as a finding, so it carries no case identity, no scope statement and no "
-                   + "completeness assertion. Its bytes are verifiable by hash exactly as any other "
-                   + "ratified bytes are." };
+                   + "published as a finding, so it carries no case identity, no scope statement, no "
+                   + "completeness assertion and no bias acknowledgement — those are claims a CASE makes, "
+                   + "and this is not one. Its bytes are verifiable by hash exactly as any other ratified "
+                   + "bytes are." };
   }
 
   /* Which case a published finding belongs to, at a given edition or at its
@@ -13883,11 +13978,14 @@ export class Store extends DurableObject {
     const marks = ids.map(() => "?").join(",");
     const reg = {};
     for (const r of this.#rows(
-      `SELECT case_id, edition, scope, completeness, ratified_at FROM published_cases
+      `SELECT case_id, edition, scope, completeness, bias_acknowledgement, ratified_at FROM published_cases
        WHERE case_id IN (${marks}) AND ratified_at IS NOT NULL ORDER BY case_id, edition`, ...ids)) {
       const e = reg[r.case_id] || (reg[r.case_id] = { latest: 0, editions: {} });
       e.editions[String(r.edition)] = {
         edition: r.edition, scope: r.scope ?? null, ratified_at: r.ratified_at,
+        /* REC-47: carried BESIDE completeness, never folded into it — C-21.1
+           compares both and they are two claims (DEC-46). */
+        bias_acknowledgement: r.bias_acknowledgement ?? null,
         completeness: r.completeness ? JSON.parse(r.completeness) : null };
       if (Number(r.edition) > e.latest) e.latest = Number(r.edition);
     }

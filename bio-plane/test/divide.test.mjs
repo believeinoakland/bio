@@ -525,7 +525,9 @@ console.log("\n--- 9. a PUBLISHED case refuses PUBLISHED_CANNOT_DIVIDE — an ed
   const p = await publish(PILAR, { target: PUB,
     statement: "This case covers the FY2023 transfer only, on the documents in hand.",
     excluded: [], subjectPosition: "not_sought",
-    subjectJustification: "Notice here would let the record be revised before it is captured; we say so." });
+    subjectJustification: "Notice here would let the record be revised before it is captured; we say so.",
+    /* ADDED 2026-08-05, REC-47 / DEC-46 (a): fixture, not this suite's subject. */
+    biasAcknowledgement: "The group's declared position on public adoption of fund transfers frames this case." });
   t("the case publishes at edition 1", [p.ok, p.edition], [true, 1]);
   const refused = await divide(ROSA, { target: PUB, reason: WHY,
     children: [{ id: "INQ-2026-1600-pub-a", question: "Was it authorised?", legs: [0] },
@@ -550,7 +552,10 @@ console.log("\n--- 10. a CHILD publishes, and its published bytes carry the disc
     excluded: [{ target: SIGNED, description: "the signature page",
                  reason: "it belongs to the sibling question and is not weighed here" }],
     subjectPosition: "sought_no_answer",
-    subjectJustification: "We put the authorisation claim to the City Administrator on 2026-07-10 and had no reply." });
+    subjectJustification: "We put the authorisation claim to the City Administrator on 2026-07-10 and had no reply.",
+    /* ADDED 2026-08-05, REC-47. */
+    biasAcknowledgement: "The declared position on public adoption frames the authorisation child as it did "
+                       + "the parent." });
   const md = await imageOf(KID_A);
   t("the published child names its PARENT and every SIBLING in the bytes that get signed",
     [p.ok, new RegExp(`^division_parent: ${PARENT}$`, "m").test(md),

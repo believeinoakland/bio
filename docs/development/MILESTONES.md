@@ -649,7 +649,7 @@ and handed to CONDUCT through the BOB INBOX.
 | D-151 a machine credential can resolve an unassigned task (DEC-7) | RECORD | M8 · REC-28 |
 | D-152 image-only PDFs are OCR'd, and OCR text is marked as derived (DEC-4) | CONTENT-PDF | M2 · CPDF-9 measure, CPDF-10 build |
 | D-153 AUDIENCES H4/H6 are the workflow, not hazards (DEC-13) | RECORD · UI | M10 · REC-14, REC-24, UI-17 |
-| D-154 a hunch is temporary declared bias, and is bias debt (DEC-15) | RECORD · UI | M9 · REC-11/12/15/18, UI-11/12 |
+| D-154 a hunch is temporary declared bias, and is HUNCH DEBT (DEC-15; term corrected 2026-08-05 per D-188 — "bias debt" names the DISCLOSED class that does not block) | RECORD · UI | M9 · REC-11/12/15/18, UI-11/12 |
 | D-155 a project declares the strength its work requires (DEC-17) | RECORD · UI | M10 · REC-14, REC-15, UI-18 |
 | D-156 "audience" names two things — reader of a case vs user type (DEC-17) | — | M10 · a documentation pass, no code |
 

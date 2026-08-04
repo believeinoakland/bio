@@ -23,7 +23,7 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    drift D-164 exists to stop. Nothing on the wire moves — the composed stamps
    are character-identical while the prefixes are `token:` and `class:`. */
 import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
-         completenessFields, sectionText, EARNED_CAPTURE_CEILING,
+         completenessFields, biasAcknowledgementOf, sectionText, EARNED_CAPTURE_CEILING,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 /* REC-22 / DEC-34: the container serialiser. The manifest REC-14 writes carries
    a `layout` block that says how the parts assemble; this module reads it and
@@ -3787,6 +3787,13 @@ export default {
         ? ratifiedFm.case_id : null;
       const caseFindings = caseId && Array.isArray(ratifiedFm.case_findings) ? ratifiedFm.case_findings : null;
       const caseScope = caseId && typeof ratifiedFm.case_scope === "string" ? ratifiedFm.case_scope : null;
+      /* REC-47 / DEC-46 (a): the AUTHORED bias acknowledgement, read out of the
+         RATIFIED BYTES exactly like the scope beside it and out of nothing
+         else. A disclosure this plane took off the request rather than out of
+         the signed document would be one we made on the group's behalf — and a
+         reader has no way to tell the difference, which is precisely why it
+         must come from inside the hash the member signed. */
+      const caseBiasAck = caseId ? biasAcknowledgementOf(ratifiedFm) : null;
 
       /* DEC-34 as REC-44 corrects it: THE CONTAINER IS THE CASE'S, and it is
          therefore NOT BUILT HERE. It used to be, because a case was assumed to
@@ -3866,7 +3873,7 @@ export default {
           ...(isCase ? { edition } : {}), title: ratifiedFm.title ?? null,
           completeness: frozenCompleteness, strength: frozenStrength,
           required: isCase ? (ratifiedFm.required_strength ?? null) : null,
-          caseId, caseScope, caseFindings, group: ratifiedFm.group ?? null,
+          caseId, caseScope, caseFindings, caseBiasAck, group: ratifiedFm.group ?? null,
           edges,
           shas: shas.map(({ text, ...s }) => s),
         }) }))).json()).result;
@@ -3916,13 +3923,31 @@ export default {
       if (pub.case && pub.case.complete && !pub.case.manifest_sha) {
         const cs = pub.case;
         const manifest = {
-          format: "bio-case-container/2",
+          /* REC-47 bumps 2 -> 3, and the bump is deliberate rather than
+             bookkeeping. The container gains `bias_acknowledgement`, which is a
+             DISCLOSURE a reader is entitled to rely on being present: without a
+             version move, a /2 container carrying no acknowledgement and a /2
+             container that simply predates the field are indistinguishable to a
+             stranger holding the zip, and "the record is silent" would read as
+             "the group declared nothing". The whole premise of the container is
+             that it is readable without our cooperation, so the only place that
+             ambiguity could be resolved is the one place the reader cannot
+             reach. REC-44 bumped 1 -> 2 for the same class of reason. */
+          format: "bio-case-container/3",
           case: cs.caseId,
           edition: cs.edition,
           group: cs.group ?? null,
           /* DEC-44 determination 2: what the case is ABOUT, authored by the
              group. Beside it, what it left OUT. A reader needs both. */
           scope: cs.scope ?? null,
+          /* REC-47 / DEC-46 (a): INSIDE THE CONTAINER, which is the copy that
+             matters most. DEC-20 makes the bias part of the evidentiary record
+             that TRAVELS with publication, and the container is the artifact
+             that travels — a stranger holding the zip must be able to read the
+             lens this case was made under without coming back to this instance.
+             An acknowledgement served only from a live op would be a disclosure
+             that stops existing the moment the instance does. */
+          bias_acknowledgement: cs.bias_acknowledgement ?? null,
           completeness: cs.completeness ?? null,
           ratified_at: cs.ratified_at,
           /* EVERY MEMBER FINDING, each with its OWN signature, its OWN attestor

@@ -510,7 +510,11 @@ console.log("\n--- 7. removing a grouping is a restructure; and the states that 
     scope: "Whether the FY2024 transfer rested on anything the Council adopted.",
     statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",
     excluded: [], subjectPosition: "sought_and_answered",
-    subjectJustification: "We put the claims to the City Administrator on 2026-06-20 and printed the reply." });
+    subjectJustification: "We put the claims to the City Administrator on 2026-06-20 and printed the reply.",
+    /* ADDED 2026-08-05, REC-47 / DEC-46 (a): op=publish now requires it. This
+       suite's subject is op=inquiryground; the field is fixture, not subject. */
+    biasAcknowledgement: "The group holds a declared position that transfers should be adopted in public "
+                       + "session, and this case is read through it." });
   t("(fixture) INQ_PUB published at edition 1", [pub.ok, pub.edition], [true, 1]);
   t("a PUBLISHED case refuses restructuring BY NAME, and the refusal names DEC-12's route",
     (await ground(CAROL, { target: INQ_PUB, grounds: TWO_GROUPS })).reason, "PUBLISHED_CANNOT_RESTRUCTURE");

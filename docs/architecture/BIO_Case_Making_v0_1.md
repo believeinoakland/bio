@@ -732,8 +732,10 @@ that showed its steps without their support status would be the overclaiming fai
 because it planned from a hypothesis, but because it hid that it had.
 
 **Consequences for the build:**
-- A hypothetical premise in a plan is DECLARED, and it is bias debt of the hunch kind — so
-  nothing resting on it can be published while it stands, which needs no new gate.
+- A hypothetical premise in a plan is DECLARED, and it is **HUNCH DEBT** — so nothing
+  resting on it can be published while it stands, which needs no new gate. *(Read "bias
+  debt of the hunch kind" 2026-08-05; corrected per D-188 / DEC-46 (d), because the
+  general term names the class that does NOT block and the hunch is the one that does.)*
 - An outward act's pre-flight REFUSES when its step is not `established`, naming the premise
   and the shortfall. This is where the project's declared required strength (DEC-17) does
   mechanical work.

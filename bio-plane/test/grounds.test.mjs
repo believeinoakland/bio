@@ -601,7 +601,10 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
     scope: "Whether the FY2024 transfer was authorised.",
     statement: "This case covers the authorisation question on the documents in hand.",
     excluded: [], subjectPosition: "sought_and_answered",
-    subjectJustification: "We put the question to the Clerk and they answered in writing." });
+    subjectJustification: "We put the question to the Clerk and they answered in writing.",
+    /* ADDED 2026-08-05, REC-47 / DEC-46 (a): fixture, not this suite's subject. */
+    biasAcknowledgement: "The group's declared position on public adoption of transfers is the lens this "
+                       + "case was made under." });
   t("it publishes at edition 1", [pub.ok, pub.edition], [true, 1]);
   /* CORRECTED 2026-08-04, REC-44 / DEC-44: the frozen pair belongs to the
      FINDING, so it is read from findings[]. REC-42's arithmetic is untouched —
@@ -651,7 +654,9 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
     scope: "Whether the transfer was authorised, on the two documents named.",
     statement: "This case covers the authorisation question on the two documents named.",
     excluded: [], subjectPosition: "not_sought",
-    subjectJustification: "Notice would let the record be revised before it is captured; we say so." });
+    subjectJustification: "Notice would let the record be revised before it is captured; we say so.",
+    /* ADDED 2026-08-05, REC-47. */
+    biasAcknowledgement: "The same declared position on public adoption frames the unstructured case too." });
   const md2 = (await GET(`op=image&token=${CAROL}&id=${PLAIN}`))["bundle.md"];
   t("an UNSTRUCTURED published case carries NO frozen branch block, and audits clean without one",
     [pub2.ok, /published_strength_grounds/.test(md2),

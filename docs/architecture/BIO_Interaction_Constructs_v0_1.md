@@ -272,13 +272,21 @@ something and has nowhere to ask.
 **Carries:** authority determination on an undetermined capture (the RULED case) ·
 "you owe an endorsement" on a pending consensus · an expertise confirmation awaiting an
 administrator · a ratification request · a review of an assistant-surfaced focus · a
-temporal expectation that has come due · bias debt owed after a lens change.
+temporal expectation that has come due · a re-run owed after a lens change.
 
 **The clock half is already argued for.** D-86 records that bias debt and temporal
 expectations are the same shape — *an obligation with a clock, attached to an object,
 blocking a state transition, settleable in batches* — and that two schedulers would be
 two sets of bugs about one thing. That description IS this construct. Building the task
 object without the clock would split it again.
+
+> *Corrected 2026-08-05 (DEC-20, D-188, DEC-46 (d)). D-86's phrase "blocking a state
+> transition" is quoted above as D-86 wrote it, and it is no longer true of the BIAS
+> half: DEC-20 narrowed the blocking rule to HUNCHES, so a re-run owed after a lens
+> change is DISCLOSED and blocks nothing. **What this does NOT change is the argument**
+> — the shape D-86 identified is "an obligation with a clock, attached to an object,
+> settleable in batches", and blocking was never the load-bearing part of it. The
+> temporal half still blocks; the bias half surfaces. One mechanism, two consumers.*
 
 **Accountability rule:** a task is never silently dropped. Unactioned, it AGES with a
 recorded reason (D-79); it does not vanish, because a finding that disappears is

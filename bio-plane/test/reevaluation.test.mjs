@@ -315,7 +315,10 @@ const pub1 = await publish(PILAR, { target: INQ_CASE,
   statement: "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.",
   excluded: [{ description: "any 2019 council minutes", reason: "outside the period at issue" }],
   subjectPosition: "sought_and_answered",
-  subjectJustification: "We put the claims to the City Administrator on 2026-06-20 and printed what came back." });
+  subjectJustification: "We put the claims to the City Administrator on 2026-06-20 and printed what came back.",
+  /* ADDED 2026-08-05, REC-47 / DEC-46 (a): fixture, not this suite's subject. */
+  biasAcknowledgement: "The group holds a declared position that fund transfers should be adopted in public "
+                     + "session; edition 1 is read through it." });
 if (!pub1.ok) throw new Error(`publish 1: ${JSON.stringify(pub1)}`);
 const rat1 = await ratify(INQ_CASE);
 if (!rat1.ok) throw new Error(`ratify 1: ${JSON.stringify(rat1)}`);
@@ -527,7 +530,10 @@ console.log("\n--- 6. DEC-12: a newer edition surfaces the obligation and recomp
              + "FY2023 comparison is still outside it.",
     excluded: [{ description: "the FY2023 comparison memo", reason: "a records request for it is outstanding" }],
     subjectPosition: "sought_no_answer",
-    subjectJustification: "We put edition 2's added claim to the City Administrator on 2026-07-12 and had no reply by publication." });
+    subjectJustification: "We put edition 2's added claim to the City Administrator on 2026-07-12 and had no reply by publication.",
+    /* ADDED 2026-08-05, REC-47: FRESH for edition 2 (C-21.1 refuses a reprint). */
+    biasAcknowledgement: "The declared position on public adoption is unchanged; edition 2 applies it to the "
+                       + "delegation file released on 2026-07-10." });
   const rat2 = await ratify(INQ_CASE);
   t("(fixture) the case republishes at edition 2 and ratifies with its own signature",
     [pub2.ok, pub2.edition, rat2.ok, rat2.edition], [true, 2, true, 2]);

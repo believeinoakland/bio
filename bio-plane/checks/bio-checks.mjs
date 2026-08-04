@@ -1977,6 +1977,16 @@ export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
  *  choice, and a group whose position has not changed must not be pushed into
  *  changing it. What must be authored FRESH is what is ASSERTED — the
  *  statement, the justification for the position, and the exclusion list. */
+/** REC-47 / DEC-46 (a): the AUTHORED bias acknowledgement, read off the
+ *  frontmatter exactly as completenessFields reads its three. Named once and
+ *  exported so the store's pre-flight, the gate and the ratify-commit path
+ *  cannot drift about which bytes are being compared — the drift hazard REC-44
+ *  measured five times over. */
+export function biasAcknowledgementOf(fm) {
+  const v = fm && typeof fm.bias_acknowledgement === 'string' ? fm.bias_acknowledgement : null;
+  return v === null || v === 'null' ? null : v;
+}
+
 export function completenessFields(fm) {
   const c = (fm && typeof fm.completeness === 'object' && fm.completeness) || {};
   const rows = Array.isArray(fm?.completeness_excluded) ? fm.completeness_excluded : [];
@@ -2036,7 +2046,12 @@ function checkPublishedExtension(fm, findings) {
                       member's own signed bytes, so a stranger holding ONE
                       finding can see what else the case rests on, and the
                       ratify committer can refuse two members who disagree
-                      about the set instead of silently reconciling them. */
+                      about the set instead of silently reconciling them.
+
+     REC-47 / DEC-46 (a) adds a FOURTH, `bias_acknowledgement`, and it is the
+     one whose arm differs from case_scope's: it is required here AND it is
+     under C-21.1's byte-check. Why, when scope beside it is not, is recorded
+     once at checkCompletenessFreshness rather than twice. */
   if (typeof fm.case_id !== 'string' || fm.case_id.trim() === '' || fm.case_id === 'null') {
     findings.push(f('C-2.8', 'error', 'published state requires case_id: a published case is a CONTAINER over one or more findings (DEC-44), and a finding published into no case has no edition, no scope and nothing for C-21.1 to hold it to',
       ['publish through op=publish, which mints or carries the case identity and stamps it into the bytes']));
@@ -2044,6 +2059,17 @@ function checkPublishedExtension(fm, findings) {
   if (typeof fm.case_scope !== 'string' || fm.case_scope.trim() === '') {
     findings.push(f('C-2.8', 'error', 'published state requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
       ['author the case scope on op=publish']));
+  }
+  /* REC-47 / DEC-46 (a). DEC-20 is the doctrine and it is worth stating at the
+     gate rather than only in the register: a published case CARRIES the bias it
+     was produced under, as a fact a reader weighs. This field is a DISCLOSURE,
+     never a bar — nothing here reads WHICH bias it names, and nothing anywhere
+     refuses a case for having one. The only bias that disqualifies is an
+     uncleared HUNCH (HUNCH DEBT, D-188), and that refusal is
+     op=publishpreflight's by name. */
+  if (biasAcknowledgementOf(fm) === null || fm.bias_acknowledgement.trim() === '') {
+    findings.push(f('C-2.8', 'error', 'published state requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) — what is refused here is publishing SILENTLY about the lens, not publishing under one',
+      ['author the bias acknowledgement on op=publish, fresh for this edition']));
   }
   if (!Array.isArray(fm.case_findings) || !fm.case_findings.length) {
     findings.push(f('C-2.8', 'error', 'published state requires case_findings naming every finding in this case: a stranger holding this document must be able to see what else the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)',
@@ -2194,7 +2220,61 @@ function checkCompletenessFreshness(ctx, findings) {
      a difference, and "a gate that pressures someone into inventing one is a
      bug in the gate" is CLAUDE.md's sentence about exactly this shape. It is
      REQUIRED and never prefilled (checkPublishedExtension), which is the arm
-     that fits the claim it makes. */
+     that fits the claim it makes.
+
+     ===================================================================
+     REC-47 / DEC-46 (a): THE BIAS ACKNOWLEDGEMENT *IS* UNDER THIS CHECK,
+     AND IT SITS BESIDE A FIELD THAT IS NOT. THE DISCRIMINATOR, ONCE.
+     ===================================================================
+     Three authored fields now travel on the publish block under TWO rules, so
+     the rule is stated rather than left to be inferred from which arms exist:
+
+       BYTE-CHECKED   completeness.statement, completeness.subject_justification,
+                      completeness_excluded, bias_acknowledgement
+       REQUIRED ONLY  case_scope
+
+     THE TEST IS NOT "could this legitimately stay the same". It is WHAT THE
+     FIELD IS A CLAIM ABOUT. A field that states a FACT ABOUT THE CASE — the
+     question it answers — is one editions do not move, and holding it to a
+     difference manufactures one. A field that states AN AUTHOR'S CLAIM ABOUT
+     THIS EDITION'S MATERIAL is a fresh act each time, because the material is
+     what changed.
+
+     Bias is not scope, and the reason is DEC-46's own distinction rather than a
+     new one. DEC-46 separates two things that travel together: the bias
+     MANIFEST is *computed and stamped*, and the ACKNOWLEDGEMENT is *authored*.
+     The manifest is the constant — the lens itself, which may sit unchanged for
+     years and SHOULD, and which nothing here compares because a derived
+     equality costs nothing to produce (CLAUDE.md). The acknowledgement is not
+     the lens; it is the publisher saying what that lens did TO THIS EDITION'S
+     FINDINGS. Edition 2 revises, adds or drops findings, so what the bias
+     shaped is different material even when the bias itself is byte-identical.
+
+     SO THE PRESSURE-TO-INVENT TEST DOES NOT FIRE HERE, and that is the whole
+     of why the answer differs from scope's. Nobody is asked to invent a change
+     IN THE BIAS. They are asked to state, as of this edition, how this case
+     stands under it — and "the lens is unchanged, and here is what it means for
+     the two findings added since edition 1" is a true sentence a publisher can
+     write without inventing anything. It is the same escape the completeness
+     arm already offers in its own remedy line: if nothing changed, say THAT, as
+     of this edition.
+
+     AND THE FAILURE MODES ARE NOT SYMMETRIC, which settles it. A stale SCOPE
+     misdescribes the question, and a reader holding the container can see the
+     findings and judge for themselves. A stale ACKNOWLEDGEMENT asserts that the
+     publisher weighed their own bias against material they never looked at —
+     a claim about an act that did not happen, which is the overclaiming half of
+     this project's threat model and the defect class it holds worse than a
+     missing feature. DEC-46's own sentence for it: a pre-flight checkbox would
+     be the checkbox these gates exist to refuse, and a gate that only checks
+     PRESENCE *is* a checkbox.
+
+     WHAT THIS ARM IS NOT. It never reads WHICH bias is named and never refuses
+     a case for carrying one — DEC-20: ordinary declared bias is DISCLOSED and
+     travels with every published case. The only bias that disqualifies is an
+     uncleared HUNCH (HUNCH DEBT, D-188), refused by name and elsewhere. This
+     arm refuses one thing only: reprinting last edition's sentence, which is
+     evidence nobody looked. */
   const reg = ctx.publishedCaseRegistry;
   if (!reg) return;
   const cid = typeof ctx.fm.case_id === 'string' && ctx.fm.case_id !== 'null' ? ctx.fm.case_id : null;
@@ -2208,19 +2288,39 @@ function checkCompletenessFreshness(ctx, findings) {
     .filter((x) => Number(x.edition) < Number(ctx.fm.edition))
     .sort((a, b) => Number(b.edition) - Number(a.edition))[0];
   if (!prior || !prior.completeness) return;   // edition 1 has nothing to be fresh against
-  const now = completenessFields(ctx.fm);
-  const was = prior.completeness;
+  /* REC-47: the acknowledgement joins the compared set here rather than in a
+     second loop with a second refusal, because it is the SAME gate for the SAME
+     reason and a second one would be a second place to state one rule (D-21).
+     It is carried on the registry row beside `completeness`, not inside it: the
+     two are different claims (DEC-46 — the lens versus the limits), and folding
+     one into the other's blob is the collapse REC-44 spent an item undoing one
+     altitude down. */
+  const now = { ...completenessFields(ctx.fm), bias_acknowledgement: biasAcknowledgementOf(ctx.fm) };
+  const was = { ...prior.completeness, bias_acknowledgement: prior.bias_acknowledgement ?? null };
   const LABEL = {
     statement: 'completeness.statement',
     subject_justification: 'completeness.subject_justification',
     excluded: 'completeness_excluded',
+    bias_acknowledgement: 'bias_acknowledgement',
+  };
+  /* One loop, one refusal, TWO sentences — because the two claims are refused
+     for the same reason and about different things, and a message that called
+     the acknowledgement "a completeness claim" would teach the next reader the
+     conflation this item exists to keep out of the record. */
+  const WHY = {
+    bias_acknowledgement:
+      `an acknowledgement of the bias a case was produced under is AUTHORED at the moment of export, not carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked at what this edition actually says. The lens itself may be unchanged and usually is — what must be fresh is the publisher's account of what it means for THIS edition's findings`,
+  };
+  const REMEDY = {
+    bias_acknowledgement:
+      'if the bias itself has not moved, say THAT as of this edition and say what it means for the findings this edition adds or revises — the bias is disclosed, never disqualifying (DEC-20)',
   };
   for (const k of Object.keys(LABEL)) {
     if (now[k] != null && was[k] != null && now[k] === was[k]) {
       findings.push(f('C-21.1', 'error',
-        `${LABEL[k]} is byte-identical to edition ${prior.edition}'s: a completeness claim carried forward unchanged is a checkbox, and this gate exists to refuse it. Every edition is a SEPARATE DOCUMENT and states its own limits in its own words, as of its own date (DEC-12, C-21.1)`,
+        `${LABEL[k]} is byte-identical to edition ${prior.edition}'s: ${WHY[k] || 'a completeness claim carried forward unchanged is a checkbox, and this gate exists to refuse it'}. Every edition is a SEPARATE DOCUMENT and states its own claims in its own words, as of its own date (DEC-12, C-21.1)`,
         [`author ${LABEL[k]} fresh for edition ${ctx.fm.edition}`,
-         'if nothing about the limits changed, say that AS OF THIS EDITION rather than reprinting the last one']));
+         REMEDY[k] || 'if nothing about the limits changed, say that AS OF THIS EDITION rather than reprinting the last one']));
     }
   }
 }
@@ -2231,7 +2331,10 @@ function checkCompletenessFreshness(ctx, findings) {
    asserts ONE grade for ONE reason, and two grade columns would create a place
    to state two. GRADE_SOURCES carries 'hunch' per DEC-15: an authored
    connection grade with an author and a date, the only authored grade
-   permitted above D, bias debt until cleared (BIO_Declared_Bias_v0_1.md). */
+   permitted above D, HUNCH DEBT until cleared (BIO_Declared_Bias_v0_1.md).
+   D-188 / DEC-46 (d): HUNCH debt, not "bias debt" — the hunch is the ONE kind
+   of declared bias that DISQUALIFIES publication (DEC-20); ordinary bias debt
+   is DISCLOSED and travels with every published case. */
 export const BASIS_ROLES = ['supports', 'cuts_against'];
 export const BASIS_GRADES = ['A', 'B', 'C', 'D'];
 export const GRADE_AXES = ['capture', 'connection'];

@@ -409,3 +409,18 @@ fully declared bias as part of the evidentiary record of that work; work
 carrying unsettled bias debt cannot be ratified for publication; and no BIO
 process may consult an undeclared lens. The construct is defined in
 BIO_Declared_Bias_v0_1.md.*
+
+> **AMENDED 2026-08-02 by Bob (DEC-20); vocabulary corrected 2026-08-05 (D-188,
+> DEC-46 (d)). The middle clause above is SUPERSEDED and is left standing only
+> because it is a dated record of a direction.** As it reads, *"work carrying
+> unsettled bias debt cannot be ratified for publication"* states the opposite
+> of the doctrine. The rule now: **only an uncleared HUNCH refuses publication**
+> (`op=publishpreflight` → `UNCLEARED_HUNCH`). **Ordinary bias debt is DISCLOSED
+> and TRAVELS with every published case**, which is what makes the FIRST clause
+> above — the declared bias is part of the evidentiary record — mean something
+> rather than being unreachable. The two clauses were in tension as written, and
+> DEC-20 resolved it in favour of the first.
+>
+> REC-47 built the half that makes the first clause operative: a published case
+> now carries an **authored bias acknowledgement**, fresh per edition, in the
+> signed bytes and in the portable container (DEC-46 (a)).

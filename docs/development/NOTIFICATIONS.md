@@ -144,7 +144,12 @@ what exists to be numbered. Class in brackets.
 
 - overdue required successor in a progression `[FINDING]` (DEC-10)
 - temporal expectation coming due `[FINDING]` (framework §8.2, D-73)
-- bias debt owed after a lens change `[OBLIGATION]` (D-86 — blocks a transition)
+- a re-run owed after a lens change `[OBLIGATION]` (D-86 — **DISCLOSED, never
+  blocking**; corrected 2026-08-05 per DEC-20 / D-188, where it read "blocks a
+  transition" — the pre-DEC-20 blanket rule. Only an uncleared HUNCH
+  disqualifies. `bio-plane/src/queuestate.mjs`'s copy of this line was corrected
+  in the same change, and the two agreeing on the wrong thing is why a copy that
+  agrees today agrees at zero cost)
 - monitoring recheck due / deadline sweep `[CONDITION]` (S-7)
 - archive-fallback eligibility reached — three failures or fourteen days `[CONDITION]` (D-104)
 - capture session TTL expiring with work outstanding `[CONDITION]` (CAPTURE-SCALING)

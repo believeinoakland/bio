@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (NINE ARMS. REC-44's four (a)-(d) and REC-49's five (i-a), (i-b), (ii-a), (ii-b), (ii-b'). The suite is 58 assertions whole. REC-44's four were ALL RE-RUN 2026-08-05 by rec49-agent against THIS file, so every count below agrees with the file it names rather than with the file it was written against; each one's FAIL count reproduced exactly except (c), which gained one and the gain is recorded on its own line. Each arm is broken ALONE and every file is restored BYTE-IDENTICALLY, sha256 compared before and after each arm and equal to: src/store.mjs 346985395796036fcdbd51004766e935221d6919bf26a0221583df23666ed12f, src/index.mjs 765333552f24a56a12529445affe113ca739236eb275cffb0d35a58ecaf2fffc, checks/bio-checks.mjs d8da7b9d51dd5634aabe9fa5a0861d07bf48c5b8b2998d80f28796851a9a659f (the (ii-b') arm also edits THIS file; no sha is quoted for it because a file cannot state its own, and it is restored byte-identically to whatever it was before that arm ran). The arms are scripted and re-runnable in one step; each is a single unique string replacement at the site quoted with it.) (a) THE SINGLE CASE-LEVEL STRENGTH -- THIS IS BOB'S OWN CONTROL, carried verbatim off DEC-44 onto REC-44: in src/store.mjs publishedCase() add `strength: state.findings[0].strength,` to the returned object -> 57 pass, 1 FAIL (RE-RUN 2026-08-05: 46 -> 57 pass with the FAIL count unchanged), in block 5, and the sweep NAMES all four surfaces it appeared on: publishedcase(by case id).strength, publishedcase(by finding id).strength, publishedcase(by edition).strength, publishedcase(by hash).strength. The composed letter it advertises is FIND_A's (capture B / connection C) while FIND_B froze (capture UNRATED / connection D) -- so the case would be presenting one of two different answers as though it were the case's, which is R2's forbidden composition arriving at case altitude. NOTE WHAT THIS MEASURED THAT REVIEW WOULD NOT: blocks 1-4 stay ENTIRELY GREEN under it, because a spurious case-level key breaks no per-finding assertion anywhere -- the surface goes on answering correctly and ADDITIONALLY answers wrongly. That is why the control is a STRUCTURAL SWEEP over whole responses rather than a value comparison, and why a value comparison would have passed. (b) THE SAME BUG IN THE EXPORT -- in src/index.mjs's case manifest add `strength: cs.findings[0].strength,` after `ratified_at:` -> 56 pass, 2 FAIL (RE-RUN 2026-08-05: 45 -> 56 pass, FAIL count unchanged): the sweep names manifest.strength and the four publishedcase(...).manifest.strength echoes, AND the separate container assertion fires, because the ZIP a stranger downloads then carries the composed claim inside the signed-hash artifact itself -- the worst place for it, since that copy travels without this instance. Two arms rather than one, deliberately: the read path and the exported container are two places a reader meets the claim and either can be broken alone. (c) THE MEMBERSHIP IS NOT CHECKED -- in src/store.mjs publish() guard the CASE_MEMBERSHIP_DIVERGED refusal with `if (false) &&` -> 55 pass, 3 FAIL in block 2b (RE-RUN 2026-08-05: 45 -> 55 pass and 2 -> 3 FAIL, and the THIRD is REC-49's and is worth keeping — block 6's fixture assertion counts the case editions, the rostered members and the ratified rows, so a member ratified into a case that never declared it now moves numbers a roster-shaped assertion cannot miss; the arm reaches one more instrument than it did): the member whose signed bytes name a roster of ONE is ratified into a case whose other members signed a roster of two, and the second adversary then reports EDITION_EXISTS -- a raw collision where a named refusal belongs. THIS ARM IS THE REASON BLOCK 2b EXISTS. The first version of this suite had no adversary at all and arm (c) measured 47 pass, 0 fail: every member of a case published by op=publish carries the same roster BY CONSTRUCTION, so both divergence refusals could have been deleted outright with the whole suite green. That is the inbox-grammar failure mode exactly (CLAUDE.md), found by running the control rather than by review. (d) C-21.1 AT THE WRONG ALTITUDE -- in checks/bio-checks.mjs checkCompletenessFreshness read `ctx.publishedRegistry` and `reg[ctx.fm.id]` again instead of the CASE registry, AND in src/store.mjs publishCase() guard the COMPLETENESS_CARRIED_FORWARD refusal with `if (false) &&` -> 54 pass, 4 FAIL in block 3 (RE-RUN 2026-08-05: 43 -> 54 pass, FAIL count unchanged): edition 2 of the case republishes edition 1's completeness statement BYTE FOR BYTE, both members move to published on it, and the case then answers edition 2 with edition 1's limits. Both halves must go together, as REC-13 found and REC-14 recorded: breaking one alone leaves the other refusing. Restore after each. ---- REC-49's five, RUN 2026-08-05 by rec49-agent. The item is the INDEX (op=publishedmanifest), and the two directions it can lie in need two instruments, exactly as REC-44's (a) and UI-29's (m)/(m2) needed two.  (i-a) THE INDEX UNDERSTATES A CASE THAT HAS A PAIR -- in src/store.mjs publishedManifest(), drop `, p.strength, p.required` from the published[] SELECT (leave the line `                p.gate_version`). RUN: 53 pass, 5 FAIL, and the sweep NAMES the understatement in both windows rather than reporting a shape mismatch: "publishedmanifest(awaiting) CASE-2026-0001@1 INQ-2026-4400-authorisation: RATIFIED member has NO frozen pair on the index -- the index UNDERSTATES a case that HAS one", and the same for both members of both complete editions. THIS IS THE ARM THE ITEM EXISTS FOR: a green battery did not catch REC-44's move because NO suite anywhere asserted that this op still answers a pair for a case that has one. Block 5 sweeps for a pair that must NOT be there and passes perfectly on an answer carrying no pairs at all -- the empty-body-digest shape. Block 5 and block 6 are complements and are useless apart.  (i-b) THE CONTAINER MANIFEST DROPPED OFF THE INDEX AGAIN -- in the same function, drop `, manifest` from the cases[] SELECT. RUN: 57 pass, 1 FAIL, naming the case editions whose container manifest went missing. It is a SEPARATE arm from (i-a) because after REC-49 the index has two independent pair-bearing surfaces -- the member's own ratified row and the case's container copy -- and either can be removed alone. Before REC-49 there was only the second, which is why the awaiting window showed nothing.  (ii-a) A CASE-LEVEL PAIR ON AN INDEX ROW -- DEC-44's own control, at the index. In the same function, map the cases[] rows to carry the FIRST member's `strength` as the case's. RUN: 57 pass, 1 FAIL in BLOCK 5, naming ["publishedmanifest.cases[0].strength","publishedmanifest.cases[1].strength"] -- while every block 6 assertion stays GREEN, because the index goes on answering every finding's pair correctly and ADDITIONALLY answers a composed one. REC-44's (a) and UI-29's (m) measured the same thing at their own altitudes.  (ii-b) THE SAME PAIR PLANTED INSIDE THE MANIFEST THE INDEX EMBEDS -- map the cases[] rows to re-stringify the manifest with `strength: <first member's>` added at its top level. RUN: 57 pass, 1 FAIL, naming ["publishedmanifest.cases[0].manifest.strength","publishedmanifest.cases[1].manifest.strength"].  (ii-b') THE SAME DEFECT WITH THE INSTRUMENT AS IT WAS BEFORE REC-49 -- (ii-b) again, plus `const expandIndex = (idx) => idx;` in this file. RUN: 57 pass, 1 FAIL -- AND BLOCK 5 IS SILENT. The one failure is block 6's manifest-PRESENCE assertion, which fires only because an unparsed manifest is a string. THAT IS THE FINDING: op=publishedmanifest hands its container manifest over as a JSON STRING, and a structural sweep that walks a response object stops dead at a string -- so the copy of the manifest a reader of the PUBLIC INDEX meets first was the one surface DEC-44's own control could not see inside. Measured, not supposed. The correction is `expandIndex`, and this arm is what earns it. */
+/* NEGATIVE CONTROL: (TEN ARMS. REC-44's four (a)-(d), REC-49's five (i-a), (i-b), (ii-a), (ii-b), (ii-b'), and REC-47's one (g). **The suite is 70 assertions whole** (58 -> 70; the +12 is REC-47's — the case-altitude arms, the two-rules-side-by-side pair, the container's own copy, and the ISOLATED divergence adversary described at (g)). REC-44's and REC-49's nine were NOT re-run 2026-08-05 by rec47-agent and their counts below are AT THE SIZE THEY WERE MEASURED AT (58); they are re-runnable in one step. REC-47's (g) was RUN 2026-08-05 against THIS file, and it CHANGED THE SUITE rather than merely confirming it — see the arm.  ==== REC-47's ONE, RUN 2026-08-05 ====  (g) THE DIVERGENCE CHECK DOES NOT READ THE ACKNOWLEDGEMENT — in src/store.mjs publish() drop the `|| (cRow.bias_acknowledgement ?? null) !== cBias` clause from the CASE_ASSERTION_DIVERGED condition, leaving the scope and completeness clauses standing -> **66 pass, 4 FAIL**. THE ARM IS RECORDED IN TWO STAGES BECAUSE THE FIRST STAGE FOUND AN INSTRUMENT DEFECT, which is the whole reason it is worth reading. FIRST RUN, against block 2b's adversary 3 alone (FIND_C forcing its way into the case): 65 pass, 2 FAIL — the clause was proved LOAD-BEARING, but the refusal reported CASE_MEMBERSHIP_DIVERGED, i.e. the arm FAILED NAMING THE WRONG RULE. That adversary structurally CANNOT isolate the acknowledgement: FIND_C is not in the declared roster, so its bytes must name a roster containing itself, and the membership rule fires whether or not anything reads the bias. This is REC-16's recorded instrument defect arriving again, and it was corrected the same way — by building the adversary that isolates the boundary. SECOND STAGE, the adversary added to block 3: FIND_B is a LEGITIMATE member of the declared roster, edition 2's case row already exists (FIND_A ratified first), and its bytes are tampered in the acknowledgement AND NOWHERE ELSE — asserted at the site by comparing the two images with that one line removed from both. With the clause gone, that ratification reports `reason: null`: IT SUCCEEDS. Nothing else in the plane catches it, so whichever member ratified first would silently decide what the public record says the case's lens was. That is the arm the item needed and the first version did not have. NOTE the REC-44 control (c) lesson underneath it: every member of a case published through op=publish carries the same assertions BY CONSTRUCTION, so a divergence refusal can be deleted outright with the whole suite green unless an adversary drives op=promote's hand-written door. Restore after. Every file restored BYTE-IDENTICALLY, sha256 compared before and after and equal to: src/store.mjs 95332d64f73e115445eb77f73eae887ab1c24eddad7dbbf5b40019ecc4b32dab, src/index.mjs 5202ffcb3ea9f2034cc210495190e37533fdf97a10e3b1f89454a069924a86bd, checks/bio-checks.mjs a2be732cb76b5234e1b7d35beff46bacd4528cf3b6a94389e286afebeb082214.  ==== REC-44's FOUR AND REC-49's FIVE (2026-08-05 numbers at suite size 58) ====  The suite is 58 assertions whole. REC-44's four were ALL RE-RUN 2026-08-05 by rec49-agent against THIS file, so every count below agrees with the file it names rather than with the file it was written against; each one's FAIL count reproduced exactly except (c), which gained one and the gain is recorded on its own line. Each arm is broken ALONE and every file is restored BYTE-IDENTICALLY, sha256 compared before and after each arm and equal to: src/store.mjs 346985395796036fcdbd51004766e935221d6919bf26a0221583df23666ed12f, src/index.mjs 765333552f24a56a12529445affe113ca739236eb275cffb0d35a58ecaf2fffc, checks/bio-checks.mjs d8da7b9d51dd5634aabe9fa5a0861d07bf48c5b8b2998d80f28796851a9a659f (the (ii-b') arm also edits THIS file; no sha is quoted for it because a file cannot state its own, and it is restored byte-identically to whatever it was before that arm ran). The arms are scripted and re-runnable in one step; each is a single unique string replacement at the site quoted with it.) (a) THE SINGLE CASE-LEVEL STRENGTH -- THIS IS BOB'S OWN CONTROL, carried verbatim off DEC-44 onto REC-44: in src/store.mjs publishedCase() add `strength: state.findings[0].strength,` to the returned object -> 57 pass, 1 FAIL (RE-RUN 2026-08-05: 46 -> 57 pass with the FAIL count unchanged), in block 5, and the sweep NAMES all four surfaces it appeared on: publishedcase(by case id).strength, publishedcase(by finding id).strength, publishedcase(by edition).strength, publishedcase(by hash).strength. The composed letter it advertises is FIND_A's (capture B / connection C) while FIND_B froze (capture UNRATED / connection D) -- so the case would be presenting one of two different answers as though it were the case's, which is R2's forbidden composition arriving at case altitude. NOTE WHAT THIS MEASURED THAT REVIEW WOULD NOT: blocks 1-4 stay ENTIRELY GREEN under it, because a spurious case-level key breaks no per-finding assertion anywhere -- the surface goes on answering correctly and ADDITIONALLY answers wrongly. That is why the control is a STRUCTURAL SWEEP over whole responses rather than a value comparison, and why a value comparison would have passed. (b) THE SAME BUG IN THE EXPORT -- in src/index.mjs's case manifest add `strength: cs.findings[0].strength,` after `ratified_at:` -> 56 pass, 2 FAIL (RE-RUN 2026-08-05: 45 -> 56 pass, FAIL count unchanged): the sweep names manifest.strength and the four publishedcase(...).manifest.strength echoes, AND the separate container assertion fires, because the ZIP a stranger downloads then carries the composed claim inside the signed-hash artifact itself -- the worst place for it, since that copy travels without this instance. Two arms rather than one, deliberately: the read path and the exported container are two places a reader meets the claim and either can be broken alone. (c) THE MEMBERSHIP IS NOT CHECKED -- in src/store.mjs publish() guard the CASE_MEMBERSHIP_DIVERGED refusal with `if (false) &&` -> 55 pass, 3 FAIL in block 2b (RE-RUN 2026-08-05: 45 -> 55 pass and 2 -> 3 FAIL, and the THIRD is REC-49's and is worth keeping — block 6's fixture assertion counts the case editions, the rostered members and the ratified rows, so a member ratified into a case that never declared it now moves numbers a roster-shaped assertion cannot miss; the arm reaches one more instrument than it did): the member whose signed bytes name a roster of ONE is ratified into a case whose other members signed a roster of two, and the second adversary then reports EDITION_EXISTS -- a raw collision where a named refusal belongs. THIS ARM IS THE REASON BLOCK 2b EXISTS. The first version of this suite had no adversary at all and arm (c) measured 47 pass, 0 fail: every member of a case published by op=publish carries the same roster BY CONSTRUCTION, so both divergence refusals could have been deleted outright with the whole suite green. That is the inbox-grammar failure mode exactly (CLAUDE.md), found by running the control rather than by review. (d) C-21.1 AT THE WRONG ALTITUDE -- in checks/bio-checks.mjs checkCompletenessFreshness read `ctx.publishedRegistry` and `reg[ctx.fm.id]` again instead of the CASE registry, AND in src/store.mjs publishCase() guard the COMPLETENESS_CARRIED_FORWARD refusal with `if (false) &&` -> 54 pass, 4 FAIL in block 3 (RE-RUN 2026-08-05: 43 -> 54 pass, FAIL count unchanged): edition 2 of the case republishes edition 1's completeness statement BYTE FOR BYTE, both members move to published on it, and the case then answers edition 2 with edition 1's limits. Both halves must go together, as REC-13 found and REC-14 recorded: breaking one alone leaves the other refusing. Restore after each. ---- REC-49's five, RUN 2026-08-05 by rec49-agent. The item is the INDEX (op=publishedmanifest), and the two directions it can lie in need two instruments, exactly as REC-44's (a) and UI-29's (m)/(m2) needed two.  (i-a) THE INDEX UNDERSTATES A CASE THAT HAS A PAIR -- in src/store.mjs publishedManifest(), drop `, p.strength, p.required` from the published[] SELECT (leave the line `                p.gate_version`). RUN: 53 pass, 5 FAIL, and the sweep NAMES the understatement in both windows rather than reporting a shape mismatch: "publishedmanifest(awaiting) CASE-2026-0001@1 INQ-2026-4400-authorisation: RATIFIED member has NO frozen pair on the index -- the index UNDERSTATES a case that HAS one", and the same for both members of both complete editions. THIS IS THE ARM THE ITEM EXISTS FOR: a green battery did not catch REC-44's move because NO suite anywhere asserted that this op still answers a pair for a case that has one. Block 5 sweeps for a pair that must NOT be there and passes perfectly on an answer carrying no pairs at all -- the empty-body-digest shape. Block 5 and block 6 are complements and are useless apart.  (i-b) THE CONTAINER MANIFEST DROPPED OFF THE INDEX AGAIN -- in the same function, drop `, manifest` from the cases[] SELECT. RUN: 57 pass, 1 FAIL, naming the case editions whose container manifest went missing. It is a SEPARATE arm from (i-a) because after REC-49 the index has two independent pair-bearing surfaces -- the member's own ratified row and the case's container copy -- and either can be removed alone. Before REC-49 there was only the second, which is why the awaiting window showed nothing.  (ii-a) A CASE-LEVEL PAIR ON AN INDEX ROW -- DEC-44's own control, at the index. In the same function, map the cases[] rows to carry the FIRST member's `strength` as the case's. RUN: 57 pass, 1 FAIL in BLOCK 5, naming ["publishedmanifest.cases[0].strength","publishedmanifest.cases[1].strength"] -- while every block 6 assertion stays GREEN, because the index goes on answering every finding's pair correctly and ADDITIONALLY answers a composed one. REC-44's (a) and UI-29's (m) measured the same thing at their own altitudes.  (ii-b) THE SAME PAIR PLANTED INSIDE THE MANIFEST THE INDEX EMBEDS -- map the cases[] rows to re-stringify the manifest with `strength: <first member's>` added at its top level. RUN: 57 pass, 1 FAIL, naming ["publishedmanifest.cases[0].manifest.strength","publishedmanifest.cases[1].manifest.strength"].  (ii-b') THE SAME DEFECT WITH THE INSTRUMENT AS IT WAS BEFORE REC-49 -- (ii-b) again, plus `const expandIndex = (idx) => idx;` in this file. RUN: 57 pass, 1 FAIL -- AND BLOCK 5 IS SILENT. The one failure is block 6's manifest-PRESENCE assertion, which fires only because an unparsed manifest is a string. THAT IS THE FINDING: op=publishedmanifest hands its container manifest over as a JSON STRING, and a structural sweep that walks a response object stops dead at a string -- so the copy of the manifest a reader of the PUBLIC INDEX meets first was the one surface DEC-44's own control could not see inside. Measured, not supposed. The correction is `expandIndex`, and this arm is what earns it. */
 /* REC-44 / DEC-44 / D-187: A PUBLISHED CASE HOLDS MULTIPLE FINDINGS.
  *
  * This suite exists because the shipped model was never chosen. Measured against
@@ -248,21 +248,37 @@ const SCOPE1 = "Whether the FY2024 sewer fund transfer was properly authorised a
              + "questions the transfer file raises together.";
 const STMT1 = "This case covers the FY2024 transfer only, on the documents in hand at edition 1.";
 const JUST1 = "We put both claims to the City Administrator on 2026-06-20 and printed what came back.";
+/* ADDED 2026-08-05, REC-47 / DEC-46 (a): the AUTHORED bias acknowledgement,
+   which op=publish now requires. It is a CASE-altitude claim like the scope and
+   the completeness assertion beside it — one acknowledgement carried by every
+   member finding — and this suite is where that altitude is asserted, since it
+   is the only one that publishes a case of more than one finding. */
+const BACK1 = "This group holds a declared position that transfers between municipal funds should be adopted "
+            + "in public session, and edition 1 reads both findings through it.";
+/* Edition 2's, and the WORDING is the assertion. The lens has NOT changed and
+   the sentence says so — which is what makes block 3's pair honest: the gate is
+   not extracting an invented difference, it is asking what the unchanged lens
+   means for material that did change. */
+const BACK2 = "The same declared position on public adoption is in force and is unchanged; edition 2 applies "
+            + "it to the delegation file released on 2026-07-10.";
 
 /* ============================================================ 1. THE ACT TAKES A SET */
 console.log("\n--- 1. op=publish takes a SET: two findings, one case, one edition ---");
 {
   t("the one-case refusal is GONE and its replacement says a case is one or MORE findings",
     (await publish(WREN, { targets: [], scope: SCOPE1, statement: STMT1, excluded: [],
-                           subjectPosition: "sought_and_answered", subjectJustification: JUST1 })).detail
+                           subjectPosition: "sought_and_answered", subjectJustification: JUST1,
+                           biasAcknowledgement: BACK1 })).detail
       .includes("CONTAINER over ONE OR MORE FINDINGS"), true);
   t("a case with no authored SCOPE is refused by name: scope says what the case is ABOUT",
     (await publish(WREN, { targets: [FIND_A, FIND_B], scope: "", statement: STMT1, excluded: [],
-                           subjectPosition: "sought_and_answered", subjectJustification: JUST1 })).reason,
+                           subjectPosition: "sought_and_answered", subjectJustification: JUST1,
+                           biasAcknowledgement: BACK1 })).reason,
     "NO_SCOPE");
   t("a finding listed twice is refused: the ordinal would mean nothing and the container would hold two copies",
     (await publish(WREN, { targets: [FIND_A, FIND_A], scope: SCOPE1, statement: STMT1, excluded: [],
-                           subjectPosition: "sought_and_answered", subjectJustification: JUST1 })).reason,
+                           subjectPosition: "sought_and_answered", subjectJustification: JUST1,
+                           biasAcknowledgement: BACK1 })).reason,
     "DUPLICATE_MEMBER");
   /* EVERY MEMBER IS JUDGED BEFORE ANY MEMBER MOVES. A case that published two
      of three findings and then refused the third would leave the record
@@ -271,14 +287,16 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
     legs: [{ target: INFO_TEST, grade: "D", axis: "connection", source: "testimony",
              author: "wren", date: "2026-08-04" }] }), "inquiry", "open");
   const partial = await publish(WREN, { targets: [FIND_A, FIND_C], scope: SCOPE1, statement: STMT1,
-    excluded: [], subjectPosition: "sought_and_answered", subjectJustification: JUST1 });
+    excluded: [], subjectPosition: "sought_and_answered", subjectJustification: JUST1,
+    biasAcknowledgement: BACK1 });
   t("one unpublishable member refuses the WHOLE act, naming the member — and nothing moved",
     [partial.reason, partial.target, await stateOf(FIND_A)], ["ILLEGAL_TRANSITION", FIND_C, "concluded"]);
 
   const e1 = await publish(WREN, { targets: [FIND_A, FIND_B], scope: SCOPE1, statement: STMT1,
     excluded: [{ target: INFO_TEST, description: "the FY2023 comparison memo",
                  reason: "a records request for it is still outstanding with the City Clerk" }],
-    subjectPosition: "sought_and_answered", subjectJustification: JUST1 });
+    subjectPosition: "sought_and_answered", subjectJustification: JUST1,
+    biasAcknowledgement: BACK1 });
   if (!e1.ok) throw new Error(`publish edition 1: ${JSON.stringify(e1)}`);
   globalThis.__E1 = e1;
   t("TWO findings publish as ONE edition of ONE case",
@@ -304,6 +322,23 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
     [[true, true, true, true], [true, true, true, true]]);
   t("and the completeness assertion is the CASE's — one claim, carried by both members",
     [mdA.includes(`statement: "${STMT1}"`), mdB.includes(`statement: "${STMT1}"`)], [true, true]);
+  /* REC-47 / DEC-46 (a): THE ALTITUDE, and this suite is the only place it can
+     be asserted, because it is the only one with a case of more than one
+     finding. The bias acknowledgement is a CASE claim: ONE acknowledgement,
+     carried IDENTICALLY by every member, exactly like case_scope and unlike the
+     frozen strength pair — which differs per finding two assertions below and
+     must go on differing. A per-finding acknowledgement would be a different
+     construct making a different claim (each finding produced under its own
+     lens), and DEC-46's import ruling is what says it is not that: a case's
+     findings are scoped to ONE project, and one project is one effective bias.
+     A case whose findings came from DIFFERENT source biases is DEC-46 (3)'s
+     case, and it lands as SEPARATE projects rather than as one case with N
+     lenses. */
+  t("THE ALTITUDE: the bias acknowledgement is the CASE's — ONE claim, byte-identical in both members",
+    [mdA.includes(`bias_acknowledgement: "${BACK1}"`), mdB.includes(`bias_acknowledgement: "${BACK1}"`)],
+    [true, true]);
+  t("and the ACT answers ONE acknowledgement for the case, not one per finding",
+    [e1.bias_acknowledgement, e1.findings.some((f) => "bias_acknowledgement" in f)], [BACK1, false]);
 
   /* THE FIXTURE'S WHOLE POINT, asserted rather than assumed: the two findings
      are worth different things, on both axes, in both STATE and GRADE. */
@@ -379,11 +414,25 @@ console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, 
      case rests on without contacting this instance. */
   const m = await anonBytes(`sha256=${c.manifest_sha}`);
   const manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(await m.arrayBuffer())));
+  /* CORRECTED 2026-08-05, REC-47: `bio-case-container/2` -> `/3`. The container
+     gained `bias_acknowledgement`, and the version had to move with it: a /2
+     container carrying no acknowledgement and a /2 container that predates the
+     field would otherwise be indistinguishable to a stranger holding the zip,
+     so "the record is silent" would read as "the group declared nothing". The
+     pin is not loosened — the exact version is still demanded — and the field
+     it was bumped FOR is now demanded beside it. */
   t("the manifest describes the CASE and carries every member finding with its own signature and pair",
     [manifest.format, manifest.case, manifest.edition,
      manifest.findings.map((f) => f.bundle_id),
      manifest.findings.every((f) => f.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----"))],
-    ["bio-case-container/2", CASE_ID, 1, [FIND_A, FIND_B], true]);
+    ["bio-case-container/3", CASE_ID, 1, [FIND_A, FIND_B], true]);
+  /* REC-47 / DEC-46 (a): IN THE CONTAINER, which is the copy that travels.
+     DEC-20 makes the bias part of the evidentiary record that accompanies every
+     published case; the container is the artifact that accompanies it once this
+     instance is out of reach, so an acknowledgement served only from a live op
+     would be a disclosure that stops existing when the instance does. */
+  t("and the container carries the CASE's bias acknowledgement, so the lens travels with the zip",
+    manifest.bias_acknowledgement, BACK1);
   t("every part is namespaced by the finding it belongs to — two members both carry a bundle.md",
     manifest.parts.map((p) => [p.finding, p.path]).sort(),
     [[FIND_A, `${FIND_A}/bundle.md`], [FIND_A, `${FIND_A}/snapshots/memo.bin`],
@@ -440,7 +489,9 @@ console.log("\n--- 2b. two members who disagree about the case are REFUSED, neve
   const own = await publish(WREN, { targets: [FIND_C], scope: "Whether notice was given at all.",
     statement: "This case covers the notice question only.", excluded: [],
     subjectPosition: "not_sought",
-    subjectJustification: "Notice would let the record be revised before it is captured; we say so." });
+    subjectJustification: "Notice would let the record be revised before it is captured; we say so.",
+    biasAcknowledgement: "The group's declared position on public adoption applies to the notice question too, "
+                       + "and this case is read through it." });
   if (!own.ok) throw new Error(`publish FIND_C: ${JSON.stringify(own)}`);
   t("(fixture) FIND_C publishes into a case of its OWN, which is minted separately",
     [own.ok, own.minted, own.caseId !== CASE_ID], [true, true, true]);
@@ -448,9 +499,16 @@ console.log("\n--- 2b. two members who disagree about the case are REFUSED, neve
 
   /* ADVERSARY 1 — the SET disagrees. Everything the case asserts is copied from
      a member that really is in it, so the ONLY difference is the roster. */
-  const rosterLie = swap(swap(swap(swap(cMd,
+  /* CORRECTED 2026-08-05, REC-47: the acknowledgement is copied too. Without
+     it FIND_C's OWN acknowledgement travels in these bytes, the assertion
+     divergence fires first, and this adversary reports CASE_ASSERTION_DIVERGED
+     — so it would silently stop testing the ROSTER, which is its whole subject.
+     The comment above is only true if EVERYTHING the case asserts is copied,
+     and this item added a third thing it asserts. */
+  const rosterLie = swap(swap(swap(swap(swap(cMd,
     "case_id", `case_id: ${CASE_ID}`), "edition", "edition: 1"),
     "case_scope", `case_scope: "${SCOPE1}"`),
+    "bias_acknowledgement", `bias_acknowledgement: "${BACK1}"`),
     "completeness", blockOf(publishedMd, "completeness"))
     .replace(/^completeness_excluded:.*(?:\n[ -].*)*/m, blockOf(publishedMd, "completeness_excluded"));
   await mustPromote(FIND_C, rosterLie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
@@ -468,7 +526,30 @@ console.log("\n--- 2b. two members who disagree about the case are REFUSED, neve
   const sl = await ratify(FIND_C);
   t("and a member whose signed bytes state a DIFFERENT scope or completeness claim is refused by name",
     [sl.reason, sl.caseId, sl.edition], ["CASE_ASSERTION_DIVERGED", CASE_ID, 1]);
-  t("neither adversary reached the case: its edition still holds exactly the two findings that signed it",
+
+  /* ADVERSARY 3 — REC-47. The roster, the scope and the completeness block now
+     ALL match what the real members signed; the ONLY difference is the BIAS
+     ACKNOWLEDGEMENT. It is a separate adversary rather than a variant of
+     adversary 2 because adversary 2 can be made to pass by a divergence check
+     that reads only scope and completeness — which is exactly what the check
+     did before this item — and a suite that could not tell those two apart
+     would report the acknowledgement as protected when nothing was reading it.
+     Two members who signed different accounts of the bias their shared case was
+     produced under have not published one case. */
+  const biasLie = swap(swap(swap(swap(swap(cMd,
+    "case_id", `case_id: ${CASE_ID}`), "edition", "edition: 1"),
+    "case_scope", `case_scope: "${SCOPE1}"`),
+    "case_findings", `case_findings: [${FIND_A}, ${FIND_B}, ${FIND_C}]`),
+    "completeness", blockOf(publishedMd, "completeness"))
+    .replace(/^completeness_excluded:.*(?:\n[ -].*)*/m, blockOf(publishedMd, "completeness_excluded"));
+  await mustPromote(FIND_C, biasLie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
+  const bl = await ratify(FIND_C);
+  t("REC-47: a member whose signed bytes state a DIFFERENT BIAS ACKNOWLEDGEMENT is refused by name",
+    [bl.reason, bl.caseId, bl.edition], ["CASE_ASSERTION_DIVERGED", CASE_ID, 1]);
+  t("and the refusal SAYS the acknowledgement is one of the three things a case edition asserts once",
+    /bias acknowledgement/.test(bl.detail ?? ""), true);
+
+  t("no adversary reached the case: its edition still holds exactly the two findings that signed it",
     (await anonCase(`id=${CASE_ID}`)).findings.map((f) => f.bundle_id), [FIND_A, FIND_B]);
 }
 
@@ -489,28 +570,109 @@ console.log("\n--- 3. C-21.1: the completeness assertion is authored PER CASE PE
   const carried = await publish(WREN, { targets: [FIND_A, FIND_B], caseId: CASE_ID, scope: SCOPE1,
     statement: STMT1, excluded: [{ description: "any 2019 minutes", reason: "outside the period at issue" }],
     subjectPosition: "sought_and_answered",
-    subjectJustification: "We put the revised claims to the City Administrator on 2026-07-12." });
+    subjectJustification: "We put the revised claims to the City Administrator on 2026-07-12.",
+    biasAcknowledgement: BACK2 });
   t("edition 2 reprinting edition 1's STATEMENT byte-for-byte is REFUSED, and the refusal names the CASE",
     [carried.reason, carried.field, carried.caseId, carried.prior],
     ["COMPLETENESS_CARRIED_FORWARD", "statement", CASE_ID, 1]);
   t("and nothing moved: a refusal at the case level leaves every member concluded",
     [await stateOf(FIND_A), await stateOf(FIND_B)], ["concluded", "concluded"]);
 
-  /* THE SCOPE IS DELIBERATELY NOT UNDER THAT BYTE-CHECK, and this is the
-     assertion that pins the judgement. A case's scope is the project's own
-     question and legitimately does not move when a finding is revised;
-     requiring it to change every edition would pressure a member into inventing
-     a difference, which is a bug in a gate rather than a gate. It is REQUIRED
-     and never prefilled, which is the arm that fits the claim it makes. */
+  /* =================================================================
+     REC-47: THE TWO RULES, SIDE BY SIDE, IN ONE REPUBLICATION.
+     =================================================================
+     This is the assertion the item exists to make legible, and it is here
+     rather than in publish.test.mjs because this is where REC-44's scope
+     judgement was pinned — the two must be readable together or the next
+     reader will find one rule and assume it is the rule.
+
+       SCOPE unchanged        -> LEGAL. A case's question does not move when a
+                                 finding is revised, and holding it to a
+                                 difference manufactures one.
+       BIAS ACK unchanged     -> REFUSED. Not because the LENS must move — it
+                                 need not, and usually should not — but because
+                                 the acknowledgement is the publisher's account
+                                 of what that lens did to THIS edition's
+                                 material, and this edition's material changed.
+
+     The discriminator is recorded at checkCompletenessFreshness. What is
+     asserted here is that the plane actually behaves as the two rules say, in
+     the ONE act where a member would meet both at once. */
   const STMT2 = "Edition 2 covers the FY2024 transfer and the delegation file released on 2026-07-10.";
+  const carriedBias = await publish(WREN, { targets: [FIND_A, FIND_B], caseId: CASE_ID, scope: SCOPE1,
+    statement: STMT2, excluded: [{ description: "any 2019 minutes", reason: "outside the period at issue" }],
+    subjectPosition: "sought_and_answered",
+    subjectJustification: "We put the revised claims to the City Administrator on 2026-07-12.",
+    biasAcknowledgement: BACK1 });
+  t("THE ITEM: the SAME republication reprinting edition 1's BIAS ACKNOWLEDGEMENT is REFUSED, under its own name",
+    [carriedBias.reason, carriedBias.field, carriedBias.check, carriedBias.caseId, carriedBias.prior],
+    ["BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD", "bias_acknowledgement", "C-21.1", CASE_ID, 1]);
+  t("and nothing moved on it either",
+    [await stateOf(FIND_A), await stateOf(FIND_B)], ["concluded", "concluded"]);
+
   const e2 = await publish(WREN, { targets: [FIND_A, FIND_B], caseId: CASE_ID, scope: SCOPE1,
     statement: STMT2, excluded: [{ description: "any 2019 minutes", reason: "outside the period at issue" }],
     subjectPosition: "sought_and_answered",
-    subjectJustification: "We put the revised claims to the City Administrator on 2026-07-12." });
+    subjectJustification: "We put the revised claims to the City Administrator on 2026-07-12.",
+    biasAcknowledgement: BACK2 });
   t("a FRESH statement publishes edition 2 of the SAME case, with the scope UNCHANGED and legal",
     [e2.ok, e2.edition, e2.caseId, e2.minted, e2.scope === SCOPE1], [true, 2, CASE_ID, false, true]);
+  /* THE PAIR, ASSERTED AS A PAIR. One publication, one field held to a
+     difference and one field not — which is the only way to show these are two
+     rules rather than one rule applied inconsistently. */
+  t("REC-47 vs REC-44, IN ONE ACT: the scope repeats and is LEGAL while the acknowledgement must be fresh",
+    [e2.scope === SCOPE1, e2.bias_acknowledgement === BACK1, e2.bias_acknowledgement === BACK2],
+    [true, false, true]);
+  /* AND THE ACKNOWLEDGEMENT SAYS THE LENS DID NOT MOVE, which is the point:
+     the gate never asks anyone to invent a change in their bias (DEC-20 — a
+     declared standing position is disclosed, not disqualifying), only to say
+     what it means for the material in front of them now. */
+  t("the fresh acknowledgement STATES the lens is unchanged — no invented difference anywhere",
+    /unchanged/.test(BACK2), true);
 
   await ratify(FIND_A);
+
+  /* ================================================================
+     REC-47 ADVERSARY: THE SECOND MEMBER SIGNED A DIFFERENT LENS.
+     ================================================================
+     THIS IS THE ONE THAT ISOLATES THE RULE, and it is here rather than in block
+     2b because block 2b structurally cannot isolate it. There the adversary is
+     FIND_C, which is not in the case's declared roster — so its bytes must
+     carry a roster naming itself, and CASE_MEMBERSHIP_DIVERGED fires on that
+     whether or not anything reads the acknowledgement. MEASURED, not assumed:
+     with the bias clause removed, block 2b's adversary 3 reports
+     CASE_MEMBERSHIP_DIVERGED and still fails — proving the clause is
+     load-bearing but naming the WRONG RULE, which is exactly the instrument
+     defect REC-16 recorded and corrected.
+
+     Here FIND_B is a LEGITIMATE member of the declared roster and the edition
+     is already open (FIND_A ratified a moment ago, writing the case row). So
+     the roster matches, the scope matches, the completeness matches, and the
+     ONLY divergence is the acknowledgement. Nothing else can fire.
+
+     It is also the REAL threat rather than a contrived one: the working record
+     moves under a published edition every time somebody promotes, and a second
+     member signing a different account of the bias the case was made under
+     would otherwise be reconciled silently — leaving whichever member ratified
+     FIRST to decide what the public record says the case's lens was. */
+  {
+    const goodB = await imageOf(FIND_B);
+    const OTHER = "A different account of the lens, signed by the second member only.";
+    const lie = goodB.replace(/^bias_acknowledgement: .*$/m, `bias_acknowledgement: "${OTHER}"`);
+    t("(fixture) the adversary really differs ONLY in the acknowledgement",
+      [lie !== goodB, lie.replace(/^bias_acknowledgement: .*$/m, "") === goodB.replace(/^bias_acknowledgement: .*$/m, "")],
+      [true, true]);
+    await mustPromote(FIND_B, lie, "inquiry", "published", (await listRow(FIND_B)).bundle_sha);
+    const bad = await ratify(FIND_B);
+    t("REC-47, ISOLATED: a rostered member signing a DIFFERENT bias acknowledgement is refused BY NAME",
+      [bad.reason, bad.caseId, bad.edition], ["CASE_ASSERTION_DIVERGED", CASE_ID, 2]);
+    t("and the refusal NAMES the acknowledgement as one of the three things a case edition asserts once",
+      /bias acknowledgement/.test(bad.detail ?? ""), true);
+    /* Put the honest bytes back and let the edition complete, so everything
+       below reads a real, whole case rather than the wreckage of an attack. */
+    await mustPromote(FIND_B, goodB, "inquiry", "published", (await listRow(FIND_B)).bundle_sha);
+  }
+
   await ratify(FIND_B);
   const c1 = await anonCase(`id=${CASE_ID}&edition=1`);
   const c2 = await anonCase(`id=${CASE_ID}`);
@@ -787,7 +949,9 @@ console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own froz
       .map((c) => [c.manifest && c.manifest.format,
                    (c.manifest && c.manifest.findings || []).map((f) => f.bundle_id),
                    (c.manifest && c.manifest.findings || []).every((f) => Array.isArray(f.strength))]),
-    [["bio-case-container/2", [FIND_A, FIND_B], true], ["bio-case-container/2", [FIND_A, FIND_B], true]]);
+    /* CORRECTED 2026-08-05, REC-47: /2 -> /3, for the reason recorded at the
+       container assertion in block 2. */
+    [["bio-case-container/3", [FIND_A, FIND_B], true], ["bio-case-container/3", [FIND_A, FIND_B], true]]);
   /* THE THIRD STATE, AND WHAT THE FIXTURE MEASURED ABOUT IT rather than what the
      item assumed. FIND_C was PUBLISHED into a case of its own in block 2b and
      never ratified — and that case appears on the index NOWHERE, because

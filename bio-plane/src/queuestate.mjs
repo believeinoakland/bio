@@ -94,7 +94,15 @@ export const QUEUE_CONDITION_KINDS = {
  * UNKNOWN rather than as MISCLASSED, which is a weaker and less true answer. */
 export const QUEUE_OBLIGATION_KINDS = {
   "authority-undetermined":      "authority undetermined at capture (D-98, RULED: created automatically) — LIVE: store.mjs TASK_KINDS",
-  "bias-debt":                   "bias debt owed after a lens change (D-86) — blocks a transition",
+  /* CORRECTED 2026-08-05 (REC-47 / DEC-46 (d), D-188). This read "blocks a
+     transition", which is the PRE-DEC-20 blanket rule and the opposite of the
+     doctrine: ordinary bias debt is DISCLOSED and travels; only an uncleared
+     HUNCH disqualifies. DEC-20 narrowed the workproduct_state half to hunches
+     too, so nothing about this kind blocks anything. The producer is unbuilt
+     (D-86's remaining half), which is why this is free to correct now — and
+     exactly why it had to be, since the producer would have been built to the
+     sentence. The identical wording in NOTIFICATIONS.md is corrected with it. */
+  "bias-debt":                   "a re-run is owed after a lens change (D-86) — DISCLOSED, never blocking (DEC-20)",
   "endorsement-owed":            "an endorsement is owed on a pending administrator or owner vote",
   "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
   "membership-request":          "a membership request is at the doorbell",
