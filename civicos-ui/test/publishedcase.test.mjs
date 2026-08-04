@@ -4,12 +4,17 @@
  *   (b) A PUBLISHED CHILD WITH NO PARENT NAMED — in `pubDivisionHtml`, disable the parent line (`${false ? …}`). RUN: 1 of 114 fails, naming the parent disclosure. ONE, and the count is the point: the siblings, the never-served sentence and the whole rest of the child's page still read perfectly, so nothing about the page LOOKS wrong — R4's disclosure is exactly the kind of absence a reader cannot notice, which is why it has an assertion of its own rather than being folded into a division-block check.
  *   (c) THE TWO STRENGTHS COMPOSED INTO ONE LETTER, INCLUDING IN PRINT — in `pubPairBadges`, return one mark: `const g=[pair.capture.grade,pair.connection.grade].filter(Boolean).sort().pop(); return `<span class="pub-axisrow"><span class="pub-grade" data-axis="capture">Overall ${g}</span></span>`;`. RUN: 7 of 114 fail — the index rows, the strength section, the frozen letters and the child's UNRATED axis all lose the connection half.
  *       THE FINDING, and it is UI-21's lesson at a new altitude: "mark count and axis count agree" STAYED GREEN. The composed mark still carries a `data-axis`, so the count sweep — the obvious instrument — called a single composed letter correct. Only the PAIRED assertions (both axes present in every context that shows a strength at all) fired. Do not weaken those into a count.
- *   (d) ONE FLOOR APPLIED TO BOTH AXES — in `stanceFloors`, return `{ capture: out.capture, connection: out.capture }`. RUN: 3 of 114 fail: no stance carries a different floor on each axis any more, and the two stances built on a `none`/real split stop naming `none` where the record said `none`. R2's forbidden composition performed by arithmetic.
- *   (e) ONE AXIS LEFT UNCONSTRAINED — in `THRESHOLDS`, delete the `connection` key from the "quoting" stance's `floors`. RUN: 7 of 114 fail. The stance resolves to NULL and the case is not drawn at all — which is the CORRECT behaviour and is why the failures are about the rendering that no longer exists (the floors it would have named, the qualifier it would have kept, the `cuts_against` leg it would have called out). The surface refusing to draw is the shipped answer; the harness failing is the statement that such a stance may not be shipped, because an unstated floor reads as a satisfied one.
+ *   (d) ONE FLOOR APPLIED TO BOTH AXES — RE-POINTED 2026-08-04 (UI-27, DEC-40) because its old subject no longer exists: it edited `stanceFloors`, and there is no stance. THE RULE IS UNCHANGED and so is the direction of the break — in `readerFloors`, read every axis off the same value (`const v = f.capture;`). RUN 2026-08-04, app.html restored byte-identical: 5 of 131 fail — a reader's pair no longer needs both axes, a half pair draws a case instead of refusing, the `none`/real split stops naming `none` where the reader said `none`, and DEC-40's filter line names one floor twice. R2's forbidden composition performed by arithmetic.
+ *   (e) ONE AXIS LEFT UNCONSTRAINED — RE-POINTED 2026-08-04 (UI-27) for the same reason: it deleted an axis from a named stance's `floors`. Now, in `readerFloors`, default a missing or unknown value instead of refusing (`if(!FLOOR_VALUES.includes(v)){ out[ax] = "none"; continue; }`). RUN 2026-08-04, restored byte-identical: 2 of 131 fail — the resolver accepts half a pair, and the half-pair rendering that must not be drawn is drawn. The surface refusing to draw is the shipped answer; the harness failing is the statement that such a rendering may not be shipped, because an unstated floor reads as a satisfied one.
  *   (f) A `none` FLOOR OMITTED FROM THE RENDERING — in `pubInbandHtml`, wrap the capture floor line as `${floors && floors.capture === "none" ? "" : `<div>…</div>`}`. RUN: 2 of 114 fail — the "whole case" and "own records" renderings stop naming the floor they applied to the documents axis. TWO, and every other assertion including the DEC-34 header's floor line stays green, because the header names the floors from a different function: an omission in ONE of the two places both floors are printed is invisible to any check that reads only the other.
  *   (g) A PAGE-SHAPED ARTIFACT WITHOUT THE DEC-34 HEADER — in `pubPage`, return `<section class="pub-page">${inner}</section>`. RUN: 7 of 114 fail: page count and header count disagree by five, the per-page facts sweep finds none of the seven facts on any page, and the edition/authors/declared-bias assertions that read the header go with it. This is DEC-34's negative control seam, which `bio-plane/test/publishedcase.test.mjs` block 4 deliberately left unplaced because the plane produces no pages to put a header on. It is placed here.
  *   (h) THE IN-BAND BLOCK HIDDEN IN PRINT — add `.pub-inband{display:none}` inside app.html's `@media print{…}` block. RUN: 1 of 114 fails, naming the hiding rule. The print arm refuses ANY hiding rule rather than protecting a list of selectors, because the moment a stylesheet is allowed to hide one thing the argument for hiding the next is already written — and a qualifier that survives on screen and vanishes on paper is the forbidden compression performed by CSS.
- * Restore after each. */
+ * Restore after each.
+ *
+ * UI-27's TWO NEW ARMS (DEC-40 (d)), RUN 2026-08-04 by ui27-agent against the 131-assertion suite, `civicos-ui/app.html` restored BYTE-IDENTICALLY after each (sha256 fcaf6b59f5274306d0c6a0370a462c89499e4d2b24c3be5176c3590882b0c7d7 compared before and after both):
+ *   (i) STRIP THE FILTER LINE FROM A FILTERED RENDERING — in `dec34Header`, delete the whole `<span class="f"><b>What this is</b> ${pubFilterHtml(floors, "filterline")}</span>` line. RUN: 4 of 131 fail — the per-page count of filter lines falls short in BOTH directions (the unfiltered rendering and the filtered one), and neither rendering's DEC-34 header carries the line any more. THIS IS THE ARM THE RULING EXISTS FOR: a filtered page indistinguishable from the case is the misrepresentation vector, and it is the one defect that leaves the page looking perfect — every leg it kept is real, every strength on it is the plane's own, and the only thing wrong with it is what it does not say.
+ *   (j) PRESENT A FILTERED RENDERING AS THE CASE — in `pubRenderingName`, return `"THE WHOLE CASE, UNFILTERED"` unconditionally. RUN: 3 of 131 fail — the filtered rendering is no longer named as a view the reader constructed, the footer's rendering hash is described as the case, and the stripped-text sweep loses the statement.
+ *       AND THE ARM MEASURED SOMETHING WORTH KEEPING, in UI-18 arm (c)'s exact shape one altitude up: the `data-filter="reader"` MARKS STAYED CORRECT on every page, because they are computed from `pubFiltered` and not from the sentence. So the count sweep — the obvious instrument — called a lying page correctly filtered, and only the assertions that read the WORDS fired. Do not weaken the word assertions into the mark count.
 /* UI-18 · O2 THE PUBLISHED CASE — the surface UI-PLAN calls "the reason the
  * rest exists", driven here against the public read path REC-22 landed.
  *
@@ -30,14 +35,21 @@
  *      and offering no address; a division's parent and siblings named and
  *      served neither; the supersession banner saying WHICH number it shows.
  *
- *   3. IT COULD FILTER SOMETHING AWAY WITHOUT SAYING SO. Q6's threshold is a
- *      NAMED STANCE resolving to a PAIR of independent floors evaluated
- *      conjunctively; both floors are stated in-band in every rendering; a
- *      floor of `none` renders explicitly; an axis that is not graded satisfies
- *      only `none`; a qualifier is never dropped; a `cuts_against` leg dropped
- *      by a threshold is called out BY NAME; and the print stylesheet may only
- *      ADD, because a qualifier that survives on screen and vanishes on paper
- *      is the same filter performed by CSS.
+ *   3. IT COULD FILTER SOMETHING AWAY WITHOUT SAYING SO. CORRECTED 2026-08-04
+ *      (UI-27) — this clause described Q6's NAMED STANCE, which DEC-40 removed:
+ *      a stance claims to enumerate purposes we cannot know, and the case
+ *      speaks for itself. THE READER supplies a pair of independent floors,
+ *      defaulting to none/none — the whole case — and every rendering drawn
+ *      under a reader's floors carries the FILTER in DEC-34's per-page header,
+ *      in-band, and beside the rendering hash in the footer, and is never
+ *      presented, printed or hash-described as "the case". An UNFILTERED
+ *      rendering says that it is unfiltered, or absence of the line becomes the
+ *      ambiguity. Everything Q6's FORM required is unchanged and still asserted:
+ *      both floors stated in-band, a floor of `none` rendered explicitly, an
+ *      axis that is not graded satisfying only `none`, a qualifier never
+ *      dropped, a `cuts_against` leg dropped by a floor called out BY NAME, and
+ *      a print stylesheet that may only ADD — because a qualifier that survives
+ *      on screen and vanishes on paper is the same filter performed by CSS.
  *
  * WHAT THIS SUITE MEASURED THAT IS WORTH THE NEXT SESSION'S TIME:
  *
@@ -339,8 +351,15 @@ vm.runInContext(appScript() +
   "globalThis.__pubBytes=pubBytes;globalThis.__pubVerifyPanel=pubVerifyPanel;" +
   "globalThis.__enterPublished=enterPublished;globalThis.__pubLeave=pubLeave;" +
   "globalThis.__publishedRouteFromHash=publishedRouteFromHash;globalThis.__pubPaintBack=pubPaintBack;" +
-  "globalThis.__THRESHOLDS=THRESHOLDS;globalThis.__stanceFloors=stanceFloors;" +
-  "globalThis.__setStance=async k=>{ PUB.stance=k; await pubPaint(); };", ctx);
+  /* CORRECTED 2026-08-04 (UI-27, DEC-40), never exempted. This line used to
+     export `THRESHOLDS` and `stanceFloors` and to set `PUB.stance`. There is no
+     stance any more: the reader supplies the pair of floors and the surface
+     offers no named set to resolve. `__setFloors` writes the two values the
+     reader would have set through the two controls — one per axis, never one
+     value written to both — and repaints. */
+  "globalThis.__readerFloors=readerFloors;globalThis.__FLOOR_VALUES=FLOOR_VALUES;" +
+  "globalThis.__pubFiltered=pubFiltered;globalThis.__pubSetFloor=pubSetFloor;" +
+  "globalThis.__setFloors=async (cap,con)=>{ PUB.floors={capture:cap,connection:con}; await pubPaint(); };", ctx);
 
 /* THE WHOLE RUN IS MADE BY A CALLER HOLDING NOTHING. There is no line below that
    sets a token, which is the point: the wire sweep at the end is evidence and
@@ -425,7 +444,7 @@ ok("the index went to op=publishedmanifest and to nothing else",
 ok("the pair is parsed out of the manifest COLUMN, which the plane hands over as a string",
    typeof MANIFEST_ROWS[0].manifest === "string" && /Documents D/.test(idx) && /Links C/.test(idx));
 
-/* ============ 2. THE CASE, at the default stance ============ */
+/* ============ 2. THE CASE, at the default pair of floors — none/none ============ */
 await ctx.__pubOpen(CASE);
 let page = pubBody();
 ok("a bundle id alone answers with the LATEST edition (DEC-12)", /edition 2 of 2/i.test(strip(page)));
@@ -464,7 +483,13 @@ ok("no request this surface made carried a credential", WIRE.every(w => !w.token
   ok("the in-band block exists", at > 0);
   const inband = page.slice(at, page.indexOf("</div>", page.indexOf('class="bound"')));
   const t = strip(inband);
-  ok("it names the threshold this rendering was drawn at", /Rendered for: Reading the whole case/.test(t));
+  /* CORRECTED 2026-08-04 (UI-27, DEC-40), never exempted. This assertion read
+     `/Rendered for: Reading the whole case/` — the label of one of the four
+     named stances. DEC-40 removed the set: the default rendering is not a
+     stance called "whole", it is the ABSENCE of a filter, and what the block
+     must name is which of the two this rendering IS. */
+  ok("it says WHAT THIS RENDERING IS — the whole case, unfiltered — rather than naming a stance",
+     /THE WHOLE CASE, UNFILTERED/.test(t) && /No floors were applied/.test(t));
   ok("it names BOTH floors, and the `none` floor renders EXPLICITLY rather than being left unsaid",
      /Floor applied to Documents[^:]*: none/.test(t) && /Floor applied to Links[^:]*: none/.test(t));
   ok("it says the two floors are independent and neither is a default for the other",
@@ -534,23 +559,73 @@ ok("no request this surface made carried a credential", WIRE.every(w => !w.token
   ok("a NAMED leg's id is not a link into anything", !new RegExp(`onclick[^>]*${L_CAP_D}`).test(rests));
 }
 
-/* ============ 3. Q6: THE THRESHOLD SELECTOR ============ */
-ok("every stance in the selector resolves to a COMPLETE pair of two floors",
-   ctx.__THRESHOLDS.every(s => {
-     const f = ctx.__stanceFloors(s.key);
-     return f && ["A","B","C","D","none"].includes(f.capture) && ["A","B","C","D","none"].includes(f.connection);
-   }));
-ok("at least one stance carries a DIFFERENT floor on each axis — the pair is genuinely independent",
-   ctx.__THRESHOLDS.some(s => { const f = ctx.__stanceFloors(s.key); return f.capture !== f.connection; }));
-ok("no stance is labelled by WHO the reader is; every label names what they are DOING",
-   ctx.__THRESHOLDS.every(s => !/lawyer|journalist|reporter|attorney|official|administrator|media|public|citizen|for [a-z]+s$/i.test(s.label)));
+/* ============ 3. DEC-40: THE READER SUPPLIES THE FLOORS ============
+   CORRECTED WHOLESALE 2026-08-04 (UI-27), never exempted. This block asserted
+   Q6's NAMED STANCE SET — that every stance resolved to a complete pair, that
+   one carried a different floor on each axis, and that no label named WHO the
+   reader is. Bob refused the question that produced the set (DEC-40): *"What's
+   a stance? A published case is in the wild for anybody to use for whatever
+   purpose they wish."* A named set claims to enumerate purposes we cannot know,
+   so the assertions that policed the LABELS are replaced by assertions that the
+   set is GONE and that the pair is the reader's own. Q6's FORM is unaffected
+   and is still asserted below: a complete pair or no rendering at all. */
+{
+  const src = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
+  ok("the named stance set and its resolver are GONE from the surface — not disabled, not unused, gone",
+     !/\bTHRESHOLDS\b/.test(src) && !/\bstanceFloors\b/.test(src) && !/function stanceOf\b/.test(src)
+     && !/function pubStance\b/.test(src));
+  ok("and not one of the four published stance labels survives anywhere in the file",
+     !/Reading the whole case/.test(src) && !/Citing this in a filing/.test(src)
+     && !/Checking this against records you already hold/.test(src)
+     && !/Quoting this in something you publish/.test(src));
+  /* THE DEFAULT IS THE WHOLE CASE, and it is none/none rather than a preset
+     named "whole" — determination 1: the case renders whole, always. */
+  ok("the surface's default pair of floors is none/none, which is the case itself",
+     ctx.__PUB.floors.capture === "none" && ctx.__PUB.floors.connection === "none"
+     && ctx.__pubFiltered(ctx.__readerFloors(ctx.__PUB.floors)) === false);
+  ok("the reader is offered the grade vocabulary and `none`, and no combination of them is preset",
+     JSON.stringify(ctx.__FLOOR_VALUES) === JSON.stringify(["A","B","C","D","none"]));
+  /* Q6's SURVIVING FORM. A pair is two independently supplied values; half a
+     pair resolves to NOTHING rather than to a default, because an axis left
+     unconstrained admits arbitrary weakness without saying so. */
+  ok("a reader's pair resolves only when BOTH axes carry a value the surface knows",
+     JSON.stringify(ctx.__readerFloors({ capture:"B", connection:"none" })) === JSON.stringify({ capture:"B", connection:"none" })
+     && ctx.__readerFloors({ capture:"B" }) === null
+     && ctx.__readerFloors({ capture:"B", connection:"Z" }) === null
+     && ctx.__readerFloors(null) === null);
+  /* AND IT IS DRIVEN, not merely resolved: a half pair draws NO case, which is
+     the behaviour the old suite reached by deleting an axis from a stance's
+     `floors` (its arm (e)). The seam moved; the refusal did not. */
+  await ctx.__setFloors("B", undefined);
+  {
+    const half = strip(pubBody());
+    ok("a half pair draws NO case at all — the legs, the strengths and the basis are all absent",
+       /This rendering was not drawn/.test(half) && !/How strong this is/.test(half)
+       && !/What it rests on/.test(half));
+  }
+  await ctx.__setFloors("none", "none");
+  /* ONE VALUE ON BOTH AXES IS R2's FORBIDDEN COMPOSITION PERFORMED BY
+     ARITHMETIC, so there is no control that writes both. Each setter names its
+     axis and touches only it. */
+  const before = { ...ctx.__PUB.floors };
+  ctx.__pubSetFloor("capture", "B");
+  ok("setting one axis's floor leaves the other exactly where the reader left it",
+     ctx.__PUB.floors.capture === "B" && ctx.__PUB.floors.connection === before.connection);
+  ctx.__pubSetFloor("capture", "Z"); ctx.__pubSetFloor("nonsense", "A");
+  ok("a value or an axis the surface does not know is not written at all",
+     ctx.__PUB.floors.capture === "B" && ctx.__PUB.floors.nonsense === undefined);
+  await ctx.__setFloors("none", "none");
+}
 
-/* ---- the qualifier rule: a determining leg is never dropped ---- */
-await ctx.__setStance("own_records");           // capture none, connection B
+/* ---- the qualifier rule: a determining leg is never dropped ----
+   UNCHANGED BY DEC-40 (c) and asserted at reader-supplied floors instead of at
+   a stance's. The floor pairs below are the ones the four stances used to
+   resolve to, so the protection is measured over exactly the same arithmetic. */
+await ctx.__setFloors("none", "B");             // capture none, connection B
 page = pubBody();
 {
   const t = strip(page);
-  ok("a stance with a `none` floor on one axis and a real floor on the other renders BOTH, explicitly",
+  ok("a pair with a `none` floor on one axis and a real floor on the other renders BOTH, explicitly",
      /Floor applied to Documents[^:]*: none/.test(t) && /Floor applied to Links[^:]*: grade B or stronger/.test(t));
   ok("the leg that DETERMINED the connection strength survives a floor it does not meet",
      keptIds(page).includes(L_CON_C) && !droppedIds(page).includes(L_CON_C)
@@ -561,11 +636,11 @@ page = pubBody();
      /A rendering may drop a claim; it may never drop a qualifier/.test(t));
 }
 
-await ctx.__setStance("quoting");               // capture B, connection none
+await ctx.__setFloors("B", "none");             // capture B, connection none
 page = pubBody();
 {
   const t = strip(page);
-  ok("the floors of this stance are B on one axis and none on the other, both named",
+  ok("the floors the reader set are B on one axis and none on the other, both named",
      /Floor applied to Documents[^:]*: grade B or stronger/.test(t) && /Floor applied to Links[^:]*: none/.test(t));
   ok("the leg that DETERMINED the capture strength survives although it is graded D",
      keptIds(page).includes(L_CAP_D) && !droppedIds(page).includes(L_CAP_D));
@@ -579,20 +654,84 @@ page = pubBody();
      /dropped by this threshold — named, with the reason/.test(t));
 }
 
-await ctx.__setStance("filing");                // A / A
+await ctx.__setFloors("A", "A");                // A / A
 page = pubBody();
 {
   const t = strip(page);
-  ok("the strictest stance names grade A on BOTH axes", (t.match(/grade A or stronger/g) || []).length >= 2);
-  ok("both determining legs still stand at the strictest stance — in the KEPT set, not merely named in the dropped one",
+  ok("the strictest pair a reader can set names grade A on BOTH axes", (t.match(/grade A or stronger/g) || []).length >= 2);
+  ok("both determining legs still stand at the strictest pair — in the KEPT set, not merely named in the dropped one",
      keptIds(page).includes(L_CAP_D) && keptIds(page).includes(L_CON_C)
      && !droppedIds(page).includes(L_CAP_D) && !droppedIds(page).includes(L_CON_C));
-  ok("and the strictest stance did drop what it should: the B-graded capture leg and the C-graded cuts_against one",
+  ok("and the strictest pair did drop what it should: the B-graded capture leg and the C-graded cuts_against one",
      droppedIds(page).includes(L_CAP_B) && droppedIds(page).includes(L_CAP_C));
   ok("the frozen pair is unchanged by the threshold — a rendering filters legs and never re-grades a case",
      /Documents D/.test(t) && /Links C/.test(t));
 }
-await ctx.__setStance("whole");
+await ctx.__setFloors("none", "none");
+
+/* ============ 3b. DEC-40 (b): THE FILTER, IN THE HEADER AND IN PRINT ============
+   NEW 2026-08-04 (UI-27) and it is the half of the ruling the old suite could
+   not have: *"a filtered rendering that looks like the case IS that claim,
+   manufactured by us and handed over pre-made."* So the filter is asserted in
+   EVERY place a page can be taken away from this screen — the per-page header,
+   the in-band block, the footer that prints beside the rendering hash — and in
+   BOTH directions, because an unfiltered rendering that said nothing would make
+   absence of the line the ambiguity. */
+const filterMarks = html => [...String(html).matchAll(/data-filter="([a-z]+)"/g)].map(m => m[1]);
+{
+  /* --- the UNFILTERED rendering SAYS it is unfiltered --- */
+  await ctx.__pubOpen(CASE);
+  await ctx.__setFloors("none", "none");
+  page = pubBody();
+  const ps = pages(page);
+  const marks = filterMarks(page);
+  ok("an unfiltered rendering carries the line on every page, in the in-band block and in the footer",
+     marks.length === ps.length + 2 && marks.every(m => m === "none"));
+  ok("and it SAYS it is unfiltered, in words a reader keeps when they paste the page",
+     /THE WHOLE CASE, UNFILTERED/.test(strip(page)) && /No floors were applied/.test(strip(page)));
+  ok("an unfiltered rendering does not warn about a filter it did not perform",
+     !/data-notthecase="1"/.test(page) && !/FILTERED VIEW/.test(strip(page)));
+  /* EVERY PAGE, not merely the first: a forwarded PDF is a stack of pages and a
+     reader may only ever hold one of them. */
+  ok("every page of it carries the line inside its own DEC-34 header",
+     ps.every(p => /data-dec34="1"[\s\S]*data-filter="none"/.test(p)));
+
+  /* --- the FILTERED rendering carries the filter, everywhere --- */
+  await ctx.__setFloors("B", "none");
+  page = pubBody();
+  const fps = pages(page);
+  const fmarks = filterMarks(page);
+  const ft = strip(page);
+  ok("a filtered rendering carries the filter line on every page, in-band and in the footer",
+     fmarks.length === fps.length + 2 && fmarks.every(m => m === "reader"));
+  ok("every page of it carries the filter inside its own DEC-34 header, beside the id and the hash",
+     fps.every(p => /data-dec34="1"[\s\S]*data-filter="reader"/.test(p))
+     && fps.every(p => strip(p).includes(CASE) && strip(p).includes(SHA2)));
+  ok("the line names BOTH floors the reader applied, so the filter travels with the page",
+     /Documents: grade B or stronger/.test(ft) && /Links: none/.test(ft));
+  /* DETERMINATION 2, and it is the one a build session would miss: what comes
+     back is A VIEW THAT READER CONSTRUCTED, labelled as such, and never "the
+     case at threshold X". */
+  ok("it is named as a view the READER constructed and explicitly NOT the case",
+     /A FILTERED VIEW YOU CONSTRUCTED — not the case/.test(ft)
+     && /data-notthecase="1"/.test(page)
+     && /Do not quote it as the case, print it as the case, or describe it by its hash as the case/.test(ft));
+  ok("and the whole case is named as still being at the same address",
+     /the case is at this same address with no floors applied/.test(ft));
+  /* HASH-DESCRIBED. The footer prints a rendering sha256 a reader will quote;
+     the sentence that describes it must not describe it as the case. */
+  const footer = page.slice(page.indexOf('data-footer="1"'));
+  ok("the footer's rendering hash is described as a filtered view and never as the case",
+     /rendering sha256:[0-9a-f]{64}/.test(strip(footer))
+     && /data-filter="reader"/.test(footer)
+     && /A FILTERED VIEW YOU CONSTRUCTED/.test(strip(footer)));
+  /* THE LINE IS TEXT. Every assertion above was made over STRIPPED markup, so
+     none of it is an attribute, a tooltip or generated content — a reader who
+     selects and pastes takes the filter with them. */
+  ok("every word of the filter statement survives the tags being stripped — it is TEXT, not CSS",
+     ft.includes("A FILTERED VIEW YOU CONSTRUCTED") && ft.includes("grade B or stronger"));
+  await ctx.__setFloors("none", "none");
+}
 
 /* ============ 4. THE DIVIDED CHILD, AND THE UNRATED AXIS ============ */
 await ctx.__pubOpen(OTHER);
@@ -622,18 +761,18 @@ page = pubBody();
      /data-super="latest"/.test(page));
 }
 /* an axis that is not graded satisfies only `none` */
-await ctx.__setStance("filing");                // A / A — the UNRATED axis cannot meet A
+await ctx.__setFloors("A", "A");                // A / A — the UNRATED axis cannot meet A
 page = pubBody();
 {
   const t = strip(page);
-  ok("an axis that is not graded satisfies a floor of none and no other, and the page SAYS it does not meet the stance",
+  ok("an axis that is not graded satisfies a floor of none and no other, and the page SAYS it does not meet the floor",
      /data-axisfail="connection"/.test(page)
      && /An axis that is not graded satisfies a floor of none and no other floor/.test(t));
   ok("nothing is hidden because of it — the legs that left the axis UNRATED are qualifiers and are KEPT",
      keptIds(page).includes("INFO-2026-8202") && !droppedIds(page).includes("INFO-2026-8202")
      && /Always present at every threshold/.test(t));
 }
-await ctx.__setStance("whole");
+await ctx.__setFloors("none", "none");
 
 /* ============ 5. EDITIONS: the prior one is still readable ============ */
 await ctx.__pubOpen(CASE, 1);
@@ -742,7 +881,25 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
      && /Signing key/.test(pubBody().length ? surface : surface));
   ok("H1 — there is no redact and no take-down control",
      !/redact|take ?down|remove this|unpublish|delete this/i.test(strip(surface)));
-  ok("and the surface takes no input of any kind — it is a read", !/<input/i.test(surface));
+  /* CORRECTED 2026-08-04 (UI-27, DEC-40), never exempted and never loosened.
+     The clause was "the surface takes no input of any kind — it is a read",
+     which was true when the only control was a four-button stance strip. DEC-40
+     gives the READER the floors, so there are now two controls that take a
+     value from them. What must still hold is the thing the clause was
+     protecting: nothing the reader types or picks is sent anywhere, and no
+     text field exists for them to write INTO the record. Both halves are
+     asserted, and the wire sweep in block 11 is the evidence for the first. */
+  ok("there is no text field and nothing to write into the record — the two floor controls are the only ones",
+     !/<input/i.test(surface) && !/<textarea/i.test(surface)
+     && (surface.match(/<select/g) || []).length === 2
+     && /data-floor="capture"/.test(surface) && /data-floor="connection"/.test(surface));
+  {
+    const before = WIRE.length;
+    ctx.__pubSetFloor("capture", "B");
+    ctx.__pubSetFloor("capture", "none");
+    ok("and setting a floor sends NOTHING: the reader's bar is applied here and is never a request",
+       WIRE.length === before);
+  }
 }
 
 /* ============ 10. THE PRINT STYLESHEET: it may only ADD ============ */
@@ -784,10 +941,10 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
   ok("the rendering sha is a real digest over the rendering's own decision, not a placeholder",
      /rendering sha256:[0-9a-f]{64}/.test(t) && !/rendering sha256:not computed/.test(t));
   const s1 = /rendering sha256:([0-9a-f]{64})/.exec(t)[1];
-  await ctx.__setStance("filing");
+  await ctx.__setFloors("A", "A");
   const s2 = /rendering sha256:([0-9a-f]{64})/.exec(strip(pubBody()))[1];
   ok("and it MOVES when the floors move — two renderings of one edition are two renderings", s1 !== s2);
-  await ctx.__setStance("whole");
+  await ctx.__setFloors("none", "none");
 }
 
 /* ============ 11. THE WIRE ============ */

@@ -659,10 +659,15 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 .pub-inband .floors div{padding:2px 0}
 .pub-inband .bound{font-family:var(--font-fact);font-size:12px;color:var(--ink-soft);margin-top:12px;
                    border-top:var(--hair);padding-top:10px;word-break:break-all}
-.pub-stances{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
-.pub-stances button{font:inherit;font-size:13px;padding:7px 13px;border-radius:var(--r-2);cursor:pointer;
-                    border:1px solid var(--verdigris-dk);background:var(--sheet);color:var(--ink)}
-.pub-stances button[aria-pressed="true"]{background:var(--verdigris);color:var(--sheet)}
+.pub-stances{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 20px}
+.pub-floor{display:flex;flex-direction:column;gap:4px;font-family:var(--font-fact);font-size:12px}
+.pub-floor select{font:inherit;font-size:13px;padding:6px 10px;border-radius:var(--r-2);cursor:pointer;
+                  border:1px solid var(--verdigris-dk);background:var(--sheet);color:var(--ink)}
+/* THE FILTER LINE (DEC-40). It is TEXT in the artifact, at the artifact's own
+   size — never a colour, never a badge, never generated content — because a
+   reader who selects a filtered page and pastes it elsewhere must take the
+   statement that it is filtered with them. */
+.filterline{font-weight:700}
 .pub-grade{font-family:var(--font-fact);font-size:12px;font-weight:700;letter-spacing:.03em;
            border:1px solid var(--ink);padding:1px 7px;display:inline-block}
 .pub-axisrow{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;margin:6px 0}
@@ -709,7 +714,10 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
   .pub-page a[data-addr][data-sha]::after{content:" [" attr(data-addr) " · sha256:" attr(data-sha) "]"}
   /* The per-page footer: case id, case sha, rendering sha, date. */
   .print-footer{position:fixed;bottom:0;left:0;right:0;background:#fff}
-  .pub-stances button{border:1px solid #000}
+  .pub-floor select{border:1px solid #000}
+  /* THE FILTER LINE PRINTS, and prints at the surrounding size. It is listed
+     here so nobody has to infer it from the absence of a rule. */
+  .filterline{font-weight:700}
 }
 </style>
 </head>
@@ -12579,48 +12587,61 @@ function errPane(e, crumbHtml){
    `serves[]`/`names[]` arrays. This file composes nothing out of two of them.
    ============================================================ */
 
-/* Q6, SETTLED: A THRESHOLD IS A NAMED STANCE RESOLVING TO A PAIR OF INDEPENDENT
-   FLOORS, ONE PER AXIS, EVALUATED CONJUNCTIVELY.
+/* DEC-40 (Bob, 2026-08-04) — THE READER SUPPLIES THE FLOORS, AND THERE IS NO
+   STANCE. THIS REPLACED SHIPPED CODE AND IS A CORRECTION, NOT AN ADDITION.
 
-   Never one value applied to both — the axes move independently by what the
-   reader is doing with the case, and one value on both is R2's forbidden
-   composition performed by arithmetic. Never one axis named with the other left
-   out — that is the same composition performed by OMISSION, and it admits
-   arbitrary weakness silently, so `stanceFloors` resolves such a stance to
-   NOTHING rather than to a default. A floor of `none` is legitimate and must
-   render EXPLICITLY: an unstated floor reads as a satisfied one.
+   UI-18 landed FOUR NAMED STANCES here — one per thing a reader might be doing
+   with a case, each resolving to a pair of floors. The four labels are NOT
+   quoted here and must not be: the harness sweeps this whole file for them, on
+   D-160's precedent that a retired string quoted in a comment is a string
+   somebody restores. They are in DEC-40's entry, which is where a superseded
+   wording belongs. DEC-40 REFUSED THE QUESTION AS POSED and removed the
+   construct: *"What's a stance? A published case is in the wild for anybody to
+   use for whatever purpose they wish… the case speaks for itself."* A named
+   stance CLAIMS TO ENUMERATE PURPOSES WE CANNOT KNOW, which is the record
+   telling a reader what they are doing — the inversion this project exists to
+   refuse.
 
-   THE LABELS NAME WHAT THE READER IS DOING AND NEVER WHO THEY ARE
-   (`AUDIENCES.md` §0). "Citing this in a filing" is a thing a person does; "for
-   lawyers" is a thing a person is, and a surface that sorts its readers into
-   kinds has started deciding what kind of person deserves which evidence. */
+   WHAT SURVIVED AND WHAT DIED. Q6's FORM survives untouched: a bar over the
+   pair is a PAIR OF INDEPENDENT FLOORS, never one value, never one axis with
+   the other silently free — that reasoning is about arithmetic and DEC-40 does
+   not touch it, so `readerFloors` still resolves an incomplete pair to NOTHING
+   rather than to a default, and a floor of `none` still renders EXPLICITLY
+   because an unstated floor reads as a satisfied one. What died is the named
+   SET and the idea that the case has modes.
+
+   THE FOUR DETERMINATIONS, and the second is the one this region carries:
+     1. THE CASE RENDERS WHOLE, ALWAYS. The default is none/none and it is not a
+        stance called "whole" — it is the absence of a filter.
+     2. A READER'S BAR IS THE READER'S, AND ITS RESULT IS NOT THE CASE. Whatever
+        comes back under a reader's floors is A VIEW THAT READER CONSTRUCTED,
+        labelled as such, never "the case at threshold X" — because the threat
+        Bob named is *someone claiming the case says something other than what it
+        says*, and a filtered rendering that LOOKS like the case is that claim,
+        manufactured by us and handed over pre-made. So the filter rides DEC-34's
+        per-page header beside the id, edition, authors and hash; an unfiltered
+        rendering SAYS SO, or absence of the line becomes the ambiguity.
+     3. "Is this strong enough for me" is answered by the two frozen strengths
+        and DEC-17's declared bar, which are already on the page. We state; the
+        reader judges. A menu would be the record doing their reasoning.
+     4. Publication mints no new kind of object — carried to IMPORT, not here.
+
+   THE VALUES ARE THE READER'S, so this file offers the GRADE VOCABULARY and no
+   preset combination of it. There is no label to name what they are doing with
+   the case, because we do not know and will not guess. */
 const FLOOR_VALUES = ["A", "B", "C", "D", "none"];
 const FLOOR_RANK = { A: 0, B: 1, C: 2, D: 3 };
-const THRESHOLDS = [
-  { key: "whole", label: "Reading the whole case",
-    doing: "Everything the case rests on, at whatever strength each leg was established. Nothing is held back and nothing is filtered out.",
-    floors: { capture: "none", connection: "none" } },
-  { key: "filing", label: "Citing this in a filing",
-    doing: "You are about to rest something of your own on this, so only legs established at the top of BOTH axes are shown as load-bearing.",
-    floors: { capture: "A", connection: "A" } },
-  { key: "own_records", label: "Checking this against records you already hold",
-    doing: "You hold authoritative copies yourself, so how directly WE hold a document matters less to you than how firmly the link between documents was established.",
-    floors: { capture: "none", connection: "B" } },
-  { key: "quoting", label: "Quoting this in something you publish",
-    doing: "You need the documents themselves held directly; the strength of the links is something you will describe in your own words rather than take from us.",
-    floors: { capture: "B", connection: "none" } },
-];
-function stanceOf(key){ return THRESHOLDS.find(s => s.key === key) || null; }
-/* THE RESOLUTION, and it is where Q6 is enforced rather than described. A
-   stance resolves ONLY to a complete pair of two independently declared floors.
+/* THE RESOLUTION, and it is where Q6's surviving FORM is enforced rather than
+   described. A pair resolves ONLY when BOTH axes carry a value this file knows.
    Anything else — a missing axis, an unknown value — resolves to null, and a
-   null pair draws no rendering at all. */
-function stanceFloors(key){
-  const s = stanceOf(key);
-  if(!s || !s.floors) return null;
+   null pair draws no rendering at all: one axis left unconstrained admits
+   arbitrary weakness without saying so, and one value applied to both is R2's
+   forbidden composition performed by arithmetic. */
+function readerFloors(f){
+  if(!f || typeof f !== "object") return null;
   const out = {};
   for(const ax of GRADE_AXES){
-    const v = s.floors[ax];
+    const v = f[ax];
     if(!FLOOR_VALUES.includes(v)) return null;
     out[ax] = v;
   }
@@ -12631,9 +12652,47 @@ function floorWord(f){
     ? "none — no floor on this axis, so every leg passes on it whatever it is graded"
     : `grade ${f} or stronger`;
 }
+/* IS THIS A FILTER AT ALL. A pair of `none` floors drops nothing, so it is the
+   WHOLE CASE and says so; anything else is a view the reader constructed. Read
+   from the floors themselves and never from a flag somebody sets, because a
+   flag is a thing a later code path can forget to set. */
+function pubFiltered(floors){
+  return !!floors && GRADE_AXES.some(ax => floors[ax] !== "none");
+}
+/* THE ONE PLACE THIS RENDERING NAMES ITSELF (DEC-40 determination 2). Every
+   surface that says what the reader is looking at — the per-page header, the
+   in-band block, the statement above the title, the footer beside the rendering
+   hash — renders THROUGH THIS FUNCTION, so a filtered rendering cannot be
+   described as "the case" in one place and as a view in another. The harness
+   sweeps the marked elements rather than the prose, and the negative control
+   makes this function lie. */
+function pubRenderingName(floors){
+  return pubFiltered(floors)
+    ? "A FILTERED VIEW YOU CONSTRUCTED — not the case"
+    : "THE WHOLE CASE, UNFILTERED";
+}
+/* THE FILTER LINE ITSELF, in the words DEC-40 requires and with the two floor
+   values in it, so a reader who takes this page away takes the filter with it.
+   `data-filter` is what the harness counts: a page without one is a filtered
+   page indistinguishable from the case, which is the misrepresentation vector
+   the ruling exists to close. */
+function pubFilterText(floors){
+  if(!floors)
+    return "THIS RENDERING RESOLVED NO PAIR OF FLOORS AND MUST NOT BE READ AS FILTERED OR AS UNFILTERED";
+  const pair = `${AXIS_SHORT.capture}: ${floorWord(floors.capture)} · ${AXIS_SHORT.connection}: ${floorWord(floors.connection)}`;
+  return pubFiltered(floors)
+    ? `${pubRenderingName(floors)}. A reader applied these floors — ${pair} — and what you are reading is what passed them. It is not the case and must not be quoted as the case; the whole case is at the same address with no floors applied.`
+    : `${pubRenderingName(floors)}. No floors were applied — ${pair} — so nothing has been filtered out of what follows.`;
+}
+function pubFilterHtml(floors, cls){
+  return `<span class="${cls}" data-filter="${floors ? (pubFiltered(floors) ? "reader" : "none") : "unresolved"}">${esc(pubFilterText(floors))}</span>`;
+}
 
-/* ---- the published surface's state. One case, one edition, one stance. ---- */
-const PUB = { id: null, edition: null, stance: "whole", data: null, renderSha: null, index: null };
+/* ---- the published surface's state. One case, one edition, and the READER'S
+   OWN pair of floors, which default to none/none — the whole case (DEC-40).
+   There is no stance key here any more and there must not be one. ---- */
+const PUB = { id: null, edition: null, floors: { capture: "none", connection: "none" },
+              data: null, renderSha: null, index: null };
 let PUB_HASH_LOCK = false;
 
 /* The plane's two frozen axis objects, keyed by axis. Returns null unless BOTH
@@ -12759,7 +12818,7 @@ function pubThreshold(c, floors){
     if(!a || a.state === "graded") continue;
     if(floors[ax] !== "none")
       axisFails.push({ axis: ax, state: a.state,
-        detail: `The ${AXIS_SHORT[ax].toLowerCase()} axis reads ${STRENGTH_STATE_WORD[a.state] || a.state}, and this rendering asks for ${floorWord(floors[ax])} on it. An axis that is not graded satisfies a floor of none and no other floor, so this case does not meet this stance on this axis. Nothing is hidden because of it: the legs that left the axis reading ${STRENGTH_STATE_WORD[a.state] || a.state} are qualifiers and are printed below.` });
+        detail: `The ${AXIS_SHORT[ax].toLowerCase()} axis reads ${STRENGTH_STATE_WORD[a.state] || a.state}, and this rendering asks for ${floorWord(floors[ax])} on it. An axis that is not graded satisfies a floor of none and no other floor, so this case does not meet the floor you set on this axis. Nothing is hidden because of it: the legs that left the axis reading ${STRENGTH_STATE_WORD[a.state] || a.state} are qualifiers and are printed below.` });
   }
   const cutsDropped = dropped.filter(d => d.leg && d.leg.role === "cuts_against");
   return { kept, dropped, cutsDropped, axisFails, qualifiers: quals };
@@ -12792,36 +12851,40 @@ function pubDeclaredBias(c){
    copy. Everything on it makes one detectable by anyone holding it, without
    this instance's cooperation — which is the stronger property and the only one
    we can honestly claim. */
-function dec34Header(c, floors, stance){
-  const st = stanceOf(stance);
+/* DEC-40 (b) WIDENED THIS HEADER BY ONE FIELD, and it is the load-bearing half
+   of the ruling: the FILTER travels here, beside the case id, the edition, the
+   authors and the hash — the brazening already required, one field wider. It is
+   on EVERY page-shaped artifact because files get forwarded and a filter stated
+   anywhere else travels no further than the note it was stated in. */
+function dec34Header(c, floors){
   const floorLine = floors
     ? `${esc(AXIS_SHORT.capture)}: ${esc(floorWord(floors.capture))} &middot; ${esc(AXIS_SHORT.connection)}: ${esc(floorWord(floors.connection))}`
-    : `THIS RENDERING RESOLVED NO PAIR OF FLOORS AND MUST NOT BE READ AS FILTERED`;
+    : `NO PAIR OF FLOORS RESOLVED`;
   return `<div class="dec34" data-dec34="1">
     <span class="f"><b>Case</b> ${esc(c.bundleId)} &middot; <b>Edition</b> ${esc(String(c.edition))} of ${esc(String(c.latest_edition))} &middot; ${esc((c.ratified_at || "").slice(0, 10))}</span>
     <span class="f"><b>Authors</b> ${esc(pubAuthors(c))}</span>
     <span class="f"><b>Declared bias</b> ${esc(pubDeclaredBias(c))}</span>
-    <span class="f"><b>Rendered for</b> ${esc(st ? st.label : "no stance")} &middot; <b>Floors</b> ${floorLine}</span>
+    <span class="f"><b>Floors</b> ${floorLine}</span>
+    <span class="f"><b>What this is</b> ${pubFilterHtml(floors, "filterline")}</span>
     <span class="f sha"><b>Hash</b> sha256:${esc(c.bundle_sha || "")}</span>
     <span class="f"><b>Verify</b> ${esc((c.verification && c.verification.bytes) || "op=verify&sha256=<the hash above>")} &mdash; tamper-EVIDENT, never tamper-proof</span>
   </div>`;
 }
 /* A PAGE-SHAPED ARTIFACT. One section, one header, always. */
-function pubPage(c, floors, stance, inner){
-  return `<section class="pub-page">${dec34Header(c, floors, stance)}${inner}</section>`;
+function pubPage(c, floors, inner){
+  return `<section class="pub-page">${dec34Header(c, floors)}${inner}</section>`;
 }
 
 /* DEC-31's BOUND RULE + H4: THE IN-BAND BLOCK. Hash, date, author and BOTH
-   floors, plus the threshold this rendering was drawn at and the exclusions the
-   case itself declared — inside the artifact, in EVERY rendering, without
-   exception, because files get forwarded and a threshold stated in a covering
-   note travels no further than the note does.
+   floors, plus DEC-40's FILTER LINE — whether this is the case or a view a
+   reader constructed — and the exclusions the case itself declared. Inside the
+   artifact, in EVERY rendering, without exception, because files get forwarded
+   and a filter stated in a covering note travels no further than the note does.
 
    IT IS TEXT. Not a tooltip, not generated content, not an attribute: a reader
    who selects this page and pastes it somewhere else takes the block with them,
    which is the only test of "in-band" that means anything. */
-function pubInbandHtml(c, floors, stance){
-  const st = stanceOf(stance);
+function pubInbandHtml(c, floors){
   let rows = [];
   try{ rows = JSON.parse((c.completeness && c.completeness.excluded) || "[]"); }catch(_){ rows = []; }
   const excl = Array.isArray(rows) && rows.length
@@ -12829,7 +12892,7 @@ function pubInbandHtml(c, floors, stance){
     : `<p style="margin:8px 0 0">The case declares that nothing material was excluded.</p>`;
   return `<div class="pub-inband">
     <h3>What you are reading, and what has been left out of it</h3>
-    <p><b>Rendered for: ${esc(st ? st.label : "no stance")}.</b> ${esc(st ? st.doing : "")}</p>
+    <p><b>${pubFilterHtml(floors, "filterline")}</b></p>
     <div class="floors">
       <div><b>Floor applied to ${esc(AXIS_SHORT.capture)} (${esc(AXIS_WORD.capture.toLowerCase())}):</b> ${esc(floors ? floorWord(floors.capture) : "NONE RESOLVED")}</div>
       <div><b>Floor applied to ${esc(AXIS_SHORT.connection)} (${esc(AXIS_WORD.connection.toLowerCase())}):</b> ${esc(floors ? floorWord(floors.connection) : "NONE RESOLVED")}</div>
@@ -12843,6 +12906,7 @@ function pubInbandHtml(c, floors, stance){
       Ratified ${esc(c.ratified_at || "an unrecorded date")}.
       Author ${esc(pubAuthors(c))}.
       Floors: ${esc(AXIS_SHORT.capture)} ${esc(floors ? floors.capture : "none resolved")}, ${esc(AXIS_SHORT.connection)} ${esc(floors ? floors.connection : "none resolved")}.
+      ${esc(pubRenderingName(floors))}.
     </div>
   </div>`;
 }
@@ -12989,9 +13053,16 @@ async function pubOpen(id, edition, fromNav){
     await pubPaint();
   }catch(e){ $("#pub-body").innerHTML = errPane(e); }
 }
-function pubStance(key){
-  if(!stanceOf(key)) return;
-  PUB.stance = key;
+/* THE READER SETS ONE AXIS'S FLOOR AT A TIME, and the two are never linked:
+   neither is a default for the other and neither is derived from the other, so
+   there is no code path here that writes both from one value (DEC-40 keeps Q6's
+   form; one value on both axes is R2's forbidden composition by arithmetic).
+   A value this file does not know is not written at all — `readerFloors` would
+   resolve the pair to null and the case would refuse to draw, and a control
+   that silently produced that state would be a filter nobody asked for. */
+function pubSetFloor(axis, value){
+  if(!GRADE_AXES.includes(axis) || !FLOOR_VALUES.includes(value)) return;
+  PUB.floors = { ...PUB.floors, [axis]: value };
   pubPaint();
 }
 /* THE RENDERING'S OWN HASH, over the facts that MAKE it this rendering: the
@@ -12999,8 +13070,8 @@ function pubStance(key){
    Deliberately not a hash of the markup — markup changes when a stylesheet
    does, and what a reader needs to name is the rendering DECISION, which is
    what the footer prints beside the case's own sha. */
-async function pubRenderSha(c, stance, floors){
-  const src = [c.bundleId, c.edition, c.bundle_sha, stance,
+async function pubRenderSha(c, floors){
+  const src = [c.bundleId, c.edition, c.bundle_sha, pubFiltered(floors) ? "filtered" : "unfiltered",
                floors ? floors.capture : "unresolved", floors ? floors.connection : "unresolved"].join("|");
   try{
     const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(src));
@@ -13010,27 +13081,37 @@ async function pubRenderSha(c, stance, floors){
 async function pubPaint(){
   const c = PUB.data;
   if(!c) return;
-  const floors = stanceFloors(PUB.stance);
-  PUB.renderSha = await pubRenderSha(c, PUB.stance, floors);
-  $("#pub-body").innerHTML = pubCaseHtml(c, floors, PUB.stance);
+  const floors = readerFloors(PUB.floors);
+  PUB.renderSha = await pubRenderSha(c, floors);
+  $("#pub-body").innerHTML = pubCaseHtml(c, floors);
 }
 
-function pubSelectorHtml(stance){
-  return `<div class="eyebrow">What are you doing with this case?</div>
-    <p class="subj-note">Every option below is a thing a reader DOES. None of them is a kind of person, and this page never asks who you are. Each carries its own pair of floors — one for each axis, applied together — and the pair is printed inside whatever you take away.</p>
-    <div class="pub-stances">${THRESHOLDS.map(s => `<button aria-pressed="${s.key === stance ? "true" : "false"}" onclick="pubStance('${esc(s.key)}')">${esc(s.label)}</button>`).join("")}</div>`;
+/* THE CONTROL, AND IT IS NOT A MENU (DEC-40). Two independent controls, one per
+   axis, offering the grade vocabulary and `none` — no presets, no named
+   combinations, and no question about what the reader is doing with the case.
+   The heading says what the default is and what applying a floor PRODUCES,
+   because a reader who applies one is about to hold something that is not the
+   case and is entitled to know that before they do rather than after. */
+function pubFloorPickerHtml(floors){
+  const one = (ax) => `<label class="pub-floor"><span>${esc(AXIS_SHORT[ax])} &middot; ${esc(AXIS_WORD[ax].toLowerCase())}</span>
+    <select data-floor="${esc(ax)}" onchange="pubSetFloor('${esc(ax)}', this.value)">${
+      FLOOR_VALUES.map(v => `<option value="${esc(v)}"${(floors && floors[ax]) === v ? " selected" : ""}>${v === "none" ? "no floor" : "grade " + esc(v) + " or stronger"}</option>`).join("")
+    }</select></label>`;
+  return `<div class="eyebrow">Your own floors, if you want them</div>
+    <p class="subj-note">This page shows the case whole. If you want to read it under a floor of your own, set one for each axis below — the two are independent, neither is a default for the other, and a floor of <b>no floor</b> is what the case renders at by default. <b>The result is not the case.</b> It is a view you constructed, it says so on every page and inside anything you print or copy, and this page has no opinion about what you are doing with it.</p>
+    <div class="pub-stances">${GRADE_AXES.map(one).join("")}</div>`;
 }
 
-function pubCaseHtml(c, floors, stance){
-  /* Q6 ENFORCED AT THE DRAW. A stance that did not resolve to a complete pair
-     draws NO case at all. It is the only honest outcome: a page that renders
-     legs under a rendering whose floors nobody can name has performed a filter
-     it cannot account for, which is precisely the silent weakness the pair
-     exists to prevent. */
+function pubCaseHtml(c, floors){
+  /* Q6's SURVIVING FORM, ENFORCED AT THE DRAW. Floors that did not resolve to a
+     complete pair draw NO case at all. It is the only honest outcome: a page
+     that renders legs under a rendering whose floors nobody can name has
+     performed a filter it cannot account for, which is precisely the silent
+     weakness the pair exists to prevent. */
   if(!floors)
-    return `${pubSelectorHtml(stance)}
+    return `${pubFloorPickerHtml(floors)}
       <div class="pub-inband"><h3>This rendering was not drawn.</h3>
-      <p>The stance selected did not resolve to a pair of independent floors — one for the ${esc(AXIS_SHORT.capture.toLowerCase())} axis and one for the ${esc(AXIS_SHORT.connection.toLowerCase())} axis. A rendering with one axis left unconstrained admits arbitrary weakness without saying so, and a rendering that applies one value to both axes has composed two measurements into one. Neither is drawn here.</p></div>
+      <p>The floors given did not resolve to a pair — one for the ${esc(AXIS_SHORT.capture.toLowerCase())} axis and one for the ${esc(AXIS_SHORT.connection.toLowerCase())} axis. A rendering with one axis left unconstrained admits arbitrary weakness without saying so, and a rendering that applies one value to both axes has composed two measurements into one. Neither is drawn here.</p></div>
       <p><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
 
   const th = pubThreshold(c, floors);
@@ -13038,9 +13119,10 @@ function pubCaseHtml(c, floors, stance){
   const namedLink = (idv) => `<span class="mono">${esc(String(idv))}</span>`;
 
   /* PAGE 1 — the rendering block first, at full size, then the conclusion. */
-  const p1 = pubPage(c, floors, stance,
+  const p1 = pubPage(c, floors,
     `${pubSupersessionHtml(c)}
-     ${pubInbandHtml(c, floors, stance)}
+     ${pubInbandHtml(c, floors)}
+     ${pubFiltered(floors) ? `<div class="pub-drop" data-notthecase="1"><b>${esc(pubRenderingName(floors))}.</b> What follows was drawn under floors a reader supplied, so legs the case rests on have been dropped from it. Do not quote it as the case, print it as the case, or describe it by its hash as the case: the case is at this same address with no floors applied, and it is what this group published.</div>` : ""}
      <h1>${esc(c.title || c.bundleId)}</h1>
      <h2>The question</h2>
      <div class="pub-excl">${esc((c.body && c.body.question) || "The published bytes carry no question section.")}</div>
@@ -13052,7 +13134,7 @@ function pubCaseHtml(c, floors, stance){
         ? `<div class="pub-drop"><b>The body of this edition could not be served.</b> ${esc(c.body.detail || "")} It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes.</div>` : ""}`);
 
   /* PAGE 2 — both strengths, and the declared bar beside them. */
-  const p2 = pubPage(c, floors, stance,
+  const p2 = pubPage(c, floors,
     `<h2>How strong this is</h2>
      <p class="lede">A case does not have <i>a</i> strength. It has two, and they are never combined, averaged or scored against each other: how directly the record holds the DOCUMENTS it reaches, and how strongly the LINKS between them were established. A conclusion is no stronger than the weakest leg on each, separately.</p>
      ${pair ? pubPairBadges(pair) : ""}
@@ -13062,7 +13144,7 @@ function pubCaseHtml(c, floors, stance){
      ${th.axisFails.map(f => `<div class="pub-drop" data-axisfail="${esc(f.axis)}">${esc(f.detail)}</div>`).join("")}`);
 
   /* PAGE 3 — the basis chain, and what this rendering dropped. */
-  const p3 = pubPage(c, floors, stance,
+  const p3 = pubPage(c, floors,
     `<h2>What it rests on</h2>
      <p class="subj-note">Every leg below carries how it was established and, where the published record holds what it rests on, an address and a hash. A leg this surface can SERVE and a leg it can only NAME are two different things and are drawn as two different things.</p>
      ${th.kept.length ? th.kept.map((e, i) => pubLegHtml(e, i)).join("") : `<div class="empty">This rendering keeps no leg. That is a fact about the threshold, not about the case.</div>`}
@@ -13076,7 +13158,7 @@ function pubCaseHtml(c, floors, stance){
      <div class="pub-excl">${esc((c.body && c.body.authored && c.body.authored.falsifier) || (c.body && c.body.falsifies) || "The published bytes carry no falsifier.")}</div>`);
 
   /* PAGE 4 — the exclusions verbatim, and the division disclosure. */
-  const p4 = pubPage(c, floors, stance,
+  const p4 = pubPage(c, floors,
     `<h2>What this excludes</h2>
      <p class="subj-note">Printed verbatim from the signed bytes, with the member who wrote it and the date it was written.
        Written by ${esc((c.completeness && c.completeness.author) || "an unnamed member")} on ${esc((c.completeness && c.completeness.at) || "an unrecorded date")}.</p>
@@ -13085,7 +13167,7 @@ function pubCaseHtml(c, floors, stance){
      ${pubDivisionHtml(c)}`);
 
   /* PAGE 5 — the material, the editions, and the verification. */
-  const p5 = pubPage(c, floors, stance,
+  const p5 = pubPage(c, floors,
     `<h2>The material</h2>
      <p class="subj-note">Every part of this edition, with its own sha256 and its own length. Each answers by hash and by hash only.</p>
      ${(c.files || []).map(f => `<div class="pub-file">${esc(f.path)} &middot; ${esc(f.kind || "file")} &middot; ${esc(f.bytes == null ? "length not recorded" : String(f.bytes) + " bytes")}
@@ -13109,8 +13191,8 @@ function pubCaseHtml(c, floors, stance){
        <dt>Container</dt><dd class="mono">${esc((c.verification && c.verification.container) || "no container published for this edition")}</dd>
      </div>`);
 
-  return `${pubSelectorHtml(stance)}${p1}${p2}${p3}${p4}${p5}
-    ${pubFooterHtml(c, floors, stance)}
+  return `${pubFloorPickerHtml(floors)}${p1}${p2}${p3}${p4}${p5}
+    ${pubFooterHtml(c, floors)}
     <p style="margin-top:20px"><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
 }
 
@@ -13138,13 +13220,21 @@ function pubDivisionHtml(c){
    in the print stylesheet is what makes it per-PAGE; it is a real element with
    real text on screen too, because a footer that exists only in a stylesheet is
    a footer nobody can copy. */
-function pubFooterHtml(c, floors, stance){
+/* DEC-40 (b): "never … HASH-DESCRIBED as the case". The rendering hash is the
+   one fact on this footer a reader is most likely to quote back at somebody —
+   "here is the case, and here is its hash" — so the sentence that DESCRIBES the
+   hash names what the hash is over, through the same one function every other
+   surface names it through. A footer that printed a rendering hash beside the
+   case id and said nothing else would hand a reader a filtered page and a
+   checkable-looking number for it. */
+function pubFooterHtml(c, floors){
   return `<div class="print-footer" data-footer="1">
     Case ${esc(c.bundleId)} &middot; edition ${esc(String(c.edition))} &middot;
     case sha256:${esc(c.bundle_sha || "")} &middot;
     rendering sha256:${esc(PUB.renderSha || "not computed")} &middot;
     ${esc((c.ratified_at || "").slice(0, 10))} &middot;
-    floors ${esc(AXIS_SHORT.capture)} ${esc(floors ? floors.capture : "unresolved")} / ${esc(AXIS_SHORT.connection)} ${esc(floors ? floors.connection : "unresolved")}
+    floors ${esc(AXIS_SHORT.capture)} ${esc(floors ? floors.capture : "unresolved")} / ${esc(AXIS_SHORT.connection)} ${esc(floors ? floors.connection : "unresolved")} &middot;
+    ${pubFilterHtml(floors, "filterline")}
   </div>`;
 }
 
