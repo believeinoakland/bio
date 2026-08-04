@@ -174,6 +174,106 @@ wording, UI-24's rider widens to "renders the published label AND fence, inventi
 and the existing Grade-A negative control is RETARGETED at the published source rather than
 deleted. **See D-184**, which the same exchange surfaced and this does not fix.
 
+### 2026-08-04 · BOB · DEC-44 — A CASE IS ONE OR **MORE** FINDINGS; the build assumed one and nobody chose it
+
+Bob asked for a FACT CHECK of his own definition and **the repository contradicted him —
+in his favour**. Measured against source, not recalled:
+
+- `store.mjs:3539`, verbatim: *"publishing publishes ONE case: pass target=<inquiry id>"*.
+- `published` is a state of an INQUIRY (`STATES.inquiry`); `published_bundles` is keyed
+  `(bundle_id, edition)`; `index.mjs:3667` builds the container as `case: body.bundleId`
+  with its own comment *"the parts listed here ARE the bundle's files"*.
+- `MILESTONES.md:428` said *"a concluded inquiry is published"* — corrected in this commit.
+
+**One-case-one-inquiry was never argued for. It was assumed by every item in the chain.**
+
+**AND DEC-32, RULED THE SAME DAY, CLOSES THE ESCAPE HATCH — which is what makes this an
+inconsistency rather than a preference.** The obvious workaround is a parent inquiry citing
+the children as basis legs. DEC-32's falsifier-count test forbids it: a finding is ONE
+proposition with ONE falsifier, and a project's several findings are several propositions
+with several falsifiers. Collapsing them into one parent conclusion is precisely the
+overclaim DEC-32 exists to prevent. **The two rulings are consistent only if a case is a
+CONTAINER OVER FINDINGS.** Second measured consequence: a published child *"NAMES its
+parent and siblings (serve neither)"* (UI-18), so even under composition a stranger holding
+the zip cannot read the findings it points at without coming back to the instance —
+defeating the read-without-our-cooperation premise the published surface exists for.
+
+**This is a CORRECTION to DONE items (REC-14, REC-22, UI-18), not new scope. Record it that
+way.** Nothing is in production — every instance is a development instance — so it is a
+schema correction, not a migration.
+
+- **The FINDING stays the unit of truth; the CASE becomes the unit of PUBLICATION.** Each
+  finding keeps its own conclusion, falsifier, basis and its own derived PAIR of strengths.
+  **A case MUST NEVER derive a single case-level strength** — that is R2's forbidden
+  composition at a new altitude, and it is the one trap in this work.
+- **An authored SCOPE STATEMENT** (Bob's *"sufficient scope to address all the issues"*),
+  beside the completeness statement, never derived from the findings' titles. Completeness
+  says what was left OUT; scope says what the case is ABOUT. Different claims, both needed.
+- **The container carries EVERY member finding's bundle in full.** Naming is not enough.
+- **Editions stay over the CONTAINER** (DEC-12 unchanged) — adding, removing or revising a
+  finding makes a new edition; priors keep answering. A ONE-finding case stays legal as the
+  degenerate case, so nothing built is wasted.
+- Shape work: a case identity distinct from a bundle id, plus case→findings membership;
+  `publishCase` takes a SET and its ONE-case refusal string is rewritten; C-21.1 and the
+  scope statement are per CASE per edition, C-21.2's per-axis inheritance stays per FINDING.
+- **NEGATIVE CONTROL the suites cannot have today:** publish a case of two findings whose
+  strengths differ, and the harness must FAIL if any surface, rendering or export presents a
+  single case-level strength.
+
+**AND A CORRECTION TO MY OWN RULING FROM EARLIER TODAY:** DEC-40's determination 4 says *"an
+imported published case is A FINDING"*. That inherited the singular assumption and now reads
+**the findings it carries** — each arriving as a finding, re-graded in its new context, none
+inheriting standing. The principle is unchanged; the arity was wrong. DEC-44 carries the fix.
+
+### 2026-08-04 · BOB · DEC-45 ANSWERED — case import, per-finding project association, and REGRADE is the warning
+
+Import is **UNBUILT** (no `op=import` anywhere — measured), so this is design-ahead scope
+for **M6's interchange half**, not a correction. DEC-45 carries the full reasoning.
+
+**The shape:** findings arrive **PROJECTLESS by default** — a supported state, not a gap
+(DEC-17 and `store.mjs:4301`: an inquiry outside any project has no project bar and
+inherits none) — carrying the source's **bias manifest** as a fact. The surface then offers
+**each finding its own destination**: an existing project, a new one the member authors, or
+none. Per-FINDING and not per-case, because DEC-44 makes a case a container over separable
+findings and two of them may belong to different work.
+
+**THE DISTINCTION A BUILD SESSION MUST NOT COLLAPSE — preserved vs applied.** Bob put it as
+*"an imported finding MUST be added to a project if its bias is to be preserved"*, and the
+architecture is right while the mechanism is one step over:
+- **PRESERVED** is the travelling **bias manifest** — `BIO_Declared_Bias_v0_1.md`: *"Every
+  work product cites its BIAS MANIFEST… part of the evidentiary record and travels with
+  publication."* The lens that PRODUCED a finding survives import even with no project.
+  Build it the other way and a projectless import silently loses provenance.
+- **APPLIED** is what project assignment actually decides: the lens the finding is
+  evaluated under going forward. `Effective bias` = instance statements minus project
+  nullifications plus project additions — so **projectless means the INSTANCE layer alone**,
+  and the surface must SAY that rather than let it be inferred.
+
+**THE WARNING IS ALREADY SPECIFIED AND IT IS NOT A DIALOG — IT IS REGRADE.** *"Hold evidence
+and analysis fixed, swap effective bias B1 for B2, re-run the evaluations, and produce a
+structured diff: for each conclusion, its grade under each lens, and the causal chain from
+each differing statement to the finding it produced to the premise it touched to the
+conclusion it moved."* So the member is SHOWN which conclusions move and which named
+statement moved each — run against the chosen destination's effective bias **before the
+association is committed**. Building a modal that says *"conclusions may change"* would be
+the weaker thing built where the stronger thing is already designed.
+
+**Two more, both cheap and both easy to lose:**
+- **Regrade's honest limit ships WITH the diff, never buried** — *"it cannot synthesize the
+  analysis a different group would have written under a different lens."* A clean regrade
+  means the analysis that EXISTS survives, not that the finding survives our lens intact.
+- **Import is the front door to RERUN**, the no-transitive-trust rule made operational:
+  *"the receiving group re-establishes trust at its own hop by rerunning the work, not by
+  accepting the producing group's reputation."* Name it in the surface; import is not a
+  substitute for it.
+
+**And the constraint from DEC-45's original recommendation stands:** import may NOT author a
+project objective or a bias statement on the member's behalf. C-2.9's non-empty `objective`
+must never be satisfied by words nobody in the importing group wrote.
+
+**Nothing in the bias doctrine needed changing to support any of this**, which is the
+strongest evidence the construct was right.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
@@ -626,7 +726,7 @@ behind-interface: I3
 depends-on: none
 accepts-when: `cd bio-plane && npm run test:battery` green with login's refusals carrying detail sentences asserted at the op, and RESOLUTIONS published equal-by-import with both enforcement sites reading the one array (change it in one place and all three move); `node civicos-ui/test/run.mjs` green (the gate renders the new sentences; UI-19's resolution control reads the publication); `npm run test:coverage` --strict exit 0; negative control — publish RESOLUTIONS as a literal copy and the drift assertion fails; strip a login detail and the auth suite fails naming the bare code.
 added: 2026-08-04 · CONDUCT (UI-24's delegations)
-landed: (merge on main, worker e1fceb0) — both login refusals carry detail from ONE static; reason codes untouched (additive; teach() renders the sentences with no UI edit). DISTINGUISHABILITY KEPT DISTINCT ON A MEASUREMENT: op=bootstrap (classes null) already hands any stranger the role roster WITH password-set dates in one call, so collapsing the refusals would defend nothing while making the store say less than it knows — the reasoning written at the constant so closing that disclosure reopens it. THE SECOND ARM FORCED THE WORDING: NO_SUCH_ROLE is returned from two places sharing one code DELIBERATELY (revocation is not announced); the obvious sentence is false for the revoked member — the shipped sentence says 'no ACTIVE credential', names both possibilities, states the record does not say which, byte-equal from both arms. RESOLUTIONS exported from the catalog (the ACTION_KINDS direction — store-side export TDZ-crashes, REC-35's settled finding); THREE readers off one array incl. C-2.10's own SENTENCE (it had transcribed the four words inside the statement that tested them). battery 94/94 (5026); --strict 129/129; harness green. NCs RUN x6 with two instrument findings (a throw-not-fail guarded — D-93 inside a control, third sighting; a WRONG PIN corrected — the two-arm comparison had never compared the two arms) and ONE ROUTED MEASUREMENT: under the stripped detail, auth-surface stayed green at all 62 — its PLANE_WORDS mock is a hand copy agreeing at zero cost; the UI harness cannot see this class → UI-25's batch. THE UNCONSUMED DISCLOSURE routed: op=bootstrap's roster has NO consumer anywhere → D-185 (renumbered from a colliding D-184) + REC-41 (closing it is an INTERFACE-CHANGES matter and reopens the distinguishability reasoning — the two travel together). UI-19's resolution control learns the set only from a refusal (holds no literal — but can only learn after the member is told no) → noted for the next UI pass. IC-17, I3 → 5.10.0.
+landed: (merge on main, worker e1fceb0) — both login refusals carry detail from ONE static; reason codes untouched (additive; teach() renders the sentences with no UI edit). DISTINGUISHABILITY KEPT DISTINCT ON A MEASUREMENT: op=bootstrap (classes null) already hands any stranger the role roster WITH password-set dates in one call, so collapsing the refusals would defend nothing while making the store say less than it knows — the reasoning written at the constant so closing that disclosure reopens it. THE SECOND ARM FORCED THE WORDING: NO_SUCH_ROLE is returned from two places sharing one code DELIBERATELY (revocation is not announced); the obvious sentence is false for the revoked member — the shipped sentence says 'no ACTIVE credential', names both possibilities, states the record does not say which, byte-equal from both arms. RESOLUTIONS exported from the catalog (the ACTION_KINDS direction — store-side export TDZ-crashes, REC-35's settled finding); THREE readers off one array incl. C-2.10's own SENTENCE (it had transcribed the four words inside the statement that tested them). battery 94/94 (5026); --strict 129/129; harness green. NCs RUN x6 with two instrument findings (a throw-not-fail guarded — D-93 inside a control, third sighting; a WRONG PIN corrected — the two-arm comparison had never compared the two arms) and ONE ROUTED MEASUREMENT: under the stripped detail, auth-surface stayed green at all 62 — its PLANE_WORDS mock is a hand copy agreeing at zero cost; the UI harness cannot see this class → UI-25's batch. THE UNCONSUMED DISCLOSURE routed: op=bootstrap's roster has NO consumer anywhere → D-188 (renumbered twice; both D-184 and D-185 collided) + REC-41 (closing it is an INTERFACE-CHANGES matter and reopens the distinguishability reasoning — the two travel together). UI-19's resolution control learns the set only from a refusal (holds no literal — but can only learn after the member is told no) → noted for the next UI pass. IC-17, I3 → 5.10.0.
 
 ### REC-40 · queued
 milestone: M9
@@ -638,7 +738,7 @@ added: 2026-08-04 · CONDUCT (UI-26's trade)
 
 ### REC-41 · queued
 milestone: M7
-scope: **Close op=bootstrap's unconsumed roster disclosure (REC-39's measurement; D-185, renumbered from the colliding D-184).** An unauthenticated classes-null op answers every credentialled role plus the date each password was last set, and NOTHING consumes it (not setup.mjs, not civicos-ui, not newgroup, no battery assertion — measured). Removing a published field from an I3 op is an INTERFACE-CHANGES matter: file the IC, measure the nil consumer impact as the evidence, remove the roles field (or gate it), and REVISIT the login-distinguishability reasoning written at Store.LOGIN_REFUSAL_DETAIL in the same turn — the two travel together (with the roster closed, distinct BAD_PASSWORD/NO_SUCH_ROLE becomes the enumeration surface, and the constant's own comment says to reopen it).
+scope: **Close op=bootstrap's unconsumed roster disclosure (REC-39's measurement; D-188, renumbered twice — D-184 and D-185 both collided with BOB-session rows).** An unauthenticated classes-null op answers every credentialled role plus the date each password was last set, and NOTHING consumes it (not setup.mjs, not civicos-ui, not newgroup, no battery assertion — measured). Removing a published field from an I3 op is an INTERFACE-CHANGES matter: file the IC, measure the nil consumer impact as the evidence, remove the roles field (or gate it), and REVISIT the login-distinguishability reasoning written at Store.LOGIN_REFUSAL_DETAIL in the same turn — the two travel together (with the roster closed, distinct BAD_PASSWORD/NO_SUCH_ROLE becomes the enumeration surface, and the constant's own comment says to reopen it).
 behind-interface: I3
 depends-on: none
 accepts-when: `cd bio-plane && npm run test:battery` green with an anonymous op=bootstrap answering no role names and no dates; the IC entry filed with the measured nil impact; the distinguishability decision revisited in the same turn with its outcome recorded at the constant; `npm run test:coverage` --strict exit 0; negative control — restore the roster field and the suite names the disclosure.

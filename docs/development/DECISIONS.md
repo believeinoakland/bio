@@ -2947,6 +2947,223 @@ recommendation: (b) then (a) — measure who is still on the fallback before rem
 reversal cost: low either way while the fallback stands; high if it is removed before
   the fleet is visible.
 
+### DEC-44 · answered
+raised: 2026-08-04 · session BOB (Bob asked for a FACT CHECK of his own statement, and the
+  repository contradicts it — in his favour)
+for: bob
+question: Is a published case ONE finding or MANY? Bob: *"A published case is one or more
+  findings (not just one). So a project with multiple standings can be published together
+  as a single case with sufficient scope to address all issues that brought the various
+  inquiries together under a single project in the first place."*
+why it is Bob's: it is the definition of the artifact the whole M10 rung produces, and
+  what a group puts its name on.
+provisional: the SHIPPED behaviour, which is one-inquiry-per-case, continues; nothing is
+  in production (every instance is a development instance) so nothing is stranded.
+**FACT CHECK — Bob is RIGHT about the requirement and the BUILD DISAGREES WITH HIM.**
+  Measured 2026-08-04 against the source, not recalled:
+  - `store.mjs:3539` refuses with, verbatim: *"publishing publishes ONE case: pass
+    target=<inquiry id>"*. `publishCase({ target })` takes a single inquiry id.
+  - `published` is a state of an INQUIRY (`STATES.inquiry`, reachable only from
+    `concluded`); `published_bundles` is keyed `(bundle_id, edition)`.
+  - `index.mjs:3667` builds the container as `case: body.bundleId` — ONE bundle — and its
+    own comment says *"THE CONTAINER IS THE BUNDLE'S PORTABLE FORM, not a new object: the
+    parts listed here ARE the bundle's files."*
+  - `MILESTONES.md:428`, M10's acceptance: *"a concluded inquiry is published"* — singular.
+  So the built model is **one published case = exactly one concluded inquiry**, and it was
+  never argued for; it was assumed by every item in the chain and nobody wrote it down as a
+  choice.
+**AND THE WORKAROUND IS CLOSED BY DEC-32, RULED THIS SAME DAY**, which is what turns this
+  from a preference into an inconsistency. The obvious escape is composition: a PARENT
+  inquiry whose basis cites the child inquiries. But DEC-32's falsifier-count test says a
+  finding holds ONE proposition with ONE falsifier, and distinct propositions are distinct
+  inquiries. A project's several findings are, by construction, several propositions with
+  several falsifiers. **So they cannot be collapsed into one parent inquiry without
+  authoring a conclusion that is not really one proposition** — precisely the overclaim
+  DEC-32 exists to prevent. The two rulings are consistent only if a case is a CONTAINER
+  OVER FINDINGS rather than a synonym for one.
+  A second measured consequence: a published child *"NAMES its parent and siblings (serve
+  neither)"* (UI-18). So even under composition the container carries the parent's bundle
+  and merely NAMES the others — a stranger holding the zip cannot read the findings it
+  points at without returning to the instance, which defeats the read-it-without-our-
+  cooperation premise S9 exists for.
+response: **ADOPTED — a case is a CONTAINER OVER ONE OR MORE FINDINGS**, scoped to the
+  project's own question. Bob's statement stands and the build is corrected to it.
+  determinations that follow, and they are mine under delegation:
+  1. **The FINDING stays the unit of truth; the CASE becomes the unit of PUBLICATION.**
+     Each finding keeps its own conclusion, falsifier, basis and its own derived pair of
+     strengths. A case does NOT compose a super-conclusion over them and MUST NOT derive a
+     single case-level strength — that would be R2's forbidden composition at a new
+     altitude, and it is exactly the "one letter" the project has refused four times.
+  2. **The case carries an authored SCOPE STATEMENT** — Bob's *"sufficient scope to address
+     all issues that brought the various inquiries together"*. Authored, never derived from
+     the findings' titles, and it sits beside the existing completeness statement rather
+     than replacing it: completeness says what was left OUT, scope says what the case is
+     ABOUT. A reader needs both and they are not the same claim.
+  3. **The container carries EVERY included finding's bundle, in full.** Naming is not
+     enough (see the measured note above) — a stranger must be able to check every finding
+     the case rests on without contacting the instance.
+  4. **Editions stay over the CONTAINER** (DEC-12, unchanged), which is now the natural
+     home for them: adding, removing or revising a finding produces a new edition of the
+     case, and prior editions keep answering.
+  5. **A one-finding case remains legal and is the degenerate case**, so nothing built is
+     wasted and the common early use is unchanged.
+  6. **DEC-40's determination 4 is CORRECTED BY THIS ENTRY**: I wrote *"an imported
+     published case is A FINDING"*, which inherited the singular assumption. It should read
+     **the findings it carries** — each arriving as a finding, re-graded in its new context,
+     none inheriting standing. The principle is unchanged; the arity was wrong.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; DEC-34's artifact-form thread and DEC-40's determination
+  4 take the correction; `MILESTONES.md` M10's acceptance is corrected from *"a concluded
+  inquiry is published"* to a case carrying one or more concluded findings.
+for CONDUCT to enact: this reshapes DONE items (REC-14, REC-22, UI-18) and is a
+  CORRECTION, not new scope — record it that way. `published_bundles`' `(bundle_id,
+  edition)` key needs a case identity distinct from a bundle id, plus the case→findings
+  membership; the container's `case`/`parts[]` carry every member finding; `publishCase`
+  takes a SET and its ONE-case refusal string is rewritten; C-21.1's completeness check and
+  the new scope statement are per CASE per edition, while C-21.2's per-axis inheritance
+  stays per FINDING. **Nothing is in production** (every instance is a development
+  instance), so this is a schema correction rather than a migration. Negative control the
+  suites cannot have today: publish a case of two findings whose strengths differ, and the
+  harness must FAIL if any surface, rendering or export presents a single case-level
+  strength.
+enacted:
+
+### DEC-45 · answered
+raised: 2026-08-04 · session BOB (Bob's question, after DEC-44)
+for: bob
+question: Is a case IMPORT always performed in the context of a project — an existing one,
+  or one created as part of the import? Or do imported findings arrive projectless, with
+  project membership a separate authored act?
+why it is Bob's: doctrine — whether one group's framing of why a set of findings belong
+  together may become another group's objective without that group authoring it. It is the
+  declared-bias / never-prefill neighbourhood, and it decides what importing MEANS.
+**MEASURED FIRST, because the question sounded like it had a built answer and does not:**
+  - **IMPORT DOES NOT EXIST.** No `op=import` anywhere in the plane. The only references
+    are DEC-41's *import-only* artifact class and DEC-40's pointer at *"whoever builds
+    IMPORT (M6's interchange half)"*. So nothing is being corrected here — this is design
+    ahead of the build, which is the cheap moment.
+  - **AN INQUIRY MAY ALREADY EXIST OUTSIDE ANY PROJECT.** DEC-17, verbatim: *"An inquiry
+    outside any project has no bar and inherits none."* So requiring a project at import
+    would INVENT a constraint the model does not otherwise carry.
+  - **PROJECT MEMBERSHIP IS ALREADY A SEPARATE EDGE ACT** — `linkproject` is in
+    `EDGE_ACTIONS` beside cite/sever/reinstate (`index.mjs:791`), i.e. creating an object
+    and placing it in a project are two acts today, not one.
+provisional: nothing is blocked; import is unbuilt, so both shapes remain free.
+alternative: import always lands in a project, creating one from the case's scope statement
+  when the member does not name an existing one.
+recommendation: **IMPORT DOES NOT REQUIRE A PROJECT AND MUST NOT CREATE ONE AUTOMATICALLY.**
+  The argument is not convenience, it is whose words they are. **DEC-44 gives the case an
+  AUTHORED SCOPE STATEMENT — the exporting group's account of what brought those inquiries
+  together FOR THEM.** Minting a project from it would install another group's framing as
+  the importing group's own objective, unauthored, which is precisely the prefill this
+  project forbids on every justified transition. C-2.9 already requires a non-empty
+  `objective` on a project; auto-creating one would satisfy that check with words nobody in
+  the importing group wrote.
+  so the shape I recommend:
+  1. **The findings arrive as FINDINGS, projectless by default** (DEC-44 as it corrects
+     DEC-40 det. 4), each re-graded in its new context, none inheriting standing.
+  2. **The case's scope statement, edition, signature, hash and the exporting group's
+     identity arrive as FACTS ABOUT the imported material** — recorded, displayed, checkable,
+     and never converted into the importing instance's own objective or bias declaration.
+  3. **Placing imported findings in a project is a SEPARATE authored act**, which is what
+     `linkproject` already is. A member who wants a project creates one and authors its own
+     objective — their words, their name.
+  4. **THE SOURCE'S `required_strength` BAR DOES NOT TRAVEL AS A BAR.** DEC-17 makes the bar
+     a property of the project doing the work; an imported finding is held to the IMPORTING
+     project's bar if it joins one, and to none if it does not. The exporting group's bar is
+     a fact about how the finding was made — shown, never binding here. Inheriting it would
+     let one group set another's standard, which is the inversion DEC-17 exists to prevent.
+  5. **Re-publication is the importing group's own case**, with their scope statement and
+     their bar; the provenance (this finding came from group X's case Y, edition N, hash H)
+     travels as a checkable fact, and DEC-12's edition-naming rule already covers citing it.
+reversal cost: nil now (import is unbuilt). Rising sharply once an import path mints
+  projects, because auto-authored objectives would then exist in the record and be
+  indistinguishable from member-authored ones without an audit.
+response: **IMPORT OFFERS PER-FINDING PROJECT ASSOCIATION, AND STAYS PROJECTLESS BY
+  DEFAULT.** Bob, 2026-08-04, raising bias: *"a published case [has] its own bias (even if
+  it's the default bias)… bias can be a property of an instance and of a project. So an
+  imported finding from a published case MUST be added to a project if its bias is to be
+  preserved. And if an imported finding is added to an existing project, then the user must
+  be made aware that doing so may cause the conclusions to change if the source bias and
+  the bias of the project/instance differ."*
+  **HE IS RIGHT ON THE ARCHITECTURE AND THE DOCTRINE ALREADY HOLDS THE MECHANISM — with
+  one distinction that must be separated before this is built, or the wrong thing gets
+  built carefully.** Measured against `BIO_Declared_Bias_v0_1.md`:
+  - **Bias attaches at INSTANCE and PROJECT level — confirmed.** Admins define instance
+    bias; project managers define project bias, which may add statements and may OVERRIDE
+    (nullify or replace) instance statements, naming what it nullifies.
+  - **`Effective bias` = adopted instance statements at pinned revisions, minus project
+    nullifications of unlocked statements, plus project replacements and additions.** So
+    the project layer is genuinely part of the lens, and a PROJECTLESS finding is evaluated
+    under the instance layer ALONE.
+  **THE DISTINCTION, and it is the correction: PRESERVED and APPLIED are two different
+  things, and only one of them needs a project.**
+  - **PRESERVED** — *"Every work product cites its BIAS MANIFEST: the list of (bias bundle
+    id, revision) in force plus a hash of the computed effective statement set… part of the
+    evidentiary record and travels with publication."* **The source's bias is preserved by
+    the manifest that TRAVELS WITH THE CASE, not by project assignment.** An imported
+    finding carries the lens that produced it as a checkable fact even if it never joins a
+    project. If preservation depended on assignment, a projectless import would silently
+    lose provenance — and it does not.
+  - **APPLIED** — the lens the finding is evaluated under GOING FORWARD is the importing
+    instance's, plus whichever project's layer it joins. **This is what project assignment
+    actually decides**, and it is why Bob's practical conclusion is right for a sharper
+    reason than the one he gave: a member who wants an imported finding evaluated under a
+    lens they control needs a project, because the instance layer alone is the only
+    alternative and it is not theirs to shape per-piece-of-work.
+  determinations, mine under delegation:
+  1. **Per-FINDING association, not per-case** — Bob's question answered directly, and
+     DEC-44 is why it must be per-finding: a case is a container over findings, findings
+     are separable, and two findings from one case may belong to different work. The import
+     surface offers each finding its own destination: an existing project, a new one the
+     member authors, or none.
+  2. **PROJECTLESS REMAINS THE DEFAULT AND IS A STATED STATE, NOT A GAP.** DEC-17 and
+     `store.mjs:4301` both hold that an inquiry outside any project has no project bar and
+     inherits none. The import surface SAYS what lens a projectless finding falls under —
+     the instance layer alone — rather than leaving it to be inferred. Silence here would
+     be the finding wearing the importing instance's lens with nothing saying so.
+  3. **THE WARNING BOB ASKS FOR IS ALREADY DESIGNED, AND IT IS NOT A DIALOG — IT IS
+     REGRADE.** `BIO_Declared_Bias_v0_1.md`: *"Hold evidence and analysis fixed, swap
+     effective bias B1 for B2, re-run the evaluations, and produce a structured diff: for
+     each conclusion, its grade under each lens, and the causal chain from each differing
+     statement to the finding it produced to the premise it touched to the conclusion it
+     moved."* So the member is not told *"conclusions may change"*; they are SHOWN which
+     ones change, by how much, and which named statement moved each. A modal warning would
+     be the weaker thing built where the stronger thing is already specified.
+  4. **THE HONEST LIMIT TRAVELS WITH IT, stated at import and not only in the design doc:**
+     *"regrade re-grades conclusions against the analysis that exists; it cannot synthesize
+     the analysis a different group would have written under a different lens."* A member
+     must not read a clean regrade as *"this finding survives our lens intact"* — it means
+     the analysis that exists survives; a group with a different lens might have asked
+     different questions and cited different documents.
+  5. **RERUN IS THE HEAVIER SIBLING AND IMPORT SHOULD NAME IT** — *"A work product from one
+     group, with its enclosed bias manifest, can be rerun by another group under that
+     group's own bias… the receiving group re-establishes trust at its own hop by rerunning
+     the work, not by accepting the producing group's reputation."* That is the
+     no-transitive-trust rule made operational, and it is exactly what importing another
+     group's findings is. Import is the front door to rerun, not a substitute for it.
+  6. **DIVERGENT LENSES INSIDE ONE INSTANCE ARE LEGITIMATE AND MUST BE VISIBLE.** Sending
+     two findings from one case to two projects puts them under two effective biases in the
+     same instance. That is allowed — projects differ deliberately — but a later reader
+     comparing them must be able to see that they were evaluated under different lenses,
+     or the divergence reads as disagreement about facts rather than about declared bias.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry and `BIO_Declared_Bias_v0_1.md` (adoption levels,
+  effective bias, the bias manifest, regrade and rerun — all pre-existing; nothing in the
+  bias doctrine needed changing to support import, which is the strongest evidence the
+  construct was right).
+for CONDUCT to enact: import is UNBUILT and this is design-ahead, so it lands as scope on
+  M6's interchange half rather than as a correction. The import path: findings arrive
+  projectless carrying the source's bias manifest as a fact; per-finding destination
+  offered (existing project · a new project the member authors · none); the projectless
+  lens is STATED; choosing a destination runs REGRADE against that destination's effective
+  bias and shows the structured diff with its causal chain BEFORE the association is
+  committed; regrade's honest limit is displayed with the diff, never buried; and the
+  import may not author a project objective or a bias statement on the member's behalf
+  (the never-prefill rule, and C-2.9's non-empty `objective` must never be satisfied by
+  words nobody in the importing group wrote).
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_

@@ -425,7 +425,7 @@ layer, which ships entire.
 was left out; a stranger with no credential can read and check it; and an outward action
 can say which findings justified it and what came back.
 
-**Acceptance:** a concluded inquiry is published through a ceremony that refuses before it
+**Acceptance:** a case carrying one or more concluded findings (DEC-44) is published through a ceremony that refuses before it
 signs and cannot be signed before the exclusion is authored; the published case is
 readable and hash-checkable with no credential; an action names the finding it rests on,
 records what was sent and what returned, and its non-response is itself a finding.
