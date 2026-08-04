@@ -57,6 +57,43 @@ progressions model how {information, money, responsibility, relationships, decis
 power} is supposed to flow and where it actually does. All of it serves the path, and
 a capability that does not serve the path is not obviously worth building.
 
+### CONTENT IS THE UNIT, AND A DOCUMENT IS NOT THE ANSWER
+
+**This is here because Bob has had to say it repeatedly, in session after session, and a
+point that must be re-made is a point the record failed to carry.** It is written in the
+one file every session loads, so no session can begin without it.
+
+**CONTENT is a reference to a PART of a document, up to and including the whole
+document — so a document is content too** (Bob's definition, 2026-08-04; ruled as DEC-23).
+Documents are what is HARVESTED. Content is what is EXTRACTED. **Meaning derives from
+both, and neither one alone.**
+
+**The internet is noisy relative to what an inquiry needs — AND SO IS THE DATA STORE.**
+Holding a document is not holding an answer. A store full of captured PDFs, none of them
+read, is a pile of noise with good provenance. Finding the document is the cheap half;
+extracting what is IN it, connecting it, and letting a member make meaning of it is the
+half the product exists for.
+
+Three consequences that keep being lost and are therefore stated as rules:
+
+- **A search that returns documents has not finished.** The same searching that grows the
+  document set is what identifies content within documents, makes connections between
+  content, and produces meaning. It is ONE process working at several altitudes, not a
+  pipeline with a document stage that completes.
+- **NEVER ASSUME THE LOWER LEVELS ARE COMPLETE.** When anything — a member, an assistant,
+  a query — goes looking, it may need to search **meaning, content, documents, AND the
+  open internet**, in any order. Treating the store as complete short-circuits exactly the
+  exploration and discovery the system is for. Bob, 2026-08-04, and it is the correction
+  that earned this section.
+- **Sparse is the normal condition at every level.** Absence at one level is not evidence
+  of absence at the next: no meaning derived may mean nothing was extracted; nothing
+  extracted may mean the document was never read; no document may mean nobody looked.
+  Saying which of those is true is a first-class obligation, not a diagnostic detail.
+
+The design work sits in `docs/development/STORE-AS-CACHE.md` (the three axes and the
+four-level search); the ruling that content is the unit the record points at is DEC-23;
+the primitive that lets an edge point at content is D-164.
+
 **The stance, and it is doctrine.** BIO is defined through doctrine and nothing in it
 resembles "stick it to the man". The objective is BETTER GOVERNMENT, pursued through
 **greater understanding, less narrative, and accountability**. The working assumption is
