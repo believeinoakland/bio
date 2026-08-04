@@ -2409,6 +2409,15 @@ enacted: 2026-08-04 · CONDUCT — REC-42 queued to CORRECT the shipped flat-AND
 > `#groundResult` in `store.mjs`, and it cost REC-42's worker time, which is why this
 > note exists rather than a silent correction.
 
+> **AMENDMENT, 2026-08-04 (CONDUCT, at UI-27's landing — the D-160 shape: the rule did
+> not move, the WORD did).** This entry states the operational test with a word its own
+> clause 1 forbids on ANY surface, so rendering the entry verbatim would break the
+> ruling it enacts — found by UI-27 while building the elicitation, and REC-45's act and
+> prompt had already avoided the same word independently. **The surface spelling is
+> "Would refuting this alone change your conclusion?"** — same test, same reasoning,
+> no forbidden vocabulary. The entry's original wording is kept above rather than
+> rewritten, because a ruling that had to be re-spelled to be sayable is worth seeing.
+
 ### DEC-33 · answered
 raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)
 for: bob
