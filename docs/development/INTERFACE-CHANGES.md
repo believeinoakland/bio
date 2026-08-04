@@ -690,3 +690,13 @@ CONDUCT's at integration.
 Landed at integration; I3 5.4.0 → **5.5.0**. The reason-code judgement (keep the old
 names, add NOT_CITABLE where reuse would lie) stands with its recorded one-string
 reversal if a later reader wants RECONCILED §3.1's rename literally.
+
+## IC-13 · I3: the intent vocabularies published · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-35 — `vocabularies` gains
+  `entity_kinds`, `relation_kinds`, `stage_requiredness` (each the enforcement's own
+  array, one place). No existing shape or string changed.
+- **Consumers:** UI. CONDUCT answers per the IC-12 mechanics, naming the proxy: `AGREE`
+  — the consumer was written for the published form (UI-13) and took it with zero
+  executable-byte change, measured.
+- **Version:** I3 5.5.0 → **5.6.0** in `INTERFACES.md`.

@@ -1064,3 +1064,5 @@ expected: QUEUE.md REC-35 (UI-13's delegation) — publish the intent layer's th
 accepts-when: `cd bio-plane && npm run test:battery` green with entity_kinds/relation_kinds/stage_requiredness in op=affordances' no-target answer asserted equal to the store's enforced sets VIA THE IMPORT; `node civicos-ui/test/run.mjs` green with the options read from the publication (source === "published", the probe path dead); `npm run test:coverage --strict` exit 0; NEGATIVE CONTROL run and recorded in the suite's `NEGATIVE CONTROL:` line — publish one vocabulary as a literal copy instead of the import and the drift assertion fails. Restored after. No push — CONDUCT integrates.
 landed: left for CONDUCT.
 released:
+
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker 329d44d). Verified: battery 92/92 (4859), harness 26 suites green, --strict 126/126. The TDZ-forced direction accepted as the DISPOSITIONS precedent; the probe-as-check reasoning accepted; the instrument repoint (enforcing ops' own refusals) accepted. IC-13, I3 → 5.6.0. No DEC.
