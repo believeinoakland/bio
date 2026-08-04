@@ -41,7 +41,18 @@ making a change another session must know about.**
    claims, route delegations into queues, register/annotate interfaces and DEBT),
    push, and spawn the area's next item.
 3. **Enqueue decompositions from BOB** — you are the GATE that confirms each
-   piece is genuinely independent before it becomes runnable.
+   piece is genuinely independent before it becomes runnable. **And test every
+   scope you write against CLAUDE.md's "CONTENT IS THE UNIT" section** (added by
+   BOB 2026-08-04, because the point had to be re-made session after session):
+   a capability that does not serve the path of questioning, exploring,
+   discovering, documenting and impacting is not obviously worth building; a
+   search that returns DOCUMENTS has not finished; the lower levels are never
+   assumed complete; and **sparse is normal at every level, so which level was
+   empty is a first-class obligation to STATE, not a diagnostic detail.** An
+   item whose accepts-when lets a surface answer "nothing found" without saying
+   whether nothing was extracted, nothing was read, or nobody looked, is
+   under-specified — that is the same rule as "undetermined is first-class",
+   one altitude down, and it is CONDUCT that writes the accepts-when.
 4. **Keep two development areas busy;** promote a dormant area when a queue
    empties.
 5. **Work `DECISIONS.md`, both directions.** It is the return channel — `QUEUE.md`'s
