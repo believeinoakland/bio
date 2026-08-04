@@ -31,6 +31,11 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             supersession never lands and cannot audit clean either. Before this
             item `supersedes` had no producer and no requirements at all. */
          BUNDLE_ID_RE, supersedesEdgeFindings,
+         /* REC-37: the basis ROLE vocabulary, imported for the widened cite's
+            own refusal and for op=affordances' published vocabularies. The one
+            place the words live is the catalog function that enforces them; a
+            second copy here is exactly the drift the MAP RULE exists to stop. */
+         BASIS_ROLES,
          /* REC-26: the monitoring frequency vocabulary. The cadence consumer's
             interval table is keyed off the CATALOG's own closed set rather than
             a local copy of the words — the MAP RULE — so a frequency the catalog
@@ -3897,7 +3902,77 @@ export class Store extends DurableObject {
 
   /* ---- the first action that refers to a selection ----
    *
-   * CITING INFORMATION IN A PROJECT, at weight `report`.
+   * CITING, at weight `report`: material — and, onto a question, another
+   * question — becomes part of what a case or a question rests on.
+   *
+   * ================= REC-37: WIDENED, NOT DUPLICATED =================
+   *
+   * THE DECISION, recorded here because every later reader inherits it. UI-20
+   * measured the gap: `op=cite` could not reach an inquiry in either direction,
+   * `inquiry_basis` was a promote-projection with no op appending a leg, and the
+   * only way a record became a case therefore did not exist. REC-37 could have
+   * answered with a second op. It did not, and the reasoning is:
+   *
+   *   1. IT IS ONE ACT IN THE RECORD'S OWN TERMS — "this is why I think that".
+   *      WHERE the record keeps it differs (a case keeps citations in
+   *      `references[]`; a question keeps them in the `basis[]` its answer rests
+   *      on) and WHAT the member did does not. A second op would publish a
+   *      second control for one act and make every surface learn which to call,
+   *      which is the inverse of the one-edge-table rule op=affordances exists
+   *      to hold.
+   *   2. EVERYTHING HARD HERE IS ALREADY BUILT AND IS IDENTICAL ON BOTH ARMS:
+   *      the selection gate, the report weight's per-item outcome, the note
+   *      grammar, SEVERED_EDGE's doctrine, the already-cited partition and the
+   *      INLINE_MAX ceiling. A dedicated op would either hold a second copy of
+   *      the most carefully ordered refusal sequence in this file, or call this
+   *      one — in which case it is this one wearing a different name.
+   *   3. THE SURFACE COST IS ZERO BY CONSTRUCTION. UI-20 already carries ONE
+   *      `ACT_FLOW` entry for `cite`; a new op would need a new call site, which
+   *      is the very clause REC-37 is measured against ("UI-20's surface needs
+   *      NO edit when this lands").
+   *
+   * THE ONE HONEST COST, stated rather than hidden: the inquiry arm needs a
+   * field the case arm has no slot for — `role`, invariant 7's storage, where
+   * `cuts_against` is first-class. That is an arm-conditional PARAMETER, not a
+   * second act (this method has always behaved per-arm: SEVERED_EDGE only ever
+   * read a project's own references). It is REQUIRED and refused BY NAME on the
+   * inquiry arm, because a default would have the record deciding what a member
+   * meant about the thing the whole strength derivation reads.
+   *
+   * WHY THE REASON CODES DID NOT MOVE. `NOT_A_PROJECT` now fires only for a
+   * citing object that is NEITHER a case NOR a question — it refuses strictly
+   * LESS than before — and `NOT_INFORMATION` is untouched on the case arm. Both
+   * keep their names. Renaming a wire string is a BREAK by this repository's own
+   * definition (I3 2.0.0 recorded exactly that for NOT_PROBLEMS), it was
+   * MEASURED to buy nothing (no consumer matches either literal anywhere in
+   * civicos-ui — the two occurrences are prose in comments), and what a member
+   * actually reads is `detail`, which is rewritten here to say precisely what is
+   * refused. The inquiry arm gets its OWN member refusal, `NOT_CITABLE`, because
+   * on that arm an inquiry IS citable and reusing `NOT_INFORMATION` would be the
+   * refusal lying about itself. Net: purely ADDITIVE and PERMISSIVE — nothing
+   * previously admitted is now refused. Reversing the judgement costs one string
+   * per arm and the suites that pin them.
+   *
+   * WHAT THE INQUIRY ARM DOES NOT DO, and each absence is a decision:
+   *   - IT DOES NOT GRADE. The leg's connection grade is FILLED from
+   *     `earnedBasisRegistry` — the SAME function `op=earnedbasis` answers from
+   *     and `op=promote` enforces with, so the read, the fill and the write
+   *     cannot disagree. A target the record holds no A/B/C resolution for lands
+   *     with NO grade, NO axis and NO source: undetermined, STATED by the
+   *     absence, INERT (DEC-18) rather than pretending to a number. There is no
+   *     grade control and no default letter anywhere on this path.
+   *   - IT DOES NOT CHECK FOR A CYCLE. R3's DAG guard is REC-11's, at the write
+   *     inside `promote` (SELF_BASIS / BASIS_CYCLE, both naming the FULL path),
+   *     and this act reaches it because the leg lands THROUGH THE DOCUMENT. A
+   *     second cycle rule here would be a second answer waiting to disagree with
+   *     the one that actually protects the graph.
+   *   - IT DOES NOT VALIDATE A LEG. `checkInquiryBasis` is ONE catalog function
+   *     run by the checker AND by promote's write path; the legs this act
+   *     composes are judged there like any other, so a leg it could not compose
+   *     honestly never lands.
+   *   - IT DOES NOT ASK WHAT STATE A TARGET IS IN (D-168). Permissive, exactly
+   *     as the case arm has always been: citing retired material is permitted
+   *     and therefore published.
    *
    * `selectionResolve` shipped in 0.17.0 with no caller. This is its first, and
    * citing was chosen for it because it ADDS references rather than moving
@@ -3912,7 +3987,14 @@ export class Store extends DurableObject {
    * Citing writes the edge into bundle.md and promotes, because `refs` is a
    * PROJECTION re-derived from frontmatter inside promote's transaction and
    * promote refuses a refs field in the payload outright (D-21). The document is
-   * authoritative; there is no second place to state an edge.
+   * authoritative; there is no second place to state an edge. REC-37: EXACTLY
+   * the same holds one altitude up. `inquiry_basis` is a projection of the same
+   * document's `basis[]`, re-derived in the same transaction, and promote
+   * refuses a `basis` field in the payload by name (BASIS_IN_PAYLOAD, D-21 from
+   * birth) — so the widened arm splices the LEG INTO THE BYTES and promotes.
+   * There is no path from this method to the table, deliberately: that is what
+   * makes REC-11's DAG guard and the one-function leg grammar unavoidable rather
+   * than merely available.
    *
    * Fully synchronous, and that is load-bearing rather than incidental. The
    * catalog's own sha256 is pure JS, so nothing between resolving the selection
@@ -3921,18 +4003,27 @@ export class Store extends DurableObject {
    * checked, but it is a backstop here rather than the only guard.
    */
   cite({ project = null, handle = null, viewer = null, owner = null,
-         note = "", author = null } = {}) {
+         note = "", author = null, role = null } = {}) {
     /* The gate first, so an unknown or someone else's selection is refused
        before this method has looked at a project at all. */
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "report" });
     if (!sel.ok) return sel;
 
+    /* `project` KEEPS ITS NAME (REC-37) and now names the CITING OBJECT, which
+       may be a case or a question. Renaming an I3 parameter would break every
+       caller for a word, and the widening is otherwise invisible to one: the
+       same request that cited into a case cites into a question. */
     const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
     if (!p) return { ok: false, reason: "NO_SUCH_PROJECT", project,
                      detail: "the citing object must exist before it can cite anything" };
-    if (p.object_type !== "project")
+    /* Through normalizeType, so a legacy focus/problem spelling lands on the
+       inquiry arm rather than falling through to the refusal — the MAP RULE. */
+    const ontoInquiry = normalizeType(p.object_type) === "inquiry";
+    if (p.object_type !== "project" && !ontoInquiry)
       return { ok: false, reason: "NOT_A_PROJECT", project, got: p.object_type,
-               detail: "cites lives on the citing object and this action cites INTO a Project (State Rules 5.2)" };
+               detail: "citations live on the CITING object, and this is neither a case nor a question. A case "
+                     + "keeps them in its references; a question keeps them in the basis its answer rests on "
+                     + "(State Rules 5.2). Nothing else in the record holds either." };
 
     /* A note is written into the restricted frontmatter grammar, whose scalar
        parser strips surrounding quotes and understands no escapes at all. A
@@ -3944,22 +4035,79 @@ export class Store extends DurableObject {
       return { ok: false, reason: "BAD_NOTE",
                detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline" };
 
-    /* Every member of the selection must be Information. A selection carrying
-       anything else is REFUSED with the offenders named, never filtered down to
-       the citable subset: quietly narrowing a set changes what the operator's
-       click meant, which is the same reason an oversized enumeration is refused
-       rather than downgraded. This also catches a Project citing itself, which
-       is a cycle with nothing to mean. */
+    /* THE ROLE (REC-37), judged before the selection's members so a member who
+       has not said what the material DOES is told that first, and told it
+       whatever else is wrong with the set.
+
+       REQUIRED on the inquiry arm and refused BY NAME. `cuts_against` is
+       first-class (invariant 7), and it is exactly the leg a default would
+       silently turn into `supports` — the record then holding a claim about the
+       member's own reasoning that the member never made. The vocabulary travels
+       WITH the refusal (`roles`), the repairs discipline REC-18 established, so
+       a surface never needs a copy of it to recover.
+
+       REFUSED, not ignored, on the case arm. A `cites` edge has no role and a
+       role quietly dropped is the D-21 class in miniature: a field authored in
+       one place and honoured nowhere. */
+    const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
+    if (ontoInquiry) {
+      if (rl === null)
+        return { ok: false, reason: "NO_ROLE", project, handle, roles: BASIS_ROLES.slice(), drift: sel.drift,
+                 detail: "a leg of a question's basis says what the material DOES for the answer, and this call "
+                       + "does not say. It is never assumed: a leg that cuts against the case is first-class "
+                       + "here, and guessing would put a claim about your own reasoning in the record that you "
+                       + `did not make. State role as one of: ${BASIS_ROLES.join(", ")}.` };
+      if (!BASIS_ROLES.includes(rl))
+        return { ok: false, reason: "BAD_ROLE", project, handle, got: rl, roles: BASIS_ROLES.slice(),
+                 drift: sel.drift,
+                 detail: `'${rl}' is not a role a basis leg can carry. The set is closed and is published by `
+                       + `op=affordances beside the act: ${BASIS_ROLES.join(", ")}.` };
+    } else if (rl !== null) {
+      return { ok: false, reason: "ROLE_NOT_APPLICABLE", project, handle, got: rl, drift: sel.drift,
+               detail: "a role says what material does for a QUESTION's answer, and this citing object is a "
+                     + "case. A case's citation edge carries no role, so this one would be dropped rather than "
+                     + "recorded — refused instead, because a field stated in one place and honoured nowhere is "
+                     + "how the record and its projections drift apart." };
+    }
+
+    /* Every member of the selection must be CITABLE, and what that means
+       depends on what is doing the citing.
+
+       ON A CASE: Information, unchanged. A case's citation edge points at
+       material, and this arm also catches a Project citing itself, which is a
+       cycle with nothing to mean.
+
+       ON A QUESTION (REC-37): Information OR another inquiry. Basis recursion
+       is REC-11's design — "a leg points at CONTENT or at another inquiry"
+       (DEC-23) — and it is the whole reason `inquiry_basis` carries a
+       `target_type`. A question citing ITSELF is deliberately NOT caught here:
+       it is a cycle that MEANS something and the record must name the path it
+       closes, which is SELF_BASIS's job at the write and not this method's.
+
+       Either way the whole call is REFUSED with the offenders named, never
+       filtered down to the citable subset: quietly narrowing a set changes what
+       the operator's click meant, the same reason an oversized enumeration is
+       refused rather than downgraded. */
     const offenders = [];
     for (const id of sel.members) {
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
-      if (!b || b.object_type !== "information") offenders.push(id);
+      const ty = b ? normalizeType(b.object_type) : null;
+      if (ontoInquiry ? !(ty === "information" || ty === "inquiry") : ty !== "information") offenders.push(id);
     }
     if (offenders.length)
-      return { ok: false, reason: "NOT_INFORMATION", project, handle,
-               offenders: offenders.sort(), drift: sel.drift,
-               detail: "citing Information means Information. These members of the selection are not, "
-                     + "and the whole call is refused rather than narrowed to the ones that are." };
+      return ontoInquiry
+        /* ITS OWN REASON, and not NOT_INFORMATION, because on this arm an
+           inquiry IS citable — a refusal named for a rule it is not applying is
+           a refusal lying about itself. */
+        ? { ok: false, reason: "NOT_CITABLE", project, handle,
+            offenders: offenders.sort(), drift: sel.drift, citable: ["information", "inquiry"],
+            detail: "a question rests on material or on another question, and nothing else in the record can be "
+                  + "a leg of its basis. These members of the selection are neither, and the whole call is "
+                  + "refused rather than narrowed to the ones that are." }
+        : { ok: false, reason: "NOT_INFORMATION", project, handle,
+            offenders: offenders.sort(), drift: sel.drift,
+            detail: "citing Information means Information. These members of the selection are not, "
+                  + "and the whole call is refused rather than narrowed to the ones that are." };
 
     const liveMd = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string")
@@ -3983,12 +4131,32 @@ export class Store extends DurableObject {
     for (const r of existing)
       if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
         byTarget.set(r.target, r.status);
+    /* EVERY references target whatever its rel, so the inquiry arm never writes
+       a SECOND entry for a target the document already references under some
+       other relation. C-6.3 asks that a leg's target be IN references[]; it does
+       not ask for a duplicate. */
+    const referenced = new Set(existing
+      .filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => r.target));
+    /* REC-37: on the inquiry arm, ALREADY means "already carries a LEG", not
+       "already referenced". A question can reference a document without resting
+       on it (basis ⊆ references, never the reverse), and treating such a target
+       as already cited would leave the one thing this act writes unwritten while
+       reporting success. What is partitioned is what the arm actually lands. */
+    const legged = new Set(ontoInquiry && Array.isArray(parsed.data.basis)
+      ? parsed.data.basis.filter((l) => l && typeof l === "object" && typeof l.target === "string")
+          .map((l) => l.target)
+      : []);
 
     const severed = [], already = [], add = [];
     for (const id of sel.members) {
       const st = byTarget.get(id);
       if (st === "severed") severed.push(id);
-      else if (st !== undefined) already.push(id);
+      /* A SECOND leg on the same target is legal by design (D4 — one document
+         cited for two reasons, which is why the table has an ordinal), but it is
+         an authored statement rather than a repeat of this act: composing it
+         needs a second role and belongs to the document. Citing stays safely
+         RETRYABLE, which is what report weight requires of it. */
+      else if (ontoInquiry ? legged.has(id) : st !== undefined) already.push(id);
       else add.push(id);
     }
     if (severed.length)
@@ -4016,12 +4184,67 @@ export class Store extends DurableObject {
                bundleSha: p.bundle_sha, rowVersion: null,
                detail: "every member of the selection was already cited; nothing was written" };
 
-    const spliced = Store.#spliceReferences(
-      liveMd.content, add.map((target) => ({ rel: "cites", target, status: "confirmed", note: nt })));
-    if (!spliced)
-      return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
-               detail: "the project's references block is not in a shape this grammar can extend in place. "
-                     + "Citing edits only that block and never rewrites the rest of the document." };
+    /* ============ THE WRITE, PER ARM, AND BOTH GO THROUGH THE DOCUMENT ======
+     *
+     * THE EARNED FILL (REC-37 / REC-18), and it is the whole of what this act
+     * says about grade. `earnedBasisRegistry` is the SAME function op=earnedbasis
+     * answers from and op=promote enforces with, so the fill cannot state a
+     * value the read would not report or the write would not accept — three
+     * consumers, one derivation, by construction rather than by discipline.
+     *
+     * THE SUBJECT COMES FROM THE BYTES, not from `bundles.inquiry_subject_entity`:
+     * the column is a projection of this very document and the bytes are the
+     * authority everywhere else in this file. They agree here (the document is
+     * already promoted), and reading the authority costs nothing.
+     *
+     * A TARGET THE RECORD EARNS NOTHING FOR LANDS UNGRADED — no grade, no axis,
+     * no source. That is not a gap to be filled with a plausible letter: an
+     * ungraded leg is INERT (DEC-18), named and visible as not yet load-bearing,
+     * and "undetermined is first-class and must be STATED" is the rule the
+     * alternative breaks. It is also why only the CONNECTION axis is filled: the
+     * capture axis's earned value is a CEILING and not a value (there is no
+     * per-document capture grade anywhere in this schema), so writing it as the
+     * leg's grade would be the record asserting a maximum as a measurement.
+     */
+    let spliced = null, filled = [];
+    if (!ontoInquiry) {
+      spliced = Store.#spliceReferences(
+        liveMd.content, add.map((target) => ({ rel: "cites", target, status: "confirmed", note: nt })));
+      if (!spliced)
+        return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
+                 detail: "the project's references block is not in a shape this grammar can extend in place. "
+                       + "Citing edits only that block and never rewrites the rest of the document." };
+    } else {
+      const subject = typeof parsed.data.subject_entity === "string" && parsed.data.subject_entity.trim() !== ""
+        ? parsed.data.subject_entity.trim() : null;
+      const reg = this.earnedBasisRegistry(subject, add);
+      filled = add.map((target) => {
+        const earned = reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
+        return earned && earned.grade
+          ? { target, role: rl, grade: earned.grade, grade_axis: "connection", grade_source: "resolution",
+              note: nt, why: earned.why }
+          : { target, role: rl, note: nt, why: null };
+      });
+      /* references FIRST and only where the document does not already carry the
+         target: C-6.3 refuses a leg whose target is not in references[], and the
+         two projections of one document must not disagree. */
+      const newRefs = add.filter((t) => !referenced.has(t))
+        .map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }));
+      const withRefs = newRefs.length
+        ? Store.#spliceReferences(liveMd.content, newRefs) : liveMd.content;
+      if (!withRefs)
+        return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
+                 detail: "the question's references block is not in a shape this grammar can extend in place. "
+                       + "Citing edits only that block and the basis block, and never rewrites the rest of "
+                       + "the document." };
+      spliced = Store.#spliceBasis(withRefs, filled);
+      if (!spliced)
+        /* ITS OWN REASON: a member told "references" about a basis failure would
+           look in the wrong block. */
+        return { ok: false, reason: "UNSPLICEABLE_BASIS", project,
+                 detail: "the question's basis block is not in a shape this grammar can extend in place. "
+                       + "Citing appends legs to that block and never rewrites the rest of the document." };
+    }
 
     /* last_updated moves, so C-13.2 requires a Session Log entry. That is not
        check-appeasement: what the record is FOR is saying who did what and on
@@ -4037,12 +4260,28 @@ export class Store extends DurableObject {
     const shown = add.slice(0, Store.CITE_LOG_SAMPLE);
     const listed = shown.join(", ")
                  + (add.length > shown.length ? `, and ${add.length - shown.length} more` : "");
-    const entry = `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"}`
-                + ` | ${author || "member"}\n`
-                + `Trigger: selection ${handle}${sel.moved ? " (the set had moved since it was made; "
-                    + "citing is report-weight and proceeded)" : ""}\n`
-                + `Changes: cites edges added to ${listed}.`
-                + `${nt ? ` Note: ${nt}.` : ""}\n`;
+    /* REC-37: on the inquiry arm the entry accounts for the LEGS, and it STATES
+       how many were left undetermined. That clause is not decoration — an
+       ungraded leg is inert and invisible in the derived pair, so a log entry
+       that reported only what landed would be the one place a member could have
+       learned that half of what they cited is not yet load-bearing. */
+    const ungraded = filled.filter((l) => !l.grade).length;
+    const graded = filled.length - ungraded;
+    const entry = ontoInquiry
+      ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"}`
+        + ` (${rl}) | ${author || "member"}\n`
+        + `Trigger: selection ${handle}${sel.moved ? " (the set had moved since it was made; "
+            + "citing is report-weight and proceeded)" : ""}\n`
+        + `Changes: basis legs added for ${listed}, each with role ${rl}. `
+        + `Grades: ${graded} filled from the record's own resolutions to this question's subject; `
+        + `${ungraded} left undetermined and stated.`
+        + `${nt ? ` Note: ${nt}.` : ""}\n`
+      : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"}`
+        + ` | ${author || "member"}\n`
+        + `Trigger: selection ${handle}${sel.moved ? " (the set had moved since it was made; "
+            + "citing is report-weight and proceeded)" : ""}\n`
+        + `Changes: cites edges added to ${listed}.`
+        + `${nt ? ` Note: ${nt}.` : ""}\n`;
     const at = text.indexOf("## Session Log");
     if (at < 0) text += "\n## Session Log\n\n" + entry;
     else {
@@ -4085,11 +4324,17 @@ export class Store extends DurableObject {
       return { ok: false, reason: "CITATION_TOO_LARGE",
                project, handle, drift: sel.drift,
                requested: add.length, bytes: bytes.length, limit: INLINE_MAX,
+               /* REC-37: on the inquiry arm a member costs a references entry
+                  AND a leg, so this estimate is CONSERVATIVE there rather than
+                  exact. It has never decided the refusal — that is made on the
+                  real encoded length a few lines above — and an estimate that
+                  errs toward "fewer would fit" tells an operator something
+                  true. Stated rather than silently reused. */
                roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / Store.CITE_EDGE_BYTES)),
-               detail: "citing this many records at once would push the Project's bundle.md past the "
-                     + "1MB inline limit. Every edge is written into the document, so the ceiling is on "
-                     + "edges in one Project, not on the size of a selection. Cite in smaller batches; "
-                     + "nothing has been written." };
+               detail: `citing this many records at once would push this ${ontoInquiry ? "question" : "case"}'s `
+                     + "bundle.md past the 1MB inline limit. Every edge is written into the document, so the "
+                     + "ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller "
+                     + "batches; nothing has been written." };
     }
 
     const textSha = createSha256().update(bytes).hex();
@@ -4105,18 +4350,40 @@ export class Store extends DurableObject {
       author: author || "member",
       files: [{ path: "bundle.md", text, bytes: bytes.length, sha256: textSha }, ...carried],
       meta: {
-        object_type: "project", group: fm.group || "believe-in-oakland", title: fm.title,
+        /* From the DOCUMENT, on op=conclude's own precedent, rather than the
+           hard-coded "project" this act carried while a project was the only
+           citing object there was. Byte-identical for a case (its frontmatter
+           says `project`) and correct for a question. */
+        object_type: fm.object_type ?? p.object_type,
+        group: fm.group || "believe-in-oakland", title: fm.title,
         current_state: fm.current_state, prior_state: fm.prior_state ?? null,
         created: fm.created, last_updated: when,
         criticality: fm.criticality ?? null,
       },
     });
+    /* THE REFUSALS THAT MATTER MOST ON THIS PATH COME BACK FROM HERE, unchanged
+       and unwrapped: SELF_BASIS and BASIS_CYCLE (R3's DAG guard, naming the FULL
+       path) and BASIS_REFUSED (the one leg grammar, with its repairs). This act
+       composes legs; promote is what judges them, and a cycle-closing cite is
+       refused AT THE WRITE and not by a rule of this method's own. */
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
 
     return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
              cited: add.slice().sort(), alreadyCited: already.sort(), severed: [],
              bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
-             gate: sel.gate, expires: sel.expires };
+             gate: sel.gate, expires: sel.expires,
+             /* REC-37: what the act actually landed on the question, per leg —
+                the role it wrote and the grade the RECORD earned, with the
+                registry's own `why` for a filled one and an explicit null for an
+                undetermined one. A surface renders this; it never composes it,
+                and there is no grade control anywhere in the flow. */
+             ...(ontoInquiry ? { citingObjectType: "inquiry", role: rl,
+                                 legs: filled.map((l) => ({ target: l.target, role: l.role,
+                                   grade: l.grade ?? null, grade_axis: l.grade_axis ?? null,
+                                   grade_source: l.grade_source ?? null, why: l.why ?? null })),
+                                 gradesFilled: filled.filter((l) => l.grade).length,
+                                 gradesUndetermined: filled.filter((l) => !l.grade).length }
+                             : {}) };
   }
 
   /* Rewrite ONE column-0 scalar inside the frontmatter, leaving every other
@@ -4223,6 +4490,63 @@ export class Store extends DurableObject {
        it rather than being swallowed into the array. */
     let last = ref;
     for (let i = ref + 1; i < end; i++) {
+      if (lines[i].trim() === "") continue;
+      if (/^\s/.test(lines[i])) { last = i; continue; }
+      break;
+    }
+    return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+  }
+
+  /* REC-37: APPEND legs to the `basis` block, touching nothing else — and it is
+   * #spliceReferences line for line, deliberately.
+   *
+   * Same three reachable shapes (no key, an inline empty `basis: []`, a
+   * populated block), same refusal-by-returning-null for any other inline
+   * scalar, same append-after-the-last-indented-line so a blank line an author
+   * put between the block and the next key stays where they put it. Written as
+   * a twin rather than as a generalisation of both because the ELEMENT shapes
+   * differ (a reference is four fixed keys; a leg's keys are present exactly
+   * when the leg carries them), and a parameterised splicer would have hidden
+   * that difference behind an option — which is the more expensive mistake in a
+   * grammar with no serializer.
+   *
+   * A KEY IS RENDERED ONLY IF THE LEG CARRIES IT, and that is the whole reason
+   * an undetermined leg is honest in the bytes: absent grade, absent axis, absent
+   * source is what C-2.8 reads as undetermined-and-stated, while `grade: null`
+   * would be a member asserting a null. `note` is omitted when empty for the
+   * same reason — an empty quoted string is a note somebody wrote nothing in.
+   * APPEND ONLY: nothing here rewrites or removes a leg the document already
+   * carries, so an earlier statement about the question's basis cannot be edited
+   * out by an act that was only ever meant to add one. */
+  static #spliceBasis(text, legs) {
+    if (!legs.length) return text;
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+
+    const block = legs.map((l) => [
+      `  - target: ${l.target}`,
+      `    role: ${l.role}`,
+      ...(l.grade ? [`    grade: ${l.grade}`] : []),
+      ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []),
+      ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []),
+      ...(l.note ? [`    note: "${l.note}"`] : []),
+    ].join("\n"));
+
+    let bi = -1;
+    for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+
+    if (bi === -1)   // no key at all: open one immediately before the closing fence
+      return [...lines.slice(0, end), "basis:", ...block, ...lines.slice(end)].join("\n");
+
+    const rest = lines[bi].slice("basis:".length).trim();
+    if (rest === "[]")   // an empty inline array becomes a block
+      return [...lines.slice(0, bi), "basis:", ...block, ...lines.slice(bi + 1)].join("\n");
+    if (rest !== "") return null;   // some other inline scalar: not ours to reinterpret
+
+    let last = bi;
+    for (let i = bi + 1; i < end; i++) {
       if (lines[i].trim() === "") continue;
       if (/^\s/.test(lines[i])) { last = i; continue; }
       break;
@@ -12903,6 +13227,10 @@ export class Store extends DurableObject {
           owner: url.searchParams.get("owner"),
           note: url.searchParams.get("note") ?? "",
           author: url.searchParams.get("author"),
+          /* REC-37: the basis leg's ROLE, read only on the inquiry arm and
+             REFUSED rather than dropped on the other. Absent stays null so a
+             case-arm caller that never heard of it is byte-identical. */
+          role: url.searchParams.get("role"),
         }),
         /* The first STATE-CHANGING actions to refer to a selection, and the
            first callers of selectionResolve's refusing arm. Weight is not read

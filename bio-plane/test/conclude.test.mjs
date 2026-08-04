@@ -235,8 +235,16 @@ console.log("\n--- 1. DEC-22: an OPEN inquiry may rest on nothing — legal, rea
   t("and it is READABLE through the ops, not quarantined", await stateOf(INQ_STANDING), "open");
   t("the document itself carries no basis at all — absent, not an empty gesture",
     /^basis:/m.test(md), false);
+  /* CORRECTED 2026-08-04 (REC-37), never exempted: `cite` joins every
+     inquiry's published act list. It was absent because `op=cite` could not
+     reach a question in either direction — the measured gap UI-20 found, and
+     the reason the one act by which a record becomes a case did not exist.
+     REC-37 widens the op so a question may cite, and the guard on that arm is
+     TYPE-only, so the act is published at every inquiry state exactly as it has
+     always been published on a RETIRED information bundle. Nothing about the
+     state-machine acts this block is really about has changed. */
   t("op=affordances still publishes its acts: an unsupported question is worked on, not frozen",
-    actIds(await affordances(INQ_STANDING)), ["conclude", "dispose"]);
+    actIds(await affordances(INQ_STANDING)), ["cite", "conclude", "dispose"]);
 }
 
 /* ------------------------------------------------------- 2. the act */
@@ -374,7 +382,15 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
      pair of assertions is now doing more work than either did alone, because it
      is what shows the divide act's basis-count condition is real rather than
      incidental. */
-  t("an OPEN inquiry publishes conclude beside dispose", actIds(openAff), ["conclude", "dispose", "inquirydivide"]);
+  /* CORRECTED 2026-08-04 (REC-37), never exempted: `cite` joins every
+     inquiry's published act list. It was absent because `op=cite` could not
+     reach a question in either direction — the measured gap UI-20 found, and
+     the reason the one act by which a record becomes a case did not exist.
+     REC-37 widens the op so a question may cite, and the guard on that arm is
+     TYPE-only, so the act is published at every inquiry state exactly as it has
+     always been published on a RETIRED information bundle. Nothing about the
+     state-machine acts this block is really about has changed. */
+  t("an OPEN inquiry publishes conclude beside dispose", actIds(openAff), ["cite", "conclude", "dispose", "inquirydivide"]);
   const concludedAff = await affordances(INQ_MAIN);
   /* CORRECTED 2026-08-04 (REC-14), never exempted: a concluded inquiry now
    publishes `publish` as well, which is the state this whole ladder exists to
@@ -385,13 +401,13 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
    in and the weakest leg is now visible in the frozen pair — and DEC-28 makes
    `concluded -> divided` a legal edge. */
 t("a CONCLUDED inquiry publishes exactly the legal acts: dispose, divide and publish — and a conclusion nobody publishes still ages (D-79)",
-    actIds(concludedAff), ["dispose", "inquirydivide", "publish"]);
+    actIds(concludedAff), ["cite", "dispose", "inquirydivide", "publish"]);   // REC-37, 2026-08-04: cite joins every inquiry (see the note above)
   t("conclude is UNPUBLISHED there, and the store agrees by name — publication and refusal cannot disagree",
     (await conclude(NADIA, { target: INQ_MAIN, conclusion: CONCL, falsifier: FALS })).reason,
     "ILLEGAL_TRANSITION");
   const legacyAff = await affordances(FOCUS_LEGACY);
   t("the legacy focus does NOT publish conclude either: the derivation asks the DECLARED vocabulary too",
-    actIds(legacyAff), ["dispose"]);
+    actIds(legacyAff), ["cite", "dispose"]);   // REC-37, 2026-08-04: cite joins every inquiry (see the note above)
   t("an information bundle never publishes conclude", actIds(await affordances(DOC)).includes("conclude"), false);
 }
 

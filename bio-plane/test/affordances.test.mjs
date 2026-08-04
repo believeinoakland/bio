@@ -364,11 +364,26 @@ await promote(F2, focusMd(F2, "elevated"), "focus", "elevated");
    has no `concluded` in it — so the derivation only answers `{dispose}` here
    because it consults vocabFor over the DECLARED spelling. Conclude's own
    suite proves the store refuses the same document by name. */
-t("a surfaced focus publishes exactly {dispose}; the disposition TARGETS come from the vocabulary, not a UI copy",
-  actIds(await affordances(F)), ["dispose"]);
+/* CORRECTED 2026-08-04 (REC-37), and the OLD EXPECTATION WAS WRONG rather than
+   superseded by taste. Both assertions below read `[]`/`["dispose"]` because
+   `cite` was published for information and project only — which was itself the
+   measured GAP UI-20 found: a question could neither cite nor be cited, so the
+   one act by which a record becomes a case did not exist. REC-37 widens
+   `op=cite` to accept a question as the citing object, so `cite` is now
+   published on every inquiry-typed row (a legacy `FOCUS-` document's row says
+   `inquiry`, the normalized type, so it lands here too) — and it is published
+   at EVERY state, because the store's guard is type-only on this arm and
+   deriving a narrower answer here than the op gives is what this file must
+   never do. The second assertion keeps its whole point: an elevated focus still
+   publishes no STATE-MACHINE act, which is what "elevated has no legal edge"
+   was asserting; `cite` is not one and its presence is the store's type rule
+   showing through, exactly as it already does on a RETIRED information bundle
+   two blocks above. */
+t("a surfaced focus publishes {cite, dispose}; the disposition TARGETS come from the vocabulary, not a UI copy",
+  actIds(await affordances(F)), ["cite", "dispose"]);
 const affF2 = await affordances(F2);
-t("an elevated focus publishes NO acts: elevated has no legal edge and elevation is not a bulk flip",
-  actIds(affF2), []);
+t("an elevated focus publishes NO state-machine act: elevated has no legal edge and elevation is not a bulk flip (cite is type-only and says nothing about state)",
+  actIds(affF2), ["cite"]);
 const hF2 = await selectIds([F2]);
 const dispF2 = rP(await GET(`op=dispose&token=mem-rec19&handle=${hF2}&to=deferred&reason=not+now`));
 t("the empty list is honest: disposing the elevated focus is refused ILLEGAL_TRANSITION by the store",

@@ -383,13 +383,21 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
   t("its rung is NULL: no document assigns reopen one, and RUNGS invents nothing (FW-14's job)",
     pub.rung, null);
 
+  /* CORRECTED 2026-08-04 (REC-37), never exempted: `cite` joins every inquiry's
+     published act list, at every state. It was absent because `op=cite` could
+     not reach a question in either direction — UI-20's measured gap, and the
+     reason the act by which a record becomes a case did not exist. The guard on
+     the widened arm is TYPE-only, so the act publishes regardless of state,
+     exactly as it already did on a RETIRED information bundle. What each
+     assertion below is really about — which STATE-MACHINE acts a question
+     offers — is unchanged. */
   t("a DEFERRED inquiry publishes reopen beside dispose", actIds(await affordances(INQ_HELD)),
-    ["dispose", "reopen"]);
+    ["cite", "dispose", "reopen"]);
   const dism = "INQ-2026-1400-dismissed-2";
   await seed(dism, inquiryMd(dism, { question: "Does the transfer recur?", ...withBasis }), "inquiry", "open");
   await dispose(NADIA, dism, "dismissed", "duplicate of the main question");
   t("a DISMISSED inquiry publishes it too — both edges, one derivation", actIds(await affordances(dism)),
-    ["dispose", "reopen"]);
+    ["cite", "dispose", "reopen"]);   // REC-37, 2026-08-04: cite joins every inquiry (see the note above)
   /* CORRECTED 2026-08-04 (REC-16), never exempted: an open inquiry RESTING ON
      SOMETHING now publishes `inquirydivide` too — dividing is legal from open,
      and it is the act a member reaches for when one leg is holding the whole
@@ -399,7 +407,7 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
   t("an OPEN inquiry does NOT publish reopen, and the store agrees by name",
     [actIds(await affordances(INQ_OPEN)),
      (await reopen(NADIA, { target: INQ_OPEN, reason: REOPEN_WHY })).reason],
-    [["conclude", "dispose", "inquirydivide"], "NOT_SET_DOWN"]);
+    [["cite", "conclude", "dispose", "inquirydivide"], "NOT_SET_DOWN"]);   // REC-37, 2026-08-04: cite joins every inquiry
   /* CORRECTED 2026-08-04 at the REC-31 x REC-14 merge, never exempted: a
      concluded inquiry now publishes `publish` beside `dispose` — REC-14
      landing, and it is the very act this refusal has always pointed at. What
@@ -411,9 +419,9 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
   t("a CONCLUDED inquiry does NOT publish reopen — it publishes the act that moves it forward — and the store agrees",
     [actIds(await affordances(INQ_CONCL)),
      (await reopen(NADIA, { target: INQ_CONCL, reason: REOPEN_WHY })).reason],
-    [["dispose", "inquirydivide", "publish"], "NOT_SET_DOWN"]);
+    [["cite", "dispose", "inquirydivide", "publish"], "NOT_SET_DOWN"]);   // REC-37, 2026-08-04: cite joins every inquiry
   t("the deferred LEGACY focus does not publish it either: the derivation asks the DECLARED vocabulary too",
-    actIds(await affordances(FOCUS_LEGACY)), ["dispose"]);
+    actIds(await affordances(FOCUS_LEGACY)), ["cite", "dispose"]);   // REC-37, 2026-08-04: cite joins every inquiry
   t("an information bundle never publishes reopen", actIds(await affordances(DOC)).includes("reopen"), false);
 
   /* NO SECOND EDGE SOURCE, asserted against the source rather than inferred
