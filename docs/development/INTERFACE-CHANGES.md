@@ -566,3 +566,111 @@ migration is the two lines above, asserted by its own guard). Version bumps: **I
 5.3.0 → 5.4.0** (additive: `op=earnedbasis`, the `BASIS_REFUSED` `repairs` field, the
 `SUBJECT_REFUSED` refusal) and the catalog version already carries the vocabulary
 change (REC-18 bumped it in-code per the REC-14/REC-23 precedent).
+
+---
+
+## IC-12 · I3 `op=cite`: the citing object may be a QUESTION · PROPOSED
+
+- **Interface:** I3 (plane → UI, the op contracts), currently **5.4.0 STABLE**
+- **Proposer:** session rec37-agent, 2026-08-04, from `QUEUE.md` REC-37 (UI-20's
+  measured gap)
+- **Owner to land it:** `RECORD` (I3's owner; the change is landed in this worker)
+- **Consumers to answer:** `UI` (live — UI-20 built `op=cite`'s only caller and
+  UI-21's finder is next), `DIST` (the installer's served surfaces)
+
+### The change, and it is ADDITIVE AND PERMISSIVE throughout
+
+`op=cite` accepted a PROJECT as the citing object and INFORMATION as every
+member. It now also accepts an INQUIRY as the citing object, and on that arm a
+member may be information OR another inquiry. Nothing previously admitted is now
+refused, and no existing refusal reason is renamed.
+
+- **New optional parameter `role`** — required on the inquiry arm only, one of
+  the catalog's `BASIS_ROLES` (`supports`, `cuts_against`). A case-arm caller
+  that never heard of it is byte-identical.
+- **Six new refusal reasons, all of them on inputs that used to be refused
+  earlier by a different arm:** `NOT_CITABLE` (a member on the question arm that
+  is neither material nor a question — the case arm keeps `NOT_INFORMATION`
+  unchanged), `NO_ROLE`, `BAD_ROLE`, `ROLE_NOT_APPLICABLE`, and — travelling
+  back from `op=promote`, where they already lived — `SELF_BASIS` and
+  `BASIS_CYCLE`, each naming the FULL path.
+- **`NOT_A_PROJECT` KEEPS ITS NAME and fires strictly less often**: only for a
+  citing object that is neither a case nor a question. Its `detail` is rewritten
+  to say so. Renaming it was considered and rejected — see below.
+- **New success fields on the inquiry arm only:** `citingObjectType`, `role`,
+  `legs[]` (target, role, grade, grade_axis, grade_source, why), `gradesFilled`,
+  `gradesUndetermined`. A reader that ignores them sees the prior shape.
+- **`op=affordances`**: `cite` is published for `["information","project",
+  "inquiry"]`, its label becomes type-neutral (*"Cite material into a case or a
+  question"*), and `VOCABULARIES` gains `basis_roles`, imported from the catalog
+  function that enforces the set.
+- **No capability change.** `cite` still needs `contribute`; no new token.
+- **No I5 change.** No table, no column, no index. The leg lands on
+  `inquiry_basis` only as REC-11's promote-projection of the document.
+
+### Why the two reason codes did NOT move
+
+`RECONCILED.md` §3.1 (UI-20) says plainly that "`NOT_INFORMATION` is the wrong
+check now", and the obvious reading is a rename. It was rejected on three
+grounds, and the judgement is CONDUCT's to overturn cheaply (one string per arm
+plus the suites that pin them):
+
+1. **Measured consumer impact of keeping them: nil.** No consumer matches on
+   either literal anywhere — the only occurrences in `civicos-ui` are prose in
+   comments, and `cite-act.test.mjs` asserts that the surface names no refusal
+   code of its own.
+2. **A renamed wire string is a BREAK by this registry's own definition**, and
+   I3 2.0.0 is the precedent that recorded exactly that for `NOT_PROBLEMS`. A
+   breaking bump would make every consumer re-verify a contract that is
+   otherwise purely permissive.
+3. **What a member reads is `detail`**, and DEC-8 makes the plane's sentence the
+   thing the surface renders. Both sentences are rewritten to say precisely what
+   is now refused, so the honesty budget is spent where it is met.
+
+The one place a rename WOULD have been dishonest to avoid is the question arm's
+member check — a refusal named `NOT_INFORMATION` firing where an inquiry IS
+admissible would be the refusal lying about itself — so that arm gets its own
+new reason, `NOT_CITABLE`, rather than reusing it.
+
+### What UI must migrate, and it is NOT a break
+
+REC-37 landed with **no edit to `app.html`**, which is the item's own acceptance
+clause, and `civicos-ui/test/cite-act.test.mjs` was driven against the widened
+plane to prove it. That run MEASURED two places where the surface has not caught
+up. Neither is a defect in what landed and neither breaks anything that worked:
+
+1. **`citeCandidates()` filters the record's `object_type` to `project`**
+   (`app.html` ~:5474), so a question is never OFFERED as a citing object even
+   though the plane now publishes `cite` on it. The comment above it — "the ONE
+   thing this surface knows that the plane does not publish" — is now stale in
+   its reasoning: `op=affordances` publishes `cite` on all three types and still
+   does not separate the two ENDS of the act, so the filter is still doing real
+   work for the information end; what it must stop excluding is the inquiry end.
+2. **The cite flow sends no `role`**, so a cite driven onto a question reaches
+   the plane and is refused `NO_ROLE`. The refusal renders in the plane's own
+   words and the harness asserts it, so DEC-8 holds and nothing is silently
+   broken — but a member cannot complete the act from the surface until the flow
+   offers the two published roles. The vocabulary is published
+   (`vocabularies.basis_roles`); no surface-side copy is needed or permitted.
+
+And the standing note from IC-11 applies again here, in the other direction: the
+flow must FILL the leg from `op=earnedbasis` and must NOT offer a grade control.
+The plane already fills it — `op=cite` returns `legs[]` with the grade the record
+earned and `null` where it earned nothing — so the surface renders what it
+received.
+
+### Consumer responses
+
+- `UI`: *pending.* **Silence is not consent** (step 2). The two migration items
+  above are named precisely and are additive.
+- `DIST`: expected NOT-AFFECTED — no served surface calls `op=cite`.
+- Every other area: NOT-AFFECTED.
+
+### Version, when CONDUCT resolves it
+
+I3 5.4.0 → **5.5.0** (additive: one optional parameter, six new refusal reasons
+on newly-legal inputs, new success fields, a widened published act and one new
+published vocabulary; `NOT_A_PROJECT` narrows permissively and keeps its name).
+I5 unchanged — no schema change of any kind. RECORD does not bump
+`INTERFACES.md` itself: this entry is the proposal, and the registry edit is
+CONDUCT's at integration.

@@ -353,8 +353,15 @@ console.log("\n--- 4. TERMINAL: the catalog's edge table says so, and every act 
     "ILLEGAL_TRANSITION");
   t("concluding it again is refused too — its legs are owned by its children now",
     (await conclude(PILAR, { target: PARENT, conclusion: "x", falsifier: "y" })).reason, "ILLEGAL_TRANSITION");
-  t("op=affordances publishes NO acts for it, and the empty list is honest because the store refuses each by name",
-    actIds(await affordances(PARENT)), []);
+  /* CORRECTED 2026-08-04 (REC-37), never exempted: `cite` joins every inquiry's published act list. It was absent because `op=cite` could
+     not reach a question in either direction — UI-20's measured gap, and the
+     reason the act by which a record becomes a case did not exist. The guard on
+     the widened arm is TYPE-only, so the act publishes regardless of state,
+     exactly as it already did on a RETIRED information bundle. What each
+     assertion below is really about — which STATE-MACHINE acts a question
+     offers — is unchanged. */
+  t("op=affordances publishes NO state-machine act for it, and that list is honest because the store refuses each by name",
+    actIds(await affordances(PARENT)), ["cite"]);
 }
 
 /* =============================================== 5. the CHILDREN and the disclosure */

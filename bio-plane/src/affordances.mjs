@@ -47,7 +47,7 @@
  * nothing operates it until REC-24, and an empty list is the true answer.
  */
 
-import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
+import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -128,6 +128,14 @@ export const VOCABULARIES = {
      publishes exactly as one that sought comment and printed the reply. What is
      gated is that the position is declared and justified. */
   subject_positions: SUBJECT_POSITIONS,
+  /* REC-37. The roles a leg of a question's basis may carry, published beside
+     the widened `cite` act because that act now REQUIRES one and refuses by
+     name without it (NO_ROLE / BAD_ROLE). A surface that had to keep its own
+     copy of these two words would be the surface deciding what `cuts_against`
+     is called, and invariant 7's storage is not a rendering detail. Imported
+     from the catalog function that enforces the set — there is one place these
+     words live and it is not this file. */
+  basis_roles: BASIS_ROLES,
 };
 
 /* The seven sourced rungs — BIO_Interaction_Constructs_v0_1.md via
@@ -300,15 +308,27 @@ export const ACTS = [
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("divided")
                      && (f.basis_legs ?? 0) >= 1
                      && (f.rested_on?.working ?? 0) === 0 },
-  /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
-     because the store's own guards are type-only on both: any information
-     bundle may be cited (cite checks NOT_INFORMATION and nothing about state —
-     citing retired material is permitted and therefore published), and any
-     project may cite. Deriving a narrower answer here than the op gives would
-     be this file inventing a rule the plane does not enforce. */
-  { id: "cite", label: "Cite information in a project", weight: "report",
-    types: ["information", "project"],
-    applies: (f, ty) => ty === "information" || ty === "project" },
+  /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
+     guards are type-only on both: any information bundle may be cited (cite
+     checks the member's TYPE and nothing about state — citing retired material
+     is permitted and therefore published), and any citing object may cite.
+     Deriving a narrower answer here than the op gives would be this file
+     inventing a rule the plane does not enforce.
+
+     REC-37 ADDS THE THIRD TYPE, and it is the one that makes a record become a
+     case: a QUESTION may cite, and what lands on it is a leg of the basis its
+     answer rests on rather than a citation edge. An inquiry also appears here
+     as a MEMBER — a leg may point at another question (basis recursion, DEC-23)
+     — which is the same widening read from the other end. The store refuses a
+     citing object that is neither NOT_A_PROJECT and a member that is neither
+     NOT_CITABLE, and this entry publishes exactly that and no narrower rule.
+
+     THE LABEL IS TYPE-NEUTRAL NOW, because one act publishing itself as "in a
+     project" on a question would be the publication disagreeing with the op it
+     fronts — the disagreement this file exists to prevent. */
+  { id: "cite", label: "Cite material into a case or a question", weight: "report",
+    types: ["information", "project", "inquiry"],
+    applies: (f, ty) => ty === "information" || ty === "project" || ty === "inquiry" },
   /* S-11 step 2: withdrawing a citation without deleting it. From the
      information side: some project holds a live cites edge to it. From the
      project side: its own references carry a confirmed cites edge. */

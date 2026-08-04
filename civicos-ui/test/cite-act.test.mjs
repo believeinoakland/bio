@@ -7,8 +7,45 @@
  * pre-flight design turns on, and a mock that answered in a friendlier order
  * would be proving something the plane does not do.
  *
- * WHAT THE PLANE IS, MEASURED IN SOURCE 2026-08-04, and every deviation from
- * the item's text below is one of these facts rather than a shortcut:
+ * ================= CORRECTED 2026-08-04 BY REC-37 =================
+ *
+ * FACTS (i) AND (ii) BELOW WERE TRUE WHEN THIS HARNESS WAS WRITTEN AND ARE NOW
+ * WRONG, and they are corrected here rather than exempted, because the GAP THEY
+ * NAMED IS CLOSED. UI-20 measured it and queued it; REC-37 built the plane half.
+ * What is true as of REC-37, measured in source the same way:
+ *
+ *   (i')  `op=cite`'s citing object MAY BE A QUESTION. The store refuses only an
+ *         object that is neither a case nor a question (`NOT_A_PROJECT`, its
+ *         name deliberately unchanged — nothing previously admitted is now
+ *         refused), and on the question arm a member may be information OR
+ *         another inquiry (`NOT_CITABLE`, a new refusal on a newly legal arm).
+ *         The leg lands on `inquiry_basis` THROUGH THE DOCUMENT: the act splices
+ *         `basis[]` and promotes, so D-21 holds and the projection is still a
+ *         projection. `op=affordances` publishes `cite` for
+ *         `["information","project","inquiry"]`, and publishes the BASIS ROLES
+ *         as a vocabulary beside it.
+ *
+ *   (ii') THE ACT STILL HAS NO CYCLE CHECK OF ITS OWN, and that has become the
+ *         point rather than the gap: the leg now REACHES REC-11's guard at the
+ *         write, so a cycle-closing cite is refused `BASIS_CYCLE` / `SELF_BASIS`
+ *         WITH THE FULL PATH NAMED. The control UI-20 recorded as impossible to
+ *         run as written — "remove the cycle pre-flight and the harness reaches
+ *         the plane with a cyclic cite" — is now run for real below, in the one
+ *         direction that was missing: onto a question.
+ *
+ *   (iii') TWO SURFACE GAPS ARE MEASURED AND NAMED HERE, not papered over. The
+ *         plane half landed with NO edit to `app.html` (that is REC-37's own
+ *         acceptance clause and this file is the cross-check), and the honest
+ *         consequence is that the surface has not caught up in two places:
+ *         `citeCandidates()` still filters the candidate list to `project`, so a
+ *         question is never OFFERED as a citing object; and the flow sends no
+ *         `role`, so a cite driven onto a question reaches the plane and is
+ *         refused `NO_ROLE` — rendered in the plane's own words, DEC-8 intact.
+ *         Both are asserted positively as the measured state, and both are UI
+ *         work rather than a defect in what landed.
+ *
+ * The ORIGINAL facts, kept because the reasoning around them is still what this
+ * file is built on:
  *
  *   (i)   `op=cite` cites INTO A PROJECT. `store.mjs:3907` refuses any other
  *         object_type NOT_A_PROJECT, and `:3930` refuses any selection member
@@ -20,7 +57,7 @@
  *         `op=promote`, and no op appends a leg to it. This harness therefore
  *         proves the inquiry half NEGATIVELY and asserts the gap rather than
  *         mocking a plane that would answer differently — a mock agreeing with
- *         a plane that does not exist agrees on nothing.
+ *         a plane that does not exist agrees on nothing.  [SUPERSEDED — (i')]
  *
  *   (ii)  `cite()` HAS NO CYCLE CHECK. The record's DAG guard is REC-11's, on
  *         the basis write path (`SELF_BASIS` / `BASIS_CYCLE`, both of which name
@@ -31,6 +68,8 @@
  *         mean"). So the cycle-closing cite below is driven for real, and what
  *         is asserted is that the surface renders THE PLANE'S answer and names
  *         every id the plane handed back. DEC-8 forbids the alternative.
+ *         [SUPERSEDED IN PART — (ii'): the case arm is exactly as described and
+ *         is still driven; the question arm now reaches the real guard.]
  *
  *   (iii) THERE IS NO CITE DRY RUN. UI-12's target-withheld pre-flight works
  *         only where the store judges the authored field BEFORE it resolves the
@@ -50,6 +89,25 @@
  *         `reversible` for it, and FW-14 is the item that ASSIGNS it. Until
  *         then the surface renders the absence as an absence, and this harness
  *         asserts it does not render `reversible` from a document nobody wrote.
+ *
+ * NEGATIVE CONTROL, RE-RUN 2026-08-04 AFTER REC-37 (rec37-agent), arm (c) — the
+ * one whose subject the widening changed most, because the new assertions are
+ * all about a refusal sentence a member reads. Same edit, same file, restored
+ * byte-identically to app.html sha256
+ * e007522835e84f964a09ea7f2708b749c8bca961f56dfb8fd7cbe0e28e179cb3.
+ * -> 10 of 131 failed (was 10 of 116), and the NEW assertion is among them:
+ * "MEASURED GAP (UI): it sends no role, so the plane refuses NO_ROLE — and the
+ * refusal is the plane's sentence". The invented sentence was named nine times
+ * by the file-wide provenance check. So the widened arm is held to DEC-8 by the
+ * same instrument as every other refusal here, and it is not passing on an
+ * equality that costs nothing.
+ * WHAT THE OLD ARMS' NOTES NO LONGER SAY, corrected rather than exempted: arm
+ * (a)'s finding read "the inquiry_basis assertion STAYED GREEN, because the
+ * plane still refuses NOT_A_PROJECT" — the plane does not refuse it any more, so
+ * what keeps that assertion honest now is that a cite into a CASE still reaches
+ * no basis at all, which is what it is asserting. And arm (b)'s note that the
+ * item's literal cycle control "CANNOT BE RUN AS WRITTEN" is superseded: it can,
+ * onto a question, and it is run below.
  *
  * NEGATIVE CONTROL, four arms, RUN 2026-08-04 and restored byte-identical after
  * each — app.html's sha256 was taken before, after the break and after the
@@ -144,7 +202,10 @@ const SAID  = [];                    // every refusal sentence the plane returne
    labels are the plane's, moved off the store's real wording so a transcription
    would be visible. */
 const PUBLISHED = {
-  cite:      { id:"cite",      label:"Cite information in a project", weight:"report",
+  /* CORRECTED 2026-08-04 (REC-37): the published label is type-neutral now,
+     because one act publishing itself as "in a project" beside a question would
+     be the publication disagreeing with the op it fronts. */
+  cite:      { id:"cite",      label:"Cite material into a case or a question", weight:"report",
                needs:"contribute", mode:"session", rung:null, prompt:null },
   retire:    { id:"retire",    label:"Retire", weight:"refuse",
                needs:"contribute", mode:"session", rung:"terminal", prompt:null },
@@ -161,6 +222,9 @@ const PUBLISHED = {
 };
 
 const CASE_1 = "PROJ-2026-0001", CASE_2 = "PROJ-2026-0002", QUESTION = "INQ-2026-0700";
+/* REC-37: a SECOND question, so a leg can point at one — basis recursion is
+   REC-11's design and it is half of what the widened act had to reach. */
+const QUESTION_SUB = "INQ-2026-0701";
 const DOCS4  = ["INFO-2026-0401","INFO-2026-0402","INFO-2026-0403","INFO-2026-0404"];
 const SEVERED_DOC = "INFO-2026-0405";
 const CITED_DOC   = "INFO-2026-0406";     // already cited by CASE_1, and so un-retirable
@@ -178,6 +242,9 @@ BUNDLES[CASE_2] = { bundle_id:CASE_2, object_type:"project", title:"Marina const
                     current_state:"forming", last_updated:"2026-07-31" };
 BUNDLES[QUESTION] = { bundle_id:QUESTION, object_type:"inquiry", title:"Did the sewer fund pay for the marina?",
                       current_state:"open", last_updated:"2026-07-31" };
+BUNDLES[QUESTION_SUB] = { bundle_id:QUESTION_SUB, object_type:"inquiry",
+                          title:"What did the transfer ordinance authorise?",
+                          current_state:"open", last_updated:"2026-07-31" };
 
 /* A PROJECT'S OWN references block — what `op=cite` edits, and the ONLY thing
    it edits. Seeded so the report outcome is genuinely per-item: one of the four
@@ -188,13 +255,51 @@ const PROJECT_REFS = {
               { rel:"cites", target:CITED_DOC, status:"confirmed", note:null } ],
   [CASE_2]: [],
 };
-/* THE INQUIRY'S BASIS — REC-11's `inquiry_basis`, here as the projection a
-   surface can see (op=projection's fm_json.basis). NOTHING in this mock ever
-   writes it, and the harness proves the cite flow does not reach it. */
+/* THE QUESTION'S BASIS — REC-11's `inquiry_basis`, here as the projection a
+   surface can see (op=projection's fm_json.basis), which IS the document's own
+   `basis:` block: the two are the same bytes by D-21, so a mock holding one
+   holds both.
+   CORRECTED 2026-08-04 (REC-37), never exempted: the old comment read "NOTHING
+   in this mock ever writes it, and the harness proves the cite flow does not
+   reach it". That was the GAP, and it is closed — `op=cite` onto a question now
+   appends a leg here, through the document, and the block below mirrors the
+   store's own order for it. What the harness proves has changed with the plane:
+   a cite into a CASE still reaches none of this (asserted, unchanged), and a
+   cite onto a QUESTION reaches it only with a role the surface does not yet
+   send. */
 const INQUIRY_BASIS = {
   [QUESTION]: [ { target:DOCS4[0], role:"supports", grade:"B", grade_axis:"capture", grade_source:"resolution" } ],
 };
 const basisSnapshot = () => JSON.stringify(INQUIRY_BASIS);
+/* The two roles the plane publishes as a vocabulary (affordances.mjs
+   VOCABULARIES.basis_roles, imported there from the catalog that enforces them).
+   Spelled here because this file IS the plane for the surface under test. */
+const ROLES = ["supports", "cuts_against"];
+/* What the record EARNS for a target, as op=earnedbasis would answer it. The
+   act FILLS from this; there is no grade control anywhere. A target absent here
+   earns nothing and its leg lands ungraded — undetermined and stated. */
+const EARNED = { [DOCS4[2]]: "A" };
+/* REC-11's DAG guard, at the WRITE and not in the act: is `from` reachable from
+   any of `targets` along stored legs? Mirrored so the refusal ORDER and the
+   named path are the store's. */
+function cyclePath(from, targets){
+  const walk = (at, path, seen) => {
+    for(const l of (INQUIRY_BASIS[at] || [])){
+      if(!String(l.target).startsWith("INQ-")) continue;
+      if(l.target === from) return [...path, from];
+      if(seen.has(l.target)) continue;
+      seen.add(l.target);
+      const f = walk(l.target, [...path, l.target], seen);
+      if(f) return f;
+    }
+    return null;
+  };
+  for(const t of targets){
+    const f = walk(t, [from, t], new Set([t]));
+    if(f) return f;
+  }
+  return null;
+}
 
 /* Selections: the plane's own lease. */
 const SELECTIONS = {};
@@ -203,7 +308,16 @@ let SEL_SEQ = 0;
 const REF = {
   NO_SUCH_SELECTION: "that selection is unknown to the record, or it has been released or has expired.",
   NO_SUCH_PROJECT:   "the citing object has to exist before it can point at anything.",
-  NOT_A_PROJECT:     "citation edges live on a case, and this is not one. The record keeps a question's own basis inside the question's document.",
+  /* CORRECTED 2026-08-04 (REC-37): the code is unchanged and the sentence is
+     not — it fires now only for an object that is NEITHER a case nor a question,
+     which is strictly less than it used to refuse. */
+  NOT_A_PROJECT:     "citations live on the citing object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on.",
+  NOT_CITABLE:       "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the set are neither.",
+  NO_ROLE:           "a leg of a question's basis says what the material DOES for the answer, and this call does not say. A leg that cuts against the case is first-class here, so it is never assumed.",
+  BAD_ROLE:          "that is not a role a basis leg can carry; the set is closed and the record publishes it beside the act.",
+  ROLE_NOT_APPLICABLE:"a role says what material does for a QUESTION's answer, and the thing being cited into here is a case. A case's citation edge carries no role.",
+  SELF_BASIS:        "a question cannot rest on itself: it is not evidence for its own answer.",
+  BASIS_CYCLE:       "this would close a loop. What a question rests on is a one-way graph, and the chain named above already leans on this one.",
   BAD_NOTE:          "the record's frontmatter grammar has no escapes, and a note has a ceiling; what you wrote does not fit inside it.",
   NOT_INFORMATION:   "citing material means material. These members of the set are not, and the whole call is handed back rather than trimmed to the ones that are.",
   SEVERED_EDGE:      "these were cut loose on purpose once, with a reason, and that is a decision rather than an absence. Putting one back is its own act.",
@@ -243,6 +357,10 @@ function actsForTarget(id){
   } else if(b.object_type === "project"){
     acts.push(PUBLISHED.cite);
   } else if(b.object_type === "inquiry"){
+    /* CORRECTED 2026-08-04 (REC-37): a question publishes `cite` now — it is the
+       act by which a record becomes a case, and affordances.mjs derives it from
+       the object's TYPE alone, exactly as it does for a case. */
+    acts.push(PUBLISHED.cite);
     acts.push(PUBLISHED.conclude);
   }
   return acts;
@@ -305,18 +423,68 @@ function mockFetch(u, opts){
     return R({ ok:true, handle, kind:"enumerated", n:ids.length });
   }
   if(op === "cite"){
-    /* THE STORE'S OWN ORDER (store.mjs cite()), mirrored exactly. */
+    /* THE STORE'S OWN ORDER (store.mjs cite()), mirrored exactly — REC-37's
+       widened order included, arm by arm and in the same sequence. */
     const sel = SELECTIONS[p.handle];
     if(!sel) return W(refuse("NO_SUCH_SELECTION"));
     const proj = BUNDLES[p.project];
     if(!proj) return W(refuse("NO_SUCH_PROJECT", { project:p.project }));
-    if(proj.object_type !== "project")
+    const onto = proj.object_type === "inquiry";
+    if(proj.object_type !== "project" && !onto)
       return W(refuse("NOT_A_PROJECT", { project:p.project, got:proj.object_type }));
     const note = String(p.note ?? "");
     if(note.length > 200 || /["\\\r\n]/.test(note)) return W(refuse("BAD_NOTE"));
-    const offenders = sel.ids.filter(id => !BUNDLES[id] || BUNDLES[id].object_type !== "information");
+    /* THE ROLE, judged before the members: a member who has not said what the
+       material DOES is told that first. Required on the question arm, refused
+       rather than dropped on the case arm. */
+    const role = p.role == null || p.role === "" ? null : String(p.role);
+    if(onto){
+      if(role === null)
+        return W(refuse("NO_ROLE", { project:p.project, handle:p.handle, roles:ROLES.slice() }));
+      if(!ROLES.includes(role))
+        return W(refuse("BAD_ROLE", { project:p.project, handle:p.handle, got:role, roles:ROLES.slice() }));
+    } else if(role !== null){
+      return W(refuse("ROLE_NOT_APPLICABLE", { project:p.project, handle:p.handle, got:role }));
+    }
+    const offenders = sel.ids.filter(id => !BUNDLES[id] || (onto
+      ? !["information","inquiry"].includes(BUNDLES[id].object_type)
+      : BUNDLES[id].object_type !== "information"));
     if(offenders.length)
-      return W(refuse("NOT_INFORMATION", { project:p.project, handle:p.handle, offenders:offenders.slice().sort() }));
+      return W(refuse(onto ? "NOT_CITABLE" : "NOT_INFORMATION",
+        { project:p.project, handle:p.handle, offenders:offenders.slice().sort() }));
+    if(onto){
+      /* THE QUESTION ARM. ALREADY means "already carries a LEG", and the leg
+         lands THROUGH THE DOCUMENT — INQUIRY_BASIS here IS the document's own
+         `basis:` block, which is what makes the projection a projection. */
+      const legs = INQUIRY_BASIS[p.project] || (INQUIRY_BASIS[p.project] = []);
+      const legged = new Set(legs.map(l => l.target));
+      const already = sel.ids.filter(id => legged.has(id));
+      const add = sel.ids.filter(id => !legged.has(id));
+      if(!sel.ids.length) return W(refuse("EMPTY_SELECTION", { project:p.project, handle:p.handle }));
+      if(!add.length)
+        return W({ ok:true, project:p.project, handle:p.handle, weight:"report", moved:false,
+                   cited:[], alreadyCited:already.slice().sort(), severed:[], citingObjectType:"inquiry",
+                   role, bundleSha:"a".repeat(64),
+                   detail:"every member of the selection was already a leg; nothing was written" });
+      /* THE DAG GUARD IS AT THE WRITE (promote), which is what this act reaches
+         rather than fronting — REC-11's, naming the FULL path. */
+      if(add.includes(p.project))
+        return W(refuse("SELF_BASIS", { project:p.project, path:[p.project, p.project] }));
+      const cyc = cyclePath(p.project, add.filter(id => BUNDLES[id].object_type === "inquiry"));
+      if(cyc) return W(refuse("BASIS_CYCLE", { project:p.project, path:cyc }));
+      const made = add.map(target => ({ target, role,
+        ...(EARNED[target] ? { grade:EARNED[target], grade_axis:"connection", grade_source:"resolution" } : {}),
+        note }));
+      for(const l of made) legs.push(l);
+      return W({ ok:true, project:p.project, handle:p.handle, weight:"report", moved:false,
+                 cited:add.slice().sort(), alreadyCited:already.slice().sort(), severed:[],
+                 citingObjectType:"inquiry", role,
+                 legs: made.map(l => ({ target:l.target, role:l.role, grade:l.grade ?? null,
+                                        grade_axis:l.grade_axis ?? null, grade_source:l.grade_source ?? null })),
+                 gradesFilled: made.filter(l => l.grade).length,
+                 gradesUndetermined: made.filter(l => !l.grade).length,
+                 bundleSha:"e".repeat(64), rowVersion:8 });
+    }
     const refs = PROJECT_REFS[p.project];
     const byTarget = new Map(refs.filter(r=>r.rel==="cites").map(r=>[r.target, r.status]));
     const severed = sel.ids.filter(id => byTarget.get(id) === "severed");
@@ -448,9 +616,13 @@ ok("the cite region exists and is marked", REGION.length > 2000);
    (NO_SUCH_SELECTION) and the two that are not about the record at all
    (PREFLIGHT_NOT_REFUSED, NO_ANSWER — the surface saying its own probe or its
    own transport misbehaved and that nothing was committed). */
+/* REC-37, 2026-08-04: the six refusals the widened act adds join the list. The
+   rule is unchanged — this surface may name none of them — and the list grows
+   with the op's contract so a new refusal cannot arrive unguarded. */
 for(const code of ["NOT_A_PROJECT","NOT_INFORMATION","SEVERED_EDGE","CITATION_TOO_LARGE",
                    "UNSPLICEABLE_REFERENCES","EMPTY_SELECTION","BAD_NOTE","NO_REASON","BAD_REASON",
-                   "CITED","ILLEGAL_TRANSITION","NO_SUCH_PROJECT"])
+                   "CITED","ILLEGAL_TRANSITION","NO_SUCH_PROJECT",
+                   "NOT_CITABLE","NO_ROLE","BAD_ROLE","ROLE_NOT_APPLICABLE","SELF_BASIS","BASIS_CYCLE"])
   ok(`the cite region names no ${code} refusal of its own`,
      !new RegExp(`reason:\\s*"${code}"`).test(REGION));
 ok("the ONE reason code the cite region knows is the field retire withholds, and it is a read not a render",
@@ -532,7 +704,20 @@ ok("the cite dialog offers the record's own cases as citing objects",
 const offered = [...c1.matchAll(/citeChoose\(&quot;([^&]+)&quot;\)/g)].map(m=>m[1]);
 ok("every citing object offered is one the record reports as a case",
    offered.length > 0 && offered.every(id => BUNDLES[id] && BUNDLES[id].object_type === "project"));
-ok("the question is not offered as a citing object", !offered.includes(QUESTION));
+/* CORRECTED 2026-08-04 (REC-37), and the correction is a MEASURED SURFACE GAP
+   rather than a rule. This assertion used to be "the question is not offered as
+   a citing object", and it was RIGHT: the plane refused NOT_A_PROJECT and
+   offering a question would have been the surface proposing an act the record
+   would decline. REC-37 makes a question a legal citing object and publishes
+   `cite` on it, so the reason that assertion existed is gone — but
+   `citeCandidates()` still filters the record's own `object_type` to `project`
+   (app.html, the one thing this surface knows that the plane does not publish),
+   and REC-37 landed with NO surface edit by design. So what is asserted is the
+   FACT: the candidate list has not caught up, and a question is still absent
+   from it. That is UI work, named here so it is not mistaken for the plane's
+   refusal — the plane would accept it, and the arm below drives it to prove so. */
+ok("MEASURED GAP (UI): a question is still not OFFERED as a citing object, because the candidate list filters to cases",
+   !offered.includes(QUESTION));
 ok("no document is offered as a citing object", !offered.some(id=>DOCS4.includes(id)));
 ok("the report weight is stated from the act's own published word", /at <b>report<\/b> weight/.test(c1));
 ok("the report weight's semantics are stated exactly: per item, and never a quiet narrowing",
@@ -646,16 +831,66 @@ snap(dlg());
 ok("an INQ- member in the selection is named by id", namedIn(dlg(), QUESTION));
 ok("the INQ- member refusal is the plane's sentence, not this page's", dlg().includes(REF.NOT_INFORMATION));
 
-/* CITING ONTO A QUESTION: driven straight at the plane, because the surface
-   does not offer it. The plane's NOT_A_PROJECT is what a member reads. */
+/* CITING ONTO A QUESTION — CORRECTED 2026-08-04 (REC-37), never exempted.
+   This block used to assert "citing onto a question is refused BY THE PLANE"
+   with NOT_A_PROJECT, and that was the GAP: the record-becomes-a-case edge did
+   not exist. It exists now, and the plane accepts a question as a citing object.
+   What the surface meets instead is the SECOND measured gap: the flow sends no
+   `role`, because there is no role control on it — so the act reaches the plane
+   and is refused NO_ROLE, which the surface renders in the plane's own words.
+   DEC-8 is intact throughout and nothing here is computed on this side. */
 ctx.__reset();
 SELECTIONS["SEL-ONQ"] = { handle:"SEL-ONQ", ids:[DOCS4[0]] };
 await ctx.__citeOverSelection("SEL-ONQ", [DOCS4[0]], citeAct(), null);
 ctx.__citeChoose(QUESTION);                 // the flow's own control cannot reach this
 await ctx.__doCite();
 snap(dlg());
-ok("citing onto a question is refused BY THE PLANE, in the plane's words", dlg().includes(REF.NOT_A_PROJECT));
-ok("and the question's basis is still byte-identical", basisSnapshot() === basisBefore);
+ok("the surface REACHES the plane with a cite onto a question — the record no longer refuses the object",
+   CALLS.some(c=>c.op==="cite" && c.params.project===QUESTION) && !dlg().includes(REF.NOT_A_PROJECT));
+ok("MEASURED GAP (UI): it sends no role, so the plane refuses NO_ROLE — and the refusal is the plane's sentence",
+   dlg().includes(REF.NO_ROLE));
+ok("the plane's own reason code travels with it, and this surface composed none of it",
+   /NO_ROLE/.test(dlg()));
+ok("and NOTHING landed while the act had not what it needs: the question's basis is still byte-identical",
+   basisSnapshot() === basisBefore);
+
+/* THE WIDENED PATH, DRIVEN FOR REAL. The surface cannot supply a role yet, so
+   this arm goes at the plane directly — the same way the blank-reason severance
+   is driven below, and for the same reason: what is being proved is the RECORD's
+   behaviour, not this page's. A document and ANOTHER QUESTION land as legs. */
+{
+  SELECTIONS["SEL-LEG"] = { handle:"SEL-LEG", ids:[DOCS4[2], QUESTION_SUB] };
+  const r = (await mockFetch(
+    `https://plane.test/api/?op=cite&project=${QUESTION}&handle=SEL-LEG&role=supports&note=`).json()).result;
+  ok("a document AND another question land on the question's basis through the one widened act",
+     r.ok && r.cited.length === 2 && r.citingObjectType === "inquiry" && r.role === "supports");
+  ok("THE LEGS ARE IN THE QUESTION'S OWN DOCUMENT — the projection a surface reads IS the document's basis block",
+     (INQUIRY_BASIS[QUESTION]||[]).filter(l => [DOCS4[2], QUESTION_SUB].includes(l.target)).length === 2);
+  ok("THE GRADE IS FILLED BY THE RECORD, from what it earns — never offered as a control",
+     r.legs.find(l=>l.target===DOCS4[2]).grade === "A"
+     && r.legs.find(l=>l.target===DOCS4[2]).grade_source === "resolution");
+  ok("and a target the record earns nothing for lands UNGRADED, stated rather than guessed",
+     r.legs.find(l=>l.target===QUESTION_SUB).grade === null
+     && r.gradesFilled === 1 && r.gradesUndetermined === 1);
+  /* THE CONTROL UI-20 RECORDED AS IMPOSSIBLE TO RUN, now run: a cycle-closing
+     cite onto a question reaches REC-11's guard at the write and is refused with
+     the FULL PATH named. */
+  SELECTIONS["SEL-BACK"] = { handle:"SEL-BACK", ids:[QUESTION] };
+  const back = (await mockFetch(
+    `https://plane.test/api/?op=cite&project=${QUESTION_SUB}&handle=SEL-BACK&role=supports&note=`).json()).result;
+  ok("a cycle-closing cite onto a question is refused at the WRITE, by REC-11's guard and not by any rule of the act's",
+     back.ok === false && back.reason === "BASIS_CYCLE");
+  ok("and the refusal NAMES THE FULL PATH the record walked",
+     Array.isArray(back.path) && back.path[0] === QUESTION_SUB
+     && back.path[back.path.length-1] === QUESTION_SUB && back.path.includes(QUESTION));
+  ok("a question citing ITSELF is refused SELF_BASIS, named as itself",
+     await (async () => {
+       SELECTIONS["SEL-SELF"] = { handle:"SEL-SELF", ids:[QUESTION] };
+       const s = (await mockFetch(
+         `https://plane.test/api/?op=cite&project=${QUESTION}&handle=SEL-SELF&role=supports&note=`).json()).result;
+       return s.ok === false && s.reason === "SELF_BASIS";
+     })());
+}
 
 /* ============ (7) CITATION_TOO_LARGE, with the record's own numbers ============ */
 TOO_LARGE = true;
@@ -793,4 +1028,4 @@ ok("the act bar's holder is no longer named for its first caller",
    && /let ACTS_HERE = \[\]/.test(APP));
 
 if(fails.length){ console.error(`cite-act: ${n} assertions, ${fails.length} failed`); console.error(fails.join("\n")); process.exit(1); }
-console.log(`cite-act: ${n} assertions, all green — a four-document selection cited onto a case through op=cite with the outcome stated per item (3 cited, 1 retained), the note optional and bounded BY THE PLANE, a severed edge and a cycle-closing cite refused in the record's own words with every id it named, citing onto a question refused NOT_A_PROJECT and the question's basis byte-identical throughout, retire pre-flighted through the plane's own reason grammar with the selection withheld and nothing written, sever and reinstate moving an edge without deleting it, and no refusal sentence originating in this surface`);
+console.log(`cite-act: ${n} assertions, all green — a four-document selection cited onto a case through op=cite with the outcome stated per item (3 cited, 1 retained), the note optional and bounded BY THE PLANE, a severed edge and a cycle-closing cite refused in the record's own words with every id it named, retire pre-flighted through the plane's own reason grammar with the selection withheld and nothing written, sever and reinstate moving an edge without deleting it, and no refusal sentence originating in this surface; and, against REC-37's WIDENED plane with NO surface edit, the flow now REACHES the plane with a cite onto a question and is refused NO_ROLE in the plane's own words (the surface sends no role yet, and the candidate list still offers only cases — both named as measured UI gaps), while the widened act driven directly lands a document AND another question as legs of the question's own document, fills the earned grade from the record and leaves an unearned one undetermined, and refuses a cycle-closing cite at the write with the full path named`);
