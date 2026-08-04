@@ -180,6 +180,46 @@ measured as Workers FREE on 2026-07-31 and the upgrade is the one act only Bob c
 it has been named to him. Items (1), (3) and (4) are enactable now, and the tesseract
 placement decision does not wait on the probe — the probe sizes it.
 
+### 2026-08-04 · BOB · THE BATTERY LEAKED 41 GB OF TEMP DIRS AND FILLED THE DISK TO ZERO (D-186)
+
+Found because a planning-surface write failed with **ENOSPC** mid-turn. Not a Claude
+Code or editor problem — measured, and it is OURS: **23,263 `miniflare-*` directories
+holding 41.0 GB** in the machine's `$TMPDIR`, plus ~2,300 from the suites' own sandboxes
+(`ratify-`, `sshsig-`, `signpage-`, `attest-`, `reuse-ratify-`, `publish-`,
+`publishedcase-`, `reeval-`) and 595 MB from the OCR probes. 36 of 42 suites drive the
+plane through miniflare and **you run the full battery on every worker landing**, so the
+leak scales with YOUR throughput — it accumulated ~23k directories in days.
+
+**Why it outranks a disk-hygiene nuisance:** at zero bytes, every Bash command failed
+before it started (the harness could not write its own output file), so the session could
+not commit, push, or reach this inbox. A planning surface that is written and
+UNPUBLISHABLE is the exact failure `plancheck` exists to prevent, arriving by a route the
+instrument cannot see.
+
+**Already done by BOB, with Bob's approval:** 37.2 GB reclaimed (2.2 GB → 40 GB free).
+**Deliberately deleted only directories older than the RUNNING battery** — a worker was
+mid-`test:battery` and removing its live sandbox would have broken your verification. The
+fix must be equally careful, and an unconditional sweep is the wrong shape.
+
+    ### M0-8 · queued
+    milestone: M0
+    scope: **Stop the battery leaking temp directories (D-186).** Three parts: (a) the
+      miniflare harness disposes of its sandbox in a `finally`, so a THROWING suite still
+      cleans up — the leak is worst exactly when tests fail; (b) each suite that mints its
+      own sandbox disposes of it the same way; (c) `scripts/battery.mjs` sweeps ORPHANS at
+      start — older than the current run only, never a blanket wipe, because a concurrent
+      worker's live sandbox must survive (that is not hypothetical: it was live during the
+      cleanup that found this). The OCR probes' npm-installs into temp are bounded
+      separately and may stay, since they are probes and not battery.
+    behind-interface: none — test estate
+    depends-on: none
+    accepts-when: `cd bio-plane && npm run test:battery` green twice in a row with the
+      `$TMPDIR` `miniflare-*` count NOT growing between runs (that comparison IS the
+      assertion); a suite made to throw mid-run still leaves no sandbox behind; negative
+      control — remove the `finally` disposal and the count grows again by the number of
+      miniflare instances, which is the state today.
+    added: 2026-08-04 · BOB
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
