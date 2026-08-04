@@ -1,7 +1,8 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) */
+/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. */
 /* Suite hygiene: the guard against a battery that wastes hours.
  *
  * Negative-control detail: remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.)
+ * (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass.
  *
  * Miniflare runs a real workerd child process. A suite that builds one and
  * never disposes it finishes its assertions in about a second, prints its
@@ -176,17 +177,19 @@ console.log("\n--- no caller-supplied provenance (D-112) ---");
    store is empty.
 
    This closes the class the same way the template checks above close theirs: at
-   the moment the mistake is made. Every `CREATE TABLE` in schema.mjs must be
-   either cleared by the whole-store purge or named in the exemption allowlist
-   below with a one-line reason. A new derived table added to schema.mjs and not
-   to purge fails here immediately.
+   the moment the mistake is made. Every `CREATE TABLE` in schema.mjs AND every
+   one written by hand in store.mjs's DO constructor (D-137: eight tables lived
+   outside the schema literal and were invisible to this check for three
+   releases) must be either cleared by the whole-store purge or named in the
+   exemption allowlist below with a one-line reason. A new derived table added
+   to EITHER file and not to purge fails here immediately.
 
    The exemptions are the tables a whole-store purge MUST NOT clear, each because
    it is not derived from the corpus: identity, auth, measured runtime capability,
    transient rate/governor state, inbound intake, or the deliberately-durable
    published projection. If you are adding a DERIVED table, it does not belong
    here; add it to purge. */
-console.log("\n--- every schema table is purged or explicitly exempt (D-113) ---");
+console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) ---");
 {
   const schema = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "schema.mjs"), "utf8");
   const store = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "store.mjs"), "utf8");
@@ -194,12 +197,26 @@ console.log("\n--- every schema table is purged or explicitly exempt (D-113) ---
   const schemaTables = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)/g)].map((m) => m[1]);
   t("schema.mjs declares tables to check", schemaTables.length > 0, true);
 
+  /* D-137. Eight tables are created BY HAND in the DO constructor rather than in
+     the schema literal, so a check that read only schema.mjs had a blind spot
+     the size of eight tables — four of them neither purged nor exempt, and one
+     (project_participants) keyed on a bundle id, the exact D-113 silent-leftover
+     in a table the D-113 check could not see. Closing a class by parsing one
+     file closes it only for that file, so the check now parses BOTH. The name is
+     anchored to the opening paren (or USING, for the FTS5 virtual table) so the
+     PROSE "CREATE TABLE IF NOT EXISTS does nothing to a table that already
+     exists" in a constructor comment cannot mint a phantom table — D-137's own
+     first enumeration listed a table named "does" for exactly that reason. */
+  const storeTables = [...new Set(
+    [...store.matchAll(/CREATE (?:VIRTUAL )?TABLE IF NOT EXISTS\s+(\w+)\s*(?:\(|USING\s)/g)].map((m) => m[1]))];
+  t("store.mjs's hand-created tables are seen too (D-137)", storeTables.length >= 8, true);
+  const allTables = [...new Set([...schemaTables, ...storeTables])];
+
   /* What the WHOLE-STORE purge clears. Sliced from the purge method's source so
      the check reads the real deletion list rather than a copy of it: the TABLES
      array it deletes WHERE bundle_id IN both branches, plus every `DELETE FROM`
-     in the else (whole-store) branch. The per-bundle branch is deliberately not
-     consulted — several derived tables have no bundle_id and are cleared only by
-     a whole-store purge, which is the scope that claims "ALL". */
+     in the purge method (the per-bundle arm's project_id-keyed DELETEs included,
+     since those tables clear in both arms). */
   const pStart = store.indexOf("purge({ bundleId");
   const pEnd = store.indexOf("---- credentials ----", pStart);
   t("the purge method is locatable in store.mjs", pStart > -1 && pEnd > pStart, true);
@@ -228,18 +245,49 @@ console.log("\n--- every schema table is purged or explicitly exempt (D-113) ---
     runtime_observations: "measured CPU cost; a capability fact, not corpus-derived",
     cpu_probe:            "stepped CPU-probe checkpoints; transient instrumentation, not corpus-derived",
     host_governor:        "per-host token-bucket governor state; transient pacing, not corpus-derived",
+    /* The three DO-constructor tables a purge must not touch (D-137). The other
+       five hand-created tables are PURGED: bundles_fts, selections and
+       selection_items always were, and project_participants / project_owner_votes
+       are keyed on project_id — a bundle id — so REC-27 added them to both arms. */
+    member_expertise:     "roster state: an append-only event log of declared and confirmed expertise per member; identity like members, not corpus-derived (D-137)",
+    admin_votes:          "administrator governance record, append-only by doctrine so an ejection can be audited by the people it was done to; membership, not corpus-derived (D-137)",
+    export_log:           "the record that an export happened, kept so an export can never happen SILENTLY; a purge that erased the evidence of a pre-purge export would defeat it (D-137)",
   };
 
   /* An exemption for a table that IS purged, or for a table that does not exist,
      is stale and misleading; catch it so the allowlist stays honest. */
   for (const name of Object.keys(EXEMPT)) {
-    t(`exemption "${name}" names a real schema table`, schemaTables.includes(name), true);
+    t(`exemption "${name}" names a real table`, allTables.includes(name), true);
     t(`exemption "${name}" is not also purged (a stale exemption)`, purged.has(name), false);
   }
 
-  /* The load-bearing assertion: nothing falls through the crack. */
-  const uncovered = schemaTables.filter((tbl) => !purged.has(tbl) && !(tbl in EXEMPT));
-  t(`every schema table is purged or exempt (uncovered: ${JSON.stringify(uncovered)})`, uncovered, []);
+  /* The load-bearing assertion: nothing falls through the crack, in EITHER file. */
+  const uncovered = allTables.filter((tbl) => !purged.has(tbl) && !(tbl in EXEMPT));
+  t(`${allTables.length - uncovered.length} of ${allTables.length} tables covered by purge or a stated exemption (uncovered: ${JSON.stringify(uncovered)})`,
+    uncovered, []);
+}
+
+/* D-131. A single raw NUL in store.mjs — a string separator written as the byte
+   rather than the escape — made ugrep-backed `grep` classify the repo's largest
+   source file as BINARY, so every plain grep against it returned exit 1, no
+   output, no warning: a false negative indistinguishable from "no matches",
+   which nearly got a correct research finding discarded. Same defect class as
+   the unescaped-backtick guards above — every test passes while a verification
+   instrument silently stops verifying — so it gets the same treatment: caught
+   at the moment the byte is written. Tab, LF and CR are the only control bytes
+   a source file may carry. */
+console.log("\n--- no source file carries a raw control byte (D-131) ---");
+{
+  const srcDir = join(DIR, "..", "src");
+  for (const f of readdirSync(srcDir).filter((n) => n.endsWith(".mjs"))) {
+    const buf = readFileSync(join(srcDir, f));
+    let badAt = -1;
+    for (let i = 0; i < buf.length; i++) {
+      const b = buf[i];
+      if (b < 0x20 && b !== 0x09 && b !== 0x0a && b !== 0x0d) { badAt = i; break; }
+    }
+    t(`${f} carries no raw control byte`, badAt, -1);
+  }
 }
 
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);
