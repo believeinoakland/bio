@@ -4675,30 +4675,51 @@ async function openBundle(id, fromNav){
        information document that holds a capture can be co-attested: an
        independent timestamp raises it from Grade B toward evidentiary weight.
 
-       THIS ONE COULD NOT JOIN THE OTHERS AND THE REASON IS THE PLANE'S, NOT A
-       SHORTCUT (measured 2026-08-05, UI-22). `attest` is a NON_ACT in
-       `affordances.mjs` — "capture-directed: co-attestation of a capture's
-       existence in time" — so `op=affordances` publishes no entry for it, no
-       label, no `needs` and no `rung`, on this object or on any other. That is
-       a deliberate doctrine (an act whose subject is a capture sha is not an
-       act on a bundle), not an omission, so there is nothing to read and no
-       amount of rewriting here can produce one. What this section CAN do is
-       take the no-refusal shape and stop deciding anything: the control exists
-       when the record hands back a capture to attest and the credential carries
-       what the op needs, and there is no branch, no sentence and no explanation
-       where it does not. The label and the rung remain this surface's own and
-       are the ONE residue this item leaves standing — raised as a DELEGATION to
-       RECORD in CLAIMS.md rather than papered over. --- */
+       THE RESIDUE UI-22 LEFT STANDING HERE IS CLOSED, 2026-08-05 (UI-24), and
+       the reason it could not be closed then is worth keeping: `attest` is a
+       NON_ACT in `affordances.mjs` — "capture-directed: co-attestation of a
+       capture's existence in time" — so `op=affordances` publishes no entry for
+       it in `acts`, on this object or on any other, and this section spelled its
+       own label. That was raised as a DELEGATION rather than papered over, and
+       REC-38 answered it: a published `capture_acts` block beside the
+       vocabularies, carrying `label`, `needs`, `mode` and `rung` for the
+       capture-directed ops, on BOTH shapes of the op. So the label and the rung
+       are READ now, like release's and dispose's, and the LAST surface-authored
+       act label in this file is gone.
+
+       WHAT DID NOT CHANGE, and it is deliberate: availability is still this
+       surface's read of a capture it HOLDS plus the credential, never a
+       derivation off the published block. REC-38's own reasoning is that a
+       capture act's subject is a sha and not this object, so the publication is
+       metadata and asserts nothing about whether THIS document can be attested;
+       treating it as an availability answer would be the publication
+       disagreeing with `op=attest`'s NO_SUCH_CAPTURE. What the publication DOES
+       gate is whether the control can be NAMED at all — an act the record
+       publishes no word for is one this surface will not invent a word for, so
+       where the block is absent the section is absent, exactly as `actVocab`'s
+       empty set leaves a control absent rather than filled from a literal. --- */
     let attestBar = "";
     {
       const capSha = primaryCaptureSha(img, fm);
-      if(canAttest() && /^[0-9a-f]{64}$/.test(capSha||"")){
+      const cact = captureAct("attest");
+      if(cact && canAttest() && /^[0-9a-f]{64}$/.test(capSha||"")){
         const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(docTitle)),
               jsha = esc(JSON.stringify(capSha)), jloc = esc(JSON.stringify(loc||""));
+        /* THE FENCE SENTENCE BELOW IS NOT THIS ITEM'S TO TOUCH (2026-08-05,
+           UI-24). Every other member-facing word on this page now comes from the
+           record; this one — that co-attestation raises a Grade B capture TOWARD
+           evidentiary weight and NEVER reaches Grade A — is a CLAIM ABOUT WHAT
+           THE RECORD ASSERTS, and REC-38 refused to invent a `prompt` for it on
+           exactly that ground. It is raised as **DEC-39** and is Bob's to rule:
+           until he does, the sentence stands here unchanged rather than being
+           re-worded by a session that has no more authority over it than the
+           last one did. Do not delete it and do not rewrite it. When DEC-39
+           lands, the wording moves to the act's published `prompt` and this
+           comment goes with it. */
         attestBar = `<h2 class="sec">Attestation</h2>
           <div class="rv-bar" style="margin:0;gap:8px">
-            <button class="btn ghost" onclick="openAttestDialog(${jid},${jt},${jsha},${jloc})">Co-attest this capture&hellip;</button>
-            <span class="n">An irreversible, public act: it asks an independent timestamp authority to attest these bytes existed, raising the capture from Grade B toward evidentiary weight. It never reaches Grade A.</span>
+            <button class="btn ghost" onclick="openAttestDialog(${jid},${jt},${jsha},${jloc})">${esc(cact.label)}&hellip;</button>
+            <span class="n">${esc(cact.label)} &mdash; the record's own name for this act${cact.rung?`, at <b>${esc(cact.rung)}</b> weight`:""}. An irreversible, public act: it asks an independent timestamp authority to attest these bytes existed, raising the capture from Grade B toward evidentiary weight. It never reaches Grade A.</span>
           </div>`;
       }
     }
@@ -4806,14 +4827,18 @@ function strataGo(a, id){
    why the surface-side disposition array — the option map C5 forbids and the
    last one in this file — was deleted by this item rather than moved.
    ============================================================ */
-const ACT_SOURCE = { loaded:false, catalog:null, vocab:null };
+const ACT_SOURCE = { loaded:false, catalog:null, vocab:null, captureActs:null };
 async function loadActSource(force){
   if(ACT_SOURCE.loaded && !force) return ACT_SOURCE;
   try{
     const r = await recR("affordances");
     ACT_SOURCE.catalog = Array.isArray(r && r.catalog) ? r.catalog : null;
     ACT_SOURCE.vocab   = (r && r.vocabularies && typeof r.vocabularies === "object") ? r.vocabularies : null;
-  }catch(_){ ACT_SOURCE.catalog = null; ACT_SOURCE.vocab = null; }
+    /* REC-38's block, taken off the SAME answer — no second call and no new op.
+       See `captureAct` below for what it is and why it is separate from
+       `catalog`. */
+    ACT_SOURCE.captureActs = Array.isArray(r && r.capture_acts) ? r.capture_acts : null;
+  }catch(_){ ACT_SOURCE.catalog = null; ACT_SOURCE.vocab = null; ACT_SOURCE.captureActs = null; }
   ACT_SOURCE.loaded = true;
   return ACT_SOURCE;
 }
@@ -4823,6 +4848,28 @@ async function loadActSource(force){
 function actVocab(name){
   const v = ACT_SOURCE.vocab && ACT_SOURCE.vocab[name];
   return Array.isArray(v) ? v : [];
+}
+/* A CAPTURE-DIRECTED ACT'S PUBLISHED METADATA, or NULL (REC-38, consumed here
+   by UI-24 — the last surface-authored act label in this file).
+
+   WHY IT IS A SEPARATE BLOCK FROM `catalog`, and the distinction is the plane's
+   and load-bearing rather than a shape detail. `op=affordances?target=` answers
+   `acts` — what may be done to THAT OBJECT AS IT STANDS, derived against its
+   type, state and edges. `attest` and `monitor` are not object-directed: their
+   subject is a CAPTURE SHA, and whether one is attestable turns on the bytes
+   being in the store, which is not in the facts shape the derivation is handed.
+   So the plane publishes them as METADATA on both shapes — the same block, never
+   filtered by a target — and a surface RENDERS the label beside a capture it
+   already holds. Deriving availability from this would be the publication
+   disagreeing with `op=attest`'s own NO_SUCH_CAPTURE, which is the disagreement
+   DEC-8 exists to forbid (REC-38's landed reasoning, on CAPTURE_ACTS).
+
+   NULL, not a literal, when the plane published nothing — `actVocab`'s rule
+   exactly. A surface that kept its own label would be the surface deciding what
+   this act is called, which is what it was doing until this turn. */
+function captureAct(id){
+  const list = ACT_SOURCE.captureActs;
+  return (Array.isArray(list) ? list.find(a=>a && a.id === id) : null) || null;
 }
 
 /* THE PLANE'S ANSWER, REFUSAL INCLUDED, in one place (UI-13's `intentAsk`, the
@@ -11406,34 +11453,62 @@ function attestHonestyHtml(){
     <p class="az-cannot"><b>Cannot:</b> make this Grade A. Grade A needs a chain-of-custody web archive this surface cannot produce; co-attestation raises Grade B <b>toward</b> evidentiary weight, it does not reach Grade A. Anyone can later verify the timestamp themselves; this plane obtains and stores it and does not claim to have checked the authority's signature.</p></div>`;
 }
 
-/* THE PRE-FLIGHT — pure, so the harness can prove it. Given the capture's
-   sha256, whether it is held, and whether this instance can store evidence,
-   it returns every gate (for the panel) and the ONE refusal that fires first,
-   in the plane's own checking order:
-     NO_STORAGE (503) -> BAD_SHA (400) -> NO_SUCH_CAPTURE (404).
+/* WHAT THIS ACT TAKES — pure, so the harness can prove it. Given the capture's
+   sha256, whether it is held, and whether this instance can store evidence, it
+   answers whether the act has what it needs, and NOTHING ELSE.
+
+   CORRECTED 2026-08-05 (UI-24), THE FIFTH PRE-DEC-8 RESIDUE — the treatment
+   UI-22 gave `ballotNeeds`, applied to the site UI-12 named and UI-23
+   deliberately left for the turn REC-38's publication existed.
+
+   WHAT WAS WRONG. Each gate carried a `need:` SENTENCE this surface wrote, and
+   the function then composed a REFUSAL out of those sentences with the store's
+   own reason codes attached — NO_STORAGE, BAD_SHA, NO_SUCH_CAPTURE, in the
+   plane's checking order. Every code was right and every sentence was ours, and
+   a correct code with an invented sentence is exactly what DEC-8 forbids: the
+   member met the plane's reason in the surface's words, and a suite pinning the
+   CODE would have called it correct forever (UI-12's arm-(d) finding, now
+   reproduced at a sixth site). The mirrored ORDER was the same defect one layer
+   up — this file restating the plane's checking sequence, which is a rule it
+   does not own and cannot be told has changed.
+
+   WHAT IT IS NOW. Each row is a REQUIREMENT stated as a requirement — a heading
+   over a condition, not a judgment about this member or an account of what the
+   record would say. No refusal, no `detail`, no reason code, no order. The
+   commit control is ABSENT until every row passes (`attestValidate`), so the
+   member never walks into a refusal, and anything that survives to commit is
+   worded by `op=attest` itself and rendered verbatim (`attestRefusalHtml`).
+
+   WHY NOT A PROBE, measured rather than assumed. `op=attest` has no dry-run and
+   the two retire-class probes have no analogue here: the op takes ONE caller
+   field, the sha, and every one of its three refusals is judged against THAT
+   field or against the instance — so there is nothing withholdable that stops
+   short of the act, and a probe carrying the real sha WOULD ATTEST. The act is
+   also irreversible and public, which is the one class where a probe that
+   commits is unrecoverable. That settles it: the no-refusal shape.
+
    `held` and `hasStorage` default to present (the doc page is showing a held
-   capture on a configured instance); a caller passes false to pre-flight the
-   refusal. `ok` is true only when nothing would refuse. */
+   capture on a configured instance); a caller passes false to state the gate
+   unmet. `ready` is true only when every row passes. */
 function attestPreflight({ sha, held, hasStorage }){
   const goodSha  = /^[0-9a-f]{64}$/.test(String(sha==null?"":sha).toLowerCase());
   const storage  = hasStorage !== false;
   const isHeld   = held !== false;
   const gates = [
-    { id:"storage", title:"This instance can store evidence", pass:storage,
-      need:"This instance has no evidence storage configured, so it cannot hold a timestamp token. Co-attestation is unavailable here." },
-    { id:"sha", title:"A capture hash to attest", pass:goodSha,
-      need:"Co-attestation is taken over the sha-256 of a capture already in the record. This document does not present one to attest." },
-    { id:"held", title:"The capture is in the record", pass:goodSha && isHeld,
-      need:"Nothing in the record has that hash. Capture the document before attesting it." },
+    { id:"storage", title:"This instance can store evidence", pass:storage },
+    { id:"sha",     title:"A capture hash to attest",         pass:goodSha },
+    { id:"held",    title:"The capture is in the record",     pass:goodSha && isHeld },
   ];
-  let refusal = null;
-  if(!storage)        refusal = { reason:"NO_STORAGE",      detail:gates[0].need };
-  else if(!goodSha)   refusal = { reason:"BAD_SHA",         detail:gates[1].need };
-  else if(!isHeld)    refusal = { reason:"NO_SUCH_CAPTURE", detail:gates[2].need };
-  return { ok: refusal===null, gates, refusal };
+  return { ready: gates.every(g=>g.pass), gates };
 }
 
 function attestPublicLocator(loc){ return /^https:\/\//i.test(String(loc||"").trim()); }
+
+/* THE RECORD'S OWN NAME FOR THIS ACT, or the empty string (REC-38 / UI-24).
+   Everything member-facing that NAMES the act — the bar's button, this dialog's
+   heading, the commit control — reads it from here, so there is one place the
+   word comes from and it is not this file. */
+function attestActLabel(){ const a = captureAct("attest"); return (a && a.label) || ""; }
 
 /* CHOOSE + PRE-FLIGHT, in one dialog. There is no AUTHOR field — the act
    carries no member text. The one CHOICE is whether to ALSO ask a public web
@@ -11441,6 +11516,15 @@ function attestPublicLocator(loc){ return /^https:\/\//i.test(String(loc||"").tr
    interest). Opened from the Attestation act-bar on an information document. */
 let ATTEST_CTX = null;   // { id, title, sha, locator, archive }
 function openAttestDialog(id, title, sha, locator){
+  /* NO PUBLISHED NAME, NO FLOW (UI-24). `attestBar` will not draw a control the
+     record has no word for, and this is the same rule at the entry point rather
+     than a second opinion about it: a dialog that had to head itself would be
+     this surface naming the act again, one layer in. A caller that reaches here
+     before `loadActSource()` has run is the UI-22 defect (a surface rendering a
+     publication it assumed some other surface had loaded), and failing to open
+     is how that is noticed rather than papered over. */
+  const cact = captureAct("attest");
+  if(!cact) return null;
   ATTEST_CTX = { id, title, sha, locator: locator||"", archive:false };
   const canArch = attestPublicLocator(locator);
   const choose = `
@@ -11456,8 +11540,17 @@ function openAttestDialog(id, title, sha, locator){
         ? "Also ask a public archive to fetch and keep the source. This is off by default because asking publicly PUBLISHES the fact that this group is interested in this source — a tactical judgement, not a default."
         : "Unavailable: this document has no public https source to archive."}</span>
     </label>`;
+  /* THE FENCE PARAGRAPH BELOW, AND EVERY OTHER GRADE SENTENCE IN THIS REGION,
+     IS LEFT EXACTLY AS IT STANDS (2026-08-05, UI-24) — `attestHonestyHtml`,
+     `attestStandingClaim`, the ladder's attest text and the bar's line with it.
+     They are not surviving residue: they are a CLAIM ABOUT WHAT THE RECORD
+     ASSERTS (a co-attested capture is strengthened TOWARD evidentiary weight and
+     never reaches Grade A), REC-38 refused to invent a published `prompt` for
+     one on exactly that ground, and it is raised as **DEC-39** for Bob to rule.
+     Until he does, re-wording it here would be this surface authoring the fence
+     a second time under a tidier heading. Do not delete, do not rewrite. */
   $("#dlg").innerHTML =
-    `<h2 id="az-h">Co-attest this capture</h2>
+    `<h2 id="az-h">${esc(cact.label)}</h2>
      <p class="what">Co-attesting asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. It is <b>irreversible and public</b>. It raises the capture from Grade B <b>toward</b> evidentiary weight — it does not, and cannot, make it Grade A.</p>
      <div class="dz-what"><span class="dz-ttl">${esc(title||id)}</span><span class="id">capture ${esc(String(sha||"").slice(0,16))}…</span></div>
      <div class="dz-choose">${choose}</div>
@@ -11465,10 +11558,10 @@ function openAttestDialog(id, title, sha, locator){
      <div class="dz-pf" id="az-pf"><!-- pre-flight, painted by attestValidate --></div>
      ${weightLadderHtml("attested", `Co-attestation is <b>attested</b> — the top rung. It is <b>irreversible and public</b>: it asks an independent timestamp authority to record that these exact bytes existed, and that record cannot be withdrawn. The key here is the <b>authority's</b>, not yours — unlike signing a release, this act invokes an outside witness and touches no signing key of your own.`)}
      <div id="az-err" class="teach hidden"></div>
-     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
-       <button class="btn" id="az-go" onclick="doAttest()">Co-attest</button></div>`;
+     <div class="row-btns" id="az-btns"><!-- the commit control, painted by attestValidate: ABSENT until the act has what it needs --></div>`;
   $("#dlg-wrap").classList.remove("hidden");
   attestValidate();
+  return cact;
 }
 function attestChoose(archive){
   if(ATTEST_CTX) ATTEST_CTX.archive = !!archive;
@@ -11488,12 +11581,20 @@ function attestValidate(){
   if(pane){
     const rows = pf.gates.map(g=>`<div class="pf-row ${g.pass?"ok":"no"}">
         <span class="pf-mark">${g.pass?"✓":"✗"}</span>
-        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span>${g.pass?"":`<span class="pf-need">${esc(g.need)}</span>`}</span>
+        <span class="pf-body"><span class="pf-title">${esc(g.title)}</span></span>
       </div>`).join("");
-    pane.innerHTML = `<div class="pf-cap">Before this runs — what it will refuse, and why</div>${rows}`
-      + (pf.ok ? `<div class="pf-clear">Nothing stands in the way. This act carries no words to author — the evidence is the timestamp itself.</div>` : "");
+    pane.innerHTML = `<div class="pf-cap">What this act needs</div>${rows}`
+      + (pf.ready ? `<div class="pf-clear">This act carries no words to author — the evidence is the timestamp itself.</div>` : "");
   }
-  const go = $("#az-go"); if(go) go.disabled = !pf.ok;
+  /* ABSENT, NOT GREYED (UI-24, correcting UI-6's `disabled`). A control that
+     cannot work is a claim about this credential and this document that the
+     surface is not entitled to make; the rows above say which requirement is
+     unmet and nothing here stands in for the record's voice. Membership
+     Architecture v2 §5, and the same rule the rail and the release flow have
+     always followed. */
+  const btns = $("#az-btns");
+  if(btns) btns.innerHTML = `<button class="btn ghost" onclick="closeDialog()">Cancel</button>`
+    + (pf.ready ? `<button class="btn" id="az-go" onclick="doAttest()">${esc(attestActLabel())}</button>` : "");
 }
 /* COMMIT. The pre-flight runs ONE more time here as the real gate: if the act
    WOULD be refused, the SURFACE refuses it and op=attest is never sent.
@@ -11505,10 +11606,18 @@ async function doAttest(){
   if(!ATTEST_CTX) return;
   const err = $("#az-err"); if(err) err.classList.add("hidden");
   const pf = attestPreflight({ sha: ATTEST_CTX.sha, held: ATTEST_CTX.held, hasStorage: ATTEST_CTX.hasStorage });
-  if(!pf.ok){                       // the surface refuses, before the plane
-    if(err){ err.innerHTML = `<b>This act won't run — and nothing has been recorded.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
+  /* FAIL-CLOSED, AND SILENT (UI-24). This is a GUARD, not a surface: the commit
+     control does not exist while a requirement is unmet, so nothing a member can
+     click reaches here, and the act is never sent on a pre-flight that has not
+     cleared. What stood here was a refusal this file WORDED — "This act won't
+     run" over the store's own reason code — which is the thing the treatment
+     above removed. The unmet requirement is already named in the panel; saying
+     it again in this surface's voice is what DEC-8 forbids. The caller is told
+     WHICH row is unmet by its id, which is this surface's own gate and not a
+     claim about what the record would have said. */
+  if(!pf.ready){
     attestValidate();
-    return { refused:true, reason:pf.refusal.reason };
+    return { refused:true, unmet:(pf.gates.find(g=>!g.pass)||{}).id || null };
   }
   const go = $("#az-go"); if(go){ go.disabled = true; go.textContent = "…"; }
   const body = { sha256: ATTEST_CTX.sha, ...(ATTEST_CTX.archive ? { archive:true, locator: ATTEST_CTX.locator } : {}) };
@@ -11517,10 +11626,10 @@ async function doAttest(){
        literal object, not through the passthrough), so there is no envelope
        here. It goes through the seam anyway — UI-23's structural rule — and
        `recPostR` returns the answer unchanged when there is no `result`.
-       NOTE for whoever takes REC-38's rider: `attestPreflight`'s SENTENCES are
-       still the surface's own and are the fifth pre-DEC-8 residue. They are
-       deliberately untouched here, because the plane publishes no label or
-       `needs` for a capture-directed act to read yet. */
+       THE RIDER LANDED 2026-08-05 (UI-24): `attestPreflight`'s sentences are
+       gone and the label is read from REC-38's published `capture_acts`. What
+       is still this surface's own, and deliberately, is the GRADE FENCE — see
+       `openAttestDialog`, DEC-39. */
     const res = await recPostR("attest", body);
     attestReceipt(res, ATTEST_CTX);
     return res;
@@ -11531,8 +11640,7 @@ async function doAttest(){
       return { refused:true, reason: e.reason||"NO_ATTESTATION" };
     }
     if(err){ err.innerHTML = attestRefusalHtml(e); err.classList.remove("hidden"); }
-    if(go){ go.disabled=false; go.textContent = "Co-attest"; }
-    attestValidate();
+    attestValidate();   // repaints the commit control under the record's own label
     return { refused:true, reason: e && e.reason };
   }
 }

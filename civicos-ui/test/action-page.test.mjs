@@ -113,6 +113,15 @@
  *       "and the refusal names the code the plane gave it" stayed GREEN. A
  *       suite checking only codes would have been entirely green on a surface
  *       that had started writing the record's refusals itself.
+ *
+ *   (d) THE TIE'S OWN, ADDED 2026-08-05 (UI-24) — drift a vocabulary in the
+ *       PLANE'S export and confirm this suite moves. Two arms, both run, both
+ *       restored byte-identical; the mechanism, the measured counts and the one
+ *       prediction that turned out wrong are recorded at `THE TIE` below, beside
+ *       the pins that make it work. The vocabularies this file publishes are the
+ *       plane's own arrays now, imported — REC-38 verified UI-19's consumers
+ *       this way from a scratch copy and a scratch run is not in the loop the
+ *       reader runs (CLAUDE.md).
  */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
@@ -136,22 +145,105 @@ const PUBLISHED = {
   actioncorrespond: { id:"actioncorrespond", label:"Record correspondence", weight:"single",
                       needs:"contribute", mode:"session", rung:null, prompt:null },
 };
-/* The plane's published vocabularies. `action_basis_kinds` is DELIBERATELY
-   ABSENT to begin with, because that is the live plane's state: the catalog
-   exports ACTION_BASIS_KINDS and VOCABULARIES does not carry it. The harness
-   publishes it later and watches the surface change with no other edit. */
-let VOCAB = { action_kind:["cpra_request","public_comment","request_for_comment","other"] };
+/* ============================================================
+   THE TIE (UI-24) — this mock publishes THE PLANE'S OWN ARRAYS, imported.
 
-const LEGAL = ["planned","active","awaiting_response","resolved","abandoned"];
-const EDGES = {
-  planned:           ["active","abandoned"],
-  active:            ["awaiting_response","resolved","abandoned"],
-  awaiting_response: ["active","resolved","abandoned"],
-  resolved:          [],
-  abandoned:         [],
-};
+   WHY, and it is a measurement rather than a preference. Until this turn every
+   vocabulary below was a LITERAL WRITTEN HERE that happened to agree with the
+   plane, and an agreement that costs nothing to produce is not evidence
+   (CLAUDE.md). REC-38 proved that on this very file the hard way: it verified
+   UI-19's consumers TWICE — once as written, once with these literals repointed
+   at the real export from a SCRATCH COPY — because only the second run shows the
+   picker lighting up off the publication that shipped rather than off a mock
+   that agrees with it. A proof run in a scratch copy is not in the loop the
+   reader runs, so it is not a mechanism; this is that proof, moved into the loop.
+
+   AND IT IMMEDIATELY PAID: `ACTION_KINDS` has EIGHT members
+   (cpra_request, grand_jury, controller_referral, public_comment, media,
+   litigation_support, request_for_comment, other) and the literal that stood
+   here published FOUR. This harness had never driven the intake the real
+   application draws, and nothing could have told anybody.
+
+   WHAT IS NOT TIED, and it is a finding rather than an omission: the four
+   RESOLUTIONS below have no published home. They are enforced twice — an inline
+   literal in `bio-checks.mjs` C-2.10 and a second array in `store.mjs`
+   `actionMove()` — and `VOCABULARIES` does not carry them, so there is nothing to
+   import and the surface can only learn them from the store's own refusal (which
+   is what it does, and which this harness drives). Raised for CONDUCT rather
+   than closed here: publishing them is REC ground, not UI's.
+   ============================================================ */
+import { VOCABULARIES } from "../../bio-plane/src/affordances.mjs";
+import { STATES } from "../../bio-plane/checks/bio-checks.mjs";
+
+/* The plane's published vocabularies, as `op=affordances` answers them.
+   `action_basis_kinds` is WITHHELD to begin with — not because the plane no
+   longer publishes it (REC-38 landed it; the note that used to stand here saying
+   otherwise is corrected), but because the surface's ABSENT-AND-STATED behaviour
+   over an unpublished set is the property this file proves, and it can only be
+   proved by withholding one. It is published from the plane's own array below
+   and the surface is watched to change with no other edit. */
+let VOCAB = { action_kind: VOCABULARIES.action_kind };
+
+/* The action state machine, from the catalog's OWN table — the one
+   `affordances.mjs` reads through `vocabFor(STATES, …)` and the one `op=actionmove`
+   refuses ILLEGAL_TRANSITION against. A mirror written here would be this file
+   deciding what an action may do. */
+const LEGAL = STATES.action.legal;
+const EDGES = STATES.action.edges;
+/* NOT PUBLISHED ANYWHERE — see the block above. Harvested by the surface from
+   the store's own refusal, which is the only source there is. */
 const RESOLUTIONS = ["complied","denied","escalated","withdrawn"];
-const DIRECTIONS = ["sent","received","no_response"];
+const DIRECTIONS = VOCABULARIES.correspondence_directions;
+
+/* THE TIE'S OWN NEGATIVE CONTROL, standing rather than run once.
+
+   Importing the plane's arrays makes the mock follow the publication — but on
+   its own it would also make a DRIFT INVISIBLE, because the mock and the
+   assertions would move together. So every token this file NAMES in an
+   assertion below is pinned to the plane's set HERE, by name. Change one in
+   `bio-plane/checks/bio-checks.mjs` and the failure is at this line, saying
+   which word moved and that the surface's own assertions are now about a
+   vocabulary the record does not have.
+
+   RUN 2026-08-05, TWO ARMS, `bio-plane/checks/bio-checks.mjs` restored
+   byte-identical after each (sha256
+   bcba30cf99796393ac8cf708ecbcfe9844d1e76cc8a76c2401e92a15d945d206 before and
+   after both), and the RESULTS ARE RECORDED AS MEASURED rather than as
+   predicted, because the first prediction was wrong:
+
+     (i)  `ACTION_BASIS_KINDS` 'advances' -> 'advancez'. 95 pass, 1 FAIL, and it
+          is this pin. NOTHING ELSE MOVED — and that is the finding: section 6
+          asserts `value="rests_on"` (untouched) and that publishing the set
+          makes the picker appear (true of ANY set), so the surface renders the
+          record's new word perfectly happily. The suite is only sensitive to
+          the words it NAMES, which is exactly why the pins name them here
+          rather than trusting a rendered-value scan to notice.
+
+     (ii) `ACTION_KINDS` 'request_for_comment' -> 'rfc'. 94 pass, 2 FAIL — this
+          pin, plus "`request_for_comment` appears with it, because the surface
+          can now complete it" in section 6.
+
+   BEFORE THE TIE BOTH EDITS WERE GREEN HERE, by construction: this file
+   contained no reference of any kind to a `bio-plane` module, so no change to
+   the plane's own arrays could reach it. */
+{
+  const named = {
+    "the two action kinds this harness authors and asserts on":
+      ["cpra_request","request_for_comment"].every(k=>VOCABULARIES.action_kind.includes(k)),
+    "the two basis roles the picker is asserted to offer":
+      ["rests_on","advances"].every(k=>VOCABULARIES.action_basis_kinds.includes(k)),
+    "the three correspondence directions, including the non-response DEC-13 records as a fact":
+      ["sent","received","no_response"].every(k=>DIRECTIONS.includes(k)),
+    "the five action states this harness walks":
+      ["planned","active","awaiting_response","resolved","abandoned"].every(s=>LEGAL.includes(s)),
+    "the one move the ILLEGAL_TRANSITION arm relies on being absent":
+      !(EDGES.planned||[]).includes("resolved"),
+  };
+  for(const [what, held] of Object.entries(named))
+    ok("THE TIE: the plane still publishes " + what, held);
+  ok("THE TIE: this harness drives the plane's WHOLE action-kind set, not a subset of it",
+     VOCAB.action_kind === VOCABULARIES.action_kind && VOCABULARIES.action_kind.length >= 8);
+}
 
 const DUE = "2026-09-10";
 const BEFORE_MS = Date.parse("2026-08-20T00:00:00Z");
@@ -656,8 +748,9 @@ ok("and `request_for_comment` is ABSENT while the surface cannot author the legs
    !/value="request_for_comment"/.test(form));
 ok("...which is stated rather than silent", /offers none rather than inventing/.test(form));
 
-/* PUBLISH THE MISSING VOCABULARY AND BOTH APPEAR, WITH NO OTHER EDIT. */
-VOCAB = { ...VOCAB, action_basis_kinds:["rests_on","advances"] };
+/* PUBLISH THE WITHHELD VOCABULARY — THE PLANE'S OWN ARRAY — AND BOTH APPEAR,
+   WITH NO OTHER EDIT. */
+VOCAB = { ...VOCAB, action_basis_kinds: VOCABULARIES.action_basis_kinds };
 await G.__loadActSource(true);
 await G.__renderAdd();
 const form2 = content();

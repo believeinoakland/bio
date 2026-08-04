@@ -4,6 +4,11 @@
    or render failure in the page path fails here instead of in production. */
 import fs from "fs";
 import { appScript } from "./extract.mjs"; import vm from "vm"; import { webcrypto } from "crypto";
+/* THE PLANE'S OWN PUBLICATION (UI-24). REC-38's `capture_acts` block is what the
+   Attestation section's label and rung come from, and this harness answers the
+   PRODUCER'S ARRAY rather than a copy of it — a copy agrees at zero cost, which
+   REC-38's own negative control measured on this exact label. */
+import { CAPTURE_ACTS } from "../../bio-plane/src/affordances.mjs";
 const els=new Map();
 function el(sel){ const e={sel,classList:{add(){},remove(){},toggle(){},contains(){return false}},style:{},dataset:{},value:"",_html:"",textContent:"",scrollTop:0,disabled:false,offsetHeight:120,
   addEventListener(){},querySelectorAll:()=>[],querySelector:()=>el(),insertAdjacentHTML(p,h){e._html+=h},focus(){},click(){},remove(){}};
@@ -38,7 +43,14 @@ Trigger: second member ratification pass
 Changes: collected to verified released under I-18.`;
 const IMG = {
  "bundle.md": BUNDLE_MD,
- "data/provenance.json": '{"grade":"B"}',
+ /* WIDENED 2026-08-05 (UI-24), and it is a fixture that was thinner than the
+    plane: `op=acquire` writes the captured document's own `capture.sha256` into
+    this file, and `primaryCaptureSha` reads it. Without it this page could never
+    render an Attestation section at all, so the section's assertions below were
+    unreachable and the residue pin was the only thing standing over them. */
+ "data/provenance.json": JSON.stringify({ grade:"B",
+   documents:[{ role:"primary", capture:{ sha256:"e".repeat(64), bytes:2048,
+                                          retrieved:"2026-07-19T09:00:00Z" } }] }),
  "data/glossary.json": '{"SSF":"Sewer Service Fund: the enterprise fund at the center of the case."}',
  "snapshots/budget.pdf.p000": {sha256:"a".repeat(64), bytes:100},
  "snapshots/budget.pdf.p001": {sha256:"b".repeat(64), bytes:50},
@@ -76,6 +88,8 @@ const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date
    if(op==="projection") return reply({ok:true,result:q.get("id")==="PROJ-1"?CITER_PROJ:PROJ});
    if(op==="backlinks") return reply({ok:true,result:BACKLINKS});
    if(op==="list") return reply({ok:true,result:[CITER,{bundle_id:"INFO-X",object_type:"information",title:"t",current_state:"verified",last_updated:"2026-07-20"}]});
+   /* FLAT, like the plane (see the UI-24 note on the other mock below). */
+   if(op==="links") return reply({ok:true,capture:q.get("capture"),links:[],resolved:0,unresolved:0});
    return reply({ok:true,result:{}});
  }};
 ctx.globalThis=ctx;
@@ -140,11 +154,26 @@ console.log("harness8: full document page renders with every element present");
    before these assertions existed.) That is the hole this section closes.
 
    TWO of the three now exist only where the record PUBLISHES the act, under the
-   record's own label. The THIRD, attestation, cannot: `attest` is a NON_ACT in
-   `bio-plane/src/affordances.mjs` — capture-directed, not object-directed — so
-   the plane publishes no entry, no label, no `needs` and no `rung` for it on any
-   object. That is doctrine rather than an omission, and it is why the label
-   there stays this surface's own and is raised as a DELEGATION instead.
+   record's own label. The THIRD, attestation, could not: `attest` is a NON_ACT
+   in `bio-plane/src/affordances.mjs` — capture-directed, not object-directed —
+   so `op=affordances` published no entry, no label, no `needs` and no `rung` for
+   it in `acts`, on any object. That is doctrine rather than an omission, which
+   is why UI-22 raised it as a DELEGATION instead of papering over it.
+
+   THE DELEGATION LANDED (REC-38) AND THE THIRD BAR JOINED THE OTHERS 2026-08-05
+   (UI-24). The plane publishes a `capture_acts` block beside the vocabularies on
+   BOTH shapes of the op — label, needs, mode and rung — and this page reads it,
+   so the last surface-authored act label in `app.html` is gone. AVAILABILITY is
+   still this surface's read of a capture it holds plus the credential, and
+   deliberately so: a capture act's subject is a sha, not this object, so the
+   publication is metadata and deriving availability from it would put the
+   publication in disagreement with `op=attest`'s own NO_SUCH_CAPTURE. What the
+   publication gates is whether the control can be NAMED at all.
+
+   WHAT IS STILL THIS SURFACE'S OWN AND MUST STAY SO FOR NOW: the grade fence
+   ("toward evidentiary weight, never Grade A"). REC-38 refused to invent a
+   published `prompt` for it — it is a claim about what the record asserts — and
+   it is raised as DEC-39. Do not close it here.
    ============================================================================ */
 {
   const mkEl = () => { const e={ classList:{add(){},remove(){},toggle(){},contains(){return false}}, style:{},
@@ -153,7 +182,13 @@ console.log("harness8: full document page renders with every element present");
     insertAdjacentHTML(p,h){ e._html += h; }, focus(){}, click(){}, remove(){} };
     Object.defineProperty(e,"innerHTML",{get(){return e._html},set(v){e._html=v}}); return e; };
 
-  async function page(acts, source){
+  /* `opts.captureActs` lets one arm publish NOTHING for the capture-directed
+     acts, which is how the absent-section rule is driven (UI-24). Default: the
+     plane's own block, decorated the way `decorateAct` decorates it. */
+  const DECORATED = CAPTURE_ACTS.map(a=>({ ...a, weight:null, needs:"contribute",
+    mode:"session", rung:a.id==="attest"?"attested":null, prompt:null }));
+  async function page(acts, source, opts){
+    const captureActs = (opts && opts.captureActs) || DECORATED;
     const E = new Map();
     const c = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,
       Uint8Array, Uint16Array, Map, Set, TextEncoder, crypto:webcrypto, Blob:class{}, IntersectionObserver:undefined,
@@ -170,11 +205,21 @@ console.log("harness8: full document page renders with every element present");
         if(op==="projection") return reply({ ok:true, result: p.get("id")==="PROJ-1" ? CITER_PROJ : PROJ });
         if(op==="list") return reply({ ok:true, result:[CITER] });
         if(op==="backlinks") return reply({ ok:true, result:BACKLINKS });
+        /* op=links is FLAT and always was — `index.mjs` answers it in its own
+           handler with `json({ok:true, ...r.result})`, not through the
+           passthrough. ADDED 2026-08-05 (UI-24): widening the provenance fixture
+           to carry a real capture sha made `linksFor` reachable from this page
+           for the first time, and the fallback below was answering it WRAPPED.
+           The envelope guard caught it in the same turn, which is the whole
+           argument for arm B: the surface reads through `recR`, which is
+           shape-agnostic, so nothing else could have. */
+        if(op==="links") return reply({ ok:true, capture:p.get("capture"), links:[], resolved:0, unresolved:0 });
         /* THE ENVELOPE the plane really sends, and the acts the record
            publishes for THIS object as it stands. */
         if(op==="affordances") return reply({ ok:true, result:{ target:p.get("target"),
           object_type:"information", current_state:"collected", acts,
-          vocabularies:{ dispositions:["deferred","dismissed"] } } });
+          vocabularies:{ dispositions:["deferred","dismissed"] },
+          capture_acts: captureActs } });
         return reply({ ok:true, result:{} });
       } };
     c.globalThis = c; vm.createContext(c);
@@ -233,14 +278,46 @@ console.log("harness8: full document page renders with every element present");
   T("the elevated-question sentence is deleted from the source",
     !APPSRC.includes("carried into a project under the record's earlier vocabulary"));
 
-  /* ---- attestation: the residue, asserted as a residue and not as a rule ----
-     `attest` is a NON_ACT, so there is no published label to read. The control
-     is still ABSENT-or-present with no sentence either way, which is the half
-     this item could close honestly. */
-  T("the Attestation section carries a label this surface wrote — the residue, named",
-    APPSRC.includes("Co-attest this capture"));
+  /* ---- attestation: THE RESIDUE IS CLOSED ----------------------------------
+     CORRECTED 2026-08-05 BY UI-24, NEVER EXEMPTED, and the inversion is the
+     whole rider. What stood here asserted the residue as a residue: `attest` is
+     a NON_ACT, `op=affordances` published no entry for it in `acts`, so this
+     surface spelled its own label and the suite PINNED THAT — deliberately, so
+     the delegation could not be forgotten. REC-38 answered the delegation with a
+     published `capture_acts` block on both shapes of the op, so the pin is now
+     its opposite: the label is READ, and the string this surface used to write
+     is asserted GONE FROM THE SOURCE.
+
+     ASSERTED AGAINST THE PLANE'S OWN EXPORT, imported, because a hand-written
+     copy of the label would agree at zero cost and prove nothing — REC-38's own
+     negative control found exactly that (a literal copy passes every wire
+     assertion), which is why the second assertion here is STRUCTURAL: the
+     literal must not be in `app.html` at all, whatever it says. */
+  const ATTEST_LABEL = CAPTURE_ACTS.find(a=>a.id==="attest").label;
+  T("the Attestation section carries the RECORD'S OWN name for the act",
+    withActs.includes(ATTEST_LABEL + "&hellip;"));
+  T("and the label this surface used to write is gone from the source, not merely unreached",
+    !APPSRC.includes('>Co-attest this capture&hellip;<') && !APPSRC.includes('<h2 id="az-h">Co-attest this capture</h2>'));
+  T("the section states the act's published RUNG rather than a weight named here",
+    withActs.includes("<b>attested</b> weight"));
   T("and nothing on the page explains when attestation is unavailable",
     !/attestation is unavailable/i.test(noActs) && !/cannot be co-attested/i.test(noActs));
+  /* WHERE THE PLANE PUBLISHES NO CAPTURE ACT, THE SECTION IS ABSENT — the
+     `actVocab` rule applied to a label: a control the record has no word for is
+     not one this surface will name. */
+  const noCap = await page([RELEASE, DISPOSE], null, { captureActs:[] });
+  T("with the capture-acts block unpublished the Attestation section is ABSENT",
+    !noCap.includes(">Attestation</h2>"));
+  /* SCOPED to the CONTROL, not to the word: the crucial-criticality tooltip
+     legitimately says "co-attestations" (it is explaining what verifying a
+     load-bearing document involves), so a bare word scan here would be a scan of
+     the record's own vocabulary rather than of this surface's authorship. */
+  T("no control for it is drawn, under the published name or any other",
+    !/openAttestDialog\(/.test(noCap) && !noCap.includes(ATTEST_LABEL));
+  T("and nothing accounts for the absence in this surface's own words",
+    !/cannot be attested|no timestamp|attestation is not available/i.test(noCap));
+  T("the page still renders — an unpublished capture act is not an error",
+    noCap.includes('id="docscroll"'));
 
   /* ---- NEGATIVE CONTROL, RUN 2026-08-05, restored byte-identical ----------
      Put the crucial-release sentence back — a correct fact about the record,
@@ -258,5 +335,5 @@ console.log("harness8: full document page renders with every element present");
     !/that surface is not built yet/i.test(noActs));
 
   if(bad.length) throw new Error("UI-22 bars: " + bad.length + " failed —\n  " + bad.join("\n  "));
-  console.log("harness8+UI-22: the document page's release and disposition sections come from op=affordances, absent-and-silent where it publishes nothing; attest named as the standing residue; negative control RUN");
+  console.log("harness8+UI-22/24: the document page's release, disposition AND attestation sections come from op=affordances — the attest label and rung from REC-38's published capture_acts, asserted against the plane's own export; absent-and-silent where it publishes nothing; negative controls RUN");
 }

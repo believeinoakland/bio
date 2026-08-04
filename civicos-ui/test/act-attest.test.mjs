@@ -7,10 +7,17 @@
  * fence:
  *   1 CHOOSE      co-attest — timestamp only, or timestamp + opt-in public
  *                 web archive (off by default: asking publishes the interest).
- *   2 PRE-FLIGHT  see WHAT IT WILL REFUSE and WHY *before* it runs — the op's
- *                 declared refusals in the plane's order (NO_STORAGE -> BAD_SHA
- *                 -> NO_SUCH_CAPTURE), computed from the op's shape + the doc
- *                 page's known capture sha (op=attest has no dry-run).
+ *   2 PRE-FLIGHT  see WHAT THIS ACT NEEDS *before* it runs — storage, a capture
+ *                 hash, and the capture being in the record — each stated as a
+ *                 requirement, with the commit control ABSENT until every one is
+ *                 met. CORRECTED 2026-08-05 BY UI-24, never exempted: this step
+ *                 used to COMPOSE THE PLANE'S REFUSALS (NO_STORAGE -> BAD_SHA ->
+ *                 NO_SUCH_CAPTURE, in the store's own checking order, each with
+ *                 a sentence THIS SURFACE wrote). Right codes, invented words —
+ *                 the arm-(d) shape DEC-8 forbids, and the last of the five
+ *                 pre-DEC-8 residues UI-12 named. `ballotNeeds` took the same
+ *                 treatment in UI-22; the reasoning and the "why not a probe"
+ *                 measurement are on `attestPreflight` in app.html.
  *   3 AUTHOR      GENUINELY ABSENT — op=attest takes no member text; the
  *                 evidence is the token, not words. (No reason field exists.)
  *   4 RECEIPT     what the plane returned — the stored RFC3161 token and the
@@ -25,10 +32,26 @@
  * accepts-when (QUEUE UI-6): co-attesting a held capture through op=attest
  * succeeds and yields a receipt showing the HONEST resulting standing (Grade B,
  * strengthened toward evidentiary weight, NEVER Grade A); the act shows its
- * weight-ladder position (`attested`) and pre-flights its refusals (bad sha /
- * no such capture / no storage -> the surface refuses, op=attest never sent);
- * a NO_ATTESTATION failure shows every recorded attempt and leaves the standing
- * unchanged.
+ * weight-ladder position (`attested`) and states what it needs before it runs
+ * (bad sha / no such capture / no storage -> the commit control is absent and
+ * op=attest is never sent); a NO_ATTESTATION failure shows every recorded
+ * attempt and leaves the standing unchanged.
+ *
+ * WHAT UI-24 ADDED, beside the correction above: this act's LABEL is published
+ * now. REC-38 answered UI-22's delegation with a `capture_acts` block on both
+ * shapes of `op=affordances`, so the bar's button, this dialog's heading and the
+ * commit control all read the producer's own word — asserted against
+ * `bio-plane/src/affordances.mjs`'s real export, imported, never against a copy.
+ * The harness boots the catalogue the way `boot()` does, because a harness that
+ * supplied a label the application could not load would be UI-22's no-caller
+ * defect wearing this item's clothes.
+ *
+ * WHAT IS STILL THIS SURFACE'S OWN, DELIBERATELY: the GRADE FENCE — that
+ * co-attestation strengthens a Grade B capture TOWARD evidentiary weight and
+ * never reaches Grade A. REC-38 refused to invent a published `prompt` for it
+ * because it is a claim about what the record asserts, and it is raised as
+ * DEC-39 for Bob to rule. Every fence assertion below therefore stands
+ * unchanged, and must keep standing until that ruling lands.
  *
  * NEGATIVE CONTROL: make the surface CLAIM Grade A from co-attestation
  * (`const ATTEST_YIELDS_GRADE = "B"` -> `"A"`) and the receipt's stated standing
@@ -37,10 +60,46 @@
  * with that exact mutation. RUN 2026-07-31: grade "B" -> receipt data-standing
  * "B", "toward evidentiary weight", no Grade-A claim (honest); grade "A" ->
  * receipt data-standing "A" (over-claims Grade A), 2 honesty assertions flip.
- * Restored source -> green.
+ * Restored source -> green. RE-RUN 2026-08-05 under UI-24's changes, same
+ * result, same 2 assertions.
+ *
+ * NEGATIVE CONTROL (UI-24's own), RUN ON DISK 2026-08-05 IN TWO ARMS, app.html
+ * and bio-plane/src/affordances.mjs each restored byte-identical (sha256
+ * c007d20035cc25febf7e75bb0a9711fa398e3899c855b1fbb2df4e18551dd2a8 and
+ * 2bef33646cab45bc429a7a7704fd3e2c0c0ef802e13372ee5db945b6f9b470d7 before and
+ * after). RESTORE THE HAND-SPELLED LABEL: in `app.html`'s `attestBar` put
+ * `Co-attest this capture&hellip;` back in place of `${esc(cact.label)}`, and in
+ * `openAttestDialog` put it back in the `<h2 id="az-h">`.
+ *
+ *   ARM 1 — the copy alone. **THIS SUITE STAYS ENTIRELY GREEN (69/69).**
+ *   `node test/run.mjs` still fails, but only on `document-page.test.mjs`'s
+ *   SOURCE-LEVEL pin ("the label this surface used to write is gone from the
+ *   source, not merely unreached"). That is REC-38's own finding reproduced
+ *   exactly one layer out: AN IDENTICAL COPY AGREES AT ZERO COST AND PASSES
+ *   EVERY BEHAVIOURAL ASSERTION. It is why the structural pin exists and why it
+ *   must not be softened into a rendered-value check.
+ *
+ *   ARM 2 — the copy PLUS a drift, which is what a copy is actually dangerous
+ *   for: with the literal restored, change the plane's own published label
+ *   (`CAPTURE_ACTS`' attest entry -> "Timestamp this capture with an outside
+ *   authority"). 1 of 69 FAILS here — "the dialog heads itself with the RECORD'S
+ *   OWN name for the act" — because the heading was the one site still holding
+ *   the copy while the bar's button and the commit control had already been
+ *   repointed at `attestActLabel()`. The count is small and is reported as
+ *   measured: a surface that keeps ONE literal is caught by ONE assertion, which
+ *   is the argument for having no literal rather than for having more
+ *   assertions.
  */
 import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+/* THE PLANE'S OWN PUBLICATION, IMPORTED (UI-24). REC-38 publishes a
+   `capture_acts` block on both shapes of `op=affordances`, and this mock answers
+   the producer's real array rather than a hand-written copy of it — a copy
+   agrees at zero cost and would prove nothing about the label the surface now
+   reads (REC-35's finding, restated on a label by REC-38's own control). The
+   `act-proposal.test.mjs` / `add-surface.test.mjs` precedent for importing a
+   plane module into a UI harness. */
+import { CAPTURE_ACTS } from "../../bio-plane/src/affordances.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -60,6 +119,17 @@ function makePlane(mode){
     let body = null; try{ body = opts && opts.body ? JSON.parse(opts.body) : null; }catch(_){}
     CALLS.push({ op, method:(opts&&opts.method)||"GET", body,
       params:Object.fromEntries(url.searchParams.entries()) });
+    /* ADDED 2026-08-05 (UI-24). The act's LABEL and RUNG are published now, so
+       the surface reads them and this harness must supply what the application
+       supplies — the catalogue read `boot()` does, answered in the WIRE shape.
+       `decorateAct` adds needs/mode/rung/weight/prompt around the array below;
+       what this surface consumes is `label` and `rung`, so those are what the
+       mock carries, taken from the producer's own export. */
+    if(op==="affordances")
+      return R({ ok:true, result:{ target:null, catalog:[], vocabularies:{},
+        capture_acts: CAPTURE_ACTS.map(a=>({ ...a, weight:null, needs:"contribute",
+                                             mode:"session", rung:a.id==="attest"?"attested":null, prompt:null })) },
+        store:"bio", tokenClass:null });
     if(op==="attest"){
       const sha = String(body && body.sha256 || "").toLowerCase();
       // the plane's OWN refusal shape (index.mjs): a bad sha / missing capture
@@ -111,19 +181,27 @@ const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__pf=attestPreflight;"
   + "globalThis.__open=openAttestDialog;globalThis.__validate=attestValidate;"
   + "globalThis.__choose=attestChoose;globalThis.__do=doAttest;globalThis.__ctx=()=>ATTEST_CTX;"
   + "globalThis.__ladder=weightLadderHtml;globalThis.__can=canAttest;"
-  + "globalThis.__claim=attestStandingClaim;globalThis.__yields=ATTEST_YIELDS_GRADE;";
+  + "globalThis.__claim=attestStandingClaim;globalThis.__yields=ATTEST_YIELDS_GRADE;"
+  + "globalThis.__loadActSource=loadActSource;globalThis.__label=attestActLabel;";
 
-function boot(source, plane){
+/* ASYNC SINCE 2026-08-05 (UI-24), and the await is the correction rather than
+   plumbing: the surface reads this act's name from the plane now, so a harness
+   that booted it without the catalogue would be a mock supplying what the
+   application never did — UI-22's `loadActSource` no-caller defect, which is the
+   one this project has already paid for twice. `boot()` awaits it before the
+   first screen paints; so does this. */
+async function boot(source, plane){
   const ctx = makeCtx(plane);
   vm.runInContext(source + EXPORTS, ctx);
   ctx.__PLANE.session = true;
   ctx.__PLANE.me = { member:"m_alice", session:true, administer:false, capabilities:["contribute"] };
+  await ctx.__loadActSource(true);
   return ctx;
 }
 
 const SRC = appScript();
 const plane = makePlane("ok");
-const ctx = boot(SRC, plane);
+const ctx = await boot(SRC, plane);
 
 /* ============================================================
    THE HONESTY SOURCE OF TRUTH — co-attestation yields B, never A.
@@ -137,21 +215,48 @@ const claimDown = ctx.__claim(false);
 ok("with no token obtained, the standing is unchanged Grade B", claimDown.grade==="B" && /unchanged/i.test(claimDown.line));
 
 /* ============================================================
-   THE PRE-FLIGHT is a pure function — prove it directly, in the plane's order.
+   WHAT THIS ACT TAKES — a pure function, proved directly.
+
+   CORRECTED 2026-08-05 BY UI-24, NEVER EXEMPTED, and the correction is the
+   point of the rider rather than a consequence of it. What stood here asserted
+   that the pre-flight COMPOSED A REFUSAL — `refusal.reason` NO_STORAGE ->
+   BAD_SHA -> NO_SUCH_CAPTURE, in the plane's own checking order, each carrying
+   a `detail` sentence this SURFACE had written. Every code was right and every
+   sentence was ours, which is exactly the arm-(d) shape UI-12 named: a suite
+   pinning the CODE calls it correct forever while the member reads words the
+   record never said. The mirrored ORDER was the same defect one layer up — a
+   surface restating a checking sequence it does not own and cannot be told has
+   changed.
+
+   So the assertions are inverted rather than deleted: the function answers
+   whether the act HAS WHAT IT NEEDS and nothing else, each row a requirement
+   stated as a requirement, and the sentences and the order are asserted GONE.
+   Anything that survives to commit is worded by `op=attest` and rendered
+   verbatim, which the refusal path below already proved and still proves.
+   `ballotNeeds` took this treatment in UI-22; this is the fifth and last
+   pre-DEC-8 residue taking it.
    ============================================================ */
 const pfGood = ctx.__pf({ sha:GOOD_SHA });
-ok("pre-flight: a held capture on a configured instance clears every gate", pfGood.ok===true && pfGood.refusal===null);
+ok("pre-flight: a held capture on a configured instance meets every requirement", pfGood.ready===true);
 const pfBad = ctx.__pf({ sha:"not-a-hash" });
-ok("pre-flight: a bad capture hash WILL refuse (BAD_SHA)", pfBad.ok===false && pfBad.refusal.reason==="BAD_SHA");
+ok("pre-flight: a bad capture hash leaves the hash requirement unmet",
+   pfBad.ready===false && pfBad.gates.find(g=>g.id==="sha").pass===false);
 const pfMissing = ctx.__pf({ sha:GOOD_SHA, held:false });
-ok("pre-flight: a hash the record does not hold WILL refuse (NO_SUCH_CAPTURE)", pfMissing.ok===false && pfMissing.refusal.reason==="NO_SUCH_CAPTURE");
+ok("pre-flight: a hash the record does not hold leaves the held requirement unmet",
+   pfMissing.ready===false && pfMissing.gates.find(g=>g.id==="held").pass===false);
 const pfNoStore = ctx.__pf({ sha:GOOD_SHA, hasStorage:false });
-ok("pre-flight: an instance with no evidence storage WILL refuse (NO_STORAGE)", pfNoStore.ok===false && pfNoStore.refusal.reason==="NO_STORAGE");
-ok("pre-flight: storage outranks the hash gate, as the plane checks it (order)",
-   ctx.__pf({ sha:"nope", hasStorage:false }).refusal.reason==="NO_STORAGE");
-ok("pre-flight: BAD_SHA outranks NO_SUCH_CAPTURE (order)",
-   ctx.__pf({ sha:"nope", held:false }).refusal.reason==="BAD_SHA");
-ok("pre-flight names three gates the member can read", pfNoStore.gates.length===3 && pfNoStore.gates.some(g=>g.id==="storage"));
+ok("pre-flight: an instance with no evidence storage leaves the storage requirement unmet",
+   pfNoStore.ready===false && pfNoStore.gates.find(g=>g.id==="storage").pass===false);
+ok("pre-flight names three requirements the member can read",
+   pfNoStore.gates.length===3 && pfNoStore.gates.some(g=>g.id==="storage"));
+/* THE CORRECTION, ASSERTED AS AN ABSENCE — the half that keeps the residue from
+   coming back under a different field name. */
+ok("pre-flight composes NO refusal — no reason code, no detail, no order of its own",
+   !("refusal" in pfNoStore) && !("ok" in pfNoStore));
+ok("and no requirement carries a sentence this surface wrote",
+   pfNoStore.gates.every(g=>!("need" in g) && typeof g.title === "string"));
+ok("nor does it restate the plane's checking sequence anywhere",
+   !ctx.__pf({ sha:"nope", hasStorage:false, held:false }).gates.some(g=>/NO_STORAGE|BAD_SHA|NO_SUCH_CAPTURE/.test(JSON.stringify(g))));
 
 /* ============================================================
    THE WEIGHT LADDER — attestation sits on the TOP rung, `attested`.
@@ -179,21 +284,52 @@ ok("NO AUTHOR STEP: the dialog carries no reason textarea (the act has no member
 ok("the dialog's weight ladder marks the top rung `attested`", /wl-rung on[\s\S]*?attested/.test(dlg0));
 ok("the ladder is HONEST that the key is the authority's, not the member's", /authority/i.test(dlg0) && /no signing key of your own/i.test(dlg0));
 const pf0 = els.get("#az-pf")._html;
-ok("PRE-FLIGHT: the panel is painted before the act runs", /what it will refuse/i.test(pf0));
-ok("PRE-FLIGHT: on a held capture, the panel clears and says no words to author", /ready|no words to author|evidence is the timestamp/i.test(pf0));
-ok("the commit button is enabled once the pre-flight clears", els.get("#az-go").disabled===false);
+ok("PRE-FLIGHT: the panel is painted before the act runs", /what this act needs/i.test(pf0));
+ok("PRE-FLIGHT: on a held capture, the panel clears and says no words to author", /no words to author|evidence is the timestamp/i.test(pf0));
+
+/* THE LABEL COMES FROM THE RECORD (UI-24). REC-38 publishes `capture_acts`, so
+   the heading and the commit control are the producer's word for this act —
+   asserted against the PLANE'S OWN EXPORT, not against a string written here,
+   because a copy agrees at zero cost. */
+const PUBLISHED_LABEL = CAPTURE_ACTS.find(a=>a.id==="attest").label;
+ok("the surface reads the act's name from the publication and keeps none of its own",
+   ctx.__label() === PUBLISHED_LABEL);
+ok("the dialog heads itself with the RECORD'S OWN name for the act",
+   new RegExp('<h2 id="az-h">'+PUBLISHED_LABEL.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+'</h2>').test(dlg0));
+const btns0 = els.get("#az-btns")._html;
+ok("the commit control EXISTS once the act has what it needs", /id="az-go"/.test(btns0));
+ok("and it carries the published label, never a verb composed here",
+   btns0.includes(PUBLISHED_LABEL));
 
 /* ============================================================
-   A surface-side refusal: a hash the record does not hold. op=attest
-   must NEVER be sent — the member meets NO_SUCH_CAPTURE before the plane.
+   AN UNMET REQUIREMENT: a hash the record does not hold.
+
+   CORRECTED 2026-08-05 BY UI-24, NEVER EXEMPTED. What stood here asserted that
+   the surface REFUSED with the plane's reason code and told the member "nothing
+   has been recorded" — a sentence this file wrote, over a code the store owns.
+   Under UI-22's treatment the surface composes no refusal at all: the commit
+   control is ABSENT while a requirement is unmet (Membership Architecture v2
+   §5, absent-not-greyed), so there is nothing to click and no words to invent.
+   `doAttest` stays as a FAIL-CLOSED GUARD, which is what the second assertion
+   below still proves: op=attest is never sent on an uncleared pre-flight.
    ============================================================ */
 const c = ctx.__ctx(); c.held = false;   // simulate the capture not being in the store
+ctx.__validate();
+const btnsNo = els.get("#az-btns")._html;
+ok("with a requirement unmet the commit control is ABSENT, not greyed",
+   !/id="az-go"/.test(btnsNo) && !/disabled/.test(btnsNo));
+ok("and the panel states WHICH requirement is unmet, in a heading and not a judgment",
+   /The capture is in the record/.test(els.get("#az-pf")._html));
 const before = plane.CALLS.length;
 const rRef = await ctx.__do();
-ok("a not-held capture is refused IN THE SURFACE", rRef && rRef.refused===true && rRef.reason==="NO_SUCH_CAPTURE");
-ok("the refused act sent NO op=attest — refused BEFORE the plane", !plane.CALLS.slice(before).some(x=>x.op==="attest"));
-ok("the surface refusal tells the member nothing was recorded", /nothing has been recorded/i.test(els.get("#az-err")._html));
+ok("the guard holds even when the act is called directly: it names the unmet requirement to its caller",
+   rRef && rRef.refused===true && rRef.unmet==="held");
+ok("the refused act sent NO op=attest — nothing reaches the plane on an uncleared pre-flight",
+   !plane.CALLS.slice(before).some(x=>x.op==="attest"));
+ok("and the surface composes no refusal sentence of its own",
+   !/won't run|will not run|nothing has been recorded|you need to/i.test(els.get("#az-err")._html));
 c.held = true;   // restore for the success path
+ctx.__validate();
 
 /* ============================================================
    THE SUCCESS PATH: co-attest a held capture -> op=attest -> RECEIPT.
@@ -222,7 +358,7 @@ ok("RECEIPT HONESTY: the standing says strengthened TOWARD evidentiary weight", 
 /* ============================================================
    THE ARCHIVE CHOICE: opting into a public archive rides on the op body.
    ============================================================ */
-const planeA = makePlane("ok"); const ctxA = boot(SRC, planeA);
+const planeA = makePlane("ok"); const ctxA = await boot(SRC, planeA);
 ctxA.__open("INFO-2026-0007", "with archive", GOOD_SHA, "https://city.example/agenda.pdf");
 ctxA.__choose(true);
 ok("choosing the archive sets it on the act context", ctxA.__ctx().archive===true);
@@ -237,7 +373,7 @@ ok("the archive appears on the receipt", /web\.archive\.org/i.test(ctxA.__els.ge
    never over-claiming. (A register showing a failed attempt and one showing
    NO attempt are different claims — so the attempts belong on screen.)
    ============================================================ */
-const planeN = makePlane("none"); const ctxN = boot(SRC, planeN);
+const planeN = makePlane("none"); const ctxN = await boot(SRC, planeN);
 ctxN.__open("INFO-2026-0007", "sewer", GOOD_SHA, "");
 const rN = await ctxN.__do();
 ok("a NO_ATTESTATION answer is handled as an honest failure (not swallowed)", rN && rN.refused===true && rN.reason==="NO_ATTESTATION");
@@ -269,7 +405,7 @@ for(const word of ["op=", "op=attest", "NO_SUCH_CAPTURE", "BAD_SHA", "NO_ATTESTA
 const BROKEN = SRC.replace('const ATTEST_YIELDS_GRADE = "B";',
                            'const ATTEST_YIELDS_GRADE = "A"; /* NEGATIVE CONTROL: over-claims Grade A */');
 ok("the negative-control mutation actually changed the source", BROKEN !== SRC);
-const planeNC = makePlane("ok"); const ctxNC = boot(BROKEN, planeNC);
+const planeNC = makePlane("ok"); const ctxNC = await boot(BROKEN, planeNC);
 ctxNC.__open("INFO-2026-0007", "sewer", GOOD_SHA, "");
 await ctxNC.__do();
 const rcNC = ctxNC.__els.get("#dlg")._html;
@@ -280,4 +416,4 @@ ok("NEG-CONTROL: and it NO LONGER shows the honest B standing — the honesty as
 ok("NEG-CONTROL contrast: the intact surface claimed Grade B, never A", /data-standing="B"/.test(rc) && !/data-standing="A"/.test(rc));
 
 if(fails.length){ console.error(`act-attest: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`act-attest: ${n} assertions, all green — choose · pre-flight refusals · NO author (op takes none) · receipt · weight-ladder(attested) · HONESTY (B toward evidentiary, never Grade A); negative control RUN`);
+console.log(`act-attest: ${n} assertions, all green — choose · what the act NEEDS (no refusal composed) · absent-not-greyed commit · the PUBLISHED label from the plane's own export · NO author (op takes none) · receipt · weight-ladder(attested) · HONESTY (B toward evidentiary, never Grade A — DEC-39 pending); negative controls RUN (Grade-A claim · the hand-spelled label restored)`);
