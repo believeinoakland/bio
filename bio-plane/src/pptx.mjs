@@ -42,8 +42,8 @@
  *   .rels part name itself ties it to the slide), the reference stops there.
  *
  *   text(parts) -> { ok:true, container:"pptx", document,
- *     slides:[ {slide, ref:"slide <n>", part, text} ],       // the per-unit
- *     speakerNotes:[ {slide, ref:"slide <n> (notes)", part, text} ], // lists
+ *     slides:[ {slide, ref:"slide <n>", part, hidden, text} ],   // per-unit
+ *     speakerNotes:[ {slide, ref:"slide <n> (notes)", part, hidden, text} ],
  *     undetermined:[ Marker... ], counts:{chars, notesChars, undetermined} }
  *   — `<a:t>` runs per slide, `<a:p>` paragraphs newline-joined. A PPTX has
  *   no pages, so the per-unit list is `slides`, the IC-2 pageless degenerate
@@ -59,6 +59,22 @@
  *       `document`, which is the deck as presented; counts split chars /
  *       notesChars so an indexer cannot conflate them by accident.
  *     { kind:"core-properties", creator, lastModifiedBy, revision, ... }
+ *
+ *   HIDDEN SLIDES (DEC-5, COFF-7 — the pptx analogue of xlsx hidden sheets):
+ *   a slide whose bytes declare `show="0"` is invisible in EVERY presented
+ *   form of the deck. The attribute is read from BOTH places it can live:
+ *   the slide part's own `<p:sld>` root (ECMA-376's home for CT_Slide@show —
+ *   where PowerPoint's "Hide Slide" writes it) and the slide's `<p:sldId>`
+ *   entry in the sldIdLst, honored when the bytes carry it there. The hidden
+ *   slide is STILL FULLY EXTRACTED — text, notes, links — and FLAGGED
+ *   everywhere shown, cited or indexed:
+ *     { kind:"hidden-slide", slide:<1-based | null when the deck order is
+ *       unreadable>, part, source:<slide-shape ref | null> }   // the
+ *       envelope item naming the slide
+ *   and every text() unit (slides[] and speakerNotes[]) carries `hidden` —
+ *   the xlsx sheets[] precedent. Absence of the attribute means shown;
+ *   nothing is guessed.
+ *
  *   under the ONE accepted envelope (IC-2, CONFIRMED from this code):
  *     { container, kinds:[...], items:[...], undetermined:[{part,why}...],
  *       counts:{<kind>:n} }
@@ -150,6 +166,26 @@ const localOf = (name) => (name.includes(":") ? name.split(":").pop() : name);
 /* The DrawingML shape elements whose opens advance the 0-based shape index —
  * <p:spTree> children and their nested kin, one sequence per slide. */
 const SHAPE_TAGS = new Set(["sp", "pic", "graphicFrame", "cxnSp", "grpSp"]);
+
+/* ------------------------------------------------------------------ *
+ * Hidden slides (DEC-5, COFF-7)
+ * ------------------------------------------------------------------ */
+
+/* xsd:boolean false — its only two lexical forms. This is the ONE funnel
+ * both attribute locations (the <p:sld> root and the sldIdLst entry) pass
+ * through; a hidden slide is one whose bytes DECLARE show false, and an
+ * absent attribute means shown — never guessed. */
+const declaresNotShown = (v) => v === "0" || v === "false";
+
+/* The slide part's root open tag — `sld` must be followed by whitespace,
+ * `/` or `>` so sldId/sldLayoutId never match. */
+const SLD_ROOT_RE = /<(?:[\w.-]+:)?sld(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/;
+const SHOW_ATTR_RE = /(?:^|\s)(?:[\w.-]+:)?show\s*=\s*(?:"([^"]*)"|'([^']*)')/;
+
+const showAttrOf = (rawAttrs) => {
+  const m = (rawAttrs || "").match(SHOW_ATTR_RE);
+  return m ? (m[1] ?? m[2]) : null;
+};
 
 /* ------------------------------------------------------------------ *
  * The slide walk — ONE pass over a slide (or notesSlide) part collecting
@@ -289,6 +325,8 @@ function resolveRelTarget(relsPart, target) {
  *    slideParts, notesParts,           // central-directory inventories
  *    slideXml, notesXml,               // Map(part -> xml) for readable parts
  *    notesOf,                          // Map(slide part -> its notesSlide part)
+ *    hiddenParts,                      // Set(slide part) whose bytes declare
+ *                                      // show="0" (root or sldIdLst entry)
  *    rels, core|null,
  *    guard|null,                       // the sizeGuard marker when over bound
  *    undetermined:[{part,why}...] }    // parts that exist but cannot be read
@@ -343,6 +381,7 @@ async function pptxParts(bytes) {
    * presentation part's .rels. The r:id is the PREFIXED :id attribute —
    * sldId also carries its own unprefixed id="", which is not a rel. */
   let order = null;
+  const hiddenParts = new Set(); // slide parts whose bytes declare show="0"
   if (presentationXml != null) {
     const presRelsPart = relsPartFor(mainPart);
     const presRels = rels.byPart.find((p) => p.part === presRelsPart);
@@ -362,7 +401,11 @@ async function pptxParts(bytes) {
           undetermined.push({ part: mainPart, why: `sldid_rel_unresolved:${id ?? "no_rid"}` });
           continue;
         }
-        order.push(resolveRelTarget(presRelsPart, rel.target));
+        const resolved = resolveRelTarget(presRelsPart, rel.target);
+        order.push(resolved);
+        /* The queue-item location: show="0" carried on the sldIdLst entry
+         * itself, honored when the bytes carry it there. */
+        if (declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(resolved);
       }
     }
   }
@@ -373,8 +416,14 @@ async function pptxParts(bytes) {
   if (!guard) {
     for (const n of slideParts) {
       const r = await readPart(b, container, n);
-      if (r.ok) slideXml.set(n, UTF8.decode(r.bytes));
-      else undetermined.push({ part: n, why: r.why });
+      if (r.ok) {
+        const xml = UTF8.decode(r.bytes);
+        slideXml.set(n, xml);
+        /* ECMA-376's location: CT_Slide@show on the part's <p:sld> root —
+         * where PowerPoint's "Hide Slide" writes it. */
+        const root = xml.match(SLD_ROOT_RE);
+        if (root && declaresNotShown(showAttrOf(root[1]))) hiddenParts.add(n);
+      } else undetermined.push({ part: n, why: r.why });
     }
     for (const n of notesParts) {
       const r = await readPart(b, container, n);
@@ -407,8 +456,8 @@ async function pptxParts(bytes) {
 
   return {
     ok: true, format: "pptx", bytes: b, container, mainPart, presentationXml,
-    order, slideParts, notesParts, slideXml, notesXml, notesOf, rels, core,
-    guard, undetermined,
+    order, slideParts, notesParts, slideXml, notesXml, notesOf, hiddenParts,
+    rels, core, guard, undetermined,
   };
 }
 
@@ -575,6 +624,21 @@ async function pptxStructure(parts) {
   const evUndetermined = [...parts.undetermined];
   if (parts.guard) evUndetermined.push({ part: GUARDED_PARTS, why: "over_size_bound", guard: parts.guard });
 
+  /* HIDDEN SLIDES (DEC-5, COFF-7): a slide whose bytes declare show="0" is
+   * invisible in every presented form of the deck — a first-class finding,
+   * the pptx analogue of a hidden xlsx sheet. The slide stays FULLY
+   * extracted (its text, notes and links are emitted like any other slide's);
+   * this item is the flag that names it, and text() marks its units. */
+  for (const { part, slide } of deck) {
+    if (!parts.hiddenParts.has(part)) continue;
+    items.push({
+      kind: "hidden-slide",
+      slide,
+      part,
+      source: slide != null ? slideShapeRef(slide) : null,
+    });
+  }
+
   /* SPEAKER NOTES — the evidentiary core: per slide, a DISTINCT kind, never
    * merged into slide text anywhere. */
   const mappedNotes = new Set();
@@ -658,12 +722,17 @@ async function pptxText(parts) {
   const speakerNotes = [];
   const undetermined = [];
   for (const { part, slide } of deck) {
+    /* The COFF-7 mark: `hidden` on EVERY unit — true when the slide's bytes
+     * declare show="0", false otherwise (the xlsx sheets[] precedent) — so a
+     * hidden slide is distinguishable from a visible one wherever a unit is
+     * shown, cited or indexed. */
+    const hidden = parts.hiddenParts.has(part);
     const xml = parts.slideXml.get(part);
     if (xml == null) {
       const stated = parts.undetermined.find((u) => u.part === part);
       undetermined.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
     } else {
-      slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, text: walkSlide(xml).text });
+      slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, hidden, text: walkSlide(xml).text });
     }
     const notesPart = parts.notesOf.get(part) ?? null;
     if (!notesPart) continue;
@@ -675,17 +744,23 @@ async function pptxText(parts) {
       /* THE DISTINCTION (DEC-5): a speaker-notes unit is its OWN unit with
        * its own ref form — never appended to the slide's text, never in
        * `document`. */
-      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, text: walkSlide(nxml).text });
+      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(nxml).text });
     }
   }
-  /* Orphan notesSlides: their text is still evidence, honestly unnumbered. */
+  /* Orphan notesSlides: their text is still evidence, honestly unnumbered —
+   * and with `hidden` NULL, because the slide attachment that would carry
+   * the flag is lost; stated, never guessed either way. */
   const mapped = new Set([...parts.notesOf.values()]);
   for (const np of parts.notesParts) {
     if (mapped.has(np) || !parts.notesXml.has(np)) continue;
-    speakerNotes.push({ slide: null, ref: null, part: np, text: walkSlide(parts.notesXml.get(np)).text });
+    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(parts.notesXml.get(np)).text });
   }
 
-  /* `document` is the deck AS PRESENTED: slide text only. Speaker notes are
+  /* `document` is the deck's slide text, speaker notes NEVER in it. A HIDDEN
+   * slide's text IS included — extracted in full, the xlsx hidden-sheet
+   * precedent: the record holds what the file holds, and the flag (the
+   * hidden-slide envelope item, the units' `hidden` mark) is what keeps a
+   * reader from mistaking it for presented content. Speaker notes are
    * counted apart so no reader can conflate the two streams by accident. */
   const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
   const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);

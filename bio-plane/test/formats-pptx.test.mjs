@@ -13,6 +13,12 @@
  *     or indexed: a distinct envelope kind, a distinct text unit list with
  *     its own "(notes)" refs, NEVER merged into `document` or a slide's text
  *   - an unreadable part -> a STATED undetermined, never a silent partial
+ *   - HIDDEN SLIDES (COFF-7, DEC-5 — the pptx analogue of xlsx hidden
+ *     sheets): a slide whose bytes declare show="0" (on its <p:sld> root,
+ *     ECMA-376's home for CT_Slide@show, OR on its sldIdLst entry) is
+ *     extracted IN FULL — text, notes, links — and flagged everywhere: the
+ *     kind `hidden-slide` envelope item naming the slide, and the `hidden`
+ *     mark on every text unit, while visible slides are NOT flagged
  * Plus the doctrine cases: wrapper BYTE-IDENTITY with subresources.mjs's ONE
  * linkWrapper (the parity formats-docx.test.mjs pins for DOCX, pinned here
  * for PPTX); the detect confidence ladder (a bare PK sniff at the 1 KiB
@@ -22,6 +28,7 @@
  * slide the deck does not contain stated, never invented.
  */
 /* NEGATIVE CONTROL: in src/pptx.mjs's pptxText, merge the notes into the slide text — change the `document` line to `const document = [...slides.map((s) => s.text), ...speakerNotes.map((s) => s.text)].filter((t) => t.length).join("\n");` — and the suite fails NAMING the distinction. RUN 2026-08-03: 2 of 95 failed ("speaker notes are NOWHERE in document — the deck as presented" and "document is the slide texts newline-joined — THE DECK AS PRESENTED"); restored -> 95 pass 0 fail. */
+/* NEGATIVE CONTROL (COFF-7, hidden slides): in src/pptx.mjs neuter the ONE funnel both attribute locations pass through — change `const declaresNotShown = (v) => v === "0" || v === "false";` to `const declaresNotShown = (v) => false;` — and the suite fails NAMING a hidden slide now indistinguishable from a visible one. RUN 2026-08-03: 8 of 110 failed ("ONE hidden-slide item — the hidden slide flagged, the visible slides NOT", "the envelope counts and names the kind", "the hidden slide's text unit is MARKED — and the visible units are not", "its speaker-notes unit carries the slide's mark too", plus the sldIdLst-location and reordered-declaration cases); restored -> 110 pass 0 fail. */
 
 import { deflateRawSync } from "node:zlib";
 import { linkWrapper } from "../src/subresources.mjs";
@@ -291,13 +298,18 @@ console.log("\n--- THE EVIDENTIARY CORE (DEC-5): speaker notes, per slide, a DIS
   t("the envelope names its kinds", S.evidentiary.kinds.sort(), ["core-properties", "speaker-notes"]);
   t("the envelope container", S.evidentiary.container, "pptx");
   t("nothing undetermined on the clean fixture", S.evidentiary.undetermined, []);
+  t("NO hidden-slide item on the all-visible deck — a visible slide is never flagged (COFF-7)",
+    S.evidentiary.items.some((i) => i.kind === "hidden-slide"), false);
 }
 
 console.log("\n--- text: <a:t> runs per slide; NOTES ARE A DISTINCT UNIT, NEVER MERGED ---");
 const T = await entry.text(parts);
 {
   t("text ok", T.ok, true);
-  t("slide units carry slide-shape refs and their part", T.slides[0], { slide: 1, ref: "slide 1", part: "ppt/slides/slide1.xml", text: S1_TEXT });
+  /* CORRECTED for COFF-7: the unit gained the `hidden` mark (false on a
+   * visible slide) — the shape grew, the old pin was not wrong, just prior. */
+  t("slide units carry slide-shape refs, their part and the hidden mark (false: this deck hides nothing)",
+    T.slides[0], { slide: 1, ref: "slide 1", part: "ppt/slides/slide1.xml", hidden: false, text: S1_TEXT });
   t("slide 2's text: paragraphs newline-joined, runs concatenated", T.slides[1].text, S2_TEXT);
   t("slide 3's text: <a:br> is a line break within its paragraph", T.slides[2].text, S3_TEXT);
   t("document is the slide texts newline-joined — THE DECK AS PRESENTED", T.document, `${S1_TEXT}\n${S2_TEXT}\n${S3_TEXT}`);
@@ -370,6 +382,9 @@ console.log("\n--- AN UNREADABLE PART IS A STATED UNDETERMINED, NEVER A SILENT P
   const orphan = s3.evidentiary.items.find((i) => i.kind === "speaker-notes" && i.part.endsWith("notesSlide2.xml"));
   t("the notes the lost rels once claimed are still emitted — honestly unattributed, never dropped",
     [orphan.slide, orphan.source, orphan.text === NOTES2_TEXT], [null, null, true]);
+  const t3 = await entry.text(p3);
+  t("an orphan notes unit's hidden mark is honestly NULL — the slide attachment that carries the flag is lost, not guessed",
+    t3.speakerNotes.find((n) => n.part.endsWith("notesSlide2.xml")).hidden, null);
 
   /* an unreadable embedding. */
   const p4 = await entry.parts(pptxFixture({ embedding: { badCrc: true } }));
@@ -434,6 +449,63 @@ console.log("\n--- the size guard: over the bound -> text-undetermined VERBATIM,
     sb.evidentiary.items.some((i) => i.kind === "speaker-notes"), false);
   t("rels links still emitted at slide granularity: 2 deferred + 1 refused",
     [sb.counts.deferred, sb.counts.refused], [2, 1]);
+}
+
+console.log("\n--- HIDDEN SLIDES (COFF-7, DEC-5): show=\"0\" — extracted in FULL, flagged EVERYWHERE ---");
+{
+  /* The ECMA-376 location: CT_Slide's own show attribute on the slide part's
+   * <p:sld> root — where PowerPoint's "Hide Slide" writes it. (The queue item
+   * names the sldIdLst entry; that location is covered below — BOTH are read,
+   * either declares the slide unshown.) */
+  const SLIDE2_HIDDEN_XML = SLIDE2_XML.replace("<p:sld ", '<p:sld show="0" ');
+  const p = await entry.parts(pptxFixture({ slide2: { data: SLIDE2_HIDDEN_XML } }));
+  const s = await entry.structure(p);
+  t("ONE hidden-slide item — the hidden slide flagged, the visible slides NOT",
+    s.evidentiary.items.filter((i) => i.kind === "hidden-slide"),
+    [{ kind: "hidden-slide", slide: 2, part: "ppt/slides/slide2.xml",
+       source: { kind: "slide-shape", ref: "slide 2", slide: 2 } }]);
+  t("the envelope counts and names the kind — the vocabulary grew, the shape did not",
+    [s.evidentiary.counts["hidden-slide"], s.evidentiary.kinds.includes("hidden-slide")], [1, true]);
+  t("the hidden slide's LINKS are still fully extracted — same partitions as the visible deck",
+    s.counts, { anchor: 1, intra: 1, deferred: 2, refused: 1, undetermined: 1 });
+  t("its SPEAKER NOTES item is still emitted — hidden means flagged, never dropped",
+    s.evidentiary.items.filter((i) => i.kind === "speaker-notes").map((i) => i.slide), [1, 2]);
+  const tx = await entry.text(p);
+  t("the hidden slide's text unit is MARKED — and the visible units are not",
+    tx.slides.map((u) => [u.slide, u.hidden]), [[1, false], [2, true], [3, false]]);
+  t("its full text is still extracted — the record holds what the file holds",
+    tx.slides[1].text, S2_TEXT);
+  t("and still in document, beside the flag (the xlsx hidden-sheet precedent: included AND flagged)",
+    tx.document, `${S1_TEXT}\n${S2_TEXT}\n${S3_TEXT}`);
+  t("its speaker-notes unit carries the slide's mark too — flagged wherever cited or indexed",
+    tx.speakerNotes.map((n) => [n.ref, n.hidden]), [["slide 1 (notes)", false], ["slide 2 (notes)", true]]);
+
+  /* The COFF-7 queue-item location: show="0" on the sldIdLst entry itself. */
+  const PRESENTATION_XML_HIDDEN = PRESENTATION_XML.replace(
+    '<p:sldId id="257" r:id="rId3"/>', '<p:sldId id="257" r:id="rId3" show="0"/>');
+  const p2 = await entry.parts(pptxFixture({ presentationXml: PRESENTATION_XML_HIDDEN }));
+  const s2 = await entry.structure(p2);
+  t("the sldIdLst-entry location flags the same slide the same way",
+    s2.evidentiary.items.filter((i) => i.kind === "hidden-slide").map((i) => [i.slide, i.part]),
+    [[2, "ppt/slides/slide2.xml"]]);
+  t("and marks the same text unit", (await entry.text(p2)).slides.map((u) => u.hidden), [false, true, false]);
+
+  /* Reordered declaration: the flag follows the PART to its deck number —
+   * never the filename. */
+  const p3 = await entry.parts(pptxFixture({
+    presentationXml: PRESENTATION_XML_REORDERED, slide2: { data: SLIDE2_HIDDEN_XML } }));
+  const s3 = await entry.structure(p3);
+  t("under a reordered declaration the flag follows the part: slide2.xml IS deck slide 3",
+    s3.evidentiary.items.filter((i) => i.kind === "hidden-slide").map((i) => [i.slide, i.part]),
+    [[3, "ppt/slides/slide2.xml"]]);
+  t("and the marked unit is the deck's slide 3",
+    (await entry.text(p3)).slides.map((u) => [u.slide, u.hidden]), [[1, false], [2, false], [3, true]]);
+
+  /* show="1" / true / absent: SHOWN — the flag needs a declaration, never a guess. */
+  const p4 = await entry.parts(pptxFixture({ slide2: { data: SLIDE2_XML.replace("<p:sld ", '<p:sld show="1" ') } }));
+  t("an explicit show=\"1\" is a VISIBLE slide — no item, no mark",
+    [(await entry.structure(p4)).evidentiary.items.some((i) => i.kind === "hidden-slide"),
+     (await entry.text(p4)).slides.some((u) => u.hidden)], [false, false]);
 }
 
 console.log("\n--- the walker holds its own doctrine ---");
