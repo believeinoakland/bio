@@ -2399,6 +2399,16 @@ for CONDUCT to enact: **REC-11 and REC-12 are the load-bearing pair.** REC-12's 
   Q14's contradiction case stays SEPARATE and stays undesigned — grounds agree on the
   conclusion; contradiction is two conclusions disagreeing.
 enacted: 2026-08-04 · CONDUCT — REC-42 queued to CORRECT the shipped flat-AND basis (the relationship on inquiry_basis; MIN over AND legs / MAX over OR branches per axis; the AND default as a correctness requirement so independent sufficiency needs an affirmative attributed act; R1 composing one level up; every flat-shape pin corrected with dates and REC-14 freezing the structured result) and UI-27's sibling elicitation half folded into the UI wave's scope note — no AND/OR vocabulary on any surface, the consequence question per leg, the derived falsifier shown back, structure authored BEFORE strength is shown, restructuring-after-seeing recorded and attributed rather than blocked. Q14's contradiction case recorded as SEPARATE and UNDESIGNED. Reasoning in this entry and QUEUE.md (REC-42).
+
+> **AMENDMENT, 2026-08-04 (CONDUCT, the D-160 pattern — a dated note where the words
+> live, never a rewrite): this entry states R1's branch composition with the RETIRED
+> word.** `UNRATED` is canonical; the retired word means the OPPOSITE in `SB-OUTPUT`
+> §5.1 and is swept out of `app.html` by the drift guard. As built (REC-42): a branch
+> the walk could not finish reads `undetermined`; a branch with nothing established
+> reads UNRATED. The ruling's substance is unaffected — the translation is written at
+> `#groundResult` in `store.mjs`, and it cost REC-42's worker time, which is why this
+> note exists rather than a silent correction.
+
 ### DEC-33 · answered
 raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)
 for: bob
