@@ -54,18 +54,32 @@
  * uninvited member's list OMITS an invisible document, because the plane
  * withholds the ROW and this surface filters nothing.
  *
- * AND THE ONE CORRECTION, never an exemption, because it is a real narrowing and
- * hiding it would be the defect: `op=readingref` matched the REFERENCE STRING,
- * `op=readingname` matches THE NAME A READING RECORDED. So BID_A — whose
+ * AND THE ONE CORRECTION, never an exemption, because it was a real narrowing and
+ * hiding it would have been the defect: `op=readingref` matched the REFERENCE
+ * STRING, `op=readingname` matched THE NAME A READING RECORDED. So BID_A — whose
  * reference is spelled exactly like one of this subject's names but whose
- * recorded name carries none of them — is no longer offered, and the assertion
- * that it IS offered has become an assertion that it is NOT, beside an assertion
- * that the page SAYS SO. What follows it is the point: the bound is a bound on
- * THE LOOKUP and not on the record, so registering the name the reading actually
- * recorded brings the document back within reach at the same Grade A, and that
- * is DRIVEN rather than claimed.
+ * recorded name carries none of them — was no longer offered, and the assertion
+ * that it IS offered became an assertion that it is NOT, beside an assertion
+ * that the page SAYS SO.
  *
- * NEGATIVE CONTROL, six arms, (a)-(c) RUN 2026-08-04 by UI-13/REC-35 and
+ * REC-40 CLOSED THAT TRADE, 2026-08-05, AND THE PIN HAS NOW MOVED TWICE — which
+ * is why the paragraph above is kept in the past tense rather than deleted. The
+ * plane's term index carries all THREE of the strings its recogniser grades on,
+ * each under its own source, so BID_A is offered again from the SAME single call
+ * at the same §8.1 grade A, and the page's clause about a document known "by an
+ * identifier and no name" is GONE because it stopped being true. Two things the
+ * reversal did NOT undo, and both are asserted: the call count is still ONE, and
+ * nothing here grades — the plane's `grade_if_resolved` is rendered as what
+ * resolving WOULD record and never as a grade the document holds.
+ *
+ * THE IMPROVABILITY ARM MOVED WITH IT. Its point is that the bound is a bound on
+ * THE LOOKUP and not on the record, so registering the name a reading actually
+ * recorded brings a document within reach — DRIVEN, never claimed. BID_A stopped
+ * being able to prove that the moment it was reachable from the start, so the arm
+ * now drives BID_I, which nothing reaches until its recorded name is registered.
+ * An arm whose subject has quietly become reachable is an arm passing for free.
+ *
+ * NEGATIVE CONTROL, eight arms, (a)-(c) RUN 2026-08-04 by UI-13/REC-35 and
  * (d)-(f) RUN 2026-08-04 by UI-26, each restored byte-identical (sha256
  * compared before and after each arm; UI-26's baselines are app.html
  * aa5bdc2f83e94f298cbff92838106773df1bb92e6ef877684194220d6688d0eb and this
@@ -119,20 +133,39 @@
  *       `loadResolveCandidates`, put the old loop back in place of the single
  *       call: `const names = (e && e.aliases || []).map(a=>a.alias);` then
  *       `for(const n of names){ ... await recR("readingref", { ref:n }) ... }`.
- *       RESULT: **14 of 129 assertions FAILED**, and they NAME THE OP: "op=
- *       readingref is not called at all", "the candidate documents came from
- *       ONE call", "the whole control costs two calls" — plus the near-name
- *       candidate and BOTH correspondence renderings vanishing, the identifier
- *       bound inverting, the gate arm losing its subject in both directions,
- *       and all four COVERAGE assertions, which is the arm-B line moving back.
- *       Restored -> 129/129, app.html sha256-verified identical.
+ *       RESULT AT UI-26: **14 of 129 assertions FAILED**, and they NAME THE OP:
+ *       "op=readingref is not called at all", "the candidate documents came
+ *       from ONE call", "the whole control costs two calls" — plus the
+ *       near-name candidate and BOTH correspondence renderings vanishing, the
+ *       identifier bound inverting, the gate arm losing its subject in both
+ *       directions, and all four COVERAGE assertions.
+ *       RE-RUN 2026-08-05 (REC-40): **16 of 141**, and the arm has become the
+ *       clearest statement of the trade this whole item is about, so the new
+ *       reading is recorded rather than only the new number. WITH THE LOOP BACK,
+ *       "THE IDENTIFIER TIER IS BACK" STILL PASSES while "A NEAR-NAME CANDIDATE
+ *       IS OFFERED" FAILS — the loop reaches BID_A and loses BID_N, which is
+ *       exactly the trade UI-26 measured, seen from the other side. The point of
+ *       REC-40 is that the plane now answers BOTH from ONE call, so what the arm
+ *       proves is no longer "the loop lost a tier" but "the loop is not how the
+ *       tier came back", and the assertion that says so ("STILL ONE CALL") is
+ *       among the sixteen.
+ *       Restored -> 141/141, app.html sha256-verified identical
+ *       (998f981eae59e8408767cf5a96216f2e74d418c75da303bd5e5608a221ea00e5).
  *
  *   (e) UI-26's SECOND — DROP THE NARROWED SENTENCE. In `loadResolveCandidates`
  *       cut everything in `note` after "plus the ones already resolved to it."
- *       so the list is offered with NO bound stated at all. RESULT: **6 of 129
- *       assertions FAILED** — all four clauses of the measured bound, the
- *       never-implies-completeness clause, and the identifier bound the page
- *       has to say out loud.
+ *       so the list is offered with NO bound stated at all. RESULT AT UI-26:
+ *       **6 of 129 assertions FAILED** — all four clauses of the measured bound,
+ *       the never-implies-completeness clause, and the identifier bound the page
+ *       had to say out loud.
+ *       RE-RUN 2026-08-05 (REC-40): **7 of 141**, and the composition of the
+ *       seven is the useful part. The clause naming the THREE places the lookup
+ *       reaches SURVIVES the cut, because REC-40 put the widening structurally
+ *       BEFORE the cut point rather than in the trailing caveat — so what the
+ *       arm now removes is the BOUND and never the widening, which is the right
+ *       way round: a page may lose its caveat and must not lose the sentence
+ *       that says what it did. The two new failures are the remaining bound and
+ *       "nothing here is settled".
  *       AND THE FINDING, kept because it is the whole reason this arm exists:
  *       the assertion that FORBIDS completeness WORDS ("every document", "all
  *       the documents", "complete") STAYED GREEN over the stripped sentence.
@@ -152,6 +185,36 @@
  *       nameless row". The arm reaches its subject; a sweep that cannot is not
  *       a sweep (UI-21's finding, applied before it could cost anything).
  *       Restored -> 125/125, this file sha256-verified identical.
+ *
+ *   (g) REC-40's, 2026-08-05, AND IT IS A PLANE ARM DRIVEN FROM THE SURFACE —
+ *       DROP THE REF-TERM SOURCE. In `bio-plane/src/store.mjs`, make
+ *       `Store.#refTermSources` return the label alone (`if (label) return
+ *       [["label", label]];` as its first line), so the plane's index carries
+ *       what REC-36 shipped and nothing more. RESULT: **6 of 141 assertions
+ *       FAILED** — the identifier tier is not offered, the reference phrasing is
+ *       not rendered, the conditional grade line is not rendered, and the plane's
+ *       own answer stops carrying an A beside the C for the two-reference
+ *       document — WHILE EVERY NAME-TIER ASSERTION STAYS GREEN, including the
+ *       near-name candidate and both weaker-correspondence renderings. The
+ *       plane's own suite fails with it at 11 of 71, two independent instruments
+ *       on one subject, and the pair is what shows the two tiers are independent
+ *       rather than one thing renamed.
+ *       Restored -> 141/141, store.mjs sha256-verified identical
+ *       (558d2e2d0575276153fb3b232fc71b02b55f7c9a027cc3e41285506f173b6879).
+ *       RE-RUN 2026-08-05 against REC-40's final store.mjs: unchanged at 6.
+ *
+ *   (h) REC-40's SECOND, AND IT IS RECORDED HERE BECAUSE THIS FILE STAYS GREEN
+ *       UNDER IT — DERIVE THE CANDIDATE'S GRADE FROM THE CORRESPONDENCE. In
+ *       `bio-plane/src/store.mjs` replace `const gradeIf =
+ *       tier.hits.includes(entityId) ? tier.grade : null;` with `const gradeIf =
+ *       whole ? (r.src === "ref" ? "A" : r.src === "key" ? "B" : "C") : null;`.
+ *       RESULT: **0 of 141 here**, and 2 of 76 in the plane's own suite. That is
+ *       the finding, not a gap: the surface renders whatever letter the plane
+ *       hands it and CANNOT TELL a true conditional from a false one, so a
+ *       promise the record would never keep is invisible from here. Any
+ *       assertion about whether a grade is EARNED has to live on the plane side;
+ *       what this file can honestly assert is that the letter is rendered as a
+ *       conditional and never as a grade held, which it does.
  */
 import fs from "fs";
 import os from "os";
@@ -286,6 +349,16 @@ const BID_N = await seedDoc(SHA_N, [{ ref:"contract:ZZ-0001", kind:"contract", k
 const BID_S = await seedDoc(SHA_S, [{ ref:"contract:ZZ-0002", kind:"contract", key:"ZZ-0002",
                                       label:"Settlement Under The Recology Hauling Contract" }],
                             { type:"project", tok:CAROL });
+/* REC-40's, 2026-08-05. The improvability arm below needs a document that NO
+   registered name reaches YET — and BID_A stopped being one, because REC-40 put
+   the identifier tier back into the same call and BID_A is offered from the
+   start again. Keeping BID_A as that arm's subject would have left it passing
+   while proving nothing, which is the failure mode the arm was written against.
+   This document is reachable by neither name nor reference until a member
+   registers the name its reading actually recorded. */
+const SHA_I = sha("ui13-zerowaste");
+const BID_I = await seedDoc(SHA_I, [{ ref:"contract:ZZ-0003", kind:"contract", key:"ZZ-0003",
+                                      label:"Zero Waste Collection Services Agreement" }]);
 
 /* ---- the store's OWN closed vocabularies, read out of the ENFORCING OPS'
    refusals by this file directly. The SECOND instrument on the DEC-8 property:
@@ -537,24 +610,76 @@ ok("A NEAR-NAME CANDIDATE IS OFFERED — the grade-C tier, reachable from this c
    cands.includes(BID_N));
 ok("and it is offered as the WEAKER correspondence, saying whose name it carries",
    /carries this subject&rsquo;s name/.test(cands));
-ok("the document whose recorded name IS this subject's name is offered as the stronger one",
-   cands.includes(BID_C) && /which is this subject&rsquo;s name/.test(cands));
+/* CORRECTED 2026-08-05 (REC-40), never exempted, and the correction is a real
+   weakening of what this line could see, made visible rather than hidden. It
+   used to read `cands.includes(BID_C) && /which is this subject's name/` — and
+   BID_C carries TWO references, one whose recorded name IS this subject's name
+   (the C tier) and one whose reference string is (the A tier). The surface shows
+   ONE row per document at the strongest correspondence, so BID_C now renders as
+   the A tier and the C tier is no longer visible in this HTML at all. The regex
+   would still have passed, on the A row's identical phrase, which is a pin
+   agreeing for a reason it was not written for. Split in two: the surface's
+   dedup asserted here, and the C tier asserted where it still exists — in the
+   plane's own answer. Neither is a claim about which tier is right. */
+ok("the document whose recorded name IS this subject's name is offered", cands.includes(BID_C));
+{
+  const ans = await get("readingname", "entity=" + ENT.entity_id);
+  const rows = (ans.documents || []).filter(d => d.capture_sha === SHA_C);
+  ok("THE C TIER DID NOT VANISH — the plane still answers it for that document's other reference",
+     rows.some(d => d.correspondence === "name" && d.grade_if_resolved === "C"));
+  ok("and the A tier is answered beside it for the same document, from the ONE call",
+     rows.some(d => d.correspondence === "reference" && d.grade_if_resolved === "A"));
+  ok("the surface shows that document once, at the strongest of them — a member is not offered it twice",
+     rows.length === 2 && (cands.match(new RegExp(SHA_C, "g")) || []).length <= 1);
+}
 ok("a document naming nothing the registry knows is not offered", !cands.includes(BID_D));
 
-/* CORRECTED 2026-08-04 (UI-26), never exempted, and the correction is the item.
-   This used to assert that BID_A — whose REFERENCE STRING is spelled exactly
-   like one of this subject's names — is offered, and it was right while the
-   control called op=readingref, which matches the reference string. op=readingname
-   matches the NAME A READING RECORDED, and BID_A's recorded name is "the
-   anticipated Recology contract", which carries no registered name of this
-   subject. So BID_A is NOT offered any more. That is a real narrowing, it is the
-   safe direction (a shorter list, never a longer one), and the page STATES it —
-   which is the next assertion, and the reason this arm is a correction rather
-   than a deletion. */
-ok("THE BOUND, MEASURED NOT ASSUMED: a document known only by an identifier is no longer offered",
-   !cands.includes(BID_A));
-ok("and the page SAYS SO, in the member's own terms, rather than leaving the absence to be inferred",
-   /by an identifier and no name at all, is not here/.test(cands));
+/* CORRECTED 2026-08-05 (REC-40), never exempted, AND THE CORRECTION IS AN
+   INVERSION OF A CORRECTION — the history is kept above deliberately, because a
+   pin that has now moved twice is the most useful thing in this block.
+
+   UI-13 asserted BID_A — whose REFERENCE STRING is spelled exactly like one of
+   this subject's names — IS offered, and was right while the control called
+   op=readingref. UI-26 inverted it to IS NOT and was right for one day: the one
+   call it replaced the loop with indexed the recorded NAME alone, so the
+   identifier tier went out of reach and the page said so. REC-40 put every tier
+   into that one index, so BID_A is offered again — from the SAME single call, at
+   the SAME §8.1 grade A, with no loop anywhere. The narrowing UI-26 measured is
+   closed, and what makes this a correction rather than a revert is that the
+   assertions below now name the TIER and the CONDITIONAL grade, which the
+   original had no vocabulary for. */
+ok("REC-40: THE IDENTIFIER TIER IS BACK — a document known by its reference alone is offered again",
+   cands.includes(BID_A));
+ok("and it says the SOURCE'S OWN REFERENCE is what carried the name, not a recorded title",
+   /carries the reference &ldquo;contract:C-2024-88&rdquo;, which is this subject&rsquo;s name/.test(cands));
+ok("STILL ONE CALL: the tier came back through the index, not by putting the per-name loop back",
+   candCalls.filter(o => o === "readingname").length === 1 && !CALLED.includes("readingref"));
+/* NOTHING IS GRADED BY BEING OFFERED, and this is where that is easiest to get
+   wrong now that a candidate can carry a letter. The page says what resolving
+   WOULD record, in those words, and never that the document has it. */
+ok("the grade is rendered as a CONDITIONAL about a run that has not happened",
+   /resolving it would record Grade A/.test(cands));
+ok("and no candidate is shown wearing a grade badge, because none of them has been resolved",
+   !/subj-grade/.test(cands));
+/* AND THE WEAKER TIERS CARRY NO LETTER AT ALL. An absent grade is not a low
+   grade: BID_N's name sits inside a longer recorded one, which the recogniser
+   does not match, so inventing a letter for it would be the overclaim. */
+ok("a name sitting inside a longer one is offered with NO grade, not with a weak one",
+   !/carries this subject&rsquo;s name &ldquo;[^&]*&rdquo; &mdash; resolving/.test(cands));
+
+/* THE NOTE RE-WIDENED WITH THE PLANE, and the clause that stopped being true is
+   GONE rather than left standing. UI-26's page told a member that a document
+   known by an identifier and no name was out of reach; that sentence would now
+   be REACHED WHILE FALSE, which is worse than the narrow list it described. */
+ok("the clause UI-26 had to write is gone — the plane stopped being bounded that way",
+   !/by an identifier and no name at all, is not here/.test(cands));
+ok("and the note states the THREE places the lookup now reaches, so the widening is stated not silent",
+   /the reference the source itself assigned/.test(cands) && /that reference&rsquo;s key/.test(cands)
+   && /the name the reading recorded/.test(cands));
+ok("the remaining bound is stated in the member's own terms, and it is the one that is actually left",
+   /recorded in none of those three places/.test(cands));
+ok("and the page still says plainly that nothing here is settled",
+   /candidates for you to confirm/.test(cands));
 
 /* THE NARROWED SENTENCE. Asserted as its FOUR SEPARATE CLAIMS and not as one
    string, because UI-21's finding was that a wording check passes over a
@@ -582,7 +707,16 @@ ok("nothing in the note claims the list is everything the record holds",
    document and never from how the member found it. This is the improvability
    doctrine `loadResolveCandidates` has always carried in a comment, made
    reachable from the control for the first time. */
-$$("#alias-in").value = "anticipated Recology contract";
+/* CORRECTED 2026-08-05 (REC-40), never exempted. The subject MOVED, and that is
+   the correction: this arm registered "anticipated Recology contract" and proved
+   BID_A came within reach, which was real while BID_A was out of reach. REC-40
+   put it back through the identifier tier, so the same arm would now have passed
+   over a document that was already there — an assertion agreeing for free. BID_I
+   is reachable by nothing until its recorded name is registered, so the property
+   the arm exists for is intact and the arm still bites. */
+ok("PRECONDITION: the document is reached by no registered name and no reference yet",
+   !cands.includes(BID_I));
+$$("#alias-in").value = "Zero Waste Collection";
 await U.aliasPreflight();
 await U.aliasGo();
 const beforeWiden = CALLED.length;
@@ -590,7 +724,7 @@ await U.loadResolveCandidates();
 const widenCalls = CALLED.slice(beforeWiden);
 const widened = html("#res-cands");
 ok("registering the name a reading recorded brings the document it names within reach",
-   widened.includes(BID_A));
+   widened.includes(BID_I));
 ok("and a FOURTH name costs no extra call: the alias join is the plane's, not a loop here",
    widenCalls.filter(o => o === "readingname").length === 1 && !widenCalls.includes("readingref"));
 
@@ -833,5 +967,5 @@ ok("nothing is greyed: there is no disabled control anywhere on either surface",
 U.PLANE.me = { member:"m_alice", handle:"alice", session:true, administer:false, capabilities:["contribute"] };
 
 if(fails.length){ console.error(`intent-write: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`intent-write: ${n} assertions, all green — nine intent ops with call sites, every option and refusal plane-sourced, commit absent while refused, a declared relation with no grade, a Grade C never established, D only by testimony · and UI-26: ONE op=readingname call where a per-name loop was, the grade-C near-name tier offered for the first time, the measured bound stated in four clauses, an uninvited member's list omitting the invisible document, and arm B's coverage line measured at the guard's own probe`);
+console.log(`intent-write: ${n} assertions, all green — nine intent ops with call sites, every option and refusal plane-sourced, commit absent while refused, a declared relation with no grade, a Grade C never established, D only by testimony · and UI-26: ONE op=readingname call where a per-name loop was, the grade-C near-name tier offered for the first time, the measured bound stated in four clauses, an uninvited member's list omitting the invisible document, and arm B's coverage line measured at the guard's own probe · and REC-40: the identifier tier back in that SAME one call, the grade rendered as what resolving WOULD record and never as a grade held, the narrowed sentence re-widened to the three places the lookup reaches, and the improvability arm re-pointed at a document nothing reaches yet`);
 process.exit(0);

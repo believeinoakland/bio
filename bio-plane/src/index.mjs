@@ -630,15 +630,31 @@ const OPS = {
      a document and which other documents mention the same reference. */
   reading:      { classes: ["admin", "member", "probe"],           mutating: false },
   readingref:   { classes: ["admin", "member", "probe"],           mutating: false },
-  /* REC-36: the same reverse question asked by NAME. `readingref` answers on the
-     source's own reference (framework 8.1's A and B tiers); `readingname` answers
-     on a REGISTERED SUBJECT's names, which is the GRADE-C tier — a document that
-     mentions a subject by name and carries no reference for it. Entity-driven and
-     not name-driven on purpose: the measurement (MEASUREMENTS.md 2026-08-04) found
+  /* REC-36: the same reverse question asked by NAME. Entity-driven and not
+     name-driven on purpose: the measurement (MEASUREMENTS.md 2026-08-04) found
      abbreviations in the corpus whose full names appear in no label, and only a
      name somebody registered reaches those. Read-only, and it establishes nothing:
      it offers CANDIDATES for a member to confirm, and op=resolve is still the only
-     thing that grades. */
+     thing that grades.
+
+     REC-40 WIDENED IT TO EVERY TIER, and the two ops are no longer split by which
+     tier they can reach. As REC-36 shipped, `readingname` answered on the NAME a
+     reading recorded (8.1's grade C) and `readingref` on the REFERENCE STRING, so
+     the A and B tiers — a document whose reference, or whose reference key, is
+     spelled like one of the subject's registered names — were proposable only by a
+     caller who already knew the exact string to ask for, and after UI-26 traded the
+     per-name loop away they were proposable from no surface at all. The term index
+     now carries all three of the strings `#recognise` grades on, each under its own
+     source, so ONE `readingname` call answers every tier at one indexed lookup,
+     gated identically, and each candidate says which string carried the name and
+     what op=resolve WOULD mint for it.
+
+     THE TWO OPS ANSWER DIFFERENT QUESTIONS AND ARE DELIBERATELY NOT COLLAPSED.
+     `readingref` takes a raw reference string FROM THE CALLER and answers which
+     documents carry exactly it, knowing nothing about the registry; `readingname`
+     takes a REGISTERED SUBJECT and walks its own aliases into the index. A caller
+     holding a reference string and no entity still has only the first, and one
+     answering on behalf of a subject wants the second. `readingref` is unchanged. */
   readingname:  { classes: ["admin", "member", "probe"],           mutating: false },
   /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis (D-83 —
      the framework's entity axis and the bias doctrine's safeguard-4 subject registry

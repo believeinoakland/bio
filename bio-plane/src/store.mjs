@@ -210,7 +210,15 @@ export class Store extends DurableObject {
        * is a different fact from a direct one, and rows keyed without via had
        * already merged them. Like links, it is derived: re-derivable from the
        * captures and the provenance documents, holding nothing a member wrote. */
-    for (const [table, needed] of [["links", "citation_norm"], ["captured_locators", "via"]]) {
+    /* reading_ref_terms gained `src` (REC-40) when the term's SOURCE became part
+     * of the key: a name satisfied by one word of a document's title and one
+     * word of its reference string is a correspondence NEITHER string made, so
+     * rows keyed without src had already merged two groups that must never be
+     * one. Like the two above it is derived -- re-derivable from reading_refs,
+     * which persists every string it projects, and holding nothing a member
+     * wrote. The backfill below repopulates it with no document re-read. */
+    for (const [table, needed] of [["links", "citation_norm"], ["captured_locators", "via"],
+                                   ["reading_ref_terms", "src"]]) {
       const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
       /* Dropped BEFORE the schema runs, so the CREATE TABLE and CREATE INDEX
          statements below rebuild it in one pass. Dropping afterwards meant the
@@ -7106,45 +7114,59 @@ export class Store extends DurableObject {
           e.kind == null ? null : String(e.kind),
           e.key == null ? null : String(e.key),
           e.label == null ? null : String(e.label));
-        /* REC-36: the name index, written in the SAME transaction as the row it
-           projects, exactly as the row is a projection of the document (D-21).
-           A label the reader did not carry produces no terms and no rows -- an
-           absent label is an absent name, never an empty one that matches. */
-        if (e.label != null)
-          for (const term of Store.#labelTerms(e.label))
+        /* REC-36/REC-40: the name index, written in the SAME transaction as the
+           row it projects, exactly as the row is a projection of the document
+           (D-21). A string the reader did not carry produces no terms and no
+           rows -- an absent label is an absent name, never an empty one that
+           matches -- and each source is indexed under its OWN `src`, so a
+           registered name is never satisfied by words taken from two of them. */
+        for (const [src, text] of Store.#refTermSources({
+          ref, ref_key: e.key == null ? null : String(e.key), label: e.label == null ? null : String(e.label) }))
+          for (const term of Store.#labelTerms(text))
             this.sql.exec(
-              `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,term) VALUES (?,?,?,?)`,
-              sha, bundleId, ref, term);
+              `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
+              sha, bundleId, ref, src, term);
       }
     }
   }
 
   /* REC-36: the bounded backfill for the name index on a store that already
-     holds readings. The terms derive from `reading_refs.label`, which is already
-     persisted, so no document has to be re-read -- unlike the projection
-     backfill, which needs the bundle's files. A reference is stale if it has a
-     label and no term row; one that legitimately produces no terms (an empty or
-     punctuation-only label) is skipped by the label test rather than being
-     retried on every construction forever. Bounded per pass for the same reason
-     #backfillProjection is: a Durable Object has a CPU budget and a large store
-     finishes over successive constructions. */
+     holds readings. The terms derive from columns `reading_refs` already
+     persists, so no document has to be re-read -- unlike the projection
+     backfill, which needs the bundle's files. Bounded per pass for the same
+     reason #backfillProjection is: a Durable Object has a CPU budget and a large
+     store finishes over successive constructions.
+
+     REC-40 CHANGED THE STALENESS TEST, and the old one would now be WRONG rather
+     than merely narrow. It read `rr.label IS NOT NULL AND rr.label <> ''`,
+     because the label was the only source and a reference with no label could
+     never produce a row. The index now also carries the REFERENCE and its KEY,
+     which every row has by construction, so a reference with no label at all is
+     exactly the row the A and B tiers are about and skipping it would leave the
+     identifier tier unreachable on every store migrated forward -- the same
+     silently-wrong empty answer this backfill exists to prevent. The test is now
+     "no term row of any source", and a reference whose every string normalises
+     to nothing (all punctuation) is re-examined on each pass rather than
+     excluded: that is a bounded cost the `examined` count reports, and it is the
+     conservative direction now that being skipped means being invisible. */
   #backfillRefTerms(limit) {
     const stale = this.#rows(
-      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.label
+      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_key, rr.label
          FROM reading_refs rr
-        WHERE rr.label IS NOT NULL AND rr.label <> ''
-          AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+        WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
                            WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)
         ORDER BY rr.capture_sha, rr.ref LIMIT ?`, limit);
     let n = 0;
     for (const r of stale) {
-      const terms = Store.#labelTerms(r.label);
-      if (!terms.length) continue;
-      for (const term of terms)
-        this.sql.exec(
-          `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,term) VALUES (?,?,?,?)`,
-          r.capture_sha, r.bundle_id, r.ref, term);
-      n++;
+      let wrote = 0;
+      for (const [src, text] of Store.#refTermSources(r))
+        for (const term of Store.#labelTerms(text)) {
+          this.sql.exec(
+            `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
+            r.capture_sha, r.bundle_id, r.ref, src, term);
+          wrote++;
+        }
+      if (wrote) n++;
     }
     return { indexed: n, examined: stale.length };
   }
@@ -7265,10 +7287,9 @@ export class Store extends DurableObject {
       entityId);
     const cap = Math.max(1, Math.min(Number(limit) || 100, 500));
     const gate = this.#bundleGate("t.bundle_id", viewer);
-    /* One candidate per captured document + reference, carrying the STRONGEST
-       correspondence any of the subject's names made with it. A document reached
-       by two aliases is one candidate, not two. */
     const found = new Map();
+    /* REC-40: the recogniser's tier per REFERENCE, computed once. */
+    const tiers = new Map();
     /* A name that normalises to nothing (punctuation only) can look up nothing,
        and that is STATED rather than silently dropped: an alias contributing no
        terms is a fact about the registry entry, and a member who wonders why a
@@ -7277,40 +7298,66 @@ export class Store extends DurableObject {
     for (const a of aliases) {
       const terms = Store.#labelTerms(a.alias);
       if (!terms.length) { unusable.push(a.alias); continue; }
-      const rows = this.#rows(
-        `SELECT t.capture_sha, t.ref, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
-           FROM reading_ref_terms t
-           JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref
-           LEFT JOIN readings r ON r.capture_sha = t.capture_sha
-          WHERE t.term IN (${terms.map(() => "?").join(",")}) AND (${gate.sql})
-          GROUP BY t.capture_sha, t.ref
-         HAVING COUNT(DISTINCT t.term) = ?
-          ORDER BY t.bundle_id, t.capture_sha, t.ref
-          LIMIT ?`,
+      const rows = this.#rows(Store.#refTermsSql(terms.length, gate.sql),
         ...terms, ...gate.args, terms.length, cap);
       for (const r of rows) {
-        /* HOW it corresponded, said plainly, because the two are not the same
-           claim. `name` is the whole label being this name — what the recogniser
-           already reaches at grade C. `name_in_label` is the name appearing
-           INSIDE a longer title, which is the tier this read adds and the weaker
-           of the two; a member sees which they are being offered. */
-        const whole = Store.#normAlias(r.label) === a.alias_norm;
+        /* HOW it corresponded, said plainly, because these are not the same
+           claim. The SOURCE says which of the reading's three strings carried
+           the name — the reference the source assigned (8.1's A tier), that
+           reference's key (B), or the name the reading recorded (C) — and WHOLE
+           says whether the registered name was the WHOLE of that string or sat
+           inside a longer one. Only a whole match is a string `#recognise` would
+           grade at all; the two partial tiers carry no grade, and rather than
+           leaving that to be inferred the answer states it per candidate. */
+        const srcText = r.src === "ref" ? r.ref : r.src === "key" ? r.ref_key : r.label;
+        const whole = Store.#normAlias(srcText) === a.alias_norm;
+        const [correspondence] = Store.#CORRESPONDENCE[r.src][whole ? "whole" : "part"];
+        /* THE GRADE COMES FROM THE RECOGNISER ITSELF, never from how this alias
+           corresponded, and the difference is not pedantry. The cascade does not
+           fall through: if ANY registered subject matches this reference at A,
+           op=resolve records nothing at B or C for it — including for THIS
+           subject, whose name the label may well be. Deriving a letter from
+           `correspondence` would promise a C that resolving would never mint.
+           Memoised per reference because several of a subject's names can reach
+           one reference and the tier is a property of the reference, not of the
+           name that found it. */
+        const tk = `${r.capture_sha} ${r.ref}`;
+        let tier = tiers.get(tk);
+        if (!tier) { tier = this.#recogniseTier(r); tiers.set(tk, tier); }
+        const gradeIf = tier.hits.includes(entityId) ? tier.grade : null;
+        const where = r.src === "ref" ? "carries the reference" : r.src === "key"
+          ? "carries the reference key" : "labels the reference";
         const cand = {
           capture_sha: r.capture_sha, bundle_id: r.bundle_id, ref: r.ref,
           kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
           matched_alias: a.alias, canonical_name: !!a.canonical,
-          correspondence: whole ? "name" : "name_in_label",
-          detail: whole
-            ? `this document's reading labels the reference '${r.label}', which is this subject's name '${a.alias}'`
-            : `this document's reading labels the reference '${r.label}', which carries every word of this subject's name '${a.alias}'`,
+          correspondence, matched_on: r.src,
+          /* WHAT THE RECOGNISER WOULD MINT, and never what this read
+             established: op=resolve remains the only thing that grades, so this
+             is a conditional about a run that has not happened. Null both when
+             the name merely sits inside a longer string and when a STRONGER
+             identifier on the same reference would resolve first. */
+          grade_if_resolved: gradeIf,
+          detail: (whole
+            ? `this document's reading ${where} '${srcText}', which is this subject's name '${a.alias}'`
+            : `this document's reading ${where} '${srcText}', which carries every word of this subject's name '${a.alias}'`)
+            + (whole && gradeIf == null
+              ? `; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first`
+              : ""),
         };
         const k = `${r.capture_sha}\u0000${r.ref}`;   /* D-131: the separator is the ESCAPE, never the raw byte */
         const prev = found.get(k);
-        if (!prev || (prev.correspondence === "name_in_label" && whole)) found.set(k, cand);
+        /* One candidate per captured document + reference, carrying the
+           STRONGEST correspondence any of the subject's names made with it
+           through any of the three sources. A document reached by two aliases,
+           or by one alias at two sources, is ONE candidate, not several. */
+        if (!prev || Store.#CORRESPONDENCE_RANK.indexOf(correspondence)
+                   < Store.#CORRESPONDENCE_RANK.indexOf(prev.correspondence)) found.set(k, cand);
       }
     }
+    const rank = (c) => Store.#CORRESPONDENCE_RANK.indexOf(c.correspondence);
     const documents = [...found.values()].sort((x, y) =>
-      (x.correspondence === y.correspondence ? 0 : x.correspondence === "name" ? -1 : 1)
+      (rank(x) - rank(y))
       || String(x.bundle_id).localeCompare(String(y.bundle_id))
       || String(x.capture_sha).localeCompare(String(y.capture_sha))
       || String(x.ref).localeCompare(String(y.ref))).slice(0, cap);
@@ -7320,10 +7367,20 @@ export class Store extends DurableObject {
       count: documents.length, documents,
       /* Said on every answer, empty or not, because an empty candidate list is
          the one a member is most likely to read as "no such document exists". */
-      detail: "these are CANDIDATES, not resolutions: a document whose reading names this subject, offered for a "
-            + "member to confirm. A name correspondence is section 8.1's grade C — plausible, never established. "
-            + "A document that mentions this subject in words the reading did not record as a label is still not "
-            + "here, and its absence says nothing about whether it exists.",
+      /* REC-40 RE-WIDENED THIS SENTENCE, and the old one is wrong rather than
+         merely narrow now: it said the lookup reaches what the reading recorded
+         AS A LABEL, which was true while the index carried labels alone. The
+         index now also carries the reference and its key, so the identifier
+         tiers are here too — and `grade_if_resolved` says per candidate what
+         op=resolve WOULD mint, which is not the same as anything being
+         established. The bound that is actually left is the one stated. */
+      detail: "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name — as the "
+            + "reference the source assigned, as that reference's key, or as the name the reading recorded — offered "
+            + "for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is "
+            + "the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name "
+            + "merely sits inside a longer string and it would mint nothing. A document that carries this subject in "
+            + "words the reading recorded in none of those three, or under a spelling none of its registered names "
+            + "reaches, is still not here, and its absence says nothing about whether it exists.",
     };
   }
 
@@ -7331,17 +7388,27 @@ export class Store extends DurableObject {
    *  term index is USED rather than trusting that creating it was enough — the
    *  `projectionPlan` precedent, and the reason it exists there applies here
    *  doubly: this read replaces a scan, and a scan that still passes every
-   *  assertion is exactly the defect nobody would notice until the corpus grew. */
+   *  assertion is exactly the defect nobody would notice until the corpus grew.
+   *
+   *  REC-40: IT NOW EXPLAINS THE STATEMENT THE READ ACTUALLY RUNS. It used to
+   *  explain a hand-written subquery over `reading_ref_terms` alone — a second
+   *  spelling of roughly the same shape, carrying neither the join to
+   *  `reading_refs` nor the group the read groups by. A copy that agrees today
+   *  agrees at zero cost, and this one had already stopped agreeing the moment
+   *  `src` joined the group. Both now come from `#refTermsSql`, so the plan is
+   *  OF the query rather than of a twin of it, and the suite additionally pins
+   *  that `store.mjs` names `reading_ref_terms t` exactly once.
+   *
+   *  The gate is `1=1` here and nothing else: `#bundleGate` compiles a viewer's
+   *  own predicate, so a plan taken through it would describe one viewer's
+   *  lookup. What this answers is whether the TERM INDEX carries the lookup, and
+   *  the gate arm of `readingname.test.mjs` is what proves the gate is applied. */
   readingNamePlan(terms = ["oakland", "police"]) {
     const t = Array.isArray(terms) && terms.length ? terms.slice(0, 24) : ["oakland"];
+    const sql = Store.#refTermsSql(t.length, "1=1");
     return {
-      terms: t,
-      plan: this.#rows(
-        `EXPLAIN QUERY PLAN
-         SELECT t.capture_sha, t.ref FROM reading_ref_terms t
-          WHERE t.term IN (${t.map(() => "?").join(",")})
-          GROUP BY t.capture_sha, t.ref HAVING COUNT(DISTINCT t.term) = ?`,
-        ...t, t.length).map((r) => r.detail),
+      terms: t, sql,
+      plan: this.#rows(`EXPLAIN QUERY PLAN ${sql}`, ...t, t.length, 100).map((r) => r.detail),
     };
   }
 
@@ -7412,6 +7479,82 @@ export class Store extends DurableObject {
   static #labelTerms(s) {
     return [...new Set(Store.#normAlias(s).split(/[^\p{L}\p{N}]+/u).filter(Boolean))].slice(0, 24);
   }
+
+  /* REC-40: THE THREE STRINGS A READING REFERENCE CARRIES, each indexed under
+     its own `src`. This is the ONE place that decides what the term index is
+     over, so the write path, the backfill and the read's own vocabulary cannot
+     fall out of step -- the same arrangement #labelTerms has for how a term is
+     folded, and for the same reason: a projection that indexed a source the read
+     did not know about would silently index nothing.
+
+     THE ORDER IS THE RECOGNISER'S GRADE ORDER (framework 8.1, `#recognise`
+     below): the whole reference is the A tier, the reference's key is the B
+     tier, the label is the C tier. It is returned strongest-first so the read
+     below can rank without restating the order.
+
+     `key` IS OMITTED WHEN IT NORMALISES TO THE WHOLE REFERENCE, which is exactly
+     the guard `#recognise` applies before it considers a B tier at all
+     (`keyNorm && keyNorm !== refNorm`). Written here once so the index and the
+     recogniser cannot disagree about whether a B tier exists for a reference. */
+  static #refTermSources(rr) {
+    const ref = rr && rr.ref == null ? "" : String(rr.ref);
+    const key = rr && rr.ref_key == null ? "" : String(rr.ref_key);
+    const label = rr && rr.label == null ? "" : String(rr.label);
+    const out = [];
+    if (ref) out.push(["ref", ref]);
+    if (key && Store.#normAlias(key) !== Store.#normAlias(ref)) out.push(["key", key]);
+    if (label) out.push(["label", label]);
+    return out;
+  }
+
+  /* REC-40: THE ONE STATEMENT the name/identifier lookup runs, built here and
+     nowhere else. `readingNamePlan` explains THIS text rather than a hand-copied
+     twin of it, because a copy that agrees today agrees at zero cost and a plan
+     assertion over a second spelling of the query proves nothing about the query
+     that runs. `readingname.test.mjs` additionally asserts that `store.mjs`
+     names `reading_ref_terms t` exactly once, so a second builder fails by name.
+
+     GROUPED BY (capture_sha, ref, SRC) and not by (capture_sha, ref): the HAVING
+     is a subset test, so sharing a group between the label and the reference
+     would let a registered name be satisfied by one word from the document's
+     title and one from its reference string -- a correspondence neither string
+     made, and a wrong subject on a document. The schema states the same rule at
+     the key; this is where it is enforced.
+
+     `term IN (...)` with a HAVING count rather than INTERSECT, per D-36: a
+     compound SELECT may have about FIVE terms in workerd, so a six-word name
+     expressed as six INTERSECT arms would meet an undocumented ceiling on
+     somebody's live instance. This binds one variable per term, and #labelTerms
+     caps the count at 24. */
+  static #refTermsSql(nTerms, gateSql) {
+    return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
+              FROM reading_ref_terms t
+              JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref
+              LEFT JOIN readings r ON r.capture_sha = t.capture_sha
+             WHERE t.term IN (${new Array(nTerms).fill("?").join(",")}) AND (${gateSql})
+             GROUP BY t.capture_sha, t.ref, t.src
+            HAVING COUNT(DISTINCT t.term) = ?
+             ORDER BY t.bundle_id, t.capture_sha, t.ref, t.src
+             LIMIT ?`;
+  }
+
+  /* REC-40: HOW a registered name corresponded — which of the reading's three
+     strings carried it, and whether it was the WHOLE of that string or sat
+     inside a longer one. This is a description of the correspondence and NOT a
+     grade: the grade comes from `#recogniseTier`, because whether op=resolve
+     would record anything depends on the whole reference and not on the name
+     that found it (a whole-label `name` correspondence mints nothing when some
+     other subject's identifier already matches the same reference at A). The
+     RANK below follows the recogniser's tier order so candidates are offered
+     strongest-first, and the two partial tiers sit below every whole one because
+     `#recognise` matches whole normalised strings and would never mint for them
+     at all. */
+  static #CORRESPONDENCE = {
+    ref:   { whole: ["reference"],     part: ["name_in_reference"] },
+    key:   { whole: ["reference_key"], part: ["name_in_reference"] },
+    label: { whole: ["name"],          part: ["name_in_label"] },
+  };
+  static #CORRESPONDENCE_RANK = ["reference", "reference_key", "name", "name_in_reference", "name_in_label"];
 
   /* Create a registry entry, with its canonical label seeded as an alias so the
      entry is retrievable BY that name as well as by any explicit alias, and any
@@ -7694,6 +7837,35 @@ export class Store extends DurableObject {
      correspondence is not recorded when the source's own identifier already resolved
      the reference. */
   #recognise(rr, resolvedBy) {
+    const { grade, hits, basis, method } = this.#recogniseTier(rr);
+    const matches = [];
+    for (const entityId of hits) {
+      matches.push(this.#upsertResolution({
+        captureSha: rr.capture_sha, bundleId: rr.bundle_id, ref: rr.ref, entityId, grade, method, basis, resolvedBy }));
+    }
+    return matches;
+  }
+
+  /** REC-40: THE TIER DECISION ON ITS OWN, because TWO callers need it and only
+   *  one of them is allowed to write anything.
+   *
+   *  `#recognise` above turns this into resolutions. `documentsNamingEntity`
+   *  needs the SAME answer to say what op=resolve WOULD mint for a candidate --
+   *  and it must be the same CODE, not the same idea written twice, because the
+   *  cascade has a property that is easy to restate wrongly: it NEVER FALLS
+   *  THROUGH. If any entity matches a reference at A, nothing is recorded at B
+   *  or C for that reference AT ALL, including for a different entity whose name
+   *  the label happens to be. A candidate read that computed its own grade from
+   *  how its own alias corresponded would therefore promise a C that op=resolve
+   *  would never mint -- the record claiming more than it can support, which is
+   *  the failure this project treats as worse than a missing feature. Found by
+   *  reasoning through the cascade after the first version shipped that bug, and
+   *  the arm that holds it is in readingname.test.mjs.
+   *
+   *  Returns the winning tier and EVERY entity that won at it; a caller asking on
+   *  behalf of one subject checks whether it is among them, and gets null when it
+   *  is not. */
+  #recogniseTier(rr) {
     const refNorm = Store.#normAlias(rr.ref);
     const keyNorm = rr.ref_key == null ? "" : Store.#normAlias(rr.ref_key);
     const labelNorm = rr.label == null ? "" : Store.#normAlias(rr.label);
@@ -7718,12 +7890,7 @@ export class Store extends DurableObject {
         }
       }
     }
-    const matches = [];
-    for (const entityId of hits) {
-      matches.push(this.#upsertResolution({
-        captureSha: rr.capture_sha, bundleId: rr.bundle_id, ref: rr.ref, entityId, grade, method, basis, resolvedBy }));
-    }
-    return matches;
+    return { grade, hits, basis, method };
   }
 
   /* op=resolve: run the recogniser over a captured document's references and store the

@@ -11041,11 +11041,27 @@ async function relationGo(){
    mentions the subject BY NAME) was unreachable from every surface. REC-36
    built the reverse read: op=readingname walks every registered name into the
    plane's own index of the names its readings recorded, in ONE statement, with
-   the alias join on the plane's side. MEASURED CONSEQUENCE, and it is stated on
-   the page rather than left to be inferred: a document whose reading recorded a
-   name that does NOT carry this subject's name is no longer offered even when
-   its raw reference happens to be spelled like one of the subject's names. That
-   is a narrower list, which is the safe direction, and the note below says so.
+   the alias join on the plane's side.
+
+   REC-40 CLOSED THE TRADE UI-26 MEASURED, 2026-08-05, and the sentence below
+   RE-WIDENED with it — corrected rather than deleted, because what changed is
+   the plane and not our willingness to say what the list is. UI-26 shipped this
+   control knowing it had lost something: a document whose raw reference happens
+   to be spelled like one of the subject's names was no longer offered, because
+   op=readingname indexed the recorded NAME alone. The plane's index now carries
+   all three of the strings its recogniser grades on — the reference the source
+   assigned (§8.1's A tier), that reference's key (B), and the recorded name (C)
+   — each under its own source, so ONE call answers every tier at one indexed
+   lookup and nothing here loops or asks twice. The narrowed clause about a
+   document "known by an identifier and no name" is therefore GONE, because it
+   has stopped being true; what replaces it is the bound that is actually left.
+
+   NOTHING ON THIS SURFACE GRADES, and REC-40 makes that easier to get wrong,
+   so it is worth saying twice: the plane's `grade_if_resolved` is a conditional
+   about a run that has not happened — what op=resolve WOULD mint — and it is
+   rendered in those words. A candidate is not a resolution and this control has
+   never established anything.
+
    The measurement that decided op=readingname's shape is MEASUREMENTS.md
    2026-08-04 (REC-36); the sentence in `note` is that bound in a member's
    words and must move if the bound moves. */
@@ -11102,18 +11118,33 @@ async function loadResolveCandidates(){
   const unusableNote = unusable.length
     ? ` ${unusable.length===1?"One name":`${unusable.length} names`} this subject is registered under &mdash; ${unusable.map(x=>`&ldquo;${esc(x)}&rdquo;`).join(", ")} &mdash; ${unusable.length===1?"has":"have"} no word in ${unusable.length===1?"it":"them"} to look anything up by, so nothing was looked up under ${unusable.length===1?"it":"them"}.`
     : "";
-  const note = `<p class="subj-note">These are the documents whose readings recorded a name that carries every word of one of this subject&rsquo;s names, plus the ones already resolved to it. What that lookup reaches, so this list is not read as the whole of what exists: it ignores capitalisation and punctuation; it tries every name this subject is registered under, which is the only way a document that writes just an abbreviation is ever reached &mdash; register the abbreviation as one of this subject&rsquo;s names and it will be; and it does <b>not</b> ignore accents, so &ldquo;Protege&rdquo; will not find &ldquo;Prot&eacute;g&eacute;&rdquo;, because putting the wrong subject on a document is the costlier mistake. A document that names this subject in words its reading did not record, or under a spelling none of its registered names reaches, or by an identifier and no name at all, is not here &mdash; and none of those absences says anything about whether such a document exists.${unusableNote}</p>`;
+  const note = `<p class="subj-note">These are the documents whose readings carry one of this subject&rsquo;s names &mdash; as the reference the source itself assigned, as that reference&rsquo;s key, or as the name the reading recorded &mdash; plus the ones already resolved to it. Nothing here is settled: these are candidates for you to confirm, and only resolving a document records anything. What the lookup reaches, so this list is not read as the whole of what exists: it ignores capitalisation and punctuation; it tries every name this subject is registered under, which is the only way a document that writes just an abbreviation is ever reached &mdash; register the abbreviation as one of this subject&rsquo;s names and it will be; and it does <b>not</b> ignore accents, so &ldquo;Protege&rdquo; will not find &ldquo;Prot&eacute;g&eacute;&rdquo;, because putting the wrong subject on a document is the costlier mistake. A document that names this subject in words its reading recorded in none of those three places, or under a spelling none of its registered names reaches, is not here &mdash; and neither absence says anything about whether such a document exists.${unusableNote}</p>`;
   if(!INTENT_SUBJ.docs.length){
-    out.innerHTML = note + `<div class="empty">No captured document&rsquo;s reading records a name that corresponds to one of this subject&rsquo;s names.</div>`;
+    out.innerHTML = note + `<div class="empty">No captured document&rsquo;s reading carries one of this subject&rsquo;s names &mdash; not as a reference, not as a reference key, and not as a recorded name.</div>`;
     return;
   }
   /* HOW each candidate corresponded is the plane's word, not a judgement made
-     here: `name` is the recorded name BEING this subject's name, and
-     `name_in_label` is this subject's name sitting inside a longer one — the
-     weaker of the two, and the tier this control offers for the first time. A
-     member picking a document is told which they are being offered. */
+     here. FIVE correspondences since REC-40, and they are the plane's own
+     vocabulary rather than five sentences composed here from a grade:
+       reference        — the source's own reference IS this subject's name (§8.1's A tier)
+       reference_key    — that reference's key is (B)
+       name             — the recorded name is (C)
+       name_in_reference / name_in_label — the name sits INSIDE a longer string,
+                          which the recogniser does not match at all
+     WHAT THE GRADE LINE SAYS AND DOES NOT. `grade_if_resolved` is the plane's
+     conditional about a run that has not happened, so it is rendered as "would
+     be graded" and never as a grade this document has. A candidate carrying no
+     grade says nothing rather than saying a weak one — an absent grade is not a
+     low grade, and inventing a letter to fill the space is exactly the
+     overclaim this surface exists not to make. */
+  const wouldGrade = (d) => d.grade_if_resolved
+    ? ` &mdash; resolving it would record Grade ${esc(d.grade_if_resolved)}`
+    : "";
   const how = (d) =>
-    d.correspondence === "name"       ? ` &mdash; its reading names &ldquo;${esc(d.label)}&rdquo;, which is this subject&rsquo;s name`
+    d.correspondence === "reference"     ? ` &mdash; its reading carries the reference &ldquo;${esc(d.ref)}&rdquo;, which is this subject&rsquo;s name${wouldGrade(d)}`
+  : d.correspondence === "reference_key" ? ` &mdash; its reading carries the reference key &ldquo;${esc(d.key||"")}&rdquo;, which is this subject&rsquo;s name${wouldGrade(d)}`
+  : d.correspondence === "name"       ? ` &mdash; its reading names &ldquo;${esc(d.label)}&rdquo;, which is this subject&rsquo;s name${wouldGrade(d)}`
+  : d.correspondence === "name_in_reference" ? ` &mdash; its reading carries the reference &ldquo;${esc(d.ref)}&rdquo;, which carries this subject&rsquo;s name &ldquo;${esc(d.matched_alias||"")}&rdquo;`
   : d.correspondence === "name_in_label" ? ` &mdash; its reading names &ldquo;${esc(d.label)}&rdquo;, which carries this subject&rsquo;s name &ldquo;${esc(d.matched_alias||"")}&rdquo;`
   : d.already_resolved                ? ` &mdash; already resolved to this subject`
   : d.ref                             ? ` &mdash; names ${esc(d.ref)}`

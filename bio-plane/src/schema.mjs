@@ -719,12 +719,48 @@ CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
 -- a candidate the viewer may not see is not a candidate and its row is withheld,
 -- not merely redacted. DERIVED from the corpus like readings/reading_refs, so a
 -- whole-store purge clears it (D-113) and a re-promotion replaces it.
+-- REC-40: THE SAME INDEX NOW CARRIES THREE TERM SOURCES, AND src IS PART OF
+-- THE KEY. REC-36 indexed the label alone, which made op=readingname answer on
+-- the NAME a reading recorded while op=readingref answered on the REFERENCE
+-- STRING -- so the framework 8.1 A and B tiers (a document whose reference, or
+-- whose reference KEY, is spelled like a subject's registered name) were
+-- proposable only by a caller who already knew the exact string to ask for, and
+-- after UI-26 traded away the per-name loop they were proposable from no surface
+-- at all. #recognise reads THREE strings and grades them A (ref), B (ref_key)
+-- and C (label); an index carrying one of the three answers one of the three.
+--
+-- WHY THE SAME TABLE AND NOT A SIBLING, by this project's own test (D4 as REC-42
+-- and REC-44 applied it): a term of an identifier needs NO ORDINAL of its own --
+-- it is keyed by exactly what a label term is keyed by, it has no ordering, no
+-- lifecycle and no identity apart from the reading_refs row it is derived from
+-- and dies with -- and NO QUERY IS KEYED ON IT SEPARATELY. There is one question
+-- ("every term of this registered name present within one reference's one
+-- source") and REC-40's whole requirement is that ONE call answer every tier, so
+-- a second table would force either a UNION of two compound arms -- toward D-36's
+-- five-compound workerd ceiling -- or two statements, which is the N-call shape
+-- this item exists to remove.
+--
+-- WHY src IS IN THE PRIMARY KEY, and it is a CORRECTNESS requirement rather
+-- than a way of labelling the answer: the lookup is a SUBSET test (every term of
+-- the name present in one group). If the label's terms and the reference's terms
+-- shared a group, a registered name could be satisfied by a MIX -- one word taken
+-- from the document's title and another from its reference string -- manufacturing
+-- a correspondence that NEITHER string made. That puts a wrong subject on a
+-- document, which is the direction the diacritic decision below already refuses
+-- to take. So the group is (capture_sha, ref, src) and a mixed match is
+-- structurally impossible rather than filtered out afterwards.
+--
+-- src is label, ref or key, and key is written only when the reference
+-- key normalises to something different from the whole reference -- the same
+-- guard #recognise applies before it considers the B tier, so the index and
+-- the recogniser cannot disagree about whether a B tier exists.
 CREATE TABLE IF NOT EXISTS reading_ref_terms (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
   ref          TEXT NOT NULL,
+  src          TEXT NOT NULL,
   term         TEXT NOT NULL,
-  PRIMARY KEY (capture_sha, ref, term)
+  PRIMARY KEY (capture_sha, ref, src, term)
 );
 CREATE INDEX IF NOT EXISTS reading_ref_terms_term ON reading_ref_terms(term);
 CREATE INDEX IF NOT EXISTS reading_ref_terms_bundle ON reading_ref_terms(bundle_id);
