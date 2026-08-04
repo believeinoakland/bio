@@ -339,12 +339,50 @@ of *"we sought X across the corpus and did not find it"* at corpus scope — D-1
 the per-document analogue. The research's nearest pattern is a crawler frontier with
 priority, and the constraint is the 6-connection ceiling above.
 
-**The doctrinal hazard to design against from the start:** an objective-driven fetcher
-selects what enters the record, and a selection rule is a bias whether or not it is
-declared. If an inquiry's objective decides what gets captured, the capture set carries
-that objective's shape — which is exactly the declared-bias neighbourhood, and it must be
-recorded as such rather than presented as a neutral corpus. This is the strongest reason
-to design the capability with the bias construct (DEC-46) rather than after it.
+**The doctrinal hazard to design against from the start — CORRECTED 2026-08-04, and the
+correction matters because the first version of this paragraph named the wrong construct.**
+
+This document first said an objective-shaped capture set *"is a bias whether or not it is
+declared"* and belonged with the declared-bias construct. **Bob challenged it and he is
+right; it is withdrawn.** Two measurements settle it:
+
+- **The search is symmetric BY CONSTRUCTION, not by good intention.** `role` is
+  `'supports' | 'cuts_against'` in the schema (`schema.mjs:1186`), a disconfirming leg is
+  an ordinary ROW, and the reachability rule in `store.mjs:4038` explicitly includes
+  *"every `cuts_against` leg"*. So an objective does not bias the search toward
+  confirmation — the model has a first-class place for evidence against, and refuses to
+  let it be orphaned.
+- **BIO's declared bias is a CLOSED SET OF THREE statement kinds** —
+  **scrutiny** (how much checking a source's claims need before they bear load),
+  **inference** (which inference patterns are licensed or blocked), and **pattern** (an
+  evidenced empirical claim about an institution's behaviour). **Every one of them is
+  about how you REASON over what you hold. None is about what you LOOKED AT.** An
+  objective-shaped corpus is therefore not a bias statement in this system's vocabulary,
+  and filing it there would have stretched a precise construct into a vague one.
+
+**THE REAL HAZARD IS COMPLETENESS, AND IT IS SHARPER THAN THE ONE I NAMED.** An
+objective-driven fetcher looks *about* its objective. Everything outside that frame is
+never fetched — so it sits permanently in `NEVER_LOOKED`, and the danger is that CORPUS
+SILENCE GETS READ AS EVIDENCE OF ABSENCE. *"The record holds nothing on Y"* is a fact
+about our frame, not a fact about Y, and a member deciding whether Y matters cannot tell
+the two apart unless the record does.
+
+That is this project's own rule one layer out: **an outcome that costs nothing to produce
+is not evidence.** A corpus assembled in pursuit of X produces silence about Y for free.
+
+And it lands in a construct that ALREADY EXISTS and already has the right properties: the
+**completeness statement** — authored per edition, never prefilled, byte-checked across
+editions by C-21.1, and travelling with the published case. What it gains under
+objective-driven acquisition is one thing: the completeness statement must be able to say
+**what the corpus was ASSEMBLED FOR**, so a reader can tell the frame's edge from the
+world's edge. The four-state model (above) is the machine-readable half of the same fact.
+
+**One narrow residual that IS a bias question**, recorded so it is not lost in the
+correction: if "indirectly relates" is computed from graded connections, and a grade may
+be a HUNCH (DEC-15's temporary declared bias), then a fetch plan can inherit a hunch —
+the corpus would then be shaped by an ungrounded grade. That is a real link to the bias
+construct, it is narrow, and it is a reason to keep hunch-derived relatedness visible in
+whatever builds the plan. It is not a reason to file the whole capability under bias.
 
 ## What to do, in order
 
@@ -371,10 +409,14 @@ to design the capability with the bias construct (DEC-46) rather than after it.
    cost per miss in Class A writes. **Cap the speculative queue from the first version** —
    every system that ships goal-driven warming caps it, and Google Search's own numbers
    show a 7–9× drop-off past the highest-confidence candidates.
-5. **Never populate from another instance without a hold-off and a stated residual.**
+5. **The objective-driven corpus is a COMPLETENESS obligation, not a bias one** (see the
+   correction above). The completeness statement must be able to say what the corpus was
+   ASSEMBLED FOR, so a reader can tell the frame's edge from the world's edge; the
+   four-state model is the machine-readable half of the same fact.
+6. **Never populate from another instance without a hold-off and a stated residual.**
    Facebook measured *"indefinitely inconsistent"* items from warm-peer population. Any
    BIO import or mirror path inherits this.
-6. The element-reference / content-extent work (D-164, D-123, D-161, D-163) is the SWH
+7. The element-reference / content-extent work (D-164, D-123, D-161, D-163) is the SWH
    qualifier construct, and the research is independent evidence for solving it once.
    It stays PARKED until Bob reopens it; this document only records the corroboration.
 
