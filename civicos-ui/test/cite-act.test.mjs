@@ -33,16 +33,25 @@
  *         the plane with a cyclic cite" — is now run for real below, in the one
  *         direction that was missing: onto a question.
  *
- *   (iii') TWO SURFACE GAPS ARE MEASURED AND NAMED HERE, not papered over. The
- *         plane half landed with NO edit to `app.html` (that is REC-37's own
- *         acceptance clause and this file is the cross-check), and the honest
- *         consequence is that the surface has not caught up in two places:
- *         `citeCandidates()` still filters the candidate list to `project`, so a
- *         question is never OFFERED as a citing object; and the flow sends no
- *         `role`, so a cite driven onto a question reaches the plane and is
- *         refused `NO_ROLE` — rendered in the plane's own words, DEC-8 intact.
- *         Both are asserted positively as the measured state, and both are UI
- *         work rather than a defect in what landed.
+ *   (iii') TWO SURFACE GAPS WERE MEASURED AND NAMED HERE, AND UI-21 CLOSED BOTH
+ *         (2026-08-05). The plane half landed with NO edit to `app.html` — that
+ *         was REC-37's own acceptance clause and this file was the cross-check —
+ *         so for one day the surface was honestly one step behind the record it
+ *         fronts: `citeCandidates()` filtered the candidate list to `project`,
+ *         so a question was never OFFERED as a citing object; and the flow sent
+ *         no `role`, so a cite driven onto a question reached the plane and came
+ *         back `NO_ROLE`, rendered in the plane's own words with DEC-8 intact.
+ *         Both were asserted POSITIVELY as the measured state rather than
+ *         papered over, which is why closing them shows up here as INVERTED
+ *         assertions with their history kept rather than as a silent green.
+ *         WHAT IS ASSERTED NOW: a question IS offered as a citing object;
+ *         choosing one raises the ROLE control, whose options are the plane's
+ *         published `vocabularies.basis_roles`; the commit is ABSENT until a
+ *         role is stated, so the act is never sent incomplete and the flow no
+ *         longer meets NO_ROLE at all; there is NO grade control anywhere on
+ *         this path; and the receipt renders the plane's own per-leg grades with
+ *         its own filled/undetermined counts. The CASE arm raises no role
+ *         control and sends none, so ROLE_NOT_APPLICABLE is never provoked.
  *
  * The ORIGINAL facts, kept because the reasoning around them is still what this
  * file is built on:
@@ -278,7 +287,11 @@ const ROLES = ["supports", "cuts_against"];
 /* What the record EARNS for a target, as op=earnedbasis would answer it. The
    act FILLS from this; there is no grade control anywhere. A target absent here
    earns nothing and its leg lands ungraded — undetermined and stated. */
-const EARNED = { [DOCS4[2]]: "A" };
+/* UI-21 adds a SECOND earned target, so the flow driven through the SURFACE can
+   land one graded leg and one ungraded one in the same act — which is the only
+   way to assert that the receipt renders the plane's `gradesFilled` AND
+   `gradesUndetermined` rather than one of them and a shrug. */
+const EARNED = { [DOCS4[2]]: "A", [DOCS4[1]]: "B" };
 /* REC-11's DAG guard, at the WRITE and not in the act: is `from` reachable from
    any of `targets` along stored legs? Mirrored so the refusal ORDER and the
    named path are the store's. */
@@ -400,12 +413,12 @@ function mockFetch(u, opts){
   if(op === "affordances"){
     if(!p.target)
       return W({ target:null, catalog:Object.values(PUBLISHED),
-                 vocabularies:{ dispositions:["deferred","dismissed"] } });
+                 vocabularies:{ dispositions:["deferred","dismissed"], basis_roles:ROLES.slice() } });
     const acts = actsForTarget(p.target);
     if(!acts) return W(refuse("NO_SUCH_BUNDLE", { target:p.target }));
     return W({ target:p.target, object_type:BUNDLES[p.target].object_type,
                current_state:BUNDLES[p.target].current_state, acts,
-               vocabularies:{ dispositions:["deferred","dismissed"] } });
+               vocabularies:{ dispositions:["deferred","dismissed"], basis_roles:ROLES.slice() } });
   }
   if(op === "backlinks"){
     const out = [];
@@ -581,12 +594,12 @@ vm.runInContext(appScript() +
   ";globalThis.__PLANE=PLANE;globalThis.__openBundle=openBundle;globalThis.__openInquiry=openInquiry;" +
   "globalThis.__actsFor=actsFor;globalThis.__actGo=actGo;globalThis.__ACTS=()=>ACTS_HERE;" +
   "globalThis.__openCite=openCite;globalThis.__citeOverSelection=citeOverSelection;" +
-  "globalThis.__citeChoose=citeChoose;globalThis.__citeNote=citeNote;globalThis.__doCite=doCite;" +
+  "globalThis.__citeChoose=citeChoose;globalThis.__citeRole=citeRole;globalThis.__citeNote=citeNote;globalThis.__doCite=doCite;" +
   "globalThis.__CITE=()=>CITE;globalThis.__openRetire=openRetire;globalThis.__retireReason=retireReason;" +
   "globalThis.__doRetire=doRetire;globalThis.__RETIRE=()=>RETIRE;globalThis.__openEdgeAct=openEdgeAct;" +
   "globalThis.__edgeChoose=edgeChoose;globalThis.__edgeReason=edgeReason;globalThis.__doEdgeAct=doEdgeAct;" +
   "globalThis.__EDGE=()=>EDGE;globalThis.__loadActSource=loadActSource;" +
-  "globalThis.__reset=()=>{RECORD_CACHE=null;REVREF_CACHE=null;PROJ_CACHE.clear();IMG_CACHE.clear();};", ctx);
+  "globalThis.__reset=()=>{RECORD_CACHE=null;PROJ_CACHE.clear();IMG_CACHE.clear();};", ctx);
 
 ctx.__PLANE.session = true;
 ctx.__PLANE.me = { member:"m_alice", session:true, administer:false, capabilities:["contribute"] };
@@ -719,23 +732,34 @@ let c1 = dlg();
 ok("the cite dialog offers the record's own cases as citing objects",
    c1.includes(CASE_1) && c1.includes(CASE_2));
 const offered = [...c1.matchAll(/citeChoose\(&quot;([^&]+)&quot;\)/g)].map(m=>m[1]);
-ok("every citing object offered is one the record reports as a case",
-   offered.length > 0 && offered.every(id => BUNDLES[id] && BUNDLES[id].object_type === "project"));
-/* CORRECTED 2026-08-04 (REC-37), and the correction is a MEASURED SURFACE GAP
-   rather than a rule. This assertion used to be "the question is not offered as
-   a citing object", and it was RIGHT: the plane refused NOT_A_PROJECT and
-   offering a question would have been the surface proposing an act the record
-   would decline. REC-37 makes a question a legal citing object and publishes
-   `cite` on it, so the reason that assertion existed is gone — but
-   `citeCandidates()` still filters the record's own `object_type` to `project`
-   (app.html, the one thing this surface knows that the plane does not publish),
-   and REC-37 landed with NO surface edit by design. So what is asserted is the
-   FACT: the candidate list has not caught up, and a question is still absent
-   from it. That is UI work, named here so it is not mistaken for the plane's
-   refusal — the plane would accept it, and the arm below drives it to prove so. */
-ok("MEASURED GAP (UI): a question is still not OFFERED as a citing object, because the candidate list filters to cases",
-   !offered.includes(QUESTION));
+/* ============ CORRECTED 2026-08-05 BY UI-21, NEVER EXEMPTED ============
+   THE MEASURED GAP THIS BLOCK PINNED IS CLOSED, so the assertion is inverted
+   and the history is kept, because the sequence is the useful part.
+
+   It read: *"MEASURED GAP (UI): a question is still not OFFERED as a citing
+   object, because the candidate list filters to cases"* — with `every citing
+   object offered is one the record reports as a case` above it. Both were TRUE
+   and both were correct to assert. UI-20 wrote them when the plane refused a
+   question outright (NOT_A_PROJECT), so offering one would have been the
+   surface proposing an act the record would decline. REC-37 then widened the
+   plane and landed with `app.html` BYTE-UNTOUCHED — its own acceptance clause —
+   which left the candidate list one step behind the record it fronts, and this
+   file recorded that as a fact rather than papering it.
+
+   UI-21 closes it: `citeCandidates()` admits both CITING types, through
+   `normalizeType` so a legacy `focus` row lands on the question arm exactly as
+   the store's own widening does. What is asserted now is the same property from
+   the other side — every offered object is one the record reports as a citing
+   KIND, a question among them, and no DOCUMENT is ever offered as one, which is
+   the clause that was always doing the real work and is unchanged. */
+ok("every citing object offered is one the record reports as a case or a question",
+   offered.length > 0 && offered.every(id => BUNDLES[id]
+     && ["project","inquiry","focus","problem"].includes(BUNDLES[id].object_type)));
+ok("a question IS offered as a citing object now that the record accepts one",
+   offered.includes(QUESTION));
 ok("no document is offered as a citing object", !offered.some(id=>DOCS4.includes(id)));
+ok("each candidate says which KIND it is, so the arms are not met only as a refusal",
+   /Inquiry|Question|Finding|Case/.test(c1) && /Project|Case/.test(c1));
 ok("the report weight is stated from the act's own published word", /at <b>report<\/b> weight/.test(c1));
 ok("the report weight's semantics are stated exactly: per item, and never a quiet narrowing",
    /per item/.test(c1) && /never quietly narrows/.test(c1));
@@ -848,33 +872,89 @@ snap(dlg());
 ok("an INQ- member in the selection is named by id", namedIn(dlg(), QUESTION));
 ok("the INQ- member refusal is the plane's sentence, not this page's", dlg().includes(REF.NOT_INFORMATION));
 
-/* CITING ONTO A QUESTION — CORRECTED 2026-08-04 (REC-37), never exempted.
-   This block used to assert "citing onto a question is refused BY THE PLANE"
-   with NOT_A_PROJECT, and that was the GAP: the record-becomes-a-case edge did
-   not exist. It exists now, and the plane accepts a question as a citing object.
-   What the surface meets instead is the SECOND measured gap: the flow sends no
-   `role`, because there is no role control on it — so the act reaches the plane
-   and is refused NO_ROLE, which the surface renders in the plane's own words.
-   DEC-8 is intact throughout and nothing here is computed on this side. */
-ctx.__reset();
-SELECTIONS["SEL-ONQ"] = { handle:"SEL-ONQ", ids:[DOCS4[0]] };
-await ctx.__citeOverSelection("SEL-ONQ", [DOCS4[0]], citeAct(), null);
-ctx.__citeChoose(QUESTION);                 // the flow's own control cannot reach this
-await ctx.__doCite();
-snap(dlg());
-ok("the surface REACHES the plane with a cite onto a question — the record no longer refuses the object",
-   CALLS.some(c=>c.op==="cite" && c.params.project===QUESTION) && !dlg().includes(REF.NOT_A_PROJECT));
-ok("MEASURED GAP (UI): it sends no role, so the plane refuses NO_ROLE — and the refusal is the plane's sentence",
-   dlg().includes(REF.NO_ROLE));
-ok("the plane's own reason code travels with it, and this surface composed none of it",
-   /NO_ROLE/.test(dlg()));
-ok("and NOTHING landed while the act had not what it needs: the question's basis is still byte-identical",
-   basisSnapshot() === basisBefore);
+/* CITING ONTO A QUESTION — CORRECTED TWICE, never exempted, and the two
+   corrections are the whole history of this edge.
 
-/* THE WIDENED PATH, DRIVEN FOR REAL. The surface cannot supply a role yet, so
-   this arm goes at the plane directly — the same way the blank-reason severance
-   is driven below, and for the same reason: what is being proved is the RECORD's
-   behaviour, not this page's. A document and ANOTHER QUESTION land as legs. */
+   UI-20 wrote it as *"citing onto a question is refused BY THE PLANE"* with
+   NOT_A_PROJECT: the record-becomes-a-case edge did not exist.
+   REC-37 (2026-08-04) built the plane half and this block became *"the surface
+   reaches the plane and is refused NO_ROLE, because the flow sends no role —
+   there is no role control on it"*: TRUE, and the second of the two measured UI
+   gaps REC-37 deliberately left.
+   UI-21 (2026-08-05) closes it. There is a role control now, its options come
+   from the plane's published `vocabularies.basis_roles`, and the COMMIT IS
+   ABSENT until a role is chosen — an absent control, not a computed NO_ROLE.
+   So the assertion inverts: the flow no longer meets that refusal, because it
+   no longer sends an incomplete act. NO_ROLE is still the record's to give and
+   still renders in the record's own words if the record ever gives it; what
+   changed is that this surface stopped walking into it. */
+ctx.__reset();
+/* Taken BEFORE the dialog opens, so "nothing was sent" below is a real
+   measurement over this block and not an equality that costs nothing: the
+   suite's CALLS log accumulates across every arm in this file. */
+const citesAtOpen = CALLS.filter(c=>c.op==="cite").length;
+/* One target the record EARNS a grade for and one it does not, in one act, so
+   the receipt has to report both halves of the plane's own count. */
+const ONQ_IDS = [DOCS4[1], LOOSE_DOC];
+SELECTIONS["SEL-ONQ"] = { handle:"SEL-ONQ", ids:ONQ_IDS.slice() };
+await ctx.__citeOverSelection("SEL-ONQ", ONQ_IDS, citeAct(), null);
+ctx.__citeChoose(QUESTION);
+const onq = snap(dlg());
+ok("choosing a question raises the ROLE control, and the case arm never had one",
+   /name="cx-role"/.test(onq));
+ok("the role options are the PLANE's published vocabulary, not a list written here",
+   ROLES.every(r => onq.includes(`citeRole(&quot;${r}&quot;)`)));
+ok("THE COMMIT IS ABSENT until the role is stated — absent, not present and greyed",
+   !/id="cx-cite"/.test(onq) && !/disabled/.test(onq));
+ok("NO GRADE CONTROL IS OFFERED ANYWHERE ON THIS PATH",
+   !/name="cx-grade"/.test(onq) && !/citeGrade\(/.test(onq));
+ok("and the page says the record FILLS the grade rather than asking for one",
+   /fills each leg/i.test(onq));
+ok("nothing has been sent while the act does not have what it needs",
+   CALLS.filter(c=>c.op==="cite").length === citesAtOpen);
+ctx.__citeRole("supports");
+const onq2 = snap(dlg());
+ok("with the role stated the commit appears", /id="cx-cite"/.test(onq2));
+await ctx.__doCite();
+const onq3 = snap(dlg());
+ok("the flow REACHES the plane with a cite onto a question, carrying the role",
+   CALLS.some(c=>c.op==="cite" && c.params.project===QUESTION && c.params.role==="supports"));
+ok("and it is NOT refused NO_ROLE any more — the gap UI-20 measured and REC-37 left is closed",
+   !onq3.includes(REF.NO_ROLE) && !/NO_ROLE/.test(onq3));
+ok("the legs landed on the question's own basis, through the document",
+   ONQ_IDS.every(id => (INQUIRY_BASIS[QUESTION]||[]).some(l => l.target === id)));
+ok("the receipt states the grade the RECORD earned, per leg, and never a letter this page chose",
+   /What each leg carries/.test(onq3) && /Grade B/.test(onq3));
+ok("an unearned leg is shown as UNDETERMINED and not-yet-load-bearing, never as a weak grade",
+   /No grade/.test(onq3) && /not yet load-bearing/.test(onq3));
+ok("the filled and undetermined counts are the PLANE's, rendered as they arrived",
+   /Legs the record graded/.test(onq3) && /Legs left undetermined/.test(onq3));
+ok("and there is still no grade control on the receipt either",
+   !/citeGrade\(/.test(onq3) && !/name="cx-grade"/.test(onq3));
+
+/* THE CASE ARM STILL HAS NO ROLE CONTROL, and that is not cosmetic: the store
+   refuses a role on a case BY NAME (ROLE_NOT_APPLICABLE) rather than dropping
+   it, so a surface that offered one there would be inviting a refusal it could
+   have avoided — and a field authored in one place and honoured nowhere is the
+   D-21 class in miniature. */
+ctx.__reset();
+const citesBeforeCase = CALLS.filter(c=>c.op==="cite").length;
+SELECTIONS["SEL-NOROLE"] = { handle:"SEL-NOROLE", ids:[DOCS4[1]] };
+await ctx.__citeOverSelection("SEL-NOROLE", [DOCS4[1]], citeAct(), null);
+ctx.__citeChoose(CASE_2);
+const onCase = snap(dlg());
+ok("no role control is raised for a CASE", !/name="cx-role"/.test(onCase));
+ok("the commit is present for a case with no role, because a case needs none",
+   /id="cx-cite"/.test(onCase));
+await ctx.__doCite();
+ok("and no role is sent on the case arm, so ROLE_NOT_APPLICABLE is never provoked",
+   CALLS.filter(c=>c.op==="cite").slice(citesBeforeCase).every(c => c.params.role === undefined));
+
+/* THE WIDENED PATH, DRIVEN AT THE PLANE DIRECTLY. Kept after UI-21 gave the
+   surface a role control, because what this arm proves is the RECORD's
+   behaviour over a MIXED set (a document AND another question as legs) and the
+   earned/unearned grade fill — properties of the plane, asserted against the
+   plane, exactly as the blank-reason severance below is. */
 {
   SELECTIONS["SEL-LEG"] = { handle:"SEL-LEG", ids:[DOCS4[2], QUESTION_SUB] };
   const r = (await mockFetch(
@@ -1045,4 +1125,4 @@ ok("the act bar's holder is no longer named for its first caller",
    && /let ACTS_HERE = \[\]/.test(APP));
 
 if(fails.length){ console.error(`cite-act: ${n} assertions, ${fails.length} failed`); console.error(fails.join("\n")); process.exit(1); }
-console.log(`cite-act: ${n} assertions, all green — a four-document selection cited onto a case through op=cite with the outcome stated per item (3 cited, 1 retained), the note optional and bounded BY THE PLANE, a severed edge and a cycle-closing cite refused in the record's own words with every id it named, retire pre-flighted through the plane's own reason grammar with the selection withheld and nothing written, sever and reinstate moving an edge without deleting it, and no refusal sentence originating in this surface; and, against REC-37's WIDENED plane with NO surface edit, the flow now REACHES the plane with a cite onto a question and is refused NO_ROLE in the plane's own words (the surface sends no role yet, and the candidate list still offers only cases — both named as measured UI gaps), while the widened act driven directly lands a document AND another question as legs of the question's own document, fills the earned grade from the record and leaves an unearned one undetermined, and refuses a cycle-closing cite at the write with the full path named`);
+console.log(`cite-act: ${n} assertions, all green — a four-document selection cited onto a case through op=cite with the outcome stated per item (3 cited, 1 retained), the note optional and bounded BY THE PLANE, a severed edge and a cycle-closing cite refused in the record's own words with every id it named, retire pre-flighted through the plane's own reason grammar with the selection withheld and nothing written, sever and reinstate moving an edge without deleting it, and no refusal sentence originating in this surface; and, with UI-21's surface half landed on REC-37's widened plane, a QUESTION is now OFFERED as a citing object, choosing one raises the ROLE control from the plane's published vocabulary, the commit is ABSENT until the role is stated (so the flow no longer walks into NO_ROLE — the gap UI-20 measured and REC-37 left is closed), NO GRADE CONTROL exists anywhere on the path, and the receipt renders the record's own per-leg grades with its own filled/undetermined counts; the case arm still raises no role control and sends none, so ROLE_NOT_APPLICABLE is never provoked; and the widened act driven directly at the plane lands a document AND another question as legs of the question's own document, fills the earned grade from the record, leaves an unearned one undetermined, and refuses a cycle-closing cite at the write with the full path named`);

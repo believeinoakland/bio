@@ -860,7 +860,6 @@ function canRelease(){
    ============================================================ */
 const IMG_CACHE = new Map();     // bundle_id -> op=image result
 const PROJ_CACHE = new Map();    // bundle_id -> op=projection result (or null)
-let REVREF_CACHE = null;         // target_id -> [{from, fromTitle, rel, status, note}]
 async function getImage(id, force){
   if(!force && IMG_CACHE.has(id)) return IMG_CACHE.get(id);
   const r = await recR("image",{id});
@@ -872,28 +871,35 @@ async function getProjection(id){
   try{ p = (await recR("projection",{id})) || null; }catch(_){ p = null; }
   PROJ_CACHE.set(id, p); return p;
 }
-/* Reverse citations, computed client-side: walk the projections of every
-   inquiry and project (the citing kinds) and index their references by target.
-   At the record's scale this is a handful of reads, cached for the session.
-   The citing kinds are asked through normalizeType, so a legacy `focus` or
-   `problem` row and a canonical `inquiry` row answer the same way (MAP RULE). */
-async function reverseRefs(id){
-  if(!REVREF_CACHE){
-    REVREF_CACHE = {};
-    try{
-      const citers = (await loadRecord()).filter(b=>["inquiry","project"].includes(normalizeType(b.object_type)));
-      for(const c of citers){
-        const p = await getProjection(c.bundle_id);
-        let fm = null; try{ fm = p && p.fm_json ? JSON.parse(p.fm_json) : null; }catch(_){}
-        for(const ref of (fm && fm.references) || []){
-          (REVREF_CACHE[ref.target] = REVREF_CACHE[ref.target] || []).push(
-            { from:c.bundle_id, fromTitle:c.title||c.bundle_id, fromType:c.object_type, fromState:c.current_state, rel:ref.rel, status:ref.status, note:ref.note });
-        }
-      }
-    }catch(_){}
-  }
-  return REVREF_CACHE[id] || [];
-}
+/* `reverseRefs` AND `REVREF_CACHE` STOOD HERE AND WERE DELETED ON 2026-08-05 BY
+   UI-21, in favour of `op=backlinks` — REC-25's GATED reverse read, built for
+   exactly this.
+
+   WHAT THEY DID, so nobody rebuilds them: they answered "which cases lean on
+   this document" by walking the projection of EVERY inquiry and project in
+   `op=list` and indexing `fm_json.references` by target, in the browser, cached
+   for the session. Three things were wrong with that and only the first is
+   about cost.
+
+     (1) It was O(citing objects) plane reads to answer one document's question,
+         and the cache made it stale the moment anyone cited anything — `doCite`
+         and `citeDone` both had to remember to clear it, which is a correctness
+         rule enforced by two call sites remembering.
+     (2) IT WAS THE BROWSER DECIDING WHAT A MEMBER MAY SEE. The walk read
+         `op=list` and `op=projection` and unioned them; whether a citing case is
+         visible to THIS viewer is D-15's question and REC-25 made it the
+         plane's, at one compilation point. A reverse index assembled on this
+         side is a second answer to a question that must have exactly one.
+     (3) It answered from the PROJECTION's frontmatter copy rather than from
+         `refs`, so an edge the record holds and the projection had not caught up
+         with was invisible here and nowhere else.
+
+   `op=backlinks` answers all three: one read, gated by the viewer's position
+   (§7.9), each row carrying the citing object's own `from_title`, `from_type`,
+   `from_state`, `rel`, `status` and `note` from the record. Where it refuses or
+   fails, the consumer STATES that it could not ask rather than rendering an
+   empty list, because "no case cites this" and "I could not find out" are
+   different facts and only one of them is reassuring. */
 /* Liveness: when the visible state of the record changes, an open list
    reflects it promptly. Polite polling, paused when the tab is hidden or a
    dialog is open, and it never disrupts a selection in progress. */
@@ -995,13 +1001,20 @@ async function boot(){
 const RAIL = [
   {id:"queue",    icon:"i-review",   label:"The queue"},
   {id:"record",   icon:"i-record",   label:"Record"},
-  {id:"search",   icon:"i-search",   label:"Search"},
+  {id:"search",   icon:"i-search",   label:"Find evidence"},
   {id:"subjects", icon:"i-focus",    label:"Subjects"},
   {id:"progressions",icon:"i-monitor",label:"Progressions"},
   {id:"inquiries",icon:"i-focus",    label:"Questions"},
   {id:"projects", icon:"i-projects", label:"Projects"},
   {id:"review",   icon:"i-review",   label:"Review"},
-  {id:"monitoring",icon:"i-monitor", label:"Monitoring"},
+  /* THE MONITORING ENTRY WAS DELETED HERE ON 2026-08-05 BY UI-21, and the ROUTE
+     KEY IS KEPT (see the router) so an existing link still lands somewhere true.
+     What it was: a screen that read one page of the record and grouped it in the
+     browser into "needs a second look" and "watched sources". Both are questions
+     the plane answers itself — `reeval:true` and `monitored:true`, two of the
+     fields `op=searchfields` publishes — so they are SCOPES on the finder now,
+     over the whole corpus and behind the viewer gate, instead of a second list
+     surface with its own table, its own sort and its own idea of what counts. */
   {id:"members",  icon:"i-members",  label:"Members & keys", admin:true},
 ];
 function buildRail(w){
@@ -1068,11 +1081,15 @@ async function navBackDo(){
   else if(p.type==="project") await openProjectWorkspace(p.key, true);   // UI-16's, the same reason
   else {
     await go(p.key, true);
-    if(p.key==="search" && p.q){
-      SEARCH_SCOPE = p.sc && SEARCH_SCOPES[p.sc] ? { key:p.sc, ...SEARCH_SCOPES[p.sc] } : null;
-      const m=$("#m-search"); if(m){ m.value=p.q; sxSync("m"); }
-      const i=$("#s-q"); if(i){ i.value=p.q; sxSync("s"); }
-      await runSearch(true);
+    if(p.key==="search" && (p.q || p.sc)){
+      /* UI-21: the remembered scope is a KEY into the scopes the plane's own
+         field list composes, not a row of a table this file keeps. An unknown
+         key simply scopes nothing, which is the fail-open direction that costs
+         a member a click rather than answering the wrong question. */
+      FIND.scope = p.sc || null; FIND.q = p.q || "";
+      const m=$("#m-search"); if(m){ m.value=FIND.q; sxSync("m"); }
+      const i=$("#s-q"); if(i){ i.value=FIND.q; sxSync("s"); }
+      await runSearch();
     }
   }
   restoreScroll(p.scroll);
@@ -1108,15 +1125,26 @@ async function go(screen, fromNav){
      are KEPT, not aliased away, because a deep link and a bookmark to any of
      them must still land on the one screen that answers what they asked —
      the landed nav pattern, deep-link compatibility without a second surface. */
+  /* UI-21: `inquiries` and `monitoring` are FINDER ROUTES now, and both keys are
+     KEPT for the same reason UI-14 kept three — a bookmark must still land on
+     the screen that answers what it asked. What changed is what answers them.
+     `renderFiltered` filtered `op=list` IN THE BROWSER by `object_type`, and
+     `renderMonitoring` filtered it by `monitor_enabled || reeval_flag`; both are
+     PUBLISHED SELECTORS (`type:`, `monitored:`, `reeval:`) that the plane can
+     answer itself, gated, over the whole corpus rather than over one page of it.
+     The scope word each one names is composed from `op=searchfields`, so a scope
+     over a field the plane does not publish is not offered — see `finderScopes`. */
   const R = {
     queue: renderQueue, home: renderQueue, tasks: renderQueue, proposals: renderQueue,
-    record: renderRecord, search: renderSearchScreen, subjects: renderSubjectView, progressions: renderProgressions, inquiries: ()=>renderFiltered("inquiries","inquiry","Questions","Questions the group is working on, and what became of them: an open question, a finding once it has been answered, a case once it has been published. Deferred and dismissed questions are kept, never deleted."),
+    record: renderRecord, search: ()=>renderFinder({ scope:null }), subjects: renderSubjectView, progressions: renderProgressions,
+    inquiries: ()=>renderFinder({ scope:"inquiries" }),
+    monitoring: ()=>renderFinder({ scope:"monitored" }),
     /* UI-16: `renderFiltered`'s Projects ARM IS DELETED. A project row is not a
        document row — it opens a WORKSPACE (`#project/<id>`), not the bundle
-       page — so the screen has a renderer of its own. `renderFiltered` itself
-       still serves Questions and is UI-21's to delete. */
+       page — so the screen has a renderer of its own. `renderFiltered` ITSELF IS
+       NOW DELETED TOO (UI-21), and the line that said so is discharged. */
     projects: renderProjects,
-    review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
+    review: renderReview, members: renderMembers, add: renderAdd, bundle: null
   };
   if(R[screen]) await R[screen]();
 }
@@ -1550,31 +1578,18 @@ function listTable(list, showType){
   const span = showType?4:3;
   return `<table class="rec">${listHead(showType)}<tbody id="recrows">${list.length?recordRows(sortList(list), showType):`<tr><td colspan="${span}" class="empty">Nothing here.</td></tr>`}</tbody></table>`;
 }
-const MON_COLS = [["title","Item"],["type","Type"],["state","State"],["checked","Last checked"],["next","Next check"]];
-function monKey(b, c){
-  if(c==="checked") return b.monitor_last_checked || "";
-  if(c==="next"){ const nx = monitorNext(b.monitor_last_checked, b.monitor_frequency); return nx ? nx.toISOString() : ""; }
-  return null;
-}
-function monRows(list){
-  return list.map(b=>{
-    const crux = b.criticality==="crucial" ? " "+sealFor("crit","crucial") : "";
-    const nx = monitorNext(b.monitor_last_checked, b.monitor_frequency);
-    return `<tr class="row" data-id="${esc(b.bundle_id)}">
-      <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}</td>
-      <td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(typeLabel(b.object_type, b.current_state))}</td>
-      <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
-      <td class="upd">${b.monitor_last_checked?fmtWhen(b.monitor_last_checked):"\u2014"}</td>
-      <td class="upd">${nx?fmtWhen(nx.toISOString()):(b.monitor_frequency?esc(b.monitor_frequency):"\u2014")}</td>
-    </tr>`;
-  }).join("");
-}
-function monTable(list){
-  const sorted = LIST_SORT.col && monKey(list[0]||{}, LIST_SORT.col)!==null
-    ? [...list].sort((a,b)=>{ const x=monKey(a,LIST_SORT.col), y=monKey(b,LIST_SORT.col); return x<y?-LIST_SORT.dir:x>y?LIST_SORT.dir:0; })
-    : sortList(list);
-  return `<table class="rec"><thead><tr>${MON_COLS.map(([c,l])=>thSort(c,l)).join("")}</tr></thead><tbody>${monRows(sorted)}</tbody></table>`;
-}
+/* `MON_COLS`, `monKey`, `monRows` and `monTable` STOOD HERE AND WERE DELETED ON
+   2026-08-05 BY UI-21 with the Monitoring screen they served \u2014 the second list
+   surface in this file, with its own columns, its own sort comparator and its
+   own client-side idea of what "monitored" meant.
+
+   `monitorNext` SURVIVES and is deliberately not deleted with them: the DOCUMENT
+   PAGE reads it for the monitored seal's fact line ("last re-checked \u2026, next
+   about \u2026"), which is where a monitor schedule belongs \u2014 beside the document it
+   is about. That is the whole of "Monitoring's ACTS move to the document": there
+   was never an act on the Monitoring screen to move, and the facts were already
+   on the document page. What is gone is a LIST that answered a question the
+   finder answers better. */
 function listSortBy(col){
   if(LIST_SORT.col===col) LIST_SORT.dir *= -1; else LIST_SORT = { col, dir:1 };
   if(LIST_REPAINT) LIST_REPAINT();
@@ -1611,15 +1626,18 @@ async function renderRecord(){
   }catch(e){ $("#content").innerHTML = errPane(e); }
 }
 
-async function renderFiltered(screen, type, title, lede){
-  $("#content").innerHTML = `<h1 class="rec">${esc(title)}</h1><p class="lede">${esc(lede)}</p><div id="recrows-holder"></div>`;
-  try{
-    const list = (await loadRecord()).filter(b=>normalizeType(b.object_type)===type);
-    LIST_REPAINT = ()=>{ $("#recrows-holder").innerHTML = listTable(list, false); wireRows(); };
-    $("#recrows-holder").innerHTML = listTable(list, false);
-    wireRows();
-  }catch(e){ $("#content").innerHTML = errPane(e); }
-}
+/* `renderFiltered` STOOD HERE AND WAS DELETED ON 2026-08-05 BY UI-21. UI-16 took
+   its Projects arm; this takes the last one, Questions.
+
+   WHAT IT DID: `(await loadRecord()).filter(b => normalizeType(b.object_type) === type)`
+   — one `op=list` read, filtered in the browser, presented as a screen about a
+   type. It is the same defect D-142 names one screen over: a client-side filter
+   over a list read answers a WEAKER question than the query the plane compiles,
+   and looks identical while doing it. `type:inquiry` is a published selector
+   (`op=searchfields`), so the record can answer it — over the whole corpus, with
+   the viewer gate applied at the plane's one compilation point, with a real
+   count rather than the size of one page. The Questions screen is a FINDER SCOPE
+   now; nothing about what a member sees is composed here. */
 
 /* ---------- Bundle view (op=image) ---------- */
 function splitFm(text){
@@ -4376,7 +4394,16 @@ async function openBundle(id, fromNav){
        speak them: who released it, which cases lean on it, when the monitor
        last looked and looks next. Information density in context. */
     const log = parseLog(img);
-    const rev = await reverseRefs(id);
+    /* WHICH CASES LEAN ON THIS DOCUMENT — `op=backlinks`, the record's own
+       gated reverse index (UI-21 deleted the client-side walk that stood here).
+       A refusal or an outage is CARRIED, not swallowed: `revErr` makes the
+       difference between "no case cites it yet" and "the record was not asked"
+       visible below, because the second must never render as the first. */
+    let rev = [], revErr = null;
+    try{
+      const back = await recR("backlinks", { target:id });
+      rev = (back && Array.isArray(back.backlinks)) ? back.backlinks : [];
+    }catch(e){ revErr = (e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) }; }
     /* The links the captured page itself made. Read from the plane, never
        computed here: which partition an address falls in depends on what the
        record holds today. */
@@ -4388,8 +4415,12 @@ async function openBundle(id, fromNav){
        section, so it never blanks the page. */
     const docKnows = await docKnowsPanel(capSha);
     const vFact = releaseFact(bundleMd);
-    const leanTitles = rev.map(r=>r.fromTitle).filter(Boolean);
-    const cFact = leanTitles.length ? `Load-bearing for: ${leanTitles.join("; ")}.` : "No case cites it yet.";
+    /* op=backlinks' own field names, read straight: `from_title`, `from_type`,
+       `from_state`. An outage says so instead of claiming nothing cites it. */
+    const leanTitles = rev.map(r=>r.from_title).filter(Boolean);
+    const cFact = revErr ? "The record was not able to say which cases lean on this."
+                : leanTitles.length ? `Load-bearing for: ${leanTitles.join("; ")}.`
+                : "No case cites it yet.";
     let mFact = null;
     if(proj && proj.monitor_enabled){
       const nx = monitorNext(proj.monitor_last_checked, proj.monitor_frequency);
@@ -4419,7 +4450,12 @@ async function openBundle(id, fromNav){
     const fwd = (fmj && fmj.references) || [];
     const objective = fmj && fmj.objective ? `<div class="card"><div class="kv"><span class="k">Objective</span><span class="v plain">${esc(fmj.objective)}</span></div>${fmj.workproduct_state?`<div class="kv"><span class="k">Work product</span><span class="v plain">${chip(fmj.workproduct_state, "workproduct")||esc(fmj.workproduct_state)}</span></div>`:""}</div>` : "";
     const fwdRows = fwd.length ? fwd.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.target)}')"><span class="lt">${esc(r.target)}</span><span class="ln">${esc(r.rel||"cites")}${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
-    const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.fromTitle)}</span><span class="ln">${esc(typeLabel(r.fromType, r.fromState))} · ${esc(r.rel||"cites")} this${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
+    const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.from_title||r.from)}</span><span class="ln">${esc(typeLabel(r.from_type, r.from_state))} · ${esc(r.rel||"cites")} this${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
+    /* THE RECORD'S REFUSAL, IN ITS OWN WORDS, where the reverse index could not
+       be read. It stands INSTEAD OF the "nothing cites this" empty state, never
+       beside it: an unanswered question rendered as a settled answer is the
+       overclaim this whole surface exists to avoid. */
+    const revErrHtml = revErr ? `<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">Cited by</h3>${actRefusalHtml(revErr)}` : "";
     const groupLine = (proj&&proj.group_id) ? `<p class="lede" style="margin:0 0 12px">In the record of <span class="mono">${esc(proj.group_id)}</span>.</p>` : "";
     /* The source's own assertions, beside the group's. A member citation is the
        group saying two things are connected; a captured link is the SOURCE
@@ -4436,8 +4472,8 @@ async function openBundle(id, fromNav){
       (LINKS.links||[]).length > 40) : "";
     const s2 = stratum("s2", `${groupLine}${objective}
       ${fwdRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">This ${esc(noun)} cites</h3><div class="card" style="padding:4px 18px">${fwdRows}</div>`:""}
-      ${revRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">Cited by</h3><div class="card" style="padding:4px 18px">${revRows}</div>`:""}
-      ${!objective&&!fwdRows&&!revRows?`<div class="empty">No member of this group has cited this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.${LINKS&&(LINKS.links||[]).length?" The links below are the source's own and are a different kind of claim.":""}</div>`:""}
+      ${revRows?`<h3 style="font-family:var(--font-ui);font-size:14px;margin:14px 0 4px">Cited by</h3><div class="card" style="padding:4px 18px">${revRows}</div>`:revErrHtml}
+      ${!objective&&!fwdRows&&!revRows&&!revErr?`<div class="empty">No member of this group has cited this yet, and it cites nothing. When a project cites it, the connection appears here in both directions.${LINKS&&(LINKS.links||[]).length?" The links below are the source's own and are a different kind of claim.":""}</div>`:""}
       ${linkSec}`);
 
     /* --- stratum 3: trust --- */
@@ -4733,7 +4769,9 @@ function actNamed(acts, id){ return (acts||[]).find(a=>a && a.id === id) || null
                     frontmatter (never a YAML parser written here)
      op=backlinks   WHAT RELIES ON THIS — REC-25's GATED reverse read, built
                     for exactly this. Never a client-side walk: `reverseRefs`
-                    above is UI-21's deletion and is not taken here.
+                    stood above and UI-21 DELETED it on 2026-08-05; the document
+                    page now takes this read too, so there is one reverse index
+                    in this file and it is the plane's.
      op=whoami      the one credential sentence (Q12), through PLANE.me
 
    WHAT IT NEVER DOES:
@@ -5936,39 +5974,63 @@ function concludeReceiptHtml(r){
    decision below follows from it and a surface that guessed here would be
    inventing rules the record does not enforce:
 
-     op=cite   (store.mjs cite())  writes `cites` edges into the CITING
-               object's own bundle.md references block. The citing object must
-               be a PROJECT — anything else is refused NOT_A_PROJECT — and
-               every member of the selection must be INFORMATION, refused
-               NOT_INFORMATION with the offenders NAMED and the whole call
-               refused rather than narrowed. Its `note` is OPTIONAL and refused
+     op=cite   (store.mjs cite())  writes into the CITING object's own
+               bundle.md and promotes. Its `note` is OPTIONAL and refused
                BAD_NOTE over 200 characters or carrying a quote, a backslash or
-               a newline. Its other refusals, in the store's own order:
+               a newline. Its shared refusals, in the store's own order:
                NO_SUCH_PROJECT, NO_BUNDLE_MD, UNPARSEABLE_FRONTMATTER,
                SEVERED_EDGE, EMPTY_SELECTION, UNSPLICEABLE_REFERENCES,
                CITATION_TOO_LARGE.
 
-     THE INQUIRY HALF DOES NOT EXIST YET, and this surface says so instead of
-     pretending. RECONCILED §3.1 (UI-20) has the pre-flight checking that every
-     member is CITABLE — `information` OR `inquiry` — under the collapse. The
-     plane has not moved: `cite()` refuses an `INQ-` member NOT_INFORMATION and
-     refuses an `INQ-` citing object NOT_A_PROJECT, and `op=affordances`
-     publishes `cite` for types information|project only. An inquiry's basis is
-     `inquiry_basis`, which REC-11 built as a PROJECTION of the document's own
-     `basis:` block written by `op=promote` — no op appends a leg. So citing
-     onto a question is PLANE WORK THAT IS NOT DONE, it is named as a gap here
-     the way UI-11 names the strength gap, and this surface will need no edit
-     when it lands: the candidate list and the act itself both come from the
-     plane.
+     THE INQUIRY HALF NOW EXISTS, AND THIS PARAGRAPH IS CORRECTED RATHER THAN
+     DELETED (2026-08-05, UI-21), because what it said was true when UI-20 wrote
+     it and the sequence is the useful part. It read: *the plane has not moved;
+     `cite()` refuses an `INQ-` member NOT_INFORMATION and an `INQ-` citing
+     object NOT_A_PROJECT; citing onto a question is PLANE WORK THAT IS NOT
+     DONE, named as a gap here the way UI-11 names the strength gap, and this
+     surface will need no edit when it lands.* UI-20 measured that gap; REC-37
+     built the plane half; and the last clause turned out to be nearly right —
+     the plane landed with this file BYTE-UNTOUCHED, which was REC-37's own
+     acceptance clause, and left exactly two things on this side, both of which
+     UI-21 closes here. WHAT IS TRUE NOW:
 
-     THE CYCLE CLAUSE, and the same discipline. `cite()` HAS NO CYCLE CHECK. The
-     record's DAG guard is REC-11's, on the basis write path — `SELF_BASIS` and
-     `BASIS_CYCLE`, both of which name the FULL PATH — and `op=cite` never
-     reaches it. The one cycle a cite can close today is a Project citing
-     ITSELF, and the store catches it inside NOT_INFORMATION on purpose (its own
-     comment: "This also catches a Project citing itself, which is a cycle with
-     nothing to mean"). So the path is NAMED HERE FROM THE PLANE'S OWN
-     `offenders` — every id the record handed back, spelled out — and no cycle
+       THE CITING OBJECT may be a CASE or a QUESTION. `NOT_A_PROJECT` survives
+       under its own name (renaming a wire string is a break by I3's own
+       standard) but now fires only for an object that is NEITHER — it refuses
+       strictly less than before.
+       ON THE CASE ARM nothing changed: members must be `information`, refused
+       NOT_INFORMATION with the offenders NAMED and the whole call refused
+       rather than narrowed.
+       ON THE QUESTION ARM a member may be `information` OR another question,
+       and the arm has its OWN refusal, `NOT_CITABLE` — reusing NOT_INFORMATION
+       there would be a refusal lying about itself, since on that arm a question
+       IS citable.
+       THE LEG LANDS THROUGH THE DOCUMENT: the act splices `basis[]` and
+       promotes, so D-21 holds, `inquiry_basis` stays a projection, and REC-11's
+       DAG guard is REACHED rather than duplicated (see the cycle clause below).
+       ROLE IS AN ARM-CONDITIONAL PARAMETER, required on the question arm
+       (NO_ROLE / BAD_ROLE, with the vocabulary travelling on the refusal) and
+       refused on the case arm (ROLE_NOT_APPLICABLE) rather than dropped. The
+       control for it is in `citePaint` and its options come from
+       `vocabularies.basis_roles`.
+       GRADE IS FILLED, NEVER OFFERED. The plane fills each leg's connection
+       grade from `earnedBasisRegistry` — the same function `op=earnedbasis`
+       reads from and `op=promote` enforces with — and a target it earns nothing
+       for lands ungraded and INERT. There is no grade control on this path and
+       there must not be.
+
+     THE CYCLE CLAUSE, and the same discipline — and REC-37 turned this from a
+     gap into the point. `cite()` STILL HAS NO CYCLE CHECK OF ITS OWN, and that
+     is now correct rather than missing: the record's DAG guard is REC-11's, at
+     the write inside `promote` (`SELF_BASIS` / `BASIS_CYCLE`, both naming the
+     FULL PATH), and because the question arm lands its leg THROUGH THE DOCUMENT
+     it REACHES that guard. A second cycle rule in the act would be a second
+     answer waiting to disagree with the one that actually protects the graph.
+     On the case arm the one closable cycle is still a Project citing ITSELF,
+     caught inside NOT_INFORMATION on purpose (the store's own comment: "This
+     also catches a Project citing itself, which is a cycle with nothing to
+     mean"). Either way the path is NAMED HERE FROM THE PLANE'S OWN `offenders`
+     and `path` — every id the record handed back, spelled out — and no cycle
      rule is computed on this surface. DEC-8 forbids the alternative, and the
      alternative would also be a surface disagreeing with the op it fronts.
 
@@ -5993,11 +6055,16 @@ function concludeReceiptHtml(r){
 
    THE ONE THING THIS SURFACE KNOWS THAT THE PLANE DOES NOT PUBLISH, stated
    because it is the honest cost of the above: `op=affordances` publishes `cite`
-   on BOTH ends of the act (a document may be cited, a project may cite) and
-   nothing in the answer separates them. So `citeCandidates()` filters the
-   record's own `object_type` to projects. That is a candidate list and never a
-   refusal — a citing object the record will not accept is refused BY THE PLANE,
-   in the plane's words, and the harness drives exactly that.
+   on BOTH ends of the act (a document may be CITED; a case or a question may
+   CITE) and nothing in the answer separates them. So `citeCandidates()` filters
+   the record's own `object_type` — through `normalizeType`, so a legacy `focus`
+   row lands on the question arm exactly as the store's own widening does — to
+   the two CITING types. That is a candidate list and never a refusal: a citing
+   object the record will not accept is refused BY THE PLANE, in the plane's
+   words, and the harness drives exactly that.
+   (UI-21 corrected "to projects" to the two types when REC-37 widened the act.
+   The clause is otherwise unchanged, and it is still the only rule of this
+   surface's own on this path.)
    ============================================================ */
 
 /* THE REPORT WEIGHT, STATED EXACTLY, from the act's OWN published weight word.
@@ -6066,21 +6133,44 @@ function citeDriftHtml(res){
    THE CITE FLOW
    --------------------------------------------------------------- */
 let CITE = null;
-/* { ids:[], handle, act, title, targets, targetsErr, target, note, result,
-     refusal, busy } */
+/* { ids:[], handle, act, title, targets, targetsErr, target, targetType, role,
+     note, result, refusal, busy } */
 
 /* THE CITING OBJECTS THE RECORD PUBLISHES THIS ACT ON. Two plane reads and no
    rule of this page's beyond the object-type filter named in the header: the
    record's own list, and then `op=affordances` for each candidate, so an object
-   the plane stops publishing `cite` on stops being offered here with no edit. */
+   the plane stops publishing `cite` on stops being offered here with no edit.
+
+   WIDENED 2026-08-05 BY UI-21, and it is a CORRECTION of a measured gap rather
+   than a new capability. UI-20 built this list when a case was the only citing
+   object `op=cite` would accept, and its harness asserted the narrowness as the
+   measured state — correctly, at the time. REC-37 then widened the plane: the
+   citing object may be a case OR A QUESTION, a question's members may be
+   information or another question, and `op=affordances` publishes `cite` on all
+   three types. That landed with `app.html` BYTE-UNTOUCHED, which was REC-37's
+   own acceptance clause, and left exactly two things for this side: a question
+   was never OFFERED here, and the flow sent no `role` so a cite driven onto one
+   reached the plane and came back `NO_ROLE`. This closes the first; the role
+   control below closes the second.
+
+   The object-type filter is still the ONE thing this function knows that the
+   plane does not publish, and the reason is unchanged: `op=affordances` publishes
+   `cite` on BOTH ENDS of the act — a document may be cited, a case or a question
+   may cite — and nothing in the answer separates them. So the record's own
+   `object_type`, through `normalizeType` (the MAP RULE, so a legacy `focus` row
+   lands on the question arm exactly as the store's own widening does), decides
+   what is a CANDIDATE. It never decides a refusal: a citing object the record
+   will not accept is refused BY THE PLANE, in the plane's words. */
+const CITING_TYPES = ["project", "inquiry"];
 async function citeCandidates(){
   const rows = await loadRecord();
   const out = [];
   for(const b of rows){
-    if(normalizeType(b.object_type) !== "project") continue;
+    const type = normalizeType(b.object_type);
+    if(!CITING_TYPES.includes(type)) continue;
     const a = await actsFor(b.bundle_id);
     if(a.ok && actNamed(a.acts, "cite"))
-      out.push({ id:b.bundle_id, title:b.title || b.bundle_id, state:b.current_state || "" });
+      out.push({ id:b.bundle_id, title:b.title || b.bundle_id, state:b.current_state || "", type });
   }
   return out;
 }
@@ -6101,15 +6191,36 @@ async function citeOverSelection(handle, ids, act, title){
 }
 async function citeOpen(init){
   CITE = { ids: init.ids || [], handle: init.handle || null, act: init.act, title: init.title || null,
-           targets: null, targetsErr: null, target: null, note: "", result: null, refusal: null, busy: false };
+           targets: null, targetsErr: null, target: null, targetType: null, role: null,
+           note: "", result: null, refusal: null, busy: false };
   $("#dlg").innerHTML = `<h2>${esc(init.act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
   $("#dlg-wrap").classList.remove("hidden");
+  /* The published vocabularies, because this dialog RENDERS one (the basis
+     roles). Cached after the first call, so asking here costs nothing and means
+     the control cannot depend on which surface opened the dialog — UI-22's
+     finding that `loadActSource` had no caller in the application at all is the
+     reason this is asked at the point of use rather than assumed. */
+  await loadActSource();
   try{ CITE.targets = await citeCandidates(); }
   catch(e){ CITE.targets = []; CITE.targetsErr = (e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) }; }
   citePaint();
 }
-function citeChoose(t){ if(!CITE) return; CITE.target = t; CITE.refusal = null; citePaint(); }
+/* Choosing the citing object also settles WHICH ARM this is, from the record's
+   own `object_type` for that candidate. The role is CLEARED on every change:
+   changing a case to a question must not carry a role chosen for neither, and
+   changing a question to a case must not leave one behind for the plane to
+   refuse ROLE_NOT_APPLICABLE over something the member cannot see. */
+function citeChoose(t){
+  if(!CITE) return;
+  const c = (CITE.targets || []).find(x=>x.id === t) || null;
+  CITE.target = t; CITE.targetType = c ? c.type : null; CITE.role = null;
+  CITE.refusal = null; citePaint();
+}
+function citeRole(v){ if(!CITE) return; CITE.role = v || null; CITE.refusal = null; citePaint(); }
 function citeNote(v){ if(!CITE) return; CITE.note = v; citePaint(); }
+/* THE ARM, and it is read from the record's word for the chosen object, never
+   from the shape of an id. */
+function citeOntoInquiry(){ return !!(CITE && CITE.targetType === "inquiry"); }
 
 async function doCite(){
   if(!CITE || CITE.busy || !CITE.target) return;
@@ -6131,12 +6242,21 @@ async function doCite(){
       const s = await recPostR("select", { ids: CITE.ids }, { kind:"enumerated" });
       handle = s.handle;
     }
-    const a = await actAsk("cite", { project: CITE.target, handle, note: CITE.note });
+    /* `role` IS SENT ONLY ON THE QUESTION ARM, and its absence on the case arm
+       is deliberate rather than incidental: the store refuses a role on a case
+       BY NAME (`ROLE_NOT_APPLICABLE`) precisely because a field stated in one
+       place and honoured nowhere is how a record and its projections drift
+       apart. So this surface does not send one where the record has no slot for
+       it — and it does not send an empty string either, which the store reads as
+       "not stated" but which would still be this page authoring a value. */
+    const params = { project: CITE.target, handle, note: CITE.note };
+    if(citeOntoInquiry() && CITE.role) params.role = CITE.role;
+    const a = await actAsk("cite", params);
     if(!CITE || CITE.act !== act) return;
     CITE.busy = false;
     if(!a.accepted){ CITE.refusal = a.refusal; citePaint(); return; }
     CITE.result = a.result;
-    RECORD_CACHE = null; REVREF_CACHE = null;   // edges moved; both caches are stale
+    RECORD_CACHE = null;   // edges moved; the list cache is stale (the reverse index is the plane's now — UI-21)
     citePaint();
   }catch(e){
     if(!CITE) return;
@@ -6158,43 +6278,86 @@ function citePaint(){
     : `<span class="mono">${esc(CITE.handle||"")}</span>`;
 
   /* WHERE IT GOES. A closed list of what the record publishes this act on, and
-     no free-text id: a member does not type a bundle id. */
+     no free-text id: a member does not type a bundle id. Each candidate says
+     which KIND it is in the record's own vocabulary, because the two ends behave
+     differently (a case takes a citation edge; a question takes a leg of its
+     basis, which needs a role) and a member choosing blind would meet that
+     difference only as a refusal. */
   const targets = CITE.targets === null
-    ? `<div class="empty">Asking the record which cases may cite&hellip;</div>`
+    ? `<div class="empty">Asking the record which cases and questions may cite&hellip;</div>`
     : CITE.targetsErr
       ? citeRefusalHtml(CITE.targetsErr)
       : !CITE.targets.length
-        ? `<div class="empty">The record publishes this act on no case this credential can see.</div>`
+        ? `<div class="empty">The record publishes this act on no case or question this credential can see.</div>`
         : CITE.targets.map(t=>`<label class="dz-opt${CITE.target===t.id?" on":""}">
             <input type="radio" name="cx-target" ${CITE.target===t.id?"checked":""} onchange="citeChoose(${esc(JSON.stringify(t.id))})">
             <span class="dz-verb">${esc(t.title)}</span>
-            <span class="dz-mean"><span class="mono">${esc(t.id)}</span>${t.state?` &middot; ${esc(t.state)}`:""}</span>
+            <span class="dz-mean"><span class="mono">${esc(t.id)}</span> &middot; ${esc(typeLabel(t.type, t.state))}${t.state?` &middot; ${esc(t.state)}`:""}</span>
           </label>`).join("");
 
-  /* THE COMMIT IS ABSENT UNTIL A CASE IS CHOSEN. Absent, never present and
-     greyed, and it asserts nothing about the record: there is no refusal here
-     because this page has judged nothing. Everything the record would refuse is
-     asked of the record when the button is pressed, and comes back in its
-     words. */
+  /* ---- THE ROLE, ON THE QUESTION ARM ONLY (REC-37's requirement, UI-21's
+          control). What a leg DOES for the answer is invariant 7's storage and
+          the record REQUIRES it here — `NO_ROLE` and `BAD_ROLE` are refused by
+          name, and the reason the plane gives is the reason this control exists:
+          a leg that CUTS AGAINST the case is first-class, and a default would
+          put a claim about the member's own reasoning into the record that they
+          never made.
+
+          THE OPTIONS ARE THE PLANE'S. `vocabularies.basis_roles`, published by
+          `op=affordances` beside the act, read through `actVocab` — the same
+          seam every other vocabulary on this surface comes through. When the
+          plane has named none the control is ABSENT and says so, rather than
+          backed by a guess. The member-facing WORDS come from `ROLE_WORD` in the
+          guarded CATALOG block, which check-semantics.mjs pins to the catalog in
+          both directions, so a role the record adds and this file has no word
+          for fails the harness by name instead of rendering blank.
+
+          THERE IS NO GRADE CONTROL HERE AND THERE MUST NOT BE. A leg's grade is
+          FILLED by the plane from `earnedBasisRegistry` — the same function
+          `op=earnedbasis` reads from and `op=promote` enforces with — and a
+          target the record earns nothing for lands UNGRADED and inert. Offering
+          a letter here would be this page inviting a member to assert a
+          measurement the record did not make. ---- */
+  const roles = actVocab("basis_roles");
+  const roleBlock = !citeOntoInquiry() ? "" : `
+    <h3 class="cx-h">What this material does for the answer</h3>
+    <p class="subj-note">Required, and never assumed. A question&rsquo;s basis records what each leg DOES for its answer, and a leg that cuts against the case is kept on exactly the same footing as one that supports it. The record will not guess this.</p>
+    ${roles.length
+      ? `<div class="dz-choose" id="cx-roles">${roles.map(r=>`<label class="dz-opt${CITE.role===r?" on":""}">
+          <input type="radio" name="cx-role" ${CITE.role===r?"checked":""} onchange="citeRole(${esc(JSON.stringify(r))})">
+          <span class="dz-verb">${esc(ROLE_WORD[r] || r)}</span>
+          <span class="dz-mean"><span class="mono">${esc(r)}</span></span>
+        </label>`).join("")}</div>`
+      : `<div class="empty">The record publishes no set of roles for a basis leg, so none is offered here. Nothing is invented in its place.</div>`}
+    <p class="subj-note">The record fills each leg&rsquo;s <b>grade</b> itself, from its own resolutions of this question&rsquo;s subject. There is no grade to choose here and there is not meant to be: a leg the record earns nothing for lands ungraded and is shown as not yet load-bearing, which is a fact about the record rather than a gap for you to fill.</p>`;
+
+  /* THE COMMIT IS ABSENT UNTIL THE ACT HAS WHAT IT NEEDS. Absent, never present
+     and greyed, and it asserts nothing about the record: there is no refusal
+     here because this page has judged nothing. On the question arm the role is
+     one of the things it needs, so the control appears when a role has been
+     chosen — an ABSENT control, not a computed `NO_ROLE`. Everything the record
+     would refuse is asked of the record when the button is pressed, and comes
+     back in its words. */
+  const ready = CITE.target && (!citeOntoInquiry() || !!CITE.role);
   const commit = CITE.refusal
     ? `<div class="intent-pf">${citeRefusalHtml(CITE.refusal)}</div>
        <div class="intent-pf"><button class="btn" id="cx-cite" onclick="doCite()"${CITE.busy?" disabled":""}>${esc(act.label)}</button></div>`
-    : CITE.target
+    : ready
       ? `<div class="intent-pf"><button class="btn" id="cx-cite" onclick="doCite()"${CITE.busy?" disabled":""}>${esc(act.label)}</button></div>`
       : "";
 
   box.innerHTML = `<h2>${esc(act.label)}</h2>
-    <p class="what">This act adds a citation edge to a case's own document, in your name, on the permanent record. It changes nothing about the material being cited.</p>
+    <p class="what">This act writes into the citing object&rsquo;s own document, in your name, on the permanent record. It changes nothing about the material being cited. On a <b>case</b> it adds a citation edge; on a <b>question</b> it adds a leg to the basis the answer rests on.</p>
     <div class="dz-what"><span class="dz-ttl">${CITE.ids.length===1?esc(CITE.title||CITE.ids[0]):`${CITE.ids.length||"the"} selected record${CITE.ids.length===1?"":"s"}`}</span><span class="id">${what}</span></div>
     ${act.prompt?`<div class="teach" style="margin:8px 0">${esc(act.prompt)}</div>`:""}
 
-    <h3 class="cx-h">Which case cites it</h3>
-    <p class="subj-note">Every case below is one the record publishes this act on. This page adds none.</p>
+    <h3 class="cx-h">What cites it</h3>
+    <p class="subj-note">Every case and question below is one the record publishes this act on. This page adds none.</p>
     <div class="dz-choose">${targets}</div>
-    <p class="subj-note">The record publishes this act under its own name, <b>${esc(act.label)}</b>, and publishes it on cases. Pointing a <b>question</b> at what it rests on is a different thing the record does not yet do from here: a question's basis is written into the question's own document, and no act appends a leg to it.</p>
+    ${roleBlock}
 
     <h3 class="cx-h">A note, if you want one</h3>
-    <p class="subj-note">Optional. It is written verbatim into the edge and into the case's Session Log. Nothing is drafted here, and no length rule is copied onto this page &mdash; if the record will not take what you wrote, the record says so in its own words.</p>
+    <p class="subj-note">Optional. It is written verbatim into what the record writes &mdash; the edge or the leg &mdash; and into the citing object&rsquo;s Session Log. Nothing is drafted here, and no length rule is copied onto this page: if the record will not take what you wrote, the record says so in its own words.</p>
     <textarea class="txt" id="cx-note" rows="2" onchange="citeNote(this.value)"></textarea>
 
     ${citeWeightNote(act)}
@@ -6212,20 +6375,78 @@ function citeReceiptHtml(r){
   const kept  = Array.isArray(r.alreadyCited) ? r.alreadyCited : [];
   const row = (label, ids) => ids.length
     ? `<div class="kv"><span class="k">${esc(label)}</span><span class="v">${ids.map(i=>`<span class="mono">${esc(String(i))}</span>`).join(", ")}</span></div>` : "";
+  const onto = r.citingObjectType === "inquiry";
   return `<h2>Cited</h2>
     <div class="intent-ok">
-      <div>The record cited <b>${esc(String(cited.length))}</b> and retained <b>${esc(String(kept.length))}</b> as ${kept.length===1?"it was":"they were"}.</div>
+      <div>The record ${onto?"rested this question on":"cited"} <b>${esc(String(cited.length))}</b> and retained <b>${esc(String(kept.length))}</b> as ${kept.length===1?"it was":"they were"}.</div>
       <div>Into <span class="mono">${esc(String(r.project||""))}</span>${r.weight?` at <b>${esc(String(r.weight))}</b> weight, the record's own word`:""}.</div>
     </div>
     <div class="card" style="margin-top:8px">
-      ${row("Cited now", cited)}
-      ${row("Already cited, left as they were", kept)}
-      ${r.bundleSha?`<div class="kv"><span class="k">The case's new sha</span><span class="v"><span class="mono">${esc(String(r.bundleSha))}</span></span></div>`:""}
+      ${row(onto?"Rested on now":"Cited now", cited)}
+      ${row(onto?"Already a leg, left as it was":"Already cited, left as they were", kept)}
+      ${r.bundleSha?`<div class="kv"><span class="k">The ${onto?"question":"case"}'s new sha</span><span class="v"><span class="mono">${esc(String(r.bundleSha))}</span></span></div>`:""}
     </div>
+    ${citeLegsHtml(r)}
     ${citeDriftHtml(r)}
-    <div class="row-btns"><button class="btn" onclick="citeDone(${esc(JSON.stringify(String(r.project||"")))})">Done</button></div>`;
+    <div class="row-btns"><button class="btn" onclick="citeDone(${esc(JSON.stringify(String(r.project||"")))},${esc(JSON.stringify(String(r.citingObjectType||"")))})">Done</button></div>`;
 }
-function citeDone(project){ closeDialog(); RECORD_CACHE = null; REVREF_CACHE = null; if(project) openBundle(project); }
+
+/* ---- WHAT LANDED ON A QUESTION, PER LEG, AND HOW MUCH OF IT IS NOT YET
+        LOAD-BEARING (REC-37's return shape, UI-21's rendering).
+
+        `legs[]` is the plane's own array: for each target it carries the ROLE
+        the record wrote and the GRADE the record EARNED, with the registry's own
+        `why` for a filled one and an explicit null for an undetermined one.
+        `gradesFilled` and `gradesUndetermined` are the plane's counts, rendered
+        as they arrived — this function counts nothing, because a count computed
+        here could disagree with the one the record wrote into its own Session
+        Log for the same act.
+
+        THE UNDETERMINED CLAUSE IS THE POINT OF THIS PANEL. An ungraded leg is
+        INERT (DEC-18): it is on the record, it is visible, and it contributes
+        nothing to the question's strength until the record can resolve its
+        target. A receipt that reported only what landed would be the one place a
+        member could have learned that half of what they just cited is not yet
+        doing any work — so the absence is STATED, per leg and in total, and it
+        is never dressed up as a low grade. ---- */
+function citeLegsHtml(r){
+  if(r.citingObjectType !== "inquiry") return "";
+  const legs = Array.isArray(r.legs) ? r.legs : [];
+  if(!legs.length) return "";
+  const filled = r.gradesFilled, undet = r.gradesUndetermined;
+  const rows = legs.map(l=>{
+    const roleWord = ROLE_WORD[l.role] || l.role || "";
+    const grade = l.grade
+      ? `<span class="subj-grade g-est">Grade ${esc(String(l.grade))}</span>`
+        + `<span class="subj-how">${esc(AXIS_WORD[l.grade_axis] || l.grade_axis || "")}${l.grade_source?` &mdash; ${esc(GRADE_SOURCE_WORD[l.grade_source] || l.grade_source)}`:""}.</span>`
+        + (l.why ? `<div class="subj-ref">${esc(String(l.why))}</div>` : "")
+      : `<span class="subj-grade g-unconf">No grade</span>`
+        + `<span class="subj-how">The record holds no resolution it could earn a grade from for this one. The leg is on the record and is <b>not yet load-bearing</b> &mdash; undetermined, stated, and not a weak grade.</span>`;
+    return `<div class="subj-doc"><div class="top">
+        <span class="mono">${esc(String(l.target||""))}</span>
+        <span class="dz-mean">${esc(roleWord)}</span>
+        ${grade}
+      </div></div>`;
+  }).join("");
+  return `<h3 class="cx-h">What each leg carries</h3>
+    <p class="subj-note">The role is what you said; the grade is what the RECORD earned from its own resolutions of this question&rsquo;s subject. You were not asked for a grade and could not have been: it is a measurement the record makes, not a judgement you supply.</p>
+    <div class="card" style="padding:4px 18px">${rows}</div>
+    ${(typeof filled === "number" && typeof undet === "number")
+      ? `<div class="card" style="margin-top:8px">
+          <div class="kv"><span class="k">Legs the record graded</span><span class="v plain"><b>${esc(String(filled))}</b></span></div>
+          <div class="kv"><span class="k">Legs left undetermined</span><span class="v plain"><b>${esc(String(undet))}</b>${undet?` &mdash; on the record and visible, and contributing nothing to this question&rsquo;s strength until the record can resolve ${undet===1?"its target":"their targets"}.`:""}</span></div>
+        </div>`
+      : ""}`;
+}
+/* The record's own word for what kind of object was cited into decides where
+   Done lands — a question opens as a question, a case as a bundle. Nothing is
+   inferred from the shape of an id (UI-22's `queueOpen` precedent: an address
+   carries the record's own type). */
+function citeDone(project, citingObjectType){
+  closeDialog(); RECORD_CACHE = null;
+  if(!project) return;
+  if(citingObjectType === "inquiry") openInquiry(project); else openBundle(project);
+}
 
 /* ---------------------------------------------------------------
    RETIRE — the one act here with a REAL pre-flight, and the reason it has one
@@ -6348,7 +6569,7 @@ async function doEdgeAct(){
     if(!EDGE || EDGE.id !== id) return;
     EDGE.busy = false;
     if(!a.accepted){ EDGE.refusal = a.refusal; edgePaint(); return; }
-    EDGE.result = a.result; RECORD_CACHE = null; REVREF_CACHE = null; edgePaint();
+    EDGE.result = a.result; RECORD_CACHE = null; edgePaint();
   }catch(e){
     if(!EDGE) return;
     EDGE.busy = false;
@@ -6405,34 +6626,227 @@ function edgePaint(){
 /*__CITE_ACT_END__*/
 
 
-/* ---------- Search (op=search) ---------- */
-async function backFromEmptySearch(){
-  await go(SEARCH_SCOPE ? SEARCH_SCOPE.key : "record");
-  const m = $("#m-search"); if(m){ m.value=""; sxSync("m"); m.focus(); }
-}
-function quickSearch(){
-  const q=$("#m-search").value.trim();
-  if(!q){ if(CUR.type==="screen" && CUR.key==="search") backFromEmptySearch(); return; }
-  if(CUR.type==="screen" && SEARCH_SCOPES[CUR.key]) SEARCH_SCOPE = { key:CUR.key, ...SEARCH_SCOPES[CUR.key] };
-  else if(!(CUR.type==="screen" && CUR.key==="search")) SEARCH_SCOPE = null;
-  go("search").then(()=>{ const i=$("#s-q"); if(i){ i.value=q; sxSync("s"); } runSearch(); });
-}
-function widenSearch(){ SEARCH_SCOPE = null; runSearch(); }
-async function renderSearchScreen(){
-  $("#content").innerHTML = `<h1 class="rec">Search</h1><p class="lede">Find material across the record. Type in the search box above, Enter runs it; an empty search takes you back to the record.</p>
-    <div class="msearch sm-only" style="width:auto;max-width:520px;margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 20 20" style="flex:none;color:var(--muted)"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund" oninput="sxSync('s')" onkeydown="if(event.key==='Enter')runSearch()"><span class="sx hidden" id="sx-s" onclick="sxClear('s')" title="clear">&times;</span></div>
-    <div id="s-res"></div>`;
-  const el = searchEl(); if(el) el.focus();
-}
-/* A search launched from a typed page stays in that page's world. */
-const SEARCH_SCOPES = {
-  inquiries:  { q:"type:inquiry",    client:h=>normalizeType(h.object_type||h.type)==="inquiry",   label:"Questions" },
-  projects:   { q:"type:project",    client:h=>(h.object_type||h.type)==="project",                 label:"Projects" },
-  review:     { q:"state:collected", client:h=>(h.current_state||h.state)==="collected",            label:"items awaiting review" },
-  monitoring: { client:h=>!!(h.monitor_enabled||h.reeval_flag),                                     label:"monitored material" },
-};
-let SEARCH_SCOPE = null;   // {key,q?,client?,label} while scoped
+/*__FINDER_START__*/
+/* ============================================================
+   E1 · THE EVIDENCE FINDER (UI-21) — ONE FINDER, TWO NAMED ROUTES, AND THE
+   INTERSECTION REFUSED RATHER THAN APPROXIMATED.
 
+   THE FINDING THIS SURFACE IS BUILT ON (SB-EVIDENCE §1.1): retrieval in this
+   system is TWO DISJOINT SYSTEMS and nothing in the plane joins them.
+
+     THE QUERY LANGUAGE   `query.mjs` compiles over the projected columns and
+                          FTS5 over five text columns. Its field list is
+                          PUBLISHED (`op=searchfields`) and it contains no
+                          `entity`, no `concerns`, no `grade`, no `connection`,
+                          no `progression` and no `phase`.
+     THE INTENT LAYER     has its own reads over its own tables. "Every document
+                          that concerns this ordinance" is `op=concerns`, a join
+                          on `resolutions.entity_id`, and `op=search` CANNOT
+                          ANSWER IT — not slowly, not partially, not at all.
+
+   So this surface asks BOTH, IN PARALLEL, and reports each route's OWN COUNT.
+   It never adds them and never blends their order, and neither is a style
+   choice:
+
+     - A COMBINED TOTAL WOULD BE A NUMBER NOTHING MEASURED. The routes range
+       over different populations (documents matching words; captures resolved
+       to a subject) and a document may sit in one, the other or both. `N + M`
+       is not the size of anything; the honest third figure is the OVERLAP, and
+       it is labelled as an overlap.
+     - A BLENDED RANKING WOULD BE A SCALE NOBODY DEFINED. FTS5 relevance and a
+       §8.1 resolution grade measure different things on different axes. Merging
+       them means inventing a conversion, which is the composed-scalar failure
+       DEC-21 forbids one altitude up.
+
+   THE CROSS-SEAM QUERY IS REFUSED, NOT APPROXIMATED, and this is the clause
+   with the most force behind it. `concerns:ENT-0031 state:collected grade:>=B`
+   asks for an INTERSECTION across the two seams. The browser could compute one
+   — take the ids from each route and keep what appears in both — and it would
+   be WRONG IN THE ONE DIRECTION THAT MATTERS: each route's answer is
+   independently capped, so the intersection of two capped sets UNDER-REPORTS,
+   and it under-reports INVISIBLY — the result looks exactly like a complete
+   one. The downstream consumer of this screen is a member assembling a
+   selection into a CASE, which is a document that makes a COMPLETENESS CLAIM. A
+   silently short answer there is not a missing feature; it is the record
+   claiming more than it can support, which this repository ranks as the worst
+   defect it can ship.
+
+   So the finder REFUSES, names which term belongs to which seam, and offers TWO
+   RUNNABLE ALTERNATIVES — each route alone, each one click, each one an answer
+   the record can actually stand behind.
+
+   WHAT IS DELIBERATELY NOT HERE. Filtering the subjects route by a projected
+   field, or the text route by a subject, needs the projected INTENT AXIS — one
+   seam that can see both — and that is HOLE-4. It is not in this item, and the
+   refusal above is what makes its absence VISIBLE instead of papered over.
+
+   THE SUBJECTS ROUTE'S CANDIDATE BOUND IS EXACT SPELLING, AND IT IS STATED
+   (the UI-13 discipline). Free text reaches the registry through
+   `op=entitybyalias`, which matches a NORMALISED alias exactly; a subject whose
+   name in the record is similar-but-not-identical to what a member typed is NOT
+   found. The reverse read that would widen it — a normalised-label lookup over
+   `reading_refs.label` — DOES NOT EXIST; it is REC-36, still queued. So the
+   limit is reported ON THE ROUTE rather than left for a member to infer from an
+   empty panel. `concerns:ENT-…` addresses a subject by id and has no such bound.
+
+   WHAT WAS DELETED HERE, all of it on 2026-08-05 and all of it named so nobody
+   restores one by habit:
+
+     THE SURFACE-SIDE SCOPE MAP, its live scope variable, and the widen control
+        A constant here held four hand-written query strings AND client-side row
+        filters, one per typed screen. Two of the four had NO plane query at all
+        (the monitoring entry was a pure browser filter), so "search in monitored
+        material" searched one page of the record. The strings had already
+        drifted once — UI-10 corrected `type:focus` to `type:inquiry` in that
+        very table after the second rename, which is the drift a copy always
+        eventually has. Scopes are composed from `op=searchfields` now, and a
+        scope over a field the plane does not publish is NOT OFFERED.
+        THE CONSTANT'S NAME IS NOT SPELLED ANYWHERE IN THIS FILE, on purpose and
+        on the D-160 precedent: the item's acceptance is a grep over this file
+        returning zero, and a tombstone that spells the word is an occurrence of
+        the word. It is described here instead, which is what a reader needs.
+     THE `op=list` SUBSTRING FALLBACK (D-142)
+        `if(!rows){ … list.filter(title/bundle_id includes) }`, with the comment
+        "so search always answers". It answered a WEAKER question (no full text,
+        no frontmatter, no facets, no relevance) in a BYTE-IDENTICAL UI, so a
+        member could not tell which engine had answered — and it reached the
+        record through `op=list`, a different read with its own posture, rather
+        than through the compiled query's ONE gate point. A surface that cannot
+        answer must SAY it cannot answer; undetermined is first-class here too.
+     `backFromEmptySearch`
+        Clearing the box EJECTED the member to another screen. A finder that can
+        hold a live selection lease cannot do that: the lease is the member's,
+        the ids in it are what they were shown, and navigating away from the one
+        surface that can act on it — because a text box went empty — throws away
+        work the plane is still holding. An empty query now clears the RESULTS
+        and leaves the member exactly where they are.
+   ============================================================ */
+
+/* ---- THE QUERY LANGUAGE, AS THE PLANE PUBLISHES IT (op=searchfields) ----
+   `op=affordances`' precedent at a different layer: the surface keeps no copy of
+   the field list, loads it once, and offers nothing the plane did not name. When
+   the plane cannot be asked there are NO scopes rather than guessed ones. */
+const SEARCH_FIELDS = { loaded:false, fields:null, syntax:[], idsMax:null, err:null };
+async function loadSearchFields(force){
+  if(SEARCH_FIELDS.loaded && !force) return SEARCH_FIELDS;
+  try{
+    const r = await recR("searchfields");
+    SEARCH_FIELDS.fields = (r && r.fields && typeof r.fields === "object") ? r.fields : null;
+    SEARCH_FIELDS.syntax = Array.isArray(r && r.syntax) ? r.syntax : [];
+    SEARCH_FIELDS.idsMax = (r && r.idsMax != null) ? r.idsMax : null;
+    SEARCH_FIELDS.err = null;
+  }catch(e){
+    SEARCH_FIELDS.fields = null; SEARCH_FIELDS.syntax = []; SEARCH_FIELDS.idsMax = null;
+    SEARCH_FIELDS.err = (e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) };
+  }
+  SEARCH_FIELDS.loaded = true;
+  return SEARCH_FIELDS;
+}
+function searchHasField(name){
+  return !!(SEARCH_FIELDS.fields && Object.prototype.hasOwnProperty.call(SEARCH_FIELDS.fields, String(name||"").toLowerCase()));
+}
+/* One selector in the published grammar, or NOTHING. This is the whole of what
+   replaced the deleted scope map: a scope is a field name plus a value, and a field
+   the plane does not publish yields no scope rather than a string sent hopefully.
+   The VALUES come from the guarded CATALOG block above, which check-semantics.mjs
+   pins against `bio-checks.mjs` — so a type or a state that is renamed fails the
+   harness by name instead of silently matching nothing. */
+function fieldSelector(field, value){
+  return searchHasField(field) ? `${field}:${value}` : null;
+}
+/* The grammar words that are NOT field names — the plane publishes them in its
+   own `syntax` lines. Listed so the parser does not mistake `sort:updated` for a
+   selector over a field nobody published. */
+const QUERY_PREFIXES = ["has", "fm", "sort", "not"];
+
+/* THE SCOPES. Every value below is a key of a table the CATALOG block mirrors
+   and check-semantics.mjs pins to `bio-checks.mjs`, so a renamed type or state
+   fails the harness by name rather than quietly matching nothing. */
+function finderScopes(){
+  const out = [];
+  const add = (key, label, field, value, note) => {
+    const q = fieldSelector(field, value);
+    if(q) out.push({ key, label, q, note });
+  };
+  add("inquiries", "Questions", "type", "inquiry",
+      "Everything the record holds as a question, whatever phase it is in.");
+  add("projects", "Cases", "type", "project",
+      "The cases the group is building.");
+  add("information", "Documents", "type", "information",
+      "Captured material only.");
+  add("review", "Awaiting review", "state", "collected",
+      "Collected and not yet released.");
+  add("monitored", "Watched sources", "monitored", "true",
+      "Re-checked against their live source on a schedule.");
+  add("reeval", "Needs a second look", "reeval", "true",
+      "Something a document depends on has moved.");
+  return out;
+}
+
+/* ---- THE PARSE. It splits a query into the seam each term belongs to and
+        decides NOTHING about what the record holds. Three buckets:
+
+          text          a bare word, a quoted phrase, or a selector over a field
+                        `op=searchfields` published (or one of the grammar
+                        prefixes the plane publishes in its own syntax lines)
+          subjects      `concerns:<subject>` — the ONE intent-layer selector this
+                        surface understands, and the reason it understands it is
+                        that the query language demonstrably does not
+          unpublished   a selector-shaped term over a name the plane publishes as
+                        neither. `grade:` is the standing example and it is not a
+                        typo: the record HAS grades, and no route can FILTER on
+                        one.
+
+        Quote-aware, because the plane's own syntax line says a quoted phrase is
+        one unit; splitting on whitespace inside quotes would make this surface
+        disagree with the grammar it is fronting. ---- */
+function finderTerms(q){
+  const out = []; let cur = "", quoted = false;
+  for(const ch of String(q||"")){
+    if(ch === '"'){ quoted = !quoted; cur += ch; continue; }
+    if(!quoted && /\s/.test(ch)){ if(cur) out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  if(cur) out.push(cur);
+  return out;
+}
+function finderPlan(q){
+  const text = [], subjects = [], unpublished = [], words = [];
+  for(const term of finderTerms(q)){
+    const con = /^-?concerns:(.+)$/i.exec(term);
+    if(con){ subjects.push({ term, subject: con[1] }); continue; }
+    const sel = /^-?([A-Za-z_][A-Za-z0-9_]*):/.exec(term);
+    if(sel){
+      const field = sel[1].toLowerCase();
+      if(searchHasField(field) || QUERY_PREFIXES.includes(field)) text.push({ term, field });
+      else unpublished.push({ term, field });
+      continue;
+    }
+    text.push({ term, field:null }); words.push(term.replace(/"/g, ""));
+  }
+  return { q: String(q||"").trim(), text, subjects, unpublished, words,
+           /* NO PRE-JOINED QUERY STRINGS ON THE PLAN. Each consumer joins the
+              terms IT will send — `finderTextRoute` sends text + unpublished
+              (the plane words what it cannot place), the refusal's alternatives
+              send one seam each and SPELL OUT what they send. A convenience
+              string here would be a fourth thing that has to agree with the
+              three, and the one that disagreed would drop a member's term
+              silently. */
+           /* THE REFUSAL CONDITION, and it is exactly "terms from more than one
+              seam in one query". An unpublished term counts as the text side's
+              problem to state, not as a third seam to intersect with. */
+           crossSeam: subjects.length > 0 && (text.length > 0 || unpublished.length > 0) };
+}
+
+let FIND = { q:"", scope:null, plan:null, refused:null, text:null, subjects:null,
+             overlap:null, running:false };
+
+function quickSearch(){
+  const q = (($("#m-search") && $("#m-search").value) || "").trim();
+  if(CUR.type==="screen" && CUR.key==="search"){ FIND.q = q; runSearch(); return; }
+  FIND.scope = null; FIND.q = q;
+  go("search").then(()=>{ const i=$("#s-q"); if(i){ i.value=q; sxSync("s"); } return runSearch(); });
+}
 /* Exactly one search box is ever visible: the masthead's on desktop, the
    screen's on phones (where the masthead search is hidden). */
 function searchEl(){
@@ -6446,45 +6860,456 @@ function sxSync(w){
 function sxClear(w){
   const i = $(w==="m" ? "#m-search" : "#s-q");
   if(!i) return;
-  i.value = ""; sxSync(w); i.focus();
-  if(w==="s"){ const r=$("#s-res"); if(r) r.innerHTML=""; }
+  i.value = ""; sxSync(w); if(i.focus) i.focus();
+  /* CLEARS THE RESULTS AND STAYS PUT. `backFromEmptySearch` navigated away from
+     here, which a finder holding a live lease must never do (see the header). */
+  FIND.q = ""; FIND.plan = null; FIND.refused = null; FIND.text = null; FIND.subjects = null; FIND.overlap = null;
+  const r = $("#f-res"); if(r) r.innerHTML = "";
 }
-async function runSearch(fromNav){
-  const el = searchEl();
-  const q = ((el && el.value) || "").trim();
-  if(!q){ backFromEmptySearch(); return; }
-  const m=$("#m-search"), sq=$("#s-q");
-  if(m){ m.value=q; sxSync("m"); } if(sq){ sq.value=q; sxSync("s"); }
-  const fq = (SEARCH_SCOPE && SEARCH_SCOPE.q) ? SEARCH_SCOPE.q + " " + q : q;
-  if(CUR.type==="screen" && CUR.key==="search"){ CUR.q = q; CUR.sc = SEARCH_SCOPE ? SEARCH_SCOPE.key : null; }
-  $("#s-res").innerHTML = `<p class="count-line">Searching&hellip;</p>`;
+
+async function renderFinder(opts){
+  setActive("search");
+  if(opts && opts.scope !== undefined) FIND.scope = opts.scope;
+  $("#content").innerHTML = `<h1 class="rec">The evidence finder</h1>
+    <p class="lede">Two ways of finding material, asked at the same time and reported separately. <b>Text and fields</b> is the record&rsquo;s query language over what documents say and what the record projects about them. <b>Subjects</b> is the reverse index: every document the record has resolved to a subject in the registry. They are different systems over different tables, so you get two counts and never one total.</p>
+    <div class="msearch sm-only" style="width:auto;max-width:520px;margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 20 20" style="flex:none;color:var(--muted)"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund, or concerns:ENT-0031" oninput="sxSync('s')" onkeydown="if(event.key==='Enter')runSearch()"><span class="sx hidden" id="sx-s" onclick="sxClear('s')" title="clear">&times;</span></div>
+    <div id="f-scopes"></div>
+    <div id="f-sel"></div>
+    <div id="f-res"></div>`;
+  await loadSearchFields();
+  await loadActSource();
+  finderPaintScopes();
+  const el = searchEl(); if(el && el.focus) el.focus();
+  finderPaintSelection();
+  if(FIND.scope || FIND.q) await runSearch();
+}
+
+function finderPaintScopes(){
+  const host = $("#f-scopes"); if(!host) return;
+  const scopes = finderScopes();
+  if(!scopes.length){
+    /* NO INVENTED SCOPE. The plane names the fields; if it could not be asked,
+       there is nothing here rather than a guess, and the reason is stated. */
+    host.innerHTML = SEARCH_FIELDS.err
+      ? `<p class="subj-note">The record could not be asked which fields its query language has, so no scopes are offered. A typed query still runs and the record judges it.</p>${actRefusalHtml(SEARCH_FIELDS.err)}`
+      : `<p class="subj-note">The record publishes no query fields, so no scopes are offered here.</p>`;
+    return;
+  }
+  host.innerHTML = `<div class="dz-choose" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">`
+    + scopes.map(s=>`<button class="btn ghost${FIND.scope===s.key?" on":""}" data-scope="${esc(s.key)}" onclick="finderScope(${esc(JSON.stringify(s.key))})" title="${esc(s.note)} Runs the record&rsquo;s own selector ${esc(s.q)}.">${esc(s.label)}</button>`).join("")
+    + (FIND.scope ? `<button class="btn ghost" onclick="finderScope(null)" title="drop the scope and ask the whole record">Everything</button>` : "")
+    + `</div>
+    <p class="subj-note">Each scope above is one selector in the record&rsquo;s own query language, composed from the fields <span class="mono">op=searchfields</span> publishes. This page keeps no list of its own, and a scope over a field the record does not publish is not offered.</p>`;
+}
+function finderScope(key){ FIND.scope = key; finderPaintScopes(); return runSearch(); }
+function finderScopeQ(){
+  const s = finderScopes().find(x=>x.key===FIND.scope);
+  return s ? s.q : null;
+}
+
+/* ---- THE TWO ROUTES. Fanned out with Promise.all, so neither waits on the
+        other and a slow subject read never delays the text answer. Each returns
+        its OWN shape and its OWN count, and neither knows the other ran. ---- */
+async function finderTextRoute(plan){
+  const scoped = finderScopeQ();
+  /* THE UNPUBLISHED TERMS GO TO THE PLANE TOO, and are not quietly dropped here.
+     This surface knows the field list; it does not know the GRAMMAR, and a term
+     it cannot place is the record's to judge and to word (DEC-8). `op=search`
+     answers with its own `query.warnings`, which the panel renders verbatim.
+     Silently deleting a term would be this page editing the member's question. */
+  const terms = plan.text.concat(plan.unpublished).map(t=>t.term).join(" ");
+  const q = [scoped, terms].filter(Boolean).join(" ").trim();
+  if(!q) return { asked:false };
   try{
-    let rows;
-    try{ const r = await recR("search",{q:fq}); rows = r && (r.hits||r.results||r.bundles||r.rows); }catch(_){ rows=null; }
-    if(!rows){ // fall back to a client filter over op=list so search always answers
-      const list = await loadRecord(); const ql=q.toLowerCase();
-      rows = list.filter(b=>(b.title||"").toLowerCase().includes(ql)||(b.bundle_id||"").toLowerCase().includes(ql));
-    }
-    if(SEARCH_SCOPE && SEARCH_SCOPE.client) rows = rows.filter(SEARCH_SCOPE.client);
-    $("#s-res").innerHTML = rows.length
-      ? `<p class="count-line">${rows.length} ${rows.length===1?"result":"results"} for \u201C${esc(q)}\u201D${SEARCH_SCOPE?` in ${esc(SEARCH_SCOPE.label)} \u00b7 <a onclick="widenSearch()">search everything</a>`:""}</p><table class="rec"><tbody>${recordRows(rows.map(x=>({bundle_id:x.bundle_id||x.id,title:x.title,object_type:x.object_type||x.type,current_state:x.current_state||x.state,last_updated:x.last_updated})))}</tbody></table>`
-      : `<p class="empty">No results for “${esc(q)}”.</p>`;
-    wireRows();
-  }catch(e){ $("#s-res").innerHTML = errPane(e); }
+    const r = await recR("search", { q, limit:"500" });
+    const hits = Array.isArray(r && r.hits) ? r.hits : [];
+    return { asked:true, q, hits,
+             /* THE PLANE'S OWN `total`, never `hits.length` dressed up as one.
+                Where they differ the panel says so, because "50 shown" and "50
+                found" are different claims and only one of them is checkable. */
+             total: (r && typeof r.total === "number") ? r.total : hits.length,
+             limit: r && r.limit,
+             warnings: (r && r.query && Array.isArray(r.query.warnings)) ? r.query.warnings : [],
+             widen: (r && r.widen) || null };
+  }catch(e){ return { asked:true, q, err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } }; }
 }
+async function finderSubjectsRoute(plan){
+  /* BY ID, when the member named one. No registry lookup, no spelling bound. */
+  if(plan.subjects.length){
+    const ids = plan.subjects.map(s=>s.subject);
+    const answers = await Promise.all(ids.map(id=>
+      recR("concerns", { id }).then(r=>({ id, r }),
+        e=>({ id, err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } }))));
+    return finderSubjectsCollect(answers, true);
+  }
+  /* BY NAME, through the registry, and the bound is EXACT SPELLING (REC-36). */
+  if(!plan.words.length) return { asked:false };
+  const alias = plan.words.join(" ");
+  let ents = [];
+  try{
+    const r = await recR("entitybyalias", { alias });
+    ents = Array.isArray(r && r.entities) ? r.entities : [];
+  }catch(e){ return { asked:true, alias, byId:false, exactOnly:true,
+                      err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } }; }
+  if(!ents.length) return { asked:true, alias, byId:false, exactOnly:true,
+                            entities:[], errors:[], documents:[], count:0 };
+  const answers = await Promise.all(ents.map(e=>
+    recR("concerns", { id:e.entity_id }).then(r=>({ id:e.entity_id, entity:e, r }),
+      err=>({ id:e.entity_id, entity:e, err:(err && typeof err === "object") ? err : { reason:"NO_ANSWER", detail:String(err) } }))));
+  return { ...finderSubjectsCollect(answers, false), alias, exactOnly:true };
+}
+/* Collapse several subjects' answers into ONE document list, keeping each
+   document's own resolution grade and the subjects it was resolved to. A
+   document resolved to two subjects the query named appears ONCE, and the grade
+   kept is the one the RECORD reported for that resolution — never recomputed and
+   never averaged across subjects, because averaging two grades is composing a
+   scale nobody defined (DEC-21, one altitude down). */
+function finderSubjectsCollect(answers, byId){
+  const entities = [], errors = [], seen = new Map();
+  for(const a of answers){
+    if(a.err){ errors.push({ id:a.id, refusal:a.err }); continue; }
+    const r = a.r || {};
+    entities.push({ entity_id: r.entity_id || a.id, entity: r.entity || a.entity || null,
+                    found: r.found !== false,
+                    count: (typeof r.count === "number") ? r.count : (r.documents||[]).length });
+    for(const d of (r.documents || [])){
+      const key = d.bundle_id || ("capture:" + d.capture_sha);
+      if(!seen.has(key)) seen.set(key, { ...d, subjects:[] });
+      seen.get(key).subjects.push(r.entity_id || a.id);
+    }
+  }
+  const documents = [...seen.values()];
+  return { asked:true, byId:!!byId, entities, errors, documents, count: documents.length };
+}
+
+async function runSearch(){
+  const el = searchEl();
+  const typed = ((el && el.value) || "").trim();
+  if(typed || !FIND.q) FIND.q = typed;
+  const m=$("#m-search"), sq=$("#s-q");
+  if(m){ m.value = FIND.q; sxSync("m"); } if(sq){ sq.value = FIND.q; sxSync("s"); }
+  if(CUR.type==="screen" && CUR.key==="search"){ CUR.q = FIND.q; CUR.sc = FIND.scope || null; }
+  const res = $("#f-res"); if(!res) return;
+  if(!FIND.q && !FIND.scope){
+    FIND.plan = null; FIND.refused = null; FIND.text = null; FIND.subjects = null; FIND.overlap = null;
+    res.innerHTML = `<p class="subj-note">Type something above, or pick a scope. Nothing has been asked of the record yet &mdash; this is an empty box, not an empty record.</p>`;
+    return;
+  }
+  await loadSearchFields();
+  const plan = finderPlan(FIND.q);
+  FIND.plan = plan;
+  /* THE REFUSAL HAPPENS BEFORE ANY CALL IS MADE. Not "run both and decline to
+     merge": the member is told what cannot be asked, and neither half is run
+     under a description its answer would not match. */
+  if(plan.crossSeam){
+    FIND.refused = plan; FIND.text = null; FIND.subjects = null; FIND.overlap = null;
+    res.innerHTML = finderCrossSeamHtml(plan);
+    return;
+  }
+  FIND.refused = null;
+  FIND.running = true;
+  res.innerHTML = `<p class="count-line">Asking both routes&hellip;</p>`;
+  const [text, subjects] = await Promise.all([finderTextRoute(plan), finderSubjectsRoute(plan)]);
+  FIND.running = false;
+  FIND.text = text; FIND.subjects = subjects;
+  /* THE OVERLAP, MERGED BY `bundle_id`, and it is the ONLY figure this page
+     derives from both routes at once. A set intersection over ids the two routes
+     each named: nothing is added, nothing is re-ranked, and it is labelled as
+     what it is. */
+  const textIds = new Set((text.hits || []).map(h=>h.bundle_id).filter(Boolean));
+  const subjIds = new Set((subjects.documents || []).map(d=>d.bundle_id).filter(Boolean));
+  const both = [...textIds].filter(id=>subjIds.has(id));
+  FIND.overlap = { ids: both, n: both.length };
+  finderPaintResults();
+}
+/* Runnable alternative: keep ONE seam's terms and drop the other's. The kept
+   terms are spelled out in the button, so nothing changes quietly. */
+function finderRunOnly(which){
+  const plan = FIND.plan; if(!plan) return;
+  FIND.q = which === "text" ? plan.text.map(t=>t.term).join(" ")
+                            : plan.subjects.map(t=>t.term).join(" ");
+  const m=$("#m-search"), sq=$("#s-q");
+  if(m) m.value = FIND.q; if(sq) sq.value = FIND.q;
+  return runSearch();
+}
+
+function finderCrossSeamHtml(plan){
+  const list = arr => arr.map(t=>`<span class="mono">${esc(t.term)}</span>`).join(", ");
+  const textAlt = plan.text.map(t=>t.term).join(" ");
+  const subjAlt = plan.subjects.map(t=>t.term).join(" ");
+  return `<div class="intent-ref">
+      <div class="intent-ref-why">This asks for the intersection of two different retrieval systems, and this page will not approximate one.</div>
+      <div class="intent-ref-code mono">CROSS_SEAM_QUERY</div>
+    </div>
+    <div class="card" style="margin-top:8px">
+      ${plan.subjects.length?`<div class="kv"><span class="k">Answered only by the subjects route</span><span class="v">${list(plan.subjects)}</span></div>`:""}
+      ${plan.text.length?`<div class="kv"><span class="k">Answered only by the text and fields route</span><span class="v">${list(plan.text)}</span></div>`:""}
+      ${plan.unpublished.length?`<div class="kv"><span class="k">Answered by neither</span><span class="v">${list(plan.unpublished)}</span></div>`:""}
+    </div>
+    <p class="subj-note">The record&rsquo;s query language runs over what documents say and the fields the record projects about them. The subjects route is a separate index over which documents the record has RESOLVED to a registered subject. Neither can filter on the other&rsquo;s terms &mdash; not slowly, not partially.</p>
+    <p class="subj-note"><b>Why this is refused rather than computed.</b> This page could ask both routes and keep the documents that appeared in both. Each route&rsquo;s answer is capped, so that intersection would be missing whatever fell past either cap &mdash; and it would look exactly like a complete answer. Material found this way ends up in a case, and a case makes a claim about how complete its evidence is. A short answer that cannot be told apart from a full one is the one failure this record will not ship.</p>
+    ${plan.unpublished.length?`<p class="subj-note">${plan.unpublished.map(t=>`<span class="mono">${esc(t.field)}</span>`).join(", ")} ${plan.unpublished.length===1?"is not a field":"are not fields"} the record&rsquo;s query language publishes, so ${plan.unpublished.length===1?"it filters":"they filter"} nothing on either route. The subjects route does report the record&rsquo;s own grade <b>per document</b>, so you can read it there even though you cannot filter on it.</p>`:""}
+    <h3 class="cx-h">Two things you can run instead</h3>
+    <div class="dz-choose" style="display:flex;flex-direction:column;gap:8px">
+      ${textAlt?`<button class="btn ghost" id="f-alt-text" onclick="finderRunOnly('text')" style="text-align:left">Run <span class="mono">${esc(textAlt)}</span> on the text and fields route</button>`:""}
+      ${subjAlt?`<button class="btn ghost" id="f-alt-subjects" onclick="finderRunOnly('subjects')" style="text-align:left">Run <span class="mono">${esc(subjAlt)}</span> on the subjects route</button>`:""}
+    </div>`;
+}
+
+/* ---- THE RESULTS. Two panels, each with its own heading, its own count and its
+        own sentence about what it ranked on. There is no line in this function
+        where the two counts meet arithmetically. ---- */
+function finderRowsHtml(rows, overlapIds){
+  return rows.map(b=>{
+    const id = b.bundle_id;
+    const crux = b.criticality==="crucial" ? " "+sealFor("crit","crucial") : "";
+    const both = id && overlapIds.has(id);
+    return `<tr class="row" data-id="${esc(id||"")}">
+      <td class="pick">${id?`<input class="ck" type="checkbox" data-id="${esc(id)}" onclick="event.stopPropagation();finderPickCount()">`:""}</td>
+      <td class="item"><span class="ttl">${esc(b.title||id||"")}</span>${crux}${both?` <span class="chip collected" title="this document was found by both routes">both routes</span>`:""}</td>
+      <td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(typeLabel(b.object_type, b.current_state))}</td>
+      <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
+      <td class="upd">${fmtWhen(b.last_updated)}</td></tr>`;
+  }).join("");
+}
+function finderTextPanelHtml(t, overlapIds){
+  const head = `<h2 class="sec">Text and fields</h2>`;
+  if(!t || !t.asked)
+    return head + `<p class="subj-note">Not asked: nothing you typed is a term this route can answer.</p>`;
+  if(t.err) return head + actRefusalHtml(t.err);
+  const shown = (t.hits||[]).length;
+  const capped = t.total > shown;
+  return head
+    + `<p class="count-line" id="f-text-count"><b>${esc(String(t.total))}</b> ${t.total===1?"document":"documents"} on this route${capped?` &middot; showing the first ${esc(String(shown))}`:""}</p>`
+    + `<p class="subj-note">The record&rsquo;s query language over what documents say and what it projects about them, ranked by relevance to the words you typed. This count is this route&rsquo;s own and stands for nothing else.</p>`
+    + ((t.warnings||[]).length ? `<div class="card" style="margin:8px 0">${t.warnings.map(w=>`<div class="kv"><span class="k">The record&rsquo;s note on this query</span><span class="v plain">${esc(String(w))}</span></div>`).join("")}</div>` : "")
+    + (t.widen ? `<div class="card" style="margin:8px 0"><div class="kv"><span class="k">The record&rsquo;s own offer</span><span class="v plain">${esc(String(t.widen.detail||""))} &mdash; ${esc(String(t.widen.total))} match any of them.</span></div></div>` : "")
+    + (shown
+        ? `<table class="rec"><thead><tr><th class="pick"></th><th>Item</th><th>Type</th><th>State</th><th>Updated</th></tr></thead><tbody>${finderRowsHtml(t.hits, overlapIds)}</tbody></table>`
+        : `<div class="empty">This route found nothing.</div>`);
+}
+function finderSubjectsPanelHtml(s, overlapIds){
+  const head = `<h2 class="sec">Subjects</h2>`;
+  if(!s || !s.asked)
+    return head + `<p class="subj-note">Not asked: this route answers about a SUBJECT, and nothing you typed names one. Type a subject&rsquo;s name, or address one by id with <span class="mono">concerns:ENT-&hellip;</span>.</p>`;
+  if(s.err) return head + actRefusalHtml(s.err);
+  /* THE STATED LIMIT (REC-36 is queued, not built). It is rendered whenever this
+     route was reached BY NAME, including when it found something — a member who
+     got two documents must still know that a third, spelled differently in the
+     record, was never a candidate. */
+  const bound = s.byId ? ""
+    : `<p class="subj-note" id="f-subj-bound"><b>What this route can and cannot find by name.</b> A typed name reaches the registry through an EXACT match on a subject&rsquo;s own names and aliases. A subject spelled differently in the record from the way you typed it here is not found, and this route cannot tell you it exists &mdash; the reverse read that would widen it does not exist yet. Address a subject by id with <span class="mono">concerns:ENT-&hellip;</span> and this bound does not apply.</p>`;
+  const ents = (s.entities||[]).filter(e=>e.found);
+  const entLine = ents.length
+    ? `<p class="subj-note">${ents.length===1?"Subject":"Subjects"}: ${ents.map(e=>`<b>${esc((e.entity&&e.entity.label)||e.entity_id)}</b> <span class="mono">${esc(e.entity_id)}</span>`).join(", ")}${ents.length>1?" &mdash; this name is carried by more than one subject in the registry, and the record does not collapse that. Every one of them was asked.":""}</p>`
+    : "";
+  const errs = (s.errors||[]).length
+    ? `<div class="card" style="margin:8px 0">${(s.errors||[]).map(e=>`<div class="kv"><span class="k">${esc(e.id)}</span><span class="v plain">${esc((e.refusal&&(e.refusal.detail||e.refusal.error||e.refusal.reason))||"")}</span></div>`).join("")}</div>`
+    : "";
+  const rows = s.documents || [];
+  return head
+    + `<p class="count-line" id="f-subj-count"><b>${esc(String(s.count))}</b> ${s.count===1?"document":"documents"} on this route</p>`
+    + `<p class="subj-note">Every document the record has RESOLVED to the subject, ordered by how strongly each resolution was established &mdash; the record&rsquo;s own grade, strongest first. A different question, a different table and a different order from the route above, which is why the two counts are reported apart.</p>`
+    + entLine + bound + errs
+    + (rows.length
+        ? `<div class="card" style="padding:4px 18px">${rows.map(d=>{
+            const target = d.bundle_id;
+            const both = target && overlapIds.has(target);
+            return `<div class="subj-doc"><div class="top">
+              ${target ? `<input class="ck" type="checkbox" data-id="${esc(target)}" onclick="finderPickCount()"> <button class="tlink" data-open="${esc(target)}">${esc(target)} &nearr;</button>`
+                       : `<span class="mono" title="the record withheld the bundle this capture belongs to from this credential">capture ${esc(String(d.capture_sha).slice(0,12))}&hellip;</span>`}
+              ${subjGradeBadge(d.grade, d.established, d.needs_confirmation)}
+              ${both?`<span class="chip collected" title="this document was found by both routes">both routes</span>`:""}
+            </div>${d.ref?`<div class="subj-ref">Resolved on the reference ${esc(d.ref)}.</div>`:""}</div>`;
+          }).join("")}</div>`
+        : `<div class="empty">This route found nothing.</div>`);
+}
+/* THE OVERLAP LINE, and the sentence that says why there is no third number
+   above it. This is the one place both counts appear together, and it states in
+   the member's own words that they are not to be added. */
+function finderOverlapHtml(t, s, overlap){
+  const tAsked = !!(t && t.asked && !t.err), sAsked = !!(s && s.asked && !s.err);
+  if(!tAsked || !sAsked)
+    return `<p class="subj-note" id="f-overlap">Only one route answered this query, so there is nothing to compare. Each route&rsquo;s count is its own.</p>`;
+  return `<div class="card" id="f-overlap" style="margin:12px 0">
+    <div class="kv"><span class="k">Found by both routes</span><span class="v plain"><b>${esc(String(overlap.n))}</b> ${overlap.n===1?"document":"documents"}</span></div>
+    <div class="kv"><span class="k">Why there is no single number</span><span class="v plain">These are two questions asked of two different indexes. A document can answer one, the other, or both, so adding the counts would produce a figure that measures nothing and counts the overlap twice. The overlap is the honest third figure, and it is an overlap and not a total.</span></div>
+  </div>`;
+}
+function finderPaintResults(){
+  const res = $("#f-res"); if(!res) return;
+  const overlapIds = new Set((FIND.overlap && FIND.overlap.ids) || []);
+  res.innerHTML = finderTextPanelHtml(FIND.text, overlapIds)
+                + finderOverlapHtml(FIND.text, FIND.subjects, FIND.overlap || { n:0, ids:[] })
+                + finderSubjectsPanelHtml(FIND.subjects, overlapIds);
+  res.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
+  res.querySelectorAll("tr.row").forEach(r=>{ if(r.dataset.id) r.onclick=()=>openBundle(r.dataset.id); });
+  finderPickCount();
+}
+
+/* ============================================================
+   THE SELECTION THE FINDER HOLDS — a REAL lease from `op=select`, whose
+   PUBLISHED expiry and PUBLISHED drift are shown as the record's own facts.
+
+   THREE PROPERTIES, each a refusal to invent something:
+
+     THE EXPIRY IS PUBLISHED, NOT COMPUTED. `op=select` answers with `expires`
+     and `ttlSeconds`; this renders `expires`. A countdown derived here from a
+     remembered TTL would drift from the record the moment the plane touched the
+     lease — and `selectionResolve` EXTENDS the expiry on every use, so a
+     surface-side clock would be wrong in the direction that tells a member their
+     work is about to be lost when it is not.
+
+     THE DRIFT IS THE PLANE'S REPORT. `op=selection` re-resolves the lease under
+     the CURRENT viewer and returns what moved: revised, purged, hidden, added,
+     removed, and its own `detail` for a query selection that cannot say which
+     rows moved. This renders those fields and adds no judgement about whether
+     the movement mattered.
+
+     THE LEASE IS TAKEN ONCE. `citeOverSelection(handle, ids, act, title)`
+     receives the handle this screen holds; the cite flow neither renews nor
+     releases it, and the ids are what the member was SHOWN while the MEMBERS the
+     act runs over are resolved by the plane from the handle at the moment it
+     runs. That is what makes drift reportable rather than invented here.
+   ============================================================ */
+let FINDSEL = null;   // { handle, ids, expires, ttlSeconds, kind, n, snapshotN, drift, moved, err, busy }
+
+function finderPicked(){
+  const host = $("#f-res"); if(!host) return [];
+  return [...host.querySelectorAll("input.ck[data-id]:checked")].map(c=>c.dataset.id);
+}
+function finderPickCount(){
+  const n = finderPicked().length, btn = $("#f-sel-go"), lbl = $("#f-sel-n");
+  if(btn) btn.disabled = !n;
+  if(lbl) lbl.textContent = n ? (n===1 ? "One document picked." : `${n} documents picked.`)
+                              : "Nothing picked. Check documents on either route to hold them together.";
+}
+async function finderHold(){
+  const ids = finderPicked();
+  if(!ids.length) return;
+  try{
+    const s = await recPostR("select", { ids }, { kind:"enumerated" });
+    FINDSEL = { handle:s.handle, ids, expires:s.expires, ttlSeconds:s.ttlSeconds,
+                kind:s.kind, n:s.n, snapshotN:undefined, drift:null, moved:false, err:null, busy:false };
+  }catch(e){
+    FINDSEL = { handle:null, ids, err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } };
+  }
+  finderPaintSelection();
+}
+async function finderCheckSelection(){
+  if(!FINDSEL || !FINDSEL.handle) return;
+  FINDSEL.busy = true; finderPaintSelection();
+  try{
+    const r = await recR("selection", { handle: FINDSEL.handle });
+    FINDSEL.n = r.n; FINDSEL.expires = r.expires; FINDSEL.drift = r.drift || null;
+    FINDSEL.moved = !!r.moved; FINDSEL.snapshotN = r.snapshotN; FINDSEL.err = null;
+  }catch(e){ FINDSEL.err = (e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) }; }
+  FINDSEL.busy = false;
+  finderPaintSelection();
+}
+async function finderReleaseSelection(){
+  const held = FINDSEL;
+  FINDSEL = null;
+  if(held && held.handle){ try{ await recR("selectionrelease", { handle: held.handle }); }catch(_){} }
+  finderPaintSelection();
+}
+/* WHICH ACTS THIS SURFACE CAN OFFER OVER A HELD SET. From `op=affordances`'
+   published CATALOGUE — the act's own `label`, `weight`, `rung`, `prompt`,
+   `needs` and `mode` — filtered to the ones with a call site here and reachable
+   by this credential. Whether THESE members are acceptable is the plane's to
+   refuse at commit, by name, with its offenders listed: this is a list of what
+   the record publishes, never a judgement about a set. */
+const ACT_FLOW_SELECTION = {
+  cite: (act) => citeOverSelection(FINDSEL.handle, FINDSEL.ids, act, null),
+};
+function finderSelectionActs(){
+  const cat = (ACT_SOURCE && Array.isArray(ACT_SOURCE.catalog)) ? ACT_SOURCE.catalog : [];
+  return cat.filter(a => a && ACT_FLOW_SELECTION[a.id] && actReachable(a));
+}
+function finderActGo(id){
+  const act = finderSelectionActs().find(a=>a.id===id);
+  if(act && FINDSEL && FINDSEL.handle) ACT_FLOW_SELECTION[id](act);
+}
+function finderDriftHtml(d){
+  if(!d) return "";
+  const rows = [];
+  const idl = arr => arr.map(x=>`<span class="mono">${esc(String(x && x.bundleId ? x.bundleId : x))}</span>`).join(", ");
+  if(Array.isArray(d.revised) && d.revised.length)
+    rows.push(`<div class="kv"><span class="k">Revised since you picked them</span><span class="v">${idl(d.revised)}</span></div>`);
+  if(Array.isArray(d.purged) && d.purged.length)
+    rows.push(`<div class="kv"><span class="k">Gone from the record</span><span class="v">${idl(d.purged)}</span></div>`);
+  if(Array.isArray(d.hidden) && d.hidden.length)
+    rows.push(`<div class="kv"><span class="k">No longer visible to this credential</span><span class="v">${idl(d.hidden)}</span></div>`);
+  if(d.added) rows.push(`<div class="kv"><span class="k">Newly matching</span><span class="v plain">${esc(String(d.added))}</span></div>`);
+  if(d.removed) rows.push(`<div class="kv"><span class="k">No longer in the set</span><span class="v plain">${esc(String(d.removed))}</span></div>`);
+  if(d.detail) rows.push(`<div class="kv"><span class="k">The record&rsquo;s account</span><span class="v plain">${esc(d.detail)}</span></div>`);
+  return rows.join("");
+}
+function finderPaintSelection(){
+  const host = $("#f-sel"); if(!host) return;
+  if(!FINDSEL){
+    host.innerHTML = `<div class="rv-bar" style="margin:0 0 12px;gap:8px">
+      <button class="btn" id="f-sel-go" disabled onclick="finderHold()">Hold these together</button>
+      <span class="n" id="f-sel-n">Nothing picked. Check documents on either route to hold them together.</span></div>`;
+    finderPickCount();
+    return;
+  }
+  if(FINDSEL.err){
+    host.innerHTML = `<div class="card" style="margin-bottom:12px">${actRefusalHtml(FINDSEL.err)}
+      <div class="row-btns"><button class="btn ghost" onclick="finderReleaseSelection()">Start again</button></div></div>`;
+    return;
+  }
+  const acts = finderSelectionActs();
+  const buttons = acts.map(a=>
+    `<button class="btn ghost" onclick="finderActGo(${esc(JSON.stringify(a.id))})">${esc(a.label)}&hellip;</button>`).join("");
+  host.innerHTML = `<div class="card" id="f-lease" style="margin-bottom:12px;border-left:3px solid var(--verdigris)">
+    <div style="font-weight:600;margin-bottom:4px">The record is holding ${FINDSEL.n===1?"one document":`${esc(String(FINDSEL.n))} documents`} for you.</div>
+    <div class="kv"><span class="k">The record&rsquo;s name for this set</span><span class="v"><span class="mono">${esc(FINDSEL.handle)}</span></span></div>
+    <div class="kv"><span class="k">Held until</span><span class="v plain"><span id="f-lease-expires">${esc(fmtWhenFull(FINDSEL.expires))}</span> &mdash; the record&rsquo;s own expiry, not a countdown this page invented. Using the set extends it.</span></div>
+    ${(FINDSEL.snapshotN !== undefined && FINDSEL.snapshotN !== null && FINDSEL.snapshotN !== FINDSEL.n) ? `<div class="kv"><span class="k">When you picked them</span><span class="v plain">${esc(String(FINDSEL.snapshotN))}</span></div>` : ""}
+    ${FINDSEL.moved ? `<div class="kv"><span class="k">The set moved</span><span class="v plain">The record reports these changes since you picked it.</span></div>${finderDriftHtml(FINDSEL.drift)}`
+                    : (FINDSEL.drift ? `<div class="kv"><span class="k">The set</span><span class="v plain">The record reports that nothing moved since you picked it.</span></div>` : "")}
+    ${buttons?`<div class="rv-bar" style="margin:10px 0 0;gap:8px">${buttons}</div>`:`<p class="subj-note">The record publishes no act this page can carry over a held set with this credential.</p>`}
+    <div class="row-btns"><button class="btn ghost" onclick="finderCheckSelection()"${FINDSEL.busy?" disabled":""}>Ask the record what moved</button>
+      <button class="btn ghost" onclick="finderReleaseSelection()">Let it go</button></div>
+  </div>`;
+}
+/*__FINDER_END__*/
 
 /* ---------- Review: the release moment (op=search -> op=select -> op=release) ---------- */
 let REVIEW_ROWS = [];   // [{bundle_id,title,criticality,current_state,last_updated}]
+/* WHICH ENGINE ANSWERED THE REVIEW LIST. D-142's third and worst clause is that
+   a member cannot TELL when a surface has degraded, so this is remembered and
+   `paintReview` says it. `search` is the real answer; `list` is the weaker one
+   and is labelled as weaker where it is shown, never presented as the same. */
+let REVIEW_VIA = null;   // "search" | "list" | null
 async function loadReviewRows(){
   /* op=search carries criticality (op=list does not), which the flow needs to
      keep crucial material out of op=release before the plane has to refuse it.
-     If search cannot answer, fall back to op=list with criticality unknown; the
-     plane still refuses a crucial selection and the refusal renders verbatim. */
-  try{
-    const r = await recR("search",{q:"type:information state:collected", limit:"500", facets:"none"});
-    const hits = r && r.hits;
-    if(Array.isArray(hits)) return hits;
-  }catch(_){}
+
+     UI-21: THE HAND-COMPOSED QUERY LITERAL IS DELETED. This line used to read
+     `q:"type:information state:collected"` — two selectors written out here, in
+     a grammar this file does not own, over field names it had no way to check.
+     They are composed from `op=searchfields` now, exactly as the finder's scopes
+     are: if the record does not publish a field, no selector is built over it
+     and the weaker read answers instead, SAYING SO. That is the difference
+     between a copy of the plane's vocabulary and a reading of it. */
+  await loadSearchFields();
+  const sel = [fieldSelector("type", "information"), fieldSelector("state", "collected")].filter(Boolean);
+  if(sel.length === 2){
+    try{
+      const r = await recR("search", { q: sel.join(" "), limit:"500", facets:"none" });
+      const hits = r && r.hits;
+      if(Array.isArray(hits)){ REVIEW_VIA = "search"; return hits; }
+    }catch(_){}
+  }
+  /* The fallback survives — a review screen that cannot list is worse than one
+     that lists without criticality, and the plane still refuses a crucial
+     selection in its own words. What is NOT allowed is the member not knowing:
+     `criticality:null` means no crucial seal renders, so a screen that stayed
+     silent here would be showing a bulk-release control over material it could
+     not tell was crucial. `REVIEW_VIA` is what makes that visible. */
+  REVIEW_VIA = "list";
   return (await loadRecord(true)).filter(b=>b.object_type==="information"&&b.current_state==="collected")
                                  .map(b=>({...b, criticality:null}));
 }
@@ -6530,6 +7355,7 @@ function paintReview(){
           ? `<table class="rec"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`
           : `<div class="empty">Nothing is waiting for review.</div>`)
       + (!able && REVIEW_ROWS.length ? `<p class="rel-note">Releasing is a named member's decision. This credential can read and prepare the review, and cannot release. Sign in as a member holding <span class="mono">contribute</span> to release.</p>` : "")
+      + (REVIEW_VIA === "list" ? `<p class="rel-note">The record answered this list from its plain index rather than from a query, so it did not carry each document&rsquo;s criticality. Nothing below is marked crucial here because none of them could be &mdash; not because none of them are. Releasing still goes to the record, and the record still refuses crucial material in its own words.</p>` : "")
       + (able && crucialN ? `<p class="rel-note">${crucialN===1?"One document is":crucialN+" documents are"} marked crucial. Crucial material is never released in bulk, and never through this flow: verifying it means checking its co-attestations, which is per-document work. That surface is not built yet.</p>` : "");
     wireRows();
 }
@@ -7236,25 +8062,19 @@ function ballotReceipt({ carried, res, target, reason, ctx }){
    words, which is precisely the shape DEC-8 forbids and which UI-12's plumbing
    already solves in one place for every act. */
 
-async function renderMonitoring(){
-  $("#content").innerHTML = `<h1 class="rec">Monitoring &amp; developments</h1><p class="lede">What changed, or needs a second look. A re-evaluate flag means something a document depends on moved; a monitored document is re-checked against its live source on a schedule.</p><div id="mon"><p class="count-line">Loading&hellip;</p></div>`;
-  try{
-    let hits = [];
-    try{ const r = await recR("search",{q:"", limit:"500", facets:"none"}); hits = (r&&r.hits)||[]; }catch(_){ hits = []; }
-    if(!hits.length) hits = await loadRecord();
-    const flagged = hits.filter(h=>h.reeval_flag);
-    const watched = hits.filter(h=>h.monitor_enabled && !h.reeval_flag);
-    const paintMon = ()=>{
-      $("#mon").innerHTML =
-        (flagged.length ? `<h2 class="sec">Needs a second look (${flagged.length})</h2>${monTable(flagged)}` : "")
-        + (watched.length ? `<h2 class="sec">Watched sources (${watched.length})</h2>${monTable(watched)}` : "")
-        + (!flagged.length && !watched.length ? `<div class="empty">Nothing is flagged and nothing is being watched right now.</div>` : "");
-      wireRows();
-    };
-    paintMon();
-    LIST_REPAINT = paintMon;
-  }catch(e){ $("#mon").innerHTML = errPane(e); }
-}
+/* `renderMonitoring` STOOD HERE AND WAS DELETED ON 2026-08-05 BY UI-21.
+
+   MEASURED, because the shape is the argument. It ran `op=search` with an EMPTY
+   query and `limit:500`, took `hits`, FELL BACK TO `op=list` when that answered
+   nothing, and then filtered the rows IN THE BROWSER on `reeval_flag` and
+   `monitor_enabled` — over at most 500 rows, with the two group headings
+   counting what survived the browser filter and presenting those counts as the
+   record's. On a corpus larger than one page that count was wrong and said so
+   nowhere; on a plane that could not answer, the fallback answered a different
+   question in an identical table (D-142's exact shape, one screen over).
+
+   Both questions are PUBLISHED SELECTORS — `reeval:true`, `monitored:true` —
+   which the plane compiles, gates and COUNTS. They are finder scopes now. */
 /* ============================================================
    UI-7: THE MEMBERS & GOVERNANCE ROSTER — the READ-ONLY half of U11.
    A member surface showing WHO holds power in the group and the group's

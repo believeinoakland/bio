@@ -67,23 +67,31 @@ const t2 = els.get("#rectable")._html;
 const order2 = ["Charlie project","Bravo doc","Alpha focus"].map(x=>t2.indexOf(x));
 if(!(order2[0]<order2[1]&&order2[1]<order2[2])) throw new Error("desc sort wrong");
 if(!t2.includes("\u25BC")) throw new Error("desc arrow missing");
-// scoped search: launched from Questions, the plane query carries the scope
-vm.runInContext("globalThis.__go=go;globalThis.__qs=quickSearch;",ctx);
-await ctx.__go("inquiries");
-ctx.document.querySelector("#m-search").value="sewer";
-await ctx.__qs();
-await new Promise(r=>setTimeout(r,0));
-if(!/type:inquiry\s+sewer/.test(ctx.__LASTQ||"")) throw new Error("scope not in plane query: "+ctx.__LASTQ);
-const res = ctx.document.querySelector("#s-res")._html;
-if(!res.includes("in Questions")||!res.includes("search everything")) throw new Error("scope not named in results: "+res.slice(0,200));
-/* and the legacy-spelled hit the scope returns is still inside it */
-if(!res.includes("Alpha focus")) throw new Error("a legacy focus row fell out of the scoped result: "+res.slice(0,300));
-// monitoring: last-checked and next-check columns, computed and sortable
-vm.runInContext("globalThis.__mon=renderMonitoring;",ctx);
-await ctx.__mon();
-const mon = ctx.document.querySelector("#mon")._html;
-for(const c of ["Last checked","Next check"]) if(!mon.includes(c)) throw new Error("monitoring column missing: "+c);
-if(!mon.includes("Jul 27")||!mon.includes("Jul 28")) throw new Error("checked/next dates wrong: "+mon.slice(0,300));
-if(!mon.includes("\u2014")) throw new Error("reeval-only row should dash its monitor cells");
-if(!mon.includes('data-pop-crit="crucial"')) throw new Error("crucial seal missing on monitoring row");
-console.log("record-list: band, type column, sorting, seals, scoped search, monitoring columns all pass");
+/* ================= CORRECTED 2026-08-05 BY UI-21 =================
+   TWO BLOCKS STOOD HERE AND ARE MOVED, not exempted, because their SUBJECT
+   moved and this file is about the RECORD LIST.
+
+   (1) THE SCOPED SEARCH. It drove `quickSearch` from the Questions screen and
+       asserted the plane query carried `type:inquiry sewer`, that the results
+       said "in Questions", and that a legacy `focus` row survived the scope.
+       The scope came from a surface-side map of hand-written query strings —
+       the very table UI-10 had to correct here after the second rename — and
+       UI-21 DELETED it. Scopes are composed from `op=searchfields` now, so what
+       used to be asserted about a literal is asserted about a COMPOSITION
+       against the published field list, in `finder.test.mjs`, which drives the
+       scope strip, both routes and the whole query surface. The legacy-alias
+       clause this file exists to protect is UNCHANGED and still asserted above,
+       over the Type column and the seals, where it does not depend on a screen
+       that no longer exists.
+
+   (2) THE MONITORING COLUMNS. They drove `renderMonitoring`, a second list
+       surface with its own table, which filtered ONE PAGE of the record in the
+       browser on `monitor_enabled` / `reeval_flag` and presented the survivors'
+       count as the record's. UI-21 deleted it: both questions are published
+       selectors (`monitored:true`, `reeval:true`) the plane compiles, gates and
+       COUNTS, and they are finder scopes now. `monitorNext` — the computation
+       those columns were really testing — survives and is exercised where it is
+       still read, on the DOCUMENT PAGE's monitored seal, by
+       document-page.test.mjs ("monitor last" / "monitor next").
+   ================================================================= */
+console.log("record-list: band, type column, sorting, seals all pass");
