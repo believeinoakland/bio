@@ -20,7 +20,11 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             here at the write (the checkGatheringGrammar precedent) and by the
             checker, so a malformed leg never lands and the two views cannot
             drift. */
-         deriveInquiryTitle, inquiryQuestionOf, checkInquiryBasis } from "../checks/bio-checks.mjs";
+         deriveInquiryTitle, inquiryQuestionOf, checkInquiryBasis,
+         /* REC-14: the published vocabulary and the ONE definition of what a
+            completeness block ASSERTS, imported so this act's pre-flight and
+            C-21.1's gate compare exactly the same fields. */
+         SUBJECT_POSITIONS, completenessFields } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
@@ -30,7 +34,7 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
    queue item and an op=affordances answer for the same subject and the same
    viewer cannot disagree. The act METADATA (needs/mode/rung) still composes at
    the control plane, where NEEDS, SESSION_OPS and RUNGS live. */
-import { DISPOSITIONS, deriveActs } from "./affordances.mjs";
+import { DISPOSITIONS, REOPENABLE_FROM, deriveActs } from "./affordances.mjs";
 /* REC-21: the queue's PERSONAL half. The CONDITION-kind vocabulary the mute
    fence refuses against, and the ONE admission decision the feed applies — pure,
    so the suite holds the rule directly rather than only through a Durable
@@ -135,7 +139,33 @@ export class Store extends DurableObject {
       if (cols.length && !cols.includes(needed)) this.sql.exec(`DROP TABLE ${table}`);
     }
 
+    /* REC-14 / DEC-12: published_bundles is RE-KEYED (bundle_id, edition).
+       Unlike the two derived tables above it may NEVER be dropped — it is the
+       published projection, and a hash once published stays answerable forever
+       — so the old table is renamed out of the way here, the schema below
+       creates the new shape, and the copy-forward runs immediately after it.
+       Every existing row becomes EDITION 1, which is what it always was: the
+       upsert that overwrote it (D-144) was the missing feature, not the append.
+       The interim name carries no IF NOT EXISTS and never survives this
+       function, so it is not a table the D-113 sweep has to know about. */
+    {
+      const cols = [...this.sql.exec(`PRAGMA table_info(published_bundles)`)].map((r) => r.name);
+      if (cols.length && !cols.includes("edition"))
+        this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
+    }
+
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
+
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(published_bundles_preeditions)`)];
+      if (old.length) {
+        this.sql.exec(
+          `INSERT INTO published_bundles (bundle_id,edition,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored)
+           SELECT bundle_id,1,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored
+           FROM published_bundles_preeditions`);
+        this.sql.exec(`DROP TABLE published_bundles_preeditions`);
+      }
+    }
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
        columns added after a store was first written need adding by hand. Done
        here rather than in a versioned migration ladder because these are
@@ -2380,16 +2410,26 @@ export class Store extends DurableObject {
    * state is spelled `surfaced`), and inventing the move would judge it by a
    * contract it was not authored under.
    *
-   * SCOPED TO THE DISPOSITION SET, DELIBERATELY. The FROM state must be in
-   * DISPOSITIONS — the one published array naming what "set down" means,
-   * imported here and by the act, so the publication and this refusal cannot
-   * disagree. `concluded -> open` is ALSO a legal edge and this op does not
-   * write it: DEC-12 makes reopening a conclusion an EDITION (the finding
-   * stays published, the case moves forward), and REC-14 builds that
-   * machinery. Reopening a conclusion here would produce an `open` inquiry
-   * still wearing its conclusion and falsifier with no edition recorded —
-   * exactly the overclaim the edition machinery exists to prevent — so it is
-   * refused BY NAME rather than by omission. */
+   * SCOPED TO REOPENABLE_FROM, DELIBERATELY. The FROM state must be in that
+   * one published array — imported here and by the act, so the publication and
+   * this refusal cannot disagree about what "reopenable" means.
+   *
+   * `concluded -> open` is ALSO a legal edge and this op does NOT write it, for
+   * the reason REC-31 gave and REC-14 did not change: reopening a conclusion
+   * here would produce an `open` inquiry still wearing its conclusion and its
+   * falsifier with NO EDITION RECORDED — exactly the overclaim the edition
+   * machinery exists to prevent — so it is refused BY NAME rather than by
+   * omission, and op=publish is where a conclusion moves forward.
+   *
+   * `published -> open` IS written here, added at the REC-31 x REC-14 merge,
+   * and the distinction is the recorded edition rather than a softening. DEC-12
+   * rules that reopening does not unpublish: edition 1 keeps answering with its
+   * own signature, attestor, time and gate version whatever happens to the
+   * working document afterwards. So there is nothing to erase and nothing to
+   * revert silently — the opposite of the concluded case — and published ->
+   * open is the ONLY route to a second edition, which makes THIS act the front
+   * door of a revision. An act the catalog permits and no caller can perform is
+   * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     if (!who || who === "member" || /^token:/.test(who))
@@ -2432,15 +2472,30 @@ export class Store extends DurableObject {
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
 
-    /* Set down, and only set down. Checked BEFORE the edge table so a
+    /* Reopenable, and only reopenable. Checked BEFORE the edge table so a
        concluded inquiry — whose `open` edge IS legal — is told what it needs
-       rather than being told the move is illegal, which it is not. */
-    if (!DISPOSITIONS.includes(b.current_state))
-      return { ok: false, reason: "NOT_SET_DOWN", target, from: b.current_state, dispositions: DISPOSITIONS,
-               detail: "reopening picks up something the group SET DOWN: deferred or dismissed. An open "
-                     + "inquiry is already open, and a CONCLUDED one is revised by publishing a new "
-                     + "EDITION (DEC-12) rather than quietly reverting to open still wearing its "
-                     + "conclusion — that act arrives with the edition machinery, not here." };
+       rather than being told the move is illegal, which it is not.
+
+       THE SET IS REOPENABLE_FROM, decided at the REC-31 x REC-14 merge, and
+       the exclusion this refusal was written for is UNCHANGED. `concluded`
+       stays refused for exactly the reason below: a conclusion reverting to
+       open still wearing its conclusion records nothing, and the edition
+       machinery is where that move belongs. `published` JOINS, because a
+       published case has the opposite property — its editions are ratified,
+       signed and immutable, and DEC-12 rules that reopening does not unpublish
+       them. There is nothing to erase, and published -> open is the only route
+       to a second edition, so refusing it here would leave a legal edge no
+       caller could travel. The array lives in affordances.mjs beside
+       DISPOSITIONS so the refusal and the published act cannot disagree about
+       what "reopenable" means. */
+    if (!REOPENABLE_FROM.includes(b.current_state))
+      return { ok: false, reason: "NOT_SET_DOWN", target, from: b.current_state, reopenable: REOPENABLE_FROM,
+               detail: "reopening picks up something the group SET DOWN (deferred or dismissed) or something "
+                     + "the group has PUBLISHED. An open inquiry is already open, and a CONCLUDED one moves "
+                     + "forward by publishing a new EDITION (DEC-12) — op=publish — rather than quietly "
+                     + "reverting to open still wearing its conclusion, which would record nothing. "
+                     + "Reopening a PUBLISHED case IS this act and does not unpublish it: every edition "
+                     + "keeps answering with its own signature, attestor, time and gate version." };
 
     /* THE MAP RULE: the machine is looked up through the catalog's own vocabFor
        over the DECLARED spelling, never STATES.inquiry by a raw key. A legacy
@@ -2453,7 +2508,8 @@ export class Store extends DurableObject {
       return { ok: false, reason: "ILLEGAL_TRANSITION", to: "open", target,
                from: b.current_state, object_type: fm.object_type ?? b.object_type,
                detail: "this is not a legal move in the catalog's state table for this document's own "
-                     + "vocabulary. An inquiry reopens from deferred or dismissed; a legacy focus/problem "
+                     + "vocabulary. An inquiry reopens from deferred, dismissed or published; a legacy "
+                     + "focus/problem "
                      + "document has no `open` state at all until its frontmatter is modernized." };
 
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
@@ -2514,6 +2570,452 @@ export class Store extends DurableObject {
        decisions with one sentence standing for all of them. */
     return { ok: true, target, from: b.current_state, to: "open",
              why, author: who, at: when, weight: "single" };
+  }
+
+
+  /* =======================================================================
+   * REC-14: PUBLISHING a case. concluded -> published, and it is the act that
+   * writes the completeness assertion, the frozen pair and the declared bar
+   * INTO the bytes a member then signs.
+   *
+   * THE ORDER IS THE POINT AND IT IS NOT NEGOTIABLE. Authoring the exclusion
+   * CHANGES THE SHA, so the signature can only be taken afterwards: you cannot
+   * sign first and write the caveat later. That is why this is a separate act
+   * from op=ratify — which is UNCHANGED at {bundleId, expectedSha, sig} — and
+   * why the sha this act returns is the one the member reviews and signs.
+   *
+   * WHAT IS AUTHORED AND WHAT IS STAMPED, on op=conclude's discipline:
+   *   AUTHORED, caller-supplied, never prefilled — the completeness statement,
+   *   every exclusion row, and the group's POSITION on putting the case to its
+   *   subject WITH its justification (DEC-13). A justification the plane wrote
+   *   is not a justification the group made.
+   *   STAMPED by the server — the author (from the session), the time, the
+   *   EDITION (from the published record, never from a parameter), both frozen
+   *   axis objects (derived, never authored), and the declared bar as it stands.
+   *
+   * DEC-13, EXACTLY AS RULED. What is required is not the CONTACT. It is the
+   * group's declared, justified POSITION on the contact, carried inside the
+   * artifact as declared bias. A group that sought comment says so; a group
+   * that deliberately did not says so and says why — and a group facing a
+   * hostile body may have real cause not to give notice. Nothing in this act,
+   * the catalog, or the gate reads WHICH position it is, and nothing anywhere
+   * checks whether the answer was favourable.
+   *
+   * DEC-17 as amended: the declared bar is STAMPED BESIDE the derived pair, and
+   * an ABSENT bar gates nothing and is stated as absent — never rendered as a
+   * blank and never as zero. Whether a case falling SHORT of its own declared
+   * bar is refused is REC-15's publishpreflight; this act stamps the two side
+   * by side so the shortfall is legible either way.
+   *
+   * C-21.1 RUNS HERE TOO, before anything moves. The gate runs it again at
+   * ratification (the checkGatheringGrammar precedent, and REC-13's), because a
+   * one-sided check is a check the other side has to catch. Refusing early is
+   * what stops the member signing a document the gate will then reject.
+   *
+   * DEC-12: this act does NOT unpublish anything and cannot. Editions append;
+   * the working document moves. */
+  publishCase({ target, statement = "", excluded = null, subjectPosition = "",
+                subjectJustification = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return { ok: false, reason: "MACHINE_CANNOT_PUBLISH",
+               detail: "publishing puts the group's name on a case. A machine credential may prepare one and "
+                     + "may never author the completeness assertion or the position on putting it to its "
+                     + "subject, both of which are declared bias. Sign in as a member." };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "publishing publishes ONE case: pass target=<inquiry id>" };
+
+    const stmt = String(statement ?? "").trim();
+    const just = String(subjectJustification ?? "").trim();
+    const pos = String(subjectPosition ?? "").trim();
+    if (!stmt)
+      return { ok: false, reason: "NO_STATEMENT",
+               detail: "a published case states what it does NOT cover. A case silent about its own limits is "
+                     + "claiming to cover everything, which is the overclaim this record exists to refuse." };
+    if (!SUBJECT_POSITIONS.includes(pos))
+      return { ok: false, reason: "NO_SUBJECT_POSITION", allowed: SUBJECT_POSITIONS,
+               detail: "declare the group's position on putting this case to its subject. The gate is that the "
+                     + "position is DECLARED — never that contact happened, and never that the answer was "
+                     + "favourable (DEC-13). Deciding not to give notice is a legitimate position and is "
+                     + "declared like any other." };
+    if (!just)
+      return { ok: false, reason: "NO_SUBJECT_JUSTIFICATION",
+               detail: "a declared position with no reasoning behind it is the checkbox this gate exists to "
+                     + "refuse. Say why — including why the group chose not to give notice — and a reader "
+                     + "weighs it exactly as they weigh any other declared bias." };
+    if (!Array.isArray(excluded))
+      return { ok: false, reason: "NO_EXCLUSION_FIELD",
+               detail: "pass excluded[]. An EMPTY list is a claim — this case left nothing material out — and "
+                     + "is legal; an ABSENT field is silence, and silence about what a case excludes is what "
+                     + "the completeness assertion exists to refuse." };
+    const rows = [];
+    for (let i = 0; i < excluded.length; i++) {
+      const r = excluded[i];
+      if (!r || typeof r !== "object")
+        return { ok: false, reason: "BAD_EXCLUSION", ord: i, detail: `excluded[${i}] is not an object` };
+      const tgt = typeof r.target === "string" && r.target.trim() !== "" ? r.target.trim() : null;
+      const desc = String(r.description ?? "").trim();
+      const why = String(r.reason ?? "").trim();
+      /* C-9: target OR prose, NEVER NEITHER — the capture-or-testify structure.
+         A row may legitimately name something not in the record (an outstanding
+         records request has no id), so a required target would force the member
+         to invent a referent or to say nothing at all. */
+      if (!tgt && !desc)
+        return { ok: false, reason: "BAD_EXCLUSION", ord: i,
+                 detail: `excluded[${i}] names neither a target nor a description. Every exclusion row carries `
+                       + `a target id OR prose, never neither — otherwise the row asserts nothing and the `
+                       + `index cannot answer "which published cases excluded this document".` };
+      if (!why)
+        return { ok: false, reason: "BAD_EXCLUSION", ord: i,
+                 detail: `excluded[${i}] carries no reason. WHAT was left out and WHY are two statements and `
+                       + `one does not stand in for the other.` };
+      rows.push({ target: tgt, description: desc, reason: why });
+    }
+    /* The restricted frontmatter grammar has no escapes, so a quote, a
+       backslash or a newline in an authored field would produce a document the
+       parser cannot read back — refused by name rather than silently mangled.
+       conclude()'s rule, at this act's own lengths. */
+    for (const [name, v] of [["statement", stmt], ["subject_justification", just],
+                             ...rows.flatMap((r, i) => [[`excluded[${i}].description`, r.description],
+                                                        [`excluded[${i}].reason`, r.reason]])]) {
+      if (v.length > Store.COMPLETENESS_MAX || /["\\\r\n]/.test(v))
+        return { ok: false, reason: "BAD_COMPLETENESS", field: name,
+                 detail: `${name} is at most ${Store.COMPLETENESS_MAX} characters and cannot contain a quote, `
+                       + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+    }
+
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
+               detail: "a case is an inquiry that reached a conclusion; nothing else publishes." };
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+    let text = liveMd.content;
+    const fm = parseFrontmatter(text).data || {};
+
+    /* THE MAP RULE: through the catalog's own vocabFor over the DECLARED
+       spelling. A legacy focus/problem document has no `published` in its
+       machine at all, and is refused rather than quietly given a state its
+       contract never had. */
+    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
+    const legalFrom = (spec?.edges?.[b.current_state]) || [];
+    if (!legalFrom.includes("published"))
+      return { ok: false, reason: "ILLEGAL_TRANSITION", to: "published", target,
+               from: b.current_state, object_type: fm.object_type ?? b.object_type,
+               detail: "publishing is reachable ONLY from `concluded`: a material set cannot be asserted over a "
+                     + "question with no conclusion. Conclude it first (op=conclude), and a case already "
+                     + "published is reopened before it can be concluded again for a new edition." };
+
+    /* DEC-12: the edition comes from the PUBLISHED RECORD, never from the
+       caller. It is what the next ratification will commit, and the ratify
+       committer refuses it independently if it does not increment. */
+    const top = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, target);
+    const edition = (top && top.m != null ? Number(top.m) : 0) + 1;
+
+    /* C-21.1, before anything moves. The comparison is against the previous
+       RATIFIED EDITION — not the previous promotion — because what a reader was
+       given is an edition. */
+    const reg = this.publishedRegistryFor(target);
+    const prior = reg[target] && reg[target].editions
+      ? Object.values(reg[target].editions).sort((a, c) => Number(c.edition) - Number(a.edition))[0] : null;
+    if (prior && prior.completeness) {
+      const now = completenessFields({ completeness: { statement: stmt, subject_justification: just },
+                                       completeness_excluded: rows });
+      const LABEL = { statement: "statement", subject_justification: "the subject-position justification",
+                      excluded: "the exclusion list" };
+      for (const k of Object.keys(LABEL))
+        if (now[k] != null && prior.completeness[k] != null && now[k] === prior.completeness[k])
+          return { ok: false, reason: "COMPLETENESS_CARRIED_FORWARD", field: k, edition, prior: prior.edition,
+                   detail: `${LABEL[k]} is byte-identical to edition ${prior.edition}'s. A completeness claim `
+                         + `carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every `
+                         + `edition is a separate document and states its own limits in its own words, as of `
+                         + `its own date. If nothing about the limits changed, say THAT, as of this edition.` };
+    }
+
+    /* R2/DEC-21: BOTH axis objects, derived and frozen — never two letters, and
+       never composed. `unrated` and `undetermined` are DIFFERENT frozen facts
+       and C-21.2 compares against the right one, which a single nullable grade
+       could not support. */
+    const pair = this.strengthOf(target);
+    const bar = this.#requiredStrengthFor(target, fm);
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+
+    const withHistory = Store.#appendStateHistory(text, {
+      timestamp: when, from_state: b.current_state, to_state: "published",
+      blurb: `edition ${edition}`, author: who });
+    if (!withHistory)
+      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+               detail: "this document's state_history block cannot be extended in place, and a publication "
+                     + "recording no transition would leave prior_state pointing at a history the document "
+                     + "does not carry (C-4.2)" };
+    text = withHistory;
+    text = Store.#setScalar(text, "prior_state", b.current_state);
+    text = Store.#setScalar(text, "current_state", "published");
+    /* setOrAdd throughout: an inquiry authored before this state existed
+       carries none of these keys, and #setScalar alone would move the state and
+       leave the entry requirements unmet — the bundle the catalog rejects. */
+    text = Store.#setOrAddScalar(text, "edition", String(edition));
+    text = Store.#setOrAddBlock(text, "completeness", [
+      `  statement: "${stmt}"`,
+      `  subject_position: ${pos}`,
+      `  subject_justification: "${just}"`,
+      `  author: ${who}`,
+      `  at: "${when}"`]);
+    text = Store.#setOrAddBlock(text, "completeness_excluded",
+      rows.length
+        ? rows.flatMap((r) => [
+            ...(r.target ? [`  - target: ${r.target}`, `    description: "${r.description}"`]
+                         : [`  - description: "${r.description}"`]),
+            `    reason: "${r.reason}"`])
+        : []);
+    text = Store.#setOrAddBlock(text, "published_strength",
+      Store.STRENGTH_AXES.flatMap((axis) => {
+        const a = pair[axis];
+        return [`  - axis: ${axis}`,
+                `    state: ${a.state}`,
+                `    grade: ${a.grade ?? "null"}`,
+                `    weakest: ${a.weakest ? a.weakest.target_id : "null"}`,
+                `    load_bearing: ${a.load_bearing}`,
+                `    population: ${a.population}`,
+                `    detail: "${Store.#fmSafe(a.detail)}"`];
+      }));
+    text = Store.#setOrAddBlock(text, "required_strength", [
+      `  declared: ${bar.declared}`,
+      `  source: ${bar.source}`,
+      `  capture: ${bar.capture ?? "null"}`,
+      `  connection: ${bar.connection ?? "null"}`,
+      `  detail: "${Store.#fmSafe(bar.detail)}"`]);
+    /* R4, RESERVED and deliberately empty: a published CHILD of a division
+       names its parent and its siblings, so a reader who can see one half can
+       see that the other half exists. REC-16 is the producer and does not exist
+       yet — the keys are written now, with null and [], so the published shape
+       does not change under readers once cases exist. */
+    text = Store.#setOrAddScalar(text, "division_parent",
+      typeof fm.division_parent === "string" ? fm.division_parent : "null");
+    text = Store.#setOrAddScalar(text, "division_siblings",
+      Array.isArray(fm.division_siblings) && fm.division_siblings.length
+        ? `[${fm.division_siblings.join(", ")}]` : "[]");
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+
+    /* The assertion in the BODY as well as the frontmatter, under the canonical
+       heading C-3.1 now requires in this state. The frontmatter is what the
+       projection and the gates read; this is what a person reads. */
+    text = Store.#setSection(text, "## What This Excludes", [
+      stmt, "",
+      ...(rows.length
+        ? rows.flatMap((r) => [`- ${r.target ? r.target + " — " : ""}${r.description || "(named above)"}: ${r.reason}`])
+        : ["Nothing material was excluded from this case."]),
+      "",
+      `Position on putting this case to its subject: ${pos}. ${just}`]);
+
+    const entry = `### Session ${when} | Published | ${who}\n`
+                + `Trigger: op=publish on ${target}\n`
+                + `Changes: state ${b.current_state} to published, edition ${edition}.\n`
+                + `Completeness: ${stmt}\n`
+                + `Excluded: ${rows.length} item(s).\n`
+                + `Subject position: ${pos} — ${just}\n`;
+    const at = text.indexOf("## Session Log");
+    if (at < 0) text += "\n## Session Log\n\n" + entry;
+    else {
+      const nxt = text.indexOf("\n## ", at + 1);
+      const cutAt = nxt === -1 ? text.length : nxt + 1;
+      text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
+    }
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+              title: fm.title, current_state: "published", prior_state: b.current_state,
+              created: fm.created, last_updated: when,
+              criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    return { ok: true, target, from: b.current_state, to: "published", edition,
+             bundleSha: promoted.bundleSha,
+             completeness: { statement: stmt, subject_position: pos, subject_justification: just,
+                             author: who, at: when, excluded: rows.length },
+             strength: Store.STRENGTH_AXES.map((axis) => ({ axis, state: pair[axis].state,
+               grade: pair[axis].grade, weakest: pair[axis].weakest ? pair[axis].weakest.target_id : null })),
+             required: bar, author: who, at: when, weight: "single",
+             next: "review this sha and ratify it (op=ratify): the assertion is inside the bytes, so the "
+                 + "signature can only be taken after it is written" };
+  }
+
+  static COMPLETENESS_MAX = 2000;
+
+  /* Frontmatter-safe: the restricted grammar has no escapes, and these strings
+     are DERIVED (a strength detail, a bar's explanation) rather than authored,
+     so they are sanitised here rather than refused — an authored field is
+     refused by name above, which is the difference that matters. */
+  static #fmSafe(s) {
+    return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
+  }
+
+  /* DEC-17 as amended: the bar the GROUP declared as its default, which a
+     PROJECT may override in its own bundle.md.
+     *
+     * WHY THE PROJECT HALF IS AUTHORED FRONTMATTER AND NOT A TABLE: DEC-17's
+     * escape is that a group may lower its own bar and may not do it quietly —
+     * *"the amendment is an authored, dated, on-the-record act visible in the
+     * published case"*. A project's bundle.md IS that: authored, dated,
+     * promoted through the gate, in append-only history. A settings row would be
+     * a way to change the standard with nothing to read afterwards.
+     *
+     * AN INQUIRY OUTSIDE ANY PROJECT HAS NO PROJECT BAR (DEC-17): the
+     * declaration is a property of a project, and inheriting one from elsewhere
+     * would invent it. The group default still applies, because that is what a
+     * default is.
+     *
+     * WHERE TWO PROJECTS CITE ONE INQUIRY, the STRICTEST declared bar wins PER
+     * AXIS — never composed into one letter. This is mine to decide and the
+     * reasoning is conservative-by-construction: a case used by two projects
+     * must satisfy both, and taking the strictest can never let a case past a
+     * bar somebody set for it. REC-15's preflight is where falling short is
+     * refused; this only decides what is STAMPED. */
+  #requiredStrengthFor(bundleId, fm) {
+    const rank = (g) => ["A", "B", "C", "D"].indexOf(g);
+    const strictest = { capture: null, connection: null };
+    const projects = [];
+    for (const r of this.#rows(
+      `SELECT r.bundle_id FROM refs r JOIN bundles b ON b.bundle_id=r.bundle_id
+       WHERE r.target_id=?`, bundleId)) {
+      const pb = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, r.bundle_id);
+      if (!pb || normalizeType(pb.object_type) !== "project") continue;
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
+      if (!md || md.content === null) continue;
+      const pfm = parseFrontmatter(md.content).data || {};
+      const rq = pfm.required_strength;
+      if (!rq || typeof rq !== "object") continue;
+      let named = false;
+      for (const axis of ["capture", "connection"]) {
+        if (!["A", "B", "C", "D"].includes(rq[axis])) continue;
+        named = true;
+        if (strictest[axis] === null || rank(rq[axis]) < rank(strictest[axis])) strictest[axis] = rq[axis];
+      }
+      if (named) projects.push(r.bundle_id);
+    }
+    if (projects.length)
+      return { declared: true, source: "project", projects,
+               capture: strictest.capture, connection: strictest.connection,
+               detail: `required by ${projects.join(", ")}: capture ${strictest.capture ?? "not set"}, `
+                     + `connection ${strictest.connection ?? "not set"}. The bar is the group's own `
+                     + `declaration about its own work, stated in advance, and is never set by who a reader is.` };
+    const g = this.#one(`SELECT capture, connection, author, at FROM group_strength_bar WHERE group_id=?`,
+      fm?.group || "believe-in-oakland");
+    if (g && (g.capture || g.connection))
+      return { declared: true, source: "group", capture: g.capture ?? null, connection: g.connection ?? null,
+               declared_by: g.author, declared_at: g.at,
+               detail: `the group's default required strength: capture ${g.capture ?? "not set"}, `
+                     + `connection ${g.connection ?? "not set"}, declared by ${g.author} on ${g.at}.` };
+    /* Undetermined is first-class and must be STATED. An absent bar gates
+       nothing, and it is NOT a bar of zero. */
+    return { declared: false, source: "none", capture: null, connection: null,
+             detail: "no required evidentiary strength was declared for this case, by the group or by any "
+                   + "project citing it, so nothing here was measured against one. An absent bar is not a bar "
+                   + "of zero, and this case makes no claim to have cleared any standard." };
+  }
+
+  /* DEC-17 as amended: the GROUP sets the default a new project starts from.
+     A PAIR, per R2 — a scalar would re-collapse the two axes in the one field a
+     reader is most likely to quote. Either axis may be left unset; what may not
+     happen is a bar that gates while saying nothing about which axis it gates. */
+  strengthBarSet({ group = null, capture = null, connection = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return { ok: false, reason: "MACHINE_CANNOT_DECLARE",
+               detail: "the required evidentiary strength is the GROUP's declaration about its own work. A "
+                     + "machine credential may not make it. Sign in as a member." };
+    const gid = String(group ?? "").trim() || "believe-in-oakland";
+    for (const [axis, v] of [["capture", capture], ["connection", connection]])
+      if (v != null && !["A", "B", "C", "D"].includes(v))
+        return { ok: false, reason: "BAD_GRADE", axis, detail: `${axis} must be one of A, B, C, D, or null` };
+    if (capture == null && connection == null)
+      return { ok: false, reason: "NO_BAR",
+               detail: "declare at least one axis. Withdrawing a bar entirely is a different act from setting "
+                     + "one, and an absent bar is stated as absent rather than written as a blank row." };
+    const at = new Date().toISOString();
+    this.sql.exec(
+      `INSERT INTO group_strength_bar (group_id,capture,connection,author,at) VALUES (?,?,?,?,?)
+       ON CONFLICT(group_id) DO UPDATE SET capture=excluded.capture, connection=excluded.connection,
+         author=excluded.author, at=excluded.at`,
+      gid, capture, connection, who, at);
+    return { ok: true, group: gid, capture, connection, author: who, at,
+             note: "this is the DEFAULT a project starts from; a project may declare its own in its bundle.md, "
+                 + "which is an authored, dated, on-the-record act visible in every case it governs." };
+  }
+
+  strengthBarOf({ group = null, target = null } = {}) {
+    if (target) {
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+      const fm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
+      return { ok: true, target, bar: this.#requiredStrengthFor(target, fm) };
+    }
+    const gid = String(group ?? "").trim() || "believe-in-oakland";
+    const g = this.#one(`SELECT group_id, capture, connection, author, at FROM group_strength_bar WHERE group_id=?`, gid);
+    return { ok: true, group: gid, bar: g || null,
+             detail: g ? null : "no group default is declared. An absent bar gates nothing and is not a bar of zero." };
+  }
+
+  /* REC-14: replace a heading's SECTION body, or open the section if the
+     document has none. Used for `## What This Excludes`, which C-3.1 requires
+     in the published state — the frontmatter is what the gates read and this is
+     what a person reads, and they are written in the same act so they cannot
+     disagree. */
+  static #setSection(text, heading, lines) {
+    const at = text.indexOf(`\n${heading}\n`);
+    const body = `${heading}\n\n${lines.join("\n")}\n`;
+    if (at === -1) return text.replace(/\s*$/, "\n") + "\n" + body;
+    const start = at + 1;
+    const nxt = text.indexOf("\n## ", start + 1);
+    const end = nxt === -1 ? text.length : nxt + 1;
+    return text.slice(0, start) + body + "\n" + text.slice(end);
+  }
+
+  /* A frontmatter BLOCK (a map or an array of objects), written whole. The
+     scalar setters cannot express either, and a block that is edited in place
+     rather than rewritten is a block that can end up half from one edition and
+     half from another — which is exactly what C-21.1 exists to catch and is not
+     a state this act should be able to produce in the first place. */
+  static #removeBlock(text, key) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return text;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return text;
+    let at = -1;
+    for (let i = 1; i < end; i++) if (lines[i].startsWith(key + ":")) { at = i; break; }
+    if (at === -1) return text;
+    let last = at;
+    for (let i = at + 1; i < end; i++) {
+      if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i; else break;
+    }
+    return [...lines.slice(0, at), ...lines.slice(last + 1)].join("\n");
+  }
+
+  static #setOrAddBlock(text, key, block) {
+    const t = Store.#removeBlock(text, key);
+    const lines = t.split("\n");
+    if (lines[0] !== "---") return t;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return t;
+    return [...lines.slice(0, end), `${key}:`, ...block, ...lines.slice(end)].join("\n");
   }
 
   /* Rewrite the `status` and `note` of specific `cites` entries in place,
@@ -2847,13 +3349,23 @@ export class Store extends DurableObject {
      writing one would move the state while leaving its own entry requirement
      unmet — the bundle the catalog then rejects. Absent, the key is opened
      immediately before the closing fence, the #spliceReferences convention. */
+  /* CORRECTED 2026-08-04 (REC-14), and the old form was WRONG rather than
+     superseded. It decided "was the key there?" by asking "did the text
+     CHANGE?" — so writing a key its EXISTING VALUE appended a SECOND copy of
+     it, and the document then carried a duplicate top-level key that C-2.1
+     refuses. Nothing caught it because no act had ever written the same value
+     twice: REC-13's conclude() was only ever called once per document until
+     DEC-12 made a case reopen, be concluded AGAIN with the same falsifier, and
+     republish. The gate found it (`duplicate top-level key 'falsifier'`), which
+     is the layering working, but the write should never have produced it.
+     Presence is now decided by LOOKING, which is what the question was. */
   static #setOrAddScalar(text, key, value) {
-    const set = Store.#setScalar(text, key, value);
-    if (set !== text) return set;
     const lines = text.split("\n");
     if (lines[0] !== "---") return text;
     const end = lines.indexOf("---", 1);
     if (end === -1) return text;
+    for (let i = 1; i < end; i++)
+      if (lines[i].startsWith(key + ":")) { lines[i] = `${key}: ${value}`; return lines.join("\n"); }
     return [...lines.slice(0, end), `${key}: ${value}`, ...lines.slice(end)].join("\n");
   }
 
@@ -3372,7 +3884,12 @@ export class Store extends DurableObject {
         ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
       if (basisFm && basisFm.basis !== undefined && basisFm.basis !== null && !pkg.replay) {
         const bf = [];
-        checkInquiryBasis(basisFm, bf);
+        /* REC-14: C-21.2 runs HERE too, with the published projection injected,
+           so an over-strong inherited grade is refused at the write and not
+           only at the gate — the checkGatheringGrammar precedent, and the
+           reason the rule lives in ONE catalog function that both sides run. */
+        checkInquiryBasis(basisFm, bf, this.publishedRegistryFor(bundleId,
+          basisLegs.map((l) => l.target).filter((t) => typeof t === "string")));
         const errs = bf.filter((x) => x.severity === "error");
         if (errs.length)
           return { ok: false, reason: "BASIS_REFUSED",
@@ -3538,6 +4055,34 @@ export class Store extends DurableObject {
                server's clock: delete-then-insert re-projects every promotion,
                so a server stamp here would silently re-date every leg. */
             leg.date != null ? String(leg.date) : null);
+        }
+      }
+      /* REC-14 / C-9: inquiry_exclusions, projected WHOLE from
+         completeness_excluded[] in the SAME transaction and by the same
+         delete-then-insert discipline as inquiry_basis above — a projection of
+         the document, never a second place to state it (D-21). The BYTES make
+         the assertion storable and signable; only this INDEXED projection makes
+         "which published cases excluded this document" ASKABLE, which is
+         invariant 7's only mechanical enforcement point at the case level.
+
+         target_id stays NULL when the row names something not in the record —
+         an outstanding records request has no id to point at — and the catalog
+         has already refused any row carrying NEITHER a target nor prose. */
+      this.sql.exec(`DELETE FROM inquiry_exclusions WHERE bundle_id=?`, bundleId);
+      if (isInquiry && basisFm && Array.isArray(basisFm.completeness_excluded)) {
+        const comp = (basisFm.completeness && typeof basisFm.completeness === "object") ? basisFm.completeness : {};
+        for (let i = 0; i < basisFm.completeness_excluded.length; i++) {
+          const row = basisFm.completeness_excluded[i];
+          if (!row || typeof row !== "object") continue;   // replay of a malformed shape: unprojectable
+          this.sql.exec(
+            `INSERT INTO inquiry_exclusions (bundle_id,ord,edition,target_id,description,reason,author,at)
+             VALUES (?,?,?,?,?,?,?,?)`,
+            bundleId, i, Number.isInteger(basisFm.edition) ? basisFm.edition : null,
+            typeof row.target === "string" ? row.target : null,
+            typeof row.description === "string" ? row.description : "",
+            typeof row.reason === "string" ? row.reason : "",
+            typeof comp.author === "string" ? comp.author : "",
+            typeof comp.at === "string" ? comp.at : "");
         }
       }
       /* REC-12: re-derive this inquiry's per-axis strength CACHE from the legs
@@ -6296,9 +6841,17 @@ export class Store extends DurableObject {
        OWN legs; legs elsewhere that TARGET it stay, honestly unresolvable, the
        same way refs to a purged bundle read as C-6.2 findings rather than
        silently vanishing. */
+    /* REC-14: `inquiry_exclusions` is DERIVED from the corpus in exactly the
+       same sense — a projection of completeness_excluded[] — and carries
+       bundle_id, so it clears in BOTH arms via this list. The PUBLISHED rows
+       are not touched by either arm and must not be: published_bundles and
+       published_shas are exempt by doctrine (a hash once published answers
+       forever), so purging the working corpus leaves the published record
+       standing, which is the correct asymmetry and is why the exclusion lives
+       in the BYTES as well as in this table. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
                     "readings", "reading_refs", "resolutions", "progression_instances",
-                    "progression_exceptions", "inquiry_basis"];
+                    "progression_exceptions", "inquiry_basis", "inquiry_exclusions"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -7160,8 +7713,9 @@ export class Store extends DurableObject {
   publishedManifest() {
     return { ok: true, scope: "published",
       published: this.#rows(
-        `SELECT p.bundle_id, p.bundle_sha, p.ratified_at, p.attestor_key, p.gate_version
-         FROM published_bundles p ORDER BY p.bundle_id`),
+        `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.attestor_key,
+                p.gate_version, p.manifest_sha, p.manifest
+         FROM published_bundles p ORDER BY p.bundle_id, p.edition`),
       shas: this.#rows(
         `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
       detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this "
@@ -7781,24 +8335,78 @@ export class Store extends DurableObject {
         `SELECT s.key_b64, s.member_id FROM signers s
          JOIN members m ON m.member_id=s.member_id
          WHERE s.status='active' AND m.status='active'`),
+      /* REC-14: the two facts the catalog cannot get from the bundle — what
+         THIS case asserted at its previous edition (C-21.1) and what the cases
+         beneath it FROZE (C-21.2). Read here, with the rows, rather than
+         probed for at the control plane, so the gate and the store's own write
+         path see the same published record. */
+      publishedRegistry: this.publishedRegistryFor(bundleId,
+        this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, bundleId).map((r) => r.target_id)),
     };
   }
 
-  publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas } = {}) {
+  /* REC-14 / DEC-12: the committer APPENDS AN EDITION. It used to UPSERT on
+     bundle_id, which destroyed the prior signature, attestor, time and gate
+     version on every re-ratification (D-144) — the defect that made the code
+     split against itself, since published_shas has always appended. Under the
+     ruling the append was right all along and this row simply was not yet
+     edition-aware.
+
+     THE EDITION COMES FROM THE RATIFIED BYTES, never from a parameter: it is
+     frontmatter on the document the signature covers, so an edition cannot be
+     claimed at the commit that was not inside the hash the member signed.
+
+     TWO REFUSALS, and they are the whole of what keeps an edition honest:
+     EDITION_NOT_INCREMENTED (a republish that does not move the number would
+     put a second, differently-signed document at the same edition — the reader
+     who cited "edition 2" would no longer know which one they read), and
+     EDITION_EXISTS with a DIFFERENT sha at the same number, which is the same
+     defect arriving by the other route. Re-ratifying the SAME bytes at the same
+     edition is idempotent and reports `existed`, because that is a retry, not a
+     revision. */
+  publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas,
+            edition, title, completeness, strength, required, manifest, manifestSha } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
     return this.ctx.storage.transactionSync(() => {
-      const cur = this.#one(`SELECT bundle_sha FROM published_bundles WHERE bundle_id=?`, bundleId);
-      const existed = !!(cur && cur.bundle_sha === bundleSha);
+      const top = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, bundleId);
+      const highest = top && top.m != null ? Number(top.m) : 0;
+      /* Re-ratifying bytes that are ALREADY published is a retry, not a
+         revision: it answers with the edition those bytes already carry rather
+         than minting a second one for the same document. */
+      const already = this.#one(
+        `SELECT edition FROM published_bundles WHERE bundle_id=? AND bundle_sha=?`, bundleId, bundleSha);
+      /* A CASE states its edition in the bytes the signature covers, so it
+         arrives here and is checked. ANYTHING ELSE — an information bundle, a
+         project — has no authored edition, and each ratification of new bytes
+         is the next one: that is what closes D-144 for every bundle type
+         rather than only for cases, since the defect was that a re-ratification
+         DESTROYED the prior signature, attestor, time and gate version. */
+      const ed = Number.isInteger(edition) ? edition
+               : already ? Number(already.edition)
+               : highest + 1;
+      const same = this.#one(`SELECT bundle_sha FROM published_bundles WHERE bundle_id=? AND edition=?`, bundleId, ed);
+      const existed = !!(same && same.bundle_sha === bundleSha);
+      if (same && !existed)
+        return { ok: false, reason: "EDITION_EXISTS", bundleId, edition: ed, published: same.bundle_sha,
+                 detail: `edition ${ed} of ${bundleId} is already published at a different sha. An edition is a `
+                       + `SEPARATE DOCUMENT and answers forever: republishing different bytes under the same `
+                       + `number would leave a reader who cited edition ${ed} unable to say which one they read.` };
+      if (!existed && highest && ed <= highest)
+        return { ok: false, reason: "EDITION_NOT_INCREMENTED", bundleId, edition: ed, highest,
+                 detail: `this case is published through edition ${highest}; a revision must increment the `
+                       + `edition (DEC-12). Editions do not overwrite each other — edition ${highest} keeps its `
+                       + `own signature, attestor, time and gate version, and a new one joins it.` };
       const now = new Date().toISOString();
       this.sql.exec(
-        `INSERT INTO published_bundles (bundle_id,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored)
-         VALUES (?,?,?,?,?,?,?)
-         ON CONFLICT(bundle_id) DO UPDATE SET bundle_sha=excluded.bundle_sha,
-           ratified_at=excluded.ratified_at, attestor_key=excluded.attestor_key,
-           attestor_member=excluded.attestor_member, gate_version=excluded.gate_version,
-           sig_armored=excluded.sig_armored`,
-        bundleId, bundleSha, now, attestorKey, attestorMember ?? null, gateVersion, sigArmored);
+        `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,completeness,strength,required,manifest_sha,manifest)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         ON CONFLICT(bundle_id,edition) DO NOTHING`,
+        bundleId, ed, title ?? null, bundleSha, now, attestorKey, attestorMember ?? null, gateVersion, sigArmored,
+        completeness ? JSON.stringify(completeness) : null,
+        strength ? JSON.stringify(strength) : null,
+        required ? JSON.stringify(required) : null,
+        manifestSha ?? null, manifest ? JSON.stringify(manifest) : null);
       /* Append-only: a hash once published stays answerable forever, across
          any number of re-ratifications. */
       for (const s of shas)
@@ -7806,7 +8414,7 @@ export class Store extends DurableObject {
           `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
            ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
           s.sha256, bundleId, s.path, s.kind, s.bytes ?? null, now);
-      return { ok: true, bundleId, bundleSha, existed, ratifiedAt: now };
+      return { ok: true, bundleId, bundleSha, edition: ed, existed, ratifiedAt: now };
     });
   }
 
@@ -7821,9 +8429,89 @@ export class Store extends DurableObject {
     return { published: matches.length > 0, sha256: sha, matches };
   }
 
+  /* REC-14 / DEC-12: the public index ENUMERATES EDITIONS rather than one row
+     per bundle, because an edition is a separate document and edition 1 keeps
+     answering after edition 2 lands. `title` is here — the one deliberate
+     divergence from DATA-MODEL 2.4.4 — so a public index is not N+1 reads of
+     the bytes to learn what each case is called. */
   publishedList() {
     return { bundles: this.#rows(
-      `SELECT bundle_id, bundle_sha, ratified_at, attestor_member, gate_version FROM published_bundles ORDER BY bundle_id`) };
+      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, gate_version
+       FROM published_bundles ORDER BY bundle_id, edition`) };
+  }
+
+  /* One case, every edition it has ever had, each with its OWN signature,
+     attestor, time and gate version, and with the frozen assertion and the
+     frozen PAIR the group signed. This is what makes "edition 1 still answers"
+     checkable rather than merely stated. */
+  publishedEditions(bundleId) {
+    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "publishededitions requires ?id=" };
+    const rows = this.#rows(
+      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
+              gate_version, sig_armored, completeness, strength, required, manifest_sha
+       FROM published_bundles WHERE bundle_id=? ORDER BY edition`, bundleId);
+    return { ok: true, bundleId, editions: rows.map((r) => ({
+      ...r,
+      completeness: r.completeness ? JSON.parse(r.completeness) : null,
+      strength: r.strength ? JSON.parse(r.strength) : null,
+      required: r.required ? JSON.parse(r.required) : null })) };
+  }
+
+  /* REC-14 / P8's justifying query, and the reason inquiry_exclusions exists as
+     a TABLE and not only as bytes: "WHICH CASES EXCLUDED THIS DOCUMENT" —
+     invariant 7's only mechanical enforcement point at the case level — as ONE
+     indexed lookup on inquiry_exclusions_target, never a scan of every
+     completeness block in the store.
+
+     Each row carries the case's CURRENT STATE and the EDITION the assertion was
+     taken from, so "which PUBLISHED cases excluded it" is a filter the caller
+     can apply on what it is given rather than a distinction this read makes on
+     their behalf: a case that was reopened after excluding a document has still
+     excluded it in every edition already published, and hiding those rows would
+     be the surface deciding what the record forgets.
+
+     D-15: viewer-gated like every other read that can name a bundle, and fails
+     closed on an absent viewer. */
+  excludedBy(targetId, viewer = null) {
+    if (!targetId) return { ok: false, reason: "NO_ID", detail: "excludedby requires ?id=" };
+    const gate = viewerPredicate(viewer);
+    const rows = this.#rows(
+      `SELECT x.bundle_id, x.ord, x.edition, x.description, x.reason, x.author, x.at,
+              b.current_state, b.title
+       FROM inquiry_exclusions x JOIN bundles b ON b.bundle_id = x.bundle_id
+       WHERE x.target_id=? AND (${gate.sql}) ORDER BY x.bundle_id, x.ord`, targetId, ...gate.args);
+    return { ok: true, targetId, cases: rows,
+             detail: "each row is a case that named this document in its completeness exclusions, with the "
+                   + "edition the assertion was taken from and the case's current state." };
+  }
+
+  /* REC-14: the published projection as the CHECK CATALOG needs it — the shape
+     C-21.1 and C-21.2 read. Built for the bundle being written or gated AND for
+     every target its basis names, in ONE indexed query rather than a probe per
+     leg: a case's own prior edition (freshness) and the frozen pair of every
+     published case beneath it (inheritance) are the two facts neither the
+     checker nor a caller can supply for itself. */
+  publishedRegistryFor(bundleId, extraTargets = []) {
+    const ids = [...new Set([bundleId, ...extraTargets].filter(Boolean))];
+    if (!ids.length) return {};
+    const marks = ids.map(() => "?").join(",");
+    const rows = this.#rows(
+      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, completeness, strength
+       FROM published_bundles WHERE bundle_id IN (${marks}) ORDER BY bundle_id, edition`, ...ids);
+    const reg = {};
+    for (const r of rows) {
+      const e = reg[r.bundle_id] || (reg[r.bundle_id] = { latest: 0, editions: {} });
+      const strength = r.strength ? JSON.parse(r.strength) : null;
+      const byAxis = {};
+      for (const a of Array.isArray(strength) ? strength : [])
+        if (a && a.axis) byAxis[a.axis] = { state: a.state, grade: a.grade ?? null };
+      e.editions[String(r.edition)] = {
+        edition: r.edition, title: r.title, bundle_sha: r.bundle_sha, ratified_at: r.ratified_at,
+        completeness: r.completeness ? JSON.parse(r.completeness) : null,
+        capture: byAxis.capture || null, connection: byAxis.connection || null };
+      if (Number(r.edition) > e.latest) e.latest = Number(r.edition);
+    }
+    return reg;
   }
 
   /* 7b: the knock. Rate accounting and the row land in one transaction, so
@@ -9532,6 +10220,21 @@ export class Store extends DurableObject {
           reason: url.searchParams.get("reason"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
+        /* REC-14. The BODY carries the authored material (the exclusion list is
+           an array, which a query string cannot express honestly); the viewer
+           and the author come from the SEARCH PARAMS, which is where the
+           control plane stamps them — so they are spread SECOND and a
+           caller-supplied author in the body is overwritten, never honoured. */
+        publishcase: () => this.publishCase({ ...(body || {}),
+          target: url.searchParams.get("target") || (body || {}).target,
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
+        strengthbar: () => this.strengthBarSet({ ...(body || {}),
+          author: url.searchParams.get("author") }),
+        strengthbarof: () => this.strengthBarOf({ group: url.searchParams.get("group"),
+          target: url.searchParams.get("target") }),
+        publishededitions: () => this.publishedEditions(url.searchParams.get("id")),
+        excludedby: () => this.excludedBy(url.searchParams.get("id"), url.searchParams.get("viewer")),
         expertisedeclare: () => this.expertiseDeclare(body || {}),
         expertiseconfirm: () => this.expertiseConfirm(body || {}),
         expertiselist: () => this.expertiseList({ memberId: url.searchParams.get("memberId") }),

@@ -47,7 +47,7 @@
  * nothing operates it until REC-24, and an empty list is the true answer.
  */
 
-import { STATES, ACTION_KINDS, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
+import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -60,12 +60,42 @@ import { STATES, ACTION_KINDS, normalizeType, vocabFor } from "../checks/bio-che
  * This is now the ONE array. */
 export const DISPOSITIONS = ["deferred", "dismissed"];
 
+/* REC-31 x REC-14, decided at their merge: the states op=reopen picks a
+ * question back up FROM. It is the disposition set PLUS `published`, and it is
+ * ONE array for the same reason DISPOSITIONS is — the store's refusal and the
+ * published act must not be able to disagree about what "reopenable" means.
+ *
+ * WHY `published` BELONGS HERE AND `concluded` DOES NOT, which is the whole of
+ * the distinction and is not a softening of REC-31's rule. That rule refuses
+ * reverting a finding WITH NO EDITION RECORDED: a concluded inquiry quietly
+ * returning to open still wearing its conclusion leaves nothing behind saying
+ * the group changed its mind, which is why `concluded` is refused BY NAME and
+ * the edition machinery is where that move belongs. A PUBLISHED case has the
+ * opposite property. Its editions are ratified, signed and immutable, and
+ * DEC-12 is explicit that reopening does not unpublish: every edition keeps
+ * answering with its own signature, attestor, time and gate version. So the
+ * hazard the exclusion guards against cannot arise on this edge — there is
+ * nothing to erase — while the need is real, because published -> open is the
+ * ONLY route to a second edition and an act the catalog permits that no caller
+ * can perform is the state machine lying.
+ *
+ * ONE reopen act, not two: "pick this question back up" is one verb, and a
+ * second control meaning the same thing on a different state is exactly the
+ * drift this file exists to prevent. */
+export const REOPENABLE_FROM = [...DISPOSITIONS, "published"];
+
 /* The object vocabularies, published the way op=searchfields publishes the
  * query language, so a surface never keeps a copy. action_kind is the check
  * catalogue's own C-2.10 suite, imported from the module that enforces it. */
 export const VOCABULARIES = {
   action_kind: ACTION_KINDS,
   dispositions: DISPOSITIONS,
+  /* REC-14 / DEC-13. Published so a ceremony surface never keeps its own copy
+     of the three positions. WHICH position a group takes gates NOTHING —
+     nothing in the plane reads it, and a group that deliberately gave no notice
+     publishes exactly as one that sought comment and printed the reply. What is
+     gated is that the position is declared and justified. */
+  subject_positions: SUBJECT_POSITIONS,
 };
 
 /* The seven sourced rungs — BIO_Interaction_Constructs_v0_1.md via
@@ -158,10 +188,36 @@ export const ACTS = [
      name (NOT_SET_DOWN) and this list does not offer it. Weight `single` and
      rung null for conclude's reasons: one question is picked back up at a
      time, and no document assigns this act a rung (FW-14's job, not a guess
-     made here). */
+     made here).
+     EXTENDED AT THE REC-14 MERGE, and the exclusion above is UNCHANGED: the
+     FROM set is REOPENABLE_FROM, which adds `published` and still refuses
+     `concluded`. A published case's editions are signed and immutable and
+     reopening does not unpublish them (DEC-12), so the "reverts a finding with
+     no edition recorded" hazard this act was scoped around cannot arise there
+     -- and published -> open is the only route to a second edition. The
+     reasoning is on REOPENABLE_FROM itself, where both consumers read it. */
   { id: "reopen", label: "Reopen", weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && DISPOSITIONS.includes(f.current_state)
+    applies: (f, ty) => ty === "inquiry" && REOPENABLE_FROM.includes(f.current_state)
                      && edgesFrom(f).includes("open") },
+  /* REC-14. An inquiry whose machine offers the `published` edge — which is
+     `concluded` and nothing else, because a material set cannot be asserted
+     over a question with no conclusion. Weight `single`, conclude's precedent:
+     one case is published at a time and there is no set to apply.
+
+     NO RUNG, and this one is worth stating rather than passing over: publishing
+     feels like the most `attested` act in the system, and `ratify` IS assigned
+     that rung by Constructs:275. But this act is not the attestation — it
+     AUTHORS the bytes that are then attested, and no document assigns it a
+     rung. Inventing "attested" here because it sits next to ratify is exactly
+     the guessing this file refuses; FW-14 owns the assignment.
+
+     The entry requirements (the completeness statement, the exclusion FIELD,
+     the declared and justified subject position) and C-21.1's freshness check
+     are ACT-TIME refusals the store words itself — the release precedent:
+     publishing the act says the state machine permits the move, not that this
+     caller's parameters will pass. */
+  { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("published") },
   /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
      because the store's own guards are type-only on both: any information
      bundle may be cited (cite checks NOT_INFORMATION and nothing about state —
@@ -215,6 +271,13 @@ export const NON_ACTS = {
   /* Inbox and publication. */
   inboxresolve: "inbox disposition, keyed by knock id",
   ratify: "publication: its pre-flight is the deferred op=publishpreflight (REC-15), because the refusal turns on gate state a surface cannot see",
+  /* REC-14 / DEC-17. Its subject is the GROUP's own declaration about the
+     standard its work is held to — authored before the work, about their own
+     intentions — so there is no object in any state for it to appear beside. A
+     project's override is not an op at all: it is authored frontmatter on the
+     project's bundle.md, which is what makes lowering a bar an on-the-record
+     act rather than a settings change with nothing to read afterwards. */
+  strengthbar: "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader",
   /* Selection lifecycle: a selection is the caller's own server-side snapshot. */
   select: "selection lifecycle, owned by the credential that made it",
   selectionrelease: "selection lifecycle, owned by the credential that made it",

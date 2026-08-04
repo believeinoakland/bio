@@ -54,7 +54,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { checkBundle, STATES } from "../checks/bio-checks.mjs";
-import { ACTS, DISPOSITIONS } from "../src/affordances.mjs";
+import { ACTS, DISPOSITIONS, REOPENABLE_FROM } from "../src/affordances.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const AFF_SRC_PATH = fileURLToPath(new URL("../src/affordances.mjs", import.meta.url));
@@ -322,8 +322,14 @@ console.log("\n--- 4. the refusals, BY NAME, each checked before anything moves 
     (await reopen("adm-rec31", { target: INQ_HELD, reason: REOPEN_WHY })).reason, "MACHINE_CANNOT_REOPEN");
 
   const alreadyOpen = await reopen(NADIA, { target: INQ_OPEN, reason: REOPEN_WHY });
-  t("an OPEN inquiry is refused NOT_SET_DOWN naming the disposition set — it is already being worked",
-    [alreadyOpen.ok, alreadyOpen.reason, alreadyOpen.dispositions], [false, "NOT_SET_DOWN", DISPOSITIONS]);
+  /* CORRECTED 2026-08-04 at the REC-31 x REC-14 merge, never exempted: the
+     refusal now names REOPENABLE_FROM rather than DISPOSITIONS, because
+     `published` joined the set (DEC-12 — a published case reopens for its next
+     edition, and reopening does not unpublish). The RULE this asserts is
+     unchanged and is the point: the refusal names the set it consulted, and
+     that set is the one published array both this op and the act read. */
+  t("an OPEN inquiry is refused NOT_SET_DOWN naming the reopenable set — it is already being worked",
+    [alreadyOpen.ok, alreadyOpen.reason, alreadyOpen.reopenable], [false, "NOT_SET_DOWN", REOPENABLE_FROM]);
 
   /* The DEC-12 boundary, and the reason this act is scoped to the disposition
      set rather than to every state offering an `open` edge. */
@@ -372,10 +378,15 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
     [actIds(await affordances(INQ_OPEN)),
      (await reopen(NADIA, { target: INQ_OPEN, reason: REOPEN_WHY })).reason],
     [["conclude", "dispose"], "NOT_SET_DOWN"]);
-  t("a CONCLUDED inquiry does NOT publish reopen, and the store agrees by name",
+  /* CORRECTED 2026-08-04 at the REC-31 x REC-14 merge, never exempted: a
+     concluded inquiry now publishes `publish` beside `dispose` — REC-14
+     landing, and it is the very act this refusal has always pointed at. What
+     this assertion exists for is unchanged and still holds: `reopen` is NOT
+     among them, and the store refuses it by the name the publication implies. */
+  t("a CONCLUDED inquiry does NOT publish reopen — it publishes the act that moves it forward — and the store agrees",
     [actIds(await affordances(INQ_CONCL)),
      (await reopen(NADIA, { target: INQ_CONCL, reason: REOPEN_WHY })).reason],
-    [["dispose"], "NOT_SET_DOWN"]);
+    [["dispose", "publish"], "NOT_SET_DOWN"]);
   t("the deferred LEGACY focus does not publish it either: the derivation asks the DECLARED vocabulary too",
     actIds(await affordances(FOCUS_LEGACY)), ["dispose"]);
   t("an information bundle never publishes reopen", actIds(await affordances(DOC)).includes("reopen"), false);
@@ -390,9 +401,15 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
   const affSrc = readFileSync(AFF_SRC_PATH, "utf8");
   const reopenEntry = affSrc.slice(affSrc.indexOf(`{ id: "reopen"`),
     affSrc.indexOf("\n", affSrc.indexOf(`edgesFrom(f).includes("open")`)));
-  t("the reopen act derives from the IMPORTED edge table and the PUBLISHED disposition set, and nothing else",
+  /* CORRECTED 2026-08-04 at the REC-31 x REC-14 merge, never exempted: the
+     published FROM set is REOPENABLE_FROM (the disposition set plus
+     `published`). The rule is untouched and is what this pins — the act reads
+     the IMPORTED edge table and ONE published array, and keeps no state list of
+     its own, which is why the third arm still looks for a literal and still
+     must not find one. */
+  t("the reopen act derives from the IMPORTED edge table and the PUBLISHED reopenable set, and nothing else",
     [/edgesFrom\(f\)\.includes\("open"\)/.test(reopenEntry),
-     /DISPOSITIONS\.includes\(f\.current_state\)/.test(reopenEntry),
+     /REOPENABLE_FROM\.includes\(f\.current_state\)/.test(reopenEntry),
      /\["deferred"|'deferred'/.test(reopenEntry)],
     [true, true, false]);
   t("and the act table itself is the ONE place the act is declared (store.mjs keeps no act list)",

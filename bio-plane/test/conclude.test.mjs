@@ -306,12 +306,16 @@ console.log("\n--- 3. the four refusals, BY NAME, each checked before anything m
 /* ----------------------------------------------- 4. one machine, the catalog's */
 console.log("\n--- 4. the machine is the CATALOG's, consulted through the map (the MAP RULE) ---");
 {
-  t("the ONE edge table carries the new state and its edges — nothing here keeps a copy",
+  /* CORRECTED 2026-08-04 (REC-14), never exempted: `published` joins the edges
+   OUT of concluded, so the sorted edge set moves. The rule this asserts is
+   unchanged — the edges come from the ONE exported table and nothing here keeps
+   a copy — and the new member is the point of REC-14 rather than drift. */
+t("the ONE edge table carries the new state and its edges — nothing here keeps a copy",
     [STATES.inquiry.legal.includes("concluded"),
      STATES.inquiry.edges.open.includes("concluded"),
      STATES.inquiry.edges.surfaced.includes("concluded"),
      STATES.inquiry.edges.concluded.slice().sort()],
-    [true, true, true, ["deferred", "dismissed", "open", "surfaced"]]);
+    [true, true, true, ["deferred", "dismissed", "open", "published", "surfaced"]]);
 
   const alias = await conclude(PILAR, { target: INQ_ALIAS, conclusion: CONCL, falsifier: FALS });
   t("`surfaced`, open's legal alias, concludes — refusing it would be the trap the alias exists to avoid",
@@ -366,8 +370,12 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
   const openAff = await affordances(INQ_SECOND);
   t("an OPEN inquiry publishes conclude beside dispose", actIds(openAff), ["conclude", "dispose"]);
   const concludedAff = await affordances(INQ_MAIN);
-  t("a CONCLUDED inquiry publishes exactly the legal acts: dispose only — a conclusion nobody publishes still ages (D-79)",
-    actIds(concludedAff), ["dispose"]);
+  /* CORRECTED 2026-08-04 (REC-14), never exempted: a concluded inquiry now
+   publishes `publish` as well, which is the state this whole ladder exists to
+   reach. `dispose` stays beside it — a conclusion nobody publishes STILL AGES
+   (D-79), and that was and is the reason this assertion exists. */
+t("a CONCLUDED inquiry publishes exactly the legal acts: dispose and publish — and a conclusion nobody publishes still ages (D-79)",
+    actIds(concludedAff), ["dispose", "publish"]);
   t("conclude is UNPUBLISHED there, and the store agrees by name — publication and refusal cannot disagree",
     (await conclude(NADIA, { target: INQ_MAIN, conclusion: CONCL, falsifier: FALS })).reason,
     "ILLEGAL_TRANSITION");
