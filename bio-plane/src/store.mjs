@@ -697,6 +697,35 @@ export class Store extends DurableObject {
     };
   }
 
+  /** The FACTS behind op=affordances (REC-19), and only the facts: what this
+   *  object is, where its state machine stands, and which citation edges touch
+   *  it — read with the SAME predicate retire's CITED guard runs (#citesInto),
+   *  so the publication and the refusal cannot disagree. The DERIVATION (which
+   *  acts those facts admit) happens at the control plane, where NEEDS and
+   *  SESSION_OPS live; this method holds no copy of any act rule. */
+  affordanceFacts({ target } = {}) {
+    if (!target) return { ok: false, reason: "NO_TARGET",
+      detail: "affordances are asked of an object: pass target=<bundle id>" };
+    const b = this.#one(
+      `SELECT bundle_id, object_type, current_state, criticality FROM bundles WHERE bundle_id=?`, target);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    /* Edges INTO the target (who cites it), live and severed. */
+    const citesIn = this.#citesInto(target);
+    /* A project's OWN citation edges by status, from its document — the same
+       source cite/sever read (the projection carries no status). */
+    const citesOut = { confirmed: 0, severed: 0 };
+    if (b.object_type === "project") {
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+      const refs = md && md.content !== null ? parseFrontmatter(md.content).data?.references : null;
+      for (const r of (Array.isArray(refs) ? refs : []))
+        if (r && typeof r === "object" && r.rel === "cites")
+          citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
+    }
+    return { ok: true, target: b.bundle_id, object_type: b.object_type,
+             current_state: b.current_state, criticality: b.criticality ?? null,
+             cites_in: citesIn, cites_out: citesOut };
+  }
+
   /* ---- S-10 step 5: selections ----
    *
    * KEEP-ALIVE, 300 seconds, refreshed on read. The same number and the same
@@ -1690,6 +1719,31 @@ export class Store extends DurableObject {
              weight: "refuse", drift: sel.drift };
   }
 
+  /* THE ONE live-cites predicate (REC-19). Who cites INTO a bundle, partitioned
+   * by edge status. `refs` is the projection of the citing documents'
+   * frontmatter, rewritten on every promotion, so a severed edge still has a
+   * row there and its STATUS lives in the document; the document is read rather
+   * than the projection, because the projection does not carry status. A citing
+   * document that cannot be read counts as LIVE — refusing on what cannot be
+   * verified is the conservative arm, and it was retire's behaviour already.
+   *
+   * Extracted from retire's CITED guard so that guard and op=affordances'
+   * publication run the SAME predicate: a pre-flight that could disagree with
+   * the refusal it fronts would be the drift DEC-8 forbids, wearing our colors. */
+  #citesInto(id) {
+    const confirmed = [], severed = [];
+    for (const r of this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, id)) {
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
+      if (!md || md.content === null) { confirmed.push(r.bundle_id); continue; }
+      const refs = parseFrontmatter(md.content).data?.references;
+      const entry = (Array.isArray(refs) ? refs : [])
+        .find((x) => x && x.rel === "cites" && x.target === id);
+      if (!entry || entry.status !== "severed") confirmed.push(r.bundle_id);
+      else severed.push(r.bundle_id);
+    }
+    return { confirmed: confirmed.sort(), severed: severed.sort() };
+  }
+
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
    *
    * Heavier than step 3's disposition for one structural reason: `retired` is
@@ -1741,20 +1795,11 @@ export class Store extends DurableObject {
       const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!b || b.object_type !== "information") { notInfo.push(id); continue; }
       if (b.current_state !== "verified") { illegal.push({ id, from: b.current_state }); continue; }
-      /* Live citations only. `refs` is the projection of the citing documents'
-         frontmatter, rewritten on every promotion, so a severed edge still has a
-         row here and its STATUS lives in the document. Read the document rather
-         than the projection, because the projection does not carry status. */
-      const citedBy = [];
-      for (const r of this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, id)) {
-        const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
-        if (!md || md.content === null) { citedBy.push(r.bundle_id); continue; }
-        const refs = parseFrontmatter(md.content).data?.references;
-        const entry = (Array.isArray(refs) ? refs : [])
-          .find((x) => x && x.rel === "cites" && x.target === id);
-        if (!entry || entry.status !== "severed") citedBy.push(r.bundle_id);
-      }
-      if (citedBy.length) cited.push({ id, citedBy: citedBy.sort() });
+      /* Live citations only, through the ONE #citesInto predicate (shared with
+         op=affordances, which publishes retire's availability from it): a
+         severed edge is a recorded decision to stop relying and does not block. */
+      const citedBy = this.#citesInto(id).confirmed;
+      if (citedBy.length) cited.push({ id, citedBy });
     }
     if (notInfo.length)
       return { ok: false, reason: "NOT_INFORMATION", offenders: notInfo.sort(),
@@ -7515,6 +7560,10 @@ export class Store extends DurableObject {
           snippetChars: Number(url.searchParams.get("snippet")) || 12,
         }),
         searchfields: () => this.searchFields(),
+        /* REC-19: the facts behind op=affordances. The control plane derives
+           the act list from these; this endpoint only reports what the store
+           holds about the object. */
+        affordancefacts: () => this.affordanceFacts({ target: url.searchParams.get("target") }),
         /* Selections. `viewer` and `owner` are both stamped by the control plane
            from the authenticated credential and are never taken from the
            caller's own parameters there. */
