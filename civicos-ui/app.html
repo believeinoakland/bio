@@ -723,7 +723,7 @@ function canRelease(){
   return !!(PLANE.session && PLANE.me && PLANE.me.session
             && (PLANE.me.capabilities||[]).includes("contribute"));
 }
-/* Disposition (defer/dismiss a focus) is capability-gated exactly like release:
+/* Disposition (defer/dismiss an inquiry) is capability-gated exactly like release:
    op=dispose NEEDS `contribute` (bio-plane/src/index.mjs) and the store stamps
    the author from the session, so a member without contribute gets no act
    surface rather than one that fails on submit. Same shape as canRelease. */
@@ -747,19 +747,21 @@ async function getProjection(id){
   PROJ_CACHE.set(id, p); return p;
 }
 /* Reverse citations, computed client-side: walk the projections of every
-   focus and project (the citing kinds) and index their references by target.
-   At the record's scale this is a handful of reads, cached for the session. */
+   inquiry and project (the citing kinds) and index their references by target.
+   At the record's scale this is a handful of reads, cached for the session.
+   The citing kinds are asked through normalizeType, so a legacy `focus` or
+   `problem` row and a canonical `inquiry` row answer the same way (MAP RULE). */
 async function reverseRefs(id){
   if(!REVREF_CACHE){
     REVREF_CACHE = {};
     try{
-      const citers = (await loadRecord()).filter(b=>["focus","problem","project"].includes(b.object_type));
+      const citers = (await loadRecord()).filter(b=>["inquiry","project"].includes(normalizeType(b.object_type)));
       for(const c of citers){
         const p = await getProjection(c.bundle_id);
         let fm = null; try{ fm = p && p.fm_json ? JSON.parse(p.fm_json) : null; }catch(_){}
         for(const ref of (fm && fm.references) || []){
           (REVREF_CACHE[ref.target] = REVREF_CACHE[ref.target] || []).push(
-            { from:c.bundle_id, fromTitle:c.title||c.bundle_id, fromType:c.object_type, rel:ref.rel, status:ref.status, note:ref.note });
+            { from:c.bundle_id, fromTitle:c.title||c.bundle_id, fromType:c.object_type, fromState:c.current_state, rel:ref.rel, status:ref.status, note:ref.note });
         }
       }
     }catch(_){}
@@ -848,7 +850,7 @@ const RAIL = [
   {id:"proposals",icon:"i-focus",    label:"Proposals"},
   {id:"search",   icon:"i-search",   label:"Search"},
   {id:"subjects", icon:"i-focus",    label:"Subjects"},
-  {id:"focuses",  icon:"i-focus",    label:"Focuses"},
+  {id:"inquiries",icon:"i-focus",    label:"Questions"},
   {id:"projects", icon:"i-projects", label:"Projects"},
   {id:"review",   icon:"i-review",   label:"Review"},
   {id:"monitoring",icon:"i-monitor", label:"Monitoring"},
@@ -885,7 +887,7 @@ function navRemember(){
 function navLabel(p){
   if(!p) return "";
   if(p.type==="bundle") return "the document";
-  const t = {record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  const t = {record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -934,14 +936,14 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={home:"Home",record:"The record",tasks:"Tasks",proposals:"Proposals",search:"Search",subjects:"Subjects",focuses:"Focuses",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={home:"Home",record:"The record",tasks:"Tasks",proposals:"Proposals",search:"Search",subjects:"Subjects",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
-      (["record","focuses","projects","review","members"].includes(screen)
+      (["record","inquiries","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
     return;
   }
   const R = {
-    home: renderHome, record: renderRecord, tasks: renderTasks, proposals: renderProposals, search: renderSearchScreen, subjects: renderSubjectView, focuses: ()=>renderFiltered("focuses","focus","Focuses","Questions the record has surfaced. Triage moves them into projects; deferred and dismissed focuses are kept, never deleted."),
+    home: renderHome, record: renderRecord, tasks: renderTasks, proposals: renderProposals, search: renderSearchScreen, subjects: renderSubjectView, inquiries: ()=>renderFiltered("inquiries","inquiry","Questions","Questions the group is working on, and what became of them: an open question, a finding once it has been answered, a case once it has been published. Deferred and dismissed questions are kept, never deleted."),
     projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
@@ -955,11 +957,111 @@ async function loadRecord(force){
   return RECORD_CACHE;
 }
 /* ============================================================
+   THE CATALOG, MIRRORED — and the mirror is GUARDED (UI-10, D-138).
+
+   This runtime is one static self-contained file, so it cannot import
+   `bio-plane/checks/bio-checks.mjs` the way `setup.mjs` does. It carries a
+   mirror of the catalog's tables instead, and `check-semantics.mjs` now
+   IMPORTS the catalog and compares this block to it table by table and key by
+   key: a catalog change this file misses fails the harness BY NAME. Before
+   UI-10 the comment two hundred lines down claimed exactly that guarantee over
+   a check that never opened `bio-checks.mjs` (DATA-MODEL.md §2.7 measured the
+   claim being false, D-138); this block plus that import is what makes it true.
+
+   EVERYTHING in this file that asks what a type or a state IS reads from here.
+   That is the MAP RULE and it is the whole item: the second rename left four
+   un-shared copies of the type mapping, the UI's among them, and a copy is what
+   drifts. Do not add a type or state literal anywhere else in this file.
+
+   THE THIRD NAME. The construct formerly Problem, then FOCUS, is the INQUIRY
+   (REC-10). History is append-only, so `problem` and `focus` stay LEGAL LEGACY
+   ALIASES and the catalog judges a document by its NORMALIZED type — hence
+   `normalizeType` here rather than a dual-spelling filter at each call site.
+   The alias map is FLATTENED, never chained, exactly as the catalog's is.
+   ============================================================ */
+/*__CATALOG_START__*/
+const LEGACY_TYPE_ALIASES = { problem:"inquiry", focus:"inquiry" };
+const normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
+/* Membership questions normalize; VOCABULARY questions — which heading set,
+   which state machine, which chip — resolve the DECLARED spelling first and
+   fall back to the normalized type, because the collapse CHANGED those
+   vocabularies and a legacy document is read under the contract it was written
+   under. This is the catalog's own `vocabFor`, same shape, same reason. */
+const vocabFor = (table, t) => table[t] !== undefined ? table[t] : table[normalizeType(t)];
+
+const PREFIX = { information:"INFO", inquiry:"INQ", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
+const FIRST_STATE = { information:"collected", inquiry:"open", focus:"surfaced", problem:"surfaced", project:"forming", action:"planned" };
+const HEADINGS = {
+  information:["## Summary","## Provenance Notes","## Session Log","## Review Notes"],
+  inquiry:["## Question","## What It Rests On","## Conclusion","## What Would Falsify This","## Session Log","## Review Notes"],
+  focus:["## Statement","## Why It Matters","## Open Questions","## Session Log","## Review Notes"],
+  problem:["## Statement","## Why It Matters","## Open Questions","## Session Log","## Review Notes"],
+  project:["## Thesis Summary","## Open Questions","## Ruled Out","## Session Log","## Review Notes"],
+  action:["## Plan","## Status","## Correspondence","## Session Log","## Review Notes"],
+};
+/* information@1 for a member writing down what they know, @2 the moment a
+   document IS captured, because the @2 contract makes the provenance register
+   mandatory (C-18.1) and a register describes captured documents: locator,
+   authority, method, grade, hash. Typed intake has no document, so @2 would
+   demand a register with nothing honest to put in it. */
+const SCHEMA_OF = { information:"information@1", inquiry:"inquiry@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
+/* The legal moves, mirrored from the catalog's STATES[type].edges rather than
+   restated. The disposition pre-flight reads this so it refuses exactly what
+   the store would refuse; a no-op move is ABSENT on purpose, because it usually
+   means the view was taken before somebody else moved the record. */
+const STATE_EDGES = {
+  information:{ collected:["verified"], verified:["retired"], retired:[] },
+  inquiry:{
+    open:["deferred","dismissed","concluded","divided"],
+    surfaced:["deferred","dismissed","concluded","divided"],
+    deferred:["open","surfaced","dismissed"],
+    dismissed:["open","surfaced","deferred"],
+    concluded:["open","surfaced","deferred","dismissed","published","divided"],
+    published:["open","surfaced"],
+    divided:[],
+  },
+  focus:{ surfaced:["elevated","deferred","dismissed"], deferred:["surfaced","elevated","dismissed"],
+          dismissed:["surfaced","elevated","deferred"], elevated:[] },
+  project:{ forming:["investigating","closed"], investigating:["matured","closed"], matured:["closed"], closed:["investigating"] },
+  action:{ planned:["active","abandoned"], active:["awaiting_response","resolved","abandoned"],
+           awaiting_response:["active","resolved","abandoned"], resolved:[], abandoned:[] },
+};
+STATE_EDGES.problem = STATE_EDGES.focus;
+/* THE MEMBER-FACING NAME, DERIVED AND NEVER STORED TWICE (R1). One type,
+   `inquiry`; three words for it, chosen by the phase the question is in.
+   `surfaced` is the legacy spelling of `open` and the legacy focus states are
+   read the same way, so an existing FOCUS- bundle and a new INQ- bundle render
+   IDENTICALLY — which is the point of collapsing them. The mapping lives here
+   once; the plane will publish `inquiry_phase` when REC-12's projection lands
+   and this becomes a read rather than a derivation. */
+const PHASE = { open:"inquiry", surfaced:"inquiry", elevated:"inquiry", deferred:"inquiry",
+                dismissed:"inquiry", divided:"inquiry", concluded:"finding", published:"case" };
+const PHASE_LABEL = { inquiry:"Inquiry", finding:"Finding", case:"Case" };
+/* The Type column's word. `annotation` and `source` are not bundle types and
+   have no catalog row; they are kinds a search hit can carry. */
+const TYPE_LABEL = { information:"Info", inquiry:"Inquiry", project:"Project", action:"Action",
+                     annotation:"Annotation", source:"Source" };
+const NON_BUNDLE_KINDS = ["annotation", "source"];
+/*__CATALOG_END__*/
+function phaseOf(state){ return PHASE[state] || "inquiry"; }
+/* What to CALL a record on screen: an inquiry is named by its phase, everything
+   else by its type. Never by a stored word — `current_state` decides. */
+function typeLabel(objectType, state){
+  const t = normalizeType(objectType || "");
+  if(t === "inquiry") return PHASE_LABEL[phaseOf(state)];
+  return TYPE_LABEL[t] || objectType || "";
+}
+const schemaFor = (type, hasDoc) => type === "information" && hasDoc ? "information@2" : vocabFor(SCHEMA_OF, type);
+
+/* ============================================================
    SEMANTICS: one source of truth for what every state MEANS,
    enables, and forbids, keyed to the plane's actual catalog.
    Every chip, teach sentence, and affordance renders from here.
-   check-semantics.mjs verifies this table against the plane's
-   source; the block between the markers must stay extractable.
+   check-semantics.mjs verifies this table against the CATALOG
+   (and against the store's own literals); the block between the
+   markers must stay extractable, and every state the catalog
+   calls legal must have a row — a state with no row renders an
+   invented first-letter seal over an empty explanation.
    ============================================================ */
 /*__SEMANTICS_START__*/
 const SEMANTICS = {
@@ -979,11 +1081,41 @@ const SEMANTICS = {
         enables:["read it and its history"],
         forbids:[["new citations","projects cite active material"]], next:[] },
     }},
-    focus: { noun:"focus", states: {
-      surfaced:  { chip:"surfaced", mark:"S", meaning:"A question the record has raised, awaiting the group's triage.",
-        enables:["elevate it into a project","defer it with a reason","dismiss it with a reason"], forbids:[], next:["elevated","deferred","dismissed"] },
-      elevated:  { chip:"elevated", mark:"E", attention:true, meaning:"Triage judged it worth pursuing; a project carries it forward.",
-        enables:["follow it into its project"], forbids:[], next:[] },
+    /* THE INQUIRY (REC-10, extended by REC-13/14/16). One type, and the noun a
+       member reads changes with the phase: an inquiry is a question, a
+       concluded one is a finding, a published one is a case. `surfaced` is the
+       legal legacy spelling of `open` and reads identically. */
+    inquiry: { noun:"inquiry", states: {
+      open:      { chip:"open", mark:"O", meaning:"A question the group is working on. It may rest on nothing yet — a question worth asking is not a claim.",
+        enables:["gather what it rests on","conclude it, with a falsifier","defer it with a reason","dismiss it with a reason"],
+        forbids:[["publish","only a concluded question can be put to anyone"]], next:["concluded","deferred","dismissed","divided"] },
+      surfaced:  { chip:"open", mark:"O", meaning:"A question the group is working on. Written under the earlier name for this state, and read exactly as open.",
+        enables:["gather what it rests on","conclude it, with a falsifier","defer it with a reason","dismiss it with a reason"],
+        forbids:[["publish","only a concluded question can be put to anyone"]], next:["concluded","deferred","dismissed","divided"] },
+      concluded: { chip:"concluded", mark:"C", good:true, meaning:"A finding: the group has answered it, named what it rests on, and named what would overturn it.",
+        enables:["read the conclusion and what would falsify it","publish it as a case","reopen it if the answer stops holding"],
+        forbids:[["a silent revision","reopening is recorded, and republishing makes a new edition"]], next:["published","open","deferred","dismissed","divided"] },
+      published: { chip:"published", mark:"P", good:true, meaning:"A case: signed, across the fence, and checkable by anyone against its published hash without this group's help.",
+        enables:["read it and verify its bytes","reopen it to revise, which publishes a new edition"],
+        forbids:[["withdrawing it","the edition already published keeps answering; correction moves forward"],["dividing it","a signed edition cannot be declared malformed after the fact"]], next:["open"] },
+      divided:   { chip:"divided", mark:"÷", quiet:true, meaning:"The question turned out to be more than one question, and every leg it rested on now lives on a successor.",
+        enables:["follow it into the questions that replaced it"],
+        forbids:[["re-opening it","the successors carry it now; un-dividing would be the record changing its mind in silence"]], next:[] },
+      deferred:  { chip:"deferred", mark:"D", quiet:true, meaning:"Parked with a reason, kept, and returnable.",
+        enables:["pick it back up","dismiss it instead"], forbids:[], next:["open","dismissed"] },
+      dismissed: { chip:"dismissed", mark:"X", quiet:true, meaning:"Declined with a reason. Kept, never deleted, so the decision itself stays accountable.",
+        enables:["read the reason","pick it back up"], forbids:[], next:["open","deferred"] },
+    }},
+    /* The LEGACY vocabulary, kept because the record is append-only: a bundle
+       written under the second name carries these states forever and is read
+       under the contract it was written under. It is the same construct — the
+       Type column says Inquiry for both. `elevated` exists only here; the
+       inquiry machine has no such move. */
+    focus: { noun:"inquiry", states: {
+      surfaced:  { chip:"open", mark:"O", meaning:"A question the record has raised, awaiting the group's triage. The earlier name for open.",
+        enables:["defer it with a reason","dismiss it with a reason"], forbids:[], next:["elevated","deferred","dismissed"] },
+      elevated:  { chip:"elevated", mark:"E", attention:true, meaning:"Triage judged it worth pursuing and a project carries it forward. A move the record no longer offers; questions written under the earlier name may still stand here.",
+        enables:["follow it into its project"], forbids:[["disposition","it has already been carried into a project"]], next:[] },
       deferred:  { chip:"deferred", mark:"D", quiet:true, meaning:"Parked by triage with a reason, kept, and returnable.",
         enables:["re-triage it later"], forbids:[], next:["elevated","dismissed"] },
       dismissed: { chip:"dismissed", mark:"X", quiet:true, meaning:"Declined by triage with a reason. Kept, never deleted, so the decision itself stays accountable.",
@@ -991,9 +1123,25 @@ const SEMANTICS = {
     }},
     project: { noun:"project", states: {
       forming:       { chip:"forming", mark:"F", meaning:"Scope and objective being set; evidence gathering begins.",
-        enables:["cite verified documents","state the objective"], forbids:[], next:["investigating"] },
+        enables:["cite verified documents","state the objective"], forbids:[], next:["investigating","closed"] },
       investigating: { chip:"investigating", mark:"I", meaning:"Active work: citations accumulate, work products draft toward ratification.",
-        enables:["cite","draft work products","initiate escalation"], forbids:[], next:[] },
+        enables:["cite","draft work products","initiate escalation"], forbids:[], next:["matured","closed"] },
+      matured:       { chip:"matured", mark:"M", good:true, meaning:"The line of work reached what it set out to establish.",
+        enables:["read what it established","close it"], forbids:[], next:["closed"] },
+      closed:        { chip:"closed", mark:"K", quiet:true, meaning:"No longer worked on. Kept in full, and re-openable if the question comes back.",
+        enables:["read it and its history","re-open it"], forbids:[], next:["investigating"] },
+    }},
+    action: { noun:"action", states: {
+      planned:           { chip:"planned", mark:"N", meaning:"Written down as something to do, and not yet begun.",
+        enables:["start it","abandon it with a reason"], forbids:[], next:["active","abandoned"] },
+      active:            { chip:"active", mark:"A", attention:true, meaning:"Under way.",
+        enables:["record what came back","resolve it","abandon it with a reason"], forbids:[], next:["awaiting_response","resolved","abandoned"] },
+      awaiting_response: { chip:"awaiting a response", mark:"W", attention:true, meaning:"Sent, and waiting on somebody outside this group.",
+        enables:["record the response","resolve it","abandon it with a reason"], forbids:[], next:["active","resolved","abandoned"] },
+      resolved:          { chip:"resolved", mark:"R", good:true, meaning:"Finished, with what came of it on the record.",
+        enables:["read what came of it"], forbids:[], next:[] },
+      abandoned:         { chip:"abandoned", mark:"Ø", quiet:true, meaning:"Stopped with a reason. Kept, never deleted, so the decision itself stays accountable.",
+        enables:["read the reason"], forbids:[], next:[] },
     }},
   },
   criticality: {
@@ -1007,8 +1155,12 @@ const SEMANTICS = {
     monitored:   { chip:"monitored", mark:"M",  meaning:"The plane re-checks the live source on a schedule and flags drift." },
   },
 };
+/* One legacy vocabulary, two spellings: the SAME object, so the two cannot
+   drift. The catalog does exactly this with HEADINGS.problem. It lives INSIDE
+   the markers because check-semantics.mjs reads what is between them and a key
+   the catalog declares must be a key this table declares. */
+SEMANTICS.types.problem = SEMANTICS.types.focus;
 /*__SEMANTICS_END__*/
-SEMANTICS.types.problem = SEMANTICS.types.focus;   // the plane's older name for a focus
 
 /* The glossary: system terms and the civic-finance shorthand this record
    swims in, disclosed on click wherever they appear in rendered prose.
@@ -1071,9 +1223,8 @@ const STRATA_INFO = {
   s3:{ label:"Trust",         tip:"Where it came from and how anyone can verify it, without this group's cooperation." },
   s4:{ label:"The record",    tip:"Everything that has ever happened to it. Append-only; nothing can be edited or removed." },
 };
-const TYPE_LABEL = {information:"Info", focus:"Focus", problem:"Focus", project:"Project", action:"Action", annotation:"Annotation", source:"Source"};
 function sem(type, state){
-  const t = SEMANTICS.types[type];
+  const t = vocabFor(SEMANTICS.types, type);
   if(t && t.states[state]) return t.states[state];
   for(const k in SEMANTICS.types){ if(SEMANTICS.types[k].states[state]) return SEMANTICS.types[k].states[state]; }
   return { chip: state, meaning: "" };
@@ -1143,7 +1294,7 @@ function recordRows(list, showType){
     const crux = b.criticality==="crucial" ? " "+sealFor("crit","crucial") : "";
     return `<tr class="row" data-id="${esc(b.bundle_id)}">
       <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}</td>
-      ${showType?`<td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(TYPE_LABEL[b.object_type]||b.object_type||"")}</td>`:""}
+      ${showType?`<td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(typeLabel(b.object_type, b.current_state))}</td>`:""}
       <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
       <td class="upd">${fmtWhen(b.last_updated)}</td>
     </tr>`;
@@ -1165,7 +1316,7 @@ function sortList(list){
   if(!LIST_SORT.col) return list;
   const c = LIST_SORT.col, d = LIST_SORT.dir;
   const key = b => c==="title" ? (b.title||b.bundle_id||"").toLowerCase()
-             : c==="type"  ? (TYPE_LABEL[b.object_type]||b.object_type||"")
+             : c==="type"  ? typeLabel(b.object_type, b.current_state)
              : c==="state" ? (b.current_state||"")
              : (b.last_updated||"");
   return [...list].sort((a,b)=>{ const x=key(a), y=key(b); return x<y?-d:x>y?d:0; });
@@ -1190,7 +1341,7 @@ function monRows(list){
     const nx = monitorNext(b.monitor_last_checked, b.monitor_frequency);
     return `<tr class="row" data-id="${esc(b.bundle_id)}">
       <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}</td>
-      <td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(TYPE_LABEL[b.object_type]||b.object_type||"")}</td>
+      <td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(typeLabel(b.object_type, b.current_state))}</td>
       <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
       <td class="upd">${b.monitor_last_checked?fmtWhen(b.monitor_last_checked):"\u2014"}</td>
       <td class="upd">${nx?fmtWhen(nx.toISOString()):(b.monitor_frequency?esc(b.monitor_frequency):"\u2014")}</td>
@@ -1219,9 +1370,11 @@ async function renderRecord(){
     $("#rc").textContent = `${list.length} items · ${collected} awaiting review`;
     $("#rectable").innerHTML = listTable(list);
     wireRows();
-    const byType = {}; list.forEach(b=>byType[b.object_type]=(byType[b.object_type]||0)+1);
+    /* Counted by NORMALIZED type, so one question is one question however its
+       row spells itself — the split count the second rename left is gone. */
+    const byType = {}; list.forEach(b=>{ const t=normalizeType(b.object_type); byType[t]=(byType[t]||0)+1; });
     if($("#cnt-review")) $("#cnt-review").textContent = collected||"";
-    if($("#cnt-focuses")) $("#cnt-focuses").textContent = (byType.focus||byType.problem||0)||"";
+    if($("#cnt-inquiries")) $("#cnt-inquiries").textContent = (byType.inquiry||0)||"";
     if($("#cnt-projects")) $("#cnt-projects").textContent = (byType.project||0)||"";
   };
   LIST_REPAINT = ()=>paint(last);
@@ -1240,7 +1393,7 @@ async function renderRecord(){
 async function renderFiltered(screen, type, title, lede){
   $("#content").innerHTML = `<h1 class="rec">${esc(title)}</h1><p class="lede">${esc(lede)}</p><div id="recrows-holder"></div>`;
   try{
-    const list = (await loadRecord()).filter(b=>b.object_type===type || (type==="focus"&&b.object_type==="problem"));
+    const list = (await loadRecord()).filter(b=>normalizeType(b.object_type)===type);
     LIST_REPAINT = ()=>{ $("#recrows-holder").innerHTML = listTable(list, false); wireRows(); };
     $("#recrows-holder").innerHTML = listTable(list, false);
     wireRows();
@@ -1687,28 +1840,13 @@ function toggleDiff(btn, revPath, bundleId){
    here would be a fourth writer in a system whose three-implementation
    conformance requirement exists to keep the writers in agreement.
 
-   The two tables below are the catalog's, and check-semantics.mjs fails the
-   build if they drift from checks/bio-checks.mjs. The installer injects them at
-   module load and cannot drift; this file is static, so the assertion is how it
-   earns the same guarantee.
+   The catalog's tables — PREFIX, FIRST_STATE, HEADINGS, SCHEMA_OF — USED TO BE
+   RESTATED HERE, under a comment claiming check-semantics.mjs failed the build
+   if they drifted. That claim was false for as long as it stood (D-138). They
+   now live ONCE, in the guarded CATALOG block near the top of this file, and
+   the guard that was claimed is now the one that runs.
    ============================================================ */
 const NL = String.fromCharCode(10);
-const PREFIX = { information:"INFO", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
-const FIRST_STATE = { information:"collected", focus:"surfaced", problem:"surfaced", project:"forming", action:"planned" };
-const HEADINGS = {
-  information:["## Summary","## Provenance Notes","## Session Log","## Review Notes"],
-  focus:["## Statement","## Why It Matters","## Open Questions","## Session Log","## Review Notes"],
-  problem:["## Statement","## Why It Matters","## Open Questions","## Session Log","## Review Notes"],
-  project:["## Thesis Summary","## Open Questions","## Ruled Out","## Session Log","## Review Notes"],
-  action:["## Plan","## Status","## Correspondence","## Session Log","## Review Notes"],
-};
-/* information@1 for a member writing down what they know, @2 the moment a
-   document IS captured, because the @2 contract makes the provenance register
-   mandatory (C-18.1) and a register describes captured documents: locator,
-   authority, method, grade, hash. Typed intake has no document, so @2 would
-   demand a register with nothing honest to put in it. */
-const SCHEMA_OF = { information:"information@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
-const schemaFor = (type, hasDoc) => type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
 
 async function sha256Text(text){
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -1745,7 +1883,9 @@ function mdFor(id, type, state, title, body, now, hasDoc, src){
     "  authority: "+JSON.stringify((src&&src.authority)||"member-entered"),
     "  retrieved: "+((src&&src.retrieved)||now),
     "monitoring:","  enabled: false","  frequency: none");
-  if(type === "focus" || type === "problem") fm.push(
+  /* Asked through normalizeType, so `inquiry` and its two legacy spellings take
+     the same arm — C-2.8 requires surfaced_by on all three (MAP RULE). */
+  if(normalizeType(type) === "inquiry") fm.push(
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if(type === "project") fm.push("objective: "+JSON.stringify(title));
@@ -1765,7 +1905,7 @@ function mdFor(id, type, state, title, body, now, hasDoc, src){
   if(type === "action") fm.push("action_kind: other","risk_tier: 1");
   fm.push("---","");
   const out = fm.slice();
-  (HEADINGS[type]||["## Summary"]).forEach((h,i)=>{ out.push(h,""); if(i===0) out.push(body,""); });
+  (vocabFor(HEADINGS, type)||["## Summary"]).forEach((h,i)=>{ out.push(h,""); if(i===0) out.push(body,""); });
   return out.join(NL);
 }
 /* C-18.1 wants the register to point at a file the bundle holds, so the document
@@ -1974,6 +2114,12 @@ const EVENTS = {
   scheduled:         { significance: SIGNIFICANCE.ROUTINE },
   agenda_published:  { significance: SIGNIFICANCE.ROUTINE },
   minutes_published: { significance: SIGNIFICANCE.ROUTINE },
+  /* the meeting_agenda type (FW-15): an item of legislation removed from a
+     published agenda is the quiet-substitution class; its wording moving is
+     worth showing; items arriving is what a supplemental agenda is */
+  item_pulled:       { significance: SIGNIFICANCE.EVENT },
+  item_changed:      { significance: SIGNIFICANCE.NOTICE },
+  item_added:        { significance: SIGNIFICANCE.ROUTINE },
 };
 
 /** Build an event, drawing its significance from the catalogue so the grade lives in
@@ -3054,6 +3200,219 @@ const meetingCalendar = {
   },
 };
 
+/* ---- docprofile/doctypes/meeting-agenda.mjs ---- */
+/* A meeting agenda: the list of legislation a body will take up, item by item.
+ *
+ * MEASURED on a real document, per the standing rule that an unmeasured content
+ * type is not written: oakland.legistar.com View.ashx?M=A&ID=1425405 (the *Rules
+ * & Legislation Committee agenda for 2026-07-16, SUPPLEMENTAL), fetched
+ * 2026-08-03 and read through Tier-1 text extraction (60,865 chars, 99.9%
+ * decode — the agenda class Tier 1 fully serves, MEASUREMENTS.md CPDF-5).
+ * Every rule below points at something in that text:
+ *
+ *   Each item of legislation carries a FILE NUMBER on its own line ("26-0910"),
+ *   41 of them in the document, each unique. This is Legistar's own stable id
+ *   for the legislation — the same number the body's minutes, later agendas and
+ *   LegislationDetail pages carry — so it is the entity key (an id the source
+ *   assigned is a key, framework §7).
+ *
+ *   An item's description precedes its number as labelled blocks, the label on
+ *   its own line and the value on the next: "Subject: / Grand Performance
+ *   Mural", "From: / Councilmember Wang", then "Recommendation: ..." inline.
+ *   The ITEM NUMBER ("3.1") sits on its own line immediately before the file
+ *   number. Section-level items ("2" / "26-0844") have no Subject block; their
+ *   heading is the non-furniture line above the item number.
+ *
+ *   Page furniture repeats through the text ("Page 12", "City of Oakland",
+ *   "Printed on 7/15/2026 ...", the meeting date, the body name, the "Agenda"
+ *   banner) and can fall BETWEEN an item's description and its file number at a
+ *   page break, so nothing here assumes a block is contiguous.
+ *
+ *   The meeting date is the document's first line ("Thursday, July 16, 2026")
+ *   and the body name repeats as a header line ("*Rules & Legislation
+ *   Committee").
+ *
+ * WHY THIS TYPE MATTERS. The agenda is the document class the citation graph is
+ * keyed on (MEASUREMENTS: the agenda decodes free; the substance it links to is
+ * where Tier 1 stops), and its file numbers are the references that connect a
+ * meeting to the legislation it took up. A reading of an agenda is therefore a
+ * list of legislation references — nothing more is claimed. What the body DID
+ * with each item is the minutes' business, not the agenda's.
+ */
+
+
+/* A Legistar legislation file number, alone on its line: two-digit year, dash,
+   four-digit serial. Line-anchored on purpose — an inline mention inside a
+   recommendation's prose is a cross-reference, not an item on THIS agenda, and
+   the measured document carries each item's number on its own line exactly once. */
+const FILE_LINE = /^(\d{2}-\d{4})$/;
+const ITEM_LINE = /^\d+(?:\.\d+)*$/;
+
+/* The page furniture the measured document repeats; skipped when scanning back
+   for a section heading. Deliberately narrow: an unrecognised line is treated as
+   substance (the conservative direction), not as furniture. */
+const FURNITURE = [
+  /^Page \d+$/i,
+  /^City of Oakland$/i,
+  /^Printed on /i,
+  /^Agenda(?:\s*-.*)?$/i,
+  /^View Report$/i,
+  /^Attachments:$/i,
+  /^Sponsors:$/i,
+  /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/,
+];
+const isFurniture = (l) => FURNITURE.some((re) => re.test(l));
+
+const MONTHS = { january: 0, february: 1, march: 2, april: 3, may: 4, june: 5, july: 6,
+                 august: 7, september: 8, october: 9, november: 10, december: 11 };
+const parseLongDate = (s) => {
+  const m = /([A-Za-z]+) (\d{1,2}), (\d{4})/.exec(String(s || ""));
+  if (!m) return null;
+  const mo = MONTHS[m[1].toLowerCase()];
+  if (mo == null) return null;
+  return new Date(Date.UTC(+m[3], mo, +m[2])).toISOString().slice(0, 10);
+};
+
+const meetingAgenda = {
+  key: "meeting_agenda",
+  label: "a meeting agenda",
+  version: 1,
+  /* A list of items, so what matters is its MEMBERSHIP — which legislation is
+     before the body and whether each item still says what it said. Declared on
+     the content type (CONSTRUCTS Step 0 #4). */
+  contract: CONTRACT.MEMBERSHIP,
+
+  detect(ctx) {
+    const t = String(ctx.text || "");
+    const signals = [];
+    /* Line-anchored file numbers are the definitive signal: HTML never carries
+       them alone on a line, and a staff report about ONE file does not list
+       them item after item. */
+    const files = t.match(/^\s*\d{2}-\d{4}\s*$/gm) || [];
+    if (files.length) signals.push(`${files.length} legislation file number line(s)`);
+    if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
+      signals.push("Subject:/Recommendation: item blocks");
+    if (/\bAgenda\b/i.test(t)) signals.push("an agenda heading");
+    if (/Roll Call|Office of the City Clerk/i.test(t)) signals.push("meeting front matter");
+    /* The heading alone is far too common a word; it never matches by itself.
+       Certain needs the file-number lines AND the item blocks AND the heading —
+       all three were measured on the real packet. */
+    if (files.length && signals.includes("Subject:/Recommendation: item blocks")
+        && signals.includes("an agenda heading"))
+      return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    if (signals.includes("an agenda heading") && signals.length >= 3)
+      return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
+  },
+
+  /** What is in it: the meeting's own facts, and one entity per item of
+   *  legislation, keyed by the source-assigned file number. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const lines = raw.split(/\r?\n/).map((l) => l.trim());
+
+    /* The meeting's facts. Date: the first long-form date line (the measured
+       document opens with it). Body: the first header-ish line naming a body.
+       Both may honestly be null — an unread fact is never invented. */
+    let date = null, body = null;
+    for (const l of lines.slice(0, 60)) {
+      if (!date && /^[A-Za-z]+day, [A-Za-z]+ \d{1,2}, \d{4}$/.test(l)) date = parseLongDate(l);
+      if (!body && /(Committee|City Council|Commission|Board|Authority)\s*$/.test(l) && !/^Councilmember/i.test(l))
+        body = l.replace(/^[*\s]+/, "").trim();
+      if (date && body) break;
+    }
+
+    const entities = [];
+    const seen = new Set();
+    let pendingSubject = null, pendingFrom = null, expect = null;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      /* Labelled blocks: the label sits on its own line and the value follows
+         (measured), or the value rides the label's own line. */
+      const lab = /^(Subject|From):\s*(.*)$/.exec(line);
+      if (lab) {
+        if (lab[2]) { if (lab[1] === "Subject") pendingSubject = lab[2]; else pendingFrom = lab[2]; expect = null; }
+        else expect = lab[1];
+        continue;
+      }
+      if (expect) {
+        if (expect === "Subject") pendingSubject = line; else pendingFrom = line;
+        expect = null;
+        continue;
+      }
+      const file = FILE_LINE.exec(line);
+      if (!file) continue;
+      const key = file[1];
+      /* The same file listed twice is one item of legislation; first mention
+         carries the description in the measured layout. */
+      if (seen.has(key)) continue;
+      seen.add(key);
+      /* The item number immediately precedes the file line; a section item with
+         no Subject block takes its heading from the nearest substantive line
+         above the item number. */
+      let item = null, heading = null;
+      for (let j = i - 1, hops = 0; j >= 0 && hops < 8; j--) {
+        const prev = lines[j];
+        if (!prev) continue;
+        hops++;
+        if (item == null && ITEM_LINE.test(prev)) { item = prev; continue; }
+        if (isFurniture(prev) || FILE_LINE.test(prev)) { if (FILE_LINE.test(prev)) break; continue; }
+        heading = prev;
+        break;
+      }
+      const label = pendingSubject || heading || `legislation ${key}`;
+      entities.push(entity(key, "legislation", String(label).slice(0, 160), {
+        subject: pendingSubject || null,
+        from: pendingFrom || null,
+        item: item || null,
+      }));
+      pendingSubject = null; pendingFrom = null;
+    }
+
+    return { entities, body, date, at: ctx.at || null };
+  },
+
+  /** Given two parses of the same agenda address, what happened to the list. */
+  assess(a, b) {
+    /* A read that found nothing is a failed reader, never an emptied agenda. */
+    if (!a.entities.length || !b.entities.length)
+      return { meaningful: null, significance: null, events: [], confirmed: null,
+               why: "the items on this agenda could not be read this time, so nothing is "
+                  + "claimed about them either way" };
+
+    const d = diffEntities(a.entities, b.entities);
+    const events = [];
+    /* An item REMOVED from a published agenda is the quiet-substitution class:
+       the document still answers at the same address and no longer offers what
+       it offered. There is no moving window here to excuse it (the calendar's
+       lesson does not transfer: an agenda is one meeting's list, not a range). */
+    for (const e of d.gone)
+      events.push(event("item_pulled", { key: e.key, label: e.label,
+        why: "an item of legislation this agenda listed is no longer on it" }));
+    for (const alt of d.altered)
+      events.push(event("item_changed", { key: alt.entity.key, label: alt.entity.label,
+        moved: alt.moved,
+        why: "what this agenda says about an item changed" }));
+    /* Items arriving is what a supplemental agenda IS (the measured document is
+       one); routine, and recorded. */
+    for (const e of d.appeared)
+      events.push(event("item_added", { key: e.key, label: e.label,
+        why: "an item of legislation was added to this agenda" }));
+
+    bySeverity(events);
+    const intact = a.entities.filter((e) =>
+      b.entities.some((x) => x.key === e.key && JSON.stringify(x.facts) === JSON.stringify(e.facts))).length;
+    return {
+      meaningful: isMeaningful(events), significance: worstSignificance(events), events,
+      confirmed: { entries: b.entities.length, intact },
+      why: events.length
+        ? `${intact} of ${a.entities.length} items unchanged; ${d.gone.length} pulled, ${d.appeared.length} added, ${d.altered.length} altered`
+        : `all ${b.entities.length} items on this agenda are unchanged`,
+    };
+  },
+};
+
 /* ---- docprofile/doctypes/generic.mjs ---- */
 /* The content type for a document whose type is not recognised.
  *
@@ -3102,10 +3461,16 @@ const generic = {
 
 
 
+
 /* generic carries `fallback: true`, so the shared registry returns it when nothing
    detects — same mechanism as the conservative handler on the stack axis. */
 const types = makeRegistry();
 types.register(meetingCalendar);
+/* meeting_agenda (FW-15) is the SECOND measured type, written from a real
+   Legistar agenda packet's Tier-1 text — the first content type reached through
+   text a non-HTML container produced, which is the FORMAT-axis uniformity claim
+   exercised on the content axis. */
+types.register(meetingAgenda);
 types.register(generic);
 
 function doctypes() { return types.all(); }
@@ -3823,7 +4188,7 @@ async function openBundle(id, fromNav){
     const fwd = (fmj && fmj.references) || [];
     const objective = fmj && fmj.objective ? `<div class="card"><div class="kv"><span class="k">Objective</span><span class="v plain">${esc(fmj.objective)}</span></div>${fmj.workproduct_state?`<div class="kv"><span class="k">Work product</span><span class="v plain">${chip(fmj.workproduct_state, "workproduct")||esc(fmj.workproduct_state)}</span></div>`:""}</div>` : "";
     const fwdRows = fwd.length ? fwd.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.target)}')"><span class="lt">${esc(r.target)}</span><span class="ln">${esc(r.rel||"cites")}${r.status?` · ${esc(r.status)}`:""}${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
-    const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.fromTitle)}</span><span class="ln">${esc(TYPE_LABEL[r.fromType]||r.fromType)} · ${esc(r.rel||"cites")} this${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
+    const revRows = rev.length ? rev.map(r=>`<div class="linkrow" onclick="openBundle('${esc(r.from)}')"><span class="lt">${esc(r.fromTitle)}</span><span class="ln">${esc(typeLabel(r.fromType, r.fromState))} · ${esc(r.rel||"cites")} this${r.note?` · ${esc(r.note)}`:""}</span></div>`).join("") : "";
     const groupLine = (proj&&proj.group_id) ? `<p class="lede" style="margin:0 0 12px">In the record of <span class="mono">${esc(proj.group_id)}</span>.</p>` : "";
     /* The source's own assertions, beside the group's. A member citation is the
        group saying two things are connected; a captured link is the SOURCE
@@ -3877,24 +4242,25 @@ async function openBundle(id, fromNav){
         relBar = `<h2 class="sec">Release</h2><div class="rv-bar" style="margin:0"><button class="btn" onclick="openReleaseDialog('${esc(id)}')">Release this document</button><span class="n">Moves it from collected to verified, in your name, on the permanent record.</span></div>`;
     }
 
-    /* --- disposition, the first ACT: defer or dismiss a focus (UI-2) --- */
+    /* --- disposition, the first ACT: defer or dismiss an inquiry (UI-2) --- */
     let dispBar = "";
-    if(["focus","problem"].includes(otype)){
-      const st = fm.current_state || (proj&&proj.current_state) || "surfaced";
-      const canMove = (DISPOSE_LEGAL[st]||[]).some(t=>DISPOSITIONS.includes(t));
+    if(normalizeType(otype) === "inquiry"){
+      const st = fm.current_state || (proj&&proj.current_state) || vocabFor(FIRST_STATE, otype);
+      const canMove = (disposeLegal(otype)[st]||[]).some(t=>DISPOSITIONS.includes(t));
       if(canDispose() && canMove){
         /* Title/id/state cross the inline handler JSON-encoded and attribute-
            escaped (a title may carry an apostrophe), the same way the release
            flow passes its id set — never a bare-quoted string. */
         const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(fm.title||(proj&&proj.title)||id)), jst = esc(JSON.stringify(st));
+        const jty = esc(JSON.stringify(otype||"inquiry"));
         dispBar = `<h2 class="sec">Disposition</h2>
           <div class="rv-bar" style="margin:0;gap:8px">
-            <button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${jst},'deferred')">Defer&hellip;</button>
-            <button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${jst},'dismissed')">Dismiss&hellip;</button>
+            <button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${jst},'deferred',${jty})">Defer&hellip;</button>
+            <button class="btn ghost" onclick="openDisposeDialog(${jid},${jt},${jst},'dismissed',${jty})">Dismiss&hellip;</button>
             <span class="n">Deferring or dismissing is a reasoned act: reversible and kept, but it records why, in your name.</span>
           </div>`;
       } else if(canDispose() && st==="elevated"){
-        dispBar = `<h2 class="sec">Disposition</h2><p class="rel-note" style="margin:0">This focus has been elevated into a project, so it can no longer be deferred or dismissed.</p>`;
+        dispBar = `<h2 class="sec">Disposition</h2><p class="rel-note" style="margin:0">This question was carried into a project under the record's earlier vocabulary, so it can no longer be deferred or dismissed.</p>`;
       }
     }
 
@@ -3990,7 +4356,7 @@ async function renderSearchScreen(){
 }
 /* A search launched from a typed page stays in that page's world. */
 const SEARCH_SCOPES = {
-  focuses:    { q:"type:focus",      client:h=>["focus","problem"].includes(h.object_type||h.type), label:"Focuses" },
+  inquiries:  { q:"type:inquiry",    client:h=>normalizeType(h.object_type||h.type)==="inquiry",   label:"Questions" },
   projects:   { q:"type:project",    client:h=>(h.object_type||h.type)==="project",                 label:"Projects" },
   review:     { q:"state:collected", client:h=>(h.current_state||h.state)==="collected",            label:"items awaiting review" },
   monitoring: { client:h=>!!(h.monitor_enabled||h.reeval_flag),                                     label:"monitored material" },
@@ -4198,11 +4564,11 @@ function releaseRefusal(e){
 }
 
 /* ============================================================
-   UI-2 — THE FIRST ACT: focus disposition, a JUSTIFIED TRANSITION.
+   UI-2 — THE FIRST ACT: inquiry disposition, a JUSTIFIED TRANSITION.
    (BIO_Interaction_Constructs v0.2 — the ACT construct + the WEIGHT
    LADDER; §J "a state change carrying authored text that becomes
    evidence".) ONE motion, exactly and only:
-     1 CHOOSE      defer or dismiss this focus.
+     1 CHOOSE      defer or dismiss this question.
      2 PRE-FLIGHT  see WHAT IT WILL REFUSE and WHY *before* it runs.
                    This is the ACT construct's defining property, not a
                    nicety: the member meets the refusal before committing.
@@ -4212,52 +4578,55 @@ function releaseRefusal(e){
      4 RECEIPT     what the plane returned: the act happened, here is the
                    record of it.
    The act's WEIGHT-LADDER rung is shown: disposition is `reasoned`.
-   Plane op consumed (I3): op=select (a one-focus enumerated selection)
+   Plane op consumed (I3): op=select (a one-inquiry enumerated selection)
    then op=dispose(handle,to,reason). op=dispose has NO dry-run, so the
    pre-flight is computed from the op's DECLARED refusal shape plus the
-   focus's own known state — honest against what exists, never a guess.
+   question's own known state — honest against what exists, never a guess.
    ============================================================ */
 
-/* The plane's OWN legal-transition table, mirrored from bio-plane/src/
-   store.mjs dispose() (the `LEGAL` map). Mirrored, not invented: the UI
-   pre-flights the same ILLEGAL_TRANSITION the store would refuse, so a
-   stale view is refused here rather than surfaced as a dead button.
-   `deferred->deferred` is deliberately ABSENT — a no-op move is a refusal,
-   because it usually means the view was taken before someone else moved it. */
-const DISPOSE_LEGAL = {
-  surfaced:  ["elevated", "deferred", "dismissed"],
-  deferred:  ["surfaced", "elevated", "dismissed"],
-  dismissed: ["surfaced", "elevated", "deferred"],
-  elevated:  [],
-};
+/* The legal moves come from the guarded CATALOG block, which mirrors the
+   catalog's STATES[type].edges — the SAME table op=dispose() imports (REC-10
+   replaced the store's literal second copy with that import, and this is the
+   surface's half of it). The type is NORMALIZED first, exactly as op=dispose()
+   normalizes the row before applying the machine — so a legacy `focus` or
+   `problem` row is pre-flighted against the same edges the plane will judge it
+   by, and `elevated`, which the inquiry machine has no entry for, is refused
+   here for the same reason it is refused there. Mirrored, not invented: the UI
+   pre-flights the same ILLEGAL_TRANSITION the store would refuse, so a stale
+   view is refused here rather than surfaced as a dead button.
+   `deferred->deferred` is absent in the catalog itself — a no-op move is a
+   refusal, because it usually means the view was taken before someone else
+   moved it. */
+const disposeLegal = (type) => vocabFor(STATE_EDGES, normalizeType(type || "inquiry")) || {};
+const DISPOSE_LEGAL = STATE_EDGES.inquiry;   // the machine every question minted today runs on
 const DISPOSITIONS = ["deferred", "dismissed"];   // the two the UI offers (op=dispose's DISPOSITIONS)
 const DISPOSE_REASON_MAX = 160;                    // Store.EDGE_REASON_MAX
 const DISPOSE_REASON_RULE = /["\\\r\n]/;           // the store's restricted-grammar rule
 const DISPOSE_VERB = { deferred:"Defer", dismissed:"Dismiss" };
 const DISPOSE_DONE = { deferred:"deferred", dismissed:"dismissed" };
 
-/* THE PRE-FLIGHT — pure, so the harness can prove it. Given the focus's
+/* THE PRE-FLIGHT — pure, so the harness can prove it. Given the question's
    current state, the chosen disposition, and the reason authored so far,
    it returns every gate the act must clear (for the panel) and the ONE
    refusal that would fire first, in the plane's own checking order:
    NOT_A_DISPOSITION -> NO_REASON (C-2.8) -> BAD_REASON -> ILLEGAL_TRANSITION.
    `ok` is true only when nothing would refuse. */
-function disposePreflight({ state, to, reason }){
+function disposePreflight({ state, to, reason, type }){
   const why = String(reason == null ? "" : reason).trim();
   const isDisp   = DISPOSITIONS.includes(to);
   const hasReason= why.length > 0;
   const goodGrammar = !DISPOSE_REASON_RULE.test(why) && why.length <= DISPOSE_REASON_MAX;
-  const legalMove = (DISPOSE_LEGAL[state] || []).includes(to);
+  const legalMove = (disposeLegal(type)[state] || []).includes(to);
   const gates = [
     { id:"reason", title:"A reason", pass:hasReason,
       need:"Required, and never written for you. This act records your reason — WHY you defer or dismiss — in your name, on the permanent record, so the decision itself stays accountable and not just its outcome. It is refused until you write one." },
     { id:"grammar", title:"Within the record's grammar", pass:!hasReason ? true : goodGrammar,
       need:`At most ${DISPOSE_REASON_MAX} characters, and no quotation marks, backslashes, or line breaks: the reason is written verbatim into the record, whose format has no escapes.` },
-    { id:"move", title:"A move this focus can make", pass:isDisp && legalMove,
-      need: !isDisp ? "Only deferring and dismissing are dispositions here; elevating a focus opens a project and is a different act."
-          : state==="elevated" ? "This focus has been elevated into a project, so it can no longer be deferred or dismissed."
-          : state===to ? `This focus is already ${DISPOSE_DONE[to]}. Someone may have moved it while this page was open; reopen it to see where it stands.`
-          : "That is not a move this focus can make from where it stands now." },
+    { id:"move", title:"A move this question can make", pass:isDisp && legalMove,
+      need: !isDisp ? "Only deferring and dismissing are dispositions here; concluding a question is a different act, with its own requirements."
+          : state==="elevated" ? "This question was carried into a project under the record's earlier vocabulary, so it can no longer be deferred or dismissed."
+          : state===to ? `This question is already ${DISPOSE_DONE[to]}. Someone may have moved it while this page was open; reopen it to see where it stands.`
+          : "That is not a move this question can make from where it stands now." },
   ];
   // The plane checks reason BEFORE it resolves the set, so NO_REASON/BAD_REASON
   // outrank ILLEGAL_TRANSITION when more than one would fire.
@@ -4288,11 +4657,14 @@ function weightLadderHtml(here, note){
 }
 
 /* CHOOSE + PRE-FLIGHT + AUTHOR, in one dialog. Opened from the act bar on a
-   focus's page for one chosen disposition; the member can still switch between
+   question's page for one chosen disposition; the member can still switch between
    the two here (that is the CHOICE), and every switch re-runs the pre-flight. */
-let DISPOSE_CTX = null;   // { id, title, state }
-function openDisposeDialog(id, title, state, to){
-  DISPOSE_CTX = { id, title, state };
+let DISPOSE_CTX = null;   // { id, title, state, type }
+/* `type` defaults to the canonical spelling: a caller that does not name it is
+   asking about a question minted today, and the pre-flight then reads the
+   inquiry machine rather than guessing. */
+function openDisposeDialog(id, title, state, to, type){
+  DISPOSE_CTX = { id, title, state, type: type || "inquiry" };
   const choose = DISPOSITIONS.map(d=>`<label class="dz-opt${d===to?" on":""}">
       <input type="radio" name="dz-to" value="${d}" ${d===to?"checked":""} onchange="disposeChoose(this.value)">
       <span class="dz-verb">${esc(DISPOSE_VERB[d])}</span>
@@ -4301,8 +4673,8 @@ function openDisposeDialog(id, title, state, to){
         : "Decline it, with a reason. Kept, never deleted, so the decision itself stays accountable."}</span>
     </label>`).join("");
   $("#dlg").innerHTML =
-    `<h2 id="dz-h">${esc(DISPOSE_VERB[to])} this focus</h2>
-     <p class="what">Disposing a focus moves its state and writes your reason into its permanent Session Log. It is reversible — a deferred or dismissed focus is kept and can be re-triaged — but it is never silent.</p>
+    `<h2 id="dz-h">${esc(DISPOSE_VERB[to])} this question</h2>
+     <p class="what">Disposing a question moves its state and writes your reason into its permanent Session Log. It is reversible — a deferred or dismissed question is kept and can be picked back up — but it is never silent.</p>
      <div class="dz-what"><span class="dz-ttl">${esc(title||id)}</span><span class="id">${esc(id)}</span></div>
      <div class="dz-choose">${choose}</div>
      <div class="dz-pf" id="dz-pf"><!-- pre-flight, painted by disposeValidate --></div>
@@ -4322,7 +4694,7 @@ function openDisposeDialog(id, title, state, to){
 }
 function disposeChoose(to){
   const go = $("#dz-go"); if(go) go.dataset.to = to;
-  const h = $("#dz-h"); if(h) h.textContent = `${DISPOSE_VERB[to]} this focus`;
+  const h = $("#dz-h"); if(h) h.textContent = `${DISPOSE_VERB[to]} this question`;
   $("#dlg").querySelectorAll(".dz-opt").forEach(o=>{
     const on = o.querySelector("input").value===to; o.classList.toggle("on", on);
   });
@@ -4335,7 +4707,7 @@ function disposeValidate(){
   if(!DISPOSE_CTX) return;
   const go = $("#dz-go"); const to = go ? go.dataset.to : "deferred";
   const el = $("#dz-reason"); const reason = el ? el.value : "";
-  const pf = disposePreflight({ state: DISPOSE_CTX.state, to, reason });
+  const pf = disposePreflight({ state: DISPOSE_CTX.state, to, reason, type: DISPOSE_CTX.type });
   const cc = $("#dz-cc");
   if(cc){
     const bad = reason.trim() && DISPOSE_REASON_RULE.test(reason);
@@ -4358,13 +4730,13 @@ function disposeValidate(){
    never reaches the plane, so the C-2.8 requirement is felt before the request
    is even sent. (Removing this early return is the harness's negative control:
    an empty-reason act would then be sent to the plane.) Only a clean pre-flight
-   builds the one-focus selection and disposes it. */
+   builds the one-inquiry selection and disposes it. */
 async function doDispose(){
   if(!DISPOSE_CTX) return;
   const go = $("#dz-go"); const to = go ? go.dataset.to : "deferred";
   const el = $("#dz-reason"); const reason = el ? String(el.value||"").trim() : "";
   const err = $("#dz-err"); if(err) err.classList.add("hidden");
-  const pf = disposePreflight({ state: DISPOSE_CTX.state, to, reason });
+  const pf = disposePreflight({ state: DISPOSE_CTX.state, to, reason, type: DISPOSE_CTX.type });
   if(!pf.ok){                       // the surface refuses, before the plane
     // The pre-flight speaks in the member's words (its `detail`), not the
     // plane's code — the plane is never even reached, so there is no plane
@@ -4378,7 +4750,7 @@ async function doDispose(){
   try{
     const sel = await recPost("select", { ids:[DISPOSE_CTX.id] }, { kind:"enumerated" });
     const res = await rec("dispose", { handle: sel.handle, to, reason });
-    RECORD_CACHE = null;            // this focus's state moved; the cache is stale
+    RECORD_CACHE = null;            // this question's state moved; the cache is stale
     disposeReceipt(res, DISPOSE_CTX);
     return res;
   }catch(e){
@@ -4398,7 +4770,7 @@ function disposeReceipt(res, ctx){
        <div class="dz-rhead">${esc(DISPOSE_DONE[to]==="deferred"?"Deferred.":"Dismissed.")}</div>
        <p class="dz-rlede">The plane recorded the act. It now reads as <span class="chip ${esc(to)}">${esc(to)}</span> in the record, and its Session Log carries your name and your reason. It is kept, and can be re-triaged.</p>
        <div class="dz-rgrid">
-         <div class="kv"><span class="k">Focus</span><span class="v">${esc((ctx&&ctx.title)||ids[0])} <span class="id">${esc(ids[0])}</span></span></div>
+         <div class="kv"><span class="k">Question</span><span class="v">${esc((ctx&&ctx.title)||ids[0])} <span class="id">${esc(ids[0])}</span></span></div>
          <div class="kv"><span class="k">Now</span><span class="v plain">${esc(to)}</span></div>
          <div class="kv"><span class="k">Your reason, as recorded</span><span class="v plain">${esc(res.reason||"")}</span></div>
          <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — reversible, but never silent</span></div>
@@ -5686,7 +6058,7 @@ function docProgGapHtml(){
       (progression_key, stage_key); the instances are listed under the one card.
 
    3. EXACTLY THREE AFFORDANCES, and only three (interaction-constructs v0.2 §P):
-      ADOPT (author it into a focus/problem the member decides is worth pursuing —
+      ADOPT (author it into an inquiry the member decides is worth pursuing —
       op=promote, the plane stamps surfaced_by human because a person judged it),
       DEFER (with a recorded reason), DISMISS (with a recorded reason). Nothing is
       adopted automatically and nothing is dismissed silently.
@@ -5695,7 +6067,7 @@ function docProgGapHtml(){
      op=instance (GET key=&id=) -> { found, grade, grade_determined, established,
        finding_count, findings:[{kind:"missing_predecessor", stage_key, required,
        grade, grade_determined}], stages:[...] } — the derived findings we RENDER.
-     op=promote (mutating) -> ADOPT authors a focus/problem; the browser never
+     op=promote (mutating) -> ADOPT authors an inquiry; the browser never
        sends surfaced_by (REC-3 stamps it from the session: a member session -> human).
 
    TWO GAPS, reported as DELEGATIONs to RECORD (CLAIMS.md) and built around here:
@@ -5806,11 +6178,11 @@ function proposalCardHtml(p){
     ${proposalGradeHtml(p)}
     <details class="prop-insts"><summary>${many ? `All ${p.n} instances` : `The instance`}</summary><ul>${insts}</ul></details>
     <div class="prop-acts">
-      <button class="btn" data-prop-adopt="${esc(p.key)}" onclick="openProposalAdopt('${esc(p.key)}')">Adopt — make it a focus</button>
+      <button class="btn" data-prop-adopt="${esc(p.key)}" onclick="openProposalAdopt('${esc(p.key)}')">Adopt — make it a question</button>
       <button class="btn ghost" data-prop-defer="${esc(p.key)}" onclick="openProposalAct('${esc(p.key)}','deferred')">Defer&hellip;</button>
       <button class="btn ghost" data-prop-dismiss="${esc(p.key)}" onclick="openProposalAct('${esc(p.key)}','dismissed')">Dismiss&hellip;</button>
     </div>
-    <div class="prop-note">Adopting authors a focus <b>in your name</b> — the record then knows a person judged this worth pursuing. Deferring or dismissing records your reason and keeps the proposal; nothing here is adopted automatically and nothing is dismissed silently.</div>
+    <div class="prop-note">Adopting authors a question <b>in your name</b> — the record then knows a person judged this worth pursuing. Deferring or dismissing records your reason and keeps the proposal; nothing here is adopted automatically and nothing is dismissed silently.</div>
   </div>`;
 }
 
@@ -5820,7 +6192,7 @@ async function renderProposals(){
   setActive("proposals");
   const c = $("#content");
   c.innerHTML = `<h1 class="rec">Proposals</h1>
-    <p class="lede">Questions the record raised on its own, and nobody has yet judged. Each is a pattern the record noticed — a required step of a progression with no document, most often — reported honestly as a question, never as an established fact. You decide what happens to each: adopt it as a focus, defer it, or dismiss it. Nothing here decides anything until you act.</p>
+    <p class="lede">Questions the record raised on its own, and nobody has yet judged. Each is a pattern the record noticed — a required step of a progression with no document, most often — reported honestly as a question, never as an established fact. You decide what happens to each: adopt it as a question of your own, defer it, or dismiss it. Nothing here decides anything until you act.</p>
     <div id="prop">Loading&hellip;</div>`;
   try{
     const feed = await loadProposals();
@@ -5965,7 +6337,7 @@ function proposalActValidate(){
 /* COMMIT. The pre-flight runs once more as the real gate: an empty reason above
    all is refused IN THE SURFACE and never reaches the plane. Only a clean
    pre-flight records the disposition — through the delegated op=proposedispose,
-   because a proposal is not a focus bundle and op=dispose cannot take it. Absent
+   because a proposal is not an inquiry bundle and op=dispose cannot take it. Absent
    that op, the plane answers "unknown op" and the surface says the record cannot
    yet keep a proposal's disposition, having written nothing. (Removing the early
    return is this suite's negative control on the reason gate.) */
@@ -5990,7 +6362,7 @@ async function doProposalDispose(){
     const gap = e && /unknown op/i.test(String(e.error || e.reason || ""));
     if(err){
       err.innerHTML = gap
-        ? `<b>The record cannot yet keep a proposal's disposition — nothing was written.</b><div style="margin-top:4px">A proposal is not a focus, so it cannot be disposed the way a focus is. Recording that a member deferred or dismissed the record's own question (and ageing it, per the aggregation discipline) needs an op RECORD does not expose yet (<span class="mono">op=proposedispose</span>). Your reason was not lost — it simply has nowhere to be stored until that lands.</div>`
+        ? `<b>The record cannot yet keep a proposal's disposition — nothing was written.</b><div style="margin-top:4px">A proposal is not a question in the record, so it cannot be disposed the way one is. Recording that a member deferred or dismissed the record's own question (and ageing it, per the aggregation discipline) needs an op RECORD does not expose yet (<span class="mono">op=proposedispose</span>). Your reason was not lost — it simply has nowhere to be stored until that lands.</div>`
         : proposalRefusalHtml(e);
       err.classList.remove("hidden");
     }
@@ -6020,29 +6392,37 @@ function proposalRefusalHtml(e){
   return `<b>${head}</b>${detail}`;
 }
 
-/* ---- ADOPT: author a focus/problem from the proposal (op=promote). This is the
+/* ---- ADOPT: author an INQUIRY from the proposal (op=promote). This is the
    affordance that is FULLY reachable, and the one where "derived informs, authored
-   binds" completes: the member writes the focus in their OWN words (never prefilled
-   — the machine's question is shown as CONTEXT, not put in their mouth), and the
-   plane stamps surfaced_by human because a person judged it worth pursuing. ---- */
-const PROP_ADOPT_KINDS = [["focus","A question worth pursuing"], ["problem","A problem to be solved"]];
+   binds" completes: the member writes the question in their OWN words (never
+   prefilled — the machine's question is shown as CONTEXT, not put in their mouth),
+   and the plane stamps surfaced_by human because a person judged it worth pursuing.
 
-/* PRE-FLIGHT — pure. The member must hold contribute, choose focus or problem, and
-   AUTHOR a title and a statement. The statement is never prefilled, so authoring it
-   is required, not editing the machine's words. */
+   THE CHOICE IS GONE, and its absence is the fix. This surface used to offer
+   "Focus" and "Problem" as two different things a proposal could become; they were
+   the SAME type wearing two spellings, and the display collapsed them anyway, so a
+   member could create a `problem` and only ever see it labelled Focus (SB-EVIDENCE
+   A-f). One type, one word, no choice to get wrong. ---- */
+const PROP_ADOPT_KINDS = [["inquiry","A question worth pursuing"]];
+
+/* PRE-FLIGHT — pure. The member must hold contribute and AUTHOR a title and a
+   statement. The statement is never prefilled, so authoring it is required, not
+   editing the machine's words. The kind gate REMAINS — a caller can still pass
+   something that is not a question, and the refusal names it — but there is no
+   longer a control that lets a member choose wrongly. */
 function proposalAdoptPreflight({ kind, title, statement, canContribute }){
   const t = String(title == null ? "" : title).trim();
   const s = String(statement == null ? "" : statement).trim();
-  const kindOk = ["focus","problem"].includes(kind);
+  const kindOk = normalizeType(kind) === "inquiry";
   const gates = [
     { id:"cap", title:"You can write to the record", pass:!!canContribute,
       need:"Adopting authors a bundle in your name, which needs a member session holding contribute." },
-    { id:"kind", title:"A focus or a problem", pass:kindOk,
-      need:"A proposal is adopted into a focus or a problem — the two questions-worth-pursuing the record holds." },
+    { id:"kind", title:"A question", pass:kindOk,
+      need:"A proposal is adopted into a question — the record raised it as one, and that is what it becomes." },
     { id:"title", title:"A title, in your words", pass:t.length > 0,
-      need:"Give the focus a title. This becomes a bundle in your name, so you name it — the record's question is a starting point, not your words." },
+      need:"Give the question a title. This becomes a bundle in your name, so you name it — the record's question is a starting point, not your words." },
     { id:"statement", title:"A statement, in your words", pass:s.length > 0,
-      need:"Write what you are pursuing and why. It is never written for you: an adopted focus carries a person's judgment, not a machine's, so the statement must be yours." },
+      need:"Write what you are pursuing and why. It is never written for you: an adopted question carries a person's judgment, not a machine's, so the statement must be yours." },
   ];
   let refusal = null;
   if(!canContribute) refusal = { reason:"NO_CONTRIBUTE", detail:gates[0].need };
@@ -6056,15 +6436,16 @@ let PROP_ADOPT_CTX = null;   // { key, proposal, kind }
 function openProposalAdopt(key){
   const p = PROPOSALS_LAST.find(x => x.key === key);
   if(!p) return;
-  PROP_ADOPT_CTX = { key, proposal:p, kind:"focus" };
-  const kinds = PROP_ADOPT_KINDS.map(([v,l],i) => `<label class="dz-opt${i===0?" on":""}">
-      <input type="radio" name="ad-kind" value="${v}" ${i===0?"checked":""} onchange="proposalAdoptChoose(this.value)">
-      <span class="dz-verb">${esc(v==="focus"?"Focus":"Problem")}</span><span class="dz-mean">${esc(l)}</span>
-    </label>`).join("");
+  PROP_ADOPT_CTX = { key, proposal:p, kind:"inquiry" };
+  /* One kind, so this renders as a STATEMENT of what is about to be written
+     rather than as a choice with one option in it. */
+  const kinds = PROP_ADOPT_KINDS.map(([v,l]) => `<div class="dz-opt on">
+      <span class="dz-verb">${esc(typeLabel(v, vocabFor(FIRST_STATE, v)))}</span><span class="dz-mean">${esc(l)}</span>
+    </div>`).join("");
   const insts = p.instances.map(i => esc(i.entity_label)).join(", ");
   $("#dlg").innerHTML =
-    `<h2 id="ad-h">Adopt this proposal as a focus</h2>
-     <p class="prop-adopt-lede">Adopting turns the record's question into a focus <b>you author</b>. The record then knows a person judged it worth pursuing — that is the whole difference between a machine noticing a pattern and a member deciding it matters.</p>
+    `<h2 id="ad-h">Adopt this proposal as a question</h2>
+     <p class="prop-adopt-lede">Adopting turns the record's question into one <b>you author</b>. The record then knows a person judged it worth pursuing — that is the whole difference between a machine noticing a pattern and a member deciding it matters.</p>
      <div class="prop-context">
        <div class="pc-cap">What the record noticed — for reference, not to copy</div>
        ${esc(proposalQuestion(p))}<br>
@@ -6075,26 +6456,25 @@ function openProposalAdopt(key){
      <label class="fld" for="ad-title">Title, in your words</label>
      <input class="txt" id="ad-title" placeholder="name the question you are taking on" oninput="proposalAdoptValidate()">
      <label class="fld" for="ad-statement">What are you pursuing, and why?</label>
-     <textarea class="txt" id="ad-statement" style="min-height:110px" placeholder="in your own words; this becomes the focus's statement, read later as your judgment" oninput="proposalAdoptValidate()"></textarea>
-     ${weightLadderHtml("reasoned", `Adopting is <b>reasoned</b>: it writes a focus into the working record in your name. It is reversible — a focus can be deferred or dismissed later — but it is never silent, and it is your judgment, not the record's, that it records.`)}
+     <textarea class="txt" id="ad-statement" style="min-height:110px" placeholder="in your own words; this becomes the question's statement, read later as your judgment" oninput="proposalAdoptValidate()"></textarea>
+     ${weightLadderHtml("reasoned", `Adopting is <b>reasoned</b>: it writes a question into the working record in your name. It is reversible — a question can be deferred or dismissed later — but it is never silent, and it is your judgment, not the record's, that it records.`)}
      <div id="ad-err" class="teach hidden"></div>
      <div id="ad-prog"></div>
      <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button>
-       <button class="btn" id="ad-go" disabled onclick="doProposalAdopt()">Adopt as a focus</button></div>`;
+       <button class="btn" id="ad-go" disabled onclick="doProposalAdopt()">Adopt as a question</button></div>`;
   $("#dlg-wrap").classList.remove("hidden");
   proposalAdoptValidate();
   const el = $("#ad-title"); if(el && el.focus) el.focus();
 }
+/* Kept as the one entry point for the kind, so nothing downstream has to know
+   whether a control or a constant chose it. There is no control today. */
 function proposalAdoptChoose(kind){
   PROP_ADOPT_CTX && (PROP_ADOPT_CTX.kind = kind);
-  const h = $("#ad-h"); if(h) h.textContent = `Adopt this proposal as a ${kind}`;
-  const go = $("#ad-go"); if(go) go.textContent = `Adopt as a ${kind}`;
-  $("#dlg").querySelectorAll(".dz-opt").forEach(o => o.classList.toggle("on", o.querySelector("input").value === kind));
   proposalAdoptValidate();
 }
 function proposalAdoptValidate(){
   if(!PROP_ADOPT_CTX) return;
-  const kind = PROP_ADOPT_CTX.kind || "focus";
+  const kind = PROP_ADOPT_CTX.kind || "inquiry";
   const title = ($("#ad-title")||{}).value || "";
   const statement = ($("#ad-statement")||{}).value || "";
   const pf = proposalAdoptPreflight({ kind, title, statement, canContribute: canProposalAct() });
@@ -6109,7 +6489,7 @@ function proposalAdoptValidate(){
   }
   const go = $("#ad-go"); if(go) go.disabled = !pf.ok;
 }
-/* COMMIT. Build a focus/problem bundle the SAME way the Add surface does (mdFor +
+/* COMMIT. Build the inquiry bundle the SAME way the Add surface does (mdFor +
    docFiles + registerFor — one writer, not a fourth), with the member's authored
    title and statement, and promote it. The browser never sends surfaced_by: the
    plane stamps it from the session (REC-3), so a member-authored adopt records
@@ -6117,7 +6497,7 @@ function proposalAdoptValidate(){
    the statement body as reference, never as the member's own claim. */
 async function doProposalAdopt(){
   if(!PROP_ADOPT_CTX) return;
-  const kind = PROP_ADOPT_CTX.kind || "focus";
+  const kind = PROP_ADOPT_CTX.kind || "inquiry";
   const title = String(($("#ad-title")||{}).value || "").trim();
   const statement = String(($("#ad-statement")||{}).value || "").trim();
   const err = $("#ad-err"); if(err) err.classList.add("hidden");
@@ -6130,21 +6510,21 @@ async function doProposalAdopt(){
   const go = $("#ad-go"); if(go){ go.disabled = true; go.textContent = "…"; }
   try{
     const now = new Date().toISOString().split(".")[0] + "Z";
-    const a = await rec("allocid", { prefix: PREFIX[kind], year: String(new Date().getFullYear()) });
+    const a = await rec("allocid", { prefix: vocabFor(PREFIX, kind), year: String(new Date().getFullYear()) });
     const stem = (a.result && a.result.id) || a.id;
     const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const p = PROP_ADOPT_CTX.proposal;
     const body = statement + NL + NL
       + "Adopted from a proposal the record surfaced: in the " + p.progression_label
       + " progression, the " + p.stage_label + " stage was not found across " + p.n + " instance"
-      + (p.n===1?"":"s") + ". This focus records that a member judged the question worth pursuing.";
-    const text = mdFor(id, kind, FIRST_STATE[kind], title, body, now, false, null);
+      + (p.n===1?"":"s") + ". This question was adopted because a member judged it worth pursuing.";
+    const text = mdFor(id, kind, vocabFor(FIRST_STATE, kind), title, body, now, false, null);
     const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
     const files = await docFiles(text, null, await sha256Text(text), null);
     const r = await recPost("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: who,
       meta: { object_type: kind, group:"believe-in-oakland", title,
-              current_state: FIRST_STATE[kind], created: now, last_updated: now },
+              current_state: vocabFor(FIRST_STATE, kind), created: now, last_updated: now },
       files, register: registerFor(null),
     });
     const res = r.result || r;
@@ -6153,7 +6533,7 @@ async function doProposalAdopt(){
       if(err){ err.innerHTML = why === "GATE_REFUSED"
         ? `<b>The checks refused this bundle: ${esc((res.findings||[]).map(f=>f.check).join(", "))}. Nothing was written.</b>`
         : `<b>Refused: ${esc(why)}. Nothing was written.</b>`; err.classList.remove("hidden"); }
-      if(go){ go.disabled=false; go.textContent = `Adopt as a ${kind}`; }
+      if(go){ go.disabled=false; go.textContent = "Adopt as a question"; }
       return { refused:true, reason:why };
     }
     RECORD_CACHE = null; IMG_CACHE.delete(id); PROJ_CACHE.delete(id);
@@ -6161,7 +6541,7 @@ async function doProposalAdopt(){
     return { ok:true, id, kind };
   }catch(e){
     if(err){ err.innerHTML = `<b>${esc((e && (e.reason||e.error||e.message)) || "That did not go through.")}</b>`; err.classList.remove("hidden"); }
-    if(go){ go.disabled=false; go.textContent = `Adopt as a ${kind}`; }
+    if(go){ go.disabled=false; go.textContent = "Adopt as a question"; }
     return { refused:true, reason: e && (e.reason||e.error) };
   }
 }
@@ -6169,9 +6549,9 @@ function proposalAdoptReceipt(id, kind, title, ctx){
   $("#dlg").innerHTML =
     `<div class="dz-receipt">
        <div class="dz-rhead">Adopted.</div>
-       <p class="dz-rlede">You authored a ${esc(kind)} from the record's question. It is written into the working record <b>in your name</b>, at its first state, with <span class="mono">surfaced_by: human</span> — the record now knows a person, not the machine, judged this worth pursuing. Publishing is a separate act with its own signature.</p>
+       <p class="dz-rlede">You authored a question from the record's own. It is written into the working record <b>in your name</b>, at its first state, with <span class="mono">surfaced_by: human</span> — the record now knows a person, not the machine, judged this worth pursuing. Publishing is a separate act with its own signature.</p>
        <div class="dz-rgrid">
-         <div class="kv"><span class="k">${esc(humanKind(kind))}</span><span class="v">${esc(title)} <span class="id">${esc(id)}</span></span></div>
+         <div class="kv"><span class="k">${esc(typeLabel(kind, vocabFor(FIRST_STATE, kind)))}</span><span class="v">${esc(title)} <span class="id">${esc(id)}</span></span></div>
          <div class="kv"><span class="k">From the proposal</span><span class="v plain">${esc(proposalQuestion(ctx.proposal))}</span></div>
          <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — reversible, but never silent</span></div>
        </div>
@@ -6467,7 +6847,11 @@ function attestRefusalHtml(e){
    web archive this surface cannot make, and claiming it would be the one thing
    the grading scheme exists to prevent.
    ============================================================ */
-const ADD_TYPES = [["information","Something the record should hold"],["focus","A question worth pursuing"],
+/* One vocabulary. `inquiry` replaces `focus` here — the type a question is
+   written as, whatever phase it later reaches. The `action` entry is left in
+   place deliberately: making it ABSENT until UI-19 gives mdFor member-authored
+   values is UI-15's scope, not this item's. */
+const ADD_TYPES = [["information","Something the record should hold"],["inquiry","A question worth pursuing"],
                    ["project","A line of work"],["action","Something to do"]];
 let ADD_BUSY = false;
 /* When the source has published a CHANGED version of something the record already
@@ -6523,7 +6907,7 @@ async function renderAdd(){
 function addTypeSync(){
   const t = ($("#a-type")||{}).value || "information";
   /* Only Information carries a captured document: the @2 contract's register
-     describes a captured document, and a Focus or a Project has none. */
+     describes a captured document, and a question or a project has none. */
   const box = $("#a-doc"); if(box) box.classList.toggle("hidden", t !== "information");
   addValidate();
 }
@@ -6538,8 +6922,8 @@ function addValidate(){
   else if(!body) why = "Write something in the body: an empty record says nothing.";
   else if(t === "information" && loc && !/^https:\/\//i.test(loc)) why = "The address must be https on a public site.";
   else if(t === "information" && loc && !auth) why = "Say who issued the document as well as where it lives.";
-  else why = loc ? `It will be captured at ${FIRST_STATE[t]}, Grade B, and appear in the record for review.`
-                 : `It will be written at ${FIRST_STATE[t]}, with no document attached.`;
+  else why = loc ? `It will be captured at ${vocabFor(FIRST_STATE, t)}, Grade B, and appear in the record for review.`
+                 : `It will be written at ${vocabFor(FIRST_STATE, t)}, with no document attached.`;
   const go = $("#a-go"), n = $("#a-n");
   const ready = !!(title && body && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
   if(go) go.disabled = !ready || ADD_BUSY;
@@ -6604,7 +6988,7 @@ async function addGo(){
     }
     addSay(`<p class="count-line">Writing it into the record&hellip;</p>`);
     const now = new Date().toISOString().split(".")[0] + "Z";
-    const a = await rec("allocid", { prefix: PREFIX[type], year: String(new Date().getFullYear()) });
+    const a = await rec("allocid", { prefix: vocabFor(PREFIX, type), year: String(new Date().getFullYear()) });
     const stem = (a.result && a.result.id) || a.id;
     const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const bodyText = CHANGED_FROM
@@ -6612,7 +6996,7 @@ async function addGo(){
              + CHANGED_FROM.bundle_id + "). The source has since published a changed document, so "
              + "this is a second capture rather than a repeat of the first."
       : body;
-    const text = mdFor(id, type, FIRST_STATE[type], title, bodyText, now, !!doc,
+    const text = mdFor(id, type, vocabFor(FIRST_STATE, type), title, bodyText, now, !!doc,
       doc ? { locator: loc, authority: auth, retrieved: doc.retrieved || now,
               content_hash: doc.capture && doc.capture.sha256 } : null);
     const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
@@ -6634,7 +7018,7 @@ async function addGo(){
     const r = await recPost("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: who,
       meta: { object_type: type, group:"believe-in-oakland", title,
-              current_state: FIRST_STATE[type], created: now, last_updated: now },
+              current_state: vocabFor(FIRST_STATE, type), created: now, last_updated: now },
       files, register: registerFor(doc),
     });
     const res = r.result || r;

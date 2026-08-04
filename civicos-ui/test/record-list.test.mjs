@@ -1,5 +1,20 @@
 /* The record list: identity band, Type column, sortable headers both
-   directions, seal-form state indicators with disclosure. */
+   directions, seal-form state indicators with disclosure.
+ *
+ * THIS SUITE IS ALSO THE UI'S LEGACY-ALIAS REGRESSION (UI-10), the way
+ * search.test.mjs is the plane's. The FOC-1 row below deliberately arrives
+ * spelled `focus` in state `elevated` — a row written under the record's SECOND
+ * name — and the assertions are that it renders IDENTICALLY to a canonical
+ * `inquiry` row: same Type word, same seal, same scope. The plane's boot
+ * normaliser projects `inquiry` for such a row today, so this fixture stands in
+ * for the un-normalised case (a hand-authored document, a restored backup) and
+ * proves the surface does not need the normalisation to have happened.
+ *
+ * CORRECTED 2026-08-04 (UI-10): the Type cell used to be asserted as ">Focus<"
+ * and the scoped search as "type:focus" / "in Focuses". Both were written under
+ * the second name. The member-facing word is now derived from the phase the
+ * question is in, so a row in a pre-conclusion state reads "Inquiry" whatever
+ * its stored spelling — which is the whole point of collapsing the type. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 const els=new Map();
@@ -8,6 +23,11 @@ const LIST=[
  {bundle_id:"INFO-2",object_type:"information",title:"Bravo doc",current_state:"verified",criticality:"crucial",last_updated:"2026-07-21"},
  {bundle_id:"FOC-1",object_type:"focus",title:"Alpha focus",current_state:"elevated",last_updated:"2026-07-19"},
  {bundle_id:"PROJ-1",object_type:"project",title:"Charlie project",current_state:"forming",last_updated:"2026-07-20"},
+ /* the same construct under its CANONICAL name, and in each phase, so the three
+    member-facing words are exercised against the states that produce them */
+ {bundle_id:"INQ-1",object_type:"inquiry",title:"Delta question",current_state:"open",last_updated:"2026-07-22"},
+ {bundle_id:"INQ-2",object_type:"inquiry",title:"Echo finding",current_state:"concluded",last_updated:"2026-07-23"},
+ {bundle_id:"INQ-3",object_type:"inquiry",title:"Foxtrot case",current_state:"published",last_updated:"2026-07-24"},
 ];
 const ctx={console,URL,URLSearchParams,JSON,Array,Object,String,Number,Math,Date,RegExp,Promise,Uint8Array,Uint16Array,Map,Set,TextEncoder,crypto:webcrypto,Blob:class{},IntersectionObserver:undefined,
  setInterval:()=>1,clearInterval(){},setTimeout:fn=>{fn();return 1},requestAnimationFrame:fn=>fn(),
@@ -27,7 +47,12 @@ await ctx.__r();
 const head = els.get("#content")._html, table = els.get("#rectable")._html;
 if(!head.includes('class="recband"')) throw new Error("record band missing");
 for(const c of ["Item","Type","State","Updated"]) if(!table.includes(">"+c)) throw new Error("column missing: "+c);
-if(!table.includes(">Info<")||!table.includes(">Focus<")||!table.includes(">Project<")) throw new Error("type cells wrong");
+if(!table.includes(">Info<")||!table.includes(">Project<")) throw new Error("type cells wrong");
+/* ONE VOCABULARY: the legacy `focus` row and the canonical `inquiry` row both
+   read Inquiry, and the phase decides the word for the other two. */
+if((table.match(/>Inquiry</g)||[]).length!==2) throw new Error("legacy and canonical rows do not read the same word: "+table);
+if(!table.includes(">Finding<")) throw new Error("a concluded question must read as a Finding");
+if(!table.includes(">Case<")) throw new Error("a published question must read as a Case");
 if(!table.includes('data-pop-state="verified"')||!table.includes('class="seal')) throw new Error("state not seal-form");
 if(!table.includes('data-pop-crit="crucial"')) throw new Error("crucial seal missing");
 // sort by title ascending: Alpha, Bravo, Charlie
@@ -42,15 +67,17 @@ const t2 = els.get("#rectable")._html;
 const order2 = ["Charlie project","Bravo doc","Alpha focus"].map(x=>t2.indexOf(x));
 if(!(order2[0]<order2[1]&&order2[1]<order2[2])) throw new Error("desc sort wrong");
 if(!t2.includes("\u25BC")) throw new Error("desc arrow missing");
-// scoped search: launched from Focuses, the plane query carries the scope
+// scoped search: launched from Questions, the plane query carries the scope
 vm.runInContext("globalThis.__go=go;globalThis.__qs=quickSearch;",ctx);
-await ctx.__go("focuses");
+await ctx.__go("inquiries");
 ctx.document.querySelector("#m-search").value="sewer";
 await ctx.__qs();
 await new Promise(r=>setTimeout(r,0));
-if(!/type:focus\s+sewer/.test(ctx.__LASTQ||"")) throw new Error("scope not in plane query: "+ctx.__LASTQ);
+if(!/type:inquiry\s+sewer/.test(ctx.__LASTQ||"")) throw new Error("scope not in plane query: "+ctx.__LASTQ);
 const res = ctx.document.querySelector("#s-res")._html;
-if(!res.includes("in Focuses")||!res.includes("search everything")) throw new Error("scope not named in results: "+res.slice(0,200));
+if(!res.includes("in Questions")||!res.includes("search everything")) throw new Error("scope not named in results: "+res.slice(0,200));
+/* and the legacy-spelled hit the scope returns is still inside it */
+if(!res.includes("Alpha focus")) throw new Error("a legacy focus row fell out of the scoped result: "+res.slice(0,300));
 // monitoring: last-checked and next-check columns, computed and sortable
 vm.runInContext("globalThis.__mon=renderMonitoring;",ctx);
 await ctx.__mon();

@@ -23,7 +23,7 @@
 import { appScript } from "./extract.mjs";
 import vm from "vm";
 import { createHash, webcrypto } from "crypto";
-import { STATES, HEADINGS } from "../../bio-plane/checks/bio-checks.mjs";
+import { STATES, HEADINGS, OBJECT_TYPES, normalizeType } from "../../bio-plane/checks/bio-checks.mjs";
 import { checkBundle } from "../../bio-plane/checks/bio-checks.mjs";
 
 /* The render companion's bytes, so the rendition can be read back and verified. */
@@ -67,7 +67,8 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
 ctx.globalThis = ctx;
 vm.createContext(ctx);
 vm.runInContext(appScript() + `;globalThis.__X={mdFor,docFiles,registerFor,schemaFor,reviseText,acquireWhy,
-  FIRST_STATE,HEADINGS,SCHEMA_OF,renderAdd,addValidate,addIncomplete,canContribute,heldMatch,PLANE};`, ctx);
+  FIRST_STATE,HEADINGS,SCHEMA_OF,PREFIX,ADD_TYPES,typeLabel,renderAdd,addValidate,addIncomplete,
+  canContribute,heldMatch,PLANE};`, ctx);
 const G = ctx.__X;
 
 /* ---- 2. the tables are the catalog's ---- */
@@ -80,7 +81,11 @@ for (const [t, hs] of Object.entries(HEADINGS))
   ok(`headings for ${t} match the catalog`, JSON.stringify(G.HEADINGS[t]) === JSON.stringify(hs));
 ok("a document raises the schema to information@2, and only for information",
    G.schemaFor("information", true) === "information@2" && G.schemaFor("information", false) === "information@1"
-   && G.schemaFor("focus", true) === "focus@1");
+   && G.schemaFor("inquiry", true) === "inquiry@1");
+/* and the legacy spellings still resolve, because a legacy bundle is revised
+   under the contract it was written under (append-only) */
+ok("a legacy focus/problem type still resolves its own schema",
+   G.schemaFor("focus", false) === "focus@1" && G.schemaFor("problem", false) === "problem@1");
 
 /* ---- 1. what it writes passes the catalog ---- */
 const sha256 = async (v) => createHash("sha256")
@@ -128,9 +133,33 @@ ok("typed intake with no document also passes", typed.errs.length === 0);
 ok("and carries no provenance register, because there is no document to describe",
    !typed.files.some(f => f.path === "data/provenance.json"));
 
+/* THE THIRD NAME, end to end (UI-10). A member choosing "A question worth
+   pursuing" on this surface writes an INQUIRY: minted under INQ-, typed
+   `inquiry`, opened at the state the catalog calls first for it, carrying the
+   inquiry heading set — and it clears the catalog with zero findings. The
+   legacy spelling is gated immediately after and must ALSO still pass, because
+   the record is append-only and a FOCUS- bundle stays legal forever. */
+ok("the Add surface offers the question as `inquiry`, and offers no second spelling of it",
+   G.ADD_TYPES.filter(([v]) => normalizeType(v) === "inquiry").map(([v]) => v).join(",") === "inquiry");
+ok("a question is minted under the prefix the catalog maps back to inquiry",
+   G.PREFIX.inquiry === "INQ" && OBJECT_TYPES[G.PREFIX.inquiry] === "inquiry");
+ok("and it opens at the state the catalog calls first for an inquiry",
+   G.FIRST_STATE.inquiry === STATES.inquiry.legal[0]);
+const inquiry = await gate("INQ-2026-0705-why-the-transfers", "inquiry", false);
+for (const e of inquiry.errs) console.log(`         ${e.check}: ${String(e.message).slice(0, 140)}`);
+ok("an inquiry written by this surface passes the catalog with zero findings", inquiry.errs.length === 0);
+ok("its body is the question, under the inquiry heading set",
+   inquiry.files[0].text.includes("## Question") && inquiry.files[0].text.includes("## What Would Falsify This"));
+ok("and it is labelled by its PHASE, not by a stored word: an open one is an inquiry",
+   G.typeLabel("inquiry", "open") === "Inquiry" && G.typeLabel("inquiry", "concluded") === "Finding"
+   && G.typeLabel("inquiry", "published") === "Case");
+
 const focus = await gate("FOCUS-2026-0702-why-the-transfers", "focus", false);
 for (const e of focus.errs) console.log(`         ${e.check}: ${String(e.message).slice(0, 140)}`);
-ok("a Focus passes too", focus.errs.length === 0);
+ok("a legacy FOCUS- bundle still passes the catalog, unchanged (append-only)", focus.errs.length === 0);
+ok("and renders identically to a canonical one — one construct, one word",
+   G.typeLabel("focus", "surfaced") === G.typeLabel("inquiry", "open")
+   && G.typeLabel("problem", "surfaced") === G.typeLabel("inquiry", "open"));
 
 /* The rendition files ride on the same register document rather than becoming
    acquisitions of their own, which is what keeps one capture hash out of two
