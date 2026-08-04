@@ -3379,8 +3379,19 @@ what reversing costs: little today and more each release. Two constants carry th
   sentences now; every act that learns a refusal detail adds one.
 **THE MEASUREMENT IS NOW IN, and this question should be answered against it rather than
   against an impression — `MEASUREMENTS.md`, "2026-08-04, UI-31: the plane vocabulary standing
-  on the PRE-AUTHENTICATION surfaces". Headline: 12 surfaces and 10 scenarios walked, 13 terms
-  standing on 5 surfaces, 56 occurrences in text a member actually reads. Two findings change
+  on the PRE-AUTHENTICATION surfaces". **Headline, CURRENT as of 2026-08-04 after UI-33 and UI-34: 9 terms
+  on 4 surfaces, 47 occurrences in text a member reads, over 11 scenarios** — down from
+  13 on 5 surfaces and 56 occurrences at UI-31's first reading, because UI-33 closed the
+  surface-authored half without waiting on you. **The UNAVOIDABLE column never moved**, so
+  none of the reasoning below is invalidated and your subject is the same eight plane-sourced
+  rows it always was. Read the newest MEASUREMENTS entry, "2026-08-04, UI-34"; the two
+  earlier ones stand, marked superseded in part. A guard now PINS those eight rows by term
+  and by source and FAILS on any movement, so the subject cannot drift while you consider it.
+  **AND THE PLANE-SOURCED COLUMN IS A LOWER BOUND IN A SECOND WAY, named 2026-08-04:**
+  `pubVerify` renders five times on the published case page, is reachable by a stranger with
+  no credential, and prints plane text verbatim including an error branch — and NO scenario
+  harvests it. UI-36 is queued to drive it, and is required to bring any new rows to THIS
+  entry rather than only to its own report. Two findings change
   the shape of the question. (1) FIVE of the thirteen are the login refusal sentence, and they
   are the only plane-sourced group AT THE GATE — everything else plane-sourced is hashes and
   file paths on the published case page, which is the verification claim rather than incidental

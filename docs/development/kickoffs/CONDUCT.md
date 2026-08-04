@@ -22,7 +22,13 @@ making a change another session must know about.**
    the model parameter on any other spawn surface — set per worker, never left
    to the machine's default. If a specific item proves beyond an Opus 5 worker,
    escalating that ONE worker's model is a tactical call under the never-block
-   rule; the default is Opus 5.
+   rule; the default is Opus 5. **EVERY brief must tell the worker to run
+   `npm ci` in `bio-plane/` first, INCLUDING UI briefs.** A fresh worktree has
+   no `bio-plane/node_modules`, and the UI harness drives plane suites - two UI
+   workers on 2026-08-04 each hit `intent-write.test.mjs` failing on a missing
+   `miniflare` BEFORE making any edit, and each spent time establishing it was
+   not their change. It recurs per worktree, so it belongs in the brief rather
+   than in anyone's memory.
 2. **When a worker reports:** VERIFY (full battery from the main checkout;
    re-run the negative control yourself for anything touching destructive or
    security-sensitive code; and run `node scripts/coverage.mjs --strict`
