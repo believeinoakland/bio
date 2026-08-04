@@ -240,6 +240,58 @@ a NODE PROXY and its own text says authoritative Worker CPU needs a deployed was
 walked in reference iterations — a Worker cannot time itself (D-56). **The probe is now
 possible, not pre-judged**, and a GO still has to be earned on the runtime.
 
+### 2026-08-04 · BOB · FOUR RULINGS — and DEC-40 SUPERSEDES SHIPPED UI-18 CODE
+
+**The `DECISIONS.md` open list is now EMPTY**, which is the healthy state. Four answered
+this turn; each carries its own `for CONDUCT to enact:` line and all four reach the queue.
+Read DEC-40 first — it is the only one that corrects something already landed.
+
+**DEC-40 · THE THRESHOLD STANCES ARE REFUSED AS A CONSTRUCT, not narrowed to a better
+set.** Bob: *"What's a stance? A published case is in the wild for anybody to use for
+whatever purpose they wish… the case speaks for itself."* A named stance claims to
+enumerate purposes we cannot know. **UI-18 shipped the four-stance selector, so this is a
+correction, not a scoping note.** Q6's FORM survives (a bar is a PAIR of independent
+floors — that is arithmetic and is untouched); the named SET and the idea that a case has
+modes do not. Four consequences, and (2) is the one a worker would otherwise miss:
+(1) the case renders WHOLE, always; (2) a reader may supply their own two floors, but what
+comes back is **a view THAT READER constructed** — it states its filter in DEC-34's
+per-page header and is never presented, printed or hash-described as "the case", because a
+filtered rendering that looks like the case IS the misrepresentation Bob named, manufactured
+by us and handed over pre-made; (3) the honest answer to *is this strong enough for me* is
+already built and is not a filter — both derived strengths beside DEC-17's declared bar,
+stated, for the reader to judge; (4) **publication does not mint a new kind of object** — an
+imported published case is a FINDING, re-graded in its new context, inheriting no standing.
+**A NEW NEGATIVE CONTROL the current suite cannot have:** strip the filter line from a
+filtered rendering and the harness must FAIL.
+
+**DEC-41 · THE CONTAINER CARRIES ITS PDF, and a case without one is IMPORT-ONLY and must
+SAY SO.** Bob: *"the PDF is a renderer of the case… a case could be published without a
+PDF, but such a case would only be useable as an import."* So the reserved `layout.note`
+join becomes real and a server-side renderer produces the parts. **Sequence it WITH the
+CPDF-12 renderer question, not beside it** — both need page-shaped output from workerd and
+building two renderers is the D-164 lesson repeated. The manifest gains `import_only`,
+stated before signing since it changes what the artifact IS; the plane's current assertion
+that no page-shaped artifact is produced there is superseded and its suite CORRECTED, never
+exempted. The PDF is a rendering and never the authority — the signed container wins.
+
+**DEC-32 · PLURALITY ADOPTED, inside one finding.** REC-11 and REC-12 are the pair.
+REC-12 models the AND/OR relationship from the start (MIN over AND legs, MAX over OR
+branches, min within a branch) — **a flat implicit-AND basis is now known WRONG**. The
+DEFAULT IS AND and that is a correctness requirement: independent sufficiency is only ever
+reached by an affirmative, attributed act, which is what stops a member repackaging legs to
+buy a grade. UI-11/UI-12 take the elicitation design in the entry: **no AND/OR vocabulary on
+any surface**, one consequence question per leg (*"if this turned out to be wrong, would
+your answer still hold?"*), the derived falsifier shown back in plain words, structure
+authored BEFORE strength is shown, restructuring-after recorded rather than blocked. Q14's
+contradiction case stays separate and undesigned.
+
+**DEC-39 · THE PLANE PUBLISHES THE CO-ATTESTATION FENCE, and it must state the QUESTION
+co-attestation answers.** The drafted three-part wording is in the entry. The UI stops
+authoring it: `ATTEST_YIELDS_GRADE` and the hand-written honesty block render the PUBLISHED
+wording, UI-24's rider widens to "renders the published label AND fence, inventing neither",
+and the existing Grade-A negative control is RETARGETED at the published source rather than
+deleted. **See D-184**, which the same exchange surfaced and this does not fix.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
