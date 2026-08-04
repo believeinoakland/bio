@@ -1069,11 +1069,28 @@ console.log("\n--- a derived table that changes shape is rebuilt, not patched --
   const src = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
   const m = /for \(const \[table, needed\] of \[([\s\S]*?)\]\) \{/.exec(src);
   const named = [...(m ? m[1] : "").matchAll(/\["([a-z_]+)"/g)].map((x) => x[1]);
-  t("only derived tables are on the reshape list", named, ["links", "captured_locators"]);
+  /* CORRECTED 2026-08-05 (REC-40), never exempted: this listed TWO, and
+     `reading_ref_terms` joined them when `src` became part of its key — a term
+     satisfied by one word of a document's title and one of its reference string
+     is a correspondence neither made, so rows keyed the old way are wrong rather
+     than incomplete, which is this list's entry condition exactly.
+     THE VALUE PIN IS DELIBERATE AND STAYS A VALUE PIN, which is unusual in this
+     project and is the point: dropping a table must be a REVIEWED act, so an
+     addition here is meant to fail a test and be argued for, not to be admitted
+     by a rule that would have admitted anything derived. */
+  t("only derived tables are on the reshape list", named, ["links", "captured_locators", "reading_ref_terms"]);
   /* The rule this asserts: a table holding first-party material must never be
      dropped to change its shape, because there is nothing to re-derive it from.
      links is regenerable from the captures; captured_locators (D-96) from the
-     captures and the provenance documents; bundles and history are not. */
+     captures and the provenance documents; reading_ref_terms (REC-40) from
+     reading_refs, which persists every string it projects; bundles and history
+     are not. */
+  /* AND THE PROPERTY THAT MAKES DROPPING SAFE IS ASSERTED, not assumed: a table
+     on this list must have somewhere to be re-derived FROM. A row dropped with
+     no rebuild path is data destroyed, and the list's own comment is the only
+     thing that has ever said otherwise. */
+  t("the newest entry has a named re-derivation path in the same file",
+    /#backfillRefTerms\(limit\)/.test(src) && /reading_refs rr/.test(src), true);
   const forbidden = ["bundles", "history", "register", "members", "refs", "promotions"];
   t("and nothing holding first-party material is", named.filter((x) => forbidden.includes(x)), []);
   t("the reshape runs BEFORE the schema, or the new index hits the old table",

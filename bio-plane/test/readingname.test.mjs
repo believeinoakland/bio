@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (a) drop the normalisation — in store.mjs make `Store.#labelTerms` return the whole raw label as one term (`const v = String(s ?? "").trim(); return v ? [v] : [];`) -> 18 of 42 fail, every measured variance class going to zero, WHILE the exact-spelling arm ("Coliseum Payment Allocation", correspondence `name`), the refusals, the establishes-nothing arm, the index-plan arm and the backfill arm all stay green. (b) neuter the gate — replace `this.#bundleGate("t.bundle_id", viewer)` with a literal carrying query.mjs's GATE_MARK and 1=1 -> 5 of 42 fail naming the leak: dave is offered the secret capture, his count rises to 2, the forged-viewer probe answers with it, and the unstamped direct read stops failing closed. RUN 2026-08-04, both restored byte-identically (store.mjs sha256 a421850cb2becbee5b2fddaf0869707b0195b5ac4b337165148ca68874fd953b before and after). */
+/* NEGATIVE CONTROL: FIVE arms, ALL RE-RUN 2026-08-05 against the FINAL files, store.mjs restored byte-identically after every one (sha256 558d2e2d0575276153fb3b232fc71b02b55f7c9a027cc3e41285506f173b6879 before and after each; the restore is ASSERTED by the runner, not eyeballed). (a) DROP THE NORMALISATION - in store.mjs make Store.#labelTerms return the whole raw label as one term (const v = String(s ?? "").trim(); return v ? [v] : [];) -> 19 of 76 fail, every measured variance class going to zero, WHILE the exact-spelling arm, the refusals, the establishes-nothing arm and the whole backfill arm stay green - AND SO DOES EVERY IDENTIFIER ARM, because an A or B tier is a WHOLE-string match that survives an unsplit term. intent-write 6 of 141. (b) NEUTER THE GATE - replace this.#bundleGate("t.bundle_id", viewer) with a literal carrying query.mjs's GATE_MARK and 1=1 -> 7 of 76 fail naming the leak: dave is offered the secret capture at the NAME tier AND the project-filed reference-spelled capture at the IDENTIFIER tier, both counts rise, the forged-viewer probe answers, and the unstamped read stops failing closed. The two NEW failures are the evidence that both tiers are gated by the ONE gate. intent-write 3 of 141. (c) THE ITEM'S OWN - DROP THE REF-TERM SOURCE: in Store.#refTermSources return the label alone (if (label) return [["label", label]]; as the first line after the three consts) -> 10 of 76 fail and every one is an identifier arm, WHILE THE NAME TIER ANSWERS UNTOUCHED (all six measured variance classes, the abbreviation alias arm, the diacritic refusal and the whole-label name correspondence all green). THE GRADE A CANDIDATE VANISHES AND THE NAME TIER STILL ANSWERS - the arm that proves the two tiers are independent rather than one thing renamed. intent-write 6 of 141, two instruments on one subject. (d) DROP src FROM THE GROUP: in Store.#refTermsSql change GROUP BY t.capture_sha, t.ref, t.src to GROUP BY t.capture_sha, t.ref -> 4 of 76 fail, headed by the MIXING control - 'Fremont Estuary', present in the corpus only as one word of a title and one word of a different string of the same reference, matches 1 where it must match 0. A wrong subject on a document assembled out of two strings neither of which carries the name. intent-write 2 of 141. (e) DERIVE THE GRADE FROM THE CORRESPONDENCE instead of from the recogniser: replace const gradeIf = tier.hits.includes(entityId) ? tier.grade : null; with const gradeIf = whole ? (r.src === "ref" ? "A" : r.src === "key" ? "B" : "C") : null; -> 2 of 76 fail, and they are THIS ITEM'S OWN BUG REPRODUCED: a subject whose registered name is a document's whole label is promised a Grade C that op=resolve would never mint, because another subject's identifier already matches the same reference at A and the cascade does not fall through. intent-write stays GREEN, which is why this arm had to be written here. */
 /* REC-36: THE REVERSE READ FOR A NAME-ONLY MENTION — framework §8.1's grade-C
  * tier, made reachable from a member surface.
  *
@@ -38,11 +38,28 @@
  * where they appear.
  *
  * WHAT THIS READ DOES NOT DO, asserted rather than promised: it establishes
- * nothing. No resolution is written, no grade is minted, and each candidate says
- * HOW it corresponded — `name` (the label IS this subject's name, what the
- * recogniser already reached) or `name_in_label` (the name sits inside a longer
- * title, the tier this adds and the weaker of the two). op=resolve remains the
- * only thing that grades, and a C there is still `needs_confirmation`.
+ * nothing. No resolution is written and no grade is minted by asking.
+ *
+ * REC-40, 2026-08-05: THE SAME ONE CALL NOW ANSWERS EVERY TIER, and this header
+ * is corrected rather than appended to, because the sentence it replaced said
+ * the read answers on the recorded NAME and that stopped being the whole truth.
+ * `#recognise` grades on THREE strings — the reference the source assigned (A),
+ * that reference's key (B), the recorded label (C) — and REC-36 indexed the
+ * third alone, so the first two were proposable only by a caller who already
+ * knew the exact string, and after UI-26 traded the per-name loop away they were
+ * proposable from nowhere. The term index carries all three now, each under its
+ * own `src`, and a candidate says which string carried the name in five values:
+ * `reference` / `reference_key` / `name` are whole-string matches the recogniser
+ * would grade A / B / C, and `name_in_reference` / `name_in_label` are the name
+ * sitting INSIDE a longer string, which it would not match at all. That is what
+ * `grade_if_resolved` says — a conditional about a run that has not happened.
+ * op=resolve remains the only thing that grades, and a C is still
+ * `needs_confirmation`.
+ *
+ * THE PREMISE NAMED TWO TIERS AND THERE WERE THREE. `op=readingref` matches
+ * `reading_refs.ref` and nothing else, so the B tier — a document whose
+ * reference KEY is spelled like a registered name — was never reachable from any
+ * surface even before UI-26, and restoring the loop would not have restored it.
  *
  * GATED PER REC-30, in the STRONGER of the gate's two postures: the ROW is
  * withheld, not the bundle reference redacted. A candidate a member cannot open
@@ -56,10 +73,62 @@
  * Durable Object directly, on `projection.test.mjs`'s precedent, because neither
  * is reachable through a control plane that always stamps a viewer.
  *
- * NEGATIVE CONTROL: two arms, both RUN 2026-08-04, each restored byte-identically (store.mjs sha256 a421850cb2becbee5b2fddaf0869707b0195b5ac4b337165148ca68874fd953b before and after both) — (a) drop the normalisation, and the near-name documents vanish while the exact-spelling match still answers; (b) neuter the gate, and dave is offered the secret capture. In full:
- *   (a) DROP THE NORMALISATION — in store.mjs make `Store.#labelTerms` return the whole raw label as one term (`const v = String(s ?? "").trim(); return v ? [v] : [];`) -> **18 of 42 failed**: every measured variance class went to zero (case 2->0 for carol and 1->0 for dave, embedded/Alameda 1->0, abbreviation/OPD 1->0 in both its arms, punctuation/Weaver 1->0, truncation 1->0, diacritic/CRC 1->0, the two unusable-alias arms, and the three gate arms that count what dave and carol are offered) — WHILE THE EXACT TIER STAYED GREEN: "Coliseum Payment Allocation" still answered 1 candidate at correspondence `name`, and the refusals, the establishes-nothing arm, the index-plan arm and the whole backfill arm passed untouched. That is the shape the control had to have: only the tier this item adds disappears.
- *   (b) NEUTER THE GATE — replace `this.#bundleGate("t.bundle_id", viewer)` with a literal object carrying query.mjs's GATE_MARK string followed by `1=1` and no args (written out rather than pasted here, because the mark's closing characters would end this comment) -> **5 of 42 failed**, naming the leak: dave is offered the secret capture, his count rises to 2, the forged-viewer probe answers with it, and the unstamped direct read stops failing closed. Every other assertion passed, which is why arm (a) alone was not enough — the whole read can be correct and still leak, and the two failures look nothing alike.
- * ONE FINDING FROM RUNNING (a), kept because the instrument was wrong first: the suite originally THREW on `alameda.documents[0].label` the moment the list emptied, so arm (a) reported 5 failures and hid the 13 after it — including the exact-tier arm that is the whole point of the control. Every index into `documents` is guarded now. This is D-93's lesson (a chain that stops at the first failure hides everything after it) turning up inside a negative control.
+ * NEGATIVE CONTROL: FIVE arms. (a) and (b) are REC-36's, RE-RUN 2026-08-05
+ * against this item's FINAL files and reproduced at new counts; (c), (d) and (e)
+ * are REC-40's. Every arm restored byte-identically, store.mjs sha256
+ * 558d2e2d0575276153fb3b232fc71b02b55f7c9a027cc3e41285506f173b6879 before and
+ * after each, and the restore is ASSERTED by the runner rather than eyeballed.
+ * The one-line header at the top of this file carries all five in full for a
+ * reader who wants to re-run one in a single step; what follows is why each
+ * exists.
+ *   (a) DROP THE NORMALISATION -> **19 of 76 failed** (18 of 42 at REC-36).
+ *       Every measured variance class goes to zero WHILE the exact tier stays
+ *       green -- and REC-40 gave this arm a second reading it did not have
+ *       before: every identifier arm ALSO stays green, because an A or B tier is
+ *       a WHOLE-string match and an unsplit term still matches a whole alias. The
+ *       arm now says which tier depends on the normalisation and which does not,
+ *       rather than only that something breaks.
+ *   (b) NEUTER THE GATE -> **7 of 76 failed** (5 of 42 at REC-36), and the two
+ *       NEW failures are the point: dave is offered the project-filed capture at
+ *       the IDENTIFIER tier as well as at the name tier. One gate, one piece of
+ *       SQL, both tiers -- which is REC-40's "gated identically" measured instead
+ *       of asserted from the source text.
+ *   (c) REC-40'S OWN, AND THE ITEM'S -- DROP THE REF-TERM SOURCE, so the index
+ *       carries labels again exactly as REC-36 shipped it -> **10 of 76 failed,
+ *       every one an identifier arm**, while all six measured variance classes,
+ *       the abbreviation alias arm, the diacritic refusal and the whole-label
+ *       `name` correspondence stayed green. THE GRADE A CANDIDATE VANISHES AND
+ *       THE NAME TIER STILL ANSWERS, which is the arm that proves the two tiers
+ *       are independent rather than one thing renamed -- had the name tier gone
+ *       with it, the widening would have been a rename and this suite could not
+ *       have told the difference. intent-write fails with it at 6 of 141, two
+ *       instruments on one subject.
+ *       ONE READING WORTH KEEPING: the B-tier GRADE assertion stays GREEN under
+ *       this arm, and that is correct rather than a hole. `#recogniseTier` reads
+ *       `reading_refs` directly and never the term index, so dropping a term
+ *       source changes what is OFFERED and not what would be GRADED. The tier
+ *       assertion beside it is the one that fires.
+ *   (d) DROP `src` FROM THE GROUP -> **4 of 76 failed**, headed by the MIXING
+ *       control: a subject whose two words live one in a title and one in a
+ *       different string of the same reference matches 1 where it must match 0.
+ *       That is a wrong subject on a document assembled out of two strings
+ *       NEITHER of which carries the name, and it is the whole reason `src` is in
+ *       the PRIMARY KEY rather than merely on the row. This arm is why the
+ *       decision is a correctness requirement and not a way of labelling rows.
+ *   (e) DERIVE THE GRADE FROM THE CORRESPONDENCE -> **2 of 76 failed**, AND THIS
+ *       ARM IS THIS ITEM'S OWN BUG, WRITTEN DOWN. The first version of REC-40
+ *       computed `grade_if_resolved` from how the alias corresponded, which is
+ *       wrong because `#recognise` NEVER FALLS THROUGH: if any subject's
+ *       identifier matches a reference at A, nothing is recorded at B or C for
+ *       it, including for a different subject whose registered name the label
+ *       happens to be. That version offered a Grade C the record would never
+ *       mint -- an overclaim, which this project holds to be worse than a missing
+ *       feature. Both callers now use ONE function, so the prediction is made by
+ *       the code that does the minting. **intent-write stays GREEN under this
+ *       arm**, which is exactly why the assertion had to be written on the plane
+ *       side: the surface renders whatever letter it is handed and cannot tell a
+ *       true conditional from a false one.
+ * ONE FINDING FROM RUNNING (a) AT REC-36, kept because the instrument was wrong first: the suite originally THREW on `alameda.documents[0].label` the moment the list emptied, so arm (a) reported 5 failures and hid the 13 after it — including the exact-tier arm that is the whole point of the control. Every index into `documents` is guarded now. This is D-93's lesson (a chain that stops at the first failure hides everything after it) turning up inside a negative control.
  */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -142,14 +211,19 @@ let bseq = 0;
    tier, deliberately matching NO registered entity here so nothing in this suite
    can pass through the reference path by accident); the LABEL is the item title,
    which is what this item indexes. */
-const doc = async (type, tok, key, label) => {
+/* REC-40: `ref` is now an OVERRIDE rather than always `legislation:<key>`,
+   because this item's whole subject is the string the SOURCE assigned. A
+   document whose reference is spelled like a registered name is the A tier and a
+   document whose reference KEY is is the B tier, and neither can be arranged
+   while every fixture reference is composed from one literal. */
+const doc = async (type, tok, key, label, ref = null) => {
   const id = `${type === "project" ? "PROJ" : "INFO"}-2026-${String(++bseq).padStart(4, "0")}-r36`;
   const md = bundleMd(id, type);
   const capture = sha(`r36-${key}`);
   const prov = JSON.stringify({ documents: [{
     capture: { sha256: capture, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
-               entities: [{ ref: `legislation:${key}`, kind: "legislation", key, label }] } }] });
+               entities: [{ ref: ref || `legislation:${key}`, kind: "legislation", key, label }] } }] });
   const files = [
     { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
     { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
@@ -184,8 +258,28 @@ const D_DIA = await doc("information", "mem-r36", "26-0817",
 const D_SECRET = await doc("project", carol, "26-0871",
   "MOU Between The City of Oakland And The California Highway Patrol");
 
-t("six captured documents promoted with readings", bseq, 6);
+/* REC-40's four, and the REFERENCE is what matters about each of them. The
+   documents above deliberately carry Legistar file numbers that match no
+   registered subject, so nothing in REC-36's arms can pass through the
+   identifier path by accident; these four exist to make that path real. */
+const D_REF = await doc("information", "mem-r36", "26-0955",
+  "Fifth Amendment To Lease Agreement", "contract:26-0955");        // ref IS a registered name -> A
+const D_SECRET_REF = await doc("project", carol, "26-0955s",
+  "Ninth Amendment To Lease Agreement", "contract:26-0955");        // the SAME ref, filed where dave cannot look
+const D_KEY = await doc("information", "mem-r36", "26-0977",
+  "Annual Report Of The Public Ethics Commission");                 // ref KEY is a registered name -> B
+const D_MIX = await doc("information", "mem-r36", "26-0999",
+  "Fremont Shoreline Improvements", "estuary:26-0999");             // one word in the title, one in the reference
+
+t("ten captured documents promoted with readings", bseq, 10);
+/* CORRECTED 2026-08-05 (REC-40), never exempted: this asserted SIX, which was
+   the whole fixture while the index carried labels alone. Four documents whose
+   REFERENCE carries the name were added because the identifier tiers cannot be
+   exercised without them, and a count assertion that is not updated with the
+   fixture is a number nobody is checking. */
 t("the secret document's capture is filed on a project", D_SECRET.id.startsWith("PROJ-"), true);
+t("and so is the one whose REFERENCE is a registered name, so the gate can be shown at that tier too",
+  D_SECRET_REF.id.startsWith("PROJ-"), true);
 
 /* --------------------------------------------------------- the subject registry */
 console.log("\n--- register subjects, whose ALIASES are what the read joins through ---");
@@ -204,7 +298,20 @@ const E_COLISEUM = await ent("contract", "Coliseum Payment Allocation");
    is what holds that decision to an assertion rather than a comment. */
 const E_PROTEGE = await ent("contract", "Mentor-Protege Program");
 const E_NOBODY = await ent("person", "Nobody At All");
-t("eight subjects registered", new Set([E_CITY, E_OPD, E_WEAVER, E_CRC, E_ALAMEDA, E_COLISEUM, E_PROTEGE, E_NOBODY]).size, 8);
+/* REC-40's three. E_LEASE is registered under the source's own COMPOSITE key,
+   which is what framework 8.1 calls the A tier and what `#recognise` grades A;
+   E_ETHICS under the bare KEY, which is the B tier. Neither canonical label
+   appears in any document's title as a whole, so nothing here can reach a
+   document except through the reference. E_FREMONT is the MIXING control and is
+   registered under two words that exist in the corpus in two different strings
+   of the same reference and in neither one alone. */
+const E_LEASE = await ent("contract", "Broadway Parcel Lease", ["contract:26-0955"]);
+const E_ETHICS = await ent("institution", "Public Ethics Commission", ["26-0977"]);
+const E_FREMONT = await ent("institution", "Fremont Estuary");
+t("eleven subjects registered", new Set([E_CITY, E_OPD, E_WEAVER, E_CRC, E_ALAMEDA, E_COLISEUM, E_PROTEGE,
+  E_NOBODY, E_LEASE, E_ETHICS, E_FREMONT]).size, 11);
+/* CORRECTED 2026-08-05 (REC-40): eight was the registry this suite needed while
+   only the label tier existed. */
 
 const cands = async (entity, tok = "mem-r36") => await get("readingname", `entity=${entity}`, tok);
 const shasOf = (r) => (r.documents || []).map((d) => d.capture_sha).sort();
@@ -262,6 +369,125 @@ const col = await cands(E_COLISEUM);
 t("a document whose label IS the subject's name is offered", shasOf(col), [D_EXACT.capture]);
 t("and is reported as the STRONGER correspondence", (col.documents[0]||{}).correspondence, "name");
 
+/* ============================================================================
+   REC-40: THE IDENTIFIER TIERS, THROUGH THE SAME ONE CALL.
+   ============================================================================
+   UI-26 replaced a per-name `op=readingref` loop with one `op=readingname` call
+   and MEASURED what that cost: `readingname` answered on the NAME a reading
+   recorded and `readingref` on the REFERENCE STRING, so a document whose
+   reference is spelled like a registered name stopped being proposable from any
+   surface. This is the reversal, and it is one call, not two.
+
+   THE PREMISE NAMED TWO TIERS AND THERE ARE THREE. `#recognise` reads the whole
+   reference (grade A), the reference KEY (grade B) and the label (grade C).
+   `op=readingref` matches `reading_refs.ref` and nothing else, so the B tier was
+   never reachable from ANY surface even before UI-26 — the loop could not have
+   restored it either. All three are indexed now, each under its own source. */
+console.log("\n--- REC-40 TIER A: a document whose REFERENCE is spelled like a registered name ---");
+const lease = await cands(E_LEASE, carol);
+t("the document is offered, from the SAME call that answers the name tier", shasOf(lease).includes(D_REF.capture), true);
+const leaseA = (lease.documents || []).find((d) => d.capture_sha === D_REF.capture) || {};
+t("and it says the SOURCE'S OWN REFERENCE is what carried the name, not the recorded title",
+  [leaseA.correspondence, leaseA.matched_on], ["reference", "ref"]);
+t("its label carries none of the subject's words, so nothing here came through the label tier",
+  leaseA.label, "Fifth Amendment To Lease Agreement");
+
+console.log("\n--- REC-40 TIER B: a document whose reference KEY is a registered name ---");
+const ethics = await cands(E_ETHICS);
+t("the document is offered", shasOf(ethics), [D_KEY.capture]);
+const ethicsB = ethics.documents[0] || {};
+t("at the KEY, which op=readingref cannot ask about at all — it matches only the whole reference",
+  [ethicsB.correspondence, ethicsB.matched_on], ["reference_key", "key"]);
+/* THIS SUBJECT CORRESPONDS THREE WAYS AT ONCE — whole key (B), its name inside
+   the whole reference, and its name inside the recorded title — and is ONE
+   candidate reported at the STRONGEST. A read that returned three rows for one
+   document would be offering a member the same document three times and calling
+   it three pieces of evidence. */
+t("and three simultaneous correspondences make ONE candidate, at the strongest of them", ethics.count, 1);
+
+console.log("\n--- THE GRADE IS THE RECOGNISER'S, and this read only says what it WOULD mint ---");
+t("the A-tier candidate says op=resolve would grade it A", leaseA.grade_if_resolved, "A");
+t("the B-tier candidate says B", ethicsB.grade_if_resolved, "B");
+t("a whole-label candidate says C", ((await cands(E_COLISEUM)).documents[0] || {}).grade_if_resolved, "C");
+t("and a name merely sitting INSIDE a longer string carries NO grade, because #recognise would mint none",
+  [...new Set(((await cands(E_ALAMEDA)).documents || []).map((d) => d.grade_if_resolved))], [null]);
+/* AND IT IS NOT A LABEL THIS SUITE CHECKS AGAINST ITSELF: the recogniser is RUN
+   and its answer compared. An assertion that the string "A" appears where this
+   file put the string "A" would cost nothing to produce and be no evidence. */
+const resA = await post("resolve", { captureSha: D_REF.capture }, carol);
+t("RUNNING op=resolve on the A-tier candidate mints exactly the grade the read predicted",
+  [(resA.resolved[0] || {}).entity_id, (resA.resolved[0] || {}).grade], [E_LEASE, "A"]);
+const resB = await post("resolve", { captureSha: D_KEY.capture });
+t("and on the B-tier candidate, B", [(resB.resolved[0] || {}).entity_id, (resB.resolved[0] || {}).grade], [E_ETHICS, "B"]);
+
+console.log("\n--- THE CASCADE DOES NOT FALL THROUGH, so a candidate may NOT promise a grade ---");
+/* FOUND BY REASONING THROUGH `#recognise` AFTER THE FIRST VERSION OF THIS ITEM
+   SHIPPED THE BUG, and it is the kind this project calls worse than a missing
+   feature: the record claiming more than it can support. `#recognise` records at
+   the STRONGEST tier that matched ANYTHING and never falls through — so if some
+   subject's identifier matches a reference at A, op=resolve records nothing at C
+   for that reference, INCLUDING for a different subject whose registered name
+   the label happens to be. A candidate read deriving its letter from how its own
+   alias corresponded would offer that second subject a Grade C the record would
+   never mint. The fix is that both callers use ONE function, `#recogniseTier`,
+   so the prediction is made by the code that does the minting.
+   D_REF is the case: its reference is E_LEASE's registered identifier (A) and
+   its label is, verbatim, this new subject's registered name (a whole-label C). */
+const E_FIFTH = await ent("contract", "Fifth Amendment To Lease Agreement");
+const fifth = await cands(E_FIFTH, carol);
+const fifthC = (fifth.documents || []).find((d) => d.capture_sha === D_REF.capture) || {};
+t("the document IS offered, and the correspondence is honestly reported as a whole-name match",
+  [fifth.count, fifthC.correspondence], [1, "name"]);
+t("BUT IT PROMISES NO GRADE, because a stronger identifier on the same reference resolves first",
+  fifthC.grade_if_resolved, null);
+t("and the candidate SAYS why, rather than leaving a member to wonder where the grade went",
+  /stronger identifier on this same reference resolves first/.test(fifthC.detail || ""), true);
+/* DRIVEN, not asserted: op=resolve is run and this subject gets nothing at all. */
+const resFifth = await post("resolve", { captureSha: D_REF.capture }, carol);
+t("RUNNING op=resolve records nothing for this subject — which is exactly what the null predicted",
+  (resFifth.resolved || []).some((m) => m.entity_id === E_FIFTH), false);
+t("while the subject whose IDENTIFIER matched still resolves at A, so the reference did resolve",
+  (resFifth.resolved || []).some((m) => m.entity_id === E_LEASE && m.grade === "A"), true);
+
+console.log("\n--- THE KEY DECISION: a name may NEVER be assembled from two different strings ---");
+/* The lookup is a SUBSET test over a group, so if the label's terms and the
+   reference's terms shared one group a registered name could be satisfied by one
+   word taken from the title and another from the reference — a correspondence
+   NEITHER string made, and a wrong subject on a document. `src` is in the
+   PRIMARY KEY and in the GROUP BY so that is structurally impossible; this is
+   the assertion that holds it, and negative control (d) is what proves it bites. */
+t("'Fremont Estuary' is in the corpus only as one word of a title and one of a reference — and matches NOTHING",
+  (await cands(E_FREMONT)).count, 0);
+t("both words really are there, so the zero above is the KEY and not an absent corpus",
+  [/Fremont/.test(D_MIX.id) || true,
+   ((await get("reading", `sha256=${D_MIX.capture}`)).reading.entities[0] || {}).label,
+   ((await get("reading", `sha256=${D_MIX.capture}`)).reading.entities[0] || {}).ref],
+  [true, "Fremont Shoreline Improvements", "estuary:26-0999"]);
+
+console.log("\n--- GATED IDENTICALLY AT THE NEW TIER: same gate, same SQL, same withheld ROW ---");
+const dLease = await cands(E_LEASE, dave);
+t("carol, who owns the project, is offered BOTH documents whose reference is this name", lease.count, 2);
+t("dave, never invited, is offered only the shared one", shasOf(dLease), [D_REF.capture]);
+t("the project-filed one is absent from dave's list entirely — the ROW, not the bundle id",
+  (dLease.documents || []).every((d) => typeof d.bundle_id === "string" && d.bundle_id), true);
+t("dave's count does not betray what was withheld at this tier either", dLease.count, 1);
+
+console.log("\n--- op=readingref is UNCHANGED and answers a DIFFERENT question — not collapsed into this one ---");
+/* Held open as a RELATION rather than ruled on. `readingref` takes a raw
+   reference string FROM THE CALLER and knows nothing about the registry;
+   `readingname` takes a SUBJECT and walks its own aliases. A caller holding a
+   string and no entity still has only the first. These assert no value about
+   which is right — only that the same document is reachable by both routes and
+   that neither has become the other. */
+const byRef = await get("readingref", `ref=${encodeURIComponent("contract:26-0955")}`, carol);
+t("the same document answers to its raw reference string, exactly as it always did",
+  (byRef.documents || []).map((d) => d.capture_sha).sort(),
+  [D_REF.capture, D_SECRET_REF.capture].sort());
+t("and op=readingref still answers on the REFERENCE and takes no entity: a registered subject is not a reference",
+  (await get("readingref", `ref=${E_LEASE}`, carol)).count, 0);
+t("while op=readingname takes the subject and no reference: the two routes reach one document by different questions",
+  shasOf(await cands(E_LEASE, carol)).includes(D_REF.capture), true);
+
 console.log("\n--- a subject nothing mentions gets an honest empty answer, with its caveat ---");
 const none = await cands(E_NOBODY);
 t("no candidates", [none.ok, none.count, none.documents], [true, 0, []]);
@@ -305,9 +531,32 @@ t("a caller-supplied viewer is ignored — the session's identity is stamped", s
 /* -------------------------------------------- indexed, not a scan; and fail-closed */
 console.log("\n--- the lookup is INDEXED, not a scan (the projectionPlan precedent) ---");
 const plan = await dcall("/readingnameplan?terms=oakland,police");
-const detail = (plan.result || plan).plan.join(" | ");
+const planned = plan.result || plan;
+const detail = planned.plan.join(" | ");
 t("the term lookup uses the term index", /USING (COVERING )?INDEX reading_ref_terms_term/.test(detail), true);
 t("and nothing in the plan scans reading_ref_terms", /SCAN reading_ref_terms\b/.test(detail), false);
+/* REC-40: AND IT IS THE STATEMENT THE READ RUNS, not a hand-written twin of it.
+   The plan used to explain a bare subquery over `reading_ref_terms` carrying
+   neither the join nor the group the read actually groups by — a copy, and one
+   that would have gone on passing while the real query started scanning. Both
+   now come from `Store.#refTermsSql`. These three assertions are what make that
+   structural rather than a claim in a comment. */
+t("the plan is OF the joined statement, so the join is measured and not assumed",
+  /reading_refs/.test(detail) && /reading_ref_terms/.test(detail), true);
+t("and nothing in the plan scans reading_refs either — the join rides its primary key",
+  /SCAN reading_refs\b/.test(detail), false);
+t("the explained SQL carries the source group, which is the shape the correctness rule lives in",
+  /GROUP BY t\.capture_sha, t\.ref, t\.src/.test(planned.sql || ""), true);
+/* THE DRIFT LEVER, asserted STRUCTURALLY: a second builder anywhere in store.mjs
+   is a second query nothing explains. A copy that agrees today agrees at zero
+   cost, so what is pinned is that there is only ONE. */
+const STORE_SRC = readFileSync(STORE, "utf8");
+t("store.mjs builds this lookup in exactly ONE place — a second copy fails here by count",
+  [STORE_SRC.split("GROUP BY t.capture_sha, t.ref, t.src").length - 1,
+   STORE_SRC.split("JOIN reading_refs rr ON").length - 1], [1, 1]);
+t("and the read does not spell its own grouping: the ONE builder is what both callers use",
+  STORE_SRC.split("EXPLAIN QUERY PLAN").length - 1 >= 1
+  && /readingNamePlan\(terms[\s\S]{0,600}Store\.#refTermsSql/.test(STORE_SRC), true);
 
 console.log("\n--- fail-closed: no viewer stamp reaches the store = no candidates, never all of them ---");
 await dcall("/promote", {
@@ -342,10 +591,25 @@ const cleared = (await dcall("/readingtermsclear", {})).result;
 t("the index clears, so the store looks like one that predates it", cleared.remaining, 0);
 t("and the subject then reaches NOTHING, which is the silently-wrong answer",
   (await dcall(`/readingname?entity=${E2}&viewer=class:member`)).result.count, 0);
+/* REC-40: THE IDENTIFIER TIER MUST COME BACK TOO, and the old staleness test
+   would not have brought it. It read `label IS NOT NULL AND label <> ''`,
+   because the label was the only source; a reference with no label at all is
+   exactly the row the A and B tiers are about, and skipping it would leave the
+   identifier tier invisible on every store migrated forward — the same silently
+   wrong empty answer this whole arm exists to catch, one tier over. */
+const e3 = await dcall("/entitycreate", { kind: "contract", label: "Some Other Name Entirely",
+                                          aliases: ["legislation:26-0912"] });
+const E3 = (e3.result || e3).entity_id;
+t("a subject registered under the source's own reference reaches NOTHING while the index is cleared",
+  (await dcall(`/readingname?entity=${E3}&viewer=class:member`)).result.count, 0);
 const re = (await dcall("/reindexnames", {})).result;
-t("the backfill re-derives it from the labels already stored", re.indexed >= 1, true);
+t("the backfill re-derives it from what reading_refs already stores", re.indexed >= 1, true);
 t("and the subject is reachable again with no document re-read",
   (await dcall(`/readingname?entity=${E2}&viewer=class:member`)).result.count, 1);
+const back3 = (await dcall(`/readingname?entity=${E3}&viewer=class:member`)).result;
+t("AND SO IS THE IDENTIFIER TIER — the backfill re-derives the reference, not the label alone",
+  [back3.count, (back3.documents[0] || {}).correspondence, (back3.documents[0] || {}).grade_if_resolved],
+  [1, "reference", "A"]);
 
 await mf.dispose();
 await dmf.dispose();
