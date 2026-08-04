@@ -3357,12 +3357,17 @@ what reversing costs: little today and more each release. Two constants carry th
   the shape of the question. (1) FIVE of the thirteen are the login refusal sentence, and they
   are the only plane-sourced group AT THE GATE — everything else plane-sourced is hashes and
   file paths on the published case page, which is the verification claim rather than incidental
-  wording. So the ruling's real subject is smaller than it looked. (2) EIGHT of the thirteen are
+  wording. So the ruling's real subject is smaller than it looked. (2) EIGHT of the thirteen were
   the SURFACE'S OWN words — `MEMBER_TOKEN` as a printed field label, `CORS` and `R2` in prose —
   and NEITHER answer moves any of them: (a) rewords the plane, (b) licenses surfaces to translate
-  what the plane SENT, and a surface's own vocabulary is outside both. If the intent is "fix what
-  a member reads before signing in", this ruling alone will not do it; UI-33 is queued for that
-  half and is not waiting on you. Also worth knowing: `this instance` arrives by BOTH routes, so
+  what the plane SENT, and a surface's own vocabulary is outside both. **UI-33 CLOSED THAT HALF on
+  2026-08-04 without waiting on you, which is why the headline above moved**: `MEMBER_TOKEN` now
+  reads "Access token", `CORS` and `R2` are gone, and the surface's own "this instance" reads "the
+  group that published it". THREE WERE KEPT with the reason recorded at each site — `sha256` names
+  the algorithm a reader must know in order to check a hash themselves, `op=…` is an ADDRESS and a
+  reworded address is a broken one, and `handle` names that identifier everywhere else in the
+  product, so changing it at the gate alone would give a member one word before signing in and
+  another after. Also worth knowing: `this instance` arrives by BOTH routes, so
   a ruling that moves it in one place leaves it standing in the other.**
 NOTE: whichever way this goes, UI-31 (LANDED 2026-08-04) closed the measurement gap meanwhile —
   UI-4's vocabulary guard covers no sign-in surface today, so this tension is currently
