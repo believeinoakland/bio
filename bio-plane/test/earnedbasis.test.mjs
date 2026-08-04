@@ -65,11 +65,23 @@
  *
  * DEC-23's provisional stands: a leg's target is an INFO-/INQ- id, because the
  * content-extent primitive is parked at D-164.
- * REC-36 is NOT landed, and it bounds this: candidate reachability is limited to
- * documents whose readings carry an EXACT reference match, because nothing
- * indexes `reading_refs.label`. A document that mentions the subject only by
- * name cannot be found — so it earns nothing here, not because it concerns the
- * subject any less, but because the plane cannot yet be asked.
+ * REC-36 HAS NOW LANDED, and the bound this header used to state is corrected
+ * rather than deleted, because what it says about earned grades still matters.
+ * It used to read: "candidate reachability is limited to documents whose
+ * readings carry an EXACT reference match, because nothing indexes
+ * `reading_refs.label`. A document that mentions the subject only by name cannot
+ * be found — so it earns nothing here, not because it concerns the subject any
+ * less, but because the plane cannot yet be asked."
+ *
+ * The plane CAN now be asked: `op=readingname` (REC-36) offers every captured
+ * document whose reading NAMES a registered subject, over an index on the
+ * label's normalised terms, joined through the registry's aliases. What has NOT
+ * changed, and is the part worth keeping: a name correspondence is section 8.1's
+ * GRADE C. Being findable is not being resolved — a candidate earns nothing at
+ * all until a member confirms it and op=resolve writes the resolution, and a C
+ * resolution is `needs_confirmation` when it does. So the grades this suite
+ * asserts are unaffected; what REC-36 changed is that the DOCUMENT can now be
+ * put in front of the member who decides.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

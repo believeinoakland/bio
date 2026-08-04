@@ -586,6 +586,16 @@ const OPS = {
      a document and which other documents mention the same reference. */
   reading:      { classes: ["admin", "member", "probe"],           mutating: false },
   readingref:   { classes: ["admin", "member", "probe"],           mutating: false },
+  /* REC-36: the same reverse question asked by NAME. `readingref` answers on the
+     source's own reference (framework 8.1's A and B tiers); `readingname` answers
+     on a REGISTERED SUBJECT's names, which is the GRADE-C tier — a document that
+     mentions a subject by name and carries no reference for it. Entity-driven and
+     not name-driven on purpose: the measurement (MEASUREMENTS.md 2026-08-04) found
+     abbreviations in the corpus whose full names appear in no label, and only a
+     name somebody registered reaches those. Read-only, and it establishes nothing:
+     it offers CANDIDATES for a member to confirm, and op=resolve is still the only
+     thing that grades. */
+  readingname:  { classes: ["admin", "member", "probe"],           mutating: false },
   /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis (D-83 —
      the framework's entity axis and the bias doctrine's safeguard-4 subject registry
      are ONE construct). Members BUILD the registry: entitycreate registers a subject
@@ -749,9 +759,14 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
    captured document may read what the plane read out of it and which other
    documents' readings carry the same entity reference. Reads of the working
    corpus, like the retrieval reads above; named as one set so the member and
-   admin lists cannot drift apart. Neither takes a viewer stamp: they key on a
-   capture sha and a raw reference, not on the corpus view. */
-const READING_READS = ["reading", "readingref"];
+   admin lists cannot drift apart.
+   CORRECTED 2026-08-04 by REC-36, and stated rather than quietly reworded: this
+   comment used to say "neither takes a viewer stamp: they key on a capture sha
+   and a raw reference, not on the corpus view." That stopped being true when
+   REC-30 swept both into REC30_VIEWER_READS — their answers name the bundle a
+   capture is filed in — and the sentence survived the sweep. All three are
+   stamped, and REC-36's `readingname` is entity-driven besides. */
+const READING_READS = ["reading", "readingref", "readingname"];
 /* The selection-backed actions on a Project's citation edges. Named as a set
    rather than listed twice, because the member and admin session lists drifting
    apart is exactly the class of defect this repository keeps finding. */
@@ -1140,6 +1155,17 @@ const NEEDS = {
      contributor does. Present rather than absent so REC-19's totality guard
      sees it; named in NON_ACTS with its reason. */
   earnedbasis:      null,
+  /* REC-36: NO CAPABILITY, on op=earnedbasis' reasoning exactly. Asking which
+     documents NAME a subject is reading the record; the write that acts on the
+     answer is op=resolve, which carries its own gate and is where the capability
+     belongs. A view-only member weighing a case needs to see what mentions their
+     subject precisely as a contributor does. Present rather than absent so
+     REC-19's totality guard SEES it — a read silently absent from both registries
+     is how REC-25's six ungated reads accumulated — and named in NON_ACTS with
+     its reason. (Its two siblings op=reading/op=readingref take the other legal
+     shape, no entry at all; this op takes op=queue's because it is a SURFACE a
+     member acts from: the candidate list a resolve is chosen out of.) */
+  readingname:      null,
   /* REC-21 / D-125: NO CAPABILITY, and the reason IS the doctrine rather than a
      convenience. `contribute` is the corpus-shaping surface — it is what
      separates a member who may change what the record says from one who may only
@@ -3806,7 +3832,14 @@ export default {
        an absent stamp, so removing an op from this list withholds an answer and
        never widens one. `op=queue` and `op=affordances` take the same stamp in
        their own handlers above. */
-    const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "resolutions",
+    /* REC-36: `readingname` joins them, and its posture is the STRONGER of the
+       two the gate's header describes. The other reading reads keep the row and
+       withhold the bundle back-reference; a CANDIDATE list withholds the ROW,
+       because a document a member cannot open is not a candidate and offering a
+       nameless one still discloses that something mentioning their subject sits
+       in a project they were not invited to. Fails closed in the store on an
+       absent stamp, like every op in this list. */
+    const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname", "resolutions",
                                 "concerns", "connections", "instance", "exceptions", "thread",
                                 "discharge", "audit", "searchindexcheck", "projectownerarith",
                                 /* REC-14's read, swept at the merge: its bar report NAMES the

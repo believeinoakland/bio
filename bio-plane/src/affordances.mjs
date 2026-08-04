@@ -620,6 +620,11 @@ export const NON_ACTS = {
      is never itself an act. No surface renders an "earnedbasis" button beside a
      bundle; UI-20's cite flow reads it to fill a leg in. */
   earnedbasis: "read: what the record earns for a candidate basis leg — consulted while composing a citation, never an act on an object",
+  /* REC-36. Keyed by ENTITY, like the registry writes above it: the question is
+     "which captured documents name this subject", not "what may be done to this
+     bundle". It offers candidates a member picks a resolve out of; the ACT is
+     op=resolve, which is already a named non-act keyed by capture sha. */
+  readingname: "read: which captured documents' readings name a registered subject (framework §8.1's grade-C tier), keyed by entity — the candidate list op=resolve is chosen from, never an act on an object",
   queuemute: "personal state, keyed (member, case): a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
   queuesnooze: "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)",
 };

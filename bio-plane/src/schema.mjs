@@ -666,6 +666,44 @@ CREATE TABLE IF NOT EXISTS reading_refs (
 );
 CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
 CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
+-- REC-36: the NAME index -- one row per normalised TERM of a reference's label,
+-- which is what makes the framework section 8.1 GRADE-C tier (a document that
+-- mentions a subject by NAME, carrying no reference the source assigned) an
+-- indexed lookup instead of a corpus scan. Before this, reading_refs had an index
+-- on ref and none on label, so a name-only mention was unreachable from any
+-- member surface and REC-18's earned grades were bounded to exact references.
+--
+-- WHY TERMS AND NOT A NORMALISED LABEL COLUMN, and it is MEASURED, not preferred
+-- (MEASUREMENTS.md 2026-08-04, REC-36; instrument test/label-variance-probe.mjs).
+-- Over the one real captured document this repository holds -- a 33-page Oakland
+-- Legistar agenda read by the real doctype -- a subject name was the WHOLE label
+-- in 0 of 41 labels against 33 names taken from the document itself. The label is
+-- the document ITEM's title ("Contract Agreement For James Beere As Oakland Police
+-- Chief"), and the name is EMBEDDED in it. A column holding the normalised whole
+-- label, however carefully folded, would have answered nothing. Requiring every
+-- term of a name to be present found 15 -- exactly what a substring scan found --
+-- so the indexable form loses nothing against the scan it replaces, at a measured
+-- 305 rows for that whole document.
+--
+-- term is the case-folded, whitespace-collapsed, punctuation-split form produced
+-- by the SAME normaliser entity_aliases.alias_norm keys on (Store labelTerms over
+-- normAlias). One function, so the two sides of the join cannot drift; a term
+-- projection that folded differently from the alias index would silently stop
+-- matching and nothing would fail.
+--
+-- bundle_id is carried so the D-15 viewer gate applies IN SQL at the lookup --
+-- a candidate the viewer may not see is not a candidate and its row is withheld,
+-- not merely redacted. DERIVED from the corpus like readings/reading_refs, so a
+-- whole-store purge clears it (D-113) and a re-promotion replaces it.
+CREATE TABLE IF NOT EXISTS reading_ref_terms (
+  capture_sha  TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,
+  ref          TEXT NOT NULL,
+  term         TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, ref, term)
+);
+CREATE INDEX IF NOT EXISTS reading_ref_terms_term ON reading_ref_terms(term);
+CREATE INDEX IF NOT EXISTS reading_ref_terms_bundle ON reading_ref_terms(bundle_id);
 -- CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY, which IS the framework's
 -- entity axis. Built ONCE (D-83): the bias doctrine's subject registry
 -- (BIO_Declared_Bias_v0_1.md safeguard 4) and the framework's entity axis
