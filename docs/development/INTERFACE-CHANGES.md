@@ -164,3 +164,91 @@ this with a COUNTER before the version bumps — which is why CHANGING is not en
 now. The registry entry stays 1.0.0 STABLE until the first item that emits a
 non-`pdf-page` `source` (COFF-3/4/5, whichever lands first) enters CHANGING here,
 lands, and bumps the version; COFF-1 and COFF-2 emit no `source` and do not wait.
+
+---
+
+## IC-2 · I2 gains the shared EVIDENTIARY ENVELOPE (the DEC-5 extras) · PROPOSED
+
+- **Interface:** I2 (content → framework), currently **1.0.0 STABLE**
+- **Proposer:** session CONTENT-OFFICE (coff4-agent), 2026-08-03, **FILED FROM
+  AS-BUILT CODE** (`bio-plane/src/docx.mjs`, COFF-4) per the first-lander rule in
+  QUEUE COFF-3/4/5: the first office entry to land files this envelope; the other
+  two CONFIRM it from their own as-built emissions rather than inventing variants.
+  This is the I1 write-from-code precedent, not a paper design.
+- **Owner to land it:** `FRAMEWORK` (dormant; CONDUCT answers by proxy per protocol
+  step 3, as it did for IC-1)
+- **Consumers to answer:** `FRAMEWORK`
+- **Producers affected:** the office entries (COFF-3/4/5); HTML and PDF are NOT
+  affected (they emit no envelope, and its ABSENCE is valid — the field is additive)
+
+### The change
+
+The office formats carry evidence that every RENDERED form of the same document
+destroys — a formula beside its cached value, a tracked change with its superseded
+wording, a reviewer's comment, a hidden sheet, speaker notes, the file's own
+provenance metadata (DEC-5: these are frequently the finding). One additive
+top-level field on the I2 `ok:true` structure object, exactly as CPDF-4's `text`
+was added:
+
+    evidentiary: {
+      container: "docx" | "xlsx" | "pptx",
+      kinds:     [ <string>... ],          // the item kinds this producer emitted
+      items:     [ EvidentiaryItem... ],   // tagged union, in body order
+      undetermined: [ { part, why, ... } ],// parts that COULD have carried items
+                                           // but could not be read — STATED
+      counts:    { <kind>: <int> } }
+
+Every `EvidentiaryItem` carries a required `kind` discriminator (the IC-1 lesson:
+a required tag converts a silent misread into a loud one) and a `source` that is
+an IC-1 element reference or `null` — the SAME reference union links use, per the
+D-164/DEC-23 one-primitive constraint; no second reference vocabulary. Kinds are
+per-format and open-ended; the ones DOCX (COFF-4) emits, from code:
+
+    { kind:"tracked-change", change:"insertion", author, date, text, source }
+    { kind:"tracked-change", change:"deletion",  author, date, superseded, source }
+        // `superseded` — THE SUPERSEDED WORDING, the field's whole point;
+        // author/date null when the file does not carry them, never invented
+    { kind:"comment", id, author, date, initials, text, source }
+    { kind:"core-properties", creator, lastModifiedBy, revision, revisionNumber,
+      created, modified, title, source:null }
+
+XLSX (COFF-3) confirms with its own kinds (formula-beside-value, hidden
+row/column/sheet) and PPTX (COFF-5) with speaker notes; the ENVELOPE — kinds/
+items/undetermined/counts, tagged items, IC-1 sources, stated undetermined — is
+what is shared and what this proposal fixes.
+
+### Filed with it, from the same as-built code: the pageless text form
+
+I2 1.0.0's `text` is PDF-shaped (`text.pages[]`), and its own residual (the
+CONTENT-HTML paragraph in the registry) anticipated that a pageless container
+would need "a documented degenerate form" rather than invented pages. A DOCX has
+no pages in its bytes (IC-1's `doc-para` rationale), so COFF-4's `text(parts)`
+emits, per unit the container actually has:
+
+    { ok:true, container:"docx", document,             // non-empty ¶s, \n-joined
+      paragraphs:[ { para, ref:"¶<1-based>", text } ], // instead of pages[]
+      undetermined:[ Marker... ],                      // e.g. the sizeGuard
+      counts:{ chars, undetermined } }                 //   marker, verbatim
+
+Same keys as the PDF shape wherever the meaning transfers (`document`,
+`undetermined`, `counts`), the per-unit list named for what the unit IS. Deleted
+(`w:delText`) wording is NOT in the text stream — the text is the document as
+served; the superseded wording lives in the envelope where it is attributed.
+
+### Why additive, and why the protocol file anyway
+
+No existing consumer reads `evidentiary` or `text.paragraphs`, `pdf-page` sources
+are untouched, and the PDF/HTML suites pin their outputs byte-identical — so this
+is additive in the CPDF-4 sense. It is filed here because I2 is STABLE and three
+producers build against the envelope concurrently: an unfiled shape is exactly how
+two of them would drift apart.
+
+### Status
+
+**PROPOSED, 2026-08-03, from as-built code.** Awaiting FRAMEWORK's response —
+FRAMEWORK is dormant, so CONDUCT answers on its behalf IN WRITING per protocol
+step 3 (the IC-1 precedent), at COFF-4's integration. The I2 registry-entry
+version bump (with IC-1's, per its RESOLUTION: the first landed non-`pdf-page`
+producer triggers CHANGING→CHANGED) is CONDUCT's to apply at integration, since
+two workers landing concurrently cannot both bump one version line. COFF-3 and
+COFF-5 CONFIRM here when they land.
