@@ -10,7 +10,7 @@
 > to close a turn should rewrite it as its own account.
 
 Written 2026-07-31 by session BOB, standing this area up. **It exists because the
-ground was already being edited with nobody owning it**: `store.mjs` is ~4,900 lines
+ground was already being edited with nobody owning it**: `store.mjs` is ~16,300 lines (measured 2026-08-04 at 16,287; this file said ~4,900 for weeks)
 and only its link, capture, task and reachability functions were claimed, so the
 schema core, `promote`, the gate, the audit sweep, membership, the projections and
 the whole retrieval surface belonged to no one. Unowned is a collision risk rather
@@ -76,7 +76,7 @@ the `accepts-when:` for each.
 
 ## What this area should know without being told
 
-**`store.mjs` is ~4,900 lines. Grep before assuming a helper does not exist.**
+**`store.mjs` is ~16,300 lines — MEASURED 2026-08-04 at 16,287, after this file had said ~4,900 for weeks. Grep before assuming a helper does not exist, and use `grep -a`.**
 
 **New schema tables go BEFORE the `host_governor` block**, and there are no backticks
 inside the schema template literal. A balanced stray pair still parses, so
