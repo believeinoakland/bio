@@ -448,3 +448,15 @@ negative control breaks exactly that merge and fails naming it.
 - **Consumers:** UI (dormant). CONDUCT answers per step 3, in writing, naming that
   it did so: `AGREE` — additive by inspection plus the measured nil on CITED.
 - **Version:** I3 5.0.0 → **5.1.0** in `INTERFACES.md`.
+
+## IC-9 · I3: the credential-free published read (`op=publishedcase`, `op=publishedbytes`, the container zip) · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-22 adds two `classes: null`
+  read ops serving the PUBLISHED PROJECTION ONLY (by id/edition/hash; bytes by hash
+  gated on `published_shas`; the deterministic container zip addressed by the
+  manifest's own sha, `format=zip`), plus `bio-case-container/1` gaining capture
+  bytes in the file manifest (additive; moves manifest_sha for capture-bearing
+  cases only — no consumer outside this item yet, UI-18 is first).
+- **Consumers:** UI (dormant). CONDUCT answers per step 3, in writing, naming that
+  it did so: `AGREE` — additive; the public surface UI-18 renders is exactly this.
+- **Version:** I3 5.1.0 → **5.2.0** in `INTERFACES.md`.
