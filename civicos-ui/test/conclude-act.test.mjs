@@ -326,7 +326,7 @@ vm.runInContext(appScript() +
   ";globalThis.__PLANE=PLANE;globalThis.__openInquiry=openInquiry;globalThis.__openConclude=openConclude;" +
   "globalThis.__toggle=concludeToggle;globalThis.__author=concludeAuthor;globalThis.__do=doConclude;" +
   "globalThis.__loadActSource=loadActSource;globalThis.__dispositions=dispositions;" +
-  "globalThis.__actsFor=actsFor;globalThis.__CONCL=()=>CONCL;globalThis.__ACTS=()=>CONCLUDE_ACTS;" +
+  "globalThis.__actsFor=actsFor;globalThis.__CONCL=()=>CONCL;globalThis.__ACTS=()=>ACTS_HERE;/* renamed by UI-20: the bar now paints on two surfaces, so its holder is no longer named for its first caller */" +
   "globalThis.__PROJ_CACHE=PROJ_CACHE;globalThis.__IMG_CACHE=IMG_CACHE;", ctx);
 
 ctx.__PLANE.session = true;
