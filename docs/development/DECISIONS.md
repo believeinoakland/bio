@@ -2229,7 +2229,7 @@ for CONDUCT to enact: record the H4 extension (addressed renderings carry hash, 
   entry.
 enacted: 2026-08-03 · CONDUCT — 5318b53: deferred on its trigger (first group asking for addressed non-public delivery), and the BOUND rule is recorded now — addressed renderings carry hash, date, author and both floors in-band — on UI-18's scope beside H4 (the AUDIENCES.md header pointer names it). Reasoning in this entry and QUEUE.md (UI-18).
 
-### DEC-32 · open
+### DEC-32 · answered
 raised: 2026-08-03 · session BOB (Bob's overlapping-utility example,
   BIO_Case_Making_v0_1.md, clarified by him 2026-08-03)
 for: bob
@@ -2372,6 +2372,33 @@ BOB'S CONSTRAINT, 2026-08-04, and it governs the BUILD rather than the meaning: 
   **Falsifiable, per the constructs doctrine:** if members routinely answer the consequence
   question one way and then correct the derived falsifier, the elicitation is wrong and the
   question needs rewording — measure it on the first real inquiries rather than predicting it.
+response: **ADOPTED IN FULL.** Bob, 2026-08-04: *"Your recommendation is good. Do that."*
+  So: **plurality lives INSIDE one finding** — one conclusion, one compound falsifier,
+  parallel claims each resting on a distinct basis, related by the AND/OR relationship Bob
+  ruled. Separate OBJECT IDENTITY is reserved for distinct propositions, and the test for
+  it is CITABILITY: a part nothing will ever cite alone does not need an id, and giving it
+  one rebuilds the multiplicity D-127's collapse removed. The falsifier-count test carries
+  the design, entailed by the arithmetic rather than added beside it. The elicitation design
+  above is binding — members are asked for CONSEQUENCES, never for structure, and the
+  derived falsifier is shown back in plain words for correction.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry (the dual-composition argument, the operational test, the
+  citability test for identity, the anti-gaming keystone and the elicitation design) and
+  `BIO_Case_Making_v0_1.md`'s DEC-32 thread, which CONDUCT updates on enactment.
+for CONDUCT to enact: **REC-11 and REC-12 are the load-bearing pair.** REC-12's strength
+  derivation models the AND/OR relationship from the start — a flat implicit-AND basis is
+  now known WRONG — computing MIN over AND legs and MAX over OR branches (min within a
+  branch). REC-11's `inquiry_basis` carries the relationship, not just the legs. **The
+  DEFAULT IS AND and that is a correctness requirement, not a preference**: an unstructured
+  basis stays weakest-leg, so independent sufficiency is only ever reached by an
+  affirmative, attributed act. R1 composes one level up (a suspended leg suspends its
+  branch; the finding suspends only when every branch is — DEC-18's pattern). UI-11/UI-12
+  take the elicitation design: no AND/OR vocabulary on any surface, the consequence question
+  per leg, the derived falsifier shown back, structure authored BEFORE strength is shown,
+  and restructuring-after-seeing-strength recorded and attributed rather than blocked.
+  Q14's contradiction case stays SEPARATE and stays undesigned — grounds agree on the
+  conclusion; contradiction is two conclusions disagreeing.
+enacted:
 
 ### DEC-33 · answered
 raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)
@@ -2621,7 +2648,7 @@ for CONDUCT to enact: unblock REC-33; rename its `MONITOR_TOKEN` to `DAEMON_TOKE
   plane's recognition of the class BEFORE the installer binds it (DIST-1).
 enacted: 2026-08-04 · CONDUCT — REC-33 unblocked and renamed to Bob's DAEMON_TOKEN (the class is the unattended path; scoped to its two verbs, widened by decision), ADMIN_TOKEN fallback kept, DIST-1's never-bind-an-unclassifiable-token constraint carried as binding; the installer half stays a follow-on DIST item behind REC-33's landing. Reasoning in this entry and REC-33's scope.
 
-### DEC-39 · open
+### DEC-39 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-38's report)
 for: bob
 question: The co-attestation honesty fence — "a co-attestation raises Grade B toward
@@ -2645,7 +2672,48 @@ recommendation: publish it via the prompt mechanism REC-16 built (one act publis
   be his.
 reversal cost: nil before publication; after, the usual wording-migration (the
   drift guard names it).
-### DEC-40 · open
+response: **PUBLISH IT, AND IT MUST STATE THE QUESTION CO-ATTESTATION ANSWERS.** Bob,
+  2026-08-04: *"Yes, it must report the question it answers."* The plane owns the fence
+  wording and publishes it with the act, via the prompt mechanism REC-16 built.
+  **WHAT THE RULING CORRECTS, and it came out of Bob's own trial example**: he asked
+  whether a coroner's courtroom testimony — held in the record only as a NEWSPAPER
+  ACCOUNT, with a member who was present and a court transcript not yet published — was
+  the co-attestation case. It is NOT, and the fact that it READ like one is the argument
+  for publishing the sentence. The existing wording says what co-attestation DOES ("raises
+  Grade B toward evidentiary weight") and what it CANNOT do ("never reaches Grade A") and
+  never says WHAT QUESTION IT ANSWERS — so a reader reaches for it to solve a DIRECTNESS
+  problem it has nothing to do with. If the project's own architect reaches for it that
+  way, a volunteer certainly will.
+  the wording is MINE to draft under this ruling and Bob amends it if it is wrong; drafted
+  here so it is in the record rather than invented at a keyboard later:
+  > **What co-attestation answers:** *when did these bytes exist?* It asks an independent
+  > timestamp authority to record that this capture's exact bytes existed no later than a
+  > fixed instant.
+  > **What it does not answer:** whether the document is TRUE, whether its source is
+  > authoritative, or how close it stands to the fact you are citing it for. A secondhand
+  > report that is co-attested is still a secondhand report.
+  > **What it is worth:** it strengthens a Grade B capture toward evidentiary weight. It
+  > never reaches Grade A — that needs a chain-of-custody web archive this surface cannot
+  > produce.
+  The three-part shape is deliberate and each part earns its place: the first line is what
+  the old sentence omitted, the second is the misreading Bob's example exposed, the third
+  is the existing honesty fence unchanged.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; the wording ships in the plane's published prompt, and
+  `BIO_Intake_Doctrine_v1_1.md`'s co-attestation section takes the pointer.
+for CONDUCT to enact: publish the fence wording with the attest act through REC-16's
+  prompt mechanism (one act publishes a prompt today — the machinery exists). **The UI
+  stops authoring it**: `civicos-ui/app.html`'s `ATTEST_YIELDS_GRADE` constant and its
+  hand-written honesty block render the PUBLISHED wording instead, and UI-24's rider is
+  widened from "renders the published label" to "renders the published label AND the
+  published fence, inventing neither." Keep the UI's negative control and RETARGET it: it
+  must still fail if any surface claims Grade A, now sourced from the published wording
+  rather than a local constant (correct the assertion, never exempt it). **AND SEE D-184**,
+  which Bob's example surfaced and which this wording does not fix: a member's FIRSTHAND
+  observation has no home as a basis leg, so the likely failure is a member citing the
+  newspaper for a fact they personally witnessed.
+enacted:
+### DEC-40 · answered
 raised: 2026-08-04 · CONDUCT (lifted from UI-18's report)
 for: bob
 question: The published-case THRESHOLD STANCES — the named set a reader picks from,
@@ -2666,8 +2734,65 @@ recommendation: confirm or amend the four; the floor values are the part most wo
   his eye (A/A for a filing may be right or may be unreachable in practice).
 reversal cost: one edit while unpublicised; after real readers quote a stance name,
   renames are noisy.
+response: **THE QUESTION IS REFUSED AS POSED — there is no set, because there is no
+  stance.** Bob, 2026-08-04: *"What's a stance? A published case is in the wild for
+  anybody to use for whatever purpose they wish. Some people may even try to claim that
+  it is (or says) something other than what it is. But the case speaks for itself, though
+  can't speak to those claims by outsiders. A case that's been published then imported
+  into a different project is essentially the same thing as it would be as a finding that
+  had never been published."*
+  **This is not a smaller set of stances; it removes the construct**, and the reasoning
+  is that a NAMED STANCE CLAIMS TO ENUMERATE PURPOSES WE CANNOT KNOW. A published artifact
+  is in the wild for uses nobody here will anticipate, so a four-item menu is a guess
+  presented as a vocabulary — and it is the record telling a reader what they are doing,
+  which is the inversion this project exists to refuse. Q6's FORM survives untouched (a
+  bar over the pair is a PAIR OF INDEPENDENT FLOORS, never one value, never one axis with
+  the other silently free — that reasoning is about arithmetic and is unaffected). What
+  dies is the named SET and the idea that the case has modes.
+  four determinations follow, and the second is the one a build session would miss:
+  1. **THE CASE RENDERS WHOLE, ALWAYS.** There is no reader-selected view in which the
+     case is the thing being shown. It speaks for itself, entire.
+  2. **A READER'S BAR IS THE READER'S, AND ITS RESULT IS NOT THE CASE.** If a reader wants
+     to apply floors, they supply the two values themselves — no preset names, no menu —
+     and what comes back is A VIEW THAT READER CONSTRUCTED, labelled as such, never "the
+     case at threshold X". **This is the load-bearing half, because of the threat Bob
+     named**: someone claiming the case says something other than what it says. A filtered
+     rendering that looks like the case IS that claim, manufactured by us and handed over
+     pre-made. So a filtered rendering states its filter IN DEC-34's per-page header,
+     beside the case id, edition, authors and hash — the brazening already required, one
+     field wider. An unfiltered rendering says so too, or absence of the line becomes the
+     ambiguity. And the existing rule stands: a bar may never drop a determining or
+     suspending leg.
+  3. **THE HONEST ANSWER TO "IS THIS STRONG ENOUGH FOR ME" IS ALREADY BUILT AND IS NOT A
+     FILTER.** The case states BOTH derived strengths and, per DEC-17, the DECLARED bar
+     its project held itself to. A reader compares those to their own need. We state; they
+     judge. Pre-chewing that into a menu is the record doing the reader's reasoning, and
+     doing it on a guess about their purpose.
+  4. **PUBLICATION DOES NOT MINT A NEW KIND OF OBJECT** — Bob's last sentence, and it
+     reaches further than this entry. An imported published case is A FINDING, gradeable
+     in its new context like any other, and MUST NOT arrive carrying privileged standing
+     because it was published somewhere else. Its signature, edition and hash remain
+     checkable facts ABOUT it; they are not a grade, and the importing instance re-grades
+     the connection in its own terms. (`published` is a lifecycle state of the same
+     object, exactly as DEC-12's editions treat it.)
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; `research/RECONCILED.md` §4 Q6 gains the note that the
+  FORM survived and the named SET did not; `research/AUDIENCES.md` §5's
+  never-reaches-ratification constraint is unaffected and unedited.
+for CONDUCT to enact: **THIS SUPERSEDES SHIPPED CODE — UI-18 landed the four-stance
+  selector, so this is a correction and not a scoping note.** (a) Remove the named stance
+  set and its labels; replace with a reader-supplied pair of floors, defaulting to none/none
+  (the whole case). (b) Any rendering produced under a reader's floors carries the filter in
+  DEC-34's per-page header and is never presented, printed or hash-described as "the case";
+  an unfiltered rendering states that it is unfiltered. (c) The determining/suspending-leg
+  protection is unchanged. (d) A NEW negative control the current suite cannot have: produce
+  a filtered rendering, strip its filter line, and the harness must FAIL — a filtered page
+  indistinguishable from the case is the misrepresentation vector this ruling exists to
+  close. (e) Carry determination 4 to whoever builds IMPORT (M6's interchange half): a
+  published case imported elsewhere is a finding and gets no inherited standing.
+enacted:
 
-### DEC-41 · open
+### DEC-41 · answered
 raised: 2026-08-04 · CONDUCT (lifted from UI-18's report)
 for: bob
 question: DEC-34 says the published case is "reduced also to PDF renderings". The
@@ -2690,6 +2815,41 @@ recommendation: the browser path likely satisfies the ruling's INTENT (a reader 
   produce a compliant PDF from the artifact), but "the container carries its own
   rendering" is a stronger claim about a forwarded file — genuinely his to weigh.
 reversal cost: none while the join stays reserved.
+response: **THE CONTAINER CARRIES ITS PDF — and a case without one is IMPORT-ONLY and must
+  say so.** Bob, 2026-08-04: *"Yes, I believe that a published case SHOULD carry a PDF. The
+  PDF is a renderer of the case. That said, a case could be published without a PDF, but
+  such a case would only be useable as an import to another project or instance."*
+  **This does not merely answer the question, it names a SECOND ARTIFACT CLASS**, and the
+  distinction is functional rather than a quality tier:
+  - **A case WITH renderings is a published case for the WORLD** — a stranger with no
+    credential and no BIO instance can read it, check it and print it. That was S9's whole
+    premise, and the browser path does not satisfy it for a FORWARDED file: an emailed or
+    archived container reaches people who will never visit the instance that made it.
+  - **A case WITHOUT renderings is valid and IMPORT-ONLY** — usable by another BIO project
+    or instance, which renders it itself. **It must SAY it is import-only**, in the manifest
+    and on the surface that produces it, or it is a published case that silently does less —
+    the D-106 class, and exactly the failure DEC-42 just refused for installs.
+  - **THE PDF IS A RENDERING, NEVER THE AUTHORITY** (Bob: *"the PDF is a renderer of the
+    case"*). The container and its signed manifest are authoritative; each rendering's hash
+    joins `published_shas` so any copy is checkable against the instance (DEC-34's
+    answer-by-hash, extended). A rendering that disagrees with the container loses.
+  - **AND IT COMPOSES WITH DEC-40's determination 4**: an import-only case is precisely the
+    *"finding that had never been published"* Bob described in the same breath — which is
+    why the class is coherent rather than a degraded edge case. It needs no rendering
+    because the importing instance renders it, and it inherits no standing on arrival.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry and DEC-34's artifact-form thread.
+for CONDUCT to enact: the manifest's reserved `layout.note` join becomes REAL — a
+  server-side renderer produces the PDFs and they join `parts[]` with their hashes in
+  `published_shas`. **Sequence it with the CPDF-12 renderer question rather than beside
+  it**: both need page-shaped output from workerd and building two renderers would be the
+  D-164 lesson repeated. Every page still carries DEC-34's full header (case id, edition,
+  authors, declared bias, both floors, hash, verification pointer) plus DEC-40's filter
+  line. The manifest gains an explicit `import_only` flag; the publish ceremony states it
+  before signing, since it changes what the artifact IS. The plane's current assertion that
+  no page-shaped artifact is produced there is SUPERSEDED and its suite corrected, never
+  exempted.
+enacted:
 
 ### DEC-42 · answered
 raised: 2026-08-04 · session BOB (from CPDF-11's NO-GO and a re-reading of CPDF-9)
