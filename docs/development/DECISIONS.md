@@ -2430,6 +2430,32 @@ recommendation: keep the shipped behaviour. The existence bit leaks structure on
   complete one) on the exact surface members open by habit. If Bob rules the other
   way, reversal is one predicate and migrates nothing.
 reversal cost: one predicate, no migration, no stored state either way.
+### DEC-37 · open
+raised: 2026-08-04 · CONDUCT (lifted from DIST-1's report)
+for: bob
+question: Is a scoped MONITOR_TOKEN worth opening a FOURTH token class in the plane's
+  auth surface? Today every monitor tick and archive fallback on every installed
+  instance authenticates as ADMIN_TOKEN — the root-of-trust credential — to do two
+  narrow things (call op=monitor; drive the archive arm of op=acquire). Scoped, a
+  leaked daemon credential would be a monitoring nuisance; today it is a total
+  instance compromise. The cost is a doctrine-visible widening of the auth surface
+  (classify() recognises exactly three tokens, and the class set is
+  CAPABILITIES-adjacent ground that has been deliberately narrow).
+why it is Bob's: the security posture of every deployed instance carries his name,
+  and the three-token narrowness reads as doctrine.
+provisional: the ADMIN_TOKEN fallback continues (it is the shipped behaviour and
+  nothing blocks); REC-33 holds the worked one-change recipe, blocked on this entry.
+  DIST-1 already established the installer must NOT bind a token the plane cannot
+  classify — an armed alarm firing 401s forever is worse than the fallback.
+alternative: run monitoring on ADMIN_TOKEN indefinitely, accepting root-of-trust
+  exposure on a standing unattended path as the price of a minimal auth surface.
+recommendation: mint the class. The unattended daemon path is exactly where a
+  credential lives longest and travels furthest (it is bound into every installed
+  instance's config), and least-privilege there buys real containment for one small,
+  well-understood widening. REC-33's recipe keeps ADMIN_TOKEN as a fallback so no
+  existing instance breaks.
+reversal cost: low before instances carry the token; after, removing the class
+  re-inerts monitoring on updated instances until a second update rebinds.
 ## Answered, awaiting enactment
 
 _(none)_
