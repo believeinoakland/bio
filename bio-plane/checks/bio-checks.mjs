@@ -258,6 +258,65 @@ STATES.problem = STATES.focus;
  *  publication cannot drift apart. */
 export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'other'];
 
+/** D-130 / REC-23: the counterparty is THREE-VALUED, and the shape is `source`'s.
+ *
+ *  WHAT WAS WRONG. C-2.10 refused an EMPTY counterparty and accepted any
+ *  non-empty string, so the intake surfaces' literal `to be named` satisfied
+ *  the check by being a string and the record asserted a counterparty it did
+ *  not have. That is the overclaiming class, in the one construct that reaches
+ *  outside the system — and it is the same pressure D-97 removed at the intake
+ *  gate when it made authority three-valued rather than forcing a caller to
+ *  invent one. `undetermined` is first-class and must be STATED.
+ *
+ *  THE SHAPE, and why it is this one. `counterparty` becomes a MAP:
+ *
+ *      counterparty:
+ *        state: named | undetermined
+ *        name: City Clerk                 # required under `named`
+ *        entity_id: ENT-2026-0007         # OPTIONAL, under `named` only
+ *        basis: <why it is not determined> # required under `undetermined`
+ *
+ *  A one-level map of scalars at two spaces is exactly what the restricted
+ *  frontmatter grammar admits (spec 2.2/3.3) and exactly what `source:
+ *  {locator, authority, retrieved}` already is. Nothing here nests further:
+ *  where a block needed a map AND a list, REC-14 and REC-16 split it into two
+ *  TOP-LEVEL keys (`completeness` / `completeness_excluded`, `division` /
+ *  `division_apportionment`) because the grammar cannot carry a map holding an
+ *  array of objects. The counterparty needs no such split — it is one party,
+ *  four scalars — so it is one block and the precedent is untouched.
+ *
+ *  NO COUNTERPARTY TABLE, and `entity_id` is why the temptation exists. A
+ *  separate counterparty registry would be a second subject registry with a
+ *  different doctrine attached, and that is exactly where a structural prior by
+ *  ROLE would eventually be added — which this project's stance forbids
+ *  outright (bad actors are identified BY EVIDENCE, never assumed by role). So
+ *  a counterparty that is a known subject POINTS INTO the one registry and the
+ *  registry stays the only place a party is described.
+ *
+ *  WHAT THIS CHECK CANNOT DO, stated rather than implied. (a) It cannot resolve
+ *  `entity_id`: the catalog is a pure function over an injected filesystem and
+ *  its only resolver seam is `resolveTarget`, which answers for BUNDLE ids.
+ *  The shape is checked here; resolution would need a new seam threaded from
+ *  the store's gateFacts, and no caller needs it yet. (b) It cannot detect
+ *  invention in general — a member who types "the relevant department" gets
+ *  past every rule below. The check is a BOUNDARY, not a prose judge; the
+ *  control that stops the invention is the surface's radio pair with no third
+ *  option and no default (UI-19), and a check that permits `undetermined`
+ *  without a control that OFFERS it just moves the invention one field over.
+ *  So exactly ONE placeholder is named here, and it is named because it was
+ *  MACHINE-WRITTEN on every action by two intake surfaces rather than typed by
+ *  anyone. */
+const COUNTERPARTY_STATES = ['named', 'undetermined'];
+/* The subject registry's own key shape: `allocId("ENT", year)` in store.mjs
+   yields ENT-<4-digit year>-<4-digit sequence>, with no slug (unlike a bundle
+   id). Shape only — see (a) above. */
+const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
+/* The one placeholder, compared case-folded and trimmed. It is the exact string
+   `mdFor` wrote in `civicos-ui/app.html` and `src/setup.mjs` until this item
+   deleted it, so a bundle carrying it was written by a machine that had no
+   counterparty and said one anyway. */
+const COUNTERPARTY_PLACEHOLDER = 'to be named';
+
 
 // ---------------------------------------------------------------------------
 // Finding helper
@@ -2144,6 +2203,100 @@ function checkCitationRegister(ctx, findings) {
   }
 }
 
+/** C-2.10's counterparty arm (D-130 / REC-23). See COUNTERPARTY_STATES above for
+ *  the shape, why it is `source`'s, why there is no counterparty table, and the
+ *  two things this check deliberately cannot do.
+ *
+ *  THE COHERENCE RULE, which is the half the item's four refusals imply rather
+ *  than list: the STATE and the CONTENT must say the same thing. A `named`
+ *  counterparty with no name asserts an addressee that is not there; an
+ *  `undetermined` counterparty carrying a name (or an `entity_id`, which names
+ *  harder — it points at a registry subject) asserts one while wearing the
+ *  label that says it does not. Both are the D-130 move in a different field,
+ *  so both are refused here rather than left for a reader to notice. */
+function checkCounterparty(fm, findings) {
+  const isPlaceholder = (v) =>
+    typeof v === 'string' && v.trim().toLowerCase() === COUNTERPARTY_PLACEHOLDER;
+  const REPAIRS = [
+    'name the counterparty: counterparty.state = named with counterparty.name',
+    'or state that it is undetermined: counterparty.state = undetermined with an authored counterparty.basis saying why',
+  ];
+  const cp = fm.counterparty;
+
+  /* The pre-REC-23 flat shape, and the one every action written before this
+     item carries. Named separately from a missing block because the repair is
+     different: the fact is present and its shape is wrong, except when the
+     "fact" is the machine's own placeholder, which has no fact under it. */
+  if (typeof cp === 'string') {
+    findings.push(f('C-2.10', 'error', isPlaceholder(cp)
+      ? `counterparty is the placeholder '${cp.trim()}', which asserts a counterparty this action does not have (D-130). It is not a name and it is not an honest undetermined`
+      : `counterparty '${cp.trim().slice(0, 40)}' is a bare string; it is a block of {state, name, basis} so that "we do not know yet" can be STATED rather than invented`,
+      REPAIRS));
+    return;
+  }
+  if (!cp || typeof cp !== 'object' || Array.isArray(cp)) {
+    findings.push(f('C-2.10', 'error',
+      'counterparty block is missing: an action names who it is addressed to, or states that it is undetermined and why',
+      REPAIRS));
+    return;
+  }
+
+  if (!COUNTERPARTY_STATES.includes(cp.state)) {
+    findings.push(f('C-2.10', 'error',
+      `counterparty.state '${cp.state}' is not one of: ${COUNTERPARTY_STATES.join(', ')}`, REPAIRS));
+    return;
+  }
+
+  const name = typeof cp.name === 'string' ? cp.name.trim() : '';
+  const basis = typeof cp.basis === 'string' ? cp.basis.trim() : '';
+  const entityId = cp.entity_id === undefined || cp.entity_id === null ? '' : String(cp.entity_id).trim();
+
+  /* The placeholder refused wherever it is written, not only in the shape the
+     machine used to write it: moving the same string one field down would
+     otherwise pass. */
+  if (isPlaceholder(name)) {
+    findings.push(f('C-2.10', 'error',
+      `counterparty.name is the placeholder '${COUNTERPARTY_PLACEHOLDER}', which is not a name (D-130)`, REPAIRS));
+  }
+  if (isPlaceholder(basis)) {
+    findings.push(f('C-2.10', 'error',
+      `counterparty.basis is the placeholder '${COUNTERPARTY_PLACEHOLDER}', which says nothing about WHY the counterparty is undetermined`,
+      ['author counterparty.basis: what has been established so far, and what would settle it']));
+  }
+
+  if (cp.state === 'named') {
+    /* The placeholder arm above has already fired if the name IS the
+       placeholder; it is non-empty, so this arm correctly does not fire twice
+       on one fact. */
+    if (!name) {
+      findings.push(f('C-2.10', 'error',
+        'counterparty.state is named and counterparty.name is empty: the state asserts an addressee the document does not carry', REPAIRS));
+    }
+    if (entityId && !ENTITY_ID_RE.test(entityId)) {
+      findings.push(f('C-2.10', 'error',
+        `counterparty.entity_id '${entityId.slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
+        ['point entity_id at an entry in the subject registry (op=entitycreate / op=entitybyalias), or omit it — it is optional']));
+    }
+  } else {
+    if (!basis) {
+      findings.push(f('C-2.10', 'error',
+        'counterparty.state is undetermined and counterparty.basis is empty: undetermined is first-class and must be STATED, so an action that does not know who it is addressed to says what it does know',
+        ['author counterparty.basis: what has been established so far, and what would settle it']));
+    }
+    /* The coherence rule, both halves. */
+    if (name) {
+      findings.push(f('C-2.10', 'error',
+        `counterparty.state is undetermined and counterparty.name is '${name.slice(0, 40)}': the block asserts a counterparty and denies having one in the same breath`,
+        ['set state: named if the name is the counterparty', 'or clear name and leave the basis to say what is known']));
+    }
+    if (entityId) {
+      findings.push(f('C-2.10', 'error',
+        `counterparty.state is undetermined and counterparty.entity_id is '${entityId.slice(0, 40)}': an entity_id names a subject in the registry, which is a determination`,
+        ['set state: named', 'or clear entity_id']));
+    }
+  }
+}
+
 function checkActionExtension(ctx, findings) {
   if (ctx.fm?.object_type !== 'action') return;
   const fm = ctx.fm;
@@ -2151,9 +2304,7 @@ function checkActionExtension(ctx, findings) {
      op=affordances) so the gate and the publication read one array. */
   if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not in the suite`));
   if (![1, 2, 3].includes(fm.risk_tier)) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not 1, 2, or 3`));
-  if (typeof fm.counterparty !== 'string' || fm.counterparty.trim() === '') {
-    findings.push(f('C-2.10', 'error', 'counterparty is missing or empty'));
-  }
+  checkCounterparty(fm, findings);
   if (fm.current_state === 'resolved' && !['complied', 'denied', 'escalated', 'withdrawn'].includes(fm.resolution)) {
     findings.push(f('C-2.10', 'error', 'resolved state requires resolution in: complied, denied, escalated, withdrawn'));
   }

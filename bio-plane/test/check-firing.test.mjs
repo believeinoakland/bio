@@ -74,7 +74,16 @@ function mdFor(id, type, state, title, body, now) {
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if (type === "project") fm.push("objective: " + JSON.stringify(title));
   if (type === "action") fm.push(
-    "action_kind: other", "risk_tier: 1", "counterparty: to be named");
+    /* Superseded 2026-08-04 (REC-23/D-130): this fixture carried
+       `counterparty: to be named`, which is the exact string the check now
+       refuses — the base was conformant only because C-2.10 accepted any
+       non-empty string. Corrected, never exempted: the conformant action is now
+       an honest `undetermined` with an authored basis, which is the shape the
+       item's accepts-when requires to PASS. counterparty.test.mjs owns the
+       refusing direction; this base only has to be clean. */
+    "action_kind: other", "risk_tier: 1",
+    "counterparty:", "  state: undetermined",
+    "  basis: The department that holds these records has not been identified; the clerk's index is the next place to look.");
   fm.push("---", "");
   const out = fm.slice();
   HEADINGS[type].forEach((h, i) => { out.push(h, ""); if (i === 0) out.push(body, ""); });
