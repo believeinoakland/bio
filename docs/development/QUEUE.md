@@ -180,7 +180,7 @@ landed: 1605dba — pipeline-e2e.test.mjs (53 assertions) drives the WHOLE M4 ax
 
 ---
 
-## RECORD — DORMANT (pre-seeded with the case-making run; first in line when a slot frees)
+## RECORD — ACTIVE (promoted 2026-08-03 into the slot CONTENT-OFFICE freed on draining; REC-10 first, per the 2026-08-01 handover order)
 
 Owns the store core and retrieval (`PARALLELISM.md`). Claim it in `CLAIMS.md` before
 editing; `store.mjs` is ~4,900 lines and CAPTURE holds its link/capture/task/
@@ -515,7 +515,7 @@ depends-on: CPDF-9, COFF-1 (dependency corrected 2026-08-03: the handover's "CPD
 accepts-when: `cd bio-plane && npm run test:battery` green with a real image-only Oakland PDF yielding text whose `text_source` chain names each step with per-region confidence and reaching `reading_refs`, while a text-layer PDF yields its own honest chain and the two are distinguishable in the projection, the index and an export; an attestation is refused to a machine credential and scoped to its extent; negative control — strip the `text_source` marker and the suite fails naming an OCR'd document indistinguishable from a published text layer; drop the confidence floor so a garbled region emits a best guess and the suite fails; collapse the chain to one label and the suite fails.
 added: 2026-08-01 · BOB · amended 2026-08-02 ×2 · enqueued 2026-08-03 · CONDUCT
 
-## CONTENT-OFFICE — ACTIVE (holds BOTH worker slots; activated 2026-08-03 by CONDUCT)
+## CONTENT-OFFICE — DORMANT (queue DRAINED 2026-08-03: COFF-1..7 all done; the office-format axis is built end to end)
 
 New area, from BOB's 2026-08-03 office-formats decomposition. Owns the OOXML container
 reader and the office format entries (`bio-plane/src/ooxml.mjs`, `bio-plane/src/formats.mjs`,
