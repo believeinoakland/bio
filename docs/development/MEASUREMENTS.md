@@ -2036,3 +2036,71 @@ leave the surface only the two moves DEC-8 forbids — compose a translation, or
 blank what the plane said. When DEC-49 is answered it becomes a failing arm by
 setting `REPORT_ONLY` to `false` at the arm; `UI31_ENFORCE=1` runs that arm today
 and it fails naming all thirteen terms with their sources.
+
+**SUPERSEDED IN PART BY UI-33, 2026-08-04 — see the next entry.** The thirteen
+above are the state UI-31 measured. The eight INCIDENTAL / part-incidental terms
+have since been closed at their source, and the table below this line is now a
+HISTORICAL reading rather than the current one. **The UNAVOIDABLE column did not
+move at all**, which is the half DEC-49 is about, so nothing in the reasoning
+this entry supplied to that decision is invalidated — only its headline count.
+
+## 2026-08-04, UI-33: the same instrument after the SURFACE-AUTHORED half was closed
+
+Same instrument, same walk, same day: `civicos-ui/test/preauth-vocabulary.test.mjs`,
+run as `UI31_ENFORCE=1 node civicos-ui/test/preauth-vocabulary.test.mjs`. This is a
+re-reading, not a new measurement design. UI-33 reworded the words `app.html` writes
+ITSELF and changed no plane-sourced string, so this entry is what a member meets
+before signing in once the half that no ruling would have fixed is fixed.
+
+**Result: 13 terms -> 9. 67 occurrences -> 55; 56 visible -> 45. 5 surfaces -> 4.**
+The walk is unchanged at 12 surfaces, 10 scenarios and 74 inherited terms; the
+harvest grew 33,412 -> 33,535 characters because two rewordings are longer than
+what they replaced.
+
+| Term | ×HTML (visible) | Owner | Change |
+| --- | --- | --- | --- |
+| `sha256` | 30 (26) | BOTH | unchanged — KEPT deliberately, see below |
+| `op=` | 12 (8) | BOTH | unchanged — KEPT deliberately, see below |
+| `bundle.md` | 3 (3) | UNAVOIDABLE | unchanged (the plane's `parts[].path`) |
+| `this instance` | 3 (3) | **UNAVOIDABLE** | was BOTH ×4 — the SURFACE's occurrence closed, the plane's two untouched |
+| `handle` | 3 (1) | INCIDENTAL | unchanged — KEPT deliberately, see below |
+| `a salted derivation` | 1 (1) | UNAVOIDABLE | unchanged |
+| `its stored hash` | 1 (1) | UNAVOIDABLE | unchanged |
+| `no active credential` | 1 (1) | UNAVOIDABLE | unchanged |
+| `register` | 1 (1) | UNAVOIDABLE | unchanged |
+| ~~`manifest`~~ | — | was INCIDENTAL ×7 | **GONE** — prose reworded; `MANIFEST.json` kept as the file's real name |
+| ~~`MEMBER_TOKEN`~~ | — | was INCIDENTAL ×2 | **GONE** — the gate's field label now reads "Access token" |
+| ~~`CORS`~~ | — | was INCIDENTAL ×1 | **GONE** — the clause already said "cross-origin reads" |
+| ~~`R2`~~ | — | was INCIDENTAL ×1 | **GONE** — a vendor product name in the preview note |
+
+**EVERY PLANE-SOURCED ROW IS UNCHANGED IN NUMBER AND IN SOURCE**, and that is the
+load-bearing half of this reading rather than a footnote: a reword that had quietly
+edited a plane string would have shrunk the report too, and would have looked
+exactly like success. DEC-49's subject is therefore the SAME eight rows it was, and
+this item pre-empted nothing.
+
+**THREE TERMS WERE KEPT ON PURPOSE, each with its reason recorded at the site in
+`app.html` (`pubVerifyPanel`).** They are named here so a later reader does not
+read them as misses. `sha256` names the ALGORITHM a reader is invited to run —
+"check this without us" is only true if they know which digest to compute, and it
+is the same prefix the record, the container and `ssh-keygen` all write.
+`op=publishedbytes&sha256=…` is an ADDRESS, not a description; a reworded address
+is a broken one. `handle` is the name of that identifier everywhere in the product,
+so rewording it at the gate alone would give a member one word before signing in
+and another after — renaming it everywhere is a product-vocabulary decision and is
+routed rather than taken in passing.
+
+**AND ONE GAP IN THE INSTRUMENT, FOUND BY RUNNING THE CONTROL RATHER THAN READING
+THE FILE, AND CLOSED.** UI-31 pinned the plane's refusal sentence verbatim at the
+GATE, so a surface editing that is caught by name. Nothing pinned the same thing on
+the published CASE PAGE. Measured: with `verification.detail` rendered through a
+`.replace("this instance","this group")`, the suite ran **31 of 31 GREEN, exit 0**,
+and only the report moved. A surface silently translating a plane sentence on the
+largest pre-authentication surface in the product — the precise move DEC-8 forbids
+— was invisible to every assertion. One REACH assertion now pins it; the same
+mutation fails **1 of 32**, naming `verification.detail` and DEC-8.
+
+Also measured in passing and NOT acted on: `op=publishedcase`'s top-level `detail`
+is rendered NOWHERE for a case that was FOUND (`app.html` prints it only on the
+not-found and not-a-case branches). Whether a found case should show the plane's
+own one-line description is a rendering question inside UI-29's ground.

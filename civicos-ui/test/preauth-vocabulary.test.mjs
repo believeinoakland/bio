@@ -15,7 +15,12 @@
  * **THIS FILE DOES NOT SETTLE WHO OWNS THE WORDING.** That is DEC-49, open with
  * Bob. It turns an UNMEASURED tension into a MEASURED one, and nothing else:
  * nothing here translates a plane sentence, blanks one, or introduces a mapping
- * layer, and `app.html` is not touched by this item at all.
+ * layer, and `app.html` was not touched by UI-31 at all.
+ *
+ * **THAT LAST CLAUSE IS UI-31'S AND STAYS TRUE OF UI-31.** UI-33 later DID change
+ * `app.html` — but only words this surface wrote itself, never a plane string,
+ * and DEC-49 remains open and un-pre-empted. See "WHAT UI-33 DID TO THIS FILE"
+ * below before reading the counts in this header as UI-31's.
  *
  * THREE THINGS IT DOES.
  *
@@ -99,27 +104,51 @@
  *
  * Run alone: `node test/preauth-vocabulary.test.mjs`.
  *
- * NEGATIVE CONTROL, FIVE ARMS, RUN 2026-08-04 against this file as it stands and
- * the counts are that run's. Arms (a)-(d) are reached through this file's own
- * switches, the way `auth-surface.test.mjs`'s arm (c) is, so each is re-runnable
- * in ONE STEP and NOTHING is written to disk — there is no restore to get wrong.
- * Arm (e) is on disk and `app.html` was restored byte-identically after it,
- * sha256 compared before and after.
+ * ============================================================================
+ * WHAT UI-33 DID TO THIS FILE, 2026-08-04, AND WHAT IT DELIBERATELY DID NOT.
+ * ============================================================================
+ * UI-33 closed the SURFACE-AUTHORED half of what this file measured — the words
+ * `app.html` wrote itself, which NEITHER answer to DEC-49 would ever have
+ * removed. The report went from 13 terms to 9, and **all EIGHT plane-sourced
+ * rows are unchanged in number and in source**, which is the assertion that
+ * matters: a reword that quietly edited a plane string would otherwise have
+ * looked exactly like success.
  *
- *   (a) HIDE A MEMBER-FACING SURFACE FROM THE WALK — the item's own control, run
+ * THE MEASUREMENT ITSELF IS UNTOUCHED. Walks 1-3, `planeRanges`, `countIn`, the
+ * HITS loop, the report and `REPORT_ONLY` all behave identically — verified by
+ * running the changed file against the UNCHANGED `app.html` and diffing the
+ * `PRE-AUTH VOCABULARY REPORT:` block, which came back character-identical.
+ * Three things changed, each for a stated reason:
+ *   - `structuralTerms()` was lifted out of the HITS loop unchanged, so the
+ *     liveness arm can exercise the real detector instead of a re-typed copy.
+ *   - THE STRUCTURAL LIVENESS ARM WAS CORRECTED, not exempted. It used to
+ *     require the two rules to have matched something on the REAL surfaces —
+ *     which was true only because `MEMBER_TOKEN`, `CORS` and `R2` were still
+ *     standing there. It was fed by the defect it was watching for, so fixing
+ *     the defect would have turned it red. Full reasoning at the arm.
+ *   - ONE REACH ASSERTION WAS ADDED, and arm (g) below is why.
+ *
+ * NEGATIVE CONTROL, SEVEN ARMS, RUN 2026-08-04 against this file as it stands
+ * and the counts are that run's. Arms (a)-(d) are reached through this file's
+ * own switches, the way `auth-surface.test.mjs`'s arm (c) is, so each is
+ * re-runnable in ONE STEP and NOTHING is written to disk — there is no restore
+ * to get wrong. Arms (e)-(g) are on disk; `app.html` was restored
+ * byte-identically after every one of them, sha256 compared before and after.
+ *
+ *   (a) HIDE A MEMBER-FACING SURFACE FROM THE WALK — UI-31's own control, run
  *       three times because the three hidings fail through three different
  *       assertions and each names something the others cannot.
  *       `UI31_HIDE=public-record node test/preauth-vocabulary.test.mjs`
- *       -> **2 of 29 FAIL**: the scenario set ("MISSING: public-record") and the
+ *       -> **2 of 30 FAIL**: the scenario set ("MISSING: public-record") and the
  *       gate control that lost its only driver ("UNCOVERED: g-pub").
- *       `UI31_HIDE=design-preview` -> **3 of 30 FAIL**: those two
+ *       `UI31_HIDE=design-preview` -> **3 of 31 FAIL**: those two
  *       (`design-preview`, `g-preview`) plus the surface set, which prints
  *       "STOPPED COVERING: [#content, #m-grp, #m-handle, #m-idstr, #rail]" —
  *       five member-facing surfaces that leave the walk with that one scenario.
  *       `UI31_HIDE=case-address-at-load` -> **3 of 30 FAIL**: the scenario, the
  *       published ADDRESS SHAPE nothing opens any more (the failure prints the
  *       router's own regex, `/^#case\/([A-Za-z0-9._-]+)(?:\/e(\d+))?$/`), and
- *       the harvest collapsing from 33,412 characters to 8,727. **THIS IS THE
+ *       the harvest collapsing from 33,535 characters to 8,714. **THIS IS THE
  *       ARM THAT PROVES THE ADDRESS WALK IS LOAD-BEARING**: that scenario
  *       renders into `#pub-body`, which another scenario also renders, so a
  *       surface-set check alone would have stayed perfectly green while the
@@ -128,7 +157,7 @@
  *   (b) NEUTER THE TERM HARVEST — `UI31_EMPTY_TERMS=1`. The walk over the
  *       sibling suites returns nothing, which is "covers nothing, passes
  *       everything" arriving in the instrument rather than the subject.
- *       RUN: **4 of 31 FAIL** — the empty harvest ("read 0 suites []"), the
+ *       RUN: **4 of 32 FAIL** — the empty harvest ("read 0 suites []"), the
  *       inherited terms, DEC-49's own four phrases, and the attribution's
  *       non-degeneracy, which collapses with them.
  *
@@ -137,33 +166,56 @@
  *       looks like (UI-28's instrument lesson: the publication must be
  *       subtracted before the remainder means anything, and UI-30's, that an
  *       extraction yielding "" makes every `includes()` trivially true).
- *       RUN: **1 of 31 FAILS**, printing "0 plane-sourced rows and 16
+ *       RUN: **1 of 32 FAILS**, printing "0 plane-sourced rows and 12
  *       surface-authored" — the report would have blamed this surface for the
  *       plane's own sentence, which is the one error that would have misdirected
  *       DEC-49 outright.
  *
  *   (d) THE REPORTING ARM AS A FAILING ARM — `UI31_ENFORCE=1`, which is exactly
- *       the one-line flip DEC-49's answer will make permanent. RUN: **1 of 31
- *       FAILS**, naming all thirteen terms with their sources. That is what this
- *       file will say the day the ruling lands, measured now rather than
- *       promised.
+ *       the one-line flip DEC-49's answer will make permanent. RUN: **1 of 32
+ *       FAILS**, naming all NINE remaining terms with their sources (it named
+ *       thirteen before UI-33). That is what this file will say the day the
+ *       ruling lands, measured now rather than promised.
  *
  *   (e) ON DISK — put a plane term where no plane put it. The gate's own token
  *       hint in `app.html` gains the words "including every capture_sha". RUN:
- *       the report grows from 13 terms to 14 and the new row is
- *       `"capture_sha" x1 (1 visible) INCIDENTAL [inherited] | surface:
+ *       **32 of 32 green** and the report grows from 9 terms to 10, the new row
+ *       being `"capture_sha" x1 (1 visible) INCIDENTAL [inherited] | surface:
  *       gate-as-served app.html:#gate (served markup)` — the right term, the
  *       right surface, and attributed to the surface that wrote it rather than
- *       to the plane. Under `UI31_ENFORCE=1` the failing arm names all fourteen.
- *       Run a second time with `op=login` in the same hint instead: the term
- *       list stays 13 because the case page already carries `op=`, and what
- *       moves is that row's SOURCE list, which gains the gate — so the report
- *       distinguishes a new word from a known word at a new site.
- *       This arm answers what the four switch arms cannot: **does the report SEE
- *       something it was not built against**, or is it only reproducing its own
- *       fixtures. `app.html` restored byte-identically after both runs, sha256
- *       478ba5ca0fe141d34832d7b14ed33d43c907334bc1d51ac55abea9603d3478b3 before
- *       and after, `git status` clean on that file.
+ *       to the plane. This arm answers what the switch arms cannot: **does the
+ *       report SEE something it was not built against**, or is it only
+ *       reproducing its own fixtures.
+ *
+ *   (f) UI-33'S OWN, AND THE ONE THAT GUARDS THE HARD CONSTRAINT — **THE SURFACE
+ *       TRANSLATES A PLANE-SOURCED TERM.** `signIn()` renders the plane's refusal
+ *       through `String(l.detail).replace("a salted derivation","a scrambled
+ *       copy")`. That is the surface composing wording for a refusal it received,
+ *       which DEC-8 forbids outright and which UI-33 was told above all else not
+ *       to do — pre-empting DEC-49, the error UI-31 deliberately refused to make.
+ *       RUN: **2 of 32 FAIL**, and the pair is the point.
+ *       The REACH arm names the act — "the gate rendered the plane's own
+ *       sentence, whole — which is the subject of this item".
+ *       The ATTRIBUTION arm names the CONSEQUENCE: three of the plane's terms
+ *       (`its stored hash`, `no active credential`, `register`) flip from
+ *       UNAVOIDABLE to **INCIDENTAL**, and `a salted derivation` vanishes from
+ *       the report altogether. The measurement DEC-49 is to be answered against
+ *       would have blamed this surface for the plane's own sentence and shrunk
+ *       the ruling's subject by one term, which is a worse outcome than the
+ *       wording change itself.
+ *
+ *   (g) THE SAME OVERSTEP ON THE CASE PAGE — and this arm FOUND A GAP AND CLOSED
+ *       IT, so both numbers are recorded. `pubCasePages` renders the plane's
+ *       `verification.detail` through `.replace("this instance","this group")`.
+ *       **BEFORE UI-33 added its REACH assertion: 31 of 31 GREEN, exit 0.** The
+ *       only thing that moved was the report — `this instance` went x3 to x2 and
+ *       lost its case-page plane source. A surface silently translating a plane
+ *       sentence on the LARGEST pre-authentication surface in the product, the
+ *       one a stranger actually arrives on, was invisible to every assertion in
+ *       this file; only the gate's sentence was pinned. **AFTER: 1 of 32 FAILS**,
+ *       naming `verification.detail` and DEC-8. The gap was found by running the
+ *       control rather than by reading the file, which is the whole argument for
+ *       running it.
  */
 import vm from "vm"; import fs from "fs"; import path from "path";
 import { webcrypto } from "crypto";
@@ -666,6 +718,39 @@ if(S("case-address-at-load"))
      S("case-address-at-load").calls.some(c => c.op === "publishedcase" && c.token === null)
      && textOf("case-address-at-load", "#pub-body").includes("Was the sewer transfer authorised?")
      && !/Not published/.test(textOf("case-address-at-load", "#pub-body")));
+/* THE PLANE'S SENTENCES ON THE CASE PAGE ARE RENDERED WHOLE — ADDED BY UI-33,
+   2026-08-04, AND IT CLOSES A GAP THIS ITEM'S OWN NEGATIVE CONTROL FOUND.
+   The refused-signin arm above pins the plane's refusal sentence verbatim at the
+   GATE, so a surface that edited THAT is caught by name. Nothing pinned the same
+   thing on the published case page — and that page is the LARGEST
+   pre-authentication surface in the product and the one a stranger actually
+   arrives on. MEASURED, not supposed: with `verification.detail` rendered through
+   a `.replace("this instance","this group")` at `pubCasePages`, this file ran
+   **31 of 31 GREEN, exit 0**, and the only thing that moved was the REPORT (the
+   `this instance` row went x3 to x2 and lost its case-page plane source). A
+   surface silently translating a plane sentence — the precise move DEC-8 forbids
+   and the precise thing UI-33 was told not to do — was invisible to every
+   assertion here.
+   It is a REACH assertion and not a vocabulary one: it says the plane's own
+   string arrives on the page unedited, which is what makes the attribution below
+   mean anything. The sentence is taken from the fixture rather than typed, so
+   this cannot drift from what the mock actually answers.
+   ITS SUBJECT IS `verification.detail` AND ONLY THAT, and the narrowing is
+   measured rather than assumed. The first version of this arm also required the
+   answer's TOP-LEVEL `detail` and FAILED on the clean file: for a case that was
+   FOUND, `op=publishedcase`'s `detail` is rendered nowhere — `app.html` prints it
+   only on the not-found branch and on the not-a-case branch. That is reported
+   here rather than smoothed away, and it is not this item's to change: whether a
+   found case should show the plane's own one-line description is a rendering
+   question inside UI-29's ground. What matters for THIS arm is that a sentence
+   nothing renders cannot be pinned as rendered-whole, so the arm pins the one
+   sentence this page does print. */
+if(S("case-address-at-load"))
+  ok("REACH: and it rendered the plane's OWN sentence WHOLE — `verification.detail`, neither "
+     + "edited, shortened nor re-spelled by this surface (DEC-8: a surface may render what it "
+     + "received and may never compose or translate it)",
+     !!CASE_ANSWER.verification.detail
+     && textOf("case-address-at-load", "#pub-body").includes(esc(CASE_ANSWER.verification.detail)));
 /* And the walk is not thin: a harvest of a few hundred characters would satisfy
    every assertion above while measuring almost nothing. */
 {
@@ -776,6 +861,18 @@ const ACRONYM = /\b[A-Z][A-Z0-9]{1,3}\b/g;
 const tightText = h => String(h).replace(/<[^>]*>/g, "")
   .replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"');
 
+/* THE TWO STRUCTURAL RULES, APPLIED. Lifted out of the HITS loop by UI-33 and
+   NOT otherwise changed — every caller passes the same two arguments the loop
+   built inline before, so the measurement is identical. It is a function now for
+   one reason: the liveness arm below must exercise the DETECTOR itself on a
+   planted string, and a control that re-types the detector is a control that
+   agrees with it at zero cost (REC-48's lesson, this project's most-repeated). */
+function structuralTerms(html, vis){
+  const acronyms = [...new Set([...tightText(html).matchAll(ACRONYM)].map(m => m[0]))]
+    .filter(a => !vis.includes(a.toLowerCase()));
+  return new Set([...String(html).matchAll(SNAKE)].map(m => m[0]).concat(acronyms));
+}
+
 function countIn(hay, t, ranges){
   let i = hay.indexOf(t), plane = 0, surface = 0;
   while(i >= 0){
@@ -792,9 +889,7 @@ for(const sc of SCENARIOS){
     const vis = visibleText(html);
     const rRaw = planeRanges(html, sc.said);
     const rVis = planeRanges(vis, sc.said);
-    const acronyms = [...new Set([...tightText(html).matchAll(ACRONYM)].map(m => m[0]))]
-      .filter(a => !vis.includes(a.toLowerCase()));
-    const structural = new Set([...html.matchAll(SNAKE)].map(m => m[0]).concat(acronyms));
+    const structural = structuralTerms(html, vis);
     const subjects = [...TERMS.map(t => [t, "inherited"]), ...[...structural].map(t => [t, "structural"])];
     for(const [t, kind] of subjects){
       const raw = countIn(html, t, rRaw);
@@ -808,13 +903,38 @@ for(const sc of SCENARIOS){
 }
 /* BOTH structural rules are asserted LIVE, separately. A rule that matched
    nothing would be a rule nobody could tell was broken — it would sit in the
-   file looking like coverage and contribute none. */
+   file looking like coverage and contribute none.
+   **CORRECTED BY UI-33, 2026-08-04, AND IT IS A CORRECTION RATHER THAN AN
+   EXEMPTION (`CLAUDE.md`: correct a superseded test, never exempt it).** As
+   UI-31 wrote it, this arm read the rules' output on the REAL surfaces and
+   required each rule to have matched something THERE. That passed only because
+   the surface was still printing `MEMBER_TOKEN` as a field label (the one
+   SCREAMING_SNAKE) and `CORS`/`R2` in prose (the two acronyms) — which is to say
+   it was fed by the very defect UI-33 was queued to close. Under the old form,
+   removing all three would have turned this assertion RED **for the subject
+   being FIXED**, and its only remedy would have been to keep a defect alive to
+   feed the instrument. That is a rule nobody could satisfy honestly.
+   What must stay live is the DETECTOR, not the defect. So the detector is
+   exercised through `structuralTerms()` — the same function the measurement
+   calls, never a re-typed copy of it — on a planted string carrying one
+   identifier, one genuine acronym and one emphasis word, and all THREE
+   properties are pinned: SCREAMING_SNAKE fires, the acronym rule fires, and the
+   discriminator that separates an acronym from emphasis still suppresses the
+   emphasis word (that third property was never asserted at all before). What the
+   rules find on the real pre-authentication surfaces is REPORTED beside it, and
+   after UI-33 the correct answer there is NOTHING. */
 {
   const struct = [...new Set(HITS.filter(h => h.kind === "structural").map(h => h.term))];
-  ok("both structural rules are live rather than decorative — found [" + struct.join(", ")
-     + "] (SCREAMING_SNAKE and the discriminated acronym rule must each match something, or a rule that "
-     + "stopped matching would look exactly like coverage)",
-     struct.some(t => t.includes("_")) && struct.some(t => !t.includes("_")));
+  const PLANT_HTML = '<b>CORS</b> and THE PLANTED_IDENT in the whole case';
+  const PLANT_VIS  = visibleText(PLANT_HTML);
+  const got = structuralTerms(PLANT_HTML, PLANT_VIS);
+  ok("both structural rules are live rather than decorative — fired on a PLANTED control through the same "
+     + "function the measurement calls, giving [" + [...got].sort().join(", ") + "]: SCREAMING_SNAKE caught "
+     + "PLANTED_IDENT, the acronym rule caught CORS, and the discriminator still suppressed THE (an emphasis "
+     + "word appears in ordinary case on the same surface; an acronym does not). On the real "
+     + "pre-authentication surfaces the two rules now find [" + (struct.join(", ") || "NOTHING, which is "
+     + "UI-33's result and not a dead rule — see the comment above") + "]",
+     got.has("PLANTED_IDENT") && got.has("CORS") && !got.has("THE"));
 }
 /* THE ATTRIBUTION IS NON-DEGENERATE, and this is the assertion that catches a
    silently broken subtraction. If the plane ranges came back empty, every
@@ -891,4 +1011,4 @@ const REPORT_ONLY = !process.env.UI31_ENFORCE;
 }
 
 if(fails.length){ console.error(`preauth-vocabulary: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, the load-time router's address shapes and the sibling suites' own sweeps; and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids; NEGATIVE CONTROL: RUN, five arms — (a) UI31_HIDE=<scenario> hides a member-facing surface from the walk and the harness fails NAMING what it stopped covering (three hidings run, 2/29, 3/30, 3/30) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 4/31 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 1/31 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/31 (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 13 terms to 14 naming the gate as the author — app.html restored byte-identically, sha256 478ba5ca… before and after`);
+console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half, which no answer to DEC-49 would have touched: 13 terms -> 9, with all EIGHT plane-sourced rows unchanged in number and in source; NEGATIVE CONTROL: RUN, seven arms — (a) UI31_HIDE=<scenario> hides a member-facing surface from the walk and the harness fails NAMING what it stopped covering (three hidings run, 2/30, 3/31, 3/30) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 4/32 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 1/32 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/32 naming all nine (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 9 terms to 10 naming the gate as the author, 32/32 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 2/32 FAIL: the REACH arm names the act and the ATTRIBUTION arm names the consequence, three plane terms flipping UNAVOIDABLE -> INCIDENTAL and a fourth vanishing (g) the same overstep on the case page, verification.detail rendered through .replace("this instance","this group") — 31/31 GREEN before UI-33's added REACH assertion and 1/32 FAIL after, which is the gap that arm found and closed — app.html restored byte-identically after every on-disk arm, sha256 eaca866f… before and after`);

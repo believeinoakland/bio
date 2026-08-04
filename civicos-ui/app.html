@@ -785,8 +785,8 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
     </div>
 
     <div id="g-token-wrap" class="hidden">
-      <label class="fld" for="g-token">MEMBER_TOKEN</label>
-      <input class="txt mono" id="g-token" placeholder="paste a throwaway MEMBER_TOKEN">
+      <label class="fld" for="g-token">Access token</label>
+      <input class="txt mono" id="g-token" placeholder="paste a token you can throw away">
       <p class="hint">A token gives read access to the working record. It carries no member identity, so capability-shaped controls stay minimal. Sign in for the full session.</p>
       <div style="margin-top:12px"><button class="btn" id="g-token-go">Connect</button></div>
     </div>
@@ -1090,12 +1090,53 @@ function liveStart(fn, ms){
   }, ms || 45000);
 }
 function listSig(list){ return list.map(b=>b.bundle_id+"|"+b.current_state+"|"+b.last_updated).join(";"); }
+/* UI-33, 2026-08-04: the fallback sentence ended "…must allow cross-origin reads
+   (CORS)." The clause already SAYS what CORS means, so the acronym was adding a
+   word to decode and no information — and the gate's own address hint fifteen
+   lines up has said "that plane must allow cross-origin reads" without it since
+   the gate was written, so the two now agree instead of one shouting an acronym.
+   THIS SENTENCE IS THIS SURFACE'S OWN and no plane sent it (it is the fallback
+   for a plane that answered NOTHING), which is why UI-31 attributed it to the
+   surface and why DEC-8 is not in play: nothing here translates or blanks a
+   refusal the plane made. The `err.reason`/`err.error`/`err.detail` branch beside
+   it is untouched — those are the plane's words and stay verbatim. */
 function teach(el, err){
-  const msg = err && (err.error || err.reason || err.detail) ? [err.reason,err.error,err.detail].filter(Boolean).join(" · ") : "Could not reach the plane. If this is a local file against a remote plane, that plane must allow cross-origin reads (CORS).";
+  const msg = err && (err.error || err.reason || err.detail) ? [err.reason,err.error,err.detail].filter(Boolean).join(" · ") : "Could not reach the plane. If this is a local file against a remote plane, that plane must allow cross-origin reads.";
   el.innerHTML = esc(msg); el.classList.remove("hidden");
 }
 
 /* ---------- connect ---------- */
+/* UI-33, 2026-08-04 — THE GATE'S OWN WORDS, AND WHY THE REASONING SITS HERE
+   RATHER THAN IN THE MARKUP IT IS ABOUT.
+   The gate is served as static HTML and UI-31's instrument harvests that markup
+   RAW, comments and all, because the served bytes are what a member gets. An
+   HTML comment inside `<div id="gate">` naming the identifier it removed would
+   therefore have put that identifier straight back into the measurement — with 0
+   visible occurrences, but a row in the report all the same. Recording the reason
+   beside the change must not re-create the thing the change removed, so the
+   record lives here, in the script that owns those controls. THE MEASUREMENT
+   ASYMMETRY IS WORTH KNOWING for whoever edits the gate next: inherited terms and
+   the SCREAMING_SNAKE rule are counted over the RAW markup and so DO see comments;
+   the acronym rule runs over tag-stripped text and does not.
+   WHAT CHANGED. The token panel's field label read `MEMBER_TOKEN` and its
+   placeholder said "paste a throwaway MEMBER_TOKEN". That is the plane's own
+   environment-binding name — `intent-write.test.mjs` sets it as a worker binding
+   beside ADMIN_TOKEN and PROBE_TOKEN — printed unaltered to a member as a FIELD
+   LABEL on the first screen anyone ever sees, and UI-31 measured it as the
+   clearest surface-authored term on any pre-authentication surface. The label now
+   names what the reader is being asked for, in the words the hint below it
+   already uses ("A token gives read access to the working record"); the binding
+   keeps its name in the plane, where its readers are operators.
+   THIS IS OUTSIDE DEC-49 IN BOTH DIRECTIONS, which is why it did not wait on it.
+   DEC-49 decides who owns the wording the PLANE sends: answer (a) rewords the
+   plane, answer (b) licenses surfaces to translate what the plane sent. A word
+   this surface wrote itself is in neither, so nothing here is pre-empted and
+   nothing here anticipates a ruling. And the converse holds and is load-bearing:
+   NO plane-sourced string on this gate is touched. `signIn()` still renders
+   `Store.LOGIN_REFUSAL_DETAIL` verbatim, whole and unedited (DEC-8: a surface may
+   render a refusal it RECEIVED and may never compose one).
+   WHAT WAS KEPT AND WHY — "Member handle", and the argument is on
+   `pubVerifyPanel` below with the other two kept terms. */
 $("#g-token-toggle").onclick = () => $("#g-token-wrap").classList.toggle("hidden");
 $("#g-base").oninput = e => PLANE.base = e.target.value.trim().replace(/\/$/,"");
 $("#g-pub").onclick = () => { PLANE.base = $("#g-base").value.trim().replace(/\/$/,""); enterPublished(); };
@@ -1115,7 +1156,15 @@ function previewShell(){
   $("#work").classList.add("on"); document.documentElement.setAttribute("data-space","working");
   go("home", true);
 }
-function previewNote(){ return `<div class="teach" style="margin:8px 0">Preview mode. Connect a plane (sign in, or serve this from the worker) to load the real record from R2. Nothing shown here is invented.</div>`; }
+/* UI-33, 2026-08-04: this said "to load the real record from R2". `R2` is the
+   VENDOR's product name for the object store the plane happens to keep captured
+   bytes in — a fact about our hosting, not about the reader's record, and one
+   that would be wrong the day an instance stores its bytes anywhere else. It is
+   also the shortest possible false friend: `R2` is the framework's own composition
+   rule everywhere else in this file. The sentence's job is to say that nothing on
+   this screen is real yet and where the real thing comes from, and it says that
+   without naming a bucket. */
+function previewNote(){ return `<div class="teach" style="margin:8px 0">Preview mode. Connect a plane (sign in, or serve this from the worker) to load the real record. Nothing shown here is invented.</div>`; }
 
 async function signIn(){
   $("#g-err").classList.add("hidden"); $("#g-signin").disabled = true;
@@ -13518,10 +13567,17 @@ function pubCaseDeclaredBias(c){
    in with a member's hash (which would be one finding's hash wearing the case's
    name). `data-hash` carries either a real sha or `none-yet`, so the harness can
    read the two apart without reading prose. */
+/* UI-33, 2026-08-04: the gloss said "the container manifest". A stranger who has
+   not signed in is exactly this page's reader, and "manifest" is a word they have
+   to be taught before the parenthesis can do its job — it is in this repository's
+   inherited jargon list for that reason (`add-surface`, `capture-honesty`). The
+   FILE keeps its real name, `MANIFEST.json`, wherever the reader will actually
+   see it in the container; what changes is the PROSE that explains it. `sha256:`
+   is deliberately KEPT (see `pubVerifyPanel`'s note). */
 function pubCaseHashLine(c){
   if(c && c.manifest_sha)
     return { attr: String(c.manifest_sha),
-             html: `sha256:${esc(String(c.manifest_sha))} (the container manifest, which names every finding's parts and every finding's signature)` };
+             html: `sha256:${esc(String(c.manifest_sha))} (the list at the root of the container, which names every finding's parts and every finding's signature)` };
   const n = (c && Array.isArray(c.awaiting)) ? c.awaiting.length : 0;
   return { attr: "none-yet",
            html: pubCaseId(c)
@@ -14110,13 +14166,32 @@ function pubCaseHtml(c, floors){
   const fp = findings.map((f, i) => pubFindingPages(c, f, i, roster.length, floors)).join("");
 
   /* THE LAST PAGE — the container, the editions and the verification, all of
-     which are the CASE's. */
+     which are the CASE's.
+     UI-33, 2026-08-04, THREE WORDS ON THIS PAGE AND ONE OF THEM WAS THE HARD ONE.
+     This page is read by a STRANGER — `#case/<id>` resolves at load with no
+     credential, which is the product claim — so its vocabulary is the least
+     forgiving in the application. (1) `manifest` in prose became "a file at the
+     root called MANIFEST.json" and "the list of parts": the FILE NAME is what the
+     reader will see when they open the container and is kept exactly, while the
+     word that had to be taught is gone. (2) "without contacting THIS INSTANCE"
+     became "without contacting the group that published it".
+     **THAT SECOND ONE IS THE CARE THIS ITEM TURNS ON.** `this instance` reaches
+     this page by BOTH routes (UI-31's finding 3): the plane says it in
+     `verification.detail`, rendered verbatim under "Check this yourself" a few
+     lines below, and the SURFACE said it here in its own paraphrase. Only the
+     surface's own occurrence is reworded. The plane's is not touched, not
+     translated and not blanked — DEC-8 forbids both moves, and who owns the
+     plane's wording is DEC-49, OPEN with Bob. A ruling that moves it there will
+     leave this sentence already saying what a stranger can read; a ruling that
+     leaves it will not have been pre-empted here.
+     `sha256` and `op=publishedbytes` are KEPT throughout, deliberately — see the
+     note on `pubVerifyPanel`. */
   const pz = pubPage(c, floors, null,
     `<h2>The container</h2>
-     <p class="subj-note">The case's portable form: every member finding's parts, at <span class="mono">&lt;case&gt;/&lt;finding&gt;/&lt;path&gt;</span>, with a manifest at the root naming each part by sha256 and each finding's own signature. A stranger holding it can check every finding this case rests on without contacting this instance.</p>
+     <p class="subj-note">The case's portable form: every member finding's parts, at <span class="mono">&lt;case&gt;/&lt;finding&gt;/&lt;path&gt;</span>, with a file at the root called <span class="mono">MANIFEST.json</span> naming each part by its sha256 hash and each finding's own signature. A stranger holding it can check every finding this case rests on without contacting the group that published it.</p>
      ${pubComplete(c) && c.manifest_sha
-       ? `<div class="pub-file">MANIFEST.json &middot; manifest &middot; sha256:<span class="mono">${esc(String(c.manifest_sha))}</span>
-            <div class="mono"><a data-addr="op=publishedbytes&amp;sha256=${esc(String(c.manifest_sha))}" data-sha="${esc(String(c.manifest_sha))}" onclick="pubBytes('${esc(String(c.manifest_sha))}')">read the manifest</a>
+       ? `<div class="pub-file">MANIFEST.json &middot; the list of parts &middot; sha256:<span class="mono">${esc(String(c.manifest_sha))}</span>
+            <div class="mono"><a data-addr="op=publishedbytes&amp;sha256=${esc(String(c.manifest_sha))}" data-sha="${esc(String(c.manifest_sha))}" onclick="pubBytes('${esc(String(c.manifest_sha))}')">read MANIFEST.json</a>
             &middot; <button class="btn ghost" onclick="pubVerify('${esc(String(c.manifest_sha))}','#v-man')">Verify this hash</button><span id="v-man"></span></div></div>
           ${(c.files || []).map((x) => `<div class="pub-file">${esc(x.path)} &middot; ${esc(x.kind || "file")} &middot; ${esc(x.bytes == null ? "length not recorded" : String(x.bytes) + " bytes")}
             <div class="mono"><a data-addr="op=publishedbytes&amp;sha256=${esc(x.sha256)}" data-sha="${esc(x.sha256)}" onclick="pubBytes('${esc(x.sha256)}')">sha256:${esc(x.sha256)}</a></div></div>`).join("")}`
@@ -14196,10 +14271,49 @@ async function pubVerify(sha, into){
 function pubBytes(sha){
   try{ window.open(`${PLANE.base}/api/?op=publishedbytes&sha256=${encodeURIComponent(sha)}`, "_blank"); }catch(_){}
 }
+/* UI-33, 2026-08-04 — AND THIS IS WHERE THE TERMS THAT WERE *KEPT* ARE ARGUED,
+   because a term left standing with no reason beside it reads to the next session
+   like one that was missed.
+   TWO REWORDED HERE, the same two the case page carried and for the same reason:
+   "the manifest that lists them" and "without this instance continuing to exist".
+   Both are this surface's own words; neither is a plane string; DEC-49 reaches
+   neither. **This function is NOT driven by any UI-31 scenario** — it needs a
+   click on the published rail — so these two occurrences are outside the measured
+   13 and rewording them moves no number in that report. They are done anyway
+   because they are the same defect one control away from the page that was
+   measured, and the reach gap is reported rather than papered over: adding a
+   scenario would change UI-31's own measurement basis, which is not this item's
+   to change.
+   THREE KEPT, DELIBERATELY.
+     `sha256` — UI-31 counted 30 occurrences, most of them this surface's. It is
+       KEPT because on this page it is not jargon standing in for a plain word: it
+       is the NAME OF THE ALGORITHM the reader is being invited to run. "Check
+       this without us" is only true if the reader knows WHICH digest to compute;
+       "fingerprint: 3f9a…" would be friendlier and would make the instruction
+       unfollowable. It is also the exact prefix the record, the container and
+       `ssh-keygen` all write, so a reader comparing two strings compares the same
+       two strings. The glossary already defines it in one sentence. Wording it
+       away would cost the product claim to buy a softer noun.
+     `op=publishedbytes&sha256=…` — KEPT for a stronger version of the same
+       reason: it is an ADDRESS, not a description. It is what a stranger types to
+       fetch the bytes without this group's help, and a reworded address is a
+       BROKEN address. The plane publishes the same string in `verification`, so
+       the surface's own occurrences say what the plane says rather than a second
+       spelling of it.
+     `handle` — KEPT, and this one is the closest call. It is the gate's field
+       label, "Member handle", 1 visible occurrence. Against rewording: it is the
+       name of that identifier EVERYWHERE in this product — the masthead, the
+       members roster, every project invite and removal form — so changing it at
+       the gate alone would give a member one word before signing in and a
+       different word after, which is worse than one mildly technical word used
+       consistently. It is also ordinary consumer vocabulary in a way
+       `MEMBER_TOKEN`, `CORS` and `R2` are not. Renaming it EVERYWHERE is a
+       product-vocabulary decision spanning surfaces in three other suites'
+       ground, so it is routed rather than taken here. */
 function pubVerifyPanel(){
   $("#pub-body").innerHTML = `<div class="eyebrow">Verifying what you are reading</div>
     <h1>Check this without us</h1>
-    <p class="pub-lead">Every part of every published edition is named by its own sha256, the manifest that lists them answers by its own sha256, and the signature covers the bundle's hash. Nothing here prevents somebody making a modified copy; everything here makes one detectable by anyone holding it, without this group's cooperation and without this instance continuing to exist. That is tamper-EVIDENT, and we do not claim tamper-proof.</p>
+    <p class="pub-lead">Every part of every published edition is named by its own sha256, the list that names them answers by its own sha256, and the signature covers the bundle's hash. Nothing here prevents somebody making a modified copy; everything here makes one detectable by anyone holding it, without this group's cooperation and even if the system you are reading this on stops running. That is tamper-EVIDENT, and we do not claim tamper-proof.</p>
     <p class="subj-note">Open any case file and every hash on it carries a Verify control beside it, which asks the record the same question you could ask it yourself.</p>
     <p><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
 }
