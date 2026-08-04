@@ -118,66 +118,7 @@ gained by killing near-done work); every spawn from this drain forward pins
 
 _(drained by CONDUCT 2026-08-04 — DEC-35's answer: the premise reframed (the survey optimised for THIS instance; the product is sovereign instances), Moondream 3.1 on env.AI is the in-account candidate, NOTHING FUNDED, Azure DI Read the external escalation tier. CPDF-11 moved into CONTENT-PDF below and spawned out of band (measurement, no slot). CPDF-10's scope re-based on the ruling in place. The renderer note enacted: the dangling-CPDF-8 flag in the entry was stale (corrected to COFF-1 on 2026-08-03) but its SUBSTANCE is live — Moondream consumes pixels, so the page-to-image renderer is now named as CPDF-12, queued behind CPDF-11's verdict. DEC-35's enacted line filled. No entries outstanding.)_
 
-### 2026-08-04 · BOB · CALIBRATION DRIFT — Bob's question exposes a real gap; D-183 and CPDF-12
-
-Bob, 2026-08-04, on the Moondream probe: *"given that web services are occasionally
-upgraded, and a Moondream revision could affect the trust level, is there a way to add
-probes like this to the workflow?"* **It is a defect, not a feature request, and the
-gap is one field wide.** D-183 carries it in full; the shape, so CONDUCT can scope it:
-
-- **The chain records the ENGINE; the grade rests on a MEASUREMENT; nothing links
-  them.** CPDF-11 sets Moondream's fidelity cap — a fact about the engine AT A DATE —
-  and the transcription references no calibration. So when a re-probe disagrees, EVERY
-  transcription by that engine is equally suspect and none is identifiable.
-- **The fix: a CALIBRATION construct** — a dated, identified fidelity measurement the
-  chain references (`ocr(moondream3.1, calibration: CAL-n)`), so a superseded
-  calibration names exactly its dependants.
-- **The drift handler is ASYMMETRIC and a build session will not derive this**: WORSE
-  surfaces a re-evaluation obligation (REC-17's shape, DEC-16's event propagation) and
-  recomputes nothing; BETTER raises nothing automatically, because a grade rises only
-  by an authored act (DEC-4). Silent re-grading in either direction is the defect.
-- **Trigger: the REC-1 alarm, a SIXTH consumer** — the mechanism already exists and
-  `SCHEDULER.md` carries the registry shape. A vendor CHANGELOG watch may only
-  ACCELERATE a probe and may NEVER satisfy one: absence of an announcement is not
-  evidence of no change, and a vendor's documentation is a claim, not a measurement.
-- **It generalises beyond OCR — build it once**: Tier-2 pdf.js has a pinned version
-  that will move, an AI post-processor is a second derivation, an external service
-  retrains under an unchanged name (DEC-35's own argument against Textract). Three
-  engines, one problem — the D-164 lesson applied BEFORE the primitive is built three
-  times.
-
-    ### CPDF-12 · queued
-    milestone: M2
-    scope: **The CALIBRATION construct and its scheduled re-probe (D-183).** (a) A
-      calibration is a dated, identified fidelity measurement of a named derivation
-      engine+version, stored, with the probe inputs and scores that produced it. (b)
-      `text_source`'s chain gains a calibration REFERENCE at each derivation step, so a
-      transcription names the measurement its grade rests on. (c) A sixth REC-1 alarm
-      consumer re-runs the probe on a cadence (start monthly; the cadence is a declared
-      constant, revisable by measurement, and it runs on the INSTANCE'S OWN account —
-      one probe per cadence against the free allocation, which the plan must state so
-      no group discovers it as a surprise). (d) The ASYMMETRIC drift handler above: a
-      worse calibration raises a re-evaluation obligation naming exactly the affected
-      transcriptions and re-grades NOTHING; a better one raises nothing. (e) An
-      announcement watch is OPTIONAL and may only shorten the interval to the next
-      probe — it may never stand IN for one, and it may never itself change a grade.
-      Build the construct ENGINE-GENERIC (pdf.js Tier 2 and any future service are
-      calibratable by the same shape), not OCR-specific.
-    behind-interface: I2 (the chain shape), I5 (the calibration table)
-    depends-on: CPDF-11 (its GO/NO-GO decides whether Moondream is the first subject —
-      the construct is worth building either way, since Tier-2 pdf.js already needs it)
-    accepts-when: `cd bio-plane && npm run test:battery` green with a transcription
-      naming its calibration; a second calibration measuring WORSE raising a
-      re-evaluation obligation that names exactly the transcriptions bound to the
-      superseded one and changes no grade; a calibration measuring BETTER raising
-      nothing; the alarm consumer registering and self-terminating per `SCHEDULER.md`;
-      negative controls — (1) make the drift handler re-grade automatically and the
-      suite fails naming the no-machine-mints-a-grade rule, and (2) let a changelog
-      signal alone mark a calibration current with no probe run, and the suite fails
-      naming the claim-versus-measurement rule.
-    added: 2026-08-04 · BOB
-
-Nothing here stops a worker. CPDF-11 is unchanged and still runs first.
+_(drained by CONDUCT 2026-08-04 — the calibration-drift entry: D-183 acknowledged (the chain records the ENGINE, the grade rests on a MEASUREMENT, nothing links them — one field wide); the calibration construct enqueued as CPDF-13 (RENUMBERED from the entry's CPDF-12, which collided with the renderer item CONDUCT allocated and pushed earlier the same day — the established collision protocol, later allocation moves), engine-generic per the D-164 lesson, the asymmetric drift handler and the changelog-may-only-accelerate rule carried verbatim, deps CPDF-11. CPDF-11 unchanged, still running. No entries outstanding.)_
 
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
@@ -907,6 +848,37 @@ behind-interface: I6
 depends-on: CPDF-11
 accepts-when: (on GO) a real scanned Oakland page rendered to pixels in-account at measured cost, the measurement in MEASUREMENTS.md first; battery green; --strict exit 0; negative control — a page that cannot be rendered yields a stated failure, never a blank image passed onward as content. (On NO-GO) the item closed with the re-scope reasoning recorded.
 added: 2026-08-04 · CONDUCT (DEC-35's enactment; the renderer flags' substance)
+
+### CPDF-13 · queued
+milestone: M2
+scope: **The CALIBRATION construct and its scheduled re-probe (D-183).** (a) A
+  calibration is a dated, identified fidelity measurement of a named derivation
+  engine+version, stored, with the probe inputs and scores that produced it. (b)
+  `text_source`'s chain gains a calibration REFERENCE at each derivation step, so a
+  transcription names the measurement its grade rests on. (c) A sixth REC-1 alarm
+  consumer re-runs the probe on a cadence (start monthly; the cadence is a declared
+  constant, revisable by measurement, and it runs on the INSTANCE'S OWN account —
+  one probe per cadence against the free allocation, which the plan must state so
+  no group discovers it as a surprise). (d) The ASYMMETRIC drift handler above: a
+  worse calibration raises a re-evaluation obligation naming exactly the affected
+  transcriptions and re-grades NOTHING; a better one raises nothing. (e) An
+  announcement watch is OPTIONAL and may only shorten the interval to the next
+  probe — it may never stand IN for one, and it may never itself change a grade.
+  Build the construct ENGINE-GENERIC (pdf.js Tier 2 and any future service are
+  calibratable by the same shape), not OCR-specific.
+behind-interface: I2 (the chain shape), I5 (the calibration table)
+depends-on: CPDF-11 (its GO/NO-GO decides whether Moondream is the first subject —
+  the construct is worth building either way, since Tier-2 pdf.js already needs it)
+accepts-when: `cd bio-plane && npm run test:battery` green with a transcription
+  naming its calibration; a second calibration measuring WORSE raising a
+  re-evaluation obligation that names exactly the transcriptions bound to the
+  superseded one and changes no grade; a calibration measuring BETTER raising
+  nothing; the alarm consumer registering and self-terminating per `SCHEDULER.md`;
+  negative controls — (1) make the drift handler re-grade automatically and the
+  suite fails naming the no-machine-mints-a-grade rule, and (2) let a changelog
+  signal alone mark a calibration current with no probe run, and the suite fails
+  naming the claim-versus-measurement rule.
+added: 2026-08-04 · BOB (as CPDF-12; RENUMBERED CPDF-13 by CONDUCT at drain — the id collided with the renderer item CONDUCT allocated and pushed earlier the same day, the 2026-08-03 D-/DEC- collision protocol applied) · enqueued 2026-08-04 · CONDUCT
 
 ## CAPTURE — DORMANT.
 CAP-3 runs OUT OF BAND: it touches only CAPTURE's own paths and contends with neither
