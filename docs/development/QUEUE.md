@@ -402,13 +402,14 @@ depends-on: none
 accepts-when: as `BUILD-ORDER.md` §2 (REC-26); negative control — remove the idempotence key and a retry inflates `observations`; remove the cadence read and every document is checked at one global interval.
 added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
 
-### REC-27 · queued
+### REC-27 · done
 milestone: M0
 scope: **D-137 / D-131 — close the D-113 class for the eight tables it cannot see.** As `BUILD-ORDER.md` §2 (REC-27), carried forward verbatim per `RECONCILED.md` §3.3. Runs in the M0 lane (holds no slot) and wants to land BEFORE REC-11/REC-14/REC-21/REC-24 each add a table. Same turn: D-131's NUL byte at `store.mjs:3833`.
 behind-interface: none
 depends-on: none
 accepts-when: as `BUILD-ORDER.md` §2 (REC-27) — `npm run test:hygiene` reports 52 of 52 tables covered, `grep -c "CREATE TABLE" bio-plane/src/store.mjs` non-zero without `-a`; negative control — remove `project_participants` from the purge list and the hygiene suite names it, which today it cannot.
 added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: (merge on main, worker 3e35d56) — hygiene parses store.mjs CREATE TABLE literals too: 52/52 tables covered (was 44 visible). project_participants AND project_owner_votes added to purge BOTH arms with stats counters (scope-correction: the item said four uncovered; the real count was FIVE — project_owner_votes had DELETEs elsewhere but none in purge). EXEMPT with stated reasons: member_expertise (roster identity), admin_votes (append-only governance record), export_log (an export can never happen silently). D-131: the NUL was a dedup-key separator in threadInstance, rewritten as \u0000 (runtime-identical); plain grep works on store.mjs again, plus a class-closing guard scanning every src/*.mjs for raw control bytes. battery 69/69 (3374), hygiene 52/52, --strict exit 0. NC RUN BY WORKER AND RE-RUN BY CONDUCT (purge is destructive code): neuter the two DELETEs → hygiene FAILS naming project_participants (51/52) + 4 projects assertions; restored green. D-137 and D-131 CLOSED.
 
 ### REC-28 · queued
 milestone: M8

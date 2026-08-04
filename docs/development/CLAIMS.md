@@ -517,3 +517,5 @@ paths: bio-plane/test/hygiene.test.mjs (the D-113 table-coverage assertion taugh
 interfaces consumed: I5 (the store schema - read; no table added, no column changed, purge completeness only)
 interfaces owned: none
 expected: QUEUE.md REC-27 / BUILD-ORDER.md section 2 (REC-27). accepts-when: npm run test:hygiene reports 52 of 52 tables covered by purge or a stated exemption (was 44 of 52); grep -c "CREATE TABLE" bio-plane/src/store.mjs non-zero WITHOUT -a; full battery green; coverage --strict exit 0; negative control - remove project_participants from the purge list and the hygiene suite names it. No push/deploy - CONDUCT integrates; landed: left for CONDUCT.
+
+released: 2026-08-03 — landed on main by CONDUCT (merge of worker 3e35d56). Verified from the main checkout: battery 69/69 (3374), hygiene 52/52 covered, --strict exit 0. Negative control RE-RUN BY CONDUCT (destructive code): neutered purge DELETEs → hygiene names project_participants, 4 projects assertions fail; restored green, byte-identical. No DEC.
