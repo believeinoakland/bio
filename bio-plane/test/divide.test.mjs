@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (REC-16's two, each broken ALONE and restored) (a) THE SIBLING SET IS NOT CHECKED — in src/store.mjs promote(), guard the resolved arm with `if (false)` (the block computing `missing`/`invented` against the parent's division.into) AND in checks/bio-checks.mjs make divisionDisclosureFindings return immediately (`export function divisionDisclosureFindings(fm, findings) { return;`) -> the child that omits a sibling LANDS, is CONCLUDED and PUBLISHES, and the assertions "a child that omits a sibling is REFUSED", "a child that names a question this division did not produce is refused", "a child carrying division_parent with no supersedes edge is refused" and the published-bytes disclosure all fail. Both halves must go together: breaking one alone leaves the other refusing (REC-13's finding, repeated). (b) THE SUPERSEDES REQUIREMENT IS REMOVED — in checks/bio-checks.mjs make supersedesEdgeFindings return immediately AND in src/store.mjs promote() guard the resolve loop (`for (const r of ... rel === "supersedes")`) with `if (false)` -> an inquiry supersedes with NO REASON and an UNRESOLVABLE TARGET and both land, and the two assertions naming SUPERSESSION_REFUSED fail. Restore after each. Both RUN 2026-08-04 — the measured results are in the header below. */
+/* NEGATIVE CONTROL: (REC-16's two, each broken ALONE and restored; 82 pass when whole) (a) THE SIBLING SET IS NOT CHECKED -- in src/store.mjs promote() change `if (parentId) {` (the resolved arm, the block computing `missing`/`invented` against the parent's division.into) to `if (false && parentId) {`, AND in checks/bio-checks.mjs make divisionDisclosureFindings return immediately (`export function divisionDisclosureFindings(fm, findings) { return;`) -> 72 pass, 10 FAIL: a child re-promoted with `division_siblings: []` LANDS, one naming a question the division never produced LANDS, one whose supersedes edge has been turned into relates_to LANDS -- and the two headline failures are at the END, where the child is CONCLUDED and PUBLISHED and the signed bytes carry a sibling set that includes a question this division did not produce and no supersedes edge at all. Both halves must go together, as REC-13 found: breaking one alone leaves the other refusing. (b) THE C-6.1 SUPERSEDES REQUIREMENT IS REMOVED -- in checks/bio-checks.mjs make supersedesEdgeFindings return immediately AND in src/store.mjs promote() make the resolve loop iterate nothing (`for (const r of (false ? (Array.isArray(docFmW.references) ? docFmW.references : []) : [])) {`) -> 76 pass, 6 FAIL: a document supersedes another with NO REASON and LANDS, a supersedes edge to a target that does not exist LANDS, the catalog finds nothing wrong with either, and a real division CHILD re-promoted with the reason stripped off its edge to its parent LANDS -- so the record holds an edge asserting a lineage with no account of it and no question at the other end. Restore after each. BOTH RUN 2026-08-04 (rec16-agent), measured exactly as recorded here; (b) was run TWICE, and the first run is why block 7 exists in its present shape -- probed through a division child alone, the disclosure arm caught both documents anyway and the control measured the wrong rule, so the isolating probes are information bundles, where there is no division to disclose. */
 /* REC-16: `divided` and op=inquirydivide — supersession gets its first producer.
  *
  * WHY THIS ACT EXISTS, because it reads like housekeeping and is not. Weakest-link
@@ -47,9 +47,30 @@
  *      and `divided` is a STATE — `disposition_reason` is untouched and the
  *      reason belongs to the act.
  *
- * NEGATIVE CONTROLS RUN 2026-08-04 (rec16-agent), each alone and restored; the
- * header line above is the re-run recipe. What each one MEASURED is recorded on
- * the line itself after the run.
+ * NEGATIVE CONTROLS RUN 2026-08-04 (rec16-agent), each alone and restored, 82
+ * pass when whole; the header line above is the re-run recipe and carries the
+ * exact edits. What each one MEASURED:
+ *   (a) the sibling set unchecked at BOTH layers -> 72 pass, 10 FAIL. A child
+ *       lands, is concluded, and PUBLISHES with a sibling set naming a question
+ *       this division never produced and with no supersedes edge at all. That is
+ *       R4's failure exactly: a reader of the published half cannot see that the
+ *       other half exists, and the whole disclosure becomes a convention rather
+ *       than a rule. Breaking one layer alone proves nothing, because the other
+ *       still refuses (REC-13's finding, repeated).
+ *   (b) the supersedes requirement removed -> 76 pass, 6 FAIL. A document
+ *       supersedes another with NO REASON and lands; one supersedes a target
+ *       that does not exist and lands; the catalog finds nothing wrong with
+ *       either; and a real division child re-promoted with the reason stripped
+ *       off lands too. The record then holds edges asserting a lineage with no
+ *       account of it and nothing at the far end, which is what `supersedes`
+ *       meant before this item gave it a producer.
+ *   AND WHAT (b) MEASURED THE FIRST TIME, kept because it changed the suite:
+ *       probed only through a division CHILD, both documents were still refused
+ *       -- by the DISCLOSURE arm, which fires on an inquiry-to-inquiry edge that
+ *       declares no division. The control failed 3 assertions and every one of
+ *       them named the wrong rule. Block 7's isolating probes are INFORMATION
+ *       bundles for that reason: the disclosure arm returns early where there is
+ *       no division to disclose, so what is left is the edge requirement alone.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
@@ -157,12 +178,12 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
   "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 
-const infoMd = (id) => ["---",
+const infoMd = (id, refs = []) => ["---",
   `id: ${id}`, "object_type: information", "schema: information@1",
   `title: "Info ${id}"`, "current_state: collected", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
-  "group: believe-in-oakland", "references: []", "state_history: []",
+  "group: believe-in-oakland", ...refLines(refs), "state_history: []",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "criticality: supporting",
@@ -373,17 +394,22 @@ console.log("\n--- 6. NO_SIBLING_DISCLOSURE: the sibling set is checked against 
   /* Only the store can answer this: the child alone cannot know how many
      siblings its division produced. This is the half the first negative control
      removes. */
+  /* Read DEFENSIVELY, the publish suite's own instrument lesson: the negative
+     control for this block removes the requirement, and the failure it produces
+     is that the write SUCCEEDS. A suite that threw on the absent `findings` key
+     would report a crash where the finding is "a child published while a sibling
+     went unnamed", and that has to be legible as what it is. */
+  const said = (r, phrase) => JSON.stringify(r ?? {}).includes(phrase);
   const omitted = await repromote(KID_A, (md) => md.replace(/^division_siblings: .*$/m, "division_siblings: []"));
-  t("a child that omits a sibling is REFUSED at the write, naming the sibling it left out",
-    [omitted.ok, omitted.reason, omitted.findings ? "shape" : omitted.missing],
-    [false, "NO_SIBLING_DISCLOSURE", "shape"]);
+  t("a child that omits a sibling is REFUSED at the write",
+    [omitted.ok, omitted.reason], [false, "NO_SIBLING_DISCLOSURE"]);
   t("and the refusal SAYS why: a reader who can see one half must be able to see that the other half exists",
-    JSON.stringify(omitted).includes("the other half EXISTS")
-      || omitted.findings.some((f) => f.detail.includes("at least one sibling to name")), true);
+    said(omitted, "the other half EXISTS") || said(omitted, "at least one sibling to name"), true);
   const invented = await repromote(KID_A,
     (md) => md.replace(/^division_siblings: .*$/m, `division_siblings: [${KID_B}, INQ-2026-1600-ghost]`));
   t("a child naming a question this division did NOT produce is refused too — the disclosure is exact, not decorative",
-    [invented.ok, invented.reason, invented.not_siblings], [false, "NO_SIBLING_DISCLOSURE", ["INQ-2026-1600-ghost"]]);
+    [invented.ok, invented.reason, invented.not_siblings ?? null],
+    [false, "NO_SIBLING_DISCLOSURE", ["INQ-2026-1600-ghost"]]);
   const noEdge = await repromote(KID_A, (md) => md.replace("    rel: supersedes", "    rel: relates_to"));
   t("a child carrying division_parent with NO supersedes edge is refused: the disclosure and the edge cannot disagree",
     [noEdge.ok, noEdge.reason], [false, "NO_SIBLING_DISCLOSURE"]);
@@ -404,25 +430,49 @@ console.log("\n--- 7. the supersedes edge's OWN requirements: a reason, and a ta
 {
   /* Before this item `supersedes` had ZERO occurrences in store.mjs and no
      producer: membership of REL_VOCAB meant only that C-6.1 would not refuse the
-     string. This block is what the second negative control removes. */
-  const NOREASON = "INQ-2026-1600-reasonless";
-  const reasonless = await promote(NOREASON, inquiryMd(NOREASON, {
-    question: "Does the pattern hold?", refs: [{ target: PARENT, rel: "supersedes" }] }), "inquiry", "open");
-  t("an inquiry superseding another with NO REASON is refused at the write, under C-6.1",
+     string. This block is what the second negative control removes, and the
+     first probes are deliberately NOT divisions — an INFORMATION bundle
+     superseding another, where the disclosure arm returns early because there is
+     no division to disclose. That is what ISOLATES the edge requirement. Probed
+     only through a child, the two arms partly back each other up and the control
+     would measure the wrong rule: the run recorded in the header found exactly
+     that and the block was rewritten around it. */
+  const NOREASON = "INFO-2026-1600-reasonless";
+  const noReasonMd = infoMd(NOREASON, [{ target: AUTH, rel: "supersedes" }]);
+  const reasonless = await promote(NOREASON, noReasonMd, "information", "collected");
+  t("a document superseding another with NO REASON is refused at the write, under C-6.1",
     [reasonless.ok, reasonless.reason, (reasonless.findings || []).map((f) => f.check)],
     [false, "SUPERSESSION_REFUSED", ["C-6.1"]]);
-  const GHOST = "INQ-2026-1600-ghosted";
-  const ghost = await promote(GHOST, inquiryMd(GHOST, {
-    question: "Does the pattern hold?",
-    refs: [{ target: "INQ-2026-1600-never-existed", rel: "supersedes", reason: "it was two questions" }] }),
-    "inquiry", "open");
-  t("a supersedes edge whose target does NOT RESOLVE is refused: an edge asserting a lineage must name a question that exists",
+  const GHOST = "INFO-2026-1600-ghosted";
+  const ghost = await promote(GHOST, infoMd(GHOST,
+    [{ target: "INFO-2026-1600-never-existed", rel: "supersedes", reason: "superseded by the adopted version" }]),
+    "information", "collected");
+  t("a supersedes edge whose target does NOT RESOLVE is refused: an edge asserting a lineage must name something that exists",
     [ghost.ok, ghost.reason], [false, "SUPERSESSION_REFUSED"]);
   t("neither document landed", [await stateOf(NOREASON), await stateOf(GHOST)], [undefined, undefined]);
   t("the CATALOG names C-6.1 on the reasonless edge too, so it cannot audit clean either",
-    (await errorsOf(NOREASON, inquiryMd(NOREASON, {
-      question: "Does the pattern hold?", refs: [{ target: PARENT, rel: "supersedes" }] })))
+    (await errorsOf(NOREASON, noReasonMd))
       .filter((e) => e.startsWith("C-6.1") && e.includes("no reason")).length, 1);
+
+  /* AND ON A REAL CHILD, which is the shape this item is actually about: strip
+     the reason off the supersedes edge a division wrote, leaving the disclosure
+     itself intact and coherent, and the write still refuses it. */
+  const stripped = await repromote(KID_B, (md) => md.replace(/^ {4}reason: ".*"$/m, '    note: ""'));
+  t("a CHILD superseding its parent with the reason stripped off is refused, disclosure intact and all",
+    [stripped.ok, stripped.reason], [false, "SUPERSESSION_REFUSED"]);
+  t("and the child is untouched: its edge still carries the reason the division authored",
+    ((await fmOf(KID_B)).references || []).filter((r) => r.rel === "supersedes").map((r) => r.reason), [WHY]);
+
+  /* The disclosure arm's own job, asserted here so the BOUNDARY between the two
+     rules is on the record rather than left to be rediscovered: an INQUIRY
+     superseding an INQUIRY outside any division is refused for the DISCLOSURE,
+     not for the edge. `relates_to` is the escape that claims no replacement. */
+  const UNDISCLOSED = "INQ-2026-1600-undisclosed";
+  const undisclosed = await promote(UNDISCLOSED, inquiryMd(UNDISCLOSED, {
+    question: "Does the pattern hold?",
+    refs: [{ target: PARENT, rel: "supersedes", reason: "it was two questions" }] }), "inquiry", "open");
+  t("an inquiry superseding an inquiry with a reason but NO division to disclose is refused NO_SIBLING_DISCLOSURE",
+    [undisclosed.ok, undisclosed.reason], [false, "NO_SIBLING_DISCLOSURE"]);
 }
 
 console.log("\n--- 8. the catalog's `divided` ENTRY REQUIREMENTS: the account is a GATE, not an op behaviour ---");
