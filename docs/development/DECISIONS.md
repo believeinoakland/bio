@@ -2377,7 +2377,7 @@ for CONDUCT to enact: REC-14 gains the container form (manifest + signature + ed
   this shapes items already queued rather than adding one.
 enacted: 2026-08-03 · CONDUCT — 5318b53: REC-14 carries the container form (zip + signed hash manifest, editions over the container); REC-22 serves it and its PDF renderings with the per-page header (case id, edition, authors, declared bias, both floors, hash, verification pointer) and the page-without-header negative control; UI-18 renders it. Tamper-EVIDENT, never claimed tamper-proof. Reasoning in QUEUE.md (REC-14/REC-22/UI-18).
 
-### DEC-35 · open
+### DEC-35 · answered
 raised: 2026-08-03 · CONDUCT (from CPDF-9's measurement and CPDF-10's placement note)
 for: bob
 question: Which external OCR service does CPDF-10 build against, on which account, at
@@ -2406,6 +2406,47 @@ recommendation: pick a service whose OCR output includes per-region confidence a
 reversal cost: low before any corpus is transcribed; after that, re-running under a
   different service produces different claims and every leg resting on the old ones
   keeps naming the old service — which is by design, but makes switching noisy.
+response: **MEASURE MOONDREAM FIRST — the question's premise is reframed before it is
+  answered.** Bob, 2026-08-04, on being shown that Cloudflare Workers AI now carries an
+  OCR-capable vision model (Moondream 3.1, coordinates included, reachable through the
+  `env.AI` binding on the Free plan): *"I'm thinking that from the perspective of a new
+  instance setting up, having everything in Cloudflare would be a simplification"* —
+  and it is more than a simplification. The external-service question as raised
+  optimised for THIS instance; the product is SOVEREIGN instances, and an OCR path that
+  requires every future group to open, fund and hold a credential for a second vendor
+  account is a D-115-class distribution liability. The in-account path removes the new
+  account, the standing credential (a binding, not a key) and the new third party in
+  the provenance chain, for every instance the installer ever creates.
+  THE RULING: (1) probe Moondream 3.1 on our own instance FIRST — it costs nothing and
+  needs no setup (CPDF-11, handed through the BOB INBOX); (2) at equal fitness against
+  the ground-truth floor, the IN-ACCOUNT path wins and becomes the default instance
+  path; (3) the external service is the ESCALATION tier (documents whose grade demands
+  a calibrated-confidence engine) or the fallback if the probe fails, with Azure DI
+  Read the primary external candidate per the survey; (4) NOTHING IS FUNDED NOW — the
+  Azure account walkthrough is shelved pending the probe.
+  ON THE CONFIDENCE CONTRACT, Bob's question answered in session ("we do need that,
+  right?") and the determination is this session's under delegation: the record needs
+  the FUNCTION of per-region confidence, not the number. Two functions: the refusal
+  trigger (garble → undetermined) and the checkability anchor (the image region a
+  reader or attester checks against pixels). The anchor needs COORDINATES, which
+  Moondream claims and CPDF-11 verifies — non-negotiable. The trigger, for a
+  confidence-less engine: the chain states `confidence: none` first-class; the
+  engine's transcription-fidelity CAP is set lower by measurement (DEC-4's existing
+  knob — no machine mints the grade); pseudo-confidence (asking the model how sure it
+  is, thresholded as if calibrated) is FORBIDDEN as the costs-nothing class; but
+  measured self-refusal is earnable — CPDF-11's degradation ladder scores whether the
+  model refuses or invents on degraded regions, and only that measured reliability can
+  license structured self-refusal as a per-region trigger. Escalation to the
+  calibrated tier or to attestation covers legs the cap cannot.
+decided: 2026-08-04 · Bob
+reasoning recorded in: research/OCR-SERVICE-SURVEY.md (the Cloudflare section and the
+  confidence-function analysis) and this entry.
+for CONDUCT to enact: queue CPDF-11 (in the BOB INBOX 2026-08-04); fund no external
+  account; when CPDF-10 is next scoped, its acceptance changes from "per-region
+  confidence" to "per-region confidence WHERE THE ENGINE SUPPLIES IT; a stated
+  `confidence: none` in the chain otherwise, with the fidelity cap set by
+  measurement" — the provenance-chain and image-region requirements are unchanged.
+enacted:
 
 ### DEC-36 · open
 raised: 2026-08-03 · CONDUCT (lifted from REC-20's report — the worker built the instruction and named the tension)

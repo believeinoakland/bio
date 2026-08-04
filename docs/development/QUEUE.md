@@ -116,6 +116,75 @@ exception recorded. In-flight Fable 5 workers land rather than respawn (nothing 
 gained by killing near-done work); every spawn from this drain forward pins
 `claude-opus-5`. No entries outstanding.)_
 
+### 2026-08-04 · BOB · DEC-35 ANSWERED — OCR goes IN-ACCOUNT if it measures up; one new item, and CPDF-10's acceptance changes
+
+**DEC-35 is answered and the premise was reframed before it was answered.** Bob asked
+whether Cloudflare has a service worth considering *"from the perspective of a new
+instance setting up"* — and it exposed a defect in the survey CONDUCT's entry rests
+on: the survey optimised for THIS instance, while the product is SOVEREIGN INSTANCES.
+Workers AI now carries **Moondream 3.1**, an OCR-capable vision model returning
+coordinates, on the `env.AI` binding, inside the Free plan. Every instance already has
+a Cloudflare account by construction; an external service makes every future group
+open, fund and hold a credential for a second vendor. Full reasoning in DECISIONS.md
+DEC-35 and `research/OCR-SERVICE-SURVEY.md` (new Cloudflare section).
+
+**NOTHING IS FUNDED.** No external account is opened pending the measurement below.
+Azure DI Read stays the primary EXTERNAL candidate, as the escalation/fallback tier.
+
+    ### CPDF-11 · queued
+    milestone: M2
+    scope: **Measure Moondream 3.1 (Workers AI, `env.AI`) as the IN-ACCOUNT OCR path —
+      measurement-only, commits no product code, holds no slot, costs nothing to run
+      (no account, no credential, no signup).** Against the SAME ground-truthed Oakland
+      exhibit and instrument CPDF-9 used, so the numbers are comparable line for line.
+      Four things, and the last two carry more weight here than for any classic engine
+      because Moondream is GENERATIVE and its failure mode is text that looks better
+      than its input:
+      (a) **Accuracy** against the measured local-tesseract floor — 99.96% character
+      accuracy, 90/90 digits, ZERO minted digits (MEASUREMENTS.md 2026-08-03). Digits
+      are where OCR fails and where human checking fails too (DEC-4).
+      (b) **Coordinates VERIFIED, not assumed** — the model claims bounding boxes;
+      confirm they ALIGN with the text they are returned for, because the image-region
+      anchor is what lets a reader check a claim against pixels and an attester testify
+      to it. This is the one non-negotiable structural requirement.
+      (c) **The blank-page negative control, weighted heavily** — a blank and a
+      noise-only page must yield NOTHING, never plausible text. An engine that
+      hallucinates on noise is the one failure mode that would put invented text in the
+      record.
+      (d) **The degradation ladder — this is the new measurement and it decides the
+      confidence question.** Feed progressively degraded regions of the ground-truthed
+      page and score whether the model REFUSES (says illegible / returns nothing) or
+      INVENTS. Only measured refusal-reliability licenses structured self-refusal as a
+      per-region trigger. **Do NOT ask the model for a confidence score and threshold
+      it** — a self-reported number treated as calibrated is the costs-nothing-to-
+      produce class and is FORBIDDEN by DEC-35.
+      Record in `MEASUREMENTS.md` with date and instrument; state the recommended
+      transcription-fidelity CAP for this engine (DEC-4: no machine mints the grade, and
+      the measurement sets the ceiling).
+    behind-interface: none — it commits no code
+    depends-on: none
+    accepts-when: `MEASUREMENTS.md` carries character accuracy, digit accuracy, minted-
+      digit count, coordinate-alignment verdict, blank/noise-page result and the
+      degradation-ladder refuse-vs-invent table — each with date and instrument — plus a
+      stated recommended cap and a GO/NO-GO on the in-account path; negative control —
+      the blank page and the noise page, run and reported, with any non-empty output
+      reported as a FAILURE of the path rather than a curiosity.
+    added: 2026-08-04 · BOB
+
+**CPDF-10's acceptance CHANGES when you next scope it**, per DEC-35: "per-region
+confidence" becomes **"per-region confidence WHERE THE ENGINE SUPPLIES IT; otherwise a
+stated `confidence: none` in the chain, with the fidelity cap set by measurement."**
+The provenance-chain rule and the image-region anchor are UNCHANGED and remain
+non-negotiable. If CPDF-11 returns GO, the in-account path becomes CPDF-10's default
+placement and the external service becomes its escalation tier — which is the chain
+shape DEC-4's amendment already anticipated, not a new mechanism.
+
+**AND THE DANGLING DEPENDENCY IS NOW LOAD-BEARING:** CPDF-10 still depends on CPDF-8,
+which exists nowhere (flagged 2026-08-03, still open). Moondream consumes PIXELS, so
+the page-to-image renderer that CPDF-8 was probably meant to name is now on the
+critical path for the in-account route as well as the external one. Naming it is
+yours.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
