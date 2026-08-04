@@ -7774,7 +7774,12 @@ export class Store extends DurableObject {
        the case has moved. Both numbers are reported so neither is implied. */
     const ratified = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, targetId);
     const latestRatified = ratified && ratified.m != null ? Number(ratified.m) : 0;
-    const fm = this.#frontmatterOf(targetId);
+    /* The document is read ONLY where it could carry an edition at all. The
+       untargeted sweep runs this once per distinct basis target, and a
+       frontmatter parse per document beneath every claim in the store is a real
+       cost for an answer that is `0` for everything nobody ever published. */
+    const fm = (latestRatified > 0 || row.current_state === "published")
+      ? this.#frontmatterOf(targetId) : null;
     const authored = fm && Number.isInteger(fm.edition) ? fm.edition : 0;
     const latest = Math.max(latestRatified, authored);
     const edition = latest > 1
