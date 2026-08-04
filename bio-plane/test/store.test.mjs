@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) disable the compare-and-swap on `base` in promote (guard `cur.bundle_sha !== base` with `false`, so a stale-base write is no longer refused CAS_STALE) -> 7 assertions fail (the lost-update / CAS-ladder refusals); restored, 43 pass. */
 /* The store core: content-addressed promote, the CAS ladder, and the image projection.
  * Negative-control detail: disable the compare-and-swap on `base` in promote (guard `cur.bundle_sha !== base` with `false`, so a stale-base write is no longer refused CAS_STALE) -> 7 assertions fail (the lost-update / CAS-ladder refusals); restored, 43 pass. */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

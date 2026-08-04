@@ -41,6 +41,7 @@
  * subject registry; its shape is checked and its resolution is not, and the
  * reason is stated at the check.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

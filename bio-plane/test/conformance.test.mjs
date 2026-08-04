@@ -20,6 +20,7 @@
  * C-12 line names the family this suite was created for, and the general line is
  * the one that would catch a regression anywhere else. D-18 closed 0.19.0.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

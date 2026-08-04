@@ -23,6 +23,7 @@
  * together. A handle is unique across the instance, because a roster where two
  * people can answer to one name defeats the purpose of having one.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

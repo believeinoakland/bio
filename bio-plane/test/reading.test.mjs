@@ -29,6 +29,7 @@
  * impossible, so a suite that still passed without the persist would test nothing.
  */
 /* NEGATIVE CONTROL: comment out `this.#writeReadings(bundleId, files)` in store.mjs promote() -> a promoted capture known to carry meeting:2101 has op=reading return found:false and reading null, and op=readingref&ref=meeting:2101 return count 0. RUN 2026-07-31: persist dropped -> "op=reading retrieves the reading by capture sha (found)" flipped true->false and the reference lookup returned 0 for a document known to carry it; restored -> 30 pass. */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

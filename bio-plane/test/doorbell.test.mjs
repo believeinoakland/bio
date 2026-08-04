@@ -10,6 +10,7 @@
  *
  * Negative-control detail: disable the per-IP knock rate limit in the store (guard `cnt(ipBucket) >= perIpLimit` with `false`) so one source is never throttled -> 3 assertions fail (the 13th knock refused RATE_IP, and the 429 status); restored, 36 pass.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

@@ -50,6 +50,7 @@
  * to NEEDS in src/index.mjs, ran this suite -> the totality assertion FAILED with
  * got ["frobnicate"] (the unpublished op named); removed the line -> suite green.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

@@ -20,6 +20,7 @@
  *
  * Negative-control detail: disable the unauthenticated gate in index.mjs (guard `if (!cls)` with `false`, so an unrecognised token is no longer rejected as "unauthenticated" and falls through to the per-op class check) -> 14 assertions fail (the inert-PUBLIC_TOKEN and projection refusals now answer "forbidden for token class" instead of "unauthenticated"); restored, 33 pass. (Confirmed the fence lives in the AUTH layer, line 842, not the per-op class gate at 843 — disabling 843 alone failed nothing.)
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

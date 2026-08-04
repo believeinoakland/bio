@@ -14,6 +14,7 @@
  * it is paginated and resumable, because a Durable Object has a CPU budget and a
  * pass that cannot be resumed cannot be run on a large store at all.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

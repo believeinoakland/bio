@@ -2,6 +2,7 @@
 /* The bootstrap handover: a Worker cannot rotate its own secret, so ADMIN_TOKEN
    is spent once for an operator-chosen password stored in the DO.
    Negative-control detail: disable the bootstrap-credential match in the claim op (guard `body.bootstrapToken !== env.ADMIN_TOKEN` with `false`, accepting any token) -> 2 assertions fail (the wrong-secret refusal path); restored, 18 pass. */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

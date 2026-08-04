@@ -21,6 +21,7 @@
  * bundle has and what the UX filters on, and the full frontmatter is kept as
  * JSON for the per-schema tail, queryable through json_extract.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

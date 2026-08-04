@@ -43,6 +43,7 @@
  * Restored to `reg` -> 18/18 green.
  */
 /* NEGATIVE CONTROL: in src/store.mjs onAlarm, reconcile over a due-filtered subset instead of the full `reg` -> probe-slow never fires; suite FAILS 8 assertions naming it (RUN 2026-07-31, restored green). */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

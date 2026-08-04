@@ -29,6 +29,7 @@
  * reason — the D-39 platform-error shape the guard exists to close). RUN
  * 2026-07-31: Part B went 20 pass / 2 fail; guard restored, 22/22 green.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

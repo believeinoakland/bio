@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. */
 /* Suite hygiene: the guard against a battery that wastes hours.
  *
  * Negative-control detail: remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.)
@@ -50,6 +50,27 @@ for (const f of suites) {
   const src = readFileSync(join(DIR, f), "utf8");
   const tail = src.slice(-400);
   t(`${f} exits deterministically`, /process\.exit\((?!1\))/.test(tail) || /process\.exit\(fail/.test(tail), true);
+}
+
+/* ---- every suite that makes temp files owns a sandbox that outlives it ------
+ * D-186. The rule above ("every suite ends on its own result") is what MAKES
+ * this necessary rather than being in tension with it: a suite ends
+ * `await mf.dispose(); process.exit(…)`, and miniflare's dispose() disarms its
+ * own synchronous exit hook and then starts removing the sandbox WITHOUT
+ * awaiting it — so process.exit() beats the removal and the directory survives.
+ * 23,263 of them accumulated in days and filled the disk to zero.
+ *
+ * `test/sandbox.mjs` fixes it by owning the ground: it points $TMPDIR at one
+ * directory and removes that synchronously on exit. A suite gets the guarantee
+ * by importing it, and that is the whole contract — which is exactly the kind of
+ * requirement a hand-kept list falls behind (D-93's chain of 38 files while the
+ * directory held 41). So the list is derived from the source instead: build a
+ * Miniflare or mkdtemp, and this assertion requires the import. */
+console.log("\n--- every suite that makes temp files owns a sandbox ---");
+for (const f of suites) {
+  const src = readFileSync(join(DIR, f), "utf8");
+  if (!/new Miniflare\(|mkdtempSync\(/.test(src)) continue;
+  t(`${f} imports test/sandbox.mjs`, /^import ["']\.\/sandbox\.mjs["'];/m.test(src), true);
 }
 
 

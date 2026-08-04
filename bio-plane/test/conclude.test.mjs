@@ -51,6 +51,7 @@
  * the suite — and a control that only broke one side would have "passed" while
  * proving nothing.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

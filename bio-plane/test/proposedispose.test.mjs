@@ -20,6 +20,7 @@
  * op=proposedispose on the control-plane surface, not only the store (D-43).
  */
 /* NEGATIVE CONTROL: (a) IN-SUITE — op=proposedispose with an empty reason is refused NO_REASON, and a bad `to` is refused NOT_A_DISPOSITION (the reason is required and never prefilled). (b) STORE-LEVEL, RUN 2026-07-31 record-agent-7: in store.mjs proposalsFeed, neuter the disposition read (make `disposed` an always-empty Map by skipping the SELECT) -> the DISMISSED procurement::solicitation proposal REAPPEARS as OPEN (proposal_count back to 2, dispositions[] empty) and the "no longer surfaces as open" + "aged into dispositions[]" assertions FAIL; restored -> full suite green. */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

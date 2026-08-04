@@ -28,6 +28,7 @@
  * revocation. Asserted below by resolving the same selection under a viewer the
  * compiler does not recognise.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

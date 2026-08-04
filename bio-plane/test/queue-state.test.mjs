@@ -59,6 +59,7 @@
  * in queue-conditions.test.mjs, which is the "KNOWN TENSION" line of REC-21's
  * landing being discharged. Read the two together.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

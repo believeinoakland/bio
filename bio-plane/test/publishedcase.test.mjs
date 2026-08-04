@@ -58,6 +58,7 @@
  * ssh-keygen, so this suite SKIPS LOUDLY WITH A NAMED REASON when ssh-keygen is
  * not on PATH rather than dying mid-run (ratify.test.mjs's precedent, D-93).
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";

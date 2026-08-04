@@ -30,6 +30,7 @@
  *
  * NEGATIVE CONTROL: in src/store.mjs #deriveConnectionsSweep, neuter the sweep by forcing an empty batch (`const batch = [];` above the real query) -> onAlarm derives nothing, so after the tick the connections for an entity known to have resolved documents stay EMPTY and the dirty-set never drains. RUN 2026-07-31 record-agent-5: 15 of 26 fail (connderive.entities 2->0, op=connections id=ORD 3->0, the raise/idempotence + batch=1 bounded-drain + self-terminate assertions) while the two MANUAL op=connect assertions in Part 3 still PASS (op=connect derives the pair by hand, unaffected); restored -> 26 pass, 0 fail. Confirms the connections seen in (1)-(4) came from the SCHEDULED sweep and nothing else, and that op=connect itself was not what filled them.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

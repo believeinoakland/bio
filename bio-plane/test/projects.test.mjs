@@ -17,6 +17,7 @@
  * evidence would fracture the record and stop a member on one project seeing
  * what another has already gathered. Only the group's THINKING is scoped.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

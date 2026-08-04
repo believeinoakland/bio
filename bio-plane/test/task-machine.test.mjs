@@ -52,6 +52,7 @@
  * about the actor. The only difference between the refused call and the accepted
  * one is who is making it.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

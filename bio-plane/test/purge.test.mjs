@@ -2,6 +2,7 @@
 /* Purge, both layers. The store layer does the deletion; the control plane
    decides who may ask and refuses an unconfirmed target. Credential-free.
    Negative-control detail: disable the confirm-target gate in the purge op (guard `confirm !== storeName` with `false`, so a purge with no/other confirm is not refused) -> 3 assertions fail (the unconfirmed-target and wrong-confirm refusals); restored, 14 pass. */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

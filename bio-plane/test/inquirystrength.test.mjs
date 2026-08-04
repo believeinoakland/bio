@@ -45,6 +45,7 @@
  * a genuinely invisible id inside a visible answer and prove the redaction
  * bites. Store code under test is Store's own; the subclass adds one route.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

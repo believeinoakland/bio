@@ -25,6 +25,7 @@
  * `FAIL ... assertions unknown`; with it, `skip ... SKIPPED — ssh-keygen not on
  * PATH`.)
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";

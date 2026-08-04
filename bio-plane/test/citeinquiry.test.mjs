@@ -70,6 +70,7 @@
  * therefore published; the doctrine is still undecided and nothing here decides
  * it.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

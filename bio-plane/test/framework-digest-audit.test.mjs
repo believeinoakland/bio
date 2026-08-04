@@ -34,6 +34,7 @@
  * equality the write did not earn is exactly what the raw sweep already could not
  * produce, so a suite that still passed without the write would be testing nothing.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

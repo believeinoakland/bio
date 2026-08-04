@@ -40,6 +40,7 @@
  * would test nothing; this one fails 33 ways.
  */
 /* NEGATIVE CONTROL: in index.mjs's acquire reading assembly change the wire branch's `if (!multipart && fmt && fmt !== "undetermined")` to `if (false)` -> the PDF known to name three entities reads found:false and its three op=readingref counts drop 1->0. RUN 2026-08-03: 33 of 55 failed (meeting_agenda->generic, 41->0 and 3->0 entities, every ref lookup 0, the docx and tier-2 arms with them); the encrypted-honesty and readText unit assertions still passed; restored -> 55 pass 0 fail. */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

@@ -59,6 +59,7 @@
  *      UNSCHEDULED by name" (want ["INFO-2026-0803-meeting"] got []) and "with the
  *      reason stated rather than a guessed interval". 53 pass, 6 fail.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
