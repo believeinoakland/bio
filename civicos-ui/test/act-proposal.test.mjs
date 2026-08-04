@@ -38,6 +38,19 @@ import { STATES } from "../../bio-plane/checks/bio-checks.mjs";
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
 
+/* THE PLANE'S OWN WORDS for op=proposedispose's refusals, copied verbatim from
+   bio-plane/src/store.mjs `proposeDispose()`. Added 2026-08-05 (UI-22): the
+   suite pins THESE SENTENCES, because a suite that pinned only the reason code
+   would pass an invented one — the arm-(d) instrument UI-12 named. */
+const PROP_WORDS = {
+  NOT_A_DISPOSITION: "a proposal is deferred (parked) or dismissed (declined); adopting one authors a "
+                   + "focus (op=promote) and is not a disposition",
+  NO_REASON: "deferring or dismissing the record's own question is recorded with a reason, in the "
+           + "member's own words — a disposition with no reason ages a finding with no account of why",
+  BAD_REASON: "a reason is at most 160 characters and cannot contain a quote, a backslash, or a "
+            + "newline: the restricted frontmatter grammar has no escapes",
+};
+
 /* ---- the mock plane: records every op, mirrors allocid + promote +
    proposedispose (the ADOPT and DEFER/DISMISS backings) ---- */
 function makePlane(opts){
@@ -56,12 +69,27 @@ function makePlane(opts){
        over by a fixture that always answers FOCUS- (UI-10). */
     if(op==="allocid") return R({ result:{ id:(url.searchParams.get("prefix")||"INQ") + "-2026-" + String(++seq).padStart(4,"0") } });
     if(op==="promote") return R({ result:{ ok:true, bundle_id:(body&&body.bundleId) } });
+    /* CORRECTED 2026-08-05 (UI-22): the mock now answers op=proposedispose in
+       the store's OWN ORDER and with the store's OWN SENTENCES (store.mjs
+       `proposeDispose()`), in the ENVELOPE the control plane really sends.
+       It answered a bare `{ok:false, reason:"NO_REASON"}` with no detail, which
+       let the surface's invented sentence look necessary. */
     if(op==="proposedispose"){
       if(opts.noDisposeOp) return { ok:false, json:async()=>({ ok:false, error:"unknown op" }) };
+      const to = body && body.to;
       const reason = String((body&&body.reason)||"").trim();
-      if(!reason) return { ok:false, json:async()=>({ ok:false, reason:"NO_REASON" }) };
-      return R({ ok:true, key:body&&body.key, to:body&&body.to, reason });
+      const REF = x => ({ ok:false, json:async()=>({ ok:true, result:x }) });
+      if(!["deferred","dismissed"].includes(to))
+        return REF({ ok:false, reason:"NOT_A_DISPOSITION", to, detail:PROP_WORDS.NOT_A_DISPOSITION });
+      if(!reason) return REF({ ok:false, reason:"NO_REASON", detail:PROP_WORDS.NO_REASON });
+      if(reason.length > 160 || /["\\\r\n]/.test(reason))
+        return REF({ ok:false, reason:"BAD_REASON", detail:PROP_WORDS.BAD_REASON });
+      return R({ ok:true, result:{ ok:true, key:body&&body.key, to, reason } });
     }
+    /* UI-22: the disposition SET is the plane's now on this surface too. */
+    if(op==="affordances")
+      return R({ ok:true, result:{ target:null, catalog:[],
+        vocabularies:{ dispositions:["deferred","dismissed"] } } });
     if(op==="proposals"){
       if(opts.noFeedOp) return { ok:false, json:async()=>({ ok:false, error:"unknown op" }) };
       return R({ result:{ instances: opts.instances||[] } });
@@ -103,16 +131,30 @@ function makeCtx(plane){
    same shapes, reached from a different surface. */
 const EXPORTS = ";globalThis.__PLANE=PLANE;"
   + "globalThis.__row=queueItemHtml;globalThis.__asProp=queueFindingAsProposal;globalThis.__badge=proposalDerivedBadgeHtml;"
-  + "globalThis.__ctxLine=proposalContext;globalThis.__pfDisp=proposalDisposePreflight;globalThis.__pfAdopt=proposalAdoptPreflight;"
-  + "globalThis.__openAct=openProposalAct;globalThis.__actVal=proposalActValidate;globalThis.__doDisp=doProposalDispose;"
+  /* CORRECTED 2026-08-05 (UI-22): `proposalDisposePreflight` and
+     `proposalActValidate` no longer exist. The pre-flight computed and WORDED
+     its own NOT_A_DISPOSITION / NO_REASON / BAD_REASON over a literal token
+     array; the flow now takes the NO-REFUSAL SHAPE (no probe is available —
+     op=proposedispose judges the progression and stage keys BEFORE the reason,
+     so there is no withholdable last field) and the record words everything
+     that survives to the commit. `__paint` replaces `__actVal`; `__author`
+     is how a reason is written, because the field is `onchange` now. */
+  + "globalThis.__ctxLine=proposalContext;globalThis.__pfAdopt=proposalAdoptPreflight;"
+  + "globalThis.__openAct=openProposalAct;globalThis.__paint=proposalActPaint;globalThis.__author=proposalActAuthor;"
+  + "globalThis.__doDisp=doProposalDispose;globalThis.__propState=()=>PROP_ACT;"
   + "globalThis.__openAdopt=openProposalAdopt;globalThis.__adoptVal=proposalAdoptValidate;globalThis.__doAdopt=doProposalAdopt;"
-  + "globalThis.__setProps=(a)=>{PROPOSALS_LAST=a;};globalThis.__ADOPT_KINDS=PROP_ADOPT_KINDS;";
+  + "globalThis.__setProps=(a)=>{PROPOSALS_LAST=a;};globalThis.__ADOPT_KINDS=PROP_ADOPT_KINDS;"
+  + "globalThis.__loadActSource=loadActSource;globalThis.__dispositions=dispositions;";
 
-function boot(source, plane){
+async function boot(source, plane){
   const ctx = makeCtx(plane);
   vm.runInContext(source + EXPORTS, ctx);
   ctx.__PLANE.session = true;
   ctx.__PLANE.me = { member:"m_alice", session:true, administer:false, capabilities:["contribute"] };
+  /* UI-22: the disposition tokens are the plane's answer now, so they are
+     LOADED before the surface is driven — a surface driven before the load
+     offers nothing at all, which is the behaviour the item wants. */
+  await ctx.__loadActSource(true);
   return ctx;
 }
 
@@ -155,7 +197,7 @@ const FIND_UNDET = { ...FIND_SOLIC, id:"FINDING::p::s",
   basis:{ ...FIND_SOLIC.basis, grade:null, grade_determined:false } };
 
 const plane = makePlane({});
-const ctx = boot(SRC, plane);
+const ctx = await boot(SRC, plane);
 
 /* ============================================================
    D-79 — AGGREGATE, DO NOT DROWN. The rule is the PLANE'S now; what this suite
@@ -235,61 +277,85 @@ ok("and the options block says whose acts they are, so it is not read as a fourt
 /* ============================================================
    DEFER / DISMISS — a reason is REQUIRED and NEVER prefilled (pre-flight, pure).
    ============================================================ */
-const pfEmpty = ctx.__pfDisp({ to:"deferred", reason:"" });
-ok("pre-flight: an empty reason WILL refuse (NO_REASON) — a reason is required",
-   pfEmpty.ok===false && pfEmpty.refusal.reason==="NO_REASON");
-ok("pre-flight names a reason gate the member must clear", pfEmpty.gates.some(g=>g.id==="reason" && !g.pass));
-const pfGood = ctx.__pfDisp({ to:"dismissed", reason:"below the solicitation threshold" });
-ok("pre-flight: an authored reason clears every gate", pfGood.ok===true && pfGood.refusal===null);
-const pfQuote = ctx.__pfDisp({ to:"deferred", reason:'has a "quote"' });
-ok("pre-flight: a quote in the reason WILL refuse (BAD_REASON grammar)", pfQuote.ok===false && pfQuote.refusal.reason==="BAD_REASON");
+/* REWRITTEN 2026-08-05 (UI-22), and it is a CORRECTION of the suite's subject.
+   The three assertions that stood here drove `proposalDisposePreflight`, a pure
+   function on the surface that decided and WORDED op=proposedispose's refusals.
+   They were true, and what they asserted was the defect. The flow now takes the
+   NO-REFUSAL SHAPE: the commit control is ABSENT until the act has what it
+   takes, and the record words everything that survives to it. */
+const els = ctx.__els;
+const dlgNow = () => els.get("#dlg")._html;
+const propResidue = h => Object.values(PROP_WORDS).reduce((a,w)=>a.split(w).join(" "), String(h));
+const PROP_PROSE = /(won't run|will not run|is refused until|you need to|before this can run|nothing stands in the way|what it will refuse|only deferring and dismissing are dispositions here)/i;
 
-/* the dialog: choose + pre-flight rendered, reason never prefilled */
+ok("the disposition tokens this surface offers are the ones op=affordances published",
+   JSON.stringify(ctx.__dispositions()) === JSON.stringify(["deferred","dismissed"]));
+{
+  const bare = makeCtx(makePlane({}));
+  vm.runInContext(SRC + EXPORTS, bare);
+  ok("before op=affordances answers, this surface knows NO disposition either — no literal array survives",
+     bare.__dispositions().length === 0);
+}
+
+/* the dialog: choose + the ABSENT commit, reason never prefilled */
 ctx.__setProps(props);
 ctx.__openAct(solic.key, "deferred");
-const els = ctx.__els;
-const dlg0 = els.get("#dlg")._html;
+const dlg0 = dlgNow();
 ok("CHOOSE: the dialog offers both dispositions (defer & dismiss)", /Defer/.test(dlg0) && /Dismiss/.test(dlg0));
 ok("the dialog shows the record's question as CONTEXT, not as the member's claim", dlg0.includes(ctx.__ctxLine(solic)));
-ok("AUTHOR: the reason field is never prefilled (placeholder only)", dlg0.includes("placeholder=") && /id="pa-reason"[^>]*>\s*<\/textarea>/.test(dlg0));
-ok("the pre-flight is painted before the act runs", /what it will refuse/i.test(els.get("#pa-pf")._html));
-ok("the commit button is disabled until the pre-flight clears", els.get("#pa-go").disabled===true);
+ok("AUTHOR: the reason field is never prefilled, and carries no drafted placeholder",
+   /id="pa-reason"[^>]*>\s*<\/textarea>/.test(dlg0) && !/placeholder=/.test(dlg0));
+ok("THE COMMIT CONTROL IS ABSENT while the act lacks a reason — not present and greyed",
+   !/id="pa-go"/.test(dlg0));
+ok("and nothing on the panel forecasts a refusal in this page's own words", !PROP_PROSE.test(propResidue(dlg0)));
+ok("no length rule is copied onto the page", !/maxlength=/.test(dlg0) && !dlg0.includes("160"));
 ok("the weight ladder places the act on 'reasoned' (never prefilled)", /reasoned/.test(dlg0) && /never prefilled/.test(dlg0));
 
-/* the empty-reason ACT is refused IN THE SURFACE — op=proposedispose never sent */
+/* the empty-reason act cannot be COMMITTED because there is no control to press */
 const before = plane.CALLS.length;
 const r1 = await ctx.__doDisp();
-ok("empty-reason act returns refused (surface-side)", r1 && r1.refused===true && r1.reason==="NO_REASON");
-ok("empty-reason act sent NO op=proposedispose — refused BEFORE the plane",
+ok("with no reason the act cannot run at all, and nothing was sent",
    !plane.CALLS.slice(before).some(c=>c.op==="proposedispose"));
-ok("empty-reason act shows the reason to the member, and says nothing was written",
-   /nothing has been written/i.test(els.get("#pa-err")._html));
+ok("and the surface wrote no refusal of its own while doing so", r1 === undefined || !r1.detail);
 
-/* AUTHOR the reason, then RECEIPT */
-els.get("#pa-reason").value = "These awards are below the competitive-bid threshold, so no solicitation was required";
-ctx.__actVal();
-ok("with a reason authored, the pre-flight clears and the button enables", els.get("#pa-go").disabled===false);
+/* AUTHOR the reason: the control APPEARS. Then commit, then the RECEIPT. */
+ctx.__author("These awards are below the competitive-bid threshold, so no solicitation was required");
+ok("with a reason authored the commit control EXISTS", /id="pa-go"/.test(dlgNow()));
 const r2 = await ctx.__doDisp();
 const dispCall = plane.CALLS.find(c=>c.op==="proposedispose");
 ok("the act records the disposition through op=proposedispose with the chosen state", !!dispCall && dispCall.body.to==="deferred");
 ok("the act sends the AUTHORED reason", dispCall.body.reason.includes("below the competitive-bid threshold"));
 ok("the act sends the proposal KEY (a proposal is addressed by its aggregation key, not a bundle id)", dispCall.body.key===solic.key);
 ok("the browser never sends an author/actor (the plane stamps it)", !("actor" in dispCall.body) && !("author" in dispCall.body));
-const rc = els.get("#dlg")._html;
-ok("RECEIPT: the act is confirmed done (deferred)", /Deferred\./.test(rc));
+const rc = dlgNow();
+ok("RECEIPT: the act is confirmed done, under the RECORD's own token", /Deferred\./.test(rc));
 ok("RECEIPT: it shows the reason AS RECORDED", rc.includes("below the competitive-bid threshold"));
 ok("the successful act returned the plane's receipt", r2 && r2.ok===true);
 
-/* the DELEGATION path: when op=proposedispose is absent, the surface says so and writes nothing */
-const planeNo = makePlane({ noDisposeOp:true }); const ctxNo = boot(SRC, planeNo);
+/* A REFUSAL THE RECORD MAKES: the surface renders its sentence and no other. */
+{
+  const p = makePlane({}); const c = await boot(SRC, p);
+  c.__setProps(props); c.__openAct(solic.key, "deferred");
+  c.__author('a reason with a "quote" in it, which the record’s grammar has no escape for');
+  await c.__doDisp();
+  const h = c.__els.get("#dlg")._html;
+  ok("the record's OWN BAD_REASON sentence is what renders", h.includes(PROP_WORDS.BAD_REASON));
+  ok("and its code is shown beside it, unmodified", h.includes("BAD_REASON"));
+  ok("no sentence of this surface's own accompanies it", !PROP_PROSE.test(propResidue(h)));
+}
+
+/* THE BUILD GAP: when op=proposedispose is absent this build says so. The one
+   sentence the surface still writes is about WHICH PLANE ANSWERED, not about a
+   rule the record applied, and it is asserted as exactly that. */
+const planeNo = makePlane({ noDisposeOp:true }); const ctxNo = await boot(SRC, planeNo);
 ctxNo.__setProps(props); ctxNo.__openAct(solic.key, "dismissed");
-ctxNo.__els.get("#pa-reason").value = "out of scope for this record";
-ctxNo.__actVal();
+ctxNo.__author("out of scope for this record");
 const rNo = await ctxNo.__doDisp();
-ok("GAP: with the delegated op absent the act is refused as a gap, having written nothing",
+ok("GAP: with the op absent the act is refused as a gap, having written nothing",
    rNo && rNo.refused===true && rNo.gap===true);
-ok("GAP: the surface says the record cannot yet keep a proposal's disposition (names the delegation)",
-   /cannot yet keep a proposal.s disposition/i.test(ctxNo.__els.get("#pa-err")._html) && /proposedispose/.test(ctxNo.__els.get("#pa-err")._html));
+ok("GAP: the surface says which build answered, and says nothing about the record's rules",
+   /does not expose the op/i.test(ctxNo.__els.get("#dlg")._html)
+   && /not a rule the record applied/i.test(ctxNo.__els.get("#dlg")._html));
 
 /* ============================================================
    ADOPT — author an INQUIRY in the member's OWN words; the plane stamps
@@ -365,7 +431,7 @@ const BROKEN = SRC.replace(
   /function proposalDerivedBadgeHtml\(p\)\{\n  return `<div class="prop-derived">[\s\S]*?<\/div>`;\n\}/,
   'function proposalDerivedBadgeHtml(p){ return ""; /* NEGATIVE CONTROL: the visibly-a-proposal marker removed */ }');
 ok("the negative-control mutation actually changed the source", BROKEN !== SRC);
-const ctxNC = boot(BROKEN, makePlane({}));
+const ctxNC = await boot(BROKEN, makePlane({}));
 const cardNC = ctxNC.__row(FIND_SOLIC);
 ok("NEG-CONTROL: with the marker removed, the card NO LONGER says 'Surfaced by the record'",
    !/Surfaced by the record/i.test(cardNC));
@@ -375,5 +441,29 @@ ok("NEG-CONTROL: with the marker removed, the card NO LONGER says nobody has yet
 ok("NEG-CONTROL contrast: the intact card carried the derived signal the broken one lost",
    /Surfaced by the record/i.test(card) && /Nobody has yet decided it is worth pursuing/i.test(card));
 
+/* ============================================================
+   NEGATIVE CONTROL, SECOND ARM — THE ARM-(d) INSTRUMENT, added 2026-08-05 by
+   UI-22 and RUN. Make `doProposalDispose` keep the record's reason CODE and
+   substitute a sentence written on the surface. The code stays right, so a
+   suite pinning only codes would be GREEN through this arm — which is exactly
+   what DEC-8 exists to catch. RUN 2026-08-05: 3 of 74 failed. Restored.
+   ============================================================ */
+{
+  const BROKEN2 = SRC.replace(
+    ": ((inner && typeof inner === \"object\" && (inner.reason||inner.detail||inner.error)) ? inner : { reason:\"NO_ANSWER\", detail:String(e) });",
+    ": { reason:(inner && inner.reason) || \"NO_ANSWER\", detail:\"The reason you wrote is not one the record will take. Shorten it and try again.\" };");
+  ok("NEG-CONTROL (arm d): the mutation actually changed the source", BROKEN2 !== SRC);
+  const c = await boot(BROKEN2, makePlane({}));
+  c.__setProps(props); c.__openAct(solic.key, "deferred");
+  c.__author('a reason with a "quote" in it');
+  await c.__doDisp();
+  const h = c.__els.get("#dlg")._html;
+  ok("NEG-CONTROL (arm d): the reason CODE is still correct — a code-only suite would be GREEN here",
+     h.includes("BAD_REASON"));
+  ok("NEG-CONTROL (arm d): but the record's own sentence is GONE", !h.includes(PROP_WORDS.BAD_REASON));
+  ok("NEG-CONTROL (arm d): and the residue scan names the SURFACE as the author of what stands there",
+     PROP_PROSE.test(propResidue(h)) || /not one the record will take/.test(h));
+}
+
 if(fails.length){ console.error(`act-proposal: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`act-proposal: ${n} assertions, all green — D-79 aggregation · D-82 visibly-derived · exactly adopt/defer/dismiss · reason required & never prefilled · op=promote adopt · negative control RUN`);
+console.log(`act-proposal: ${n} assertions, all green — D-79 aggregation · D-82 visibly-derived · exactly adopt/defer/dismiss · published tokens · absent commit · plane-worded refusals · op=promote adopt; negative controls RUN (derived marker · arm-(d) right code + invented sentence)`);

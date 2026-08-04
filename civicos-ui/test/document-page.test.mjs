@@ -113,3 +113,136 @@ if(html.slice(0,headEnd).includes('section class="stratum"')) throw new Error("a
 if(!html.slice(headEnd).includes('id="s1"')||!html.slice(headEnd).includes('id="s4"')) throw new Error("strata not inside the scroll box");
 if(html.slice(0,headEnd).indexOf("docband")<0) throw new Error("band not in the fixed header");
 console.log("harness8: full document page renders with every element present");
+
+/* ============================================================================
+   UI-22 (2026-08-05) — THE DOCUMENT PAGE'S THREE BARS COME FROM THE PLANE.
+
+   ADDED, and the reason it is added rather than corrected is itself the finding:
+   NOTHING IN THIS HARNESS PINNED THESE BARS. `relBar`, `dispBar` and `attestBar`
+   each decided for itself whether its control existed — from the document's
+   type, its state, a surface mirror of the catalog's edge table and a
+   surface-side capability rule — and every one of those decisions could have
+   been wrong without a single suite going red. (Measured this turn: the three
+   bars were rewired onto `op=affordances` and all 26 harnesses stayed green
+   before these assertions existed.) That is the hole this section closes.
+
+   TWO of the three now exist only where the record PUBLISHES the act, under the
+   record's own label. The THIRD, attestation, cannot: `attest` is a NON_ACT in
+   `bio-plane/src/affordances.mjs` — capture-directed, not object-directed — so
+   the plane publishes no entry, no label, no `needs` and no `rung` for it on any
+   object. That is doctrine rather than an omission, and it is why the label
+   there stays this surface's own and is raised as a DELEGATION instead.
+   ============================================================================ */
+{
+  const mkEl = () => { const e={ classList:{add(){},remove(){},toggle(){},contains(){return false}}, style:{},
+    dataset:{}, value:"", _html:"", textContent:"", scrollTop:0, disabled:false, offsetHeight:120,
+    addEventListener(){}, querySelectorAll:()=>[], querySelector:()=>mkEl(),
+    insertAdjacentHTML(p,h){ e._html += h; }, focus(){}, click(){}, remove(){} };
+    Object.defineProperty(e,"innerHTML",{get(){return e._html},set(v){e._html=v}}); return e; };
+
+  async function page(acts, source){
+    const E = new Map();
+    const c = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,
+      Uint8Array, Uint16Array, Map, Set, TextEncoder, crypto:webcrypto, Blob:class{}, IntersectionObserver:undefined,
+      setInterval:()=>1, clearInterval(){}, setTimeout:fn=>{fn();return 1}, requestAnimationFrame:fn=>fn(),
+      document:{ querySelector:s=>{ if(!E.has(s)) E.set(s, mkEl()); return E.get(s); }, querySelectorAll:()=>[],
+        addEventListener(){}, documentElement:{setAttribute(){}}, getElementById:()=>mkEl(), hidden:false,
+        createElement:()=>mkEl(), body:{appendChild(){}} },
+      location:{ protocol:"https:" }, history:{ pushState(){}, back(){} },
+      localStorage:{ getItem:()=>null, setItem(){} }, window:{ addEventListener(){}, open:()=>null },
+      fetch: async (u)=>{
+        const p = new URL(u,"https://x.test").searchParams, op = p.get("op");
+        const reply = o => ({ ok:true, json:async()=>o });
+        if(op==="image") return reply({ ok:true, result:IMG });
+        if(op==="projection") return reply({ ok:true, result: p.get("id")==="PROJ-1" ? CITER_PROJ : PROJ });
+        if(op==="list") return reply({ ok:true, result:[CITER] });
+        /* THE ENVELOPE the plane really sends, and the acts the record
+           publishes for THIS object as it stands. */
+        if(op==="affordances") return reply({ ok:true, result:{ target:p.get("target"),
+          object_type:"information", current_state:"collected", acts,
+          vocabularies:{ dispositions:["deferred","dismissed"] } } });
+        return reply({ ok:true, result:{} });
+      } };
+    c.globalThis = c; vm.createContext(c);
+    vm.runInContext((source || appScript()) + ";globalThis.__open=openBundle;globalThis.__PLANE=PLANE;globalThis.__loadActSource=loadActSource;", c);
+    c.__PLANE.session = true;
+    c.__PLANE.me = { member:"m_alice", handle:"alice", session:true, administer:false, capabilities:["contribute"] };
+    /* The published vocabularies, loaded the way boot() loads them — the seam
+       UI-22 found had no caller in the application at all. */
+    await c.__loadActSource(true);
+    await c.__open("INFO-X", true);
+    return E.get("#content")._html;
+  }
+  const bad = [];
+  const T = (msg, cond) => { if(!cond) bad.push(msg); };
+
+  const RELEASE = { id:"release", label:"Release (verify)", weight:"refuse", needs:"contribute",
+                    mode:"session", rung:"reasoned", prompt:null };
+  const DISPOSE = { id:"dispose", label:"Dispose (defer or dismiss)", weight:"refuse", needs:"contribute",
+                    mode:"session", rung:"reasoned", prompt:null };
+
+  /* ---- published: the sections exist, under the RECORD'S OWN LABELS ---- */
+  const withActs = await page([RELEASE, DISPOSE]);
+  T("the Release section appears where the record publishes the act", withActs.includes(">Release</h2>"));
+  T("and its control carries the PUBLISHED label, not one written here",
+    withActs.includes(">Release (verify)<") && !withActs.includes(">Release this document<"));
+  T("the Disposition section appears where the record publishes the act", withActs.includes(">Disposition</h2>"));
+  T("and its buttons come from the PUBLISHED disposition vocabulary",
+    /openDisposeDialog\([^)]*&quot;deferred&quot;\)/.test(withActs) || withActs.includes("Defer&hellip;"));
+  T("the disposition line names the act under the record's own label and rung",
+    withActs.includes("Dispose (defer or dismiss)") && withActs.includes("reasoned"));
+
+  /* ---- NOT published: BOTH sections are absent, and NOTHING explains why ----
+     This is the arm-(d) instrument for this site. The two sentences deleted this
+     turn each carried a correct FACT and an account of the record's rules
+     written here: the crucial-release note ("that surface is not built yet") and
+     the elevated-question note ("it can no longer be deferred or dismissed").
+     A control that does not exist asserts nothing; a sentence explaining its
+     absence asserts a great deal, and it is this surface saying it. */
+  const noActs = await page([]);
+  T("with the act unpublished the Release section is ABSENT", !noActs.includes(">Release</h2>"));
+  T("with the act unpublished the Disposition section is ABSENT", !noActs.includes(">Disposition</h2>"));
+  T("and NOTHING on the page accounts for either absence in this surface's own words",
+    !/no longer be deferred or dismissed/i.test(noActs)
+    && !/that surface is not built yet/i.test(noActs)
+    && !/outside the release flow/i.test(noActs)
+    && !/earlier vocabulary/i.test(noActs));
+  T("the page still renders — an absent act is not an error", noActs.includes('id="docscroll"'));
+  /* And the strip says what the record publishes, so an act is never silently dropped. */
+  T("where the record publishes nothing, the strip says exactly that",
+    noActs.includes("publishes no act on this"));
+
+  /* ---- the sentences are gone from the SOURCE, not merely unreached ---- */
+  const APPSRC = appScript();
+  T("the crucial-release sentence is deleted from the source",
+    !APPSRC.includes("that surface is not built yet"));
+  T("the elevated-question sentence is deleted from the source",
+    !APPSRC.includes("carried into a project under the record's earlier vocabulary"));
+
+  /* ---- attestation: the residue, asserted as a residue and not as a rule ----
+     `attest` is a NON_ACT, so there is no published label to read. The control
+     is still ABSENT-or-present with no sentence either way, which is the half
+     this item could close honestly. */
+  T("the Attestation section carries a label this surface wrote — the residue, named",
+    APPSRC.includes("Co-attest this capture"));
+  T("and nothing on the page explains when attestation is unavailable",
+    !/attestation is unavailable/i.test(noActs) && !/cannot be co-attested/i.test(noActs));
+
+  /* ---- NEGATIVE CONTROL, RUN 2026-08-05, restored byte-identical ----------
+     Put the crucial-release sentence back — a correct fact about the record,
+     worded here, standing where an absent control belongs — and confirm the
+     scan above FAILS naming this surface as its author.
+     RUN: 1 of the assertions below flipped, plus the source-level one. */
+  const BROKEN = APPSRC.replace(
+    '      const act = publishedHere("release");\n      if(act)',
+    '      const act = publishedHere("release");\n      if(!act && fm.criticality==="crucial") relBar = `<h2 class="sec">Release</h2><p class="rel-note" style="margin:0">Verifying crucial material is per-document work outside the release flow; that surface is not built yet.</p>`;\n      else if(act)');
+  T("NEG-CONTROL (bars): the mutation actually changed the source", BROKEN !== APPSRC);
+  const ncPage = await page([], BROKEN);
+  T("NEG-CONTROL (bars): a sentence this surface wrote now stands where an absent control belongs",
+    /that surface is not built yet/i.test(ncPage));
+  T("NEG-CONTROL (bars) contrast: the intact page carries no such sentence",
+    !/that surface is not built yet/i.test(noActs));
+
+  if(bad.length) throw new Error("UI-22 bars: " + bad.length + " failed —\n  " + bad.join("\n  "));
+  console.log("harness8+UI-22: the document page's release and disposition sections come from op=affordances, absent-and-silent where it publishes nothing; attest named as the standing residue; negative control RUN");
+}
