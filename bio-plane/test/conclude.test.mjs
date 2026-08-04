@@ -391,7 +391,19 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
      TYPE-only, so the act is published at every inquiry state exactly as it has
      always been published on a RETIRED information bundle. Nothing about the
      state-machine acts this block is really about has changed. */
-  t("an OPEN inquiry publishes conclude beside dispose", actIds(openAff), ["cite", "conclude", "dispose", "inquirydivide"]);
+  /* CORRECTED 2026-08-04 (REC-45), never exempted, and one note covers the
+     three assertions below: `inquiryground` joins the published list of every
+     inquiry that RESTS ON SOMETHING and is neither published nor divided.
+     Grouping moves NO state — it authors what a question rests on, not where it
+     stands — so nothing about the state-machine acts this block is really about
+     has changed. It appears on the LEGACY focus for the same reason `cite`
+     does: the guard is type-and-basis, never the declared state vocabulary, and
+     a legacy focus with legs has a basis a member can group. INQ_STANDING,
+     which rests on nothing, still publishes exactly {conclude, dispose} — which
+     is what shows this act's basis-count condition is real rather than
+     incidental, exactly as it does for the divide act above. */
+  t("an OPEN inquiry publishes conclude beside dispose", actIds(openAff),
+    ["cite", "conclude", "dispose", "inquirydivide", "inquiryground"]);
   const concludedAff = await affordances(INQ_MAIN);
   /* CORRECTED 2026-08-04 (REC-14), never exempted: a concluded inquiry now
    publishes `publish` as well, which is the state this whole ladder exists to
@@ -402,13 +414,14 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
    in and the weakest leg is now visible in the frozen pair — and DEC-28 makes
    `concluded -> divided` a legal edge. */
 t("a CONCLUDED inquiry publishes exactly the legal acts: dispose, divide and publish — and a conclusion nobody publishes still ages (D-79)",
-    actIds(concludedAff), ["cite", "dispose", "inquirydivide", "publish"]);   // REC-37, 2026-08-04: cite joins every inquiry (see the note above)
+    actIds(concludedAff),
+    ["cite", "dispose", "inquirydivide", "inquiryground", "publish"]);   // REC-37/REC-45, 2026-08-04 (see the notes above)
   t("conclude is UNPUBLISHED there, and the store agrees by name — publication and refusal cannot disagree",
     (await conclude(NADIA, { target: INQ_MAIN, conclusion: CONCL, falsifier: FALS })).reason,
     "ILLEGAL_TRANSITION");
   const legacyAff = await affordances(FOCUS_LEGACY);
   t("the legacy focus does NOT publish conclude either: the derivation asks the DECLARED vocabulary too",
-    actIds(legacyAff), ["cite", "dispose"]);   // REC-37, 2026-08-04: cite joins every inquiry (see the note above)
+    actIds(legacyAff), ["cite", "dispose", "inquiryground"]);   // REC-37/REC-45, 2026-08-04 (see the notes above)
   t("an information bundle never publishes conclude", actIds(await affordances(DOC)).includes("conclude"), false);
 }
 

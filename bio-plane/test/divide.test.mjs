@@ -578,8 +578,15 @@ console.log("\n--- 11. DEC-29(b): the divide surface's wording STATES the disclo
      DIVIDE_PROMPT.includes("it names them to its readers")], [true, true]);
   t("and it names the honest alternative when the intent really is to drop material",
     DIVIDE_PROMPT.includes("sever it with a reason instead"), true);
-  t("no other act invents a prompt: exactly one is published, and it is this one",
-    ACTS.filter((a) => a.prompt).map((a) => a.id), ["inquirydivide"]);
+  /* CORRECTED 2026-08-04 (REC-45), and SUPERSEDED rather than wrong: "exactly
+     one" was true when this was written and was doing real work — it caught a
+     prompt appearing on an act no ruling had attached one to. REC-45 attaches
+     the second, on this act's own DEC-29(b) mechanism and for the hazard one
+     notch sharper: OR takes the MAXIMUM, so grouping raises a grade with no new
+     evidence at all. The assertion is NOT loosened to "at least one" — it names
+     the whole set, so an unattached prompt still fails it. */
+  t("no act invents a prompt: the published set is exactly the two a ruling attaches one to",
+    ACTS.filter((a) => a.prompt).map((a) => a.id).sort(), ["inquirydivide", "inquiryground"]);
 }
 
 console.log("\n--- 12. publication and refusal agree, in both directions (DEC-8) ---");

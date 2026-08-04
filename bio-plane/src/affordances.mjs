@@ -172,6 +172,54 @@ export const DIVIDE_PROMPT =
   + "when a child is published it names them to its readers. If you mean to drop material rather than "
   + "re-home it, sever it with a reason instead.";
 
+/* REC-45 / DEC-29(b), on REC-16's mechanism exactly: THE GROUPING PROMPT.
+ *
+ * WHY THIS ACT WARRANTS ONE AT ALL, and the argument is DIVIDE_PROMPT's with
+ * the hazard one notch sharper. Division's prompt exists because division's
+ * visible effect is a HIGHER publishable strength, so a surface offering it is
+ * proposing an act that makes the member's case look stronger. Grouping is the
+ * SAME shape and more direct: OR takes the MAXIMUM, so this is the one act in
+ * the record that raises a finding's grade without adding a single new piece of
+ * evidence. DEC-32 names the hazard in those words — *"a member has a standing
+ * incentive to bundle a weak ground beside a strong one and publish at the
+ * strong one's grade"* — and names the three things that contain it: the
+ * assertion is AUTHORED and carries a name, the compound falsifier is the
+ * check, and each group's legs stay VISIBLE so a reader tests sufficiency
+ * rather than taking it. Two of those three are mechanism this plane enforces,
+ * and they are what this wording states.
+ *
+ * IT LIVES HERE for DEC-8's reason, unchanged from DIVIDE_PROMPT: a surface
+ * renders what it RECEIVED and never composes a prompt of its own, so a
+ * sentence that appeared in one client and not another would be the forbidden
+ * surface-side map one layer up from the act list.
+ *
+ * EVERY CLAUSE IS MECHANISM, and that is a deliberate boundary rather than a
+ * stylistic one. Each sentence below is a fact about what this plane DOES,
+ * checkable against code and asserted clause by clause in the suite: (1) what
+ * the field means, in the words checkGrounds' own refusal already uses; (2) the
+ * MAX composition in `#axisResult`; (3) the server stamp and its carry-forward
+ * rule in `groundInquiry`; (4) the branches surviving redaction and being
+ * frozen into the ratified bytes (`published_strength_grounds`, required by
+ * C-2.8); (5) the AND default. NOTHING here states a doctrine the record does
+ * not already enforce — REC-45 was scoped to report such a sentence as a DEC
+ * candidate rather than write one, and one was reported rather than written
+ * (DEC-32's operational test, *"would refuting this alone change the
+ * conclusion?"*, which belongs to UI-27's elicitation and not to this act).
+ *
+ * AND IT CARRIES NO ANALYST VOCABULARY, which is DEC-32 clause 1 and is binding
+ * on any member-facing string: no AND, no OR, no disjunction, no branch, and
+ * not the word `ground` itself — including in this act's own label. The wire
+ * name is `inquiryground` because a wire name is not a surface; the sentence a
+ * member reads says GROUP. */
+export const GROUND_PROMPT =
+  "Grouping says these reasons are enough on their own to carry your answer. Your answer's strength is "
+  + "then taken from the strongest group rather than from its weakest single reason, so your name and the "
+  + "time go on each group you make and stay there until that group's reasons change. Nothing is hidden: "
+  + "every reason stays visible under the group you put it in, and a published case carries each group and "
+  + "what it reached inside the signed bytes, so a reader can check whether they really were enough on "
+  + "their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the "
+  + "weakest one.";
+
 /* The object vocabularies, published the way op=searchfields publishes the
  * query language, so a surface never keeps a copy. action_kind is the check
  * catalogue's own C-2.10 suite, imported from the module that enforces it. */
@@ -482,6 +530,50 @@ export const ACTS = [
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("divided")
                      && (f.basis_legs ?? 0) >= 1
                      && (f.rested_on?.working ?? 0) === 0 },
+  /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
+     something, and whose record is still working.
+
+     WHY THE LEG COUNT IS PART OF THE DERIVATION and not a detail, exactly as it
+     is for division above: a partition is a partition OF THE LEGS, so a
+     question resting on nothing has nothing to group and the store refuses it
+     NO_BASIS. Publishing the act there would be a pre-flight offering a control
+     the refusal it fronts would decline, which is the DEC-8 disagreement this
+     file exists to prevent. ONE leg IS enough and deliberately so: a member may
+     legitimately say that the single thing they have is enough on its own, and
+     the act is also the only route BACK to an ungrouped basis.
+
+     THE TWO STATES IT IS NOT OFFERED IN, and the store refuses each BY NAME so
+     a caller that arrives anyway is told which rule it met.  `published`: the
+     composed pair and the per-group breakdown are inside signed, ratified bytes
+     (REC-14/REC-42), and re-partitioning underneath them would change what the
+     document's own basis composes to while an edition on the record says
+     otherwise — DEC-12's route is reopen, restructure, republish, which is the
+     same shape PUBLISHED_CANNOT_DIVIDE takes one act over.  `divided`: the
+     parent has been declared MALFORMED and carried forward into children that
+     supersede it (REC-16), and re-deriving a terminal parent's strength after
+     the fact would move a number its children's disclosure already pointed at.
+
+     NO RUNG. No document assigns grouping one, and RUNGS carries only the seven
+     that are sourced. It is tempting to write `reasoned` here; that is the
+     guessing this file refuses, and FW-14 owns the assignment.
+
+     WEIGHT `single`, conclude's precedent: one question's structure is authored
+     at a time, and a bulk version would be the checkbox these constructs exist
+     to refuse — the more so here, because this is the act that RAISES a grade.
+
+     THE PROMPT RIDES THE ACT (DEC-29(b), REC-16's mechanism): every surface
+     that can offer grouping receives the wording that must accompany it. The
+     reasoning for why this act warrants one, and for the vocabulary bound every
+     clause of it respects, is on GROUND_PROMPT itself.
+
+     THE ENTRY REQUIREMENTS ARE ACT-TIME REFUSALS the store words itself — a
+     reason on a RESTRUCTURE, a partition that is total, a label with an
+     attributed row — the release precedent: publishing the act says the record
+     permits the move, not that this caller's parameters will pass. */
+  { id: "inquiryground", label: "Group what this rests on", weight: "single", types: ["inquiry"],
+    prompt: GROUND_PROMPT,
+    applies: (f, ty) => ty === "inquiry" && (f.basis_legs ?? 0) >= 1
+                     && f.current_state !== "published" && f.current_state !== "divided" },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
      guards are type-only on both: any information bundle may be cited (cite
      checks the member's TYPE and nothing about state — citing retired material

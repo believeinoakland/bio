@@ -4322,6 +4322,429 @@ export class Store extends DurableObject {
                  + "and every sibling's. This question is terminal: it is answered by its children now." };
   }
 
+  /* =======================================================================
+   * REC-45 / DEC-32: `op=inquiryground` — THE ACT THAT AUTHORS THE STRUCTURE.
+   *
+   * REC-42 built the partition and both gates that defend it, and left one gap
+   * routed rather than closed: NOTHING AUTHORED IT. Grounds reached the record
+   * only through a hand-written `bundle.md` promoted by op=promote, so DEC-32
+   * clause 6 — *"RESTRUCTURING AFTER SEEING THE STRENGTH IS LEGAL, RECORDED AND
+   * ATTRIBUTED — never blocked… the system may NOTICE the pattern"* — was
+   * unreachable in both halves at once, because neither RECORDING nor NOTICING
+   * is possible without an act that carries a reason. This is that act.
+   *
+   * IT IS BUILT ON op=publish's STAMPING SHAPE, and the split is the same one:
+   *   AUTHORED, caller-supplied, never prefilled — WHICH legs are grouped
+   *   together, what each group is called, the optional STATEMENT on a group,
+   *   and the REASON for a restructuring. Nothing here proposes a partition,
+   *   guesses a label, or moves a leg on a member's behalf.
+   *   STAMPED by the server — `asserted_by` and `at` on every group, taken from
+   *   the authenticated session and the clock and NEVER from a parameter.
+   *
+   * AND THE STAMP IS THE POINT OF THE ITEM. REC-42's gate already refuses a
+   * MACHINE asserter and an UNDATED assertion; what it cannot refuse is a
+   * caller who supplies a well-formed name and a well-formed date belonging to
+   * somebody else, or belonging to an hour before the strength was shown. So a
+   * caller's `asserted_by`/`at` are DELETED from every row before the stamp
+   * (the op=promote `ownerMemberId` precedent, and the reason it is DELETE and
+   * not OVERWRITE: overwriting is a property of the code path taken, deletion
+   * is a property of the input, and only the second survives somebody later
+   * adding an arm). CLAUDE.md's rule is exactly this one — a provenance hop a
+   * caller can hand us is one a caller can invent — and this is the last door
+   * on the one field in the record that makes a finding STRONGER.
+   *
+   * WHAT COUNTS AS A RESTRUCTURE, and it is decided from the RECORD:
+   * the inquiry is in FIRST AUTHORSHIP when its standing document carries NO
+   * partition at all — no leg names a group and there is no `grounds` key — and
+   * is being RESTRUCTURED in every other case. A reason is REQUIRED on the
+   * second and required on neither half of the first; DEC-32's clause is about
+   * a member who *"may legitimately realise their structure was wrong"*, and
+   * there must be a structure for that to be true of. The distinction is NOT a
+   * parameter and must never become one: a caller who could declare "this is my
+   * first time" could walk past the reason gate on every restructuring they
+   * made. REMOVING a partition is a restructure too, and takes a reason like
+   * any other — it changes an authored structure, and the fact that it moves in
+   * the conservative direction is a fact about the ANSWER, not about the act.
+   *
+   * WHAT CARRIES FORWARD AND WHAT IS RE-STAMPED, which is the other half of
+   * making clause 6 legible. A group's row asserts that ITS LEGS are enough on
+   * their own, so the assertion is ABOUT the legs: a group whose leg set and
+   * statement are unchanged keeps the `asserted_by` and `at` it already had,
+   * and a group whose membership moved becomes THIS member's assertion, NOW.
+   * Re-stamping everything would erase the one thing DEC-32 says the date is
+   * for — *"a structure authored after a strength was seen is a different act
+   * from one authored before it, and only a date lets a reader tell"* — and
+   * carrying everything forward would let a member re-cut a group under
+   * somebody else's name and an older date.
+   *
+   * ONE GRAMMAR, AT BOTH GATES, AND NO SECOND ONE HERE. The candidate document
+   * is judged by `checkInquiryBasis` — the catalog's own function, the same one
+   * op=promote runs at the write and the checker runs at the gate — over the
+   * SAME two registries promote injects, and it is judged BEFORE a byte moves.
+   * The refusal is even called `BASIS_REFUSED`, promote's name, because one
+   * function answering twice should not answer under two names. So every REC-42
+   * refusal fires through this act: an unattributed label, a half-labelled
+   * basis, a machine asserter, an undated assertion, a duplicate label and an
+   * empty group. What is refused HERE and could not be refused there is the
+   * mapping this act introduces and the document does not have — an ordinal
+   * naming no leg, and one leg claimed by two groups.
+   *
+   * THE PARTITION IS ADDRESSED BY ORDINAL and never by target id, which is
+   * REC-16's apportionment decision for REC-16's reason: D4 makes duplicate
+   * targets legal, a basis legitimately cites one document for two legs, and
+   * target-keying would let one instruction move two legs a member meant to
+   * separate. `ord` is the leg's position in `basis[]`, which is what
+   * `inquiry_basis` already keys on.
+   *
+   * TWO STATES REFUSE BY NAME, on op=inquirydivide's precedent that a refusal
+   * should say which rule it met. `published`: the pair and the per-group
+   * breakdown are inside signed, ratified bytes, and re-cutting the partition
+   * underneath them would leave the document composing to something an edition
+   * on the record contradicts — DEC-12's route is reopen, restructure,
+   * republish. `divided`: the parent was declared MALFORMED and carried forward
+   * into children, and re-deriving a terminal parent's strength moves a number
+   * its children's own disclosure already pointed at.
+   *
+   * WHAT IS DELIBERATELY NOT HERE. No NOTICER. DEC-32 says the system MAY
+   * notice a weak leg moved into its own group immediately after a strength
+   * drop and surface it; this act makes that possible and does not do it, and
+   * the difference matters — noticing is a derived read with a surface half
+   * (UI-27's), and building it inside the act would put a judgement about the
+   * member's motive in the same function that must never refuse them (*"a
+   * machine may not refuse the act and must not hide it"*). What this act does
+   * instead is leave the evidence a noticer needs where an append-only history
+   * keeps it: the pair AS IT STOOD BEFORE the act and after it, written into
+   * the Session Log entry beside the reason, and returned to the caller.
+   */
+  groundInquiry({ target, grounds, reason = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return { ok: false, reason: "MACHINE_CANNOT_GROUND",
+               detail: "grouping is a named member's judgement that some of their reasons are enough on "
+                     + "their own to carry their answer, and it is the one act in this record that makes a "
+                     + "finding STRONGER. A machine credential may surface a question and gather what it "
+                     + "rests on; it may not decide that part of the gathering was sufficient by itself. "
+                     + "Sign in as a member." };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET",
+               detail: "grouping authors the structure of ONE question: pass target=<inquiry id>" };
+    if (grounds === undefined)
+      return { ok: false, reason: "NO_PARTITION", target,
+               detail: "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per "
+                     + "group, where each ord is a leg's position in this question's basis. Pass an EMPTY "
+                     + "array to remove the grouping entirely and let the answer read as its weakest leg "
+                     + "again; that is a restructuring like any other and takes a reason." };
+
+    /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
+       inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
+       absent one, so the refusal discloses nothing. */
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
+               detail: "a basis is what a QUESTION rests on, and only an inquiry carries one." };
+    if (b.current_state === "published")
+      return { ok: false, reason: "PUBLISHED_CANNOT_RESTRUCTURE", target, from: b.current_state,
+               detail: "a published case's composed strength and its per-group breakdown are inside signed, "
+                     + "ratified bytes. Re-cutting the structure underneath them would leave this document "
+                     + "composing to something the edition on the record contradicts. Reopen it "
+                     + "(op=reopen), restructure, and publish what changed as a new edition — the route "
+                     + "DEC-12 built for exactly this." };
+    if (b.current_state === "divided")
+      return { ok: false, reason: "DIVIDED_CANNOT_RESTRUCTURE", target, from: b.current_state,
+               detail: "this question was declared malformed and carried forward into children that "
+                     + "supersede it. Re-deriving its strength now would move a number its children's own "
+                     + "disclosure already points at. Restructure the CHILD that carries the half you mean." };
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this inquiry has no readable bundle.md, so its structure cannot be authored" };
+    let text = liveMd.content;
+    const fm = parseFrontmatter(text).data || {};
+    const all = Array.isArray(fm.basis) ? fm.basis : [];
+    const legs = all.filter((l) => l && typeof l === "object");
+    if (!legs.length)
+      return { ok: false, reason: "NO_BASIS", target,
+               detail: "a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite "
+                     + "what it rests on first (op=cite); an assertion that nothing is enough on its own is "
+                     + "not a thing the record can hold." };
+    if (legs.length !== all.length)
+      return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
+               detail: "this question's basis carries an entry that is not a leg, so the ordinals a "
+                     + "partition addresses cannot be lined up against the document. Nothing was written." };
+
+    /* WHAT STANDS TODAY, read from the DOCUMENT — `inquiry_basis` is a
+       projection of it and never a second place to state it (D-21). */
+    const standingLabel = legs.map((l) => typeof l.ground === "string" && l.ground.trim() ? l.ground.trim() : null);
+    const standingRows = Array.isArray(fm.grounds) ? fm.grounds : [];
+    const standingByLabel = new Map();
+    for (const r of standingRows)
+      if (r && typeof r === "object" && typeof r.ground === "string" && !standingByLabel.has(r.ground))
+        standingByLabel.set(r.ground, r);
+    /* THE DISTINCTION, decided here and from the record alone. Any standing
+       label OR any standing `grounds` key — even an empty or malformed one —
+       is a structure this act is about to replace. */
+    const restructure = standingLabel.some((g) => g !== null)
+                     || (fm.grounds !== undefined && fm.grounds !== null);
+
+    const why = String(reason ?? "").trim();
+    if (restructure && !why)
+      return { ok: false, reason: "NO_REASON", target, restructure: true,
+               detail: "this question already carries an authored structure, so changing it is a REVISION "
+                     + "and records WHY. Restructuring after seeing a strength is legal and is never "
+                     + "blocked (DEC-32) — the defence is that it is visible, which it is not without an "
+                     + "account of it. Nothing here is derived, defaulted or prefilled. A FIRST grouping "
+                     + "needs no reason: there is no earlier structure for it to be a revision of." };
+    if (why && (why.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why)))
+      return { ok: false, reason: "BAD_REASON", target,
+               detail: `a reason is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a quote, `
+                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+
+    /* ---------------- the caller's partition, mapped onto the legs ----------
+       THE SHAPE ARMS BELOW ARE THE MAPPING AND NOTHING ELSE. Every rule about
+       what a LABEL may say, who may assert it, and whether the partition is
+       total belongs to the catalog's `checkGrounds` and is applied to the
+       CANDIDATE further down — one grammar, at both gates, never a second copy
+       written here because it was convenient. */
+    if (!Array.isArray(grounds))
+      return { ok: false, reason: "BAD_PARTITION", target,
+               detail: "grounds must be an ARRAY of groups, each { ground, legs: [ord, ...] }" };
+    const nextLabel = new Array(legs.length).fill(null);
+    const claimed = new Map();          // ord -> the label that claimed it
+    const asked = [];                   // [{ label, ords, statement }] in the caller's own order
+    for (let i = 0; i < grounds.length; i++) {
+      const row = grounds[i];
+      if (!row || typeof row !== "object" || Array.isArray(row))
+        return { ok: false, reason: "BAD_PARTITION", target, at: i,
+                 detail: `grounds[${i}] is not an object` };
+      const label = typeof row.ground === "string" ? row.ground.trim() : row.ground;
+      const ords = row.legs;
+      if (!Array.isArray(ords))
+        return { ok: false, reason: "BAD_PARTITION", target, at: i,
+                 detail: `grounds[${i}].legs must be an array of ordinals — a group is a partition OF THE `
+                       + `LEGS, and a group naming none asserts that nothing is enough on its own. Legs are `
+                       + `addressed by ORDINAL (their position in basis[]) and never by target id, because `
+                       + `one document legitimately carries two legs (D4).` };
+      const stmt = row.statement === undefined || row.statement === null ? null : row.statement;
+      if (stmt !== null && (typeof stmt !== "string"
+          || stmt.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(stmt)))
+        return { ok: false, reason: "BAD_STATEMENT", target, at: i,
+                 detail: `grounds[${i}].statement is at most ${Store.EDGE_REASON_MAX} characters and cannot `
+                       + `contain a quote, a backslash, or a newline: the restricted frontmatter grammar `
+                       + `has no escapes` };
+      for (const raw of ords) {
+        if (!Number.isInteger(raw) || raw < 0 || raw >= legs.length)
+          return { ok: false, reason: "BAD_PARTITION", target, at: i, ord: raw ?? null, legs: legs.length,
+                   detail: `grounds[${i}].legs names ord ${JSON.stringify(raw) ?? "null"}, and this question `
+                         + `has legs 0..${legs.length - 1}. An ordinal that addresses no leg groups nothing.` };
+        if (claimed.has(raw))
+          return { ok: false, reason: "BAD_PARTITION", target, ord: raw,
+                   claimed_by: [claimed.get(raw), label],
+                   detail: `basis[${raw}] is claimed by two groups. A leg belongs to exactly ONE group: a `
+                         + `leg that is needed whatever else holds is NECESSARY, and the honest way to say `
+                         + `so is to leave the reasons ungrouped — an ungrouped basis is read as no `
+                         + `stronger than its weakest leg, which is the conservative reading.` };
+        claimed.set(raw, label);
+        nextLabel[raw] = label;
+      }
+      asked.push({ label, ords: [...ords].sort((x, y) => x - y), statement: stmt });
+    }
+
+    /* ------------------------------------------- the stamp, and what carries */
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const ordsOf = (label) => standingLabel.reduce((a, g, i) => (g === label ? [...a, i] : a), []);
+    const same = (a, c) => a.length === c.length && a.every((v, i) => v === c[i]);
+    const rowsOut = asked.map((a) => {
+      const prior = typeof a.label === "string" ? standingByLabel.get(a.label) : undefined;
+      const priorStmt = prior && typeof prior.statement === "string" ? prior.statement : null;
+      /* CARRIED FORWARD only when the assertion is genuinely the same one: the
+         same legs and the same statement. And only when the standing row's own
+         attribution is usable — a document that reached the store carrying a
+         nameless or undated row (a replayed history: the gate's shape refusals
+         honour the replay exemption) is re-stamped rather than trusted, which
+         fails toward THIS member owning what they just authored. */
+      const carry = !!prior && same(a.ords, ordsOf(a.label)) && priorStmt === a.statement
+                 && typeof prior.asserted_by === "string" && prior.asserted_by.trim() !== ""
+                 && typeof prior.at === "string" && prior.at.trim() !== "";
+      return { ground: a.label, legs: a.ords, statement: a.statement,
+               /* A caller's own `asserted_by`/`at` never appear in this object.
+                  They are not overwritten from `row` — `row` is never read for
+                  them at all, which is the same thing DELETE buys at the trust
+                  boundary and is why the suite asserts a caller's values are
+                  DISCARDED rather than merely losing. */
+               asserted_by: carry ? Store.#fmSafe(prior.asserted_by) : Store.#fmSafe(who),
+               at: carry ? Store.#fmSafe(prior.at) : when,
+               carried_forward: carry };
+    });
+
+    /* NOTHING MOVED, so nothing is recorded. An act that writes a reason, a
+       Session Log entry and a promotion over an identical partition is a
+       revision of nothing, and a record that holds one has a restructuring in
+       it that never happened. */
+    if (same(nextLabel.map((g) => String(g)), standingLabel.map((g) => String(g)))
+        && rowsOut.every((r) => r.carried_forward)
+        && standingByLabel.size === rowsOut.length)
+      return { ok: false, reason: "PARTITION_UNCHANGED", target,
+               detail: "this is the structure this question already carries, leg for leg. Nothing was "
+                     + "written: a revision that changes nothing would put a restructuring in the record "
+                     + "that did not happen." };
+
+    /* ---------------- ONE GRAMMAR, judged before a byte moves ---------------
+       The CANDIDATE frontmatter, checked by the catalog's own function over the
+       same two registries op=promote injects at the write. This is the act's
+       gate and the write's gate running the same rule twice on purpose (the
+       checkGatheringGrammar precedent), and it is also what guarantees a label
+       has passed GROUND_LABEL_RE — no quotes, no colons, no newlines — before
+       any of it is written into a restricted-grammar block. */
+    const grouped = nextLabel.some((g) => g !== null);
+    const candidate = { ...fm,
+      basis: legs.map((l, i) => {
+        if (nextLabel[i] === null) { const { ground, ...rest } = l; return rest; }
+        return { ...l, ground: nextLabel[i] };
+      }) };
+    if (grounds.length) candidate.grounds = rowsOut.map((r) => ({ ground: r.ground,
+      asserted_by: r.asserted_by, at: r.at, ...(r.statement === null ? {} : { statement: r.statement }) }));
+    else delete candidate.grounds;
+    const bf = [];
+    checkInquiryBasis(candidate, bf, this.publishedRegistryFor(target,
+      legs.map((l) => l.target).filter((t) => typeof t === "string")),
+      this.earnedRegistryForDoc(candidate, candidate.basis));
+    const errs = bf.filter((x) => x.severity === "error");
+    if (errs.length)
+      return { ok: false, reason: "BASIS_REFUSED", target,
+               findings: errs.map((x) => ({ check: x.check, detail: x.message, repairs: x.repairs ?? [] })),
+               detail: "the structure this would author is refused by the SAME catalog function op=promote "
+                     + "runs at the write, so nothing was written. Every group is a claim that its legs are "
+                     + "enough on their own, and that claim carries a name and a date." };
+
+    /* ---------------------------------------------------- and now the bytes */
+    const before = this.strengthOf(target);
+    const spliced = Store.#spliceBasisGround(text, nextLabel);
+    if (!spliced)
+      return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
+               detail: "this document's basis block is not in a shape this grammar can edit in place. "
+                     + "Nothing was written — a partial edit of a basis is worse than none." };
+    text = spliced;
+    text = grounds.length
+      ? Store.#setOrAddBlock(text, "grounds", rowsOut.flatMap((r) => [
+          `  - ground: ${r.ground}`,
+          `    asserted_by: ${r.asserted_by}`,
+          `    at: "${r.at}"`,
+          ...(r.statement === null ? [] : [`    statement: "${r.statement}"`])]))
+      /* REMOVED, not emptied. An unstructured basis must read BYTE-IDENTICALLY
+         to one that was never grouped (REC-42's clause 2), and a document left
+         wearing an empty `grounds:` key is not that document. */
+      : Store.#removeBlock(text, "grounds");
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    /* C-13.2: last_updated moving requires a Session Log entry, and it is where
+       DEC-32 clause 6's RECORD lives — this act moves no state, so there is no
+       state_history entry to carry it and the log is the durable trace. THE
+       PAIR AS IT STOOD BEFORE goes in beside the reason: that is the evidence a
+       noticer needs (*"a weak leg moved into its own branch immediately after a
+       strength drop"*), left where an append-only history keeps it rather than
+       reconstructed later by something that would have to guess. */
+    const w = (p) => `capture ${p.capture.state === "graded" ? p.capture.grade : p.capture.state}, `
+                   + `connection ${p.connection.state === "graded" ? p.connection.grade : p.connection.state}`;
+    text = Store.#appendSessionLog(text,
+      `### Session ${when} | ${restructure ? "Restructured" : "Grouped"} | ${who}\n`
+      + `Trigger: op=inquiryground on ${target}\n`
+      + `Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(s) — `
+          + rowsOut.map((r) => `${r.ground}: ${r.legs.join(", ")}`).join("; ")
+          : `grouping removed; ${legs.length} leg(s) read as necessary again`}.\n`
+      + (restructure ? `Reason: ${why}\n` : "First grouping: no earlier structure to revise.\n")
+      + `Strength before: ${w(before)}.\n`);
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      /* NO STATE MOVES. The meta carries the document's own state forward
+         unchanged — this act authors what a question rests on, not where it
+         stands — which is why it is not in index.mjs's STATE_ACTIONS. */
+      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+              title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
+              created: fm.created, last_updated: when,
+              criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    const after = this.strengthOf(target);
+
+    /* `weight: "single"` for conclude's reason, and here it is load-bearing
+       rather than conventional: one question's structure is authored at a time,
+       and a bulk grouping would raise a set of grades with one sentence
+       standing for all of them. */
+    return { ok: true, target, act: restructure ? "restructured" : "authored",
+             grouped, grounds: rowsOut, legs: legs.length,
+             reason: restructure ? why : null, asserted_by: who, at: when, weight: "single",
+             bundleSha: promoted.bundleSha,
+             /* DEC-32 clause 6's noticing material, returned as well as
+                recorded. NOT a judgement: the act reports what the pair was and
+                what it is, and says nothing about why the member moved. */
+             strength: { before: { capture: before.capture, connection: before.connection },
+                         after: { capture: after.capture, connection: after.connection } },
+             next: grouped
+               ? "each group's strength is its weakest leg, and this question's is its strongest group. "
+                 + "Every group carries the name and the date of the member who asserted it was enough on "
+                 + "its own, and a published case carries the per-group breakdown inside the signed bytes."
+               : "this question reads as its weakest leg again, which is the conservative reading and the "
+                 + "one an ungrouped basis always takes." };
+  }
+
+  /* REC-45: set or clear the `ground:` line on each basis leg, addressed BY
+     POSITION and touching nothing else in the document.
+     `byOrd[i]` is the label for basis[i], or null to remove any label it has.
+
+     WHY A SPLICE AND NOT A REWRITE of the block: a leg carries authored fields
+     this act has no business restating — a grade, its source, a hunch's author
+     and date, a note — and rebuilding the block from the parsed frontmatter
+     would silently re-emit every one of them through this function's idea of
+     the grammar. #spliceEdgeStatus's discipline exactly: walk the entries, edit
+     the one line that is ours, and refuse (null) rather than guess if the block
+     is not in a shape this can address. */
+  static #spliceBasisGround(text, byOrd) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    let at = -1;
+    for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { at = i; break; }
+    if (at === -1) return null;
+    const starts = [];
+    let blockEnd = at;
+    for (let i = at + 1; i < end; i++) {
+      if (lines[i].trim() === "") continue;
+      if (/^ {2}- /.test(lines[i])) { starts.push(i); blockEnd = i; continue; }
+      if (/^\s/.test(lines[i])) { blockEnd = i; continue; }
+      break;
+    }
+    /* An entry count that does not match the parsed leg count means the
+       ordinals this was handed do not address the entries in front of it, and a
+       partial edit of a basis is worse than no edit at all. */
+    if (starts.length !== byOrd.length) return null;
+    const segs = [];
+    for (let s = 0; s < starts.length; s++) {
+      const from = starts[s], to = (s + 1 < starts.length ? starts[s + 1] : blockEnd + 1) - 1;
+      const kept = [];
+      for (let i = from; i <= to; i++) if (!/^\s+ground:/.test(lines[i])) kept.push(lines[i]);
+      if (byOrd[s] !== null) kept.push(`    ground: ${byOrd[s]}`);
+      segs.push(kept);
+    }
+    return [...lines.slice(0, starts[0]), ...segs.flat(), ...lines.slice(blockEnd + 1)].join("\n");
+  }
+
   /* Frontmatter-safe: the restricted grammar has no escapes, and these strings
      are DERIVED (a strength detail, a bar's explanation) rather than authored,
      so they are sanitised here rather than refused — an authored field is
@@ -14704,6 +15127,20 @@ export class Store extends DurableObject {
            they are spread SECOND and a caller-supplied author in the body is
            overwritten, never honoured. */
         inquirydivide: () => this.divide({ ...(body || {}),
+          target: url.searchParams.get("target") || (body || {}).target,
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
+        /* REC-45, inquirydivide's shape exactly, and the SPREAD ORDER is the
+           load-bearing part rather than a convention. The BODY carries the
+           authored material — the partition is an array of objects each holding
+           an array of ordinals, which a query string cannot express honestly —
+           and the viewer and the author come from the SEARCH PARAMS where the
+           control plane stamps them, so they are spread SECOND and a
+           caller-supplied `author` in the body is overwritten, never honoured.
+           A caller-supplied `asserted_by`/`at` never reaches this line at all:
+           groundInquiry reads them from NO input, which is the delete-then-stamp
+           discipline arriving one layer in. */
+        inquiryground: () => this.groundInquiry({ ...(body || {}),
           target: url.searchParams.get("target") || (body || {}).target,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
