@@ -95,13 +95,13 @@ const mk = (id, text, type) => call("/promote", {
           last_updated: "2026-07-02T00:00:00Z" },
 });
 const errorsOf = async (id) => {
-  const files = new Map(Object.entries(await call(`/image?id=${id}`)));
+  const files = new Map(Object.entries(await call(`/image?id=${id}&viewer=class:member`)));
   const { findings } = await checkBundle({ folderName: id, files,
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
     resolveTarget: () => true });
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
-const projOf = async (id) => call(`/projection?id=${id}`);
+const projOf = async (id) => call(`/projection?id=${id}&viewer=class:member`);
 const select = async (ids) => (await call(`/select?${STAMP}`, { ids })).handle;
 const S = async (q) => call(`/search?${q}&${STAMP}`);
 

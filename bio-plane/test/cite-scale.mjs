@@ -154,7 +154,7 @@ for (const n of [1000, 2500, 5000, 7500, 10000].filter((x) => x <= N)) {
   const r = await call(`/cite?${STAMP}&project=${proj}&handle=${sel.handle}`, {});
   const tCite = Date.now() - t1;
 
-  const md = (await call(`/file?id=${proj}&path=bundle.md`))?.text ?? "";
+  const md = (await call(`/file?id=${proj}&path=bundle.md&viewer=class:member`))?.text ?? "";
   const size = md.length;
   let outcome;
   if (r.ok) {
@@ -180,7 +180,7 @@ if (N >= 10000) {
     if (!slice.length) break;
     const sel = await call(`/select?${STAMP}`, { ids: slice });
     const r = await call(`/cite?${STAMP}&project=${proj}&handle=${sel.handle}`, {});
-    const md = (await call(`/file?id=${proj}&path=bundle.md`))?.text ?? "";
+    const md = (await call(`/file?id=${proj}&path=bundle.md&viewer=class:member`))?.text ?? "";
     if (r.ok) {
       total += r.cited.length;
       console.log(`    round ${round + 1}: +${r.cited.length} edges, total ${total}, ${md.length}B`);

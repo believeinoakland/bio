@@ -371,6 +371,13 @@ const OPS = {
   list:       { classes: ["admin", "member", "probe"],           mutating: false },
   image:      { classes: ["admin", "member", "probe"],           mutating: false },
   file:       { classes: ["admin", "member", "probe"],           mutating: false },
+  /* REC-25: the plane-side gated BACKLINK read — every edge INTO a bundle,
+     with the citing bundle filtered by the viewer's position (Membership
+     Architecture 7.9). Exists so the UI can delete its client-side
+     reverseRefs walk, which rebuilt the reverse-edge leak by walking every
+     project's projection. Working corpus, so member class and above; the
+     viewer is stamped server-side below like every retrieval read. */
+  backlinks:  { classes: ["admin", "member", "probe"],           mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1218,8 +1225,12 @@ export default {
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));
+      /* REC-25: the D-15 viewer stamp, server-side from the authenticated
+         identity exactly as the passthrough reads take it below. An object the
+         viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. */
+      const affViewer = viaSession ? `member:${sessMember}` : `class:${cls}`;
       const facts = (await (await st.fetch(
-        `http://do/affordancefacts?target=${encodeURIComponent(target)}`)).json()).result;
+        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`)).json()).result;
       if (!facts || facts.ok !== true)
         return json({ ok: false, ...(facts || { reason: "NO_FACTS" }),
                       store: storeName, tokenClass: cls },
@@ -2684,7 +2695,10 @@ export default {
         return json({ ok: false, error: "monitor needs a bundleId" }, 400);
 
       const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
-      const img = (await (await stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}`)).json()).result;
+      /* REC-25: the store's image read fails closed without a viewer. The
+         monitor is a machine caller acting as itself, so it reads at its own
+         credential's scope, which D-15 deliberately leaves unfiltered. */
+      const img = (await (await stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `class:${cls}`)}`)).json()).result;
       if (!img || typeof img["bundle.md"] !== "string")
         return json({ ok: false, reason: "ABSENT", bundleId }, 404);
       const live = img["bundle.md"];
@@ -2848,12 +2862,16 @@ export default {
                       store: storeName, tokenClass: cls }, 403);
       const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
 
-      const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}`)).json()).result;
+      /* REC-25: ratification reads at the RATIFIER'S scope — a bundle the
+         caller may not see cannot be assembled for their signature, and the
+         answer is the same ABSENT a hidden bundle would give anywhere else. */
+      const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `class:${cls}`);
+      const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`)).json()).result;
       const r2 = typeof env.CAPTURES?.head === "function";
       /* The catalog resolves references against the whole store, so it needs
          to know which identifiers exist. One cheap query rather than a probe
          per reference. */
-      const known = new Set(((await (await stub.fetch("http://do/list")).json()).result || [])
+      const known = new Set(((await (await stub.fetch(`http://do/list?viewer=${ratViewer}`)).json()).result || [])
         .map((b) => b.bundle_id));
       const gate = await runGate({
         bundleId: body.bundleId, image, knownIds: known,
@@ -3027,8 +3045,19 @@ export default {
        the only place the identity comes from. A viewer the compiler does not
        recognise compiles to a deny predicate, so the failure mode of a missing
        stamp is an empty result rather than an unfiltered one. */
+    /* REC-25 / F-8: the stamp covers EVERY read that could name a bundle, not
+       only the compiled-query paths. op=list, op=index, op=projection,
+       op=image and op=file bypassed it — an uninvited member read every
+       project's id, title and state, and op=image handed over the document
+       body itself — and op=backlinks is born stamped. The store fails closed
+       on an absent viewer, so removing an op from this list yields an empty
+       answer rather than an unfiltered one. (op=affordances takes the same
+       stamp in its own handler above; op=search and the edge/state actions
+       were stamped from the first commit.) */
     if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
-        || STATE_ACTIONS.includes(op)) {
+        || STATE_ACTIONS.includes(op)
+        || op === "list" || op === "index" || op === "projection" || op === "image"
+        || op === "file" || op === "backlinks") {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
     /* Ownership of a selection is the same server-side stamp. A selection is

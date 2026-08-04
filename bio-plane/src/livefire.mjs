@@ -72,7 +72,10 @@ export async function livefire(env, storeName) {
     "the lost-update floor, on real storage");
   assert("garbage base refused", (await post("promote", { ...(await pkgFor("ratified", 5)), base: "deadbeef" })).reason, "CAS_STALE");
 
-  const live = await get(`image?id=${id}`);
+  /* REC-25: the image read fails closed without a viewer. The battery is a
+     first-party machine probe reading its own scratch canary, so it reads at
+     machine scope — the scope D-15 deliberately leaves unfiltered. */
+  const live = await get(`image?id=${id}&viewer=class:probe`);
   assert("live state is the winning revision", /rev 3/.test(live["bundle.md"]), true);
   assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire.md"] || ""), true);
   assert("the verbatim promotion record is projected", "_history/promotion_20260723T190000Z_livefire.json" in live, true,

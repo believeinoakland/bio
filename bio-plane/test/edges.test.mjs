@@ -200,17 +200,17 @@ const sever = async (ids, reason, extra = "") =>
 const reinstate = async (ids, reason, extra = "") =>
   call(`/reinstate?${STAMP}&project=${PROJ.id}&handle=${await sel(ids)}${reason !== null ? "&reason=" + encodeURIComponent(reason) : ""}${extra}`, {});
 
-const doc = async () => (await call(`/file?id=${PROJ.id}&path=bundle.md`)).text;
-const liveSha = async (id) => (await call(`/index`)).bundles.find((b) => b.id === id)?.sha256 ?? null;
+const doc = async () => (await call(`/file?id=${PROJ.id}&path=bundle.md&viewer=class:member`)).text;
+const liveSha = async (id) => (await call(`/index?viewer=class:member`)).bundles.find((b) => b.id === id)?.sha256 ?? null;
 const edge = async (target) =>
   (parseFrontmatter(await doc()).data.references || []).find((r) => r.target === target) || null;
 const conformance = async () => {
-  const img = await call(`/image?id=${PROJ.id}`);
+  const img = await call(`/image?id=${PROJ.id}&viewer=class:member`);
   const files = new Map(), elided = new Set();
   for (const [p, v] of Object.entries(img)) {
     if (typeof v === "string") files.set(p, v); else elided.add(p);
   }
-  const known = new Set((await call(`/index`)).bundles.map((b) => b.id));
+  const known = new Set((await call(`/index?viewer=class:member`)).bundles.map((b) => b.id));
   const { findings } = await checkBundle({
     folderName: PROJ.id, files, elidedPaths: elided, resolveTarget: (k) => known.has(k),
   });
@@ -251,7 +251,7 @@ console.log("\n--- the record accounts for it ---");
   const log = text.slice(text.indexOf("## Session Log"));
   t("a Session Log entry names the severance", /### Session .*Severed/i.test(log), true);
   t("and carries the full reason", log.includes("superseded by a better source"), true);
-  t("other files survived the whole-image write", (await call(`/file?id=${PROJ.id}&path=data%2Fkeep.json`)).text, KEEP);
+  t("other files survived the whole-image write", (await call(`/file?id=${PROJ.id}&path=data%2Fkeep.json&viewer=class:member`)).text, KEEP);
 }
 
 console.log("\n--- a severance with no reason is refused ---");

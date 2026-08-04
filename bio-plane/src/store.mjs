@@ -9,7 +9,7 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
    statements and maintains the index; it builds no query. That is what makes the
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
    no second place in the plane where a query could come from. */
-import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX } from "./query.mjs";
+import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX, viewerPredicate } from "./query.mjs";
 
 /* BIO store, plane layer, step 1.
  *
@@ -511,17 +511,27 @@ export class Store extends DurableObject {
   }
 
   /** The projected metadata for one bundle, or a json_extract query over the
-   *  per-schema tail. This is what the retrieval compiler will filter on. */
-  projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = 200 } = {}) {
-    const cols = ["bundle_id", "object_type", "group_id", "title", "current_state",
-                  "prior_state", "created", "last_updated", "criticality",
-                  "bundle_sha", ...Store.PROJECTION_COLS].join(", ");
-    if (bundleId) return this.#one(`SELECT ${cols} FROM bundles WHERE bundle_id=?`, bundleId);
+   *  per-schema tail. This is what the retrieval compiler will filter on.
+   *
+   *  REC-25 / F-8: the D-15 viewer gate, from query.mjs's ONE compilation
+   *  point. FAIL CLOSED — an absent or unrecognised viewer compiles to the
+   *  deny predicate, exactly as the search path already behaves, so a caller
+   *  that reaches this read without a server-stamped identity sees nothing
+   *  rather than everything. An invisible bundle answers EXACTLY as an absent
+   *  one (null), because "hidden" said out loud is half the leak. */
+  projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = 200, viewer = null } = {}) {
+    const cols = ["b.bundle_id", "b.object_type", "b.group_id", "b.title", "b.current_state",
+                  "b.prior_state", "b.created", "b.last_updated", "b.criticality",
+                  "b.bundle_sha", ...Store.PROJECTION_COLS.map((c) => "b." + c)].join(", ");
+    const gate = viewerPredicate(viewer);
+    if (bundleId) return this.#one(
+      `SELECT ${cols} FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, bundleId, ...gate.args);
     if (jsonPath !== null && jsonEquals !== null)
       return this.#rows(
-        `SELECT ${cols} FROM bundles WHERE json_extract(fm_json, ?) = ? ORDER BY bundle_id LIMIT ?`,
-        jsonPath, jsonEquals, limit);
-    return this.#rows(`SELECT ${cols} FROM bundles ORDER BY bundle_id LIMIT ?`, limit);
+        `SELECT ${cols} FROM bundles b WHERE json_extract(b.fm_json, ?) = ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
+        jsonPath, jsonEquals, ...gate.args, limit);
+    return this.#rows(`SELECT ${cols} FROM bundles b WHERE (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
+                      ...gate.args, limit);
   }
 
   /** EXPLAIN QUERY PLAN for representative filters, so a test can assert the
@@ -703,11 +713,17 @@ export class Store extends DurableObject {
    *  so the publication and the refusal cannot disagree. The DERIVATION (which
    *  acts those facts admit) happens at the control plane, where NEEDS and
    *  SESSION_OPS live; this method holds no copy of any act rule. */
-  affordanceFacts({ target } = {}) {
+  affordanceFacts({ target, viewer = null } = {}) {
     if (!target) return { ok: false, reason: "NO_TARGET",
       detail: "affordances are asked of an object: pass target=<bundle id>" };
+    /* REC-25 / F-8: the D-15 viewer gate. An object the viewer may not see
+       answers NO_SUCH_BUNDLE — the SAME shape a truly absent id answers, so
+       the refusal discloses nothing. Fail closed on an absent viewer, exactly
+       as the search path behaves. */
+    const gate = viewerPredicate(viewer);
     const b = this.#one(
-      `SELECT bundle_id, object_type, current_state, criticality FROM bundles WHERE bundle_id=?`, target);
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.criticality FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     /* Edges INTO the target (who cites it), live and severed. */
     const citesIn = this.#citesInto(target);
@@ -2561,32 +2577,101 @@ export class Store extends DurableObject {
    * identifier seen, which makes it resumable and independent of any snapshot of
    * the store. A caller that passes no limit gets what it always got. */
   listBundles(filter = {}) {
-    let q = `SELECT bundle_id, object_type, current_state, title, last_updated, bundle_sha FROM bundles`;
-    const w = [], a = [];
-    if (filter.type) { w.push(`object_type=?`); a.push(filter.type); }
-    if (filter.state) { w.push(`current_state=?`); a.push(filter.state); }
-    if (filter.after) { w.push(`bundle_id > ?`); a.push(filter.after); }
-    if (w.length) q += ` WHERE ` + w.join(" AND ");
-    q += ` ORDER BY bundle_id`;
+    /* REC-25 / F-8: the D-15 viewer gate, from query.mjs's ONE compilation
+       point. Fail closed — an absent viewer compiles to the deny predicate, so
+       the failure mode of a missing control-plane stamp is an empty list rather
+       than an unfiltered one, exactly as the search path already behaves. */
+    const gate = viewerPredicate(filter.viewer);
+    let q = `SELECT b.bundle_id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha FROM bundles b`;
+    const w = [`(${gate.sql})`], a = [...gate.args];
+    if (filter.type) { w.push(`b.object_type=?`); a.push(filter.type); }
+    if (filter.state) { w.push(`b.current_state=?`); a.push(filter.state); }
+    if (filter.after) { w.push(`b.bundle_id > ?`); a.push(filter.after); }
+    q += ` WHERE ` + w.join(" AND ");
+    q += ` ORDER BY b.bundle_id`;
     const limit = Number(filter.limit);
     if (!Number.isFinite(limit) || limit <= 0) return this.#rows(q, ...a);
     const cap = Math.min(5000, Math.floor(limit));
     const rows = this.#rows(q + ` LIMIT ?`, ...a, cap);
     /* The shape changes only when paging was asked for, so no existing caller
-       has to learn a new answer. */
+       has to learn a new answer. The total counts what the VIEWER may see:
+       a count that included invisible rows would say "something is hidden",
+       which is half the leak. */
     return { bundles: rows, cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
-             total: this.#one(`SELECT COUNT(*) AS n FROM bundles`).n };
+             total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n };
   }
 
   /** The index projection. One stored artifact on Drive, one query here.
-   *  Note the absence of `locator`: there is no substrate path to leak. */
-  buildIndex() {
+   *  Note the absence of `locator`: there is no substrate path to leak.
+   *  REC-25 / F-8: §7.9 names the index as the one place the graph could
+   *  escape, so the D-15 gate applies here as everywhere — fail closed. */
+  buildIndex({ viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
     return {
       generated: new Date().toISOString(),
       version: 2,
       bundles: this.#rows(
-        `SELECT bundle_id AS id, object_type, current_state, title, last_updated, bundle_sha AS sha256 FROM bundles ORDER BY bundle_id`),
+        `SELECT b.bundle_id AS id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha AS sha256
+         FROM bundles b WHERE (${gate.sql}) ORDER BY b.bundle_id`, ...gate.args),
     };
+  }
+
+  /** REC-25: may this viewer see this bundle at all? The D-15 predicate over a
+   *  single row, used to gate the whole-image and single-file reads, which are
+   *  not SQL over the projection and so cannot carry the predicate inline.
+   *  False for an absent bundle AND for an invisible one, deliberately: the
+   *  two must be indistinguishable to the caller. */
+  #viewerSees(bundleId, viewer) {
+    if (!bundleId) return false;
+    const gate = viewerPredicate(viewer);
+    return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+                       bundleId, ...gate.args);
+  }
+
+  /** REC-25: the plane-side gated BACKLINK read — every edge INTO a bundle,
+   *  with the citing bundle filtered by the VIEWER'S position (Membership
+   *  Architecture 7.9: derived reverse edges into projects are filtered by the
+   *  viewer's position). This is the read that lets the UI delete its
+   *  client-side reverseRefs walk (app.html), which rebuilt the leak by
+   *  walking every project's projection.
+   *
+   *  `cites` lives on the citing object, so an edge's STATUS lives in the
+   *  citing document, not in the refs projection — read here the way
+   *  #citesInto reads it, so the backlink surface and retire's CITED refusal
+   *  cannot disagree about what a live citation is. A citing document that
+   *  cannot be read counts as live (status defaults confirmed), the same
+   *  conservative arm #citesInto takes.
+   *
+   *  An invisible TARGET answers NO_SUCH_BUNDLE — the same shape as an absent
+   *  one — and invisible CITING bundles are simply not in the list. No count
+   *  of what was withheld is reported, because that count is the leak. */
+  backlinks({ target = null, viewer = null } = {}) {
+    if (!target) return { ok: false, reason: "NO_TARGET",
+      detail: "backlinks are asked of an object: pass target=<bundle id>" };
+    if (!this.#viewerSees(target, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    const gate = viewerPredicate(viewer);
+    const rows = this.#rows(
+      `SELECT r.bundle_id AS from_id, r.kind AS rel, b.object_type AS from_type,
+              b.title AS from_title, b.current_state AS from_state
+       FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
+       WHERE r.target_id = ? AND (${gate.sql})
+       ORDER BY r.bundle_id, r.kind`, target, ...gate.args);
+    const out = [];
+    for (const r of rows) {
+      let status = null, note = null;
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.from_id);
+      if (md && md.content !== null) {
+        const refs = parseFrontmatter(md.content).data?.references;
+        const entry = (Array.isArray(refs) ? refs : [])
+          .find((x) => x && x.rel === r.rel && x.target === target);
+        if (entry) { status = entry.status ?? "confirmed"; note = entry.note ?? null; }
+      }
+      out.push({ from: r.from_id, from_type: r.from_type, from_title: r.from_title,
+                 from_state: r.from_state, rel: r.rel,
+                 status: status ?? "confirmed", note });
+    }
+    return { ok: true, target, backlinks: out };
   }
 
   /** C-6.2: every reference whose target does not exist. A join, not a scan. */
@@ -7405,12 +7490,27 @@ export class Store extends DurableObject {
         promote: () => this.promote(body),
         allocid: () => this.allocId(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
-        image: () => this.readImage(url.searchParams.get("id")),
-        file: () => this.readFile(url.searchParams.get("id"), url.searchParams.get("path")),
+        /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
+           reads. `viewer` is stamped by the control plane, never taken from a
+           caller's own parameters there; an invisible bundle answers null,
+           exactly as an absent one does, and an absent viewer sees nothing
+           (fail closed, the search path's own posture). The METHODS stay
+           ungated because the store itself is a legitimate whole-corpus
+           reader (audit, eachImage, ratify's assembly); this dispatch map is
+           the store's one external door. */
+        image: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer"))
+          ? this.readImage(url.searchParams.get("id")) : null,
+        file: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer"))
+          ? this.readFile(url.searchParams.get("id"), url.searchParams.get("path")) : null,
         list: () => this.listBundles({ type: url.searchParams.get("type"), state: url.searchParams.get("state"),
                                        after: url.searchParams.get("after") || null,
-                                       limit: url.searchParams.get("limit") }),
-        index: () => this.buildIndex(),
+                                       limit: url.searchParams.get("limit"),
+                                       viewer: url.searchParams.get("viewer") }),
+        index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
+        /* REC-25: the gated backlink read — reverse edges into a bundle,
+           filtered by the viewer's position (7.9). */
+        backlinks: () => this.backlinks({ target: url.searchParams.get("target"),
+                                          viewer: url.searchParams.get("viewer") }),
         capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
         siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
         recordsiteassets: () => this.recordSiteAssets(body || {}),
@@ -7537,6 +7637,7 @@ export class Store extends DurableObject {
           bundleId: url.searchParams.get("id"),
           jsonPath: url.searchParams.get("jsonPath"),
           jsonEquals: url.searchParams.get("jsonEquals"),
+          viewer: url.searchParams.get("viewer"),
         }),
         /* Retrieval. `viewer` is stamped by the control plane and is never taken
            from the caller's own parameters there; here it is simply read, and an
@@ -7563,7 +7664,8 @@ export class Store extends DurableObject {
         /* REC-19: the facts behind op=affordances. The control plane derives
            the act list from these; this endpoint only reports what the store
            holds about the object. */
-        affordancefacts: () => this.affordanceFacts({ target: url.searchParams.get("target") }),
+        affordancefacts: () => this.affordanceFacts({ target: url.searchParams.get("target"),
+                                                      viewer: url.searchParams.get("viewer") }),
         /* Selections. `viewer` and `owner` are both stamped by the control plane
            from the authenticated credential and are never taken from the
            caller's own parameters there. */

@@ -182,7 +182,7 @@ console.log("\n--- a creation is indexed inside its own transaction ---");
 console.log("\n--- an inline document beyond bundle.md is part of the text surface ---");
 {
   const r = await promote({ ...C, updated: "2026-07-17T00:00:00Z" },
-    (await call(`/projection?id=${C.id}`)).bundle_sha,
+    (await call(`/projection?id=${C.id}&viewer=class:member`)).bundle_sha,
     "# Analysis\n\nThe comptroller signed the requisition without a resolution.");
   t("the revision lands", r.ok, true);
   t("a word only present in analysis.md is searchable",
@@ -192,7 +192,7 @@ console.log("\n--- an inline document beyond bundle.md is part of the text surfa
 
 console.log("\n--- a revision replaces its index row, so the index cannot lag the document ---");
 {
-  const before = (await call(`/projection?id=${B.id}`)).bundle_sha;
+  const before = (await call(`/projection?id=${B.id}&viewer=class:member`)).bundle_sha;
   const revised = { ...B, title: "Water billing reconciliation", updated: "2026-07-22T00:00:00Z",
                     body: "Reconciliation of the water accounts is complete." };
   t("the revision lands", (await promote(revised, before)).ok, true);

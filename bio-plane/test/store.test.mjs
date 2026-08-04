@@ -52,8 +52,8 @@ const sha2 = c3.result.bundleSha;
 // THE ASSERTION THE WHOLE PLANE DECISION RESTS ON
 const c4 = await call("/promote", { ...pkg("ratified", 4), base: sha1 });
 t("update with STALE base is refused", c4.result.reason, "CAS_STALE");
-t("stale attempt did not change live state", (await call("/list")).result[0].bundle_sha, sha2);
-t("state is the one the winning write set", (await call("/list")).result[0].current_state, "verified");
+t("stale attempt did not change live state", (await call("/list?viewer=class:member")).result[0].bundle_sha, sha2);
+t("state is the one the winning write set", (await call("/list?viewer=class:member")).result[0].current_state, "verified");
 
 const c5 = await call("/promote", { ...pkg("ratified", 5), base: "deadbeef" });
 t("garbage base is refused", c5.result.reason, "CAS_STALE");
@@ -62,7 +62,7 @@ const c6 = await call("/promote", { ...pkg("collected", 6), base: sha2, bundleId
 t("update against an absent bundle is refused", c6.result.reason, "ABSENT");
 
 console.log("\n--- history is append-only ---");
-const img = (await call("/image?id=INFO-2026-0001-x")).result;
+const img = (await call("/image?id=INFO-2026-0001-x&viewer=class:member")).result;
 t("history snapshot present for the superseded rev", "_history/bundle_20260723T100000Z_aaaa1111.md" in img, true);
 t("the snapshot key is a filename suffix, not a directory", Object.keys(img).some(k => k.startsWith("_history/20260723T100000Z")), false);
 t("the verbatim promotion record is projected", "_history/promotion_20260723T100000Z_aaaa1111.json" in img, true);
@@ -82,7 +82,7 @@ t("history holds the prior revision, not the stale one", /rev 1/.test(img["_hist
 console.log("\n--- the Drive defect classes, now structurally impossible ---");
 const dup = await call("/promote", { ...pkg("collected", 7), base: null });
 t("concurrent creation cannot fork the bundle", dup.result.reason, "EXISTS");
-t("exactly one bundle row exists", (await call("/list")).result.length, 1);
+t("exactly one bundle row exists", (await call("/list?viewer=class:member")).result.length, 1);
 const big = "x".repeat(1024 * 1024 + 1);
 const over = await call("/promote", { ...pkg("verified", 8), base: sha2, files: [...pkg("verified", 8).files, { path: "big.md", text: big, bytes: big.length, sha256: sha(big) }] });
 t("oversize inline is refused at the write, not at SQLite", over.result.reason, "OVERSIZE_INLINE");
@@ -98,7 +98,7 @@ t("second actor is denied while the lease holds", l2.result.ok, false);
 t("denial names the holder", l2.result.heldBy, "alice");
 
 console.log("\n--- index projection ---");
-const idx = (await call("/index")).result;
+const idx = (await call("/index?viewer=class:member")).result;
 t("index carries no substrate locator", Object.keys(idx.bundles[0]).includes("locator"), false);
 t("index carries the C-13 diff key", "sha256" in idx.bundles[0], true);
 
@@ -124,12 +124,12 @@ console.log("\n--- a promotion cannot silently delete files ---");
   const dropped = await call("/promote", onlyMd);
   t("mentioning one file is refused, not obeyed", dropped.result.reason, "FILES_DROPPED");
   t("and the refusal names what would have gone", dropped.result.paths, ["data/extra.json"]);
-  t("nothing was removed", Object.keys((await call("/image?id=" + DID)).result).includes("data/extra.json"), true);
+  t("nothing was removed", Object.keys((await call("/image?id=" + DID + "&viewer=class:member")).result).includes("data/extra.json"), true);
 
   const declared = await call("/promote", { ...onlyMd, drop: ["data/extra.json"] });
   t("naming it deletes it on purpose", declared.result.ok, true);
   t("and then it really is gone",
-    Object.keys((await call("/image?id=" + DID)).result).includes("data/extra.json"), false);
+    Object.keys((await call("/image?id=" + DID + "&viewer=class:member")).result).includes("data/extra.json"), false);
 }
 
 
@@ -139,9 +139,9 @@ console.log("\n--- list pages when asked, and not otherwise ---");
      two seconds at 100,000. Paging is opt-in because the browser, the audit and
      the migration verifier all want everything, and changing the answer they get
      would break three callers to prepare for a store nobody has yet. */
-  const all = (await call("/list")).result;
+  const all = (await call("/list?viewer=class:member")).result;
   t("no limit returns a plain array, as it always did", Array.isArray(all), true);
-  const page = (await call("/list?limit=2")).result;
+  const page = (await call("/list?limit=2&viewer=class:member")).result;
   t("a limit returns a page with a cursor", Array.isArray(page.bundles), true);
   t("of the size asked for", page.bundles.length, 2);
   t("and says how many there are altogether", page.total, all.length);
@@ -150,14 +150,14 @@ console.log("\n--- list pages when asked, and not otherwise ---");
   const seen = [];
   let after = "";
   for (let i = 0; i < 20; i++) {
-    const r = (await call(`/list?limit=2&after=${encodeURIComponent(after)}`)).result;
+    const r = (await call(`/list?limit=2&after=${encodeURIComponent(after)}&viewer=class:member`)).result;
     for (const b of r.bundles) seen.push(b.bundle_id);
     if (!r.cursor) break;
     after = r.cursor;
   }
   t("paging visits every bundle exactly once", seen.sort(), all.map((b) => b.bundle_id).sort());
   t("and the final page reports no cursor",
-    (await call(`/list?limit=5000&after=`)).result.cursor, null);
+    (await call(`/list?limit=5000&after=&viewer=class:member`)).result.cursor, null);
 }
 
 console.log(`\n${fail ? "FAILED" : "OK"}  ${pass} passed, ${fail} failed`);

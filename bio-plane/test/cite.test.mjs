@@ -198,8 +198,8 @@ async function setup() {
 }
 
 const liveText = async (id, path = "bundle.md") =>
-  (await call(`/file?id=${id}&path=${encodeURIComponent(path)}`))?.text ?? null;
-const liveSha = async (id) => (await call(`/index`)).bundles.find((b) => b.id === id)?.sha256 ?? null;
+  (await call(`/file?id=${id}&path=${encodeURIComponent(path)}&viewer=class:member`))?.text ?? null;
+const liveSha = async (id) => (await call(`/index?viewer=class:member`)).bundles.find((b) => b.id === id)?.sha256 ?? null;
 
 const selectIds = async (ids) =>
   (await call(`/select?${STAMP}`, { ids })).handle;
@@ -214,12 +214,12 @@ const cite = async (project, handle, extra = "") =>
    heard of as dangling, which is a verifier failing for a reason that has
    nothing to do with the code under test. */
 const conformanceErrors = async (id) => {
-  const img = await call(`/image?id=${id}`);
+  const img = await call(`/image?id=${id}&viewer=class:member`);
   const files = new Map(), elided = new Set();
   for (const [p, v] of Object.entries(img)) {
     if (typeof v === "string") files.set(p, v); else elided.add(p);
   }
-  const known = new Set((await call(`/index`)).bundles.map((b) => b.id));
+  const known = new Set((await call(`/index?viewer=class:member`)).bundles.map((b) => b.id));
   const { findings } = await checkBundle({
     folderName: id, files, elidedPaths: elided, resolveTarget: (k) => known.has(k),
   });
@@ -276,14 +276,14 @@ console.log("\n--- the record accounts for the change ---");
   t("last_updated moved", fm.data.last_updated > "2026-07-02T00:00:00Z", true);
   const log = text.slice(text.indexOf("## Session Log"));
   t("a Session Log entry names the citation", /### Session .*[\s\S]*cit/i.test(log), true);
-  const img = await call(`/image?id=${PROJ.id}`);
+  const img = await call(`/image?id=${PROJ.id}&viewer=class:member`);
   const recs = Object.keys(img).filter((k) => k.startsWith("_history/"));
   t("history took a snapshot of the superseded revision", recs.length > 0, true);
 }
 
 console.log("\n--- the promotion is authored, not mechanical ---");
 {
-  const img = await call(`/image?id=${PROJ.id}`);
+  const img = await call(`/image?id=${PROJ.id}&viewer=class:member`);
   const man = JSON.parse(img["_history/manifest.json"]);
   const last = man.entries[man.entries.length - 1];
   t("no mechanical writer is claimed", last.writer ?? null, null);
