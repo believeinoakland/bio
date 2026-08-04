@@ -127,9 +127,15 @@ const infoMd = (id) => ["---",
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
   : ["references: []"];
+/* CORRECTED 2026-08-04 (REC-18), never exempted — see queue.test.mjs for the
+   full note. `grade_source: resolution` became an EARNED value that a question
+   naming no subject entity cannot claim; `hunch` is the honest name for the
+   authored connection grade this fixture always was, carries the same B, and
+   announces itself with an author and a date (DEC-15). */
 const legLines = (targets) => targets.length
   ? ["basis:", ...targets.flatMap((x) => [`  - target: ${x}`, "    role: supports",
-      "    grade: B", "    grade_axis: connection", "    grade_source: resolution"])]
+      "    grade: B", "    grade_axis: connection", "    grade_source: hunch",
+      "    author: suite", "    date: 2026-08-04"])]
   : [];
 const inquiryMd = (id, question, legs) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",

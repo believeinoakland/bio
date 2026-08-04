@@ -409,6 +409,12 @@ export const NON_ACTS = {
      PANEL those buttons sit under (UI-11's strength panel, UI-12's live
      preview). op=queue's classification exactly, one altitude down. */
   inquirystrength: "read: the derived pair for one question — the panel the acts are rendered under, never an act on an object",
+  /* REC-18. A READ, and its subject is a PROSPECTIVE leg rather than an object:
+     op=earnedbasis says what the record would earn for a target if it were
+     cited, which is a fact consulted while COMPOSING the act (op=promote) and
+     is never itself an act. No surface renders an "earnedbasis" button beside a
+     bundle; UI-20's cite flow reads it to fill a leg in. */
+  earnedbasis: "read: what the record earns for a candidate basis leg — consulted while composing a citation, never an act on an object",
   queuemute: "personal state, keyed (member, case): a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
   queuesnooze: "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)",
 };

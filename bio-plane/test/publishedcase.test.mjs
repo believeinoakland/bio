@@ -164,6 +164,9 @@ const legLines = (legs) => legs.length
       ...(l.grade !== undefined ? [`    grade: ${l.grade}`] : []),
       ...(l.axis ? [`    grade_axis: ${l.axis}`] : []),
       ...(l.source ? [`    grade_source: ${l.source}`] : []),
+      /* REC-18: a hunch announces itself with an author and a date (DEC-15). */
+      ...(l.author ? [`    author: ${l.author}`] : []),
+      ...(l.date ? [`    date: ${l.date}`] : []),
       ...(l.edition !== undefined ? [`    target_edition: ${l.edition}`] : [])])]
   : [];
 const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
@@ -242,7 +245,21 @@ const WORKING_SHA = sha(WORKING);
 await mf.dispatchFetch(`http://x/api/capture?token=mem-rec22&sha256=${WORKING_SHA}`,
   { method: "PUT", body: WORKING });
 
-await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected");
+/* CORRECTED 2026-08-04 (REC-18), never exempted: INFO_CAP REGISTERS the capture
+   whose bytes are already in the bucket above. It always should have — the case
+   below carries a capture-axis grade over this document, and under REC-18 that
+   grade is EARNED from the capture record rather than authored, so a document
+   with no registered bytes has nothing for the axis to measure. The old fixture
+   registered the capture against the CASE and left the DOCUMENT empty, which
+   put the bytes one object away from the grade that claimed them. */
+/* A capture sha OF ITS OWN, and not CAP_SHA: `register.capture_sha` is the
+   table's PRIMARY KEY, so registering one sha against a second bundle REPLACES
+   the first row rather than adding one. The document's capture and the copy that
+   travels inside the published container are two registrations and must be two
+   shas. */
+const DOC_CAP_SHA = sha("publishedcase-INFO_CAP-bytes");
+await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected", VERA, null,
+  { register: [{ path: "snapshots/source.bin", sha256: DOC_CAP_SHA, bytes: 512, encoding: "binary" }] });
 await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected");
 await mustPromote(INFO_LEFTOUT, infoMd(INFO_LEFTOUT), "information", "collected");
 
@@ -251,8 +268,16 @@ await mustPromote(INFO_LEFTOUT, infoMd(INFO_LEFTOUT), "information", "collected"
    makes "both frozen strengths, never one" checkable rather than agreeable. */
 await mustPromote(CASE, inquiryMd(CASE, { question: "Was the sewer transfer authorised?",
   refs: [INFO_CAP, INFO_CONN],
-  legs: [{ target: INFO_CAP, grade: "B", axis: "capture", source: "resolution" },
-         { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" }] }), "inquiry", "open",
+  /* CORRECTED 2026-08-04 (REC-18), never exempted. The frozen pair is unchanged
+     at (capture B, connection C); what changed is where each letter comes from.
+     `resolution` is now EARNED against the inquiry's subject entity and this
+     question names none, so the capture leg says `capture` (earning B from the
+     capture INFO_CAP now registers — the doctrine's own value for a direct
+     capture) and the connection leg says `hunch`, the honest name for an
+     authored connection grade and the only authored source above D (DEC-15). */
+  legs: [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
+         { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
+           author: "vera", date: "2026-08-04" }] }), "inquiry", "open",
   VERA, null, {
     /* THE CAPTURED PART TRAVELS WITH THE CASE, so the published container holds
        a blob and not only text — the file manifest states per-file sha AND
@@ -260,9 +285,14 @@ await mustPromote(CASE, inquiryMd(CASE, { question: "Was the sewer transfer auth
     files: [{ path: "snapshots/memo.bin", blobSha: CAP_SHA, bytes: CAPTURE.length, sha256: CAP_SHA }],
     register: [{ path: "snapshots/memo.bin", sha256: CAP_SHA, bytes: CAPTURE.length, encoding: "binary" }],
   });
-await conclude(VERA, { target: CASE,
+const concluded = await conclude(VERA, { target: CASE,
   conclusion: "The transfer rests on a memo nobody adopted.",
   falsifier: "An adopted resolution naming the transfer would overturn this." });
+/* ADDED 2026-08-04 (REC-18): the result is CHECKED. It was not, and a conclude
+   that silently failed surfaced six blocks later as an ILLEGAL_TRANSITION at
+   publish — the setup step reporting nothing while the assertion that depended
+   on it read as a defect in the thing under test. */
+if (!concluded.ok) throw new Error(`conclude ${CASE}: ${JSON.stringify(concluded)}`);
 
 const STMT1 = "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.";
 const JUST1 = "We put the four claims to the City Administrator on 2026-06-20 and printed what came back.";

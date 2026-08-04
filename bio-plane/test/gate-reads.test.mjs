@@ -687,6 +687,15 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "which is REC-14's measured leak shape (ids interpolated into a detail sentence) and is worse here: "
       + "an inherited-undetermined leg's `why` embeds the sub-walk's detail, naming where the walk stopped "
       + "several levels down — ids no field in the answer holds. The withholding is stated without a count.",
+    /* REC-18's read, classified by the item that adds it (2026-08-04,
+       rec18-agent). op=inquirystrength's posture is the model. */
+    earnedbasis: "REC-18: the OWNING INQUIRY is the answer's SUBJECT (it supplies the subject entity every "
+      + "grade is earned against), so an inquiry the viewer may not see is WITHHELD WHOLE and byte-identically "
+      + "to an absent one. The TARGETS are supplied by the caller and named back in the answer, so each one is "
+      + "passed through the same predicate and an invisible one is DROPPED — with `out_of_view: true` stated "
+      + "and NO id and NO count, because the count is the leak. The GRADES themselves are not gated and must "
+      + "not be: what a document earned against a subject is a record fact, and a grade that moved with the "
+      + "reader would be the record claiming something different to different people.",
     strengthbarof: "REC-30 at the merge: #requiredStrengthFor reports `projects: [...]` and interpolates "
       + "the same ids into its detail — §7.9's reverse-edge walk arriving by a new door. The bar VALUE is "
       + "deliberately NOT gated (DEC-17: it is never set by who a reader is, and op=publish stamps it from "

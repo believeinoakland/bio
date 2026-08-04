@@ -471,3 +471,78 @@ negative control breaks exactly that merge and fails naming it.
   it did so: `AGREE` — UI-11's `inquiryPair()` seam was written for exactly this
   answer and consumes it with no reshape; UI-12 is its next consumer.
 - **Version:** I3 5.2.0 → **5.3.0** in `INTERFACES.md`.
+
+---
+
+## IC-11 · I3/I5: `GRADE_SOURCES` gains `capture`, and `op=earnedbasis` · PROPOSED 2026-08-04 (REC-18)
+
+- **Interfaces:** I3 (plane → UI) and I5 (the store schema).
+- **Proposer:** `rec18-agent` (RECORD), 2026-08-04, from REC-18 / DATA-MODEL D1(b).
+- **Owner to land it:** `RECORD` (landed in the worktree; CONDUCT integrates).
+- **Consumers to answer:** `UI` — and it is **NOT dormant**: UI-12 is running
+  concurrently on `civicos-ui` ground as this is written. That is why this entry is
+  PROPOSED and not recorded post-hoc as accepted, unlike IC-3..IC-10.
+
+### The change, in three parts
+
+**1. `GRADE_SOURCES` gains a fifth member, `capture`** (`bio-checks.mjs`). This is the
+one part that is NOT safely additive, and the guard that says so is `civicos-ui`'s own:
+`check-semantics.mjs` mirrors the catalog's five leg vocabularies into `app.html` and
+fails in BOTH directions, so as of this change it reports, correctly:
+
+```
+FAIL: GRADE_SOURCES has drifted from the catalog.
+       catalog:  ["resolution","testimony","hunch","inherited","capture"]
+       app.html: ["resolution","testimony","hunch","inherited"]
+FAIL: GRADE_SOURCE_WORD has no member-facing word for 'capture', which the catalog declares
+```
+
+**That failure is the mechanism working**, not a defect: the guard exists precisely so a
+new grade source cannot reach a member surface as a blank sentence. The migration is two
+lines in `app.html` — the array, and a `GRADE_SOURCE_WORD` entry — and it is UI's to
+make, not RECORD's.
+
+**2. `op=earnedbasis`**, a new gated read (admin/member/probe, non-mutating). Additive;
+no existing op's shape changed. It answers, for one inquiry, what each candidate basis
+target EARNS: `{ subject_entity, subject_label, earned: { connection: {...}, capture:
+{...} } }`.
+
+**3. `bundles.inquiry_subject_entity`** (I5), one nullable projection column, plus the
+optional `subject_entity` frontmatter scalar on an inquiry. Additive; no table added, no
+table re-keyed, nothing in `schema.mjs`'s literal touched.
+
+### Why `capture` is required rather than convenient
+
+Before it, all four sources were sources for a CONNECTION grade, and the capture axis
+had no honest name to give. A graded leg must state a `grade_source` (REC-11), so a
+capture-axis leg had to borrow a connection word — and nothing checked its value against
+the record. The measured consequence: a member could type capture grade **A** beside a
+document, against the landed doctrine that grade A needs a chain-of-custody web archive
+this plane cannot produce and does not claim (`CAPTURE-FIDELITY.md`; RECONCILED R2-e /
+R2-g). REC-18's own `accepts-when` requires that "a leg's capture grade comes from the
+capture record and is never authored", and that sentence has no enforcement point
+without a source name that means *earned from the capture record*.
+
+### What UI must do, and what it must NOT
+
+- **Do:** add `"capture"` to `GRADE_SOURCES` in `app.html` and give it a
+  `GRADE_SOURCE_WORD`. The word should say what the grade IS — a fact about how the
+  bytes reached us, held by the record — and must not read as a member's assertion, or
+  it collapses into `testimony`'s meaning. A suggestion, not a ruling, since the
+  member-facing wording is UI's: *"from the capture record"*.
+- **Do NOT** render `capture` and `resolution` as one "earned" badge. They are earned
+  from two different things over two different populations, and DEC-21 is that the axes
+  are never composed. A surface that showed one word for both would be R2-e's defect
+  wearing new clothes.
+
+### Consumer responses
+
+- `UI`: *pending.* **Silence is not consent** (step 2). UI-12 is live and can answer.
+- Every other area: NOT-AFFECTED — no other consumer reads the leg vocabularies.
+
+### Version, when CONDUCT resolves it
+
+I3 5.3.0 → **5.4.0** (additive op + a widened published vocabulary); I5 gains one
+nullable column, so its version moves by its own additive rule. RECORD does not bump
+`INTERFACES.md` itself: this entry is the proposal, and the registry edit is CONDUCT's
+at integration.

@@ -139,7 +139,10 @@ const legLines = (legs) => legs.length
       `    role: ${l.role ?? "supports"}`,
       ...(l.grade !== undefined ? [`    grade: ${l.grade}`] : []),
       ...(l.axis ? [`    grade_axis: ${l.axis}`] : []),
-      ...(l.source ? [`    grade_source: ${l.source}`] : [])])]
+      ...(l.source ? [`    grade_source: ${l.source}`] : []),
+      /* REC-18: a hunch announces itself with an author and a date (DEC-15). */
+      ...(l.author ? [`    author: ${l.author}`] : []),
+      ...(l.date ? [`    date: ${l.date}`] : [])])]
   : [];
 
 const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [], legs = [] } = {}) => ["---",
@@ -189,6 +192,13 @@ const promote = async (tok, id, text, type, base = null) => {
   const r = await POST(`op=promote&token=${tok}`, {
     bundleId: id, base, snapKey: `${id}-${base ? sha(base).slice(0, 8) : "new"}`, author: "suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+    /* REC-18, 2026-08-04: an INFORMATION bundle REGISTERS a capture, because a
+       capture-axis grade is now EARNED from the capture record and a document
+       with no registered bytes has nothing for the axis to measure. One sha per
+       bundle — `register.capture_sha` is the table's primary key. */
+    register: type === "information"
+      ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
+      : [],
     meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW, last_updated: LATER } });
@@ -213,7 +223,17 @@ const UNGR1 = "INFO-2026-0900-ungraded-1", UNGR2 = "INFO-2026-0900-ungraded-2";
 for (const d of [CAP_B, CAP_C, CON_A, CON_D, UNGR1, UNGR2])
   await promote(carol, d, infoMd(d), "information");
 
-const g = (target, grade, axis, source = "resolution") => ({ target, role: "supports", grade, axis, source });
+/* CORRECTED 2026-08-04 (REC-18), never exempted, and every GRADE below is
+   unchanged — this suite is about the GATED READ of the pair, not about the
+   ladder. `grade_source` stopped being a label a fixture could pick: `resolution`
+   is now EARNED against the inquiry's subject entity and is a CONNECTION source
+   only. So the default follows the AXIS — `capture` on the capture axis (earned
+   from the capture each document now registers) and `hunch` on the connection
+   axis, the honest name for an authored connection grade and the only authored
+   source above D, carrying the author and date DEC-15 requires. */
+const HUNCH = { author: "suite", date: "2026-08-04" };
+const g = (target, grade, axis, source = axis === "capture" ? "capture" : "hunch") =>
+  ({ target, role: "supports", grade, axis, source, ...(source === "hunch" ? HUNCH : {}) });
 const bare = (target, role = "supports") => ({ target, role });
 
 /* ------------------------------------------------------------------------- */

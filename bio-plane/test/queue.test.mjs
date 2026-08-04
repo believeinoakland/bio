@@ -102,9 +102,20 @@ const infoMd = (id) => ["---",
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
   : ["references: []"];
+/* CORRECTED 2026-08-04 (REC-18), never exempted. These legs were written when
+   `grade_source: resolution` was a LABEL a fixture could pick; REC-18 makes it
+   an EARNED value — the strongest resolution of the target's captures to the
+   inquiry's SUBJECT ENTITY — so a leg claiming it on a question that names no
+   subject is now refused at the write, and correctly: the old fixture asserted
+   a provenance for its grade that nothing in the store supported. The GRADE is
+   unchanged at B because what this suite tests is the queue, not the ladder.
+   `hunch` is the honest name for an authored connection grade and is the only
+   authored source permitted above D (DEC-15), so it carries the same B with the
+   author and date a hunch must announce itself by. */
 const legLines = (targets) => targets.length
   ? ["basis:", ...targets.flatMap((x) => [`  - target: ${x}`, "    role: supports",
-      "    grade: B", "    grade_axis: connection", "    grade_source: resolution"])]
+      "    grade: B", "    grade_axis: connection", "    grade_source: hunch",
+      "    author: suite", "    date: 2026-08-04"])]
   : [];
 const inquiryMd = (id, question, legs) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",

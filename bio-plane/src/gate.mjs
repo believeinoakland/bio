@@ -45,7 +45,7 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
 
-export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry, publishedRegistry }) {
+export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry, publishedRegistry, earnedRegistry }) {
   const files = new Map(), elided = new Set();
   for (const [path, v] of Object.entries(image || {})) {
     if (typeof v === "string") files.set(path, v);
@@ -68,6 +68,14 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        Passing null here does not soften the gate, it blinds it -- so it is
        threaded from the one place that has the rows. */
     publishedRegistry: publishedRegistry || null,
+    /* REC-18: what each basis target EARNS, supplied by the store (gateFacts)
+       for the bundle being gated. The third fact the catalog cannot answer from
+       the bundle alone -- an EARNED grade is computed from `resolutions` and the
+       capture record, so a leg claiming one can only be confirmed where those
+       rows are. Passing null here does not soften the gate either: checkEarnedLeg
+       refuses the leg outright rather than waving it through, which is why the
+       blinding is loud instead of silent. */
+    earnedRegistry: earnedRegistry || null,
   });
 
   const errors = findings

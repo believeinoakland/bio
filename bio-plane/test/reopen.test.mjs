@@ -96,13 +96,20 @@ const imageOf = async (id, tok = "mem-rec31") =>
   (await GET(`op=image&token=${tok}&id=${encodeURIComponent(id)}`)).result?.["bundle.md"];
 const stateOf = async (id, tok = "mem-rec31") =>
   ((await GET(`op=list&token=${tok}`)).result || []).find((b) => b.bundle_id === id)?.current_state;
-const errorsOf = async (id, text) => {
+/* `earned` ADDED 2026-08-04 (REC-18): an EARNED grade is computed from the
+   record's resolutions and capture rows, so the pure catalog refuses a leg
+   claiming one rather than passing it. Read from the plane (op=earnedbasis)
+   rather than hand-built, so what the checker is judged against is what the
+   write path enforces. */
+const errorsOf = async (id, text, earned) => {
   const { findings } = await checkBundle({ folderName: id,
     files: new Map([["bundle.md", text]]),
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
-    resolveTarget: () => true });
+    resolveTarget: () => true, earnedRegistry: earned });
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
+const earnedFor = async (id, targets) => rP(await GET(
+  `op=earnedbasis&token=mem-rec31&id=${id}${targets ? `&targets=${targets}` : ""}`));
 
 /* ------------------------------------------------------------- documents */
 const NOW = "2026-07-01T00:00:00Z";
@@ -114,7 +121,10 @@ const legLines = (legs) => legs.length
   ? ["basis:", ...legs.flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role ?? "supports"}`,
       ...(l.grade !== undefined ? [`    grade: ${l.grade}`] : []),
       ...(l.axis ? [`    grade_axis: ${l.axis}`] : []),
-      ...(l.source ? [`    grade_source: ${l.source}`] : [])])]
+      ...(l.source ? [`    grade_source: ${l.source}`] : []),
+      /* REC-18: a hunch announces itself with an author and a date (DEC-15). */
+      ...(l.author ? [`    author: ${l.author}`] : []),
+      ...(l.date ? [`    date: ${l.date}`] : [])])]
   : [];
 
 const inquiryMd = (id, { question = "Where does the sewer fund transfer basis come from?",
@@ -181,8 +191,8 @@ const promote = async (id, md, type, state, tok = "mem-rec31", extra = {}) =>
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [], ...extra,
   }));
-const seed = async (id, md, type, state) => {
-  const r = await promote(id, md, type, state);
+const seed = async (id, md, type, state, tok, extra) => {
+  const r = await promote(id, md, type, state, tok, extra);
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   return r;
 };
@@ -218,7 +228,13 @@ const withBasis = { refs: [DOC], legs: [{ target: DOC, role: "supports" }] };
 const CONCL = "The transfer rests on a 1998 council resolution never rescinded";
 const FALS = "A rescinding resolution, or a finance memo naming a different authority";
 
-await seed(DOC, infoMd(DOC), "information", "collected");
+/* REC-18, 2026-08-04: the document REGISTERS a capture. Block 7 hangs a
+   capture-axis grade on this leg, and that grade is now EARNED from the capture
+   record — a document with no registered bytes has nothing for the axis to
+   measure, so the leg would be refused for a reason that has nothing to do with
+   what block 7 is testing. */
+await seed(DOC, infoMd(DOC), "information", "collected", "mem-rec31",
+  { register: [{ path: "snapshots/memo.bin", sha256: sha(`capture-of-${DOC}`), encoding: "binary", bytes: 10 }] });
 for (const id of [INQ_DEF, INQ_DISM, INQ_HELD, INQ_OPEN, INQ_CONCL])
   await seed(id, inquiryMd(id, { question: `What does ${id} rest on?`, ...withBasis }), "inquiry", "open");
 await seed(FOCUS_LEGACY, focusMd(FOCUS_LEGACY), "focus", "surfaced");
@@ -520,8 +536,19 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
 /* --------------------------- 7. chore (3): DEC-21, capture has a referent */
 console.log("\n--- 7. chore (3): a capture-axis grade on an INQ- leg has no referent (DEC-21) ---");
 {
-  const legTo = (target, axis) => ({ refs: [DOC, target].filter((x, i, a) => a.indexOf(x) === i),
-    legs: [{ target, role: "supports", grade: "B", axis, source: "resolution" }] });
+  /* SOURCE CORRECTED 2026-08-04 (REC-18), never exempted. This block is about
+     REC-31's rule (a capture-axis grade on an INQ- leg has no referent) and that
+     rule is unchanged — what changed is that `grade_source` stopped being a
+     label a fixture could pick. `resolution` is now EARNED and is a CONNECTION
+     source only, so each probe below names the source its axis actually admits:
+     `hunch` for an authored connection grade (DEC-15's only authored source
+     above D) and `capture` for the earned capture axis. The BAD probe keeps
+     `resolution` deliberately — it is the one whose refusal is being measured,
+     and REC-31's finding is the one that must come back. */
+  const legTo = (target, axis, source = "resolution", extra = {}) =>
+    ({ refs: [DOC, target].filter((x, i, a) => a.indexOf(x) === i),
+       legs: [{ target, role: "supports", grade: "B", axis, source, ...extra }] });
+  const HUNCH = { author: "casey", date: "2026-08-04" };
   const BAD = "INQ-2026-1400-capture-on-inquiry";
   const badMd = inquiryMd(BAD, { question: "Does the capture axis mean anything here?",
     ...legTo(INQ_OPEN, "capture") });
@@ -539,13 +566,17 @@ console.log("\n--- 7. chore (3): a capture-axis grade on an INQ- leg has no refe
   /* What is refused is the AXIS, not the leg: an inquiry leg is a perfectly
      gradable edge — on connection, which is what it is an edge of. */
   const OK_CONN = "INQ-2026-1400-connection-on-inquiry";
-  const okMd = inquiryMd(OK_CONN, { question: "And on the connection axis?", ...legTo(INQ_OPEN, "connection") });
+  const okMd = inquiryMd(OK_CONN, { question: "And on the connection axis?",
+    ...legTo(INQ_OPEN, "connection", "hunch", HUNCH) });
   t("the SAME leg graded on CONNECTION lands: a leg to another inquiry is an edge, and edges have connection grades",
-    [(await promote(OK_CONN, okMd, "inquiry", "open")).ok, await errorsOf(OK_CONN, okMd)], [true, []]);
+    [(await promote(OK_CONN, okMd, "inquiry", "open")).ok,
+     await errorsOf(OK_CONN, okMd, await earnedFor(OK_CONN))], [true, []]);
   const OK_CAP = "INQ-2026-1400-capture-on-document";
-  const capMd = inquiryMd(OK_CAP, { question: "And a capture grade about a document?", ...legTo(DOC, "capture") });
+  const capMd = inquiryMd(OK_CAP, { question: "And a capture grade about a document?",
+    ...legTo(DOC, "capture", "capture") });
   t("and a capture grade on an INFO- leg is untouched: capture ranges over documents, which is the whole rule",
-    [(await promote(OK_CAP, capMd, "inquiry", "open")).ok, await errorsOf(OK_CAP, capMd)], [true, []]);
+    [(await promote(OK_CAP, capMd, "inquiry", "open")).ok,
+     await errorsOf(OK_CAP, capMd, await earnedFor(OK_CAP))], [true, []]);
 
   /* HISTORY IS APPEND-ONLY. The refusal is a WRITE-time gate and the replay
      exemption is deliberate: the record's own past may contain such a row, and
