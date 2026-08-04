@@ -169,7 +169,12 @@ const edgesFrom = (f) =>
  * membership), declared_type (the document's own spelling, for vocabulary —
  * REC-13), current_state, cites_in {confirmed[], severed[]} (edges INTO an
  * information target, read the way retire reads them — severed is not live),
- * cites_out {confirmed, severed} (a project's own citation edges by status). */
+ * cites_out {confirmed, severed} (a project's own citation edges by status),
+ * basis_legs (REC-16: how many legs this question rests on), and rested_on
+ * {working, frozen, severed} (REC-17: how many live basis legs rest ON it, by
+ * whether the dependent can still withdraw one — COUNTS and never ids, because
+ * this answer is about the target and naming its dependents would be §7.9's
+ * reverse walk by a new door). */
 export const ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
@@ -185,6 +190,15 @@ export const ACTS = [
      normalizeType, so all three spellings land on this arm) may be
      dispositioned while the state machine offers a disposition edge; the
      disposition SET itself is in VOCABULARIES. */
+  /* REC-17 / D-5 DELIBERATELY DOES NOT NARROW THIS ACT, and the reason is the
+     release precedent rather than an oversight. Dismissal of a cited inquiry is
+     now refused CITED — but `dismissed` is a PARAMETER of this act, not the
+     act: `deferred` is the other target state, it is reversible, and it stays
+     legal over a cited question (it raises the re-evaluation obligation instead
+     of refusing). Publishing the act says the state machine permits the move,
+     not that this caller's parameters will pass, which is exactly what release
+     and conclude already say here. Narrowing it would unpublish DEFER on the
+     one question a member most wants to defer. */
   { id: "dispose", label: "Dispose (defer or dismiss)", weight: "refuse", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry"
                      && DISPOSITIONS.some((d) => edgesFrom(f).includes(d)) },
@@ -271,10 +285,21 @@ export const ACTS = [
      THE PROMPT rides the act (DEC-29(b)): every surface that can offer division
      receives the wording that must accompany it, because a surface renders what
      it received and never composes a prompt of its own. */
+  /* THIRD CONDITION, ADDED BY REC-17 / D-5, and it is retire's condition
+     one altitude up: division is TERMINAL for the parent, so it refuses CITED
+     while a WORKING inquiry's live basis leg still rests on the question — and
+     a pre-flight offering a control the refusal it fronts would decline is the
+     DEC-8 disagreement this file exists to prevent. `rested_on.working` and not
+     `.frozen`: a PUBLISHED dependent's basis is inside a signed edition and
+     cannot withdraw a leg, so the store deliberately does not refuse on it (the
+     reasoning is at divide()'s guard, where both consumers of the distinction
+     can read it), and unpublishing the act here would disagree in the other
+     direction. ONE predicate behind both, as with retire and #citesInto. */
   { id: "inquirydivide", label: "Divide (split this question)", weight: "single", types: ["inquiry"],
     prompt: DIVIDE_PROMPT,
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("divided")
-                     && (f.basis_legs ?? 0) >= 1 },
+                     && (f.basis_legs ?? 0) >= 1
+                     && (f.rested_on?.working ?? 0) === 0 },
   /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
      because the store's own guards are type-only on both: any information
      bundle may be cited (cite checks NOT_INFORMATION and nothing about state —

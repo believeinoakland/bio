@@ -664,6 +664,15 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     excludedby: "REC-14 gated it at birth, correctly and through the same one compilation point. It is "
       + "NOT the published-projection class: it JOINS the live `bundles` table and reports each case's "
       + "CURRENT STATE, so it can name an unpublished case — which is exactly why the gate belongs on it.",
+    /* REC-17's read, classified by the item that adds it (2026-08-04,
+       rec17-agent). BOTH of this sweep's shapes appear in one answer, which is
+       why the classification is worth stating rather than assuming. */
+    reevaluations: "REC-17: the obligation row IS ABOUT the dependent inquiry, so a dependent the viewer "
+      + "may not see is WITHHELD whole and no count of the withheld is reported (op=backlinks' posture). "
+      + "The SUPERSEDING ids inside a visible row are back-references and are REDACTED to null, while the "
+      + "record's own facts in that row — the source, the date, both derived strengths — stand unchanged "
+      + "for every reader: a derivation that got weaker or stronger with the reader would be the record "
+      + "claiming something different to different people, which is worse than the leak.",
     strengthbarof: "REC-30 at the merge: #requiredStrengthFor reports `projects: [...]` and interpolates "
       + "the same ids into its detail — §7.9's reverse-edge walk arriving by a new door. The bar VALUE is "
       + "deliberately NOT gated (DEC-17: it is never set by who a reader is, and op=publish stamps it from "

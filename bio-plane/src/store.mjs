@@ -255,6 +255,21 @@ export class Store extends DurableObject {
       ["bundles", "inquiry_connection_strength", "TEXT"],
       ["bundles", "inquiry_connection_state", "TEXT"],
       ["bundles", "inquiry_basis_count", "INTEGER"],
+      /* REC-17 / P-64: the REVERSE of a `supersedes` edge, so R7's obligation
+         is a LOOKUP and not a graph walk. `refs` answers "what does this
+         document supersede" because the edge lives on the SUPERSEDING
+         document; the question the obligation asks is the other one — "has
+         anything superseded THIS?" — and asking it of `refs` means scanning
+         for a target rather than reading a row. The column holds the
+         superseding ids, comma-joined and sorted, NULL when nothing supersedes
+         this bundle. Additive and nullable like every column above: a bundle
+         promoted before this existed has none until the boot pass below or its
+         next promotion fills it.
+         DELIBERATELY NOT INDEXED, and that is not an oversight: this column is
+         read BY bundle_id, which is the primary key, so an index on its value
+         would serve no seek anybody makes. REC-12's state columns are
+         unindexed for the same reason and its comment says so. */
+      ["bundles", "inquiry_superseded_by", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -471,6 +486,17 @@ export class Store extends DurableObject {
        milliseconds, but a large store finishes over successive constructions
        rather than timing out on one. */
     this.#backfillProjection(500);
+
+    /* REC-17: the same backfill for the supersession reverse index, and it is
+       NOT bounded by a page count because it cannot be. It is bounded by the
+       number of `supersedes` EDGES in the store, which is the number of
+       divisions anybody has performed — a handful where the projection backfill
+       is tens of thousands of documents. Derived from `refs`, which is itself a
+       projection of the citing documents, so this restates nothing: it answers
+       the reverse question from the forward edges that already landed. */
+    for (const r of this.sql.exec(
+      `SELECT DISTINCT target_id FROM refs WHERE kind='supersedes'`))
+      this.#writeSupersededBy(r.target_id);
   }
 
   /* The projection derived from a bundle.md, using the CATALOG'S OWN parser so
@@ -539,6 +565,42 @@ export class Store extends DurableObject {
       ...Store.PROJECTION_COLS.map((c) => p[c]), bundleId
     );
     return p;
+  }
+
+  /* REC-17 / P-64: maintain ONE bundle's `inquiry_superseded_by` from the
+     `supersedes` edges that point AT it. Derived from `refs` — which promote
+     projects from the superseding documents' own frontmatter — so this is a
+     reverse VIEW of the forward edges and never a second place the relationship
+     is stated (D-21, and REC-16's D5: the division is authored in bundle.md and
+     no op writes a division table).
+
+     Called from promote for three id sets, and all three are needed:
+       - the supersedes targets this promotion ADDS (a child naming its parent),
+       - the ones it REMOVED (a revision that dropped the edge; without this the
+         parent would keep claiming a successor that no longer names it),
+       - the promoted bundle's OWN row, because a bundle can be created AFTER
+         something already superseded it and would otherwise never be told.
+     An UPDATE against an id with no row is a no-op, which is the right
+     behaviour for an edge whose target is not in the store: C-6.2 already
+     treats an unresolvable target as an error and op=dangling reports it. */
+  #writeSupersededBy(targetId) {
+    if (!targetId) return null;
+    const ids = [...this.sql.exec(
+      `SELECT bundle_id FROM refs WHERE target_id=? AND kind='supersedes' ORDER BY bundle_id`, targetId)]
+      .map((r) => r.bundle_id);
+    /* NULL and not the empty string when nothing supersedes it: an empty string
+       is a value a reader has to know to disbelieve, and every other additive
+       column here says "no writer" with NULL. */
+    const val = ids.length ? ids.join(",") : null;
+    this.sql.exec(`UPDATE bundles SET inquiry_superseded_by=? WHERE bundle_id=?`, val, targetId);
+    return ids;
+  }
+
+  /* The column read back as a list. ONE parser, so no caller splits the string
+     itself and none can disagree about the separator. */
+  static supersededByOf(row) {
+    const v = row && typeof row.inquiry_superseded_by === "string" ? row.inquiry_superseded_by : "";
+    return v ? v.split(",").filter((x) => x !== "") : [];
   }
 
   /* The integer the text index is keyed on. Allocated once per bundle and never
@@ -875,11 +937,26 @@ export class Store extends DurableObject {
        offering a control the refusal it fronts would decline, which is what
        DEC-8 forbids. A FACT, not a rule: the rule that consumes it lives in the
        act catalogue, and this method still holds no copy of any act rule. */
+    /* REC-17: WHAT RESTS ON THIS QUESTION, through the SAME #restsOnLive
+       predicate the CITED refusals run — the #citesInto discipline exactly:
+       one predicate, so a published act and the refusal it fronts cannot
+       disagree (DEC-8). COUNTS AND NOT IDS: op=affordances answers about the
+       TARGET, and handing back the ids of the inquiries that rest on it would
+       be §7.9's reverse-edge walk arriving by a new door — the leak REC-30
+       closed on op=strengthbarof. A count that names nothing is not identity.
+       WORKING and FROZEN are counted separately because the two acts refuse on
+       different sets and each act states which (divide refuses on the working
+       set alone; dismissal, which is a PARAMETER of op=dispose rather than an
+       act, refuses on both). */
+    const rested = normalizeType(b.object_type) === "inquiry"
+      ? this.#restsOnLive(target) : { confirmed: [], frozen: [], severed: [] };
     return { ok: true, target: b.bundle_id, object_type: b.object_type,
              declared_type: typeof docFm.object_type === "string" ? docFm.object_type : b.object_type,
              current_state: b.current_state, criticality: b.criticality ?? null,
              basis_legs: Array.isArray(docFm.basis)
                ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
+             rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length,
+                          severed: rested.severed.length },
              cites_in: citesIn, cites_out: citesOut };
   }
 
@@ -1847,6 +1924,40 @@ export class Store extends DurableObject {
                      + "something is already in usually means the view was taken before someone else's "
                      + "disposition, so it is refused rather than treated as a no-op." };
 
+    /* REC-17 / D-5: THE WALK-BACK EDGES, and the criterion is the corpus's own
+       rather than a preference. `SB-CORE.md:1507` says retire is "the existing
+       TERMINAL transition, which already refuses on a downstream consequence
+       (CITED) rather than on the actor", and that is the whole rule:
+       **terminal acts on a cited inquiry REFUSE with CITED; reversible acts
+       raise the re-evaluation OBLIGATION.** `dismissed` is terminal in the
+       sense that matters here — the question is ABANDONED, and nothing succeeds
+       it — so an inquiry a live basis leg still reasons from is refused, with
+       the offenders named and the DOCUMENT PATH'S OWN REMEDY WORDING
+       (SB-CORE.md:944-949, which retire's CITED already words). `deferred` is
+       reversible and is NOT refused: it raises the obligation below.
+       NO NEW MECHANISM AND NO NEW REFUSAL NAME — this is retire's `CITED` over
+       REC-11's reverse index, which is why it is one lookup and not a walk.
+       A PUBLISHED dependent counts here, and that is the point rather than a
+       side effect: its basis is frozen inside a signed edition, so if the
+       question beneath it is abandoned its panel names a question nobody will
+       ever answer while its frozen strength still reads. That is the harm this
+       item's second negative control produces on purpose. */
+    if (to === "dismissed") {
+      const cited = [];
+      for (const id of sel.members) {
+        const rests = this.#restsOnLive(id);
+        if (rests.all.length) cited.push({ id, citedBy: rests.all });
+      }
+      if (cited.length)
+        return { ok: false, reason: "CITED", to, offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
+                 detail: "live basis legs still rest on these questions. Dismissing one abandons it, and a "
+                       + "claim resting on an abandoned question would go on reading at a strength nobody "
+                       + "will ever re-examine — the downstream consequence retire already refuses on. "
+                       + "Withdraw those legs first (sever the citation with a reason), or DEFER instead: "
+                       + "deferring is reversible and raises the re-evaluation obligation on every "
+                       + "dependent rather than stranding it." };
+    }
+
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
     const disposed = [];
     for (const id of sel.members) {
@@ -1912,8 +2023,32 @@ export class Store extends DurableObject {
       if (!promoted.ok) return { ...promoted, bundleId: id, disposedSoFar: disposed };
       disposed.push(id);
     }
+    /* REC-17 / D-5, the OTHER half: a REVERSIBLE act raises the obligation,
+       exactly as supersession does. Nothing is written to the dependents — the
+       obligation is a QUERY (P-64), derived from the state this act just moved
+       — and what is returned here is the act TELLING THE ACTOR what its move
+       put a second look on. Reported for `deferred` only: the `dismissed` arm
+       never reaches here, because a cited inquiry cannot be dismissed at all. */
+    const raised = disposed.flatMap((id) =>
+      this.#reevalRaisedBy(id, viewer).map((d) => ({ ...d, target: id })));
     return { ok: true, to, reason: why, handle, disposed: disposed.sort(),
-             weight: "refuse", drift: sel.drift };
+             weight: "refuse", drift: sel.drift,
+             ...(to === "deferred"
+               ? { reevaluation: { source: "deferred", since: when, raised } }
+               : {}) };
+  }
+
+  /* The dependents ONE act just put a second look on, named in the actor's own
+     answer — the same reverse lookup op=reevaluations runs, and GATED THE SAME
+     WAY (REC-30): a dependent the actor may not see is WITHHELD, with no count
+     of what was withheld, because that count is the leak. An act's echo is a
+     read like any other and does not get a weaker posture for riding a write.
+     Kept to ids and ords: the echo names no title. */
+  #reevalRaisedBy(targetId, viewer) {
+    const visible = this.#bundleRedactor(viewer);
+    return this.#restsOnLive(targetId).all
+      .filter((l) => visible(l.bundle_id) !== null)
+      .map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role, state: l.state }));
   }
 
   /* THE ONE live-cites predicate (REC-19). Who cites INTO a bundle, partitioned
@@ -1939,6 +2074,55 @@ export class Store extends DurableObject {
       else severed.push(r.bundle_id);
     }
     return { confirmed: confirmed.sort(), severed: severed.sort() };
+  }
+
+  /* THE ONE live-basis-leg predicate (REC-17 / D-5). Which inquiries REASON
+   * FROM this one — `SELECT ... FROM inquiry_basis WHERE target_id=?`, the
+   * single indexed lookup REC-11 built `inquiry_basis_target` for, and the
+   * whole mechanism P-64 asks for. #citesInto answers the CITATION question for
+   * information objects; this answers the BASIS question for inquiries, and the
+   * two are deliberately separate because a citation and a leg of a claim are
+   * different relationships (D-21, REC-11).
+   *
+   * LIVE, and each exclusion is a rule rather than a filter:
+   *   - the citing document is read for the REFERENCE entry's status, exactly
+   *     the way #citesInto reads it (basis ⊆ references[], C-6.3 as REC-11
+   *     rewrote it), so a SEVERED edge does not block: severing is the recorded
+   *     decision to stop relying, and treating it as live would make the
+   *     refusal unclearable by the very act doctrine prescribes for clearing it.
+   *   - a citing document that CANNOT BE READ counts as live. Refusing on what
+   *     cannot be verified is the conservative arm and it is retire's already.
+   *   - a `divided` dependent does not block. It is TERMINAL (DEC-28) and its
+   *     legs were re-homed onto children that carry their own, so its basis is
+   *     frozen history; counting it would refuse an act on behalf of a question
+   *     that has been carried forward, and the remedy — sever the leg — cannot
+   *     be performed on a terminal document at all.
+   *
+   * The offenders are named by (bundle_id, ord): REC-11's ord is what makes a
+   * leg ADDRESSABLE, and one document legitimately carries two legs (D4). */
+  #restsOnLive(id) {
+    const confirmed = [], severed = [], frozen = [];
+    for (const r of this.#rows(
+      `SELECT ib.bundle_id, ib.ord, ib.role, b.current_state, b.object_type
+         FROM inquiry_basis ib JOIN bundles b ON b.bundle_id = ib.bundle_id
+        WHERE ib.target_id=? ORDER BY ib.bundle_id, ib.ord`, id)) {
+      const leg = { bundle_id: r.bundle_id, ord: r.ord, role: r.role || null,
+                    state: r.current_state };
+      if (r.current_state === "divided") continue;
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
+      if (md && md.content !== null) {
+        const refs = parseFrontmatter(md.content).data?.references;
+        const entry = (Array.isArray(refs) ? refs : []).find((x) => x && x.target === id);
+        if (entry && entry.status === "severed") { severed.push(leg); continue; }
+      }
+      /* FROZEN vs WORKING, and the split is the D-5 refinement this item makes
+         (reported to CONDUCT rather than buried): a `published` dependent's
+         basis is inside a SIGNED EDITION and cannot be edited at all, so it can
+         never withdraw a leg. Both sets are returned; which one an act refuses
+         on is the ACT's rule, stated at the act. */
+      (r.current_state === "published" ? frozen : confirmed).push(leg);
+    }
+    return { confirmed, frozen, severed, all: [...confirmed, ...frozen] };
   }
 
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
@@ -2597,8 +2781,15 @@ export class Store extends DurableObject {
     /* `weight: "single"` for conclude's reason: one question is picked back up
        at a time. A bulk reopen would be a checkbox reversing a set of separate
        decisions with one sentence standing for all of them. */
+    /* REC-17 / D-5: reopening is REVERSIBLE, so it is permitted over a cited
+       inquiry and RAISES the obligation instead of refusing — the same arm
+       deferring takes. The question everything below it rested on is being
+       worked again, which is precisely a reason to take a second look, and
+       nothing is written to the dependents: the obligation is derived. */
     return { ok: true, target, from: b.current_state, to: "open",
-             why, author: who, at: when, weight: "single" };
+             why, author: who, at: when, weight: "single",
+             reevaluation: { source: "reopened", since: when,
+                             raised: this.#reevalRaisedBy(target, viewer) } };
   }
 
 
@@ -2884,6 +3075,17 @@ export class Store extends DurableObject {
              strength: Store.STRENGTH_AXES.map((axis) => ({ axis, state: pair[axis].state,
                grade: pair[axis].grade, weakest: pair[axis].weakest ? pair[axis].weakest.target_id : null })),
              required: bar, author: who, at: when, weight: "single",
+             /* REC-17 / DEC-12: a newer EDITION surfaces the re-evaluation
+                obligation on everything whose basis names this case and
+                RECOMPUTES NOTHING on the member's behalf — a leg keeps citing
+                the edition it names, and C-21.2 keeps comparing against that
+                edition's own frozen pair. Reported from edition 2 onward
+                because edition 1 moves nothing under anybody: there was no
+                prior edition for a leg to be resting on. */
+             ...(edition > 1
+               ? { reevaluation: { source: "edition", since: when, edition,
+                                   raised: this.#reevalRaisedBy(target, viewer) } }
+               : {}),
              next: "review this sha and ratify it (op=ratify): the assertion is inside the bytes, so the "
                  + "signature can only be taken after it is written" };
   }
@@ -3011,6 +3213,34 @@ export class Store extends DurableObject {
                      + "concluded; something deferred or dismissed is picked back up first (op=reopen), "
                      + "and a legacy focus/problem document has no divided state at all until its "
                      + "frontmatter is modernized." };
+
+    /* REC-17 / D-5: division is TERMINAL for the parent, so it takes the same
+       `CITED` refusal dismissal takes — retire's refusal on a downstream
+       consequence rather than on the actor — over REC-11's reverse index. No
+       new mechanism and no new refusal name.
+       AND THE SET IT REFUSES ON IS NARROWER THAN DISMISSAL'S, which is this
+       item's one judgment call and is reported to CONDUCT rather than buried.
+       A WORKING dependent (open, concluded, deferred, dismissed) blocks:
+       C-6.2's remedies for a leg whose target moved are "restore from history",
+       "re-point to the successor" and "sever with a reason", and a working
+       document can perform all three — so it is told now, with the offenders
+       named, rather than discovering it later. A PUBLISHED dependent does NOT
+       block, for the reason the two acts differ: dismissal ABANDONS a question
+       and leaves nothing to re-point to, while a division CARRIES IT FORWARD
+       into children that supersede it and are resolvable in both directions
+       (REC-16). Refusing there would make a case's own publication the thing
+       that freezes a malformed question in the record forever — the exact
+       overclaim division exists to let a member escape (R4/DEC-28) — and the
+       published edition is not stranded: it keeps answering with its own
+       signature (DEC-12) and its authors get R7's obligation, which is what
+       this item builds. */
+    const restsOn = this.#restsOnLive(target);
+    if (restsOn.confirmed.length)
+      return { ok: false, reason: "CITED", target, offenders: restsOn.confirmed,
+               detail: "live basis legs still rest on this question. Dividing it declares it MALFORMED and "
+                     + "ends it, and a claim resting on it would be left pointing at a question the record "
+                     + "has withdrawn. Withdraw those legs first (sever the citation with a reason), or "
+                     + "re-point them at the child that carries the half they rely on once it exists." };
 
     /* THE CHILDREN, and the apportionment they carry. Both AUTHORED: nothing
        here proposes a split, guesses a question, or distributes a leg. */
@@ -3339,6 +3569,14 @@ export class Store extends DurableObject {
                role: l.role ?? "supports", to: homes.get(i) })),
              cuts_against: legs.filter((l) => l.role === "cuts_against").length,
              reason: why, apportioned_by: who, at: when, weight: "single",
+             /* REC-17: supersession is the ORIGINAL raiser of R7's obligation
+                (P-64), and this act is its producer. The dependents named here
+                are the FROZEN ones — a working dependent would have refused the
+                act above — and nothing is written to them: the obligation is a
+                query, derived from the supersedes edge the children just made,
+                and their strengths are untouched. */
+             reevaluation: { source: "supersession", since: when,
+                             raised: this.#reevalRaisedBy(target, viewer) },
              next: "each child is OPEN and carries a supersedes edge back to this parent, this parent's id "
                  + "and every sibling's. This question is terminal: it is answered by its children now." };
   }
@@ -4735,6 +4973,12 @@ export class Store extends DurableObject {
 
       /* Projected from the document, every promotion, so the table is a view of
          bundle.md rather than a second place to state the same thing. */
+      /* REC-17: the supersedes targets this revision is REPLACING, read before
+         the delete. A revision that drops a `supersedes` edge must un-tell the
+         parent, and after the delete there is nothing left to read. */
+      const supersededBefore = [...this.sql.exec(
+        `SELECT target_id FROM refs WHERE bundle_id=? AND kind='supersedes'`, bundleId)]
+        .map((r) => r.target_id);
       this.sql.exec(`DELETE FROM refs WHERE bundle_id=?`, bundleId);
       const md = files.find((f) => f.path === "bundle.md");
       const fmRefs = md && typeof md.text === "string"
@@ -4744,6 +4988,17 @@ export class Store extends DurableObject {
         this.sql.exec(`INSERT OR REPLACE INTO refs (bundle_id,target_id,kind) VALUES (?,?,?)`,
           bundleId, t.target, typeof t.rel === "string" ? t.rel : "");
       }
+      /* REC-17 / P-64: the reverse index, in the SAME transaction as the refs it
+         derives from — the discipline every projection in this function keeps,
+         so the lookup can never be a revision behind the edges. Three id sets
+         (added, removed, and this bundle's own row); the set is de-duplicated
+         because a revision that keeps an edge names the same target twice. */
+      for (const t of new Set([...supersededBefore,
+                               ...[...this.sql.exec(
+                                 `SELECT target_id FROM refs WHERE bundle_id=? AND kind='supersedes'`, bundleId)]
+                                 .map((r) => r.target_id),
+                               bundleId]))
+        this.#writeSupersededBy(t);
 
       /* REC-11: inquiry_basis, projected WHOLE from basis[] in this SAME
          transaction as refs and by the same delete-then-insert discipline, so
@@ -7317,6 +7572,238 @@ export class Store extends DurableObject {
       `SELECT bundle_id, ord, role, grade, grade_axis, grade_source
        FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, targetId);
     return { ok: true, targetId, dependents };
+  }
+
+  /* =======================================================================
+   * REC-17 / P-64: THE RE-EVALUATION OBLIGATION, AS A QUERY AND NOT A FLAG.
+   *
+   * When a case is superseded or republished at a new edition, everything that
+   * cited it needs a second look. `SELECT bundle_id FROM inquiry_basis WHERE
+   * target_id = <moved>` is the WHOLE MECHANISM, over the `inquiry_basis_target`
+   * index REC-11 built, plus `bundles.inquiry_superseded_by` — the reverse of a
+   * `supersedes` edge — so the supersession half is a LOOKUP and not a graph
+   * walk either.
+   *
+   * NOTHING IS STORED, and that is the item's title rather than an
+   * implementation preference. Two reasons, both of them load-bearing:
+   *
+   *   1. A STORED VERDICT GOES STALE. REC-12 already proved this of the
+   *      strength cache — a leg raised beneath an inquiry does not re-promote
+   *      it — and a stored "needs re-evaluation" bit would go stale in BOTH
+   *      directions: still set after the member looked, still clear after the
+   *      thing beneath it moved again.
+   *   2. THE MEMBER DECIDES, NOT THE PLANE. No verdict here is computed from
+   *      STRENGTH, and nothing in this file alters a strength when something
+   *      moves underneath: the case's frozen pair keeps reading exactly what
+   *      the group signed (DEC-12), the derived pair keeps deriving from the
+   *      legs as authored, and what the reader is handed is the FACT that
+   *      something moved. Recomputing a case's strength on its authors' behalf
+   *      because a document beneath it was republished would be the plane
+   *      making a claim nobody authored.
+   *
+   * THE VOCABULARY IS REUSED, NOT MINTED. The answer speaks in
+   * `reeval_flag`/`reeval_since`/`reeval_source` — the three columns already in
+   * the schema, already projected from `reeval_pending`, already indexed and
+   * already normalised at boot (LAYERS.md B7 names them as the one reusable
+   * mechanism in the ground). A dependent's own STORED triple is carried beside
+   * the derived one under `stored`, never merged into it: what a document
+   * ASSERTS about itself and what the record DERIVES about it are two
+   * statements, and collapsing them would let a derived obligation look like an
+   * authored one.
+   *
+   * FIVE SOURCES, and every one of them is a fact about the TARGET's own row
+   * rather than a judgement about the dependent:
+   *   supersession — something supersedes it (REC-16's edges, both directions
+   *                  resolvable, read from the reverse index)
+   *   edition      — it stands at a LATER edition than the leg names (DEC-12:
+   *                  the leg keeps citing the edition it named, and nothing
+   *                  here follows it forward)
+   *   deferred     — the group set the question down (reversible; D-5's
+   *                  obligation arm)
+   *   reopened     — the group picked it back up (reversible; D-5)
+   *   dismissed    — the question was abandoned. Under this item that is
+   *                  REFUSED while a live leg names it, so this source can only
+   *                  arise from a document hand-authored into `dismissed` or
+   *                  from a store written before the refusal existed. It is
+   *                  reported rather than assumed impossible.
+   *
+   * GATED (REC-25/REC-30), in both of that sweep's shapes: a DEPENDENT the
+   * viewer may not see is a row ABOUT that bundle and is WITHHELD with no count
+   * of what was withheld, and a SUPERSEDING id inside a visible row is a
+   * back-reference and is REDACTED while every record fact in the row — the
+   * source, the date, both strengths — stands unchanged. A derivation that got
+   * weaker or stronger with the reader would be the record claiming something
+   * different to different people, which is worse than the leak. */
+  reevaluations({ target = null, viewer = null } = {}) {
+    if (target && !this.#viewerSees(target, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    /* With no target: every id any leg names. Bounded by the number of DISTINCT
+       basis targets rather than by the corpus — the same index, read the other
+       way — and each one costs one row read before it is dismissed as unmoved. */
+    const targets = target
+      ? [target]
+      : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis ORDER BY target_id`)
+          .map((r) => r.target_id);
+    const visible = this.#bundleRedactor(viewer);
+    const obligations = [];
+    for (const t of targets) {
+      const moved = this.#reevalMoved(t, visible);
+      if (!moved) continue;
+      const legs = this.#rows(
+        `SELECT bundle_id, ord, target_id, role, grade, grade_axis, grade_source, at
+           FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, t);
+      const byBundle = new Map();
+      for (const l of legs) {
+        /* The row IS about this dependent, so an invisible one is withheld
+           whole — op=backlinks' posture — and no count of the withheld is
+           reported, because that count is the leak. */
+        if (visible(l.bundle_id) === null) continue;
+        if (!byBundle.has(l.bundle_id)) byBundle.set(l.bundle_id, []);
+        byBundle.get(l.bundle_id).push(l);
+      }
+      for (const [bundleId, mine] of byBundle) {
+        const dep = this.#one(
+          `SELECT title, object_type, current_state, reeval_flag, reeval_since, reeval_source
+             FROM bundles WHERE bundle_id=?`, bundleId);
+        /* The leg's OWN cited edition comes from the dependent's document, not
+           from a column: `target_edition` is authored on the leg (DEC-12) and
+           inquiry_basis does not project it. The document is the authority for
+           every fact in this file, which is why it is read rather than cached. */
+        const fmBasis = this.#basisFrontmatter(bundleId);
+        const causes = [];
+        for (const c of moved.causes) causes.push(c);
+        const citedEditions = [];
+        if (moved.edition) {
+          for (const l of mine) {
+            const cited = fmBasis[l.ord] && fmBasis[l.ord].target_edition != null
+              ? Number(fmBasis[l.ord].target_edition) : null;
+            citedEditions.push(cited);
+            if (cited === null || cited < moved.edition.latest)
+              causes.push({ source: "edition", since: moved.edition.since, ord: l.ord,
+                            cited_edition: cited, latest_edition: moved.edition.latest,
+                            latest_ratified_edition: moved.edition.latest_ratified,
+                            detail: cited === null
+                              ? `this leg names no edition of ${t}, which now stands at edition `
+                                + `${moved.edition.latest}. A leg keeps citing the edition it names `
+                                + `(DEC-12) and this one names none, so which edition it rests on cannot `
+                                + `be read off the record.`
+                              : `this leg rests on edition ${cited} of ${t}, which now stands at edition `
+                                + `${moved.edition.latest}. Edition ${cited} keeps answering with its own `
+                                + `signature and its own frozen strength; nothing here follows the case `
+                                + `forward on your behalf (DEC-12).` });
+          }
+        }
+        if (!causes.length) continue;
+        obligations.push({
+          bundle_id: bundleId, title: dep?.title ?? null,
+          object_type: dep?.object_type ?? null, current_state: dep?.current_state ?? null,
+          target: t, target_state: moved.state,
+          legs: mine.map((l) => ({ ord: l.ord, role: l.role || null, grade: l.grade ?? null,
+                                   grade_axis: l.grade_axis ?? null,
+                                   grade_source: l.grade_source ?? null,
+                                   target_edition: fmBasis[l.ord]?.target_edition ?? null })),
+          /* THE REUSED TRIPLE. `flag` is true because this answer only ever
+             carries rows that have an obligation; `since` and `source` come
+             from the first cause in the priority the derivation computed. */
+          reeval: { flag: true, since: causes[0].since, source: causes[0].source },
+          causes,
+          /* The dependent's OWN authored triple, beside the derived one and
+             never merged with it. */
+          stored: { flag: dep && dep.reeval_flag != null ? !!dep.reeval_flag : null,
+                    since: dep?.reeval_since ?? null, source: dep?.reeval_source ?? null },
+          /* BOTH strengths, derived on read and UNALTERED by any of this. Named
+             in the answer because the whole question the obligation asks is
+             "does this still read the way you published it?", and a reader
+             cannot weigh that without the pair in front of them. */
+          strength: (() => { const s = this.strengthOf(bundleId);
+                             return { capture: s.capture, connection: s.connection,
+                                      depth_bound: s.depth_bound }; })(),
+          ...(moved.superseded_by ? { superseded_by: moved.superseded_by } : {}),
+        });
+      }
+    }
+    obligations.sort((a, b) => (a.bundle_id + a.target) < (b.bundle_id + b.target) ? -1 : 1);
+    return { ok: true, ...(target ? { target } : {}), obligations, count: obligations.length };
+  }
+
+  /* One target's own row, answered as "has anything moved under a leg naming
+     it?". Returns null when nothing has — which is the common case and is what
+     keeps the untargeted sweep cheap. */
+  #reevalMoved(targetId, visible) {
+    const row = this.#one(
+      `SELECT bundle_id, object_type, current_state, prior_state, last_updated, inquiry_superseded_by
+         FROM bundles WHERE bundle_id=?`, targetId);
+    if (!row) return null;
+    const causes = [];
+    /* SUPERSESSION, from the reverse index and not from a walk. The superseding
+       ids are BACK-REFERENCES: an invisible one is redacted to null and the
+       fact that this bundle was superseded still stands, because that fact is
+       the record's and must not change with the reader (REC-30). */
+    const sup = Store.supersededByOf(row);
+    let supersededBy = null;
+    if (sup.length) {
+      supersededBy = sup.map((id) => visible(id));
+      const when = this.#one(
+        `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (${sup.map(() => "?").join(",")})`,
+        ...sup);
+      causes.push({ source: "supersession", since: (when && when.m) || row.last_updated,
+                    detail: `${targetId} has been superseded. The question it asked is carried forward by `
+                          + `what supersedes it, and a leg naming ${targetId} was not re-pointed by that `
+                          + `act — nothing here re-points it for you.` });
+    }
+    /* THE LIFECYCLE ARMS (D-5). Read off the target's own state pair; the
+       reversible acts are what RAISE rather than refuse. */
+    if (row.current_state === "deferred")
+      causes.push({ source: "deferred", since: row.last_updated,
+                    detail: `${targetId} has been set down. It is reversible and the group may pick it back `
+                          + `up, and until it does, a claim resting on it rests on a question nobody is `
+                          + `working.` });
+    else if (row.current_state === "dismissed")
+      causes.push({ source: "dismissed", since: row.last_updated,
+                    detail: `${targetId} was abandoned. A claim resting on it names a question that will `
+                          + `not be answered.` });
+    else if (row.current_state === "open" && REOPENABLE_FROM.includes(row.prior_state))
+      causes.push({ source: "reopened", since: row.last_updated,
+                    detail: `${targetId} was picked back up from ${row.prior_state}. What it concluded is `
+                          + `being worked again, which is a reason to look at what rests on it.` });
+    /* THE EDITION ARM is per-LEG (it depends on which edition the leg named), so
+       what is computed here is the target's latest edition and the caller pairs
+       it with each leg. LATEST is the greater of what has been RATIFIED and what
+       the working document now says: an authored-but-unratified edition 2 has no
+       signature yet, and a reader whose leg names edition 1 still wants to know
+       the case has moved. Both numbers are reported so neither is implied. */
+    const ratified = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, targetId);
+    const latestRatified = ratified && ratified.m != null ? Number(ratified.m) : 0;
+    /* The document is read ONLY where it could carry an edition at all. The
+       untargeted sweep runs this once per distinct basis target, and a
+       frontmatter parse per document beneath every claim in the store is a real
+       cost for an answer that is `0` for everything nobody ever published. */
+    const fm = (latestRatified > 0 || row.current_state === "published")
+      ? this.#frontmatterOf(targetId) : null;
+    const authored = fm && Number.isInteger(fm.edition) ? fm.edition : 0;
+    const latest = Math.max(latestRatified, authored);
+    const edition = latest > 1
+      ? { latest, latest_ratified: latestRatified, since: row.last_updated }
+      : null;
+    if (!causes.length && !edition) return null;
+    return { state: row.current_state, causes, edition,
+             ...(supersededBy ? { superseded_by: supersededBy } : {}) };
+  }
+
+  /* A bundle's frontmatter, parsed from its live bundle.md. Small helper so the
+     two readers below do not each restate the same three lines. */
+  #frontmatterOf(bundleId) {
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+    if (!md || md.content === null) return null;
+    try { return parseFrontmatter(md.content).data || null; } catch { return null; }
+  }
+
+  /* The authored basis legs of a bundle, by ord — for the fields inquiry_basis
+     deliberately does not project (`target_edition`). */
+  #basisFrontmatter(bundleId) {
+    const fm = this.#frontmatterOf(bundleId);
+    const legs = fm && Array.isArray(fm.basis) ? fm.basis : [];
+    return legs.map((l) => (l && typeof l === "object" ? l : {}));
   }
 
   /* =======================================================================
@@ -10820,6 +11307,12 @@ export class Store extends DurableObject {
            surfaces. */
         basis: () => this.basisFor(url.searchParams.get("id")),
         restson: () => this.restingOn(url.searchParams.get("id")),
+        /* REC-17 / P-64: the RE-EVALUATION OBLIGATION, derived on read over the
+           same reverse index. `?target=` asks it of one moved thing; with no
+           target it sweeps every id a leg names. GATED — `viewer` is stamped by
+           the control plane and an absent one fails closed. */
+        reevaluations: () => this.reevaluations({ target: url.searchParams.get("target"),
+                                                  viewer: url.searchParams.get("viewer") }),
         /* REC-12: the derived strength PAIR, on read. A DO-internal read of
            the same class as basis/restson — REC-14 stamps this pair into the
            ratified bytes and REC-22 serves it, and those are the items that

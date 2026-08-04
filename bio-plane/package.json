@@ -76,6 +76,7 @@
     "test:publish": "node test/publish.test.mjs",
     "test:reopen": "node test/reopen.test.mjs",
     "test:divide": "node test/divide.test.mjs",
+    "test:reevaluation": "node test/reevaluation.test.mjs",
     "test:gate-reads": "node test/gate-reads.test.mjs",
     "test:queue": "node test/queue.test.mjs",
     "test:queue-state": "node test/queue-state.test.mjs",
