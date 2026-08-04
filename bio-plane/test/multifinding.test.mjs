@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (REC-44's four, each broken ALONE and restored; 47 pass when whole; ALL RUN 2026-08-04, rec44-agent, and the numbers below are what they MEASURED. Every file restored BYTE-IDENTICALLY, sha256 compared before and after each arm: src/store.mjs a4c660c2ee74a50ab6318b86d9775ff9b5fcb1a3855f32e49beb57cf7a2253a2, src/index.mjs 765333552f24a56a12529445affe113ca739236eb275cffb0d35a58ecaf2fffc, checks/bio-checks.mjs 40ad733f3b1e0a53b9e4bcbd569bb461a9323e1a82e2e5f079e920ae54763ebb.) (a) THE SINGLE CASE-LEVEL STRENGTH -- THIS IS BOB'S OWN CONTROL, carried verbatim off DEC-44 onto REC-44: in src/store.mjs publishedCase() add `strength: state.findings[0].strength,` to the returned object -> 46 pass, 1 FAIL, in block 5, and the sweep NAMES all four surfaces it appeared on: publishedcase(by case id).strength, publishedcase(by finding id).strength, publishedcase(by edition).strength, publishedcase(by hash).strength. The composed letter it advertises is FIND_A's (capture B / connection C) while FIND_B froze (capture UNRATED / connection D) -- so the case would be presenting one of two different answers as though it were the case's, which is R2's forbidden composition arriving at case altitude. NOTE WHAT THIS MEASURED THAT REVIEW WOULD NOT: blocks 1-4 stay ENTIRELY GREEN under it, because a spurious case-level key breaks no per-finding assertion anywhere -- the surface goes on answering correctly and ADDITIONALLY answers wrongly. That is why the control is a STRUCTURAL SWEEP over whole responses rather than a value comparison, and why a value comparison would have passed. (b) THE SAME BUG IN THE EXPORT -- in src/index.mjs's case manifest add `strength: cs.findings[0].strength,` after `ratified_at:` -> 45 pass, 2 FAIL: the sweep names manifest.strength and the four publishedcase(...).manifest.strength echoes, AND the separate container assertion fires, because the ZIP a stranger downloads then carries the composed claim inside the signed-hash artifact itself -- the worst place for it, since that copy travels without this instance. Two arms rather than one, deliberately: the read path and the exported container are two places a reader meets the claim and either can be broken alone. (c) THE MEMBERSHIP IS NOT CHECKED -- in src/store.mjs publish() guard the CASE_MEMBERSHIP_DIVERGED refusal with `if (false) &&` -> 45 pass, 2 FAIL in block 2b: the member whose signed bytes name a roster of ONE is ratified into a case whose other members signed a roster of two, and the second adversary then reports EDITION_EXISTS -- a raw collision where a named refusal belongs. THIS ARM IS THE REASON BLOCK 2b EXISTS. The first version of this suite had no adversary at all and arm (c) measured 47 pass, 0 fail: every member of a case published by op=publish carries the same roster BY CONSTRUCTION, so both divergence refusals could have been deleted outright with the whole suite green. That is the inbox-grammar failure mode exactly (CLAUDE.md), found by running the control rather than by review. (d) C-21.1 AT THE WRONG ALTITUDE -- in checks/bio-checks.mjs checkCompletenessFreshness read `ctx.publishedRegistry` and `reg[ctx.fm.id]` again instead of the CASE registry, AND in src/store.mjs publishCase() guard the COMPLETENESS_CARRIED_FORWARD refusal with `if (false) &&` -> 43 pass, 4 FAIL in block 3: edition 2 of the case republishes edition 1's completeness statement BYTE FOR BYTE, both members move to published on it, and the case then answers edition 2 with edition 1's limits. Both halves must go together, as REC-13 found and REC-14 recorded: breaking one alone leaves the other refusing. Restore after each. */
+/* NEGATIVE CONTROL: (NINE ARMS. REC-44's four (a)-(d) and REC-49's five (i-a), (i-b), (ii-a), (ii-b), (ii-b'). The suite is 58 assertions whole. REC-44's four were ALL RE-RUN 2026-08-05 by rec49-agent against THIS file, so every count below agrees with the file it names rather than with the file it was written against; each one's FAIL count reproduced exactly except (c), which gained one and the gain is recorded on its own line. Each arm is broken ALONE and every file is restored BYTE-IDENTICALLY, sha256 compared before and after each arm and equal to: src/store.mjs 346985395796036fcdbd51004766e935221d6919bf26a0221583df23666ed12f, src/index.mjs 765333552f24a56a12529445affe113ca739236eb275cffb0d35a58ecaf2fffc, checks/bio-checks.mjs d8da7b9d51dd5634aabe9fa5a0861d07bf48c5b8b2998d80f28796851a9a659f (the (ii-b') arm also edits THIS file; no sha is quoted for it because a file cannot state its own, and it is restored byte-identically to whatever it was before that arm ran). The arms are scripted and re-runnable in one step; each is a single unique string replacement at the site quoted with it.) (a) THE SINGLE CASE-LEVEL STRENGTH -- THIS IS BOB'S OWN CONTROL, carried verbatim off DEC-44 onto REC-44: in src/store.mjs publishedCase() add `strength: state.findings[0].strength,` to the returned object -> 57 pass, 1 FAIL (RE-RUN 2026-08-05: 46 -> 57 pass with the FAIL count unchanged), in block 5, and the sweep NAMES all four surfaces it appeared on: publishedcase(by case id).strength, publishedcase(by finding id).strength, publishedcase(by edition).strength, publishedcase(by hash).strength. The composed letter it advertises is FIND_A's (capture B / connection C) while FIND_B froze (capture UNRATED / connection D) -- so the case would be presenting one of two different answers as though it were the case's, which is R2's forbidden composition arriving at case altitude. NOTE WHAT THIS MEASURED THAT REVIEW WOULD NOT: blocks 1-4 stay ENTIRELY GREEN under it, because a spurious case-level key breaks no per-finding assertion anywhere -- the surface goes on answering correctly and ADDITIONALLY answers wrongly. That is why the control is a STRUCTURAL SWEEP over whole responses rather than a value comparison, and why a value comparison would have passed. (b) THE SAME BUG IN THE EXPORT -- in src/index.mjs's case manifest add `strength: cs.findings[0].strength,` after `ratified_at:` -> 56 pass, 2 FAIL (RE-RUN 2026-08-05: 45 -> 56 pass, FAIL count unchanged): the sweep names manifest.strength and the four publishedcase(...).manifest.strength echoes, AND the separate container assertion fires, because the ZIP a stranger downloads then carries the composed claim inside the signed-hash artifact itself -- the worst place for it, since that copy travels without this instance. Two arms rather than one, deliberately: the read path and the exported container are two places a reader meets the claim and either can be broken alone. (c) THE MEMBERSHIP IS NOT CHECKED -- in src/store.mjs publish() guard the CASE_MEMBERSHIP_DIVERGED refusal with `if (false) &&` -> 55 pass, 3 FAIL in block 2b (RE-RUN 2026-08-05: 45 -> 55 pass and 2 -> 3 FAIL, and the THIRD is REC-49's and is worth keeping — block 6's fixture assertion counts the case editions, the rostered members and the ratified rows, so a member ratified into a case that never declared it now moves numbers a roster-shaped assertion cannot miss; the arm reaches one more instrument than it did): the member whose signed bytes name a roster of ONE is ratified into a case whose other members signed a roster of two, and the second adversary then reports EDITION_EXISTS -- a raw collision where a named refusal belongs. THIS ARM IS THE REASON BLOCK 2b EXISTS. The first version of this suite had no adversary at all and arm (c) measured 47 pass, 0 fail: every member of a case published by op=publish carries the same roster BY CONSTRUCTION, so both divergence refusals could have been deleted outright with the whole suite green. That is the inbox-grammar failure mode exactly (CLAUDE.md), found by running the control rather than by review. (d) C-21.1 AT THE WRONG ALTITUDE -- in checks/bio-checks.mjs checkCompletenessFreshness read `ctx.publishedRegistry` and `reg[ctx.fm.id]` again instead of the CASE registry, AND in src/store.mjs publishCase() guard the COMPLETENESS_CARRIED_FORWARD refusal with `if (false) &&` -> 54 pass, 4 FAIL in block 3 (RE-RUN 2026-08-05: 43 -> 54 pass, FAIL count unchanged): edition 2 of the case republishes edition 1's completeness statement BYTE FOR BYTE, both members move to published on it, and the case then answers edition 2 with edition 1's limits. Both halves must go together, as REC-13 found and REC-14 recorded: breaking one alone leaves the other refusing. Restore after each. ---- REC-49's five, RUN 2026-08-05 by rec49-agent. The item is the INDEX (op=publishedmanifest), and the two directions it can lie in need two instruments, exactly as REC-44's (a) and UI-29's (m)/(m2) needed two.  (i-a) THE INDEX UNDERSTATES A CASE THAT HAS A PAIR -- in src/store.mjs publishedManifest(), drop `, p.strength, p.required` from the published[] SELECT (leave the line `                p.gate_version`). RUN: 53 pass, 5 FAIL, and the sweep NAMES the understatement in both windows rather than reporting a shape mismatch: "publishedmanifest(awaiting) CASE-2026-0001@1 INQ-2026-4400-authorisation: RATIFIED member has NO frozen pair on the index -- the index UNDERSTATES a case that HAS one", and the same for both members of both complete editions. THIS IS THE ARM THE ITEM EXISTS FOR: a green battery did not catch REC-44's move because NO suite anywhere asserted that this op still answers a pair for a case that has one. Block 5 sweeps for a pair that must NOT be there and passes perfectly on an answer carrying no pairs at all -- the empty-body-digest shape. Block 5 and block 6 are complements and are useless apart.  (i-b) THE CONTAINER MANIFEST DROPPED OFF THE INDEX AGAIN -- in the same function, drop `, manifest` from the cases[] SELECT. RUN: 57 pass, 1 FAIL, naming the case editions whose container manifest went missing. It is a SEPARATE arm from (i-a) because after REC-49 the index has two independent pair-bearing surfaces -- the member's own ratified row and the case's container copy -- and either can be removed alone. Before REC-49 there was only the second, which is why the awaiting window showed nothing.  (ii-a) A CASE-LEVEL PAIR ON AN INDEX ROW -- DEC-44's own control, at the index. In the same function, map the cases[] rows to carry the FIRST member's `strength` as the case's. RUN: 57 pass, 1 FAIL in BLOCK 5, naming ["publishedmanifest.cases[0].strength","publishedmanifest.cases[1].strength"] -- while every block 6 assertion stays GREEN, because the index goes on answering every finding's pair correctly and ADDITIONALLY answers a composed one. REC-44's (a) and UI-29's (m) measured the same thing at their own altitudes.  (ii-b) THE SAME PAIR PLANTED INSIDE THE MANIFEST THE INDEX EMBEDS -- map the cases[] rows to re-stringify the manifest with `strength: <first member's>` added at its top level. RUN: 57 pass, 1 FAIL, naming ["publishedmanifest.cases[0].manifest.strength","publishedmanifest.cases[1].manifest.strength"].  (ii-b') THE SAME DEFECT WITH THE INSTRUMENT AS IT WAS BEFORE REC-49 -- (ii-b) again, plus `const expandIndex = (idx) => idx;` in this file. RUN: 57 pass, 1 FAIL -- AND BLOCK 5 IS SILENT. The one failure is block 6's manifest-PRESENCE assertion, which fires only because an unparsed manifest is a string. THAT IS THE FINDING: op=publishedmanifest hands its container manifest over as a JSON STRING, and a structural sweep that walks a response object stops dead at a string -- so the copy of the manifest a reader of the PUBLIC INDEX meets first was the one surface DEC-44's own control could not see inside. Measured, not supposed. The correction is `expandIndex`, and this arm is what earns it. */
 /* REC-44 / DEC-44 / D-187: A PUBLISHED CASE HOLDS MULTIPLE FINDINGS.
  *
  * This suite exists because the shipped model was never chosen. Measured against
@@ -331,6 +331,30 @@ console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, 
     [mid.complete, mid.awaiting, mid.manifest_sha, mid.findings.map((f) => f.bundle_id)],
     [false, [FIND_B], null, [FIND_A]]);
 
+  /* REC-49: THE ONE INSTANT THE AWAITING WINDOW EXISTS in this fixture, kept for
+     block 6's index sweep. On a real instance this state lasts as long as it
+     takes the remaining members to ratify — hours or days — and it is precisely
+     the state in which the case has NO container manifest for the public index
+     to read a pair out of. Captured rather than reconstructed, so block 6 sweeps
+     the answer the plane actually gave at that moment. */
+  globalThis.__IDX_AWAITING = rP(await anonJson("op=publishedmanifest"));
+  {
+    const idx = globalThis.__IDX_AWAITING;
+    const rowOf = (id) => (idx.published || []).find((p) => p.bundle_id === id && p.edition === 1);
+    const csRow = (idx.cases || []).find((c) => c.case_id === CASE_ID && c.edition === 1);
+    /* Written to REPORT rather than to throw: the negative control for this item
+       removes the pair-bearing columns, and a TypeError names nothing while a
+       failed assertion names the finding whose pair went missing. */
+    t("REC-49: the INDEX already carries the ratified member's OWN frozen pair, with no container to read one from",
+      [(rowOf(FIND_A).strength || []).map((a) => [a.axis, a.state, a.grade]),
+       (rowOf(FIND_A).required || {}).declared ?? "NO BAR STATED", csRow.manifest, csRow.manifest_sha],
+      [[["capture", "graded", "B"], ["connection", "graded", "C"]], false, null, null]);
+    t("and NOTHING in the index states a pair for the member that has not ratified: nothing was signed for it",
+      [!!rowOf(FIND_B), (idx.caseMembers || []).filter((m) => m.case_id === CASE_ID && m.edition === 1)
+        .map((m) => m.bundle_id)],
+      [false, [FIND_A, FIND_B]]);
+  }
+
   const shaB = await shaOf(FIND_B);
   const r2 = await ratify(FIND_B);
   t("the LAST member completes the edition and the container is assembled then and not before",
@@ -539,6 +563,22 @@ console.log("\n--- 4. C-21.2: the inheritance rule is checked PER FINDING, at th
     noCase.ok, false);
 }
 
+/* REC-49: op=publishedmanifest EMBEDS each complete case edition's container
+   manifest as a JSON **STRING** on its `cases[]` row, and a structural sweep
+   that walks a response object stops dead at a string. So the copy of the
+   manifest a reader of the PUBLIC INDEX meets first was the one surface DEC-44's
+   sweep could not see inside — measured, not supposed: negative control (ii-b)
+   below plants a case-level pair there and the uncorrected sweep reports
+   nothing. Expanded here so the index is swept like every other surface.
+   CORRECTED 2026-08-05 (REC-49) and never exempted: block 5 passed
+   `publishedmanifest` in raw, which was not wrong about anything it could see
+   and was blind to a whole surface. */
+const expandIndex = (idx) => ({ ...idx,
+  cases: (idx.cases || []).map((cs) => ({ ...cs,
+    manifest: typeof cs.manifest === "string"
+      ? (() => { try { return JSON.parse(cs.manifest); } catch (_) { return { UNPARSEABLE: cs.manifest }; } })()
+      : cs.manifest })) });
+
 /* ======================= 5. BOB'S NEGATIVE CONTROL: no single case-level strength */
 console.log("\n--- 5. DEC-44's own control: NO surface, rendering or export states a case-level strength ---");
 {
@@ -587,7 +627,12 @@ console.log("\n--- 5. DEC-44's own control: NO surface, rendering or export stat
   const byHash = await anonCase(`sha256=${await shaOf(FIND_B)}`);
   const list = rP(await GET("op=publishedlist&token=mem-rec44"));
   const editions = rP(await GET(`op=publishededitions&token=mem-rec44&id=${FIND_A}`));
-  const pubManifest = rP(await anonJson("op=publishedmanifest"));
+  /* EXPANDED (REC-49) — see the note above `expandIndex`. Unexpanded, the index
+     was swept only down to the JSON string its `cases[]` rows carry, so the
+     container manifest the public index hands out was excused from DEC-44's own
+     control. An excused surface is exactly where the next case-level strength
+     appears, which is this suite's own stated rule. */
+  const pubManifest = expandIndex(rP(await anonJson("op=publishedmanifest")));
   const mBytes = new Uint8Array(await (await anonBytes(`sha256=${byCase.manifest_sha}`)).arrayBuffer());
   const manifest = JSON.parse(new TextDecoder().decode(mBytes));
 
@@ -616,6 +661,153 @@ console.log("\n--- 5. DEC-44's own control: NO surface, rendering or export stat
     caseLevelStrengths(inner, "container/MANIFEST.json"), []);
   t("the manifest says in words what it is refusing to do, so the next reader does not add one back",
     inner.verify.includes("there is no case-level strength"), true);
+}
+
+/* ============ 6. REC-49: THE PUBLIC INDEX TELLS THE TRUTH ABOUT A CASE'S STRENGTHS */
+console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own frozen pair, awaiting window or not ---");
+{
+  /* WHY THIS BLOCK EXISTS, and the reason is a measurement rather than a design
+     preference. REC-44 moved `completeness`/`manifest`/`manifest_sha` off
+     `published_bundles` onto `published_cases`; the battery stayed green; and
+     NOTHING ANYWHERE ASSERTED THAT op=publishedmanifest STILL ANSWERS A PAIR FOR
+     A CASE THAT HAS ONE. Block 5 sweeps for a pair that must NOT be there, and
+     block 5 passes perfectly on an answer carrying no pairs at all — the
+     empty-body-digest shape CLAUDE.md names: an outcome that costs nothing to
+     produce is not evidence. This block is its complement and the two are
+     useless apart. A surface can fail in two directions and one instrument sees
+     one of them.
+
+     AND IT SWEEPS BOTH WINDOWS, because they are two different answers. A case
+     edition is ratified one member at a time and the container is assembled only
+     when the last member lands, so there is a real window — potentially days on
+     a live instance — in which `cases[].manifest` is null. CONDUCT'S
+     DETERMINATION (REC-49), implemented here: the index carries the per-finding
+     pair for every RATIFIED member THROUGH that window. It composes nothing —
+     `published_bundles.strength` is the member's own signed, ratified pair, and
+     REC-44 already ruled that the findings which ratified are published and
+     answerable now. What the index must never carry is a pair for the CASE, and
+     that is block 5's job, not this one's.
+
+     STRUCTURAL, OVER WHOLE RESPONSES, AND NEVER A VALUE COMPARISON. REC-44's
+     control (a) and UI-29's control (m) both measured the same thing one
+     altitude apart: a value comparison goes on passing while the surface answers
+     correctly AND additionally answers wrongly. The mirror holds here — an
+     assertion that FIND_A's index row says B/C would go on passing while the
+     index quietly stopped answering for every other case on the instance. So the
+     sweep asks a question about the WHOLE response: for every member of every
+     case edition the index holds, is that member's pair stated, and whose is
+     it? */
+  const PAIR_KEYS = new Set(["strength", "required", "required_strength", "published_strength"]);
+  const pairSites = (root, label) => {
+    const sites = [];
+    const walk = (node, path, owner) => {
+      if (Array.isArray(node)) { node.forEach((v, i) => walk(v, `${path}[${i}]`, owner)); return; }
+      if (!node || typeof node !== "object") return;
+      /* Whose pair it is, by the same rule block 5 uses to decide what a finding
+         is: an object naming a `bundle_id` of its own is a finding, and anything
+         beneath it belongs to that finding. */
+      const own = Object.prototype.hasOwnProperty.call(node, "bundle_id") ? node.bundle_id : owner;
+      for (const [k, v] of Object.entries(node)) {
+        const p = `${path}.${k}`;
+        if (PAIR_KEYS.has(k) && v !== null) sites.push({ path: p, owner: own ?? null });
+        walk(v, p, own);
+      }
+    };
+    walk(root, label, null);
+    return sites;
+  };
+  const understated = (idx, label) => {
+    const out = [];
+    const sites = pairSites(idx, label);
+    for (const cs of idx.cases || []) {
+      const roster = (idx.caseMembers || [])
+        .filter((m) => m.case_id === cs.case_id && Number(m.edition) === Number(cs.edition));
+      for (const m of roster) {
+        const row = (idx.published || [])
+          .find((p) => p.bundle_id === m.bundle_id && Number(p.edition) === Number(cs.edition));
+        const where = `${label} ${cs.case_id}@${cs.edition} ${m.bundle_id}`;
+        if (!row) {
+          /* DECLARED AND NOT YET RATIFIED. Nothing has been signed for it, so
+             nothing may state a pair for it — an invented pair here is the same
+             defect pointing the other way, and the worse of the two. */
+          if (sites.some((s) => s.owner === m.bundle_id))
+            out.push(`${where}: AWAITED member carries a pair nobody signed for it`);
+          continue;
+        }
+        if (!Array.isArray(row.strength) || row.strength.length !== 2
+            || !row.strength.every((a) => a && a.axis && a.state))
+          out.push(`${where}: RATIFIED member has NO frozen pair on the index — the index UNDERSTATES a case that HAS one`);
+        if (!row.required || typeof row.required.declared !== "boolean")
+          out.push(`${where}: RATIFIED member states no declared-bar fact on the index`);
+      }
+    }
+    return out;
+  };
+
+  const nowIdx = expandIndex(rP(await anonJson("op=publishedmanifest")));
+  const midIdx = expandIndex(globalThis.__IDX_AWAITING);
+
+  t("THE AWAITING WINDOW: every ratified member's pair is stated and no awaited member's is",
+    understated(midIdx, "publishedmanifest(awaiting)"), []);
+  t("THE COMPLETE EDITIONS: the same sweep over the same answer once every container exists",
+    understated(nowIdx, "publishedmanifest"), []);
+
+  /* AND THE SWEEP IS NOT PASSING ON AN EMPTY ANSWER — the fixture is asserted
+     rather than assumed, because a sweep over zero cases returns [] and would
+     look identical. */
+  t("the fixture the sweep ran over: two case editions, two members each, four ratified findings",
+    [(nowIdx.cases || []).map((c) => `${c.case_id}@${c.edition}`),
+     (nowIdx.caseMembers || []).length, (nowIdx.published || []).length],
+    [[`${CASE_ID}@1`, `${CASE_ID}@2`], 4, 4]);
+
+  const pairOf = (idx, id, ed) => ((idx.published || [])
+    .find((p) => p.bundle_id === id && Number(p.edition) === ed) || {}).strength;
+  const grades = (s) => (s || []).map((a) => [a.axis, a.state, a.grade]);
+  /* THE TWO MEMBERS DIFFER ON BOTH AXES AND THE INDEX KEEPS THEM APART. This is
+     not a check that a value round-tripped — it is the check that the index did
+     not hand one member's pair to the other, which is the cheapest way for a
+     surface to look right while composing. The fixture makes any mix-up visible
+     because nothing about the two pairs matches. */
+  t("each member's index pair is ITS OWN, and the two do not resemble each other",
+    [grades(pairOf(nowIdx, FIND_A, 1)), grades(pairOf(nowIdx, FIND_B, 1))],
+    [[["capture", "graded", "B"], ["connection", "graded", "C"]],
+     [["capture", "unrated", null], ["connection", "graded", "D"]]]);
+  /* THE INDEX AND THE CASE PAGE ARE THE SAME PAIR. Cheap agreement on its own
+     (both read one column), so it is asserted for what it can actually catch: a
+     reader who quotes the index and a reader who quotes the case page must not
+     be able to come away with different letters for one finding. */
+  t("and it is the same pair op=publishedcase publishes for that finding, so the two surfaces cannot diverge",
+    (await anonCase(`id=${CASE_ID}&edition=1`)).findings.map((f) => JSON.stringify(f.strength)),
+    [FIND_A, FIND_B].map((id) => JSON.stringify(pairOf(nowIdx, id, 1))));
+  /* THE CONTAINER MANIFEST IS STILL ON THE INDEX and still names every member.
+     A reconstruction needs it — it is the case's own record of what it carried —
+     and this is the assertion that fails if the column is dropped again. */
+  t("the complete editions still carry their CONTAINER MANIFEST on the index, naming every member with its pair",
+    (nowIdx.cases || []).filter((c) => c.manifest_sha)
+      .map((c) => [c.manifest && c.manifest.format,
+                   (c.manifest && c.manifest.findings || []).map((f) => f.bundle_id),
+                   (c.manifest && c.manifest.findings || []).every((f) => Array.isArray(f.strength))]),
+    [["bio-case-container/2", [FIND_A, FIND_B], true], ["bio-case-container/2", [FIND_A, FIND_B], true]]);
+  /* THE THIRD STATE, AND WHAT THE FIXTURE MEASURED ABOUT IT rather than what the
+     item assumed. FIND_C was PUBLISHED into a case of its own in block 2b and
+     never ratified — and that case appears on the index NOWHERE, because
+     `published_cases` is written at the first RATIFICATION out of that member's
+     signed bytes, exactly like the roster and for the same reason. So the index
+     can never hold a case edition with an empty roster, and a surface drawing
+     one would be drawing a case that nothing signed. Both halves are asserted,
+     because it is the pair of them that makes the state unreachable rather than
+     merely unobserved. */
+  t("a case PUBLISHED but never ratified is not on the public index at all: nothing was signed, so there is nothing to state",
+    (nowIdx.cases || []).some((c) => c.case_id !== CASE_ID), false);
+  t("and every case edition the index DOES hold has a roster, so it can never present a case of nought findings",
+    (nowIdx.cases || []).filter((c) => !(nowIdx.caseMembers || [])
+      .some((m) => m.case_id === c.case_id && Number(m.edition) === Number(c.edition)))
+      .map((c) => `${c.case_id}@${c.edition}`), []);
+  /* THE PLANE SAYS AT WHICH ALTITUDE A PAIR LIVES, in the answer itself, so a
+     surface built against this op does not have to infer it from the shape. */
+  t("and the answer states the rule it is keeping, where a consumer will read it",
+    [/frozen strength pair belongs to a FINDING/.test(nowIdx.altitudes || ""),
+     /DECLARED AND NOT YET RATIFIED/.test(nowIdx.altitudes || "")], [true, true]);
 }
 
 await mf.dispose();

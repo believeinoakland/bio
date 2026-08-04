@@ -12254,10 +12254,32 @@ export class Store extends DurableObject {
    *  exactly as op=verify already works. */
   publishedManifest() {
     return { ok: true, scope: "published",
+      /* REC-49, and it is CONDUCT's determination enacted rather than a
+         convenience: EVERY RATIFIED FINDING CARRIES ITS OWN FROZEN PAIR HERE,
+         inside the awaiting window as much as outside it.
+         `published_bundles.strength` is the member's OWN signed, ratified pair —
+         the same bytes op=publishedcase publishes for that finding and the same
+         value the container manifest copies at assembly — so stating it composes
+         nothing and makes no new claim. REC-44 already ruled that the findings
+         which ratified are published and answerable NOW; an index that withheld
+         their pairs until the LAST member landed would understate, for days,
+         what the record actually holds.
+         WHY IT MATTERS THAT IT IS HERE AND NOT ONLY IN `cases[].manifest`: the
+         container's manifest does not exist until the edition completes, so a
+         reader of an incomplete case would see nothing at all. A record that
+         understates what it holds is still a record that does not say what is
+         true, and understatement reads as modesty, which is why nobody
+         questions it.
+         AND THE ALTITUDE IS THE WHOLE POINT (DEC-44): the pair belongs to a
+         FINDING and there is no such thing as a case-level pair. These fields
+         sit on the finding rows and must NEVER appear on `cases[]`. */
       published: this.#rows(
         `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.attestor_key,
-                p.gate_version
-         FROM published_bundles p ORDER BY p.bundle_id, p.edition`),
+                p.gate_version, p.strength, p.required
+         FROM published_bundles p ORDER BY p.bundle_id, p.edition`)
+        .map((r) => ({ ...r,
+          strength: r.strength ? JSON.parse(r.strength) : null,
+          required: r.required ? JSON.parse(r.required) : null })),
       /* REC-44: the CASES, beside the findings rather than instead of them. The
          findings are what carry a signature and a frozen pair; the case is what
          carries the container's manifest, its own hash and the scope. A
@@ -12270,6 +12292,12 @@ export class Store extends DurableObject {
          ORDER BY case_id, edition, ord`),
       shas: this.#rows(
         `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
+      altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE "
+               + "has a scope, a completeness assertion, editions and a container; it has no strength, and "
+               + "composing its members' pairs into one letter would be a claim the evidence does not "
+               + "support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET "
+               + "RATIFIED: it has no pair because nothing has been signed for it, which is a state of the "
+               + "record and not a gap in this answer.",
       detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this "
             + "instance's cooperation or continued existence. Nothing unpublished appears, by construction: "
             + "this reads the published projection and never the working corpus." };
