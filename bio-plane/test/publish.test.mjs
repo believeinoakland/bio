@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (REC-14's three, each broken ALONE and restored; recorded as run in the header below) (a) C-21.1 IS A CHECKBOX — in checks/bio-checks.mjs checkCompletenessFreshness replace the comparison `now[k] === was[k]` with `false`, AND in src/store.mjs publishCase() the same comparison in the COMPLETENESS_CARRIED_FORWARD arm -> a second edition whose statement, justification and exclusion list are the previous edition's BYTE FOR BYTE publishes and ratifies; (b) THE AXES COMPOSED — in checks/bio-checks.mjs checkInheritedLeg replace `const on = frozen[axis]` with `const on = frozen.capture` (one scalar for both axes) -> the connection-axis probe that inherits B from a case whose CONNECTION is C is ACCEPTED, and the legal connection-C leg is refused; (c) THE UPSERT RETURNS — in src/store.mjs publish() replace `ON CONFLICT(bundle_id,edition) DO NOTHING` with an UPDATE of every column and drop the EDITION_NOT_INCREMENTED arm -> edition 2 overwrites edition 1's row and edition 1's signature, attestor, time and gate version are GONE from the published projection. Restore after each. */
+/* NEGATIVE CONTROL: (REC-14's four, each broken ALONE and restored; 70 pass when whole) (a) C-21.1 IS A CHECKBOX — in checks/bio-checks.mjs checkCompletenessFreshness replace `if (now[k] != null && was[k] != null && now[k] === was[k]) {` with `if (false) {`, AND in src/store.mjs publishCase() replace the matching `if (now[k] != null && prior.completeness[k] != null && ...)` with `if (false)` -> 65 pass, 5 FAIL: the headline "a second edition carrying edition 2's STATEMENT verbatim is REFUSED" reports `undefined` because op=publish ACCEPTED it and the edition landed, the next two then report ILLEGAL_TRANSITION (the case is already published on a carried-forward assertion), and "the CATALOG names C-21.1" reports 0 — the gate finds nothing wrong with that document either, so nothing downstream would ever notice. Both halves must go together, as REC-13 found: breaking one alone leaves the other refusing. (b) THE AXES COMPOSED, two variants, because which probe flips depends on which scalar the bug composes. (b1) checkInheritedLeg `const on = frozen[axis]` -> `const on = frozen.capture` -> 69 pass, 1 FAIL: PROBE 2 (inheriting CONNECTION B from a case whose frozen connection is C) is ACCEPTED, got [true,null,[]] where [false,"BASIS_REFUSED",["C-21.2"]] was wanted. (b2) compose to the WEAKEST letter instead (`const on = worst(frozen.capture, frozen.connection)`) -> 69 pass, 1 FAIL, the OPPOSITE one: PROBE 3, the LEGAL leg inheriting capture B at the frozen capture grade, is REFUSED. Two "must refuse" probes alone would have missed (b2) entirely; the four probes are why either variant is caught. (c) THE UPSERT RETURNS — in src/store.mjs publish() replace `ON CONFLICT(bundle_id,edition) DO NOTHING` with an UPDATE of every column, force `const ed = 1`, and guard both edition refusals with `if (false)` -> 61 pass, 9 FAIL: "edition 1 KEEPS its own signature" reports edition 2's sha in edition 1's row, "BOTH editions are readable" reports ONE row, and "edition 1's completeness statement is still exactly what was signed" reports edition 2's statement. D-144 reproduced exactly — a reader who relied on edition 1's attestation finds edition 2's in its place. Restore after each. */
 /* REC-14: the `published` state — EDITIONS, the completeness assertion, and the
  * gates that stop it being a checkbox.
  *
@@ -40,24 +40,26 @@
  *      lookup — the query invariant 7 has no other mechanical enforcement point
  *      for at the case level.
  *
- * NEGATIVE CONTROLS RUN 2026-08-04 (rec14-agent), each alone and restored; the
- * header line above is the re-run recipe:
- *   (a) C-21.1 neutered in BOTH gates -> 4 FAIL. The headline
- *       "a second edition carrying edition 1's completeness verbatim is
- *       REFUSED" reports ok:true, and the case then RATIFIES: a published
- *       edition 2 whose account of its own limits is a copy of edition 1's, and
- *       no gate anywhere looking. Both halves had to go together, exactly as
- *       REC-13 found: breaking the store alone leaves the gate refusing the
- *       document op=publish just wrote.
- *   (b) the axes composed to one scalar -> 2 FAIL, and they fail in OPPOSITE
- *       directions, which is the whole argument: the connection-axis probe that
- *       must be refused is ACCEPTED (it is compared against the capture grade),
- *       and the legal connection-C leg is REFUSED. A suite with only the two
- *       "must refuse" probes would have caught neither cleanly.
- *   (c) the upsert restored -> 3 FAIL, including "edition 1 keeps its own
- *       signature" reporting the edition-2 signature: D-144 reproduced exactly,
- *       a reader who relied on edition 1's attestation finding edition 2's in
- *       its place.
+ * NEGATIVE CONTROLS RUN 2026-08-04 (rec14-agent), each alone and restored, 70
+ * pass when whole; the header line above is the re-run recipe and carries the
+ * exact edits. What each one MEASURED:
+ *   (a) C-21.1 neutered in BOTH gates -> 65 pass, 5 FAIL. A second edition
+ *       whose statement is the previous edition's BYTE FOR BYTE publishes, and
+ *       the catalog then finds nothing wrong with the document either: the
+ *       completeness assertion becomes a field that must be non-empty, which is
+ *       the checkbox this gate exists to refuse. Breaking one side alone proves
+ *       nothing, because the other still refuses (REC-13's finding, repeated).
+ *   (b) the axes composed to ONE scalar -> 69 pass, 1 FAIL, in TWO variants
+ *       that fail in OPPOSITE directions. Composed to the capture grade, the
+ *       connection probe that must be refused is ACCEPTED. Composed to the
+ *       weakest letter, the LEGAL connection/capture leg at the frozen grade is
+ *       REFUSED. That is why there are four probes and not two: a suite holding
+ *       only the two "must refuse" cases would pass under the second bug while
+ *       the record quietly refused honest legs.
+ *   (c) the upsert restored -> 61 pass, 9 FAIL. One row survives, edition 1's
+ *       sha, signature and completeness statement are edition 2's, and the
+ *       reader who relied on edition 1's attestation finds edition 2's in its
+ *       place. D-144, reproduced on purpose.
  *
  * Every assertion that ratifies signs a real `bio-ratify` statement with stock
  * ssh-keygen, so this suite SKIPS LOUDLY WITH A NAMED REASON when ssh-keygen is
@@ -460,16 +462,21 @@ console.log("\n--- 5. DEC-12: reopened, concluded again, published at edition 2 
   const rat2 = await ratify(INQ_CASE);
   t("edition 2 ratifies", [rat2.ok, rat2.edition], [true, 2]);
   const eds = await editionsOf(INQ_CASE);
+  /* Read defensively ON PURPOSE: the negative control for this block puts the
+     UPSERT back, and the failure it produces is that edition 1's ROW IS GONE.
+     A suite that threw on the missing row would report a crash where the
+     finding is "the earlier attestation was destroyed", which is D-144 itself
+     and has to be legible as that. */
+  const [ed1, ed2] = [eds.editions[0] ?? {}, eds.editions[1] ?? {}];
   t("BOTH editions are readable, each with its OWN sha, time and armored signature",
-    [eds.editions.length, eds.editions[0].edition, eds.editions[1].edition,
-     eds.editions[0].bundle_sha !== eds.editions[1].bundle_sha,
-     eds.editions[0].sig_armored !== eds.editions[1].sig_armored], [2, 1, 2, true, true]);
-  t("edition 1 KEEPS its own signature after edition 2 lands (D-144 closed as a feature)",
-    eds.editions[0].bundle_sha, sha1);
+    [eds.editions.length, ed1.edition, ed2.edition,
+     ed1.bundle_sha !== ed2.bundle_sha, ed1.sig_armored !== ed2.sig_armored], [2, 1, 2, true, true]);
+  t("edition 1 KEEPS its own signature, attestor and time after edition 2 lands (D-144 closed as a feature)",
+    [ed1.bundle_sha, ed1.attestor_member, typeof ed1.sig_armored], [sha1, "pilar", "string"]);
   t("each edition has its own container manifest, so a copy of either can be checked",
-    eds.editions[0].manifest_sha !== eds.editions[1].manifest_sha, true);
+    Boolean(ed1.manifest_sha) && ed1.manifest_sha !== ed2.manifest_sha, true);
   t("edition 1's completeness statement is still exactly what was signed, not edition 2's",
-    eds.editions[0].completeness.statement, STMT1);
+    ed1.completeness?.statement, STMT1);
 }
 
 /* ============================================ 6. C-21.1 and the edition refusals */
@@ -509,7 +516,7 @@ console.log("\n--- 6. C-21.1: a completeness claim carried forward unchanged is 
   const ok3 = await publish(PILAR, { target: INQ_CASE, statement: FRESH_S, excluded: FRESH_X,
     subjectPosition: "sought_and_answered", subjectJustification: FRESH_J });
   t("the same POSITION and the same AUTHOR are legal on a fresh assertion — the stamps are not the claim",
-    [ok3.ok, ok3.edition, ok3.completeness.subject_position, ok3.completeness.author],
+    [ok3.ok, ok3.edition, ok3.completeness?.subject_position, ok3.completeness?.author],
     [true, 3, "sought_and_answered", "pilar"]);
   /* THE GATE runs C-21.1 again at ratification: the store's refusal above stops
      a member signing a document the gate would reject, and the gate is what
