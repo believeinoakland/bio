@@ -46,7 +46,15 @@ const call = async (p, body) => (await (await mf.dispatchFetch("http://x" + p,
 
 const add = (b) => call("/memberadd", b);
 const enroll = (b) => call("/enroll", b);
-const list = async () => (await call("/memberlist")).members;
+/* THE ADMINISTRATOR STAMP, carried the way this battery's other gated direct-DO
+   reads carry `viewer` (REC-25). This suite drives the Durable Object with no
+   control plane in front of it, and D-157's cover↔handle projection lives in the
+   store and FAILS CLOSED: without the stamp the rows come back with handles and
+   no `cover`, which is correct for an ordinary member and wrong for the
+   administrator's view every assertion below is written from. `administer=1` is
+   what index.mjs stamps for an administrator; the store never takes it from a
+   caller, and members.test.mjs proves that through the real surface. */
+const list = async () => (await call("/memberlist?administer=1")).members;
 const of = async (id) => (await list()).find((m) => m.member_id === id) || null;
 
 /* Bring a member all the way to active, which is the state every governance
