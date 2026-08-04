@@ -1,4 +1,8 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) overclaim the capture grade in the acquire path (index.mjs: a direct fetch stamps "A" instead of "B") -> 1 assertion fails (the load-bearing "acquire says B, a Worker cannot produce a grade-A capture"); restored, 72 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) overclaim the capture grade in the acquire path (index.mjs: a direct fetch stamps "A" instead of "B") -> 1 assertion fails (the load-bearing "acquire says B, a Worker cannot produce a grade-A capture"); restored, 72 pass. (run 2026-08-04, REC-48) publish op=acquire's `note:` as a hand-typed literal copy instead of the composed `ACQUIRE_GRADE_NOTE` -> THIS SUITE STAYS GREEN and only hygiene.test.mjs's structural sweep fails; then move the enforced ceiling to C and 5 assertions here fail naming the note that still says B. Three arms in full below, each RUN. */
+/* REC-48's THREE ARMS (run 2026-08-04, rec48-agent), each broken ALONE and every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/index.mjs 16cf4e2f..., checks/bio-checks.mjs d8da7b9d...); whole = acquire 79, hygiene 369, earnedbasis 54; ALL THREE RE-RUN against the final files, so the counts name the files that are on disk.
+   (a) THE ITEM'S OWN — PUBLISH THE NOTE AS A HAND-TYPED LITERAL COPY. Replace `note: ACQUIRE_GRADE_NOTE,` in src/index.mjs with the same sentence typed out ("Grade B: bytes as fetched … Co-attestation raises B toward evidentiary weight.") -> THIS SUITE STAYS 79 PASS, 0 FAIL. Every behavioural pin — the wire equality, the composer equality, both interpolation pins, the not-the-attest-fence pin — is satisfied by a copy that agrees today at zero cost. Only hygiene.test.mjs moves: 367/2, both detectors naming `index.mjs:1822 "Grade B"` and `"Grade A"`. REC-35's finding restated a fifth time and REC-43's measurement reproduced on a second sentence: THE STRUCTURAL PIN IS THE WHOLE OF THIS CONTROL, and a suite that owns the sentence cannot be the suite that catches the copy.
+   (b) THE SAME LITERAL, AND THEN MOVE THE RULE — keep the literal and set `EARNED_CAPTURE_CEILING = 'C'` in checks/bio-checks.mjs -> 74 pass, 5 FAIL, and they name the note that still says B in both directions: the letter claimed is no longer the letter the gate enforces, the ceiling is not interpolated, the derived unreachable grade is not named, the wire is not the composition, and it is not the published constant. THIS IS WHAT THE COPY COSTS — a caller is told the capture it just made is Grade B while the gate refuses any leg above C, the record overclaiming on a doctrine sentence, which CLAUDE.md ranks worse than a missing feature. hygiene 367/2 and earnedbasis 50/4 alongside.
+   (c) THE COMPOSED NOTE UNDER THE SAME MOVED RULE -> 78 pass, 1 FAIL, and the difference between (b) and (c) is the whole item: the note now says Grade C and no caller is told a grade the gate will not accept. The ONE remaining failure is a REAL FINDING and not this item's doing — "the letter it claims is the one the gate ENFORCES" fires on `src/index.mjs`'s `grade: via === "archive.org" ? "C" : "B"`, the STAMPED grade, which is a value copy of the ceiling that REC-48 deliberately did not close because its other arm (the archive-sourced letter) has no exported constant to compose from and minting one is a doctrine act. Routed to CONDUCT; the assertion is left in so the gap is MEASURED rather than remembered. */
 /* Acquisition: the fetch layer, and the honesty of what it claims.
  *
  * Negative-control detail: overclaim the capture grade in the acquire path (index.mjs: a direct fetch stamps "A" instead of "B") -> 1 assertion fails (the load-bearing "acquire says B, a Worker cannot produce a grade-A capture"); restored, 72 pass.
@@ -16,12 +20,29 @@
  * into a probe of things it should not reach. The fence is the catalog's own
  * isPublicHttpsLocator, the same function that guards the gathering queue, so
  * there is one definition of a reachable address rather than two.
+ *
+ * CORRECTED 2026-08-04 BY REC-48, and stated rather than quietly reworded: the
+ * paragraph above says "Grade A requires a WACZ … so the load-bearing assertion
+ * in this suite is that acquire says B". That is still the doctrine and it is
+ * still where the load sits — but the two letters are no longer WRITTEN in the
+ * op's answer. `note:` interpolates them from `EARNED_CAPTURE_CEILING` and the
+ * derived `UNREACHABLE_CAPTURE_GRADE`, so what this suite pins is that the
+ * sentence a caller reads is a FUNCTION of the rule `checkEarnedLeg` enforces,
+ * not a third copy of it. The letters survive in this header on purpose: it is
+ * prose about the doctrine, it reaches no caller, and stating the rule is the
+ * only way the correction is legible.
  */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+/* REC-48: the note is composed, so the suite composes the expectation the same
+   way instead of typing the sentence. Both modules are pure — neither imports
+   `cloudflare:workers` — so they load in the node harness, which is the
+   precedent REC-43 set for the attest fence. */
+import { acquireGradeNote, ACQUIRE_GRADE_NOTE, ATTEST_FENCE } from "../src/affordances.mjs";
+import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -79,8 +100,57 @@ t("the instant is ISO 8601 UTC", /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(a
 t("the content type the source declared is kept", a.document.capture.content_type, "application/pdf");
 
 console.log("\n--- the grade is honest ---");
-t("acquire claims Grade B, never A", a.document.capture.grade, "B");
-t("and says in words why A is not available", /chain-of-custody/.test(a.note), true);
+/* PIN CORRECTED 2026-08-04 (REC-48). It read `t("acquire claims Grade B, never A",
+   …, "B")` and `t("and says in words why A is not available", /chain-of-custody/…)`.
+   Neither was wrong about the plane; both were wrong about WHAT THEY GUARDED.
+   The first named two letters in its own label and compared against a third copy
+   of one of them; the second checked that a reason-shaped phrase appeared and
+   would have gone on passing if every letter in the sentence had moved. Between
+   them they let `note:` state the capture-grade doctrine in its own letters for
+   as long as the op has existed. The literal wire pin is KEPT — it is the claim
+   that this plane says B today, and it is what would catch a silent doctrine
+   move — and the pins that were doing nothing are replaced by the ones that make
+   the sentence a FUNCTION of the rule. */
+t("acquire claims the ceiling letter and never the one above it", a.document.capture.grade, "B");
+t("and the letter it claims is the one the gate ENFORCES, not a copy that agrees today",
+  a.document.capture.grade, EARNED_CAPTURE_CEILING);
+t("the note still says in words why the grade above the ceiling is unavailable",
+  /chain-of-custody/.test(a.note), true);
+
+/* THE NOTE IS COMPOSED FROM THE ENFORCED RULE, WHICH IS REC-48. The letters are
+   INTERPOLATED from `EARNED_CAPTURE_CEILING` and the DERIVED
+   `UNREACHABLE_CAPTURE_GRADE`, so the sentence a caller reads and the refusal
+   `checkEarnedLeg` makes cannot say different things. These four pins are
+   BEHAVIOURAL and they are deliberately not the whole guard: a hand-typed
+   literal identical to the composition would satisfy every one of them at zero
+   cost (REC-43 measured exactly that on the attest fence). The pin that bites is
+   STRUCTURAL and lives in hygiene.test.mjs — no module of src/ may spell a grade
+   letter beside the word at all. Both are needed: this one says the sentence is
+   RIGHT, that one says it is not a copy. */
+t("the note interpolates the enforced ceiling rather than spelling it",
+  a.note.includes(`Grade ${EARNED_CAPTURE_CEILING}:`), true);
+t("and names the unreachable grade the rule DERIVES, not a typed letter",
+  a.note.includes(`Grade ${UNREACHABLE_CAPTURE_GRADE} needs a chain-of-custody`), true);
+t("the note over the wire IS the composition, character for character",
+  a.note, acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE));
+t("and is the published constant the plane composes once",
+  a.note === ACQUIRE_GRADE_NOTE, true);
+
+/* IT IS NOT THE ATTEST FENCE, and a later session must not "simplify" it into
+   one. Different act, different reader, different moment: the fence is the
+   prompt on the act a member is DECIDING to take (DEC-39), this is the receipt
+   for bytes already captured. REC-48's scope says so in as many words; this pin
+   is what makes that survive the next reader who notices they overlap. */
+t("op=acquire's note is its own sentence and not the attest act's fence",
+  [a.note === ATTEST_FENCE, a.note.length > 0, ATTEST_FENCE.length > 0], [false, true, true]);
+
+/* The composer refuses to write a sentence it cannot make true — a load failure,
+   never a fallback that ships "Grade null needs a chain-of-custody web archive". */
+{
+  let threw = false;
+  try { acquireGradeNote(EARNED_CAPTURE_CEILING, null); } catch { threw = true; }
+  t("with no grade above the ceiling the note is not composed at all", threw, true);
+}
 t("the method names the surface that did it", /bio-plane acquire/.test(a.document.capture.method), true);
 
 console.log("\n--- the bytes are really in the store, content-addressed ---");

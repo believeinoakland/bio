@@ -7,6 +7,7 @@
 
    (c) THE CAPTURE CEILING. In checkEarnedLeg, `if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(earned.grade)) {` -> `if (false) {` -> earnedbasis 51 pass, 1 FAIL; battery 90/91 (4798). "grade A on the capture axis is UNREACHABLE" got [true,false]: a leg claiming capture grade A over a directly captured document is ACCEPTED, against the landed doctrine that grade A needs a chain-of-custody web archive this plane cannot produce and does not claim (CAPTURE-FIDELITY.md; R2-e/R2-g). One assertion and one suite, which is itself worth recording — nothing else in the battery notices a capture grade the record cannot support, and this arm is the only thing standing between the record and it.
 
+   (run 2026-08-04, REC-48) A FOURTH ARM ON A DIFFERENT SUBJECT — THIS OP'S `ceiling` SENTENCE. It spelled the unreachable letter in its own letters, a FOURTH copy of the capture-grade doctrine that REC-48's scope had counted as three; it is now DERIVED from BASIS_GRADES as the rank above EARNED_CAPTURE_CEILING. (d) hand-type `Grade A` back into it in src/store.mjs -> THIS SUITE STAYS 54 PASS, 0 FAIL, and only hygiene.test.mjs moves (367/2, naming `store.mjs:5191 "Grade A"`). An identical copy agrees at zero cost, and a suite that owns a sentence cannot be the suite that catches the copy — the pin that bites is structural and lives one altitude up. (e) move the rule instead, `EARNED_CAPTURE_CEILING = 'C'` in checks/bio-checks.mjs -> 50 pass, 4 FAIL, and they are the right four: the ceiling this op reports, the grade a leg lands with, its readback, and "grade A on the capture axis is UNREACHABLE" — the READ and the ENFORCER moving together, which is what the composed sentence buys. src/store.mjs restored byte-identically (sha256 7c1ed3aa...), checks/bio-checks.mjs likewise (d8da7b9d...); both arms re-run against the final files.
    Restored after each, byte-identically; 91/91 (4799) and coverage --strict exit 0 afterwards. */
 /* REC-18: EARNED BASIS GRADES — `grade_source: 'resolution'` from `resolutions`.
  *
@@ -88,7 +89,8 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { checkBundle, EARNED_CAPTURE_CEILING,
+         UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -328,6 +330,20 @@ console.log("\n--- 2. the EARNED connection grade: computed by the record, not h
     [pre.earned.capture[DOC_A]?.grade, pre.earned.capture[DOC_A]?.mode], ["B", "ceiling"]);
   t("a document the record holds NO bytes for earns nothing on the capture axis either",
     DOC_BARE in pre.earned.capture, false);
+  /* REC-48 (2026-08-04). This op's `ceiling` sentence was the FOURTH place the
+     capture-grade doctrine was written out in its own letters — REC-48's scope
+     counted three and this one was found by sweeping for the class rather than
+     by taking the count on trust. The letter is now DERIVED (the rank above
+     EARNED_CAPTURE_CEILING in the same BASIS_GRADES array `checkEarnedLeg`
+     compares this very leg against), so the sentence a member reads while
+     filling a leg in and the refusal they will meet if they claim too much
+     cannot say different things. Value pins, deliberately, and both sides of
+     the answer: the wire says B today, AND what it says is the rule's own. */
+  t("the ceiling sentence names the DERIVED unreachable grade, not a typed letter",
+    pre.earned.capture[DOC_A]?.ceiling?.startsWith(`Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable`),
+    true);
+  t("and the grade it reports is the ceiling the gate ENFORCES",
+    pre.earned.capture[DOC_A]?.grade, EARNED_CAPTURE_CEILING);
 
   const leg = (grade) => ({ refs: [DOC_A], legs: [{ target: DOC_A, role: "supports",
     grade, axis: "connection", source: "resolution" }] });
