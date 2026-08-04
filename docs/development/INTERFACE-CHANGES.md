@@ -460,3 +460,14 @@ negative control breaks exactly that merge and fails naming it.
 - **Consumers:** UI (dormant). CONDUCT answers per step 3, in writing, naming that
   it did so: `AGREE` — additive; the public surface UI-18 renders is exactly this.
 - **Version:** I3 5.1.0 → **5.2.0** in `INTERFACES.md`.
+
+## IC-10 · I3: `op=inquirystrength` · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-34 adds one gated read
+  (admin/member/probe) returning the derived pair as two axis objects verbatim from
+  the derivation, with REC-30's postures plus a prose sweep. Additive; no existing
+  op changed.
+- **Consumers:** UI (dormant). CONDUCT answers per step 3, in writing, naming that
+  it did so: `AGREE` — UI-11's `inquiryPair()` seam was written for exactly this
+  answer and consumes it with no reshape; UI-12 is its next consumer.
+- **Version:** I3 5.2.0 → **5.3.0** in `INTERFACES.md`.
