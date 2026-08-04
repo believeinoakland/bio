@@ -771,3 +771,167 @@ reversal if a later reader wants RECONCILED §3.1's rename literally.
   `AGREE` — UI-27 is the written consumer and builds its elicitation against this act
   rather than hand-writing frontmatter, which is why it was sequenced first.
 - **Version:** I3 5.11.0 → **5.12.0** in `INTERFACES.md`.
+
+---
+
+## IC-20 · I3: `op=bootstrap` stops answering `roles`, and `op=login`'s two refusal codes become one · PROPOSED, RESPONSES, ACCEPTED, CHANGING, CHANGED AND SETTLED 2026-08-05 (REC-41)
+
+- **Interface:** I3 (plane → UI), **5.12.0 STABLE**
+- **Proposer and owner to land it:** `RECORD` (session rec41-agent), from REC-41 / D-188
+- **Consumers to answer per `INTERFACES.md`:** `UI`, `DIST`, and every content area
+  that needs its work reachable
+
+### 1 · PROPOSED
+
+**Two changes, and they travel together because closing the first is what forces
+the second. Both are BREAKING.**
+
+**(a) `op=bootstrap` stops publishing `roles`.** The op is `classes: null` — no
+token, no session, any caller on the internet. It exists to answer whether the
+instance has been claimed and whether a live bootstrap credential exists to claim
+it with; `gate-reads.test.mjs` has always described it in exactly those words. It
+ALSO answered `roles`: every role holding a credential, each with the date its
+password was last set. That is a roster plus a set of per-person dates, handed to
+a stranger in one request. The field is REMOVED — not blanked, not emptied, not
+gated: the `SELECT` against `credentials` is gone, so there is no roster in the
+answer for a later refactor to re-expose, and a caller cannot tell from the shape
+that one was ever computed. Remaining keys: `ok`, `service`, `version`,
+`bootstrapConfigured`, `claimed`, `rearmed`, `consumedAt`.
+
+`consumedAt` STAYS and the distinction is stated so it is not swept away next
+time: it is the instant this INSTANCE was claimed — one fact about this copy of
+the software, naming nobody, and there is one of it however many members the
+group has. It is not a per-person password date.
+
+**(b) `op=login`'s `NO_SUCH_ROLE` and `BAD_PASSWORD` are replaced by one code,
+`SIGN_IN_REFUSED`, carrying one sentence.** REC-39 kept the two distinguishable
+on ONE recorded ground: that `op=bootstrap` already handed any stranger the whole
+roster, "more completely and more cheaply than login probing could ever assemble
+it", so collapsing them would defend nothing. Change (a) destroys that ground. The
+decision was therefore re-made rather than inherited, in the same turn, and
+reversed. Two wire strings a caller may match on are gone.
+
+### 2 · WHY, AND THE MEASUREMENTS IT RESTS ON
+
+**The consumer impact of (a) is NIL, and it was RE-MEASURED for this proposal
+rather than taken from the queue item** (a claim in an item is a claim, not a
+measurement). As of 2026-08-05, against source:
+
+| Caller | Calls `op=bootstrap`? | Reads `roles`? |
+| --- | --- | --- |
+| `bio-plane/src/setup.mjs` | yes, three times | **no** — `version`, `claimed`, `bootstrapConfigured`, `rearmed`, `consumedAt` |
+| `newgroup/src/index.mjs` | yes, twice (`:364` `verifyUpdate`, `:631` the pre-update version probe) | **no** — `version` only |
+| `civicos-ui/**` | **no** — `grep -rani bootstrap civicos-ui` returns one line of prose in `NEXT_SESSION_PROMPT.md` | n/a |
+| the battery | `bootstrap.test.mjs`, `installer.test.mjs`, `browse.test.mjs` | **no** — no assertion anywhere named the field |
+
+**ONE CORRECTION TO THE ITEM'S PREMISE, recorded because the register should not
+carry an inaccuracy even a harmless one:** REC-41 and D-188 both say "not
+`newgroup`". `newgroup` IS a consumer of `op=bootstrap` — it is the installer's
+version probe and it calls the op twice. It is not a consumer of `roles`. The
+premise is right about the field and loose about the op, and the distinction
+matters here because (a) leaves every one of `newgroup`'s reads untouched.
+
+**A near-consumer worth naming, because it is the shape that would have made this
+look consumed:** `setup.mjs`'s panel carried a row labelled "Roles with
+passwords" whose value has always been filled from the SIGNED-IN role, never from
+this field. A label describing `roles` over a value that never came from it.
+Corrected to "Signed in as" in the same turn rather than deleted — a member
+seeing which identity the session holds is the point of the row.
+
+**Why (b) follows, measured rather than preferred:**
+
+1. `op=login` is `classes: null` and carries **no rate limit of any kind**. The
+   only unauthenticated op in this plane that meters a caller is `op=knock`. With
+   distinct codes, "does this role hold a credential" is an unmetered anonymous
+   oracle answering one guess per request, forever. Closing the wholesale route
+   and leaving that open would disclose the same set of facts more slowly, and
+   let this register record a closure the plane does not deliver.
+2. **This plane already decided this question three times and always the other
+   way.** `#INVITE_MISS`: a spent invitation and one that never existed answer
+   byte-identically, "the security property and not tidiness". `NOT_PUBLISHED`:
+   never-published, no-such-edition and never-existed are "one answer here".
+   And `NO_SUCH_ROLE` already collapsed its OWN two arms — revoked, and never
+   registered. Login was the last unauthenticated identity probe still
+   separating its outcomes, and only because of a disclosure that no longer
+   exists.
+3. **The distinction had exactly one consumer and the consumer was part of the
+   defect.** `setup.mjs` branched on `NO_SUCH_ROLE` to render "No member by that
+   name has set a password on this copy yet" — a paraphrase stating the
+   disclosure more plainly than the plane did, to an anonymous visitor, on the
+   instance's own front door. It now renders the plane's `detail` (DEC-8).
+   `civicos-ui` does not branch on the code: `signIn` hands the refusal to
+   `teach()`, so **no UI edit is owed by this change**.
+
+**AND A THIRD THING THE PROPOSAL FOUND WHILE BUILDING IT, which is part of (b)
+rather than extra scope:** identical words are not an identical answer if one
+arrives in a millisecond and the other in a hundred. The arms that refuse without
+checking a password returned immediately while a wrong password ran PBKDF2 at
+100,000 iterations. Measured: **6.7 ms versus 0.6 ms, an eleven-fold gap** — so
+the live roster was enumerable with a stopwatch and any password at all, which is
+exactly what (a) removes. Every such arm now pays an equivalent derivation
+first. Stated without overclaim: this equalises the dominant cost and is **not**
+a proof of constant time.
+
+**WHAT IS NOT CLAIMED BY EITHER CHANGE**, because overclaiming a fix is the
+failure this project exists to refuse. Member identity is not secret after this.
+`op=publishedcase` is `classes: null` and publishes `attestor.member` on every
+ratified finding, deliberately — a signature that does not name its signer is not
+a signature. What closes is the general oracle over everyone who holds a
+credential, including the members who have never published anything and whom
+nothing else names.
+
+### 3 · RESPONSES
+
+- **`UI`: `AGREE` — answered on its behalf by CONDUCT, IN WRITING, per protocol
+  step 3, and recorded as CONDUCT answering FOR the area and never as the area
+  agreeing.** UI is DORMANT for this purpose: the live `civicos-ui` session is
+  UI-29, whose claim is scoped to the published-case rendering surface and which
+  cannot answer for the interface. The grounds are drawn from the measurement
+  above rather than invented: `civicos-ui` **never calls `op=bootstrap`**, so (a)
+  cannot reach it; and its sign-in gate renders the plane's refusal through
+  `teach()` rather than matching on a reason string (UI-23's seam, DEC-8), so (b)
+  reaches it as different prose in an element that already displays whatever the
+  plane sent. Nothing in the UI migrates.
+- **`DIST`: `NOT-AFFECTED`, answered on its behalf by CONDUCT, in writing, same
+  standing.** The installer's served surfaces read `version` from this op and
+  nothing else. ONE THING DIST MUST KNOW AND IT IS NOT A MIGRATION: the signed
+  artifact at `newgroup/src/release.mjs` embeds a BUNDLED COPY of the previous
+  `setup.mjs`, including the `NO_SUCH_ROLE` branch and the old panel label. It is
+  regenerated at the next release cut and was deliberately NOT hand-edited by
+  this item — a signed artifact is not patched in place.
+- **Content areas: `NOT-AFFECTED`**, answered on their behalf by CONDUCT in
+  writing. No content area reaches either op; both are pre-auth surfaces.
+
+### 4 · RESOLUTION
+
+**ACCEPTED 2026-08-05.** All responses AGREE or NOT-AFFECTED; no counter. The
+proxy answers were given by CONDUCT for dormant/unavailable areas and are named
+as such above.
+
+### 5 · CHANGING → CHANGED
+
+Landed by `RECORD` in one turn with the measurements above. **I3 5.12.0 →
+6.0.0.**
+
+**IT IS A MAJOR BUMP AND THE NIL CONSUMER IMPACT DOES NOT MAKE IT A MINOR ONE.**
+Removing a published field from an op's answer is a break by definition, and so
+is retiring two refusal reason codes. IC-3 settled this reasoning for a single
+renamed wire string with impact equally nil: recording it as additive because
+nobody happened to be reading it "would teach this registry to lie". A registry
+whose version numbers track who complained rather than what changed cannot be
+used to reason about compatibility at all.
+
+### 6 · SETTLED
+
+- **`UI`** — nothing to migrate; measured, not assumed (no call site for
+  `op=bootstrap`; no reason-code match in the sign-in gate).
+- **`DIST`** — nothing to migrate; the embedded `setup.mjs` refreshes at the next
+  release cut.
+- **Content areas** — nothing to migrate.
+- **The battery** — `members.test.mjs` carries the structural sweep over the
+  whole unauthenticated response and the four-arm refusal equality;
+  `bootstrap.test.mjs`'s `BAD_PASSWORD` pin is corrected with a dated reason
+  rather than exempted. Three negative controls RUN and recorded in
+  `members.test.mjs`'s own `NEGATIVE CONTROL:` line.
+
+**Returns to STABLE at 6.0.0.**

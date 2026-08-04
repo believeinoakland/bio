@@ -7,6 +7,11 @@
    (b) GIVE THE WRAPPER ARM ITS OWN HONEST-LOOKING SENTENCE — in the DO dispatch's `login:` wrapper, replace the shared `Store.LOGIN_REFUSAL_DETAIL.NO_SUCH_ROLE` with "this role is registered here and its membership is no longer active, so it cannot sign in." (true of that branch, which is exactly what makes it dangerous) -> 3 FAIL (78/81) naming the two-arm byte-equality, the "no ACTIVE credential" content pin, and the both-possibilities pin. This is the failure the one-constant arrangement exists to prevent: the reason CODE still collapses revocation into never-existed while the SENTENCE announces it.
    (b-instrument) ARM (b)'s FIRST RUN EXPOSED A WRONG PIN AND IT WAS CORRECTED, NOT EXEMPTED: the byte-equality assertion had compared `member:nobody` against `member:meilan`, and BOTH are answered by the wrapper (it refuses an absent member row as well as an inactive one), so the two arms were never actually compared. `login()`'s own arm is reached by a role with no `member:` prefix; the pin now uses one. Before the correction arm (b) fired only 2.
    Restored -> 81/81. */
+/* NEGATIVE CONTROL (REC-41, closing D-188 and revisiting REC-39's decision), THREE arms, ALL RUN 2026-08-05, `src/store.mjs` restored BYTE-IDENTICAL after each (sha256 40872e0e… before and after all three; `src/setup.mjs` 6aae2b79… and this file c5a24137… untouched by the controls):
+   (a) THE ITEM'S OWN — RESTORE THE ROSTER. In `store.mjs bootstrapState()` put back `const roles = this.#rows("SELECT role, updated FROM credentials")` and the `roles,` key on the returned object -> 4 FAIL (89/93), and the failures NAME the disclosure rather than reporting a shape mismatch: `["$.roles.0.role = \"member:ruth\"","$.roles.1.role = \"admin\"","$.roles.2.role = \"member:meilan\""]` on the role sweep and `["$.roles.0.updated = \"2026-08-04T19:08:37.880Z\"", …]` on the date sweep, plus the no-nesting and exact-key-set arms. FOUR ARMS FIRE ON ONE DEFECT ON PURPOSE: the sweep is over the WHOLE response by CLASS OF FACT (any role name, any instant, any collection, any unexpected key) and not a check for the name `roles`, because REC-44's control (a) measured that a surface goes on answering correctly and ADDITIONALLY answers wrongly — a `"roles" in b === false` pin would have been satisfied by the identical leak under the name `credentials`, `members`, or nested inside `state`.
+   (b) RE-SPLIT THE REFUSALS — return `NO_SUCH_ROLE` with its own sentence from `login()`'s no-credentials arm and `BAD_PASSWORD` with its own from the derivation arm, i.e. the shape REC-39 shipped -> 8 FAIL (85/93): the two code pins, the collapse pin, the retired-code pin, the four-arm equality, the counted-set pin and the shared-sentence content pin. This is the arm that proves the SECOND half of REC-41 is enforced and not merely commented.
+   (c) NEUTER THE COST EQUALISER — make `Store.#payLoginCost` a no-op -> 2 FAIL (91/93), and this is the arm worth reading, because EVERY WIRE ASSERTION STAYS GREEN under it: the codes are identical, the sentences are byte-equal, the sweep is clean, and the enumeration oracle is wide open anyway. MEASURED: wrong-password 6.7ms · no-credential 0.6ms (0.09x) · no-such-member 0.6ms (0.08x) — an eleven-fold gap that answers "is this an active member" to anyone with a timer and any password at all, which is precisely the roster arm (a) removes. With the equaliser restored the three arms land within 4% of each other (7.5 / 7.3 / 7.2 ms). A collapse asserted only on the wire would have passed this suite completely.
+   Restored -> 93/93. */
 /* Member credentials and the session write powers.
  *
  * Runs the full Worker (index.mjs) under miniflare with the DO bound, so
@@ -79,8 +84,13 @@ console.log("\n--- member sign-in and the intake powers ---");
 const lg = await POST("op=login", { role: "member:ruth", password: "ruth-passphrase-1" });
 t("member logs in", lg.result.ok, true);
 const S = "token=" + lg.result.token;
-t("wrong password refused", (await POST("op=login", { role: "member:ruth", password: "wrong-passphrase-x" })).result.reason, "BAD_PASSWORD");
-t("unknown member refused", (await POST("op=login", { role: "member:nobody", password: "whatever-whatever" })).result.reason, "NO_SUCH_ROLE");
+/* CORRECTED 2026-08-05 (REC-41): both were pinned to their own code —
+   BAD_PASSWORD and NO_SUCH_ROLE. The codes are collapsed into one, so the pins
+   assert the ONE code from both callers; the reason is at
+   store.mjs LOGIN_REFUSAL_DETAIL and the inverted distinguishability assertion
+   is below. */
+t("wrong password refused", (await POST("op=login", { role: "member:ruth", password: "wrong-passphrase-x" })).result.reason, "SIGN_IN_REFUSED");
+t("unknown member refused", (await POST("op=login", { role: "member:nobody", password: "whatever-whatever" })).result.reason, "SIGN_IN_REFUSED");
 
 /* REC-39 — THE REFUSED SIGN-IN'S WORDS, asserted AT THE OP because that is
    where a member meets them.
@@ -113,24 +123,46 @@ t("a refused login carries a SENTENCE, not only a code, on both refusals",
 t("D-57: neither sentence addresses the caller — the detail is about the mechanism, never about who is asking",
   [/\byou\b|\byour\b|\byours\b/i.test(det(badPw)), /\byou\b|\byour\b|\byours\b/i.test(det(noRole))],
   [false, false]);
-/* WHAT EACH SENTENCE MUST BE TRUE OF, pinned as the fact it states rather than
-   as its prose, so the wording stays free to improve and the CLAIM does not.
-   BAD_PASSWORD says a credential exists and the supplied password did not derive
-   its stored hash. NO_SUCH_ROLE says there is no ACTIVE credential — and the
-   word `active` is the load-bearing one, see the two-arm pin below. */
-t("BAD_PASSWORD says what the mechanism did: a stored credential, and a derivation that did not match it",
-  [/credential/i.test(det(badPw)), /derive/i.test(det(badPw))], [true, true]);
-t("NO_SUCH_ROLE says there is no ACTIVE credential, and SAYS that it does not distinguish the two ways that happens",
-  [/\bactive\b/i.test(det(noRole)), /deliberate/i.test(det(noRole))], [true, true]);
-/* AND THE SENTENCES ARE DIFFERENT, which is a decision and not an accident:
-   REC-39 kept the two refusals distinguishable because they always have been on
-   the wire — the reason CODES differ and three suites pin them — and because
-   `op=bootstrap` is unauthenticated and already answers with `roles`, every role
-   holding a credential. Collapsing the prose while the codes stay distinct would
-   defend nothing and make the store say less than it knows. If op=bootstrap's
-   roster is ever closed, THIS assertion is the one to revisit. */
-t("the two refusals are distinguishable, deliberately (see the reasoning at store.mjs LOGIN_REFUSAL_DETAIL)",
-  det(badPw) === det(noRole), false);
+/* WHAT THE ONE SENTENCE MUST BE TRUE OF, pinned as the facts it states rather
+   than as its prose, so the wording stays free to improve and the CLAIM does
+   not.
+ *
+ * CORRECTED 2026-08-05 BY REC-41, NOT EXEMPTED, and the correction is the whole
+ * point of the item rather than a knock-on. These were two assertions, one per
+ * refusal: BAD_PASSWORD said a credential exists and the password did not derive
+ * its stored hash, NO_SUCH_ROLE said there is no ACTIVE credential. THE OLD
+ * ASSERTIONS WERE RIGHT ABOUT THE FACTS AND WRONG ABOUT THE ARRANGEMENT — the
+ * facts are now carried by ONE sentence returned from every arm, so they are
+ * asserted of that one sentence, reached through BOTH callers. Splitting them
+ * back into two would re-open exactly what REC-41 closed. */
+for (const [who, r] of [["the wrong-password caller", badPw], ["the unknown-role caller", noRole]]) {
+  t(`the one sentence says what the mechanism did, to ${who}: a stored credential and a derivation that did not match`,
+    [/credential/i.test(det(r)), /derive/i.test(det(r))], [true, true]);
+  t(`the one sentence says there is no ACTIVE credential, and SAYS it does not distinguish the ways that happens, to ${who}`,
+    [/\bactive\b/i.test(det(r)), /deliberate/i.test(det(r))], [true, true]);
+}
+/* AND THE TWO REFUSALS ARE NOW IDENTICAL, WHICH IS THE DECISION REC-41 MADE.
+ *
+ * SUPERSEDED ASSERTION, CORRECTED WITH ITS REASON RATHER THAN DELETED. This
+ * read `det(badPw) === det(noRole)` -> `false`: REC-39 kept the two refusals
+ * distinguishable, and its ONLY ground was that `op=bootstrap` already answered
+ * `roles` — every role holding a credential — to any stranger, so collapsing
+ * them would defend nothing. The comment here and the one at
+ * `store.mjs LOGIN_REFUSAL_DETAIL` both said, in writing, that closing that
+ * roster is what reopens this. REC-41 closed it in the same turn as this edit.
+ * With the wholesale disclosure gone, a distinguishable refusal IS the retail
+ * one — `op=login` is `classes: null` and carries no rate limit, so it answers
+ * "does this role hold a credential" once per request, forever. So the two are
+ * now ONE code and ONE sentence, and this assertion is inverted. The reasoning,
+ * the evidence and what it does NOT claim are recorded at the constant. */
+t("REC-41: the two refusals are now IDENTICAL — one code, one sentence (see the reasoning at store.mjs LOGIN_REFUSAL_DETAIL)",
+  [badPw.reason, noRole.reason, det(badPw) === det(noRole), det(badPw) === ""],
+  ["SIGN_IN_REFUSED", "SIGN_IN_REFUSED", true, false]);
+/* AND NEITHER OLD CODE MAY COME BACK BY THE SIDE DOOR. A caller that still
+   matches on them must see them gone rather than see one of them survive on one
+   arm, which is how a collapse half-lands. */
+t("REC-41: neither retired code appears on either refusal",
+  [badPw.reason, noRole.reason].filter((x) => x === "BAD_PASSWORD" || x === "NO_SUCH_ROLE"), []);
 
 const aid = await GET(`op=allocid&prefix=INFO&year=2026&${S}`);
 t("session allocates an id", typeof aid.result.id, "string");
@@ -253,7 +285,8 @@ t("and holds a live session", (await GET(`op=list&${M}`)).result.length >= 0, tr
 t("revoke", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "revoked" })).result.ok, true);
 t("revoked member's session is dead", (await GET(`op=list&${M}`)).error, "unauthenticated");
 const revoked = (await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" })).result;
-t("revoked member cannot log in", revoked.reason, "NO_SUCH_ROLE");
+/* CORRECTED 2026-08-05 (REC-41): was NO_SUCH_ROLE. One code now. */
+t("revoked member cannot log in", revoked.reason, "SIGN_IN_REFUSED");
 /* WHICH ARM ANSWERED, measured rather than assumed, and the first version of the
    pin below was wrong because of it. EVERY `member:` role is judged by the DO
    dispatch's wrapper — it runs before `login()` and refuses an absent row as
@@ -262,11 +295,12 @@ t("revoked member cannot log in", revoked.reason, "NO_SUCH_ROLE");
    `login()`'s own NO_SUCH_ROLE is reached by a role with no `member:` prefix and
    no credentials row, which is what this is. Corrected, not exempted. */
 const noCred = (await POST("op=login", { role: "operator", password: "whatever-whatever" })).result;
-t("a role with no credential row at all is refused by login() itself", noCred.reason, "NO_SUCH_ROLE");
-/* REC-39 — THE TWO-ARM PIN, and it is the whole reason the NO_SUCH_ROLE sentence
-   says "no ACTIVE credential" rather than the obvious "no such role".
+/* CORRECTED 2026-08-05 (REC-41): was NO_SUCH_ROLE. One code now. */
+t("a role with no credential row at all is refused by login() itself", noCred.reason, "SIGN_IN_REFUSED");
+/* REC-39 — THE TWO-ARM PIN, and it is the whole reason the sentence says "no
+ * ACTIVE credential" rather than the obvious "no such role".
  *
- * NO_SUCH_ROLE is returned from TWO PLACES: `login()` itself, where no
+ * The refusal is returned from TWO PLACES: `login()` itself, where no
  * credentials row exists, and the DO dispatch's `login:` wrapper, where a
  * credential DOES exist and the member is no longer active. The shared reason
  * code is deliberate — it is the enrollment rule (a wrong, a spent and a
@@ -275,15 +309,30 @@ t("a role with no credential row at all is refused by login() itself", noCred.re
  *
  * A DETAIL SENTENCE IS THE EASIEST WAY TO UNDO THAT, because the honest-looking
  * sentence for each arm is a different sentence, and writing them separately
- * would have re-opened in prose exactly what the shared code closes. So the two
- * arms are held BYTE-EQUAL here, and the sentence is worded to be true of both
- * ("no active credential") rather than true of either one in particular. */
+ * would have re-opened in prose exactly what the shared code closes. So the
+ * arms are held BYTE-EQUAL here, and the sentence is worded to be true of all of
+ * them rather than true of any one in particular.
+ *
+ * WIDENED 2026-08-05 BY REC-41 from three arms to FOUR: the wrong-password
+ * caller now meets the same sentence too, so `badPw` joins the equality below
+ * rather than being the one deliberate exception to it. */
 t("REC-39: the revoked member and the no-credential role meet the SAME sentence, byte for byte, from the TWO arms",
   det(revoked) === det(noCred) && det(revoked) !== "", true);
 /* And the third caller — a `member:` handle that was never registered — meets it
-   too, so all three ways to arrive at NO_SUCH_ROLE are one answer. */
+   too, so all three ways to arrive at the refusal are one answer. */
 t("REC-39: and the never-registered handle meets the same one",
   det(noRole) === det(revoked), true);
+/* REC-41's FOURTH ARM. A wrong password on a LIVE, ACTIVE member is the one
+   caller REC-39 deliberately answered differently, on the ground that the
+   roster was open anyway. It is not different any more. */
+t("REC-41: and so does a wrong password on a live member — four arms, one answer",
+  [det(badPw) === det(revoked), badPw.reason === revoked.reason], [true, true]);
+/* THE WHOLE SET AT ONCE, so a fifth arm added later cannot quietly answer its
+   own way: every refusal this suite can produce collapses to ONE distinct
+   (reason, detail) pair. A value comparison between two chosen arms would pass
+   while a third went its own way — REC-44's lesson. */
+t("REC-41: every login refusal in this suite is ONE distinct answer, counted rather than compared pairwise",
+  [...new Set([badPw, noRole, revoked, noCred].map((r) => JSON.stringify([r.reason, det(r)])))].length, 1);
 /* AND THE SENTENCE IS COMPLETE RATHER THAN SELECTIVE: it names BOTH ways a role
    can have no active credential and then says the record does not report which
    one happened. That is the shape that leaks nothing — an answer that named one
@@ -300,6 +349,130 @@ t("REC-39: no login refusal echoes the role string it was handed",
 t("reinstate", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "active" })).result.ok, true);
 const mlg2 = await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" });
 t("reinstated member logs in again", mlg2.result.ok, true);
+
+console.log("\n--- REC-41: what a STRANGER is told by op=bootstrap ---");
+/* THE UNAUTHENTICATED SURFACE, SWEPT STRUCTURALLY (REC-41, closing D-188).
+ *
+ * `op=bootstrap` is `classes: null`: no token, no session, any caller on the
+ * internet. Until this item it answered `roles` — every role holding a
+ * credential, each with the date its password was last set. A roster and a set
+ * of per-person dates, handed to a stranger in one call, consumed by NOTHING
+ * (re-measured 2026-08-05: setup.mjs reads five other fields, newgroup reads
+ * `version`, civicos-ui never calls the op, no suite asserted on it).
+ *
+ * WHY THIS IS A SWEEP OVER THE WHOLE RESPONSE AND NOT A CHECK FOR `roles`.
+ * REC-44's control (a) measured the failure mode directly: a surface goes on
+ * answering correctly and ADDITIONALLY answers wrongly, so a value comparison
+ * against the fields you expected passes while the leak sits in a field you did
+ * not think to name. `t("no roles key", "roles" in b, false)` is exactly that
+ * assertion, and it would be satisfied by `credentials`, `members`, `passwords`
+ * or a nested `state.roles`. So the instrument below walks EVERY key and EVERY
+ * leaf of the whole answer and fails on the CLASS of fact — any role name, any
+ * timestamp — wherever it appears and whatever it is called.
+ *
+ * This suite is the right home for it because this is the fixture that HAS a
+ * roster: an `admin` credential from op=claim plus `member:ruth` and
+ * `member:meilan` from two enrollments, with three distinct password-set dates
+ * behind them. bootstrap.test.mjs claims a single admin and could not tell a
+ * closed roster from an empty one — an outcome that costs nothing to produce is
+ * not evidence. */
+const anon = await GET("op=bootstrap");
+/* Every (path, value) leaf and every key path in the answer, so nesting cannot
+   hide a disclosure from a top-level check. */
+const walk = (v, path, out) => {
+  if (v !== null && typeof v === "object") {
+    for (const k of Object.keys(v)) {
+      const at = path + "." + k;
+      out.push([at, "«key»"]);   /* the NAME is swept too: a key can disclose */
+      walk(v[k], at, out);
+    }
+  } else out.push([path, v]);
+  return out;
+};
+const leaves = walk(anon, "$", []);
+const flat = (x) => String(x).toLowerCase();
+/* (1) NO ROLE NAME, ANYWHERE. Every credentialled role this fixture created,
+   plus the member ids and handles behind them, searched as a SUBSTRING of every
+   key and every value — so `roles`, `credentials:["member:ruth"]`, a key named
+   `member:ruth`, or a bare `ruth` inside some summary string all fail alike. */
+const NAMES = ["admin", "ruth", "meilan", "member:ruth", "member:meilan"];
+const roleHits = leaves
+  .filter(([p, v]) => NAMES.some((n) => flat(p).includes(n) || flat(v).includes(n)))
+  .map(([p, v]) => p + " = " + JSON.stringify(v));
+t("REC-41: an anonymous op=bootstrap names NO credentialled role, at any key, at any depth",
+  roleHits, []);
+/* (2) NO PASSWORD DATE, ANYWHERE. Any ISO-8601 instant reaching a stranger is a
+   failure EXCEPT the one that is not a password date: `consumedAt` is when this
+   INSTANCE was claimed — one fact about this copy of the software, naming
+   nobody, however many members the group has — and the setup page shows it to
+   its operator. It is allowed BY PATH, not by value, so a password date that
+   happens to equal it is still caught somewhere else. */
+const ISO = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+const dateHits = leaves
+  .filter(([p, v]) => ISO.test(String(v)) && p !== "$.consumedAt")
+  .map(([p, v]) => p + " = " + JSON.stringify(v));
+t("REC-41: and NO password date — the only instant it may carry is the instance's own claim time",
+  dateHits, []);
+/* (3) THE SHAPE ITSELF IS FLAT AND ENUMERATED. A roster is a collection, so an
+   answer with no collections in it cannot carry one; and pinning the key set
+   EXACTLY means a NEW field fails by name rather than being swept under the two
+   checks above. This is the arm that catches a disclosure whose values happen to
+   dodge both patterns. */
+t("REC-41: the answer carries no nested object or array at all",
+  leaves.filter(([, v]) => v === "«key»").map(([p]) => p).filter((p) => p.slice(1).split(".").length > 2), []);
+t("REC-41: and its key set is exactly what the pre-auth question needs, nothing more",
+  Object.keys(anon).sort(),
+  ["bootstrapConfigured", "claimed", "consumedAt", "ok", "rearmed", "service", "version"]);
+/* (4) AND THE SWEEP IS NOT PASSING BECAUSE THE FIXTURE IS EMPTY. If this
+   instance held no credentials the four assertions above would pass on a store
+   with nothing to leak, which is the equality-that-costs-nothing trap. The
+   roster is proved to EXIST, through the gated op that is entitled to show it,
+   before the anonymous answer is asserted to withhold it. */
+const rosterNow = (await GET(`op=memberlist&token=t-admin-1`)).result.members.map((m) => m.member_id).sort();
+t("REC-41: the instance really does hold the roster the stranger was not shown",
+  rosterNow, ["meilan", "ruth"]);
+
+console.log("\n--- REC-41: and the refusals COST the same, or a stopwatch undoes them ---");
+/* IDENTICAL WORDS ARE NOT AN IDENTICAL ANSWER IF ONE ARRIVES IN A MILLISECOND
+   AND THE OTHER IN A HUNDRED.
+ *
+ * A wrong password on a LIVE member runs PBKDF2 at 100,000 iterations. The two
+ * arms that refuse without ever checking a password — `login()`'s no-credentials
+ * row, and the DO dispatch wrapper's absent-or-inactive member — used to return
+ * straight away. So before REC-41 a stranger could enumerate the live roster
+ * with any password at all and a timer, recovering exactly what closing
+ * op=bootstrap's roster had just taken away. `Store.#payLoginCost` makes those
+ * arms pay what an acceptance pays.
+ *
+ * PINNED AS A RATIO, NOT A DURATION, and measured from the MEDIAN of several
+ * probes: an absolute millisecond threshold would be a machine-speed assertion
+ * that reddens on a slow runner, and a single sample is noise. The band is
+ * deliberately generous — the defect it must catch is a TENFOLD gap, so half is
+ * far inside it and far outside the jitter. MEASURED 2026-08-05 on this
+ * machine: the arms land within a few percent of each other, and with the
+ * equaliser removed the no-credential arm runs ~50x faster. */
+const median = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+const timeLogin = async (role, password) => {
+  const runs = [];
+  for (let i = 0; i < 5; i++) {
+    const t0 = performance.now();
+    await POST("op=login", { role, password });
+    runs.push(performance.now() - t0);
+  }
+  return median(runs);
+};
+const tBadPw   = await timeLogin("member:ruth", "wrong-passphrase-x");   /* live member, real derivation */
+const tNoCred  = await timeLogin("operator", "whatever-whatever");       /* login()'s own arm */
+const tNoMember= await timeLogin("member:nobody", "whatever-whatever");  /* the wrapper's arm */
+const ratio = (x) => tBadPw > 0 ? x / tBadPw : 0;
+t("REC-41: a role with no credential row costs what a wrong password costs (no stopwatch oracle)",
+  ratio(tNoCred) > 0.5, true);
+t("REC-41: and so does a member id that is not on the roster — the arm that enumerated the live members",
+  ratio(tNoMember) > 0.5, true);
+/* The measurement itself is printed, because a ratio assertion that passes tells
+   the next session nothing about the margin it passed by. */
+console.log(`         measured: wrong-password ${tBadPw.toFixed(1)}ms · no-credential ${tNoCred.toFixed(1)}ms `
+          + `(${ratio(tNoCred).toFixed(2)}x) · no-such-member ${tNoMember.toFixed(1)}ms (${ratio(tNoMember).toFixed(2)}x)`);
 /* An ORDINARY member's live session (administer: false), which is one of the two
    callers D-157 measured receiving the pairing. */
 const M2 = "token=" + mlg2.result.token;

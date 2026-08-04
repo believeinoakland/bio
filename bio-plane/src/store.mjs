@@ -11399,19 +11399,81 @@ export class Store extends DurableObject {
       .map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
+  /* A fixed, published, deliberately WORTHLESS salt, and the one place a
+     refusal pays what an acceptance pays.
+
+     REC-41, 2026-08-05. Collapsing the login refusals into one code and one
+     sentence (see LOGIN_REFUSAL_DETAIL) is defeated by a stopwatch if the arms
+     do not COST the same. Before this, every arm that refuses without a
+     password check — no credentials row, and the DO dispatch's revoked/absent
+     member arm — returned immediately, while the wrong-password arm ran PBKDF2
+     at 100,000 iterations. That is tens of milliseconds, not the sub-millisecond
+     difference a network round trip hides, so "is this an active member" was
+     answerable with a timer even with the wire answers identical.
+
+     Every such arm now awaits this first. STATED HONESTLY AND NOT OVERCLAIMED:
+     it equalises the DOMINANT cost and is NOT a proof of constant time — the
+     SQL lookup and the string compare still differ by microseconds. It removes
+     the measurement an ordinary caller can actually make over the internet,
+     which is the threat this is for.
+
+     The salt guards nothing and is never stored; a real credential's salt is
+     minted per password by `setPassword`. */
+  static #TIMING_SALT = "bio-login-timing-equaliser";
+
+  static async #payLoginCost(password) {
+    await Store.#derive(String(password ?? ""), Store.#TIMING_SALT, 100000);
+  }
+
+  /* WHAT THIS ANSWERS, AND WHAT IT DELIBERATELY NO LONGER ANSWERS (REC-41,
+     2026-08-05, closing D-188).
+
+     `op=bootstrap` is `classes: null` — no token, no session, any stranger on
+     the internet. It exists to answer ONE question, the one the setup page must
+     ask before it can show anything: has this instance been claimed yet, and is
+     there a live bootstrap credential to claim it with. `gate-reads.test.mjs`
+     has always described it in exactly those words ("answers whether this
+     instance has been claimed").
+
+     UNTIL THIS ITEM IT ALSO ANSWERED `roles`: every role holding a credential,
+     each with the date its password was last set. Two facts about the people in
+     the group — who they are, and when each of them last touched their
+     password — handed to any caller in one unauthenticated request. That is a
+     ROSTER, and a roster is what `memberList` withholds the pairing from and
+     what schema.mjs's `members.cover` comment says the cover/handle split
+     exists to protect (D-157: "the rare defect whose blast radius is OUTSIDE
+     the project").
+
+     MEASURED BEFORE REMOVING IT, because a claim in a queue item is a claim and
+     not a measurement (REC-39 first, re-measured here 2026-08-05): NOTHING
+     consumes the field. `src/setup.mjs` reads `version`, `claimed`,
+     `bootstrapConfigured`, `rearmed` and `consumedAt` and never `roles` — its
+     "Roles with passwords" row is filled from the signed-in role, not from this
+     answer. `newgroup/src/index.mjs` calls the op twice and reads `version`
+     only. `civicos-ui` does not call the op at all. No suite asserted on it.
+     So the disclosure was not paying for anything, which is why the removal is
+     a straight subtraction rather than a trade.
+
+     THE CREDENTIALS TABLE IS NO LONGER READ HERE AT ALL. The field is not
+     blanked, emptied or gated — the SELECT is gone, so there is no roster in
+     this answer to leak by a later refactor, and a caller cannot tell from the
+     shape that one was ever computed. */
   bootstrapState(tokenFp = null) {
     const b = this.#one(`SELECT consumed_at, token_fp FROM bootstrap WHERE id=1`);
-    const roles = this.#rows(`SELECT role, updated FROM credentials`);
     const spent = !!(b && b.consumed_at);
     /* A different bootstrap secret than the one that was spent means the
        operator has rotated it in the dashboard, which is the recovery gesture.
        Re-arm rather than lock them out. */
     const rearmed = spent && tokenFp !== null && b.token_fp !== tokenFp;
+    /* `consumedAt` STAYS, and the distinction is worth stating so it is not
+       swept away next time. It is the instant the INSTANCE was claimed — a fact
+       about this copy of the software, which the setup page shows its operator
+       and which names nobody. It is not a per-person password date, and there
+       is exactly one of it however many members the group has. */
     return {
       claimed: spent && !rearmed,
       rearmed,
       consumedAt: rearmed ? null : (b?.consumed_at || null),
-      roles,
     };
   }
 
@@ -11470,27 +11532,101 @@ export class Store extends DurableObject {
      and the sentence SAYS that it does not separate them rather than leaving a
      reader to assume it does.
 
-     DISTINGUISHABLE FROM BAD_PASSWORD, DELIBERATELY, and it discloses nothing.
-     The two reason CODES have always been distinct and three suites pin them, so
-     a detail sentence changes no attacker's ability to enumerate. What settles it
-     is a measurement rather than a preference: `op=bootstrap` is `classes: null`
-     — unauthenticated, no token — and answers with `roles`, every role holding a
-     credential and the date each password was last set. The role list is already
-     handed to any stranger in one call, more completely and more cheaply than
-     login probing could ever assemble it, so collapsing these two would defend
-     nothing while making the store say less than it knows. That the disclosure
-     exists at all is a separate question, raised for CONDUCT and NOT assumed
-     here: if op=bootstrap's roster is closed, this reasoning is the thing to
-     re-open, and it is written down for that reason. */
+     ── REVISITED AND REVERSED, REC-41, 2026-08-05. READ THIS BEFORE THE HISTORY
+     BELOW IT. ──────────────────────────────────────────────────────────────────
+
+     REC-39 kept `NO_SUCH_ROLE` and `BAD_PASSWORD` distinguishable on ONE ground,
+     recorded here so it could be re-opened: that `op=bootstrap` already handed
+     any stranger the whole role roster in a single unauthenticated call, "more
+     completely and more cheaply than login probing could ever assemble it", so
+     collapsing the two would have defended nothing. REC-41 CLOSED THAT ROSTER
+     (see `bootstrapState` above). The ground is gone, so the decision was not
+     inherited — it was made again, on evidence, in the same turn that removed
+     it. THE OUTCOME: the two refusals are COLLAPSED into one reason code and one
+     sentence. There is now exactly one way `op=login` says no.
+
+     WHAT WAS MEASURED, 2026-08-05, rather than argued:
+
+     1. `op=login` is `classes: null` and carries NO rate limit of any kind. The
+        only unauthenticated op in this plane that meters a caller is `op=knock`
+        (per-IP and global windows, `KNOCK` in index.mjs). So with distinct
+        codes, "does this role hold a credential" is an unmetered anonymous
+        oracle answering one guess per request, forever. Closing the wholesale
+        route while leaving that open would have made the plane disclose the
+        same set of facts more slowly, and let this file claim a closure the
+        plane does not deliver.
+     2. THIS PLANE ALREADY DECIDED THIS QUESTION, THREE TIMES, AND ALWAYS THE
+        OTHER WAY. `#INVITE_MISS`: a spent invitation and one that never existed
+        return byte-identical answers, "the security property and not tidiness".
+        `NOT_PUBLISHED` on the published read: never-published, no-such-edition
+        and never-existed are "one answer here". And `NO_SUCH_ROLE` ITSELF
+        already collapses its own two arms — a revoked member and a role that
+        was never registered — for exactly this reason. Login was the one
+        unauthenticated identity probe in the plane still separating its
+        outcomes, and it was separating them only because of a disclosure that
+        no longer exists.
+     3. THE DISTINCTION HAD ONE CONSUMER AND THE CONSUMER WAS PART OF THE
+        DEFECT. `src/setup.mjs` branched on `NO_SUCH_ROLE` to render "No member
+        by that name has set a password on this copy yet" — a PARAPHRASE that
+        stated the disclosure more plainly than the plane ever did, to an
+        anonymous visitor, on the instance's own front door. It now renders the
+        plane's own sentence (DEC-8: a surface renders what it received).
+        `civicos-ui` does not branch on the code at all — `signIn` hands the
+        refusal to `teach()` — so no UI edit was owed.
+
+     WHAT THE COLLAPSE DOES NOT COST, since that is the case against it and it
+     deserves stating rather than skipping. A member who cannot get in is not
+     left guessing: the one sentence NAMES both possibilities — no active
+     credential under that role, or a stored credential whose derivation the
+     supplied password does not reproduce — and then says the record does not
+     report which. That is the same shape `NO_SUCH_ROLE` already used for its
+     own two arms and `#INVITE_MISS` for its two, and it is honest in the way
+     D-57 requires: it states what the mechanism did, including that the
+     mechanism deliberately declines to separate them. Nothing true was deleted;
+     one fact stopped being reported, and the answer SAYS it stopped.
+
+     WHAT IS NOT CLAIMED BY THIS, because overclaiming a fix is the failure this
+     project exists to refuse. Member identity is NOT secret after this change,
+     and it was never this mechanism's to keep: `op=publishedcase` is `classes:
+     null` and publishes `attestor.member` on every ratified finding, because a
+     signature that does not name its signer is not a signature. A member who
+     has ratified something public is publicly named, deliberately. What closes
+     here is the general oracle over EVERYONE who holds a credential — including
+     the members who have never published anything, whom nothing else names.
+
+     REVERSING THIS costs two lines: the two codes are additive to re-split, and
+     `login()` still knows which arm it took. If a future item finds a caller
+     that genuinely needs to tell a mistyped role from a mistyped password, the
+     honest way back is a rate limit plus an AUTHENTICATED diagnostic, not a
+     louder anonymous refusal.
+
+     ── REC-39's original reasoning, kept because the parts of it that are still
+     true are still load-bearing. ──────────────────────────────────────────────
+
+     D-57'S RULE, WHICH IS WHAT THESE SENTENCES ARE FOR, is unchanged: a refusal
+     detail must state what THE MECHANISM FOUND and must never make a claim about
+     who is asking. The sentence below says "you" nowhere, does not advise, and
+     does not characterise the attempt.
+
+     WHY IT SAYS "ACTIVE" AND NOT "NO SUCH ROLE", also unchanged and now covering
+     three arms rather than two. The obvious wording — "no role by that name is
+     registered here" — is FALSE for the revoked member, whose credential row is
+     still there and whose sign-in is refused by the DO dispatch's wrapper.
+     Writing the obvious sentence would make revocation distinguishable from
+     never-having-existed in prose while the reason code keeps them identical,
+     which is the enrollment rule broken by a comment. "No active credential" is
+     exactly true of both of those arms and separates neither, and the sentence
+     SAYS that it does not separate them rather than leaving a reader to assume
+     it does. */
   static LOGIN_REFUSAL_DETAIL = {
-    NO_SUCH_ROLE:
-      "this instance holds no active credential under that role. A role that was never registered and one "
-      + "whose membership is no longer active are the same answer here, deliberately: which of the two it "
-      + "is, the record does not say.",
-    BAD_PASSWORD:
-      "a credential is stored under that role and the password supplied does not derive its stored hash. "
-      + "The password itself is never kept — only a salted derivation of it — so this is the only comparison "
-      + "there is to make. No session was issued and nothing was written.",
+    SIGN_IN_REFUSED:
+      "no session was issued and nothing was written. Either this instance holds no active credential "
+      + "under that role — a role that was never registered and one whose membership is no longer active "
+      + "are the same answer here — or a credential is stored and the password supplied does not derive "
+      + "its stored hash. The password itself is never kept, only a salted derivation of it, so that is "
+      + "the only comparison there is to make. Which of those happened, the record does not say: it is one "
+      + "answer deliberately, so that a refusal cannot be used to find out which roles hold a credential "
+      + "on this instance.",
   };
 
   /* Exchanges a password for a bearer token so the password does not travel on
@@ -11498,12 +11634,23 @@ export class Store extends DurableObject {
      network round trip at this granularity, but the derived-hash compare avoids
      ever holding the password beyond this call. */
   async login({ role = "admin", password, ttlSeconds = 43200 } = {}) {
+    /* REC-41, 2026-08-05: ONE refusal. Both arms below answer identically —
+       same code, same sentence, byte for byte — because with op=bootstrap's
+       roster closed a distinguishable refusal is the enumeration surface that
+       replaces it. The full reasoning is at LOGIN_REFUSAL_DETAIL above; the
+       arms stay separate HERE only because the derivation cannot run without a
+       stored salt. */
     const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
-    if (!c) return { ok: false, reason: "NO_SUCH_ROLE",
-                     detail: Store.LOGIN_REFUSAL_DETAIL.NO_SUCH_ROLE };
+    /* AND THE ARMS MUST COST THE SAME, or the collapse above is defeated with a
+       stopwatch — see #payLoginCost. */
+    if (!c) {
+      await Store.#payLoginCost(password);
+      return { ok: false, reason: "SIGN_IN_REFUSED",
+               detail: Store.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED };
+    }
     const got = await Store.#derive(String(password ?? ""), c.salt, c.iterations);
-    if (got !== c.hash) return { ok: false, reason: "BAD_PASSWORD",
-                                 detail: Store.LOGIN_REFUSAL_DETAIL.BAD_PASSWORD };
+    if (got !== c.hash) return { ok: false, reason: "SIGN_IN_REFUSED",
+                                 detail: Store.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED };
     const token = Store.#rand(32);
     const expires = Date.now() + ttlSeconds * 1000;
     this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
@@ -15553,13 +15700,27 @@ export class Store extends DurableObject {
              indistinguishable from the missing-credential arm. A sentence
              written here — however true of this branch — would announce that a
              credential exists and the member was removed, which is the fact the
-             shared reason code withholds. The suite pins the two byte-equal. */
+             shared reason code withholds. The suite pins the two byte-equal.
+             REC-41 (2026-08-05) widened that from two arms to ALL of them: the
+             code is now `SIGN_IN_REFUSED` and a wrong password answers with it
+             too, so this arm is indistinguishable from every other way to fail
+             a sign-in rather than from one of them. The reasoning is at
+             Store.LOGIN_REFUSAL_DETAIL. */
           const role = body?.role || "admin";
           if (role.startsWith("member:")) {
             const m = this.#one(`SELECT status FROM members WHERE member_id=?`, role.slice(7));
-            if (!m || m.status !== "active")
-              return { ok: false, reason: "NO_SUCH_ROLE",
-                       detail: Store.LOGIN_REFUSAL_DETAIL.NO_SUCH_ROLE };
+            if (!m || m.status !== "active") {
+              /* THE ENUMERATION ARM THAT MATTERS MOST, and it is why the cost
+                 equaliser is not decoration: this branch decides "is this an
+                 active member" from the members table alone and never touches a
+                 password, so before REC-41 it answered in a millisecond while
+                 an active member's wrong password took a hundred. A stranger
+                 could enumerate the live roster with a timer and any password
+                 at all — the roster op=bootstrap had just stopped handing out. */
+              await Store.#payLoginCost(body?.password);
+              return { ok: false, reason: "SIGN_IN_REFUSED",
+                       detail: Store.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED };
+            }
           }
           return this.login(body || {});
         },
