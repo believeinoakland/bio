@@ -12,6 +12,11 @@
    (e3) RESTORE THE STORE'S LOCAL COPY — splice `const RESOLUTIONS = ["complied","denied","escalated","withdrawn"];` back into `actionMove()` above `const res = …`, which is the exact state REC-39 found -> the no-literal-copy pin FAILS (68/69) and nothing else does, because a shadowing copy of the same four words behaves identically until the day the catalogue changes. That is why the pin is structural and not behavioural;
    (e4) RESTORE THE CATALOGUE'S INLINE COPY — put `['complied','denied','escalated','withdrawn']` and its hand-written sentence back into checkActionExtension -> the same no-literal-copy pin FAILS (68/69), from the other enforcement site. Both copies are pinned dead BY NAME so the found state cannot be re-entered from either end.
    Restored -> 69/69. */
+/* NEGATIVE CONTROL (REC-43 / DEC-39, the co-attestation fence's drift guard), THREE arms, all RUN 2026-08-04, both files restored BYTE-IDENTICAL (sha256 compared before and after: src/affordances.mjs 9a894add…, checks/bio-checks.mjs 7d63a552…):
+   (a) THE ITEM'S OWN — PUBLISH THE FENCE AS A LITERAL COPY. Replace `export const ATTEST_FENCE = attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);` in src/affordances.mjs with the same sentence hand-typed as a string literal ("… a Grade B capture … never reaches Grade A …") -> "affordances.mjs SPELLS no grade letter in the fence" FAILS (77/78) and NOTHING ELSE DOES: the over-the-wire pin, the DEC-39 verbatim pin, the equals-the-enforcement pin and both letter pins all PASS, because an identical copy agrees at zero cost. REC-35's finding restated a fourth time and the first on a SENTENCE rather than an array — the structural pin is the whole of this control;
+   (b) THE SAME LITERAL, AND THEN MOVE THE RULE — keep the literal and set `EARNED_CAPTURE_CEILING = 'C'` in checks/bio-checks.mjs -> THREE FAIL (75/78) and they name the drift in both directions: the publication no longer equals the enforcement's own value, and the two letters the fence states are no longer the rule's. THIS IS WHAT THE COPY COSTS: a member co-attesting is told the capture is strengthened toward evidentiary weight at Grade B while the gate refuses any leg above C — the record overclaiming on a doctrine sentence, which is the failure CLAUDE.md ranks worse than a missing feature;
+   (c) THE COMPOSED FENCE UNDER THE SAME MOVED RULE — restore the composition, leave the ceiling at C -> TWO FAIL (76/78) and they are the RIGHT two: "the published fence IS Bob's sentence" (the publication has moved off the ruling, which is precisely what must stop a turn), and the counterfactual, which goes degenerate because attestFence("C","B") is now the published string. What does NOT happen in this arm is the thing arm (b) does: no member is told a grade the gate will not accept, because the sentence followed the rule. That difference between (b) and (c) is the item.
+   Restored -> 78/78. */
 /* op=affordances (REC-19, standing doctrine DEC-8): the plane publishes what may
  * be DONE to an object, so an act surface renders options it RECEIVED and never
  * computes one. whoami publishes capabilities, searchfields publishes the query
@@ -56,10 +61,12 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROMPT, GROUND_PROMPT, deriveActs,
-         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, CAPTURE_ACTS }
+         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, CAPTURE_ACTS,
+         ATTEST_FENCE, attestFence }
   from "../src/affordances.mjs";
 import { ACTION_KINDS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
-         RESOLUTIONS } from "../checks/bio-checks.mjs";
+         RESOLUTIONS, BASIS_GRADES,
+         EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -249,8 +256,15 @@ t("every capture-directed NON_ACT has published metadata, and the block names no
    CAPTURE_ACTS.map((a) => a.id).filter((k) => !captureDirected.includes(k))], [[], []]);
 t("the capture acts stay NON_ACTS: publishing metadata for one does not make it an act on a bundle",
   CAPTURE_ACTS.filter((a) => ACT_IDS.has(a.id)).map((a) => a.id), []);
-t("CAPTURE_ACTS declares ONLY id and label — needs/mode/rung have homes and are never copied here",
-  [...new Set(CAPTURE_ACTS.flatMap((a) => Object.keys(a)))].sort(), ["id", "label"]);
+/* CORRECTED 2026-08-04 (REC-43 / DEC-39), and SUPERSEDED rather than wrong: the
+   set was {id, label} because those were the only facts the block owned. A
+   PROMPT is a third, and it has no other home — `prompt` is declared on the act
+   in ACTS too (DEC-29(b), REC-16's field), because a sentence attached to a
+   control is not composable from NEEDS, SESSION_OPS or RUNGS. So the allowed set
+   gains `prompt` and the assertion is NOT loosened: it is still an exact set, so
+   `needs`, `mode`, `rung` or any fourth invented key still fails here by name. */
+t("CAPTURE_ACTS declares ONLY id, label and prompt — needs/mode/rung have homes and are never copied here",
+  [...new Set(CAPTURE_ACTS.flatMap((a) => Object.keys(a)))].sort(), ["id", "label", "prompt"]);
 t("index.mjs composes the block through the SAME decorateAct and keeps no literal label of its own",
   [/capture_acts: CAPTURE_ACTS\.map\(decorate\)/.test(indexSrc),
    /import \{[^}]*\bCAPTURE_ACTS\b[^}]*\} from "\.\/affordances\.mjs"/.test(indexSrc),
@@ -461,12 +475,92 @@ t("op=affordances publishes the capture-directed acts, each in the producer's ow
   [CAPTURE_ACTS.map((a) => a.id), true]);
 t("the LABEL a surface renders is the plane's own — UI-22's residue, and the last surface-authored act wording",
   cat.result.capture_acts.map((a) => [a.id, a.label]), CAPTURE_ACTS.map((a) => [a.id, a.label]));
+/* CORRECTED 2026-08-04 (REC-43 / DEC-39), and SUPERSEDED rather than wrong:
+   `prompt: null` was the honest answer while no ruling attached a sentence to
+   this act — REC-38 refused to invent one and routed the question, which is why
+   there is a ruling to enact. DEC-39 attaches it, so the pin is corrected to the
+   PUBLISHED constant rather than loosened: a null prompt on attest now fails
+   here, and so does a prompt that is not `ATTEST_FENCE`. */
 t("RUNGS.attest is REACHABLE at last: attest publishes its sourced `attested` rung, the capability NEEDS names, and session mode",
   cat.result.capture_acts.find((a) => a.id === "attest"),
   { id: "attest", label: CAPTURE_ACTS.find((a) => a.id === "attest").label,
-    weight: null, needs: "contribute", mode: "session", rung: RUNGS.attest, prompt: null });
+    weight: null, needs: "contribute", mode: "session", rung: RUNGS.attest, prompt: ATTEST_FENCE });
 t("monitor publishes rung null — no document assigns it one, and a capture act guesses no more than a bundle act does",
   [cat.result.capture_acts.find((a) => a.id === "monitor").rung, "monitor" in RUNGS], [null, false]);
+
+/* REC-43 / DEC-39 — THE CO-ATTESTATION HONESTY FENCE, published with the act.
+ *
+ * DEC-39's ruling has two halves and both are asserted here. THE WORDING IS
+ * BOB'S: it is taken verbatim from the DEC-39 entry, and the first assertion
+ * below reads the entry's own blockquote and compares it, so a session that
+ * paraphrased or "improved" the sentence would fail against the ruling itself
+ * rather than against a copy of it. THE LETTERS ARE THE RULE'S: `Grade B` and
+ * `Grade A` are composed from `EARNED_CAPTURE_CEILING` and the rank above it in
+ * `BASIS_GRADES`, imported from where `checkEarnedLeg` refuses a leg claiming
+ * more than the ceiling — so the sentence a member reads and the grade the gate
+ * will accept move together or the suite fails.
+ *
+ * THE DRIFT GUARD IS STRUCTURAL AS WELL AS BEHAVIOURAL, and REC-35's finding is
+ * exactly why: a hand-typed literal saying "Grade B … Grade A" would satisfy
+ * every wire assertion here, because an identical copy agrees at zero cost. So
+ * the pin below reads the SOURCE and fails if the fence's grade letters are
+ * spelled in `affordances.mjs` instead of composed, and if `store.mjs` keeps a
+ * ceiling of its own. That is this item's negative control. */
+const DEC_FENCE = (() => {
+  const lines = readFileSync(new URL("../../docs/development/DECISIONS.md", import.meta.url), "utf8")
+    .split("\n");
+  const at = lines.findIndex((l) => l.startsWith("### DEC-39"));
+  if (at < 0) return null;
+  const quoted = lines.slice(at, at + 80).filter((l) => /^\s*>\s/.test(l))
+    .map((l) => l.replace(/^\s*>\s?/, ""));
+  if (!quoted.length) return null;
+  /* The `**`/`*` markers and the blockquote's line breaks are DECISIONS.md's
+     RENDERING, not part of the sentence; every word, its order and `TRUE`'s
+     capitalisation are compared unchanged. */
+  return quoted.join(" ").replace(/\*/g, "").replace(/\s+/g, " ").trim();
+})();
+t("the published fence IS Bob's sentence: byte-identical to the DEC-39 entry's own wording, not a paraphrase of it",
+  [DEC_FENCE !== null, DEC_FENCE === ATTEST_FENCE], [true, true]);
+t("attest publishes it over the wire, from the module that owns it — never a copy (DEC-29(b)'s mechanism, REC-16's field)",
+  [cat.result.capture_acts.find((a) => a.id === "attest").prompt === ATTEST_FENCE,
+   cat.result.capture_acts.filter((a) => a.prompt !== null).map((a) => a.id)],
+  [true, ["attest"]]);
+t("and the publication EQUALS the enforcement's own value: the fence composed from the ceiling the gate enforces",
+  ATTEST_FENCE === attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE), true);
+t("the two letters it states are the RULE's: the ceiling checkEarnedLeg enforces, and the rank immediately above it",
+  [ATTEST_FENCE.includes(`Grade ${EARNED_CAPTURE_CEILING} capture toward evidentiary weight`),
+   ATTEST_FENCE.includes(`never reaches Grade ${UNREACHABLE_CAPTURE_GRADE}`),
+   UNREACHABLE_CAPTURE_GRADE === BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1]],
+  [true, true, true]);
+/* THE WORDING IS A FUNCTION OF THE RULE, driven rather than reasoned: compose
+   the same sentence under a DIFFERENT ceiling and it says the different letters.
+   A literal copy cannot do this, which is what makes it evidence. */
+t("move the rule and the sentence moves with it — the fence is composed, not stored",
+  [attestFence("C", "B") === ATTEST_FENCE,
+   attestFence("C", "B").includes("Grade C capture toward evidentiary weight"),
+   attestFence("C", "B").includes("never reaches Grade B")],
+  [false, true, true]);
+/* AND IT REFUSES TO COMPOSE A SENTENCE IT CANNOT MAKE TRUE: with no grade above
+   the ceiling there is nothing the fence can honestly say is unreachable. */
+t("with no grade above the ceiling the fence THROWS rather than publishing 'never reaches Grade null'",
+  (() => { try { attestFence("A", null); return "composed"; } catch { return "threw"; } })(), "threw");
+/* THE STRUCTURAL PIN — the negative control's subject. The grade letters must be
+   COMPOSED in affordances.mjs and not spelled there, and the ceiling must have
+   exactly one home: store.mjs imports it and keeps no `static
+   EARNED_CAPTURE_CEILING` of its own. */
+const affSrcNoComments = readFileSync(new URL("../src/affordances.mjs", import.meta.url), "utf8")
+  .replace(/\/\*[\s\S]*?\*\//g, "");
+t("affordances.mjs SPELLS no grade letter in the fence — it interpolates the enforced ceiling and the rank above it",
+  [/Grade\s+[ABCD]\b/.test(affSrcNoComments),
+   /\$\{ceiling\}/.test(affSrcNoComments) && /\$\{unreachable\}/.test(affSrcNoComments),
+   /import \{[\s\S]*?\bEARNED_CAPTURE_CEILING\b[\s\S]*?\} from "\.\.\/checks\/bio-checks\.mjs"/
+     .test(affSrcNoComments)],
+  [false, true, true]);
+t("and store.mjs keeps no ceiling of its own any more — one value, three readers (the registry, the refusal, the fence)",
+  [/static\s+EARNED_CAPTURE_CEILING/.test(storeSrc.replace(/\/\*[\s\S]*?\*\//g, "")),
+   /import \{[\s\S]*?\bEARNED_CAPTURE_CEILING\b[\s\S]*?\} from "\.\.\/checks\/bio-checks\.mjs"/
+     .test(storeSrc)],
+  [false, true]);
 /* WEIGHT IS null AND THE null IS STATED. `weight` is the SET-APPLICATION weight
    an act's op hard-codes, and a capture act has no set: op=attest takes one sha
    and op=monitor one bundle id, neither through a selection handle. Publishing
