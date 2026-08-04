@@ -2765,6 +2765,7 @@ for CONDUCT to enact: (1) **D-54 changes character** — the installer no longer
   deliberately NOT rewritten. (5) The free-tier-rot warning in `CAPTURE-SCALING.md` INVERTS
   and must not be lost — see D-185.
 enacted:
+enacted: 2026-08-04 · CONDUCT — all four items: (1) D-54 re-scoped as DIST-3 (the installer REQUIRES and VERIFIES Paid by provoking the platform, and REFUSES rather than half-installing — refusing IS the fix); (2) CPDF-12 re-scoped tesseract-fleet-member-first with the deployed wasm CPU probe plus the unmeasured memory figure, carrying the extraction-not-rasterisation observation to be verified across the corpus before a renderer is built; (3) CPDF-10's in-account engine becomes tesseract pending that probe, external unfunded; (4) D-185's row carries the do-not-delete ruling. The paid-upgrade entry enacted into the same CPDF-12 scope (the plan measured, the runtime GO still to be earned). Reasoning in DEC-42, QUEUE.md (CPDF-10/12, DIST-3) and the corrected documents the BOB session listed.
 
 ### DEC-43 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-33's report)

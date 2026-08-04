@@ -120,131 +120,32 @@ _(drained by CONDUCT 2026-08-04 — DEC-35's answer: the premise reframed (the s
 
 _(drained by CONDUCT 2026-08-04 — the calibration-drift entry: D-183 acknowledged (the chain records the ENGINE, the grade rests on a MEASUREMENT, nothing links them — one field wide); the calibration construct enqueued as CPDF-13 (RENUMBERED from the entry's CPDF-12, which collided with the renderer item CONDUCT allocated and pushed earlier the same day — the established collision protocol, later allocation moves), engine-generic per the D-164 lesson, the asymmetric drift handler and the changelog-may-only-accelerate rule carried verbatim, deps CPDF-11. CPDF-11 unchanged, still running. No entries outstanding.)_
 
-### 2026-08-04 · BOB · DEC-42 — WORKERS PAID IS NOW A REQUIREMENT; the OCR placement changes and D-54 changes character
-
-**Bob has reversed the standing ruling** *"Workers Paid is an optimisation, never a
-requirement"*, on an inventory rather than on the OCR result: an instance already needs
-a Cloudflare account and a payment method, and R2 already bills past its free allowance,
-so the honest change is **$0/month + a card → $5/month + a card**, not free → paid.
-*"Okay, that's the reality."* Full reasoning and the what-the-$5-buys table in
-DECISIONS.md **DEC-42**.
-
-**A CORRECTION I OWE THE RECORD, made in DEC-42 rather than quietly:** I previously
-reported WASM OCR as ruled out on bundle size. That was true only of the two placements
-DEC-35 named (in-plane, and inside the existing pdf-worker). CPDF-9's measurement plainly
-records that **a dedicated third fleet member FITS** — 2.72 MB gzip standalone, or 0.72 MB
-with the language model read from R2. Tesseract was never blocked on size. It was blocked
-on CPU (~17–54M reference-iterations per page against a Free kill window of ~40–42M), and
-**Paid moves that line from 10 ms to 30 s**.
-
-**Which matters because of what tesseract SCORED (CPDF-9, measured): 99.96% character
-accuracy, 90/90 digits, ZERO minted digits** — it is the floor every other candidate is
-scored against — and it is a CLASSIC engine, so it supplies the per-word confidence and
-coordinates DEC-35 named as constraints and Moondream measurably failed (2 of 24
-box-checks; a confident box for a figure not on the page).
-
-**Four things to enact.** Documents carrying the superseded ruling are already corrected
-in this session's commits (`CAPTURE-SCALING.md` — superseded in place with its original
-reasoning kept; `CLIENT-RENDERED.md`; `kickoffs/CAPTURE.md`; `DEBT.md`).
-`CIVICOS_UI_STATE.md`'s entry is dated history and is deliberately NOT rewritten.
-
-1. **D-54 CHANGES CHARACTER, and it is now M7's sharpest item.** The installer no longer
-   merely DETECTS the Workers plan — it **REQUIRES Paid, verifies it, and refuses to
-   complete honestly** rather than installing something quietly degraded. Refusing IS the
-   fix; a warning is not, because the D-106 failure it guards against is a group getting
-   something quietly different from every description of it.
-2. **CPDF-12 is RE-SCOPED AGAIN, and it gets cheaper.** The renderer and the composed-shape
-   probe are no longer the in-account route's only hope. Measure the **TESSERACT FLEET
-   MEMBER FIRST** — a DEPLOYED wasm CPU probe walked in reference iterations under Paid,
-   which is CPDF-9's own stated caveat (*"authoritative Worker CPU needs a deployed wasm
-   probe"*; its node-proxy figures are CPU-ORDER only). Memory is also unmeasured there — a
-   3300×2550 RGBA frame is 33.6 MB against the isolate's 128 MB.
-   **AND ONE OBSERVATION THAT MAY REMOVE THE RENDERER ENTIRELY, to be verified not
-   assumed:** on the measured exhibit each page is ONE full-page embedded image (JPEG
-   `DCTDecode`, CCITT G4 `CCITTFaxDecode`). For the image-only class — which is what OCR
-   is FOR — that means **image EXTRACTION, not page rasterisation**. Check it across the
-   corpus before building a renderer; if it holds, CPDF-12's expensive half is a JPEG
-   pass-through plus a CCITT G4 decoder.
-3. **CPDF-10's placement becomes in-account tesseract**, pending that probe. The external
-   tier stays UNFUNDED and Azure DI Read remains the named fallback (DEC-35 unchanged in
-   its preference order — this simply makes the in-account option a good one).
-4. **D-185 is new and must not be lost**: the free-tier frugality code now defends against
-   limits no supported instance runs under. **Do NOT delete it** — resumable sessions, the
-   calibrated ceiling and capture-across-ticks are cheap to keep, expensive to rebuild, and
-   still decide whether a heavy first capture completes under Paid. What must be settled in
-   writing is that the project stops believing it is free-tier-viable while nothing
-   exercises that path.
-
-**BLOCKED UNTIL BOB UPGRADES THE ACCOUNT:** only the DEPLOYED probe in (2). The account was
-measured as Workers FREE on 2026-07-31 and the upgrade is the one act only Bob can perform;
-it has been named to him. Items (1), (3) and (4) are enactable now, and the tesseract
-placement decision does not wait on the probe — the probe sizes it.
-
-### 2026-08-04 · BOB · THE BATTERY LEAKED 41 GB OF TEMP DIRS AND FILLED THE DISK TO ZERO (D-186)
-
-Found because a planning-surface write failed with **ENOSPC** mid-turn. Not a Claude
-Code or editor problem — measured, and it is OURS: **23,263 `miniflare-*` directories
-holding 41.0 GB** in the machine's `$TMPDIR`, plus ~2,300 from the suites' own sandboxes
-(`ratify-`, `sshsig-`, `signpage-`, `attest-`, `reuse-ratify-`, `publish-`,
-`publishedcase-`, `reeval-`) and 595 MB from the OCR probes. 36 of 42 suites drive the
-plane through miniflare and **you run the full battery on every worker landing**, so the
-leak scales with YOUR throughput — it accumulated ~23k directories in days.
-
-**Why it outranks a disk-hygiene nuisance:** at zero bytes, every Bash command failed
-before it started (the harness could not write its own output file), so the session could
-not commit, push, or reach this inbox. A planning surface that is written and
-UNPUBLISHABLE is the exact failure `plancheck` exists to prevent, arriving by a route the
-instrument cannot see.
-
-**Already done by BOB, with Bob's approval:** 37.2 GB reclaimed (2.2 GB → 40 GB free).
-**Deliberately deleted only directories older than the RUNNING battery** — a worker was
-mid-`test:battery` and removing its live sandbox would have broken your verification. The
-fix must be equally careful, and an unconditional sweep is the wrong shape.
-
-    ### M0-8 · queued
-    milestone: M0
-    scope: **Stop the battery leaking temp directories (D-186).** Three parts: (a) the
-      miniflare harness disposes of its sandbox in a `finally`, so a THROWING suite still
-      cleans up — the leak is worst exactly when tests fail; (b) each suite that mints its
-      own sandbox disposes of it the same way; (c) `scripts/battery.mjs` sweeps ORPHANS at
-      start — older than the current run only, never a blanket wipe, because a concurrent
-      worker's live sandbox must survive (that is not hypothetical: it was live during the
-      cleanup that found this). The OCR probes' npm-installs into temp are bounded
-      separately and may stay, since they are probes and not battery.
-    behind-interface: none — test estate
-    depends-on: none
-    accepts-when: `cd bio-plane && npm run test:battery` green twice in a row with the
-      `$TMPDIR` `miniflare-*` count NOT growing between runs (that comparison IS the
-      assertion); a suite made to throw mid-run still leaves no sandbox behind; negative
-      control — remove the `finally` disposal and the count grows again by the number of
-      miniflare instances, which is the state today.
-    added: 2026-08-04 · BOB
-
-### 2026-08-04 · BOB · THE PAID UPGRADE HAS LANDED — the deployed probe is UNBLOCKED
-
-Bob upgraded the account. **MEASURED, not taken on trust** (`MEASUREMENTS.md`
-2026-08-04): a Worker uploaded with `limits.cpu_ms: 50000` — the exact upload the Free
-plan refused on 2026-07-31 with code 100328 — now returns **HTTP 200 with
-`limits:{"cpu_ms":50000}` echoed back**. Account pinned to `20b533…3b7f72` before the
-probe ran; probe worker deleted and verified gone (404).
-
-**So the one blocker named in the DEC-42 handover is cleared.** The deployed wasm CPU
-probe for the tesseract fleet member (CPDF-12 as re-scoped) can run now. The 10 ms
-per-invocation ceiling that ruled the engine out is gone; the limit is settable to 30 s
-by default and 5 min maximum.
-
-**What is NOT established, and must not be read into it:** that tesseract fits the CPU
-envelope in workerd, or that memory holds (a 3300×2550 RGBA frame is 33.6 MB against a
-128 MB isolate). That entry measured the PLAN and nothing else. CPDF-9's CPU figures are
-a NODE PROXY and its own text says authoritative Worker CPU needs a deployed wasm probe
-walked in reference iterations — a Worker cannot time itself (D-56). **The probe is now
-possible, not pre-judged**, and a GO still has to be earned on the runtime.
+_(drained by CONDUCT 2026-08-04 — three entries. **DEC-42/Workers Paid:** the correction accepted with thanks (wasm OCR was never ruled out on SIZE — a dedicated third fleet member fits at 2.72 MB gz, 0.72 with the model in R2; it was ruled out on CPU, and Paid moves that line from 10 ms to 30 s), so (1) D-54 re-scoped as M7's sharpest item — the installer REQUIRES and VERIFIES Paid and refuses to complete honestly, queued as DIST-3; (2) CPDF-12 RE-SCOPED AGAIN, tesseract-fleet-member-first with the deployed wasm CPU probe (now unblocked — the third entry measured the plan, HTTP 200 with cpu_ms echoed, and measured the PLAN ONLY: a GO still has to be earned on the runtime, and memory is unmeasured at 33.6 MB per RGBA frame against 128 MB), carrying the observation that may remove the renderer entirely — on the measured exhibit each page is ONE full-page embedded image, so the image-only class wants EXTRACTION not rasterisation, to be verified across the corpus before anything is built; (3) CPDF-10's placement becomes in-account tesseract pending that probe, external still unfunded; (4) D-185 (the free-tier frugality code) is NOT deleted — recorded on its row. **The leak (D-186):** M0-8 moved into the M0 lane and spawned FIRST, ahead of every other item, because the leak scales with CONDUCT's own throughput — the sweep must spare a running battery, which is not hypothetical. Gratitude noted for the 37.2 GB reclaimed carefully. **The paid upgrade:** enacted into CPDF-12's scope as above. No entries outstanding.)_
 
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
+
+### M0-8 · queued
+milestone: M0
+scope: **Stop the battery leaking temp directories (D-186).** Three parts: (a) the
+  miniflare harness disposes of its sandbox in a `finally`, so a THROWING suite still
+  cleans up — the leak is worst exactly when tests fail; (b) each suite that mints its
+  own sandbox disposes of it the same way; (c) `scripts/battery.mjs` sweeps ORPHANS at
+  start — older than the current run only, never a blanket wipe, because a concurrent
+  worker's live sandbox must survive (that is not hypothetical: it was live during the
+  cleanup that found this). The OCR probes' npm-installs into temp are bounded
+  separately and may stay, since they are probes and not battery.
+behind-interface: none — test estate
+depends-on: none
+accepts-when: `cd bio-plane && npm run test:battery` green twice in a row with the
+  `$TMPDIR` `miniflare-*` count NOT growing between runs (that comparison IS the
+  assertion); a suite made to throw mid-run still leaves no sandbox behind; negative
+  control — remove the `finally` disposal and the count grows again by the number of
+  miniflare instances, which is the state today.
+added: 2026-08-04 · BOB
 
 ### M0-1 · done
 milestone: M0
@@ -764,7 +665,7 @@ landed: (merge on main, worker 3ec9a41) — MEASUREMENTS.md 2026-08-03 + probe b
 
 ### CPDF-10 · queued
 milestone: M2
-scope: **The Tier-3 OCR path, behind whatever placement CPDF-9's measurement permits.** PLACEMENT RE-BASED BY DEC-35 (2026-08-04, superseding the 2026-08-03 service-first note): in-plane and pdf-worker stay RULED OUT by bundle size; the IN-ACCOUNT path (Moondream 3.1 over env.AI) is the DEFAULT pending CPDF-11's GO — sovereign instances must not need a second vendor account (the D-115 class); the EXTERNAL service (Azure DI Read primary) is the ESCALATION tier or the fallback on NO-GO; NOTHING FUNDED. Per-region confidence becomes confidence-WHERE-SUPPLIED, else a stated confidence: none in the chain with the fidelity cap set by measurement; pseudo-confidence (a self-reported number thresholded as calibrated) FORBIDDEN as the costs-nothing class; measured self-refusal (CPDF-11's degradation ladder) is the only earnable per-region trigger. The provenance chain and the image-region anchor UNCHANGED, non-negotiable. Deps gain CPDF-11 and (on GO) CPDF-12. D-152, DEC-4 as twice amended. THE PROVENANCE RULE IS THE ITEM, not the engine: **`text_source` records a CHAIN, not a token** — `pixels → ocr(engine, version) → ai(function, version) → attested(member, date, extent)` — each step naming what performed it, and **each step can only weaken the claim, never strengthen it** (an AI that cleans a garbled line produced more READABLE text, not more RELIABLE text; the hazard of this capability is output that looks better than its input — do not let the chain collapse to a single label). A text LAYER is itself an unverified transcription (`pdfstructure.mjs` already decodes through the file's own `/ToUnicode` map), so **the ceiling is VERIFIED AGAINST THE RENDERED IMAGE, reachable from both paths**: member attestation is offered on a text layer too, SCOPED to what was actually checked (a leg citing outside the attested extent does not inherit it); the chain is still recorded — verification supersedes it as grade determinant, never as record. Attestation is a member act refusable to a machine credential. Transcription fidelity BOUNDS the capture axis (weakest link of byte provenance and fidelity) — no third scale, no new machinery. A basis leg resting on OCR'd text carries its image region (page + rect); OCR never raises a capture grade; a low-confidence region reads `undetermined`, never a best guess. Text reaches the READING path via FW-15's wire.
+scope: **The Tier-3 OCR path, behind whatever placement CPDF-9's measurement permits.** PLACEMENT RE-BASED BY DEC-35 (2026-08-04, superseding the 2026-08-03 service-first note): in-plane and pdf-worker stay RULED OUT by bundle size; the IN-ACCOUNT path is the DEFAULT and its engine is now TESSERACT AS A FLEET MEMBER pending CPDF-12's deployed probe (DEC-42: Moondream returned NO-GO on coordinates; tesseract was never blocked on size, only on the Free CPU ceiling Paid removes) — sovereign instances must not need a second vendor account (the D-115 class); the EXTERNAL service (Azure DI Read primary) is the ESCALATION tier or the fallback on NO-GO; NOTHING FUNDED. Per-region confidence becomes confidence-WHERE-SUPPLIED, else a stated confidence: none in the chain with the fidelity cap set by measurement; pseudo-confidence (a self-reported number thresholded as calibrated) FORBIDDEN as the costs-nothing class; measured self-refusal (CPDF-11's degradation ladder) is the only earnable per-region trigger. The provenance chain and the image-region anchor UNCHANGED, non-negotiable. Deps gain CPDF-11 and (on GO) CPDF-12. D-152, DEC-4 as twice amended. THE PROVENANCE RULE IS THE ITEM, not the engine: **`text_source` records a CHAIN, not a token** — `pixels → ocr(engine, version) → ai(function, version) → attested(member, date, extent)` — each step naming what performed it, and **each step can only weaken the claim, never strengthen it** (an AI that cleans a garbled line produced more READABLE text, not more RELIABLE text; the hazard of this capability is output that looks better than its input — do not let the chain collapse to a single label). A text LAYER is itself an unverified transcription (`pdfstructure.mjs` already decodes through the file's own `/ToUnicode` map), so **the ceiling is VERIFIED AGAINST THE RENDERED IMAGE, reachable from both paths**: member attestation is offered on a text layer too, SCOPED to what was actually checked (a leg citing outside the attested extent does not inherit it); the chain is still recorded — verification supersedes it as grade determinant, never as record. Attestation is a member act refusable to a machine credential. Transcription fidelity BOUNDS the capture axis (weakest link of byte provenance and fidelity) — no third scale, no new machinery. A basis leg resting on OCR'd text carries its image region (page + rect); OCR never raises a capture grade; a low-confidence region reads `undetermined`, never a best guess. Text reaches the READING path via FW-15's wire.
 behind-interface: I2
 depends-on: CPDF-9, COFF-1, CPDF-11, CPDF-12-on-GO (dependency corrected 2026-08-03: the handover's "CPDF-8" was RECONCILED §3.3's name for the FORMAT registry, carried as COFF-1. The page-to-pixels rendering path BOB flagged as the other candidate reading is real but is DECIDED by CPDF-9's placement measurement — an external-service placement needs no renderer; an in-plane or fleet placement does — so the renderer item is named when that recommendation lands, not pre-built.)
 accepts-when: `cd bio-plane && npm run test:battery` green with a real image-only Oakland PDF yielding text whose `text_source` chain names each step with per-region confidence and reaching `reading_refs`, while a text-layer PDF yields its own honest chain and the two are distinguishable in the projection, the index and an export; an attestation is refused to a machine credential and scoped to its extent; negative control — strip the `text_source` marker and the suite fails naming an OCR'd document indistinguishable from a published text layer; drop the confidence floor so a garbled region emits a best guess and the suite fails; collapse the chain to one label and the suite fails.
@@ -982,7 +883,7 @@ landed: (merge on main, worker 9d6274a) — model @cf/moondream/moondream3.1-9B-
 
 ### CPDF-12 · queued
 milestone: M2
-scope: **The page-to-pixels renderer — named at last (the substance of two dangling-dependency flags).** Moondream consumes IMAGES, so the in-account OCR route needs a PDF page rendered to pixels; nothing in Workers renders one today (pdf.js needs a canvas — CPDF-9's finding). RE-SCOPED 2026-08-04 at CPDF-11's NO-GO-with-a-live-alternative: the verdict's composed shape (detect the block → crop → transcribe the crop) is the only in-account shape that can carry the image-region anchor, scored 99.62%/10-of-10/0-minted at n=1, and NEEDS this renderer — so the item is now (a) the renderer measurement-first (bundle/CPU per the CPDF-9 pattern; a fleet member the likely placement, I6) and (b) THE COMPOSED-SHAPE PROBE at n>>1 against the same enforced-comparable floor (reproducibility across runs, minted digits, anchor checkability per crop — the three NO-GO reasons re-measured under the composed shape). Still measurement + instrument; product code only for the renderer if its own numbers permit. CPDF-10 waits on this verdict before the external tier is funded (DEC-35's in-account-first preference, nothing funded).
+scope: **The page-to-pixels renderer — named at last (the substance of two dangling-dependency flags).** Moondream consumes IMAGES, so the in-account OCR route needs a PDF page rendered to pixels; nothing in Workers renders one today (pdf.js needs a canvas — CPDF-9's finding). RE-SCOPED AGAIN 2026-08-04 by DEC-42 (Workers Paid) — TESSERACT FLEET MEMBER FIRST, and it is cheaper than both prior scopes: a DEPLOYED wasm CPU probe walked in reference iterations (CPDF-9's own stated caveat — its node figures are CPU-ORDER only, and a Worker cannot time itself, D-56), plus the MEMORY measurement nobody has taken (a 3300x2550 RGBA frame is 33.6 MB against a 128 MB isolate). Tesseract is the FLOOR every candidate is scored against (99.96% char, 90/90 digits, ZERO minted) and is a classic engine, so it supplies the per-word confidence and coordinates Moondream measurably failed. THE OBSERVATION THAT MAY REMOVE THE RENDERER ENTIRELY, to be VERIFIED not assumed: on the measured exhibit each page is ONE full-page embedded image (JPEG DCTDecode, CCITT G4) — for the image-only class, which is what OCR is FOR, that means image EXTRACTION not page rasterisation; check it across the corpus BEFORE building a renderer, and if it holds the expensive half is a JPEG pass-through plus a CCITT G4 decoder. The prior scope's composed-shape probe and renderer stay available if tesseract fails its probe. Prior scope, kept as the reasoning that got here: the verdict's composed shape (detect the block → crop → transcribe the crop) is the only in-account shape that can carry the image-region anchor, scored 99.62%/10-of-10/0-minted at n=1, and NEEDS this renderer — so the item is now (a) the renderer measurement-first (bundle/CPU per the CPDF-9 pattern; a fleet member the likely placement, I6) and (b) THE COMPOSED-SHAPE PROBE at n>>1 against the same enforced-comparable floor (reproducibility across runs, minted digits, anchor checkability per crop — the three NO-GO reasons re-measured under the composed shape). Still measurement + instrument; product code only for the renderer if its own numbers permit. CPDF-10 waits on this verdict before the external tier is funded (DEC-35's in-account-first preference, nothing funded).
 behind-interface: I6
 depends-on: CPDF-11
 accepts-when: (on GO) a real scanned Oakland page rendered to pixels in-account at measured cost, the measurement in MEASUREMENTS.md first; battery green; --strict exit 0; negative control — a page that cannot be rendered yields a stated failure, never a blank image passed onward as content. (On NO-GO) the item closed with the re-scope reasoning recorded.
@@ -1186,13 +1087,30 @@ output is attributed to that party) and its SHAPE is decided provisionally in
 which needs no new reference granularity. Scope this area against that shape when a
 slot frees.
 
-## DIST — DORMANT again (DIST-1 done 2026-08-04; the backlog — D-115/116/107/54 and the MONITOR_TOKEN follow-on behind DEC-37/REC-33 — waits for the next activation)
+## DIST — ACTIVE (promoted 2026-08-04: DIST-2 and DIST-3 both landed on it from DEC-37/DEC-42; DIST-1 done 2026-08-04; the backlog — D-115/116/107/54 and the MONITOR_TOKEN follow-on behind DEC-37/REC-33 — waits for the next activation)
 Batches releases from a green `main`; the deploy step is gated to Bob. New standing
 work from the topology decision: D-115 (the installer installs ONE Worker and the
 topology now has a fleet), D-116 (version authority must span the fleet, or D-106's
 drift class returns multiplied), D-107 (no scripted installer deploy with read-back),
 D-54 (the installer does not detect the Workers plan). Activate when a fleet member is
 close to shipping, and not after it ships. NEW 2026-08-04: the REC-26 delegation (CLAIMS.md) — uploadInstall AND uploadUpdate meta.bindings gain { type: service, name: SELF, service: slug } so archive-monitor and monitor-cadence arm on deployed instances; a scoped MONITOR_TOKEN is the better credential than the ADMIN_TOKEN fallback.
+
+### DIST-2 · queued
+milestone: M1
+scope: **The installer binds DAEMON_TOKEN (REC-33's follow-on).** newgroup generates a DAEMON_TOKEN and binds it in BOTH uploadInstall and uploadUpdate (the SELF-binding precedent DIST-1 established; the update path so already-installed instances receive it). DIST-1's constraint is now satisfied in this direction — the plane classifies the class (REC-33 landed) BEFORE the installer binds it. The ADMIN_TOKEN fallback stays until DEC-43 rules on its retirement. NO DEPLOY: land tested code; the install/update run is gated to Bob.
+behind-interface: I4
+depends-on: REC-33
+accepts-when: the installer suite green with DAEMON_TOKEN generated and bound in both upload paths' built config; `cd bio-plane && npm run test:battery` green; negative control — remove the update-path binding and the suite names the already-installed instance that would never receive it.
+added: 2026-08-04 · CONDUCT (REC-33's follow-on)
+
+### DIST-3 · queued
+milestone: M7
+scope: **D-54 re-scoped by DEC-42: the installer REQUIRES Workers Paid, verifies it, and REFUSES to complete rather than installing something quietly degraded.** Detection was the old scope; refusing IS the fix, because the D-106 failure it guards is a group getting something quietly different from every description of it. Verify the plan the way the BOB session measured it (provoke the platform — upload with limits.cpu_ms set and read the answer; code 100328 is Free, HTTP 200 with the limit echoed is Paid) rather than trusting a plan field. The refusal names what is missing, what it costs ($0/month + a card → $5/month + a card — an instance already needs an account and a payment method, and R2 already bills past its free allowance), and what to do; it must never half-install.
+behind-interface: I4
+depends-on: none
+accepts-when: the installer suite green with a Free-plan account refused BY NAME before anything is created and a Paid one proceeding, the plan established by provoking the platform not by reading a field; negative control — accept the Free answer and the suite names the half-installed instance.
+added: 2026-08-04 · CONDUCT (DEC-42's item 1)
+
 
 ### DIST-1 · done
 milestone: M1
