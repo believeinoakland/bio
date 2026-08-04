@@ -384,6 +384,78 @@ the corpus would then be shaped by an ungrounded grade. That is a real link to t
 construct, it is narrow, and it is a reason to keep hunch-derived relatedness visible in
 whatever builds the plan. It is not a reason to file the whole capability under bias.
 
+### THE FRONTIER HAS TWO SOURCES, AND THE SECOND IS THE VALUABLE ONE
+
+Bob, 2026-08-04, and it corrects an assumption running through everything above:
+
+> *"A reporter faces the same hazard — that corpus silence gets read as evidence of
+> absence. That's why tips and shoe leather are so valuable. The humans who use BIO are
+> doing the same thing — at the same time they're using AI, search engines, and other
+> digital tools to fill in missing evidence, whether supporting or cutting against."*
+
+Every frontier this document has described is DERIVED — `deferred` links found inside
+documents, entity connections, adjacency computed from what is already held. **A derived
+frontier can only ever reach what the corpus already points at, so it inherits the
+corpus's blind spots exactly.** That is the machine analogue of a reporter who only reads
+clippings.
+
+**So the frontier has two sources and they are not equivalent:**
+
+- **DERIVED** — links, entities, computed adjacency. Cheap, unbounded, and blind in the
+  same directions the corpus is.
+- **AUTHORED** — a member's lead. A tip, a thing they know exists, a document they saw in
+  a courtroom, a contract they have reason to think was signed. **This is the only channel
+  that can reach outside the corpus's existing shape**, and it is the one a reporter would
+  say does the real work.
+
+**AND AN AUTHORED LEAD IS WHAT MAKES AN ABSENCE EVIDENTIARY — this is the sharpest
+consequence and it closes a loop opened earlier in this document.** RFC 2308's rule is
+that a negative answer with no proof of authority attached is not recordable at all: the
+SOA is what makes *"it does not exist"* a finding rather than a shrug. **A member's
+authored lead is exactly that authority.** *"We went looking for the contract this tip
+described, across these sources, on this date, and there is none"* is a `LOOKED_ABSENT`
+with a named author standing behind why we looked — which is a finding. The same query
+with no lead behind it is silence that cost nothing to produce.
+
+So the four-state model and the member-lead channel are the same mechanism seen from two
+ends, and neither is worth much without the other.
+
+**Two gaps this names, neither of which the record can express today:**
+
+1. **A member's LEAD has no home.** The frontier is `deferred` links — URLs discovered
+   inside documents. A tip is not a URL: it is *a thing that should exist, sought*. Sibling
+   to D-184 (a member's firsthand OBSERVATION has no home as a basis leg); the same member
+   knowledge is unrepresentable both before the search and after it.
+2. **A search that came back empty is not recorded at all.** Only fetches that succeeded
+   leave a trace. The most evidentiary outcome of shoe leather — *we looked hard, here, and
+   it is not there* — is the one the record currently drops.
+
+### "INDIRECT" MEANS CONTEXT SUGGESTING WHERE ELSE TO LOOK — so the fetch plan is a PROPOSAL
+
+Bob, clarifying: *"When I refer to indirect content I'm mainly thinking about how context
+around an objective can indicate other related areas to explore."*
+
+This is NOT primarily a graph walk over existing edges. It is an inference from an
+objective's context to ADJACENT AREAS worth examining — the kind of reasoning that is
+AI-assisted by nature, and which Bob names AI, search engines and other digital tools as
+serving alongside the human.
+
+**Which settles the shape: a fetch plan is a PROPOSAL, not an acquisition.** It lands on
+constructs that already exist and already carry the right rules:
+
+- **P · PROPOSAL** — *a derived finding awaiting an authored act*, whose charter is D-90:
+  **derived things inform and authored acts bind.**
+- **D-82** — an assistant-surfaced item must LOOK derived. A suggested area to explore is
+  exactly that, and must never be indistinguishable from a member's own lead.
+- **`surfaced_by`** already distinguishes `agent` from `human` at the surfacing act, so the
+  record can already say which channel produced a frontier entry — the field exists and
+  the frontier does not yet use it.
+
+So the capability is: context proposes, the member disposes, and the record keeps which
+was which. A machine that fetches on its own inference is the version to refuse, and not
+because it would be wasteful — because the corpus would then be shaped by an unauthored
+judgment, and nobody could later say whose.
+
 ## What to do, in order
 
 1. **Adopt the framing as READ-THROUGH ACQUISITION OVER A WRITE-ONCE ARCHIVE**, with the
