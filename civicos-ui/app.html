@@ -839,7 +839,10 @@ async function boot(){
   $("#pub").classList.remove("on");
   $("#work").classList.add("on");
   document.documentElement.setAttribute("data-space","working");
-  go("home", true);
+  /* UI-11: an address in the bar is an address. A member who reloaded on a
+     question's page, or was handed its link, lands back on it rather than on
+     Home with the url still claiming otherwise. */
+  if(!routeFromHash()) go("home", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -887,6 +890,7 @@ function navRemember(){
 function navLabel(p){
   if(!p) return "";
   if(p.type==="bundle") return "the document";
+  if(p.type==="inquiry") return "the question";
   const t = {record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
@@ -904,6 +908,7 @@ async function navBackDo(){
   navSync();
   if(!p){ await go("record", true); return; }
   if(p.type==="bundle") await openBundle(p.key, true);
+  else if(p.type==="inquiry") await openInquiry(p.key, true);   // UI-11's route is a place you can come back to
   else {
     await go(p.key, true);
     if(p.key==="search" && p.q){
@@ -1042,6 +1047,39 @@ const PHASE_LABEL = { inquiry:"Inquiry", finding:"Finding", case:"Case" };
 const TYPE_LABEL = { information:"Info", inquiry:"Inquiry", project:"Project", action:"Action",
                      annotation:"Annotation", source:"Source" };
 const NON_BUNDLE_KINDS = ["annotation", "source"];
+/* REC-11 / REC-12's BASIS AND STRENGTH VOCABULARY, mirrored here for the reason
+   every table above is mirrored: this runtime is one static file, and a word it
+   spells anywhere else is a copy that drifts. check-semantics.mjs pins all five
+   arrays against the catalog's own exports, and pins that every value in them
+   has a member-facing word below — so a new role, a new grade source or a
+   fourth strength state fails the harness by name instead of rendering blank.
+
+   D-160 IS ABSOLUTE: the retired word for the boundary case means the OPPOSITE
+   in SB-OUTPUT §5.1 and appears nowhere in this file. The word is UNRATED. */
+const BASIS_ROLES = ["supports", "cuts_against"];
+const BASIS_GRADES = ["A", "B", "C", "D"];
+const GRADE_AXES = ["capture", "connection"];
+const GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited"];
+const STRENGTH_STATES = ["graded", "unrated", "undetermined"];
+/* THE MEMBER'S WORDS for each. A role is what the leg DOES to the conclusion;
+   `cuts_against` is a leg like any other and is counted on its own axis exactly
+   as a supporting one is (invariant 7 — a rendering that quietly drops it is
+   the failure this vocabulary exists to prevent). */
+const ROLE_WORD = { supports: "supports this", cuts_against: "cuts against this" };
+/* DEC-21: two MEASUREMENTS over two POPULATIONS. Capture ranges over every
+   document the conclusion reaches; connection over every edge it rests on. They
+   are never combined, never averaged, and never reduced to one letter. */
+const AXIS_WORD = { capture: "How directly the record holds the documents",
+                    connection: "How strongly the links between them were established" };
+const AXIS_SHORT = { capture: "Documents", connection: "Links" };
+/* Grade renders as HOW a leg was established, never as how credible it is. */
+const GRADE_SOURCE_WORD = {
+  resolution: "established by the record resolving this document to its subject",
+  testimony:  "recorded as a member's testimony, with an author and a date",
+  hunch:      "a member's HUNCH: declared bias, not yet established",
+  inherited:  "inherited from the edition of the case this leg cites",
+};
+const STRENGTH_STATE_WORD = { graded: "graded", unrated: "UNRATED", undetermined: "undetermined" };
 /*__CATALOG_END__*/
 function phaseOf(state){ return PHASE[state] || "inquiry"; }
 /* What to CALL a record on screen: an inquiry is named by its phase, everything
@@ -4283,6 +4321,12 @@ async function openBundle(id, fromNav){
       }
     }
 
+    /* UI-11: a question's own page is a DIFFERENT surface from its document —
+       it reads the basis, both strengths and what rests on it — so the document
+       page names it rather than absorbing it. One line, and it is the entry
+       point that makes the route reachable by a member rather than by a url. */
+    const askLink = normalizeType(otype)==="inquiry"
+      ? ` &middot; <a onclick="openInquiry(${esc(JSON.stringify(id))})">the question page</a>` : "";
     const back = `<a onclick="go('record')">The record</a> &rsaquo; `;
     const tab = k => `<a${k==="s1"?' class="on"':""} data-s="${k}" onclick="strataGo(this,'${k}')" title="${esc(STRATA_INFO[k].tip)}">${esc(STRATA_INFO[k].label)}</a>`;
     const openTab = PRIMARY_K>=0 ? `<a class="openlink" onclick="openArtifact(${PRIMARY_K})" title="opens like any link: a tab for what the browser renders, a download otherwise; verified against the record underneath">Open the document<span class="arr" aria-hidden="true">\u2197</span></a>` : "";
@@ -4290,13 +4334,13 @@ async function openBundle(id, fromNav){
     $("#content").innerHTML =
       `<div class="dochead">
          <div class="docband" title="a document in the working record"></div>
-         <p class="crumb">${back}<span class="mono">${esc(id)}</span></p>
+         <p class="crumb">${back}<span class="mono">${esc(id)}</span>${askLink}</p>
          <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
          <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${openTab}${seals}</div>
        </div>
        <div id="docscroll">${s1}${s2}${s3}${s4}${docKnows}${relBar}${dispBar}${attestBar}</div>`;
     strataSpy();
-  }catch(e){ $("#content").innerHTML = errPane(e); }
+  }catch(e){ $("#content").innerHTML = errPane(e, recordCrumb(id)); }
 }
 function stratum(id, inner, closed){
   return `<section class="stratum${closed?" closed":""}" id="${id}"><div class="eyebrow-s"><span class="tri" onclick="triToggle(this)" title="collapse or expand"></span><span class="ebt" title="${esc(STRATA_INFO[id].tip)}">${esc(STRATA_INFO[id].label)}</span></div><div class="sbody">${inner}</div></section>`;
@@ -4334,6 +4378,315 @@ function strataGo(a, id){
   document.querySelectorAll("section.stratum").forEach(x=>x.classList.toggle("on", x.id===id));
   el.scrollIntoView({behavior:"smooth", block:"start"});
 }
+
+/*__INQUIRY_PAGE_START__*/
+/* ============================================================
+   S3 · THE INQUIRY PAGE (UI-11), READ-ONLY.
+
+   Route `#inquiry/<id>`. The surface where a member first sees what a claim
+   RESTS ON and how strong it is — and the one place the record is most able to
+   claim more than it can support, so nearly everything below is a refusal to.
+
+   WHAT IT READS, and every one of them is a plane read:
+     op=image       the document as authored — the question, the falsifier
+     op=projection  the row and `fm_json`, the plane's OWN parse of the
+                    frontmatter (never a YAML parser written here)
+     op=backlinks   WHAT RELIES ON THIS — REC-25's GATED reverse read, built
+                    for exactly this. Never a client-side walk: `reverseRefs`
+                    above is UI-21's deletion and is not taken here.
+     op=whoami      the one credential sentence (Q12), through PLANE.me
+
+   WHAT IT NEVER DOES:
+     - compose the two strengths into one letter, average them, score them,
+       or draw a bar. There is no arithmetic over grades anywhere in this
+       region; the only grade values rendered are ones the plane published.
+     - render an act, an option, or a refusal. NO ACT BAR THIS TURN (UI-12
+       adds it), so there is no surface-side option map to delete later.
+     - decide settledness from a letter.
+
+   THE PAIR, AND THE MEASURED GAP — read this before wiring anything to it.
+   REC-12's `strengthOf()` is the AUTHORITY and derives on read inside the
+   Durable Object. It is NOT reachable from a surface: `op=strength` and
+   `op=basis` exist in the store's route map but are absent from `index.mjs`'s
+   OPS table, which is a strict whitelist. `op=projection` does not carry the
+   cached columns either (they are not in `Store.PROJECTION_COLS`), and
+   `op=search`'s hits do not (not in `query.mjs`'s `PROVENANCE_COLS`); the two
+   GRADE columns are filter/sort/facet selectors only, and the two STATE
+   columns are not exposed at all — so even a facet route could not tell
+   UNRATED from undetermined, which is the distinction DEC-18 turns on.
+   WHERE THE PAIR DOES REACH A SURFACE: frozen into the document's own
+   frontmatter when a case is published (REC-14 stamps BOTH AXIS OBJECTS, not
+   two letters, which is why one renderer serves both). So `inquiryPair()`
+   below is ONE SEAM: it reads the axis objects the plane published, and where
+   the plane has published none it says so as a NAMED GAP (UI-9's precedent)
+   rather than deriving them here or dressing a surface gap up as the record's
+   `undetermined` — which is D-129's distinction and would be a lie about the
+   record. The day a control-plane read serves `strengthOf()`, this one
+   function changes and nothing else does.
+   ============================================================ */
+
+/* The crumb, built in ONE place because it must render FIRST, survive the
+   error, and read identically in both. */
+function recordCrumb(id, extra){
+  return `<p class="crumb"><a onclick="go('record')">The record</a> &rsaquo; <span class="mono">${esc(id)}</span>${extra||""}</p>`;
+}
+
+/* A `## Heading` section's own text, from the document as authored. The heading
+   is looked up in the guarded CATALOG table for the type that DECLARED itself,
+   never spelled here, so a legacy `focus` document is read under the contract
+   it was written under (vocabFor, the MAP RULE). */
+function headingLike(type, re){
+  return (vocabFor(HEADINGS, type) || []).find(h=>re.test(h)) || null;
+}
+function mdSectionOf(body, heading){
+  if(!heading) return "";
+  const lines = String(body||"").split("\n");
+  const at = lines.findIndex(l=>l.trim()===heading);
+  if(at === -1) return "";
+  const out = [];
+  for(let i=at+1;i<lines.length;i++){ if(/^##\s/.test(lines[i])) break; out.push(lines[i]); }
+  return out.join("\n").trim();
+}
+
+/* ---- C-14: THE UNDETERMINED PRIMITIVE, DRAWN ONCE ----
+   Three lines, always: the word, the dated basis, and whether looking again
+   could change it. Q9 SETTLED the third line as a CLOSED SET OF THREE FORMS,
+   chosen by facts the plane published — mapping a published enum to a fixed
+   string is rendering, not computing, which is why this does not violate
+   DEC-8. A free-text third line is STRUCTURALLY IMPOSSIBLE here: the form is a
+   key, an unknown key renders nothing at all, and the harness drives that. */
+const UNDET_RETRY = {
+  could_not_determine: "Looking again may settle this.",
+  positively_none:     "There is nothing here to find; looking again will not change this.",
+  grade_the_leg:       "Only grading the leg will settle this; looking again will not.",
+};
+function undeterminedPane(basis, form, names){
+  const retry = UNDET_RETRY[form];
+  if(!retry) return "";                     // a form nobody published is not a sentence to invent
+  const who = (names && names.length) ? ` ${names.map(n=>esc(n)).join(", ")}` : "";
+  return `<div class="card undet" style="margin:0 0 12px">
+    <div class="subj-grade g-unconf">undetermined</div>
+    <div class="subj-how"><b>basis</b> &middot; ${esc(basis)}</div>
+    <div class="subj-how"><b>retry</b> &middot; ${esc(retry)}${form==="grade_the_leg"?who:""}</div>
+  </div>`;
+}
+
+/* ---- a leg's grade: HOW it was established, never how credible ----
+   DELIBERATELY NOT `subjGradeBadge`, and the reason is that function's own
+   contract: `established` and `needs_confirmation` come FROM THE PLANE
+   (op=concerns / op=connections) so that a letter can never decide
+   settledness. `inquiry_basis` publishes no such flags — it carries grade,
+   grade_axis and grade_source and nothing else — so calling it would force
+   this surface to INVENT a settledness the record never asserted, which is the
+   one thing that function exists to prevent. The badge reuses its markup and
+   its classes, states HOW from the plane's own `grade_source`, and never says
+   established or unconfirmed about a leg. */
+function basisGradeBadge(leg){
+  const src = leg && leg.grade_source;
+  const how = GRADE_SOURCE_WORD[src] || "recorded with no account of where it came from";
+  if(leg.grade == null)
+    return `<span class="subj-grade g-unconf">no grade yet</span>`
+         + `<span class="subj-how">Not yet load-bearing: this leg carries no grade, so it is not counted on any axis (DEC-18). It is here, and it is named, because a leg dropped from the page is a leg nobody remembers deciding about.</span>`;
+  return `<span class="subj-grade ${src==="hunch"?"g-unconf":"g-est"}">Grade ${esc(leg.grade)}</span>`
+       + `<span class="subj-how">${esc(how)}.</span>`;
+}
+
+function basisLegRow(leg, ord){
+  const target = leg && leg.target ? String(leg.target) : "";
+  const role = ROLE_WORD[leg && leg.role] || "is recorded against this";
+  const axis = AXIS_SHORT[leg && leg.grade_axis] || null;
+  const hunch = leg && leg.grade_source === "hunch";
+  return `<div class="card" style="margin:0 0 10px">
+    <div class="kv"><span class="k">Leg ${ord+1}</span><span class="v plain">
+      <a onclick="openBundle(${esc(JSON.stringify(target))})" class="mono">${esc(target)}</a>
+      &middot; ${esc(role)}${axis?` &middot; graded on the ${esc(axis.toLowerCase())} axis`:""}</span></div>
+    <div style="margin-top:6px">${basisGradeBadge(leg||{})}</div>
+    ${hunch?`<div class="teach" style="margin:8px 0 0"><b>HUNCH</b> &middot; declared by ${esc(leg.author||"an unnamed member")} on ${esc(leg.date||"an unrecorded date")}. A hunch is declared bias, recorded openly from the moment it is made rather than disclosed at publication, and it is temporary by construction: it is cleared by establishing the grade, or it stands and says so.</div>`:""}
+    ${leg && leg.note?`<div class="subj-how" style="margin-top:6px">${esc(leg.note)}</div>`:""}
+  </div>`;
+}
+
+/* ---- THE ONE SEAM: the plane's own axis objects, or nothing ---- */
+function inquiryPair(fmj){
+  const rows = fmj && Array.isArray(fmj.published_strength) ? fmj.published_strength : null;
+  if(!rows) return null;
+  const out = {};
+  for(const a of rows) if(a && GRADE_AXES.includes(a.axis)) out[a.axis] = a;
+  return (out.capture && out.connection) ? out : null;
+}
+
+/* One axis, rendered from ONE axis object the plane published. Never combined
+   with the other, never averaged, never scored, never drawn as a bar, and the
+   grade rendered is the plane's own value — this function performs no
+   comparison between grades at all. */
+function axisPanel(axis, a, legs){
+  const head = `<h3 style="font-family:var(--font-ui);font-size:14px;margin:18px 0 4px">${esc(AXIS_SHORT[axis])} &middot; ${esc(AXIS_WORD[axis].toLowerCase())}</h3>`;
+  const state = STRENGTH_STATES.includes(a.state) ? a.state : null;
+  const counts = (a.load_bearing != null && a.population != null)
+    ? `<div class="subj-how">${esc(String(a.load_bearing))} of ${esc(String(a.population))} legs on this axis are load-bearing.</div>` : "";
+  if(state === "graded"){
+    /* THE WEAKEST LEG, NAMED, WITH ITS OWN SENTENCE. Both come from the plane:
+       `weakest` is the leg the plane's own derivation set the axis by, and
+       `detail` is the plane's sentence about it. An ungraded leg present
+       alongside graded ones changes NOTHING here — DEC-18: it is inert, not
+       unrating, and this axis still reads from its graded legs. */
+    return head + `<div class="card" style="margin:0 0 12px">
+      <div class="kv"><span class="k">${esc(AXIS_SHORT[axis])}</span><span class="v plain">
+        <span class="subj-grade g-est">Grade ${esc(a.grade)}</span></span></div>
+      <div class="subj-how" style="margin-top:6px">No stronger than the weakest leg it rests on${a.weakest?`, which is <a onclick="openBundle(${esc(JSON.stringify(String(a.weakest)))})" class="mono">${esc(String(a.weakest))}</a>`:""}.</div>
+      ${a.detail?`<div class="subj-how">${esc(a.detail)}</div>`:""}
+      ${counts}</div>`;
+  }
+  if(state === "unrated"){
+    /* UNRATED is the BOUNDARY CASE (DEC-18) and UNRATED is the word (D-160).
+       It is not a low score and not a failure: nothing on this axis is
+       established. WHICH third line the primitive takes is decided by the
+       plane's own numbers — legs present but ungraded means only grading one
+       will settle it; no legs at all on this axis means there is positively
+       nothing here to find. */
+    const inert = (Array.isArray(a.not_load_bearing) ? a.not_load_bearing.map(m=>m.target_id)
+                  : legs.filter(l=>l && l.grade == null).map(l=>l.target)).filter(Boolean);
+    const form = (a.population > 0 || inert.length) ? "grade_the_leg" : "positively_none";
+    return head + `<div class="card" style="margin:0 0 12px">
+      <div class="kv"><span class="k">${esc(AXIS_SHORT[axis])}</span><span class="v plain">
+        <span class="subj-grade g-unconf">UNRATED</span></span></div>
+      <div class="subj-how" style="margin-top:6px">UNRATED is not a low score and not a failure: nothing on this axis has been established, so this conclusion rests on nothing established here.</div>
+      ${a.detail?`<div class="subj-how">${esc(a.detail)}</div>`:""}
+      ${counts}</div>`
+      + undeterminedPane(`no leg on this axis carries an established grade`, form, inert);
+  }
+  if(state === "undetermined"){
+    /* R3: UNKNOWN IS NOT ABSENT. The walk did not finish, so what lies below
+       is unknown rather than weak, and the axis states that instead of a
+       number. */
+    return head + undeterminedPane(
+      a.detail || `the walk over what this rests on did not finish within its bound of ${a.depth_bound}`,
+      "could_not_determine", []);
+  }
+  return head + `<div class="empty">The record published no state for this axis, and this page does not invent one.</div>`;
+}
+
+/* The STRENGTH panel. TWO strengths, never one — the two panels are rendered
+   from two independent axis objects and there is no code path here that
+   produces a third, composed value. */
+function strengthPanels(pair, legs){
+  const lede = `<p class="lede">A case does not have <i>a</i> strength. It has two, and they are never combined, averaged or scored against each other: how directly the record holds the DOCUMENTS it reaches, and how strongly the LINKS between them were established. A conclusion is no stronger than the weakest leg on each, separately.</p>`;
+  const hunches = legs.filter(l=>l && l.grade_source === "hunch");
+  const hunchNote = hunches.length
+    ? `<div class="teach" style="margin:14px 0 0"><b>A hunch stands on this question.</b> ${hunches.map(h=>esc(String(h.target))).join(", ")} ${hunches.length===1?"is":"are"} recorded as a member's hunch — declared bias, not an established grade. While one stands, this case cannot be published; clearing it means establishing the grade, not waiting for it to age into a fact.</div>`
+    : "";
+  if(!pair){
+    /* THE NAMED GAP, and it is named rather than filled. Both axes are still
+       drawn, because the shape of the answer is a PAIR whether or not this
+       surface can read its values yet, and a member who learns the shape here
+       learns the right one. */
+    return `<h2 class="sec">Strength</h2>${lede}
+      ${GRADE_AXES.map(ax=>`<h3 style="font-family:var(--font-ui);font-size:14px;margin:18px 0 4px">${esc(AXIS_SHORT[ax])} &middot; ${esc(AXIS_WORD[ax].toLowerCase())}</h3>
+        <div class="empty">Derived by the record from the legs above, and not published to this page yet. The strength of a question that is still being worked on is computed fresh every time it is asked for — it is not read from a stored number, because a stored one goes stale the moment a leg beneath it is re-graded. It is shown here once a case is set down and published, where it is frozen with the edition it belongs to. This page shows no number in the meantime and does not compute one.</div>`).join("")}
+      ${hunchNote}`;
+  }
+  return `<h2 class="sec">Strength</h2>${lede}
+    ${GRADE_AXES.map(ax=>axisPanel(ax, pair[ax], legs)).join("")}
+    ${hunchNote}`;
+}
+
+/* Q12, SETTLED: narration is SURFACE-scoped and PLANE-SOURCED. One sentence,
+   from what `op=whoami` published about this session, stated once at the top of
+   the surface. Controls are never narrated and never greyed — an absent
+   capability removes the entry point silently, which on this read-only turn
+   means there is nothing here to remove. */
+function credentialSentence(me){
+  const canAct = !!(me && me.session && (me.capabilities||[]).includes("contribute"));
+  if(canAct) return "";
+  return `<p class="subj-note">This credential can read this question and cannot act on it.</p>`;
+}
+
+let INQ_HASH_LOCK = false;
+async function openInquiry(id, fromNav){
+  if(!fromNav) navRemember();
+  CUR = { type:"inquiry", key:id };
+  setActive("inquiries"); liveStop();
+  /* THE CRUMB RENDERS FIRST and every later render carries it, including the
+     error — which is the errPane correction this item makes. */
+  const crumb = recordCrumb(id, ` &rsaquo; <span>the question</span>`);
+  $("#content").innerHTML = `${crumb}<p class="count-line">Loading&hellip;</p>`;
+  try{
+    if(typeof location !== "undefined" && location.hash !== undefined && location.hash !== "#inquiry/"+id){
+      INQ_HASH_LOCK = true; try{ location.hash = "#inquiry/"+id; }finally{ INQ_HASH_LOCK = false; }
+    }
+  }catch(_){}
+  try{
+    const [img, proj] = await Promise.all([getImage(id, true), getProjection(id)]);
+    if(!img){ $("#content").innerHTML = errPane({error:"This question was not found."}, crumb); return; }
+    const { fm, body } = splitFm(typeof img["bundle.md"]==="string" ? img["bundle.md"] : "");
+    let fmj = null; try{ fmj = proj && proj.fm_json ? JSON.parse(proj.fm_json) : null; }catch(_){}
+    const otype = fm.object_type || (proj&&proj.object_type) || "inquiry";
+    if(normalizeType(otype) !== "inquiry"){
+      $("#content").innerHTML = errPane({error:`${id} is not a question, so it has no basis and no strength. Open it as a document instead.`}, crumb);
+      return;
+    }
+    const state = fm.current_state || (proj&&proj.current_state) || vocabFor(FIRST_STATE, otype);
+    /* THE PHASE WORD. Derived in the UI from `current_state` through the ONE
+       guarded catalog table (UI-10), and it becomes a plane READ the day the
+       projection publishes `inquiry_phase` — which it does not today. */
+    const phase = phaseOf(state);
+    const legs = (fmj && Array.isArray(fmj.basis)) ? fmj.basis.filter(l=>l && typeof l==="object") : [];
+    const pair = inquiryPair(fmj);
+
+    const questionText = mdSectionOf(body, (vocabFor(HEADINGS, otype)||[])[0]);
+    const falsifyHeading = headingLike(otype, /falsif/i);
+    const falsifyText = mdSectionOf(body, falsifyHeading);
+
+    /* WHAT RELIES ON THIS — REC-25's gated reverse read, never a walk here. */
+    let back = null, backErr = null;
+    try{ back = (await rec("backlinks",{target:id})).result || null; }catch(e){ backErr = e; }
+    const rels = (back && Array.isArray(back.backlinks)) ? back.backlinks : [];
+
+    const questionPane = questionText
+      ? `<div class="card"><div class="prose">${mdLite(questionText)}</div></div>`
+      : `<div class="empty">This question's own words are not in the document. Nothing is shown in their place.</div>`;
+
+    const legsPane = legs.length
+      ? legs.map((l,i)=>basisLegRow(l,i)).join("")
+      : `<div class="empty">This question rests on nothing yet. A question may stand with no legs at all: it is a standing objective, and the record says so rather than pretending it is answered.</div>`;
+
+    const relPane = backErr
+      ? errPane(backErr)
+      : (rels.length
+        ? rels.map(r=>`<div class="linkrow" onclick="openBundle(${esc(JSON.stringify(String(r.from)))})"><span class="lt">${esc(r.from_title||r.from)}</span><span class="ln">${esc(typeLabel(r.from_type, r.from_state))} &middot; ${esc(r.rel||"cites")} this${r.note?` &middot; ${esc(r.note)}`:""}</span></div>`).join("")
+        : `<div class="empty">Nothing in the record rests on this question yet.</div>`);
+
+    $("#content").innerHTML = `${crumb}
+      <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
+      <p class="lede">${esc(PHASE_LABEL[phase])} &middot; <span class="mono">${esc(state)}</span></p>
+      ${credentialSentence(PLANE.me)}
+      <h2 class="sec">The question, as authored</h2>${questionPane}
+      <h2 class="sec">What it rests on</h2>
+      <p class="subj-note">Every leg the question rests on, in the order it was recorded, with what it does to the conclusion and how its grade was established. A leg that cuts against the conclusion is a leg like any other and is counted on its own axis exactly as a supporting one is — the record keeps what it found, not only what it hoped for.</p>
+      ${legsPane}
+      ${strengthPanels(pair, legs)}
+      <h2 class="sec">What would falsify it</h2>
+      ${falsifyText
+        ? `<div class="card"><div class="prose">${mdLite(falsifyText)}</div></div>`
+        : `<div class="empty">This question does not yet say what would falsify it. Saying so is a requirement of concluding it, and nothing is written here on the author's behalf.</div>`}
+      <h2 class="sec">What relies on this</h2>
+      <p class="subj-note">Read from the record's own reverse index, filtered to what this credential may see. Nothing here is assembled by walking the record from this page.</p>
+      ${relPane}`;
+  }catch(e){ $("#content").innerHTML = errPane(e, crumb); }
+}
+
+/* The route. `#inquiry/<id>` is the address the design names, so it is a real
+   address: it survives a reload and it can be handed to another member. */
+function routeFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#inquiry\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  openInquiry(m[1]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!INQ_HASH_LOCK) routeFromHash(); }); }catch(_){}
+/*__INQUIRY_PAGE_END__*/
 
 /* ---------- Search (op=search) ---------- */
 async function backFromEmptySearch(){
@@ -7229,9 +7582,18 @@ async function addCapture(locator, authority, wantSubs){
   }
 }
 
-function errPane(e){
+/* THE CRUMB SURVIVES THE ERROR (UI-11).
+   Every page that opens one object writes its crumb FIRST and then replaces the
+   whole pane with this on failure — which took the crumb with it, so a member
+   whose plane blinked lost the only way back and the only statement of where
+   they were. The correction is the optional second argument: a caller that has
+   a crumb hands it in and it is re-rendered ABOVE the message. Additive on
+   purpose — every existing call site keeps its exact behaviour, and the crumb
+   is passed as HTML the caller already built rather than rebuilt here, because
+   only the caller knows what the object was. */
+function errPane(e, crumbHtml){
   const msg = e && (e.error||e.reason||e.detail) ? [e.reason,e.error,e.detail].filter(Boolean).join(" · ") : "Could not reach the plane.";
-  return `<div class="teach" style="margin:8px 0">${esc(msg)}</div>`;
+  return `${crumbHtml||""}<div class="teach" style="margin:8px 0">${esc(msg)}</div>`;
 }
 
 /* ---------- Published space (op=publishedmanifest, public) ---------- */

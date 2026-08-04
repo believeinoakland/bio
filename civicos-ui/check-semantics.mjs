@@ -47,6 +47,18 @@
  *       SAME EDIT LEFT THIS CHECK GREEN — it never opened the catalog — and
  *       that is the whole reason the item exists.
  *
+ *   (c) UI-11's arm, over the basis vocabulary, RUN 2026-08-04 (both files
+ *       restored byte-identical, sha256 compared): drop `inherited` from
+ *       `GRADE_SOURCES` in app.html alone ->
+ *         FAIL: GRADE_SOURCES has drifted from the catalog
+ *       and, the other direction, ADD a fifth source to `GRADE_SOURCES` in the
+ *       catalog alone ->
+ *         FAIL: GRADE_SOURCES has drifted from the catalog
+ *         FAIL: GRADE_SOURCE_WORD has no member-facing word for 'estimate'
+ *       — which is the failure that matters: a new grade source with no word
+ *       renders a blank sentence beside a leg's grade on the inquiry page, and
+ *       nothing else in the suite would have noticed.
+ *
  *   (b) delete `divided` from `STATES.inquiry.legal` in the catalog alone and
  *       this check FAILS twice, naming the UI as the inventor:
  *         FAIL: PHASE names 'divided', which is not a legal inquiry state
@@ -57,6 +69,7 @@ import fs from "fs";
 import vm from "vm";
 import {
   OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, STATES, HEADINGS,
+  BASIS_ROLES, BASIS_GRADES, GRADE_AXES, GRADE_SOURCES, STRENGTH_STATES,
 } from "../bio-plane/checks/bio-checks.mjs";
 
 const appPath = new URL("./app.html", import.meta.url).pathname;
@@ -79,7 +92,10 @@ function block(marker, exportNames) {
 }
 const C = block("CATALOG", ["LEGACY_TYPE_ALIASES", "normalizeType", "vocabFor", "PREFIX",
   "FIRST_STATE", "HEADINGS", "SCHEMA_OF", "STATE_EDGES", "PHASE", "PHASE_LABEL",
-  "TYPE_LABEL", "NON_BUNDLE_KINDS"]);
+  "TYPE_LABEL", "NON_BUNDLE_KINDS",
+  /* UI-11: REC-11/REC-12's basis and strength vocabulary. */
+  "BASIS_ROLES", "BASIS_GRADES", "GRADE_AXES", "GRADE_SOURCES", "STRENGTH_STATES",
+  "ROLE_WORD", "AXIS_WORD", "AXIS_SHORT", "GRADE_SOURCE_WORD", "STRENGTH_STATE_WORD"]);
 const S = block("SEMANTICS", ["SEMANTICS"]).SEMANTICS;
 
 /* The canonical types: what OBJECT_TYPES maps its prefixes onto, deduplicated.
@@ -167,6 +183,45 @@ for (const st of inquiryStates)
 for (const [st, phase] of Object.entries(C.PHASE)) {
   if (!inquiryStates.includes(st)) bad(`PHASE names '${st}', which is not a legal inquiry state in the catalog`);
   if (C.PHASE_LABEL[phase] === undefined) bad(`PHASE.${st} is '${phase}', which PHASE_LABEL does not name`);
+}
+
+/* ---- 1b. the BASIS and STRENGTH vocabulary IS the catalog's (UI-11) ----
+   The same guarantee UI-10 established over the type tables, extended to the
+   five arrays REC-11 and REC-12 introduced. Both directions: an array that
+   drifts fails naming it, and every value in it must have a member-facing word
+   in app.html — a new grade source with no word renders a blank sentence on the
+   inquiry page, which is exactly the silent failure this guard exists for. */
+for (const [name, ui, cat] of [
+  ["BASIS_ROLES", C.BASIS_ROLES, BASIS_ROLES],
+  ["BASIS_GRADES", C.BASIS_GRADES, BASIS_GRADES],
+  ["GRADE_AXES", C.GRADE_AXES, GRADE_AXES],
+  ["GRADE_SOURCES", C.GRADE_SOURCES, GRADE_SOURCES],
+  ["STRENGTH_STATES", C.STRENGTH_STATES, STRENGTH_STATES],
+]) {
+  if (J(ui) !== J(cat))
+    bad(`${name} has drifted from the catalog.\n       catalog:  ${J(cat)}\n       app.html: ${J(ui)}`);
+}
+for (const [wordTable, values, label] of [
+  [C.ROLE_WORD, BASIS_ROLES, "ROLE_WORD"],
+  [C.AXIS_WORD, GRADE_AXES, "AXIS_WORD"],
+  [C.AXIS_SHORT, GRADE_AXES, "AXIS_SHORT"],
+  [C.GRADE_SOURCE_WORD, GRADE_SOURCES, "GRADE_SOURCE_WORD"],
+  [C.STRENGTH_STATE_WORD, STRENGTH_STATES, "STRENGTH_STATE_WORD"],
+]) {
+  for (const v of values)
+    if (!wordTable || wordTable[v] === undefined)
+      bad(`${label} has no member-facing word for '${v}', which the catalog declares`);
+  for (const k of Object.keys(wordTable || {}))
+    if (!values.includes(k)) bad(`${label} names '${k}', which the catalog does not declare`);
+}
+/* D-160 is ABSOLUTE: the retired word for the boundary case means the OPPOSITE
+   in SB-OUTPUT §5.1, so it must not appear in the member-facing runtime at all.
+   The literal is assembled from halves here for the same reason the plane's own
+   guard does it — a guard that spells the word is an occurrence of the word. */
+{
+  const retired = "susp" + "end";
+  const hits = [...app.matchAll(new RegExp(retired + "[a-z]*", "gi"))].map((m) => m[0]);
+  if (hits.length) bad(`the retired strength word appears in app.html ${hits.length} time(s) (${[...new Set(hits)].join(", ")}): UNRATED is the word (D-160)`);
 }
 
 /* ---- 2. the semantics table covers the catalog, and invents nothing ---- */
