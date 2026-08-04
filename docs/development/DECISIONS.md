@@ -3530,6 +3530,223 @@ reversal cost: low now. High once instances are deployed and reaching hosts unat
   the outward behaviour of every installed instance would have to be changed by an update,
   and D-116's fleet-visibility problem means we could not enumerate who had taken it.
 
+### DEC-54 · answered
+raised: 2026-08-04 · session BOB (Bob's question, after the search-completeness research)
+for: bob
+question: Are the differing STANDARDS OF EVIDENCE — across user types (lawyer, journalist,
+  auditor, activist) and within them (AP vs BBC vs NPR) — another form of declared bias,
+  to be recorded as such and supported as variation? And could an AI read an
+  organisation's published policies and craft a matching bias setting?
+why it is Bob's: it touches two of his own rulings (AUDIENCES §5 and DEC-17) and asks
+  whether a standard may be indexed on WHO someone is.
+provisional: nothing is blocked. `required_strength` is ruled and unbuilt; bias bundles are
+  unbuilt (D-84); no surface names either concept.
+**MEASURED FIRST — most of this is ALREADY RULED, and the ruling is Bob's own:**
+  - **A standard of evidence is NOT one of the three bias kinds.** Declared bias is a
+    CLOSED SET: **scrutiny** (how much checking a source needs before it bears load),
+    **inference** (which inference patterns are licensed or blocked), **pattern** (an
+    evidenced empirical claim about behaviour). All three govern HOW YOU REASON over what
+    you hold. A standard of evidence is a **BAR** — how strong support must be before you
+    assert — and BIO already has that construct: DEC-17's `required_strength{capture,
+    connection}`.
+  - **THE TWO HAVE OPPOSITE MECHANICS, which is why merging them would break both.** Bias
+    is DISCLOSED and travels with publication, refusing nothing (DEC-20: only a hunch
+    blocks). A declared bar GATES — `BELOW_PROJECT_STRENGTH` refuses at pre-flight. File a
+    bar as bias and it stops gating; file bias as a bar and it starts refusing.
+  - **AND VARIATION BY ROLE IS ALREADY REFUSED, by Bob.** `AUDIENCES.md` §5: *"per-audience
+    relaxation is a structural prior by role — the same defect as a suspicion flag, with
+    the sign reversed"*, and a threshold *"must never be a threshold on RATIFICATION."*
+    DEC-17 keeps the bar on the PROJECT axis precisely to stay clear of it: *"a project
+    convened to refer something to an auditor needs a different bar from one convened to
+    decide whether a thing is worth looking at… **nobody's standard is set by who they
+    are.**"*
+  - **The decisive reason it cannot be per-user-type is Bob's own D-156 amendment:** *"the
+    same person can be BOTH… the two senses are not two populations of people, they are two
+    RELATIONSHIPS to a case, and which one applies depends on the case, not on the
+    person."* A lawyer building a case and reading someone else's is the same lawyer. There
+    is no stable per-person index to hang a standard on.
+recommendation: **THE VARIATION IS REAL AND ALREADY SUPPORTED — INDEXED ON THE WORK, NOT
+  THE PERSON.** Adopt no new construct for the bar. A group whose project exists to refer a
+  matter to an auditor declares a high bar because of what the WORK is for; the same
+  member's scoping project declares a lower one. That is DEC-17 working as designed, and it
+  delivers everything the user-type framing wanted without a structural prior by role.
+  **BUT PART OF AN ORGANISATION'S POLICY GENUINELY IS BIAS, and splitting it is the first
+  thing any such capability must do.** A newsroom policy contains BOTH: bars (AP's *"more
+  than one source"* → `required_strength`) AND scrutiny statements (AP's *"the source is
+  reliable, and in a position to have direct knowledge"*; Reuters' *"weigh the source's
+  track record, position and motive"* → bias kind 1, cleanly). One document, two
+  constructs, and conflating them is the error to design against.
+  **ON THE AI-READS-POLICY IDEA: viable as a PROPOSAL, and this session's research names
+  the specific hazard.** The completeness research found that newsroom standards substitute
+  three things for numbers — identifiability tests, referral gates, reflective tests — and
+  that **in four of five documented verification failures the organisation's COUNTABLE
+  rules were formally SATISFIED while the uncountable properties failed** (source
+  independence, adversarial contact, chain of custody, non-denial read as confirmation).
+  **So an extractor pointed at AP's policy would reliably capture "more than one source"
+  and drop "in a position to have direct knowledge" — it would systematically encode the
+  part that does not protect and discard the part that does.**
+  Which inverts what the capability should output: **its most valuable product is the list
+  of what it COULD NOT mechanise**, because that list is where the protection lives. Build
+  it to report the residue as prominently as the extraction, or it will quietly convert a
+  good policy into a weak checklist.
+  three constraints already ruled and binding on any such feature:
+  1. **It may never AUTHOR.** DEC-46 settled this for import — no project objective or bias
+     statement written on a member's behalf — and the same applies here. Derived informs,
+     authored binds (D-90); it proposes, a member adopts with their name on it, and it must
+     LOOK derived (D-82).
+  2. **The malformedness rule binds the machine exactly as it binds a member**: bias may
+     raise scrutiny, constrain inference and assert evidenced patterns, and **may never
+     issue verdicts** — and *"the construct that fights undeclared distortion is held to a
+     higher standard than the distortion."* A generated statement that fails that test is
+     refused like any other.
+  3. **A pattern statement must cite evidence in the record** and cannot leave draft
+     without it, so an extractor can propose scrutiny and inference statements far more
+     safely than pattern statements.
+  **AND THE PAYOFF IS ALREADY DESIGNED: REGRADE.** Once two organisations' lenses are both
+  expressible, the same findings can be re-run under each and the differences localised to
+  named statements — *"the disagreement is LOCALIZED TO NAMED LENS DIFFERENCES instead of
+  narrative against narrative."* That is what makes this worth building at all, and it is
+  the capability Bob already called valuable.
+reversal cost: nil now — bias bundles and `required_strength` are both unbuilt. Rising
+  sharply if a per-role bar is ever implemented, because removing it later would look like
+  raising a standard on a class of users.
+response: **BUILD THE INHALE — and Bob's reframe identifies the shared failure better than
+  the question that preceded it.** Bob, 2026-08-04: *"the flaw in varying standards is the
+  same as the flaw in bias. The danger in both is **claiming a standard you don't follow,
+  and denying a bias that you do have.** So having the ability to inhale an organization's
+  stated policy, thus turning it into a BIO enforced policy, is a big part of the
+  solution."*
+  **THE DECLARED/ENACTED GAP IS THE SHARED FAILURE, AND THIS SESSION MEASURED IT.** Blair &
+  Maron: attorneys STIPULATED they must reach 75% recall, sincerely believed they had, and
+  measured at ~20% — a declared standard, unmet, unnoticed, after iteration. TREC 2011:
+  teams estimating their own recall erred by up to +95 points, and the coordinators warned
+  this would *"terminate the review prematurely, due to the false belief that a high level
+  of recall had been achieved."* A stated standard nobody checks is not a standard; it is a
+  claim, and it fails silently. Bob's unification is correct: a bar and a bias differ in
+  mechanism (one gates, one discloses — see the analysis above) and are IDENTICAL in
+  failure mode.
+  **AND BIO ALREADY CLOSES THE GAP FOR THE BAR HALF — this is what makes the proposal
+  cheap.** `required_strength` is not an aspiration in a handbook; `BELOW_PROJECT_STRENGTH`
+  REFUSES at pre-flight. DEC-17's escape clause is already the anti-claiming device, in
+  those words: *"the escape is amending the project's declared bar, which is an authored,
+  dated, on-the-record act visible in the published case — **you can lower your own bar,
+  you cannot do it quietly.**"* That is *"claiming a standard you don't follow"* made
+  structurally impossible. The bias half has the same shape: the bias manifest is computed,
+  hashed and travels with publication, so a declared lens cannot be denied later.
+  three determinations that make the inhale safe, and they are mine under delegation:
+  1. **AN INHALED POLICY RENDERS AS TWO PARTS, AND THE SECOND IS PUBLISHED AS PROMINENTLY
+     AS THE FIRST: what BIO ENFORCES, and what it CANNOT.** This is not caution, it is the
+     research's central finding applied: the mechanisable parts of a policy are the
+     COUNTABLE ones, and in four of five documented verification failures **the countable
+     rules were formally satisfied while the uncountable properties failed.** So enforcing
+     the extractable half while silently dropping *"in a position to have direct
+     knowledge"* would deliver enforcement of precisely the part that does not protect,
+     wearing the authority of the whole policy. **A case saying "held to AP's standards"
+     must therefore also say which of AP's standards this system does not check.**
+  2. **INHALE MEANS PROPOSE FOR ADOPTION, NEVER INSTALL.** Adoption is an authored,
+     attributed act (DEC-46, D-90, D-82). Otherwise adopting a policy becomes a way to
+     LAUNDER a standard — *"we follow BBC standards"* with nobody in the group having
+     authored anything, which is the never-prefill violation wearing a compliance badge.
+  3. **THE INHALED POLICY BECOMES A PINNED, VERSIONED, CITABLE OBJECT — and this is the
+     real payoff rather than a side effect.** An external policy MOVES; a case published
+     under it must remain checkable after it moves. So an adopted policy is stored with its
+     source, its retrieval date and its content hash, and a published case names the
+     VERSION it was held to — the DEC-12 edition pattern and D-183's calibration pattern at
+     a third altitude. **That converts a moving external standard into something a reader
+     can check years later**, which is exactly what a policy in somebody's handbook can
+     never be. It also makes REGRADE meaningful across organisations: two lenses, both
+     pinned, both re-runnable.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; `research/SEARCH-COMPLETENESS.md` (the countable/
+  uncountable finding and the Blair & Maron and TREC 2011 measurements);
+  `BIO_Declared_Bias_v0_1.md` takes the adoption-is-authored rule.
+for CONDUCT to enact: this is DESIGN AHEAD — bias bundles do not exist (D-84) and
+  `required_strength` is unbuilt (D-155), so nothing is corrected and nothing is queued
+  yet. Record it as scope on the bias work: (a) an inhaled policy SPLITS into bars
+  (`required_strength`) and bias statements (scrutiny / inference / pattern), because one
+  document contains both and conflating them breaks the gate/disclose distinction; (b) the
+  unenforceable residue is a first-class published output, not a log line; (c) adoption is
+  authored and attributed, never installed; (d) the adopted policy is pinned with source,
+  date and hash, and a published case names the version it was held to. Sequence behind
+  D-84.
+enacted:
+
+### DEC-55 · open
+raised: 2026-08-04 · session BOB (Bob's question on integrating skilled AIs)
+for: bob
+question: How do skilled AIs integrate into the BIO workflow, given the requirement that the
+  work be done **in the context of a Claude subscription plan**? Bob names three places: work
+  toward an objective; the CivicOS assistant and wizard; and setting the standard of evidence
+  from an organisation's published policy.
+why it is Bob's: it decides where the machine SITS relative to the record and the member, which
+  is DEC-24's boundary made architectural — and the credential posture of every instance.
+provisional: nothing is built. DEC-24's boundary and DEC-27's assistant are ruled and undrawn;
+  no AI reaches the plane today.
+**WHAT IS ALREADY RULED, so this entry only adds what is missing:**
+  - **DEC-24 — the boundary**: *"the machine may do the LOOKING; the member does the
+    CONCLUDING"*, with FOUR roles on the path verbs: **EXTRACT** (document → content),
+    **PURSUE** (find material bearing on an unsupported claim, supporting AND cutting against),
+    **FIND** (search across content and claims), **CHECK** (read the record ADVERSARIALLY —
+    *"the role most worth building"*, because the threat model is self-directed overclaiming).
+    Rule 1: *"The machine proposes; the member authors."*
+  - **DEC-27** — the assistant is adopted, and *"the value of the entry is the BOUNDARY rather
+    than the adoption."*
+  - **D-82 / `surfaced_by`** — an assistant-surfaced item must LOOK derived and is server-stamped
+    at the surfacing act.
+**BOB'S THREE PLACES MAP ONTO TWO ANSWERED THINGS AND ONE NEW ONE:**
+  1. *Work toward an objective* = DEC-24's PURSUE + FIND + EXTRACT. Ruled.
+  2. *The assistant and wizard* = DEC-27's surface. Ruled, undrawn.
+  3. *Setting the standard from a published policy* (DEC-54) **is none of the four roles.** It is
+     not LOOKING and it is not CONCLUDING — **it proposes the STANDARD BY WHICH concluding will
+     be judged.** That is a new position on DEC-24's boundary and it is the highest-risk of the
+     three: a search done badly wastes effort, but a GATE set badly refuses nothing while
+     appearing strict — and DEC-54 established that an extractor reliably captures a policy's
+     COUNTABLE half, which the completeness research showed is the half that does not protect.
+     **So the policy role is MORE constrained than the looking roles, not less**, and its
+     unenforceable residue is published output rather than a log line.
+recommendation: **THE SUBSCRIPTION CONSTRAINT IS NOT A BILLING DETAIL — IT DECIDES THE
+  ARCHITECTURE, AND IT DECIDES IT WELL.** A Claude subscription is a PERSON's entitlement
+  exercised through a client; it is not a server credential. So the AI cannot live in the plane,
+  and **AI work runs MEMBER-SIDE, under the member's own subscription, proposing back into the
+  record through the same authored acts a human uses.** The natural shape is an MCP surface over
+  the ops the member already has, so the member's own Claude session can EXTRACT / PURSUE / FIND
+  / CHECK against their instance.
+  **four consequences, and every one of them resolves a problem this project already has:**
+  1. **No AI credential in any instance.** Compare what the alternative costs: DEC-37 had to mint
+     a token class for one unattended path; DEC-35's external-service option would have put a
+     funded vendor key in every group's install; DEC-42 accepted a $5/month plan partly to avoid
+     a second vendor account. **The subscription model removes that entire class for AI.**
+  2. **The instance CANNOT do AI work unattended — structurally, not by policy.** That is
+     DEC-47's open question (may an instance reach a source nobody named?) answered by
+     construction for everything AI-driven: there is no AI available to the server.
+  3. **Provenance gets a NAMED PERSON behind it.** The AI acted for a member, on that member's
+     entitlement, and the member adopts the result with their name on it. A server-side AI's
+     output has no person behind it at all.
+  4. **It scales with the group rather than the instance** — three active members, three
+     subscriptions, no per-instance cost.
+  **AND THE HONEST COST, which must be stated rather than discovered: the plane cannot VERIFY
+  what the AI did.** Member-side means the model, version and prompt are outside the record's
+  reach. So the plane records what the member DECLARES about the derivation and never presents
+  it as observed — D-112's rule exactly (*a provenance hop a caller can hand us is one a caller
+  can invent*). The accountability rests on the MEMBER who ran it and adopted it; the AI
+  attribution is a declared fact about how they worked. Note what adversaries negotiate when they
+  cannot trust each other here: the *Cerebras* stipulation requires all prompts disclosed and
+  changes redlined within three business days (`research/SEARCH-COMPLETENESS.md`). A group that
+  wants to offer that standard voluntarily should be able to; it must not be claimed by default.
+  **ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or
+  as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`,
+  `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine
+  callers are DISTINGUISHABLE. **If a member points their Claude session at their own member
+  token, the plane cannot tell, and every one of those fences silently stops working.** So: the
+  AI must act under a DISTINCT credential class (the DEC-37 precedent — mint the class rather
+  than widen a token's meaning), the fences keep firing, and the member's adoption is a separate
+  authored act under their own identity. **Two identities, two steps, and the machine refusals
+  hold.** Without this the subscription model would quietly hand a machine every right a member
+  has, which is the opposite of what it is for.
+reversal cost: low now, nothing is built. High once an assistant ships against the member's own
+  session, because the fences would have to be re-established against callers already relying on
+  them.
+
 ## Answered, awaiting enactment
 
 _(none)_
