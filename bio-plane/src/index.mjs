@@ -560,6 +560,20 @@ const OPS = {
      the one surface every member opens by habit, so it is the one that must not
      leak a project identity). */
   queue:              { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-21 / D-125: the queue's PERSONAL half, and NO PROBE CLASS on either —
+     which is the deliberate part. A machine credential has no member behind it,
+     so there is no attention for it to be a preference ABOUT; admitting probe
+     and refusing inside would be inventing a member in order to refuse them.
+     This is not the D-151 fence-versus-act question (an unassigned task is a
+     real object a machine could reach and must not resolve); it is that a mute
+     with no member is not a thing that exists. The store refuses NO_MEMBER too,
+     so a bypass fails closed rather than writing a row keyed on nothing.
+     BOTH MUTATE, and they mutate ONE table: `queue_state`. Neither writes to
+     `tasks` or `proposal_dispositions` and neither mints a bundle — the
+     op=proposedispose precedent carried one step on. Declining is not
+     authoring; a preference is not even a disposition. */
+  queuemute:          { classes: ["admin", "member"],               mutating: true  },
+  queuesnooze:        { classes: ["admin", "member"],               mutating: true  },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -668,6 +682,14 @@ const REGISTRY_ACTIONS = ["entitycreate", "entityalias", "relationdeclare",
    (`#refuseNotYours`, NOT_YOURS) refuses a member who is neither the assignee
    nor an admin — the enforcement UI-1 delegated as cosmetic. */
 const TASK_ACTIONS = ["taskforward", "taskresolve"];
+/* REC-21: the queue's PERSONAL writes. They are MUTATING, so SESSION_OPS is what
+   actually lets a member session reach them, and they are in BOTH lists for the
+   same reason every other member surface is: an administrator is a member too.
+   Kept as their own array rather than folded into TASK_ACTIONS because they are
+   the OTHER doctrine — a task act changes the record for everyone, and these
+   change nothing for anyone but the member who made them. Naming them together
+   would be the first step toward one control. */
+const QUEUE_ACTIONS = ["queuemute", "queuesnooze"];
 /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
    captured document's references to registry entities (resolve), TESTIFIES a grade-D
    connection (resolvetestify), and READS the resolutions of a document (resolutions)
@@ -713,12 +735,13 @@ const SESSION_OPS = {
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
-                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS]),
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
-                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, "memberadd", "memberset",
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
+                   "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
 
@@ -890,6 +913,23 @@ const NEEDS = {
      NEEDS is either a published act or a NAMED non-act, and op=queue is named
      in NON_ACTS with its reason. */
   queue:            null,
+  /* REC-21 / D-125: NO CAPABILITY, and the reason IS the doctrine rather than a
+     convenience. `contribute` is the corpus-shaping surface — it is what
+     separates a member who may change what the record says from one who may only
+     read it. A mute changes nothing the record says: it is one member deciding
+     what they are told about their own attention, and requiring `contribute` for
+     it would classify a personal preference as a corpus act, which is the exact
+     collapse this item exists to prevent. It would also mean a view-only member
+     could be notified and could never manage it — an attention surface they can
+     receive and cannot answer. The `select` precedent is the same shape: a
+     server-side snapshot of the caller's own state, writing nothing about the
+     corpus, and needed by a view-only member in order to read at all.
+     What DOES bound these is SESSION_OPS above (they are mutating, so a machine
+     credential cannot reach them through a session route) and the store's own
+     NO_MEMBER refusal — an identity question, like the task fence, not a
+     capability one. */
+  queuemute:        null,
+  queuesnooze:      null,
 };
 
 /* REC-19's act decoration, hoisted to module scope by REC-20 so op=affordances
@@ -3159,9 +3199,24 @@ export default {
     if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
         || STATE_ACTIONS.includes(op)
         || op === "list" || op === "index" || op === "projection" || op === "image"
-        || op === "file" || op === "backlinks") {
+        || op === "file" || op === "backlinks" || QUEUE_ACTIONS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
+    /* REC-21. WHOSE attention this is, stamped by the server and never taken
+       from the request — the strictest instance of the impostor rule in this
+       file, because the thing being written is not a claim about the record but
+       a claim about a PERSON: a caller who could name the member could decide
+       what somebody else is told about, and could do it leaving nothing in the
+       record for that person to find. The caller's own `member` was copied in the
+       loop above, so it is overwritten here rather than honoured. A machine
+       credential stamps EMPTY rather than `class:<cls>` — unlike a lease actor,
+       there is no named machine identity that makes sense here, because a
+       preference belongs to somebody's attention and a token has none — and the
+       store refuses NO_MEMBER, so a bypass fails closed instead of writing a row
+       nobody owns. The viewer stamp above covers the case-visibility gate, so
+       muting cannot be used to probe for a project you were never invited to. */
+    if (QUEUE_ACTIONS.includes(op))
+      inner.searchParams.set("member", viaSession ? sessMember : "");
     /* Ownership of a selection is the same server-side stamp. A selection is
        readable only by the credential that made it, and "only by the credential"
        is worth nothing if the caller names the credential. */

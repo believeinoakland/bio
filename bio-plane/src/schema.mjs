@@ -1076,6 +1076,47 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
 );
 CREATE INDEX IF NOT EXISTS inquiry_basis_target ON inquiry_basis(target_id);
 CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
+-- REC-21: the PERSONAL half of the queue, and it is a SEPARATE TABLE on
+-- purpose. The record half of an item's state lives on the EVENT (DEC-16: a
+-- task's status, a proposal's disposition), so one member's resolution clears
+-- every member's queue. This table holds what must NOT work that way: what one
+-- member has chosen not to be told about. Muting is PERSONAL; dismissing is a
+-- RECORD ACT; they are never one control (D-125), and keeping them in two
+-- tables with two doctrines is how that survives the next person who
+-- implements a delete button.
+--
+-- muted_kinds is a sorted comma-separated set and MAY CONTAIN CONDITION KINDS
+-- ONLY. A CONDITION is a fact about our own machinery; an OBLIGATION is
+-- something a named person must do for the record to proceed, and tasks
+-- carries no per-member mute, so a muted obligation would leave the record
+-- believing a question reached a person it cannot reach. The fence is at the
+-- ONE write (store.mjs queueMute, over queuestate.mjs's catalogue), because a
+-- CHECK constraint here could not name the vocabulary and a second copy of the
+-- rule is a second place for it to drift.
+--
+-- The set is the kinds PRESENT WHEN THE MUTE WAS MADE, which is why this is a
+-- set of kinds and not a boolean on the case: a new kind on a muted case is not
+-- in the set and still reaches the member.
+--
+-- snoozed_until is an instant the MEMBER chose. There is no default: P-87 says
+-- re-notify at the stage's OWN declared interval and never on a global one, so
+-- there is no instance-wide snooze constant anywhere in this plane and a snooze
+-- with no instant is refused rather than filled in. last_seen is the anchor a
+-- re-notify clock reads.
+--
+-- case_id IS a bundle id (an inquiry or a project), so this table clears in
+-- BOTH purge arms via a DELETE keyed on it (D-113); hygiene.test.mjs holds that
+-- against this file.
+CREATE TABLE IF NOT EXISTS queue_state (
+  member_id     TEXT NOT NULL,
+  case_id       TEXT NOT NULL,
+  muted_kinds   TEXT,
+  snoozed_until TEXT,
+  last_seen     TEXT,
+  PRIMARY KEY (member_id, case_id)
+);
+CREATE INDEX IF NOT EXISTS queue_state_member ON queue_state(member_id);
+CREATE INDEX IF NOT EXISTS queue_state_case ON queue_state(case_id);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

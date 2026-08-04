@@ -74,6 +74,7 @@
     "test:conclude": "node test/conclude.test.mjs",
     "test:gate-reads": "node test/gate-reads.test.mjs",
     "test:queue": "node test/queue.test.mjs",
+    "test:queue-state": "node test/queue-state.test.mjs",
     "test:battery": "node scripts/battery.mjs",
     "test:coverage": "node scripts/coverage.mjs --strict"
   },

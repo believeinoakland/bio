@@ -31,6 +31,12 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
    viewer cannot disagree. The act METADATA (needs/mode/rung) still composes at
    the control plane, where NEEDS, SESSION_OPS and RUNGS live. */
 import { DISPOSITIONS, deriveActs } from "./affordances.mjs";
+/* REC-21: the queue's PERSONAL half. The CONDITION-kind vocabulary the mute
+   fence refuses against, and the ONE admission decision the feed applies — pure,
+   so the suite holds the rule directly rather than only through a Durable
+   Object, the same reason deriveActs lives outside this file. */
+import { QUEUE_CONDITION_KINDS, classOfKind, MUTE_REFUSAL_DETAIL,
+         serializeMutedKinds, parseMutedKinds, suppressedBy } from "./queuestate.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
@@ -1059,6 +1065,31 @@ export class Store extends DurableObject {
         due:  (now) => now,
         wake: (now) => this.#overdueScan(now).next_deadline,
         tick: (now) => ({ overduescan: this.#overdueScan(now) }) },
+      /* REC-21 / P-87: the QUEUE RE-NOTIFY consumer, and it is here rather than
+         anywhere else because P-87 is a rule about WHERE the interval comes
+         from. "Re-notify at the stage's OWN declared interval, never a global
+         one" is satisfied structurally: this consumer holds NO constant. Its
+         wake is the earliest instant a member's own snooze expires, read from
+         queue_state; the interval of a FINDING that keeps coming due is the
+         overdue-scan consumer's business and is read from the STAGE's declared
+         `within_interval` there. Two consumers, each on its own cadence,
+         reconciled by the one alarm — which is precisely the property REC-1's
+         registry exists to protect and the reason a global re-notify timer was
+         forbidden.
+         It WRITES NOTHING (the overdue-scan precedent): the queue is derived on
+         read, so a snooze expiring changes nothing in the store — it changes
+         only when the alarm next fires, which is what a push signal is. And it
+         SELF-TERMINATES: no future snooze, no wake, no alarm. */
+      { name: "queue-renotify",
+        /* DUE only when a snooze has actually EXPIRED, not on every wake. The
+           two original consumers are always-due because they are cheap no-ops on
+           an empty subject; this one has a real subject and a real answer, so it
+           fires at its own moment and no other's — the INTERVAL-consumer shape
+           the reconcile exists to protect. */
+        due:  (now) => this.#queueRenotifyExpired(now) > 0 ? now : null,
+        wake: (now) => this.#queueRenotifyWake(now),
+        tick: (now) => ({ queuerenotify: { expired: this.#queueRenotifyExpired(now),
+                                           next: this.#queueRenotifyWake(now) } }) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -1085,7 +1116,8 @@ export class Store extends DurableObject {
     const probe = await this.#probeState(now);
     const reg = this.#schedConsumers(probe);
     const grace = Store.SCHED_GRACE_MS;
-    let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null; const probes = [];
+    let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
+        queuerenotify = null; const probes = [];
     for (const c of reg) {
       const d = c.due(now);
       if (d === null || d > now + grace) continue;
@@ -1100,6 +1132,10 @@ export class Store extends DurableObject {
       else if (c.name === "archive-monitor") monitor = r && r.monitor;
       else if (c.name === "connection-derive") connderive = r && r.connderive;
       else if (c.name === "overdue-scan") overduescan = r && r.overduescan;
+      /* REC-21 / P-87. Named explicitly rather than falling through to `probes`:
+         an unnamed consumer would be reported as a test probe, which is how a
+         real clock disappears from the alarm's own account of itself. */
+      else if (c.name === "queue-renotify") queuerenotify = r && r.queuerenotify;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -1117,7 +1153,8 @@ export class Store extends DurableObject {
              rearmed: nextAt !== null, nextAt, probes,
              ...(monitor ? { monitor } : {}),
              ...(connderive ? { connderive } : {}),
-             ...(overduescan ? { overduescan } : {}) };
+             ...(overduescan ? { overduescan } : {}),
+             ...(queuerenotify ? { queuerenotify } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -5184,6 +5221,30 @@ export class Store extends DurableObject {
       });
     }
 
+    /* ------------------------------------------- REC-21 · the PERSONAL half
+       ONE admission point, consulted for EVERY item whatever its class, over
+       queuestate.mjs's pure decision. The class fence is at the WRITE (queueMute
+       refuses anything that is not a CONDITION kind), so a kind present in
+       muted_kinds already means "a condition this member muted" and the read
+       asks only about membership. That is deliberate and it is what makes the
+       rule's failure observable: negative control (b) removes the write fence,
+       a real OBLIGATION kind enters the column, and a real obligation genuinely
+       disappears from a real feed — which is exactly the harm the doctrine
+       names, demonstrated rather than asserted.
+       A mute is PERSONAL, so an anonymous or machine caller (no member) has no
+       mutes and sees the whole live set: #queueMutes returns an empty map and
+       this loop suppresses nothing. */
+    const mutes = this.#queueMutes(me);
+    const suppressed = [];
+    const admitted = [];
+    for (const it of items) {
+      const by = suppressedBy(it, mutes);
+      if (by === null) { admitted.push(it); continue; }
+      suppressed.push({ id: it.id, class: it.class, kind: it.kind, case: by });
+    }
+    items.length = 0;
+    items.push(...admitted);
+
     /* `class` NOT NULL on the producer. The feed is derived, not stored, so
        the constraint a column would carry is enforced here, at the one place
        an item is minted — and it REFUSES rather than emitting a classless item,
@@ -5206,13 +5267,278 @@ export class Store extends DurableObject {
       classes: Store.QUEUE_CLASSES,
       classes_deferred: Store.QUEUE_CLASSES_DEFERRED,
       ancestor_depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
+      /* REC-21. What this member has chosen not to be told about, REPORTED
+         rather than silently applied — the same rule the ancestor walk obeys
+         and for the same reason: a feed that is quietly shorter is
+         indistinguishable from nobody caring. A surface renders "you muted 2
+         condition kinds on this case" from this block; nothing is hidden from
+         the member who did the hiding. `personal: true` is stated because the
+         one thing a reader must never conclude from a mute is that the record
+         changed. */
+      mute: {
+        personal: true,
+        cases: [...mutes.keys()].sort(),
+        suppressed,
+        suppressed_count: suppressed.length,
+        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed "
+              + "from the record, nothing here left another member's queue, and only CONDITION kinds "
+              + "can be here: an OBLIGATION leaves every list when it is RESOLVED and a FINDING when "
+              + "it is dismissed, both of which are acts the record keeps.",
+      },
       counts: {
         obligation: out.filter((i) => i.class === "OBLIGATION").length,
         finding: out.filter((i) => i.class === "FINDING").length,
         ungrouped: out.filter((i) => i.case.ungrouped).length,
         case_undetermined: out.filter((i) => i.case.state === "undetermined").length,
+        suppressed: suppressed.length,
       },
     };
+  }
+
+  /* ========================================================================
+   *  REC-21 · queue_state — the PERSONAL half, and the boundary it defends.
+   *
+   *  THE TWO OPS BELOW WRITE TO ONE TABLE AND TO NOTHING ELSE. Not `tasks`, not
+   *  `proposal_dispositions`, and no bundle is minted. That is the discipline
+   *  op=proposedispose established from the other side — declining is not
+   *  authoring, so it writes a disposition rather than a document — carried one
+   *  step further: a preference is not even a disposition. A disposition is
+   *  ATTRIBUTED and DATED and stays in the case's history because the group is
+   *  entitled to know its question was set aside and by whom. A mute is
+   *  addressed to nobody, changes nothing about the record, and the group is
+   *  entitled to know nothing about it.
+   *
+   *  WHY DEC-16 RAISES THE STAKES. Under shared resolution one member's act
+   *  clears every other member's queue. That is right for a RESOLUTION — the
+   *  City replacing a page is one fact about the world and anyone standing on
+   *  it can settle it for everyone — and it is exactly why the personal half
+   *  must not be able to reach the same lever. If mute and dismiss were one
+   *  control, one member's inbox hygiene would clear the group's question, and
+   *  a silent disappearance would be indistinguishable from a bug.
+   *
+   *  AND THE OTHER HALF OF DEC-16'S SAFEGUARD NEEDS NO CODE HERE, which is
+   *  worth stating so nobody later builds it: an act that CHANGES the record is
+   *  ITSELF AN EVENT, and it propagates by the same every-ancestor rule as any
+   *  other. Resolving by LOOKING and finding nothing changed correctly clears
+   *  the item for everyone; resolving by CHANGING something raises a new event
+   *  that reaches every ancestor entry — including the entry of a member who
+   *  muted conditions on that case, because the new event is an OBLIGATION and
+   *  a mute cannot reach one. That is the ordinary consequence loop, not a
+   *  mechanism, and the suite asserts it end to end rather than trusting it.
+   * ======================================================================== */
+
+  /** This member's mute rows, as the pure decision wants them: a Map
+   *  case_id -> Set(kind). A caller with no member (a machine credential, an
+   *  unauthenticated probe) has no personal state and gets an empty map, so the
+   *  operator view is the whole live set — the same carve-out D-15 makes for a
+   *  machine viewer, for the same reason: there is no person whose preferences
+   *  these could be. */
+  #queueMutes(member) {
+    const out = new Map();
+    if (typeof member !== "string" || !member.trim()) return out;
+    for (const r of this.#rows(
+      `SELECT case_id, muted_kinds FROM queue_state WHERE member_id=?`, member.trim())) {
+      const kinds = parseMutedKinds(r.muted_kinds);
+      if (kinds.length > 0) out.set(r.case_id, new Set(kinds));
+    }
+    return out;
+  }
+
+  /** The case a personal preference may be attached to, resolved through the
+   *  catalog's OWN machinery and gated by the viewer.
+   *
+   *  MAP RULE (REC-10/REC-13). `normalizeType` decides whether the bundle is a
+   *  CASE at all, so a legacy `focus`/`problem` document is mutable exactly as a
+   *  canonical `inquiry` one is, and `vocabFor` reads its state through the
+   *  machine that document was authored under. A raw `object_type === "inquiry"`
+   *  here would silently refuse every legacy question.
+   *
+   *  D-15 through the ONE compilation point: a case this viewer cannot see
+   *  answers identically to one that does not exist, so a mute cannot be used to
+   *  probe for the existence of a project nobody invited you to. */
+  #queueCaseFor(caseId, viewer) {
+    const id = typeof caseId === "string" ? caseId.trim() : "";
+    if (!id) return { ok: false, reason: "NO_CASE",
+                      detail: "a personal preference is keyed (member, case); name the case it is about" };
+    const gate = viewerPredicate(viewer);
+    /* `FROM bundles b` and not `FROM bundles`: viewerPredicate compiles a
+       predicate over the alias `b`, which is the shape every other gated read in
+       this file passes it. */
+    const row = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
+        WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
+    if (!row) return { ok: false, reason: "NO_SUCH_CASE", case: id,
+      detail: "no case by that id is visible to you. A case you may not see and a case that does not "
+            + "exist answer identically here (D-15), so this refusal reveals nothing either way." };
+    const ty = normalizeType(row.object_type);
+    if (!Store.QUEUE_CASE_TYPES.includes(ty))
+      return { ok: false, reason: "NOT_A_CASE", case: id, object_type: ty,
+        detail: "a queue entry is filed under a CASE — an inquiry or a project — and personal state is "
+              + "keyed to that. A document is a SUBJECT, not a home: muting one would be muting every "
+              + "question that rests on it, for reasons none of those questions' owners could see." };
+    const spec = vocabFor(STATES, row.object_type);
+    return { ok: true, id: row.bundle_id, type: ty, title: row.title ?? null,
+             state: row.current_state ?? null,
+             known_state: !!(spec && spec.edges
+               && Object.prototype.hasOwnProperty.call(spec.edges, row.current_state)) };
+  }
+
+  /** op=queuemute — mute CONDITION kinds on one case, for one member.
+   *
+   *  `member` is stamped server-side at index.mjs and is never taken from the
+   *  caller: a caller who could name the member could mute somebody else's
+   *  attention, which is the one thing a personal preference must not permit.
+   *
+   *  THE FENCE. Every named kind must be a CONDITION kind. A kind that is an
+   *  OBLIGATION or a FINDING is refused with the kind, its ACTUAL class, and the
+   *  act that DOES clear it, because a refusal that only says no is the kind of
+   *  gate that pressures a member into finding a way around it. A kind the
+   *  catalogue does not name at all is refused separately: unknown is not the
+   *  same as wrong.
+   *
+   *  It refuses an EMPTY set too. "Mute this case" with no kinds is the delete
+   *  button the doctrine forbids, and accepting it as a no-op would leave a
+   *  member believing they had silenced something they had not. */
+  queueMute({ member = null, case: caseId = null, kinds = null, unmute = false,
+              viewer = null, at = null } = {}) {
+    const me = typeof member === "string" ? member.trim() : "";
+    if (!me) return { ok: false, reason: "NO_MEMBER",
+      detail: "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine "
+            + "credential has no member behind it. There is no instance-wide mute and there must not be." };
+    const c = this.#queueCaseFor(caseId, viewer);
+    if (c.ok !== true) return c;
+    const named = Array.isArray(kinds) ? kinds.map((k) => (typeof k === "string" ? k.trim() : "")).filter(Boolean) : [];
+    if (named.length === 0)
+      return { ok: false, reason: "NO_KINDS", case: c.id,
+        detail: "name the CONDITION kinds to mute. A mute is scoped to the kinds present when it was "
+              + "made — that is what lets a NEW kind on this case still reach you — so there is no "
+              + "whole-case mute to ask for.",
+        available: Object.keys(QUEUE_CONDITION_KINDS) };
+    for (const k of named) {
+      if (k.includes(","))
+        return { ok: false, reason: "BAD_KIND", kind: k, case: c.id,
+          detail: "a kind is a slug and may not contain a comma; the stored set is comma-separated" };
+      const cls = classOfKind(k);
+      if (cls === null)
+        return { ok: false, reason: "UNKNOWN_KIND", kind: k, case: c.id,
+          detail: "the notification catalogue does not name that kind. Unknown is not the same as "
+                + "forbidden, and this refusal is the first rather than the second.",
+          available: Object.keys(QUEUE_CONDITION_KINDS) };
+      if (cls !== "CONDITION")
+        return { ok: false, reason: "KIND_NOT_PERSONAL", kind: k, kind_class: cls, case: c.id,
+          detail: MUTE_REFUSAL_DETAIL[cls],
+          available: Object.keys(QUEUE_CONDITION_KINDS) };
+    }
+    const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
+    const row = this.#one(
+      `SELECT muted_kinds, snoozed_until FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
+    const had = parseMutedKinds(row ? row.muted_kinds : "");
+    /* UNION on repeat, DIFFERENCE on unmute. Union rather than replace because
+       a second mute is a member muting MORE, not restating everything they ever
+       muted — and because replace would silently un-mute a kind the surface did
+       not happen to re-send. */
+    const next = unmute ? had.filter((k) => !named.includes(k))
+                        : [...new Set([...had, ...named])];
+    const text = serializeMutedKinds(next);
+    this.sql.exec(
+      `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(member_id, case_id) DO UPDATE SET muted_kinds=excluded.muted_kinds,
+                                                     last_seen=excluded.last_seen`,
+      me, c.id, text, row ? row.snoozed_until ?? null : null, stamp);
+    return {
+      ok: true, member: me, case: c.id, case_type: c.type, case_title: c.title,
+      muted_kinds: parseMutedKinds(text), added: unmute ? [] : named.filter((k) => !had.includes(k)),
+      removed: unmute ? named.filter((k) => had.includes(k)) : [], at: stamp,
+      /* The RECORD SURFACES THIS ACT DID NOT TOUCH, counted rather than claimed,
+         so the suite can assert the boundary from the op's own answer as well as
+         from the tables. */
+      wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
+      detail: "a mute is PERSONAL and reaches CONDITION kinds only. Nothing left the record, nothing "
+            + "left another member's queue, and an OBLIGATION on this case still reaches you: an "
+            + "obligation leaves every list only when it is RESOLVED, which is record state.",
+    };
+  }
+
+  /** op=queuesnooze — defer a case's re-notification, for one member, until an
+   *  instant the MEMBER named.
+   *
+   *  P-87 IS ENFORCED BY AN ABSENCE, and that is the point. "Re-notify at the
+   *  stage's OWN declared interval, never a global one" means this plane has no
+   *  instance-wide snooze constant to fall back on, so a snooze with no instant
+   *  is REFUSED rather than filled in with one. There is nothing to configure
+   *  and nothing to drift; the cadence comes from the member's own choice, and
+   *  the re-notification clock is the REC-1 alarm's `queue-renotify` consumer,
+   *  whose wake is read from these rows and from no constant of its own.
+   *
+   *  A SNOOZE HIDES NOTHING. It does not filter the feed — deferring a
+   *  re-notification is not the same as removing an item, and treating them as
+   *  the same is how an obligation would go quiet on a member who only meant
+   *  "not right now". The feed keeps reporting the item; the alarm stops
+   *  pushing about it until the instant passes. */
+  queueSnooze({ member = null, case: caseId = null, until = null, clear = false,
+                viewer = null, at = null } = {}) {
+    const me = typeof member === "string" ? member.trim() : "";
+    if (!me) return { ok: false, reason: "NO_MEMBER",
+      detail: "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a "
+            + "machine credential has no member behind it." };
+    const c = this.#queueCaseFor(caseId, viewer);
+    if (c.ok !== true) return c;
+    const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
+    let iso = null;
+    if (!clear) {
+      if (typeof until !== "string" || !until)
+        return { ok: false, reason: "NO_UNTIL", case: c.id,
+          detail: "name the instant to snooze until. There is no default and there must not be one: "
+                + "P-87 requires re-notification at the stage's OWN declared interval, never at a "
+                + "global one, so this plane holds no instance-wide snooze constant to fall back on." };
+      const ms = Date.parse(until);
+      if (!Number.isFinite(ms))
+        return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
+          detail: "until must be an instant this plane can read (ISO-8601)" };
+      if (ms <= this.#nowMs(null))
+        return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id,
+          detail: "a snooze that has already expired is not a snooze; it would report as deferred while "
+                + "deferring nothing" };
+      iso = new Date(ms).toISOString();
+    }
+    const row = this.#one(
+      `SELECT muted_kinds FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
+    this.sql.exec(
+      `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(member_id, case_id) DO UPDATE SET snoozed_until=excluded.snoozed_until,
+                                                     last_seen=excluded.last_seen`,
+      me, c.id, row ? row.muted_kinds ?? null : null, iso, stamp);
+    return {
+      ok: true, member: me, case: c.id, case_type: c.type, snoozed_until: iso, at: stamp,
+      wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
+      detail: iso
+        ? "re-notification about this case is deferred for YOU until that instant. The items themselves "
+        + "are unchanged, they still appear in your feed, and no other member's feed moved."
+        : "the snooze is cleared; re-notification resumes at the declared interval of whatever raises it.",
+    };
+  }
+
+  /** The earliest instant any member's snooze expires, or null. This is the
+   *  whole of the `queue-renotify` consumer's wake and it holds NO constant of
+   *  its own — P-87 by construction rather than by discipline. */
+  /** How many snoozes have come due at this instant. */
+  #queueRenotifyExpired(now) {
+    return this.#rows(
+      `SELECT count(*) c FROM queue_state WHERE snoozed_until IS NOT NULL AND snoozed_until<=?`,
+      new Date(now).toISOString())[0].c;
+  }
+
+  #queueRenotifyWake(now) {
+    let best = null;
+    for (const r of this.#rows(
+      `SELECT snoozed_until FROM queue_state WHERE snoozed_until IS NOT NULL`)) {
+      const ms = Date.parse(r.snoozed_until);
+      if (!Number.isFinite(ms) || ms <= now) continue;
+      if (best === null || ms < best) best = ms;
+    }
+    return best;
   }
 
   /* op=proposedispose (REC-7): record a member's DEFER or DISMISS of a derived PROPOSAL, WITHOUT
@@ -5378,6 +5704,11 @@ export class Store extends DurableObject {
          could not see). */
       projectParticipants: n("project_participants"),
       projectOwnerVotes: n("project_owner_votes"),
+      /* REC-21: members' personal queue state, reported so a purge can PROVE it
+         cleared the mutes and snoozes it took (D-113). A COUNT OF ROWS AND
+         NOTHING ELSE — stats is an operator surface and whose attention is muted
+         on what is not an operator's business. */
+      queueState: n("queue_state"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -5798,6 +6129,14 @@ export class Store extends DurableObject {
            change nothing. hygiene.test.mjs holds this list against BOTH files now. */
         this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
+        /* REC-21 / D-113. queue_state is keyed (member_id, case_id) and a case_id
+           IS a bundle id, so it clears in the per-bundle arm too: purging an
+           inquiry or a project while leaving members' mutes and snoozes against
+           it would leave personal state pointed at a case that no longer exists,
+           and a later bundle allocated a colliding id would inherit somebody's
+           silence. It is NOT in TABLES because its column is case_id rather than
+           bundle_id. For a non-case bundleId this DELETE matches no rows. */
+        this.sql.exec(`DELETE FROM queue_state WHERE case_id=?`, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
@@ -5897,6 +6236,16 @@ export class Store extends DurableObject {
            Cleared here in the whole-store arm only; a per-bundle purge leaves it (no bundle_id).
            hygiene.test.mjs asserts this list against schema.mjs. */
         this.sql.exec(`DELETE FROM proposal_dispositions`);
+        /* REC-21 / D-113. Members' mutes and snoozes are keyed on a case id — a
+           bundle id — so a whole-store purge that reported scope ALL while
+           leaving them standing is the silent-leftover exactly: the corpus is
+           gone and a member is still not being told about a case that no longer
+           exists. It is PERSONAL state rather than corpus-derived, like the
+           registry and the proposal dispositions above, and it is cleared here
+           for the same reason those are — op=purge is the scratch-reset tool and
+           the caller believes the store is empty. hygiene.test.mjs asserts this
+           list against schema.mjs. */
+        this.sql.exec(`DELETE FROM queue_state`);
       }
     });
     const after = this.stats();
@@ -5924,6 +6273,9 @@ export class Store extends DurableObject {
                  connectionDirty: d("connectionDirty"),
                  /* REC-7 / D-79: the aged proposal dispositions a whole-store purge took (D-113). */
                  proposalDispositions: d("proposalDispositions"),
+                 /* REC-21: the mutes and snoozes a purge took (D-113) — per-bundle
+                    for a case bundle, everything for scope ALL. */
+                 queueState: d("queueState"),
                  /* REC-27 / D-137: the participation graph and pending owner votes a purge
                     took — per-bundle for a project bundle, everything for scope ALL. */
                  projectParticipants: d("projectParticipants"),
@@ -8733,6 +9085,18 @@ export class Store extends DurableObject {
                                       viewer: url.searchParams.get("viewer"),
                                       nowMs: url.searchParams.get("now"),
                                       limit: url.searchParams.get("limit") }),
+        /* REC-21: the PERSONAL half. Both take `member` and `viewer` from the
+           control plane's server-side stamps and NEVER from a body — a caller who
+           could name the member could mute somebody else's attention. Both write
+           to queue_state and to nothing else: no task row, no disposition, no
+           bundle. Declining is not authoring (op=proposedispose's precedent), and
+           a preference is not even a disposition. */
+        queuemute: () => this.queueMute({ ...(body || {}),
+                                          member: url.searchParams.get("member"),
+                                          viewer: url.searchParams.get("viewer") }),
+        queuesnooze: () => this.queueSnooze({ ...(body || {}),
+                                              member: url.searchParams.get("member"),
+                                              viewer: url.searchParams.get("viewer") }),
         /* REC-7: op=proposedispose, record a member's DEFER/DISMISS of a derived proposal WITHOUT
            minting a bundle (D-79 — declining is not authoring). Writes one disposition row keyed by
            (progression_key, stage_key); op=proposals then ages that proposal out of the open feed.
