@@ -3266,6 +3266,33 @@ for CONDUCT to enact: (a) **REC-14's publish block gains the AUTHORED bias ackno
   rides with the project surfaces whenever the bias bundle lands (D-84 first).
 enacted: 2026-08-04 · CONDUCT — (a) REC-47 queued as a CORRECTION to REC-14 (the authored acknowledgement fresh per edition beside the completeness statement and subject position, carrying C-21.1's carried-forward control); (b) M6's import scope AMENDED in MILESTONES — a new project per distinct source bias, stated and reasoned, never merging a lens into an existing project, with DEC-45's per-finding association demoted to the second step where regrade fires; (c) REGRADE named as a member capability on M4 (and reachable from M10's bias work), with the import path recorded as one CALLER rather than its home; (d) the HUNCH DEBT vocabulary correction rides REC-47 as a documentation pass, its own wording included; (e) D-189 recorded as riding the project surfaces whenever the bias bundle lands, behind D-84. Reasoning in this entry, MILESTONES M4/M6 and QUEUE.md (REC-47).
 
+### DEC-52 · open
+raised: 2026-08-04 · CONDUCT (lifted from REC-46's report)
+for: bob
+question: May a MACHINE credential declare a relation, resolve a reference, or thread a
+  progression? REC-46 measured that `class:<class>` — a minted machine identity — is
+  stamped on `owner`, `by`, `declaredBy`, `resolvedBy`, `threadedBy` and `memberId`, and
+  that each of those fields is described in its own comment as "a member's constitutive
+  statement" while **nothing enforces it**. REC-46 changed no such site and every one of
+  them stayed green, which is the measurement: the constraint exists in prose only.
+why it is Bob's: this is D-151's finding one subsystem over — D-151 ruled that certain
+  acts are a member's and cannot be performed by a machine. Whether that extends to
+  declaring a relation, resolving a reference and threading a progression is a doctrine
+  question about what the record means when it says a member said something, not a
+  refactor. It also decides what an automated instance may build on its own.
+provisional: as shipped — a machine credential may write these fields. REC-46 deliberately
+  changed nothing here, so nothing has moved and nothing is broken.
+alternative: extend the machine refusal to these six fields, as REC-46's own predicate
+  already makes possible in one line each — the identity question is now answered in one
+  place, so enacting this is small whichever way it goes.
+recommendation: refuse them, on D-151's own reasoning. A relation a machine declared and a
+  relation a member declared are not the same claim, and today the record cannot tell them
+  apart while its comments assert that it can — the gap between what the code enforces and
+  what the record says about itself is the failure mode this project is built to refuse.
+  But this touches what an automated instance may do unattended, which is your call.
+what reversing costs: small now, larger later — every stamped field written before a
+  ruling is a row nobody can re-attribute afterwards.
+
 ### DEC-51 · open
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
 for: bob
