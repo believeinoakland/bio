@@ -3661,6 +3661,82 @@ for CONDUCT to enact: this is DESIGN AHEAD — bias bundles do not exist (D-84) 
   D-84.
 enacted:
 
+### DEC-55 · open
+raised: 2026-08-04 · session BOB (Bob's question on integrating skilled AIs)
+for: bob
+question: How do skilled AIs integrate into the BIO workflow, given the requirement that the
+  work be done **in the context of a Claude subscription plan**? Bob names three places: work
+  toward an objective; the CivicOS assistant and wizard; and setting the standard of evidence
+  from an organisation's published policy.
+why it is Bob's: it decides where the machine SITS relative to the record and the member, which
+  is DEC-24's boundary made architectural — and the credential posture of every instance.
+provisional: nothing is built. DEC-24's boundary and DEC-27's assistant are ruled and undrawn;
+  no AI reaches the plane today.
+**WHAT IS ALREADY RULED, so this entry only adds what is missing:**
+  - **DEC-24 — the boundary**: *"the machine may do the LOOKING; the member does the
+    CONCLUDING"*, with FOUR roles on the path verbs: **EXTRACT** (document → content),
+    **PURSUE** (find material bearing on an unsupported claim, supporting AND cutting against),
+    **FIND** (search across content and claims), **CHECK** (read the record ADVERSARIALLY —
+    *"the role most worth building"*, because the threat model is self-directed overclaiming).
+    Rule 1: *"The machine proposes; the member authors."*
+  - **DEC-27** — the assistant is adopted, and *"the value of the entry is the BOUNDARY rather
+    than the adoption."*
+  - **D-82 / `surfaced_by`** — an assistant-surfaced item must LOOK derived and is server-stamped
+    at the surfacing act.
+**BOB'S THREE PLACES MAP ONTO TWO ANSWERED THINGS AND ONE NEW ONE:**
+  1. *Work toward an objective* = DEC-24's PURSUE + FIND + EXTRACT. Ruled.
+  2. *The assistant and wizard* = DEC-27's surface. Ruled, undrawn.
+  3. *Setting the standard from a published policy* (DEC-54) **is none of the four roles.** It is
+     not LOOKING and it is not CONCLUDING — **it proposes the STANDARD BY WHICH concluding will
+     be judged.** That is a new position on DEC-24's boundary and it is the highest-risk of the
+     three: a search done badly wastes effort, but a GATE set badly refuses nothing while
+     appearing strict — and DEC-54 established that an extractor reliably captures a policy's
+     COUNTABLE half, which the completeness research showed is the half that does not protect.
+     **So the policy role is MORE constrained than the looking roles, not less**, and its
+     unenforceable residue is published output rather than a log line.
+recommendation: **THE SUBSCRIPTION CONSTRAINT IS NOT A BILLING DETAIL — IT DECIDES THE
+  ARCHITECTURE, AND IT DECIDES IT WELL.** A Claude subscription is a PERSON's entitlement
+  exercised through a client; it is not a server credential. So the AI cannot live in the plane,
+  and **AI work runs MEMBER-SIDE, under the member's own subscription, proposing back into the
+  record through the same authored acts a human uses.** The natural shape is an MCP surface over
+  the ops the member already has, so the member's own Claude session can EXTRACT / PURSUE / FIND
+  / CHECK against their instance.
+  **four consequences, and every one of them resolves a problem this project already has:**
+  1. **No AI credential in any instance.** Compare what the alternative costs: DEC-37 had to mint
+     a token class for one unattended path; DEC-35's external-service option would have put a
+     funded vendor key in every group's install; DEC-42 accepted a $5/month plan partly to avoid
+     a second vendor account. **The subscription model removes that entire class for AI.**
+  2. **The instance CANNOT do AI work unattended — structurally, not by policy.** That is
+     DEC-47's open question (may an instance reach a source nobody named?) answered by
+     construction for everything AI-driven: there is no AI available to the server.
+  3. **Provenance gets a NAMED PERSON behind it.** The AI acted for a member, on that member's
+     entitlement, and the member adopts the result with their name on it. A server-side AI's
+     output has no person behind it at all.
+  4. **It scales with the group rather than the instance** — three active members, three
+     subscriptions, no per-instance cost.
+  **AND THE HONEST COST, which must be stated rather than discovered: the plane cannot VERIFY
+  what the AI did.** Member-side means the model, version and prompt are outside the record's
+  reach. So the plane records what the member DECLARES about the derivation and never presents
+  it as observed — D-112's rule exactly (*a provenance hop a caller can hand us is one a caller
+  can invent*). The accountability rests on the MEMBER who ran it and adopted it; the AI
+  attribution is a declared fact about how they worked. Note what adversaries negotiate when they
+  cannot trust each other here: the *Cerebras* stipulation requires all prompts disclosed and
+  changes redlined within three business days (`research/SEARCH-COMPLETENESS.md`). A group that
+  wants to offer that standard voluntarily should be able to; it must not be claimed by default.
+  **ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or
+  as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`,
+  `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine
+  callers are DISTINGUISHABLE. **If a member points their Claude session at their own member
+  token, the plane cannot tell, and every one of those fences silently stops working.** So: the
+  AI must act under a DISTINCT credential class (the DEC-37 precedent — mint the class rather
+  than widen a token's meaning), the fences keep firing, and the member's adoption is a separate
+  authored act under their own identity. **Two identities, two steps, and the machine refusals
+  hold.** Without this the subscription model would quietly hand a machine every right a member
+  has, which is the opposite of what it is for.
+reversal cost: low now, nothing is built. High once an assistant ships against the member's own
+  session, because the fences would have to be re-established against callers already relying on
+  them.
+
 ## Answered, awaiting enactment
 
 _(none)_
