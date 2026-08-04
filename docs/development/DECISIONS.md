@@ -3520,6 +3520,87 @@ reversal cost: low now. High once instances are deployed and reaching hosts unat
   the outward behaviour of every installed instance would have to be changed by an update,
   and D-116's fleet-visibility problem means we could not enumerate who had taken it.
 
+### DEC-48 · open
+raised: 2026-08-04 · session BOB (Bob's question, after the search-completeness research)
+for: bob
+question: Are the differing STANDARDS OF EVIDENCE — across user types (lawyer, journalist,
+  auditor, activist) and within them (AP vs BBC vs NPR) — another form of declared bias,
+  to be recorded as such and supported as variation? And could an AI read an
+  organisation's published policies and craft a matching bias setting?
+why it is Bob's: it touches two of his own rulings (AUDIENCES §5 and DEC-17) and asks
+  whether a standard may be indexed on WHO someone is.
+provisional: nothing is blocked. `required_strength` is ruled and unbuilt; bias bundles are
+  unbuilt (D-84); no surface names either concept.
+**MEASURED FIRST — most of this is ALREADY RULED, and the ruling is Bob's own:**
+  - **A standard of evidence is NOT one of the three bias kinds.** Declared bias is a
+    CLOSED SET: **scrutiny** (how much checking a source needs before it bears load),
+    **inference** (which inference patterns are licensed or blocked), **pattern** (an
+    evidenced empirical claim about behaviour). All three govern HOW YOU REASON over what
+    you hold. A standard of evidence is a **BAR** — how strong support must be before you
+    assert — and BIO already has that construct: DEC-17's `required_strength{capture,
+    connection}`.
+  - **THE TWO HAVE OPPOSITE MECHANICS, which is why merging them would break both.** Bias
+    is DISCLOSED and travels with publication, refusing nothing (DEC-20: only a hunch
+    blocks). A declared bar GATES — `BELOW_PROJECT_STRENGTH` refuses at pre-flight. File a
+    bar as bias and it stops gating; file bias as a bar and it starts refusing.
+  - **AND VARIATION BY ROLE IS ALREADY REFUSED, by Bob.** `AUDIENCES.md` §5: *"per-audience
+    relaxation is a structural prior by role — the same defect as a suspicion flag, with
+    the sign reversed"*, and a threshold *"must never be a threshold on RATIFICATION."*
+    DEC-17 keeps the bar on the PROJECT axis precisely to stay clear of it: *"a project
+    convened to refer something to an auditor needs a different bar from one convened to
+    decide whether a thing is worth looking at… **nobody's standard is set by who they
+    are.**"*
+  - **The decisive reason it cannot be per-user-type is Bob's own D-156 amendment:** *"the
+    same person can be BOTH… the two senses are not two populations of people, they are two
+    RELATIONSHIPS to a case, and which one applies depends on the case, not on the
+    person."* A lawyer building a case and reading someone else's is the same lawyer. There
+    is no stable per-person index to hang a standard on.
+recommendation: **THE VARIATION IS REAL AND ALREADY SUPPORTED — INDEXED ON THE WORK, NOT
+  THE PERSON.** Adopt no new construct for the bar. A group whose project exists to refer a
+  matter to an auditor declares a high bar because of what the WORK is for; the same
+  member's scoping project declares a lower one. That is DEC-17 working as designed, and it
+  delivers everything the user-type framing wanted without a structural prior by role.
+  **BUT PART OF AN ORGANISATION'S POLICY GENUINELY IS BIAS, and splitting it is the first
+  thing any such capability must do.** A newsroom policy contains BOTH: bars (AP's *"more
+  than one source"* → `required_strength`) AND scrutiny statements (AP's *"the source is
+  reliable, and in a position to have direct knowledge"*; Reuters' *"weigh the source's
+  track record, position and motive"* → bias kind 1, cleanly). One document, two
+  constructs, and conflating them is the error to design against.
+  **ON THE AI-READS-POLICY IDEA: viable as a PROPOSAL, and this session's research names
+  the specific hazard.** The completeness research found that newsroom standards substitute
+  three things for numbers — identifiability tests, referral gates, reflective tests — and
+  that **in four of five documented verification failures the organisation's COUNTABLE
+  rules were formally SATISFIED while the uncountable properties failed** (source
+  independence, adversarial contact, chain of custody, non-denial read as confirmation).
+  **So an extractor pointed at AP's policy would reliably capture "more than one source"
+  and drop "in a position to have direct knowledge" — it would systematically encode the
+  part that does not protect and discard the part that does.**
+  Which inverts what the capability should output: **its most valuable product is the list
+  of what it COULD NOT mechanise**, because that list is where the protection lives. Build
+  it to report the residue as prominently as the extraction, or it will quietly convert a
+  good policy into a weak checklist.
+  three constraints already ruled and binding on any such feature:
+  1. **It may never AUTHOR.** DEC-46 settled this for import — no project objective or bias
+     statement written on a member's behalf — and the same applies here. Derived informs,
+     authored binds (D-90); it proposes, a member adopts with their name on it, and it must
+     LOOK derived (D-82).
+  2. **The malformedness rule binds the machine exactly as it binds a member**: bias may
+     raise scrutiny, constrain inference and assert evidenced patterns, and **may never
+     issue verdicts** — and *"the construct that fights undeclared distortion is held to a
+     higher standard than the distortion."* A generated statement that fails that test is
+     refused like any other.
+  3. **A pattern statement must cite evidence in the record** and cannot leave draft
+     without it, so an extractor can propose scrutiny and inference statements far more
+     safely than pattern statements.
+  **AND THE PAYOFF IS ALREADY DESIGNED: REGRADE.** Once two organisations' lenses are both
+  expressible, the same findings can be re-run under each and the differences localised to
+  named statements — *"the disagreement is LOCALIZED TO NAMED LENS DIFFERENCES instead of
+  narrative against narrative."* That is what makes this worth building at all, and it is
+  the capability Bob already called valuable.
+reversal cost: nil now — bias bundles and `required_strength` are both unbuilt. Rising
+  sharply if a per-role bar is ever implemented, because removing it later would look like
+  raising a standard on a class of users.
+
 ## Answered, awaiting enactment
 
 _(none)_
