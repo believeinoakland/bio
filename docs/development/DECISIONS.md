@@ -3266,6 +3266,34 @@ for CONDUCT to enact: (a) **REC-14's publish block gains the AUTHORED bias ackno
   rides with the project surfaces whenever the bias bundle lands (D-84 first).
 enacted: 2026-08-04 · CONDUCT — (a) REC-47 queued as a CORRECTION to REC-14 (the authored acknowledgement fresh per edition beside the completeness statement and subject position, carrying C-21.1's carried-forward control); (b) M6's import scope AMENDED in MILESTONES — a new project per distinct source bias, stated and reasoned, never merging a lens into an existing project, with DEC-45's per-finding association demoted to the second step where regrade fires; (c) REGRADE named as a member capability on M4 (and reachable from M10's bias work), with the import path recorded as one CALLER rather than its home; (d) the HUNCH DEBT vocabulary correction rides REC-47 as a documentation pass, its own wording included; (e) D-189 recorded as riding the project surfaces whenever the bias bundle lands, behind D-84. Reasoning in this entry, MILESTONES M4/M6 and QUEUE.md (REC-47).
 
+### DEC-51 · open
+raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
+for: bob
+question: Should `op=acquire`'s grade note reach a MEMBER, or only the caller it was
+  written for? REC-48 wrote at `acquireGradeNote` that the note is a receipt handed to a
+  caller deciding nothing — and that if a later reading found the receipt is where members
+  actually form the belief, that would be "a ruling about which surface owns the fence, not
+  an edit to make here quietly." UI-32 is that later reading. `addCapture` receives the note
+  on every member capture and DISCARDS it, so a member's only account of what a capture is
+  worth arrives on the document page after the fact.
+why it is Bob's: DEC-39 was exactly this kind of ruling — where a doctrine sentence stands
+  and who owns it. This asks whether a second account stands at the moment of capture, which
+  is where the belief is actually formed. It also decides whether someone who has NOT been
+  offered co-attestation is told what it would be worth.
+provisional: as shipped — the note is received and not rendered. UI-32 removed the grade
+  letter from that surface entirely, so nothing there overclaims today; the member simply
+  gets no account of capture strength until afterwards.
+alternative: render it at the moment of capture. It would be the one place the record's own
+  words about capture strength reach the member while they are deciding — and it would put a
+  second, shorter account of co-attestation in front of someone who has not been offered the
+  act, which is the risk UI-32 names.
+recommendation: render the part that describes THIS capture's standing and not the
+  co-attestation clause, because the clause describes an act unavailable at that surface —
+  but that is a splitting question I did not settle unilaterally, since DEC-39's three-part
+  shape was deliberate and UI-28 measured that the parts reassemble character for character.
+  If you want it whole or not at all, say so and both are one item.
+what reversing costs: one surface change either way; nothing in the plane moves.
+
 ### DEC-50 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-45's report; **renumbered TWICE** — first from a colliding DEC-46, then from a colliding DEC-47, both allocated by the BOB session within hours. The BOB entries keep both numbers; this one moves, because the architect's numbers are the ones other documents will already be citing)
 for: bob
