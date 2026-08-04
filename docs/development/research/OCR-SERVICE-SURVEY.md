@@ -66,6 +66,80 @@ Notes that do not fit a cell:
    failure mode that is precisely the minted-text hazard CPDF-9's negative
    control exists to catch.
 
+## THE CLOUDFLARE PATH — added 2026-08-04, and it reframes the ranking above
+
+Bob asked whether Cloudflare has a service worth considering, *"from the perspective
+of a new instance setting up."* It does, and the question exposes a defect in the
+ranking above: **the survey optimised for THIS instance, and the product is SOVEREIGN
+INSTANCES.** Every instance the installer creates already HAS a Cloudflare account by
+construction. An external service means every future group opens, funds and holds a
+credential for a SECOND vendor — a D-115-class distribution liability the table had no
+column for.
+
+| | external service (Azure/Google) | Workers AI (Moondream 3.1) |
+| --- | --- | --- |
+| new vendor account per group | yes — signup, payment card, billing | **none** |
+| standing credential in `.env` | yes, a key per instance | **none** — a service binding in `wrangler.jsonc` |
+| installer change | docs + per-group manual steps | one binding line; `newgroup` stays one-account |
+| third party named in provenance | a NEW one, per transcription | Cloudflare + model + version — already in every instance's trust base |
+| cost at our volumes | ~$1/mo plus a billing relationship | free allocation (10k neurons/day, Free plan included) |
+
+**What is actually there** (vendor-stated, retrieved 2026-08-04):
+
+- **Moondream 3.1** (`moondream3.1-9B-A2B`) in the Workers AI catalog — a 9B MoE vision
+  model whose declared capabilities are object detection, pointing, **OCR** and
+  structured output, **returning coordinates and bounding boxes**. Reached via the
+  `env.AI` binding. Model string is pinnable. THE CANDIDATE.
+- **`ai.toMarkdown()`** — text-layer PDFs only (we extract those better in-plane) and
+  *captions* images rather than transcribing them. NOT a candidate.
+- **Containers / Sandbox** running a real engine (RapidOCR is the community pattern) —
+  requires the PAID Workers plan, and CPDF-7 made Free-plan viability the floor because
+  the installer puts instances into other groups' accounts, most of them Free. FAILS
+  DISTRIBUTION.
+- **AI Gateway** — proxies external vendors; every group still needs the external
+  account. No simplification.
+- No classic (non-LLM) OCR engine exists in the catalog. All Workers AI OCR is
+  vision-model OCR.
+
+### The cost of the in-account path, and it is exactly one thing
+
+**Moondream is a GENERATIVE vision model, not a classic OCR engine.** It returns
+coordinates; it offers **no calibrated per-word confidence contract** of the kind this
+survey's constraint column names. A generative model's failure mode is precisely the
+minted-text hazard — output that looks BETTER than its input. Third-party blog claims
+of *"zero hallucination risk"* on Cloudflare OCR pipelines are marketing and are
+labelled as such here.
+
+### What replaces per-word confidence — DEC-35's determination
+
+The record needs the FUNCTION of per-region confidence, not the number. It does two
+jobs, and they separate cleanly:
+
+1. **The checkability anchor** — the image region a reader or an attester checks the
+   claim against, instead of trusting our transcription. This needs COORDINATES, not
+   confidence. Moondream claims them; CPDF-11 VERIFIES they align. Non-negotiable.
+2. **The refusal trigger** — garbled region reads `undetermined` rather than a best
+   guess (the mojibake rule one layer up). For a confidence-less engine:
+   - the chain STATES `ocr(moondream3.1, confidence: none)` — an engine with no
+     per-region self-knowledge says so, exactly as an unreadable font does;
+   - the engine's transcription-fidelity CAP is set LOWER by measurement — DEC-4's
+     existing knob (no machine mints the grade), not new machinery;
+   - **pseudo-confidence is FORBIDDEN** — asking the model how sure it is and
+     thresholding that as though calibrated is an unearned number dressed as
+     calibration, the costs-nothing-to-produce class;
+   - **but measured self-refusal is EARNABLE** — CPDF-11's degradation ladder scores
+     whether the model refuses or invents on progressively degraded regions. Only that
+     measured reliability licenses structured self-refusal as a per-region trigger; if
+     it fails, the Moondream path has NO per-region trigger and the cap carries
+     everything, which is a statable limit rather than a hidden one;
+   - **escalation covers the rest** — a leg needing a higher capture grade than the cap
+     allows goes to the calibrated external tier or to member attestation, which is the
+     chain shape DEC-4's amendment already anticipated.
+
+**Consequence for the ranking above: it is now the ESCALATION/FALLBACK ranking**, not
+the primary one. Azure DI Read remains the primary EXTERNAL candidate. Nothing external
+is funded pending CPDF-11.
+
 ## What decides it
 
 The survey RANKS; the ground-truthed page DECIDES. CPDF-9's instrument (the
