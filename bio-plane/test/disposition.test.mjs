@@ -1,7 +1,7 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-Problem is narrowed instead of refused whole) -> 4 assertions fail (NOT_PROBLEMS, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31; refusal renamed NOT_PROBLEMS -> NOT_INQUIRIES by REC-10 2026-08-03) disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-inquiry is narrowed instead of refused whole) -> 4 assertions fail (NOT_INQUIRIES, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass. */
 /* S-11 step 3: bulk disposition of Problems, `op=dispose`, weight `refuse`.
  *
- * Negative-control detail: disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-Problem is narrowed instead of refused whole) -> 4 assertions fail (NOT_PROBLEMS, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass.
+ * Negative-control detail: disable the whole-set refusal in dispose (guard `offenders.length` with `false`, so a selection carrying a non-inquiry is narrowed instead of refused whole) -> 4 assertions fail (NOT_INQUIRIES, offenders named, nothing-moved) then the suite throws on the partially-applied set; restored, 47 pass.
  *
  * The first selection-backed action to move an OBJECT's state rather than an
  * edge's. Steps 1 and 2 edited the `references` block of a Project; this edits
@@ -179,19 +179,25 @@ console.log("\n--- the target state is closed, and elevation is not this action 
   const h = await select(IDS);
   t("an unknown state is refused",
     (await call(`/dispose?handle=${h}&to=archived&reason=x&${STAMP}`)).reason, "BAD_TARGET_STATE");
-  /* `elevated` is a legal Problem state and is deliberately NOT dispositionable
-     here. Elevating a Problem into a Project creates an `elevated_into` edge and
-     a Project bundle; doing it as a bulk state flip would produce Problems
-     claiming to be elevated into nothing. */
-  t("elevated is refused by name, because elevation is not a state flip",
-    (await call(`/dispose?handle=${h}&to=elevated&reason=x&${STAMP}`)).reason, "NOT_A_DISPOSITION");
+  /* Superseded 2026-08-03 (REC-10): `elevated` is no longer a state in the
+     machine dispose runs — the inquiry machine has open/deferred/dismissed
+     (surfaced a legal alias of open), and elevation was the OLD Focus
+     vocabulary's exit into a Project. The old expectation NOT_A_DISPOSITION
+     was wrong once the state itself left the table: an unknown target is
+     refused earlier, by name, as BAD_TARGET_STATE — same closed-machine
+     property, one refusal sooner. */
+  t("elevated is refused by name: not a state in the inquiry machine at all",
+    (await call(`/dispose?handle=${h}&to=elevated&reason=x&${STAMP}`)).reason, "BAD_TARGET_STATE");
 }
 
 console.log("\n--- the whole set moves or none of it does (weight refuse) ---");
 {
   const h = await select([...IDS, "INFO-2026-0001-x"]);
   const r = await call(`/dispose?handle=${h}&to=deferred&reason=${encodeURIComponent("waiting on the audit")}&${STAMP}`);
-  t("a selection carrying a non-Problem is refused whole", r.reason, "NOT_PROBLEMS");
+  /* Superseded 2026-08-03 (REC-10): the refusal is NOT_INQUIRIES now — the
+     wire name stopped naming a construct that no longer exists (DATA-MODEL
+     §2.7 change 13). The property asserted is unchanged: refused WHOLE. */
+  t("a selection carrying a non-inquiry is refused whole", r.reason, "NOT_INQUIRIES");
   t("with the offenders named", r.offenders, ["INFO-2026-0001-x"]);
   t("and NOTHING moved, not even the valid members", await stateOf(IDS[0]), "surfaced");
 }

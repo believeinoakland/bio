@@ -405,8 +405,12 @@ console.log("\n--- facet counts drive the filter sidebar ---");
     truth[b.state] = (truth[b.state] || 0) + 1;
   t("state counts agree with ground truth",
     Object.fromEntries(r.facets.state.map((x) => [x.value, x.n])), truth);
+  /* Superseded 2026-08-03 (REC-10): the canonical name for the legacy
+     `problem`/`focus` spellings is now `inquiry`, so the facet answers with
+     it. The assertion's point is unchanged — one canonical spelling, never a
+     split count. */
   t("the type facet counts both types, the legacy one under its canonical name",
-    Object.fromEntries(Object.entries(Object.fromEntries(r.facets.type.map((x) => [x.value, x.n]))).sort()), { focus: 1, information: 2 });
+    Object.fromEntries(Object.entries(Object.fromEntries(r.facets.type.map((x) => [x.value, x.n]))).sort()), { information: 2, inquiry: 1 });
   const filtered = await S("q=type:information");
   t("a facet counts the FILTERED set, not the corpus",
     Object.fromEntries(filtered.facets.type.map((x) => [x.value, x.n])), { information: 2 });

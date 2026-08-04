@@ -75,7 +75,7 @@ export const FIELDS = {
 /* The text columns of the FTS5 table, in table order. `meta` carries the
    flattened frontmatter so a bare term finds a value no column projects, which
    is what makes the per-schema tail searchable without a schema per version. */
-import { parseFrontmatter } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType } from "../checks/bio-checks.mjs";
 
 export const FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 
@@ -405,10 +405,12 @@ function selector(tok, ctx) {
     return textAtom(null, `${tok.field} ${tok.value}`.trim(), true, ctx);
   }
   let raw = String(tok.value);
-  /* The Focus rename: the projection stores `focus` and only `focus`, so the
-     legacy spelling is honoured as a filter value rather than answered with an
-     empty page. Schema stamps are document truth and are NOT mapped. */
-  if (f.col === "object_type" && raw.toLowerCase() === "problem") raw = "focus";
+  /* The type renames (normalisation site 4 of 4, REC-10): the projection
+     stores canonical types only, so the legacy spellings `problem` and
+     `focus` are honoured as filter values THROUGH THE CATALOG'S OWN MAP
+     rather than restated here or answered with an empty page. The deliberate
+     carve-out stands: schema stamps are document truth and are NOT mapped. */
+  if (f.col === "object_type") raw = normalizeType(raw.toLowerCase());
   /* Comparisons and ranges are metadata predicates on every field, including the
      free-text ones: `created:>2026-01-01` is an ordering question and MATCH
      cannot answer it. */

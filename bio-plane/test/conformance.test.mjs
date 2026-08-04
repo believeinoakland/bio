@@ -172,11 +172,14 @@ console.log("\n--- the intake form writes conformant bundles ---");
   const fn = new Function(...Object.keys(sandbox), script + "\n;return { mdFor, FIRST_STATE, PREFIX, reviseText };");
   const ui = fn(...Object.values(sandbox));
 
-  t("first states come from the catalog, not from memory, both Focus spellings included", ui.FIRST_STATE,
-    { information: "collected", focus: "surfaced", project: "forming", action: "planned", problem: "surfaced" });
+  /* Superseded 2026-08-03 (REC-10): the catalog gained the inquiry machine
+     (first state `open`) and KEEPS the legacy focus/problem vocabularies, so
+     the derived table now carries all six keys, in the catalog's order. */
+  t("first states come from the catalog, not from memory, legacy spellings included", ui.FIRST_STATE,
+    { information: "collected", inquiry: "open", focus: "surfaced", project: "forming", action: "planned", problem: "surfaced" });
 
   const now = "2026-07-24T12:00:00Z";
-  for (const type of ["information", "focus", "problem", "project", "action"]) {
+  for (const type of ["information", "inquiry", "focus", "problem", "project", "action"]) {
     const id = `${ui.PREFIX[type]}-2026-0002-intake-check`;
     const text = ui.mdFor(id, type, ui.FIRST_STATE[type], "Intake check", "What the member wrote.", now);
     const f2 = new Map([["bundle.md", text]]);
