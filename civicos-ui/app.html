@@ -4841,8 +4841,9 @@ async function openBundle(id, fromNav){
     }
 
     /* --- attestation, the fourth ACT: co-attest a held capture (UI-6). An
-       information document that holds a capture can be co-attested: an
-       independent timestamp raises it from Grade B toward evidentiary weight.
+       information document that holds a capture can be co-attested by an
+       independent timestamp authority. What that is worth to the record is the
+       act's PUBLISHED FENCE and is not stated here (UI-28 / DEC-39).
 
        THE RESIDUE UI-22 LEFT STANDING HERE IS CLOSED, 2026-08-05 (UI-24), and
        the reason it could not be closed then is worth keeping: `attest` is a
@@ -4871,25 +4872,28 @@ async function openBundle(id, fromNav){
     {
       const capSha = primaryCaptureSha(img, fm);
       const cact = captureAct("attest");
-      if(cact && canAttest() && /^[0-9a-f]{64}$/.test(capSha||"")){
+      /* AND THE FENCE GATES THE SECTION TOO (2026-08-04, UI-28), for the reason
+         the label gates it: an act the record publishes no fence for is one this
+         surface will not fence itself. `openAttestDialog` refuses on the same
+         condition, so there is one rule and not two opinions. */
+      if(cact && attestFence() && canAttest() && /^[0-9a-f]{64}$/.test(capSha||"")){
         const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(docTitle)),
               jsha = esc(JSON.stringify(capSha)), jloc = esc(JSON.stringify(loc||""));
-        /* THE FENCE SENTENCE BELOW IS NOT THIS ITEM'S TO TOUCH (2026-08-05,
-           UI-24). Every other member-facing word on this page now comes from the
-           record; this one — that co-attestation raises a Grade B capture TOWARD
-           evidentiary weight and NEVER reaches Grade A — is a CLAIM ABOUT WHAT
-           THE RECORD ASSERTS, and REC-38 refused to invent a `prompt` for it on
-           exactly that ground. It is raised as **DEC-39** and is Bob's to rule:
-           until he does, the sentence stands here unchanged rather than being
-           re-worded by a session that has no more authority over it than the
-           last one did. Do not delete it and do not rewrite it. When DEC-39
-           lands, the wording moves to the act's published `prompt` and this
-           comment goes with it. */
+        /* THE FENCE SENTENCE THAT STOOD IN THE LINE BELOW IS GONE, 2026-08-04
+           (UI-28), and UI-24's note that it was "not this item's to touch" was
+           right when it was written: it is a CLAIM ABOUT WHAT THE RECORD ASSERTS
+           and DEC-39 was open with Bob. He ruled — the plane publishes the fence
+           and it must state the question co-attestation answers — and REC-43
+           landed it on the act, so the wording arrives with the act and renders
+           below. This surface keeps the act's NAME, its RUNG and the fact that
+           the act is irreversible and public; it states no grade, here or
+           anywhere else in this region. */
         attestBar = `<h2 class="sec">Attestation</h2>
           <div class="rv-bar" style="margin:0;gap:8px">
             <button class="btn ghost" onclick="openAttestDialog(${jid},${jt},${jsha},${jloc})">${esc(cact.label)}&hellip;</button>
-            <span class="n">${esc(cact.label)} &mdash; the record's own name for this act${cact.rung?`, at <b>${esc(cact.rung)}</b> weight`:""}. An irreversible, public act: it asks an independent timestamp authority to attest these bytes existed, raising the capture from Grade B toward evidentiary weight. It never reaches Grade A.</span>
-          </div>`;
+            <span class="n">${esc(cact.label)} &mdash; the record's own name for this act${cact.rung?`, at <b>${esc(cact.rung)}</b> weight`:""}. An irreversible, public act: it asks an independent timestamp authority to attest these bytes existed.</span>
+          </div>
+          ${attestFenceHtml()}`;
       }
     }
 
@@ -12002,12 +12006,14 @@ function proposalAdoptReceipt(id, kind, title, ctx){
                    recorded attempt with its reason, and the standing left
                    UNCHANGED.
 
-   THE HONESTY FENCE, load-bearing (index.mjs:2304): co-attestation raises
-   a capture from Grade B TOWARD evidentiary weight; it NEVER yields Grade
-   A — Grade A needs a chain-of-custody web archive this surface cannot
-   produce. The surface must never say Grade A, on the pre-flight or the
-   receipt. `ATTEST_YIELDS_GRADE` is the single source of truth for the
-   yielded grade and the negative-control anchor.
+   THE HONESTY FENCE IS PUBLISHED (2026-08-04, UI-28 / DEC-39), and the
+   paragraph that stood here — this surface's own statement of what a
+   co-attestation is and is not worth, with a local grade constant named as
+   its single source of truth — is gone with the constant. The fence rides
+   the act: `capture_acts`' attest entry carries `prompt`, and this surface
+   renders it and spells no grade letter of its own. `attestFence()` is the
+   only way it reaches the member, and the act is not offered when the
+   record publishes no fence. See `attestFence` / `attestFenceHtml` below.
 
    THE CEREMONY OF THE TOP RUNG (v0.2 §A): the surface states what becomes
    permanent and what it does and does NOT claim. The rung is `attested`,
@@ -12033,29 +12039,84 @@ function canAttest(){
             && (PLANE.me.capabilities||[]).includes("contribute"));
 }
 
-/* THE HONESTY, in one place. Co-attestation strengthens a Grade B capture
-   TOWARD evidentiary weight; it NEVER reaches Grade A. This constant is the
-   single source of truth for the grade the act claims to yield, and the
-   NEGATIVE-CONTROL anchor: set it to "A" and the surface starts over-claiming,
-   which the suite catches. It is NOT read from the op (op=attest returns no
-   grade field) — it is doctrine (index.mjs:2304), stated by the surface. */
-const ATTEST_YIELDS_GRADE = "B";   // B toward evidentiary weight, never A
-function attestStandingClaim(strengthened){
-  if(!strengthened)
-    return { grade:"B", line:`No timestamp was obtained, so the capture's standing is <b>unchanged — Grade B</b>. Nothing was strengthened, and nothing here claims otherwise.` };
-  const g = ATTEST_YIELDS_GRADE;
-  // The false branch the negative control forces: claiming co-attestation
-  // reached Grade A. The honest branch keeps it at B, toward evidentiary weight.
-  return g === "A"
-    ? { grade:"A", line:`The capture is now <b>Grade A</b>.` }
-    : { grade:"B", line:`Still <b>Grade ${esc(g)}</b>, now <b>strengthened toward evidentiary weight</b> by an independent timestamp — <b>not</b> Grade A, which needs a chain-of-custody web archive this surface cannot produce.` };
+/* THE FENCE COMES FROM THE RECORD (2026-08-04, UI-28 / DEC-39), AND WHAT STOOD
+   HERE IS DELETED RATHER THAN REWORDED: a local constant holding the grade
+   letter a co-attestation yields, and a hand-written "does / cannot" block,
+   which between them were the last member-facing claim about the record's
+   semantics that the record did not own. NEITHER THE CONSTANT'S NAME NOR ITS
+   LETTER IS SPELLED IN THIS COMMENT, deliberately and for UI-30's measured
+   reason: a copy written into a comment is still a copy, it is the copy that
+   goes stale, and the suite's sweep over this region would be enforcing an
+   absence its own explanation violated. What was there is in QUEUE.md's UI-28
+   line and in this file's history; what it MEANT is below.
+
+   WHY THE OLD SENTENCE WAS WRONG, and it is not that it was inaccurate. It said
+   what co-attestation DOES and what it CANNOT do and never said WHAT QUESTION IT
+   ANSWERS — so a reader reaches for it to solve a DIRECTNESS problem it has
+   nothing to do with. Bob's own trial example was a coroner's courtroom
+   testimony held only as a newspaper account: it READ like the co-attestation
+   case and is not one. DEC-39 ruled that the plane publishes the fence AND that
+   it must state the question, and REC-43 landed it on `capture_acts`' attest
+   entry as `prompt`.
+
+   THE TWO GRADE LETTERS ARE THE ENFORCED RULE'S, WHICH IS WHY NONE IS SPELLED
+   HERE. `bio-plane/src/affordances.mjs` composes the wording from
+   `EARNED_CAPTURE_CEILING` — declared in `checks/bio-checks.mjs` beside
+   `checkEarnedLeg`, the arm that actually REFUSES a leg claiming more than the
+   ceiling — and from the rank immediately above it. A letter copied into this
+   file would agree at zero cost today and drift silently the day the rule moves.
+
+   IT ARRIVES AS ONE PLAIN STRING and carries no markdown; DEC-39's bold labels
+   and blockquote breaks are that document's rendering, not the publication's.
+
+   AND THE ACT IS NOT OFFERED WITHOUT IT. `attestFence()` answers "" when the
+   record publishes no fence, and every entry point — the document page's bar and
+   this dialog — checks it. That is REC-38's rule for the LABEL (an act the
+   record publishes no word for is one this surface will not invent a word for)
+   applied to the wording that must ACCOMPANY an irreversible, public act, and it
+   is also why an extraction that silently yielded "" cannot pass unnoticed: it
+   removes the control rather than emptying the sentence. */
+function attestFence(){
+  const a = captureAct("attest");
+  return a && typeof a.prompt === "string" ? a.prompt.trim() : "";
 }
-/* The "what it does / what it cannot" block, shown BEFORE the act runs and
-   again on the receipt, so the member meets the limit at both ends. */
-function attestHonestyHtml(){
-  return `<div class="az-honesty"><div class="pf-cap">What co-attestation does — and what it cannot</div>
-    <p class="az-does"><b>Does:</b> asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. That is the part an attacker holding a write token cannot forge, so it strengthens the capture toward evidentiary weight.</p>
-    <p class="az-cannot"><b>Cannot:</b> make this Grade A. Grade A needs a chain-of-custody web archive this surface cannot produce; co-attestation raises Grade B <b>toward</b> evidentiary weight, it does not reach Grade A. Anyone can later verify the timestamp themselves; this plane obtains and stores it and does not claim to have checked the authority's signature.</p></div>`;
+/* THE FENCE, RENDERED — the publication and nothing else, shown where the act is
+   OFFERED and again on the receipt that says it succeeded, so the member meets
+   it at both ends.
+
+   THE SPLIT ADDS NO WORDS AND HOLDS NO COPY. The published string carries three
+   labelled parts and the labels are found by SHAPE (`What …:` at a sentence
+   start), never by a label string written down here — a label copied into this
+   file would be three fragments of the publication living in the surface again,
+   which is the defect this item closes. If the pattern finds fewer than two
+   parts the whole string renders as one paragraph: an unfamiliar fence renders
+   unstyled and WHOLE rather than being reshaped by a surface that no longer
+   understands it. */
+function attestFenceHtml(){
+  const fence = attestFence();
+  if(!fence) return "";
+  const parts = fence.split(/(?=\bWhat\b[^:.]{0,60}:)/).map(s=>s.trim()).filter(Boolean);
+  const body = (parts.length > 1 ? parts : [fence])
+    .map(p=>`<p class="az-part">${esc(p).replace(/^([^:]{1,60}:)/, "<b>$1</b>")}</p>`).join("");
+  return `<div class="az-honesty">${body}</div>`;
+}
+/* WHAT THE ACT DID — never what it is WORTH (2026-08-04, UI-28). Until this item
+   this composed the standing sentence out of the local grade constant: the
+   earned letter, "strengthened toward evidentiary weight", and a denial of the
+   letter above it. Every word of that is the fence, and the fence is published
+   now (the sentence is not reproduced here for the reason given on
+   `attestFence`), so what is left in this function is the
+   one thing this surface actually knows — whether a timestamp was obtained. The
+   machine-readable marker is the OUTCOME (`attested` / `unchanged`) and NOT a
+   grade letter, because a grade letter written here is this surface stating
+   doctrine again under a tidier name. What it is worth renders beside it, in the
+   record's own words. */
+function attestStandingClaim(strengthened){
+  return strengthened
+    ? { standing:"attested",
+        line:`An independent timestamp authority's token is now on the record over these bytes. What that is worth is stated below, in the record's own words.` }
+    : { standing:"unchanged",
+        line:`No timestamp was obtained, so nothing about this capture changed. Nothing was strengthened, and nothing here claims otherwise.` };
 }
 
 /* WHAT THIS ACT TAKES — pure, so the harness can prove it. Given the capture's
@@ -12127,9 +12188,14 @@ function openAttestDialog(id, title, sha, locator){
      this surface naming the act again, one layer in. A caller that reaches here
      before `loadActSource()` has run is the UI-22 defect (a surface rendering a
      publication it assumed some other surface had loaded), and failing to open
-     is how that is noticed rather than papered over. */
+     is how that is noticed rather than papered over.
+
+     NO PUBLISHED FENCE, NO FLOW EITHER (2026-08-04, UI-28) — the same rule, over
+     the wording DEC-39 attached to this act. An irreversible, public act offered
+     with its honesty fence missing is worse than one that cannot be offered, and
+     this surface will not compose the fence to fill the gap. */
   const cact = captureAct("attest");
-  if(!cact) return null;
+  if(!cact || !attestFence()) return null;
   ATTEST_CTX = { id, title, sha, locator: locator||"", archive:false };
   const canArch = attestPublicLocator(locator);
   const choose = `
@@ -12145,21 +12211,21 @@ function openAttestDialog(id, title, sha, locator){
         ? "Also ask a public archive to fetch and keep the source. This is off by default because asking publicly PUBLISHES the fact that this group is interested in this source — a tactical judgement, not a default."
         : "Unavailable: this document has no public https source to archive."}</span>
     </label>`;
-  /* THE FENCE PARAGRAPH BELOW, AND EVERY OTHER GRADE SENTENCE IN THIS REGION,
-     IS LEFT EXACTLY AS IT STANDS (2026-08-05, UI-24) — `attestHonestyHtml`,
-     `attestStandingClaim`, the ladder's attest text and the bar's line with it.
-     They are not surviving residue: they are a CLAIM ABOUT WHAT THE RECORD
-     ASSERTS (a co-attested capture is strengthened TOWARD evidentiary weight and
-     never reaches Grade A), REC-38 refused to invent a published `prompt` for
-     one on exactly that ground, and it is raised as **DEC-39** for Bob to rule.
-     Until he does, re-wording it here would be this surface authoring the fence
-     a second time under a tidier heading. Do not delete, do not rewrite. */
+  /* THE FENCE BELOW IS THE PUBLICATION NOW (2026-08-04, UI-28). UI-24's note
+     here said every grade sentence in this region was LEFT EXACTLY AS IT STOOD
+     because it was a claim about what the record asserts and DEC-39 was open
+     with Bob. DEC-39 is answered and REC-43 published the wording, so the
+     sentences it protected are gone rather than reworded — including this
+     dialog's own lede, which stated the fence a second time in this surface's
+     words and additionally paraphrased the part the publication opens with. What
+     is left in the lede is act MECHANICS (irreversible, public), which is not a
+     claim about the record's semantics and is not the fence's to carry. */
   $("#dlg").innerHTML =
     `<h2 id="az-h">${esc(cact.label)}</h2>
-     <p class="what">Co-attesting asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. It is <b>irreversible and public</b>. It raises the capture from Grade B <b>toward</b> evidentiary weight — it does not, and cannot, make it Grade A.</p>
+     <p class="what">This act is <b>irreversible and public</b>.</p>
      <div class="dz-what"><span class="dz-ttl">${esc(title||id)}</span><span class="id">capture ${esc(String(sha||"").slice(0,16))}…</span></div>
      <div class="dz-choose">${choose}</div>
-     ${attestHonestyHtml()}
+     ${attestFenceHtml()}
      <div class="dz-pf" id="az-pf"><!-- pre-flight, painted by attestValidate --></div>
      ${weightLadderHtml("attested", `Co-attestation is <b>attested</b> — the top rung. It is <b>irreversible and public</b>: it asks an independent timestamp authority to record that these exact bytes existed, and that record cannot be withdrawn. The key here is the <b>authority's</b>, not yours — unlike signing a release, this act invokes an outside witness and touches no signing key of your own.`)}
      <div id="az-err" class="teach hidden"></div>
@@ -12232,9 +12298,10 @@ async function doAttest(){
        here. It goes through the seam anyway — UI-23's structural rule — and
        `recPostR` returns the answer unchanged when there is no `result`.
        THE RIDER LANDED 2026-08-05 (UI-24): `attestPreflight`'s sentences are
-       gone and the label is read from REC-38's published `capture_acts`. What
-       is still this surface's own, and deliberately, is the GRADE FENCE — see
-       `openAttestDialog`, DEC-39. */
+       gone and the label is read from REC-38's published `capture_acts`. IT
+       WIDENED 2026-08-04 (UI-28): the GRADE FENCE this line used to record as
+       still ours is read from the same publication now — see `attestFence`,
+       DEC-39. Nothing member-facing in this act is worded here. */
     const res = await recPostR("attest", body);
     attestReceipt(res, ATTEST_CTX);
     return res;
@@ -12249,10 +12316,15 @@ async function doAttest(){
     return { refused:true, reason: e && e.reason };
   }
 }
-/* THE RECEIPT — success. The stored RFC3161 token, and the capture's HONEST
-   new standing: still Grade B, strengthened TOWARD evidentiary weight, NEVER
-   Grade A. The plane's own note is rendered verbatim (§ passthrough), because
-   it carries the further honesty that the plane did not verify the signature. */
+/* THE RECEIPT — success. The stored RFC3161 token, what the act DID, and the
+   published fence again, so the member meets what it is worth at both ends of
+   the act. CORRECTED 2026-08-04 (UI-28): this comment used to restate the fence
+   in its own letters and the receipt used to render that sentence; the fence is
+   published, so the receipt renders the publication and states no grade. The
+   grade sentence is not reproduced here — see `attestFence`. The plane's own
+   note is rendered verbatim
+   (§ passthrough) because it carries the further honesty that the plane did not
+   verify the authority's signature. */
 function attestReceipt(res, ctx){
   const a = res.attestation || {};
   const claim = attestStandingClaim(true);
@@ -12260,16 +12332,17 @@ function attestReceipt(res, ctx){
   $("#dlg").innerHTML =
     `<div class="dz-receipt">
        <div class="dz-rhead">Co-attested.</div>
-       <p class="dz-rlede">An independent timestamp authority recorded that this capture's exact bytes existed no later than a fixed instant. The token is stored and anyone can verify it against the authority's certificate.</p>
+       <p class="dz-rlede">The token is stored and anyone can verify it against the authority's certificate.</p>
        <div class="dz-rgrid">
          <div class="kv"><span class="k">Document</span><span class="v">${esc((ctx&&ctx.title)||(ctx&&ctx.id)||"")} <span class="id">${esc((ctx&&ctx.id)||"")}</span></span></div>
          <div class="kv"><span class="k">Over capture</span><span class="v plain">${esc(a.over||(ctx&&ctx.sha)||"")}</span></div>
          <div class="kv"><span class="k">Timestamp</span><span class="v plain">${esc(a.kind||"rfc3161")}${a.service?` · ${esc(a.service)}`:""}${a.bytes?` · ${esc(String(a.bytes))} bytes`:""}</span></div>
          <div class="kv"><span class="k">Token hash</span><span class="v plain">${esc(a.sha256||"")}</span></div>
          ${arch}
-         <div class="kv"><span class="k">Resulting standing</span><span class="v plain" data-standing="${esc(claim.grade)}">${claim.line}</span></div>
+         <div class="kv"><span class="k">Resulting standing</span><span class="v plain" data-standing="${esc(claim.standing)}">${claim.line}</span></div>
          <div class="kv"><span class="k">Weight</span><span class="v plain">attested — irreversible and public; the authority's key, not yours</span></div>
        </div>
+       ${attestFenceHtml()}
        ${res.note?`<p class="az-planenote">${esc(res.note)}</p>`:""}
        <div class="row-btns"><button class="btn" onclick="attestDone('${esc((ctx&&ctx.id)||"")}')">Done</button></div>
      </div>`;
@@ -12290,7 +12363,7 @@ function attestFailReceipt(e, ctx){
        <div class="dz-rgrid">
          <div class="kv"><span class="k">Document</span><span class="v">${esc((ctx&&ctx.title)||(ctx&&ctx.id)||"")} <span class="id">${esc((ctx&&ctx.id)||"")}</span></span></div>
          ${rows}
-         <div class="kv"><span class="k">Resulting standing</span><span class="v plain" data-standing="${esc(claim.grade)}">${claim.line}</span></div>
+         <div class="kv"><span class="k">Resulting standing</span><span class="v plain" data-standing="${esc(claim.standing)}">${claim.line}</span></div>
          <div class="kv"><span class="k">Weight</span><span class="v plain">attested — nothing became permanent this time</span></div>
        </div>
        <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Close</button>

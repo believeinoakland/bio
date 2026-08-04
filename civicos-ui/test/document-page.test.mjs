@@ -8,7 +8,7 @@ import { appScript } from "./extract.mjs"; import vm from "vm"; import { webcryp
    Attestation section's label and rung come from, and this harness answers the
    PRODUCER'S ARRAY rather than a copy of it — a copy agrees at zero cost, which
    REC-38's own negative control measured on this exact label. */
-import { CAPTURE_ACTS } from "../../bio-plane/src/affordances.mjs";
+import { CAPTURE_ACTS, ATTEST_FENCE } from "../../bio-plane/src/affordances.mjs";
 const els=new Map();
 function el(sel){ const e={sel,classList:{add(){},remove(){},toggle(){},contains(){return false}},style:{},dataset:{},value:"",_html:"",textContent:"",scrollTop:0,disabled:false,offsetHeight:120,
   addEventListener(){},querySelectorAll:()=>[],querySelector:()=>el(),insertAdjacentHTML(p,h){e._html+=h},focus(){},click(){},remove(){}};
@@ -170,10 +170,16 @@ console.log("harness8: full document page renders with every element present");
    publication in disagreement with `op=attest`'s own NO_SUCH_CAPTURE. What the
    publication gates is whether the control can be NAMED at all.
 
-   WHAT IS STILL THIS SURFACE'S OWN AND MUST STAY SO FOR NOW: the grade fence
-   ("toward evidentiary weight, never Grade A"). REC-38 refused to invent a
-   published `prompt` for it — it is a claim about what the record asserts — and
-   it is raised as DEC-39. Do not close it here.
+   AND THE FENCE CAME FROM THE RECORD TOO, 2026-08-04 (UI-28 / DEC-39). What
+   stood here said the grade fence "must stay" this surface's own until Bob ruled
+   on DEC-39. He ruled — the plane publishes it, and it must state the question
+   co-attestation answers — REC-43 landed it as `prompt` on `capture_acts`, and
+   the bar renders the publication. Two consequences here, both below: this
+   harness's `DECORATED` mock stops hand-answering `prompt:null` (a mock that
+   answers a shape the plane no longer sends is D-173's class at the CONTENT
+   altitude — UI-30's finding), and an act the record publishes NO FENCE for is
+   not offered at all, which is the label rule applied to the wording that must
+   accompany an irreversible, public act.
    ============================================================================ */
 {
   const mkEl = () => { const e={ classList:{add(){},remove(){},toggle(){},contains(){return false}}, style:{},
@@ -186,7 +192,12 @@ console.log("harness8: full document page renders with every element present");
      acts, which is how the absent-section rule is driven (UI-24). Default: the
      plane's own block, decorated the way `decorateAct` decorates it. */
   const DECORATED = CAPTURE_ACTS.map(a=>({ ...a, weight:null, needs:"contribute",
-    mode:"session", rung:a.id==="attest"?"attested":null, prompt:null }));
+    mode:"session", rung:a.id==="attest"?"attested":null,
+    /* CORRECTED 2026-08-04 (UI-28), NEVER EXEMPTED: `prompt:null` was true of
+       the wire until REC-43 published the attest fence, and a mock that keeps
+       answering the old shape is the defect D-173 names, at the CONTENT
+       altitude. `decorateAct`'s own expression, over the producer's array. */
+    prompt:a.prompt ?? null }));
   async function page(acts, source, opts){
     const captureActs = (opts && opts.captureActs) || DECORATED;
     const E = new Map();
@@ -318,6 +329,23 @@ console.log("harness8: full document page renders with every element present");
     !/cannot be attested|no timestamp|attestation is not available/i.test(noCap));
   T("the page still renders — an unpublished capture act is not an error",
     noCap.includes('id="docscroll"'));
+  /* ---- the fence, 2026-08-04 (UI-28 / DEC-39) ------------------------------
+     THE BAR CARRIES THE PUBLICATION, asserted against the plane's own export
+     rather than a copy, and it carries it WHOLE: this section OFFERS an
+     irreversible, public act, and DEC-39's reasoning is that the wording must
+     travel with the act so it cannot appear in one client and not another.
+     And where the record publishes no fence, the section is ABSENT for the same
+     reason it is absent without a label — with the sharper edge that an act
+     offered with its honesty fence missing is worse than one not offered. */
+  T("the Attestation section carries the act's PUBLISHED fence, whole",
+    withActs.replace(/<[^>]*>/g," ").replace(/\s+/g," ").includes(ATTEST_FENCE.replace(/\s+/g," ").trim()));
+  T("and it spells no grade of its own once the publication is subtracted",
+    !/\bGrade\s+[A-Z]\b/.test(withActs.replace(/<[^>]*>/g," ").replace(/\s+/g," ")
+      .split(ATTEST_FENCE.replace(/\s+/g," ").trim()).join(" ")));
+  const noFence = await page([RELEASE, DISPOSE], null,
+    { captureActs: DECORATED.map(a=>({ ...a, prompt:null })) });
+  T("with the FENCE unpublished the Attestation section is ABSENT — the act is not offered unfenced",
+    !noFence.includes(">Attestation</h2>") && !/openAttestDialog\(/.test(noFence));
 
   /* ---- NEGATIVE CONTROL, RUN 2026-08-05, restored byte-identical ----------
      Put the crucial-release sentence back — a correct fact about the record,
@@ -335,5 +363,5 @@ console.log("harness8: full document page renders with every element present");
     !/that surface is not built yet/i.test(noActs));
 
   if(bad.length) throw new Error("UI-22 bars: " + bad.length + " failed —\n  " + bad.join("\n  "));
-  console.log("harness8+UI-22/24: the document page's release, disposition AND attestation sections come from op=affordances — the attest label and rung from REC-38's published capture_acts, asserted against the plane's own export; absent-and-silent where it publishes nothing; negative controls RUN");
+  console.log("harness8+UI-22/24/28: the document page's release, disposition AND attestation sections come from op=affordances — the attest label, rung AND FENCE from the published capture_acts, asserted against the plane's own export; the section absent-and-silent where the record publishes no label AND where it publishes no fence; negative controls RUN");
 }

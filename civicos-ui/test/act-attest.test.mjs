@@ -24,18 +24,40 @@
  *                 capture's HONEST new standing; on NO_ATTESTATION, every
  *                 recorded attempt and the standing left unchanged.
  *
- * THE HONESTY (load-bearing, index.mjs:2304): co-attestation raises Grade B
- * TOWARD evidentiary weight and NEVER yields Grade A. The receipt's stated
- * resulting standing is Grade B (carried in a machine-checkable data-standing
- * marker); it must never claim the act reached Grade A.
+ * THE HONESTY, AND IT IS PUBLISHED NOW — CORRECTED 2026-08-04 BY UI-28 (DEC-39),
+ * NEVER EXEMPTED. What stood here said the fence in this file's own letters:
+ * "co-attestation raises Grade B toward evidentiary weight and never yields
+ * Grade A", with the receipt's standing pinned to that letter. Every word of it
+ * was a CLAIM ABOUT WHAT THE RECORD ASSERTS being made by the surface and
+ * re-made by its suite, and a pin written in the same letters as the subject
+ * agrees with it at zero cost forever. Bob ruled (DEC-39) that the PLANE
+ * publishes the fence and that it must state THE QUESTION CO-ATTESTATION
+ * ANSWERS; REC-43 landed it as `prompt` on `capture_acts`' attest entry,
+ * composed from `EARNED_CAPTURE_CEILING` and the rank above it. So this suite
+ * asserts against the PUBLICATION and against the ENFORCED RULE — imported, both
+ * of them — and spells no grade letter of its own anywhere.
  *
- * accepts-when (QUEUE UI-6): co-attesting a held capture through op=attest
- * succeeds and yields a receipt showing the HONEST resulting standing (Grade B,
- * strengthened toward evidentiary weight, NEVER Grade A); the act shows its
- * weight-ladder position (`attested`) and states what it needs before it runs
- * (bad sha / no such capture / no storage -> the commit control is absent and
- * op=attest is never sent); a NO_ATTESTATION failure shows every recorded
- * attempt and leaves the standing unchanged.
+ * THREE THINGS THIS SUITE DOES NOT RE-DERIVE, recorded by UI-28 so no later
+ * session argues them out of the file. (i) THE WORDING IS CONDUCT'S DRAFT UNDER
+ * BOB'S RULING and not Bob's own sentence — DEC-39 says so in its own words — so
+ * the assertion is against the PUBLICATION and never against the DECISIONS.md
+ * entry and never against a copy typed here. (ii) The published `prompt` is a
+ * PLAIN STRING carrying no markdown; the ruling's bold labels and blockquote
+ * breaks are that document's rendering. (iii) Whether the three parts should be
+ * carried as STRUCTURE on the published field is an open I3 shape question
+ * CONDUCT deliberately did not pre-decide — this is built against the string,
+ * and the surface splits it by SHAPE (`What …:`) while holding no label of its
+ * own. The split is measured below rather than trusted: the rendered parts must
+ * REASSEMBLE into the publication exactly.
+ *
+ * accepts-when (QUEUE UI-6, widened by UI-28): co-attesting a held capture
+ * through op=attest succeeds and yields a receipt showing what the act DID and
+ * the PUBLISHED fence for what it is worth; the act shows its weight-ladder
+ * position (`attested`) and states what it needs before it runs (bad sha / no
+ * such capture / no storage -> the commit control is absent and op=attest is
+ * never sent); a NO_ATTESTATION failure shows every recorded attempt and leaves
+ * the standing unchanged; and NO surface in this region claims the grade the
+ * enforced rule says co-attestation cannot reach.
  *
  * WHAT UI-24 ADDED, beside the correction above: this act's LABEL is published
  * now. REC-38 answered UI-22's delegation with a `capture_acts` block on both
@@ -46,22 +68,58 @@
  * supplied a label the application could not load would be UI-22's no-caller
  * defect wearing this item's clothes.
  *
- * WHAT IS STILL THIS SURFACE'S OWN, DELIBERATELY: the GRADE FENCE — that
- * co-attestation strengthens a Grade B capture TOWARD evidentiary weight and
- * never reaches Grade A. REC-38 refused to invent a published `prompt` for it
- * because it is a claim about what the record asserts, and it is raised as
- * DEC-39 for Bob to rule. Every fence assertion below therefore stands
- * unchanged, and must keep standing until that ruling lands.
+ * WHAT WAS STILL THIS SURFACE'S OWN UNTIL 2026-08-04, AND IS NOT NOW: the GRADE
+ * FENCE. REC-38 refused to invent a published `prompt` for it because it is a
+ * claim about what the record asserts; that refusal is what routed the question
+ * to Bob, DEC-39 answered it, and UI-28 is the surface half. The line that stood
+ * here — "every fence assertion below therefore stands unchanged, and must keep
+ * standing until that ruling lands" — has been honoured by CORRECTING those
+ * assertions at the site rather than deleting them: each one still guards the
+ * same property and now reads it out of the publication.
  *
- * NEGATIVE CONTROL: make the surface CLAIM Grade A from co-attestation
- * (`const ATTEST_YIELDS_GRADE = "B"` -> `"A"`) and the receipt's stated standing
- * flips to Grade A — the honesty assertion (`data-standing="B"`, never "A")
- * fails. RUN MECHANICALLY below in a second VM context built from the source
- * with that exact mutation. RUN 2026-07-31: grade "B" -> receipt data-standing
- * "B", "toward evidentiary weight", no Grade-A claim (honest); grade "A" ->
- * receipt data-standing "A" (over-claims Grade A), 2 honesty assertions flip.
- * Restored source -> green. RE-RUN 2026-08-05 under UI-24's changes, same
- * result, same 2 assertions.
+ * NEGATIVE CONTROL, UI-28's, IN TWO ARMS, both RUN MECHANICALLY on every
+ * invocation in a second VM context / over a mutated source string, and both
+ * RE-RUN ON DISK 2026-08-04 against the FINAL files with every file restored
+ * BYTE-IDENTICALLY afterwards (sha256 compared before and after each arm).
+ *
+ *   ARM (a) — THE COPY, and it is the KEPT-AND-RETARGETED anchor of the old
+ *   control. Put a local grade constant back and give `attestFenceHtml` a
+ *   HAND-WRITTEN copy of the published fence instead of the publication. THE
+ *   RENDERED SURFACE IS THEN INDISTINGUISHABLE — every member-facing assertion
+ *   about the rendered fence stays green, because an identical copy agrees at
+ *   zero cost (REC-35's finding, restated on this sentence by REC-43's own arm
+ *   (a)). What fails is the STRUCTURAL sweep over the source regions, NAMING the
+ *   copy. RUN ON DISK 2026-08-04: **3 of 83**, and the sweep printed NINE
+ *   complaints — four grade letters spelled in the region, four verbatim runs of
+ *   the publication, and the retired constant by name. THE THIRD FAILURE IS THE
+ *   ONE NOBODY PREDICTED and it is the better argument: with a copy in hand the
+ *   surface RENDERS A FENCE THE RECORD NEVER PUBLISHED — the no-fence-no-act
+ *   gate stops holding, because the gate reads the publication and the block
+ *   reads the copy. A copy does not merely risk drift; it re-arms the surface to
+ *   speak when the record is silent.
+ *
+ *   ARM (b) — THE RETARGET. The old arm flipped a local constant to "A"; there
+ *   is no constant now, so the arm flips what it was really testing: make the
+ *   surface CLAIM THE UNREACHABLE GRADE, with the letter taken from the
+ *   ENFORCED RULE (`UNREACHABLE_CAPTURE_GRADE`) rather than typed, in the one
+ *   sentence the surface still writes for itself (the standing line). The sweep
+ *   fires — and it fires on the REMAINDER, after everything the plane published
+ *   has been subtracted, because the publication ITSELF names that grade in
+ *   order to deny it and a sweep that could not tell those apart would be
+ *   unusable. RUN ON DISK 2026-08-04: **5 of 83**, the first naming the claim.
+ *
+ *   ARM (c) — MOVE THE RULE, which is what the whole design is for and is worth
+ *   one line to prove. Change `EARNED_CAPTURE_CEILING` in
+ *   `bio-plane/checks/bio-checks.mjs` ALONE (B -> C) and touch nothing else:
+ *   **83/83 STILL GREEN**, the member now reading the new ceiling and the new
+ *   unreachable grade, with no edit in `app.html` and none in this file. Then
+ *   the same moved rule WITH arm (a)'s copy in place: **14 of 83 FAIL** — a
+ *   member told the old ceiling while the gate refuses above the new one, which
+ *   is the record overclaiming on a doctrine sentence and is exactly REC-43's
+ *   arms (b)/(c) reproduced one layer out at the surface.
+ *
+ * All three arms restored every file BYTE-IDENTICALLY, sha256 compared before
+ * and after each: app.html 8f28e66b…, bio-checks.mjs d8da7b9d….
  *
  * NEGATIVE CONTROL (UI-24's own), RUN ON DISK 2026-08-05 IN TWO ARMS, app.html
  * and bio-plane/src/affordances.mjs each restored byte-identical (sha256
@@ -98,8 +156,20 @@ import { appScript } from "./extract.mjs";
    agrees at zero cost and would prove nothing about the label the surface now
    reads (REC-35's finding, restated on a label by REC-38's own control). The
    `act-proposal.test.mjs` / `add-surface.test.mjs` precedent for importing a
-   plane module into a UI harness. */
-import { CAPTURE_ACTS } from "../../bio-plane/src/affordances.mjs";
+   plane module into a UI harness.
+
+   WIDENED 2026-08-04 (UI-28) TO THE FENCE, AND TO THE RULE UNDER IT. Two
+   imports, not one, because they measure different things. `ATTEST_FENCE` is
+   what the member must receive — the PUBLICATION, never the DECISIONS.md entry
+   and never a copy. `EARNED_CAPTURE_CEILING` / `UNREACHABLE_CAPTURE_GRADE` are
+   what the plane ENFORCES (`checkEarnedLeg` refuses a leg claiming more than the
+   ceiling), and the fence's two grade letters are composed from them, so this
+   suite can assert that the wording a member reads is a FUNCTION of the rule
+   rather than a sentence that happens to agree with it today. A DIRECT IMPORT is
+   available here where UI-30 had to read `store.mjs` textually: neither module
+   touches `cloudflare:workers`. */
+import { CAPTURE_ACTS, ATTEST_FENCE } from "../../bio-plane/src/affordances.mjs";
+import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../bio-plane/checks/bio-checks.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -122,13 +192,21 @@ function makePlane(mode){
     /* ADDED 2026-08-05 (UI-24). The act's LABEL and RUNG are published now, so
        the surface reads them and this harness must supply what the application
        supplies — the catalogue read `boot()` does, answered in the WIRE shape.
-       `decorateAct` adds needs/mode/rung/weight/prompt around the array below;
-       what this surface consumes is `label` and `rung`, so those are what the
-       mock carries, taken from the producer's own export. */
+       `decorateAct` adds needs/mode/rung/weight/prompt around the array below.
+
+       CORRECTED 2026-08-04 (UI-28), NEVER EXEMPTED: this mock hand-answered
+       `prompt:null` for every capture act, which was true of the wire when it
+       was written and became FALSE the moment REC-43 landed. A mock that answers
+       a shape the plane no longer sends is D-173's class at the CONTENT altitude
+       — UI-30 measured the same defect on a retired login code and the suite
+       stayed green through it. The prompt is now `decorateAct`'s own expression
+       (`a.prompt ?? null`) over the PRODUCER'S array, so the fence this surface
+       renders is the one the plane publishes and nobody typed it. */
     if(op==="affordances")
       return R({ ok:true, result:{ target:null, catalog:[], vocabularies:{},
         capture_acts: CAPTURE_ACTS.map(a=>({ ...a, weight:null, needs:"contribute",
-                                             mode:"session", rung:a.id==="attest"?"attested":null, prompt:null })) },
+                                             mode:"session", rung:a.id==="attest"?"attested":null,
+                                             prompt:a.prompt ?? null })) },
         store:"bio", tokenClass:null });
     if(op==="attest"){
       const sha = String(body && body.sha256 || "").toLowerCase();
@@ -181,7 +259,12 @@ const EXPORTS = ";globalThis.__PLANE=PLANE;globalThis.__pf=attestPreflight;"
   + "globalThis.__open=openAttestDialog;globalThis.__validate=attestValidate;"
   + "globalThis.__choose=attestChoose;globalThis.__do=doAttest;globalThis.__ctx=()=>ATTEST_CTX;"
   + "globalThis.__ladder=weightLadderHtml;globalThis.__can=canAttest;"
-  + "globalThis.__claim=attestStandingClaim;globalThis.__yields=ATTEST_YIELDS_GRADE;"
+  + "globalThis.__claim=attestStandingClaim;"
+  /* CORRECTED 2026-08-04 (UI-28): `__yields` exported the local grade constant,
+     which no longer exists — the fence and its letters come from the plane. What
+     is exported instead is the two functions that READ the publication, so the
+     suite can measure that the surface renders it whole and adds nothing. */
+  + "globalThis.__fence=attestFence;globalThis.__fenceHtml=attestFenceHtml;"
   + "globalThis.__loadActSource=loadActSource;globalThis.__label=attestActLabel;";
 
 /* ASYNC SINCE 2026-08-05 (UI-24), and the await is the correction rather than
@@ -204,15 +287,106 @@ const plane = makePlane("ok");
 const ctx = await boot(SRC, plane);
 
 /* ============================================================
-   THE HONESTY SOURCE OF TRUTH — co-attestation yields B, never A.
+   THE HONESTY SOURCE OF TRUTH — THE PUBLICATION, AND THE RULE UNDER IT.
+
+   CORRECTED 2026-08-04 BY UI-28 (DEC-39), NEVER EXEMPTED. What stood here was
+   five assertions written in the same letters as the surface they judged: the
+   local constant is "B"; the standing claim's grade is "B"; it says "toward
+   evidentiary weight"; it denies "Grade A". Every one of them passed because
+   two copies of the same sentence agree, and none of them could have noticed
+   the sentence being WRONG — which is what DEC-39 found it to be, not in its
+   letters but in its silence: it never said what question co-attestation
+   answers, so a reader reaches for it to solve a directness problem it has
+   nothing to do with. The property they were guarding — this surface never
+   overclaims what a co-attestation is worth — is guarded below, against the
+   publication and against the enforced rule.
    ============================================================ */
-ok("the surface's yielded grade is B (toward evidentiary weight), never A", ctx.__yields==="B");
+
+/* THE INSTRUMENTS, AND THEY ARE GUARDED BEFORE THEY ARE USED (UI-30's
+   measurement, which this item is a direct consumer of: an extraction that
+   silently yields "" makes every `includes()` trivially true — the zero-cost
+   equality arriving in the INSTRUMENT rather than the subject).
+
+   `strip` takes rendered HTML down to its text. `without` subtracts the
+   PUBLICATION from that text, and the sweep reads the REMAINDER — because the
+   published fence NAMES the unreachable grade in order to deny it, so a sweep
+   that could not tell the record's denial from the surface's claim would either
+   fire on the honest rendering or have to be weakened into uselessness. This is
+   UI-30's "subtract what the plane said and read what is left", one item on. */
+const FENCE = String(ATTEST_FENCE).replace(/\s+/g," ").trim();
+const strip = h => String(h==null?"":h).replace(/<[^>]*>/g," ")
+  .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&")
+  .replace(/\s+/g," ").trim();
+const without = h => strip(h).split(FENCE).join(" ").replace(/\s+/g," ").trim();
+/* Any GRADE CLAIM at all, in the remainder. Not "the letter A" — the letters are
+   the rule's and this file spells none; the sweep looks for the SHAPE of a grade
+   claim and reports whatever letter it finds. */
+const gradeClaims = h => (without(h).match(/\bGrade\s+[A-Z]\b/g) || []);
+
+ok("INSTRUMENT: the imported publication is a non-empty plain string with no markup",
+   typeof ATTEST_FENCE === "string" && FENCE.length > 200 && !/[<>&"]/.test(FENCE));
+ok("INSTRUMENT: the enforced ceiling and the grade above it are single distinct letters",
+   /^[A-Z]$/.test(String(EARNED_CAPTURE_CEILING)) && /^[A-Z]$/.test(String(UNREACHABLE_CAPTURE_GRADE))
+   && EARNED_CAPTURE_CEILING !== UNREACHABLE_CAPTURE_GRADE);
+/* THE WORDING IS A FUNCTION OF THE RULE, not a copy that agrees today. If the
+   ceiling moves, the published sentence moves with it and this stays true; a
+   sentence pinned to a typed letter would not. */
+ok("the publication states the ENFORCED ceiling and denies the grade above it, both as the rule spells them",
+   FENCE.includes("Grade " + EARNED_CAPTURE_CEILING) && FENCE.includes("Grade " + UNREACHABLE_CAPTURE_GRADE));
+ok("and the publication states WHAT QUESTION co-attestation answers — DEC-39's correction, not decoration",
+   /what co-attestation answers/i.test(FENCE) && /what it does not answer/i.test(FENCE)
+   && /what it is worth/i.test(FENCE));
+
+/* THE SURFACE READS IT AND KEEPS NONE OF ITS OWN. Asserted against the plane's
+   export; the mock answers the producer's array, so this is the wire and not a
+   fixture agreeing with itself. */
+ok("the surface's fence IS the publication, character for character", ctx.__fence() === ATTEST_FENCE);
+const fenceHtml = ctx.__fenceHtml();
+ok("the rendered fence carries the publication WHOLE", strip(fenceHtml) === FENCE);
+ok("and the rendering adds NOT ONE WORD of its own", without(fenceHtml) === "");
+/* THE SPLIT IS MEASURED, NOT TRUSTED (UI-28 (ii)/(iii)). The published string is
+   plain and the surface styles it by splitting on the SHAPE of the three labels
+   the ruling wrote. If that split ever dropped, reordered or re-worded a part,
+   the reassembly below stops equalling the publication. Whether the parts should
+   instead be published as STRUCTURE is an open I3 question; this measures that
+   the string treatment is honest meanwhile. */
+const parts = (fenceHtml.match(/<p class="az-part">([\s\S]*?)<\/p>/g) || []);
+ok("the fence renders as the three labelled parts the ruling wrote", parts.length === 3);
+ok("and the parts REASSEMBLE into the publication exactly — nothing added, nothing lost",
+   parts.map(strip).join(" ").replace(/\s+/g," ").trim() === FENCE);
+ok("each part is headed by its own published label, emphasis added and words not",
+   parts.every(p=>/<p class="az-part"><b>[^<]{1,60}:<\/b>/.test(p)));
+
+/* WHAT THE SURFACE STILL SAYS FOR ITSELF — the OUTCOME of the act, and never
+   what it is worth. The marker is machine-readable so the sweep has something
+   exact to judge, and it is deliberately not a grade letter. */
 const claimUp = ctx.__claim(true);
-ok("the standing claim on success is Grade B, not A", claimUp.grade==="B");
-ok("the standing claim says 'toward evidentiary weight'", /toward evidentiary weight/i.test(claimUp.line));
-ok("the standing claim explicitly denies Grade A", /not.*Grade A/i.test(claimUp.line));
+ok("the success standing states what the act DID, marked `attested`", claimUp.standing === "attested");
+ok("and it claims no grade of its own", gradeClaims(claimUp.line).length === 0);
 const claimDown = ctx.__claim(false);
-ok("with no token obtained, the standing is unchanged Grade B", claimDown.grade==="B" && /unchanged/i.test(claimDown.line));
+ok("with no token obtained the standing is UNCHANGED, and still claims no grade",
+   claimDown.standing === "unchanged" && /unchanged|nothing/i.test(claimDown.line)
+   && gradeClaims(claimDown.line).length === 0);
+
+/* THE ACT IS NOT OFFERED WITHOUT ITS FENCE. REC-38's rule for the LABEL, applied
+   to the wording DEC-39 attached to the act: where the record publishes no
+   fence, this surface neither composes one nor offers the act naked. */
+{
+  const planeNF = makePlane("ok");
+  const innerFetch = planeNF.fetch;
+  planeNF.fetch = async (u, opts) => {
+    const r = await innerFetch(u, opts);
+    const url = new URL(u, "https://plane.test");
+    if(url.searchParams.get("op") !== "affordances") return r;
+    const j = await r.json();
+    j.result.capture_acts = j.result.capture_acts.map(a=>({ ...a, prompt:null }));
+    return { ok:true, json:async()=>j };
+  };
+  const ctxNF = await boot(SRC, planeNF);
+  ok("with no fence published, the surface holds none", ctxNF.__fence() === "" && ctxNF.__fenceHtml() === "");
+  ok("and the act's dialog REFUSES TO OPEN rather than offering it unfenced",
+     ctxNF.__open("INFO-2026-0007", "sewer", GOOD_SHA, "") === null);
+}
 
 /* ============================================================
    WHAT THIS ACT TAKES — a pure function, proved directly.
@@ -278,8 +452,16 @@ const dlg0 = els.get("#dlg")._html;
 ok("CHOOSE: the dialog offers timestamp-only and timestamp+archive", /Timestamp only/.test(dlg0) && /public web archive/i.test(dlg0));
 ok("CHOOSE: the public-archive option warns it PUBLISHES the interest", /publishes/i.test(dlg0.toLowerCase()) || /PUBLISHES/.test(dlg0));
 ok("the dialog names the document by title", dlg0.includes("The sewer contract, as published"));
-ok("HONESTY: the dialog shows what co-attestation does AND cannot, before it runs", /What co-attestation does/i.test(dlg0) && /Cannot:/.test(dlg0));
-ok("HONESTY: the pre-flight-time block denies Grade A and says 'toward evidentiary weight'", /toward evidentiary weight/i.test(dlg0) && /make this Grade A/i.test(dlg0)===true);
+/* CORRECTED 2026-08-04 (UI-28), NEVER EXEMPTED. These two asserted the surface's
+   OWN block by its own headings ("What co-attestation does", "Cannot:") and its
+   own letters ("make this Grade A") — pins in the same words as the subject. The
+   property is unchanged: the member meets the fence BEFORE the act runs. What
+   changed is where the words come from, so the assertion reads the publication
+   and the subtraction proves the dialog carries it rather than something like
+   it. */
+ok("HONESTY: the dialog carries the PUBLISHED fence, whole, before the act runs", strip(dlg0).includes(FENCE));
+ok("HONESTY: and the dialog claims no grade of its own once the publication is subtracted",
+   gradeClaims(dlg0).length === 0);
 ok("NO AUTHOR STEP: the dialog carries no reason textarea (the act has no member text)", !/<textarea/i.test(dlg0));
 ok("the dialog's weight ladder marks the top rung `attested`", /wl-rung on[\s\S]*?attested/.test(dlg0));
 ok("the ladder is HONEST that the key is the authority's, not the member's", /authority/i.test(dlg0) && /no signing key of your own/i.test(dlg0));
@@ -347,13 +529,19 @@ ok("RECEIPT: it shows the token is OVER the capture hash", rc.includes(GOOD_SHA)
 ok("RECEIPT: it renders the plane's own note verbatim (does not claim to have verified the signature)", /does not claim to have verified the signature/i.test(rc));
 ok("RECEIPT: it states the weight-ladder rung (attested)", /attested/.test(rc));
 
-/* THE HONESTY, ON THE RECEIPT — the load-bearing assertion. The stated
-   resulting standing is Grade B (toward evidentiary weight), NEVER Grade A.
-   Checked on the machine-readable data-standing marker so the honest prose
-   ("not Grade A") does not confuse presence-of-string with the CLAIM. */
-ok("RECEIPT HONESTY: the stated standing is Grade B", /data-standing="B"/.test(rc));
-ok("RECEIPT HONESTY: the surface NEVER claims the act reached Grade A", !/data-standing="A"/.test(rc));
-ok("RECEIPT HONESTY: the standing says strengthened TOWARD evidentiary weight", /toward evidentiary weight/i.test(rc));
+/* THE HONESTY, ON THE RECEIPT — the load-bearing assertion, CORRECTED
+   2026-08-04 (UI-28) AND NOT WEAKENED. What stood here read the machine-readable
+   marker for the earned grade letter and for the absence of the letter above it,
+   and pinned the prose "toward evidentiary weight". The marker is no longer a
+   grade at all: a grade letter written by this surface, even into a data
+   attribute, is the surface stating doctrine under a machine-readable name. So
+   the marker says what the act DID, the fence says what it is worth in the
+   record's own words, and the third assertion is the RETARGETED control's
+   instrument — no claim of the unreachable grade survives subtraction. */
+ok("RECEIPT: the stated standing is the act's OUTCOME, not a grade", /data-standing="attested"/.test(rc));
+ok("RECEIPT: the receipt carries the PUBLISHED fence for what the act is worth", strip(rc).includes(FENCE));
+ok("RECEIPT HONESTY: with the publication subtracted, the receipt claims NO grade — including the unreachable one",
+   gradeClaims(rc).length === 0);
 
 /* ============================================================
    THE ARCHIVE CHOICE: opting into a public archive rides on the op body.
@@ -380,7 +568,13 @@ ok("a NO_ATTESTATION answer is handled as an honest failure (not swallowed)", rN
 const rcN = ctxN.__els.get("#dlg")._html;
 ok("FAIL RECEIPT: it states no timestamp was obtained", /No timestamp was obtained/i.test(rcN));
 ok("FAIL RECEIPT: it shows every recorded attempt with its reason", /freetsa/i.test(rcN) && /http 503|network/i.test(rcN));
-ok("FAIL RECEIPT HONESTY: the standing is UNCHANGED Grade B, never A", /data-standing="B"/.test(rcN) && !/data-standing="A"/.test(rcN) && /unchanged/i.test(rcN));
+/* CORRECTED 2026-08-04 (UI-28): the marker is the outcome, not a grade letter
+   (see the success receipt above). The property is the same and is stronger for
+   being swept: nothing was strengthened, so nothing may claim a grade at all —
+   and this receipt does not render the fence either, because "what it is worth"
+   is about a strengthening that did not happen. */
+ok("FAIL RECEIPT HONESTY: the standing is UNCHANGED and claims no grade whatever",
+   /data-standing="unchanged"/.test(rcN) && /unchanged|nothing/i.test(rcN) && gradeClaims(rcN).length === 0);
 
 /* ============================================================
    THE VOCABULARY GUARD: no plane-internal jargon reaches the member through
@@ -395,25 +589,107 @@ for(const word of ["op=", "op=attest", "NO_SUCH_CAPTURE", "BAD_SHA", "NO_ATTESTA
   ok(`the authored act chrome never says "${word}"`, !chrome.includes(word));
 
 /* ============================================================
-   NEGATIVE CONTROL — RUN, not inferred. Rebuild the surface from the source
-   with the honesty source-of-truth flipped to claim Grade A
-   (`const ATTEST_YIELDS_GRADE = "B"` -> `"A"`), run the SAME success act, and
-   confirm the receipt now OVER-CLAIMS: its stated standing flips to Grade A,
-   so the honesty assertions above no longer hold. This is the exact break the
-   declaration line names.
+   THE STRUCTURAL SWEEP OVER THE SOURCE — because an identical copy agrees at
+   zero cost and passes every rendered-value assertion above (REC-38 measured
+   that on this act's LABEL; REC-43 measured it again on this very SENTENCE).
+   The rendered assertions prove the member meets the publication; only this
+   proves the surface has stopped AUTHORING it.
+
+   TWO REGIONS, because the act lives in two places: the bar `renderDocument`
+   draws and the act region itself. THE READ IS GUARDED — a region that could not
+   be found, that came back short, or that lost its anchors is a COMPLAINT and
+   not a silent pass, which is the trap UI-30 named: an extraction yielding ""
+   would make every "does not contain" trivially true.
    ============================================================ */
-const BROKEN = SRC.replace('const ATTEST_YIELDS_GRADE = "B";',
-                           'const ATTEST_YIELDS_GRADE = "A"; /* NEGATIVE CONTROL: over-claims Grade A */');
-ok("the negative-control mutation actually changed the source", BROKEN !== SRC);
+const RETIRED_CONST = "ATTEST_" + "YIELDS_" + "GRADE";   // assembled: the file enforcing the absence is not an instance of it
+/* The runs to look for are taken FROM THE PUBLICATION, split by the same shape
+   the surface splits on. Nothing here is typed. */
+const PUBLISHED_RUNS = FENCE.split(/(?=\bWhat\b[^:.]{0,60}:)/)
+  .map(s=>s.trim()).filter(s=>s.length >= 40).concat([FENCE]);
+function fenceSourceSweep(src){
+  const c = [];
+  const flat = s => s.replace(/\s+/g," ");
+  const region = (name, from, to, anchors) => {
+    const i = src.indexOf(from); const j = i < 0 ? -1 : src.indexOf(to, i + from.length);
+    if(i < 0 || j < 0){ c.push(`INSTRUMENT: the ${name} region could not be read from app.html`); return null; }
+    const text = flat(src.slice(i, j));
+    if(text.length < 500) c.push(`INSTRUMENT: the ${name} region read only ${text.length} characters`);
+    for(const a of anchors) if(!text.includes(a)) c.push(`INSTRUMENT: the ${name} region lost its anchor \`${a}\``);
+    return text;
+  };
+  const regions = [
+    ["document page's attest bar", region("document page's attest bar",
+      "--- attestation, the fourth ACT", "--- UI-20: THE PLANE-PUBLISHED ACT STRIP",
+      ["attestBar =", "openAttestDialog("])],
+    ["attest act", region("attest act",
+      "function canAttest()", "U8: THE ADD SURFACE",
+      ["attestFenceHtml", "attestReceipt", "attestStandingClaim"])],
+  ];
+  for(const [name, text] of regions){
+    if(!text) continue;
+    for(const g of (text.match(/\bGrade\s+[A-Z]\b/g) || []))
+      c.push(`the ${name} region SPELLS A GRADE LETTER ("${g}") — the letters belong to the enforced rule`);
+    for(const run of PUBLISHED_RUNS)
+      if(text.includes(run))
+        c.push(`the ${name} region holds a VERBATIM COPY of the publication ("${run.slice(0,44)}…")`);
+  }
+  if(src.includes(RETIRED_CONST)) c.push(`the retired local grade constant \`${RETIRED_CONST}\` is back in app.html`);
+  return c;
+}
+const sweepNow = fenceSourceSweep(SRC);
+ok("SOURCE: the attest regions hold no copy of the publication, spell no grade letter, and keep no local grade constant"
+   + (sweepNow.length ? " — " + sweepNow.join(" · ") : ""),
+   sweepNow.length === 0);
+
+/* ============================================================
+   NEGATIVE CONTROLS — RUN, not inferred, both arms mechanical.
+
+   ARM (a) THE COPY. Give `attestFenceHtml` a hand-written copy of the fence and
+   put the local grade constant back. The point of the arm is what STAYS GREEN.
+   ARM (b) THE RETARGET of the old control: the surface CLAIMS THE UNREACHABLE
+   GRADE. The letter comes from `UNREACHABLE_CAPTURE_GRADE`, so if the enforced
+   rule moves, this arm keeps testing the right thing instead of a stale letter.
+   ============================================================ */
+const COPY_SRC = SRC.replace("  const fence = attestFence();",
+  "  const fence = " + JSON.stringify(ATTEST_FENCE) + ";   /* NEGATIVE CONTROL (a): a hand-written copy */\n"
+  + "  const " + RETIRED_CONST + " = \"" + EARNED_CAPTURE_CEILING + "\";"
+  + "   // Grade " + EARNED_CAPTURE_CEILING + " toward evidentiary weight, never Grade " + UNREACHABLE_CAPTURE_GRADE);
+ok("NEG-CONTROL (a): the copy mutation actually changed the source", COPY_SRC !== SRC);
+const copyComplaints = fenceSourceSweep(COPY_SRC);
+ok("NEG-CONTROL (a): the structural sweep FAILS and NAMES the copy, the letter and the constant — "
+   + copyComplaints.join(" · "),
+   copyComplaints.length >= 3
+   && copyComplaints.some(x=>/VERBATIM COPY/.test(x))
+   && copyComplaints.some(x=>/SPELLS A GRADE LETTER/.test(x))
+   && copyComplaints.some(x=>x.includes(RETIRED_CONST))
+   && !copyComplaints.some(x=>/^INSTRUMENT/.test(x)));
+/* AND THE FINDING: the copy renders IDENTICALLY. Every rendered-value assertion
+   is green against it, which is why the pin above is structural and must never
+   be softened into a rendered-value check. (Run ON DISK the arm shows one more
+   thing this in-VM version cannot: with the copy in hand the surface renders a
+   fence the record never published, because the no-fence gate reads the
+   publication while the block reads the copy. See the header.) */
+const ctxCopy = await boot(COPY_SRC, makePlane("ok"));
+ctxCopy.__open("INFO-2026-0007", "sewer", GOOD_SHA, "");
+const dlgCopy = ctxCopy.__els.get("#dlg")._html;
+ok("NEG-CONTROL (a) CONTRAST: the copy is INDISTINGUISHABLE on screen — same fence, no grade claim, zero cost",
+   strip(dlgCopy).includes(FENCE) && gradeClaims(dlgCopy).length === 0);
+
+const BROKEN = SRC.replace(/line:`An independent timestamp authority[^`]*`/,
+  "line:`The capture is now Grade " + UNREACHABLE_CAPTURE_GRADE + ".`   /* NEGATIVE CONTROL (b) */");
+ok("NEG-CONTROL (b): the retargeted mutation actually changed the source", BROKEN !== SRC);
 const planeNC = makePlane("ok"); const ctxNC = await boot(BROKEN, planeNC);
 ctxNC.__open("INFO-2026-0007", "sewer", GOOD_SHA, "");
 await ctxNC.__do();
 const rcNC = ctxNC.__els.get("#dlg")._html;
-ok("NEG-CONTROL: with the grade flipped, the receipt CLAIMS Grade A (data-standing=A)", /data-standing="A"/.test(rcNC));
-ok("NEG-CONTROL: and it NO LONGER shows the honest B standing — the honesty assertion would fail",
-   !/data-standing="B"/.test(rcNC));
-/* control-of-the-control: the intact surface never claimed Grade A (proven above) */
-ok("NEG-CONTROL contrast: the intact surface claimed Grade B, never A", /data-standing="B"/.test(rc) && !/data-standing="A"/.test(rc));
+ok("NEG-CONTROL (b): the receipt now CLAIMS the grade the enforced rule says co-attestation cannot reach — "
+   + gradeClaims(rcNC).join(", "),
+   gradeClaims(rcNC).includes("Grade " + UNREACHABLE_CAPTURE_GRADE));
+ok("NEG-CONTROL (b): and it claims it BESIDE the honest publication, which the sweep sees through",
+   strip(rcNC).includes(FENCE));
+/* control-of-the-control: the intact receipt carried the same publication and
+   claimed nothing beside it (proven above, restated against the same instrument). */
+ok("NEG-CONTROL contrast: the intact receipt claimed no grade at all", gradeClaims(rc).length === 0);
 
 if(fails.length){ console.error(`act-attest: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`act-attest: ${n} assertions, all green — choose · what the act NEEDS (no refusal composed) · absent-not-greyed commit · the PUBLISHED label from the plane's own export · NO author (op takes none) · receipt · weight-ladder(attested) · HONESTY (B toward evidentiary, never Grade A — DEC-39 pending); negative controls RUN (Grade-A claim · the hand-spelled label restored)`);
+console.log(`act-attest: ${n} assertions, all green — choose · what the act NEEDS (no refusal composed) · absent-not-greyed commit · the PUBLISHED label AND the PUBLISHED FENCE from the plane's own export, whole and reassembled · no act offered without its fence · NO author (op takes none) · receipt · weight-ladder(attested) · HONESTY swept on the REMAINDER after the publication is subtracted (DEC-39 landed); negative controls RUN (the copy, indistinguishable on screen and named by the structural sweep · the retargeted claim of the unreachable grade)`);
