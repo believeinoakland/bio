@@ -838,6 +838,14 @@ depends-on: none
 accepts-when: `cd bio-plane && npm run test:battery` green with one exported predicate answering at every asking site (change what counts as a machine in ONE place and every site moves — the drift assertion), `asserted_by: token:member` refused at the hand-written door as it already is through the act, and every existing machine refusal unchanged; `npm run test:coverage` --strict exit 0; negative control — restore a local word list at one site and the drift assertion fails naming it.
 added: 2026-08-04 · CONDUCT (REC-45's measurement)
 
+### REC-47 · queued
+milestone: M10
+scope: **The AUTHORED bias acknowledgement on the publish block (DEC-46 (a)) — a CORRECTION to REC-14.** A published case carries the bias it was produced under as a fact a reader weighs, and today the block carries the completeness statement and the subject position but not this. Add it beside them: **fresh per edition, never prefilled**, authored by the member, stamped into the ratified bytes. Its negative control is the one the other two already have — **a carried-forward acknowledgement must FAIL** (C-21.1's byte-check extended to the new field, same gate, same reasoning: a gate that only checks presence IS a checkbox). Correct REC-14's landed pins with dated reasons, never exempt. **Vocabulary, DEC-46 (d):** say **HUNCH DEBT** where the rule means hunches and reserve *bias debt* for the general class — this item's own wording included; the documentation pass across the design docs rides with it.
+behind-interface: I5
+depends-on: none
+accepts-when: `cd bio-plane && npm run test:battery` green with a published edition carrying an authored bias acknowledgement, a republish refused when the acknowledgement is byte-identical to the previous edition's (C-21.1's arm), and a missing acknowledgement refused by name; `npm run test:hygiene` green; `npm run test:coverage` --strict exit 0; negative control — pass a carried-forward acknowledgement and the gate is a checkbox, exactly as the completeness arm's control shows.
+added: 2026-08-04 · CONDUCT (DEC-46 (a) — corrects REC-14)
+
 ### CPDF-1 · done
 milestone: M2
 scope: D-91 phase-2 measurement — unpdf bundle size and node-proxy extraction cost.

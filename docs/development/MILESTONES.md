@@ -264,6 +264,11 @@ not exist) · CONSTRUCTS Steps 3, 4, 5, 5a · office-document metadata as a firs
 ENTITY-AXIS INPUT (DEC-5: creator/lastModifiedBy/tracked-change attribution are
 "the actions of people and departments" — readings resolved ACROSS documents, not a
 per-document curiosity; the COFF items extract it, this rung consumes it).
+> **REGRADE IS A MEMBER CAPABILITY (DEC-46 (c), 2026-08-04)** — named here and on M10's
+> bias work rather than buried as an import detail: a member re-runs a grade against a
+> declared bias and reads the structured diff with its causal chain, whether or not
+> anything is being imported. The import path (M6) is one CALLER of it, not its home.
+
 **Areas:** FRAMEWORK, RECORD (schema and the ageing mechanism).
 **Depends on:** M3.
 
@@ -310,6 +315,14 @@ plan for R2 growth, the free tier's storage ceiling, retention, or a second copy
 while one budget book measured 39.6MB · D-9 (`registerAudit` cannot tell *captured*
 from *unbacked* because it never looks in R2) · D-45 (an unbacked register entry is
 refused at ratify, not at promote — default is to leave it).
+> **AMENDED 2026-08-04 by DEC-46 (b), and it changes the first step:** import lands in a
+> **NEW PROJECT PER DISTINCT SOURCE BIAS**, states that it is doing so and why, and **may
+> NOT merge an imported lens into an existing project** — a lens is the frame a finding
+> was produced under, and merging two frames silently makes a third nobody declared.
+> DEC-45's per-finding destination association becomes the **SECOND** step, where regrade
+> fires against the destination's effective bias. Everything else in DEC-45's path below
+> is unchanged.
+
 > **THE IMPORT HALF, scoped 2026-08-04 by DEC-45 (design-ahead; import is UNBUILT, so
 > this is scope on this rung, not a correction to anything).** A published case imported
 > elsewhere is a FINDING and gets no inherited standing (DEC-40's determination 4). The
