@@ -2385,6 +2385,18 @@ decided: 2026-08-04 · Bob
 reasoning recorded in: this entry (the dual-composition argument, the operational test, the
   citability test for identity, the anti-gaming keystone and the elicitation design) and
   `BIO_Case_Making_v0_1.md`'s DEC-32 thread, which CONDUCT updates on enactment.
+RESEARCH FINDING AGAINST THIS ENTRY, 2026-08-04 (same day, from the search-completeness
+  research): **the OR-max rule is sound only if branches are INDEPENDENT, and this entry
+  makes independence an authored judgment with nothing testing it — which is the exact
+  failure mode that defeats every professional verification methodology surveyed.** The NYT
+  Iraq post-mortem (defectors and the officials confirming them were the same pipeline),
+  Buttry's fourteen honest eyewitnesses who were all wrong the same way, and the Berkeley
+  Protocol naming CIRCULAR REPORTING as a hazard while supplying no test for it, are three
+  independent demonstrations. **The arithmetic is not wrong; the missing piece is the
+  independence check**, and BIO can build what no newsroom could: provenance is
+  content-addressed, so the system can DERIVE that two branches' legs share an upstream
+  origin and surface it — derived informs, authored binds. Recorded as D-195; it changes
+  REC-12's scope, not this ruling.
 for CONDUCT to enact: **REC-11 and REC-12 are the load-bearing pair.** REC-12's strength
   derivation models the AND/OR relationship from the start — a flat implicit-AND basis is
   now known WRONG — computing MIN over AND legs and MAX over OR branches (min within a
