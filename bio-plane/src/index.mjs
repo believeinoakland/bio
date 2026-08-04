@@ -548,6 +548,18 @@ const OPS = {
      op=proposals): a member session reads this document's place in the record's processes. Takes the
      same optional `now` as-of clock op=proposals takes. */
   captureprogressions:{ classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-20 / DEC-16: the member's ONE queue. OBLIGATIONs (from `tasks`) and
+     FINDINGs (from the proposals derivation) in ONE contract, each carrying its
+     `class`, its `options[]` (REC-19's derivation, never a surface's copy) and
+     its `case` — EVERY ancestor over a bounded walk of the basis and citation
+     edges. It REPORTS and never mutates. Member class and above and never
+     public: a queue names what the group is working on and who owes what, which
+     is the working corpus. `member` AND `viewer` are stamped server-side below
+     — whose queue this is, and whose view its case names are compiled for, are
+     server decisions or they are not decisions at all (D-15 §7.9: the queue is
+     the one surface every member opens by habit, so it is the one that must not
+     leak a project identity). */
+  queue:              { classes: ["admin", "member", "probe"],      mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -869,7 +881,33 @@ const NEEDS = {
      addressed to. */
   taskforward:      null,
   taskresolve:      null,
+  /* REC-20: reading your own queue carries NO working capability, for the same
+     reason taskforward/taskresolve carry none — the question is not "may this
+     member contribute" but "what has this record put in front of THIS member",
+     and a view-only member holds it exactly as a contributor does. It is
+     non-mutating, so SESSION_OPS does not gate it either. The entry exists
+     rather than being absent so REC-19's totality guard can see it: an op in
+     NEEDS is either a published act or a NAMED non-act, and op=queue is named
+     in NON_ACTS with its reason. */
+  queue:            null,
 };
+
+/* REC-19's act decoration, hoisted to module scope by REC-20 so op=affordances
+   and op=queue share ONE function rather than one function and a copy of it.
+   The store derives WHICH acts exist (deriveActs over its own facts); this adds
+   the metadata that lives only here — the capability NEEDS gates the call with,
+   how the op is reached, and the DECLARED ladder rung (null wherever no
+   document assigns one; FW-14 assigns the rest). A queue item's options[] and
+   an op=affordances answer for the same subject are therefore identical by
+   construction and not by agreement, which is the property the item's suite
+   asserts byte-for-byte. */
+const decorateAct = (a) => ({
+  id: a.id, label: a.label, weight: a.weight,
+  needs: NEEDS[a.id] ?? null,
+  mode: SESSION_OPS.member.has(a.id) ? "session"
+      : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
+  rung: RUNGS[a.id] ?? null,
+});
 
 const KNOCK = {
 
@@ -1232,13 +1270,9 @@ export default {
        bundle returns an empty act list because nothing operates one until
        REC-24, and an empty list is the honest answer. */
     if (op === "affordances") {
-      const decorate = (a) => ({
-        id: a.id, label: a.label, weight: a.weight,
-        needs: NEEDS[a.id] ?? null,
-        mode: SESSION_OPS.member.has(a.id) ? "session"
-            : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
-        rung: RUNGS[a.id] ?? null,
-      });
+      /* REC-20 hoisted this to module scope (decorateAct) so op=queue's
+         options[] and this answer come from the SAME function. */
+      const decorate = decorateAct;
       const target = url.searchParams.get("target");
       if (!target) {
         /* No target: the whole catalogue and the vocabularies, the shape a
@@ -1266,6 +1300,47 @@ export default {
         target: facts.target, object_type: facts.object_type,
         current_state: facts.current_state,
         acts: deriveActs(facts).map(decorate),
+        vocabularies: VOCABULARIES,
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+
+    /* op=queue (REC-20, ruled by DEC-16). The member's ONE feed: OBLIGATIONs
+       from `tasks` and FINDINGs from the proposals derivation, in one contract,
+       each with the case set it belongs to and the acts available on its
+       subject.
+
+       Composed the way op=affordances is, and for the same reason: the store
+       derives the ITEMS and the homes (it holds the edges and the D-15
+       predicate), and the act metadata is added HERE, where NEEDS, SESSION_OPS
+       and RUNGS live — through decorateAct, the SAME function op=affordances
+       uses, so the two answers cannot drift.
+
+       TWO server-side stamps, both set AFTER nothing of the caller's is read,
+       because either one taken from the request would defeat the other:
+         - `member` decides WHOSE obligations these are. A caller who could name
+           the member could read anyone's queue.
+         - `viewer` decides which case names the answer may contain. D-15 has
+           exactly one compilation point and this is the only place the identity
+           enters it; the store fails closed, so a missing stamp yields an
+           ungrouped feed rather than an unfiltered one.
+       A machine credential has no member behind it, so it stamps `member` empty
+       and receives the whole live set — the operator view the token exists for,
+       and the same carve-out D-15 makes for a machine viewer. */
+    if (op === "queue") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const inner = new URL("http://do/queue");
+      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+      inner.searchParams.set("member", viaSession ? sessMember : "");
+      for (const k of ["now", "limit"]) {
+        const v = url.searchParams.get(k);
+        if (v !== null) inner.searchParams.set(k, v);
+      }
+      const r = (await (await st.fetch(inner.toString())).json()).result;
+      if (!r || r.ok !== true)
+        return json({ ok: false, ...(r || { reason: "NO_QUEUE" }), store: storeName, tokenClass: cls }, 400);
+      return json({ ok: true, result: {
+        ...r,
+        items: r.items.map((i) => ({ ...i, options: (i.options || []).map(decorateAct) })),
         vocabularies: VOCABULARIES,
       }, store: storeName, tokenClass: cls }, 200);
     }

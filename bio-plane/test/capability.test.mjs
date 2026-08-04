@@ -327,11 +327,31 @@ const listOf = (name) => {
 const sessNames = new Set([...(sessBlock ?? "").matchAll(/"([a-z]+)"/g)].map(m => m[1]));
 for (const sp of [...(sessBlock ?? "").matchAll(/\.\.\.([A-Z_]+)/g)].map(m => m[1]))
   for (const o of listOf(sp)) sessNames.add(o);
+/* Corrected 2026-08-03 (REC-20): `reachable` was sessNames ∩ mutating, which
+   was an accurate proxy for "a session can reach this op" only while every
+   capability-table entry was mutating. SESSION_OPS gates MUTATING ops alone
+   (index.mjs: `if (spec.mutating && !SESSION_OPS[kind].has(op))`), so a
+   NON-mutating op is reachable by every session of a permitted class and
+   appears in SESSION_OPS nowhere. op=queue is the first read to declare its
+   capability in the table — `null`, stated rather than omitted, so REC-19's
+   totality guard can see the op is a named NON_ACT — and the old computation
+   would have reported it as a table entry no session can reach, which is the
+   opposite of true. The RULE is unchanged: the capability table may name
+   nothing unreachable. Only the measurement of "reachable" is repaired, and it
+   is repaired for the SECOND assertion only: the first still requires every
+   session-reachable MUTATING op to be named, which is the obligation — a read
+   may be named or omitted, a mutating act may not be omitted. */
 const reachable = [...sessNames].filter(o => mutating.has(o));
+/* Reads a session can reach: non-mutating and permitted to a member or admin
+   class. SESSION_OPS never mentions them because it gates nothing they do. */
+const readable = new Set([...(opsBlock ?? "").matchAll(/^\s{2}([a-z]+):\s*\{([^}]*)\}/gm)]
+  .filter(m => !/mutating:\s*true/.test(m[2]) && /"(admin|member)"/.test(m[2]))
+  .map(m => m[1]));
+const anyReachable = new Set([...reachable, ...readable]);
 const named = new Set([...(needsBlock ?? "").matchAll(/^\s{2}([a-z]+):/gm)].map(m => m[1]));
 t("there are session-reachable mutating ops to check", reachable.length > 8, true);
 t("every one of them is named in the capability table", reachable.filter(o => !named.has(o)), []);
-t("and the table names nothing a session cannot reach", [...named].filter(o => !reachable.includes(o)), []);
+t("and the table names nothing a session cannot reach", [...named].filter(o => !anyReachable.has(o)), []);
 
 await mf.dispose();
 console.log(`\ncapability: ${pass} pass, ${fail} fail`);

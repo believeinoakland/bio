@@ -112,8 +112,14 @@ console.log("\n--- structural: vocabularies and rungs are the enforcing tables, 
    (a second array that could drift) no longer exists by design, so the
    corrected assertion is structural: the import is present and no literal
    copy survives anywhere in the write path for it to drift against. */
+/* Corrected 2026-08-03 (REC-20): the regex pinned the WHOLE import clause
+   (`{ DISPOSITIONS }`), so it failed the moment store.mjs took a SECOND named
+   binding from the same module — REC-20 imports deriveActs from here so
+   op=queue's options[] are this file's derivation and not a copy of it. The
+   old form measured the clause; the rule is about the BINDING and the absence
+   of a literal, so it now matches DISPOSITIONS wherever it sits in the list. */
 t("dispose() enforces the PUBLISHED set: store.mjs imports DISPOSITIONS from affordances.mjs and keeps no literal copy",
-  /import \{ DISPOSITIONS \} from "\.\/affordances\.mjs"/.test(storeSrc)
+  /import \{[^}]*\bDISPOSITIONS\b[^}]*\} from "\.\/affordances\.mjs"/.test(storeSrc)
     && !/const DISPOSITIONS = \[/.test(storeSrc), true);
 t("the published action_kind vocabulary IS the array C-2.10 enforces (one import, no copy)",
   VOCABULARIES.action_kind, ACTION_KINDS);

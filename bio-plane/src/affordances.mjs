@@ -219,6 +219,13 @@ export const NON_ACTS = {
      (NOT_YOURS), published with the task itself via op=tasks. */
   taskforward: "task act, assignee-fenced; travels with the task via op=tasks",
   taskresolve: "task act, assignee-fenced; travels with the task via op=tasks",
+  /* REC-20. A READ, and one whose subject is a MEMBER rather than an object:
+     op=queue answers "what has this record put in front of me", keyed by the
+     member the control plane stamps. It is not an act on a bundle and no
+     surface renders a "queue" button beside one — it is the surface those
+     buttons live ON, and the acts it offers per item are THIS file's own
+     derivation, carried into the feed rather than restated there. */
+  queue: "read: the member's own feed, keyed by member — not an act on an object; the acts it offers per item ARE this derivation",
 };
 
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));

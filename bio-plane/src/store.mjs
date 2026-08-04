@@ -12,7 +12,9 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             spelling first, normalized type as the fallback. op=conclude asks a
             VOCABULARY question ("which state machine governs this document"),
             so it goes through the map like every other consulting site rather
-            than reaching into STATES by a raw key. */
+            than reaching into STATES by a raw key. REC-20: the MAP RULE applies
+            to op=queue's ancestor walk too — a case's type and state read
+            through the same machinery, so a legacy spelling groups identically. */
          normalizeType, LEGACY_TYPE_ALIASES, STATES, OBJECT_TYPES, vocabFor,
          /* REC-11: the basis leg grammar is the catalog's ONE function, run
             here at the write (the checkGatheringGrammar precedent) and by the
@@ -23,7 +25,12 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
    suite pinning the two identical; REC-11's folded chore flips the direction. */
-import { DISPOSITIONS } from "./affordances.mjs";
+/* REC-20: op=queue's `options[]` come from REC-19's OWN derivation and from
+   nowhere else — the store calls deriveActs over its own affordanceFacts, so a
+   queue item and an op=affordances answer for the same subject and the same
+   viewer cannot disagree. The act METADATA (needs/mode/rung) still composes at
+   the control plane, where NEEDS, SESSION_OPS and RUNGS live. */
+import { DISPOSITIONS, deriveActs } from "./affordances.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
@@ -4785,6 +4792,378 @@ export class Store extends DurableObject {
     return { ok: true, capture_sha: captureSha, count: instances.length, instances };
   }
 
+  /* ========================= REC-20 · op=queue ==============================
+   *
+   * ONE read, ONE contract, over the two producers that already exist: an
+   * OBLIGATION is a row in `tasks` (D-98's routed work) and a FINDING is an
+   * aggregated proposal from `proposalsFeed` (D-79's derived question). Before
+   * this op a member had to open two surfaces and reconcile them by eye, and
+   * neither could say WHICH CASE a thing belonged to. D-140 and SB-CORE
+   * GAP-Q1/GAP-Q3; the queue is the one surface every member opens by habit.
+   *
+   * THE LOAD-BEARING SHAPE, and it is DEC-16 (Bob, 2026-08-02, answering his
+   * own DEC-10): **the unit of state is the EVENT, not the (member, case)
+   * entry — one state, N homes.** `case` is populated with EVERY ANCESTOR over
+   * a bounded walk of the basis/citation edges, so a fact about a document
+   * reaches everyone standing on it; and because the state lives on the event,
+   * an event appearing under several cases does NOT create several entries, so
+   * DEC-10's "one standing entry per (member, case)" survives intact and one
+   * resolution clears the item everywhere.
+   *
+   * NO NEW TABLE, AND THAT IS A FINDING RATHER THAN A SHORTCUT. DEC-16's shape
+   * asks for state that is keyed by the event. Both producers ALREADY key it
+   * that way: `tasks.status` lives on the task row (the event), and
+   * `proposal_dispositions` is keyed by (progression_key, stage_key) — the
+   * proposal's own identity — never by who read it or under which case. So the
+   * carrier exists, the homes are DERIVED on read from the edges, and nothing
+   * is stored that could go stale. (REC-21's `queue_state` is the PERSONAL
+   * half — mute and snooze — and is deliberately a different table with a
+   * different doctrine: muting is personal, resolving is a record act.)
+   *
+   * THE VIEWER POSTURE. This is a read that names bundle ids, so it takes the
+   * D-15 gate through query.mjs's ONE compilation point exactly as REC-25
+   * stamped the other reads. An ancestor the caller may not see is NOT named,
+   * and its absence is STATED rather than silently shortening the set — the
+   * same honesty DEC-16 requires of an exhausted walk, for the same reason: a
+   * quietly truncated home set is indistinguishable from nobody caring.
+   *
+   * CONDITION IS DEFERRED, DECLARED, AND NOT STUBBED (HOLE-1). The class has no
+   * carrier and no producer in this plane; inventing one here would build the
+   * second half of a bridge. It is named in QUEUE_CLASSES_DEFERRED so the
+   * deferral is structural and a later item cannot forget it existed.
+   * ======================================================================== */
+
+  /** The classes this producer EMITS. `class` is NOT NULL on the producer:
+   *  queueFeed refuses to answer rather than hand a surface a classless item,
+   *  which is the shape a `class TEXT NOT NULL` column would enforce if the
+   *  feed were a table. It is not a table — it is derived on read — so the
+   *  constraint is enforced here, at the one place items are minted. */
+  static QUEUE_CLASSES = ["OBLIGATION", "FINDING"];
+  /** Declared, not stubbed. A class with no producer is named with the reason
+   *  it is absent, so "not built yet" is distinguishable from "forgotten". */
+  static QUEUE_CLASSES_DEFERRED = {
+    CONDITION: "HOLE-1: the CONDITION class has no carrier and no producer in this plane "
+             + "(NOTIFICATIONS.md scopes mute and acknowledge to it, and REC-21 owns that half). "
+             + "Emitting a stub would build the second half of a bridge, so it is declared absent.",
+  };
+  /** R3's depth bound, applied to the ancestor walk. The basis graph is a DAG
+   *  enforced at write (REC-11), so a walk terminates by construction — but
+   *  "terminates" is not "terminates inside a Durable Object's CPU budget",
+   *  and R3 requires derivation to carry a bound whose EXHAUSTION is reported
+   *  as `undetermined` rather than as a failure or as a silent truncation.
+   *  Six: deep enough that a real chain of questions resting on questions is
+   *  covered whole (the corpus's own worked example is three), shallow enough
+   *  that a pathological chain reports undetermined instead of burning the
+   *  read. REC-12's read-time derivation takes THIS constant when it lands, so
+   *  the record has one bound and not two. */
+  static QUEUE_ANCESTOR_DEPTH = 6;
+  /** Which object types can BE a case — the grouping key is a bundle id and it
+   *  is an inquiry or a project, never a document. Consulted through
+   *  normalizeType (REC-10's MAP RULE) so a legacy `focus`/`problem` spelling
+   *  groups identically to a canonical `inquiry` one. */
+  static QUEUE_CASE_TYPES = ["inquiry", "project"];
+  /** How many subject bundles one FINDING derives its options from. An
+   *  aggregated proposal spans N instances and therefore N documents; deriving
+   *  acts over all of them would make one queue read O(corpus). */
+  static QUEUE_OPTION_SUBJECTS_MAX = 8;
+
+  /** One step UP the graph from a node: the edges an ancestor is reached by.
+   *
+   *  TWO edge kinds, because a case reaches a document two ways. `inquiry_basis`
+   *  (REC-11) carries "this inquiry RESTS ON that target", indexed on target_id
+   *  — the reverse index restingOn() already reads. `refs` with rel `cites`
+   *  carries "this bundle CITES that target", which is how a project holds the
+   *  documents and questions it is working on. Both are read at their target
+   *  index, so a step is two indexed lookups and not a scan. */
+  #queueAncestorEdges(nodeId) {
+    const up = new Set();
+    for (const r of this.#rows(
+      `SELECT DISTINCT bundle_id FROM inquiry_basis WHERE target_id=?`, nodeId))
+      up.add(r.bundle_id);
+    for (const r of this.#rows(
+      `SELECT DISTINCT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, nodeId))
+      up.add(r.bundle_id);
+    return [...up].sort();
+  }
+
+  /** DEC-16's EVERY-ANCESTOR walk, bounded, viewer-gated, and honest about both
+   *  ways it can come back incomplete.
+   *
+   *  Returns the SET of homes for one event, given the subject(s) the event is
+   *  about. Breadth-first so `depth` means what it says; a `seen` set makes the
+   *  walk cost linear in the edges actually reachable and makes a diamond
+   *  (two questions resting on one document, both under one project) cost one
+   *  visit rather than two.
+   *
+   *  WHAT IS AND IS NOT A HOME. The walk passes THROUGH every node it reaches
+   *  but only ADMITS the case types (QUEUE_CASE_TYPES, via normalizeType) as
+   *  homes: an information bundle that happens to cite another document is a
+   *  waypoint, not a group header. Passing through it is deliberate — a
+   *  question reachable only through a document is still a question that rests
+   *  on the subject.
+   *
+   *  TWO WAYS TO COME BACK UNDETERMINED, both STATED and neither silent:
+   *    - `depth_bound`: the frontier was still non-empty at the bound (R3).
+   *    - `out_of_view`: an ancestor exists that this viewer may not see (D-15
+   *      §7.9 filters PROJECT bundles). The id, the title, the state and even
+   *      the COUNT are withheld — the count is the leak — but the FACT that the
+   *      set is incomplete is reported, because a silently shorter set is
+   *      exactly the "indistinguishable from nobody caring" failure DEC-16's
+   *      truncation rule is about. The walk still passes THROUGH an invisible
+   *      node: reaching a VISIBLE ancestor by way of an invisible one discloses
+   *      nothing about the invisible one.
+   *
+   *  An EMPTY set with no reasons is UNGROUPED, and that is a real answer: an
+   *  item nothing rests on sits ungrouped and is never given an invented home. */
+  #queueAncestors(subjectIds, viewer) {
+    const bound = Store.QUEUE_ANCESTOR_DEPTH;
+    /* D-15 through the ONE compilation point. Fail closed: an absent or
+       unrecognised viewer compiles to the deny predicate, so a caller that
+       reached here without an identity groups under nothing rather than
+       under everything. */
+    const gate = viewerPredicate(viewer);
+    const seen = new Set((subjectIds || []).filter((x) => typeof x === "string" && x));
+    const found = new Map();
+    const reasons = new Set();
+    let frontier = [...seen];
+    let depth = 0;
+    while (frontier.length > 0 && depth < bound) {
+      depth += 1;
+      const next = [];
+      for (const node of frontier) {
+        for (const up of this.#queueAncestorEdges(node)) {
+          if (seen.has(up)) continue;
+          seen.add(up);
+          next.push(up);
+          const row = this.#one(
+            `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
+             WHERE b.bundle_id=? AND (${gate.sql})`, up, ...gate.args);
+          if (!row) {
+            /* Absent and invisible are indistinguishable TO THE CALLER (REC-25),
+               but they are not the same fact and this producer must not report
+               the wrong one: an edge whose target was purged is not an ancestor
+               being withheld. The existence probe is internal — the store is a
+               legitimate whole-corpus reader — and its answer never leaves this
+               method except as the single word `out_of_view`. */
+            if (this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, up))
+              reasons.add("out_of_view");
+            continue;
+          }
+          /* MAP RULE (REC-10, and REC-13's seam): every type and state
+             consultation goes through the catalog's own vocabulary machinery,
+             never a raw key — so a legacy `focus`/`problem` document groups
+             exactly as a canonical `inquiry` one does. */
+          const ty = normalizeType(row.object_type);
+          if (!Store.QUEUE_CASE_TYPES.includes(ty)) continue;   // a waypoint, not a home
+          const spec = vocabFor(STATES, row.object_type);
+          const edges = spec && spec.edges ? spec.edges : null;
+          /* Is this case CLOSED? Three-valued on purpose: a state the machine
+             does not name is UNDETERMINED, not terminal. DEC-16's own reasoning
+             turns on whether an ancestor has been concluded, so a surface must
+             be able to tell "no way out" from "we do not know". */
+          const terminal = edges && Object.prototype.hasOwnProperty.call(edges, row.current_state)
+            ? edges[row.current_state].length === 0 : null;
+          found.set(row.bundle_id, {
+            id: row.bundle_id, type: ty, title: row.title ?? null,
+            state: row.current_state ?? null, terminal, depth });
+        }
+      }
+      frontier = next;
+    }
+    /* EXHAUSTION IS REPORTED EXACTLY, not eagerly. Stopping with a non-empty
+       frontier is not by itself a truncation: the last layer may simply have
+       nothing above it, and reporting `undetermined` there would claim we do
+       not know something we do. So the bound reports itself only when a node we
+       never expanded genuinely HAS an unvisited ancestor — one extra indexed
+       lookup per remaining node, and the difference between an honest
+       undetermined and a reflexive one. */
+    if (frontier.length > 0
+        && frontier.some((n) => this.#queueAncestorEdges(n).some((u) => !seen.has(u))))
+      reasons.add("depth_bound");
+    const ancestors = [...found.values()]
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    const state = reasons.size > 0 ? "undetermined" : "determined";
+    return { state, ungrouped: state === "determined" && ancestors.length === 0,
+             reasons: [...reasons].sort(), depth_bound: bound, ancestors };
+  }
+
+  /** DEC-16's event-state gate, asked of the EVENT and of nothing else.
+   *
+   *  A task's status IS the event's state: it lives on the task row, which is
+   *  the event, and not on any (member, case) pairing. That is why one
+   *  resolution clears the item under every ancestor without a second
+   *  mechanism, and it is what the item's negative control breaks. */
+  #queueEventLive(task) {
+    return task && task.status !== "resolved";
+  }
+
+  /** The options a member may act on, DERIVED — never a copy, never invented.
+   *
+   *  REC-19 owns "what may be DONE to an object": ACTS + deriveActs over the
+   *  store's own affordanceFacts, which is itself viewer-gated. This method
+   *  calls THAT derivation and projects the three fields that survive the DO
+   *  boundary; the control plane decorates them with `needs`, `mode` and
+   *  `rung` from NEEDS/SESSION_OPS/RUNGS through the SAME function op=affordances
+   *  uses, so a queue item's options and an affordances answer for the same
+   *  subject and the same viewer are identical by construction rather than by
+   *  agreement. A subject the viewer cannot see contributes nothing, and an
+   *  empty list is the honest answer (REC-19's own posture for an `action`
+   *  bundle: nothing operates it, so nothing is published).
+   *
+   *  Union order is ACTS order, preserved: a single-subject item's options are
+   *  byte-for-byte op=affordances' `acts`. */
+  #queueOptions(subjectIds, viewer) {
+    const byId = new Map();
+    for (const id of (subjectIds || []).slice(0, Store.QUEUE_OPTION_SUBJECTS_MAX)) {
+      const facts = this.affordanceFacts({ target: id, viewer });
+      if (!facts || facts.ok !== true) continue;
+      for (const a of deriveActs(facts))
+        if (!byId.has(a.id)) byId.set(a.id, { id: a.id, label: a.label, weight: a.weight });
+    }
+    return [...byId.values()];
+  }
+
+  /** op=queue: the member's ONE feed.
+   *
+   *  `member` and `viewer` are BOTH stamped server-side at index.mjs and are
+   *  never taken from the caller — whose queue this is, and whose view its
+   *  case names are compiled for, are server decisions or they are not
+   *  decisions at all.
+   *
+   *  WHOSE OBLIGATIONS. Tasks assigned to the caller, PLUS tasks honestly
+   *  `unassigned`. D-98 intends an unassigned task to stay claimable and
+   *  routable by hand, and DEC-7 keeps it claimable rather than stranded, so
+   *  hiding it from every queue would strand exactly the work routing could
+   *  find nobody for. A machine credential has no member behind it and gets
+   *  the whole live set, which is the operator view the token exists for.
+   *
+   *  `refers_to` POINTS AT THE SUBJECT, NOT AT THE CASE. They are different
+   *  columns and the contract carries both: `subject` is what the item is
+   *  about, `case` is where it is filed. Collapsing them is how a queue
+   *  invents a home. */
+  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200 } = {}) {
+    const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 200)));
+    const now = this.#nowMs(nowMs);
+    const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    const items = [];
+
+    /* ---------------------------------------------------- OBLIGATION · tasks */
+    for (const row of this.#rows(
+      `SELECT * FROM tasks ORDER BY created DESC, id LIMIT ?`, cap * 2)) {
+      if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
+      const subject = row.refers_to;
+      /* The homes are derived FIRST and the event's state is asked ONCE, for
+         all of them. This ordering is the whole of DEC-16 in two lines: one
+         state, N homes.
+         NEGATIVE CONTROL (REC-20): replace the single event-keyed test below
+         with a per-(member, case) one — keep the item alive under every home
+         except the first, as a queue_state row keyed by (member, case) would —
+         and a resolved event with two ancestors leaves a stale unresolved copy
+         under the second. */
+      const homes = this.#queueAncestors([subject], viewer);
+      if (!this.#queueEventLive(row)) continue;
+      const createdMs = Date.parse(row.created);
+      items.push({
+        id: row.id,
+        class: "OBLIGATION",
+        kind: row.kind,
+        case: homes,
+        subject: { kind: "bundle", id: subject },
+        summary: row.subject_text,
+        detail: row.subject_desc ?? null,
+        basis: { source: "tasks", refers_to: subject, routed_role: row.assignee_role,
+                 status: row.status,
+                 detail: "an obligation is a routed task: a named person must act for the record "
+                       + "to proceed (D-98). refers_to points at the SUBJECT; case is derived." },
+        age: Number.isFinite(createdMs)
+          ? { state: "determined", since: row.created, ms: Math.max(0, now - createdMs) }
+          : { state: "undetermined", reason: "unparseable_created",
+              detail: "the task row carries a created stamp this producer cannot read as an instant" },
+        assignee: row.assignee,
+        assignee_role: row.assignee_role,
+        options: this.#queueOptions([subject], viewer),
+      });
+    }
+
+    /* --------------------------------------- FINDING · the proposals feed
+       proposalsFeed is the ONE derivation (REC-6/7/8) and is read whole rather
+       than re-implemented, so the queue and op=proposals cannot disagree about
+       what is open. It has ALREADY aged out every disposed proposal, and its
+       disposition key is (progression_key, stage_key) — the proposal's own
+       identity, the EVENT — never (member, case). So the FINDING half inherits
+       DEC-16's shape from the producer rather than needing a gate here: one
+       op=proposedispose clears the finding under every case it appears in. */
+    const feed = this.proposalsFeed(nowMs);
+    for (const p of feed.proposals) {
+      const subjects = [];
+      for (const inst of p.instances)
+        for (const r of this.#rows(
+          `SELECT DISTINCT bundle_id FROM progression_instances
+            WHERE progression_key=? AND entity_id=? ORDER BY bundle_id`,
+          p.progression_key, inst.entity_id))
+          if (!subjects.includes(r.bundle_id)) subjects.push(r.bundle_id);
+      items.push({
+        id: `FINDING::${p.key}`,
+        class: "FINDING",
+        /* The ESCALATED kind leads when the stage has also crossed a deadline —
+           one kind, as the contract has one column, with the full set on the
+           basis so nothing is lost. */
+        kind: p.overdue ? "overdue_successor" : "missing_predecessor",
+        case: this.#queueAncestors(subjects, viewer),
+        subject: { kind: "progression_stage", id: null,
+                   progression_key: p.progression_key, stage_key: p.stage_key,
+                   bundles: subjects.slice(0, Store.QUEUE_OPTION_SUBJECTS_MAX) },
+        summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
+        detail: `${p.n} instance${p.n === 1 ? "" : "s"} of this progression reach${p.n === 1 ? "es" : ""} `
+              + `'${p.stage_label}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : ""),
+        basis: { source: "proposalsFeed", progression_key: p.progression_key, stage_key: p.stage_key,
+                 kinds: p.kinds, n: p.n, grade: p.grade, grade_determined: p.grade_determined,
+                 overdue_count: p.overdue_count, surfaced_by: p.surfaced_by,
+                 detail: "a finding is DERIVED (D-79): the record's own question, aggregated one per "
+                       + "(progression, stage), graded the weakest instance and never averaged." },
+        /* A derived finding is recomputed on every read and has no creation
+           instant to age from. Undetermined, and STATED rather than filled in
+           with the read's own clock — which would age every finding to zero. */
+        age: { state: "undetermined", reason: "derived_on_read",
+               detail: "a derived finding is recomputed at read time and has no creation instant; "
+                     + "the temporal signal it does carry is overdue_count on the basis" },
+        assignee: null,
+        assignee_role: null,
+        options: this.#queueOptions(subjects, viewer),
+      });
+    }
+
+    /* `class` NOT NULL on the producer. The feed is derived, not stored, so
+       the constraint a column would carry is enforced here, at the one place
+       an item is minted — and it REFUSES rather than emitting a classless item,
+       because a surface that receives one has no honest way to render it. */
+    for (const it of items)
+      if (!Store.QUEUE_CLASSES.includes(it.class))
+        return { ok: false, reason: "NO_CLASS", id: it.id ?? null,
+                 detail: "every queue item carries a class from " + Store.QUEUE_CLASSES.join(" | ")
+                       + "; this producer refuses to emit one that does not" };
+
+    /* Obligations first — something a named person must do outranks something
+       the record noticed — then stable on id so the feed does not shuffle. */
+    const rank = (c) => Store.QUEUE_CLASSES.indexOf(c);
+    items.sort((a, b) => rank(a.class) - rank(b.class)
+      || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    const out = items.slice(0, cap);
+    return {
+      ok: true, member: me, items: out,
+      item_count: out.length, truncated: items.length > out.length,
+      classes: Store.QUEUE_CLASSES,
+      classes_deferred: Store.QUEUE_CLASSES_DEFERRED,
+      ancestor_depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
+      counts: {
+        obligation: out.filter((i) => i.class === "OBLIGATION").length,
+        finding: out.filter((i) => i.class === "FINDING").length,
+        ungrouped: out.filter((i) => i.case.ungrouped).length,
+        case_undetermined: out.filter((i) => i.case.state === "undetermined").length,
+      },
+    };
+  }
+
   /* op=proposedispose (REC-7): record a member's DEFER or DISMISS of a derived PROPOSAL, WITHOUT
      minting a bundle. REC-6's op=proposals surfaces the record's own questions (one missing-
      predecessor finding per (progression_key, stage_key), aggregated). A member who decides a
@@ -8004,6 +8383,19 @@ export class Store extends DurableObject {
            the overdue computation is deterministic in a suite. Reports, never mutates. */
         captureprogressions: () => this.captureProgressions({ captureSha: url.searchParams.get("sha256"),
                                                               nowMs: url.searchParams.get("now") }),
+        /* REC-20 / DEC-16: op=queue, the member's ONE feed — OBLIGATIONs from
+           `tasks` and FINDINGs from the proposals derivation in one contract,
+           each carrying its class, its options[] (REC-19's derivation) and its
+           `case` set: EVERY ancestor over the bounded basis/citation walk.
+           `member` and `viewer` are BOTH stamped by the control plane and
+           never taken from a caller — whose queue it is and whose view the
+           case names compile for are server decisions. The store fails closed
+           on an absent viewer (D-15), so a missing stamp yields an ungrouped
+           feed rather than an unfiltered one. */
+        queue: () => this.queueFeed({ member: url.searchParams.get("member"),
+                                      viewer: url.searchParams.get("viewer"),
+                                      nowMs: url.searchParams.get("now"),
+                                      limit: url.searchParams.get("limit") }),
         /* REC-7: op=proposedispose, record a member's DEFER/DISMISS of a derived proposal WITHOUT
            minting a bundle (D-79 — declining is not authoring). Writes one disposition row keyed by
            (progression_key, stage_key); op=proposals then ages that proposal out of the open feed.
