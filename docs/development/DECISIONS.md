@@ -3266,6 +3266,37 @@ for CONDUCT to enact: (a) **REC-14's publish block gains the AUTHORED bias ackno
   rides with the project surfaces whenever the bias bundle lands (D-84 first).
 enacted: 2026-08-04 · CONDUCT — (a) REC-47 queued as a CORRECTION to REC-14 (the authored acknowledgement fresh per edition beside the completeness statement and subject position, carrying C-21.1's carried-forward control); (b) M6's import scope AMENDED in MILESTONES — a new project per distinct source bias, stated and reasoned, never merging a lens into an existing project, with DEC-45's per-finding association demoted to the second step where regrade fires; (c) REGRADE named as a member capability on M4 (and reachable from M10's bias work), with the import path recorded as one CALLER rather than its home; (d) the HUNCH DEBT vocabulary correction rides REC-47 as a documentation pass, its own wording included; (e) D-189 recorded as riding the project surfaces whenever the bias bundle lands, behind D-84. Reasoning in this entry, MILESTONES M4/M6 and QUEUE.md (REC-47).
 
+### DEC-53 · open
+raised: 2026-08-04 · CONDUCT (lifted from REC-40's report)
+for: bob
+question: How far may the MACHINE propose toward an ESTABLISHED record? Until REC-40,
+  every candidate this control could offer was Grade C — `needs_confirmation`, a
+  proposal the member had to affirm. REC-40 makes the identifier tiers reachable in
+  one call, so the same list can now offer Grade A and B candidates, and `#isEstablished`
+  treats A and B as ESTABLISHED. **So a member is now one click from an established
+  resolution off a machine-composed list.** Nothing invents anything — the candidate is
+  a real correspondence the record found, and `op=resolve` is still the only thing that
+  grades — but the ceiling on what a machine may put in front of a member has moved.
+why it is Bob's: this is "less narrative" as a constraint on US, which CLAUDE.md names as
+  the primary threat model — the risk that the record claims more than the evidence
+  supports, arriving through convenience rather than through error. Whether a machine may
+  propose something the member can accept AS ESTABLISHED in one act is a doctrine question
+  about how the record gets built, not a UI affordance.
+provisional: as shipped — A and B candidates are offered, ranked, and each carries
+  `grade_if_resolved` saying exactly what resolving it WOULD mint, null where the name
+  merely sits inside a longer string or a stronger identifier would resolve first. The
+  conditional is honest and the surface composes none of it.
+alternative: cap what the list may OFFER at C regardless of what the tier would mint, so
+  every machine-composed candidate stays a proposal the member must affirm as a
+  proposal — the stronger candidates would still be found, just never pre-graded.
+recommendation: ship as-is, and revisit if a real group ever resolves in bulk. An A-tier
+  correspondence — the reference IS the subject's registered identifier — is not a guess
+  the machine made; refusing to say so would be its own kind of dishonesty, and the member
+  still performs the act. But the number to watch is how often a member accepts without
+  reading, and nobody is measuring that today.
+what reversing costs: one predicate at the read, and the ranking already exists — cheap
+  now, and cheaper than it will ever be again once resolutions exist in volume.
+
 ### DEC-52 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-46's report)
 for: bob
