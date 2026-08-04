@@ -434,12 +434,18 @@ console.log("\n--- 6. THE BACK-REFERENCE POSTURE: an invisible id redacted, the 
 
 console.log("\n--- 7. the cost shape, for UI-12's live preview (measured, not asserted) ---");
 {
-  const n = 20, t0 = Date.now();
-  for (let i = 0; i < n; i++) await pair(carol, PARENT);
-  const each = (Date.now() - t0) / n;
-  console.log(`  NOTE  op=inquirystrength over a 2-level basis: ~${each.toFixed(1)}ms per call, ${n} calls, `
-    + `miniflare on this machine. It is a bounded walk (depth ${6}) with NO memo and no cache read: `
-    + `cost is linear in legs reached, and a live preview re-querying per selection pays it each time.`);
+  const time = async (id) => {
+    const n = 20, t0 = Date.now();
+    for (let i = 0; i < n; i++) await pair(carol, id);
+    return (Date.now() - t0) / n;
+  };
+  const each = await time(PARENT), deep = await time("INQ-2026-0903-d0");
+  console.log(`  NOTE  cost shape, miniflare on this machine, 20 calls each: a 2-level basis `
+    + `~${each.toFixed(1)}ms per call; the depth-exhausted 8-deep chain ~${deep.toFixed(1)}ms. `
+    + `The walk is BOUNDED (depth 6) and reads no cache, but it carries NO memo and NO visited set `
+    + `by design (REC-12: the bound is what makes it terminate, and a memo would mask the control), `
+    + `so a basis whose legs converge on one sub-inquiry re-walks it once per path. UI-12's live `
+    + `preview re-queries per selection and pays this each time.`);
   t("the read is genuinely non-mutating: the op table says so and the cached column never moves",
     /inquirystrength: \{ classes: \["admin", "member", "probe"\],      mutating: false \}/.test(INDEX_SRC), true);
 }
