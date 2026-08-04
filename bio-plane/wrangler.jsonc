@@ -50,8 +50,28 @@
   // reads PDFs — it just does Tier 1 only. DIST owns actually deploying the
   // member and teaching the installer to install the fleet; a slot-less area
   // cannot deploy a second Worker.
+  // SELF (REC-26, milestone M1). A service binding from this Worker to ITSELF,
+  // which is how the DO's periodic consumers reach the control plane: CAP-3's
+  // archive-monitor fires op=acquire{via:"archive.org"} over it, and REC-26's
+  // monitor-cadence fires op=monitor over it. Both are gated on the binding
+  // existing (#monitorConfigured), so WITHOUT this line they contribute no wake,
+  // hold no alarm, and are built-and-wired-to-nothing — which is exactly what
+  // MACHINE-PROCESSES.md §0 measured on every deployed instance and what this
+  // entry closes for the plane.
+  //
+  // The consumers reach the SAME ops a caller uses, deliberately: the eligibility
+  // fence, the provenance hop and the governor all run once, in one code path
+  // that cannot drift (D-112). A loopback binding is the only way to do that from
+  // inside a Durable Object, which cannot call the Worker's fetch handler
+  // directly.
+  //
+  // The target is this Worker's own name. For the INSTALLER the name is per
+  // instance (the instance name IS the worker name, D-102) so it must be
+  // templated from the installer's `slug` — that half is a DIST delegation in
+  // CLAIMS.md, not something this file can carry.
   "services": [
-    { "binding": "PDF_WORKER", "service": "pdf-worker" }
+    { "binding": "PDF_WORKER", "service": "pdf-worker" },
+    { "binding": "SELF",       "service": "bio-plane" }
   ],
 
   "observability": { "enabled": true }
