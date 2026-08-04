@@ -378,6 +378,16 @@ const OPS = {
      author stamp below. One `target`, like conclude: one question is picked
      back up at a time. */
   reopen:          { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-16: DIVIDING an inquiry, open|surfaced|concluded -> divided. Conclude's
+     class list for conclude's reason — a machine class REACHES it and is
+     refused by the store (MACHINE_CANNOT_DIVIDE) rather than being absent, fail
+     closed, because deciding that a question was two questions is a member's
+     judgement about the record and the rule is about who the caller IS. One
+     `target`, like conclude and reopen: one question is divided at a time, and
+     the CHILDREN arrive in the POST body because the apportionment is an array
+     of arrays and a query string cannot express one honestly (op=publish's
+     precedent exactly). */
+  inquirydivide:   { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -688,7 +698,14 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
    assertion and on the declared position about putting the case to its
    subject, which is the strictest reason in this file for the stamp to be the
    server's. */
-const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "publish"];
+/* REC-16 adds `inquirydivide` for exactly the same reason as its three
+   predecessors: it needs both SESSION_OPS lists, the server-side viewer stamp
+   and the server-side author stamp, and nothing else. Not selection-backed (one
+   question is divided at a time), so the `owner` stamp is inert for it. Its
+   author is the member whose name goes on the apportionment — WHO decided where
+   each leg went, including every leg that cuts against the case — which is the
+   same reason publish's stamp must be the server's. */
+const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "publish", "inquirydivide"];
 /* REC-14 / DEC-17: declaring the group's default required strength is a
    session act whose AUTHOR is part of the declaration — "you can lower your own
    bar; you cannot do it quietly" — so it takes the author stamp without being a
@@ -851,6 +868,19 @@ const NEEDS = {
      stamp, as release's and conclude's are, because capabilities gate SESSIONS
      and the rule here is about who a session IS. */
   reopen:           "contribute",
+  /* REC-16 / DEC-30, and this one is SETTLED rather than provisional: division
+     is AUTHOR-SCOPED — any `contribute` holder, with the act attributed — and
+     no fifth capability token is minted. The reasoning is Bob's and it is
+     decisive: division is how a member escapes an overclaiming mix, so
+     owner-only would let an owner hold another member's name against an
+     overclaim that member can see, and DE-ESCALATION MUST NEVER REQUIRE
+     PERMISSION FROM SOMEONE WHOSE INCENTIVE MAY RUN THE OTHER WAY. What bounds
+     misuse is not a gate but R4's disclosure: nothing leaves the record, the
+     sibling exists, and a published child must name it. The named-member
+     requirement is enforced by the store on the author stamp, as release's,
+     conclude's and reopen's are, because capabilities gate SESSIONS and the
+     rule here is about who a session IS. */
+  inquirydivide:    "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -1005,12 +1035,18 @@ const NEEDS = {
    an op=affordances answer for the same subject are therefore identical by
    construction and not by agreement, which is the property the item's suite
    asserts byte-for-byte. */
+/* REC-16 / DEC-29(b) adds `prompt`: the wording a surface MUST show when it
+   offers this act, null wherever no ruling attaches one. It is published rather
+   than left to the client for DEC-8's reason — a surface renders what it
+   received — and it is on the act rather than in a separate table so a surface
+   that has the control necessarily has the sentence that must accompany it. */
 const decorateAct = (a) => ({
   id: a.id, label: a.label, weight: a.weight,
   needs: NEEDS[a.id] ?? null,
   mode: SESSION_OPS.member.has(a.id) ? "session"
       : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
   rung: RUNGS[a.id] ?? null,
+  prompt: a.prompt ?? null,
 });
 
 const KNOCK = {

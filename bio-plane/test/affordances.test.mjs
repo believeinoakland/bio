@@ -41,7 +41,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, deriveActs }
+import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROMPT, deriveActs }
   from "../src/affordances.mjs";
 import { ACTION_KINDS } from "../checks/bio-checks.mjs";
 
@@ -103,8 +103,11 @@ t("every published act is a real op in the OPS table",
   [...ACT_IDS].filter((k) => !opsKeys.includes(k)), []);
 /* Corrected 2026-08-04 (REC-31): "all seven" became all EIGHT with `reopen`.
    The count in the label is not decoration — it is the thing a reader checks
-   against the catalogue assertion below. */
-t("every published act carries a NEEDS entry (all eight are mutating session acts)",
+   against the catalogue assertion below. Corrected again 2026-08-04 (REC-16):
+   TEN, which is `reopen` and `publish` from the REC-31/REC-14 wave — this label
+   was left at eight when the catalogue assertion moved to nine, which is the
+   drift the label exists to prevent — plus `inquirydivide`. */
+t("every published act carries a NEEDS entry (all ten are mutating session acts)",
   [...ACT_IDS].filter((k) => !needsKeys.includes(k)), []);
 
 console.log("\n--- structural: vocabularies and rungs are the enforcing tables, not copies ---");
@@ -218,10 +221,27 @@ const cat = await affordances(null);
    deferred|dismissed -> open edges the catalog has carried since REC-10 with
    no op writing them), and REC-14 published `publish` (the concluded ->
    published edge, DEC-12's editions). Seven became NINE. */
-t("no target -> the whole catalogue: nine acts, each with id/label/weight/needs/mode/rung",
+/* Superseded a third time 2026-08-04 by REC-16, and CORRECTED rather than
+   loosened for the reason the two notes above give: this assertion exists so a
+   published act cannot appear or vanish without a turn saying so. NINE became
+   TEN with `inquirydivide` (DEC-28's `divided` state getting its act), and the
+   shape gained `prompt` — DEC-29(b)'s ruling that the divide surface's wording
+   must STATE the disclosure the division will make, published on the act
+   because a surface renders what it received (DEC-8) and must not compose a
+   prompt of its own. */
+t("no target -> the whole catalogue: ten acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
-   cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung"].every((k) => k in a))],
-  [true, 9, true]);
+   cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
+  [true, 10, true]);
+/* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
+   null for every act no ruling attaches one to, and for `inquirydivide` it is
+   the published wording — so a surface that has the control necessarily has the
+   sentence that must accompany it. The clause-by-clause assertion lives in
+   divide.test.mjs; what this one holds is that the catalogue publishes it at
+   all and invents one nowhere else. */
+t("exactly one act carries a PROMPT, and it is the divide act's published wording (DEC-29(b))",
+  cat.result.catalog.filter((a) => a.prompt !== null).map((a) => [a.id, a.prompt === DIVIDE_PROMPT]),
+  [["inquirydivide", true]]);
 t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the seven action kinds",
   [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
   [["deferred", "dismissed"], 7]);
