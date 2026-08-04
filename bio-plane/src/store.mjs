@@ -9761,21 +9761,38 @@ export class Store extends DurableObject {
    *   - an ADMIN MEMBER — `#isAdminMember` (the ROOT admin session, actor
    *     "admin"; or any in-app member with role='admin'), the same "group admin"
    *     the routing (#routeTask) falls back to. The admin override stays.
-   *   - anyone, when the task is honestly `unassigned` — D-98's routing intends
-   *     an unassigned task to stay CLAIMABLE and "routable by hand". An
+   *   - any MEMBER, when the task is honestly `unassigned` — D-98's routing
+   *     intends an unassigned task to stay CLAIMABLE and "routable by hand". An
    *     unassigned task exists PRECISELY because routing found no project manager
    *     and no active admin (#routeTask's last arm), so requiring assignee-or-
    *     admin would strand it forever — the exact over-fencing REC-4 warns
    *     against. DEC-7 raises whether "claimable" should be narrowed to the
-   *     routed role (member_expertise → PM → group admin) rather than any actor;
-   *     the provisional here is: any caller that reaches the op may claim an
-   *     unassigned task, which blocks nothing.
+   *     routed role (member_expertise → PM → group admin) rather than any actor,
+   *     and KEEPS it open: the routing that produced `unassigned` had already
+   *     exhausted PM and active admin, and member_expertise is doctrine'd as a
+   *     HINT for a human forward rather than an automatic gate.
    *
-   *  A machine credential (`actor` = "token:member" / "token:probe" /
-   *  "token:admin") is neither a member nor ROOT_ADMIN, so it is fenced off an
-   *  ASSIGNED task and can only act on an unassigned one — which matches the
-   *  standing doctrine that capabilities gate a SESSION and never a machine
-   *  credential, and the D-98 note that "a daemon cannot close somebody's work".
+   *  WHAT THIS FENCE DOES NOT ANSWER, corrected 2026-08-04 (REC-28, D-151), and
+   *  the correction is the point of the item. This comment used to say that a
+   *  machine credential (`actor` = "token:member" / "token:probe" /
+   *  "token:admin") "is neither a member nor ROOT_ADMIN, so it is fenced off an
+   *  ASSIGNED task and can only act on an unassigned one", and cited D-98's "a
+   *  daemon cannot close somebody's work". Every clause of that was true and it
+   *  described a guarantee the code did not make: the FIRST line below allows on
+   *  `unassigned` BEFORE it has looked at the caller at all, so a machine could
+   *  RESOLVE an unassigned task and close an obligation with no member act. A
+   *  daemon cannot close somebody's work; it could close NOBODY'S work, and
+   *  closing is the act.
+   *
+   *  The hole is closed at the ACT and not here (taskForward/taskResolve refuse
+   *  `token:` actors BY SHAPE with MACHINE_CANNOT_FORWARD/MACHINE_CANNOT_RESOLVE,
+   *  the MACHINE_CANNOT_RELEASE precedent), so the refusal does not depend on
+   *  assignment state at all. BOTH fences stay, because they answer different
+   *  questions and the second is not derivable from the first: THIS one answers
+   *  *is this THIS member's task*, and the act refusal answers *is this a person
+   *  at all*. So the "anyone" above now honestly reads "any member" — not
+   *  because this function checks it, but because no machine reaches this
+   *  function on these two verbs any more.
    *
    *  Returns a NOT_YOURS refusal NAMING who it is with, or null to proceed. */
   #refuseNotYours(row, actor, verb) {
@@ -9796,9 +9813,29 @@ export class Store extends DurableObject {
    *  A MEMBER action, never a daemon one: the ruling makes forwarding a human
    *  judgement, and `member_expertise` is a hint for that human rather than an
    *  automatic reassignment. The prior assignment stays in history, because who
-   *  a task was taken FROM is as much a fact as who holds it now. */
+   *  a task was taken FROM is as much a fact as who holds it now.
+   *
+   *  REC-28 / D-151: "never a daemon one" is now ENFORCED and not only stated.
+   *  A machine credential's actor is stamped `token:<class>` by the control
+   *  plane, so it is refused BY SHAPE — the MACHINE_CANNOT_RELEASE / CONCLUDE /
+   *  REOPEN precedent, and the same one rule in a fifth place: a machine may
+   *  surface, route and prepare; a member authors, resolves and forwards. It is
+   *  checked BEFORE the row is read, so unlike the TASK-ACTOR FENCE it cannot
+   *  depend on assignment state — which is exactly how the hole existed.
+   *
+   *  The precedent's `who === "member"` arm does NOT carry over, deliberately:
+   *  on these two verbs the control plane stamps every machine credential
+   *  `token:<class>` (never a bare class word), while the bare string "admin" is
+   *  a LEGITIMATE actor here — it is ROOT_ADMIN's own session (`#isAdminMember`)
+   *  — so a bare-class arm would refuse the root administrator's browser. */
   taskForward({ id = null, to = null, actor = null, now = null } = {}) {
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
+    if (/^token:/.test(String(actor)))
+      return { ok: false, reason: "MACHINE_CANNOT_FORWARD",
+               detail: "forwarding a task hands an obligation to a named person, and deciding who is "
+                     + "better placed to answer it is a member's judgement. A machine credential may "
+                     + "surface a task and route it at drain time, and may not re-address one. "
+                     + "Sign in as a member." };
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
     if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
@@ -9820,9 +9857,29 @@ export class Store extends DurableObject {
     return { ok: true, id, assignee: task.assignee, assignee_role: task.assignee_role, from: row.assignee, at };
   }
 
-  /** Resolve a task. Also a member action. */
+  /** Resolve a task. Also a member action — and, as of REC-28 (D-151), a member
+   *  action the code enforces rather than a comment that describes one.
+   *
+   *  RESOLVING IS THE CLOSING ACT: the obligation the record raised is answered
+   *  and stops asking. Before this refusal a machine credential could close an
+   *  UNASSIGNED task, because the TASK-ACTOR FENCE allows on `unassigned` before
+   *  it looks at the caller — an obligation discharged with `actor:
+   *  "token:probe"` in its history and no member anywhere in it. The refusal is
+   *  at the ACT and by SHAPE (the MACHINE_CANNOT_RELEASE / CONCLUDE / REOPEN
+   *  precedent), checked before the row is read, so it holds whatever the task's
+   *  assignment is.
+   *
+   *  `taskDrain` is deliberately untouched and is the daemon's path: draining
+   *  turns queued events into tasks and ROUTES them, which is surfacing work
+   *  rather than discharging it. Nothing a drain does closes an obligation. */
   taskResolve({ id = null, actor = null, now = null } = {}) {
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
+    if (/^token:/.test(String(actor)))
+      return { ok: false, reason: "MACHINE_CANNOT_RESOLVE",
+               detail: "resolving a task says the obligation the record raised has been answered, and "
+                     + "that is a named member's act. A machine credential may surface a task, route it "
+                     + "and prepare what it needs, and may not close it — an unassigned task is nobody's "
+                     + "work, and closing nobody's work is still closing. Sign in as a member." };
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
