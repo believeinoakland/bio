@@ -625,6 +625,7 @@ purposes. A COVER is what an administrator calls someone in the roster and is
 explicitly not a claim about who they are in the world; a HANDLE is chosen by the
 member at enrolment, is unique across the instance, and is what the RECORD shows.
 Only administrators see them together, which is why `op=memberlist` is admin-only.
+> *(Amendment, 2026-08-03 — the D-160 pattern: a dated record gets an amendment, not a rewrite. The clause above was true as written for plane 0.35.0's INTENT but the op was never actually admin-only, and D-157 measured the pairing reaching ordinary members and MEMBER_TOKEN on the live store. REC-29 closed it the other way round: memberlist stays member-reachable per Membership Architecture §3 and the PROJECTION withholds `cover` from every non-administrator, server-stamped, fail-closed.)*
 The uniqueness is a partial unique index rather than a convention, because a
 roster in which two people answer to one name defeats the purpose of having one.
 

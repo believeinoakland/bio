@@ -1,4 +1,6 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) stop stamping a session lease with the signed-in member (index.mjs: set the lease `actor` to `token:${cls}` unconditionally instead of `viaSession ? sessMember : ...`) -> 1 assertion fails ("session lease is stamped with the member, not the claimed actor"); restored, 55 pass. */
+/* NEGATIVE CONTROL: (run 2026-08-03, D-157) restore the PRE-FIX projection — store.mjs Store.memberList, replace `const pairs = administer === true || administer === "1"` with `const pairs = true`, so cover is selected for every caller as it was before -> 6 assertions fail, NAMING both non-administrator callers that received the pairing: the ORDINARY MEMBER SESSION ("and receives NO cover field at all", "and the whole answer carries no cover value smuggled elsewhere", "a member cannot stamp itself an administrator") and the shared MEMBER_TOKEN ("the shared MEMBER_TOKEN receives NO cover field either", "no cover value reaches the machine member credential", "nor can the shared machine credential"); restored byte-identical, 71 pass. The probe assertions correctly do NOT fail: probe answers from the empty `scratch` roster, so there is no row to leak — an outcome that costs nothing to produce is not evidence, and it is the scratch confinement rather than this projection that holds there. */
+/* NEGATIVE CONTROL, the other direction: (run 2026-08-03, D-157) delete the SERVER STAMP — index.mjs, disable the `if (op === "memberlist") inner.searchParams.set("administer", ...)` block -> 7 assertions fail. Two things are proved at once. FAIL CLOSED: every administrator assertion fails (root token, admin session, in-app administrator's session, and the "roster records a cover" block below), because an unstamped call yields handles and no cover — losing the stamp loses the pairing rather than leaking it. And THE IMPOSTOR RULE: "a member cannot stamp itself an administrator" fails, because with the server's `set` gone the caller's own `administer=1` survives the parameter copy and is honoured. Restored byte-identical, 71 pass. */
 /* Member credentials and the session write powers.
  *
  * Runs the full Worker (index.mjs) under miniflare with the DO bound, so
@@ -7,6 +9,15 @@
  * storage must work, per the installer doctrine that R2 is optional.
  *
  * Negative-control detail: stop stamping a session lease with the signed-in member (index.mjs: set the lease `actor` to `token:${cls}` unconditionally instead of `viaSession ? sessMember : ...`) -> 1 assertion fails ("session lease is stamped with the member, not the claimed actor"); restored, 55 pass.
+ *
+ * D-157 (2026-08-03) added the section-3 block at the end: only administrators
+ * see cover and handle TOGETHER. It is asserted HERE and not in
+ * membership.test.mjs deliberately — membership.test.mjs drives the Durable
+ * Object directly, and the whole rule turns on which credential authenticated,
+ * which only the control plane knows. Its two negative controls are recorded
+ * above: one restores the pre-fix projection and names the callers that leaked;
+ * the other deletes the server stamp and proves the projection fails closed and
+ * cannot be talked into opening by a caller who names the stamp himself.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
@@ -186,12 +197,100 @@ t("revoke", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "revo
 t("revoked member's session is dead", (await GET(`op=list&${M}`)).error, "unauthenticated");
 t("revoked member cannot log in", (await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" })).result.reason, "NO_SUCH_ROLE");
 t("reinstate", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "active" })).result.ok, true);
-t("reinstated member logs in again", (await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" })).result.ok, true);
+const mlg2 = await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" });
+t("reinstated member logs in again", mlg2.result.ok, true);
+/* An ORDINARY member's live session (administer: false), which is one of the two
+   callers D-157 measured receiving the pairing. */
+const M2 = "token=" + mlg2.result.token;
 
 console.log("\n--- the roster is visible, invites are not ---");
 const ml = await GET(`op=memberlist&token=t-member-1`);
 t("machine member token reads the roster", ml.result.members.length, 2);
 t("no invite material in the roster", JSON.stringify(ml.result).includes(add2.result.invite), false);
+
+console.log("\n--- section 3: only administrators see cover and handle TOGETHER (D-157) ---");
+{
+  /* WHY THE ASSERTION ABOVE WAS NOT ENOUGH, and why the one that used to stand
+     alone here was wrong. "machine member token reads the roster" is still
+     TRUE and still belongs: §3 says "Members and the public see handles", so a
+     member reading the roster is the design, not the defect. What the old
+     assertion did was count the rows and stop — it confirmed the member token
+     received an answer and never looked at its SHAPE, so for as long as it
+     stood, `handle` and `cover` arrived together for every non-administrator
+     and the suite reported green. MEASURED 2026-08-02 on the live store: an
+     ordinary member session and the shared MEMBER_TOKEN each received a view
+     byte-identical to the administrator's. A test that asserts a caller gets an
+     answer, on an op whose whole rule is about what may be IN the answer, is a
+     test of the wrong thing; it is corrected here rather than exempted, because
+     the row count is worth keeping and it is the omission that was the defect.
+
+     THE STAKE is not tidiness. The cover↔handle split exists precisely so that
+     a roster seized or subpoenaed does not deanonymise the group: handles are
+     already public, covers are the administrator's private labels, and only the
+     PAIR maps the public record back to the people in it. */
+  const rowsFor = async (q) => (await GET(`op=memberlist&${q}`)).result.members;
+  const hasKey = (rs, k) => rs.every((r) => k in r);
+  const anyKey = (rs, k) => rs.some((r) => k in r);
+
+  /* The administrator half: the pairing is SERVED, not merely permitted — the
+     fix must not have turned a projection into a refusal. */
+  const asRootToken = await rowsFor("token=t-admin-1");
+  t("the ADMIN_TOKEN root of trust receives cover and handle together",
+    [hasKey(asRootToken, "cover"), hasKey(asRootToken, "handle")], [true, true]);
+  t("and the pairing is the real one, not an empty field",
+    asRootToken.find((m) => m.member_id === "ruth").cover, "the CPA from Tuesday");
+  const asAdminSession = await rowsFor(A);
+  t("an administrator's SESSION receives the pairing too",
+    [hasKey(asAdminSession, "cover"), asAdminSession.find((m) => m.member_id === "meilan").cover],
+    [true, "Meilan"]);
+  /* Ruth is an in-app administrator (role admin, not the root token), so her
+     session's `administer` right is what carries the pairing — the same field
+     op=whoami publishes, never a second rule. */
+  t("ruth is an in-app administrator, not the root of trust",
+    (await GET(`op=whoami&${S}`)).result.administer, true);
+  t("and her session receives the pairing on that right",
+    hasKey(await rowsFor(S), "cover"), true);
+
+  /* The non-administrator half. ABSENT, not null and not blank: a key that is
+     present and empty still confirms that a pairing exists to be asked for. */
+  const asMember = await rowsFor(M2);
+  t("an ordinary member's session does not administer",
+    (await GET(`op=whoami&${M2}`)).result.administer, false);
+  t("and receives NO cover field at all — absent, not null, not empty",
+    anyKey(asMember, "cover"), false);
+  t("while still receiving the handle roster it is entitled to (§3)",
+    [hasKey(asMember, "handle"), asMember.length], [true, 2]);
+  t("and the whole answer carries no cover value smuggled elsewhere",
+    JSON.stringify(asMember).includes("the CPA from Tuesday"), false);
+
+  const asMemberToken = await rowsFor("token=t-member-1");
+  t("the shared MEMBER_TOKEN receives NO cover field either",
+    anyKey(asMemberToken, "cover"), false);
+  t("and still reads the handle roster",
+    [hasKey(asMemberToken, "handle"), asMemberToken.length], [true, 2]);
+  t("no cover value reaches the machine member credential",
+    JSON.stringify(asMemberToken).includes("Meilan"), false);
+
+  /* PROBE was measured NOT exposed before this change — scopeFor confines it to
+     the `scratch` namespace, a different Durable Object with its own member
+     table — and re-verified here, because this build changed what a
+     non-administrator receives and a reachability claim is worth nothing
+     unchecked. It answers from scratch (an empty roster, never the live one)
+     and carries no cover even so. */
+  const asProbe = await rowsFor("token=t-probe-1");
+  t("the probe class answers from scratch, not from the live roster",
+    [asProbe.length, JSON.stringify(asProbe).includes("ruth")], [0, false]);
+  t("and probe does not administer, so it could not receive a pairing either",
+    anyKey(asProbe, "cover"), false);
+
+  /* The impostor rule: the stamp is the SERVER's. A caller who names it is
+     overwritten, not honoured — the same discipline viewer/author/by/owner
+     follow, and the reason the projection cannot be talked out of. */
+  t("a member cannot stamp itself an administrator",
+    anyKey(await rowsFor(`${M2}&administer=1`), "cover"), false);
+  t("nor can the shared machine credential",
+    anyKey(await rowsFor("token=t-member-1&administer=true"), "cover"), false);
+}
 
 /* Miniflare holds a live workerd child process. Without dispose the suite
    prints its result and then hangs forever, which costs minutes per run and

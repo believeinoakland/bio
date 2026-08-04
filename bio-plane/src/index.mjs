@@ -370,6 +370,14 @@ const OPS = {
      `target` rather than a selection: one conclusion answers one question, and
      a bulk conclude would be the checkbox the construct exists to refuse. */
   conclude:        { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-31: REOPENING an inquiry the group set down, deferred|dismissed ->
+     open. Conclude's class list for conclude's reason — a machine class
+     REACHES it and is refused by the store (MACHINE_CANNOT_REOPEN) rather
+     than being absent, fail closed, because overturning the group's own
+     disposition is a rule about who the caller IS and is enforced on the
+     author stamp below. One `target`, like conclude: one question is picked
+     back up at a time. */
+  reopen:          { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -454,10 +462,20 @@ const OPS = {
   memberadd:    { classes: ["admin", "probe"],                     mutating: true  },
   memberlist:   { classes: ["admin", "member", "probe"],           mutating: false },
   memberset:    { classes: ["admin", "probe"],                     mutating: true  },
-  /* The membership model's member half. All admin-only: memberlist pairs cover
-     with handle and only administrators see those together (section 3), and the
-     rest is section 4 governance. `adminarith` is a read of the rule itself, so
-     a UI can tell a group what a removal would take before they begin one. */
+  /* The membership model's member half. `memberadd`, `memberset`, `membercaps`,
+     `adminendorse` and `adminremove` are admin-only: section 4 governance.
+     `memberlist` is NOT, and this comment used to say it was — the second of
+     D-157's three self-contradicting sites, sitting two lines under the entry
+     that is the first: a grant of admin, member AND probe, which was the
+     TRUTHFUL one. Section 3 gives members and the public the
+     HANDLE roster ("Members and the public see handles"); what only
+     administrators see is the cover↔handle PAIRING ("Pairing. Only
+     administrators see cover and handle together"). That distinction cannot be
+     expressed by a class ACL — the op must stay reachable by the callers who
+     must not see the pairing — so it is a PROJECTION in Store.memberList(),
+     driven by the `administer` stamp set beside the D-15 viewer stamp below.
+     `adminarith` is a read of the rule itself, so a UI can tell a group what a
+     removal would take before they begin one. */
   membercaps:   { classes: ["admin", "probe"],                     mutating: true  },
   adminendorse: { classes: ["admin", "probe"],                     mutating: true  },
   adminremove:  { classes: ["admin", "probe"],                     mutating: true  },
@@ -661,12 +679,16 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
    defect class this file keeps naming. It is not selection-backed, so the
    `owner` stamp below is inert for it (nothing reads it); that costs nothing and
    is cheaper than a list that exists to omit one parameter. */
-/* REC-14: `publish` joins for the same three reasons `conclude` did — it is a
-   session act, it takes the server-side viewer stamp, and its author is the
-   member whose name goes on the completeness assertion and the declared
-   position. It is not selection-backed either (one case is published at a
-   time), so the `owner` stamp is inert for it exactly as it is for conclude. */
-const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "publish"];
+/* REC-31 adds `reopen` and REC-14 adds `publish`, both for exactly REC-13's
+   reason above: each needs what this array confers — both SESSION_OPS lists,
+   the server-side viewer stamp and the server-side author stamp — and nothing
+   else. Neither is selection-backed (one question is picked back up at a time;
+   one case is published at a time), so the `owner` stamp is inert for both.
+   `publish`'s author is the member whose name goes on the completeness
+   assertion and on the declared position about putting the case to its
+   subject, which is the strictest reason in this file for the stamp to be the
+   server's. */
+const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "publish"];
 /* REC-14 / DEC-17: declaring the group's default required strength is a
    session act whose AUTHOR is part of the declaration — "you can lower your own
    bar; you cannot do it quietly" — so it takes the author stamp without being a
@@ -820,6 +842,15 @@ const NEEDS = {
      stamp, exactly as release's is, because capabilities gate SESSIONS and the
      rule here is about who a session IS. */
   conclude:         "contribute",
+  /* REC-31: reopening rides `contribute` like every other corpus write, and
+     mints no capability of its own. Disagreeing with a disposition is not a
+     separate right a group grants — CAPABILITIES.md §4 is explicit that a
+     fifth token would need §5 reopened — and DEC-30 fixes the rest: no owner
+     gate, no ballot, the act attributed in the state_history and the Session
+     Log. The named-member requirement is enforced by the store on the author
+     stamp, as release's and conclude's are, because capabilities gate SESSIONS
+     and the rule here is about who a session IS. */
+  reopen:           "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -3331,6 +3362,33 @@ export default {
         || op === "file" || op === "backlinks" || op === "excludedby" || QUEUE_ACTIONS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
+    /* D-157: WHETHER THIS CALLER ADMINISTERS, decided by the SERVER from the
+       credential that authenticated, and set AFTER the caller's parameters were
+       copied above so a caller-supplied `administer` is overwritten rather than
+       honoured. It drives ONE thing: whether op=memberlist's rows carry `cover`
+       beside `handle`. Section 3 gives members and the public the handle roster
+       and gives only administrators the PAIRING, so the rule is a projection in
+       the store (Store.memberList) rather than a class ACL here — the op is
+       legitimately reachable by a member, and what a member must not receive is
+       a FIELD, not the answer.
+
+       Who administers: a SESSION reports its own `administer` right, which is
+       true for the root-admin session and for a member whose role is admin —
+       the same field op=whoami publishes, so an interface cannot be told one
+       thing and served another. A MACHINE credential administers only when it is
+       the ADMIN_TOKEN class, the root of trust every membership rule sits
+       beneath (4.6). MEMBER_TOKEN does not, which is half of what D-157
+       measured. PROBE_TOKEN does not either, and that is deliberate rather than
+       incidental: scopeFor confines probe to the scratch namespace — a different
+       Durable Object with its own member table — so it never reached the live
+       roster, and it now also cannot use scratch to rehearse a read of a pairing
+       no non-administrator is entitled to.
+
+       The store fails closed on an absent or unrecognised stamp (handles, no
+       cover), so deleting this line loses the pairing rather than leaking it. */
+    if (op === "memberlist")
+      inner.searchParams.set("administer",
+        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
     /* REC-21. WHOSE attention this is, stamped by the server and never taken
        from the request — the strictest instance of the impostor rule in this
        file, because the thing being written is not a claim about the record but

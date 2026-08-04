@@ -376,3 +376,18 @@ negative control breaks exactly that merge and fails naming it.
 - **Version:** I3 1.6.0 → **2.0.0** in `INTERFACES.md` — major, because a renamed
   reason is a break by definition even when the measured consumer impact is nil;
   calling it additive would teach the registry to lie.
+
+## IC-4 · I3: `op=memberlist`'s answer becomes viewer-dependent · PROPOSED, ACCEPTED AND CHANGED 2026-08-03 (one act, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-29/D-157 — a non-administrator
+  caller's roster rows no longer carry the `cover` key at all; an administrator's
+  view is unchanged. **A field disappearing for a class of callers is a BREAK by
+  IC-3's own standard**, whatever the measured impact, so it gets a protocol row.
+- **Consumers:** UI (dormant). CONDUCT answers on its behalf per step 3, in writing,
+  naming that it did so: `AGREE` — impact MEASURED nil by the implementer
+  (`rosterRow` falls through `m.cover || m.name || ""`; `setup.mjs` signs in as the
+  administrator, whose view is unchanged). If a pinned `cover` read surfaces in a
+  later UI item it is corrected there, never exempted.
+- **Version:** I3 2.0.0 → **3.0.0** in `INTERFACES.md` — major, same reasoning as
+  IC-3: an additive label here would teach the registry to lie, and this registry's
+  honesty is the product.
