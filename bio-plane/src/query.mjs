@@ -70,6 +70,16 @@ export const FIELDS = {
   reeval:         { col: "reeval_flag",     type: "bool" },
   since:          { col: "reeval_since",    type: "time" },
   reevalsource:   { col: "reeval_source",   type: "text", lower: true },
+  /* REC-12: the derived strength PAIR, filterable per axis over the projection
+     CACHE (store.mjs #writeStrengthProjection). TWO fields and never one — a
+     single `strength:` selector would be the composed scalar DEC-21 forbids,
+     and a query language is where a reader would learn the wrong shape first.
+     `upper` because grades are recorded A..D and a member types `capture:b`.
+     "B or better" is `capture:<=B`: the letters sort the way the grades rank,
+     so an ordering that reads oddly in prose is one indexed seek in SQLite. */
+  capture:        { col: "inquiry_capture_strength",    type: "text", upper: true },
+  connection:     { col: "inquiry_connection_strength", type: "text", upper: true },
+  legs:           { col: "inquiry_basis_count",         type: "number" },
 };
 
 /* The text columns of the FTS5 table, in table order. `meta` carries the
@@ -87,7 +97,12 @@ export const SORTABLE = { relevance: null, ...Object.fromEntries(
 /* Facets the sidebar counts unless the caller names others. Every one is an
    indexed enumeration, which is why the count is an aggregate the measurements
    showed costs 5ms over 20,000 rows. */
-export const DEFAULT_FACETS = ["type", "state", "criticality", "schema", "status"];
+/* REC-12 adds the two AXES, side by side and never summed: a sidebar that
+   counted one "strength" would be composing them for the reader before they
+   asked. A non-inquiry row projects neither column, and a facet arm already
+   skips NULLs, so the two arms cost nothing on a corpus with no inquiries. */
+export const DEFAULT_FACETS = ["type", "state", "criticality", "schema", "status",
+                               "capture", "connection"];
 
 /* The marker every generated statement carries. The runtime test asserts that
    each statement the store executes contains it, so a query path that skipped
@@ -434,7 +449,11 @@ function selector(tok, ctx) {
 function coerce(f, v) {
   if (f.type === "number") { const n = Number(v); return Number.isFinite(n) ? n : v; }
   if (f.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
-  return f.lower ? String(v).toLowerCase() : String(v);
+  /* `upper` is `lower`'s twin and exists for the same reason: normalise the
+     ARGUMENT so the column's index survives the comparison. Grades are stored
+     as the record writes them (A..D), so a member typing `capture:b` must be
+     answered rather than told nothing matched (REC-12). */
+  return f.lower ? String(v).toLowerCase() : f.upper ? String(v).toUpperCase() : String(v);
 }
 
 function applySort(spec, ctx) {
