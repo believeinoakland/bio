@@ -2127,7 +2127,7 @@ reasoning recorded in: this entry (the recommendation carries the full argument)
 for CONDUCT to enact: REC-16 gains the prompt-wording clause as an acceptance item; RECONCILED
   §4 Q7 marked settled by this entry.
 
-### DEC-30 · open
+### DEC-30 · answered
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q10 — four files, one question)
 for: bob
 question: Is DIVISION owner-scoped or author-scoped, and does CONCLUDING an inquiry need a
