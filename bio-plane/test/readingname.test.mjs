@@ -61,6 +61,7 @@
  *   (b) NEUTER THE GATE — replace `this.#bundleGate("t.bundle_id", viewer)` with a literal object carrying query.mjs's GATE_MARK string followed by `1=1` and no args (written out rather than pasted here, because the mark's closing characters would end this comment) -> **5 of 42 failed**, naming the leak: dave is offered the secret capture, his count rises to 2, the forged-viewer probe answers with it, and the unstamped direct read stops failing closed. Every other assertion passed, which is why arm (a) alone was not enough — the whole read can be correct and still leak, and the two failures look nothing alike.
  * ONE FINDING FROM RUNNING (a), kept because the instrument was wrong first: the suite originally THREW on `alameda.documents[0].label` the moment the list emptied, so arm (a) reported 5 failures and hid the 13 after it — including the exact-tier arm that is the whole point of the control. Every index into `documents` is guarded now. This is D-93's lesson (a chain that stops at the first failure hides everything after it) turning up inside a negative control.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

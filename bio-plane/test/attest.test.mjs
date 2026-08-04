@@ -14,6 +14,7 @@
  * claims about what the group tried, and collapsing them lets an absence read
  * as a success.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";

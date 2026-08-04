@@ -19,6 +19,7 @@
  * capture are the two assertions that would catch a future refactor quietly
  * moving the write into the producer.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

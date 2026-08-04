@@ -16,6 +16,7 @@
  * Driven at the Durable Object, because the counter is store state and the
  * control-plane surface over it is a read.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

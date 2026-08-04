@@ -55,6 +55,7 @@
  * recordcapturedlocator, promote — never by hand-writing a row, so what is under
  * test is the plane's own state and not a fixture's idea of it.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

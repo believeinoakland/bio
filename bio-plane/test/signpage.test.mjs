@@ -12,6 +12,7 @@
  * judgment. If the page and OpenSSH ever disagree, this suite is where
  * that shows up.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";

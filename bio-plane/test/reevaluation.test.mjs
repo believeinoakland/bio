@@ -58,6 +58,7 @@
  * NEGATIVE CONTROLS RUN 2026-08-04 (rec17-agent), each alone and restored; the
  * header line above is the re-run recipe and carries the exact edits.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, mkdtempSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

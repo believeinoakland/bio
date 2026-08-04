@@ -31,6 +31,7 @@
  *      source, because "we did not call that function" is a property of the
  *      code and not of one answer.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

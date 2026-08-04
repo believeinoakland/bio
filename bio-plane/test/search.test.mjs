@@ -50,6 +50,7 @@
  * compared against what SQL returns, which is the discipline both probes used.
  * An agreement between the compiler and itself would prove nothing.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

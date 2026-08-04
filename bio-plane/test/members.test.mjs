@@ -25,6 +25,7 @@
  * the other deletes the server stamp and proves the projection fails closed and
  * cannot be talked into opening by a caller who names the stamp himself.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

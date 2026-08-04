@@ -5,6 +5,7 @@
  * SHA-256s, encoding base64 entries hashing the transport text), _history
  * snapshot naming, .b64 twins with an RFC 3161 token over the twin.
  * Negative-control detail: disable the capture-vs-register hash check in migrate.mjs checkProvenance (guard `got !== want` with `false`, so a tampered capture is not detected) -> 1 assertion fails ("a capture that fails its register aborts" no longer sees PROVENANCE_MISMATCH); restored, 40 pass. */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";

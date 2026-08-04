@@ -18,6 +18,7 @@
  * its bytes; ssh-keygen absent)`. (Run 2026-07-31, M0-4: with ssh-keygen hidden,
  * the note names both cases; with ssh-keygen present, 18 pass and no skip note.)
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";

@@ -11,6 +11,7 @@
  *
  * Negative-control detail: disable the session capability gate in index.mjs (guard the `needs && ... !sessCaps.has(needs)` branch with `false`, so a member missing a capability is not refused NOT_CAPABLE) -> 8 assertions fail (the contribute/publish/create_projects refusals); restored, 63 pass.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

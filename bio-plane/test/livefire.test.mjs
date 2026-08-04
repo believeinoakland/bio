@@ -2,6 +2,7 @@
 /* Runs the deployed battery against local workerd first, so we know it works
    before it is fired at real storage. Credential-free.
    Negative-control detail: disable the store CAS-on-base in promote (guard `cur.bundle_sha !== base` with `false`) so the plane the self-test drives no longer refuses a stale write -> livefire reports 14/19, ok:false, exit 1: 5 self-test assertions fail (STALE base refused, garbage base refused, live state is the winning revision, history holds the superseded revision, lease returns live sha); restored, 19/19 ok:true. */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

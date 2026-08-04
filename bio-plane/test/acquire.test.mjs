@@ -17,6 +17,7 @@
  * isPublicHttpsLocator, the same function that guards the gathering queue, so
  * there is one definition of a reachable address rather than two.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

@@ -25,6 +25,7 @@
  * source-edit control (header line) breaks the op the way a real regression
  * would and is RUN and recorded, per VERIFICATION.md.
  */
+import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
