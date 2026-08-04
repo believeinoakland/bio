@@ -10,7 +10,11 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    It is the one bound between a member typing a URL and this Worker fetching it,
    so it must be the same function the checker uses on the queue. */
 import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
-         completenessFields } from "../checks/bio-checks.mjs";
+         completenessFields, sectionText } from "../checks/bio-checks.mjs";
+/* REC-22 / DEC-34: the container serialiser. The manifest REC-14 writes carries
+   a `layout` block that says how the parts assemble; this module reads it and
+   writes the zip, so nothing about the container's shape is decided twice. */
+import { serialiseContainer, containerEntries } from "./container.mjs";
 /* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
    catalogue reads the legal-edge table from the check catalogue (exported,
    never copied); `needs` and `mode` are composed HERE from NEEDS and
@@ -478,6 +482,23 @@ const OPS = {
   strengthbar:  { classes: ["admin", "member", "probe"],           mutating: true  },
   strengthbarof:{ classes: ["admin", "member", "probe"],           mutating: false },
   publishededitions: { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-22, the PUBLIC READ PATH. `classes: null` — NO credential of any kind,
+     and it is the same argument op=verify and op=publishedmanifest already make
+     rather than a new one: both read the PUBLISHED PROJECTION ONLY
+     (published_bundles, published_shas, published_edges and the PUBLISHED
+     bucket), all of which are written by ratification alone, so there is no
+     working material for a missing predicate to leak. That is the property
+     schema.mjs:172 says those tables exist to guarantee, and REC-30's sweep
+     records both ops as deliberately ungated for exactly this reason.
+
+     publishedcase answers by BUNDLE ID (with an optional edition, latest by
+     default) or by BUNDLE SHA, which resolves to ITS OWN edition — DEC-12's
+     "edition 1 still answers after edition 2 lands", checkable rather than
+     stated. publishedbytes answers BY HASH AND NEVER BY PATH, so the published
+     corpus cannot be walked: a sha with no published_shas row 404s, and it 404s
+     identically whether it was never ratified or never existed. */
+  publishedcase:  { classes: null,                                 mutating: false },
+  publishedbytes: { classes: null,                                 mutating: false },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
@@ -1073,6 +1094,12 @@ const KNOCK = {
 };
 
 const SCRATCH = "scratch";
+/* REC-22: the ONE namespace the public read path answers from. An instance has
+   one published record, so op=publishedcase and op=publishedbytes are pinned
+   here exactly as op=verify and op=publishedmanifest are — and a probe's
+   `scratch` rehearsal, which lives in a different Durable Object under a
+   different PUBLISHED prefix, is therefore unreachable from the public surface. */
+const PUBLISHED_STORE = "bio";
 
 async function fingerprint(v) {
   if (!v) return null;
@@ -1235,6 +1262,194 @@ export default {
       if (op === "publishedmanifest") {
         const r = await stub.fetch(new Request("http://do/publishedmanifest"));
         return json({ ok: true, result: (await r.json()).result }, 200);
+      }
+
+      /* ===================================================================
+         REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
+         part that matters — nothing withheld, because there is nothing here
+         that was not deliberately published.
+
+         WHY THIS IS SAFE WITHOUT A CREDENTIAL, stated once for both ops: every
+         byte either op can reach comes from the published projection —
+         published_bundles, published_shas, published_edges, and the PUBLISHED
+         bucket, which the ratification act is the only writer of. The fence is
+         structural in two independent layers (a table set and a bucket
+         boundary), so it does not depend on a predicate being remembered. That
+         is the property schema.mjs states those tables exist for, and REC-30's
+         sweep classifies both ops as deliberately ungated for exactly it.
+
+         PINNED TO `bio`, like op=verify and op=publishedmanifest above: an
+         instance has ONE published record. A probe's `scratch` namespace has its
+         own Durable Object and its own PUBLISHED prefix and is therefore NOT
+         readable here, which is deliberate — rehearsing a publication must not
+         put anything on the public surface. */
+      if (op === "publishedcase" || op === "publishedbytes") {
+        const shaParam = (url.searchParams.get("sha256") || "").toLowerCase();
+        const pubKey = (sha) => `${PUBLISHED_STORE}/published/${sha}`;
+        const pubBytes = async (sha) => {
+          if (typeof env.PUBLISHED?.get !== "function") return null;
+          const o = await env.PUBLISHED.get(pubKey(sha));
+          return o ? new Uint8Array(await o.arrayBuffer()) : null;
+        };
+
+        if (op === "publishedbytes") {
+          if (!/^[0-9a-f]{64}$/.test(shaParam))
+            return json({ ok: false, error: "publishedbytes requires sha256=<64 lowercase hex>. This surface "
+                        + "answers BY HASH and never by path, so there is nothing to walk." }, 400);
+          /* THE GUARD, and it is the whole op. A sha is served if and only if a
+             published_shas row names it. Everything else 404s with the SAME body
+             — a hash that was never ratified and a hash that never existed are
+             one answer, so the absence of a document cannot be inferred from the
+             shape of a refusal.
+
+             It is NOT redundant with the bucket boundary and the suite proves
+             that: point PUBLISHED at the working bucket (a plausible installer
+             slip that nothing else in the plane would catch) and this guard is
+             the only thing standing between an anonymous caller and the working
+             corpus. */
+          const v = (await (await stub.fetch(`http://do/verify?sha256=${shaParam}`)).json()).result;
+          const notFound = () => json({ ok: false, reason: "NOT_FOUND", sha256: shaParam,
+            detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
+                  + "never existed are the same answer here, deliberately." }, 404);
+          if (!v || !v.published) return notFound();
+          if (typeof env.PUBLISHED?.get !== "function")
+            return json({ ok: false, reason: "NO_PUBLISHED_STORE",
+              detail: "this instance has no published object store configured, so its published bytes are "
+                    + "not servable. The hash is genuine and this instance cannot hand over the bytes." }, 503);
+
+          /* DEC-34, THE CONTAINER. The manifest's own hash IS the container's
+             identity — it names and hashes every part — so the zip is addressed
+             by that hash like everything else here, and `format=zip` on a hash
+             that is not a manifest is refused by NAME rather than quietly
+             serving the part instead. */
+          const wantZip = (url.searchParams.get("format") || "") === "zip";
+          const isManifest = v.matches.some((m) => m.kind === "manifest");
+          if (wantZip && !isManifest)
+            return json({ ok: false, reason: "NOT_A_CONTAINER", sha256: shaParam,
+              detail: "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. "
+                    + "This hash names a part inside a container, not a container." }, 400);
+          const raw = await pubBytes(shaParam);
+          if (!raw) return notFound();
+          if (!wantZip) {
+            const m = v.matches[0] || {};
+            return new Response(raw, { status: 200, headers: {
+              "content-type": "application/octet-stream", "access-control-allow-origin": "*",
+              "x-published-sha256": shaParam, "x-published-kind": m.kind || "",
+              /* The PATH is disclosed on the way OUT and is never accepted on the
+                 way IN: a reader saving the file deserves its name; a caller
+                 asking by path would be walking the corpus. */
+              "content-disposition": `attachment; filename="${(m.path || shaParam).split("/").pop().replace(/[^\w.\-]/g, "_")}"`,
+            } });
+          }
+          let manifest = null;
+          try { manifest = JSON.parse(new TextDecoder().decode(raw)); } catch { manifest = null; }
+          if (!manifest || typeof manifest !== "object")
+            return json({ ok: false, reason: "MANIFEST_UNREADABLE", sha256: shaParam }, 500);
+          const built = await containerEntries(manifest, raw, pubBytes);
+          if (!built.ok) return json({ ok: false, ...built }, 409);
+          const zip = serialiseContainer(built.entries);
+          if (!zip.ok) return json({ ok: false, ...zip }, 413);
+          const zipSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", zip.bytes))]
+            .map((x) => x.toString(16).padStart(2, "0")).join("");
+          return new Response(zip.bytes, { status: 200, headers: {
+            "content-type": "application/zip", "access-control-allow-origin": "*",
+            "x-manifest-sha256": shaParam, "x-container-sha256": zipSha,
+            "x-container-parts": String(built.entries.length),
+            "content-disposition": `attachment; filename="${String(manifest.case || "case").replace(/[^\w.\-]/g, "_")}`
+                                 + `-edition-${Number(manifest.edition) || 1}.zip"`,
+          } });
+        }
+
+        /* ---- op=publishedcase ---- */
+        const id = url.searchParams.get("id");
+        if (!id && !/^[0-9a-f]{64}$/.test(shaParam))
+          return json({ ok: false, error: "publishedcase requires id=<bundle id> (with an optional "
+                      + "&edition=N, latest by default) or sha256=<the bundle sha of an edition>" }, 400);
+        const q = new URLSearchParams();
+        if (id) q.set("id", id);
+        if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
+        if (/^[0-9a-f]{64}$/.test(shaParam)) q.set("sha256", shaParam);
+        const c = (await (await stub.fetch(`http://do/publishedcase?${q}`)).json()).result;
+        if (!c || !c.ok) return json({ ok: false, ...(c || { reason: "NOT_PUBLISHED" }) }, 404);
+
+        /* D-1: THE BODY COMES FROM THE SAME BYTES AS THE FROZEN STRENGTH. The
+           document is fetched from the published bucket by the edition's own
+           bundle_sha, so what a reader is shown and what the group signed cannot
+           be two different documents — which is precisely the overclaim D-1
+           refuses (rendering a frozen strength beside a live working body). An
+           unreadable body is STATED as unavailable with its reason; it is never
+           substituted from the working corpus, which would be the same overclaim
+           by a shorter route. */
+        const md = await pubBytes(c.bundle_sha);
+        const text = md ? new TextDecoder().decode(md) : null;
+        const fm = text ? (parseFrontmatter(text).data || {}) : null;
+        const body = text
+          ? { state: "published", from_sha: c.bundle_sha,
+              question: sectionText(text, "## Question"),
+              conclusion: sectionText(text, "## Conclusion"),
+              falsifies: sectionText(text, "## What Would Falsify This"),
+              excludes: sectionText(text, "## What This Excludes"),
+              /* BOTH, because the document says it in two places and they are not
+                 the same statement. The FRONTMATTER carries what op=conclude
+                 authored and what the catalog gates — that is the conclusion of
+                 record. The SECTION carries the prose beside it, which is where a
+                 division writes its account and where a person reads. Returning
+                 only one of them would either drop the gated claim or drop the
+                 explanation; a renderer needs to know which is which. */
+              authored: { conclusion: typeof fm?.conclusion === "string" ? fm.conclusion : null,
+                          falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null },
+              detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds "
+                    + "the case to; the section fields are the prose printed beside it in the signed bytes." }
+          : { state: "unavailable", from_sha: c.bundle_sha,
+              reason: typeof env.PUBLISHED?.get === "function" ? "OBJECT_MISSING" : "NO_PUBLISHED_STORE",
+              detail: "this instance cannot hand over the bytes of that edition, so its conclusion is not "
+                    + "rendered here. It is NOT read from the working record instead: the frozen strength "
+                    + "and the rendered body must come from the same bytes." };
+
+        /* THE BASIS LEGS, from the signed bytes, each one classified as a leg
+           this surface can SERVE or one it can only NAME. `served` is decided
+           against the published projection and nothing else, so a leg resting on
+           working material is named and never resolved; the cited EDITION's
+           frozen pair travels with it (DEC-12: a leg names an edition and does
+           not silently follow a newer one). */
+        const legs = Array.isArray(fm?.basis) ? fm.basis.filter((l) => l && typeof l.target === "string") : [];
+        let registry = {};
+        if (legs.length) {
+          const ids = [...new Set(legs.map((l) => l.target))];
+          const rt = (await (await stub.fetch(
+            `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`)).json()).result;
+          registry = (rt && rt.registry) || {};
+        }
+        const basis = legs.map((l) => {
+          const reg = registry[l.target] || null;
+          const named = l.target_edition != null ? String(l.target_edition) : null;
+          const cited = reg ? (named ? reg.editions[named] : reg.editions[String(reg.latest)]) : null;
+          return {
+            target: l.target, role: l.role ?? "supports",
+            grade: l.grade ?? null, grade_axis: l.grade_axis ?? null, grade_source: l.grade_source ?? null,
+            target_edition: l.target_edition ?? null,
+            served: !!cited,
+            cited_edition: cited
+              ? { edition: cited.edition, title: cited.title, bundle_sha: cited.bundle_sha,
+                  ratified_at: cited.ratified_at, capture: cited.capture, connection: cited.connection }
+              : null,
+            detail: cited
+              ? "this leg rests on a published edition, so it can be served from this surface."
+              : "this leg is NAMED and not served: what it rests on is not in the published record, so this "
+              + "surface can say the case cites it and can hand over nothing of it.",
+          };
+        });
+
+        return json({ ok: true, ...c, object_type: normalizeType(fm?.object_type) ?? null, body, basis,
+          verification: {
+            bytes: `op=publishedbytes&sha256=${c.bundle_sha}`,
+            container: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}&format=zip` : null,
+            manifest: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
+            detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the "
+                  + "manifest answers by its own sha256, and the signature covers the bundle sha. Nothing "
+                  + "here prevents a modified copy; everything here makes one detectable by anyone holding "
+                  + "it, without this instance's cooperation.",
+          } }, 200);
       }
       /* 7b. Anyone, no token, no session. Size-capped, rate-limited, and
          confined to the inbox namespace: payload bytes land under
@@ -3149,6 +3364,14 @@ export default {
         return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
                       findings: gate.findings, store: storeName, tokenClass: cls }, 409);
 
+      /* REC-22: a capture part's SIZE, taken from the register the store already
+         handed us with the gate facts. The public file manifest states per-file
+         sha AND bytes, and a blob part is the one kind whose length is not in
+         the image — reading it here costs nothing (the rows are already in
+         memory) and beats a HEAD per part against R2. Absent means absent: a
+         part the register does not size stays `null` rather than being given a
+         plausible number. */
+      const registerBytes = new Map((facts.registers || []).map((r) => [r.path, r.bytes]));
       const shas = [];
       for (const [path, v] of Object.entries(image)) {
         if (path.startsWith("_history/")) continue;
@@ -3158,7 +3381,8 @@ export default {
           shas.push({ sha256: sha, path, kind: path === "bundle.md" ? "bundle" : "file",
                       bytes: new TextEncoder().encode(v).length, text: v });
         } else {
-          shas.push({ sha256: v.blobSha, path, kind: "capture" });
+          shas.push({ sha256: v.blobSha, path, kind: "capture",
+                      bytes: registerBytes.has(path) ? registerBytes.get(path) : null });
         }
       }
 
@@ -3234,6 +3458,38 @@ export default {
       shas.push({ sha256: manifestSha, path: "MANIFEST.json", kind: "manifest",
                   bytes: manifestBytes.length, text: JSON.stringify(manifest, null, 1) });
 
+      /* REC-22 / R4: THE PUBLISHED GRAPH, read out of the RATIFIED BYTES and out
+         of nothing else — not the caller's request, not the working `refs`
+         table, which is a projection of whatever bundle.md says today and moves
+         under a published edition every time somebody promotes. What the
+         signature covers is what the published graph says.
+
+         The CLASSIFICATION is made here and enforced in the store:
+           - references[]      candidates for a SERVE edge. The store admits one
+                               only if the target is itself published; the rest
+                               are dropped, which is what stops the published
+                               graph naming working material.
+           - division_parent   NAME-ONLY, by kind, whatever the target's state.
+           - division_siblings A divided parent is TERMINAL and can never be
+                               published and a sibling may not be, so R4's
+                               disclosure — "a published child names its parent
+                               and its siblings" — exists only as a name-only
+                               edge. It is name-only even when the target IS
+                               published: the rule is "names them while serving
+                               neither", which is about the disclosure and not
+                               about what happens to be reachable. */
+      const fmRefs = Array.isArray(ratifiedFm.references) ? ratifiedFm.references : [];
+      const edges = [
+        ...fmRefs.filter((r) => r && typeof r.target === "string")
+          .map((r) => ({ to: r.target, kind: typeof r.rel === "string" && r.rel ? r.rel : "cites",
+                         disclosure: "serve" })),
+        ...(typeof ratifiedFm.division_parent === "string" && ratifiedFm.division_parent !== "null"
+          ? [{ to: ratifiedFm.division_parent, kind: "division_parent", disclosure: "name" }] : []),
+        ...(Array.isArray(ratifiedFm.division_siblings) ? ratifiedFm.division_siblings : [])
+          .filter((s) => typeof s === "string" && s)
+          .map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" })),
+      ];
+
       const pub = (await (await stub.fetch(new Request("http://do/publish", {
         method: "POST", body: JSON.stringify({
           bundleId: body.bundleId, bundleSha: body.expectedSha,
@@ -3246,7 +3502,7 @@ export default {
           ...(isCase ? { edition } : {}), title: ratifiedFm.title ?? null,
           completeness: frozenCompleteness, strength: frozenStrength,
           required: isCase ? (ratifiedFm.required_strength ?? null) : null,
-          manifest, manifestSha,
+          manifest, manifestSha, edges,
           shas: shas.map(({ text, ...s }) => s),
         }) }))).json()).result;
       if (!pub?.ok)
@@ -3357,7 +3613,16 @@ export default {
       }
 
       return json({ ok: true, bundleId: body.bundleId, bundleSha: body.expectedSha,
-                    edition: pub.edition, container: { manifest_sha: manifestSha, parts: manifest.parts.length },
+                    edition: pub.edition,
+                    /* REC-22: the manifest's own hash IS the container's identity — every
+                       part is named and hashed by it — so it is also the address the zip
+                       is served at (op=publishedbytes&sha256=<manifest_sha>&format=zip),
+                       and `graph` reports what the published edges did: how many the
+                       surface may SERVE, how many it may only NAME, and how many
+                       references were dropped for pointing at unpublished material. */
+                    container: { manifest_sha: manifestSha, parts: manifest.parts.length,
+                                 zip: `op=publishedbytes&sha256=${manifestSha}&format=zip` },
+                    graph: pub.edges ?? null,
                     existed: pub.existed, ratifiedAt: pub.ratifiedAt,
                     attestor: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
                     published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },

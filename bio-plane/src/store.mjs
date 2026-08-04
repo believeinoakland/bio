@@ -7666,6 +7666,16 @@ export class Store extends DurableObject {
        forever), so purging the working corpus leaves the published record
        standing, which is the correct asymmetry and is why the exclusion lives
        in the BYTES as well as in this table. */
+    /* REC-22: `published_edges` is in BOTH arms, and it is the one PUBLISHED-side
+       table that is, which is a judgement rather than an oversight. Its siblings
+       published_bundles and published_shas are exempt because nothing else holds
+       what they hold -- a hash once published answers forever. published_edges
+       holds NO fact of its own: every row is recomputable from the case's own
+       ratified bundle.md, which carries references[] and the division disclosure
+       INSIDE the hash the group signed and stays answerable at op=publishedbytes
+       whatever this table says. Clearing it destroys an index, never a fact.
+       Its column is from_bundle rather than bundle_id, so it cannot ride TABLES
+       and takes an explicit DELETE in each arm below. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
                     "readings", "reading_refs", "resolutions", "progression_instances",
                     "progression_exceptions", "inquiry_basis", "inquiry_exclusions"];
@@ -7703,11 +7713,21 @@ export class Store extends DurableObject {
            silence. It is NOT in TABLES because its column is case_id rather than
            bundle_id. For a non-case bundleId this DELETE matches no rows. */
         this.sql.exec(`DELETE FROM queue_state WHERE case_id=?`, bundleId);
+        /* REC-22 / D-113. The published graph is keyed from_bundle -> to_bundle,
+           so a per-bundle purge takes the edges OUT of that bundle and also the
+           edges INTO it: an edge whose target no longer exists would have the
+           public surface resolving a serve against a row that has gone, and an
+           index that outlives what it indexes is the D-113 leftover. */
+        this.sql.exec(`DELETE FROM published_edges WHERE from_bundle=? OR to_bundle=?`, bundleId, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`);
         this.sql.exec(`DELETE FROM bundles`);
+        /* REC-22 / D-113: the whole published GRAPH goes with the corpus, for the
+           reason recorded above the TABLES list — it is an index over bytes that
+           answer forever, not a fact of its own. */
+        this.sql.exec(`DELETE FROM published_edges`);
         /* Selections are derived, so a purge of everything takes them too. A
            purge of ONE bundle deliberately leaves them alone: the selection
            should report that item as purged rather than silently forget it was
@@ -9192,7 +9212,7 @@ export class Store extends DurableObject {
      edition is idempotent and reports `existed`, because that is a retry, not a
      revision. */
   publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas,
-            edition, title, completeness, strength, required, manifest, manifestSha } = {}) {
+            edition, title, completeness, strength, required, manifest, manifestSha, edges } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
     return this.ctx.storage.transactionSync(() => {
@@ -9241,8 +9261,56 @@ export class Store extends DurableObject {
           `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
            ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
           s.sha256, bundleId, s.path, s.kind, s.bytes ?? null, now);
-      return { ok: true, bundleId, bundleSha, edition: ed, existed, ratifiedAt: now };
+      const graph = this.#publishEdges(bundleId, edges, now);
+      return { ok: true, bundleId, bundleSha, edition: ed, existed, ratifiedAt: now, edges: graph };
     });
+  }
+
+  /* REC-22 / R4: the PUBLISHED GRAPH, written inside the publishing act's own
+     transaction from the RATIFIED BYTES (the control plane reads references[]
+     and the division disclosure out of the document the signature covers and
+     hands them here) -- never from the working `refs` table, which is a
+     projection of whatever bundle.md says TODAY and moves under a published
+     edition every time somebody promotes.
+
+     TWO CLASSES AND ONE RESTRICTION.
+       - a SERVE edge is admitted only when its target is ITSELF published.
+         That restriction is what stops the published graph naming working
+         material, and it is checked HERE against published_bundles rather than
+         being asserted by the caller.
+       - a NAME edge is admitted whatever the target's state, and carries an id
+         and nothing else. R4's disclosure lands here and had to: a divided
+         parent is TERMINAL and can never be published, so the restriction as
+         BUILD-ORDER first wrote it made R4's disclosure impossible on the exact
+         surface R4 was written for. The control plane classifies -- a division's
+         parent and siblings are name-only BY KIND, even when the target happens
+         to be published, because "names its parent and its siblings while
+         serving neither" is a rule about the DISCLOSURE and not about what is
+         reachable.
+
+     Idempotent on (from, to, kind) so a second edition re-asserting an edge
+     does not double it, and the class is REFRESHED on re-publication: whether a
+     target is published is a fact about the record now, not about the edition
+     that first named it. */
+  #publishEdges(bundleId, edges, now) {
+    if (!Array.isArray(edges)) return { serve: 0, name: 0, dropped: 0 };
+    const out = { serve: 0, name: 0, dropped: 0 };
+    for (const e of edges) {
+      if (!e || typeof e.to !== "string" || !e.to || typeof e.kind !== "string" || !e.kind) continue;
+      /* A self-edge discloses nothing and is not a graph. */
+      if (e.to === bundleId) continue;
+      const nameOnly = e.disclosure === "name";
+      if (!nameOnly && !this.#one(`SELECT bundle_id FROM published_bundles WHERE bundle_id=? LIMIT 1`, e.to)) {
+        out.dropped++;
+        continue;
+      }
+      this.sql.exec(
+        `INSERT INTO published_edges (from_bundle,to_bundle,kind,disclosure,published) VALUES (?,?,?,?,?)
+         ON CONFLICT(from_bundle,to_bundle,kind) DO UPDATE SET disclosure=excluded.disclosure`,
+        bundleId, e.to, e.kind, nameOnly ? "name" : "serve", now);
+      out[nameOnly ? "name" : "serve"]++;
+    }
+    return out;
   }
 
   /* ---- the doorbell, store side ---- */
@@ -9282,6 +9350,104 @@ export class Store extends DurableObject {
       completeness: r.completeness ? JSON.parse(r.completeness) : null,
       strength: r.strength ? JSON.parse(r.strength) : null,
       required: r.required ? JSON.parse(r.required) : null })) };
+  }
+
+  /* REC-22: ONE PUBLISHED EDITION, everything the public read path can say about
+     it from the store side. Reads published_bundles and published_edges and
+     NOTHING else -- it never joins the working corpus, never reports a working
+     state, and carries no title but the one frozen into the edition -- which is
+     the whole of why this answers without a credential of any kind (REC-30's
+     classification, and schema.mjs:172 says these tables exist to guarantee
+     exactly that property).
+
+     RESOLUTION, three ways and one rule (DEC-12): a bundle id alone answers with
+     the LATEST edition; an id and an edition answer with that edition; a
+     bundle_sha answers with THE EDITION THOSE BYTES ARE -- a hash resolves to
+     its own edition and never to the current one, which is what makes "edition 1
+     still answers after edition 2 lands" true rather than merely stated.
+
+     A NOT_PUBLISHED answer is IDENTICAL for a bundle that was never published,
+     an edition that does not exist and an id that never existed, and it is
+     identical by construction rather than by care: there is no other table in
+     this method to tell them apart with. */
+  publishedCase({ id = null, edition = null, sha256 = null } = {}) {
+    const COLS = `bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
+                  gate_version, sig_armored, completeness, strength, required, manifest_sha, manifest`;
+    let row = null;
+    if (sha256) {
+      row = this.#one(`SELECT ${COLS} FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`, sha256);
+      id = row ? row.bundle_id : id;
+    } else if (id && edition != null && Number.isInteger(Number(edition))) {
+      row = this.#one(`SELECT ${COLS} FROM published_bundles WHERE bundle_id=? AND edition=?`, id, Number(edition));
+    } else if (id) {
+      row = this.#one(`SELECT ${COLS} FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, id);
+    }
+    if (!row)
+      return { ok: false, reason: "NOT_PUBLISHED",
+               detail: "no published edition answers to that. A case that was never published, an edition "
+                     + "that does not exist and an id that never existed are one answer here, because the "
+                     + "published projection is the only thing this read can see." };
+
+    /* Every edition of this case, so a reader holding an older one learns that a
+       newer one exists WITHOUT this surface deciding on their behalf that the
+       new one supersedes what they read (DEC-12: the supersession is SURFACED,
+       never followed -- REC-17 renders the obligation from exactly this). */
+    const editions = this.#rows(
+      `SELECT edition, bundle_sha, ratified_at, manifest_sha FROM published_bundles WHERE bundle_id=? ORDER BY edition`,
+      row.bundle_id);
+
+    /* The graph. A SERVE edge is resolved against the published projection --
+       the target's latest edition, its frozen title and the shas a reader can
+       fetch. A NAME edge is an id and its kind and NOTHING else: no title, no
+       state, no sha, nothing fetchable. The two are separate arrays rather than
+       one array with a flag, because a renderer that forgets to read a flag
+       renders a leak, and one that iterates the wrong array renders nothing. */
+    const serves = [], names = [];
+    for (const e of this.#rows(
+      `SELECT to_bundle, kind, disclosure FROM published_edges WHERE from_bundle=? ORDER BY kind, to_bundle`,
+      row.bundle_id)) {
+      if (e.disclosure === "name") { names.push({ to: e.to_bundle, kind: e.kind }); continue; }
+      const t = this.#one(
+        `SELECT edition, title, bundle_sha, manifest_sha, ratified_at FROM published_bundles
+         WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, e.to_bundle);
+      if (!t) continue;   // published then purged: an edge with nothing behind it serves nothing
+      serves.push({ to: e.to_bundle, kind: e.kind, edition: t.edition, title: t.title,
+                    bundle_sha: t.bundle_sha, manifest_sha: t.manifest_sha, ratified_at: t.ratified_at });
+    }
+    const division = {
+      parent: names.find((n) => n.kind === "division_parent")?.to ?? null,
+      siblings: names.filter((n) => n.kind === "division_sibling").map((n) => n.to).sort(),
+      detail: "a division's parent and siblings are NAMED and never served: the parent is terminal and can "
+            + "never be published, a sibling may not be, and a reader who can see one half of a divided "
+            + "question is entitled to know the other half exists (R4).",
+    };
+
+    const manifest = row.manifest ? JSON.parse(row.manifest) : null;
+    return { ok: true, bundleId: row.bundle_id, edition: row.edition, title: row.title,
+             bundle_sha: row.bundle_sha, ratified_at: row.ratified_at,
+             attestor: { member: row.attestor_member, key_b64: row.attestor_key },
+             gate_version: row.gate_version, sig_armored: row.sig_armored,
+             completeness: row.completeness ? JSON.parse(row.completeness) : null,
+             strength: row.strength ? JSON.parse(row.strength) : null,
+             required: row.required ? JSON.parse(row.required) : null,
+             manifest_sha: row.manifest_sha, manifest,
+             files: (manifest && Array.isArray(manifest.parts) ? manifest.parts : []).map(
+               (p) => ({ path: p.path, sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null })),
+             editions: editions.map((e) => e.edition), edition_index: editions,
+             latest_edition: editions.length ? editions[editions.length - 1].edition : row.edition,
+             serves, names, division };
+  }
+
+  /* REC-22: which of these ids have a published edition, and what each one FROZE
+     -- the one indexed lookup that lets the public read path say, per basis leg,
+     whether it is a leg the page can SERVE or one it can only NAME. Reuses
+     publishedRegistryFor, which C-21.2 already reads: a leg names an edition
+     (DEC-12) and the comparison is against THAT edition's frozen pair, so the
+     shape a check needs and the shape a reader needs are the same shape. */
+  publishedTargets(ids) {
+    const list = (Array.isArray(ids) ? ids : String(ids || "").split(","))
+      .map((s) => String(s || "").trim()).filter(Boolean).slice(0, 200);
+    return { ok: true, registry: this.publishedRegistryFor(null, list) };
   }
 
   /* REC-14 / P8's justifying query, and the reason inquiry_exclusions exists as
@@ -11164,6 +11330,14 @@ export class Store extends DurableObject {
           target: url.searchParams.get("target"),
           viewer: url.searchParams.get("viewer") }),
         publishededitions: () => this.publishedEditions(url.searchParams.get("id")),
+        /* REC-22: the public read path's store side. No `viewer` is stamped on
+           either — deliberately, and it is the item's whole safety argument
+           rather than an omission: both read the published projection only, so
+           there is no working material for a predicate to filter. */
+        publishedcase: () => this.publishedCase({ id: url.searchParams.get("id"),
+          edition: url.searchParams.get("edition"),
+          sha256: (url.searchParams.get("sha256") || "").toLowerCase() || null }),
+        publishedtargets: () => this.publishedTargets(url.searchParams.get("ids")),
         excludedby: () => this.excludedBy(url.searchParams.get("id"), url.searchParams.get("viewer")),
         expertisedeclare: () => this.expertiseDeclare(body || {}),
         expertiseconfirm: () => this.expertiseConfirm(body || {}),
