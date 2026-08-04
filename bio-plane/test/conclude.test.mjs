@@ -315,7 +315,7 @@ t("the ONE edge table carries the new state and its edges — nothing here keeps
      STATES.inquiry.edges.open.includes("concluded"),
      STATES.inquiry.edges.surfaced.includes("concluded"),
      STATES.inquiry.edges.concluded.slice().sort()],
-    [true, true, true, ["deferred", "dismissed", "open", "published", "surfaced"]]);
+    [true, true, true, ["deferred", "dismissed", "divided", "open", "published", "surfaced"]]);
 
   const alias = await conclude(PILAR, { target: INQ_ALIAS, conclusion: CONCL, falsifier: FALS });
   t("`surfaced`, open's legal alias, concludes — refusing it would be the trap the alias exists to avoid",
@@ -368,14 +368,24 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
     pub.rung, null);
 
   const openAff = await affordances(INQ_SECOND);
-  t("an OPEN inquiry publishes conclude beside dispose", actIds(openAff), ["conclude", "dispose"]);
+  /* CORRECTED 2026-08-04 (REC-16), never exempted: an open inquiry that RESTS
+     ON SOMETHING now publishes `inquirydivide` too. INQ_STANDING above, which
+     rests on nothing, still publishes exactly {conclude, dispose} — and that
+     pair of assertions is now doing more work than either did alone, because it
+     is what shows the divide act's basis-count condition is real rather than
+     incidental. */
+  t("an OPEN inquiry publishes conclude beside dispose", actIds(openAff), ["conclude", "dispose", "inquirydivide"]);
   const concludedAff = await affordances(INQ_MAIN);
   /* CORRECTED 2026-08-04 (REC-14), never exempted: a concluded inquiry now
    publishes `publish` as well, which is the state this whole ladder exists to
    reach. `dispose` stays beside it — a conclusion nobody publishes STILL AGES
-   (D-79), and that was and is the reason this assertion exists. */
-t("a CONCLUDED inquiry publishes exactly the legal acts: dispose and publish — and a conclusion nobody publishes still ages (D-79)",
-    actIds(concludedAff), ["dispose", "publish"]);
+   (D-79), and that was and is the reason this assertion exists.
+   CORRECTED AGAIN 2026-08-04 (REC-16): `inquirydivide` joins them. A concluded
+   inquiry is exactly where dividing is most likely to be right — the answer is
+   in and the weakest leg is now visible in the frozen pair — and DEC-28 makes
+   `concluded -> divided` a legal edge. */
+t("a CONCLUDED inquiry publishes exactly the legal acts: dispose, divide and publish — and a conclusion nobody publishes still ages (D-79)",
+    actIds(concludedAff), ["dispose", "inquirydivide", "publish"]);
   t("conclude is UNPUBLISHED there, and the store agrees by name — publication and refusal cannot disagree",
     (await conclude(NADIA, { target: INQ_MAIN, conclusion: CONCL, falsifier: FALS })).reason,
     "ILLEGAL_TRANSITION");

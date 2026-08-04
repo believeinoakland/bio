@@ -410,3 +410,15 @@ negative control breaks exactly that merge and fails naming it.
   trees).
 - **Version:** I3 3.0.0 → **4.0.0** in `INTERFACES.md` — major, the IC-3/IC-4
   standard: answers changing for a class of callers is a break however desirable.
+
+## IC-6 · I3: `op=inquirydivide` + the act shape's `prompt` field · PROPOSED, ACCEPTED AND CHANGED 2026-08-03 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-16 adds one mutating op
+  (`op=inquirydivide`) and one additive field on the affordances act shape —
+  `prompt`, the plane-published divide wording (DEC-29(b): the disclosure sentence
+  travels WITH the control, so no surface authors its own copy). No field removed,
+  no wire string renamed; a consumer ignoring `prompt` sees the prior shape.
+- **Consumers:** UI (dormant). CONDUCT answers per step 3, in writing, naming that
+  it did so: `AGREE` — additive by inspection, and the prompt mechanism is DEC-8's
+  own pattern (plane-sourced wording) extended to pre-act disclosure.
+- **Version:** I3 4.0.0 → **4.1.0** in `INTERFACES.md` — minor, genuinely additive.

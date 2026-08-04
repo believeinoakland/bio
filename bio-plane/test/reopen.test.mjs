@@ -374,19 +374,28 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
   await dispose(NADIA, dism, "dismissed", "duplicate of the main question");
   t("a DISMISSED inquiry publishes it too — both edges, one derivation", actIds(await affordances(dism)),
     ["dispose", "reopen"]);
+  /* CORRECTED 2026-08-04 (REC-16), never exempted: an open inquiry RESTING ON
+     SOMETHING now publishes `inquirydivide` too — dividing is legal from open,
+     and it is the act a member reaches for when one leg is holding the whole
+     question's strength down. What this assertion exists for is unchanged and
+     still holds exactly: `reopen` is NOT among the acts an open inquiry
+     publishes, and the store refuses it by the name the publication implies. */
   t("an OPEN inquiry does NOT publish reopen, and the store agrees by name",
     [actIds(await affordances(INQ_OPEN)),
      (await reopen(NADIA, { target: INQ_OPEN, reason: REOPEN_WHY })).reason],
-    [["conclude", "dispose"], "NOT_SET_DOWN"]);
+    [["conclude", "dispose", "inquirydivide"], "NOT_SET_DOWN"]);
   /* CORRECTED 2026-08-04 at the REC-31 x REC-14 merge, never exempted: a
      concluded inquiry now publishes `publish` beside `dispose` — REC-14
      landing, and it is the very act this refusal has always pointed at. What
      this assertion exists for is unchanged and still holds: `reopen` is NOT
-     among them, and the store refuses it by the name the publication implies. */
+     among them, and the store refuses it by the name the publication implies.
+     CORRECTED AGAIN 2026-08-04 (REC-16), same reason one act along: dividing is
+     legal from `concluded` as well as from `open`, so `inquirydivide` joins the
+     forward-moving acts here. `reopen` is still not one of them. */
   t("a CONCLUDED inquiry does NOT publish reopen — it publishes the act that moves it forward — and the store agrees",
     [actIds(await affordances(INQ_CONCL)),
      (await reopen(NADIA, { target: INQ_CONCL, reason: REOPEN_WHY })).reason],
-    [["dispose", "publish"], "NOT_SET_DOWN"]);
+    [["dispose", "inquirydivide", "publish"], "NOT_SET_DOWN"]);
   t("the deferred LEGACY focus does not publish it either: the derivation asks the DECLARED vocabulary too",
     actIds(await affordances(FOCUS_LEGACY)), ["dispose"]);
   t("an information bundle never publishes reopen", actIds(await affordances(DOC)).includes("reopen"), false);

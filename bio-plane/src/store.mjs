@@ -24,7 +24,14 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          /* REC-14: the published vocabulary and the ONE definition of what a
             completeness block ASSERTS, imported so this act's pre-flight and
             C-21.1's gate compare exactly the same fields. */
-         SUBJECT_POSITIONS, completenessFields } from "../checks/bio-checks.mjs";
+         SUBJECT_POSITIONS, completenessFields,
+         /* REC-16: the id grammar the division's CHILDREN are named under, and
+            the two supersession rules — run here at the write (the
+            checkInquiryBasis precedent) and by the checker, so a malformed
+            supersession never lands and cannot audit clean either. Before this
+            item `supersedes` had no producer and no requirements at all. */
+         BUNDLE_ID_RE, supersedesEdgeFindings,
+         divisionDisclosureFindings } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
@@ -860,9 +867,19 @@ export class Store extends DurableObject {
         if (r && typeof r === "object" && r.rel === "cites")
           citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
     }
+    /* REC-16: HOW MANY LEGS this question rests on, read from the document like
+       every other fact here (inquiry_basis is a projection of it, never a second
+       place to state it). The divide act needs it because the apportionment
+       refuses to leave a child with nothing, so a question resting on zero legs
+       cannot be divided at all — publishing the act there would be a pre-flight
+       offering a control the refusal it fronts would decline, which is what
+       DEC-8 forbids. A FACT, not a rule: the rule that consumes it lives in the
+       act catalogue, and this method still holds no copy of any act rule. */
     return { ok: true, target: b.bundle_id, object_type: b.object_type,
              declared_type: typeof docFm.object_type === "string" ? docFm.object_type : b.object_type,
              current_state: b.current_state, criticality: b.criticality ?? null,
+             basis_legs: Array.isArray(docFm.basis)
+               ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
              cites_in: citesIn, cites_out: citesOut };
   }
 
@@ -2873,6 +2890,459 @@ export class Store extends DurableObject {
 
   static COMPLETENESS_MAX = 2000;
 
+  /* REC-16: DIVIDING an inquiry. open|surfaced|concluded -> `divided`, which is
+   * TERMINAL (DEC-28), with the parent's legs re-homed onto children that each
+   * supersede it.
+   *
+   * WHY THIS EXISTS AND IS NOT HOUSEKEEPING. Weakest-link composition means an
+   * inquiry mixing one well-supported claim with one thin one is worth exactly
+   * the thin one. Without division a member's only options are to OVERCLAIM or
+   * to STAY SILENT, and both are failures of the same kind this repository's
+   * threat model is about. Division is the honest third move: say that the
+   * question was two questions, and answer each at what it is actually worth.
+   *
+   * AND THE ABUSE IS THE SAME MECHANISM (R4), which is why the disclosure below
+   * is the point of this act rather than a detail. Dividing would otherwise be a
+   * CHEAPER WAY TO SHED A FINDING THAT CUTS AGAINST YOU than severing it: move
+   * the inconvenient leg onto a child nobody publishes and the published half
+   * looks stronger, with nothing on the record saying what happened. Three
+   * things close that, and all three are enforced rather than encouraged:
+   *
+   *   1. NO LEG MAY BE DROPPED. Every ord in the parent's basis is apportioned
+   *      to at least one child, INCLUDING every `cuts_against` leg, and the
+   *      refusal names the orphans (NO_APPORTIONMENT). Severance is the act that
+   *      removes material and it costs a per-leg reason; division only re-homes,
+   *      so it does not do severance's work at a discount (DEC-29(a)).
+   *   2. EACH CHILD NAMES ITS PARENT AND EVERY SIBLING, in its own bundle.md, in
+   *      the keys REC-14 reserved for exactly this and projected through the
+   *      ordinary promote path. A reader who can see one half must be able to
+   *      see that the other half EXISTS.
+   *   3. THE PARENT RECORDS WHERE EVERY LEG WENT, in `division_apportionment`,
+   *      and the catalog's `divided` entry requirements refuse the state without
+   *      it — so a hand-written document cannot wear `divided` while quietly
+   *      losing a leg.
+   *
+   * ONE AUTHORED REASON FOR THE WHOLE DIVISION (DEC-29(a)), and NO per-leg
+   * reason. The per-leg judgement is already recorded per leg, in the
+   * apportionment; a second one would be friction theatre on an act whose
+   * disclosure is already total. Do not add one by inference.
+   *
+   * AUTHOR-SCOPED, SETTLED (DEC-30): any `contribute` holder, act attributed. A
+   * machine credential is refused BY SHAPE (MACHINE_CANNOT_DIVIDE), the
+   * MACHINE_CANNOT_CONCLUDE precedent — a machine may surface a question and may
+   * never decide that the group's question was malformed. Owner-scoping was the
+   * alternative and was refused for a reason worth keeping here: division is how
+   * a member escapes an overclaiming mix, and de-escalation must never require
+   * permission from someone whose incentive may run the other way.
+   *
+   * NO NEW TABLE (decision D5). The division is AUTHORED in bundle.md and the
+   * children's `supersedes` edges reach `refs` through the projection that
+   * already exists. A division table written by an op would be the first
+   * relationship in this record that exists outside the document asserting it.
+   *
+   * THE MACHINE IS THE CATALOG'S, through vocabFor over the DECLARED spelling,
+   * so a legacy focus/problem document — whose own vocabulary has no `divided`
+   * — is refused rather than quietly given a state its contract never had. */
+  divide({ target, reason = "", children = null, viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return { ok: false, reason: "MACHINE_CANNOT_DIVIDE",
+               detail: "dividing is a named member's judgement that the group's own question was malformed — "
+                     + "that it was two questions — and that judgement carries a name. A machine credential "
+                     + "may surface a question and gather what it rests on; it may not restructure the "
+                     + "record's questions. Sign in as a member." };
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON",
+               detail: "a division records WHY the question was two questions. One authored reason covers the "
+                     + "whole restructuring (DEC-29) and nothing is derived, defaulted or proposed: "
+                     + "'divided' with no account of why is a state change wearing a correction's clothes." };
+    if (why.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON",
+               detail: `the reason is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a quote, `
+                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET",
+               detail: "a division restructures ONE question: pass target=<inquiry id>" };
+
+    /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
+       inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
+       absent one, so the refusal discloses nothing. */
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha, b.group_id FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
+               detail: "dividing splits a question, and only an inquiry carries one." };
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+    const parentText = liveMd.content;
+    const fm = parseFrontmatter(parentText).data || {};
+
+    /* PUBLISHED_CANNOT_DIVIDE, refused BY NAME and BEFORE the generic edge
+       check, because the two say different things to the member. DEC-12 changed
+       PUBLISHING — a case may be reopened and republished at a new edition — and
+       it did not change this. An EDITION says the case continues; a DIVISION
+       says the parent was MALFORMED. A signed edition cannot be retroactively
+       declared malformed without erasing what a reader already relied on, and
+       the honest route is the one DEC-12 built: reopen it, and let the next
+       edition say what changed. */
+    if (b.current_state === "published")
+      return { ok: false, reason: "PUBLISHED_CANNOT_DIVIDE", target, from: b.current_state,
+               detail: "a published case cannot be divided. An EDITION says the case continues; a DIVISION "
+                     + "says the parent was malformed, and a hash somebody has already relied on cannot be "
+                     + "retroactively declared malformed. Reopen it (op=reopen) and publish what changed as "
+                     + "a new edition, which is the act DEC-12 built for exactly this." };
+
+    /* THE MAP RULE: the machine is the catalog's, looked up through vocabFor
+       over the DECLARED spelling, never STATES.inquiry by a raw key. */
+    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
+    const legalFrom = (spec?.edges?.[b.current_state]) || [];
+    if (!legalFrom.includes("divided"))
+      return { ok: false, reason: "ILLEGAL_TRANSITION", to: "divided", target,
+               from: b.current_state, object_type: fm.object_type ?? b.object_type,
+               detail: "this is not a legal move in the catalog's state table for this document's own "
+                     + "vocabulary. An inquiry divides from open (or its `surfaced` alias) or from "
+                     + "concluded; something deferred or dismissed is picked back up first (op=reopen), "
+                     + "and a legacy focus/problem document has no divided state at all until its "
+                     + "frontmatter is modernized." };
+
+    /* THE CHILDREN, and the apportionment they carry. Both AUTHORED: nothing
+       here proposes a split, guesses a question, or distributes a leg. */
+    const kids = Array.isArray(children) ? children.filter((c) => c && typeof c === "object") : [];
+    if (kids.length < 2)
+      return { ok: false, reason: "TOO_FEW_CHILDREN", target, got: kids.length,
+               detail: "a division produces at least TWO questions. One child is a rename and zero is a "
+                     + "deletion, and neither is what dividing claims about the parent." };
+    const ids = kids.map((c) => String(c.id ?? "").trim());
+    for (const id of ids)
+      if (!BUNDLE_ID_RE.test(id) || normalizeType(OBJECT_TYPES[id.split("-")[0]]) !== "inquiry")
+        return { ok: false, reason: "BAD_CHILD_ID", target, child: id,
+                 detail: "each child is named with a canonical INQ- id: a division produces questions, and "
+                       + "the id grammar is what makes them addressable by everything that will cite them." };
+    if (new Set(ids).size !== ids.length)
+      return { ok: false, reason: "BAD_CHILD_ID", target, children: ids,
+               detail: "two children carry the same id: a leg apportioned to a child named twice has one "
+                     + "home, not two." };
+    if (ids.includes(target))
+      return { ok: false, reason: "BAD_CHILD_ID", target,
+               detail: "a division's child cannot be the parent itself: the parent is terminal and the "
+                     + "children are what carry the question forward." };
+    for (const id of ids) {
+      const exists = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id);
+      if (exists)
+        return { ok: false, reason: "CHILD_EXISTS", target, child: id,
+                 detail: "this id already names a bundle. A division CREATES its children, so re-using an "
+                       + "existing id would overwrite a question somebody else is working on." };
+    }
+    for (const c of kids) {
+      const q = String(c.question ?? "").trim();
+      if (!q)
+        return { ok: false, reason: "NO_CHILD_QUESTION", target, child: String(c.id ?? ""),
+                 detail: "each child is a QUESTION and its question is authored, never derived from the "
+                       + "parent's. The whole claim a division makes is that these are two different "
+                       + "questions, so a child that cannot state its own has not been shown to be one." };
+      if (q.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(q))
+        return { ok: false, reason: "BAD_CHILD_QUESTION", target, child: String(c.id ?? ""),
+                 detail: `a child's question is at most ${Store.RELEASE_ACK_MAX} characters and cannot `
+                       + `contain a quote, a backslash, or a newline: the restricted frontmatter grammar `
+                       + `has no escapes` };
+    }
+
+    /* THE APPORTIONMENT. Addressed by ORDINAL, because duplicate targets are
+       legal by design (D4 — one document, two legs) and keying on the target
+       would let one assignment discharge two legs. A leg may land on ONE child
+       or on BOTH; what it may not do is land nowhere. */
+    const legs = Array.isArray(fm.basis) ? fm.basis.filter((l) => l && typeof l === "object") : [];
+    if (!legs.length)
+      return { ok: false, reason: "NO_APPORTIONMENT", target, orphans: [],
+               detail: "this inquiry rests on nothing, so there is nothing to apportion and both children "
+                     + "would inherit nothing. A standing objective with no legs is not two questions yet "
+                     + "(DEC-22); it is one question nobody has gathered anything for." };
+    const homes = new Map();               // ord -> [child ids], in children order
+    for (let k = 0; k < kids.length; k++) {
+      const raw = Array.isArray(kids[k].legs) ? kids[k].legs : null;
+      if (!raw || !raw.length)
+        return { ok: false, reason: "NO_APPORTIONMENT", target, child: ids[k],
+                 detail: `${ids[k]} was apportioned no leg of the parent's basis. A child that inherits `
+                       + `nothing is a NEW question, not a half of this one — open it as its own inquiry `
+                       + `rather than calling it a division.` };
+      for (const o of raw) {
+        const ord = Number(o);
+        if (!Number.isInteger(ord) || ord < 0 || ord >= legs.length)
+          return { ok: false, reason: "BAD_APPORTIONMENT", target, child: ids[k], ord: o,
+                   detail: `a leg is apportioned by its ORDINAL in the parent's basis (0..${legs.length - 1}); `
+                         + `'${o}' names none. Ordinals rather than targets, because one document `
+                         + `legitimately carries two legs (D4).` };
+        if (!homes.has(ord)) homes.set(ord, []);
+        if (!homes.get(ord).includes(ids[k])) homes.get(ord).push(ids[k]);
+      }
+    }
+    const orphans = [];
+    for (let i = 0; i < legs.length; i++) if (!homes.has(i)) orphans.push(i);
+    if (orphans.length) {
+      const cutting = orphans.filter((i) => legs[i].role === "cuts_against");
+      return { ok: false, reason: "NO_APPORTIONMENT", target,
+               orphans: orphans.map((i) => ({ ord: i, target: legs[i].target ?? null, role: legs[i].role ?? null })),
+               cuts_against_orphans: cutting.length,
+               detail: `every leg gets a home. ${orphans.length} leg(s) were apportioned to no child`
+                     + (cutting.length ? `, and ${cutting.length} of them CUT AGAINST this inquiry` : "")
+                     + ". Division RE-HOMES material and only severance REMOVES it, which is why dividing "
+                     + "cannot do severance's work at a discount (R4): apportion them, or sever them with "
+                     + "a reason, which is the act that takes material out of a question." };
+    }
+
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const group = fm.group || "believe-in-oakland";
+
+    /* THE CHILDREN ARE DERIVED FROM THE PARENT'S OWN DOCUMENT, not built from a
+       template here. A template would be this file's private idea of what an
+       inquiry looks like, and it would fall behind the catalog's the first time
+       the shape moved; deriving means a child is conformant for whatever
+       contract the parent was authored under, which is the same reason every
+       projection in this file reads the document rather than restating it. What
+       is REPLACED is everything the child must not inherit: the parent's answer,
+       the parent's history, the parent's session log. */
+    const plans = [];
+    for (let k = 0; k < kids.length; k++) {
+      const id = ids[k];
+      const q = String(kids[k].question).trim();
+      const sibs = ids.filter((x) => x !== id);
+      const mine = [...homes.entries()].filter(([, to]) => to.includes(id)).map(([ord]) => ord).sort((x, y) => x - y);
+      const childLegs = mine.map((ord) => legs[ord]);
+      let text = parentText;
+      text = Store.#setScalar(text, "id", id);
+      text = Store.#setScalar(text, "title", `"${Store.#fmSafe(deriveInquiryTitle(q) ?? q)}"`);
+      text = Store.#setScalar(text, "current_state", "open");
+      text = Store.#setScalar(text, "prior_state", "null");
+      text = Store.#setOrAddScalar(text, "created", `"${when}"`);
+      text = Store.#setOrAddScalar(text, "last_updated", `"${when}"`);
+      /* A NEW document has no history of its own, and inheriting the parent's
+         would be the child claiming transitions it never made — the append-only
+         surface C-5.1 guards, filled with somebody else's past. REMOVED and
+         re-opened rather than overwritten in place: a parent that has been
+         concluded carries a populated BLOCK, and setting the key line alone
+         would leave its indented entries behind as array items belonging to
+         nothing (C-2.1's "array item outside any block", which is exactly what
+         the catalog said the first time this was written the short way). */
+      text = Store.#removeBlock(text, "state_history");
+      text = Store.#setOrAddScalar(text, "state_history", "[]");
+      /* The parent's ANSWER is not the child's. An inquiry authored before
+         `concluded` existed carries neither key; one divided out of a concluded
+         parent carries both, and carrying them forward would put the parent's
+         conclusion on an open question nobody has answered. */
+      text = Store.#setOrAddScalar(text, "conclusion", `""`);
+      text = Store.#setOrAddScalar(text, "falsifier", `""`);
+      text = Store.#setOrAddScalar(text, "disposition_reason", `""`);
+      /* THE DISCLOSURE (R4), in the keys REC-14 RESERVED for it with no
+         producer. This act is the producer. */
+      text = Store.#setOrAddScalar(text, "division_parent", target);
+      text = Store.#setOrAddScalar(text, "division_siblings", `[${sibs.join(", ")}]`);
+      /* references: the apportioned legs' targets, plus the supersedes edge back
+         to the parent WITH ITS REASON — the requirement C-6.1 gains with this
+         item, because before it `supersedes` passed on the strength of being in
+         a list and had no producer at all. */
+      const refTargets = [...new Set(childLegs.map((l) => l.target).filter((t) => typeof t === "string"))];
+      text = Store.#setOrAddBlock(text, "references", [
+        ...refTargets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
+        `  - target: ${target}`, "    rel: supersedes", "    status: confirmed",
+        `    reason: "${Store.#fmSafe(why)}"`]);
+      text = Store.#setOrAddBlock(text, "basis", childLegs.flatMap((l) => [
+        `  - target: ${l.target}`,
+        `    role: ${l.role ?? "supports"}`,
+        ...(l.grade !== undefined && l.grade !== null ? [`    grade: ${l.grade}`] : []),
+        ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []),
+        ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []),
+        ...(l.target_edition !== undefined ? [`    target_edition: ${l.target_edition}`] : []),
+        ...(l.author ? [`    author: ${l.author}`] : []),
+        ...(l.date ? [`    date: ${l.date}`] : []),
+        ...(typeof l.note === "string" ? [`    note: "${Store.#fmSafe(l.note)}"`] : [])]));
+      /* The parent's division block is the PARENT's, never the child's: a child
+         carrying one would claim to have been divided itself. */
+      text = Store.#removeBlock(text, "division");
+      text = Store.#removeBlock(text, "division_apportionment");
+      text = Store.#setSection(text, "## Question", [q]);
+      /* THE DISCLOSURE FOR A PERSON TO READ, beside the frontmatter the gates
+         and the projections read — the same two-places discipline op=publish
+         takes with `## What This Excludes`. A disclosure only a parser can find
+         is not a disclosure. */
+      text = Store.#setSection(text, "## What It Rests On", [
+        `Divided out of ${target} on ${when} by ${who}.`, "",
+        why, "",
+        `The other half of that question stays on the record: ${sibs.join(", ")}. `
+        + `${target} is the divided parent and records where every leg went, including any leg that cuts `
+        + `against this question.`]);
+      text = Store.#setSection(text, "## Conclusion", []);
+      text = Store.#setSection(text, "## What Would Falsify This", []);
+      text = Store.#setSection(text, "## Session Log", [
+        `### Session ${when} | Divided out | ${who}`,
+        `Trigger: op=inquirydivide on ${target}`,
+        `Changes: created from ${target}, ${childLegs.length} leg(s) apportioned here.`,
+        `Parent: ${target}`,
+        `Siblings: ${sibs.join(", ")}`,
+        `Reason: ${why}`]);
+      plans.push({ id, q, sibs, mine, legs: childLegs, text });
+    }
+
+    /* PRE-FLIGHT EVERY CHILD BEFORE ANYTHING IS WRITTEN, through the catalog's
+     * own functions — the ones promote itself will run.
+     *
+     * WHY IT IS HERE AND NOT LEFT TO promote. The parent has to be written
+     * FIRST: a child's disclosure is checked against the PARENT's own
+     * `division.into`, so a child written before the parent moved would be
+     * refused NO_SIBLING_DISCLOSURE by a parent that has not been divided yet.
+     * That ordering is the right one — a child supersedes a parent that IS
+     * divided — but it means a child refused at ITS write would leave a terminal
+     * parent naming a question that does not exist. So every child is judged
+     * here, against the same rules, before the parent moves; what remains after
+     * this gate is the promote-internal failures (a collision, an oversize
+     * inline), which cannot arise for a freshly created document of this size.
+     *
+     * The alternative — write the children first and skip the resolved check
+     * while the parent is mid-division — was rejected outright: an exemption
+     * saying "the disclosure is not checked during the act that produces
+     * disclosures" is the hole this whole item exists to close. */
+    for (const pl of plans) {
+      const cf = parseFrontmatter(pl.text).data || {};
+      const findings = [];
+      supersedesEdgeFindings(cf, findings);
+      divisionDisclosureFindings(cf, findings);
+      checkInquiryBasis(cf, findings, this.publishedRegistryFor(pl.id,
+        pl.legs.map((l) => l.target).filter((t) => typeof t === "string")));
+      const errs = findings.filter((x) => x.severity === "error");
+      if (errs.length)
+        return { ok: false, reason: "CHILD_REFUSED", target, child: pl.id,
+                 findings: errs.map((x) => ({ check: x.check, detail: x.message })),
+                 detail: `the document this division would create for ${pl.id} would not pass the catalog, `
+                       + `so nothing was written: the parent is untouched and no child exists. A division `
+                       + `that landed half-applied would leave a terminal parent naming a question nobody `
+                       + `can open.` };
+    }
+
+    /* THE PARENT MOVES FIRST, and every child follows. The pre-flight above is
+       why this order and not the other. */
+    let text = parentText;
+    const withHistory = Store.#appendStateHistory(text, {
+      timestamp: when, from_state: b.current_state, to_state: "divided",
+      blurb: why, author: who });
+    if (!withHistory)
+      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+               detail: "this document's state_history block cannot be extended in place, and a division "
+                     + "recording no transition would leave prior_state pointing at a history the document "
+                     + "does not carry (C-4.2)" };
+    text = withHistory;
+    text = Store.#setScalar(text, "prior_state", b.current_state);
+    text = Store.#setScalar(text, "current_state", "divided");
+    /* `disposition_reason` is UNTOUCHED (DEC-28). Division's reason belongs to
+       the ACT; routing it through the disposition field would make one field
+       carry two grammars — a stance toward a question, and an account of a
+       restructuring — and every consumer of the field would have to know which
+       one it was holding. */
+    text = Store.#setOrAddBlock(text, "division", [
+      `  reason: "${Store.#fmSafe(why)}"`,
+      `  apportioned_by: ${who}`,
+      `  at: "${when}"`,
+      `  into: [${ids.join(", ")}]`]);
+    /* WHERE EVERY LEG WENT, one row per (leg, child). A second top-level key
+       rather than a member of the map above because the restricted grammar
+       cannot express an array of objects inside a map — the same split REC-14's
+       completeness / completeness_excluded pair takes, for the same reason.
+       `role` is carried on the row so the account is readable without joining it
+       back to basis[]: what a reader checks first is where the legs that CUT
+       AGAINST the case went. */
+    const rows = [];
+    for (let i = 0; i < legs.length; i++)
+      for (const to of homes.get(i))
+        rows.push([`  - ord: ${i}`, `    target: ${legs[i].target}`,
+                   `    role: ${legs[i].role ?? "supports"}`, `    to: ${to}`]);
+    text = Store.#setOrAddBlock(text, "division_apportionment", rows.flat());
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    /* The account in the BODY as well as the frontmatter, the op=publish
+       precedent: the frontmatter is what the gates and the projections read,
+       this is what a person reads. The parent's own conclusion, where it had
+       one, is kept above it — a division does not unsay what the group
+       concluded, it says the question was two questions. */
+    text = Store.#setSection(text, "## Conclusion", [
+      ...(typeof fm.conclusion === "string" && fm.conclusion.trim() ? [fm.conclusion, ""] : []),
+      `Divided on ${when} by ${who} into ${ids.join(", ")}: ${why}`, "",
+      "Where every leg went:", "",
+      ...legs.map((l, i) => `- ${l.target}${l.role === "cuts_against" ? " (cuts against)" : ""} -> `
+                          + `${homes.get(i).join(", ")}`)]);
+
+    const entry = `### Session ${when} | Divided | ${who}\n`
+                + `Trigger: op=inquirydivide on ${target}\n`
+                + `Changes: state ${b.current_state} to divided (terminal).\n`
+                + `Into: ${ids.join(", ")}\n`
+                + `Reason: ${why}\n`
+                + `Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), `
+                + `${legs.filter((l) => l.role === "cuts_against").length} cutting against.\n`;
+    const at = text.indexOf("## Session Log");
+    if (at < 0) text += "\n## Session Log\n\n" + entry;
+    else {
+      const nxt = text.indexOf("\n## ", at + 1);
+      const cutAt = nxt === -1 ? text.length : nxt + 1;
+      text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
+    }
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type, group,
+              title: fm.title, current_state: "divided", prior_state: b.current_state,
+              created: fm.created, last_updated: when,
+              criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, target };
+
+    const created = [];
+    for (const pl of plans) {
+      const cb = new TextEncoder().encode(pl.text);
+      const cp = this.promote({
+        bundleId: pl.id, base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+        author: who,
+        files: [{ path: "bundle.md", text: pl.text, bytes: cb.length,
+                  sha256: createSha256().update(cb).hex() }],
+        meta: { object_type: fm.object_type ?? b.object_type, group,
+                title: deriveInquiryTitle(pl.q) ?? pl.q,
+                current_state: "open", prior_state: null,
+                created: when, last_updated: when,
+                criticality: fm.criticality ?? null },
+      });
+      if (!cp.ok)
+        return { ...cp, target, child: pl.id, created: created.map((c) => c.id),
+                 detail: "the parent is divided and this child could not be written. Every child was judged "
+                       + "against the catalog before anything moved, so this is a storage failure rather "
+                       + "than a malformed document; the parent names it in division.into and it can be "
+                       + "written again under the same id." };
+      created.push({ id: pl.id, question: pl.q, siblings: pl.sibs, legs: pl.mine, bundleSha: cp.bundleSha });
+    }
+
+    return { ok: true, target, from: b.current_state, to: "divided", terminal: true,
+             bundleSha: promoted.bundleSha,
+             into: ids, children: created,
+             apportionment: legs.map((l, i) => ({ ord: i, target: l.target ?? null,
+               role: l.role ?? "supports", to: homes.get(i) })),
+             cuts_against: legs.filter((l) => l.role === "cuts_against").length,
+             reason: why, apportioned_by: who, at: when, weight: "single",
+             next: "each child is OPEN and carries a supersedes edge back to this parent, this parent's id "
+                 + "and every sibling's. This question is terminal: it is answered by its children now." };
+  }
+
   /* Frontmatter-safe: the restricted grammar has no escapes, and these strings
      are DERIVED (a strength detail, a bar's explanation) rather than authored,
      so they are sanitised here rather than refused — an authored field is
@@ -4041,8 +4511,14 @@ export class Store extends DurableObject {
        */
       const isInquiry = normalizeType(meta.object_type) === "inquiry";
       const basisMd = files.find((f) => f.path === "bundle.md");
-      const basisFm = isInquiry && basisMd && typeof basisMd.text === "string"
+      /* Parsed ONCE for both arms below. REC-16's supersession check is NOT
+         inquiry-scoped — `supersedes` is in the vocabulary for every type and
+         an ungoverned edge is ungoverned wherever it sits — while the basis
+         grammar is, so the inquiry-only view is derived from this rather than
+         re-parsed. */
+      const docFmW = basisMd && typeof basisMd.text === "string"
         ? parseFrontmatter(basisMd.text).data : null;
+      const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis)
         ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
       if (basisFm && basisFm.basis !== undefined && basisFm.basis !== null && !pkg.replay) {
@@ -4057,6 +4533,84 @@ export class Store extends DurableObject {
         if (errs.length)
           return { ok: false, reason: "BASIS_REFUSED",
                    findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
+      }
+      /* REC-16 / R4: THE SUPERSESSION EDGE AND THE DIVISION DISCLOSURE, checked
+       * at the WRITE, on exactly the basis arm's reasoning above — the catalog's
+       * own functions, so the store's view and the checker's view are ONE rule
+       * and a malformed supersession neither lands nor audits clean.
+       *
+       * TWO REFUSALS, because they are two different failures and a member
+       * needs to be told which one they hit. SUPERSESSION_REFUSED is about the
+       * EDGE: it carries no reason, or its target is not a canonical id, or it
+       * points at nothing in this store. NO_SIBLING_DISCLOSURE is about the
+       * DISCLOSURE: the child does not name every other child of its division.
+       *
+       * THE COMPLETENESS OF THE SIBLING SET CAN ONLY BE ANSWERED HERE. The pure
+       * check can see that a child names SOME siblings; only the store can see
+       * the parent's own `division.into` and say whether it named ALL of them,
+       * and that is the whole of what R4 protects — a child disclosing one
+       * sibling while a second exists is exactly as blind for a reader as one
+       * disclosing none. So the resolved comparison is against the parent
+       * document, and it names the siblings that were left out.
+       *
+       * REPLAY IS EXEMPT from the shape arms, the gathering-grammar precedent:
+       * the record's own history contains documents written before this rule
+       * existed and must be holdable verbatim. */
+      if (docFmW && !pkg.replay) {
+        const sf = [];
+        supersedesEdgeFindings(docFmW, sf);
+        const serrs = sf.filter((x) => x.severity === "error");
+        if (serrs.length)
+          return { ok: false, reason: "SUPERSESSION_REFUSED",
+                   findings: serrs.map((x) => ({ check: x.check, detail: x.message })) };
+        for (const r of (Array.isArray(docFmW.references) ? docFmW.references : [])) {
+          if (!r || typeof r !== "object" || r.rel !== "supersedes") continue;
+          if (r.target === bundleId)
+            return { ok: false, reason: "SUPERSESSION_REFUSED", target: r.target,
+                     findings: [{ check: "C-6.1",
+                       detail: `${bundleId} supersedes itself: a question cannot be the thing it replaced` }] };
+          if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
+            return { ok: false, reason: "SUPERSESSION_REFUSED", target: r.target,
+                     findings: [{ check: "C-6.1",
+                       detail: `supersedes target '${r.target}' does not resolve in this store: an edge that `
+                             + `asserts a lineage must name a question that exists, or it points a reader at `
+                             + `nothing while claiming a replacement happened` }] };
+        }
+        const df = [];
+        divisionDisclosureFindings(docFmW, df);
+        const derrs = df.filter((x) => x.severity === "error");
+        if (derrs.length)
+          return { ok: false, reason: "NO_SIBLING_DISCLOSURE",
+                   findings: derrs.map((x) => ({ check: x.check, detail: x.message })) };
+        const parentId = typeof docFmW.division_parent === "string" && docFmW.division_parent !== "null"
+          ? docFmW.division_parent : null;
+        if (parentId) {
+          const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, parentId);
+          const pfm = pmd && pmd.content !== null ? (parseFrontmatter(pmd.content).data || {}) : null;
+          const into = pfm && pfm.division && Array.isArray(pfm.division.into)
+            ? pfm.division.into.filter((x) => typeof x === "string") : null;
+          if (!into || !into.includes(bundleId))
+            return { ok: false, reason: "NO_SIBLING_DISCLOSURE", parent: parentId,
+                     detail: `${parentId} does not record ${bundleId} as one of the questions it was divided `
+                           + `into, so the parent and the child disagree about whether this division happened. `
+                           + `A child names a parent that names it back, or the disclosure is a claim nobody `
+                           + `can check.` };
+          const declared = new Set(Array.isArray(docFmW.division_siblings) ? docFmW.division_siblings : []);
+          const missing = into.filter((x) => x !== bundleId && !declared.has(x));
+          const invented = [...declared].filter((x) => !into.includes(x));
+          if (missing.length || invented.length)
+            return { ok: false, reason: "NO_SIBLING_DISCLOSURE", parent: parentId,
+                     missing, not_siblings: invented,
+                     detail: (missing.length
+                       ? `this child does not name ${missing.join(", ")}, which ${parentId} was also divided `
+                       + `into. A reader who can see one half of a divided inquiry must be able to see that `
+                       + `the other half EXISTS — otherwise dividing is a cheaper way to shed a finding that `
+                       + `cuts against you than severing it, and invariant 7 falls to a housekeeping `
+                       + `operation (R4). `
+                       : "")
+                     + (invented.length
+                       ? `it also names ${invented.join(", ")}, which ${parentId} was not divided into.` : "") };
+        }
       }
       if (basisLegs.length) {
         /* R3: the basis graph is a DAG, enforced HERE, at the write that would
@@ -10591,6 +11145,16 @@ export class Store extends DurableObject {
            control plane stamps them — so they are spread SECOND and a
            caller-supplied author in the body is overwritten, never honoured. */
         publishcase: () => this.publishCase({ ...(body || {}),
+          target: url.searchParams.get("target") || (body || {}).target,
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
+        /* REC-16, publishcase's shape exactly: the BODY carries the authored
+           material (the children and their apportionments are arrays, which a
+           query string cannot express honestly), and the viewer and the author
+           come from the SEARCH PARAMS where the control plane stamps them — so
+           they are spread SECOND and a caller-supplied author in the body is
+           overwritten, never honoured. */
+        inquirydivide: () => this.divide({ ...(body || {}),
           target: url.searchParams.get("target") || (body || {}).target,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
