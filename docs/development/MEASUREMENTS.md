@@ -1908,3 +1908,38 @@ CPDF-12 (the page-to-pixels renderer) was scoped to re-scope on NO-GO; note that
 the composed shape, if anyone wants it measured, needs the same renderer, so
 closing CPDF-12 outright and measuring the composed shape are alternatives
 rather than independent choices.
+
+## 2026-08-04, session BOB: the account is now on Workers PAID — MEASURED, not taken on trust (DEC-42)
+
+Bob upgraded the project's Cloudflare account after DEC-42. The plan is established
+the same way the FREE plan was on 2026-07-31 — **by provoking the platform**, so the
+two entries are comparable line for line and neither rests on a dashboard reading or
+a vendor claim.
+
+**Instrument.** `scratchpad/plan-probe.mjs` (throwaway, not committed): a Worker
+uploaded over the REST API with `limits.cpu_ms: 50000` in its metadata — a value the
+Free plan refuses outright. The account id is pinned to
+`20b533579290b9b93168345edd3b7f72` and the probe EXITS before touching anything if it
+does not match (the wrong-account hazard in `CLAUDE.md`). The probe worker was
+uploaded, read back, DELETED and verified gone (404).
+
+| Date | Upload with `limits.cpu_ms: 50000` | Verdict |
+| --- | --- | --- |
+| 2026-07-31 | **HTTP 400, code 100328** — *"CPU limits are not supported for the Free plan"* | Workers FREE |
+| **2026-08-04** | **HTTP 200 ACCEPTED**, `limits: {"cpu_ms":50000}` echoed back | **Workers PAID** |
+
+**Sweep confirmed:** `DELETE` 200, re-read 404. Nothing left behind on the account.
+
+### What this unblocks, and what it does NOT establish
+
+**Unblocked:** the DEPLOYED wasm CPU probe for the tesseract fleet member (the BOB
+INBOX entry of 2026-08-04, CPDF-12 as re-scoped). CPDF-9's CPU figures are a NODE
+PROXY calibrated into reference iterations and its own text says authoritative Worker
+CPU needs a deployed wasm probe — that probe can now run, and the 10 ms ceiling that
+blocked it is gone.
+
+**NOT established here, and it must not be read as established:** that tesseract
+actually FITS the CPU envelope in workerd, or that memory holds (a 3300×2550 RGBA
+frame is 33.6 MB against a 128 MB isolate). This entry measures the PLAN and nothing
+else. The engine's numbers are CPDF-12's to produce, on the runtime, in reference
+iterations — the `op=cpuprobe` pattern, because a Worker cannot time itself (D-56).

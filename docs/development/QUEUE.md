@@ -220,6 +220,26 @@ fix must be equally careful, and an unconditional sweep is the wrong shape.
       miniflare instances, which is the state today.
     added: 2026-08-04 · BOB
 
+### 2026-08-04 · BOB · THE PAID UPGRADE HAS LANDED — the deployed probe is UNBLOCKED
+
+Bob upgraded the account. **MEASURED, not taken on trust** (`MEASUREMENTS.md`
+2026-08-04): a Worker uploaded with `limits.cpu_ms: 50000` — the exact upload the Free
+plan refused on 2026-07-31 with code 100328 — now returns **HTTP 200 with
+`limits:{"cpu_ms":50000}` echoed back**. Account pinned to `20b533…3b7f72` before the
+probe ran; probe worker deleted and verified gone (404).
+
+**So the one blocker named in the DEC-42 handover is cleared.** The deployed wasm CPU
+probe for the tesseract fleet member (CPDF-12 as re-scoped) can run now. The 10 ms
+per-invocation ceiling that ruled the engine out is gone; the limit is settable to 30 s
+by default and 5 min maximum.
+
+**What is NOT established, and must not be read into it:** that tesseract fits the CPU
+envelope in workerd, or that memory holds (a 3300×2550 RGBA frame is 33.6 MB against a
+128 MB isolate). That entry measured the PLAN and nothing else. CPDF-9's CPU figures are
+a NODE PROXY and its own text says authoritative Worker CPU needs a deployed wasm probe
+walked in reference iterations — a Worker cannot time itself (D-56). **The probe is now
+possible, not pre-judged**, and a GO still has to be earned on the runtime.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
