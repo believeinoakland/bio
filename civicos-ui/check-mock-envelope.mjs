@@ -231,6 +231,12 @@ function armA(){
 const SUITES_WITH_OP_TRAFFIC = [
   "act-attest.test.mjs", "act-ballot.test.mjs", "act-dispose.test.mjs", "act-proposal.test.mjs",
   "cite-act.test.mjs", "conclude-act.test.mjs", "document-page.test.mjs", "document-structure.test.mjs",
+  /* UI-27. Pinned the day it landed, on UI-18's precedent: it is the only suite
+     that drives `op=inquiryground`, the act DEC-32's elicitation authors
+     through, and a mock that answered it flat would leave the receipt — the one
+     place this flow shows a strength at all — reading `undefined` while every
+     assertion about the questions it asks stayed green. */
+  "elicitation.test.mjs",
   "inquiry-page.test.mjs", "intent-write.test.mjs", "members-roster.test.mjs", "project-workspace.test.mjs",
   /* UI-18. Pinned the day it landed rather than a release later: it is the only
      suite that drives the CREDENTIAL-FREE ops, so if it goes quiet the three

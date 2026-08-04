@@ -6576,6 +6576,11 @@ const ACT_FLOW = {
   reinstate: (id, title, act) => openEdgeAct(id, title, act),
   actionmove:       (id, title, act) => openActionMove(id, title, act),
   actioncorrespond: (id, title, act) => openActionCorrespond(id, title, act),
+  /* UI-27 added DEC-32's elicitation, and the one-entry-per-act promise held a
+     fourth time: a flow with a shape unlike every other one here — ordered
+     phases, a derivation, and a strength that may not be shown until the record
+     has answered — arrived and nothing above this line changed. */
+  inquiryground:    (id, title, act) => openElicit(id, title, act),
 };
 
 /* `elsewhere` is a set of act ids this PAGE carries in a section of its own, so
@@ -6850,6 +6855,376 @@ function concludeReceiptHtml(r){
     <div class="row-btns"><button class="btn" onclick="closeDialog();openInquiry(${esc(JSON.stringify(String(r.target||"")))})">Back to the question</button></div>`;
 }
 /*__CONCLUDE_ACT_END__*/
+/*__ELICITATION_START__*/
+/* ============================================================
+   DEC-32's ELICITATION (UI-27) — THE MEMBER IS ASKED FOR CONSEQUENCES,
+   NEVER FOR STRUCTURE, AND THE STRUCTURE IS DERIVED FROM THEIR ANSWERS.
+
+   WHAT THIS CARRIES, and every clause is Bob's ruling of 2026-08-04 rather than
+   this file's idea of a good form:
+
+     1. NO ANALYST VOCABULARY ON ANY SURFACE — not even as a tooltip. *"The
+        vocabulary is the analyst's, not the member's, and a member who must
+        learn it to state a finding will state a worse finding."* The words this
+        flow must never print are asserted by a SWEEP over everything it renders,
+        in `elicitation.test.mjs`, and not left to this comment. The wire name of
+        the act it carries contains one of those words; a wire name is not a
+        surface, and the act's own published label and prompt honour the same
+        rule (REC-45 asserts that directly), which is why both are rendered
+        verbatim here and neither is re-worded.
+
+     2. ONE CONSEQUENCE QUESTION PER LEG, in the member's own terms, and it is
+        the whole mechanism: **"If this turned out to be wrong, would your answer
+        still hold?"** Anyone can answer that about their own reasoning without
+        vocabulary. "No, my answer falls" makes the reason NECESSARY; "Yes" makes
+        it replaceable, and ONE follow-up — which of the others stop carrying the
+        answer the moment this one does — is what says WHICH reasons stand
+        together. The relationship Bob ruled is ENTAILED by the answers and is
+        never asked for.
+
+     3. THE DERIVED FALSIFIER IS SHOWN BACK, in plain words, and the member may
+        correct it. *"Reading a falsifier is enormously easier than authoring a
+        structure"* — and it is the one check that catches a mis-elicited
+        structure, because a member who reads it and says "no, that's not right"
+        has corrected the model without knowing there is one.
+
+     4. THE DEFAULT IS THE CONSERVATIVE ONE AND THAT IS THE ANTI-GAMING
+        KEYSTONE. It is reached here by two independent routes. FIRST, the
+        answers: one necessary reason and this flow authors NOTHING, because the
+        record holds a basis grouped WHOLE or not at all (C-2.8) and the honest
+        whole is the ungrouped one — *"a leg that is needed whatever else holds
+        is NECESSARY, and the honest way to say so is to leave the reasons
+        ungrouped"* (the act's own refusal, in its own words). SECOND, the
+        omissions: nothing is prefilled, no answer is defaulted, and a member who
+        answers nothing reaches no control at all. Strengthening a finding
+        therefore always takes an act carrying the member's name, and can never
+        happen by omission or by a member not understanding the question.
+
+     5. THE STRUCTURE IS AUTHORED BEFORE THE STRENGTH IS SHOWN, and this is the
+        ORDERING RULE — the difference between a design that resists bias and one
+        that invites it. **Not one grade, letter, state or pair appears anywhere
+        in this flow until the record has answered the act.** The suite asserts
+        it over the rendered markup AND over the wire (no strength read is even
+        ASKED before the commit), because a preview that merely was not drawn is
+        one an extra code path can draw.
+
+     6. RESTRUCTURING AFTER SEEING THE STRENGTH IS LEGAL, RECORDED AND
+        ATTRIBUTED — never blocked. The receipt is where the strength first
+        appears, and it is also where the route back is offered: a member who
+        looks at what their answers reached and wants them different says why,
+        and the act records the reason and stamps the name and the time itself.
+        A machine may not refuse the act and must not hide it.
+
+     7. THE READER IS THE FINAL CHECK, which is what makes this safe to ship: the
+        published case shows every set and its reasons, so "these were enough on
+        their own" is a claim any reader can test. That half is the published
+        surface's and is already built.
+
+   WHAT IS NOT PREFILLED WHEN AN ANSWER ALREADY STANDS, and the decision is
+   deliberate rather than an omission: the member's earlier answers are NOT
+   restored into the controls. Independent sufficiency must be affirmatively
+   claimed every time it is claimed (clause 4), and a prefilled "yes" would carry
+   a sufficiency claim forward by omission — which is the one way the keystone
+   can be got around. What IS shown is what the record holds today, read back in
+   the same plain words this flow uses for everything else.
+
+   WHAT THIS SURFACE DOES NOT DO. It does not NOTICE. DEC-32 permits the system
+   to notice a weak reason moved out on its own immediately after a strength drop
+   and to surface it; the act leaves the evidence for that (the pair before and
+   after, in the Session Log and in its answer) and neither the act nor this flow
+   makes the judgement. Building it here would put a guess about the member's
+   motive into the surface that must never refuse them.
+   ============================================================ */
+
+/* DEC-32's OPERATIONAL TEST, rendered VERBATIM and attributed.
+   THE COLLISION IS REAL AND IS NAMED HERE RATHER THAN SMOOTHED AWAY: DEC-32's
+   entry states this test in a form containing one of the words its own clause 1
+   forbids on any surface, and CONDUCT's ruling on this item quotes it in the
+   form below — the same test with the analyst's noun removed. That form is what
+   a member reads, because a ruling cannot be rendered by breaking the same
+   ruling; the entry's spelling stays in DECISIONS.md, where a superseded
+   wording belongs. This is D-160's shape exactly: the rule did not move, the
+   word did. */
+const ELIC_OPERATIONAL_TEST = "Would refuting this alone change your conclusion?";
+
+/* { id, title, act, legs, standing, ans:{ord:{holds,falls[]}}, stmts:{}, reason,
+     phase:"author"|"readback", refusal, receipt, busy } */
+let ELIC = null;
+
+/* WHAT THE RECORD HOLDS TODAY, read from the plane's OWN parse of the document
+   (op=projection's `fm_json`), never from a second place and never from a
+   parameter. `grouped` is what makes a further act a REVISION rather than a
+   first answer — the act decides that from the record too, and this is the same
+   read, which is why the two cannot disagree. */
+function elicStanding(fmj){
+  const legs = (fmj && Array.isArray(fmj.basis)) ? fmj.basis.filter(l=>l && typeof l==="object") : [];
+  const labelled = legs.map(l=>(typeof l.ground === "string" && l.ground.trim()) ? l.ground.trim() : null);
+  const rows = (fmj && Array.isArray(fmj.grounds)) ? fmj.grounds : [];
+  const sets = new Map();
+  labelled.forEach((g,i)=>{ if(g === null) return; if(!sets.has(g)) sets.set(g,[]); sets.get(g).push(i); });
+  return { grouped: labelled.some(g=>g!==null) || rows.length > 0,
+           sets: [...sets.entries()].map(([label, ords])=>({ label, ords })),
+           rows };
+}
+
+/* THE DERIVATION. Consequences in, structure out, and there is no third input:
+   nothing below reads a grade, a state or a strength, which is what makes the
+   ordering rule (clause 5) a property of the code rather than of the layout.
+
+   Two reasons stand together when the member says one stops carrying the answer
+   the moment the other does — so the sets are the connected components of that
+   relation, taken over the reasons the member said their answer survives. A
+   reason whose loss the answer does NOT survive is NECESSARY, and one of those
+   is enough to leave the whole basis ungrouped: the record holds a partition
+   WHOLE or not at all, and the whole that is honest is the conservative one. */
+function elicDerive(){
+  if(!ELIC) return null;
+  const n = ELIC.legs.length, ans = ELIC.ans;
+  const answered = n > 0 && ELIC.legs.every((_,i)=> ans[i] && (ans[i].holds === true || ans[i].holds === false));
+  const necessary = ELIC.legs.map((_,i)=>i).filter(i=> ans[i] && ans[i].holds === false);
+  const parent = ELIC.legs.map((_,i)=>i);
+  const find = a => parent[a] === a ? a : (parent[a] = find(parent[a]));
+  for(let i=0;i<n;i++){
+    if(!ans[i] || ans[i].holds !== true) continue;
+    for(const j of (ans[i].falls || [])){
+      if(!(j >= 0 && j < n)) continue;
+      if(!ans[j] || ans[j].holds !== true) continue;   /* a necessary reason is in no set */
+      const a = find(i), b = find(j); if(a !== b) parent[a] = b;
+    }
+  }
+  const by = new Map();
+  for(let i=0;i<n;i++){
+    if(!ans[i] || ans[i].holds !== true) continue;
+    const r = find(i); if(!by.has(r)) by.set(r, []); by.get(r).push(i);
+  }
+  const sets = [...by.values()].map(g=>g.slice().sort((a,b)=>a-b)).sort((a,b)=>a[0]-b[0]);
+  const covers = sets.reduce((s,g)=>s+g.length,0) === n;
+  return { answered, necessary, sets, covers,
+           partition: (answered && !necessary.length && covers && sets.length > 0) ? sets : null };
+}
+/* The name a set is filed under. DERIVED from the member's own answers — the
+   positions of the reasons they said stand together — because a name is the one
+   thing the wire needs that no consequence question can ask for, and inventing a
+   word for it here would be this surface naming somebody's argument. The member
+   may write over it, and may write nothing. */
+function elicLabel(g, k){
+  const l = "reasons " + g.map(i=>i+1).join(" ");
+  return l.length <= 48 ? l : ("reasons set " + (k+1));
+}
+function elicName(ords){
+  return ords.map(i=>String((ELIC.legs[i] && ELIC.legs[i].target) || ("reason " + (i+1)))).join(", ");
+}
+/* THE FALSIFIER, DERIVED AND SHOWN BACK (clause 3), in the two shapes the ruling
+   names and in its words. Nothing here is stored: what the record holds is the
+   member's own authored falsifier, and this is the READ-BACK that lets them see
+   what their answers just said. */
+function elicFalsifier(d){
+  if(!d || !d.answered) return "";
+  if(d.partition)
+    return "Your answer fails only if ALL of these fail: "
+         + d.partition.map(g=>elicName(g)).join("; ") + ".";
+  return "Your answer fails if ANY of these fails: "
+       + ELIC.legs.map((_,i)=>elicName([i])).join(", ") + ".";
+}
+
+async function openElicit(id, title, act){
+  ELIC = { id, title, act, legs:[], standing:{ grouped:false, sets:[], rows:[] },
+           ans:{}, stmts:{}, reason:"", phase:"author", refusal:null, receipt:null, busy:false };
+  $("#dlg").innerHTML = `<h2>${esc(act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
+  $("#dlg-wrap").classList.remove("hidden");
+  try{
+    const proj = await getProjection(id);
+    let fmj = null; try{ fmj = proj && proj.fm_json ? JSON.parse(proj.fm_json) : null; }catch(_){}
+    ELIC.legs = (fmj && Array.isArray(fmj.basis)) ? fmj.basis.filter(l=>l && typeof l==="object") : [];
+    ELIC.standing = elicStanding(fmj);
+  }catch(_){ ELIC.legs = []; }
+  elicPaint();
+}
+function elicAnswer(ord, holds){
+  if(!ELIC) return;
+  const cur = ELIC.ans[ord] || { holds:null, falls:[] };
+  ELIC.ans[ord] = { holds, falls: holds === true ? cur.falls : [] };
+  elicPaint();
+}
+function elicWith(ord, other){
+  if(!ELIC) return;
+  const cur = ELIC.ans[ord] || { holds:null, falls:[] };
+  const at = cur.falls.indexOf(other);
+  ELIC.ans[ord] = { holds: cur.holds,
+                    falls: at === -1 ? [...cur.falls, other] : cur.falls.filter((_,i)=>i !== at) };
+  elicPaint();
+}
+function elicSay(which, v){
+  if(!ELIC) return;
+  if(which === "reason") ELIC.reason = v; else ELIC.stmts[which] = v;
+}
+function elicPhase(p){ if(ELIC){ ELIC.phase = p; elicPaint(); } }
+
+function elicPaint(){
+  if(!ELIC) return;
+  const box = $("#dlg"); if(!box) return;
+  const act = ELIC.act;
+  if(ELIC.receipt){ box.innerHTML = elicReceiptHtml(ELIC.receipt); return; }
+  const d = elicDerive();
+
+  if(!ELIC.legs.length){
+    box.innerHTML = `<h2>${esc(act.label)}</h2>
+      <div class="empty">This question rests on nothing yet, so there is nothing to answer about. Record what it rests on first.</div>
+      <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Close</button></div>`;
+    return;
+  }
+
+  /* WHAT THE RECORD HOLDS TODAY, read back in plain words. Shown, never restored
+     into the controls — see the header. */
+  const standing = ELIC.standing.grouped
+    ? `<div class="teach" style="margin:8px 0"><b>You have answered this before.</b> The record holds ${
+        ELIC.standing.sets.map(s=>`<span class="mono">${esc(elicName(s.ords))}</span>`).join(" &mdash; and, separately &mdash; ")
+      } as sets that carry your answer on their own. Answering again replaces that, and the record will ask you why. Your earlier answers are not filled in below: saying that something carries your answer on its own is a thing you say each time you say it.</div>`
+    : "";
+
+  if(ELIC.phase === "author"){
+    const rows = ELIC.legs.map((l,i)=>{
+      const a = ELIC.ans[i] || { holds:null, falls:[] };
+      const t = String(l.target || ("reason " + (i+1)));
+      const others = a.holds === true
+        ? `<div class="cx-sel"><p class="subj-note">Which of the others stop carrying your answer the moment this one does? Tick those, and leave the rest.</p>${
+            ELIC.legs.map((m,j)=> j === i ? "" : `<label class="dz-opt${a.falls.includes(j)?" on":""}">
+              <input type="checkbox" ${a.falls.includes(j)?"checked":""} onchange="elicWith(${i},${j})">
+              <span class="dz-verb mono">${esc(String(m.target || ("reason " + (j+1))))}</span></label>`).join("")
+          }</div>`
+        : "";
+      return `<div class="card" style="margin:0 0 12px" data-reason="${esc(t)}">
+        <div class="kv"><span class="k">Reason ${i+1}</span><span class="v plain mono">${esc(t)}</span></div>
+        <p class="subj-note" data-consequence="1"><b>If this turned out to be wrong, would your answer still hold?</b></p>
+        <div class="dz-choose">
+          <label class="dz-opt${a.holds === false?" on":""}">
+            <input type="radio" name="h${i}" ${a.holds === false?"checked":""} onchange="elicAnswer(${i}, false)">
+            <span class="dz-verb">No &mdash; my answer falls with it.</span></label>
+          <label class="dz-opt${a.holds === true?" on":""}">
+            <input type="radio" name="h${i}" ${a.holds === true?"checked":""} onchange="elicAnswer(${i}, true)">
+            <span class="dz-verb">Yes &mdash; my answer still holds.</span></label>
+        </div>
+        ${others}</div>`;
+    }).join("");
+    box.innerHTML = `<h2>${esc(act.label)}</h2>
+      <p class="what">This asks about your own reasoning, one reason at a time, and writes nothing until you have read back what your answers say.</p>
+      <div class="dz-what"><span class="dz-ttl">${esc(ELIC.title||ELIC.id)}</span><span class="id">${esc(ELIC.id)}</span></div>
+      ${act.prompt?`<div class="teach" style="margin:8px 0">${esc(act.prompt)}</div>`:""}
+      ${standing}
+      ${rows}
+      ${d.answered
+        ? `<div class="intent-pf"><button class="btn" id="el-read" onclick="elicPhase('readback')">Read back what this says</button></div>`
+        : `<p class="subj-note">Answer every reason above, and this page will read back what your answers say about your own answer.</p>`}
+      <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+    return;
+  }
+
+  /* ---- THE READ-BACK. Plain words, correctable, and it IS the check. ---- */
+  const sets = d.partition
+    ? d.partition.map((g,k)=>`<div class="card" style="margin:0 0 10px" data-set="${esc(elicLabel(g,k))}">
+        <div class="kv"><span class="k">Carries it on its own</span><span class="v plain mono">${esc(elicName(g))}</span></div>
+        <p class="subj-note" data-optest="1">${esc(ELIC_OPERATIONAL_TEST)} You have answered no &mdash; what is left still carries it. That is what the record will hold, under your name and today's date.</p>
+        <p class="subj-note">In your own words, if you want to say it: what do these say together? This is optional, and nothing turns on it.</p>
+        <textarea class="txt" rows="2" data-stmt="${esc(elicLabel(g,k))}" onchange="elicSay(${esc(JSON.stringify(elicLabel(g,k)))}, this.value)"></textarea>
+      </div>`).join("")
+    : "";
+  const outcome = d.partition
+    ? `<div class="intent-ok"><div>Your answers say these stand apart, so the record will hold them apart. Nothing here was filled in for you, and nothing here was read off a grade.</div></div>`
+    : `<div class="teach"><b>Your answers say your answer needs every one of these.</b> ${
+        d.necessary.map(i=>`<span class="mono">${esc(elicName([i]))}</span>`).join(", ")
+      } ${d.necessary.length === 1 ? "is one" : "are ones"} your answer falls with, so nothing here stands on its own and the record keeps them together &mdash; which is the reading that claims least. ${
+        ELIC.standing.grouped
+          ? "The record holds an earlier answer of yours that says otherwise. Recording this replaces it, and the record will ask you why."
+          : "That is what the record already holds, so there is nothing to write and this page offers no control that would write it."}</div>`;
+  const reasonBox = ELIC.standing.grouped
+    ? `<h3 class="cx-h">Why you are changing it</h3>
+       <p class="subj-note">The record requires this whenever you change an answer you already recorded, and keeps it beside the change with your name and the time. It is not a reason to be blocked: changing your mind is allowed and is recorded, never refused.</p>
+       <textarea class="txt" id="el-why" rows="3" onchange="elicSay('reason', this.value)"></textarea>`
+    : "";
+  const canCommit = !!d.partition || ELIC.standing.grouped;
+  box.innerHTML = `<h2>${esc(act.label)}</h2>
+    <div class="dz-what"><span class="dz-ttl">${esc(ELIC.title||ELIC.id)}</span><span class="id">${esc(ELIC.id)}</span></div>
+    <h3 class="cx-h">What your answers say</h3>
+    <p class="subj-note">Read this. If it is not what you meant, go back and change an answer &mdash; that is what this page is for, and reading this is far easier than writing it.</p>
+    <div class="pub-excl" data-falsifier="1">${esc(elicFalsifier(d))}</div>
+    ${sets}
+    ${outcome}
+    ${reasonBox}
+    ${ELIC.refusal?actRefusalHtml(ELIC.refusal):""}
+    <div class="intent-pf">
+      <button class="btn ghost" onclick="elicPhase('author')">Go back and change an answer</button>
+      ${canCommit?`<button class="btn" id="el-go" onclick="doElicit()"${ELIC.busy?" disabled":""}>${esc(act.label)}</button>`:""}
+    </div>
+    ${actRungHtml(act)}
+    <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+  const w = $("#el-why"); if(w) w.value = ELIC.reason;
+}
+
+/* THE ACT. The partition travels in the BODY because it is an array of objects
+   holding arrays of positions, which a query string cannot express honestly; the
+   name and the time are NOT SENT AT ALL, because the record stamps them from the
+   session and the clock and discards a caller's values. That is the whole reason
+   this act exists rather than a hand-written document. */
+async function doElicit(){
+  if(!ELIC || ELIC.busy) return;
+  const d = elicDerive();
+  ELIC.busy = true; ELIC.refusal = null; elicPaint();
+  const grounds = d.partition
+    ? d.partition.map((g,k)=>{
+        const label = elicLabel(g,k);
+        const stmt = String(ELIC.stmts[label] || "").trim();
+        return stmt ? { ground: label, legs: g, statement: stmt } : { ground: label, legs: g };
+      })
+    : [];
+  const a = await intentAsk("inquiryground",
+    { target: ELIC.id, grounds, ...(String(ELIC.reason||"").trim() ? { reason: String(ELIC.reason).trim() } : {}) });
+  if(!ELIC) return;
+  ELIC.busy = false;
+  if(!a.accepted){ ELIC.refusal = a.refusal; elicPaint(); return; }
+  ELIC.receipt = a.result;
+  elicPaint();
+}
+
+/* THE RECEIPT, AND IT IS THE FIRST PLACE A STRENGTH APPEARS IN THIS FLOW
+   (clause 5). Both axes, from the record's own two axis objects, rendered by the
+   same function the question's page and the published case use — this surface
+   performs no arithmetic over grades and shows no number the record did not
+   answer with. The name and the time beside each set are the RECORD'S stamp and
+   were never sent to it. And clause 6's route out is here: a member who has now
+   seen what their answers reached may change them, saying why. */
+function elicReceiptHtml(r){
+  const rows = Array.isArray(r.grounds) ? r.grounds : [];
+  const pairHtml = (label, p) => `<h3 class="cx-h">${esc(label)}</h3>${
+    GRADE_AXES.map(ax=>axisPanel(ax, liveAxis(p && p[ax]) || {}, ELIC ? ELIC.legs : [])).join("")}`;
+  return `<h2>${esc(r.act === "restructured" ? "Changed" : "Recorded")}</h2>
+    <div class="intent-ok">
+      <div>The record holds ${esc(String(r.legs || 0))} reason${r.legs === 1 ? "" : "s"} on <span class="mono">${esc(String(r.target||""))}</span>${
+        rows.length ? ` in ${esc(String(rows.length))} set${rows.length === 1 ? "" : "s"}` : ", together"}.</div>
+      <div>Recorded against <b>${esc(String(r.asserted_by||""))}</b>${r.at?` on <span class="mono">${esc(String(r.at))}</span>`:""} &mdash; the record's own stamp, not this page's, and not anything this page sent it.</div>
+      ${r.reason?`<div>Your reason, kept beside it: <span class="mono">${esc(String(r.reason))}</span></div>`:""}
+    </div>
+    ${rows.length?`<div style="margin-top:10px">${rows.map(g=>`<div class="card" style="margin:0 0 8px">
+      <div class="kv"><span class="k mono">${esc(String(g.ground||""))}</span><span class="v plain">${esc((g.legs||[]).map(i=>i+1).join(", "))}</span></div>
+      <div class="subj-how">Asserted by ${esc(String(g.asserted_by||""))} on ${esc(String(g.at||""))}${g.carried_forward?" &mdash; carried forward unchanged, because these reasons did not move":""}.</div>
+      ${g.statement?`<div class="subj-how">${esc(String(g.statement))}</div>`:""}</div>`).join("")}</div>`:""}
+    <h3 class="cx-h">What that reads at now</h3>
+    <p class="subj-note">This is the first time this page has shown you a strength, and the order is the point: you answered about your own reasoning first, and the record answered second. Two strengths, never one, and both are the record's own.</p>
+    ${r.strength?pairHtml("Before", r.strength.before):""}
+    ${r.strength?pairHtml("Now", r.strength.after):""}
+    <p class="subj-note">If seeing this makes you think you answered something wrongly, change it. That is allowed, it is not refused, and it is recorded with your name, the time and the reason you give &mdash; which is what makes it something a reader can weigh rather than something nobody can see.</p>
+    <div class="row-btns">
+      <button class="btn ghost" onclick="closeDialog();openInquiry(${esc(JSON.stringify(String((ELIC&&ELIC.id)||"")))})">Back to the question</button>
+      <button class="btn" id="el-again" onclick="elicAgain()">Change what you recorded</button>
+    </div>`;
+}
+function elicAgain(){
+  if(!ELIC) return;
+  ELIC.receipt = null; ELIC.refusal = null; ELIC.ans = {}; ELIC.stmts = {}; ELIC.reason = "";
+  ELIC.standing = { grouped:true, sets: ELIC.standing.sets, rows: ELIC.standing.rows };
+  ELIC.phase = "author";
+  elicPaint();
+}
+/*__ELICITATION_END__*/
 /*__CITE_ACT_START__*/
 /* ============================================================
    S4 -> S3 · UI-20 · CITE, AND THE THREE EDGE ACTS.
