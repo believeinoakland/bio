@@ -145,14 +145,19 @@ const FLAT_OPS = new Map(Object.entries({
      points at the handler it came from. */
   knock:          'index.mjs op==="knock" — builds its own answer literal (ok, knockId, sha256, bytes, received)',
   verify:         'index.mjs op==="verify" — json({ok:true, ...out.result})',
-  /* UI-18. The public read path's case op has its own handler and FLATTENS:
-     `json({ ok:true, ...c, object_type, body, basis, verification })`. Its
-     sibling `op=publishedbytes` is not listed because it answers BYTES, not
-     JSON, on success — the probe only judges answers it can read as an object,
-     and a refusal is legitimately flat either way. `op=publishedmanifest` is
-     NOT here and must not be: index.mjs re-wraps it explicitly
-     (`json({ok:true, result: …})`), so wrapped is the correct expectation. */
-  publishedcase:  'index.mjs op==="publishedcase" — json({ok:true, ...c, object_type, body, basis, verification})',
+  /* UI-18. The public read path's case op has its own handler and FLATTENS.
+     CORRECTED 2026-08-04 (UI-29, REC-44/DEC-44), never exempted: the quoted
+     return literal was `json({ok:true, ...c, object_type, body, basis,
+     verification})`, and those three keys moved INSIDE `findings[]` when a case
+     became a container over one or more findings. The envelope shape did not
+     move at all — this line is evidence for the FLAT judgement and evidence has
+     to name the code it was read off, or the list becomes a place to add an op
+     that is merely inconvenient. Its sibling `op=publishedbytes` is not listed
+     because it answers BYTES, not JSON, on success — the probe only judges
+     answers it can read as an object, and a refusal is legitimately flat either
+     way. `op=publishedmanifest` is NOT here and must not be: index.mjs re-wraps
+     it explicitly (`json({ok:true, result: …})`), so wrapped is correct. */
+  publishedcase:  'index.mjs op==="publishedcase" — json({ok:true, ...c, findings, verification})',
 }));
 const wireShapeOf = op => FLAT_OPS.has(op) ? "flat" : "wrapped";
 

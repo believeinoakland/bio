@@ -345,6 +345,11 @@ h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px
 .pub-list .pf:hover{background:var(--card)}
 .pub-list .pf .t{font-family:var(--font-record);font-size:20px;font-weight:600}
 .pub-list .pf .m{font-family:var(--font-fact);font-size:12px;color:var(--muted);margin-top:4px}
+/* UI-29: one member finding of a case edition, on the index. It is a SECTION
+   and carries `data-findingsec` because a finding's strength lives inside a
+   marked region on every surface this file draws, and the sweep for a
+   case-level strength is the complement of those regions. */
+.pub-list .pf .pub-member{display:block;border-top:var(--hair);margin-top:8px;padding-top:8px;font-size:13px}
 
 /* review: selection and the release moment */
 .rv-bar{display:flex;align-items:center;gap:14px;margin:0 0 14px}
@@ -681,6 +686,14 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 .pub-file{border-top:var(--hair);padding:9px 0;font-size:13.5px}
 .pub-drop{border:1px dashed var(--signal-dk);padding:10px 12px;margin:12px 0;font-size:14px}
 .pub-super{border:1px solid var(--signal-dk);background:var(--card);padding:12px 14px;margin:0 0 22px;font-size:14.5px}
+/* UI-29 (DEC-44). `.pub-state` is the case edition's own state — complete, or
+   awaiting members that have not been ratified — and it is rendered in BOTH
+   directions, so it is a normal block and not a warning colour: nothing has
+   failed in either. `.pub-forfinding` is the finding a pair belongs to, printed
+   in the same weight as the letters beside it, because a pair whose owner is
+   quieter than the pair is a pair a reader will quote without its owner. */
+.pub-state{border:1px solid var(--rule);background:var(--card);padding:12px 14px;margin:0 0 18px;font-size:14.5px}
+.pub-forfinding{font-family:var(--font-fact);font-size:12px;font-weight:700;letter-spacing:.03em}
 .pub-excl{white-space:pre-wrap;font-size:15px;border-left:3px solid var(--ink);padding-left:14px;margin:10px 0}
 .print-footer{font-family:var(--font-fact);font-size:10.5px;color:var(--muted);border-top:var(--hair);
               padding-top:8px;margin-top:26px;word-break:break-all}
@@ -718,6 +731,15 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
   /* THE FILTER LINE PRINTS, and prints at the surrounding size. It is listed
      here so nobody has to infer it from the absence of a rule. */
   .filterline{font-weight:700}
+  /* UI-29 (DEC-44), and both are ADDITIONS. The case edition's STATE prints at
+     full body size — a reader holding a printed case must be able to see that
+     two of its six findings had not been ratified when it was drawn, and a
+     window that survives on screen and shrinks on paper is the same omission
+     performed by CSS. And the FINDING a pair belongs to prints in the weight of
+     the letters it names: a page of grades whose owners went quiet on paper is
+     exactly the composition this item exists to prevent, arriving in print. */
+  .pub-state{break-inside:avoid;font-size:var(--t-pub-body)}
+  .pub-forfinding{font-weight:700}
 }
 </style>
 </head>
@@ -13027,6 +13049,15 @@ function floorWord(f){
     ? "none — no floor on this axis, so every leg passes on it whatever it is graded"
     : `grade ${f} or stronger`;
 }
+/* THE SHORT FORM, for the places a floor is printed beside other facts — the
+   bound block and the per-page footer. It NEVER prints an axis word followed by
+   a bare letter (`Documents B`), because that is the shape a STRENGTH takes on
+   this surface and a reader scanning a footer cannot tell a floor from a grade
+   by position. UI-29's sweep enforces exactly that: an axis word followed by a
+   letter anywhere outside a finding's own pages is a case-level strength, and a
+   floor written the ambiguous way would be indistinguishable from one — to the
+   harness and, which matters more, to the reader. */
+function floorShort(f){ return f === "none" ? "none" : `grade ${f}`; }
 /* IS THIS A FILTER AT ALL. A pair of `none` floors drops nothing, so it is the
    WHOLE CASE and says so; anything else is a view the reader constructed. Read
    from the floors themselves and never from a flag somebody sets, because a
@@ -13063,82 +13094,164 @@ function pubFilterHtml(floors, cls){
   return `<span class="${cls}" data-filter="${floors ? (pubFiltered(floors) ? "reader" : "none") : "unresolved"}">${esc(pubFilterText(floors))}</span>`;
 }
 
-/* ---- the published surface's state. One case, one edition, and the READER'S
+/* ---- the published surface's state. One CASE, one edition, and the READER'S
    OWN pair of floors, which default to none/none — the whole case (DEC-40).
    There is no stance key here any more and there must not be one. ---- */
 const PUB = { id: null, edition: null, floors: { capture: "none", connection: "none" },
               data: null, renderSha: null, index: null };
 let PUB_HASH_LOCK = false;
 
-/* The plane's two frozen axis objects, keyed by axis. Returns null unless BOTH
-   are present: the shape of a case's strength is a PAIR, and half of one is not
-   a weaker answer, it is a different one. */
-function pubPair(c){
-  const rows = c && Array.isArray(c.strength) ? c.strength : null;
+/* ============================================================
+   UI-29 · DEC-44: A CASE IS A CONTAINER OVER ONE OR **MORE** FINDINGS, AND THIS
+   REGION RENDERS THE FINDINGS, PLURAL. THIS REPLACED SHIPPED CODE AND IS A
+   CORRECTION, NOT AN ADDITION.
+
+   UI-18 rendered ONE inquiry as the case: one body, one basis chain, one frozen
+   pair, one falsifier, one division disclosure. That shape was never chosen —
+   it was ASSUMED by every item in the chain (D-187), and Bob's fact check of his
+   own definition found the repository contradicting him in his favour. REC-44
+   corrected the record; this corrects the surface it is read on.
+
+   WHAT LIVES AT WHICH ALTITUDE, and the two must never be collapsed:
+     PER CASE PER EDITION — the authored SCOPE statement (what the case is
+       ABOUT) and the COMPLETENESS assertion (what it leaves OUT). A reader
+       needs both and they are not the same claim (DEC-44 determination 2).
+     PER FINDING — the conclusion, the falsifier, the basis chain, the declared
+       bar, the division disclosure, the attestor and the signature, and THE
+       FROZEN PAIR OF STRENGTHS. C-21.2's per-axis inheritance is a fact about a
+       LEG of a FINDING and renders inside that finding and nowhere else.
+
+   AND THERE IS NO CASE-LEVEL STRENGTH. Not on the screen, not on a printed
+   page, not in anything this surface exports or describes by hash. Two findings
+   of different strength collapsed into one letter is R2's forbidden composition
+   arriving at case altitude — the "one letter" this project has now refused five
+   times — and it is the misrepresentation DEC-44 closes. It is enforced
+   STRUCTURALLY rather than by care: every strength mark on this surface is
+   produced by `pubStateBadge` and carries `data-finding`, the id of the finding
+   whose pair or whose leg it states, and every one of them is drawn inside a
+   `data-findingsec` section. The harness sweeps the COMPLEMENT — everything
+   outside those sections, over the whole response — and a single mark, letter or
+   axis word appearing there fails it. That shape is forced by what REC-44's own
+   control (a) measured: a spurious case-level strength leaves every per-finding
+   assertion GREEN, because the surface goes on answering correctly and
+   ADDITIONALLY answers wrongly. A value comparison passes; only a structural
+   sweep over whole responses bites.
+
+   THE `awaiting` WINDOW IS A STATE AND IS RENDERED AS ONE. Ratification is per
+   FINDING (the finding is the unit of truth; a case-level signature would cover
+   something nobody reviewed), so a case edition is ratified N times and becomes
+   servable as a container when the LAST member lands. Between the first and the
+   last there is a real window in which the case edition EXISTS, some of its
+   findings are published and answerable, and the container cannot be assembled.
+   That window is never an error and is never hidden: it is stated in both
+   directions, so absence of the statement cannot become the ambiguity.
+   ============================================================ */
+
+/* THE CASE'S OWN IDENTITY, and it is a real answer when there is none: a
+   ratified bundle that belongs to no case answers here as WHAT IT IS rather
+   than having a case identity manufactured for it (the conflation D-187
+   records, one level down). */
+function pubCaseId(c){ return c && c.caseId ? String(c.caseId) : null; }
+/* THE DECLARED MEMBERSHIP, IN ORDER, and the declared/ratified distinction is
+   the whole of what makes an edition incomplete: `findings[]` is the RATIFIED
+   subset and `awaiting[]` is what was declared and has not landed. Rendering
+   only the ratified subset would make an incomplete edition look complete,
+   which is the one thing this window must not do. */
+function pubRoster(c){
+  const got = (c && Array.isArray(c.findings)) ? c.findings : [];
+  const wait = (c && Array.isArray(c.awaiting)) ? c.awaiting : [];
+  return [...got.map((f) => ({ ratified: true, id: String(f.bundle_id), finding: f })),
+          ...wait.map((id) => ({ ratified: false, id: String(id), finding: null }))];
+}
+function pubComplete(c){ return !(c && c.complete === false); }
+/* THE EDITION'S STATE IN ONE LINE, for DEC-34's per-page header. It goes on
+   EVERY page-shaped artifact for the reason every other field there does: files
+   get forwarded, a reader may hold one sheet out of nine, and "two of these
+   findings had not been ratified when this was drawn" is exactly the kind of
+   fact that must not live only on the page nobody kept. Both directions, so
+   absence of the line cannot become the ambiguity. */
+function pubEditionStateWord(c){
+  if(!pubCaseId(c)) return "not a case — these are ratified bytes that are in no published case";
+  const roster = pubRoster(c);
+  const wait = (c && Array.isArray(c.awaiting)) ? c.awaiting : [];
+  return pubComplete(c)
+    ? `complete — all ${roster.length} declared finding${roster.length === 1 ? " is" : "s are"} ratified`
+    : `INCOMPLETE — ${roster.length - wait.length} of ${roster.length} declared findings ratified, awaiting ${wait.map(String).join(", ")}`;
+}
+
+/* The plane's two frozen axis objects FOR ONE FINDING, keyed by axis. Returns
+   null unless BOTH are present: the shape of a finding's strength is a PAIR,
+   and half of one is not a weaker answer, it is a different one.
+   CORRECTED 2026-08-04 (UI-29, DEC-44): this used to be handed the CASE. A case
+   has no strength to read — every pair belongs to a finding. */
+function pubPair(f){
+  const rows = f && Array.isArray(f.strength) ? f.strength : null;
   if(!rows) return null;
   const out = {};
   for(const a of rows) if(a && GRADE_AXES.includes(a.axis)) out[a.axis] = a;
   return (out.capture && out.connection) ? out : null;
 }
 /* THE ONLY PRODUCER OF A STRENGTH MARK ON THIS SURFACE, and it is one function
-   so that "two strengths, never one" is structural. Every mark carries the axis
-   it belongs to as a data attribute AND names that axis in its own text, so a
-   composed letter cannot be drawn without the harness's sweep seeing an
-   unattributed mark. */
-function pubStateBadge(axis, a){
+   so that "two strengths per finding, never one, and never one for the case" is
+   structural. Every mark carries the axis it belongs to AND — DEC-44 — THE
+   FINDING WHOSE STRENGTH IT IS, as a data attribute, so a mark drawn at case
+   altitude cannot name an owner and the harness's complement sweep sees it. A
+   mark with an empty `data-finding` is a mark about nothing and fails the sweep
+   by construction rather than by review. */
+function pubStateBadge(axis, a, fid){
   if(!GRADE_AXES.includes(axis)) return "";
+  const attrs = `data-axis="${esc(axis)}" data-finding="${esc(String(fid == null ? "" : fid))}"`;
   const label = esc(AXIS_SHORT[axis]);
   if(!a || !STRENGTH_STATES.includes(a.state))
-    return `<span class="pub-grade" data-axis="${esc(axis)}">${label} &middot; no state published</span>`;
+    return `<span class="pub-grade" ${attrs}>${label} &middot; no state published</span>`;
   if(a.state === "graded")
-    return `<span class="pub-grade" data-axis="${esc(axis)}">${label} ${esc(String(a.grade))}</span>`;
-  return `<span class="pub-grade" data-axis="${esc(axis)}">${label} ${esc(STRENGTH_STATE_WORD[a.state] || a.state)}</span>`;
+    return `<span class="pub-grade" ${attrs}>${label} ${esc(String(a.grade))}</span>`;
+  return `<span class="pub-grade" ${attrs}>${label} ${esc(STRENGTH_STATE_WORD[a.state] || a.state)}</span>`;
 }
-function pubPairBadges(pair){
-  return `<span class="pub-axisrow">${GRADE_AXES.map(ax => pubStateBadge(ax, pair ? pair[ax] : null)).join("")}</span>`;
+/* AND THE PAIR SAYS WHOSE IT IS IN TEXT, not only in an attribute nobody can
+   read: a reader who pastes a row of letters somewhere else must take the
+   finding they belong to with them, or the composition happens in the paste. */
+function pubPairBadges(pair, fid){
+  return `<span class="pub-axisrow" data-finding="${esc(String(fid == null ? "" : fid))}"
+    ><span class="pub-forfinding">${esc(String(fid == null ? "an unnamed finding" : fid))} &mdash;</span>${
+    GRADE_AXES.map((ax) => pubStateBadge(ax, pair ? pair[ax] : null, fid)).join("")}</span>`;
 }
 
-/* DEC-17 AS AMENDED: THE DECLARED BAR, BESIDE THE STRENGTH REACHED. A reader
-   building on another group's case is entitled to know the standard that case
-   was held to. An ABSENT bar renders as ABSENT and never as zero — the plane's
-   own sentence says so and is printed verbatim, because "an absent bar is not a
-   bar of zero" is exactly the sentence a renderer is tempted to shorten into a
-   dash. */
-function pubBarHtml(c){
-  const b = c && c.required ? c.required : null;
+/* DEC-17 AS AMENDED: THE DECLARED BAR, BESIDE THE STRENGTH REACHED — and per
+   FINDING, because `required_strength` is frozen into the finding's own bytes
+   and two findings of one case may have been held to different standards. An
+   ABSENT bar renders as ABSENT and never as zero; the plane's own sentence is
+   printed verbatim, because "an absent bar is not a bar of zero" is exactly the
+   sentence a renderer is tempted to shorten into a dash. */
+function pubBarHtml(f){
+  const b = f && f.required ? f.required : null;
+  const fid = esc(String((f && f.bundle_id) || ""));
   if(!b || b.declared !== true)
-    return `<div class="pub-bar" data-bar="absent"><b>Declared required strength: NONE WAS DECLARED.</b>
-      ${esc(b && b.detail ? b.detail : "No required evidentiary strength was declared for this case, so nothing here was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard.")}</div>`;
-  return `<div class="pub-bar" data-bar="declared"><b>Declared required strength, set in advance:
+    return `<div class="pub-bar" data-bar="absent" data-finding="${fid}"><b>Declared required strength for ${fid}: NONE WAS DECLARED.</b>
+      ${esc(b && b.detail ? b.detail : "No required evidentiary strength was declared for this finding, so nothing here was measured against one. An absent bar is not a bar of zero, and this finding makes no claim to have cleared any standard.")}</div>`;
+  return `<div class="pub-bar" data-bar="declared" data-finding="${fid}"><b>Declared required strength for ${fid}, set in advance:
       ${esc(AXIS_SHORT.capture)} ${esc(b.capture || "not set")} &middot; ${esc(AXIS_SHORT.connection)} ${esc(b.connection || "not set")}.</b>
       ${esc(b.detail || "")}</div>`;
 }
 
-/* THE QUALIFIERS (H5, D-8/C-15). A threshold may drop CLAIMS. It may never drop
-   a leg that DETERMINED either published strength, nor a leg that LEFT AN AXIS
-   UNRATED — because under the collapse the case's strength IS its weakest leg, so
-   dropping the determining leg drops the thing that produced the qualifier the
-   rendering still prints, and the reader is shown a strength with no leg that
-   could have produced it. `undetermined` therefore never needs a position in
-   the threshold order at all.
+/* THE QUALIFIERS (H5, D-8/C-15), PER FINDING. A threshold may drop CLAIMS. It
+   may never drop a leg that DETERMINED either published strength, nor a leg that
+   LEFT AN AXIS UNRATED — because under the collapse a finding's strength IS its
+   weakest leg, so dropping the determining leg drops the thing that produced the
+   qualifier the rendering still prints, and the reader is shown a strength with
+   no leg that could have produced it. `undetermined` therefore never needs a
+   position in the threshold order at all.
 
-   D-160 IS ABSOLUTE AND IT REACHES THIS ITEM'S OWN VOCABULARY. QUEUE.md and
-   RECONCILED both describe this class of leg with the word that was RETIRED,
-   because it means the OPPOSITE in SB-OUTPUT §5.1 and `check-semantics.mjs`
-   fails on any occurrence of it in this file. The rule is unchanged and the
-   word is not: the boundary case is UNRATED, and the leg is one that LEFT AN
-   AXIS UNRATED.
+   D-160 IS ABSOLUTE AND IT REACHES THIS ITEM'S OWN VOCABULARY. The boundary case
+   is UNRATED, and the leg is one that LEFT AN AXIS UNRATED.
 
-   Such a leg is any ungraded leg while an axis reads UNRATED or
-   undetermined. The FROZEN pair does not carry `not_load_bearing` (the
-   frontmatter block writes axis, state, grade, weakest, load_bearing,
-   population and detail), so the set is taken from the basis itself — which is
-   the conservative direction: it keeps more legs, and the rule here is one
-   qualifier too many rather than one too few. */
-function pubQualifiers(c){
+   The FROZEN pair does not carry `not_load_bearing`, so the set is taken from
+   the finding's own basis — the conservative direction: one qualifier too many
+   rather than one too few. */
+function pubQualifiers(f){
   const ids = new Set(), why = new Map();
-  const pair = pubPair(c);
-  const legs = (c && Array.isArray(c.basis)) ? c.basis : [];
+  const pair = pubPair(f);
+  const legs = (f && Array.isArray(f.basis)) ? f.basis : [];
   if(!pair) return { ids, why };
   for(const ax of GRADE_AXES){
     const a = pair[ax];
@@ -13146,7 +13259,7 @@ function pubQualifiers(c){
     if(a.state === "graded" && a.weakest != null){
       const id = String(a.weakest);
       ids.add(id);
-      why.set(id, `it determined this case's ${AXIS_SHORT[ax].toLowerCase()} strength — the case is no stronger than this leg`);
+      why.set(id, `it determined this finding's ${AXIS_SHORT[ax].toLowerCase()} strength — the finding is no stronger than this leg`);
     }
     if(a.state === "unrated" || a.state === "undetermined"){
       for(const l of legs){
@@ -13160,12 +13273,14 @@ function pubQualifiers(c){
   return { ids, why };
 }
 
-/* THE CONJUNCTIVE EVALUATION. Each axis's floor is applied to the legs of THAT
-   axis and to nothing else; the two are never mixed and neither is ever used as
-   a default for the other. */
-function pubThreshold(c, floors){
-  const legs = (c && Array.isArray(c.basis)) ? c.basis : [];
-  const quals = pubQualifiers(c);
+/* THE CONJUNCTIVE EVALUATION, PER FINDING. Each axis's floor is applied to the
+   legs of THAT axis of THAT finding and to nothing else; the two axes are never
+   mixed and neither is ever used as a default for the other, and two findings'
+   bases are never pooled — pooling them would attribute one finding's evidence
+   to the other, which is the composition at a different address. */
+function pubThreshold(f, floors){
+  const legs = (f && Array.isArray(f.basis)) ? f.basis : [];
+  const quals = pubQualifiers(f);
   const kept = [], dropped = [];
   for(const l of legs){
     const id = String(l.target || "");
@@ -13187,33 +13302,66 @@ function pubThreshold(c, floors){
   /* AN AXIS THAT IS NOT GRADED SATISFIES ONLY `none`. Stated as its own fact rather than
      performed by silently emptying the axis. */
   const axisFails = [];
-  const pair = pubPair(c);
+  const pair = pubPair(f);
   if(pair) for(const ax of GRADE_AXES){
     const a = pair[ax];
     if(!a || a.state === "graded") continue;
     if(floors[ax] !== "none")
       axisFails.push({ axis: ax, state: a.state,
-        detail: `The ${AXIS_SHORT[ax].toLowerCase()} axis reads ${STRENGTH_STATE_WORD[a.state] || a.state}, and this rendering asks for ${floorWord(floors[ax])} on it. An axis that is not graded satisfies a floor of none and no other floor, so this case does not meet the floor you set on this axis. Nothing is hidden because of it: the legs that left the axis reading ${STRENGTH_STATE_WORD[a.state] || a.state} are qualifiers and are printed below.` });
+        detail: `The ${AXIS_SHORT[ax].toLowerCase()} axis of ${String((f && f.bundle_id) || "this finding")} reads ${STRENGTH_STATE_WORD[a.state] || a.state}, and this rendering asks for ${floorWord(floors[ax])} on it. An axis that is not graded satisfies a floor of none and no other floor, so this finding does not meet the floor you set on this axis. Nothing is hidden because of it: the legs that left the axis reading ${STRENGTH_STATE_WORD[a.state] || a.state} are qualifiers and are printed below.` });
   }
-  const cutsDropped = dropped.filter(d => d.leg && d.leg.role === "cuts_against");
+  const cutsDropped = dropped.filter((d) => d.leg && d.leg.role === "cuts_against");
   return { kept, dropped, cutsDropped, axisFails, qualifiers: quals };
 }
 
-/* ---- who authored this, and what bias the case declared about itself ---- */
-function pubAuthors(c){
+/* ---- who authored this, and what bias it declared about itself ---- */
+/* PER FINDING: the member who attested THESE bytes. */
+function pubAuthors(f){
+  const m = f && f.attestor && f.attestor.member ? String(f.attestor.member) : null;
+  return m ? m + " (attested " + String(f.bundle_id) + ")" : "not named in the published bytes";
+}
+/* PER CASE: a LIST and never a merge. The completeness assertion has one author
+   — it is the case's claim — and every member finding has its own attestor. A
+   case with two attestors has two, and saying "the author" would be composing
+   two people into one the same way a case-level letter composes two strengths. */
+function pubCaseAuthors(c){
   const names = [];
-  if(c && c.attestor && c.attestor.member) names.push(String(c.attestor.member) + " (attested)");
-  if(c && c.completeness && c.completeness.author && String(c.completeness.author) !== String(c.attestor && c.attestor.member))
-    names.push(String(c.completeness.author) + " (completeness)");
+  if(c && c.completeness && c.completeness.author) names.push(String(c.completeness.author) + " (completeness, for the case)");
+  for(const f of (c && c.findings) || []) if(f.attestor && f.attestor.member) names.push(String(f.attestor.member) + " (attested " + String(f.bundle_id) + ")");
   return names.length ? names.join(", ") : "not named in the published bytes";
 }
 /* DECLARED BIAS is the HUNCH legs and nothing else: a hunch is declared bias,
    recorded openly from the moment it is made. "None declared" is a real answer
-   and is printed as one. */
-function pubDeclaredBias(c){
-  const legs = (c && Array.isArray(c.basis)) ? c.basis : [];
-  const h = legs.filter(l => l && l.grade_source === "hunch").map(l => String(l.target));
+   and is printed as one. Per FINDING, because a basis belongs to a finding. */
+function pubDeclaredBias(f){
+  const legs = (f && Array.isArray(f.basis)) ? f.basis : [];
+  const h = legs.filter((l) => l && l.grade_source === "hunch").map((l) => String(l.target));
   return h.length ? `${h.length} declared hunch${h.length === 1 ? "" : "es"} — ${h.join(", ")}` : "none declared";
+}
+/* PER CASE: again a list, finding by finding, never a total. A count over the
+   whole case would be a case-level number about evidence, which is the shape
+   this item exists to keep off this surface. */
+function pubCaseDeclaredBias(c){
+  const parts = ((c && c.findings) || []).map((f) => `${String(f.bundle_id)}: ${pubDeclaredBias(f)}`);
+  return parts.length ? parts.join(" &middot; ") : "no ratified finding to declare one";
+}
+
+/* THE CASE'S OWN CHECKABLE HASH, and the honest answer when there is not one
+   yet. A case's hash is its CONTAINER MANIFEST's — the artifact that names every
+   member's parts and every member's signature. In the `awaiting` window there is
+   no container, so there is no case hash, and that is STATED rather than filled
+   in with a member's hash (which would be one finding's hash wearing the case's
+   name). `data-hash` carries either a real sha or `none-yet`, so the harness can
+   read the two apart without reading prose. */
+function pubCaseHashLine(c){
+  if(c && c.manifest_sha)
+    return { attr: String(c.manifest_sha),
+             html: `sha256:${esc(String(c.manifest_sha))} (the container manifest, which names every finding's parts and every finding's signature)` };
+  const n = (c && Array.isArray(c.awaiting)) ? c.awaiting.length : 0;
+  return { attr: "none-yet",
+           html: pubCaseId(c)
+             ? `NO CONTAINER HASH YET &mdash; this case edition is awaiting ${esc(String(n))} of its declared findings, so there is nothing assembled to hash. No member's hash stands in for it.`
+             : `NO CASE HASH &mdash; these bytes are not a member of any published case, so there is no case container to hash.` };
 }
 
 /* DEC-34: THE PER-PAGE HEADER. Case id, edition, authors, declared bias, both
@@ -13222,39 +13370,55 @@ function pubDeclaredBias(c){
    stamps; the harness counts pages against stamps in both directions so a page
    cannot appear without a header and a header cannot be counted twice.
 
+   WIDENED 2026-08-04 (UI-29, DEC-44) BY ONE FIELD AND NOT ONE MORE: a page that
+   belongs to a FINDING names that finding beside the case, and carries THAT
+   finding's own hash, authors and declared bias. A page that belongs to the CASE
+   carries the case's own container hash and LISTS its members' authors. A page
+   is one or the other and never both, which is what keeps a finding's facts from
+   being read as the case's.
+
    TAMPER-EVIDENT, NEVER TAMPER-PROOF. Nothing on this page prevents a modified
-   copy. Everything on it makes one detectable by anyone holding it, without
-   this instance's cooperation — which is the stronger property and the only one
-   we can honestly claim. */
-/* DEC-40 (b) WIDENED THIS HEADER BY ONE FIELD, and it is the load-bearing half
-   of the ruling: the FILTER travels here, beside the case id, the edition, the
-   authors and the hash — the brazening already required, one field wider. It is
-   on EVERY page-shaped artifact because files get forwarded and a filter stated
-   anywhere else travels no further than the note it was stated in. */
-function dec34Header(c, floors){
+   copy. Everything on it makes one detectable by anyone holding it, without this
+   instance's cooperation — which is the stronger property and the only one we can
+   honestly claim. */
+function dec34Header(c, floors, f){
   const floorLine = floors
     ? `${esc(AXIS_SHORT.capture)}: ${esc(floorWord(floors.capture))} &middot; ${esc(AXIS_SHORT.connection)}: ${esc(floorWord(floors.connection))}`
     : `NO PAIR OF FLOORS RESOLVED`;
-  return `<div class="dec34" data-dec34="1">
-    <span class="f"><b>Case</b> ${esc(c.bundleId)} &middot; <b>Edition</b> ${esc(String(c.edition))} of ${esc(String(c.latest_edition))} &middot; ${esc((c.ratified_at || "").slice(0, 10))}</span>
-    <span class="f"><b>Authors</b> ${esc(pubAuthors(c))}</span>
-    <span class="f"><b>Declared bias</b> ${esc(pubDeclaredBias(c))}</span>
+  const caseId = pubCaseId(c);
+  const hash = f ? { attr: String(f.bundle_sha || ""),
+                     html: `sha256:${esc(String(f.bundle_sha || ""))} (this finding's own signed bytes)` }
+                 : pubCaseHashLine(c);
+  const verify = f
+    ? `op=publishedbytes&sha256=${esc(String(f.bundle_sha || ""))}`
+    : esc((c.verification && c.verification.manifest) || "op=verify&sha256=<the hash above>");
+  return `<div class="dec34" data-dec34="1" data-hash="${esc(hash.attr)}">
+    <span class="f"><b>Case</b> ${esc(caseId || "NONE — these bytes are not a member of any published case")} &middot; <b>Edition</b> ${esc(String(c.edition))} of ${esc(String(c.latest_edition))} &middot; ${esc((c.ratified_at || "not yet — this edition is still being ratified").slice(0, 40))}</span>
+    <span class="f"><b>${f ? "Finding" : "Findings"}</b> ${f ? esc(String(f.bundle_id)) : esc(pubRoster(c).map((m) => m.id + (m.ratified ? "" : " (awaiting)")).join(", ") || "none")}</span>
+    <span class="f"><b>Edition state</b> ${esc(pubEditionStateWord(c))}</span>
+    <span class="f"><b>Authors</b> ${esc(f ? pubAuthors(f) : pubCaseAuthors(c))}</span>
+    <span class="f"><b>Declared bias</b> ${f ? esc(pubDeclaredBias(f)) : pubCaseDeclaredBias(c)}</span>
     <span class="f"><b>Floors</b> ${floorLine}</span>
     <span class="f"><b>What this is</b> ${pubFilterHtml(floors, "filterline")}</span>
-    <span class="f sha"><b>Hash</b> sha256:${esc(c.bundle_sha || "")}</span>
-    <span class="f"><b>Verify</b> ${esc((c.verification && c.verification.bytes) || "op=verify&sha256=<the hash above>")} &mdash; tamper-EVIDENT, never tamper-proof</span>
+    <span class="f sha"><b>Hash</b> ${hash.html}</span>
+    <span class="f"><b>Verify</b> ${verify} &mdash; tamper-EVIDENT, never tamper-proof</span>
   </div>`;
 }
-/* A PAGE-SHAPED ARTIFACT. One section, one header, always. */
-function pubPage(c, floors, inner){
-  return `<section class="pub-page">${dec34Header(c, floors)}${inner}</section>`;
+/* A PAGE-SHAPED ARTIFACT. One section, one header, always — and it declares
+   which ALTITUDE it is at, so the harness can sweep the case-level pages for a
+   strength that must not be on them. */
+function pubPage(c, floors, f, inner){
+  const at = f ? ` data-page="finding" data-findingsec="${esc(String(f.bundle_id))}"` : ` data-page="case" data-caselevel="1"`;
+  return `<section class="pub-page"${at}>${dec34Header(c, floors, f)}${inner}</section>`;
 }
 
-/* DEC-31's BOUND RULE + H4: THE IN-BAND BLOCK. Hash, date, author and BOTH
-   floors, plus DEC-40's FILTER LINE — whether this is the case or a view a
-   reader constructed — and the exclusions the case itself declared. Inside the
-   artifact, in EVERY rendering, without exception, because files get forwarded
-   and a filter stated in a covering note travels no further than the note does.
+/* DEC-31's BOUND RULE + H4: THE IN-BAND BLOCK, AND IT IS THE CASE'S. Hash, date,
+   author and BOTH floors, plus DEC-40's FILTER LINE — whether this is the case or
+   a view a reader constructed — plus, from UI-29, THE TWO CASE-LEVEL ASSERTIONS:
+   the authored SCOPE (what this case is about) and the COMPLETENESS statement
+   (what it leaves out). DEC-44 determination 2: a reader needs both and they are
+   not the same claim, so neither stands in for the other and neither is derived
+   from the findings' titles.
 
    IT IS TEXT. Not a tooltip, not generated content, not an attribute: a reader
    who selects this page and pastes it somewhere else takes the block with them,
@@ -13263,78 +13427,150 @@ function pubInbandHtml(c, floors){
   let rows = [];
   try{ rows = JSON.parse((c.completeness && c.completeness.excluded) || "[]"); }catch(_){ rows = []; }
   const excl = Array.isArray(rows) && rows.length
-    ? `<ul style="margin:8px 0 0;padding-left:20px">${rows.map(r => `<li>${esc(r && r[0] ? r[0] + " — " : "")}${esc((r && r[1]) || "")}: ${esc((r && r[2]) || "")}</li>`).join("")}</ul>`
+    ? `<ul style="margin:8px 0 0;padding-left:20px">${rows.map((r) => `<li>${esc(r && r[0] ? r[0] + " — " : "")}${esc((r && r[1]) || "")}: ${esc((r && r[2]) || "")}</li>`).join("")}</ul>`
     : `<p style="margin:8px 0 0">The case declares that nothing material was excluded.</p>`;
+  const hash = pubCaseHashLine(c);
   return `<div class="pub-inband">
     <h3>What you are reading, and what has been left out of it</h3>
     <p><b>${pubFilterHtml(floors, "filterline")}</b></p>
+    <p style="margin-top:12px" data-scope="1"><b>What this case is about.</b> ${esc(pubCaseId(c) ? ((c.scope) || "The published bytes carry no scope statement for this case.") : "These bytes are not a member of any published case, so there is no case scope statement and none is invented here.")}</p>
+    <p><b>This is a case of ${esc(String(pubRoster(c).length))} finding${pubRoster(c).length === 1 ? "" : "s"}, and each one carries its own conclusion, its own falsifier and its own pair of strengths.</b> There is no strength for the case as a whole and this page does not compute one: two findings can be strong and weak in different ways at once, and one letter over both would be a claim the evidence does not support.</p>
     <div class="floors">
       <div><b>Floor applied to ${esc(AXIS_SHORT.capture)} (${esc(AXIS_WORD.capture.toLowerCase())}):</b> ${esc(floors ? floorWord(floors.capture) : "NONE RESOLVED")}</div>
       <div><b>Floor applied to ${esc(AXIS_SHORT.connection)} (${esc(AXIS_WORD.connection.toLowerCase())}):</b> ${esc(floors ? floorWord(floors.connection) : "NONE RESOLVED")}</div>
-      <div>The two floors are independent and are applied together. Neither is a default for the other, and neither was derived from the other.</div>
+      <div>The two floors are independent and are applied together. Neither is a default for the other, and neither was derived from the other. They are applied to every finding's own legs separately.</div>
     </div>
-    <p style="margin-top:12px"><b>What this case says it does not cover.</b> ${esc((c.completeness && c.completeness.statement) || "The published bytes carry no completeness statement.")}</p>
+    <p style="margin-top:12px"><b>What this case says it does not cover.</b> ${esc((c.completeness && c.completeness.statement) || (pubCaseId(c) ? "The published bytes carry no completeness statement." : "These bytes are not a member of any published case, so they carry no case completeness assertion."))}</p>
     ${excl}
     <div class="bound">
-      Case ${esc(c.bundleId)}, edition ${esc(String(c.edition))}.
-      Hash sha256:${esc(c.bundle_sha || "")}.
-      Ratified ${esc(c.ratified_at || "an unrecorded date")}.
-      Author ${esc(pubAuthors(c))}.
-      Floors: ${esc(AXIS_SHORT.capture)} ${esc(floors ? floors.capture : "none resolved")}, ${esc(AXIS_SHORT.connection)} ${esc(floors ? floors.connection : "none resolved")}.
+      Case ${esc(pubCaseId(c) || "none")}, edition ${esc(String(c.edition))}.
+      Hash ${hash.html}
+      Ratified ${esc(c.ratified_at || "not yet — this edition is still being ratified")}.
+      Author ${esc(pubCaseAuthors(c))}.
+      Floors: ${esc(AXIS_SHORT.capture)} ${esc(floors ? floorShort(floors.capture) : "none resolved")}, ${esc(AXIS_SHORT.connection)} ${esc(floors ? floorShort(floors.connection) : "none resolved")}.
       ${esc(pubRenderingName(floors))}.
     </div>
   </div>`;
+}
+
+/* THE `awaiting` WINDOW, RENDERED AS A STATE (REC-44, and it is UI-29's own
+   half of it). A case edition is ratified ONCE PER FINDING, so between the
+   first member landing and the last there is a real window in which the edition
+   exists, some findings are published and answerable, and the container cannot
+   be assembled. It is not an error — nothing failed — and it is not hidden,
+   because a reader shown four findings when six were declared has been told
+   something untrue by omission.
+
+   STATED IN BOTH DIRECTIONS. A complete edition SAYS it is complete, for the
+   same reason DEC-40's unfiltered rendering says it is unfiltered: if only the
+   incomplete case spoke, absence of the statement would become the ambiguity. */
+function pubStateHtml(c){
+  const roster = pubRoster(c);
+  const wait = (c && Array.isArray(c.awaiting)) ? c.awaiting : [];
+  const got = roster.length - wait.length;
+  if(!pubCaseId(c))
+    return `<div class="pub-state" data-caseedition="notacase" data-awaiting="0">
+      <b>These bytes are not a member of any published case.</b> ${esc((c.detail) || "They were ratified and are verifiable by hash, and they carry no case identity, no scope statement and no completeness assertion, because they are not a case. None is invented for them here.")}</div>`;
+  if(pubComplete(c))
+    return `<div class="pub-state" data-caseedition="complete" data-awaiting="0">
+      <b>This case edition is complete: all ${esc(String(roster.length))} of its declared findings are ratified.</b>
+      Each was signed on its own bytes by its own attestor, and the container that carries all of them can be assembled and checked whole.</div>`;
+  return `<div class="pub-state" data-caseedition="awaiting" data-awaiting="${esc(String(wait.length))}">
+    <b>This case edition is not finished yet: ${esc(String(got))} of ${esc(String(roster.length))} declared findings have been ratified.</b>
+    This is a state of the record, not an error, and nothing has failed. A case is ratified ONE FINDING AT A TIME, because the finding is the unit of truth and what a member signs is one document's own bytes; the edition becomes servable as a container when the last member lands.
+    The findings that have landed are published and answer individually, exactly as they do below, and every one of them is verifiable by its own hash right now.
+    The container is NOT assembled and no hash for it is offered: one built now would name parts this record does not hold and would claim to carry findings that have not been ratified.
+    Still awaiting ratification: ${esc(wait.map(String).join(", "))}. Nothing of ${wait.length === 1 ? "it" : "them"} is served or described here — not a title, not a conclusion, not a strength, not a hash — because nothing of ${wait.length === 1 ? "it" : "them"} has been signed.</div>`;
+}
+
+/* WHAT THE READER ASKED FOR, WHEN IT WAS A FINDING. A finding's id resolves to
+   the case it was published in, and the case is the artifact the group put its
+   name on — but the reader asked about one member of it, and this surface does
+   not decide on their behalf that they meant the whole. It says which id it was
+   handed and what that id is. */
+function pubAskedHtml(c){
+  if(!c || !c.asked) return "";
+  return `<div class="pub-state" data-asked="${esc(String(c.asked))}">
+    <b>You asked for ${esc(String(c.asked))}, which is a FINDING.</b>
+    It was published as one member of case ${esc(pubCaseId(c) || "none")}, and the case is what this group put its name on, so the case is below with that finding inside it. Both ids answer at this address, and nothing was decided on your behalf about which one you meant.</div>`;
+}
+
+/* THE DECLARED MEMBERSHIP, ON THE PAGE. In the authored order — which is the
+   order the container's parts take and the order every rendering takes — with
+   the ratified and the awaited marked APART rather than merged into a count. */
+function pubRosterHtml(c){
+  const roster = pubRoster(c);
+  if(!roster.length) return `<p class="subj-note" data-roster="0">This case edition declares no findings, and this page invents none.</p>`;
+  return `<h2>The findings in this case</h2>
+    <p class="subj-note">In the order the group published them. Each is a separate document with its own conclusion, its own falsifier, its own basis and its own pair of strengths, signed on its own bytes by its own attestor.</p>
+    ${roster.map((m, i) => m.ratified
+      ? `<div class="pub-file" data-member="ratified" data-leg="${esc(m.id)}">Finding ${esc(String(i + 1))} of ${esc(String(roster.length))} &middot; <span class="mono">${esc(m.id)}</span> &middot; ${esc(m.finding.title || "untitled")}
+           <div class="mono">ratified ${esc(String(m.finding.ratified_at || "").slice(0, 10))} &middot; attested by ${esc((m.finding.attestor && m.finding.attestor.member) || "not named")}</div></div>`
+      : `<div class="pub-file" data-member="awaiting" data-leg="${esc(m.id)}">Finding ${esc(String(i + 1))} of ${esc(String(roster.length))} &middot; <span class="mono">${esc(m.id)}</span> &middot; DECLARED AND NOT YET RATIFIED
+           <div class="mono">nothing of this finding is served here: it has not been signed, so this surface has no title, no conclusion, no strength and no hash to offer for it</div></div>`).join("")}`;
 }
 
 /* REC-17's BANNER, AND IT SAYS WHICH NUMBER IT SHOWS. REC-17's landed line
    records the finding this exists for: a dependent's DERIVED pair follows a
    republished case forward while the frozen inherited grade does not, so a
    banner that only said "a newer edition exists" would leave a reader guessing
-   which of the two numbers is on the page in front of them. It is THE EDITION'S
-   OWN FROZEN PAIR, always, and the banner says so.
+   which of the numbers is on the page in front of them. They are THE FINDINGS'
+   OWN FROZEN PAIRS as this edition froze them, always, and the banner says so.
 
-   AND IT COMES FROM `published_bundles` + THE FROZEN BYTES, NEVER FROM
-   `op=reevaluations`: that op is member-class, and a public banner that needed
-   a credential would either not render for the reader it is for, or would be a
-   credentialled read wearing a public page's clothes. Everything here is in
-   `op=publishedcase`'s own answer. */
+   CORRECTED 2026-08-04 (UI-29, DEC-44), never exempted: this said "the two
+   strengths on this page", singular case, because a case had one pair. An
+   edition of a case carries one pair PER FINDING and the banner names them that
+   way. The rule REC-17 wrote did not move; the arity did.
+
+   AND IT COMES FROM `published_cases` + THE FROZEN BYTES, NEVER FROM
+   `op=reevaluations`: that op is member-class, and a public banner that needed a
+   credential would either not render for the reader it is for, or would be a
+   credentialled read wearing a public page's clothes. */
 function pubSupersessionHtml(c){
   const eds = Array.isArray(c.editions) ? c.editions : [];
-  const newer = eds.filter(e => Number(e) > Number(c.edition));
-  if(!newer.length){
-    return `<div class="pub-super" data-super="latest">You are reading edition ${esc(String(c.edition))}, which is the newest edition of this case. The two strengths shown on this page are edition ${esc(String(c.edition))}'s own frozen pair, signed with these bytes.</div>`;
-  }
+  const newer = eds.filter((e) => Number(e) > Number(c.edition));
+  const id = pubCaseId(c) || String((c.findings && c.findings[0] && c.findings[0].bundle_id) || "");
+  if(!newer.length)
+    return `<div class="pub-super" data-super="latest">You are reading edition ${esc(String(c.edition))}, which is the newest edition of this case. Every strength shown on this page is the frozen pair of the FINDING it is printed beside, as edition ${esc(String(c.edition))} froze it, signed with that finding's own bytes.</div>`;
   return `<div class="pub-super" data-super="superseded"><b>A newer edition of this case exists.</b>
     You are reading edition ${esc(String(c.edition))}; edition${newer.length === 1 ? "" : "s"} ${esc(newer.join(", "))} ${newer.length === 1 ? "was" : "were"} published later.
     Edition ${esc(String(c.edition))} has not been withdrawn and still answers: an edition is a separate document and every published one stands.
-    <b>The two strengths on this page are edition ${esc(String(c.edition))}'s OWN FROZEN PAIR</b> — the numbers signed with these bytes. They are not edition ${esc(String(c.latest_edition))}'s, and nothing here has been recomputed on your behalf.
-    ${newer.map(e => `<a class="pub-back" onclick="pubOpen('${esc(c.bundleId)}', ${esc(String(e))})">Read edition ${esc(String(e))}</a>`).join(" ")}</div>`;
+    <b>Every strength on this page is edition ${esc(String(c.edition))}'s OWN FROZEN PAIR for the finding it sits beside</b> — the numbers signed with that finding's bytes. They are not edition ${esc(String(c.latest_edition))}'s, and nothing here has been recomputed on your behalf.
+    ${newer.map((e) => `<a class="pub-back" onclick="pubOpen('${esc(id)}', ${esc(String(e))})">Read edition ${esc(String(e))}</a>`).join(" ")}</div>`;
 }
 
 /* ---- one basis leg, and the SERVE / NAME split rendered as two things ----
    `ratify` copies the files of the bundle being ratified and a cited document
    is a DIFFERENT bundle, so a leg this surface can hand over and a leg it can
    only name are not the same object with a flag. The plane decides which is
-   which (`served`), against the published projection and nothing else. */
-function pubLegHtml(entry, ord){
+   which (`served`), against the published projection and nothing else.
+
+   C-21.2's INHERITANCE RENDERS HERE AND NOWHERE ELSE (DEC-44 (d)): the pair
+   frozen into the edition a leg NAMES is a fact about that cited finding, and
+   the leg belongs to the citing FINDING. Both marks name their finding — the
+   leg's own grade names the finding whose leg it is, the cited pair names the
+   finding it was frozen into — so the inheritance can never be read as a fact
+   about the case. */
+function pubLegHtml(entry, ord, fid){
   const l = entry.leg || {};
   const id = String(l.target || "");
   const role = ROLE_WORD[l.role] || "is recorded against this";
   const axis = GRADE_AXES.includes(l.grade_axis) ? AXIS_SHORT[l.grade_axis] : null;
   const how = GRADE_SOURCE_WORD[l.grade_source] || "recorded with no account of where it came from";
   const grade = l.grade == null
-    ? `<span class="pub-grade" data-axis="${esc(l.grade_axis || "capture")}">${esc(axis || AXIS_SHORT.capture)} no grade — not load-bearing (DEC-18)</span>`
-    : pubStateBadge(l.grade_axis, { state: "graded", grade: l.grade });
+    ? `<span class="pub-grade" data-axis="${esc(l.grade_axis || "capture")}" data-finding="${esc(String(fid || ""))}">${esc(axis || AXIS_SHORT.capture)} no grade — not load-bearing (DEC-18)</span>`
+    : pubStateBadge(l.grade_axis, { state: "graded", grade: l.grade }, fid);
   const cited = l.cited_edition || null;
+  const ordId = esc(String(fid || "")) + "-" + ord;
   const read = l.served && cited
     ? `<div class="mono"><span class="served yes">This surface can SERVE it.</span>
          Edition ${esc(String(cited.edition))} &middot; ${esc(cited.title || "untitled")} &middot; ratified ${esc((cited.ratified_at || "").slice(0, 10))}<br>
          <a data-addr="op=publishedbytes&amp;sha256=${esc(cited.bundle_sha)}" data-sha="${esc(cited.bundle_sha)}" onclick="pubBytes('${esc(cited.bundle_sha)}')">read the bytes this leg rests on</a>
-         &middot; <button class="btn ghost" onclick="pubVerify('${esc(cited.bundle_sha)}','#v-leg-${ord}')">Verify this hash</button>
-         <span id="v-leg-${ord}"></span></div>
-       ${cited.capture || cited.connection ? `<div class="pub-axisrow">${pubStateBadge("capture", cited.capture)}${pubStateBadge("connection", cited.connection)}</div><div class="subj-how">The pair above is the pair frozen into the EDITION THIS LEG NAMES, not the newest edition of it.</div>` : ""}`
+         &middot; <button class="btn ghost" onclick="pubVerify('${esc(cited.bundle_sha)}','#v-leg-${ordId}')">Verify this hash</button>
+         <span id="v-leg-${ordId}"></span></div>
+       ${cited.capture || cited.connection ? `<div class="pub-axisrow" data-finding="${esc(id)}"><span class="pub-forfinding">${esc(id)} &mdash;</span>${pubStateBadge("capture", cited.capture, id)}${pubStateBadge("connection", cited.connection, id)}</div><div class="subj-how">The pair above is the pair frozen into the EDITION THIS LEG NAMES, not the newest edition of it, and it is that finding's pair and not this one's.</div>` : ""}`
     : `<div class="mono"><span class="served no">This surface can only NAME it.</span>
-         ${esc(l.detail || "what this leg rests on is not in the published record, so this surface can say the case cites it and can hand over nothing of it.")}
+         ${esc(l.detail || "what this leg rests on is not in the published record, so this surface can say the finding cites it and can hand over nothing of it.")}
          There is no address and no hash to offer for it here.</div>`;
   /* `data-kept` IS LOAD-BEARING AND WAS ADDED BECAUSE THE FIRST NEGATIVE
      CONTROL FOUND THE HARNESS MEASURING NOTHING. A dropped leg is NAMED in the
@@ -13343,7 +13579,7 @@ function pubLegHtml(entry, ord){
      it passed while the determining leg was being filtered out. The kept set
      and the dropped set are marked apart in the markup so the difference is
      readable rather than inferred. */
-  return `<div class="pub-leg" data-kept="1" data-leg="${esc(id)}">
+  return `<div class="pub-leg" data-kept="1" data-leg="${esc(id)}" data-of="${esc(String(fid || ""))}">
     <div><b>Leg ${ord + 1}</b> &middot; <span class="mono">${esc(id)}</span> &middot; ${esc(role)}${axis ? ` &middot; graded on the ${esc(axis.toLowerCase())} axis` : ""}</div>
     <div class="pub-axisrow">${grade}<span class="subj-how">${esc(how)}.</span></div>
     ${entry.qualifier ? `<div class="subj-how"><b>Always present at every threshold:</b> ${esc(entry.why || "")}. A rendering may drop a claim; it may never drop a qualifier.</div>` : (entry.why ? `<div class="subj-how">${esc(entry.why)}.</div>` : "")}
@@ -13351,10 +13587,43 @@ function pubLegHtml(entry, ord){
   </div>`;
 }
 
+/* R4: A PUBLISHED FINDING NAMES ITS PARENT AND ITS SIBLINGS AND SERVES NEITHER.
+   A reader who can see one half of a divided question is entitled to know the
+   other half exists. The parent is terminal and can never be published; a
+   sibling may not be. So these are ids and kinds and nothing else — no title,
+   no state, no sha, nothing fetchable — and the page says that is deliberate.
+   PER FINDING (DEC-44): a division is a fact about one question being split,
+   which is a statement about a FINDING and never about the case that carries
+   it — a case may hold one divided finding and one that was never divided. */
+function pubDivisionHtml(f){
+  const d = (f && f.division) || {};
+  const sibs = Array.isArray(d.siblings) ? d.siblings : [];
+  const fid = esc(String((f && f.bundle_id) || ""));
+  if(!d.parent && !sibs.length)
+    return `<h3>Division</h3><p class="subj-note" data-division="none" data-of="${fid}">${fid} was not divided out of a larger question: the published record names no parent and no sibling for it.</p>`;
+  return `<h3>Division</h3>
+    <div class="pub-drop" data-division="named" data-of="${fid}">
+      <b>${fid} is one half of a question that was divided.</b>
+      ${d.parent ? `<div>Parent: <span class="mono">${esc(d.parent)}</span></div>` : ""}
+      ${sibs.length ? `<div>Sibling${sibs.length === 1 ? "" : "s"}: ${sibs.map((s) => `<span class="mono">${esc(s)}</span>`).join(", ")}</div>` : ""}
+      <div>${esc(d.detail || "a division's parent and siblings are NAMED and never served.")}</div>
+      <div>They are NAMED here and this surface can hand over nothing of them: no title, no state, no hash, no address. Knowing the other half exists is the disclosure; being able to read it is not something this page can offer.</div>
+    </div>`;
+}
+
 /* ============================================================
-   THE INDEX — over EDITIONS, per DEC-12. An edition is a separate document and
-   edition 1 keeps answering after edition 2 lands, so the index enumerates
-   editions rather than cases and every row states which edition it is.
+   THE INDEX — over CASE EDITIONS, per DEC-12 and DEC-44. An edition is a
+   separate document and edition 1 keeps answering after edition 2 lands, so the
+   index enumerates editions; and an edition is an edition OF A CASE, so a row is
+   a case edition and carries ONE PAIR PER MEMBER FINDING. A row that carried a
+   single pair for a case would be the composition this whole surface refuses,
+   arriving in the place a reader is most likely to quote it from.
+
+   CORRECTED 2026-08-04 (UI-29, REC-44): `op=publishedmanifest` no longer carries
+   a `manifest` column on the bundle rows at all — the container's manifest is
+   the CASE's and answers on `cases[]`. A surface that went on parsing the old
+   column would have rendered "carries no frozen strength pair" for every case on
+   every real instance, which is a lie that looks like modesty.
    ============================================================ */
 function pubManifestOf(row){
   try{ return typeof row.manifest === "string" ? JSON.parse(row.manifest) : (row.manifest || null); }
@@ -13367,46 +13636,85 @@ async function pubList(fromNav){
   const body = $("#pub-body");
   body.innerHTML = `<div class="eyebrow">The published record</div>
     <h1>Case files</h1>
-    <p class="pub-lead">Every ratified edition this group has published, readable and verifiable by anyone, with no account and no credential. An edition is a separate document: a newer one joins the older, and never replaces it.</p>
+    <p class="pub-lead">Every ratified edition this group has published, readable and verifiable by anyone, with no account and no credential. A case is one or more findings published together; an edition is a separate document, and a newer one joins the older rather than replacing it.</p>
     <div class="pub-list" id="pl">Loading&hellip;</div>`;
   try{
     const r = await apiQ("publishedmanifest");
     const pub = (r && r.published) || [];
-    PUB.index = pub;
+    const cases = (r && r.cases) || [];
+    const members = (r && r.caseMembers) || [];
+    PUB.index = { published: pub, cases, members };
+    /* the ratified bundle rows, by id and edition, so a member row can carry the
+       title the group signed rather than one this page composes */
+    const byId = new Map();
+    for(const p of pub) byId.set(p.bundle_id + "@" + p.edition, p);
+    const inCase = new Set(members.map((m) => m.bundle_id + "@" + m.edition));
     const top = new Map();
-    for(const p of pub) top.set(p.bundle_id, Math.max(Number(p.edition || 1), Number(top.get(p.bundle_id) || 0)));
-    $("#pl").innerHTML = pub.length
-      ? pub.map(p => {
-          const m = pubManifestOf(p);
-          const pair = pubPair({ strength: m && m.strength });
-          const bar = m && m.required_strength && m.required_strength.declared === true
-            ? `bar: ${esc(AXIS_SHORT.capture)} ${esc(m.required_strength.capture || "not set")} · ${esc(AXIS_SHORT.connection)} ${esc(m.required_strength.connection || "not set")}`
-            : `bar: none declared`;
-          const latest = Number(top.get(p.bundle_id) || p.edition);
-          const sup = Number(p.edition) < latest
-            ? `<span class="served no">superseded by edition ${esc(String(latest))}, which is a separate document — this row's pair is edition ${esc(String(p.edition))}'s own</span>`
-            : `<span class="served yes">newest edition</span>`;
-          /* THE INDEX ROW CARRIES BOTH STRENGTHS. R1/R2: a row that carried one
-             would be the composition this whole surface refuses, arriving in
-             the place a reader is most likely to quote. A published bundle that
-             is not a case carries no frozen pair at all, and that is SAID
-             rather than filled in. */
-          const strength = pair
-            ? pubPairBadges(pair)
-            : `<span class="subj-how">This published bundle carries no frozen strength pair: it is not a case file, and no pair is invented for it here.</span>`;
-          return `<div class="pf" onclick="pubOpen('${esc(p.bundle_id)}', ${esc(String(p.edition))})">
-            <div class="t">${esc(p.title || p.bundle_id)}</div>
-            <div class="m">${esc(p.bundle_id)} &middot; edition ${esc(String(p.edition))} &middot; ratified ${esc((p.ratified_at || "").slice(0, 10))} &middot; sha256:${esc((p.bundle_sha || "").slice(0, 16))}&hellip;</div>
-            <div style="margin-top:7px">${strength}</div>
-            <div class="m">${bar} &middot; ${sup}</div>
-          </div>`;
-        }).join("")
+    for(const cs of cases) top.set(cs.case_id, Math.max(Number(cs.edition || 1), Number(top.get(cs.case_id) || 0)));
+    const rows = [];
+    for(const cs of cases){
+      const roster = members.filter((m) => m.case_id === cs.case_id && Number(m.edition) === Number(cs.edition))
+                            .sort((a, b) => Number(a.ord) - Number(b.ord));
+      const man = pubManifestOf(cs);
+      const manFind = new Map();
+      for(const f of (man && Array.isArray(man.findings)) ? man.findings : []) manFind.set(f.bundle_id, f);
+      const waiting = roster.filter((m) => !byId.has(m.bundle_id + "@" + cs.edition));
+      const latest = Number(top.get(cs.case_id) || cs.edition);
+      const sup = Number(cs.edition) < latest
+        ? `<span class="served no">superseded by edition ${esc(String(latest))}, which is a separate document — every pair on this row is edition ${esc(String(cs.edition))}'s own</span>`
+        : `<span class="served yes">newest edition</span>`;
+      /* ONE PAIR PER FINDING, EACH NAMED. Never a row-level pair, and never a
+         bar for the case: `required_strength` is frozen into a finding's bytes
+         and two members may have been held to different standards. */
+      const findingRows = roster.map((m) => {
+        const row = byId.get(m.bundle_id + "@" + cs.edition);
+        const mf = manFind.get(m.bundle_id) || null;
+        const pair = pubPair({ strength: mf && mf.strength });
+        const bar = mf && mf.required_strength && mf.required_strength.declared === true
+          ? `bar: ${esc(AXIS_SHORT.capture)} ${esc(mf.required_strength.capture || "not set")} · ${esc(AXIS_SHORT.connection)} ${esc(mf.required_strength.connection || "not set")}`
+          : `bar: none declared`;
+        /* A MEMBER BLOCK IS A SECTION AND CARRIES `data-findingsec`, THE SAME
+           MARK THE CASE PAGE'S FINDING PAGES CARRY. One altitude mechanism, not
+           two: everything a FINDING says about its own strength lives inside a
+           marked region, on this surface and on the case page alike, and the
+           sweep for a case-level strength is the complement of those regions on
+           both. A second mechanism here would be a second thing to forget. */
+        if(!row)
+          return `<section class="pub-member" data-member="awaiting" data-findingsec="${esc(m.bundle_id)}" data-leg="${esc(m.bundle_id)}"><span class="mono">${esc(m.bundle_id)}</span> — DECLARED AND NOT YET RATIFIED. Nothing of it is served or described here.</section>`;
+        return `<section class="pub-member" data-member="ratified" data-findingsec="${esc(m.bundle_id)}" data-leg="${esc(m.bundle_id)}"><span class="mono">${esc(m.bundle_id)}</span> &middot; ${esc(row.title || "untitled")}
+          <div style="margin-top:5px">${pair
+            ? pubPairBadges(pair, m.bundle_id)
+            : `<span class="subj-how" data-nopair="${esc(m.bundle_id)}">This finding's frozen pair travels in the case container, which is not assembled for this edition yet. It is on the case page, read from that finding's own signed bytes; no pair is composed for it here.</span>`}</div>
+          <div class="m">${bar}</div></section>`;
+      }).join("");
+      rows.push(`<div class="pf" data-caserow="${esc(cs.case_id)}" data-caseedition="${waiting.length ? "awaiting" : "complete"}" onclick="pubOpen('${esc(cs.case_id)}', ${esc(String(cs.edition))})">
+        <div class="t">${esc(cs.scope || cs.case_id)}</div>
+        <div class="m">${esc(cs.case_id)} &middot; edition ${esc(String(cs.edition))} &middot; ${
+          waiting.length
+            ? `NOT FINISHED YET: ${esc(String(roster.length - waiting.length))} of ${esc(String(roster.length))} declared findings ratified, and the container is not assembled`
+            : `ratified ${esc(String(cs.ratified_at || "").slice(0, 10))} &middot; container sha256:${esc(String(cs.manifest_sha || "").slice(0, 16))}&hellip;`}</div>
+        <div class="m">A case of ${esc(String(roster.length))} finding${roster.length === 1 ? "" : "s"}. Each carries its own pair of strengths; there is no strength for the case.</div>
+        ${findingRows}
+        <div class="m">${sup}</div>
+      </div>`);
+    }
+    /* AND THE RATIFIED BUNDLES THAT ARE IN NO CASE, which are not case files and
+       are said to be exactly that rather than dropped or dressed up as one. */
+    for(const p of pub){
+      if(inCase.has(p.bundle_id + "@" + p.edition)) continue;
+      rows.push(`<div class="pf" data-caserow="" data-notacase="${esc(p.bundle_id)}" onclick="pubOpen('${esc(p.bundle_id)}', ${esc(String(p.edition))})">
+        <div class="t">${esc(p.title || p.bundle_id)}</div>
+        <div class="m">${esc(p.bundle_id)} &middot; edition ${esc(String(p.edition))} &middot; ratified ${esc((p.ratified_at || "").slice(0, 10))} &middot; sha256:${esc((p.bundle_sha || "").slice(0, 16))}&hellip;</div>
+        <div class="m"><span class="subj-how">These are ratified bytes that are not a member of any published case: no case identity, no scope statement, no completeness assertion and no frozen strength pair. None of them is invented here. The bytes are verifiable by hash exactly as any other ratified bytes are.</span></div>
+      </div>`);
+    }
+    $("#pl").innerHTML = rows.length ? rows.join("")
       : `<div class="empty">This group has not published any case files yet. When it ratifies one, it appears here, and anyone can verify it against its published hash without the group's cooperation.</div>`;
   }catch(e){ $("#pl").innerHTML = errPane(e); }
 }
 
 /* ============================================================
-   THE CASE, IN FULL.
+   THE CASE, IN FULL — every finding of it.
    ============================================================ */
 async function pubOpen(id, edition, fromNav){
   PUB.id = id; PUB.edition = (edition == null || edition === "") ? null : Number(edition);
@@ -13441,16 +13749,21 @@ function pubSetFloor(axis, value){
   pubPaint();
 }
 /* THE RENDERING'S OWN HASH, over the facts that MAKE it this rendering: the
-   case, its edition, the bytes it was drawn from, and the two floors applied.
-   Deliberately not a hash of the markup — markup changes when a stylesheet
-   does, and what a reader needs to name is the rendering DECISION, which is
-   what the footer prints beside the case's own sha. */
+   case, its edition, the bytes of every finding it drew, and the two floors
+   applied. Deliberately not a hash of the markup — markup changes when a
+   stylesheet does, and what a reader needs to name is the rendering DECISION.
+   EVERY FINDING'S SHA IS IN IT (UI-29): a rendering of a case is a rendering of
+   the set, so two editions with the same container hash and different members
+   drawn must not produce the same number. */
 async function pubRenderSha(c, floors){
-  const src = [c.bundleId, c.edition, c.bundle_sha, pubFiltered(floors) ? "filtered" : "unfiltered",
+  const src = [pubCaseId(c) || "no-case", c.edition, c.manifest_sha || "no-container",
+               (c.findings || []).map((f) => f.bundle_sha).join(","),
+               (c.awaiting || []).join(","),
+               pubFiltered(floors) ? "filtered" : "unfiltered",
                floors ? floors.capture : "unresolved", floors ? floors.connection : "unresolved"].join("|");
   try{
     const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(src));
-    return [...new Uint8Array(d)].map(x => x.toString(16).padStart(2, "0")).join("");
+    return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
   }catch(_){ return null; }
 }
 async function pubPaint(){
@@ -13470,11 +13783,73 @@ async function pubPaint(){
 function pubFloorPickerHtml(floors){
   const one = (ax) => `<label class="pub-floor"><span>${esc(AXIS_SHORT[ax])} &middot; ${esc(AXIS_WORD[ax].toLowerCase())}</span>
     <select data-floor="${esc(ax)}" onchange="pubSetFloor('${esc(ax)}', this.value)">${
-      FLOOR_VALUES.map(v => `<option value="${esc(v)}"${(floors && floors[ax]) === v ? " selected" : ""}>${v === "none" ? "no floor" : "grade " + esc(v) + " or stronger"}</option>`).join("")
+      FLOOR_VALUES.map((v) => `<option value="${esc(v)}"${(floors && floors[ax]) === v ? " selected" : ""}>${v === "none" ? "no floor" : "grade " + esc(v) + " or stronger"}</option>`).join("")
     }</select></label>`;
   return `<div class="eyebrow">Your own floors, if you want them</div>
-    <p class="subj-note">This page shows the case whole. If you want to read it under a floor of your own, set one for each axis below — the two are independent, neither is a default for the other, and a floor of <b>no floor</b> is what the case renders at by default. <b>The result is not the case.</b> It is a view you constructed, it says so on every page and inside anything you print or copy, and this page has no opinion about what you are doing with it.</p>
+    <p class="subj-note">This page shows the case whole. If you want to read it under a floor of your own, set one for each axis below — the two are independent, neither is a default for the other, and a floor of <b>no floor</b> is what the case renders at by default. They are applied to every finding's legs separately. <b>The result is not the case.</b> It is a view you constructed, it says so on every page and inside anything you print or copy, and this page has no opinion about what you are doing with it.</p>
     <div class="pub-stances">${GRADE_AXES.map(one).join("")}</div>`;
+}
+
+/* ---- ONE FINDING, in its own pages. Everything on them is that finding's:
+   its conclusion, its falsifier, its basis, its declared bar, its division and
+   ITS PAIR. Nothing here is composed with any other member of the case. ---- */
+function pubFindingPages(c, f, i, n, floors){
+  const th = pubThreshold(f, floors);
+  const pair = pubPair(f);
+  const fid = String(f.bundle_id);
+  const namedLink = (idv) => `<span class="mono">${esc(String(idv))}</span>`;
+
+  const a = pubPage(c, floors, f,
+    `<h2>Finding ${esc(String(i + 1))} of ${esc(String(n))} &middot; <span class="mono">${esc(fid)}</span></h2>
+     <h3>${esc(f.title || fid)}</h3>
+     <h3>The question</h3>
+     <div class="pub-excl">${esc((f.body && f.body.question) || "The published bytes carry no question section.")}</div>
+     <h3>The conclusion</h3>
+     <div class="pub-excl">${esc((f.body && f.body.authored && f.body.authored.conclusion) || (f.body && f.body.conclusion) || "The published bytes carry no conclusion.")}</div>
+     ${f.body && f.body.conclusion && f.body.authored && f.body.authored.conclusion && f.body.conclusion !== f.body.authored.conclusion
+        ? `<p class="subj-note">The conclusion of record is the one the gate holds this finding to. The prose the group printed beside it follows.</p><div class="pub-excl">${esc(f.body.conclusion)}</div>` : ""}
+     ${f.body && f.body.state !== "published"
+        ? `<div class="pub-drop"><b>The body of this finding could not be served.</b> ${esc(f.body.detail || "")} It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes.</div>` : ""}`);
+
+  const b = pubPage(c, floors, f,
+    `<h2>How strong finding ${esc(String(i + 1))} is &middot; <span class="mono">${esc(fid)}</span></h2>
+     <p class="lede">A finding does not have <i>a</i> strength. It has two, and they are never combined, averaged or scored against each other: how directly the record holds the DOCUMENTS it reaches, and how strongly the LINKS between them were established. A conclusion is no stronger than the weakest leg on each, separately. And a CASE has neither: these two belong to this finding, the other findings have their own, and nothing on this surface adds them up.</p>
+     ${pair ? pubPairBadges(pair, fid) : ""}
+     ${pubBarHtml(f)}
+     ${pair ? GRADE_AXES.map((ax) => axisPanel(ax, pair[ax], (f.basis || []).map((l) => ({ ...l, target: l.target })), { link: namedLink })).join("")
+            : `<div class="empty">This finding published no frozen strength pair, and this page invents neither half of one.</div>`}
+     ${th.axisFails.map((x) => `<div class="pub-drop" data-axisfail="${esc(x.axis)}" data-of="${esc(fid)}">${esc(x.detail)}</div>`).join("")}`);
+
+  const d = pubPage(c, floors, f,
+    `<h2>What finding ${esc(String(i + 1))} rests on &middot; <span class="mono">${esc(fid)}</span></h2>
+     <p class="subj-note">Every leg below carries how it was established and, where the published record holds what it rests on, an address and a hash. A leg this surface can SERVE and a leg it can only NAME are two different things and are drawn as two different things. These legs are this finding's; no other finding of this case rests on them unless it says so itself.</p>
+     ${th.kept.length ? th.kept.map((e, k) => pubLegHtml(e, k, fid)).join("") : `<div class="empty">This rendering keeps no leg of this finding. That is a fact about the threshold, not about the finding.</div>`}
+     ${th.cutsDropped.length ? `<div class="pub-drop" data-cutsdropped="1" data-of="${esc(fid)}"><b>Dropped by this threshold, and named because ${th.cutsDropped.length === 1 ? "it cuts" : "they cut"} AGAINST the conclusion:</b>
+        ${th.cutsDropped.map((x) => `<div><span class="mono">${esc(String(x.leg.target))}</span> — ${esc(x.reason)}.</div>`).join("")}
+        A leg that cuts against a conclusion is never dropped quietly: reading a case with the evidence against it filtered out and no notice of it is the one way this page could mislead without stating a single falsehood.</div>` : ""}
+     ${th.dropped.length ? `<details><summary>${esc(String(th.dropped.length))} leg${th.dropped.length === 1 ? "" : "s"} of ${esc(fid)} dropped by this threshold — named, with the reason</summary>
+        ${th.dropped.map((x) => `<div class="pub-leg" data-dropped="1" data-leg="${esc(String(x.leg.target))}" data-of="${esc(fid)}"><span class="mono">${esc(String(x.leg.target))}</span> &middot; ${esc(ROLE_WORD[x.leg.role] || "recorded against this")} &middot; dropped because ${esc(x.reason)}.</div>`).join("")}
+        </details>` : `<p class="subj-note">This threshold dropped nothing of ${esc(fid)}.</p>`}
+     <h3>What would overturn finding ${esc(String(i + 1))}</h3>
+     <div class="pub-excl">${esc((f.body && f.body.authored && f.body.authored.falsifier) || (f.body && f.body.falsifies) || "The published bytes carry no falsifier.")}</div>
+     ${pubDivisionHtml(f)}
+     <h3>This finding's own material and its signature</h3>
+     <p class="subj-note">Every part of this finding's edition, with its own sha256 and its own length. Each answers by hash and by hash only. In the case container these sit under this finding's own directory, because two findings both carry a <span class="mono">bundle.md</span> and one flat list would say two things about one name.</p>
+     ${(f.parts || []).map((p) => `<div class="pub-file">${esc(fid)}/${esc(p.path)} &middot; ${esc(p.kind || "file")} &middot; ${esc(p.bytes == null ? "length not recorded" : String(p.bytes) + " bytes")}
+        <div class="mono"><a data-addr="op=publishedbytes&amp;sha256=${esc(p.sha256)}" data-sha="${esc(p.sha256)}" onclick="pubBytes('${esc(p.sha256)}')">sha256:${esc(p.sha256)}</a>
+        &middot; <button class="btn ghost" onclick="pubVerify('${esc(p.sha256)}','#v-part-${esc(String(p.sha256)).slice(0, 12)}')">Verify</button><span id="v-part-${esc(String(p.sha256)).slice(0, 12)}"></span></div></div>`).join("")}
+     <div class="pub-verify"><p>This finding was signed on its own bytes, by its own attestor. Anyone may confirm it against its published hash, without this group's cooperation and without an account.</p>
+       <button class="btn" onclick="pubVerify('${esc(f.bundle_sha)}','#v-f-${esc(fid)}')">Verify this finding</button></div>
+     <div id="v-f-${esc(fid)}"></div>
+     <div class="metagrid">
+       <dt>Attested by</dt><dd>${esc((f.attestor && f.attestor.member) || "not named")}</dd>
+       <dt>Signing key</dt><dd class="mono">${esc((f.attestor && f.attestor.key_b64) || "").slice(0, 44)}&hellip;</dd>
+       <dt>Gate version</dt><dd class="mono">${esc(String(f.gate_version || ""))}</dd>
+       <dt>Signature</dt><dd class="mono">${esc((f.sig_armored || "").split("\n")[0] || "")}</dd>
+       <dt>These bytes</dt><dd class="mono">${esc(String(f.bytes || ("op=publishedbytes&sha256=" + (f.bundle_sha || ""))))}</dd>
+     </div>`);
+
+  return a + b + d;
 }
 
 function pubCaseHtml(c, floors){
@@ -13489,126 +13864,96 @@ function pubCaseHtml(c, floors){
       <p>The floors given did not resolve to a pair — one for the ${esc(AXIS_SHORT.capture.toLowerCase())} axis and one for the ${esc(AXIS_SHORT.connection.toLowerCase())} axis. A rendering with one axis left unconstrained admits arbitrary weakness without saying so, and a rendering that applies one value to both axes has composed two measurements into one. Neither is drawn here.</p></div>
       <p><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
 
-  const th = pubThreshold(c, floors);
-  const pair = pubPair(c);
-  const namedLink = (idv) => `<span class="mono">${esc(String(idv))}</span>`;
+  const findings = Array.isArray(c.findings) ? c.findings : [];
+  const roster = pubRoster(c);
 
-  /* PAGE 1 — the rendering block first, at full size, then the conclusion. */
-  const p1 = pubPage(c, floors,
+  /* PAGE 1 — WHAT THIS CASE IS: the rendering block first at full size, then the
+     case's own two assertions, the state of the edition, and the membership. No
+     strength appears on this page and none may: it is the case's altitude. */
+  const p1 = pubPage(c, floors, null,
     `${pubSupersessionHtml(c)}
      ${pubInbandHtml(c, floors)}
-     ${pubFiltered(floors) ? `<div class="pub-drop" data-notthecase="1"><b>${esc(pubRenderingName(floors))}.</b> What follows was drawn under floors a reader supplied, so legs the case rests on have been dropped from it. Do not quote it as the case, print it as the case, or describe it by its hash as the case: the case is at this same address with no floors applied, and it is what this group published.</div>` : ""}
-     <h1>${esc(c.title || c.bundleId)}</h1>
-     <h2>The question</h2>
-     <div class="pub-excl">${esc((c.body && c.body.question) || "The published bytes carry no question section.")}</div>
-     <h2>The conclusion</h2>
-     <div class="pub-excl">${esc((c.body && c.body.authored && c.body.authored.conclusion) || (c.body && c.body.conclusion) || "The published bytes carry no conclusion.")}</div>
-     ${c.body && c.body.conclusion && c.body.authored && c.body.authored.conclusion && c.body.conclusion !== c.body.authored.conclusion
-        ? `<p class="subj-note">The conclusion of record is the one the gate holds this case to. The prose the group printed beside it follows.</p><div class="pub-excl">${esc(c.body.conclusion)}</div>` : ""}
-     ${c.body && c.body.state !== "published"
-        ? `<div class="pub-drop"><b>The body of this edition could not be served.</b> ${esc(c.body.detail || "")} It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes.</div>` : ""}`);
+     ${pubFiltered(floors) ? `<div class="pub-drop" data-notthecase="1"><b>${esc(pubRenderingName(floors))}.</b> What follows was drawn under floors a reader supplied, so legs the findings rest on have been dropped from it. Do not quote it as the case, print it as the case, or describe it by its hash as the case: the case is at this same address with no floors applied, and it is what this group published.</div>` : ""}
+     <h1>${esc(pubCaseId(c) || String((findings[0] && findings[0].bundle_id) || "Ratified bytes"))}</h1>
+     ${pubAskedHtml(c)}
+     ${pubStateHtml(c)}
+     <h2>What this case is about</h2>
+     <p class="subj-note">Authored by the group, per case per edition, and never derived from the findings' titles: what the case is ABOUT is a different claim from what it leaves OUT, and a reader needs both.</p>
+     <div class="pub-excl" data-scopetext="1">${esc(pubCaseId(c) ? ((c.scope) || "The published bytes carry no scope statement for this case.") : "These bytes are not a member of any published case, so there is no case scope statement and none is invented here.")}</div>
+     ${pubRosterHtml(c)}`);
 
-  /* PAGE 2 — both strengths, and the declared bar beside them. */
-  const p2 = pubPage(c, floors,
-    `<h2>How strong this is</h2>
-     <p class="lede">A case does not have <i>a</i> strength. It has two, and they are never combined, averaged or scored against each other: how directly the record holds the DOCUMENTS it reaches, and how strongly the LINKS between them were established. A conclusion is no stronger than the weakest leg on each, separately.</p>
-     ${pair ? pubPairBadges(pair) : ""}
-     ${pubBarHtml(c)}
-     ${pair ? GRADE_AXES.map(ax => axisPanel(ax, pair[ax], (c.basis || []).map(l => ({ ...l, target: l.target })), { link: namedLink })).join("")
-            : `<div class="empty">This edition published no frozen strength pair, and this page invents neither half of one.</div>`}
-     ${th.axisFails.map(f => `<div class="pub-drop" data-axisfail="${esc(f.axis)}">${esc(f.detail)}</div>`).join("")}`);
-
-  /* PAGE 3 — the basis chain, and what this rendering dropped. */
-  const p3 = pubPage(c, floors,
-    `<h2>What it rests on</h2>
-     <p class="subj-note">Every leg below carries how it was established and, where the published record holds what it rests on, an address and a hash. A leg this surface can SERVE and a leg it can only NAME are two different things and are drawn as two different things.</p>
-     ${th.kept.length ? th.kept.map((e, i) => pubLegHtml(e, i)).join("") : `<div class="empty">This rendering keeps no leg. That is a fact about the threshold, not about the case.</div>`}
-     ${th.cutsDropped.length ? `<div class="pub-drop" data-cutsdropped="1"><b>Dropped by this threshold, and named because ${th.cutsDropped.length === 1 ? "it cuts" : "they cut"} AGAINST the conclusion:</b>
-        ${th.cutsDropped.map(d => `<div><span class="mono">${esc(String(d.leg.target))}</span> — ${esc(d.reason)}.</div>`).join("")}
-        A leg that cuts against a conclusion is never dropped quietly: reading a case with the evidence against it filtered out and no notice of it is the one way this page could mislead without stating a single falsehood.</div>` : ""}
-     ${th.dropped.length ? `<details><summary>${esc(String(th.dropped.length))} leg${th.dropped.length === 1 ? "" : "s"} dropped by this threshold — named, with the reason</summary>
-        ${th.dropped.map(d => `<div class="pub-leg" data-dropped="1" data-leg="${esc(String(d.leg.target))}"><span class="mono">${esc(String(d.leg.target))}</span> &middot; ${esc(ROLE_WORD[d.leg.role] || "recorded against this")} &middot; dropped because ${esc(d.reason)}.</div>`).join("")}
-        </details>` : `<p class="subj-note">This threshold dropped nothing.</p>`}
-     <h2>What would overturn this</h2>
-     <div class="pub-excl">${esc((c.body && c.body.authored && c.body.authored.falsifier) || (c.body && c.body.falsifies) || "The published bytes carry no falsifier.")}</div>`);
-
-  /* PAGE 4 — the exclusions verbatim, and the division disclosure. */
-  const p4 = pubPage(c, floors,
-    `<h2>What this excludes</h2>
-     <p class="subj-note">Printed verbatim from the signed bytes, with the member who wrote it and the date it was written.
+  /* PAGE 2 — WHAT THE CASE EXCLUDES, verbatim. Per CASE per EDITION (DEC-44
+     (d)), which is the altitude C-21.1 checks it at. */
+  const p2 = pubPage(c, floors, null,
+    `<h2>What this case excludes</h2>
+     <p class="subj-note">Printed verbatim from the signed bytes, with the member who wrote it and the date it was written. It is the CASE's assertion, made once for this edition, and not a claim any one finding makes on its own.
        Written by ${esc((c.completeness && c.completeness.author) || "an unnamed member")} on ${esc((c.completeness && c.completeness.at) || "an unrecorded date")}.</p>
-     <div class="pub-excl">${esc((c.body && c.body.excludes) || "The published bytes carry no What This Excludes section.")}</div>
-     <p class="subj-note">Position on putting this case to its subject: ${esc((c.completeness && c.completeness.subject_position) || "not stated")}. ${esc((c.completeness && c.completeness.subject_justification) || "")}</p>
-     ${pubDivisionHtml(c)}`);
+     <div class="pub-excl">${esc((c.completeness && c.completeness.statement) || (pubCaseId(c) ? "The published bytes carry no completeness statement for this case." : "These bytes are not a member of any published case and carry no case completeness assertion."))}</div>
+     <p class="subj-note">Position on putting this case to its subject: ${esc((c.completeness && c.completeness.subject_position) || "not stated")}. ${esc((c.completeness && c.completeness.subject_justification) || "")}</p>`);
 
-  /* PAGE 5 — the material, the editions, and the verification. */
-  const p5 = pubPage(c, floors,
-    `<h2>The material</h2>
-     <p class="subj-note">Every part of this edition, with its own sha256 and its own length. Each answers by hash and by hash only.</p>
-     ${(c.files || []).map(f => `<div class="pub-file">${esc(f.path)} &middot; ${esc(f.kind || "file")} &middot; ${esc(f.bytes == null ? "length not recorded" : String(f.bytes) + " bytes")}
-        <div class="mono"><a data-addr="op=publishedbytes&amp;sha256=${esc(f.sha256)}" data-sha="${esc(f.sha256)}" onclick="pubBytes('${esc(f.sha256)}')">sha256:${esc(f.sha256)}</a>
-        &middot; <button class="btn ghost" onclick="pubVerify('${esc(f.sha256)}','#v-file-${esc(f.sha256).slice(0, 12)}')">Verify</button><span id="v-file-${esc(f.sha256).slice(0, 12)}"></span></div></div>`).join("")}
+  /* THE FINDINGS, each in its own pages. */
+  const fp = findings.map((f, i) => pubFindingPages(c, f, i, roster.length, floors)).join("");
+
+  /* THE LAST PAGE — the container, the editions and the verification, all of
+     which are the CASE's. */
+  const pz = pubPage(c, floors, null,
+    `<h2>The container</h2>
+     <p class="subj-note">The case's portable form: every member finding's parts, at <span class="mono">&lt;case&gt;/&lt;finding&gt;/&lt;path&gt;</span>, with a manifest at the root naming each part by sha256 and each finding's own signature. A stranger holding it can check every finding this case rests on without contacting this instance.</p>
+     ${pubComplete(c) && c.manifest_sha
+       ? `<div class="pub-file">MANIFEST.json &middot; manifest &middot; sha256:<span class="mono">${esc(String(c.manifest_sha))}</span>
+            <div class="mono"><a data-addr="op=publishedbytes&amp;sha256=${esc(String(c.manifest_sha))}" data-sha="${esc(String(c.manifest_sha))}" onclick="pubBytes('${esc(String(c.manifest_sha))}')">read the manifest</a>
+            &middot; <button class="btn ghost" onclick="pubVerify('${esc(String(c.manifest_sha))}','#v-man')">Verify this hash</button><span id="v-man"></span></div></div>
+          ${(c.files || []).map((x) => `<div class="pub-file">${esc(x.path)} &middot; ${esc(x.kind || "file")} &middot; ${esc(x.bytes == null ? "length not recorded" : String(x.bytes) + " bytes")}
+            <div class="mono"><a data-addr="op=publishedbytes&amp;sha256=${esc(x.sha256)}" data-sha="${esc(x.sha256)}" onclick="pubBytes('${esc(x.sha256)}')">sha256:${esc(x.sha256)}</a></div></div>`).join("")}`
+       : `<div class="pub-drop" data-nocontainer="1"><b>There is no container for this edition yet.</b> ${esc(pubCaseId(c)
+            ? "It is assembled when the last declared finding is ratified, and not before: a container built now would name parts this record does not hold. Every finding that HAS landed is above, with its own parts and its own hash, and each is verifiable right now."
+            : "These bytes are not a member of any published case, so no case container exists for them. They are verifiable individually by hash.")}</div>`}
      <h2>Editions</h2>
-     <p class="subj-note">Each edition is a separate document with its own signature, its own attestor and its own frozen pair. Every one of them still answers.</p>
-     ${(c.edition_index || []).map(e => `<div class="pub-file">Edition ${esc(String(e.edition))} &middot; ratified ${esc((e.ratified_at || "").slice(0, 10))}
-        &middot; <a class="pub-back" onclick="pubOpen('${esc(c.bundleId)}', ${esc(String(e.edition))})">read it</a>
-        <div class="mono">sha256:${esc(e.bundle_sha)}</div></div>`).join("")}
+     <p class="subj-note">Each edition of this case is a separate document, with its own membership, its own scope and completeness assertions and its own container. Every one of them still answers.</p>
+     ${(c.edition_index || []).map((e) => `<div class="pub-file">Edition ${esc(String(e.edition))} &middot; ratified ${esc(String(e.ratified_at || "not yet").slice(0, 10))}
+        &middot; <a class="pub-back" onclick="pubOpen('${esc(pubCaseId(c) || String((findings[0] && findings[0].bundle_id) || ""))}', ${esc(String(e.edition))})">read it</a>
+        <div class="mono">${e.manifest_sha ? "container sha256:" + esc(String(e.manifest_sha)) : "no container assembled for this edition yet"}</div></div>`).join("")}
      <h2>Check this yourself</h2>
      <p class="subj-note">${esc((c.verification && c.verification.detail) || "")}</p>
-     <div class="pub-verify"><p>Anyone may confirm this edition against its published hash, without this group's cooperation and without an account.</p>
-       <button class="btn" onclick="pubVerify('${esc(c.bundle_sha)}','#v-case')">Verify this edition</button></div>
+     <div class="pub-verify"><p>Anyone may confirm any part of this case against its published hash, without this group's cooperation and without an account. Each finding is signed on its OWN bytes — there is no case-level signature, because a signature over the case would be a signature over something no single member reviewed.</p>
+       ${(c.verification && Array.isArray(c.verification.findings) ? c.verification.findings : findings.map((f) => ({ bundle_id: f.bundle_id }))).map((v) => `<div class="mono">${esc(String(v.bundle_id))} &middot; <button class="btn ghost" onclick="pubVerify('${esc(String((findings.find((f) => f.bundle_id === v.bundle_id) || {}).bundle_sha || ""))}','#v-c-${esc(String(v.bundle_id))}')">Verify ${esc(String(v.bundle_id))}</button><span id="v-c-${esc(String(v.bundle_id))}"></span></div>`).join("")}</div>
      <div id="v-case"></div>
      <div class="metagrid">
-       <dt>Attested by</dt><dd>${esc((c.attestor && c.attestor.member) || "not named")}</dd>
-       <dt>Signing key</dt><dd class="mono">${esc((c.attestor && c.attestor.key_b64) || "").slice(0, 44)}&hellip;</dd>
-       <dt>Gate version</dt><dd class="mono">${esc(String(c.gate_version || ""))}</dd>
-       <dt>Signature</dt><dd class="mono">${esc((c.sig_armored || "").split("\n")[0] || "")}</dd>
+       <dt>Case</dt><dd class="mono">${esc(pubCaseId(c) || "none — these bytes are not a member of any published case")}</dd>
+       <dt>Findings</dt><dd class="mono">${esc(roster.map((m) => m.id + (m.ratified ? "" : " (awaiting)")).join(", ") || "none")}</dd>
        <dt>Container</dt><dd class="mono">${esc((c.verification && c.verification.container) || "no container published for this edition")}</dd>
      </div>`);
 
-  return `${pubFloorPickerHtml(floors)}${p1}${p2}${p3}${p4}${p5}
+  return `${pubFloorPickerHtml(floors)}${p1}${p2}${fp}${pz}
     ${pubFooterHtml(c, floors)}
     <p style="margin-top:20px"><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
 }
 
-/* R4: A PUBLISHED CHILD NAMES ITS PARENT AND ITS SIBLINGS AND SERVES NEITHER.
-   A reader who can see one half of a divided question is entitled to know the
-   other half exists. The parent is terminal and can never be published; a
-   sibling may not be. So these are ids and kinds and nothing else — no title,
-   no state, no sha, nothing fetchable — and the page says that is deliberate. */
-function pubDivisionHtml(c){
-  const d = c.division || {};
-  const sibs = Array.isArray(d.siblings) ? d.siblings : [];
-  if(!d.parent && !sibs.length)
-    return `<h2>Division</h2><p class="subj-note" data-division="none">This case was not divided out of a larger question: the published record names no parent and no sibling for it.</p>`;
-  return `<h2>Division</h2>
-    <div class="pub-drop" data-division="named">
-      <b>This case is one half of a question that was divided.</b>
-      ${d.parent ? `<div>Parent: <span class="mono">${esc(d.parent)}</span></div>` : ""}
-      ${sibs.length ? `<div>Sibling${sibs.length === 1 ? "" : "s"}: ${sibs.map(s => `<span class="mono">${esc(s)}</span>`).join(", ")}</div>` : ""}
-      <div>${esc(d.detail || "a division's parent and siblings are NAMED and never served.")}</div>
-      <div>They are NAMED here and this surface can hand over nothing of them: no title, no state, no hash, no address. Knowing the other half exists is the disclosure; being able to read it is not something this page can offer.</div>
-    </div>`;
-}
+/* THE PER-PAGE FOOTER: case id, container sha, rendering sha, date.
+   `position:fixed` in the print stylesheet is what makes it per-PAGE; it is a
+   real element with real text on screen too, because a footer that exists only
+   in a stylesheet is a footer nobody can copy.
 
-/* THE PER-PAGE FOOTER: case id, case sha, rendering sha, date. `position:fixed`
-   in the print stylesheet is what makes it per-PAGE; it is a real element with
-   real text on screen too, because a footer that exists only in a stylesheet is
-   a footer nobody can copy. */
-/* DEC-40 (b): "never … HASH-DESCRIBED as the case". The rendering hash is the
-   one fact on this footer a reader is most likely to quote back at somebody —
-   "here is the case, and here is its hash" — so the sentence that DESCRIBES the
-   hash names what the hash is over, through the same one function every other
-   surface names it through. A footer that printed a rendering hash beside the
-   case id and said nothing else would hand a reader a filtered page and a
-   checkable-looking number for it. */
+   DEC-40 (b): "never … HASH-DESCRIBED as the case". The rendering hash is the
+   one fact on this footer a reader is most likely to quote back at somebody, so
+   the sentence that DESCRIBES the hash names what the hash is over, through the
+   same one function every other surface names it through.
+
+   CORRECTED 2026-08-04 (UI-29, DEC-44), never exempted: this printed the CASE's
+   `bundle_sha`, which no longer exists and never should have — a case has no
+   bytes of its own, it has a CONTAINER, and its checkable hash is that
+   container's manifest. It carries NO strength and must not: the footer repeats
+   on every printed page, so a letter here would be the composition arriving on
+   every sheet a reader forwards. */
 function pubFooterHtml(c, floors){
-  return `<div class="print-footer" data-footer="1">
-    Case ${esc(c.bundleId)} &middot; edition ${esc(String(c.edition))} &middot;
-    case sha256:${esc(c.bundle_sha || "")} &middot;
+  const hash = pubCaseHashLine(c);
+  return `<div class="print-footer" data-footer="1" data-hash="${esc(hash.attr)}">
+    Case ${esc(pubCaseId(c) || "none")} &middot; edition ${esc(String(c.edition))} &middot;
+    ${esc(pubRoster(c).length)} finding${pubRoster(c).length === 1 ? "" : "s"} &middot;
+    ${hash.attr === "none-yet" ? "no container hash yet" : "container sha256:" + esc(hash.attr)} &middot;
     rendering sha256:${esc(PUB.renderSha || "not computed")} &middot;
-    ${esc((c.ratified_at || "").slice(0, 10))} &middot;
-    floors ${esc(AXIS_SHORT.capture)} ${esc(floors ? floors.capture : "unresolved")} / ${esc(AXIS_SHORT.connection)} ${esc(floors ? floors.connection : "unresolved")} &middot;
+    ${esc(String(c.ratified_at || "not yet ratified").slice(0, 10))} &middot;
+    floors ${esc(AXIS_SHORT.capture)} ${esc(floors ? floorShort(floors.capture) : "unresolved")} / ${esc(AXIS_SHORT.connection)} ${esc(floors ? floorShort(floors.connection) : "unresolved")} &middot;
     ${pubFilterHtml(floors, "filterline")}
   </div>`;
 }
