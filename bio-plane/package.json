@@ -39,6 +39,7 @@
     "test:formats": "node test/formats.test.mjs",
     "test:formats-docx": "node test/formats-docx.test.mjs",
     "test:formats-xlsx": "node test/formats-xlsx.test.mjs",
+    "test:formats-pptx": "node test/formats-pptx.test.mjs",
     "test:ooxml": "node test/ooxml.test.mjs",
     "test:pdfstructure": "node test/pdfstructure.test.mjs",
     "test:pdfstructure-op": "node test/pdfstructure-op.test.mjs",

@@ -46,6 +46,7 @@
 import { extractPdfStructure } from "./pdfstructure.mjs";
 import { docxEntry } from "./docx.mjs";
 import { xlsxEntry } from "./formats-xlsx.mjs";
+import { pptxEntry } from "./pptx.mjs";
 
 /* Registration order is dispatch order within a pass: the first entry whose
    detect() answers wins that pass. Kept insertion-ordered by Map. */
@@ -200,3 +201,10 @@ registerFormat(docxEntry);
 /* The XLSX entry (COFF-3) — defined in formats-xlsx.mjs, registered here and
    NOWHERE else: adding the format costs this one call (the D-70 property). */
 registerFormat(xlsxEntry);
+
+/* pptx.mjs IS the PPTX entry (COFF-5): the same detect ladder, the parts walk
+   over ooxml.mjs, I2 structure through the ONE linkWrapper with
+   {kind:"slide-shape"} references (IC-1), <a:t> text per slide, and the DEC-5
+   evidentiary envelope (SPEAKER NOTES distinct from slide text, core
+   properties). */
+registerFormat(pptxEntry);
