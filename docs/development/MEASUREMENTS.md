@@ -1152,3 +1152,22 @@ source contradicts itself in three places at once — `index.mjs:407` grants
 admin-only: memberlist pairs cover with handle and only administrators see those
 together (section 3)"*, and `store.mjs:5810` says *"Every op that reaches this is
 admin-only at the control plane."* Neither comment is true. Recorded as D-157.
+
+## 2026-08-03, session BOB: BACKFILL — the OOXML container is readable in workerd with zero dependency (measured 2026-07-31)
+
+Backfilled: this measurement ran 2026-07-31 (session BOB, the office-formats research
+turn) and was recorded only in `OFFICE-FORMATS.md`, against the rule that numbers live
+HERE with date and instrument. The numbers are unchanged; only their home was wrong.
+
+**Instrument.** miniflare driving workerd (the same harness the plane's op suites
+use), probing `DecompressionStream` support directly in the Workers runtime.
+
+- `DecompressionStream` accepts `deflate`, `deflate-raw` AND `gzip` on workerd.
+- A `deflate-raw` round trip succeeds: 480 raw bytes → 29 compressed → back intact.
+
+Consequence, as `OFFICE-FORMATS.md` draws it: ZIP members are stored raw-deflated, so
+an OOXML container (`.docx`/`.xlsx`/`.pptx`, and ODF's identical shape) is readable in
+the plane with ZERO dependency — a central-directory walk plus
+`DecompressionStream("deflate-raw")`. The same finding class as `FlateDecode` making
+PDF phase 1 dependency-free. The primitive is also already exercised in shipped code:
+`pdfstructure.mjs:77` inflates through `DecompressionStream("deflate-raw")` today.

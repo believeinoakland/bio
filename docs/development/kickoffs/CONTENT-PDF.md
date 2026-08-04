@@ -4,6 +4,15 @@
 the function-specific Worker topology decision. Read it before starting — the old
 item told you to bundle `unpdf` into the plane, and that is now wrong.**
 
+**CORRECTED 2026-08-03 by session BOB: the DISPATCH this file describes is moving
+onto the FORMAT registry** (COFF-1 — QUEUE.md BOB INBOX 2026-08-03, `OFFICE-FORMATS.md`,
+`INTERFACES.md` I7). `op=pdfstructure` survives with byte-identical output, but its
+read-time dispatch and the acquire-time `HTML_CT` guard become registry consultations,
+and `pdfstructure.mjs` becomes the PDF registry entry behind I7. "The op question"
+section below is superseded the same way: once COFF-1 lands, op wiring for a content
+area is a registry entry, not an `index.mjs` delegation. Nothing else in this area's
+scope changes — it still owns `pdfstructure.mjs` and `pdf-worker/**`.
+
 Written 2026-07-31 by `ARCH` from the main checkout, standing this area up as the
 first content area to run in parallel (`PARALLELISM.md`, `INTERFACES.md`,
 `CLAIMS.md`). It is written to be SHOVEL-READY: the next session can claim, build,

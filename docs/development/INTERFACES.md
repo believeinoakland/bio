@@ -845,3 +845,56 @@ The worker now EXISTS; the shape re-read from its code:
   binding both work on this Free account (~1 ms/call, one subrequest). The residual open
   number is pdf.js against the 10 ms Worker-CPU ceiling — CPDF-1's gated follow-on, on a
   deployed probe, out of scope here.
+
+---
+
+## I7 — the FORMAT registry entry (content dispatch)
+
+- **ID:** I7
+- **Owner:** `CONTENT-OFFICE` (new area, proposed in the 2026-08-03 BOB INBOX entry;
+  CONDUCT confirms ownership at activation)
+- **Version:** 0.1.0 — **PROVISIONAL**
+- **Producers:** every format entry — HTML and PDF (moved on by COFF-1), the OOXML
+  entries (COFF-3/4/5), ODF and later formats
+- **Consumers:** the plane's two dispatch sites — acquire-time detection and the
+  read-time structure/text op
+
+### What it is
+
+The uniform recogniser shape for the FORMAT axis, specified by
+`BIO_Content_Framework_v0_10.md` §4 and never exercised — D-70 records that the
+framework's a-new-axis-costs-a-registry-entry claim is an assertion, untested because
+no third axis has ever been added. Office formats are that test. One registry entry
+per format; once COFF-1 lands, the registry is the ONLY dispatch — no format-specific
+if-branch outside it, at either dispatch site.
+
+### The shape (from the design; to be CONFIRMED from code when COFF-1 lands)
+
+    detect(bytes, contentType) -> { format, confidence, signals }   // magic bytes FIRST, content type second
+    parts(container)           -> named parts                       // container walk (ZIP central directory for OOXML/ODF)
+    structure(parts)           -> I2 links + element references (IC-1 kinds)
+    text(parts)                -> I2 text shape + what could NOT be decoded, stated
+
+Rules carried from the axes already built, not new inventions:
+
+- **Detection is by MAGIC BYTES first, content type second** — a source's declared
+  `Content-Type` is frequently wrong, and I1 records that it may be absent entirely.
+  For OOXML the discriminator is `PK\x03\x04` plus `[Content_Types].xml` and its
+  declared document type, which is what separates a `.docx` from an arbitrary ZIP a
+  body might also publish.
+- **`undetermined` is first-class in every function's output.** A part that cannot be
+  read, a bound exceeded, a flavour that cannot be discriminated — stated, never
+  guessed, never silently dropped.
+- **A format entry ASSERTS nothing about meaning** (that stays FRAMEWORK's, through
+  I2) **and writes nothing** (the fleet rule, applied one layer down).
+
+### Status
+
+PROVISIONAL, registered 2026-08-03 by session BOB from the framework §4 design. The
+I1 precedent (write the interface from the code as it stands) is deliberately
+inverted here, and the reason is recorded so it is not read as drift: two items build
+AGAINST this contract in parallel (COFF-1 the registry, COFF-2 the container reader),
+and the paper contract is exactly what makes them independent of each other. COFF-1's
+landing confirms or amends this section from the code as built; any drift between
+this text and the landed shape is resolved in favour of the code, in this file, at
+that moment.

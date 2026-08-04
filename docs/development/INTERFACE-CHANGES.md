@@ -94,3 +94,34 @@ whether it wants to go further NOW rather than twice.
 either shape until this resolves; D-121's office-format work can proceed through steps
 1 and 2 (the FORMAT registry and the container reader), neither of which emits a
 `source`.
+
+### AMENDED 2026-08-03 by the proposer (session BOB) — the DOCX kind was omitted
+
+The union as PROPOSED enumerates `pdf-page` / `sheet-cell` / `slide-shape` / `dom`,
+while `OFFICE-FORMATS.md`'s own part-map table names a DOCX element reference —
+paragraph / run index — that has no kind. Without one, the DOCX entry (COFF-4) must
+either emit `source: null`, discarding citability finer than the whole document, or
+invent an unregistered shape — the silent-misread hazard the tagged union exists to
+prevent. One arm is added; nothing else changes:
+
+    | { kind: "doc-para", ref: "¶142", para: 141, run: 2 }
+
+- **`para`** — 0-based index into the body's `<w:p>` sequence, REQUIRED. A DOCX
+  contains no pages: pagination is computed at render time by the layout engine and
+  shifts with fonts and printer metrics, so citing a "page" of a DOCX would claim
+  something the captured bytes do not say. The paragraph sequence IS in the bytes,
+  and every reference is anchored to a capture sha, so the index is stable for
+  exactly as long as the citation is meaningful.
+- **`ref`** — the human-readable form, `¶<1-based para>`, REQUIRED per this
+  proposal's own rule.
+- **`run`** — 0-based run index within the paragraph, OPTIONAL: present when the
+  reference genuinely targets runs (a hyperlink, a tracked change), absent when the
+  paragraph is the honest granularity. Run boundaries are producer artifacts (Word
+  splits runs on formatting and even spell-check state), so the paragraph is what a
+  person is shown and the run only sharpens it within one capture — it is never
+  presented as structure the author meant.
+
+Still PROPOSED; the response owed is unchanged (FRAMEWORK answers, or CONDUCT answers
+on its behalf in writing, naming that it did so). The 2026-08-03 BOB INBOX entry asks
+CONDUCT to resolve this, since three format entries (COFF-3/4/5) build against the
+resolved union.

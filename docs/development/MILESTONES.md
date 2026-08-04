@@ -560,7 +560,7 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-118 service bindings on Free unmeasured | CONTENT-PDF | M2 · measure first |
 | pdf-worker · Tier 1 in-plane extractor, then coverage measurement | CONTENT-PDF | M2 |
 | pdf-worker · Tier 2 (`unpdf`) as a fleet member behind I6 | CONTENT-PDF · DIST | M2 |
-| D-121 office formats: the FORMAT registry + OOXML container | CONTENT-* · CAPTURE | M2 |
+| D-121 office formats: the FORMAT registry + OOXML container | CONTENT-OFFICE (new area) | M2 · queued COFF-1..COFF-6 (BOB INBOX 2026-08-03) |
 | D-122 office formats carry latent evidence AND personal data | — | DOCTRINE · DEC-5 |
 | D-123 I2 element reference needs a per-container form | CONDUCT (answers for dormant FRAMEWORK) | M2 |
 | CAPTURE-SCALING item 6 · reuse verification + re-fetch at ratification | CAPTURE | M2 · DECIDED, queued CAP-4 |

@@ -879,6 +879,200 @@ through this inbox like any other.
 - The enactment backlog stands at 30; nothing in this entry adds to it beyond the two
   entries above.
 
+### 2026-08-03 · BOB · OFFICE FORMATS: the M2 development plan — six items, a new area, one protocol act
+
+Bob confirmed the focus and the plan 2026-08-03: XLSX/DOCX/PPTX content extraction,
+decomposed for maximum parallel development. Everything below rests on rulings already
+made — DEC-5 (surface it all: the evidentiary extras are in scope from the start, not
+a follow-on), the registry-first shape (`OFFICE-FORMATS.md` and the 2026-07-31 inbox
+entry above), and D-70's untested-uniformity warning, which COFF-1 exists to answer
+with evidence. **No new DEC entries**; the open list still holds only DEC-32, which
+touches none of this.
+
+**Done by BOB in this same commit, so you do not re-do it:** I7 (the FORMAT-registry
+entry contract) registered PROVISIONAL in `INTERFACES.md`, written from the framework
+§4 design deliberately so COFF-1 and COFF-2 can build against it in parallel; IC-1
+AMENDED with the `doc-para` kind (the proposal had omitted DOCX's element reference);
+the 2026-07-31 deflate-raw measurement backfilled into `MEASUREMENTS.md`;
+`kickoffs/CONTENT-PDF.md` corrected (its op-dispatch text is superseded by COFF-1);
+D-121's placement row in `MILESTONES.md` updated to name these items.
+
+**1 · THE PROTOCOL ACT, AND IT GATES ONLY WAVE 2: resolve IC-1 (as amended).**
+FRAMEWORK answers if staffed; otherwise you answer on its behalf IN WRITING, naming
+that you did so (protocol step 3). COFF-1 and COFF-2 do not wait on it — neither
+emits a `source`. COFF-3/4/5 do. **D-164's content-extent primitive stays PARKED and
+is NOT reopened by this**: IC-1 was shaped so that primitive can subsume it later at
+the cost of a `kind`, not a break (its own "What this does not settle" section says
+exactly this).
+
+**2 · A NEW AREA: CONTENT-OFFICE.** Owns the OOXML container reader and the office
+format entries (`bio-plane/src/ooxml.mjs`, the per-format entry modules, their
+tests), and builds the FORMAT registry (COFF-1). Registry ownership rests with it for
+now, with the same promotion trigger as the I3 note in `kickoffs/CONTENT-PDF.md`: if
+registry ownership becomes a cross-area bottleneck, promote it then — do not
+pre-build. Activation is yours; the kickoff is written at activation (one act,
+ORCHESTRATION rule 7), and COFF-1's claim must NAME the two dispatch touchpoints it
+moves (`index.mjs`'s acquire-time `HTML_CT` site and the read-time `op=pdfstructure`
+dispatch) — CAPTURE and CONTENT-PDF are both dormant, so that is a claim with a note
+rather than a live delegation.
+
+**3 · THE ITEMS — all M2. The waves are the parallelism:** COFF-6 immediately (out of
+band, measurement-only, holds no slot — the CPDF-5/7 pattern); COFF-1 ∥ COFF-2
+(disjoint files, the two behavioural slots); then COFF-3/4/5, mutually independent —
+recommended order **XLSX → DOCX → PPTX**, by evidentiary density under DEC-5
+(formulas, then tracked changes, then speaker notes). Two slots against three items:
+sequencing within the wave is yours.
+
+    ### COFF-1 · queued
+    milestone: M2
+    scope: **The FORMAT registry, with HTML and PDF moved onto it — the D-70 test, and
+      NO new capability.** New `bio-plane/src/formats.mjs`: one entry per format in
+      I7's shape; detection by magic bytes first, content type second. Move BOTH
+      existing dispatch mechanisms onto it: the acquire-time `HTML_CT` guard
+      (`index.mjs:1836` — detection consults the registry; the subresource branch
+      stays HTML-only in behaviour) and the read-time `op=pdfstructure` dispatch
+      (`index.mjs:1417` — the op survives, byte-identical output, routed through the
+      registry entry; `pdfstructure.mjs` becomes the PDF entry). Stamp what detect()
+      found into the capture's profile ADDITIVELY (I1 §4c gains a `format` field —
+      the FW-3/FW-4 additive precedent: minor version bump in the registry in the
+      same turn, no protocol case, consumers that ignore it keep working). Then
+      CONFIRM I7 from the code as built — the contract was written from design,
+      deliberately, and the code wins on drift. Update D-70's row with the verdict:
+      if a new format costs a registry entry, §9's cost table is real.
+    behind-interface: I7
+    depends-on: none
+    accepts-when: `cd bio-plane && npm run test:battery` green with HTML and PDF
+      outputs pinned unchanged (the existing suites are the pin); a TEST-ONLY stub
+      format registers and is reachable through detect→structure with ZERO edits
+      outside the registry — that assertion is the D-70 evidence; `npm run
+      test:coverage` --strict exit 0; negative control — delete the PDF entry from
+      the registry and `op=pdfstructure` fails NAMING the format as unregistered,
+      and the battery fails.
+    added: 2026-08-03 · BOB
+
+    ### COFF-2 · queued
+    milestone: M2
+    scope: **The OOXML container reader — pure module, ZERO dependency** (measured:
+      `deflate-raw` round-trips in workerd; `MEASUREMENTS.md` 2026-08-03 backfill).
+      `bio-plane/src/ooxml.mjs`: central-directory walk; member inflate via
+      `DecompressionStream("deflate-raw")`; part lookup by name;
+      `[Content_Types].xml` parse and flavour discrimination (docx/xlsx/pptx vs an
+      arbitrary ZIP a body might also publish); the uniform `_rels/*.rels` walker
+      (`TargetMode="External"` → outbound, shared by all three formats and ODF);
+      `docProps/core.xml` metadata extraction (creator, lastModifiedBy, revision
+      count, instants — evidentiary per DEC-5); size-guard plumbing (the bound is a
+      NAMED PROVISIONAL constant until COFF-6 measures it; over bound →
+      `text-undetermined` with the reason, NEVER silent truncation). ODF is DESIGNED
+      FOR (the part-map is a parameter), not built. Builds against I7 on paper —
+      independent of COFF-1's landing.
+    behind-interface: I7
+    depends-on: none
+    accepts-when: battery green with fixture round-trips for all three flavours; a
+      plain ZIP is NOT identified as OOXML, and a renamed one is caught by
+      magic-bytes-plus-parts rather than extension or content type; a truncated
+      central directory yields a stated `undetermined`, never a silent partial;
+      negative control — neuter the flavour discrimination and the suite fails on
+      the plain-ZIP assertion.
+    added: 2026-08-03 · BOB
+
+    ### COFF-3 · queued
+    milestone: M2
+    scope: **The XLSX registry entry.** Structure:
+      `xl/worksheets/_rels/sheetN.xml.rels` → I2 partitions through the ONE
+      `linkWrapper` (parity with HTML/PDF asserted, as `pdfstructure.test.mjs` pins
+      it); defined names and cross-sheet refs → `anchor`; `xl/embeddings/` →
+      `intra`; element references `{kind:"sheet-cell"}` per resolved IC-1. Text:
+      `xl/sharedStrings.xml` + sheet `<v>` values. THE EVIDENTIARY CORE (DEC-5):
+      the `<f>` FORMULA held BESIDE its cached `<v>` value, distinguishable
+      everywhere the text is shown, cited or indexed — the derivation is frequently
+      the finding, and every rendered form of the sheet destroys it; hidden rows,
+      columns and SHEETS emitted flagged hidden (a hidden sheet is a first-class
+      finding invisible in every rendered form). Extras land under ONE shared I2
+      extension envelope: the FIRST of COFF-3/4/5 to land files it against I2 as
+      IC-2 from as-built code (the I1 write-from-code precedent), the other two
+      confirm rather than invent variants.
+    behind-interface: I2
+    depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (a protocol state, not an item —
+      §1 above)
+    accepts-when: battery green with a real Oakland workbook fixture yielding
+      cell-referenced links, formulas beside values, and a hidden sheet flagged; an
+      over-bound workbook → `text-undetermined` named; negative control — collapse
+      `<f>` into `<v>` and the suite fails naming the formula/value distinction,
+      AND strip the hidden flag and the suite fails.
+    added: 2026-08-03 · BOB
+
+    ### COFF-4 · queued
+    milestone: M2
+    scope: **The DOCX registry entry.** Structure: `word/_rels/document.xml.rels` →
+      partitions through `linkWrapper`; bookmarks → `anchor`; `word/embeddings/` →
+      `intra`; element references `{kind:"doc-para"}` per resolved IC-1 (paragraph
+      0-based required, run optional — run boundaries are producer artifacts; the
+      paragraph is what a person is shown). Text: `<w:t>` runs in body order. THE
+      EVIDENTIARY CORE (DEC-5): tracked changes — `w:ins`/`w:del` with AUTHOR, DATE
+      and the SUPERSEDED WORDING — and `word/comments.xml` with author and date;
+      both are evidence a published PDF is specifically designed to remove. Extras
+      under the shared envelope (IC-2 rule as in COFF-3).
+    behind-interface: I2
+    depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (§1 above)
+    accepts-when: battery green with a real Oakland DOCX fixture yielding
+      paragraph-referenced links and a tracked change carrying author, date and the
+      superseded wording; an unreadable part → stated `undetermined`; negative
+      control — drop the superseded wording from the `w:del` emit and the suite
+      fails naming it.
+    added: 2026-08-03 · BOB
+
+    ### COFF-5 · queued
+    milestone: M2
+    scope: **The PPTX registry entry.** Structure:
+      `ppt/slides/_rels/slideN.xml.rels` → partitions through `linkWrapper`; slide
+      refs → `anchor`; `ppt/embeddings/` → `intra`; element references
+      `{kind:"slide-shape"}` per resolved IC-1. Text: `<a:t>` runs per slide. THE
+      EVIDENTIARY CORE (DEC-5): `notesSlide` speaker notes — routinely more candid
+      than the slide — emitted per slide and distinguishable from slide text
+      everywhere shown, cited or indexed. Extras under the shared envelope (IC-2
+      rule as in COFF-3).
+    behind-interface: I2
+    depends-on: COFF-1, COFF-2, and IC-1 RESOLVED (§1 above)
+    accepts-when: battery green with a real Oakland deck fixture yielding
+      slide+shape references and speaker notes distinguishable from slide text;
+      negative control — merge notes into slide text and the suite fails naming the
+      distinction.
+    added: 2026-08-03 · BOB
+
+    ### COFF-6 · queued
+    milestone: M2
+    scope: **Measure the real Oakland office corpus BEFORE the bounds and deferrals
+      harden — measurement-only, commits no product code, holds no slot (the
+      CPDF-5/7 pattern), runs immediately.** On real documents from Oakland's
+      orbit: size distribution (SETS the extraction bound COFF-2 ships
+      provisionally — the bound is measured, never picked); link density; frequency
+      of formulas, tracked changes, comments, speaker notes and hidden sheets
+      (sizes the evidentiary value actually present in this corpus); legacy
+      `.doc`/`.xls`/`.ppt` (OLE2) prevalence — the EMPIRICAL answer to the
+      legacy-format question, which stays deferred with this measurement as its
+      trigger; ODF prevalence (COFF-2 designs for it; this decides whether it is
+      ever built). Record in `MEASUREMENTS.md` with date and instrument.
+    behind-interface: none — it commits no code
+    depends-on: none
+    accepts-when: `MEASUREMENTS.md` carries the size distribution with a stated
+      recommended bound, the per-artefact frequency table, and the legacy/ODF
+      prevalence counts, each with date and instrument, plus a stated
+      recommendation on the legacy deferral; negative control — include one file
+      that is a renamed plain ZIP masquerading as `.xlsx` and confirm the
+      instrument reports it as NOT OOXML rather than counting it.
+    added: 2026-08-03 · BOB
+
+**4 · A DANGLING DEPENDENCY TO FIX WHEN YOU DRAIN: CPDF-10 depends on CPDF-8, which
+does not exist** — not in this file, not anywhere in the repository (checked
+2026-08-03, python over the tree). As written, CPDF-10 can never become runnable. The
+likeliest intent is a page-rendering path — OCR consumes PIXELS, and nothing today
+renders a PDF page to an image — but naming the missing item is yours; flagged, not
+fixed, because the queue body is yours.
+
+Nothing here stops a worker and nothing supersedes a queue item. Superseded TEXT:
+`kickoffs/CONTENT-PDF.md`'s dispatch description and its "op question" section,
+corrected by BOB in this same commit.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
