@@ -9,7 +9,8 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    public hosts only, no credentials in the authority, no bare IPs, no localhost.
    It is the one bound between a member typing a URL and this Worker fetching it,
    so it must be the same function the checker uses on the queue. */
-import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType } from "../checks/bio-checks.mjs";
+import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
+         completenessFields } from "../checks/bio-checks.mjs";
 /* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
    catalogue reads the legal-edge table from the check catalogue (exported,
    never copied); `needs` and `mode` are composed HERE from NEEDS and
@@ -444,6 +445,16 @@ const OPS = {
      scratch, whose Durable Object is a different instance with its own
      member tables, so scratch enrollment can never touch the live roster. */
   ratify:       { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* REC-14. The state act that AUTHORS a case: it writes the completeness
+     assertion, the declared subject position, both frozen strengths and the
+     declared bar into the bytes op=ratify then signs. Separate from ratify
+     because authoring the assertion CHANGES THE SHA -- you cannot sign first
+     and write the caveat later. */
+  publish:      { classes: ["admin", "member", "probe"],           mutating: true  },
+  strengthbar:  { classes: ["admin", "member", "probe"],           mutating: true  },
+  strengthbarof:{ classes: ["admin", "member", "probe"],           mutating: false },
+  publishededitions: { classes: ["admin", "member", "probe"],      mutating: false },
+  excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
@@ -668,11 +679,21 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
    defect class this file keeps naming. It is not selection-backed, so the
    `owner` stamp below is inert for it (nothing reads it); that costs nothing and
    is cheaper than a list that exists to omit one parameter. */
-/* REC-31 adds `reopen` for exactly REC-13's reason above: it needs what this
-   array confers — both SESSION_OPS lists, the server-side viewer stamp and the
-   server-side author stamp — and nothing else. Like conclude it is not
-   selection-backed, so the `owner` stamp is inert for it. */
-const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen"];
+/* REC-31 adds `reopen` and REC-14 adds `publish`, both for exactly REC-13's
+   reason above: each needs what this array confers — both SESSION_OPS lists,
+   the server-side viewer stamp and the server-side author stamp — and nothing
+   else. Neither is selection-backed (one question is picked back up at a time;
+   one case is published at a time), so the `owner` stamp is inert for both.
+   `publish`'s author is the member whose name goes on the completeness
+   assertion and on the declared position about putting the case to its
+   subject, which is the strictest reason in this file for the stamp to be the
+   server's. */
+const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "publish"];
+/* REC-14 / DEC-17: declaring the group's default required strength is a
+   session act whose AUTHOR is part of the declaration — "you can lower your own
+   bar; you cannot do it quietly" — so it takes the author stamp without being a
+   state action on any object. */
+const DECLARATION_ACTIONS = ["strengthbar"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue"];
@@ -757,13 +778,14 @@ const SESSION_OPS = {
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
-                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS]),
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
+                   ...DECLARATION_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
-                   "memberadd", "memberset",
+                   ...DECLARATION_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
 
@@ -884,6 +906,17 @@ const NEEDS = {
      key was doing the capability's job: a member with no publish reached
      op=ratify and was stopped only by not having a key. */
   ratify:           "publish",
+  /* REC-14: authoring a case carries the SAME capability as ratifying one, and
+     deliberately not `contribute`. Concluding says what the record shows;
+     publishing puts the group's name on it and states, in the group's voice,
+     what it does not cover and whether it was put to its subject. That is the
+     publication surface, and a member who may not publish may not author it
+     either. No fifth capability token is minted (CAPABILITIES.md section 4). */
+  publish:          "publish",
+  /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it
+     rides the publication surface too. Lowering your own bar is legitimate and
+     is an authored, dated, on-the-record act; what it may not be is quiet. */
+  strengthbar:      "publish",
   /* create_projects is deliberately absent, because no op creates a project. A
      project is created by promoting a bundle with no base whose object_type is
      `project`, so the check lives at that SHAPE, once, in the promote branch. */
@@ -3049,6 +3082,13 @@ export default {
       const gate = await runGate({
         bundleId: body.bundleId, image, knownIds: known,
         registers: facts.registers,
+        /* REC-14: the two facts the catalog cannot read out of the bundle --
+           what THIS case asserted at its previous EDITION (C-21.1) and what the
+           cases beneath it FROZE when they were signed (C-21.2). They come from
+           the store with the rest of the gate facts, so the gate and the write
+           path judge against the same published record. Passing nothing here
+           does not soften the gate, it blinds it. */
+        publishedRegistry: facts.publishedRegistry,
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
@@ -3072,14 +3112,97 @@ export default {
         }
       }
 
+      /* REC-14 / DEC-12: the EDITION, the frozen pair, the declared bar and the
+         completeness assertion all come out of the RATIFIED BYTES -- never off
+         the request and never re-derived here. The signature covers this
+         document, so anything committed beside it must be inside the hash the
+         member signed; re-deriving the strength at this point would put a
+         number in the public projection that nobody attested. An inquiry that
+         is not `published` ratifies exactly as before with edition 1, which is
+         what every information bundle is. */
+      const ratifiedFm = typeof image["bundle.md"] === "string"
+        ? (parseFrontmatter(image["bundle.md"]).data || {}) : {};
+      const isCase = normalizeType(ratifiedFm.object_type) === "inquiry"
+        && ratifiedFm.current_state === "published";
+      const edition = isCase && Number.isInteger(ratifiedFm.edition) ? ratifiedFm.edition : 1;
+      const frozenStrength = isCase && Array.isArray(ratifiedFm.published_strength)
+        ? ratifiedFm.published_strength : null;
+      const frozenCompleteness = isCase ? {
+        ...completenessFields(ratifiedFm),
+        subject_position: ratifiedFm.completeness?.subject_position ?? null,
+        author: ratifiedFm.completeness?.author ?? null,
+        at: ratifiedFm.completeness?.at ?? null,
+      } : null;
+
+      /* DEC-34: the CONTAINER's signed hash manifest. "Protected" means
+         TAMPER-EVIDENT and the record must never claim otherwise -- a zip
+         password is either broken encryption or a lock on the stranger this
+         surface exists to serve, and a PDF's write-protect flag is advisory.
+         What actually protects: every part is listed here by sha256, the
+         manifest names the bundle sha the SSHSIG covers and carries the
+         armored signature itself, and the manifest's OWN sha goes into
+         published_shas -- so any copy of the container anywhere can be checked
+         against this instance by hash, and a modified copy is DETECTABLE by
+         anyone without our cooperation. That is the stronger property, and it
+         needs no DRM.
+
+         THE CONTAINER IS THE BUNDLE'S PORTABLE FORM, not a new object: the
+         parts listed here ARE the bundle's files, each already content-addressed
+         in the published bucket. `layout` says how they serialise into the zip
+         so REC-22 -- which serves the container and its PDF renderings -- has a
+         shape to build against rather than one to invent. The renderings and
+         the per-page brazening are REC-22/UI-18's half and are deliberately not
+         produced here; when they land they join `parts` with kind "rendering"
+         and the manifest shape does not change.
+
+         EDITIONS ARE OVER THE CONTAINER (DEC-12): a new edition is a new
+         manifest with a new hash, and earlier editions keep answering. */
+      const manifest = {
+        format: "bio-case-container/1",
+        case: body.bundleId,
+        title: ratifiedFm.title ?? null,
+        edition,
+        group: ratifiedFm.group ?? null,
+        bundle_sha: body.expectedSha,
+        gate_version: gate.gateVersion,
+        attestor: { member: attestor?.member_id ?? sessMember, key_b64: sv.keyB64 },
+        signature: { namespace: NS_RATIFY, statement: ratifyStatement(body.bundleId, body.expectedSha),
+                     armored: body.sig },
+        strength: frozenStrength,
+        required_strength: isCase ? (ratifiedFm.required_strength ?? null) : null,
+        parts: shas.map(({ text, ...part }) => part),
+        layout: { root: `${body.bundleId}/`, parts_at: "path", manifest_at: "MANIFEST.json",
+                  note: "the zip carries every part at its own path with this manifest at the root. Check "
+                      + "each part's sha256 against this list, then check this manifest's own sha256 and the "
+                      + "signature over bundle_sha. Renderings (REC-22) join parts[] as kind: rendering." },
+        verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here "
+              + "makes one detectable by anyone holding it, without this instance's cooperation.",
+      };
+      const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
+      const manifestSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", manifestBytes))]
+        .map((x) => x.toString(16).padStart(2, "0")).join("");
+      shas.push({ sha256: manifestSha, path: "MANIFEST.json", kind: "manifest",
+                  bytes: manifestBytes.length, text: JSON.stringify(manifest, null, 1) });
+
       const pub = (await (await stub.fetch(new Request("http://do/publish", {
         method: "POST", body: JSON.stringify({
           bundleId: body.bundleId, bundleSha: body.expectedSha,
           attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? sessMember,
           gateVersion: gate.gateVersion, sigArmored: body.sig,
+          /* Only a CASE names its edition, and it names it in the signed bytes.
+             Everything else leaves it to the store, which appends the next one
+             — an information bundle has no authored edition to assert and the
+             control plane must not invent one for it. */
+          ...(isCase ? { edition } : {}), title: ratifiedFm.title ?? null,
+          completeness: frozenCompleteness, strength: frozenStrength,
+          required: isCase ? (ratifiedFm.required_strength ?? null) : null,
+          manifest, manifestSha,
           shas: shas.map(({ text, ...s }) => s),
         }) }))).json()).result;
-      if (!pub?.ok) return json({ ok: false, reason: "PUBLISH_FAILED", detail: pub, store: storeName, tokenClass: cls }, 500);
+      if (!pub?.ok)
+        return json({ ok: false, ...(pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub }),
+                      store: storeName, tokenClass: cls },
+                    pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS") ? 409 : 500);
 
       /* The fence: ratified bytes land content-addressed in the published
          bucket, so the published corpus is self-contained. Existing keys
@@ -3184,6 +3307,7 @@ export default {
       }
 
       return json({ ok: true, bundleId: body.bundleId, bundleSha: body.expectedSha,
+                    edition: pub.edition, container: { manifest_sha: manifestSha, parts: manifest.parts.length },
                     existed: pub.existed, ratifiedAt: pub.ratifiedAt,
                     attestor: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
                     published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
@@ -3194,7 +3318,12 @@ export default {
     /* A few ops read better at the edge than they do inside the store, so
        the public name and the internal name differ. The map is the only
        place that difference lives. */
-    const DO_PATH = { inbox: "inboxlist", memberlist: "memberlist", signerlist: "signerlist" };
+    /* REC-14: op=publish is the STATE ACT; the store's own /publish is the
+       ratify committer that writes the published_bundles row. Two different
+       things with one obvious name, so the public name and the internal name
+       differ here exactly as they do for op=inbox. */
+    const DO_PATH = { inbox: "inboxlist", memberlist: "memberlist", signerlist: "signerlist",
+                      publish: "publishcase" };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
     /* Who holds a lease is stamped by the server, never taken from the request,
@@ -3239,11 +3368,16 @@ export default {
        their own handlers above. */
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "resolutions",
                                 "concerns", "connections", "instance", "exceptions", "thread",
-                                "discharge", "audit", "searchindexcheck", "projectownerarith"];
+                                "discharge", "audit", "searchindexcheck", "projectownerarith",
+                                /* REC-14's read, swept at the merge: its bar report NAMES the
+                                   projects that declared the bar, which is §7.9's reverse-edge
+                                   walk arriving by a new door. The VALUE stays whole for every
+                                   reader (DEC-17) — only the names are withheld. */
+                                "strengthbarof"];
     if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
         || STATE_ACTIONS.includes(op)
         || op === "list" || op === "index" || op === "projection" || op === "image"
-        || op === "file" || op === "backlinks" || QUEUE_ACTIONS.includes(op)
+        || op === "file" || op === "backlinks" || op === "excludedby" || QUEUE_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
@@ -3300,7 +3434,7 @@ export default {
        browser cannot write history as someone else, and a machine credential
        says plainly that it was a machine rather than borrowing a person's name.
        A caller-supplied `author` is overwritten, not honoured. */
-    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
+    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op))
       inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is

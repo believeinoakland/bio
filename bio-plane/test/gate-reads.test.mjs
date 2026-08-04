@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: (run 2026-08-03, rec25-agent) TWO arms, both required because the store FAILS CLOSED. (a) Remove `op === "list"` from the viewer-stamp condition in src/index.mjs (the REC-25 stamp block) -> 6 assertions fail, ALL naming op=list, across every viewer (empty answers: a missing stamp is an outage, never a leak — the doctrinal failure mode). (b) Neuter the DO gate instead — in src/store.mjs listBundles, replace the gate predicate with 1=1 -> 3 assertions fail naming op=list as THE LEAK (dave receives the project row). Restored -> 36 pass. Detail below. */
 /* NEGATIVE CONTROL (REC-30, run 2026-08-03, rec30-agent): THREE arms, one per mechanism the sweep added, each restored after running. (a) THE ITEM'S OWN — restore the dangling leak: in src/store.mjs danglingRefs, change the WHERE to `AND (1=1 OR ${seen.sql})` -> 3 assertions fail NAMING op=dangling, and the got carries PROJ-2026-0001-secret (the citing project's id, the measured leak) -> restored, 96 pass. (b) THE FAIL-CLOSED ARM — delete "dangling" from REC30_VIEWER_READS in src/index.mjs -> 5 assertions fail naming op=dangling, every answer EMPTY for every viewer including the machine credential (a missing stamp is an outage, never a leak) AND the impostor assertion flips, proving the caller-supplied `viewer=class:member` is HONOURED the moment the server stops overwriting it — REC-29's carried lesson, demonstrated. (c) THE BACK-REFERENCE ARM — neuter the projection: make src/store.mjs's #bundleRedactor return the identity (`return (id) => id ?? null;` as its first line) -> 8 assertions fail across op=reading, op=readingref, op=resolutions, op=concerns, op=connections, op=instance and op=exceptions, every one of them handing the uninvited member the secret project's id -> restored, 96 pass. */
+/* NEGATIVE CONTROL, RE-RUN ON THE MERGED TREE (2026-08-04, rec30-agent, after origin/main b6e957c brought REC-14's published/editions in), all four arms restored after running: (a) 3 failures naming op=dangling; (b) 5 failures, every answer empty, the impostor assertion flipping; (c) now 12 failures, because REC-14's op=strengthbarof shares #bundleRedactor and joins the same class; and NEW (d) THE BAR ARM — restore REC-14's leak by making src/store.mjs's strengthBarOf return the raw bar (`if (true) return { ok: true, target, bar };` in place of the `!Array.isArray(bar.projects)` early return) -> 4 assertions fail, the uninvited member receiving `projects: ["PROJ-2026-0001-secret"]` and the same ids interpolated into the bar's prose -> restored, 110 pass. */
 /* REC-25 / F-8 / D-135 / D-141: the D-15 viewer gate stamped on ALL read paths.
  *
  * WHAT THIS CLOSES. index.mjs stamped the viewer for op=search, op=select and
@@ -170,8 +171,12 @@ await mk(PROB, "problem", "mem-rec25");
 /* The project cites the shared evidence in its own frontmatter — `cites` lives
    on the citing object — so the reverse edge INTO the information is exactly
    the edge 7.9 says must be filtered by the viewer's position. */
+/* REC-14's `required_strength` on the SECRET project, so op=strengthbarof has a
+   real bar to report about the SHARED information the project cites — and a real
+   project id to withhold while reporting it. */
 await mk(PROJ, "project", carol,
-  `references:\n  - target: ${INFO}\n    rel: cites\n    status: confirmed\n    note: evidence\n${dangle(PHANTOM_P)}`,
+  `references:\n  - target: ${INFO}\n    rel: cites\n    status: confirmed\n    note: evidence\n${dangle(PHANTOM_P)}`
+  + `required_strength:\n  capture: B\n  connection: C\n`,
   { sha: PSHA, entities: [REF] });
 
 const ids = (r) => (r.body.result || []).map((b) => b.bundle_id).sort();
@@ -494,6 +499,71 @@ console.log("\n--- op=projectownerarith: an owner count IS existence ---");
     (await GET(`op=projectownerarith&token=${carol}&projectId=${PROJ}`)).body.result.live.owners, 1);
 }
 
+console.log("\n--- REC-14's reads, swept at the merge (2026-08-04) ---");
+{
+  /* op=strengthbarof: the bar of a SHARED information that only the SECRET
+     project declares a bar on. The VALUE is the record's and is identical for
+     both readers (DEC-17: never set by who a reader is, and op=publish stamps it
+     from the whole corpus whatever this read shows); the project's NAME is not. */
+  const dv = (await GET(`op=strengthbarof&token=${dave}&target=${INFO}`)).body.result;
+  const cl = (await GET(`op=strengthbarof&token=${carol}&target=${INFO}`)).body.result;
+  t("the owner is told which project declared the bar", cl.bar.projects, [PROJ]);
+  t("the uninvited member is told the SAME bar, per axis",
+    [dv.bar.capture, dv.bar.connection, dv.bar.declared, dv.bar.source],
+    [cl.bar.capture, cl.bar.connection, cl.bar.declared, cl.bar.source]);
+  t("and is told NO project name", dv.bar.projects, []);
+  t("nor one in the prose — the detail interpolated the same ids",
+    JSON.stringify(dv).includes(PROJ), false);
+  t("the withholding is STATED, and without a count (the count is the leak)",
+    [dv.bar.projects_out_of_view, "projects_out_of_view_count" in dv.bar], [true, false]);
+  t("a machine credential is not filtered",
+    (await GET(`op=strengthbarof&token=mem-rec25&target=${INFO}`)).body.result.bar.projects, [PROJ]);
+  t("the GROUP arm names no bundle at all, for anybody",
+    "projects" in ((await GET(`op=strengthbarof&token=${dave}`)).body.result.bar || {}), false);
+
+  /* op=excludedby: REC-14 gated it at birth. Asserted STRUCTURALLY as well as
+     behaviourally, and the reason is honesty about what a fixture can prove
+     here: inquiry_exclusions rows are written by op=publish, publishable cases
+     are INQUIRIES, and an inquiry is shared corpus — so no fixture in this suite
+     can make the gate BITE, and an empty answer from a target nobody excluded
+     would be an outcome that costs nothing to produce. What IS checkable is that
+     the read carries the predicate from the one compilation point and binds the
+     alias the predicate is written over. */
+  const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  /* One method's BODY, bounded by class-member indentation. Not `indexOf(name)`:
+     a method is CALLED long before it is declared, so slicing between two first
+     mentions ran backwards and silently produced an empty string — an assertion
+     that passes on nothing is the failure this whole suite is about. */
+  const methodSrc = (name) => {
+    const lines = store.split("\n");
+    const at = lines.findIndex((l) => new RegExp(`^ {2}(async )?${name}\\(`).test(l));
+    if (at < 0) return "";
+    const end = lines.findIndex((l, i) => i > at && /^ {2}[A-Za-z#*]/.test(l));
+    return lines.slice(at, end < 0 ? lines.length : end).join("\n");
+  };
+  const fn = methodSrc("excludedBy");
+  t("the excludedBy body was actually located (an empty slice would pass on nothing)",
+    fn.includes("inquiry_exclusions"), true);
+  t("op=excludedby compiles its gate at the ONE compilation point",
+    /viewerPredicate\(viewer\)/.test(fn), true);
+  t("and binds the alias that predicate is written over (REC-25's landed lesson)",
+    /JOIN bundles b\b/.test(fn) && /\$\{gate\.sql\}/.test(fn), true);
+  const [xHid, xAbs] = [await GET(`op=excludedby&token=${dave}&id=${PROJ}`),
+                        await GET(`op=excludedby&token=${dave}&id=${MISSING}`)];
+  t("and a hidden id answers exactly as an absent one, targetId aside",
+    { ...xHid, body: { ...xHid.body, result: { ...xHid.body.result, targetId: "X" } } },
+    { ...xAbs, body: { ...xAbs.body, result: { ...xAbs.body.result, targetId: "X" } } });
+
+  /* op=publishededitions: the published projection, and the contrast that makes
+     the classification a judgment rather than a habit — it reads
+     published_bundles and joins NOTHING. */
+  const pe = methodSrc("publishedEditions");
+  t("op=publishededitions consults the published projection only",
+    /FROM published_bundles/.test(pe) && !/JOIN bundles\b/.test(pe) && !/current_state/.test(pe), true);
+  t("an unpublished bundle has no editions to disclose, to anybody",
+    (await GET(`op=publishededitions&token=${dave}&id=${PROJ}`)).body.result.editions, []);
+}
+
 console.log("\n--- REC-29's inherited lesson: EVERY gate-like store param is SERVER-STAMPED ---");
 /* The passthrough copies every caller parameter into the inner URL, so any
    store-side gate driven by a param is an impostor hole unless the control plane
@@ -506,6 +576,8 @@ console.log("\n--- REC-29's inherited lesson: EVERY gate-like store param is SER
   const plain = await GET(`op=list&token=${dave}`);
   t("`viewer`: a caller cannot compile a query for somebody else's position",
     await GET(`op=list&token=${dave}&viewer=class:admin`), plain);
+  t("`viewer` on REC-14's bar read: a forged class:admin buys no project name",
+    (await GET(`op=strengthbarof&token=${dave}&target=${INFO}&viewer=class:admin`)).body.result.bar.projects, []);
   t("`viewer` on the swept reads either: op=dangling under a forged class:member",
     (await GET(`op=dangling&token=${dave}&viewer=class:member`)).body.result.dangling.map((x) => x.bundle_id),
     [INFO]);
@@ -546,10 +618,13 @@ console.log("\n--- the DO envelope's `ms` is gone at the SOURCE, not stripped at
  *  REC-25's leak existed because six read ops were added over months and nobody
  *  was ever asked the question.
  *
- *  (COORDINATION: REC-14 runs concurrently and owns the published/ratify/state
- *  ground. If it lands read ops after this, they will be unclassified and this
- *  assertion will name them at ITS integration. That is the mechanism working:
- *  classify each one gated or ungated-with-a-reason.)
+ *  (COORDINATION, and the mechanism has already earned its keep: REC-14 landed
+ *  on main while this item was in flight, and at the merge this assertion named
+ *  its three new read ops. op=strengthbarof turned out to reintroduce §7.9's
+ *  reverse-edge walk by a new door and was GATED; op=excludedby was already
+ *  gated, correctly, and is NOT the published class — it joins the live table;
+ *  op=publishededitions IS the published class and stays ungated. Three ops,
+ *  three different answers, none of them a formality.)
  * ------------------------------------------------------------------------- */
 console.log("\n--- every read op is classified: gated, or ungated for a stated reason ---");
 {
@@ -584,6 +659,15 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     projectownerarith: "REC-30: an owner count is existence",
     projectparticipants: "7.8, gated by PARTICIPATION on the server-stamped `by`: a non-participant "
       + "is told what a nonexistent project would tell them",
+    /* REC-14's reads, classified at the merge (2026-08-04, rec30-agent). The
+       classifications are security judgments and they are this item's to make. */
+    excludedby: "REC-14 gated it at birth, correctly and through the same one compilation point. It is "
+      + "NOT the published-projection class: it JOINS the live `bundles` table and reports each case's "
+      + "CURRENT STATE, so it can name an unpublished case — which is exactly why the gate belongs on it.",
+    strengthbarof: "REC-30 at the merge: #requiredStrengthFor reports `projects: [...]` and interpolates "
+      + "the same ids into its detail — §7.9's reverse-edge walk arriving by a new door. The bar VALUE is "
+      + "deliberately NOT gated (DEC-17: it is never set by who a reader is, and op=publish stamps it from "
+      + "the whole corpus regardless); the NAMES are withheld and the withholding is stated without a count.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
@@ -596,6 +680,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "without this instance's cooperation. Nothing unpublished appears, by construction.",
     verify: "PUBLISHED PROJECTION: answers only from published_shas — a hash never ratified is "
       + "indistinguishable from one that never existed.",
+    publishededitions: "PUBLISHED PROJECTION (REC-14, classified at the merge by REC-30): reads "
+      + "published_bundles and NOTHING else — no join to the working corpus, no current_state, no title "
+      + "beyond the one frozen into the edition. Every row is there because somebody ratified and "
+      + "published it, which is the deliberate act of making it public; gating it would gate the thing "
+      + "the doorbell exists to serve. Its sibling op=excludedby is gated precisely BECAUSE it does join "
+      + "the live table — the difference between the two is the whole test.",
     /* names no bundle: there is no identity in the answer to gate */
     stats: "COUNTS ONLY, an operator surface. A count that names nothing is not identity — and the "
       + "counts REC-25 did gate were the TOTALS OF AN ENUMERATION, where a total bigger than the "
