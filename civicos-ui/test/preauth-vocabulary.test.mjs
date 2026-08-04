@@ -254,6 +254,70 @@
  * SURFACE-authored half, from the verify pane's own two sentences. **EVERY
  * PLANE-SOURCED ROW IS UNCHANGED IN NUMBER AND IN SOURCE**, which is now
  * asserted rather than observed.
+ *
+ * ============================================================================
+ * WHAT UI-36 DID TO THIS FILE, 2026-08-04. **DEC-49'S SUBJECT GREW — 8 ROWS TO
+ * 11 — AND THAT IS THE RESULT RATHER THAN A SIDE EFFECT.**
+ * ============================================================================
+ * A PUBLIC OP NOBODY DROVE. `pubVerify(sha, into)` is the only place a
+ * pre-authentication surface CALLS the plane on the reader's behalf: it renders
+ * FIVE times on the published case page, a stranger reaches it holding nothing,
+ * it asks `op=verify` (`classes: null`), and it prints the plane's answer back
+ * — `matches[0].path`, `.kind`, `.bundle_id`. No scenario had ever clicked it,
+ * so every word of that answer stood OUTSIDE the reading DEC-49 is being
+ * answered against. That is the plane-sourced column being a lower bound in a
+ * SECOND way, unrelated to the two wire-shaped fixtures UI-31 named.
+ *
+ * WHAT WAS ADDED. **WALK 1c**, which discovers the controls the CASE PAGE
+ * serves by reading the page AS RENDERED — walks 1 and 1b read served markup,
+ * and this page's controls are written by script out of what the plane
+ * answered, so no read of `app.html` finds them at all. Every control it finds
+ * must be DRIVEN by a scenario or NAMED by the load-time router's own body
+ * (which is how `pubOpen` is accounted for, read out of
+ * `publishedRouteFromHash` rather than asserted). Then the existing
+ * `case-address-at-load` scenario DRIVES every `pubVerify` and `pubBytes` call
+ * site the page rendered, EVALUATING THE CALL AS THE PAGE WROTE IT, and the mock
+ * learns `op=verify` FLAT with its refusal read textually out of
+ * `bio-plane/src/index.mjs`.
+ *
+ * IT IS THE EXISTING SCENARIO AND NOT A TWELFTH ONE, DELIBERATELY. A second
+ * scenario opening the same address renders the whole case page again and
+ * DOUBLE-COUNTS every plane-sourced occurrence on the largest pre-authentication
+ * surface in the product; the delta would then be a re-render rather than this
+ * control. That is the indistinguishability UI-33 and UI-34 each avoided, and
+ * UI-34's `fromNav` entry was the same reasoning. **THE INSTRUMENT IS PROVED
+ * UNCHANGED THE WAY UI-33 AND UI-34 PROVED IT**: this file with the drive hidden
+ * (`UI31_HIDE=case-verify`) reproduces UI-34's report CHARACTER-IDENTICALLY, so
+ * every number that moved was moved by the drive and by nothing else.
+ *
+ * THE READING, BEFORE AND AFTER: 11 scenarios -> 11 (unchanged); 12 surfaces ->
+ * 19; 34,375 -> 35,835 characters; 9 terms -> 13; 57 -> 67 occurrences; 47 -> 57
+ * visible. **THE SUBJECT: 8 PLANE-SOURCED ROWS -> 11**, all four movements from
+ * `op=verify`'s own answer and every one named at `DEC49_SUBJECT` below —
+ * `manifest` NEW (the plane's `kind` VALUE, printed as a word), `CASE` NEW (the
+ * acronym rule on the plane's real minted id prefix), `FIND` NEW (the same rule
+ * on the FIXTURE's id spelling, labelled as such), and `bundle.md` gaining THREE
+ * SOURCES as `op=verify` echoes the part path the case page already showed.
+ *
+ * **AND THE ITEM'S OWN PREMISE IS CONTRADICTED BY THE MEASUREMENT, WHICH IS THE
+ * MORE IMPORTANT HALF.** UI-36 was routed on the reading that `pubVerify`'s
+ * `catch` branch "prints `e.error || e.reason` verbatim under DEC-8". IT CANNOT,
+ * and no plane word can reach that branch: `apiQ` goes through `api`, which is
+ * `fetch(...).then(r => r.json())` and REJECTS only on a transport failure or a
+ * body that is not JSON — neither carries an `error` or a `reason`. Arm (l)
+ * measures it: translating that expression, a DEC-8 overstep, leaves this file
+ * 48/48 GREEN and the report CHARACTER-IDENTICAL.
+ * **THE CONSEQUENCE IS A LIVE DEFECT AND IT IS PINNED, NOT FIXED, HERE.**
+ * Because `apiQ` does not throw on `ok:false`, a REFUSAL from `op=verify`
+ * arrives as an ordinary value with `published` undefined and falls into the
+ * NOT-PUBLISHED branch — so a reader who asked a question the plane DECLINED to
+ * answer is told "No published part answers to that hash", a substantive claim
+ * about the record, on the one surface whose whole purpose is "check this
+ * without us". It is reachable by a click (the container row fills its hash from
+ * `bundle_sha || ""`). The surface is NOT changed by this item: DEC-49 is open,
+ * and every reading in this chain is worth what it is worth because nothing on
+ * the surface moved while it was taken. The state is measured, asserted and
+ * routed instead.
  */
 import vm from "vm"; import fs from "fs"; import path from "path";
 import { webcrypto } from "crypto";
@@ -421,6 +485,25 @@ const REFUSAL_SENTENCE = REFUSAL ? REFUSAL[REFUSAL_CODE] : "";
 ok("the plane's login-refusal sentence is readable from here, whole, and is prose",
    !!REFUSAL_CODE && REFUSAL_SENTENCE.length > 200 && /^[a-z].*\.$/s.test(REFUSAL_SENTENCE));
 
+/* AND `op=verify`'S OWN REFUSAL, READ THE SAME WAY AND FOR THE SAME REASON —
+   ADDED BY UI-36, 2026-08-04. `op=verify` is answered by the CONTROL PLANE
+   rather than by the store (`index.mjs`, section 7a: "Anyone, no token, no
+   session"), and when it will not answer a hash it says so in its own words.
+   Those words are read textually out of index.mjs, never typed here: a
+   hand-typed copy would agree with its source at zero cost, and this file's
+   whole subject is whether the plane's exact words reach an uncredentialed
+   reader. The read is GUARDED, because an extraction that silently yielded ""
+   would make the refusal arm below trivially true. */
+const INDEX_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "index.mjs"), "utf8");
+function planeVerifyRefusal(){
+  const m = /op === "verify"\)\s*\{[\s\S]{0,600}?error:\s*"((?:[^"\\]|\\.)*)"/.exec(INDEX_SRC);
+  return m ? JSON.parse('"' + m[1] + '"') : "";
+}
+const VERIFY_REFUSAL = planeVerifyRefusal();
+ok("the plane's own refusal for op=verify is readable from here and is the control plane's own sentence — "
+   + JSON.stringify(VERIFY_REFUSAL),
+   VERIFY_REFUSAL.length > 20 && /verify/.test(VERIFY_REFUSAL) && /sha256/.test(VERIFY_REFUSAL));
+
 /* The two public ops. Wire-shaped: `op=publishedmanifest` is WRAPPED (index.mjs
    re-wraps it explicitly), `op=publishedcase` is FLAT (its own handler), which
    is what `check-mock-envelope.mjs`'s wire map says and what its arm B judges
@@ -478,6 +561,18 @@ const CASE_ANSWER = {
     detail:"every hash here is checkable by anyone with ssh-keygen, without this instance." },
 };
 
+/* THE PUBLISHED PROJECTION'S ANSWER FOR A HASH — `op=verify`, ADDED BY UI-36.
+   Every row is taken from `CASE_ANSWER`'s OWN parts and its own manifest rather
+   than invented, so what the verify control renders is what this case actually
+   contains: a stranger who checks a hash off this page is told about the same
+   part the page just showed them. `MANIFEST.json` is the container's real file
+   name (the same one UI-33 kept when it reworded the prose around it). */
+const VERIFY_MATCHES = new Map([
+  [SHA, { bundle_id:FIND_ID, path:"bundle.md",          kind:"bundle",   published:"2026-07-01T09:00:00Z" }],
+  [CAP, { bundle_id:FIND_ID, path:"snapshots/memo.bin", kind:"capture",  published:"2026-07-01T09:00:00Z" }],
+  [MAN, { bundle_id:CASE_ID, path:"MANIFEST.json",      kind:"manifest", published:"2026-07-01T10:00:00Z" }],
+]);
+
 /* Every string the plane hands over in a scenario, recursively, so the report
    can say who wrote each word rather than guessing. */
 function stringsOf(v, out){
@@ -508,6 +603,29 @@ function makePlane(mode){
       return W(say({ ok:false, reason:REFUSAL_CODE, detail:REFUSAL_SENTENCE }));
     if(op === "publishedmanifest") return W(say(MANIFEST_ANSWER));
     if(op === "publishedcase")     return R(say(CASE_ANSWER));
+    /* `op=verify` — FLAT (`index.mjs` op==="verify": json({ok:true, ...out.result})),
+       which is what check-mock-envelope's wire map says and what its arm B judges
+       this answer against. THREE ANSWERS, because the op has three and the
+       surface renders each differently:
+         a well-formed hash the published projection knows -> published, with the
+           part NAMED, which is the plane-sourced text UI-36 exists to harvest;
+         a well-formed hash it does not know -> published:false, nothing named;
+         anything that is not a 64-hex hash -> a REFUSAL in the control plane's
+           own words, carrying the sentence read out of index.mjs above.
+       `opts.verifyUnreachable` is set MID-SCENARIO rather than at construction:
+       a plane that goes away between the page loading and the reader clicking
+       Verify is the state the `catch` branch exists for, and it cannot be
+       reached from a plane that was unreachable when the page was drawn. */
+    if(op === "verify"){
+      if(opts.verifyUnreachable) throw new TypeError("Failed to fetch");
+      const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+      if(!/^[0-9a-f]{64}$/.test(sha)){
+        const refused = say({ ok:false, error:VERIFY_REFUSAL });
+        return { ok:false, status:400, json:async()=>refused };
+      }
+      const m = VERIFY_MATCHES.get(sha);
+      return R(say({ ok:true, published:!!m, sha256:sha, matches:m ? [{ ...m }] : [] }));
+    }
     return { ok:false, json:async()=>({ ok:false, error:"unknown op " + op }) };
   }
   return { CALLS, SAID, fetch };
@@ -590,7 +708,8 @@ const SCENARIOS = [];
 async function scenario(key, label, spec){
   if(HIDE === key) return;                       // NEGATIVE CONTROL (a)
   const rec = { key, label, controls:spec.controls || [], address:spec.address || null,
-                pubControls:spec.pubControls || [], surfaces:new Map(), said:[] };
+                pubControls:spec.pubControls || [], caseControls:spec.caseControls || [],
+                surfaces:new Map(), said:[] };
   const plane = makePlane(spec.mode);
   const ctx = load(plane, spec.hash || "");
   if(spec.drive) await spec.drive(ctx, plane);
@@ -689,9 +808,69 @@ await scenario("published-address-at-load", "the published index address, opened
   controls:[], address:"#published", hash:"#published",
   drive:async()=>{ await settle(); },
 });
+/* THE CASE PAGE, AND — ADDED BY UI-36, 2026-08-04 — ITS OWN CONTROLS, DRIVEN.
+   `pubVerify(sha, into)` is the control this item is about: a PUBLIC,
+   UNCREDENTIALED op's button that the case page renders FIVE times, that a
+   stranger reaches holding nothing, and that renders the plane's OWN words back
+   at them — `matches[0].path`, `.kind` and `.bundle_id`. Until now NO scenario
+   clicked it, so those words were outside every reading DEC-49 is being answered
+   against, and the plane-sourced column was a lower bound in a second way that
+   had nothing to do with the two wire-shaped fixtures.
+   IT IS DRIVEN INSIDE THIS SCENARIO RATHER THAN AS A TWELFTH ONE, and the
+   reason is UI-34's own: a second scenario opening the same address would render
+   the whole case page a second time and DOUBLE-COUNT every plane-sourced
+   occurrence on the largest pre-authentication surface in the product — the
+   delta would be a re-render rather than this control, which is exactly the
+   indistinguishability UI-33 and UI-34 each went out of their way to avoid.
+   Driving the buttons the page already rendered adds the verify panes and
+   NOTHING ELSE. `UI31_HIDE=case-verify` hides the drive (and only the drive),
+   which is the arm that puts this file back in the state it was in before this
+   item; the walk 1c cross-check then names `pubVerify` as an uncredentialed
+   control nobody drives.
+   EVERY CALL IS THE PAGE'S OWN. The call sites are read out of the RENDERED
+   html and EVALUATED AS WRITTEN — nothing is re-typed here, so this cannot
+   drift from what a click actually does, and a sixth call site is driven the
+   day the page renders one. */
+const CASE_MODE = {};                       // mutated mid-drive; see the mock
+const CASE_CALLS_DRIVEN = [];               // the call-site source, exactly as rendered
+const unesc = s => String(s).replace(/&quot;/g,'"').replace(/&#39;/g,"'")
+  .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&");
 await scenario("case-address-at-load", "a published case address, opened by a stranger", {
-  controls:[], address:"#case/", hash:"#case/" + CASE_ID,
-  drive:async()=>{ await settle(); },
+  controls:[], address:"#case/", hash:"#case/" + CASE_ID, mode:CASE_MODE,
+  caseControls:HIDE === "case-verify" ? [] : ["pubVerify", "pubBytes"],
+  drive:async(ctx)=>{
+    await settle();
+    if(HIDE === "case-verify") return;                    // NEGATIVE CONTROL (j)
+    /* The address resolves through two awaits before the page exists, so the
+       drive waits for the page rather than assuming a turn count. The bound is
+       the point: a page that never arrives leaves `sites` empty and the walk
+       1c reach assertion above fails naming it, instead of this drive silently
+       clicking nothing. */
+    for(let i = 0; i < 20 && !(ctx.__doc.querySelector("#pub-body")._html || "").includes("onclick="); i++)
+      await settle();
+    const body = ctx.__doc.querySelector("#pub-body")._html || "";
+    const sites = [...body.matchAll(/onclick="((?:pubVerify|pubBytes)\([^"]*\))"/g)].map(m => unesc(m[1]));
+    for(const call of sites){ CASE_CALLS_DRIVEN.push(call); await vm.runInContext(call, ctx); }
+    await settle();
+    /* THE REFUSAL, and it is a call THIS PAGE COMPOSES rather than one invented
+       here: `pubCaseVerifyRows` fills the hash from
+       `(findings.find(...) || {}).bundle_sha || ""`, so a case whose
+       `verification` block names a finding the case body does not carry sends an
+       EMPTY hash — which the control plane refuses in its own words. The `|| ""`
+       fallback is pinned from the source below, so this drive is evidence about
+       a reachable state and not a hypothetical. */
+    const verifySites = sites.filter(c => c.startsWith("pubVerify("));
+    const refusalCall = verifySites[0].replace(/\('[0-9a-f]*'/, "(''")
+                                      .replace(/,'[^']*'\)$/, ",'#v-refused')");
+    CASE_CALLS_DRIVEN.push(refusalCall); await vm.runInContext(refusalCall, ctx);
+    /* AND THE `catch` BRANCH: the plane goes away between the page being drawn
+       and the reader clicking. The call is one of the page's own, redirected to
+       its own container so the success reading above is not overwritten. */
+    CASE_MODE.verifyUnreachable = true;
+    const goneCall = verifySites[0].replace(/,'[^']*'\)$/, ",'#v-unreachable')");
+    CASE_CALLS_DRIVEN.push(goneCall); await vm.runInContext(goneCall, ctx);
+    await settle();
+  },
 });
 
 /* 11 THE VERIFY PANE, opened from the published rail by somebody holding
@@ -754,6 +933,53 @@ const EXPECT_KEYS = ["gate-as-served","token-panel","plane-address","refused-sig
      + PUB_CONTROLS.length + " [" + PUB_CONTROLS.join(", ") + "]"),
      uncovered.length === 0);
 }
+/* ============================================================
+   WALK 1c — THE CONTROLS THE PUBLISHED CASE PAGE SERVES (UI-36, 2026-08-04)
+   ============================================================
+   WALK 1 READS THE GATE'S SERVED MARKUP AND WALK 1b THE PUBLISHED MASTHEAD'S,
+   AND BOTH READ MARKUP THAT SHIPS IN THE FILE. THE CASE PAGE'S CONTROLS ARE
+   WRITTEN BY SCRIPT, out of what the plane answered, so no read of `app.html`
+   discovers them at all — and that is the second half of the class walk 1b
+   opened. `pubVerify` renders five times on a page a stranger arrives on
+   directly, asks a public op, and prints the plane's answer; nothing in this
+   file could see it, and nothing in this file could see that nobody drove it.
+   SO THIS WALK READS THE PAGE AS RENDERED, from the harvest of the scenario
+   that opened the address — discovery by WALKING and not by reading, which is
+   the only kind that finds a control the source does not spell out.
+   EVERY CONTROL IT FINDS MUST BE ACCOUNTED FOR, in one of two ways, and both
+   are evidence rather than a list: a scenario DRIVES it, or the load-time
+   router's own body NAMES it (which is how `pubOpen` is driven — the address
+   itself calls it, and that is read out of `publishedRouteFromHash`). A sixth
+   name on this page fails here until somebody says which it is. */
+const CASE_PAGE_HTML = (S => S ? (S.surfaces.get("#pub-body") || "") : "")(SCENARIOS.find(s => s.key === "case-address-at-load"));
+const CASE_SITES = [...CASE_PAGE_HTML.matchAll(/onclick="([A-Za-z0-9_]+)\(/g)].map(m => m[1]);
+const CASE_CONTROLS = [...new Set(CASE_SITES)].sort();
+const CASE_SITE_COUNT = t => CASE_SITES.filter(x => x === t).length;
+ok("WALK 1c REACH: the published CASE PAGE was read as RENDERED and carries controls — "
+   + CASE_SITES.length + " call sites over [" + CASE_CONTROLS.join(", ") + "]",
+   CASE_PAGE_HTML.length > 2000 && CASE_SITES.length >= 8 && CASE_CONTROLS.length === 4);
+ok("WALK 1c REACH: it serves exactly the uncredentialed controls this walk has classified — found ["
+   + CASE_CONTROLS.map(c => c + " x" + CASE_SITE_COUNT(c)).join(", ")
+   + "] (a fifth must be driven or classified before this passes)",
+   ["pubBytes","pubList","pubOpen","pubVerify"].every(f => CASE_CONTROLS.includes(f)));
+/* AND THE COUNT THIS ITEM WAS ROUTED ON, MEASURED RATHER THAN QUOTED: five
+   Verify buttons on one case page, each on a different hash — the finding's, the
+   manifest's, both parts', and the container row's. */
+ok("WALK 1c REACH: pubVerify is rendered " + CASE_SITE_COUNT("pubVerify")
+   + " times on this one case page, to a reader holding nothing", CASE_SITE_COUNT("pubVerify") === 5);
+{
+  const driven = new Set(SCENARIOS.flatMap(s => [...s.caseControls, ...s.pubControls]));
+  /* `pubOpen` is driven BY THE ADDRESS: the load-time router calls it, which is
+     read out of the router's own body rather than asserted here. */
+  const byRouter = CASE_CONTROLS.filter(f => new RegExp("\\b" + f + "\\(").test(PUBROUTE));
+  const uncovered = CASE_CONTROLS.filter(f => !driven.has(f) && !byRouter.includes(f));
+  ok("REACH: every control the published CASE PAGE serves to an uncredentialed reader is driven — "
+     + "UNCOVERED: [" + (uncovered.join(", ") || "none") + "] · driven by a scenario: ["
+     + [...driven].sort().join(", ") + "] · driven by the load-time address itself: ["
+     + byRouter.join(", ") + "]",
+     uncovered.length === 0);
+}
+
 /* And the same for walk 2's address shapes: each shape the load-time router
    matches must be opened by a scenario. This is the arm that keeps
    `case-address-at-load` load-bearing — it renders into `#pub-body` like the
@@ -768,8 +994,16 @@ const EXPECT_KEYS = ["gate-as-served","token-panel","plane-address","refused-sig
 }
 /* THE SURFACES ACTUALLY WALKED, by name and by count. */
 const ALL_SURFACES = [...new Set(SCENARIOS.flatMap(s => [...s.surfaces.keys()]))].sort();
+/* UI-36 added the five verify panes the case page's own buttons write into, plus
+   the two containers the refusal and the transport-failure drives are aimed at.
+   They are SURFACES in their own right — a reader watches the answer appear
+   beside the hash they clicked — and they carry plane-sourced text, which is the
+   whole of what this item found. */
 const EXPECT_SURFACES = ["#content","#g-err","#m-grp","#m-handle","#m-idstr",
-                         "#p-gid","#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED];
+                         "#p-gid","#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED,
+                         "#v-c-" + FIND_ID, "#v-f-" + FIND_ID, "#v-man",
+                         "#v-part-" + SHA.slice(0, 12), "#v-part-" + CAP.slice(0, 12),
+                         "#v-refused", "#v-unreachable"];
 {
   const missing = EXPECT_SURFACES.filter(s => !ALL_SURFACES.includes(s));
   const extra   = ALL_SURFACES.filter(s => !EXPECT_SURFACES.includes(s));
@@ -863,6 +1097,91 @@ if(S("case-address-at-load"))
      + "received and may never compose or translate it)",
      !!CASE_ANSWER.verification.detail
      && textOf("case-address-at-load", "#pub-body").includes(esc(CASE_ANSWER.verification.detail)));
+/* ============================================================
+   THE VERIFY CONTROL, IN ALL FOUR OF ITS STATES — UI-36, 2026-08-04
+   ============================================================
+   `pubVerify` is the only PUBLIC OP a pre-authentication surface CALLS on the
+   reader's behalf. Everything else on these surfaces is either the page the
+   plane drew at load or the surface's own prose. So its four states are pinned
+   one by one, and two of the four are findings rather than confirmations. */
+if(S("case-address-at-load") && HIDE !== "case-verify"){
+  const sc = S("case-address-at-load");
+  const asked = sc.calls.filter(c => c.op === "verify");
+  ok("REACH: the case page's own Verify buttons were driven AS THE PAGE WROTE THEM — " + CASE_CALLS_DRIVEN.length
+     + " call sites evaluated verbatim, " + asked.length + " of them reaching op=verify, EVERY ONE with no "
+     + "credential on the wire (a public op asked by somebody holding nothing is the product claim)",
+     CASE_CALLS_DRIVEN.length === 11 && asked.length === 7 && asked.every(c => c.token === null)
+     && sc.calls.every(c => c.token === null));
+  /* (1) THE SUCCESS BRANCH, WHICH IS WHY THIS ITEM EXISTS. The plane names the
+     part, its kind and the bundle it sits in, and the surface prints all three
+     verbatim. The expected strings come from the fixture the mock answered
+     rather than being typed, so this arm cannot drift from what the plane said.
+     THIS IS PLANE-SOURCED TEXT ON A PRE-AUTHENTICATION SURFACE, and it is new
+     to the report below — DEC-49's subject grew here. */
+  const m = VERIFY_MATCHES.get(SHA);
+  const okPane = textOf("case-address-at-load", "#v-f-" + FIND_ID);
+  ok("REACH: the SUCCESS branch rendered the plane's answer WHOLE — the part it names ("
+     + JSON.stringify(m.path) + "), its kind and the bundle it sits in, neither edited nor re-spelled "
+     + "(DEC-8: a surface may render what it received and may never compose or translate it)",
+     /PUBLISHED\./.test(okPane) && okPane.includes(esc(m.path)) && okPane.includes(esc(m.kind))
+     && okPane.includes(esc(m.bundle_id)));
+  /* (2) THE NOT-PUBLISHED BRANCH is this surface's OWN sentence: the plane
+     answers `published:false` and says nothing else, so every word a reader gets
+     here was written by app.html. Pinned so that a plane sentence arriving here
+     later is visible as a CHANGE rather than absorbed. */
+  ok("REACH: and when the plane answers a well-formed hash it does not know, every word the reader "
+     + "gets is this surface's own — the plane says only published:false",
+     VERIFY_MATCHES.size === 3);
+  /* (3) THE REFUSAL, AND IT IS A DEFECT PINNED AS IT STANDS RATHER THAN FIXED
+     HERE — read this before changing it.
+     `op=verify` REFUSES a malformed hash in the control plane's own words
+     ("verify requires sha256=…"), and `apiQ` — unlike `rec` — does NOT throw on
+     `ok:false`, so the refusal arrives as an ordinary value with `published`
+     undefined and falls into the NOT-PUBLISHED branch. The reader is therefore
+     told "No published part answers to that hash", which is a SUBSTANTIVE
+     CLAIM ABOUT THE RECORD, when what actually happened is that the plane
+     declined to answer the question. That is the record claiming more than it
+     can support (CLAUDE.md's worst class of defect) on the one surface whose
+     entire purpose is "check this without us", and it is reachable by a click:
+     the container row fills its hash from `bundle_sha || ""`.
+     THIS ITEM DOES NOT CHANGE THE SURFACE — DEC-49 is open and every reading in
+     this chain is worth what it is worth because the surface was not touched
+     while it was taken. So the state is MEASURED and pinned, and the fix is
+     routed. WHEN IT IS FIXED, THIS IS THE ASSERTION TO CORRECT, with the date
+     and the reason, never to exempt. */
+  const refusedPane = textOf("case-address-at-load", "#v-refused");
+  ok("MEASURED, AND IT IS A DEFECT THIS ITEM PINS RATHER THAN FIXES: the plane REFUSED the question in "
+     + "its own words (" + JSON.stringify(VERIFY_REFUSAL) + ") and the reader is told the RECORD has no "
+     + "such hash. The refusal reaches this surface and is dropped — apiQ does not throw on ok:false, so "
+     + "a declined question and a genuine absence are one sentence here",
+     /NOT PUBLISHED\./.test(refusedPane)
+     && /No published part answers to that hash/.test(refusedPane)
+     && !refusedPane.includes(VERIFY_REFUSAL)
+     && !/verify requires/.test(refusedPane));
+  /* And the call that produces it is one the page COMPOSES, read out of
+     app.html rather than supposed: the container row's hash falls back to the
+     empty string when the plane's `verification` block names a finding the case
+     body does not carry. */
+  ok("and the empty hash that reaches it is composed by the page itself — the container row's "
+     + "`bundle_sha || \"\"` fallback, read out of app.html",
+     /pubVerify\('\$\{esc\(String\(\(findings\.find[\s\S]{0,80}?bundle_sha \|\| ""\)\)\}'/.test(APP_SRC));
+  /* (4) THE `catch` BRANCH — THE ITEM'S OWN PREMISE, AND THE MEASUREMENT
+     CONTRADICTS IT. UI-36 was routed on the reading that this branch "prints
+     `e.error || e.reason` verbatim under DEC-8". IT CANNOT. `apiQ` reaches the
+     plane through `api`, which is `fetch(...).then(r => r.json())` and rejects
+     only on a transport failure or a body that is not JSON — neither of which
+     carries an `error` or a `reason` — so the expression always falls through
+     to this surface's own fallback sentence. The branch is DEC-8-shaped code
+     that no plane string can reach, which is why arm (k) below moves nothing.
+     Measured, not read: the plane is taken away and the pane is harvested. */
+  const gonePane = textOf("case-address-at-load", "#v-unreachable");
+  ok("MEASURED: the ERROR branch renders NO plane word at all. The plane went away between the page "
+     + "being drawn and the reader clicking, and every word in the pane is this surface's own — "
+     + "`e.error || e.reason` has no value to render, because apiQ rejects only with a transport error",
+     /Could not ask\./.test(gonePane) && /the record did not answer/.test(gonePane)
+     && !gonePane.includes(VERIFY_REFUSAL));
+}
+
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the
    product's verification CLAIM, addressed to somebody holding nothing, and it is
    this surface's OWN prose throughout — no plane string reaches it, which is why
@@ -1130,16 +1449,61 @@ for(const [term, e] of ordered){
    Bob has to be told. Neither is allowed to happen quietly.
    A SCENARIO ADDED LATER WILL LAND HERE, and that is the design: adding one is a
    change to the measurement basis, it belongs in MEASUREMENTS.md with its date,
-   and this arm is what makes a session state it rather than absorb it. */
+   and this arm is what makes a session state it rather than absorb it.
+   ============================================================
+   UPDATED DELIBERATELY BY UI-36, 2026-08-04 — 8 ROWS -> 11, AND THE THREE NEW
+   ONES PLUS THREE NEW SOURCES ON AN OLD ONE ARE NAMED HERE, IN THE COMMIT, IN
+   MEASUREMENTS.md AND IN THE REPORT TO CONDUCT. THIS IS NOT A RE-BASELINE.
+   ============================================================
+   WHAT GREW AND WHY. `pubVerify` calls `op=verify` — a public op no scenario
+   had ever driven — and prints the plane's answer back to a stranger:
+   `matches[0].path`, `.kind` and `.bundle_id`. Harvesting that is what UI-36
+   was routed to do, and it ADDS to the very column Bob is ruling on. Each new
+   row is annotated with what it actually is, because "a term reached the
+   report" and "a WORD reached a reader" are not the same finding:
+     `manifest`  — the plane's own `kind` VALUE, printed as a word in a sentence
+        ("it names MANIFEST.json (manifest) in CASE-2026-0001"). This is the
+        genuinely new vocabulary: an English noun the plane chose, standing on a
+        pre-authentication surface, and UI-33 had removed the surface-authored
+        `manifest` from these surfaces entirely — it is back, from the plane.
+     `bundle.md` — the same `parts[].path` the case page already showed, now
+        ECHOED BACK by a second op. Not a new word; three new places it arrives.
+     `CASE`      — the structural ACRONYM rule firing on the plane's minted
+        identifier prefix. `allocId("CASE", year)` is real: `CASE-<year>-<seq>`
+        is what a live instance mints, so this is the plane's spelling and not
+        the fixture's invention.
+     `FIND`      — the same rule on `FIND-2026-0001`, and this one IS the
+        fixture's own spelling: the real prefixes are INFO/INQ/FOCUS/PROB/PROJ/
+        ACTN (app.html's `PREFIX`) and nothing mints FIND. It is pinned anyway,
+        because the pin's job is to make movement visible, and it is labelled
+        here so nobody reads it as evidence about a live instance.
+   AND AN INSTRUMENT PROPERTY WORTH KNOWING, reported rather than corrected:
+   both acronym rows appear because the discriminator that separates an acronym
+   from EMPHASIS is per-SURFACE — an emphasis word is suppressed when the same
+   surface also uses it in ordinary case. The verify panes are one sentence
+   long, so `CASE`, `FIND` (and, surface-authored, `NOT`) have nowhere to be
+   suppressed from. The rule is unchanged and the measurement is unchanged; the
+   granularity of the surfaces it now runs over is what moved. */
 const DEC49_SUBJECT = {
   "sha256":              ["case-address-at-load #pub-body"],
   "op=":                 ["case-address-at-load #pub-body"],
-  "bundle.md":           ["case-address-at-load #pub-body"],
+  "bundle.md":           ["case-address-at-load #pub-body",
+                          /* NEW 2026-08-04, UI-36 — op=verify echoing the part's path */
+                          "case-address-at-load #v-part-" + SHA.slice(0, 12),
+                          "case-address-at-load #v-f-" + FIND_ID,
+                          "case-address-at-load #v-c-" + FIND_ID],
   "this instance":       ["case-address-at-load #pub-body", "refused-signin #g-err"],
   "a salted derivation": ["refused-signin #g-err"],
   "its stored hash":     ["refused-signin #g-err"],
   "no active credential":["refused-signin #g-err"],
   "register":            ["refused-signin #g-err"],
+  /* NEW ROWS, UI-36, 2026-08-04 — all four from op=verify's answer. */
+  "manifest":            ["case-address-at-load #v-man"],
+  "CASE":                ["case-address-at-load #v-man"],
+  "FIND":                ["case-address-at-load #v-part-" + SHA.slice(0, 12),
+                          "case-address-at-load #v-part-" + CAP.slice(0, 12),
+                          "case-address-at-load #v-f-" + FIND_ID,
+                          "case-address-at-load #v-c-" + FIND_ID],
 };
 {
   const now = {};
@@ -1185,4 +1549,4 @@ const REPORT_ONLY = !process.env.UI31_ENFORCE;
 }
 
 if(fails.length){ console.error(`preauth-vocabulary: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, the VERIFY PANE opened from the published rail, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, THE PUBLISHED MASTHEAD'S OWN CONTROLS, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); DEC-49'S SUBJECT — the eight plane-sourced rows — PINNED BY TERM AND BY SOURCE, so any movement in them FAILS rather than being reported (UI-34: the hard constraint every item on these surfaces inherits was checked by hand until now); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half: 13 terms -> 9, all EIGHT plane-sourced rows unchanged. UI-34 (2026-08-04) ENLARGED THE BASIS BY ONE SCENARIO, deliberately and alone: 10 scenarios -> 11, 33,535 -> 34,375 characters, 55 -> 57 occurrences and 45 -> 47 visible, the whole delta being 'sha256' x30(26) -> x32(28) on its SURFACE half from the verify pane's own prose, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE; NEGATIVE CONTROL: RUN, nine arms, all re-run against the FINAL file — (a) UI31_HIDE=<scenario> hides a member-facing surface and the harness fails NAMING what it stopped covering (three hidings: public-record 3/35 now also naming pubList uncovered, design-preview 3/36, case-address-at-load 4/35 which ALSO trips the DEC-49 subject arm with sha256, op= and bundle.md VANISHED) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 5/37 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 2/37 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/37 naming all nine (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 9 terms to 10 naming the gate as the author, 37/37 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 3/37 FAIL: the REACH arm names the act, the ATTRIBUTION arm names the consequence, and the DEC-49 SUBJECT arm names all four terms that VANISHED (g) the same overstep on the case page, verification.detail through .replace("this instance","this group") — 2/37 FAIL, the subject arm reporting 'this instance' now ARRIVING only from refused-signin #g-err, so the class UI-33 had to pin with a bespoke reach assertion is now caught generically (h) UI-34'S OWN — UI31_HIDE=published-verify-panel, 2/37 naming the scenario and pubVerifyPanel as an uncredentialed control nobody drives, which is the state this file was in before this item (i) UI-34'S SECOND — a THIRD link planted on the published rail, 2/37 naming pubExpandForPrint in walk 1b and as undriven, so a new control on that rail cannot arrive unmeasured — app.html restored byte-identically after every on-disk arm, sha256 64fc94c6… before and after`);
+console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, the VERIFY PANE opened from the published rail, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, THE PUBLISHED MASTHEAD'S OWN CONTROLS, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); DEC-49'S SUBJECT — the ELEVEN plane-sourced rows, eight until UI-36 drove op=verify — PINNED BY TERM AND BY SOURCE, so any movement in them FAILS rather than being reported (UI-34: the hard constraint every item on these surfaces inherits was checked by hand until now); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half: 13 terms -> 9, all EIGHT plane-sourced rows unchanged. UI-34 (2026-08-04) ENLARGED THE BASIS BY ONE SCENARIO, deliberately and alone: 10 scenarios -> 11, 33,535 -> 34,375 characters, 55 -> 57 occurrences and 45 -> 47 visible, the whole delta being 'sha256' x30(26) -> x32(28) on its SURFACE half from the verify pane's own prose, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE. UI-36 (2026-08-04) DROVE op=verify, THE PUBLIC OP NOBODY HAD ASKED: 12 surfaces -> 19, 34,375 -> 35,835 characters, 9 terms -> 13, 57 -> 67 occurrences and 47 -> 57 visible, scenarios UNCHANGED at 11 — and DEC-49'S SUBJECT GREW 8 ROWS -> 11, every movement named at DEC49_SUBJECT ('manifest' NEW, the plane's kind VALUE as a word; 'CASE' NEW, the acronym rule on the plane's real minted id prefix; 'FIND' NEW, the same rule on the fixture's own id spelling and labelled as such; 'bundle.md' +3 SOURCES as op=verify echoes the part path). The instrument itself is UNCHANGED, proved by running this file with the new drive hidden and diffing UI-34's report to CHARACTER-IDENTICAL; NEGATIVE CONTROL: RUN, thirteen arms, all re-run against the FINAL file — (a) UI31_HIDE=<scenario> hides a member-facing surface and the harness fails NAMING what it stopped covering (three hidings: public-record 4/46, design-preview 3/47, case-address-at-load 8/40 which ALSO takes walk 1c's whole subject away — 0 call sites discovered, so a walk that covers nothing FAILS here instead of passing everything — and trips the subject arm) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 5/48 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 2/48 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/48 naming all thirteen (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 13 terms to 14 naming the gate as the author, 48/48 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 3/48 FAIL: the REACH arm names the act, the ATTRIBUTION arm names the consequence, and the DEC-49 SUBJECT arm names all four terms that VANISHED (g) the same overstep on the case page, verification.detail through .replace("this instance","this group") — 2/48 FAIL, the subject arm reporting 'this instance' now ARRIVING only from refused-signin #g-err (h) UI-34'S OWN — UI31_HIDE=published-verify-panel, 2/47 naming the scenario and pubVerifyPanel as an uncredentialed control nobody drives (i) a THIRD link planted on the published rail, 2/48 naming pubExpandForPrint in walk 1b and as undriven (j) UI-36'S OWN — UI31_HIDE=case-verify hides the verify DRIVE and 3/42 FAIL, naming pubVerify and pubBytes as controls on an uncredentialed page that NO scenario drives, the seven verify surfaces that stopped being covered, and the subject collapsing back to its pre-item state (manifest, CASE, FIND VANISHED and bundle.md losing three sources) — which is exactly the state this file was in before this item (k) UI-36'S DEC-8 ARM — pubVerify's SUCCESS branch translates the plane's own matches[0].path ("bundle.md" -> "the finding's own write-up"), 2/48 FAIL: the REACH arm names the act and the SUBJECT arm names the consequence generically, without anybody having anticipated the field (l) **THE ARM THAT MOVED NOTHING, AND IT IS A FINDING RATHER THAN A GAP** — pubVerify's ERROR branch translates its "e.error || e.reason" expression, the same DEC-8 overstep one branch over: 48/48 GREEN and the report CHARACTER-IDENTICAL, because that expression can never hold a plane string (apiQ rejects only with a transport error), which is why the refusal assertion above pins a defect instead (m) a SIXTH control planted on the case page, 2/48 naming pubShout in walk 1c and as undriven, so a new control on the page a stranger arrives on cannot arrive unmeasured — app.html restored byte-identically after every on-disk arm, sha256 333b4d7f… before and after`);

@@ -2208,3 +2208,131 @@ member-visible site naming that identifier uses the SAME word — and pins no va
 at all**, so it enforces "everywhere or nowhere" rather than "handle". Renaming
 all nine keeps it green (measured, twice, in two capitalisations); renaming some
 fails naming the ones that did not move.
+
+**SUPERSEDED IN PART BY UI-36, 2026-08-04 — see the next entry, and what is
+superseded is BOTH the basis AND the headline of "every plane-sourced row
+unchanged".** The reading above was taken over a walk that never asked a public
+op. UI-36 drove `op=verify` from the case page's own five Verify buttons, and
+**DEC-49's subject GREW from eight plane-sourced rows to ELEVEN**. The three
+readings above stand as readings; their counts are not comparable term-for-term
+with the ones below, and the sentence "every plane-sourced row is unchanged in
+number and in source" is true of UI-33 and UI-34 and is NOT true of UI-36 — by
+design, because harvesting a public op's answers is what UI-36 was for.
+
+## 2026-08-04, UI-36: the same instrument over a walk that finally ASKS A PUBLIC OP — and DEC-49's subject grows
+
+**This entry exists because the ruling's SUBJECT moved, which is a larger event
+than a basis moving.** UI-31, UI-33 and UI-34 all ended with "every plane-sourced
+row is unchanged in number and in source". This one does not, and the growth is
+the result rather than a regression: there was a whole PUBLIC OP whose answers no
+scenario had ever harvested, so the plane-sourced column was a lower bound in a
+second way that had nothing to do with the two wire-shaped fixtures UI-31 named.
+
+**Instrument.** `civicos-ui/test/preauth-vocabulary.test.mjs`, in the harness
+`node civicos-ui/test/run.mjs` runs. **The measurement itself is UNCHANGED** —
+walk 3's term harvest, `planeRanges`, `countIn`, the HITS loop, the report and
+`REPORT_ONLY` are the same computation, and that is PROVED rather than asserted:
+this file run with the new drive hidden (`UI31_HIDE=case-verify`) reproduces
+UI-34's report **character-identically**, so every number that moved was moved by
+the drive. Run it rather than reasoning about the numbers below.
+
+**WHAT WAS MISSING, AND IT IS THE SAME CLASS AS UI-34'S ONE LEVEL DOWN.**
+`pubVerify(sha, into)` renders **five times** on the published case page — beside
+the finding, beside the manifest, beside each of the two parts, and on the
+container row — is reached by a stranger holding nothing, and is the ONLY place a
+pre-authentication surface CALLS the plane on the reader's behalf. It asks
+`op=verify` (`classes: null` in the plane's OPS table) and prints the answer
+back: `matches[0].path`, `.kind`, `.bundle_id`. **No scenario had clicked it.**
+UI-34 taught this file to discover the published masthead's SERVED controls; the
+case page's controls are written by SCRIPT out of what the plane answered, so no
+read of `app.html` discovers them at all. **WALK 1c** now reads the case page AS
+RENDERED and requires every control on it to be driven by a scenario or named by
+the load-time router's own body — which is how `pubOpen` is accounted for, read
+out of `publishedRouteFromHash` rather than assumed.
+
+**THE NEW BASIS.** 11 scenarios (UNCHANGED — the drive was added to the scenario
+that already opens the case address, because a second scenario opening the same
+address would double-count every plane-sourced occurrence on the largest
+pre-authentication surface in the product and the delta would be a re-render
+rather than this control). **12 surfaces -> 19**, the seven new ones being the
+verify panes the page's own buttons write into. **34,375 -> 35,835 characters.**
+74 inherited terms plus two structural rules (unchanged).
+
+**Result: 9 terms -> 13. 57 occurrences -> 67; 47 visible -> 57. 4 surfaces
+carrying terms -> 10.**
+
+| Term | before (no public op driven) | after (op=verify driven) | Change |
+| --- | --- | --- | --- |
+| `sha256` | 32 (28) BOTH | 32 (28) BOTH | unchanged |
+| `op=` | 12 (8) BOTH | 12 (8) BOTH | unchanged |
+| `bundle.md` | 3 (3) UNAVOIDABLE | **6 (6) UNAVOIDABLE** | **+3, ALL plane-sourced, from THREE new surfaces** — `op=verify` echoes back the same `parts[].path` the case page already showed |
+| `FIND` | — | **4 (4) UNAVOIDABLE [structural]** | **NEW** — the acronym rule on the bundle id in the verify panes |
+| `this instance` | 3 (3) UNAVOIDABLE | 3 (3) | unchanged |
+| `handle` | 3 (1) INCIDENTAL | 3 (1) | unchanged |
+| `a salted derivation` | 1 (1) UNAVOIDABLE | 1 (1) | unchanged |
+| `CASE` | — | **1 (1) UNAVOIDABLE [structural]** | **NEW** — the same rule on the case id |
+| `its stored hash` | 1 (1) UNAVOIDABLE | 1 (1) | unchanged |
+| `manifest` | — | **1 (1) UNAVOIDABLE** | **NEW, and the one that is a WORD** — the plane's `kind` VALUE printed in a sentence |
+| `no active credential` | 1 (1) UNAVOIDABLE | 1 (1) | unchanged |
+| `NOT` | — | 1 (1) INCIDENTAL [structural] | NEW, surface-authored ("NOT PUBLISHED.") |
+| `register` | 1 (1) UNAVOIDABLE | 1 (1) | unchanged |
+
+**DEC-49'S SUBJECT: EIGHT PLANE-SOURCED ROWS -> ELEVEN**, and each movement is
+named in `DEC49_SUBJECT` in the instrument, in the commit message and here.
+`manifest` is the one that matters most to the ruling, because it is an ENGLISH
+WORD the plane chose and printed at a stranger — and UI-33 had removed the
+surface-authored `manifest` from these surfaces entirely, so it is back, from the
+other side. `bundle.md` is not new vocabulary but three new places it arrives.
+`CASE` is the plane's real minted identifier prefix (`allocId("CASE", year)`
+mints `CASE-<year>-<seq>`). **`FIND` is the FIXTURE's own id spelling and is
+labelled as such** — the product's real prefixes are INFO/INQ/FOCUS/PROB/PROJ/
+ACTN — and it is pinned anyway because the pin's job is to make movement visible,
+not to be a claim about a live instance.
+
+**An instrument property, reported and not corrected.** Both new structural rows
+appear because the discriminator separating an ACRONYM from EMPHASIS is
+per-SURFACE: an emphasis word is suppressed when the same surface also uses it in
+ordinary case. The verify panes are one sentence long, so `CASE`, `FIND` and
+(surface-authored) `NOT` have nowhere to be suppressed from. The rule is
+unchanged; the granularity of the surfaces it runs over is what moved.
+
+### THE FINDING THAT CONTRADICTS THE ITEM THAT ROUTED IT, AND IT IS A LIVE DEFECT
+
+UI-36 was queued on the reading that `pubVerify`'s error branch "prints
+`e.error || e.reason` verbatim under DEC-8". **MEASURED: it cannot, and no plane
+word can ever reach that branch.** `apiQ` reaches the plane through `api`, which
+is `fetch(...).then(r => r.json())`; it rejects only on a transport failure or a
+body that is not JSON, and neither carries an `error` or a `reason`. The branch
+always renders this surface's own fallback. Measured by the arm rather than read
+off the source: translating that expression — a DEC-8 overstep — leaves the suite
+**48/48 green and the report character-identical**.
+
+**The consequence is worse than the dead branch.** Because `apiQ` does not throw
+on `ok:false` (unlike `rec`, which does), a REFUSAL from `op=verify` arrives as an
+ordinary value with `published` undefined and falls into the NOT-PUBLISHED branch.
+So a reader who asked a question the plane DECLINED to answer — the control plane
+answers `{ok:false, error:"verify requires sha256=<64 lowercase hex>"}` with HTTP
+400 — is told **"No published part answers to that hash. A hash that was never
+ratified and a hash that never existed are the same answer here, deliberately."**
+That is a substantive claim about the record standing in for a refusal to answer,
+on the one surface whose entire purpose is "check this without us", to somebody
+holding no credential. **It is reachable by a click**: the container row composes
+its hash as `bundle_sha || ""`, so a case whose `verification` block names a
+finding the case body does not carry sends an empty hash and gets exactly this.
+Measured through the op, with the plane's refusal read textually out of
+`bio-plane/src/index.mjs` rather than typed.
+
+**The surface was NOT changed to fix it**, and that is deliberate: DEC-49 is open,
+and every reading in this chain is worth what it is worth because nothing on the
+surface moved while the reading was taken. The state is pinned by an assertion in
+the instrument with a comment saying it pins a DEFECT and is the assertion to
+CORRECT (never exempt) when the fix lands, and it is routed.
+
+**WHAT THIS STILL DOES NOT ESTABLISH.** UI-31's limit is unchanged for the two
+published READ ops — `op=publishedmanifest` and `op=publishedcase` are driven from
+wire-shaped fixtures, so their plane-sourced column remains a lower bound. What
+has changed is that `op=verify` is no longer a THIRD, unnamed lower bound: it is
+driven, its answers are harvested, and its rows are in the subject. The three
+call-site paths its answers carry (`bundle.md`, `snapshots/memo.bin`,
+`MANIFEST.json`) are this fixture's, so a live instance's part paths may carry
+terms these do not.
