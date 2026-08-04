@@ -1632,3 +1632,279 @@ to whoever takes D-74: the Legistar file number (`26-0910`) is on **41/41** item
 here, alone on its line, and is already the A/B tier's key — so the D-74 question
 for this institution is not whether Legistar has a stable identifier but whether
 the finance and procurement systems carry the SAME one.
+
+## 2026-08-04, thread CONTENT-PDF: is Moondream 3.1 on Workers AI a usable IN-ACCOUNT OCR path? — accuracy, coordinates, controls and the degradation ladder (DEC-35, CPDF-11)
+
+The measurement DEC-35 reframed the external-service question into. The
+in-account path would remove a whole vendor account, a standing credential and a
+new third party from every instance the installer ever creates, so it is worth a
+real probe before anything is funded. **Nothing was funded, no account was
+created, no credential was issued, and no signup happened** — `env.AI` rides the
+account the project already has. **THIS COMMITS NO PRODUCT CODE.** Grade VALUES
+are not set here: fidelity bounds the capture axis, no machine mints the grade,
+and this measurement must not be read as permission (DEC-4 as twice amended).
+
+**Instrument.** `bio-plane/test/ocr-moondream-probe.mjs` plus the scratch Worker
+it uploads, `bio-plane/test/ocr-moondream-worker.mjs`. Probes, NOT in the
+battery — the runner discovers `*.test.mjs` and neither file is one, so nothing
+joins the battery and no skip marker exists to rot. Re-runnable end to end:
+`node test/ocr-moondream-probe.mjs`. Every number below is from ONE run of the
+committed probe on **2026-08-04**.
+
+- **The exact model id: `@cf/moondream/moondream3.1-9B-A2B`.** Reached through
+  the `AI` binding on a scratch Worker uploaded to the pinned project account
+  (`20b533579290b9b93168345edd3b7f72`, asserted by the probe before a byte is
+  uploaded) and DELETED on the way out. **The REST route
+  (`/accounts/<id>/ai/run/<model>`) is NOT usable with the project token:**
+  measured HTTP 403 code 10000 on `/ai/models/search` and `/ai/models/schema`
+  while `/workers/scripts` answers 200 — the token carries Workers Scripts and
+  not Workers AI. The binding needs no token permission at all, which is both
+  the workaround and the production shape a sovereign instance would use.
+- **The same page, the same ground truth, the same arithmetic as the floor** —
+  and not by copying. The probe READS `GT_PAGE2` and the `norm`/`levenshteinPairs`
+  sources out of `test/ocr-measure-probe.mjs` at run time, and asserts all four
+  of CPDF-9's scoring expressions are still literally present there, stopping
+  with a named error if they are not. A copied ground truth is one that drifts,
+  and two OCR numbers from drifted machinery are not comparable however alike
+  they look.
+- Page images are CPDF-9's recipe unchanged (pypdf 6.14.2 + Pillow 11.3.0,
+  including the `/Rotate 270` correction), so the pixels this model saw are the
+  pixels tesseract saw: `legistar-attach-15721260.pdf` page 2, 2550x3300
+  upright, 202,177 B PNG, image-only re-verified on every run.
+- **The floor it is measured against** (MEASUREMENTS.md 2026-08-03, local
+  tesseract, eng tessdata_fast): **99.96% character accuracy, 90/90 digits, ZERO
+  minted digits**, blank page yields `""`.
+- **No pseudo-confidence anywhere.** The model is never asked how sure it is and
+  no self-reported number is thresholded — FORBIDDEN by DEC-35. The one prompt
+  used at every rung and on both controls asks for a transcription and offers a
+  one-word refusal, and that refusal is what the ladder scores.
+
+### 1. ACCURACY on the ground-truthed page — close to the floor, and NOT the same claim
+
+Three runs, PDF page 2, scored against the 2,687-character human ground truth:
+
+| Run | Char accuracy | Edits | GT digits correct | Digits MINTED | Latency |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 99.44% | 15 | 89/90 | 0 | 6,680 ms |
+| 2 | 99.40% | 16 | 89/90 | 0 | 6,127 ms |
+| 3 | 99.44% | 15 | 89/90 | 0 | 5,960 ms |
+| **local tesseract fast (the floor, 2026-08-03)** | **99.96%** | **1** | **90/90** | **0** | — |
+
+**The single digit "error" is an OMISSION, not a misread.** The full edit list
+for the worst run is: one dropped `and`, one dropped `s`, **nine inserted `"`
+characters** in the CEQA section list, and the page-number `2` at the foot of
+the page dropped. Every one of the 17 number tokens the page turns on — all
+three bid amounts to the cent (`$21,180,436.10`, `$20,881,650.00`,
+`$26,181,434.00`), the dates, all five CEQA section numbers — is correct in all
+three runs. **This is the exact place the floor's best_int model failed**
+(`($26,181,434.00)` read as `(526,181,434.00)`, a minted `5` turning a $26M bid
+into $526M). Moondream did not make that error at full resolution in any run.
+
+**But the transcription is NOT REPRODUCIBLE, and that is a property of the
+claim, not of the run.** Three runs of the identical bytes produced **2 distinct
+transcriptions** (and the two earlier probe runs produced different splits
+again). A classic engine pinned to a version returns the same characters
+forever; this one does not, so "the engine and its version" does not identify
+the transcription the way `text_source` assumes. Re-running does not reproduce
+the record — it produces a second, differently-wrong record.
+
+Latency is **6,127 ms median round trip from this machine**, including a 270 KB
+base64 upload. It is NOT a CPU figure and is NOT comparable to CPDF-9's
+node-proxy medians (1,054 ms for the same page); it is recorded because it is
+what a caller would actually wait, and it says the in-account path is a queued
+job and not an inline step.
+
+### 2. COORDINATES — VERIFIED, AND THEY DO NOT ALIGN. This is the finding.
+
+The one non-negotiable structural requirement (DEC-4: an OCR citation carries
+its image region; DEC-35: Moondream claims coordinates, CPDF-11 verifies them).
+Verified rather than assumed: **every box the model returned was cropped out of
+the page and read by the LOCAL TESSERACT the floor was measured with.** The
+referee says whether a box aligns; the model does not grade its own boxes.
+
+**(a) The API shape, before any number: no call returns text WITH its
+coordinates.** `task=query` returns `answer` and nothing else — no boxes.
+`task=detect`/`point` return `objects`/`points` and no text. The transcription
+and the geometry come from different calls about different things, so the anchor
+DEC-4 requires does not exist as a single answer from this model at all.
+
+**(b) Localising a literal string that IS on the page — 2 of 24 box-checks
+align**, three runs per target:
+
+| Target | On the page? | Boxes over 3 runs | Referee finds the target |
+| --- | --- | --- | --- |
+| `$21,180,436.10` | yes | 3 | **0/3** — every box read `competitive ser…`, a different part of the page |
+| `$26,181,434.00` | yes | 15 | **0/15**, and 3 boxes were too small to contain any readable text |
+| `Notice of Exemption` | yes | 3 | 2/3 |
+| `$99,999,999.99` | **NO** | 3 | 0/3 — **it returned a box on every run for text that is not on the page** |
+
+The absent-target row is the one that settles it: a localiser that answers
+regardless has localised nothing, and it put its confident box on a real,
+unrelated line (`WHEREAS, on April 30, 2026, after a competitive bidding
+process…`). The box count is also unstable — the same target returned 1 box on
+one run and 7 on another.
+
+**(c) Layout blocks — partially real, and the criterion is only trustworthy
+because its own control fails.** Target `paragraph of text`: **7 of 11 boxes
+align**, reading order monotone. A box counts as aligned only if the referee
+recovers 40+ characters of the ground truth from inside it AND finds them within
+10% of the page of where the box's own vertical midpoint predicts. **NEGATIVE
+CONTROL, RUN: the same boxes displaced a quarter-page down, same criterion —
+0/9 align.** The criterion discriminates. It was not always so: the first
+version of this check asked only "did the referee recover 40+ characters", and
+**7 of 10 DISPLACED boxes passed it**, because a page that is dense text top to
+bottom will hand you ground truth wherever you crop. That criterion was
+measuring the page's density, not the box's position, and it is recorded here
+because the wrong instrument produced the more flattering number.
+
+**(d) The composed shape — the only in-account shape that could carry an anchor,
+and it is a hint rather than a result.** Detect the block, crop it, transcribe
+the crop. Of the three largest blocks, only ONE had a region ground truth the
+referee could place with confidence (the other two: the referee's own read of
+the crop was 66% and 35% placeable, so any score would have been about the
+window and not about the model, and the probe refuses to score them). The one
+scored region: **99.62% character accuracy, 10/10 digits, 0 minted.** n=1. It
+says the composition is not obviously broken; it does not say it works.
+
+### 3. NEGATIVE CONTROLS — RUN, and the path PASSES this one cleanly
+
+Blank white page and uniform-noise page, both at the ground-truthed page's own
+2550x3300 dimensions, three runs each, same prompt:
+
+| Control | Runs | Output | Verdict |
+| --- | --- | --- | --- |
+| blank white page | 3 | `ILLEGIBLE` every run | **PASS** |
+| uniform noise page | 3 | `ILLEGIBLE` every run | **PASS** |
+
+**Zero non-empty transcriptions on six control runs.** The failure mode that
+would put invented text in the record from nothing is ABSENT, and the probe
+exits non-zero if that ever regresses. This matches the floor engine's behaviour
+(tesseract: `text=""`, confidence 0) and it is the strongest result on the
+in-account path's side.
+
+### 4. THE DEGRADATION LADDER — IT INVENTS BEFORE IT REFUSES, and that decides the confidence question
+
+Five rungs of one axis (resolution, then resolution plus blur), every rung the
+same pixel dimensions so "smaller image" and "less legible" are not confounded,
+every rung asked THREE times with the same refusal-offering prompt. C1 is
+deliberately **off the ladder**: contrast collapse is a different axis, not a
+sixth rung, and numbering it as one implied a monotone ordering the measurement
+then contradicted.
+
+| Rung | What it is | REFUSED | Verdicts (3 runs) | Median char | GT digits | MINTED |
+| --- | --- | --- | --- | --- | --- | --- |
+| R0 | 300 dpi, the original page | 0/3 | FAITHFUL x3 | 99.59% | 89/90 | 0 |
+| R1 | 150 dpi equivalent | 0/3 | FAITHFUL x3 | 99.44% | 89/90 | 0 |
+| R2 | 75 dpi equivalent | 0/3 | FAITHFUL x3 | 99.59% | 89/90 | 0 |
+| **R3** | **75 dpi + gaussian blur 2.0** | **0/3** | **PARTIAL x3** | **84.96%** | **36/90** | **20** |
+| R4 | 37.5 dpi + gaussian blur 3.0 | **3/3** | REFUSED x3 | — | — | — |
+| C1 | OFF-LADDER: contrast collapsed to 16 greys | 0/3 | FAITHFUL x3 | 99.78% | 89/90 | 0 |
+
+Verdicts are defined in the probe, not eyeballed: REFUSED (said it could not
+read it, or said nothing), FAITHFUL (>=95% of ground-truth characters), PARTIAL
+(50-95%), INVENTED (<50% and still >=100 characters of confident text).
+
+**R3 IS THE WHOLE MEASUREMENT.** At 75 dpi with a modest blur the model refused
+**zero times out of three**. It returned 2,650-2,750 characters of fluent,
+correctly-punctuated, structurally perfect legal prose — and **16 to 20 MINTED
+DIGITS per run**, with 36 of 90 ground-truth digits correct. What it minted is
+exactly what a reader would never catch: `$50,000` became `$10,000` and
+`$100,000` across runs, `lowest responsible bidder` became `least responsible
+bidder`, `bidder` became `builder`. Nothing in the output distinguishes an R3
+transcription from an R0 one. There is no garble, no mojibake, no dropped
+region — the mojibake rule DEC-4 applies one layer up has nothing to fire on,
+because the output of a generative model on an illegible input is not garbled,
+it is WRONG AND FLUENT.
+
+**So refusal is real but it is a FLOOR alarm, not a BOUNDARY alarm.** It fires
+3/3 at R4, one full rung PAST the band where the damage happens. DEC-35's test
+was whether measured refusal-reliability licenses structured self-refusal as a
+per-region trigger. **It does not.** A trigger that stays silent through the
+entire invention band and speaks only once the image is unusable protects
+nothing; wiring it in would produce a system that reports "the model did not
+refuse" about precisely the pages where it minted the numbers. The Moondream
+path therefore has **NO per-region refusal trigger**, which is DEC-35's own
+named alternative — a statable limit rather than a hidden one — and the cap
+carries everything.
+
+C1 is a smaller finding worth keeping: pushing ink and paper into 16 adjacent
+grey levels cost nothing at all (99.78%). Contrast is recoverable; resolution
+and blur are not. A degradation ladder for any future engine should be built on
+the second axis.
+
+### 5. COST — real, and small
+
+41 model calls in the run of record: 31,454 input tokens, 9,488 output tokens,
+**1,720 neurons**. At the **vendor-stated** price for this model ($0.30 per M
+input tokens, $1.00 per M output tokens, retrieved 2026-08-04) the entire
+measurement cost **~$0.019**. The survey's Cloudflare section cites a free
+allocation of 10,000 neurons/day on the Free plan; that figure is the vendor's
+and this account's plan could not be read (`/subscriptions` answers 403 to the
+project token), so it is NOT established here. What IS established: the whole
+probe ran inside the existing account with no new credential of any kind.
+
+### 6. THE RECOMMENDED TRANSCRIPTION-FIDELITY CAP FOR THIS ENGINE
+
+DEC-4(c): a leg's capture grade is the weakest link of (byte provenance,
+transcription fidelity); DEC-4(d): no machine mints the transcription grade, and
+the measurement sets the ceiling. The capture axis is A/B/C with A structurally
+unreachable and B the ceiling (REC-18). **The measurement sets this engine's cap
+at C, and adds one rule the cap alone does not cover:**
+
+1. **CAP: C.** Never B. Three independent reasons, any one of which would be
+   enough: the transcription is **not reproducible** (2 distinct texts from 3
+   runs of identical bytes), so the record cannot be re-derived from what it
+   names; **no checkable image region exists** for the transcribed text, so
+   DEC-4's anchor — the thing that lets a reader check the claim against pixels
+   instead of trusting us — is absent; and the **R3 band is indistinguishable
+   from R0 in the output**, so no property of a transcription tells anyone which
+   band it came from.
+2. **AND: a digit transcribed by this engine may not carry a leg at all without
+   member attestation.** This is narrower and harder than the cap because the
+   cap does not reach it: at R3 the engine mints 16-20 digits per page while
+   producing text a reader will accept, and the digits are where OCR fails and
+   where human checking fails too (DEC-4). Digits from this engine are a
+   candidate for a member to check against the image, never a recorded value.
+
+### 7. GO / NO-GO on the in-account path
+
+**NO-GO for Moondream 3.1 as the DEFAULT in-account transcription path, as
+CPDF-11 scoped it.** It fails the one requirement DEC-35 called non-negotiable
+and it fails it outright: the boxes do not land on the text they are returned
+for (2 of 24 checks), the transcription call returns no boxes at all, and the
+model returns a confident box for a string that is not on the page. Accuracy
+does not rescue this — the image-region anchor is not a nice-to-have that a good
+character score buys off, it is the mechanism by which the record stops
+depending on being trusted, and 99.44% is anyway BELOW the floor set by an
+engine that is free, pinned, deterministic and already measured.
+
+The degradation ladder independently confirms it. DEC-35 made structured
+self-refusal EARNABLE by measurement; this engine did not earn it, because it
+invents through the entire band where inventing matters and refuses only after.
+
+**What this does NOT rule out, stated so nobody reads the verdict wider than it
+is:**
+
+- The **negative controls PASS cleanly** — this is not an engine that
+  hallucinates text out of nothing, and that was the loudest worry.
+- **Layout-block detection is partly real** (7/11 with a control that
+  discriminates at 0/9), and the **composed shape** — detect the block, crop it,
+  transcribe the crop — scored 99.62% with 10/10 digits and 0 minted on the one
+  region that had a trustworthy ground truth. That is the ONLY in-account shape
+  that could carry an image-region anchor, and it is **UNPROVEN AT n=1**, not
+  refuted. Proving or killing it needs a second measurement with a
+  multi-region ground truth, and it would still be capped at C by reason 1
+  (non-reproducibility) alone.
+- Nothing here is a finding about Workers AI generally, or about any other model
+  in the catalog. It is one model, one page, one day, named exactly.
+
+**Consequence for the queue, for CONDUCT to weigh rather than for this
+measurement to decide:** DEC-35 clause 3 makes the external service the
+escalation tier and the fallback if the probe fails — this is a probe failing on
+the structural requirement, so the external tier is now the only measured route
+to a checkable region, and Azure DI Read remains the primary external candidate
+(survey, 2026-08-03) with its accuracy still unmeasured against this same page.
+CPDF-12 (the page-to-pixels renderer) was scoped to re-scope on NO-GO; note that
+the composed shape, if anyone wants it measured, needs the same renderer, so
+closing CPDF-12 outright and measuring the composed shape are alternatives
+rather than independent choices.
