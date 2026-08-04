@@ -71,6 +71,7 @@
     "test:affordances": "node test/affordances.test.mjs",
     "test:basis": "node test/basis.test.mjs",
     "test:gate-reads": "node test/gate-reads.test.mjs",
+    "test:queue": "node test/queue.test.mjs",
     "test:battery": "node scripts/battery.mjs",
     "test:coverage": "node scripts/coverage.mjs --strict"
   },
