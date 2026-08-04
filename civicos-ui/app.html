@@ -4394,6 +4394,29 @@ async function openBundle(id, fromNav){
       }
     }
 
+    /* --- UI-20: THE PLANE-PUBLISHED ACT STRIP, and the last of the four acts
+       that had ops and no call sites. Everything above this line in openBundle
+       is a pre-DEC-8 bar that decides for itself whether its control exists;
+       this one asks `op=affordances` and renders what came back. `cite`,
+       `retire`, `sever` and `reinstate` have flows here, so they get controls;
+       an act the plane publishes that this page carries in a section of its own
+       is NAMED with where it lives (`elsewhere`, derived from which of those
+       bars actually rendered, never from a list written down); anything else is
+       named with no control at all.
+       The strip is built from what the plane answers, so a member who cannot
+       reach an act sees NO control for it (Q12: one credential sentence, not a
+       narration per button). */
+    let docActBar = "";
+    try{
+      const elsewhere = [];
+      if(relBar) elsewhere.push("release");
+      if(dispBar) elsewhere.push("dispose");
+      if(attestBar) elsewhere.push("attest");
+      const docActs = await actsFor(id);
+      docActBar = actBarHtml(id, fm.title||(proj&&proj.title)||id, docActs,
+                             { noun, elsewhere }) + credentialSentence(PLANE.me, noun);
+    }catch(_){ docActBar = ""; }
+
     /* UI-11: a question's own page is a DIFFERENT surface from its document —
        it reads the basis, both strengths and what rests on it — so the document
        page names it rather than absorbing it. One line, and it is the entry
@@ -4411,7 +4434,7 @@ async function openBundle(id, fromNav){
          <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
          <div class="strata">${tab("s1")}${tab("s2")}${s3?tab("s3"):""}${tab("s4")}${openTab}${seals}</div>
        </div>
-       <div id="docscroll">${s1}${s2}${s3}${s4}${docKnows}${relBar}${dispBar}${attestBar}</div>`;
+       <div id="docscroll">${s1}${s2}${s3}${s4}${docKnows}${relBar}${dispBar}${attestBar}${docActBar}</div>`;
     strataSpy();
   }catch(e){ $("#content").innerHTML = errPane(e, recordCrumb(id)); }
 }
@@ -4762,10 +4785,10 @@ function strengthPanels(pair, legs){
    the surface. Controls are never narrated and never greyed — an absent
    capability removes the entry point silently, which on this read-only turn
    means there is nothing here to remove. */
-function credentialSentence(me){
+function credentialSentence(me, noun){
   const canAct = !!(me && me.session && (me.capabilities||[]).includes("contribute"));
   if(canAct) return "";
-  return `<p class="subj-note">This credential can read this question and cannot act on it.</p>`;
+  return `<p class="subj-note">This credential can read this ${esc(noun||"question")} and cannot act on it.</p>`;
 }
 
 let INQ_HASH_LOCK = false;
@@ -4815,7 +4838,7 @@ async function openInquiry(id, fromNav){
       ]);
       back = b; actsR = a;
     }catch(e){ backErr = backErr || e; }
-    CONCLUDE_ACTS = (actsR && actsR.ok) ? actsR.acts : [];
+    ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
     const rels = (back && Array.isArray(back.backlinks)) ? back.backlinks : [];
 
     const questionPane = questionText
@@ -5008,40 +5031,69 @@ function actRungHtml(act){
    what may be done: the plane decides that and this page renders every act it
    published. This says only which of them have a CALL SITE here, so an act
    without one is named rather than given a control that cannot work. */
-const ACT_FLOW = { conclude: (id, title, act) => openConclude(id, title, act) };
+/* UI-20 added `cite`, `retire`, `sever` and `reinstate`. UI-12's landed line
+   promised exactly this shape — one entry per new act and no new plumbing —
+   and this is the turn that proves it: four flows arrived and nothing above
+   this line changed except the two names that said "conclude" when they meant
+   "the act bar". */
+const ACT_FLOW = {
+  conclude:  (id, title, act) => openConclude(id, title, act),
+  cite:      (id, title, act) => openCite(id, title, act),
+  retire:    (id, title, act) => openRetire(id, title, act),
+  sever:     (id, title, act) => openEdgeAct(id, title, act),
+  reinstate: (id, title, act) => openEdgeAct(id, title, act),
+};
 
-function actBarHtml(id, title, r){
+/* `elsewhere` is a set of act ids this PAGE carries in a section of its own, so
+   the bar can say where the control is instead of claiming there is none. It is
+   a statement about this page's layout and never about the record: the acts, the
+   labels and the availability all still come from the plane, and nothing here
+   decides that an act may or may not be done. */
+function actBarHtml(id, title, r, opts){
   if(!r) return "";
+  const noun = (opts && opts.noun) || "question";
+  const elsewhere = (opts && opts.elsewhere) || [];
   if(!r.ok)
     /* The plane refused the question about this object. Its words, verbatim. */
     return `<h2 class="sec">What can be done here</h2>${actRefusalHtml(r.refusal)}`;
   const acts = r.acts || [];
+  ACTS_HERE = acts;
   if(!acts.length)
     return `<h2 class="sec">What can be done here</h2>
-      <div class="empty">The record publishes no act on this question as it stands.</div>`;
+      <div class="empty">The record publishes no act on this ${esc(noun)} as it stands.</div>`;
   const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(title||id));
   const withFlow = acts.filter(a=>ACT_FLOW[a.id] && actReachable(a));
-  const named    = acts.filter(a=>!(ACT_FLOW[a.id] && actReachable(a)));
+  const here     = acts.filter(a=>!(ACT_FLOW[a.id] && actReachable(a)) && elsewhere.includes(a.id));
+  const named    = acts.filter(a=>!(ACT_FLOW[a.id] && actReachable(a)) && !elsewhere.includes(a.id));
   const buttons = withFlow.map(a=>
     `<button class="btn ghost" onclick="actGo(${esc(JSON.stringify(a.id))},${jid},${jt})">${esc(a.label)}&hellip;</button>`).join("");
   /* An act the record publishes that this surface cannot carry is NAMED with no
      control, using the producer's own label — never re-worded and never
      silently dropped, because an act nobody can see is an act nobody remembers
      asking for. */
+  const mine = here.length
+    ? `<p class="subj-note">The record also publishes ${here.map(a=>`<b>${esc(a.label)}</b>`).join(", ")} on this ${esc(noun)}. ${here.length===1?"It has":"They have"} a section of ${here.length===1?"its":"their"} own further up this page.</p>`
+    : "";
   const rest = named.length
-    ? `<p class="subj-note">The record also publishes ${named.map(a=>`<b>${esc(a.label)}</b>`).join(", ")} on this question. ${named.length===1?"It is":"They are"} not carried on this page.</p>`
+    ? `<p class="subj-note">The record also publishes ${named.map(a=>`<b>${esc(a.label)}</b>`).join(", ")} on this ${esc(noun)}. ${named.length===1?"It is":"They are"} not carried on this page.</p>`
     : "";
   return `<h2 class="sec">What can be done here</h2>
-    <p class="subj-note">Every act below is one the record publishes for this question as it stands, under the record's own name for it. This page adds none and renames none.</p>
+    <p class="subj-note">Every act below is one the record publishes for this ${esc(noun)} as it stands, under the record's own name for it. This page adds none and renames none.</p>
     ${buttons?`<div class="rv-bar" style="margin:0;gap:8px">${buttons}</div>`:""}
+    ${mine}
     ${rest}`;
 }
 function actGo(actId, id, title){
-  const act = actNamed(CONCLUDE_ACTS, actId);
+  const act = actNamed(ACTS_HERE, actId);
   const flow = ACT_FLOW[actId];
   if(act && flow) flow(id, title, act);
 }
-let CONCLUDE_ACTS = [];      // the acts the plane published for the open question
+/* RENAMED FROM `CONCLUDE_ACTS` BY UI-20, and the rename is the point rather
+   than tidying: the bar now paints on two surfaces (a question's page and a
+   document's), so a name that said "conclude" was describing the first caller
+   instead of the thing. It holds the acts the plane published for whichever
+   object the bar last painted. */
+let ACTS_HERE = [];
 
 /* ---- THE LIVE PAIR: ONE SEAM, exactly as `inquiryPair` is ONE seam ----
    `op=inquirystrength` answers with the SAME axis-object shape REC-14 freezes
@@ -5264,6 +5316,478 @@ function concludeReceiptHtml(r){
     <div class="row-btns"><button class="btn" onclick="closeDialog();openInquiry(${esc(JSON.stringify(String(r.target||"")))})">Back to the question</button></div>`;
 }
 /*__CONCLUDE_ACT_END__*/
+/*__CITE_ACT_START__*/
+/* ============================================================
+   S4 -> S3 · UI-20 · CITE, AND THE THREE EDGE ACTS.
+
+   The never-built half of U9. `op=cite` has existed since 2026-07-25 with no
+   caller anywhere; `retire`, `sever` and `reinstate` had ops and no call sites
+   either. This region is all four, built on UI-12's act plumbing with one
+   ACT_FLOW entry each and nothing else added to it.
+
+   WHAT THE PLANE ACTUALLY IS, MEASURED IN SOURCE THIS TURN, because every
+   decision below follows from it and a surface that guessed here would be
+   inventing rules the record does not enforce:
+
+     op=cite   (store.mjs cite())  writes `cites` edges into the CITING
+               object's own bundle.md references block. The citing object must
+               be a PROJECT — anything else is refused NOT_A_PROJECT — and
+               every member of the selection must be INFORMATION, refused
+               NOT_INFORMATION with the offenders NAMED and the whole call
+               refused rather than narrowed. Its `note` is OPTIONAL and refused
+               BAD_NOTE over 200 characters or carrying a quote, a backslash or
+               a newline. Its other refusals, in the store's own order:
+               NO_SUCH_PROJECT, NO_BUNDLE_MD, UNPARSEABLE_FRONTMATTER,
+               SEVERED_EDGE, EMPTY_SELECTION, UNSPLICEABLE_REFERENCES,
+               CITATION_TOO_LARGE.
+
+     THE INQUIRY HALF DOES NOT EXIST YET, and this surface says so instead of
+     pretending. RECONCILED §3.1 (UI-20) has the pre-flight checking that every
+     member is CITABLE — `information` OR `inquiry` — under the collapse. The
+     plane has not moved: `cite()` refuses an `INQ-` member NOT_INFORMATION and
+     refuses an `INQ-` citing object NOT_A_PROJECT, and `op=affordances`
+     publishes `cite` for types information|project only. An inquiry's basis is
+     `inquiry_basis`, which REC-11 built as a PROJECTION of the document's own
+     `basis:` block written by `op=promote` — no op appends a leg. So citing
+     onto a question is PLANE WORK THAT IS NOT DONE, it is named as a gap here
+     the way UI-11 names the strength gap, and this surface will need no edit
+     when it lands: the candidate list and the act itself both come from the
+     plane.
+
+     THE CYCLE CLAUSE, and the same discipline. `cite()` HAS NO CYCLE CHECK. The
+     record's DAG guard is REC-11's, on the basis write path — `SELF_BASIS` and
+     `BASIS_CYCLE`, both of which name the FULL PATH — and `op=cite` never
+     reaches it. The one cycle a cite can close today is a Project citing
+     ITSELF, and the store catches it inside NOT_INFORMATION on purpose (its own
+     comment: "This also catches a Project citing itself, which is a cycle with
+     nothing to mean"). So the path is NAMED HERE FROM THE PLANE'S OWN
+     `offenders` — every id the record handed back, spelled out — and no cycle
+     rule is computed on this surface. DEC-8 forbids the alternative, and the
+     alternative would also be a surface disagreeing with the op it fronts.
+
+     THERE IS NO CITE DRY RUN, and this is the residue UI-12 predicted. The
+     withheld-field pre-flight works only where the store checks the authored
+     field BEFORE it resolves the selection. Measured, for the four acts here:
+
+       retire      reason FIRST, selection second  -> a real pre-flight. The
+                   reason is judged by the plane with the handle withheld, and a
+                   cleared check is literally NO_SUCH_SELECTION.
+       cite        selection first, then project, then note   -> no probe.
+       sever       selection first, then project, then reason -> no probe.
+       reinstate   the same method as sever                   -> no probe.
+
+     Where there is no probe the shape is UI-22's stated preference and not a
+     computed refusal: the commit control is ABSENT until the member has
+     supplied what the act needs, an absent control asserts nothing about the
+     record, and everything that survives to the commit is WORDED BY THE PLANE.
+     The publication half still does real work — the act exists here only
+     because `op=affordances` published it, and every citing object offered is
+     one the plane publishes `cite` on.
+
+   THE ONE THING THIS SURFACE KNOWS THAT THE PLANE DOES NOT PUBLISH, stated
+   because it is the honest cost of the above: `op=affordances` publishes `cite`
+   on BOTH ends of the act (a document may be cited, a project may cite) and
+   nothing in the answer separates them. So `citeCandidates()` filters the
+   record's own `object_type` to projects. That is a candidate list and never a
+   refusal — a citing object the record will not accept is refused BY THE PLANE,
+   in the plane's words, and the harness drives exactly that.
+   ============================================================ */
+
+/* THE REPORT WEIGHT, STATED EXACTLY, from the act's OWN published weight word.
+   Two consequences, both of them the plane's doctrine (store.mjs
+   selectionResolve: report proceeds and says what moved; cite(): a refusal
+   refuses the whole call and names who it is about). Nothing here is a promise
+   this page makes on the record's behalf. */
+function citeWeightNote(act){
+  const w = (act && act.weight) || null;
+  if(!w) return `<p class="subj-note">The record publishes no weight for this act, so nothing is claimed here about how it applies to a set.</p>`;
+  return `<p class="subj-note">The record applies this act at <b>${esc(w)}</b> weight, and two things follow from that.
+    A set that has changed since you picked it does not stop the act &mdash; what changed is reported back and shown to you.
+    And the outcome is stated <b>per item</b>, not as one yes or no: some will be newly cited, and any that were already
+    cited are left exactly as they are. If the record refuses instead, it refuses the whole call and names which members it
+    is about &mdash; it never quietly narrows your set to the part it would accept.</p>`;
+}
+
+/* WHAT THE RECORD REFUSED, ITS SENTENCE, AND EVERY ID IT NAMED. The sentence
+   comes from `actRefusalHtml` and is the plane's verbatim; the lists below it
+   are the plane's OWN fields (`offenders`, `path`, `requested`, `roomFor`,
+   `bytes`, `limit`) spelled out rather than summarised, because a member told
+   only "refused" cannot act. Nothing here composes a sentence about the record:
+   the labels say what the field is, and the values are the record's. */
+function citeRefusalHtml(r){
+  if(!r) return "";
+  const idList = (v) => (Array.isArray(v) ? v : [v]).map(x=>{
+    if(x && typeof x === "object"){
+      const id = x.id || x.bundleId || x.target || "";
+      const extra = x.from ? ` (${x.from})` : (Array.isArray(x.citedBy) ? ` (cited by ${x.citedBy.join(", ")})` : "");
+      return `<span class="mono">${esc(String(id))}</span>${esc(extra)}`;
+    }
+    return `<span class="mono">${esc(String(x))}</span>`;
+  }).join(", ");
+  const parts = [];
+  if(Array.isArray(r.path) && r.path.length)
+    parts.push(`<div class="kv"><span class="k">The path the record found</span><span class="v">${r.path.map(x=>`<span class="mono">${esc(String(x))}</span>`).join(" &rarr; ")}</span></div>`);
+  if(r.offenders != null && (!Array.isArray(r.offenders) || r.offenders.length))
+    parts.push(`<div class="kv"><span class="k">Named by the record</span><span class="v">${idList(r.offenders)}</span></div>`);
+  if(r.requested != null)
+    parts.push(`<div class="kv"><span class="k">Asked for</span><span class="v plain">${esc(String(r.requested))}</span></div>`);
+  if(r.roomFor != null)
+    parts.push(`<div class="kv"><span class="k">Room for</span><span class="v plain">${esc(String(r.roomFor))}</span></div>`);
+  if(r.bytes != null && r.limit != null)
+    parts.push(`<div class="kv"><span class="k">Bytes against the limit</span><span class="v plain">${esc(String(r.bytes))} / ${esc(String(r.limit))}</span></div>`);
+  return actRefusalHtml(r) + (parts.length ? `<div class="card" style="margin-top:8px">${parts.join("")}</div>` : "");
+}
+
+/* WHAT MOVED, when the record says something moved. Report weight means the act
+   ran anyway and told you; this renders the record's own drift object and adds
+   no judgment about whether it mattered. */
+function citeDriftHtml(res){
+  if(!res || !res.moved) return "";
+  const d = res.drift || {};
+  const rows = [];
+  if(Array.isArray(d.revised) && d.revised.length)
+    rows.push(`<div class="kv"><span class="k">Revised since you picked them</span><span class="v">${d.revised.map(x=>`<span class="mono">${esc(String(x.bundleId||x))}</span>`).join(", ")}</span></div>`);
+  if(Array.isArray(d.purged) && d.purged.length)
+    rows.push(`<div class="kv"><span class="k">Gone from the record</span><span class="v">${d.purged.map(x=>`<span class="mono">${esc(String(x))}</span>`).join(", ")}</span></div>`);
+  if(Array.isArray(d.hidden) && d.hidden.length)
+    rows.push(`<div class="kv"><span class="k">No longer visible to this credential</span><span class="v">${d.hidden.map(x=>`<span class="mono">${esc(String(x))}</span>`).join(", ")}</span></div>`);
+  if(d.detail) rows.push(`<div class="kv"><span class="k">The record's account</span><span class="v plain">${esc(d.detail)}</span></div>`);
+  return `<div class="card" style="margin-top:8px"><div class="kv"><span class="k">The set moved</span><span class="v plain">The act is report weight, so it ran and said so.</span></div>${rows.join("")}</div>`;
+}
+
+/* ---------------------------------------------------------------
+   THE CITE FLOW
+   --------------------------------------------------------------- */
+let CITE = null;
+/* { ids:[], handle, act, title, targets, targetsErr, target, note, result,
+     refusal, busy } */
+
+/* THE CITING OBJECTS THE RECORD PUBLISHES THIS ACT ON. Two plane reads and no
+   rule of this page's beyond the object-type filter named in the header: the
+   record's own list, and then `op=affordances` for each candidate, so an object
+   the plane stops publishing `cite` on stops being offered here with no edit. */
+async function citeCandidates(){
+  const rows = await loadRecord();
+  const out = [];
+  for(const b of rows){
+    if(normalizeType(b.object_type) !== "project") continue;
+    const a = await actsFor(b.bundle_id);
+    if(a.ok && actNamed(a.acts, "cite"))
+      out.push({ id:b.bundle_id, title:b.title || b.bundle_id, state:b.current_state || "" });
+  }
+  return out;
+}
+
+/* From a DOCUMENT PAGE: this one document. The selection is not made until the
+   member commits, because a lease taken on opening a dialog is a lease taken
+   for a member who may close it. */
+async function openCite(id, title, act){
+  return citeOpen({ ids:[id], handle:null, act, title });
+}
+/* From a SELECTION the finder already holds (UI-21's entry point): the lease is
+   the finder's and this flow neither renews nor releases it. `ids` is what the
+   member was shown; the MEMBERS the act runs over are the plane's, resolved
+   from the handle at the moment it runs, which is what makes drift reportable
+   rather than invented here. */
+async function citeOverSelection(handle, ids, act, title){
+  return citeOpen({ ids: Array.isArray(ids) ? ids : [], handle: handle || null, act, title: title || null });
+}
+async function citeOpen(init){
+  CITE = { ids: init.ids || [], handle: init.handle || null, act: init.act, title: init.title || null,
+           targets: null, targetsErr: null, target: null, note: "", result: null, refusal: null, busy: false };
+  $("#dlg").innerHTML = `<h2>${esc(init.act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
+  $("#dlg-wrap").classList.remove("hidden");
+  try{ CITE.targets = await citeCandidates(); }
+  catch(e){ CITE.targets = []; CITE.targetsErr = (e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) }; }
+  citePaint();
+}
+function citeChoose(t){ if(!CITE) return; CITE.target = t; CITE.refusal = null; citePaint(); }
+function citeNote(v){ if(!CITE) return; CITE.note = v; citePaint(); }
+
+async function doCite(){
+  if(!CITE || CITE.busy || !CITE.target) return;
+  const act = CITE.act;
+  CITE.busy = true; CITE.refusal = null; citePaint();
+  try{
+    /* The selection is made HERE, from the ids the member was shown, unless the
+       caller already holds one. `op=select` is the plane's own lease; the ids
+       are never re-derived. */
+    let handle = CITE.handle;
+    if(!handle){
+      const s = await recPost("select", { ids: CITE.ids }, { kind:"enumerated" });
+      handle = s.handle;
+    }
+    const a = await actAsk("cite", { project: CITE.target, handle, note: CITE.note });
+    if(!CITE || CITE.act !== act) return;
+    CITE.busy = false;
+    if(!a.accepted){ CITE.refusal = a.refusal; citePaint(); return; }
+    CITE.result = a.result;
+    RECORD_CACHE = null; REVREF_CACHE = null;   // edges moved; both caches are stale
+    citePaint();
+  }catch(e){
+    if(!CITE) return;
+    CITE.busy = false;
+    CITE.refusal = (e && typeof e === "object" && (e.reason || e.detail || e.error))
+      ? e : { reason:"NO_ANSWER", detail:String(e) };
+    citePaint();
+  }
+}
+
+function citePaint(){
+  if(!CITE) return;
+  const box = $("#dlg"); if(!box) return;
+  const act = CITE.act;
+  if(CITE.result){ box.innerHTML = citeReceiptHtml(CITE.result); return; }
+
+  const what = CITE.ids.length
+    ? CITE.ids.map(i=>`<span class="mono">${esc(i)}</span>`).join(", ")
+    : `<span class="mono">${esc(CITE.handle||"")}</span>`;
+
+  /* WHERE IT GOES. A closed list of what the record publishes this act on, and
+     no free-text id: a member does not type a bundle id. */
+  const targets = CITE.targets === null
+    ? `<div class="empty">Asking the record which cases may cite&hellip;</div>`
+    : CITE.targetsErr
+      ? citeRefusalHtml(CITE.targetsErr)
+      : !CITE.targets.length
+        ? `<div class="empty">The record publishes this act on no case this credential can see.</div>`
+        : CITE.targets.map(t=>`<label class="dz-opt${CITE.target===t.id?" on":""}">
+            <input type="radio" name="cx-target" ${CITE.target===t.id?"checked":""} onchange="citeChoose(${esc(JSON.stringify(t.id))})">
+            <span class="dz-verb">${esc(t.title)}</span>
+            <span class="dz-mean"><span class="mono">${esc(t.id)}</span>${t.state?` &middot; ${esc(t.state)}`:""}</span>
+          </label>`).join("");
+
+  /* THE COMMIT IS ABSENT UNTIL A CASE IS CHOSEN. Absent, never present and
+     greyed, and it asserts nothing about the record: there is no refusal here
+     because this page has judged nothing. Everything the record would refuse is
+     asked of the record when the button is pressed, and comes back in its
+     words. */
+  const commit = CITE.refusal
+    ? `<div class="intent-pf">${citeRefusalHtml(CITE.refusal)}</div>
+       <div class="intent-pf"><button class="btn" id="cx-cite" onclick="doCite()"${CITE.busy?" disabled":""}>${esc(act.label)}</button></div>`
+    : CITE.target
+      ? `<div class="intent-pf"><button class="btn" id="cx-cite" onclick="doCite()"${CITE.busy?" disabled":""}>${esc(act.label)}</button></div>`
+      : "";
+
+  box.innerHTML = `<h2>${esc(act.label)}</h2>
+    <p class="what">This act adds a citation edge to a case's own document, in your name, on the permanent record. It changes nothing about the material being cited.</p>
+    <div class="dz-what"><span class="dz-ttl">${CITE.ids.length===1?esc(CITE.title||CITE.ids[0]):`${CITE.ids.length||"the"} selected record${CITE.ids.length===1?"":"s"}`}</span><span class="id">${what}</span></div>
+    ${act.prompt?`<div class="teach" style="margin:8px 0">${esc(act.prompt)}</div>`:""}
+
+    <h3 class="cx-h">Which case cites it</h3>
+    <p class="subj-note">Every case below is one the record publishes this act on. This page adds none.</p>
+    <div class="dz-choose">${targets}</div>
+    <p class="subj-note">The record publishes this act under its own name, <b>${esc(act.label)}</b>, and publishes it on cases. Pointing a <b>question</b> at what it rests on is a different thing the record does not yet do from here: a question's basis is written into the question's own document, and no act appends a leg to it.</p>
+
+    <h3 class="cx-h">A note, if you want one</h3>
+    <p class="subj-note">Optional. It is written verbatim into the edge and into the case's Session Log. Nothing is drafted here, and no length rule is copied onto this page &mdash; if the record will not take what you wrote, the record says so in its own words.</p>
+    <textarea class="txt" id="cx-note" rows="2" onchange="citeNote(this.value)"></textarea>
+
+    ${citeWeightNote(act)}
+    ${actRungHtml(act)}
+    ${commit}
+    <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+  const n = $("#cx-note"); if(n) n.value = CITE.note;
+}
+
+/* THE RECEIPT: per item, from the record's OWN two arrays. `cited` is what was
+   written; `alreadyCited` is what the record kept exactly as it was. Neither is
+   counted here from anything this page held. */
+function citeReceiptHtml(r){
+  const cited = Array.isArray(r.cited) ? r.cited : [];
+  const kept  = Array.isArray(r.alreadyCited) ? r.alreadyCited : [];
+  const row = (label, ids) => ids.length
+    ? `<div class="kv"><span class="k">${esc(label)}</span><span class="v">${ids.map(i=>`<span class="mono">${esc(String(i))}</span>`).join(", ")}</span></div>` : "";
+  return `<h2>Cited</h2>
+    <div class="intent-ok">
+      <div>The record cited <b>${esc(String(cited.length))}</b> and retained <b>${esc(String(kept.length))}</b> as ${kept.length===1?"it was":"they were"}.</div>
+      <div>Into <span class="mono">${esc(String(r.project||""))}</span>${r.weight?` at <b>${esc(String(r.weight))}</b> weight, the record's own word`:""}.</div>
+    </div>
+    <div class="card" style="margin-top:8px">
+      ${row("Cited now", cited)}
+      ${row("Already cited, left as they were", kept)}
+      ${r.bundleSha?`<div class="kv"><span class="k">The case's new sha</span><span class="v"><span class="mono">${esc(String(r.bundleSha))}</span></span></div>`:""}
+    </div>
+    ${citeDriftHtml(r)}
+    <div class="row-btns"><button class="btn" onclick="citeDone(${esc(JSON.stringify(String(r.project||"")))})">Done</button></div>`;
+}
+function citeDone(project){ closeDialog(); RECORD_CACHE = null; REVREF_CACHE = null; if(project) openBundle(project); }
+
+/* ---------------------------------------------------------------
+   RETIRE — the one act here with a REAL pre-flight, and the reason it has one
+   is a property of the store rather than of this page: `retire()` judges the
+   reason BEFORE it resolves the selection, so a call carrying the member's
+   reason and NO handle reaches the plane's own reason grammar and can never
+   move anything. A cleared check is literally NO_SUCH_SELECTION. An ACCEPTED
+   one would mean a retirement happened where none was asked for, so it fails
+   CLOSED (UI-13's precedent, UI-12's second use, and this is the third).
+   --------------------------------------------------------------- */
+let RETIRE = null;   // { id, title, act, reason, pf, result, busy }
+
+async function openRetire(id, title, act){
+  RETIRE = { id, title, act, reason:"", pf:null, result:null, busy:false };
+  $("#dlg").innerHTML = `<h2>${esc(act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
+  $("#dlg-wrap").classList.remove("hidden");
+  await retirePreflight();
+}
+function retireReason(v){ if(!RETIRE) return; RETIRE.reason = v; return retirePreflight(); }
+
+async function retirePreflight(){
+  if(!RETIRE) return;
+  const id = RETIRE.id;
+  const a = await actAsk("retire", { handle:"", reason: RETIRE.reason });
+  if(!RETIRE || RETIRE.id !== id) return;
+  RETIRE.pf = a.accepted
+    ? { clear:false, refusal:{ reason:"PREFLIGHT_NOT_REFUSED",
+        detail:"The record accepted a check that was supposed to be incomplete. Nothing was committed from this surface." } }
+    : (a.refusal.reason === "NO_SUCH_SELECTION" ? { clear:true, refusal:null } : { clear:false, refusal:a.refusal });
+  retirePaint();
+}
+
+async function doRetire(){
+  if(!RETIRE || RETIRE.busy) return;
+  const id = RETIRE.id;
+  RETIRE.busy = true; retirePaint();
+  try{
+    const s = await recPost("select", { ids:[id] }, { kind:"enumerated" });
+    const a = await actAsk("retire", { handle: s.handle, reason: RETIRE.reason });
+    if(!RETIRE || RETIRE.id !== id) return;
+    RETIRE.busy = false;
+    if(!a.accepted){ RETIRE.pf = { clear:false, refusal:a.refusal }; retirePaint(); return; }
+    RETIRE.result = a.result; RECORD_CACHE = null; retirePaint();
+  }catch(e){
+    if(!RETIRE) return;
+    RETIRE.busy = false;
+    RETIRE.pf = { clear:false, refusal:(e && typeof e === "object" && (e.reason||e.detail||e.error)) ? e : { reason:"NO_ANSWER", detail:String(e) } };
+    retirePaint();
+  }
+}
+
+function retirePaint(){
+  if(!RETIRE) return;
+  const box = $("#dlg"); if(!box) return;
+  const act = RETIRE.act;
+  if(RETIRE.result){
+    const ids = Array.isArray(RETIRE.result.retired) ? RETIRE.result.retired : [];
+    box.innerHTML = `<h2>Retired</h2>
+      <div class="intent-ok">
+        <div>The record retired ${ids.map(i=>`<span class="mono">${esc(String(i))}</span>`).join(", ")}.</div>
+        <div>Your reason, as the record wrote it: <span class="mono">${esc(String(RETIRE.result.reason||""))}</span></div>
+      </div>
+      <div class="row-btns"><button class="btn" onclick="closeDialog();openBundle(${esc(JSON.stringify(String(ids[0]||RETIRE.id)))})">Done</button></div>`;
+    return;
+  }
+  const pf = RETIRE.pf;
+  const commit = !pf ? `<div class="intent-pf"><div class="intent-ref-why">Asking the record what it would refuse&hellip;</div></div>`
+    : !pf.clear ? `<div class="intent-pf">${citeRefusalHtml(pf.refusal)}</div>`
+    : `<div class="intent-pf"><button class="btn" id="cx-retire" onclick="doRetire()"${RETIRE.busy?" disabled":""}>${esc(act.label)}</button></div>`;
+  box.innerHTML = `<h2>${esc(act.label)}</h2>
+    <p class="what">This act moves this document out of the working record, in your name. Nothing is deleted and everything stays readable.</p>
+    <div class="dz-what"><span class="dz-ttl">${esc(RETIRE.title||RETIRE.id)}</span><span class="id">${esc(RETIRE.id)}</span></div>
+    ${act.prompt?`<div class="teach" style="margin:8px 0">${esc(act.prompt)}</div>`:""}
+    <h3 class="cx-h">Why</h3>
+    <p class="subj-note">In your words, and required. Nothing is drafted or suggested here.</p>
+    <textarea class="txt" id="cx-reason" rows="2" onchange="retireReason(this.value)"></textarea>
+    ${actRungHtml(act)}
+    ${commit}
+    <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+  const r = $("#cx-reason"); if(r) r.value = RETIRE.reason;
+}
+
+/* ---------------------------------------------------------------
+   SEVER and REINSTATE — one dialog, because the store has one method
+   (`#edgeTransition`) and two directions over the same grammar. Which EDGES are
+   offered comes from `op=backlinks` and each edge's own published `status`, the
+   same fact `op=affordances` derives the act's availability from. There is no
+   pre-flight: the store resolves the selection and the project BEFORE it looks
+   at the reason, so no probe can reach the reason without also being able to
+   run the act. The commit is absent until there is both an edge and a reason,
+   and the record words everything that survives to it.
+   --------------------------------------------------------------- */
+let EDGE = null;   // { id, title, act, want, links, linksErr, project, reason, refusal, result, busy }
+
+async function openEdgeAct(id, title, act){
+  const want = act.id === "reinstate" ? "severed" : "confirmed";
+  EDGE = { id, title, act, want, links:null, linksErr:null, project:null, reason:"",
+           refusal:null, result:null, busy:false };
+  $("#dlg").innerHTML = `<h2>${esc(act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
+  $("#dlg-wrap").classList.remove("hidden");
+  const a = await actAsk("backlinks", { target:id });
+  if(!EDGE || EDGE.id !== id) return;
+  if(!a.accepted){ EDGE.links = []; EDGE.linksErr = a.refusal; }
+  else EDGE.links = (a.result && Array.isArray(a.result.backlinks) ? a.result.backlinks : [])
+                      .filter(b=>b && b.rel === "cites" && b.status === want);
+  edgePaint();
+}
+function edgeChoose(p){ if(!EDGE) return; EDGE.project = p; EDGE.refusal = null; edgePaint(); }
+function edgeReason(v){ if(!EDGE) return; EDGE.reason = v; edgePaint(); }
+
+async function doEdgeAct(){
+  if(!EDGE || EDGE.busy || !EDGE.project || !EDGE.reason.trim()) return;
+  const id = EDGE.id;
+  EDGE.busy = true; EDGE.refusal = null; edgePaint();
+  try{
+    const s = await recPost("select", { ids:[id] }, { kind:"enumerated" });
+    const a = await actAsk(EDGE.act.id, { project: EDGE.project, handle: s.handle, reason: EDGE.reason });
+    if(!EDGE || EDGE.id !== id) return;
+    EDGE.busy = false;
+    if(!a.accepted){ EDGE.refusal = a.refusal; edgePaint(); return; }
+    EDGE.result = a.result; RECORD_CACHE = null; REVREF_CACHE = null; edgePaint();
+  }catch(e){
+    if(!EDGE) return;
+    EDGE.busy = false;
+    EDGE.refusal = (e && typeof e === "object" && (e.reason||e.detail||e.error)) ? e : { reason:"NO_ANSWER", detail:String(e) };
+    edgePaint();
+  }
+}
+
+function edgePaint(){
+  if(!EDGE) return;
+  const box = $("#dlg"); if(!box) return;
+  const act = EDGE.act;
+  if(EDGE.result){
+    const moved = Array.isArray(EDGE.result.severed) ? EDGE.result.severed
+                : Array.isArray(EDGE.result.reinstated) ? EDGE.result.reinstated : [];
+    box.innerHTML = `<h2>${esc(act.label)}</h2>
+      <div class="intent-ok">
+        <div>The record moved the citation edge on <span class="mono">${esc(String(EDGE.result.project||EDGE.project||""))}</span>${moved.length?` for ${moved.map(i=>`<span class="mono">${esc(String(i))}</span>`).join(", ")}`:""}.</div>
+        <div>The edge is kept with its reason. Nothing was deleted.</div>
+        <div>Your reason, as the record wrote it: <span class="mono">${esc(String(EDGE.result.reason||""))}</span></div>
+      </div>
+      <div class="row-btns"><button class="btn" onclick="closeDialog();openBundle(${esc(JSON.stringify(String(EDGE.id)))})">Done</button></div>`;
+    return;
+  }
+  const links = EDGE.links === null
+    ? `<div class="empty">Asking the record which cases point at this&hellip;</div>`
+    : EDGE.linksErr
+      ? citeRefusalHtml(EDGE.linksErr)
+      : !EDGE.links.length
+        ? `<div class="empty">The record holds no ${esc(EDGE.want)} citation edge into this document that this credential can see.</div>`
+        : EDGE.links.map(b=>`<label class="dz-opt${EDGE.project===b.from?" on":""}">
+            <input type="radio" name="cx-edge" ${EDGE.project===b.from?"checked":""} onchange="edgeChoose(${esc(JSON.stringify(b.from))})">
+            <span class="dz-verb">${esc(b.from_title||b.from)}</span>
+            <span class="dz-mean"><span class="mono">${esc(b.from)}</span> &middot; ${esc(b.status)}${b.note?` &middot; ${esc(b.note)}`:""}</span>
+          </label>`).join("");
+  const commit = (EDGE.project && EDGE.reason.trim())
+    ? `<div class="intent-pf"><button class="btn" id="cx-edge-go" onclick="doEdgeAct()"${EDGE.busy?" disabled":""}>${esc(act.label)}</button></div>` : "";
+  box.innerHTML = `<h2>${esc(act.label)}</h2>
+    <p class="what">A citation edge is never deleted. This act moves its status and records why, in your name, on the permanent record.</p>
+    <div class="dz-what"><span class="dz-ttl">${esc(EDGE.title||EDGE.id)}</span><span class="id">${esc(EDGE.id)}</span></div>
+    ${act.prompt?`<div class="teach" style="margin:8px 0">${esc(act.prompt)}</div>`:""}
+    <h3 class="cx-h">Which case's edge</h3>
+    <p class="subj-note">Read from the record's own reverse index, with the record's own word for each edge's status.</p>
+    <div class="dz-choose">${links}</div>
+    <h3 class="cx-h">Why</h3>
+    <p class="subj-note">In your words, and required. Nothing is drafted or suggested here.</p>
+    <textarea class="txt" id="cx-edge-reason" rows="2" onchange="edgeReason(this.value)"></textarea>
+    ${EDGE.refusal?`<div class="intent-pf">${citeRefusalHtml(EDGE.refusal)}</div>`:""}
+    ${actRungHtml(act)}
+    ${commit}
+    <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+  const r = $("#cx-edge-reason"); if(r) r.value = EDGE.reason;
+}
+/*__CITE_ACT_END__*/
+
 
 /* ---------- Search (op=search) ---------- */
 async function backFromEmptySearch(){
