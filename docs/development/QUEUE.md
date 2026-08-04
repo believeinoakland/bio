@@ -631,7 +631,7 @@ accepts-when: battery green with a real Oakland DOCX fixture yielding
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
 landed: (merge on main, worker 64e2238) — bio-plane/src/docx.mjs on ooxml.mjs primitives; paragraph-referenced links ({kind:"doc-para", ref, para, run}) with wrappers byte-identical to linkWrapper; tracked changes carry author, date and the SUPERSEDED WORDING (excluded from text — the document as served — held attributed in the envelope); comments with author/date; unreadable parts stated ({part, why}), never invented. formats-docx.test.mjs 82 assertions; battery 70/70 (3459); --strict exit 0. NC RUN (drop superseded wording → 2/82 fail by name; restored). IC-2 FILED first-lander (the evidentiary envelope + pageless text.paragraphs form); CONDUCT proxy-answered AGREE for dormant FRAMEWORK, RESOLUTION ACCEPTED, and applied the ONE version bump I2 1.0.0 → 1.1.0 covering IC-1 (CHANGED — the source union) and IC-2 together. Detect ladder: bare PK at the 1 KiB seam answers null; certainty is architecturally impossible before inflation.
 
-### COFF-5 · queued
+### COFF-5 · done
 milestone: M2
 scope: **The PPTX registry entry.** Structure:
   `ppt/slides/_rels/slideN.xml.rels` → partitions through `linkWrapper`; slide
@@ -648,6 +648,7 @@ accepts-when: battery green with a real Oakland deck fixture yielding
   negative control — merge notes into slide text and the suite fails naming the
   distinction.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: (merge on main, worker fde39df) — bio-plane/src/pptx.mjs on the accepted as-built patterns: slide-shape references with slide numbers from the DECLARED sldIdLst order resolved through rels, never filenames (reordered-deck fixture proves it; unreadable declaration → honestly unnumbered, never filename-derived); speaker notes distinct EVERYWHERE (envelope kind speaker-notes, separate text.speakerNotes[] units, counts.notesChars — never in document, the deck as presented); notes survive a corrupt slide because the slide→notes mapping lives in the rels; hlinkClick slide jumps → anchor; embeddings → intra by sha256; core-properties as the shared item kind. IC-2 CONFIRMED from as-built code, no variant. formats-pptx.test.mjs 95 assertions; battery 72/72 (3637) after the one integration-seam correction (the suite branched before COFF-3's bound rename landed — the stale PROVISIONAL bound pin corrected-with-comment by CONDUCT at merge, the exact formats-docx precedent); --strict exit 0. NC RUN (merge notes into document → 2/95 fail by name; restored). Worker's flag QUEUED as COFF-7: hidden slides (p:sld show="0"), the pptx analogue of xlsx hidden sheets.
 
 ### COFF-6 · done
 milestone: M2
@@ -673,6 +674,14 @@ accepts-when: `MEASUREMENTS.md` carries the size distribution with a stated
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
 landed: (merge on main, worker 7354079) — MEASUREMENTS.md 2026-08-03 + instrument tools/measure-office-corpus.py (stdlib, seeded, reproducible). Census of ALL 43,282 oaklandca.gov assets (S3 ListObjectsV2) + 792 Legistar attachments; 93-file stratified download + size tail. BOUND: 20 MiB of DECLARED UNCOMPRESSED text-part bytes summed from the central directory (container size is a bad proxy both directions) — passes 86/88 measured OOXML files; the two excluded are the 2019/2020 police Stop-Data workbooks, named as the raise-to-64-MiB test cases. Artefact frequencies real (tracked changes 7/40 docx, formulas 18/30 xlsx, hidden sheets 3/30). LEGACY: 0.32% of assets, KEEP DEFERRED — revisit trigger is a group actually needing one inspected. ODF: zero in 43,282 — DO NOT BUILD; keep the free design accommodation only. NC RUN (renamed plain ZIP reported NOT OOXML, never counted). CONDUCT's scope ruling on the worker's decision item: COFF-2's DOM reader ships at the 20 MiB bound; the two stop-data workbooks read text-undetermined honestly; a streaming (memory-flat) extractor reaching 64 MiB is DEFERRED on the same trigger shape as legacy formats — a group actually needing those workbooks inspected — because pre-building it now is the do-not-pre-build failure. COFF-3 enacts the bound.
 
+
+### COFF-7 · queued
+milestone: M2
+scope: **Hidden slides — the pptx analogue of xlsx hidden sheets (DEC-5).** Flagged by COFF-5's worker and queued by CONDUCT: a slide carrying `show="0"` in its `sldIdLst` entry is invisible in every presented form of the deck and is exactly the first-class finding hidden xlsx sheets already are. Add one envelope kind (`hidden-slide`) to pptx.mjs's evidentiary output, the slide still fully extracted (text, notes, links) and flagged everywhere shown, cited or indexed; confirm the kind under IC-2 (one line — the vocabulary grows, the envelope does not change shape). Small, self-contained, touches only pptx.mjs + its suite.
+behind-interface: I2
+depends-on: COFF-5
+accepts-when: `cd bio-plane && npm run test:battery` green with a fixture deck whose hidden slide is extracted AND flagged (kind `hidden-slide`, text units marked) while visible slides are not; `npm run test:coverage` --strict exit 0; negative control — strip the flag and the suite fails naming a hidden slide indistinguishable from a visible one.
+added: 2026-08-03 · CONDUCT (from COFF-5's report)
 
 ## CAPTURE — DORMANT.
 CAP-3 runs OUT OF BAND: it touches only CAPTURE's own paths and contends with neither

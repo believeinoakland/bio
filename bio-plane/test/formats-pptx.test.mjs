@@ -418,8 +418,14 @@ console.log("\n--- the size guard: over the bound -> text-undetermined VERBATIM,
   const tb = await entry.text(pb);
   t("text refuses as a stated undetermined", tb.document, null);
   t("carrying the guard marker verbatim: why", tb.undetermined[0].why, "over_size_bound");
-  t("naming the bound constant so nobody mistakes it for a measurement",
-    tb.undetermined[0].boundName, "PROVISIONAL_OOXML_SIZE_BOUND_BYTES");
+  /* CORRECTED at integration (CONDUCT, 2026-08-03), the same seam formats-docx
+   * hit: this suite branched before COFF-3's enactment of COFF-6 landed, which
+   * replaced the provisional 32 MiB container bound with the MEASURED one —
+   * 20 MiB of declared uncompressed text-part bytes (MEASUREMENTS.md
+   * 2026-08-03). The property under test is unchanged: the marker NAMES its
+   * bound so nobody mistakes where the number came from. */
+  t("naming the bound constant so nobody mistakes where the number came from",
+    tb.undetermined[0].boundName, "MEASURED_OOXML_TEXT_BOUND_BYTES");
   t("counts say one undetermined, zero chars in EITHER stream", tb.counts, { chars: 0, notesChars: 0, undetermined: 1 });
   const sb = await entry.structure(pb);
   t("structure states it in the envelope too, naming the guarded part family",
