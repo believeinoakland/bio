@@ -3266,8 +3266,8 @@ for CONDUCT to enact: (a) **REC-14's publish block gains the AUTHORED bias ackno
   rides with the project surfaces whenever the bias bundle lands (D-84 first).
 enacted: 2026-08-04 · CONDUCT — (a) REC-47 queued as a CORRECTION to REC-14 (the authored acknowledgement fresh per edition beside the completeness statement and subject position, carrying C-21.1's carried-forward control); (b) M6's import scope AMENDED in MILESTONES — a new project per distinct source bias, stated and reasoned, never merging a lens into an existing project, with DEC-45's per-finding association demoted to the second step where regrade fires; (c) REGRADE named as a member capability on M4 (and reachable from M10's bias work), with the import path recorded as one CALLER rather than its home; (d) the HUNCH DEBT vocabulary correction rides REC-47 as a documentation pass, its own wording included; (e) D-189 recorded as riding the project surfaces whenever the bias bundle lands, behind D-84. Reasoning in this entry, MILESTONES M4/M6 and QUEUE.md (REC-47).
 
-### DEC-47 · open
-raised: 2026-08-04 · CONDUCT (lifted from REC-45's report; renumbered from a colliding DEC-46 — the BOB session allocated and answered that number the same hour)
+### DEC-50 · open
+raised: 2026-08-04 · CONDUCT (lifted from REC-45's report; **renumbered TWICE** — first from a colliding DEC-46, then from a colliding DEC-47, both allocated by the BOB session within hours. The BOB entries keep both numbers; this one moves, because the architect's numbers are the ones other documents will already be citing)
 for: bob
 question: A GROUPED question cannot take a new leg. Once a basis names grounds,
   REC-42's total-or-absent rule refuses `op=cite` — every leg must belong to a ground,
