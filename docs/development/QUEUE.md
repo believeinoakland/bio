@@ -1633,6 +1633,7 @@ scope: **The surface stops authoring the attestation fence (DEC-39's UI half).**
 behind-interface: I3
 depends-on: REC-43
 accepts-when: `node civicos-ui/test/run.mjs` green with the fence rendered from the publication (asserted against the plane's export, not a copy) and no local constant remaining; negative control — restore the hand-written constant and the harness fails naming the copy; the retargeted control still fails on any Grade A claim.
+NOTE 2026-08-04 (CONDUCT): this item was spawned once against an UNMET dependency and stood down with nothing written — my sequencing error, recorded rather than tidied away; REC-43 must land first, since DEC-39's whole point is that the surface stops authoring the wording. The stood-down worker's own note for the re-spawn: DEC-39's enactment paragraph closes with 'AND SEE D-184' (a member's firsthand observation has no home as a basis leg, which the fence wording explicitly does NOT fix) — that stays on D-184's row and is OUT OF SCOPE here, though it will read like adjacent work.
 added: 2026-08-04 · CONDUCT (DEC-39's UI half)
 
 ### UI-29 · queued
