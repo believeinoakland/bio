@@ -247,29 +247,53 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px 0 12px;padding-bottom:7px;border-bottom:var(--hair)}
 .empty{color:var(--muted);font-size:14px;padding:24px 0}
 
-/* home (UI-8): the "what needs you" orientation surface, M8's entry point */
-.hm-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:0 0 24px}
-.hm-card{background:var(--sheet);border:var(--hair);padding:16px 18px;box-shadow:var(--e-2);display:flex;flex-direction:column}
-.hm-card h2{font-family:var(--font-fact);font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--muted);text-transform:uppercase;margin:0 0 10px}
-.hm-count{font-family:var(--font-record);font-size:34px;font-weight:600;line-height:1;color:var(--ink)}
-.hm-count.zero{color:var(--muted)}
-.hm-count .u{font-family:var(--font-ui);font-size:14px;font-weight:400;color:var(--muted);margin-left:8px}
-.hm-line{font-size:13.5px;color:var(--ink);margin:10px 0 4px;line-height:1.45}
-.hm-sub{font-size:12.5px;color:var(--muted);margin:2px 0;line-height:1.4}
-.hm-urgent{font-size:13px;color:var(--ink);background:var(--paper-2);border:var(--hair);border-radius:var(--r-2);padding:9px 11px;margin:10px 0 4px;line-height:1.45}
-.hm-urgent .k{font-family:var(--font-fact);font-weight:600;color:var(--ink)}
-.hm-urgent .age{color:var(--muted);font-size:12px}
-.hm-pending{font-size:12.5px;color:var(--signal-dk);background:var(--tint-note);border:1px solid #d6a48c;border-radius:var(--r-2);padding:8px 10px;margin:8px 0 4px;line-height:1.45}
-.hm-go{margin-top:auto;padding-top:12px}
-.hm-go button{font:inherit;font-size:13px;padding:6px 12px;border-radius:var(--r-2);border:1px solid var(--rule);background:#fff;color:var(--ink);cursor:pointer}
-.hm-go button:hover{border-color:var(--verdigris-dk);color:var(--verdigris-dk)}
-.hm-entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:4px 0 0}
-.hm-entry{text-align:left;background:var(--sheet);border:var(--hair);box-shadow:var(--e-2);padding:14px 16px;cursor:pointer;font:inherit;display:flex;gap:12px;align-items:flex-start}
-.hm-entry:hover{border-color:var(--verdigris-dk)}
-.hm-entry svg{width:20px;height:20px;color:var(--verdigris-dk);flex:none;margin-top:2px}
-.hm-entry .t{font-family:var(--font-fact);font-size:14px;font-weight:600;color:var(--ink)}
-.hm-entry .d{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.4}
-.hm-allclear{font-size:14px;color:var(--ink);background:#e2ede3;border:1px solid #8fb79a;border-radius:var(--r-2);padding:14px 16px;margin:0 0 24px;line-height:1.5}
+/* the queue (UI-14): three screens become one. Home, Tasks and Proposals were
+   three answers to one question — "what needs somebody" — and this is the one. */
+.q-rule{font-size:12.5px;color:var(--muted);background:var(--paper-2);border:var(--hair);border-radius:var(--r-2);padding:9px 11px;margin:0 0 18px;line-height:1.45}
+.q-allclear{font-size:14px;color:var(--ink);background:#e2ede3;border:1px solid #8fb79a;border-radius:var(--r-2);padding:14px 16px;margin:0 0 20px;line-height:1.5}
+.q-feed{font-size:13px;border-radius:var(--r-2);padding:11px 13px;margin:0 0 12px;line-height:1.5}
+.q-feed.failed{color:var(--signal-dk);background:var(--tint-note);border:1px solid #d6a48c}
+.q-feed.absent{color:var(--ink);background:var(--paper-2);border:var(--hair)}
+.q-feed.pending{color:var(--muted);background:var(--paper-2);border:var(--hair)}
+.q-feed-why{font-family:var(--font-mono,monospace);font-size:12px;color:var(--muted)}
+.q-feed .q-retry{margin-left:10px}
+.q-muted{font-size:12.5px;color:var(--ink);background:var(--paper-2);border:var(--hair);border-radius:var(--r-2);padding:9px 11px;margin:0 0 18px;line-height:1.45}
+.q-case{margin:0 0 30px}
+.q-case>h2{font-family:var(--font-record);font-size:17px;font-weight:600;margin:0 0 4px;padding-bottom:6px;border-bottom:var(--hair)}
+.q-case-kind{font-family:var(--font-fact);font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-left:8px}
+.q-case-meta{font-size:12px;color:var(--muted);margin:0 0 10px}
+.q-item{background:var(--sheet);border:var(--hair);padding:14px 16px;margin:0 0 12px;box-shadow:var(--e-2)}
+.q-item.obligation{border-left:3px solid var(--verdigris-dk)}
+.q-item.finding{border-left:3px solid #b9a06a}
+.q-item.condition{border-left:3px solid #9aa09a}
+.q-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.q-class{font-family:var(--font-fact);font-size:11px;letter-spacing:.05em}
+.q-kind{font-family:var(--font-fact);font-size:15px;font-weight:600;color:var(--ink)}
+.q-age{color:var(--muted);font-size:12.5px}
+.q-summary{font-size:14px;color:var(--ink);margin:2px 0 6px;line-height:1.45}
+.q-detail{font-size:13px;color:var(--ink-soft,var(--muted));margin:0 0 8px;line-height:1.45}
+.q-meta{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+.q-on{color:var(--muted);font-size:12px}
+.q-assign{font-size:12.5px;color:var(--ink);margin:0 0 6px}
+.q-assign.flag{color:var(--signal-dk);background:var(--tint-note);border:1px solid #d6a48c;border-radius:var(--r-2);padding:6px 9px}
+.q-counts{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+.q-incomplete{font-size:12.5px;color:var(--muted);background:var(--tint-muted);border-radius:var(--r-2);padding:7px 10px;margin:0 0 8px;line-height:1.45}
+.q-gap{font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.45}
+.q-basis{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+.q-basis summary{cursor:pointer}
+.q-basis-rows{list-style:none;margin:6px 0 0;padding:6px 0 0;border-top:var(--hair)}
+.q-basis-rows li{padding:1px 0}
+.q-opts{font-size:12.5px;margin:6px 0 0;padding-top:8px;border-top:var(--hair);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.q-opts.none{color:var(--muted);display:block}
+.q-opts-cap{width:100%;font-family:var(--font-fact);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.q-rung{color:var(--muted);font-size:12px;margin-right:10px}
+.q-opt-flat{font-size:13px;color:var(--ink)}
+.q-entry-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.q-err{font-size:13px;color:var(--signal-dk);margin-top:6px}
+.q-mute{font-size:12.5px;color:var(--muted);margin:0 0 12px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.q-mute-what{flex:1;min-width:220px;line-height:1.45}
+.q-mute-err{width:100%;color:var(--signal-dk)}
+.q-notice{font-size:13px;color:var(--ink);background:#e2ede3;border:1px solid #8fb79a;border-radius:var(--r-2);padding:10px 12px;margin:0 0 12px;line-height:1.5}
 
 /* the fence band, with the printer's double rule */
 .fence{grid-row:3/4;grid-column:2/3;position:relative;height:var(--fence-h);background:var(--paper-2);border-top:1px solid var(--rule-strong);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
@@ -883,15 +907,17 @@ async function boot(){
   /* UI-11: an address in the bar is an address. A member who reloaded on a
      question's page, or was handed its link, lands back on it rather than on
      Home with the url still claiming otherwise. */
-  if(!routeFromHash()) go("home", true);
+  if(!routeFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
+/* UI-14: ONE entry where there were three. Home, Tasks and Proposals were three
+   rail entries answering one question, and a member had to visit all three, in
+   an order nothing told them, to find out what needed them. Their ROUTES still
+   resolve (see the router below) so an old link still lands somewhere true. */
 const RAIL = [
-  {id:"home",     icon:"i-home",     label:"Home"},
+  {id:"queue",    icon:"i-review",   label:"The queue"},
   {id:"record",   icon:"i-record",   label:"Record"},
-  {id:"tasks",    icon:"i-review",   label:"Tasks"},
-  {id:"proposals",icon:"i-focus",    label:"Proposals"},
   {id:"search",   icon:"i-search",   label:"Search"},
   {id:"subjects", icon:"i-focus",    label:"Subjects"},
   {id:"progressions",icon:"i-monitor",label:"Progressions"},
@@ -933,7 +959,7 @@ function navLabel(p){
   if(!p) return "";
   if(p.type==="bundle") return "the document";
   if(p.type==="inquiry") return "the question";
-  const t = {record:"The record",tasks:"Tasks",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -983,14 +1009,19 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={home:"Home",record:"The record",tasks:"Tasks",proposals:"Proposals",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
       (["record","inquiries","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
     return;
   }
+  /* UI-14: home, tasks and proposals are the SAME surface now. The three keys
+     are KEPT, not aliased away, because a deep link and a bookmark to any of
+     them must still land on the one screen that answers what they asked —
+     the landed nav pattern, deep-link compatibility without a second surface. */
   const R = {
-    home: renderHome, record: renderRecord, tasks: renderTasks, proposals: renderProposals, search: renderSearchScreen, subjects: renderSubjectView, progressions: renderProgressions, inquiries: ()=>renderFiltered("inquiries","inquiry","Questions","Questions the group is working on, and what became of them: an open question, a finding once it has been answered, a case once it has been published. Deferred and dismissed questions are kept, never deleted."),
+    queue: renderQueue, home: renderQueue, tasks: renderQueue, proposals: renderQueue,
+    record: renderRecord, search: renderSearchScreen, subjects: renderSubjectView, progressions: renderProgressions, inquiries: ()=>renderFiltered("inquiries","inquiry","Questions","Questions the group is working on, and what became of them: an open question, a finding once it has been answered, a case once it has been published. Deferred and dismissed questions are kept, never deleted."),
     projects: ()=>renderFiltered("projects","project","Projects","Workspaces that cite evidence and initiate escalation."),
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
@@ -5704,305 +5735,631 @@ async function renderMembers(){
 }
 
 /* ============================================================
-   UI-8: THE MEMBER HOME — the "what needs you" orientation surface, M8's
-   ENTRY POINT ("a member can reach what the record holds"). It is the first
-   screen a member lands on, because nothing else tells them what the record is
-   ASKING of them.
+   UI-14 · S1 THE QUEUE — three screens become ONE.
 
-   HOME aggregates the attention the record holds for THIS member and points at
-   where each act happens. It is READ-ONLY orientation — never an act surface;
-   the acts (resolve a task, adopt a proposal) live on their own screens, which
-   HOME links to. It sends no act op.
+   HOME (UI-8), TASKS (UI-1) and PROPOSALS (UI-5) were three answers to one
+   question — "what needs somebody" — and a member had to visit all three, in
+   an order nothing told them, to find out. They are DELETED here, not layered
+   over: one surface reads `op=queue`, which carries OBLIGATIONs (routed tasks),
+   FINDINGs (the proposals derivation the browser used to aggregate for itself)
+   and CONDITIONs (facts about our own machinery) in ONE contract. Their routes
+   still resolve, so an old link and an old bookmark still land somewhere true.
 
-   Two summaries, and every count COMES FROM AN OP — never invented:
+   WHAT THE PLANE DECIDES AND THIS SURFACE ONLY RENDERS:
 
-   - OPEN TASKS from op=tasks, the SAME feed UI-1's inbox reads, partitioned the
-     SAME way (mine / unassigned / others over the live, non-resolved tasks) so
-     the home count and the inbox can never disagree. It shows how many need you,
-     the one waiting longest (the honest proxy for "most urgent" — the plane
-     computes no priority or clock yet, D-86), and the unassigned tasks no one is
-     holding, surfaced so they cannot fall through.
+   - THE GROUPING. `case` is a structured object from the producer — its state,
+     whether the item is ungrouped, the reasons the set may be incomplete, the
+     depth bound, and every visible ANCESTOR with its type, state, terminality
+     and depth. This surface groups by it and NEVER invents a home for an item
+     that has none.
 
-   - OPEN PROPOSALS from op=proposals (REC-6's discovery feed, now live), read
-     through the SAME loadProposals() UI-5 uses, so the two surfaces aggregate
-     identically. If op=proposals is absent, HOME degrades HONESTLY to a "feed
-     pending" note exactly as UI-5's gap banner does — it NEVER fabricates a
-     count.
+   - EVERY OPTION. `options[]` is REC-19's derivation, the same function
+     `op=affordances` answers with, so a queue item and an affordances answer
+     cannot disagree. The label and the rung are rendered VERBATIM. There is no
+     act map here, and (DEC-8) NO REFUSAL RENDERED HERE WAS COMPUTED HERE: every
+     refusal on this screen is one the plane returned.
 
-   HONESTY is load-bearing (the whole product is trustworthiness of the record):
-   an empty record shows an honest empty state ("nothing needs you right now"),
-   never a fake number and never a fabricated task; a feed that cannot be read is
-   STATED as undetermined, not guessed. The all-clear banner is shown ONLY when
-   both feeds answered AND both are genuinely empty — a fetch error or a pending
-   proposals feed withholds it, because "nothing needs you" is itself a claim the
-   record must be able to stand behind.
+   - THE AGE. Determined ages come with their instant; a FINDING is recomputed on
+     every read and has NO creation instant, so its age is `undetermined` with a
+     reason — rendered through the SHARED three-line primitive (C-14) UI-11
+     built, over Q9's closed set of three. It is not re-implemented here.
+
+   DEC-16, AND THE HALF A SURFACE HAS TO BUILD. One EVENT renders under EVERY
+   ancestor case, and the unit of state is the EVENT, so ONE resolution clears it
+   from all of them and from every member's feed at once. What the plane cannot
+   do is tell the member who did NOT resolve it what became of the item they were
+   looking at a moment ago: from op=queue's side it is simply absent, and an
+   absence is a GAP. So this surface remembers what it SHOWED, and when a shown
+   item is gone it asks the resolutions feed WHO answered it and WHEN and renders
+   that under EVERY case it was filed under — a receipt, never a live copy.
+
+   Q13, SETTLED. Within a class, LONGEST-WAITING FIRST is the RULE. It is not a
+   stand-in for an urgency the record does not compute, the word "proxy" is gone,
+   and the rule is STATED on the surface where a member can read it.
+
+   DEC-36's SHIPPED PROVISIONAL. An ancestor set the viewer may not see whole
+   renders the FACT of incompleteness and NOTHING ELSE — no id, no title, no
+   count. A count of what was withheld is the leak.
+
+   PER-FEED DEGRADATION, which is why the feeds are NAMED. A failed feed is named
+   with the PLANE'S OWN reason and shows NO COUNT rather than a wrong one; "this
+   op is not on this plane" is a DIFFERENT fact from "this feed failed" and the
+   two are never collapsed (the Proposals screen this replaces collapsed them);
+   a Retry re-runs ONLY the failed feed; and the all-clear banner renders only
+   when EVERY feed answered and every feed yielded nothing, because an all-clear
+   is itself a claim.
+
+   REC-21's MUTE belongs to the QUEUE ENTRY and never to an object's control
+   strip — a personal preference standing beside dispose/retire is D-125's
+   forbidden collapse. It reads "Mute conditions on this case", reaches CONDITION
+   kinds only, and what it suppressed is REPORTED back, so a member who muted
+   something is never shown a feed that is quietly shorter.
+
+   FOLLOW-ON, NAMED AND NOT STUBBED: SELECTION SCOPING (states Q10, Q11 and Q12
+   of the S1 design — selecting several items, acting on the selection, and the
+   scope a selection carries across surfaces). Nothing here reserves a control
+   for it, because a control that does nothing is worse than an absent one.
    ============================================================ */
+/*__QUEUE_START__*/
 
-/* Summarise op=tasks for THIS member. Reuses myMemberId() and the exact
-   partition renderTasks applies. The count is the op's, not the home's: no task
-   in the feed -> no number. Throws on a real fetch failure so the caller can say
-   so rather than show a zero it did not earn. */
-async function homeTasksSummary(){
-  const me = myMemberId();
-  const r = await rec("tasks");
-  const tasks = (r.result && r.result.tasks) || [];
-  const live = tasks.filter(t=>t.status !== "resolved");
-  const mine       = live.filter(t=>me && t.assignee===me);
-  const unassigned = live.filter(t=>t.assignee==="unassigned");
-  /* "most urgent" = the longest-waiting of YOUR tasks, by created date. The
-     plane computes no priority, so waiting-longest is the honest ordering (the
-     same ageing framing UI-1 uses), never a fabricated urgency. */
-  const urgent = mine.slice().sort((a,b)=> new Date(a.created||0) - new Date(b.created||0))[0] || null;
-  return { yours: mine.length, unassigned: unassigned.length, urgent };
+/* THE FEEDS, NAMED. A failure has to be attributable: "the queue could not be
+   read" and "we could not find out what was answered" are different facts, and
+   a member must be able to tell which happened. Each loads on its own, degrades
+   on its own, and is retried on its own. */
+const QUEUE_FEEDS = [
+  { id:"queue", label:"the queue",
+    what:"what the record is asking of somebody: obligations, findings and conditions in one contract" },
+  { id:"resolutions", label:"what was answered",
+    what:"the obligations that left this queue because a named person resolved them" },
+];
+
+/* The PLANE'S OWN words for why it could not answer. Never composed here — the
+   reason, the detail and the error are the producer's (DEC-8). */
+function queueReason(e){
+  if(!e) return "";
+  return [e.reason, e.detail || e.error].filter(Boolean).join(" · ");
 }
+/* An unregistered op answers "unknown op" (I3). That is a DIFFERENT FACT from a
+   feed that failed, and the two are never collapsed. */
+function queueAbsent(e){ return !!(e && /unknown op/i.test(String(e.error || e.reason || ""))); }
 
-/* Summarise op=proposals through the SAME loadProposals() UI-5 uses. It never
-   throws — it returns {gap:true,...} when the op is absent/errored, which HOME
-   renders as an honest "feed pending" rather than a count. */
-async function homeProposalsSummary(){
-  const feed = await loadProposals();
-  if(feed.gap) return { pending:true, reason:feed.reason };
-  return { pending:false, count:(feed.proposals||[]).length };
-}
-
-function homeTasksCardHtml(t, err){
-  let body;
-  if(err){
-    body = `<div class="hm-pending">The record could not be asked for your tasks just now, so no count is shown rather than a wrong one. ${esc((err&&(err.reason||err.error||err.detail))||"Could not reach the plane.")}</div>`;
-  }else{
-    const total = t.yours, zero = total===0;
-    body = `<div class="hm-count ${zero?"zero":""}">${total}<span class="u">${total===1?"needs you":"need you"}</span></div>`;
-    if(t.urgent){
-      body += `<div class="hm-urgent"><span class="k">${esc(taskKindLabel(t.urgent.kind))}</span> — <span class="age">${esc(taskAge(t.urgent.created))}</span>, waiting longest.</div>`;
-    }else if(zero){
-      body += `<div class="hm-sub">Nothing is assigned to you. When the record needs you to decide something, it appears here.</div>`;
-    }
-    if(t.unassigned)
-      body += `<div class="hm-sub">And <b>${t.unassigned}</b> ${t.unassigned===1?"task":"tasks"} no one is holding yet — shown so ${t.unassigned===1?"it does":"they do"} not fall through.</div>`;
-  }
-  return `<div class="hm-card"><h2>Open tasks</h2>${body}<div class="hm-go"><button data-go="tasks">Open Tasks</button></div></div>`;
-}
-
-function homeProposalsCardHtml(p){
-  let body;
-  if(p.pending){
-    body = `<div class="hm-pending">The record cannot enumerate its derived findings yet — the proposals feed is not answering on this plane. Rather than show a count it cannot stand behind, it says so. No number is invented.</div>`;
-  }else{
-    const total = p.count, zero = total===0;
-    body = `<div class="hm-count ${zero?"zero":""}">${total}<span class="u">${total===1?"awaits you":"await you"}</span></div>`;
-    body += zero
-      ? `<div class="hm-sub">The record has surfaced no proposals right now. When it notices a pattern that wants a person, it appears here as a question — never as a fact.</div>`
-      : `<div class="hm-sub">${total===1?"A question the record raised on its own, and nobody has":`Questions the record raised on their own, and nobody has`} yet judged ${total===1?"it":"them"} — a question, not an established finding.</div>`;
-  }
-  return `<div class="hm-card"><h2>Open proposals</h2>${body}<div class="hm-go"><button data-go="proposals">Open Proposals</button></div></div>`;
-}
-
-/* Clear entry to the surfaces M8 has built. Members is admin-gated exactly as
-   the rail is (capability a member lacks is ABSENT, not shown), so the home
-   entry matches what the member can actually navigate to. */
-function homeEntryHtml(){
-  const isAdmin = !!(PLANE.me && PLANE.me.administer);
-  const entries = [
-    { go:"tasks",    icon:"i-review",  t:"Tasks",         d:"Everything the record needs a person to settle — yours, and the ones no one is holding." },
-    { go:"subjects", icon:"i-focus",   t:"Subjects",      d:"What the record knows about a subject: every document that concerns it, at its honest grade." },
-  ];
-  if(isAdmin) entries.push({ go:"members", icon:"i-members", t:"Members & keys", d:"Who holds power in the group, and the governance thresholds — facts you can check." });
-  return `<h2 class="sec">Go to a surface</h2>
-    <div class="hm-entries">${entries.map(e=>
-      `<button class="hm-entry" data-go="${e.go}"><svg viewBox="0 0 20 20"><use href="#${e.icon}"/></svg><span><span class="t">${esc(e.t)}</span><span class="d">${esc(e.d)}</span></span></button>`).join("")}</div>`;
-}
-function wireHomeEntries(){
-  document.querySelectorAll("#hm [data-go], #content .hm-entry[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
-}
-
-let HOME_LAST = null;
-async function renderHome(){
-  setActive("home");
-  const c = $("#content");
-  const who = PLANE.me && (PLANE.me.handle || PLANE.me.cover);
-  c.innerHTML = `<h1 class="rec">Home</h1>
-    <p class="lede">What the record is asking of you${who?`, ${esc(who)}`:""}. Every count here is read from the record — what it actually holds, never a guess — and each points at where the work is done. Nothing is acted on from this screen.</p>
-    <div id="hm">Loading&hellip;</div>`;
-  const host = $("#hm");
-  /* The two summaries degrade INDEPENDENTLY: a task-fetch failure must not
-     suppress the proposals count, and vice versa. */
-  let tasks = null, tasksErr = null;
-  try{ tasks = await homeTasksSummary(); }catch(e){ tasksErr = e; }
-  const props = await homeProposalsSummary();
-  HOME_LAST = { tasks, tasksErr, props };
-  /* All-clear ONLY when both feeds answered and both are genuinely empty. An
-     error or a pending feed withholds it — "nothing needs you" is a claim the
-     record must be able to stand behind. */
-  const allClear = !tasksErr && tasks && tasks.yours===0 && tasks.unassigned===0
-                   && !props.pending && props.count===0;
-  const banner = allClear
-    ? `<div class="hm-allclear"><b>Nothing needs you right now.</b> The record has no open tasks assigned to you, none going unheld, and no proposals awaiting a person. When it does, it will appear here — the count will always be the record's own, never a placeholder.</div>`
-    : "";
-  host.innerHTML = banner
-    + `<div class="hm-sum">${homeTasksCardHtml(tasks, tasksErr)}${homeProposalsCardHtml(props)}</div>`
-    + homeEntryHtml();
-  wireHomeEntries();
-}
-
-/* ============================================================
-   UI-1: THE TASK INBOX — the member surface for the attention layer.
-
-   The plane half already ships (D-98, 0.49.0): op=tasks lists, op=taskforward
-   and op=taskresolve act, routing member_expertise -> project manager -> group
-   admin, deduped on (refers_to, kind). This is the QUEUE construct of
-   BIO_Interaction_Constructs v0.2 ("things that want me", one list). Each item
-   says THIS NEEDS YOU and POINTS AT the act it resolves in; it does not
-   reimplement the act (the ACT construct is later items). Following the pointer
-   IS the "do"; the two verbs here are forward and resolve.
-
-   The accountability rules ARE the surface, not decoration:
-
-   - A task is never silently dropped. Unactioned it AGES with a recorded reason
-     (D-79). The plane does not yet RUN the ageing job (D-79 is open under M4), so
-     this surface shows the age from `created` and renders an ageing reason ONLY
-     if the task's own history carries one. It never fabricates a reason, and it
-     never hides a stale task.
-   - A task is addressed to somebody or honestly `unassigned` — never a phantom
-     (D-98's third under-specification). `unassigned` is its own honest state
-     with its own section, because those are the ones at risk of falling through.
-   - The refusal shape is "this is not yours to resolve, and here is who it is
-     with." A task held by another member renders exactly that, with no active
-     resolve/forward. (The plane admits any member's call; the SURFACE is honest
-     about whose task it is. That the plane does not itself enforce assignee-
-     ownership on taskresolve is noted to RECORD, not worked around here.)
-   ============================================================ */
-
-/* Member-facing labels for each task kind. TASK_KINDS in the plane is
-   ["authority-undetermined"] today; the construct names more to come
-   (ratification, endorsement, expertise-confirm, focus-review, temporal
-   expectation, bias debt). An unknown kind is rendered HONESTLY from its own
-   token rather than hidden — undetermined is first-class here too. */
-const TASK_KIND_UI = {
-  "authority-undetermined": {
-    label: "Authority undetermined",
-    needs: "The record could not tell who published this capture. Someone has to determine its authority before it can be trusted.",
-    act:   "Determine who published it",
-  },
-};
-function humanKind(kind){ return String(kind||"").replace(/[-_]+/g," ").replace(/\b\w/g, c=>c.toUpperCase()); }
-function taskKindLabel(kind){ return (TASK_KIND_UI[kind] && TASK_KIND_UI[kind].label) || humanKind(kind); }
-function myMemberId(){ return (PLANE.me && PLANE.me.member) || null; }
-
-/* Age from `created`, in plain words. A task is never silently dropped, so the
-   surface always says how long it has waited — the honest floor while the plane
-   grows the ageing job that will attach a reason (D-79). */
-function taskAge(iso){
-  if(!iso) return "";
-  const t = new Date(iso); if(isNaN(t)) return "";
-  const days = Math.floor((Date.now() - t.getTime())/86400000);
-  if(days <= 0) return "opened today";
-  if(days === 1) return "opened yesterday";
-  if(days < 30) return `opened ${days} days ago`;
-  const mo = Math.round(days/30);
-  return mo <= 1 ? "opened about a month ago" : `opened about ${mo} months ago`;
-}
-/* If the plane ever ages a task, the history carries the event and its reason.
-   Surface it verbatim; never invent one. */
-function agedEvent(t){
-  const h = (t && t.history) || [];
-  for(let i=h.length-1;i>=0;i--){
-    const e = h[i];
-    if(e && (e.event==="aged" || e.event==="deferred") && e.reason) return { at:e.at, reason:e.reason };
-  }
-  return null;
-}
-function assigneeBadge(t){
-  if(t.assignee === "unassigned")
-    return `<span class="chip flag" title="No project manager and no active administrator was available to hold this. It is shown honestly as unassigned rather than addressed to someone who does not exist, and can still be routed by hand.">Unassigned</span>`;
-  return `<span class="chip" title="Currently with this member">${esc(t.assignee)}</span>`;
-}
-function taskStatusChip(t){
-  const map = { open:"With you now", forwarded:"Forwarded", resolved:"Resolved" };
-  return `<span class="chip ${t.status==="resolved"?"verified":(t.status==="forwarded"?"elevated":"collected")}">${esc(map[t.status]||t.status)}</span>`;
-}
-function taskHistory(t){
-  const h = (t && t.history) || [];
-  if(!h.length) return "";
-  const verb = { forwarded:"forwarded", resolved:"resolved", aged:"aged", deferred:"deferred" };
-  return `<ul class="tk-hist">${h.map(e=>`<li>${esc(fmtWhen(e.at))} · ${esc(verb[e.event]||e.event)}${e.actor?` by ${esc(e.actor)}`:""}${e.reason?` — ${esc(e.reason)}`:""}</li>`).join("")}</ul>`;
-}
-
-let TASKS_LAST = [];
-async function renderTasks(){
-  setActive("tasks");
-  const c = $("#content");
-  c.innerHTML = `<h1 class="rec">Tasks</h1><p class="lede">Things the record needs a person to settle. Each one points at where it gets resolved. Nothing here is deleted: a task no one acts on ages with its reason rather than vanishing, and one no one holds is shown as unassigned, never hidden.</p><div id="tk">Loading&hellip;</div>`;
+async function queueLoadFeed(id){
   try{
-    const r = await rec("tasks");
-    const tasks = (r.result && r.result.tasks) || [];
-    TASKS_LAST = tasks;
-    const me = myMemberId();
-    const live = tasks.filter(t=>t.status !== "resolved");
-    const mine       = live.filter(t=>me && t.assignee===me);
-    const unassigned = live.filter(t=>t.assignee==="unassigned");
-    const others     = live.filter(t=>t.assignee!=="unassigned" && t.assignee!==me);
-    const badge = $("#cnt-tasks"); if(badge) badge.textContent = mine.length ? String(mine.length) : "";
-    let html = "";
-    html += taskSection("Yours", mine, "yours", me);
-    html += taskSection("Unassigned — no one is holding these", unassigned, "unassigned", me);
-    if(others.length) html += taskSection("With other members", others, "others", me);
-    if(!mine.length && !unassigned.length && !others.length)
-      html += `<div class="empty">No open tasks. When the record needs a person to decide something, it appears here.</div>`;
-    $("#tk").innerHTML = html;
-    wireTaskActions();
-  }catch(e){ $("#tk").innerHTML = errPane(e); }
+    let data;
+    if(id === "queue")            data = await recR("queue");
+    else if(id === "resolutions") data = await recR("tasks", { status:"resolved" });
+    else return { state:"failed", why:"this surface has no loader named for that feed" };
+    /* The store can REFUSE inside a successful envelope. A refusal is the
+       producer's and is rendered verbatim, and it makes the feed FAILED — never
+       empty, because an empty feed is a claim about the record. */
+    if(data && data.ok === false) return { state:"failed", why:queueReason(data) };
+    return { state:"answered", data };
+  }catch(e){
+    if(queueAbsent(e)) return { state:"absent", why:queueReason(e) };
+    return { state:"failed", why:queueReason(e) };
+  }
 }
 
-function taskSection(title, list, group, me){
-  if(!list.length) return "";
-  return `<section class="tsec"><h2>${esc(title)}${group==="yours"?` <span class="tk-age">(${list.length})</span>`:""}</h2>${list.map(t=>taskCard(t, group, me)).join("")}</section>`;
+let QUEUE = null;                 // { feeds:{ id -> {state,data,why} } }
+let QUEUE_GROUPS = [];            // the painted case groups, for the entry controls
+let QUEUE_ITEMS = new Map();      // id -> the live item, for the forward picker
+let QUEUE_SEEN = new Map();       // id -> what this member was SHOWN, so a disappearance can be explained
+let QUEUE_BUSY = false;
+
+async function renderQueue(){
+  setActive("queue");
+  const c = $("#content");
+  c.innerHTML = `<h1 class="rec">The queue</h1>
+    <p class="lede">Everything the record is asking of somebody, in one list: what a named person owes, what the record noticed on its own, and what our own machinery is doing to the work. Each item is filed under the case it belongs to. Nothing is decided by this screen — every option on an item is one the record published for it.</p>
+    <div id="q">Loading&hellip;</div>`;
+  QUEUE = { feeds:{} };
+  await queueRun(QUEUE_FEEDS.map(f=>f.id));
 }
 
-function taskCard(t, group, me){
-  const k = TASK_KIND_UI[t.kind];
-  const need = (k && k.needs) || (t.subject && t.subject.text) || "The record needs a person to settle this.";
-  const actLabel = (k && k.act) || "Go to where this is resolved";
-  const aged = agedEvent(t);
-  const pointer = t.refers_to
-    ? `<button class="tlink" data-open="${esc(t.refers_to)}" title="${esc(actLabel)} — the task points at the act, it does not replace it">${esc(actLabel)} ↗</button> <span class="tk-ref">on ${esc(t.refers_to)}</span>`
-    : `<span class="tk-ref">${esc(humanKind(t.kind))}</span>`;
-  const cls = group==="unassigned" ? " tunassigned" : (group==="others" ? " tother" : "");
-  return `<div class="tcard${cls}" data-id="${esc(t.id)}">
-    <div class="tk-head"><span class="tk-kind">${esc(taskKindLabel(t.kind))}</span>${assigneeBadge(t)}${taskStatusChip(t)}</div>
-    <div class="tk-need">${esc(need)}</div>
-    ${aged ? `<div class="tk-aged">Still here after ${esc(fmtWhen(aged.at))}: ${esc(aged.reason)}</div>` : ""}
-    <div class="tk-meta">${pointer}<span class="tk-age" title="Opened ${esc(fmtWhenFull(t.created))}">${esc(taskAge(t.created))}</span></div>
-    <div class="tk-acts" data-acts="${esc(t.id)}">${taskActions(t, group)}</div>
-    <div class="tk-err" data-err="${esc(t.id)}"></div>
-    ${taskHistory(t)}
+/* Run NAMED feeds and repaint. Three properties, and each is load-bearing:
+   - the feeds run IN PARALLEL and each repaints as it lands, so one feed that is
+     slow or never answers cannot hold the other's items off the screen;
+   - a feed that has not answered is PAINTED AS PENDING rather than left as a
+     blank screen, because "still asking" is a state a member is entitled to see
+     and is what the all-clear is withheld for;
+   - Retry hands this ONE id, which is the whole of the Retry control: a feed
+     that answered is not re-read, so retrying the half that broke cannot quietly
+     change the half that was fine. */
+async function queueRun(ids){
+  if(!QUEUE) QUEUE = { feeds:{} };
+  for(const id of ids) QUEUE.feeds[id] = { state:"pending" };
+  queuePaint();
+  await Promise.all(ids.map(async id => {
+    QUEUE.feeds[id] = await queueLoadFeed(id);
+    queuePaint();
+  }));
+}
+async function queueRetry(id){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  try{ await queueRun([id]); } finally { QUEUE_BUSY = false; }
+}
+
+function queueFeedState(id){ return (QUEUE && QUEUE.feeds && QUEUE.feeds[id]) || { state:"pending" }; }
+function queueData(){
+  const f = queueFeedState("queue");
+  return (f.state === "answered" && f.data) ? f.data : null;
+}
+function queueItems(){
+  const d = queueData();
+  return (d && Array.isArray(d.items)) ? d.items : [];
+}
+function queueResolutions(){
+  const f = queueFeedState("resolutions");
+  return (f.state === "answered" && f.data && Array.isArray(f.data.tasks)) ? f.data.tasks : [];
+}
+
+/* ---- the AGE, and the one primitive ----
+   The producer either publishes an instant or says why it cannot. Where it
+   cannot, the SHARED three-line component (C-14, built by UI-11) renders it,
+   over Q9's CLOSED SET of three forms — this surface does not own a second
+   shape and does not write a third line of its own. The map below turns the
+   producer's own published reason into one of those three; a reason this
+   surface has no rule for renders a NAMED GAP, never an invented sentence. */
+const QUEUE_AGE_FORM = {
+  derived_on_read:     "positively_none",
+  unparseable_created: "positively_none",
+  no_refusal_instant:  "positively_none",
+};
+function queueWaitMs(it){
+  const a = it && it.age;
+  return (a && a.state === "determined" && Number.isFinite(a.ms)) ? a.ms : -1;
+}
+function queueAgeWords(ms){
+  const days = Math.floor(ms/86400000);
+  if(days >= 60) return `waiting about ${Math.round(days/30)} months`;
+  if(days >= 30) return "waiting about a month";
+  if(days >= 2)  return `waiting ${days} days`;
+  if(days === 1) return "waiting since yesterday";
+  const hrs = Math.floor(ms/3600000);
+  return hrs >= 1 ? `waiting ${hrs} hour${hrs===1?"":"s"}` : "opened just now";
+}
+function queueAgeHtml(it){
+  const a = (it && it.age) || {};
+  if(a.state === "determined" && Number.isFinite(a.ms))
+    return `<span class="q-age" title="${esc(a.since||"")}">${esc(queueAgeWords(a.ms))}</span>`;
+  const form = QUEUE_AGE_FORM[a.reason];
+  if(form) return undeterminedPane(a.detail || "the record published no instant to age this from", form, []);
+  return `<div class="q-gap">How long this has been waiting is undetermined, and this surface has no published rule for the reason the record gave. It is stated rather than guessed.</div>`;
+}
+
+/* ---- Q13, SETTLED: the ordering RULE, and it is stated on the surface ----
+   Within a class the LONGEST-WAITING comes first. The class order is the
+   PRODUCER'S own `classes`, never a second ranking invented here; an item whose
+   age the record cannot derive sorts last, because ordering it by a number
+   nobody has would be the fabrication this rule exists to avoid. */
+const QUEUE_ORDER_RULE = "Within a class, the longest-waiting comes first. That is the rule this list is ordered by. The record computes no priority and this order is not a stand-in for one — it does not mean the top of the list matters most, only that it has waited longest. An item whose age the record cannot derive is placed last and says so on its own row.";
+function queueOrder(items){
+  const d = queueData();
+  const classes = (d && Array.isArray(d.classes)) ? d.classes : [];
+  const rank = c => { const i = classes.indexOf(c); return i < 0 ? classes.length : i; };
+  return items.slice().sort((a,b)=>
+    rank(a.class) - rank(b.class)
+    || queueWaitMs(b) - queueWaitMs(a)
+    || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
+/* ---- the grouping. DEC-16: ONE event, N homes ----
+   An item with ancestors is rendered under EVERY one of them, and it is the
+   SAME event under each — which is why nothing on this screen is keyed on the
+   (member, case) pair, and why one resolution clears it everywhere.
+   An item with an EMPTY, DETERMINED ancestor set sits UNGROUPED and is never
+   given an invented home. An item with no visible ancestor and an UNDETERMINED
+   set is neither: its home is unknown, and that is what it says. */
+function queueGrouped(items){
+  const groups = new Map();
+  const ungrouped = [], unknownHome = [];
+  for(const it of items){
+    const c = (it && it.case) || {};
+    const anc = Array.isArray(c.ancestors) ? c.ancestors : [];
+    if(anc.length){
+      for(const a of anc){
+        let g = groups.get(a.id);
+        if(!g){ g = { id:a.id, ancestor:a, items:[] }; groups.set(a.id, g); }
+        g.items.push(it);
+      }
+      continue;
+    }
+    if(c.ungrouped === true) ungrouped.push(it);
+    else unknownHome.push(it);
+  }
+  const out = [...groups.values()].sort((x,y)=>{
+    const wx = Math.max(-1, ...x.items.map(queueWaitMs)), wy = Math.max(-1, ...y.items.map(queueWaitMs));
+    return wy - wx || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0);
+  });
+  return { groups: out, ungrouped, unknownHome };
+}
+
+/* DEC-36's shipped provisional. The FACT of incompleteness and NOTHING else —
+   no id, no title, no count. The count is the leak. */
+function queueCaseNoteHtml(it){
+  const c = (it && it.case) || {};
+  if(c.state !== "undetermined") return "";
+  const r = Array.isArray(c.reasons) ? c.reasons : [];
+  const bits = [];
+  if(r.includes("out_of_view"))
+    bits.push("Part of what this is filed under is not visible to this credential, so the list of cases below it is incomplete rather than settled.");
+  if(r.includes("depth_bound"))
+    bits.push("The walk that finds what this is filed under stopped at its bound, so what lies further up is unknown rather than absent.");
+  if(r.includes("subject_bound"))
+    bits.push("The gathering of what this is about stopped at its bound, so the list of cases is incomplete rather than settled.");
+  if(!bits.length) bits.push("Where this is filed is not fully determined, and the record says so rather than implying the list is complete.");
+  return `<div class="q-incomplete">${bits.map(b=>esc(b)).join(" ")}</div>`;
+}
+
+/* WHO THIS IS ADDRESSED TO. The producer's own `assignee` and `assignee_role`;
+   nothing here decides whose work anything is. */
+function queueAssigneeHtml(it){
+  const me = myMemberId();
+  const who = it && it.assignee;
+  const role = it && it.assignee_role;
+  if(who == null)
+    return `<div class="q-assign">This is not addressed to anybody. The record raised it; no obligation was routed to a person.</div>`;
+  if(who === "unassigned")
+    return `<div class="q-assign flag">No one is holding this. It is shown as unassigned rather than addressed to somebody who does not exist, and it can still be taken or routed by hand.</div>`;
+  if(me && who === me)
+    return `<div class="q-assign">Yours &middot; assigned by the record, not by a person${role?` (routed as ${esc(role)})`:""}.</div>`;
+  return `<div class="q-assign">With <b>${esc(who)}</b>${role?` &middot; routed as ${esc(role)}`:""}.</div>`;
+}
+
+/* WHAT IT IS ABOUT — the SUBJECT, which is a different column from the case and
+   is never collapsed into it. */
+function queueSubjectHtml(it){
+  const s = (it && it.subject) || {};
+  if(s.kind === "bundle" && s.id)
+    return `<button class="tlink" data-open="${esc(s.id)}" title="the queue points at where the act happens; it does not replace it">Open the document ↗</button>`
+         + ` <span class="q-on">on <span class="mono">${esc(s.id)}</span></span>`;
+  if(s.kind === "progression_stage")
+    return `<span class="q-on">on the <span class="mono">${esc(s.stage_key||"")}</span> stage of <span class="mono">${esc(s.progression_key||"")}</span>`
+         + ((s.bundles && s.bundles.length) ? ` &middot; ${s.bundles.map(b=>`<span class="mono">${esc(b)}</span>`).join(", ")}` : "")
+         + `</span>`;
+  if(s.kind === "host")    return `<span class="q-on">on the host <span class="mono">${esc(s.host||"")}</span></span>`;
+  if(s.kind === "capture") return `<span class="q-on">on a capture of <span class="mono">${esc(s.locator||s.capture_sha||"")}</span></span>`;
+  return "";
+}
+
+/* THE INSTANCE COUNTS, from the producer's basis. D-79's aggregation now happens
+   in the plane (one FINDING per progression stage), so the number here is the
+   record's, not a count this browser did. */
+function queueCountsHtml(it){
+  const b = (it && it.basis) || {};
+  if(!Number.isFinite(b.n)) return "";
+  const over = Number.isFinite(b.overdue_count) && b.overdue_count > 0
+    ? `; <b>${b.overdue_count}</b> of them past a declared deadline` : "";
+  return `<div class="q-counts"><b>${b.n}</b> instance${b.n===1?"":"s"} of this one check, grouped as ONE item rather than ${b.n}${over}.</div>`;
+}
+
+/* THE BASIS, FROM THE PRODUCER, VERBATIM. Every one of the three producers
+   publishes a `basis.detail` saying in its own words why the item exists and
+   what would end it — an obligation is a routed task, a finding is derived and
+   never averaged, a condition is a fact about our own machinery. That sentence
+   IS the basis, and it is rendered unchanged. The rest of the basis object is
+   the producer's internal keying and is deliberately NOT dumped onto a
+   member-facing screen: the numbers a member needs from it (the instance count,
+   the overdue count) are rendered above, and a column name is not an
+   explanation. */
+function queueBasisHtml(it){
+  const b = (it && it.basis) || {};
+  if(!b.detail) return "";
+  return `<details class="q-basis"><summary>Why this is here, in the record's own words</summary>`
+    + `<p class="subj-note">${esc(b.detail)}</p></details>`;
+}
+
+/* THE OPTIONS ARE THE PRODUCER'S, rendered VERBATIM — label and rung both. This
+   surface holds no map of acts and invents no refusal (DEC-8); an empty list is
+   the honest answer and says so rather than offering something that would be
+   refused. A control a credential cannot use is ABSENT, never greyed (Q12).
+   AN OPTION POINTS AT THE ACT, it does not perform it: the queue opens the
+   document the act is published on, which is UI-1's rule kept. An item whose
+   subject is not a document — a progression stage, a host — has nowhere to point,
+   so its options are STATED rather than drawn as controls that cannot work. */
+function queueOptionsHtml(it){
+  const opts = Array.isArray(it && it.options) ? it.options : [];
+  const subj = (it.subject && it.subject.kind === "bundle" && it.subject.id) ? it.subject.id : null;
+  if(!opts.length)
+    return `<div class="q-opts none">The record publishes no act on this item for this credential.</div>`;
+  const body = opts.map(o=>{
+    const rung = o.rung ? `<span class="q-rung">${esc(o.rung)}</span>` : "";
+    return subj
+      ? `<button class="tbtn q-opt" data-open="${esc(subj)}" data-opt="${esc(o.id)}">${esc(o.label)}</button>${rung}`
+      : `<span class="q-opt-flat">${esc(o.label)}</span>${rung}`;
+  }).join("");
+  return `<div class="q-opts"><span class="q-opts-cap">What the record publishes as doable here</span>${body}</div>`;
+}
+
+/* THE QUEUE ENTRY'S OWN CONTROLS, and they are deliberately NOT in `options[]`.
+   `options[]` is what may be done to the OBJECT. Resolving or forwarding acts on
+   the ENTRY — the routed event — and the three proposal affordances act on the
+   record's own question. A credential that cannot act sees none of them at all;
+   nothing is greyed and nothing is narrated per control (Q12). */
+function queueEntryControlsHtml(it){
+  if(it.class === "OBLIGATION"){
+    if(!canContribute()) return "";
+    return `<div class="q-entry-acts" data-acts="${esc(it.id)}">`
+      + `<button class="tbtn tfwd" data-fwd="${esc(it.id)}">Forward to someone&hellip;</button>`
+      + `<button class="tbtn tres" data-res="${esc(it.id)}">Mark resolved</button>`
+      + `</div><div class="q-err" data-err="${esc(it.id)}"></div>`;
+  }
+  if(it.class === "FINDING"){
+    const key = queueFindingKey(it);
+    if(!key || !canProposalAct()) return "";
+    return `<div class="q-entry-acts">`
+      + `<button class="btn" data-prop-adopt="${esc(key)}" onclick="openProposalAdopt('${esc(key)}')">Adopt — make it a question</button>`
+      + `<button class="btn ghost" data-prop-defer="${esc(key)}" onclick="openProposalAct('${esc(key)}','deferred')">Defer&hellip;</button>`
+      + `<button class="btn ghost" data-prop-dismiss="${esc(key)}" onclick="openProposalAct('${esc(key)}','dismissed')">Dismiss&hellip;</button>`
+      + `</div>`;
+  }
+  return "";
+}
+
+/* A FINDING's act context, taken from THIS feed. The aggregation the old
+   Proposals screen did in the browser is the plane's now — one FINDING per
+   (progression, stage) — so nothing here re-reads op=proposals to aggregate the
+   same thing a second time. */
+function queueFindingKey(it){ return String((it && it.id) || "").replace(/^FINDING::/, ""); }
+function queueFindingAsProposal(it){
+  const b = (it && it.basis) || {};
+  return { key: queueFindingKey(it),
+    progression_key: b.progression_key || null, stage_key: b.stage_key || null,
+    progression_label: humanKind(b.progression_key || ""), stage_label: humanKind(b.stage_key || ""),
+    required: null, n: Number.isFinite(b.n) ? b.n : 0,
+    grade: b.grade ?? null, grade_determined: b.grade_determined !== false,
+    surfaced_by: b.surfaced_by || "machine", instances: [],
+    /* The producer's own sentence, so the act dialog quotes the record rather
+       than a sentence this browser composed. */
+    summary: it.summary || null };
+}
+
+function queueItemHtml(it){
+  return `<article class="q-item ${esc(String(it.class||"").toLowerCase())}" data-id="${esc(it.id)}">
+    <div class="q-head">
+      <span class="chip q-class">${esc(it.class||"")}</span>
+      <span class="q-kind">${esc(humanKind(it.kind))}</span>
+    </div>
+    ${queueAgeHtml(it)}
+    <div class="q-summary">${esc(it.summary||"")}</div>
+    ${it.detail ? `<div class="q-detail">${esc(it.detail)}</div>` : ""}
+    <div class="q-meta">${queueSubjectHtml(it)}</div>
+    ${queueAssigneeHtml(it)}
+    ${queueCountsHtml(it)}
+    ${queueCaseNoteHtml(it)}
+    ${it.class === "FINDING" ? proposalDerivedBadgeHtml(it) : ""}
+    ${it.class === "FINDING" ? proposalGradeHtml(queueFindingAsProposal(it)) : ""}
+    ${queueBasisHtml(it)}
+    ${queueOptionsHtml(it)}
+    ${queueEntryControlsHtml(it)}
+  </article>`;
+}
+
+/* ---- REC-21 / C-3: the mute, on the QUEUE ENTRY ----
+   It reads exactly "Mute conditions on this case" and it reaches CONDITION items
+   ONLY. The kinds it names are the CONDITION kinds PRESENT on this case when the
+   control was drawn — the plane's own scoping rule, and what lets a NEW kind on
+   the same case still reach the member. An OBLIGATION or a FINDING kind is never
+   named here; the plane refuses one if it ever were, and this surface renders
+   THE PLANE'S refusal rather than a sentence of its own. */
+function queueMutableKinds(items){
+  return [...new Set((items||[]).filter(it => it.class === "CONDITION")
+                                .map(it => it.kind).filter(Boolean))].sort();
+}
+function queueMuteHtml(group){
+  if(!(PLANE.me && PLANE.me.session)) return "";
+  const kinds = queueMutableKinds(group.items);
+  if(!kinds.length) return "";
+  return `<div class="q-mute">
+    <button class="tbtn q-mutebtn" data-mute="${esc(group.id)}">Mute conditions on this case</button>
+    <span class="q-mute-what">It reaches condition kinds only, and only for you: ${kinds.map(k=>`<span class="mono">${esc(k)}</span>`).join(", ")}. Muting changes nothing about the record and nothing for anybody else, and an obligation on this case still reaches you — an obligation leaves every list only when it is resolved.</span>
+    <div class="q-mute-err" data-muteerr="${esc(group.id)}"></div>
+  </div>`;
+}
+async function queueMuteCase(caseId){
+  if(QUEUE_BUSY) return; QUEUE_BUSY = true;
+  const host = document.querySelector(`[data-muteerr="${caseId}"]`);
+  try{
+    const g = (QUEUE_GROUPS||[]).find(x => x.id === caseId);
+    const kinds = queueMutableKinds(g ? g.items : []);
+    const r = await recPost("queuemute", { case: caseId, kinds });
+    const res = (r && r.result !== undefined) ? r.result : r;
+    if(res && res.ok === false){ if(host) host.textContent = queueReason(res); return; }
+    await queueRun(["queue"]);
+  }catch(e){ if(host) host.textContent = queueReason(e); }
+  finally{ QUEUE_BUSY = false; }
+}
+
+/* WHAT THE MEMBER CHOSE NOT TO BE TOLD, REPORTED. A feed that is quietly shorter
+   is indistinguishable from nobody caring, so the plane reports its own
+   suppressions and this renders them. There is never a gap here. */
+function queueMuteReportHtml(){
+  const d = queueData();
+  const m = d && d.mute;
+  if(!m || !Array.isArray(m.cases) || !m.cases.length) return "";
+  const n = Number.isFinite(m.suppressed_count) ? m.suppressed_count : (m.suppressed||[]).length;
+  const kinds = [...new Set((m.suppressed||[]).map(s=>s && s.kind).filter(Boolean))];
+  const head = n === 0
+    ? `You muted condition kinds on ${m.cases.length} ${m.cases.length===1?"case":"cases"}, and nothing is being kept from you right now — none of the conditions you muted is currently true.`
+    : `You muted ${kinds.length} condition ${kinds.length===1?"kind":"kinds"} (${kinds.map(k=>esc(k)).join(", ")}) on ${m.cases.length} ${m.cases.length===1?"case":"cases"}, so ${n} ${n===1?"item is":"items are"} not shown to you below.`;
+  return `<div class="q-muted"><b>${head}</b> ${esc(m.detail||"")}</div>`;
+}
+
+/* ---- DEC-16's receipts: what became of an item that is no longer here ---- */
+function queueNotices(){
+  const live = new Set(queueItems().map(i=>String(i.id)));
+  const resolved = new Map(queueResolutions().map(t=>[String(t.id), t]));
+  const out = [];
+  for(const [id, seen] of QUEUE_SEEN){
+    if(live.has(id)) continue;
+    const t = resolved.get(id);
+    if(!t) continue;      // gone for a reason this feed cannot name: nothing is invented
+    const ev = (t.history||[]).slice().reverse().find(e => e && e.event === "resolved");
+    out.push({ id, seen, at: t.resolved_at || (ev && ev.at) || null, by: (ev && ev.actor) || null });
+  }
+  return out;
+}
+function queueNoticeHtml(nt){
+  const when = nt.at ? fmtWhenFull(nt.at) : null;
+  const named = nt.by && when;
+  return `<div class="q-notice" data-notice="${esc(nt.id)}">
+    <b>Resolved${nt.by?` by ${esc(nt.by)}`:""}${when?` on ${esc(when)}`:""}.</b>
+    ${esc(nt.seen.summary||"")} It is no longer waiting on anybody. One resolution clears an item from every case it was filed under, so it has gone from all of them at once — this is a receipt, not a copy of it.
+    ${named?"":`<span class="q-gap">The record did not say who answered it or when, and neither is invented here.</span>`}
   </div>`;
 }
 
-function taskActions(t, group){
-  if(group==="others"){
-    return `<div class="tk-refusal">This isn't yours to resolve — it's with <b>${esc(t.assignee)}</b>.</div>`;
-  }
-  const fwd = `<button class="tbtn tfwd" data-fwd="${esc(t.id)}">Forward to someone&hellip;</button>`;
-  const res = `<button class="tbtn tres" data-res="${esc(t.id)}">Mark resolved</button>`;
-  return fwd + res;
+/* ---- per-feed degradation, and the all-clear ---- */
+function queueFeedHtml(){
+  return QUEUE_FEEDS.map(f=>{
+    const st = queueFeedState(f.id);
+    if(st.state === "answered") return "";
+    if(st.state === "absent")
+      return `<div class="q-feed absent" data-feed="${esc(f.id)}"><b>This op is not on this plane.</b> ${esc(f.what)} — the read this needs is not registered on the plane this instance talks to. That is not a failure and there is nothing to retry: asking again asks the same plane the same question. No count is shown for it. <span class="q-feed-why">${esc(st.why||"")}</span></div>`;
+    if(st.state === "failed")
+      return `<div class="q-feed failed" data-feed="${esc(f.id)}"><b>This feed failed: ${esc(f.label)}.</b> ${esc(f.what)} — and the record could not answer, so NO COUNT is shown for it rather than a wrong one. The plane's own reason: <span class="q-feed-why">${esc(st.why||"the plane gave none")}</span><button class="tbtn q-retry" data-retry="${esc(f.id)}">Retry this feed</button></div>`;
+    return `<div class="q-feed pending" data-feed="${esc(f.id)}">${esc(f.label)} has not answered yet, so nothing is claimed about it.</div>`;
+  }).join("");
+}
+/* What a feed CONTRIBUTED to this screen. The all-clear needs every feed to have
+   answered AND every feed to have yielded nothing — an all-clear is itself a
+   claim, and a screen that could not ask is a different fact from a quiet one. */
+function queueFeedYield(id){
+  if(id === "queue") return queueItems().length;
+  if(id === "resolutions") return queueNotices().length;
+  return 0;
+}
+function queueAllClearHtml(){
+  if(!QUEUE_FEEDS.every(f => queueFeedState(f.id).state === "answered")) return "";
+  if(QUEUE_FEEDS.some(f => queueFeedYield(f.id) > 0)) return "";
+  return `<div class="q-allclear"><b>Nothing needs anybody right now.</b> Every feed this surface reads answered, and every one of them was empty. An all-clear is itself a claim, so it is withheld whenever a feed failed, is missing from this plane, or has not answered yet: a quiet screen and a screen that could not ask are different facts, and only one of them is good news.</div>`;
 }
 
-function wireTaskActions(){
-  document.querySelectorAll("#tk [data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
-  document.querySelectorAll("#tk [data-res]").forEach(b=>b.onclick=()=>resolveTask(b.dataset.res));
-  document.querySelectorAll("#tk [data-fwd]").forEach(b=>b.onclick=()=>openForward(b.dataset.fwd));
+/* Q12, SETTLED: narration is SURFACE-scoped and PLANE-SOURCED — one sentence,
+   from what op=whoami published about this session, stated once at the top.
+   Controls are never narrated and never greyed; a credential that cannot act
+   simply has no act control to see. */
+function queueCredentialSentence(me){
+  const canAct = !!(me && me.session && (me.capabilities||[]).includes("contribute"));
+  if(canAct) return "";
+  return `<p class="subj-note">This credential can read this queue and cannot act on it.</p>`;
 }
+
+function queueRemember(items){
+  for(const it of items){
+    const c = (it && it.case) || {};
+    QUEUE_SEEN.set(String(it.id), {
+      summary: it.summary || "", class: it.class, kind: it.kind,
+      cases: (Array.isArray(c.ancestors) ? c.ancestors : []).map(a=>a.id),
+      ungrouped: c.ungrouped === true });
+  }
+}
+
+function queuePaint(){
+  const host = $("#q"); if(!host) return;
+  const items = queueItems();
+  const { groups, ungrouped, unknownHome } = queueGrouped(items);
+  QUEUE_GROUPS = groups;
+  QUEUE_ITEMS = new Map(items.map(i=>[String(i.id), i]));
+  /* The three proposal affordances take their context from THIS feed. */
+  PROPOSALS_LAST = items.filter(i => i.class === "FINDING").map(queueFindingAsProposal);
+
+  const notices = queueNotices();
+  const byCase = new Map(); const looseNotices = [];
+  for(const nt of notices){
+    const homes = (nt.seen.cases||[]);
+    if(!homes.length){ looseNotices.push(nt); continue; }
+    for(const cid of homes){ if(!byCase.has(cid)) byCase.set(cid, []); byCase.get(cid).push(nt); }
+  }
+  /* A receipt for an item filed under a case that has no live item left still
+     has to be shown, or resolving the last item under a case would produce the
+     very gap DEC-16 forbids. */
+  const shown = new Set(groups.map(g=>g.id));
+  const orphanCases = [...byCase.keys()].filter(cid => !shown.has(cid));
+
+  const badge = $("#cnt-queue"); if(badge) badge.textContent = items.length ? String(items.length) : "";
+
+  const groupsHtml = groups.map(g => queueGroupHtml(g, byCase.get(g.id))).join("")
+    + orphanCases.map(cid => `<section class="q-case" data-case="${esc(cid)}">
+        <h2>${esc(cid)}</h2>
+        <p class="q-case-meta">Nothing is waiting on anybody under this case now.</p>
+        ${(byCase.get(cid)||[]).map(queueNoticeHtml).join("")}
+      </section>`).join("");
+
+  const ungroupedHtml = (ungrouped.length || looseNotices.length)
+    ? `<section class="q-case" data-case="__ungrouped__">
+        <h2>Not filed under any case</h2>
+        <p class="q-case-meta">Nothing in the record rests on these yet, so there is no case to file them under. They are shown here rather than given a home they do not have.</p>
+        ${looseNotices.map(queueNoticeHtml).join("")}
+        ${queueOrder(ungrouped).map(queueItemHtml).join("")}
+      </section>` : "";
+
+  const unknownHtml = unknownHome.length
+    ? `<section class="q-case" data-case="__unknown__">
+        <h2>Where these are filed is undetermined</h2>
+        <p class="q-case-meta">The record could not finish working out which cases these belong to, so it says that rather than showing them as belonging to nothing.</p>
+        ${queueOrder(unknownHome).map(queueItemHtml).join("")}
+      </section>` : "";
+
+  const nothing = !groupsHtml && !ungroupedHtml && !unknownHtml;
+  const emptyHtml = (nothing && !queueAllClearHtml())
+    ? `<div class="empty">Nothing is shown here from the feeds that answered.</div>` : "";
+
+  host.innerHTML = queueCredentialSentence(PLANE.me)
+    + queueFeedHtml()
+    + queueAllClearHtml()
+    + `<p class="q-rule">${esc(QUEUE_ORDER_RULE)}</p>`
+    + queueMuteReportHtml()
+    + groupsHtml + ungroupedHtml + unknownHtml + emptyHtml;
+  queueWire();
+  queueRemember(items);
+}
+
+function queueGroupHtml(g, notices){
+  const a = g.ancestor || {};
+  const terminal = a.terminal === true ? " &middot; closed"
+                 : a.terminal === null ? " &middot; whether it is closed is undetermined" : "";
+  return `<section class="q-case" data-case="${esc(g.id)}">
+    <h2>${esc(a.title || g.id)}<span class="q-case-kind">${esc(typeLabel(a.type, a.state))}</span></h2>
+    <p class="q-case-meta"><span class="mono">${esc(g.id)}</span>${a.state?` &middot; ${esc(a.state)}`:""}${terminal}</p>
+    ${queueMuteHtml(g)}
+    ${(notices||[]).map(queueNoticeHtml).join("")}
+    ${queueOrder(g.items).map(queueItemHtml).join("")}
+  </section>`;
+}
+
+function queueWire(){
+  document.querySelectorAll("#q [data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
+  document.querySelectorAll("#q [data-res]").forEach(b=>b.onclick=()=>resolveTask(b.dataset.res));
+  document.querySelectorAll("#q [data-fwd]").forEach(b=>b.onclick=()=>openForward(b.dataset.fwd));
+  document.querySelectorAll("#q [data-retry]").forEach(b=>b.onclick=()=>queueRetry(b.dataset.retry));
+  document.querySelectorAll("#q [data-mute]").forEach(b=>b.onclick=()=>queueMuteCase(b.dataset.mute));
+}
+/*__QUEUE_END__*/
+
+/* ============================================================
+   THE TWO VERBS ON AN OBLIGATION — kept from UI-1, re-homed onto the queue
+   entry. The inbox SCREEN is gone; the acts are not, because deleting a screen
+   is not a reason to delete the only route to op=taskresolve and op=taskforward.
+   ============================================================ */
+function myMemberId(){ return (PLANE.me && PLANE.me.member) || null; }
+/* A kind's own token, made readable. NOT a map of kinds to member-facing names:
+   the surface-side TASK_KIND_UI table this replaces was exactly that, and it
+   spelled a plane vocabulary in a second place. The record's own `summary` and
+   `detail` are what say what an item needs. */
+function humanKind(kind){ return String(kind||"").replace(/[-_]+/g," ").replace(/\b\w/g, c=>c.toUpperCase()); }
 
 let TASKS_BUSY = false;
 /* Resolve THROUGH op=taskresolve. The actor is stamped by the plane from the
    session, never sent from here (the plane refuses a resolution that names no
-   member). On success re-read the inbox so the member sees the true state, not
-   an optimistic guess. */
+   member). On success re-read BOTH feeds so the member sees the true state, not
+   an optimistic guess — and so the resolution's own receipt, which the
+   resolutions feed carries, is there for everybody else's next read. */
 async function resolveTask(id){
   if(TASKS_BUSY) return; TASKS_BUSY = true;
   try{
     await recPost("taskresolve", { id });
-    await renderTasks();
+    await queueRun(QUEUE_FEEDS.map(f=>f.id));
   }catch(e){ taskErr(id, e); }
   finally{ TASKS_BUSY = false; }
 }
@@ -6013,19 +6370,19 @@ async function forwardTask(id, to){
   if(TASKS_BUSY) return; TASKS_BUSY = true;
   try{
     await recPost("taskforward", { id, to });
-    await renderTasks();
+    await queueRun(QUEUE_FEEDS.map(f=>f.id));
   }catch(e){ taskErr(id, e); }
   finally{ TASKS_BUSY = false; }
 }
 /* The picker reads the roster through op=memberlist. If this credential cannot
    read it, the surface says so rather than offering a control that cannot work. */
 async function openForward(id){
-  const host = document.querySelector(`#tk [data-acts="${id}"]`);
+  const host = document.querySelector(`#q [data-acts="${id}"]`);
   if(!host) return;
   let members = [];
   try{ const r = await rec("memberlist"); members = (r.result && (r.result.members||r.result)) || []; }
   catch(e){ taskErr(id, { reason:"This account cannot read the member roster, so it cannot choose who to forward to." }); return; }
-  const t = TASKS_LAST.find(x=>String(x.id)===String(id));
+  const t = QUEUE_ITEMS.get(String(id));
   const opts = members
     .filter(m=>(m.status?m.status==="active":true) && (m.member_id||m.member||m.handle) !== (t&&t.assignee))
     .map(m=>{ const mid=m.member_id||m.member||m.id; const label=m.handle||m.cover||mid; return `<option value="${esc(mid)}">${esc(label)}</option>`; }).join("");
@@ -6033,10 +6390,14 @@ async function openForward(id){
   host.innerHTML = `<div class="tk-picker"><select data-pick="${esc(id)}"><option value="">Choose a member&hellip;</option>${opts}</select><button class="tbtn tdofwd" data-dofwd="${esc(id)}">Forward</button><button class="tbtn tcancel" data-cancel="${esc(id)}">Cancel</button></div>`;
   const sel = host.querySelector(`[data-pick="${id}"]`);
   host.querySelector(`[data-dofwd="${id}"]`).onclick = ()=>{ const to = sel && sel.value; if(to) forwardTask(id, to); };
-  host.querySelector(`[data-cancel="${id}"]`).onclick = ()=>{ const t2=TASKS_LAST.find(x=>String(x.id)===String(id)); host.innerHTML = taskActions(t2, "yours"); wireTaskActions(); };
+  host.querySelector(`[data-cancel="${id}"]`).onclick = ()=>{
+    host.innerHTML = `<button class="tbtn tfwd" data-fwd="${esc(id)}">Forward to someone&hellip;</button>`
+                   + `<button class="tbtn tres" data-res="${esc(id)}">Mark resolved</button>`;
+    queueWire();
+  };
 }
 function taskErr(id, e){
-  const host = document.querySelector(`#tk [data-err="${id}"]`);
+  const host = document.querySelector(`#q [data-err="${id}"]`);
   const msg = (e && (e.reason||e.error||e.detail)) ? [e.reason,e.detail].filter(Boolean).join(" · ") : "The plane did not accept that.";
   if(host) host.textContent = msg;
 }
@@ -7049,9 +7410,11 @@ async function dischargeGo(){
    reads ONE instance by (progression_key, entity_id), and op=proposals
    aggregates every instance but carries no capture_sha to tie a finding to
    THIS document. So the progression half reads a DELEGATED op
-   (op=captureprogressions) and degrades honestly when it is absent — exactly
-   as UI-5's loadProposals reads a delegated op=proposals and reports the gap
-   rather than inventing findings. The delegation is in CLAIMS.md.
+   (op=captureprogressions) and degrades honestly when it is absent — the same
+   treatment the QUEUE now carries as its own per-feed degradation (UI-14), which
+   is where this pattern lives since the Proposals screen and its `loadProposals`
+   were deleted: a read that is not on this plane is a different fact from a read
+   that failed, and neither invents a finding. The delegation is in CLAIMS.md.
    ============================================================ */
 
 /* Bounded fan-out: a subject's human label + kind for one id, so the panel
@@ -7145,7 +7508,9 @@ function docConnectionsHtml(c, captureSha){
 
 /* (3)+(4) The PROGRESSIONS this document sits in and at which stage, and any
    OVERDUE required successor. Reads the delegated op; degrades honestly to a
-   named gap when the op is absent (the UI-5 loadProposals pattern). */
+   named gap when the op is absent (the pattern the queue now carries as its own
+   per-feed degradation, UI-14 — "this op is not on this plane" kept DISTINCT
+   from "this read failed"). */
 function docProgressionsHtml(p){
   const head = `<section class="tsec"><h2>Processes this document is part of</h2>`
     + `<p class="subj-note">An institutional process runs in stages — a meeting, then its minutes; a need, an award, a signed contract. Where this document sits in one, and whether a required next step is overdue, is shown honestly: an undated or undetermined step is never given a made-up deadline.</p>`;
@@ -7188,7 +7553,9 @@ function docInstanceHtml(inst){
 /* The delegated per-document progression read. Returns { instances } when the
    op answers, a { gap } marker when the op is not on the plane (an unregistered
    op answers "unknown op", I3), and { _err } on any other failure — never
-   invented findings. Mirrors UI-5's loadProposals exactly. */
+   invented findings. The same absent-vs-failed distinction the queue makes
+   (UI-14); `loadProposals`, which this used to mirror, is deleted with the
+   Proposals screen. */
 async function docProgressions(captureSha){
   let raw;
   try{ raw = await recR("captureprogressions", { sha256:captureSha }); }
@@ -7229,8 +7596,13 @@ function docProgGapHtml(){
 
    2. AGGREGATE, DO NOT DROWN (D-79). One check firing across N progression
       instances is ONE proposal with N instances, NEVER N items. "Why do these N
-      awards have no solicitation" is ONE question. proposalsFrom() groups by
-      (progression_key, stage_key); the instances are listed under the one card.
+      awards have no solicitation" is ONE question. CORRECTED 2026-08-04 (UI-14):
+      this used to be `proposalsFrom()` grouping by (progression_key, stage_key)
+      in the BROWSER, over instance reads it made itself. The PLANE does it now —
+      op=queue emits one FINDING per (progression, stage) out of `proposalsFeed`
+      — so the browser copy is deleted rather than kept beside it. The rule did
+      not change; the place it is applied did, and one rule applied in two places
+      is a copy waiting to drift.
 
    3. EXACTLY THREE AFFORDANCES, and only three (interaction-constructs v0.2 §P):
       ADOPT (author it into an inquiry the member decides is worth pursuing —
@@ -7245,12 +7617,10 @@ function docProgGapHtml(){
      op=promote (mutating) -> ADOPT authors an inquiry; the browser never
        sends surfaced_by (REC-3 stamps it from the session: a member session -> human).
 
-   TWO GAPS, reported as DELEGATIONs to RECORD (CLAIMS.md) and built around here:
-     (a) NO AGGREGATED FEED. No op enumerates progression instances and returns
-         their missing-predecessor findings; op=instance reads ONE instance by
-         (key, entity). loadProposals() reads a delegated op=proposals when present
-         (returning the instance reads, which THIS surface aggregates per D-79) and
-         reports the gap honestly when it is absent, rather than inventing findings.
+   ONE GAP LEFT. Gap (a) — NO AGGREGATED FEED — IS CLOSED, and the code that
+   worked around it is gone (UI-14, 2026-08-04): op=queue carries the derivation
+   as FINDING items, already aggregated and already filed under their cases, so
+   there is no delegated op=proposals read here and no gap banner to render.
      (b) NO DISPOSITION HOME FOR A BARE PROPOSAL. op=dispose disposes a FOCUS bundle
          (a handle + a state); a proposal is not a bundle, and D-79 records that the
          ageing/aggregation store "does not exist". DEFER/DISMISS author the full
@@ -7262,49 +7632,31 @@ function docProgGapHtml(){
 /* §8.1 grade rank (A strongest .. D weakest); a proposal's strength is the WEAKEST
    connection across its instances (a case is only as strong as its weakest link),
    and UNDETERMINED if any instance is undetermined — never guessed. */
-const PROP_GRADE_RANK = { A:4, B:3, C:2, D:1 };
-function weakerGrade(a, b){ return (PROP_GRADE_RANK[a]||0) <= (PROP_GRADE_RANK[b]||0) ? a : b; }
+/* `PROP_GRADE_RANK` and `weakerGrade` are DELETED with `proposalsFrom` (UI-14,
+   2026-08-04). Taking the weakest grade across a finding's instances is the
+   PLANE'S arithmetic now and comes back on `basis.grade` / `basis.grade_determined`;
+   a second implementation of "a case is only as strong as its weakest link" in
+   the browser is a copy of a rule that must have exactly one home. */
 const PROP_GRADE_HOW = {   // §8.1 — HOW a connection was established, never credibility
   A:"a shared identifier, both ends captured", B:"an identifier matched in both captures",
   C:"a corresponding name — not a shared identifier", D:"a member's testimony" };
 const PROP_REQUIRED_WORD = { always:"always expected", usually:"usually expected" };
 
-/* D-79 AGGREGATION — pure, so the harness can prove it. Given the instance reads
-   (each { progression_key, progression_label, entity_id, entity_label, findings[] }),
-   group every missing-predecessor finding by (progression_key, stage_key) into ONE
-   proposal carrying its N instances. This is the rule: N instances of one check are
-   ONE proposal, never N. */
-function proposalsFrom(instances){
-  const groups = new Map();
-  for(const inst of (instances||[])){
-    for(const f of (inst.findings||[])){
-      if(f.kind !== "missing_predecessor") continue;   // the derived finding we surface
-      const key = inst.progression_key + "::" + f.stage_key;
-      let g = groups.get(key);
-      if(!g){
-        g = { key, progression_key: inst.progression_key,
-          progression_label: inst.progression_label || humanKind(inst.progression_key),
-          stage_key: f.stage_key, stage_label: f.stage_label || humanKind(f.stage_key),
-          required: f.required, surfaced_by: "machine", instances: [] };
-        groups.set(key, g);
-      }
-      g.instances.push({ entity_id: inst.entity_id, entity_label: inst.entity_label || inst.entity_id,
-        progression_key: inst.progression_key, grade: f.grade, grade_determined: f.grade_determined !== false });
-    }
-  }
-  const out = [];
-  for(const g of groups.values()){
-    g.n = g.instances.length;
-    const anyUndet = g.instances.some(i => !i.grade_determined || !i.grade);
-    g.grade_determined = !anyUndet;
-    g.grade = anyUndet ? null : g.instances.map(i => i.grade).reduce((a, b) => weakerGrade(a, b));
-    out.push(g);
-  }
-  // biggest pattern first (the drowning failure is showing many small ones as many items)
-  out.sort((a, b) => b.n - a.n || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-  return out;
+/* THE D-79 AGGREGATION LIVES IN THE PLANE NOW, and `proposalsFrom` is DELETED
+   with the screen it fed. op=queue's FINDING items come out of `proposalsFeed`
+   already grouped one per (progression, stage), which is the same rule this
+   function applied in the browser — and two places applying one rule is what a
+   copy is. What survives here is the VOCABULARY the act dialogs still read and
+   the queue row still renders: how a grade was established, and the question a
+   proposal poses when the producer published no sentence of its own.
+   (UI-14, 2026-08-04.) */
+/* The sentence an act dialog QUOTES back. When the producer published one — and
+   op=queue's FINDING items do — it is the producer's, verbatim; `proposalQuestion`
+   below is the fallback for a proposal shape that carries none, and it composes
+   from the labels only, never from a judgement. */
+function proposalContext(p){
+  return (p && p.summary) ? p.summary : proposalQuestion(p);
 }
-
 function proposalQuestion(p){
   const stage = String(p.stage_label || p.stage_key).toLowerCase();
   const prog = String(p.progression_label || p.progression_key).toLowerCase();
@@ -7333,88 +7685,25 @@ function proposalGradeHtml(p){
   return `<div class="prop-grade">Strength: <b>Grade ${esc(p.grade)}</b>, established by ${esc(PROP_GRADE_HOW[p.grade] || "an unrecorded method")}. That is how strongly the record connected the evidence — not how much to trust it, and not a judgment that the question matters.</div>`;
 }
 
-function proposalInstanceHtml(i){
-  const g = i.grade_determined && i.grade
-    ? `<span class="prop-inst-g" title="how this instance's link was established">Grade ${esc(i.grade)}</span>`
-    : `<span class="prop-inst-g" title="not yet determined">grade undetermined</span>`;
-  return `<li>${esc(i.entity_label)} ${g}</li>`;
-}
+/* `proposalInstanceHtml` and `proposalCardHtml` are DELETED with the Proposals
+   screen (UI-14, 2026-08-04). The queue row renders a FINDING from the
+   producer's own `summary`, `detail` and `basis`, so there is no second card
+   composing the same sentences from instance reads this surface no longer makes.
+   `proposalDerivedBadgeHtml` and `proposalGradeHtml` above are KEPT and are
+   called from the queue row: D-82's derived marker is the load-bearing honesty
+   here and moving surfaces is not a reason to drop it. */
+/* ---- the act CONTEXT, which is all that is left of the screen ----
+   `renderProposals`, `proposalGapHtml` and `loadProposals` are DELETED (UI-14,
+   2026-08-04). op=proposals is no longer read by any surface: op=queue carries
+   the same derivation as FINDING items, already aggregated and already grouped
+   by case, and a second read of the same finding through a second op is exactly
+   the "two surfaces answering one question" this item removes. The delegated-op
+   GAP BANNER goes with it — that gap is closed, and per-feed degradation is now
+   the queue's own named, retryable, count-free treatment.
 
-/* ONE proposal card: the derived marker FIRST (D-82), then the question, the D-79
-   aggregation ("N instances of one check, grouped"), the honest grade, the N
-   instances under one disclosure, and EXACTLY THREE affordances. */
-function proposalCardHtml(p){
-  const insts = p.instances.map(proposalInstanceHtml).join("");
-  const many = p.n > 1;
-  return `<div class="prop-card" data-key="${esc(p.key)}">
-    ${proposalDerivedBadgeHtml(p)}
-    <h3 class="prop-q">${esc(proposalQuestion(p))}</h3>
-    <div class="prop-meta">In the <b>${esc(p.progression_label)}</b> progression, the <b>${esc(p.stage_label)}</b> stage is ${esc(PROP_REQUIRED_WORD[p.required] || (p.required + " expected"))} but no document fills it. ${many ? `<b>${p.n} instances</b> of this one check — grouped as one question, not ${p.n} separate items.` : `One instance.`}</div>
-    ${proposalGradeHtml(p)}
-    <details class="prop-insts"><summary>${many ? `All ${p.n} instances` : `The instance`}</summary><ul>${insts}</ul></details>
-    <div class="prop-acts">
-      <button class="btn" data-prop-adopt="${esc(p.key)}" onclick="openProposalAdopt('${esc(p.key)}')">Adopt — make it a question</button>
-      <button class="btn ghost" data-prop-defer="${esc(p.key)}" onclick="openProposalAct('${esc(p.key)}','deferred')">Defer&hellip;</button>
-      <button class="btn ghost" data-prop-dismiss="${esc(p.key)}" onclick="openProposalAct('${esc(p.key)}','dismissed')">Dismiss&hellip;</button>
-    </div>
-    <div class="prop-note">Adopting authors a question <b>in your name</b> — the record then knows a person judged this worth pursuing. Deferring or dismissing records your reason and keeps the proposal; nothing here is adopted automatically and nothing is dismissed silently.</div>
-  </div>`;
-}
-
-/* ---- the screen ---- */
+   PROPOSALS_LAST survives as the ACT CONTEXT the three affordances read, and it
+   is filled by `queuePaint` from the queue feed. */
 let PROPOSALS_LAST = [];
-async function renderProposals(){
-  setActive("proposals");
-  const c = $("#content");
-  c.innerHTML = `<h1 class="rec">Proposals</h1>
-    <p class="lede">Questions the record raised on its own, and nobody has yet judged. Each is a pattern the record noticed — a required step of a progression with no document, most often — reported honestly as a question, never as an established fact. You decide what happens to each: adopt it as a question of your own, defer it, or dismiss it. Nothing here decides anything until you act.</p>
-    <div id="prop">Loading&hellip;</div>`;
-  try{
-    const feed = await loadProposals();
-    const host = $("#prop");
-    if(feed.gap){
-      host.innerHTML = proposalGapHtml(feed);
-      return;
-    }
-    PROPOSALS_LAST = feed.proposals || [];
-    const badge = $("#cnt-proposals"); if(badge) badge.textContent = PROPOSALS_LAST.length ? String(PROPOSALS_LAST.length) : "";
-    if(!PROPOSALS_LAST.length){
-      host.innerHTML = `<div class="empty">The record has surfaced no proposals right now. When it notices a pattern that wants a person — a required step with no document, say — it appears here as a question, not a fact.</div>`;
-      return;
-    }
-    host.innerHTML = PROPOSALS_LAST.map(proposalCardHtml).join("");
-  }catch(e){ const host = $("#prop"); if(host) host.innerHTML = errPane(e); }
-}
-
-/* The honest gap: the aggregated derived-findings feed is not on the plane yet.
-   Say so plainly and name what is delegated, rather than showing an empty screen
-   that implies the record found nothing. */
-function proposalGapHtml(feed){
-  return `<div class="prop-banner">
-    <b>The record cannot yet enumerate its own derived findings.</b> This surface renders a
-    proposal from the missing-predecessor findings a progression instance produces (op=instance),
-    grouped so one check across many instances is one proposal — but there is no op today that
-    walks every instance and returns those findings as one feed. That op (an aggregated
-    <span class="mono">op=proposals</span>) is delegated to RECORD; until it lands, the record has
-    no way to hand this surface the findings to show. The rendering, the grouping, and the
-    adopt / defer / dismiss acts are built and proven against the instance shape.
-  </div>`;
-}
-
-/* ---- the FEED loader. Reads a delegated op=proposals (returning the instance
-   reads this surface aggregates per D-79); reports the gap honestly when the op is
-   not on the plane, rather than inventing findings. ---- */
-async function loadProposals(){
-  let raw;
-  try{ raw = await rec("proposals"); }
-  catch(e){
-    // An unregistered op answers "unknown op" (I3); anything else is a real error.
-    if(e && /unknown op/i.test(String(e.error || e.reason || ""))) return { gap:true, reason:"no-op" };
-    return { gap:true, reason:"error", err:e };
-  }
-  const instances = (raw && (raw.instances || (raw.result && raw.result.instances))) || [];
-  return { gap:false, proposals: proposalsFrom(instances) };
-}
 
 /* ============================================================
    THE THREE AFFORDANCES, each an ACT (choose/pre-flight/author/receipt).
@@ -7463,7 +7752,7 @@ function openProposalAct(key, to){
   $("#dlg").innerHTML =
     `<h2 id="pa-h">${esc(PROP_DISPOSE_VERB[to])} this proposal</h2>
      <p class="what">A proposal is the record's question, not yours yet. Deferring or dismissing it records your reason on the record; it is reversible — a deferred or dismissed proposal is kept — but never silent, and it neither adopts nor edits anything.</p>
-     <div class="prop-context"><div class="pc-cap">The record's question, as it stands</div>${esc(proposalQuestion(PROP_ACT_CTX.proposal))}</div>
+     <div class="prop-context"><div class="pc-cap">The record's question, as it stands</div>${esc(proposalContext(PROP_ACT_CTX.proposal))}</div>
      <div class="dz-choose">${choose}</div>
      <div class="dz-pf" id="pa-pf"></div>
      <label class="fld" for="pa-reason">Your reason</label>
@@ -7553,12 +7842,12 @@ function proposalDisposeReceipt(res, ctx, to, reason){
        <div class="dz-rhead">${esc(done==="deferred"?"Deferred.":"Dismissed.")}</div>
        <p class="dz-rlede">The record kept the proposal and recorded your act. It carries your name and your reason; it is kept, never deleted, and can be re-triaged. The record's question stands answered by a person, not silently dropped.</p>
        <div class="dz-rgrid">
-         <div class="kv"><span class="k">Proposal</span><span class="v">${esc(proposalQuestion(ctx.proposal))}</span></div>
+         <div class="kv"><span class="k">Proposal</span><span class="v">${esc(proposalContext(ctx.proposal))}</span></div>
          <div class="kv"><span class="k">Now</span><span class="v plain">${esc(done)}</span></div>
          <div class="kv"><span class="k">Your reason, as recorded</span><span class="v plain">${esc((res && res.reason) || reason || "")}</span></div>
          <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — reversible, but never silent</span></div>
        </div>
-       <div class="row-btns"><button class="btn" onclick="closeDialog();renderProposals()">Done</button></div>
+       <div class="row-btns"><button class="btn" onclick="closeDialog();renderQueue()">Done</button></div>
      </div>`;
 }
 function proposalRefusalHtml(e){
@@ -7623,7 +7912,7 @@ function openProposalAdopt(key){
      <p class="prop-adopt-lede">Adopting turns the record's question into one <b>you author</b>. The record then knows a person judged it worth pursuing — that is the whole difference between a machine noticing a pattern and a member deciding it matters.</p>
      <div class="prop-context">
        <div class="pc-cap">What the record noticed — for reference, not to copy</div>
-       ${esc(proposalQuestion(p))}<br>
+       ${esc(proposalContext(p))}<br>
        <span style="color:var(--muted)">${esc(p.progression_label)} · missing ${esc(p.stage_label)} · ${p.n} instance${p.n===1?"":"s"}${insts?` (${insts})`:""}${p.grade_determined&&p.grade?` · Grade ${esc(p.grade)}`:" · strength undetermined"}</span>
      </div>
      <div class="dz-choose">${kinds}</div>
@@ -7727,10 +8016,10 @@ function proposalAdoptReceipt(id, kind, title, ctx){
        <p class="dz-rlede">You authored a question from the record's own. It is written into the working record <b>in your name</b>, at its first state, with <span class="mono">surfaced_by: human</span> — the record now knows a person, not the machine, judged this worth pursuing. Publishing is a separate act with its own signature.</p>
        <div class="dz-rgrid">
          <div class="kv"><span class="k">${esc(typeLabel(kind, vocabFor(FIRST_STATE, kind)))}</span><span class="v">${esc(title)} <span class="id">${esc(id)}</span></span></div>
-         <div class="kv"><span class="k">From the proposal</span><span class="v plain">${esc(proposalQuestion(ctx.proposal))}</span></div>
+         <div class="kv"><span class="k">From the proposal</span><span class="v plain">${esc(proposalContext(ctx.proposal))}</span></div>
          <div class="kv"><span class="k">Weight</span><span class="v plain">reasoned — reversible, but never silent</span></div>
        </div>
-       <div class="row-btns"><button class="btn ghost" onclick="closeDialog();renderProposals()">Back to proposals</button>
+       <div class="row-btns"><button class="btn ghost" onclick="closeDialog();renderQueue()">Back to the queue</button>
          <button class="btn" onclick="closeDialog();openBundle('${esc(id)}')">Open the ${esc(kind)}</button></div>
      </div>`;
 }
