@@ -3135,13 +3135,23 @@ export class Store extends DurableObject {
      writing one would move the state while leaving its own entry requirement
      unmet — the bundle the catalog then rejects. Absent, the key is opened
      immediately before the closing fence, the #spliceReferences convention. */
+  /* CORRECTED 2026-08-04 (REC-14), and the old form was WRONG rather than
+     superseded. It decided "was the key there?" by asking "did the text
+     CHANGE?" — so writing a key its EXISTING VALUE appended a SECOND copy of
+     it, and the document then carried a duplicate top-level key that C-2.1
+     refuses. Nothing caught it because no act had ever written the same value
+     twice: REC-13's conclude() was only ever called once per document until
+     DEC-12 made a case reopen, be concluded AGAIN with the same falsifier, and
+     republish. The gate found it (`duplicate top-level key 'falsifier'`), which
+     is the layering working, but the write should never have produced it.
+     Presence is now decided by LOOKING, which is what the question was. */
   static #setOrAddScalar(text, key, value) {
-    const set = Store.#setScalar(text, key, value);
-    if (set !== text) return set;
     const lines = text.split("\n");
     if (lines[0] !== "---") return text;
     const end = lines.indexOf("---", 1);
     if (end === -1) return text;
+    for (let i = 1; i < end; i++)
+      if (lines[i].startsWith(key + ":")) { lines[i] = `${key}: ${value}`; return lines.join("\n"); }
     return [...lines.slice(0, end), `${key}: ${value}`, ...lines.slice(end)].join("\n");
   }
 
@@ -8191,6 +8201,34 @@ export class Store extends DurableObject {
       required: r.required ? JSON.parse(r.required) : null })) };
   }
 
+  /* REC-14 / P8's justifying query, and the reason inquiry_exclusions exists as
+     a TABLE and not only as bytes: "WHICH CASES EXCLUDED THIS DOCUMENT" —
+     invariant 7's only mechanical enforcement point at the case level — as ONE
+     indexed lookup on inquiry_exclusions_target, never a scan of every
+     completeness block in the store.
+
+     Each row carries the case's CURRENT STATE and the EDITION the assertion was
+     taken from, so "which PUBLISHED cases excluded it" is a filter the caller
+     can apply on what it is given rather than a distinction this read makes on
+     their behalf: a case that was reopened after excluding a document has still
+     excluded it in every edition already published, and hiding those rows would
+     be the surface deciding what the record forgets.
+
+     D-15: viewer-gated like every other read that can name a bundle, and fails
+     closed on an absent viewer. */
+  excludedBy(targetId, viewer = null) {
+    if (!targetId) return { ok: false, reason: "NO_ID", detail: "excludedby requires ?id=" };
+    const gate = viewerPredicate(viewer);
+    const rows = this.#rows(
+      `SELECT x.bundle_id, x.ord, x.edition, x.description, x.reason, x.author, x.at,
+              b.current_state, b.title
+       FROM inquiry_exclusions x JOIN bundles b ON b.bundle_id = x.bundle_id
+       WHERE x.target_id=? AND (${gate.sql}) ORDER BY x.bundle_id, x.ord`, targetId, ...gate.args);
+    return { ok: true, targetId, cases: rows,
+             detail: "each row is a case that named this document in its completeness exclusions, with the "
+                   + "edition the assertion was taken from and the case's current state." };
+  }
+
   /* REC-14: the published projection as the CHECK CATALOG needs it — the shape
      C-21.1 and C-21.2 read. Built for the bundle being written or gated AND for
      every target its basis names, in ONE indexed query rather than a probe per
@@ -9927,6 +9965,7 @@ export class Store extends DurableObject {
         strengthbarof: () => this.strengthBarOf({ group: url.searchParams.get("group"),
           target: url.searchParams.get("target") }),
         publishededitions: () => this.publishedEditions(url.searchParams.get("id")),
+        excludedby: () => this.excludedBy(url.searchParams.get("id"), url.searchParams.get("viewer")),
         expertisedeclare: () => this.expertiseDeclare(body || {}),
         expertiseconfirm: () => this.expertiseConfirm(body || {}),
         expertiselist: () => this.expertiseList({ memberId: url.searchParams.get("memberId") }),

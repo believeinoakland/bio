@@ -72,6 +72,7 @@
     "test:basis": "node test/basis.test.mjs",
     "test:strength": "node test/strength.test.mjs",
     "test:conclude": "node test/conclude.test.mjs",
+    "test:publish": "node test/publish.test.mjs",
     "test:gate-reads": "node test/gate-reads.test.mjs",
     "test:queue": "node test/queue.test.mjs",
     "test:queue-state": "node test/queue-state.test.mjs",

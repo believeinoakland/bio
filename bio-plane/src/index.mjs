@@ -446,6 +446,7 @@ const OPS = {
   strengthbar:  { classes: ["admin", "member", "probe"],           mutating: true  },
   strengthbarof:{ classes: ["admin", "member", "probe"],           mutating: false },
   publishededitions: { classes: ["admin", "member", "probe"],      mutating: false },
+  excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
@@ -3327,7 +3328,7 @@ export default {
     if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
         || STATE_ACTIONS.includes(op)
         || op === "list" || op === "index" || op === "projection" || op === "image"
-        || op === "file" || op === "backlinks" || QUEUE_ACTIONS.includes(op)) {
+        || op === "file" || op === "backlinks" || op === "excludedby" || QUEUE_ACTIONS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
     }
     /* REC-21. WHOSE attention this is, stamped by the server and never taken
