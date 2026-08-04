@@ -579,7 +579,7 @@ landed: 7404f21 (worker a20e3ec) — bio-plane/src/ooxml.mjs, pure zero-dependen
 
 ### COFF-3 · queued
 milestone: M2
-scope: **The XLSX registry entry.** Structure:
+scope: **The XLSX registry entry.** FIRST, one mechanical enactment from COFF-6: replace ooxml.mjs's PROVISIONAL_OOXML_SIZE_BOUND_BYTES (32 MiB container) with the MEASURED bound — 20 MiB of DECLARED UNCOMPRESSED text-part bytes summed from the central directory before inflation (MEASUREMENTS.md 2026-08-03; the metric changed, not just the number), keeping the over-bound → text-undetermined marker. Streaming-to-64-MiB is DEFERRED (see COFF-6's landed line), do not build it. Structure:
   `xl/worksheets/_rels/sheetN.xml.rels` → I2 partitions through the ONE
   `linkWrapper` (parity with HTML/PDF asserted, as `pdfstructure.test.mjs` pins
   it); defined names and cross-sheet refs → `anchor`; `xl/embeddings/` →
@@ -641,7 +641,7 @@ accepts-when: battery green with a real Oakland deck fixture yielding
   distinction.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
 
-### COFF-6 · queued
+### COFF-6 · done
 milestone: M2
 scope: **Measure the real Oakland office corpus BEFORE the bounds and deferrals
   harden — measurement-only, commits no product code, holds no slot (the
@@ -663,6 +663,7 @@ accepts-when: `MEASUREMENTS.md` carries the size distribution with a stated
   that is a renamed plain ZIP masquerading as `.xlsx` and confirm the
   instrument reports it as NOT OOXML rather than counting it.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: (merge on main, worker 7354079) — MEASUREMENTS.md 2026-08-03 + instrument tools/measure-office-corpus.py (stdlib, seeded, reproducible). Census of ALL 43,282 oaklandca.gov assets (S3 ListObjectsV2) + 792 Legistar attachments; 93-file stratified download + size tail. BOUND: 20 MiB of DECLARED UNCOMPRESSED text-part bytes summed from the central directory (container size is a bad proxy both directions) — passes 86/88 measured OOXML files; the two excluded are the 2019/2020 police Stop-Data workbooks, named as the raise-to-64-MiB test cases. Artefact frequencies real (tracked changes 7/40 docx, formulas 18/30 xlsx, hidden sheets 3/30). LEGACY: 0.32% of assets, KEEP DEFERRED — revisit trigger is a group actually needing one inspected. ODF: zero in 43,282 — DO NOT BUILD; keep the free design accommodation only. NC RUN (renamed plain ZIP reported NOT OOXML, never counted). CONDUCT's scope ruling on the worker's decision item: COFF-2's DOM reader ships at the 20 MiB bound; the two stop-data workbooks read text-undetermined honestly; a streaming (memory-flat) extractor reaching 64 MiB is DEFERRED on the same trigger shape as legacy formats — a group actually needing those workbooks inspected — because pre-building it now is the do-not-pre-build failure. COFF-3 enacts the bound.
 
 
 ## CAPTURE — DORMANT.
