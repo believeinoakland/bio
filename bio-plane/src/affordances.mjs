@@ -47,15 +47,16 @@
  * nothing operates it until REC-24, and an empty list is the true answer.
  */
 
-import { STATES, ACTION_KINDS, normalizeType } from "../checks/bio-checks.mjs";
+import { STATES, ACTION_KINDS, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
-/* The disposition set: the target states op=dispose may write. `elevated` is a
- * legal focus state and deliberately NOT a disposition (elevating authors a
- * Project; a bulk flip would claim elevation into nothing) — the store refuses
- * it NOT_A_DISPOSITION. The write path holds its own copy inside dispose()
- * (REC-10's claimed ground this wave, so it could not be rewired to read this
- * one yet); the affordances suite asserts the two arrays are identical, so
- * they cannot drift apart silently until they are unified. */
+/* The disposition set: the target states op=dispose may write. Every other
+ * inquiry state is entered by its own act with its own entry requirements
+ * (REC-13/14/16 bring them), never by a bulk flip; the legacy machine's
+ * `elevated` is not a state in the inquiry machine at all and the store
+ * refuses it BAD_TARGET_STATE. The write path holds its own copy inside
+ * dispose() (landed in the same wave as this file, from separate claims);
+ * the affordances suite asserts the two arrays are identical, so they
+ * cannot drift apart silently until they are unified. */
 export const DISPOSITIONS = ["deferred", "dismissed"];
 
 /* The object vocabularies, published the way op=searchfields publishes the
@@ -81,8 +82,13 @@ export const RUNGS = {
   ratify:    "attested",   // Constructs:275 (publication pre-flight is REC-15's)
 };
 
-/* One legal-edge lookup, over the IMPORTED table. */
-const edgesFrom = (type, state) => (STATES[type]?.edges?.[state]) || [];
+/* One legal-edge lookup, over the IMPORTED table, THROUGH the catalog's own
+ * vocabulary machinery (REC-10's normalisation, fifth consulting site): the
+ * type reaches here already normalized, and vocabFor resolves it — declared
+ * spelling first, normalized fallback — so a legacy-spelled fact and a
+ * canonical one answer identically, and the state-alias handling (`surfaced`
+ * a legal alias of `open`) is the TABLE'S OWN, never a copy here. */
+const edgesFrom = (type, state) => (vocabFor(STATES, type)?.edges?.[state]) || [];
 
 /* The facts shape is store.mjs affordanceFacts(): object_type, current_state,
  * cites_in {confirmed[], severed[]} (edges INTO an information target, read the
@@ -99,10 +105,12 @@ export const ACTS = [
   { id: "retire", label: "Retire", weight: "refuse", types: ["information"],
     applies: (f, ty) => ty === "information" && edgesFrom(ty, f.current_state).includes("retired")
                      && f.cites_in.confirmed.length === 0 },
-  /* S-11 step 3. A focus may be dispositioned while the state machine offers a
-     disposition edge; the disposition SET itself is in VOCABULARIES. */
-  { id: "dispose", label: "Dispose (defer or dismiss)", weight: "refuse", types: ["focus"],
-    applies: (f, ty) => ty === "focus"
+  /* S-11 step 3. An inquiry (né focus/problem — the type reaches here through
+     normalizeType, so all three spellings land on this arm) may be
+     dispositioned while the state machine offers a disposition edge; the
+     disposition SET itself is in VOCABULARIES. */
+  { id: "dispose", label: "Dispose (defer or dismiss)", weight: "refuse", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry"
                      && DISPOSITIONS.some((d) => edgesFrom(ty, f.current_state).includes(d)) },
   /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
      because the store's own guards are type-only on both: any information
