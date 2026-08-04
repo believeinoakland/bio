@@ -725,3 +725,13 @@ reversal if a later reader wants RECONCILED §3.1's rename literally.
   `AGREE` — UI-19's consumers verified lighting up off the real export with no UI
   edit; UI-24's rider consumes the attest label next.
 - **Version:** I3 5.7.0 → **5.8.0** in `INTERFACES.md`.
+
+## IC-16 · I3: `op=readingname` · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-36 — one new member-class read
+  (`op=readingname`, entity= → the documents naming that subject through the
+  term-normalised alias join), gated in the stronger row-withheld posture. Additive.
+- **Consumers:** UI. CONDUCT answers per the IC-12 mechanics, naming the proxy:
+  `AGREE` — UI-26 is the written consumer (queued); UI-13's stated limit narrows
+  honestly when it lands.
+- **Version:** I3 5.8.0 → **5.9.0** in `INTERFACES.md`.
