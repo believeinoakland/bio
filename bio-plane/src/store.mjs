@@ -36,6 +36,17 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             place the words live is the catalog function that enforces them; a
             second copy here is exactly the drift the MAP RULE exists to stop. */
          BASIS_ROLES,
+         /* REC-51 (2026-08-04): the basis GRADE vocabulary, for the same reason
+            BASIS_ROLES is imported one line up, and it arrives one level BELOW
+            the doctrine sentences REC-43/REC-48/REC-50 composed. Those three
+            items closed statements ABOUT the vocabulary; this file held four
+            copies OF it — `["A","B","C","D"]` three times and a rank map
+            restating the same letters AND their order — while importing this
+            very catalog. They agreed with it at zero cost and would have
+            disagreed with it silently the day it changed. The RANK is now
+            DERIVED from this array's own order rather than restated, so the
+            two cannot disagree at all: see `#GRADE_RANK`. */
+         BASIS_GRADES,
          /* REC-26: the monitoring frequency vocabulary. The cadence consumer's
             interval table is keyed off the CATALOG's own closed set rather than
             a local copy of the words — the MAP RULE — so a frequency the catalog
@@ -4970,7 +4981,12 @@ export class Store extends DurableObject {
      * bar somebody set for it. REC-15's preflight is where falling short is
      * refused; this only decides what is STAMPED. */
   #requiredStrengthFor(bundleId, fm) {
-    const rank = (g) => ["A", "B", "C", "D"].indexOf(g);
+    /* REC-51: STRICTEST is lowest index in the catalog's OWN order, which is
+       strongest-first — the same ordering `checkEarnedLeg` compares against and
+       the same one `UNREACHABLE_CAPTURE_GRADE` steps through. Read from the
+       array rather than restated, so "strictest" cannot come to mean something
+       else here than it means at the enforcement point. */
+    const rank = (g) => BASIS_GRADES.indexOf(g);
     const strictest = { capture: null, connection: null };
     const projects = [];
     for (const r of this.#rows(
@@ -4985,7 +5001,7 @@ export class Store extends DurableObject {
       if (!rq || typeof rq !== "object") continue;
       let named = false;
       for (const axis of ["capture", "connection"]) {
-        if (!["A", "B", "C", "D"].includes(rq[axis])) continue;
+        if (!BASIS_GRADES.includes(rq[axis])) continue;
         named = true;
         if (strictest[axis] === null || rank(rq[axis]) < rank(strictest[axis])) strictest[axis] = rq[axis];
       }
@@ -5024,8 +5040,16 @@ export class Store extends DurableObject {
                      + "machine credential may not make it. Sign in as a member." };
     const gid = String(group ?? "").trim() || "believe-in-oakland";
     for (const [axis, v] of [["capture", capture], ["connection", connection]])
-      if (v != null && !["A", "B", "C", "D"].includes(v))
-        return { ok: false, reason: "BAD_GRADE", axis, detail: `${axis} must be one of A, B, C, D, or null` };
+      /* REC-51: the membership test AND the sentence that reports it both read
+         the catalog. The sentence was a FIFTH copy this item's scope had counted
+         as four — the same shape REC-48 hit when op=earnedbasis's `ceiling:`
+         string turned out to spell a letter its neighbour already interpolated.
+         Its exact twin in `checkInquiryBasis` (C-2.8) has composed from
+         `BASIS_GRADES.join(', ')` since REC-11; this one now does too, so a
+         member is never refused against a vocabulary the refusal misstates. */
+      if (v != null && !BASIS_GRADES.includes(v))
+        return { ok: false, reason: "BAD_GRADE", axis,
+                 detail: `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null` };
     if (capture == null && connection == null)
       return { ok: false, reason: "NO_BAR",
                detail: "declare at least one axis. Withdrawing a bar entirely is a different act from setting "
@@ -7573,7 +7597,19 @@ export class Store extends DurableObject {
    * moment a member registers the source identifier as an alias and the recogniser is
    * re-run. */
 
-  static #GRADE_RANK = { A: 4, B: 3, C: 2, D: 1 };
+  /* REC-51: DERIVED from the catalog's own order, never restated. This was
+     `{ A: 4, B: 3, C: 2, D: 1 }` — the vocabulary AND its ordering typed out a
+     second time, in a file that already imports the array both come from. It
+     agreed with `BASIS_GRADES` at zero cost and would have disagreed with it
+     silently the day the catalog gained or lost a letter, which is the MAP RULE
+     and D-164's "solve it once" one level below the doctrine SENTENCES REC-43,
+     REC-48 and REC-50 composed.
+     `BASIS_GRADES` is strongest-first, so a HIGHER number is a STRONGER grade
+     and every `>`/`<` comparison below keeps the sense it has always had. While
+     the catalog reads A,B,C,D this evaluates to exactly the map it replaces —
+     nothing moves today, and it is a function of the catalog from now on. */
+  static #GRADE_RANK = Object.fromEntries(
+    BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i]));
   /* established is a PROPERTY OF THE GRADE, computed here and stored, so a Grade C can
      never be read back as established (an equality that costs nothing is not evidence,
      CLAUDE.md): A and B rest on a captured identifier at both ends; C is correspondence
@@ -8150,7 +8186,26 @@ export class Store extends DurableObject {
       const perCapture = this.#strongestResolutionsFor(subjectEntity);
       for (const c of perCapture.values()) {
         if (!c.bundle_id || !want.has(c.bundle_id)) continue;
-        /* A/B/C ONLY. The machine never mints a D. */
+        /* A/B/C ONLY. The machine never mints a D.
+           REC-51 LEFT THIS LITERAL DELIBERATELY, and it is the ONE grade-letter
+           literal still standing anywhere in src/. It is NOT a copy of
+           `BASIS_GRADES` — it is a strict SUBSET of it carrying its own
+           doctrine: the grades a MACHINE may mint. Grade D is a member's
+           TESTIMONY (op=resolvetestify), recorded with an author and a date, and
+           the recogniser never produces one; `checkEarnedLeg` types that 'D' at
+           the enforcement point itself, so there is no exported constant to
+           compose from and MINTING ONE WOULD BE A RULING — what a machine may
+           earn, and whether that set follows the catalog when the catalog moves,
+           is a doctrine question and no DEC is open in it. Deriving it (say, as
+           "all but the weakest") would silently answer it.
+           So it is held the way REC-50 held op=acquire's archive letter: OPEN BY
+           DECISION, NOT BY OVERSIGHT, and guarded by two assertions in
+           hygiene.test.mjs rather than by this comment — one naming it as the
+           single stated limit of detector (C), the other pinning that it stays a
+           contiguous STRONGEST-FIRST PREFIX of `BASIS_GRADES`. Pinning that
+           relation asserts no VALUE, so it is not a ruling; what it buys is that
+           a catalog change which reorders or renames the vocabulary FAILS here
+           by name instead of leaving this subset quietly meaning something new. */
         if (!["A", "B", "C"].includes(c.grade)) continue;
         const cur = out.earned.connection[c.bundle_id];
         if (!cur || Store.#GRADE_RANK[c.grade] > Store.#GRADE_RANK[cur.grade])

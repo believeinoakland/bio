@@ -34,7 +34,13 @@ import { join } from "node:path";
 /* REC-48: the capture rule's two letters, from the enforcement point that
    refuses a leg claiming more than the ceiling. This suite states them no more
    than the plane does — the sweep below is narrowed BY the rule, not beside it. */
-import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
+/* REC-51: `BASIS_GRADES` joins the two letters above for detector (C)'s
+   stated-limit pin only. It is the SUBJECT of a relation assertion, never of a
+   value comparison — (C) matches a SHAPE and is deliberately blind to what this
+   array currently holds, so the control (which moves the catalog) cannot deafen
+   it. Merged with M0-9's import by CONDUCT at integration 2026-08-04: both
+   items landed in this file in the same hour and both imports are load-bearing. */
+import { BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -411,6 +417,65 @@ console.log("\n--- no source file carries a raw control byte (D-131) ---");
  * correct answer, not noise — a tree where one letter means two doctrines has
  * become ambiguous to a reader and somebody should look at it.
  *
+ * (C) IS A THIRD DETECTOR AND NOT A TWEAK TO EITHER OF THE OTHER TWO, and this
+ * paragraph exists so the next reader does not "simplify" three detectors into
+ * one that catches less. REC-51 (2026-08-04). (A) and (B) look for a LETTER
+ * BESIDE THE WORD — statements ABOUT the vocabulary, addressed to a reader.
+ * `store.mjs` also held four copies OF the vocabulary: `["A","B","C","D"]` three
+ * times and `static #GRADE_RANK = { A: 4, B: 3, C: 2, D: 1 }`, which restates
+ * the letters AND their ordering. NONE of them spells a word, so (A) and (B) are
+ * SILENT ON ALL FOUR BY DESIGN — correctly silent, since their subject is prose
+ * a member can be told, and this class never reaches a member at all. It is the
+ * same defect one level down: the copies agreed with the catalog at zero cost
+ * and would have disagreed with it silently the day `BASIS_GRADES` changed.
+ * Widening (A) or (B) to reach them cannot work, because their whole precision
+ * comes from the word they are anchored to; drop the anchor and "Grade" matches
+ * every capital letter in the tree. So (C) has its OWN subject and its OWN
+ * shape: a literal DATA STRUCTURE spelling a grade vocabulary — an array of
+ * three or more quoted single capitals, or an object keyed by three or more of
+ * them.
+ *
+ * (C) IS DELIBERATELY BLIND TO THE CATALOG'S CURRENT VALUE, and that is the
+ * property that makes its negative control mean anything. A detector that
+ * compared a literal against `BASIS_GRADES` would go SILENT at exactly the
+ * moment it is needed: the control ADDS A LETTER to the catalog, and a
+ * value-comparing detector would then stop recognising the four-letter copies
+ * that just fell out of step. (C) matches the SHAPE, so it names a copy whether
+ * the catalog has moved under it or not. It is asserted below that (C) fires on
+ * a five-letter copy as readily as on a four-letter one, so this is measured
+ * rather than argued.
+ *
+ * ONE STATED LIMIT, AND IT IS A FINDING RATHER THAN AN EXEMPTION. A fifth
+ * literal in store.mjs is NOT a copy of the vocabulary: `["A","B","C"]` inside
+ * the earned-connection walk is a strict SUBSET of it carrying its own doctrine
+ * — the grades a MACHINE may mint, grade D being a member's testimony, which
+ * `checkEarnedLeg` types at the enforcement point itself. There is no exported
+ * constant to compose from and minting one would ASSERT what a machine earns and
+ * whether that set follows the catalog when the catalog moves: a ruling, and no
+ * DEC is open in it. So it is left standing, exactly as REC-48 recorded the
+ * lowercase connection-axis spellings as a stated limit rather than an allowlist
+ * — and it is not skipped by a pattern. (C)'s load-bearing assertion pins the
+ * found set to EXACTLY that one site, named and reasoned, so a sixth literal
+ * fails here the moment it is written and this one cannot quietly change either.
+ * Beside it, and following REC-50's way of holding an open decision without
+ * leaving it unguarded, a second assertion reads that subset OUT OF the source
+ * and pins that it stays a contiguous STRONGEST-FIRST PREFIX of `BASIS_GRADES`.
+ * Pinning a relation asserts no VALUE, so it is not a ruling; what it buys is
+ * that a catalog change which REORDERS or RENAMES the vocabulary fails here by
+ * name, while a catalog change that merely APPENDS a letter leaves it green —
+ * which is the honest answer, because whether a machine may mint a new letter is
+ * the undetermined question and must not be answered by a silent derivation.
+ *
+ * PROSE ENUMERATIONS ARE NOT IN (C)'s SUBJECT, stated so its silence is not
+ * misread. `must be one of A, B, C, D` in an emitted sentence is a copy of the
+ * vocabulary too, and REC-51 composed the one instance of it in store.mjs from
+ * `BASIS_GRADES.join(", ")` — but (C) does not attempt to police prose, for
+ * REC-48's own measured reason one paragraph up: matching letters against words
+ * in both directions is unbounded, and two emitted connection-axis sentences in
+ * this tree spell "A/B/C" on the wrong side of the word as a stated limit
+ * already. (C) is COMPLETE for literal data structures, which is the class
+ * REC-51 names, and claims nothing beyond it.
+ *
  * ITS OWN REACH IS ASSERTED BELOW FOUR WAYS, because a walk that covers nothing
  * passes everything: the file list is non-trivial and names the modules that
  * carry the doctrine; the detector fires on a planted control IN EVERY FILE'S
@@ -508,6 +573,192 @@ console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
       .map((h) => `${f}:${h.line} ${JSON.stringify(h.what)}`));
   t(`(B) no module spells the capture rule's own letters (${RULE_LETTERS.join("/")}) beside "grade", in any case (found: ${JSON.stringify(offendersB)})`,
     offendersB, []);
+
+  /* ------------------------------------------------------------------ *
+   * DETECTOR (C), REC-51: a copy OF the vocabulary, not a statement
+   * ABOUT it. The reasoning, the stated limit and the reason this is a
+   * THIRD detector rather than a widening of (A) or (B) are in the block
+   * comment above — read it before changing anything here.
+   * ------------------------------------------------------------------ */
+  console.log("\n--- no module restates the grade vocabulary (REC-51, detector C) ---");
+
+  /* The SHAPE of a vocabulary restatement, never its current VALUE:
+       - an array of >= 3 quoted single capitals   ["A", "B", "C", "D"]
+       - an object keyed by >= 3 single capitals   { A: 4, B: 3, C: 2, D: 1 }
+     Three is the floor because two letters are a pair, not a vocabulary, and
+     the capture rule's own two letters are legitimately handled in pairs.
+     Deliberately NOT compared against BASIS_GRADES: see the block comment. */
+  const vocabLiterals = (text) => {
+    const hits = [];
+    const res = [
+      /\[\s*(?:(['"])[A-Z]\1\s*,\s*){2,}(['"])[A-Z]\2\s*,?\s*\]/g,
+      /\{\s*(?:[A-Z]\s*:\s*[^,{}]+,\s*){2,}[A-Z]\s*:\s*[^,{}]+\s*,?\s*\}/g,
+    ];
+    for (const re of res) {
+      let m;
+      while ((m = re.exec(text)) !== null)
+        hits.push({ line: text.slice(0, m.index).split("\n").length,
+                    what: m[0].replace(/\s+/g, " ").trim() });
+    }
+    return hits;
+  };
+
+  /* REACH C0, AND IT GUARDS ALL THREE DETECTORS, NOT ONLY (C). The walk the
+     whole block shares is `readdirSync(srcDir)`, which does NOT descend. Today
+     `src/` is flat — 23 modules, and `find src -name '*.mjs'` returns the same
+     23 — so the sweep reaches everything it claims to. But nothing said so, and
+     the day somebody adds `src/something/` the sweep would go on passing while
+     quietly guarding a smaller tree: the covered-on-paper failure this project
+     has now hit five times, arriving through the FILE LIST rather than through a
+     detector. Asserting flatness is the honest fix at this altitude — it fails
+     the moment the assumption stops holding, and whoever adds the directory then
+     makes the walk recursive deliberately instead of never learning it mattered. */
+  t("the src walk's flat-directory assumption still holds (no subdirectory escapes any detector)",
+    readdirSync(srcDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name),
+    []);
+
+  /* REACH C1: (C) fires in EVERY file's own stripped text, measured as a DELTA
+     against that file's own count — REC-48's arm-(i) correction, which first
+     compared a planted count to 1 and so read a file that already had hits as
+     deaf. store.mjs is exactly such a file (the stated limit lives there), so
+     this suite would reproduce that defect verbatim if it compared to 1. */
+  const PLANT_C = '\nconst __reachC = ["Q", "R", "S"];\n';
+  const deafC = files.filter((f) => {
+    const stripped = uncomment(raw.get(f));
+    return vocabLiterals(stripped + PLANT_C).length !== vocabLiterals(stripped).length + 1;
+  });
+  t(`(C) fires in all ${files.length} files' own stripped text (deaf: ${JSON.stringify(deafC)})`,
+    deafC, []);
+
+  /* REACH C2: (C) recognises BOTH SHAPES REC-51 removed, and each specimen below
+     is a verbatim transcription of a line that stood in store.mjs before this
+     item — the array copy and the rank map. They are written out here rather
+     than read back out of the source: the source no longer holds them, and
+     reading them out of the COMMENTS that quote them would tie this assertion to
+     the wording of a comment, which is not a thing to pin. So this says exactly
+     what it is, a specimen test, and it earns its keep by covering both forms —
+     a detector that found only arrays would be half a detector and would have
+     left the rank map standing. THE EMPIRICAL PROOF THAT (C) CATCHES THE REAL
+     DEFECT IS ARM (b), which runs it against the actual pre-fix tree and gets
+     all four sites back by file and line; this assertion is the cheap standing
+     guard that keeps both shapes covered between control runs. */
+  const removedArray = vocabLiterals('const x = ["A","B","C","D"];');
+  const removedObject = vocabLiterals("static R = { A: 4, B: 3, C: 2, D: 1 };");
+  t("(C) recognises both shapes REC-51 removed — the array copy and the rank map",
+    [removedArray.length, removedObject.length], [1, 1]);
+
+  /* REACH C3: (C) is INDEPENDENT OF THE CATALOG'S CURRENT VALUE. This is the
+     assertion that makes the negative control mean something: the control adds
+     a letter to BASIS_GRADES, and a detector that compared literals against the
+     catalog would go silent on the four-letter copies at exactly that moment.
+     A five-letter copy and a four-letter copy must both be named. */
+  t("(C) names a vocabulary copy whether or not it matches today's catalog",
+    [vocabLiterals('const x = ["A","B","C","D"];').length,
+     vocabLiterals('const x = ["A","B","C","D","E"];').length,
+     vocabLiterals('const x = ["W","X","Y","Z"];').length],
+    [1, 1, 1]);
+
+  /* REACH C4: (C) is NARROW — it does not simply match every array or object in
+     the tree, which would make its silence meaningless and its noise unusable.
+     A two-letter pair, a word vocabulary and an ordinary options object are all
+     legitimately NOT restatements of a grade vocabulary. */
+  t("(C) does not fire on a pair, a word vocabulary or an ordinary object",
+    [vocabLiterals('const x = ["A","B"];').length,
+     vocabLiterals('const x = ["capture","connection"];').length,
+     vocabLiterals("const x = { ok: 1, reason: 2, detail: 3 };").length],
+    [0, 0, 0]);
+
+  /* THE LOAD-BEARING ASSERTION. Line numbers are deliberately kept out of the
+     compared value — they shift with any edit above and would turn this pin
+     into a maintenance tax — while the label still reports them, so a failure
+     names the place. */
+  const hitsC = files.flatMap((f) =>
+    vocabLiterals(uncomment(raw.get(f))).map((h) => ({ f, ...h })));
+  const offendersC = hitsC.map((h) => `${h.f} ${h.what}`);
+  t(`(C) the only grade-vocabulary literal left in src/ is the machine-mintable subset, OPEN BY DECISION and not by oversight — a sixth would fail here (found: ${JSON.stringify(hitsC.map((h) => `${h.f}:${h.line} ${h.what}`))})`,
+    offendersC, ['store.mjs ["A", "B", "C"]']);
+
+  /* THE STATED LIMIT, HELD RATHER THAN EXEMPTED (REC-50's pattern). The subset
+     is read OUT OF the source above and never typed here, then pinned to a
+     RELATION: a contiguous strongest-first prefix of the catalog, strictly
+     shorter than it. That asserts no VALUE, so it is not a ruling. A catalog
+     that REORDERS or RENAMES its letters fails here by name; a catalog that
+     APPENDS one leaves it green, which is the honest answer — whether a machine
+     may mint a new letter is the undetermined question, and a derivation that
+     answered it silently is the thing this assertion exists to prevent. */
+  const subsetLetters = (hitsC[0]?.what.match(/[A-Z](?=["'])/g)) || [];
+  t(`the machine-mintable subset (${subsetLetters.join("/")}) is a strict, contiguous, strongest-first prefix of BASIS_GRADES (${BASIS_GRADES.join("/")})`,
+    [subsetLetters.length >= 2,
+     subsetLetters.length < BASIS_GRADES.length,
+     subsetLetters.every((g, i) => g === BASIS_GRADES[i])],
+    [true, true, true]);
+
+  /* THE RANK IS DERIVED, AND THAT IS PINNED STRUCTURALLY. (C) stops the rank map
+     from being written as a literal again; this says the thing that replaced it
+     actually reads the catalog, rather than reaching the same numbers by some
+     other private route. The match itself is asserted first — an extraction that
+     silently yielded null would make every test below it trivially true, which
+     is the instrument-level version of the very defect this suite guards. */
+  const rankInit = uncomment(raw.get("store.mjs")).match(/#GRADE_RANK\s*=([\s\S]*?);/);
+  t("store.mjs's grade rank initialiser is readable at all (the extraction is not silently null)",
+    rankInit !== null, true);
+  t("the grade rank map is DERIVED from BASIS_GRADES' own order, not restated",
+    [/\bBASIS_GRADES\b/.test(rankInit?.[1] ?? ""),
+     /['"][A-Z]['"]/.test(rankInit?.[1] ?? "")],
+    [true, false]);
+
+  /* REC-51'S CONTROL ARMS, IN FULL AND AS ACTUALLY RUN. They belong in this
+     file's header block, which the concurrent item M0-9 holds; not one byte of
+     it was touched, so they are recorded here instead and the marker token is
+     deliberately NOT spelled, so neither coverage.mjs's detector nor M0-9's
+     widened replacement reads this as a second declaration. TO BE FOLDED INTO
+     THE HEADER AT M0-9's INTEGRATION.
+     Every file restored BYTE-IDENTICALLY after each arm, sha256 compared before
+     and after (src/store.mjs 6bd3c5fc…, checks/bio-checks.mjs d8da7b9d… — the
+     same catalog digest REC-48 and REC-50 each recorded). ALL ARMS RE-RUN
+     AGAINST THE FINAL FILE, so the counts below name the file that carries them.
+     Whole suite = 378 pass, which is 369 + 9 and the entire assertion delta this
+     item adds to the battery (5453 -> 5462; no other suite moved).
+     (a) THE ITEM'S OWN, and the FOURTH measurement of the zero-cost copy, on a
+         fourth subject: hand-type `{ A: 4, B: 3, C: 2, D: 1 }` back over the
+         derived rank map -> hygiene 376/2, (C) naming `store.mjs:4776 { A: 4,
+         B: 3, C: 2, D: 1 }` and the derivation pin failing beside it, WHILE
+         every suite that consumes the rank stays GREEN: resolution 39/0,
+         connection 41/0, strength 42/0, publish 77/0, search 164/0,
+         earnedbasis 54/0. An identical copy satisfies every behavioural
+         assertion in the battery at zero cost; only the structural pin bites.
+     (b) THE ACCEPTS-WHEN'S OWN CONTROL, run against the PRE-FIX tree (all four
+         copies hand-typed back exactly as they stood on main) with 'E' added to
+         BASIS_GRADES in checks/bio-checks.mjs ALONE -> hygiene 376/2, and (C)
+         NAMES ALL FOUR PLACES THAT DID NOT FOLLOW by file and line:
+         store.mjs:3185, :3200 and :3236 (the array copies) and store.mjs:4775
+         (the rank map). THE REST OF THIS ARM IS THE POINT OF THE ITEM: with the
+         catalog moved and all four copies stale, publish 77/0, resolution 39/0,
+         strength 42/0, basis 29/0 and earnedbasis 54/0 ARE ALL STILL GREEN. The
+         drift is completely silent behaviourally. Nothing but this sweep sees it.
+         Note also that (C) named them WITH the catalog already moved — a
+         detector that compared literals to BASIS_GRADES would have gone deaf at
+         exactly this moment, which is why (C) matches a shape (REACH C3).
+     (c) The same letter added to the catalog ALONE against the FIXED tree ->
+         hygiene 378/0, publish 77/0, strength 42/0. The rank map derived itself
+         to { A: 5, B: 4, C: 3, D: 2, E: 1 } and op=strengthbar's refusal composed
+         itself to "…must be one of A, B, C, D, E, or null" with nothing edited;
+         (C) still names only the stated limit, and the prefix pin stays GREEN
+         because an APPENDED letter leaves the machine-mintable subset a prefix —
+         the undetermined question is not answered by the derivation, which is
+         the honest outcome. THE DIFFERENCE BETWEEN (b) AND (c) IS THE ITEM.
+     (d) Delete the stated limit's own literal from store.mjs -> hygiene 376/2:
+         the load-bearing (C) assertion fails naming an EMPTY found set against
+         the expected one, and the prefix pin fails on its own length guard. The
+         limit cannot rot away unnoticed either, which is the difference between
+         a stated limit and an exemption.
+     (e) REACH C0's own control, and it guards ALL THREE detectors rather than
+         only (C): `mkdir src/subdir-probe` -> hygiene 377/1, the flat-directory
+         assertion failing and NAMING the directory, while every other assertion
+         in the block stays green — which is precisely the danger, since a module
+         placed in that directory would be swept by nothing at all and the sweep
+         would go on reporting a clean tree. `rmdir` restored it, 378 pass, and
+         `git status src/` confirmed no stray path was left behind. */
 }
 
 /* ---- the negative-control REGISTER's own detector, asserted (M0-9) ----------
