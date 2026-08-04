@@ -225,6 +225,55 @@ imported published case is A FINDING"*. That inherited the singular assumption a
 **the findings it carries** — each arriving as a finding, re-graded in its new context, none
 inheriting standing. The principle is unchanged; the arity was wrong. DEC-44 carries the fix.
 
+### 2026-08-04 · BOB · DEC-45 ANSWERED — case import, per-finding project association, and REGRADE is the warning
+
+Import is **UNBUILT** (no `op=import` anywhere — measured), so this is design-ahead scope
+for **M6's interchange half**, not a correction. DEC-45 carries the full reasoning.
+
+**The shape:** findings arrive **PROJECTLESS by default** — a supported state, not a gap
+(DEC-17 and `store.mjs:4301`: an inquiry outside any project has no project bar and
+inherits none) — carrying the source's **bias manifest** as a fact. The surface then offers
+**each finding its own destination**: an existing project, a new one the member authors, or
+none. Per-FINDING and not per-case, because DEC-44 makes a case a container over separable
+findings and two of them may belong to different work.
+
+**THE DISTINCTION A BUILD SESSION MUST NOT COLLAPSE — preserved vs applied.** Bob put it as
+*"an imported finding MUST be added to a project if its bias is to be preserved"*, and the
+architecture is right while the mechanism is one step over:
+- **PRESERVED** is the travelling **bias manifest** — `BIO_Declared_Bias_v0_1.md`: *"Every
+  work product cites its BIAS MANIFEST… part of the evidentiary record and travels with
+  publication."* The lens that PRODUCED a finding survives import even with no project.
+  Build it the other way and a projectless import silently loses provenance.
+- **APPLIED** is what project assignment actually decides: the lens the finding is
+  evaluated under going forward. `Effective bias` = instance statements minus project
+  nullifications plus project additions — so **projectless means the INSTANCE layer alone**,
+  and the surface must SAY that rather than let it be inferred.
+
+**THE WARNING IS ALREADY SPECIFIED AND IT IS NOT A DIALOG — IT IS REGRADE.** *"Hold evidence
+and analysis fixed, swap effective bias B1 for B2, re-run the evaluations, and produce a
+structured diff: for each conclusion, its grade under each lens, and the causal chain from
+each differing statement to the finding it produced to the premise it touched to the
+conclusion it moved."* So the member is SHOWN which conclusions move and which named
+statement moved each — run against the chosen destination's effective bias **before the
+association is committed**. Building a modal that says *"conclusions may change"* would be
+the weaker thing built where the stronger thing is already designed.
+
+**Two more, both cheap and both easy to lose:**
+- **Regrade's honest limit ships WITH the diff, never buried** — *"it cannot synthesize the
+  analysis a different group would have written under a different lens."* A clean regrade
+  means the analysis that EXISTS survives, not that the finding survives our lens intact.
+- **Import is the front door to RERUN**, the no-transitive-trust rule made operational:
+  *"the receiving group re-establishes trust at its own hop by rerunning the work, not by
+  accepting the producing group's reputation."* Name it in the surface; import is not a
+  substitute for it.
+
+**And the constraint from DEC-45's original recommendation stands:** import may NOT author a
+project objective or a bias statement on the member's behalf. C-2.9's non-empty `objective`
+must never be satisfied by words nobody in the importing group wrote.
+
+**Nothing in the bias doctrine needed changing to support any of this**, which is the
+strongest evidence the construct was right.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on

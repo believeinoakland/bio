@@ -3028,7 +3028,7 @@ for CONDUCT to enact: this reshapes DONE items (REC-14, REC-22, UI-18) and is a
   strength.
 enacted:
 
-### DEC-45 · open
+### DEC-45 · answered
 raised: 2026-08-04 · session BOB (Bob's question, after DEC-44)
 for: bob
 question: Is a case IMPORT always performed in the context of a project — an existing one,
@@ -3079,6 +3079,90 @@ recommendation: **IMPORT DOES NOT REQUIRE A PROJECT AND MUST NOT CREATE ONE AUTO
 reversal cost: nil now (import is unbuilt). Rising sharply once an import path mints
   projects, because auto-authored objectives would then exist in the record and be
   indistinguishable from member-authored ones without an audit.
+response: **IMPORT OFFERS PER-FINDING PROJECT ASSOCIATION, AND STAYS PROJECTLESS BY
+  DEFAULT.** Bob, 2026-08-04, raising bias: *"a published case [has] its own bias (even if
+  it's the default bias)… bias can be a property of an instance and of a project. So an
+  imported finding from a published case MUST be added to a project if its bias is to be
+  preserved. And if an imported finding is added to an existing project, then the user must
+  be made aware that doing so may cause the conclusions to change if the source bias and
+  the bias of the project/instance differ."*
+  **HE IS RIGHT ON THE ARCHITECTURE AND THE DOCTRINE ALREADY HOLDS THE MECHANISM — with
+  one distinction that must be separated before this is built, or the wrong thing gets
+  built carefully.** Measured against `BIO_Declared_Bias_v0_1.md`:
+  - **Bias attaches at INSTANCE and PROJECT level — confirmed.** Admins define instance
+    bias; project managers define project bias, which may add statements and may OVERRIDE
+    (nullify or replace) instance statements, naming what it nullifies.
+  - **`Effective bias` = adopted instance statements at pinned revisions, minus project
+    nullifications of unlocked statements, plus project replacements and additions.** So
+    the project layer is genuinely part of the lens, and a PROJECTLESS finding is evaluated
+    under the instance layer ALONE.
+  **THE DISTINCTION, and it is the correction: PRESERVED and APPLIED are two different
+  things, and only one of them needs a project.**
+  - **PRESERVED** — *"Every work product cites its BIAS MANIFEST: the list of (bias bundle
+    id, revision) in force plus a hash of the computed effective statement set… part of the
+    evidentiary record and travels with publication."* **The source's bias is preserved by
+    the manifest that TRAVELS WITH THE CASE, not by project assignment.** An imported
+    finding carries the lens that produced it as a checkable fact even if it never joins a
+    project. If preservation depended on assignment, a projectless import would silently
+    lose provenance — and it does not.
+  - **APPLIED** — the lens the finding is evaluated under GOING FORWARD is the importing
+    instance's, plus whichever project's layer it joins. **This is what project assignment
+    actually decides**, and it is why Bob's practical conclusion is right for a sharper
+    reason than the one he gave: a member who wants an imported finding evaluated under a
+    lens they control needs a project, because the instance layer alone is the only
+    alternative and it is not theirs to shape per-piece-of-work.
+  determinations, mine under delegation:
+  1. **Per-FINDING association, not per-case** — Bob's question answered directly, and
+     DEC-44 is why it must be per-finding: a case is a container over findings, findings
+     are separable, and two findings from one case may belong to different work. The import
+     surface offers each finding its own destination: an existing project, a new one the
+     member authors, or none.
+  2. **PROJECTLESS REMAINS THE DEFAULT AND IS A STATED STATE, NOT A GAP.** DEC-17 and
+     `store.mjs:4301` both hold that an inquiry outside any project has no project bar and
+     inherits none. The import surface SAYS what lens a projectless finding falls under —
+     the instance layer alone — rather than leaving it to be inferred. Silence here would
+     be the finding wearing the importing instance's lens with nothing saying so.
+  3. **THE WARNING BOB ASKS FOR IS ALREADY DESIGNED, AND IT IS NOT A DIALOG — IT IS
+     REGRADE.** `BIO_Declared_Bias_v0_1.md`: *"Hold evidence and analysis fixed, swap
+     effective bias B1 for B2, re-run the evaluations, and produce a structured diff: for
+     each conclusion, its grade under each lens, and the causal chain from each differing
+     statement to the finding it produced to the premise it touched to the conclusion it
+     moved."* So the member is not told *"conclusions may change"*; they are SHOWN which
+     ones change, by how much, and which named statement moved each. A modal warning would
+     be the weaker thing built where the stronger thing is already specified.
+  4. **THE HONEST LIMIT TRAVELS WITH IT, stated at import and not only in the design doc:**
+     *"regrade re-grades conclusions against the analysis that exists; it cannot synthesize
+     the analysis a different group would have written under a different lens."* A member
+     must not read a clean regrade as *"this finding survives our lens intact"* — it means
+     the analysis that exists survives; a group with a different lens might have asked
+     different questions and cited different documents.
+  5. **RERUN IS THE HEAVIER SIBLING AND IMPORT SHOULD NAME IT** — *"A work product from one
+     group, with its enclosed bias manifest, can be rerun by another group under that
+     group's own bias… the receiving group re-establishes trust at its own hop by rerunning
+     the work, not by accepting the producing group's reputation."* That is the
+     no-transitive-trust rule made operational, and it is exactly what importing another
+     group's findings is. Import is the front door to rerun, not a substitute for it.
+  6. **DIVERGENT LENSES INSIDE ONE INSTANCE ARE LEGITIMATE AND MUST BE VISIBLE.** Sending
+     two findings from one case to two projects puts them under two effective biases in the
+     same instance. That is allowed — projects differ deliberately — but a later reader
+     comparing them must be able to see that they were evaluated under different lenses,
+     or the divergence reads as disagreement about facts rather than about declared bias.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry and `BIO_Declared_Bias_v0_1.md` (adoption levels,
+  effective bias, the bias manifest, regrade and rerun — all pre-existing; nothing in the
+  bias doctrine needed changing to support import, which is the strongest evidence the
+  construct was right).
+for CONDUCT to enact: import is UNBUILT and this is design-ahead, so it lands as scope on
+  M6's interchange half rather than as a correction. The import path: findings arrive
+  projectless carrying the source's bias manifest as a fact; per-finding destination
+  offered (existing project · a new project the member authors · none); the projectless
+  lens is STATED; choosing a destination runs REGRADE against that destination's effective
+  bias and shows the structured diff with its causal chain BEFORE the association is
+  committed; regrade's honest limit is displayed with the diff, never buried; and the
+  import may not author a project objective or a bias statement on the member's behalf
+  (the never-prefill rule, and C-2.9's non-empty `objective` must never be satisfied by
+  words nobody in the importing group wrote).
+enacted:
 
 ## Answered, awaiting enactment
 
