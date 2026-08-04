@@ -145,10 +145,19 @@ await proves("C-2.9", "a project workproduct_state is out of enum", "project",
 await proves("C-2.10", "an action risk_tier is out of range", "action",
   new Map([["bundle.md", baseMd("action").replace("risk_tier: 1", "risk_tier: 9")]]));
 
-/* ---- references (C-6.3): an elevated Focus must carry elevated_into ---- */
+/* ---- references (C-6.3): a basis leg must appear in references[] ----
+   Superseded 2026-08-03 (REC-11): the old proof required an elevated Focus to
+   carry an elevated_into edge. It was wrong to keep because elevation is not a
+   state in the inquiry machine at all (the REC-10 collapse removed it; only
+   legacy history carries it, judged by its own contract). C-6.3's replacing
+   rule is the basis arm: an inquiry carrying a basis leg must carry the same
+   target in references[], so refs and inquiry_basis — two projections of one
+   document — cannot disagree. The focus base normalizes to inquiry, so it
+   exercises the arm; grade absent = undetermined, stated, and legal. */
 console.log("\n--- references ---");
-await proves("C-6.3", "a Focus is elevated with no elevated_into edge", "focus",
-  new Map([["bundle.md", baseMd("focus").replace("current_state: surfaced", "current_state: elevated")]]));
+await proves("C-6.3", "a basis leg's target is absent from references[]", "focus",
+  new Map([["bundle.md", fmInsert(baseMd("focus"),
+    "basis:", "  - target: INFO-2026-0001-somedoc", "    role: supports")]]));
 
 /* ---- deletion and citation registers (C-7.1, C-8.1) ---- */
 console.log("\n--- deletion and citation registers ---");

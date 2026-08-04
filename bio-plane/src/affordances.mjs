@@ -53,10 +53,11 @@ import { STATES, ACTION_KINDS, normalizeType, vocabFor } from "../checks/bio-che
  * inquiry state is entered by its own act with its own entry requirements
  * (REC-13/14/16 bring them), never by a bulk flip; the legacy machine's
  * `elevated` is not a state in the inquiry machine at all and the store
- * refuses it BAD_TARGET_STATE. The write path holds its own copy inside
- * dispose() (landed in the same wave as this file, from separate claims);
- * the affordances suite asserts the two arrays are identical, so they
- * cannot drift apart silently until they are unified. */
+ * refuses it BAD_TARGET_STATE. UNIFIED by REC-11's folded chore: the write
+ * path (dispose(), and the proposal-disposition arm) IMPORTS this array — it
+ * held its own literal copy from the REC-19 wave's separate claims, pinned
+ * identical by the affordances suite until the direction could be flipped.
+ * This is now the ONE array. */
 export const DISPOSITIONS = ["deferred", "dismissed"];
 
 /* The object vocabularies, published the way op=searchfields publishes the

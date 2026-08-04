@@ -1026,6 +1026,56 @@ CREATE TABLE IF NOT EXISTS proposal_dispositions (
   PRIMARY KEY (progression_key, stage_key)
 );
 CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
+-- REC-11 / DATA-MODEL D4: the INQUIRY BASIS -- the legs an inquiry rests on,
+-- and invariant 7's storage: a leg whose role is cuts_against is a ROW, so a
+-- rendering cannot quietly drop the evidence that argues the other way.
+--
+-- DERIVED from bundle.md's basis[] frontmatter, written whole at op=promote in
+-- the SAME transaction as refs by the same delete-then-insert discipline, so it
+-- is a projection of the document and never a second place to state it (D-21).
+-- A separate table rather than columns on refs, and that is D4's ruling, not
+-- taste: refs' PK has no ordinal, so one document could not be cited for two
+-- legs, and a nullable grade on the universal edge projection would create a
+-- place to put a grade on edges that must not carry one -- the category error
+-- entity_relations refuses structurally above.
+--
+-- target_id is an INFO- bundle OR another inquiry (INQ-, or a legacy PROB-/
+-- FOCUS- id) -- the self-reference IS basis recursion and needs no other
+-- mechanism. The basis graph over inquiry-typed legs is a DAG, enforced at the
+-- WRITE: op=promote refuses a write whose target would close a cycle, naming
+-- the path (before REC-11 the record's only acyclicity protection was a side
+-- effect of op=cite refusing non-information members).
+--
+-- grade is NULLABLE and NULL means undetermined and STATED -- never invented
+-- to pass a gate. grade_axis is the axis the grade is ON (capture or
+-- connection), recorded on the leg because it is NOT derivable from
+-- target_type: a connection grade legitimately sits on an INFO- leg. One
+-- column, not two grade columns, because a leg asserts ONE grade for ONE
+-- reason (RECONCILED R2). grade_source is resolution (earned, REC-18's path),
+-- testimony (a member's signed grade-D account), or hunch (DEC-15): an
+-- authored connection grade, the ONLY authored grade permitted above D,
+-- requiring an author and a date in the document, visible as a hunch from the
+-- moment it is made, and BIAS DEBT until cleared (BIO_Declared_Bias_v0_1.md).
+--
+-- inquiry_basis_target is the reverse index: "which inquiries rest on this
+-- document" (E2, and REC-17's re-evaluation obligation) is ONE indexed lookup.
+-- Cleared in BOTH purge arms via the TABLES list (D-113); hygiene.test.mjs
+-- holds that list against this file.
+CREATE TABLE IF NOT EXISTS inquiry_basis (
+  bundle_id    TEXT NOT NULL,   -- the inquiry
+  ord          INTEGER NOT NULL,-- position in basis[], so a leg is addressable
+  target_id    TEXT NOT NULL,   -- an INFO- or an INQ-/PROB-/FOCUS- bundle
+  target_type  TEXT NOT NULL,   -- 'information' | 'inquiry', denormalised for the walk
+  role         TEXT NOT NULL,   -- 'supports' | 'cuts_against'
+  grade        TEXT,            -- A|B|C|D, NULL = undetermined and STATED as such
+  grade_axis   TEXT,            -- 'capture' | 'connection': the axis the grade is on
+  grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' (DEC-15)
+  note         TEXT,
+  at           TEXT,
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS inquiry_basis_target ON inquiry_basis(target_id);
+CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

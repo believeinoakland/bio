@@ -1116,14 +1116,16 @@ function checkReferences(ctx, findings) {
       }
     }
   }
-  // required edges (locally verifiable). 'inquiry' because normalizeType now
-  // maps both legacy spellings there (REC-10); only a legacy document can be
-  // in state 'elevated', so this arm fires for legacy bundles alone.
-  if (normalizeType(ctx.fm?.object_type) === 'inquiry' && ctx.fm.current_state === 'elevated') {
-    if (!refs.some(r => r && r.rel === 'elevated_into')) {
-      findings.push(f('C-6.3', 'error', "an elevated Problem must carry at least one 'elevated_into' reference"));
-    }
-  }
+  /* C-6.3, REPLACED by REC-11 (QUEUE.md carries the ruling). The old arm
+     required an elevated Problem to carry an 'elevated_into' reference; it was
+     wrong to keep because elevation is not a state in the inquiry machine at
+     all (the REC-10 collapse removed it — only legacy history carries it, and
+     a legacy document is judged by its own contract, which never enforced the
+     edge at write). Its successor discipline is the basis arm: an inquiry
+     carrying a basis leg must carry the same target in references[], so refs
+     and inquiry_basis — both projections of this one document — cannot
+     disagree. That arm lives in checkInquiryBasis (C-2.8's family) so the
+     store's write path and this checker run the SAME rule. */
   if (ctx.fm?.workproduct_state === 'distributed') {
     const hasDist = [...ctx.files.keys()].some(p => p.startsWith('distributions/'));
     if (!hasDist) findings.push(f('C-6.3', 'error', 'workproduct_state is distributed but distributions/ is empty'));
@@ -1294,8 +1296,9 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /* C-2.8, renamed from checkFocusExtension by REC-10. Keeps surfaced_by and
    disposition_reason exactly as the focus contract had them; the per-state
-   entry requirements (conclusion, falsifier, basis, completeness, division)
-   arrive with REC-13/14/16 TOGETHER WITH their states. */
+   entry requirements (conclusion, falsifier, completeness, division) arrive
+   with REC-13/14/16 TOGETHER WITH their states. REC-11 adds the basis[] leg
+   grammar via checkInquiryBasis below. */
 function checkInquiryExtension(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
   const fm = ctx.fm;
@@ -1305,6 +1308,107 @@ function checkInquiryExtension(ctx, findings) {
   if (['deferred', 'dismissed'].includes(fm.current_state)) {
     if (typeof fm.disposition_reason !== 'string' || fm.disposition_reason.trim() === '') {
       findings.push(f('C-2.8', 'error', `${fm.current_state} state requires a non-empty disposition_reason`));
+    }
+  }
+  checkInquiryBasis(fm, findings);
+}
+
+/* REC-11: the basis leg vocabularies, exported so op=affordances can publish
+   them the way it publishes the disposition set, and so no surface keeps a
+   copy. GRADE_AXES is single-column by RECONCILED R2's own reasoning: a leg
+   asserts ONE grade for ONE reason, and two grade columns would create a place
+   to state two. GRADE_SOURCES carries 'hunch' per DEC-15: an authored
+   connection grade with an author and a date, the only authored grade
+   permitted above D, bias debt until cleared (BIO_Declared_Bias_v0_1.md). */
+export const BASIS_ROLES = ['supports', 'cuts_against'];
+export const BASIS_GRADES = ['A', 'B', 'C', 'D'];
+export const GRADE_AXES = ['capture', 'connection'];
+export const GRADE_SOURCES = ['resolution', 'testimony', 'hunch'];
+
+/* REC-11: the basis[] leg grammar, ONE function consulted by BOTH the checker
+ * (via checkInquiryExtension above) and the store's op=promote write path —
+ * the checkGatheringGrammar precedent — so a malformed leg never lands and the
+ * two views cannot drift. Shape findings are C-2.8 (the inquiry extension);
+ * the references[] subset arm is C-6.3, the rule that REPLACED the
+ * elevated_into requirement (see checkReferences).
+ *
+ * The leg: {target, role, grade, grade_axis, grade_source, note, author, date}.
+ * target is an INFO- or an inquiry-prefixed id — the inquiry target IS basis
+ * recursion. role is invariant 7's storage: cuts_against is first-class. An
+ * ABSENT or null grade is legal and means undetermined, STATED — never
+ * invented to pass a gate. A PRESENT grade must say which axis it is on
+ * (not derivable from target_type: connection grades legitimately sit on
+ * INFO- legs — SB-OUTPUT 432-435) and where it came from. A hunch requires
+ * its author and its date, refused BY NAME, because a hunch is only honest
+ * while it announces itself; testimony is a member's signed account and is
+ * grade D at no other value (DEC-15: hunch is the only authored grade
+ * permitted above D). Duplicate targets are LEGAL by design — D4: a basis
+ * legitimately cites one document for two legs, which is why this table has
+ * an ordinal and refs could not carry it. */
+export function checkInquiryBasis(fm, findings) {
+  const legs = fm?.basis;
+  if (legs === undefined || legs === null) return;   // no basis is a legal open inquiry
+  if (!Array.isArray(legs)) {
+    findings.push(f('C-2.8', 'error', `basis is not an array`));
+    return;
+  }
+  const refTargets = new Set((Array.isArray(fm.references) ? fm.references : [])
+    .filter((r) => r && typeof r === 'object' && typeof r.target === 'string')
+    .map((r) => r.target));
+  for (let i = 0; i < legs.length; i++) {
+    const leg = legs[i];
+    if (typeof leg !== 'object' || leg === null) {
+      findings.push(f('C-2.8', 'error', `basis[${i}] is not an object`));
+      continue;
+    }
+    const t = leg.target;
+    if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
+      findings.push(f('C-2.8', 'error', `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical bundle id`));
+    } else {
+      const tt = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
+      if (tt !== 'information' && tt !== 'inquiry') {
+        findings.push(f('C-2.8', 'error', `basis[${i}].target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else`));
+      } else if (!refTargets.has(t)) {
+        /* C-6.3 (the arm that replaced elevated_into): refs and inquiry_basis
+           are projections of this one document and must not disagree. */
+        findings.push(f('C-6.3', 'error', `basis[${i}].target '${t}' is not in references[]: an inquiry carrying a basis leg carries the same target as a reference, so the two projections cannot disagree`,
+          [`add a references[] entry for '${t}'`, 'remove the basis leg']));
+      }
+    }
+    if (!BASIS_ROLES.includes(leg.role)) {
+      findings.push(f('C-2.8', 'error', `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(', ')}`));
+    }
+    const graded = leg.grade !== undefined && leg.grade !== null;
+    if (graded && !BASIS_GRADES.includes(leg.grade)) {
+      findings.push(f('C-2.8', 'error', `basis[${i}].grade '${leg.grade}' is not one of: ${BASIS_GRADES.join(', ')} (absent or null means undetermined, and is stated as such)`));
+    }
+    if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis)) {
+      findings.push(f('C-2.8', 'error', `basis[${i}].grade_axis '${leg.grade_axis}' is not one of: ${GRADE_AXES.join(', ')}`));
+    }
+    if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source)) {
+      findings.push(f('C-2.8', 'error', `basis[${i}].grade_source '${leg.grade_source}' is not one of: ${GRADE_SOURCES.join(', ')}`));
+    }
+    if (graded) {
+      if (!GRADE_AXES.includes(leg.grade_axis)) {
+        findings.push(f('C-2.8', 'error', `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states whether its grade is capture or connection`));
+      }
+      if (!GRADE_SOURCES.includes(leg.grade_source)) {
+        findings.push(f('C-2.8', 'error', `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(', ')})`));
+      }
+    }
+    if (leg.grade_source === 'hunch') {
+      if (typeof leg.author !== 'string' || leg.author.trim() === '') {
+        findings.push(f('C-2.8', 'error', `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
+      }
+      if (!DATE_RE.test(String(leg.date ?? ''))) {
+        findings.push(f('C-2.8', 'error', `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
+      }
+    }
+    if (leg.grade_source === 'testimony' && graded && leg.grade !== 'D') {
+      findings.push(f('C-2.8', 'error', `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade D at no other value — a hunch is the only authored grade permitted above D (DEC-15)`));
+    }
+    if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
+      findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
     }
   }
 }
