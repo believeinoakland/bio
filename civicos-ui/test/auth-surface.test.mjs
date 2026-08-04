@@ -759,14 +759,41 @@ if(!CHILD){
     await c2.__signIn();
     ok("NEG-CONTROL (a): and a WRONG password no longer meets the record's own sentence",
        !H(c2).includes(REFUSAL_SENTENCE));
-    /* And the published list goes silently empty — the honest-looking blank
-       screen D-173 is named for. */
+    /* And the published list does not render the case files — the honest-looking
+       blank screen D-173 is named for.
+       **CORRECTED 2026-08-04 BY UI-37, AND THE OLD ASSERTION IS WORTH KNOWING
+       ABOUT BECAUSE IT MEASURED A SECOND DEFECT WITHOUT ANYBODY NOTICING.** As
+       written, this arm required the broken surface to render "This group has
+       not published any case files yet" — and it passed, for years of items,
+       which means D-173's "honest-looking blank screen" WAS LITERALLY THAT
+       SENTENCE. The blank screen and D-195's false negative are the same
+       rendering: `pubList` read `(r && r.published) || []`, so an answer it
+       could not open and an answer that said nothing were one thing, and the
+       page filled the gap with a claim about the whole published record.
+       UI-37 closed that at the site, so the old assertion now describes the
+       BUG rather than the behaviour and would have gone red for the fix. It is
+       CORRECTED rather than exempted (CLAUDE.md), and it is corrected to assert
+       BOTH halves, because dropping either would lose a demonstration:
+         (i) the harm D-173 names is UNCHANGED — the two case files in the
+             manifest still do not reach the reader when the envelope is not
+             opened, so this control still bites;
+         (ii) and the surface no longer LIES about it. A broken seam now
+             produces a page that says it cannot say what this group published,
+             which is the honest form of the same failure. */
     const p3 = makePlane();
     const c3 = boot(BROKEN, p3);
     c3.__enterPublished();
     await new Promise(r=>setTimeout(r,0));
-    ok("NEG-CONTROL (a): and the published list renders EMPTY over a manifest that has two case files",
-       /has not published any case files/i.test(E(c3, "#pl")._html));
+    const pl3 = E(c3, "#pl")._html;
+    ok("NEG-CONTROL (a): and the published list renders NEITHER case file over a manifest that has two — "
+       + "the harm D-173 names, unchanged",
+       MANIFEST.published.every(p => !pl3.includes(p.bundle_id)));
+    ok("NEG-CONTROL (a): CORRECTED 2026-08-04 (UI-37, D-195) — and it no longer says the group has "
+       + "published nothing. That sentence WAS D-173's honest-looking blank screen, and it was a claim "
+       + "about the whole record made out of an answer this surface could not read; a broken seam now "
+       + "says it cannot say",
+       !/has not published any case files/i.test(pl3)
+       && /cannot say what this group has published/.test(pl3));
   }
   ok("NEG-CONTROL (a) contrast: the intact surface signed in, authenticated every op, and listed both case files",
      ctx.__PLANE.token===TOKEN && tokened.every(c=>c.token===TOKEN)

@@ -13972,9 +13972,29 @@ async function pubList(fromNav){
     <div class="pub-list" id="pl">Loading&hellip;</div>`;
   try{
     const r = await apiQ("publishedmanifest");
-    const pub = (r && r.published) || [];
-    const cases = (r && r.cases) || [];
-    const members = (r && r.caseMembers) || [];
+    /* **THE SAME COLLAPSE `pubVerify` WAS QUEUED FOR, ONE FUNCTION AWAY — FOUND
+       BY UI-37's OWN SWEEP, 2026-08-04, AND CORRECTED HERE RATHER THAN ROUTED.**
+       `(r && r.published) || []` cannot tell "the plane answered and this group
+       has published nothing" apart from "the plane did not answer", and the
+       empty state below then tells a stranger "This group has not published any
+       case files yet" — a substantive claim about the whole record, made from a
+       refusal, on the index page of the public surface. It is the identical
+       defect to D-195 and it reads worse, because it is a claim about
+       EVERYTHING rather than about one hash.
+       The test is the POSITIVE shape, for the same reason it is in `pubVerify`:
+       `publishedManifest()` always answers `{ok:true, scope, published:[], …}`,
+       so an answer without an array is not an empty record — it is not an
+       answer. That covers the refusal arms of both layers, including the one
+       where the Durable Object throws and section 7a's `{ok:true, ...undefined}`
+       spread hands this surface an HTTP 200 with nothing in it. */
+    if(!r || r.ok === false || !Array.isArray(r.published)){
+      const said = planeSaid(r);
+      $("#pl").innerHTML = `<div class="empty">This page cannot say what this group has published, including whether it has published anything at all, because the record did not answer${said ? `. The record's own words: <b>${esc(said)}</b>` : ` and did not say why`}.</div>`;
+      return;
+    }
+    const pub = r.published;
+    const cases = r.cases || [];
+    const members = r.caseMembers || [];
     PUB.index = { published: pub, cases, members };
     /* the ratified bundle rows, by id and edition, so a member row can carry the
        title the group signed rather than one this page composes */
@@ -14092,8 +14112,28 @@ async function pubOpen(id, edition, fromNav){
     if(PUB.edition) params.edition = String(PUB.edition);
     const c = await apiQ("publishedcase", params);
     if(!c || c.ok === false){
-      $("#pub-body").innerHTML = `<div class="eyebrow">Case file</div><h1>Not published</h1>
-        <p class="pub-lead">${esc(c && c.detail ? c.detail : "No published edition answers to that.")}</p>
+      /* **CORRECTED 2026-08-04 — UI-37, D-195's class, the THIRD site the sweep
+         found and the mildest of the three.** This branch already knew a refusal
+         when it saw one, and then printed `<h1>Not published</h1>` over EVERY
+         one of them: the control plane refuses a call with no `id` and no
+         `sha256` in its own words ("publishedcase requires id=…"), which is not
+         a statement that nothing is published — it is a statement that the
+         question was malformed. Worse, it read only `detail`, and that refusal
+         carries `error`, so the plane's actual words were dropped and this
+         surface's own "No published edition answers to that." stood in for them:
+         a substantive negative composed to fill a gap left by reading one field.
+         The heading is now SELECTED on the plane's own code. `NOT_PUBLISHED` is
+         the store's answer for a case, an edition or an id the published
+         projection does not hold, and it is the only answer that earns the
+         negative heading; everything else is a refusal and says so. Nothing is
+         translated either way — `planeSaid` picks whichever field carried the
+         sentence and composes none of it. */
+      const notPublished = !!(c && c.reason === "NOT_PUBLISHED");
+      const said = planeSaid(c);
+      $("#pub-body").innerHTML = `<div class="eyebrow">Case file</div><h1>${notPublished ? "Not published" : "Not answered"}</h1>
+        <p class="pub-lead">${notPublished
+          ? esc(said || "No published edition answers to that.")
+          : `This page cannot say whether any edition answers to that, because the question was not answered${said ? `. The record's own words: <b>${esc(said)}</b>` : `, and the record did not say why`}.`}</p>
         <p><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
       return;
     }
@@ -14344,21 +14384,101 @@ function pubFooterHtml(c, floors){
 }
 
 /* ---- the Verify button, wired to op=verify ---- */
+/* WHAT THE PLANE SAID, SELECTED AND NEVER COMPOSED — UI-37, 2026-08-04.
+   The three public reads on this page use ONE rule for finding the plane's own
+   words rather than each deciding for itself which field the sentence arrived
+   in. It SELECTS and composes nothing (DEC-8: a surface may render a refusal it
+   received and may NEVER compute one), and it returns "" rather than a sentence
+   when the plane said nothing — a caller holding "" must say only that it has no
+   answer, and must never invent a reason for one.
+   WHICH FIELDS, MEASURED RATHER THAN GUESSED, because reading fewer of them is
+   exactly how `pubOpen` came to print its own sentence over two of its three
+   refusal arms: `op=verify` refuses with `error` (index.mjs section 7a);
+   `op=publishedcase` refuses with `error` from the control plane and with
+   `reason` + `detail` from the store; `op=publishedbytes` uses `reason` +
+   `detail`.
+   THE ORDER IS PROSE FIRST AND THE BARE CODE LAST, and that is UI-30's rule at
+   the login gate rather than a new one: render the plane's SENTENCE when it sent
+   one, and keep an older plane's bare reason rather than showing a blank. It is
+   deliberately NOT `errPane`'s join — `errPane` serves a signed-in member and
+   prints the wire code beside the sentence, which is diagnostic there and is a
+   SCREAMING_SNAKE identifier in front of a stranger here. Choosing among things
+   the plane said is selection; the sentence is never edited, and the code still
+   reaches the reader whenever it is all the plane sent.
+   AND WHERE IT IS PUT ON THE PAGE IS PART OF NOT EDITING IT. The plane's
+   refusals do not all end in a full stop — "verify requires sha256=<64 lowercase
+   hex>" and "unknown op" do not — so a sentence of this surface's own set
+   directly after one of them runs the two together and a reader gets a single
+   ungrammatical run of text with no way to tell where ours stops and theirs
+   starts. The gate has never had this problem because `teach()` puts the plane's
+   sentence in `#g-err` ALONE, which is the precedent followed here: this
+   surface's own words come FIRST and complete, and the plane's follow behind an
+   explicit attribution, in their own element. Adding punctuation to the plane's
+   sentence would have been the easy fix and is exactly the edit DEC-8 forbids. */
+function planeSaid(x){
+  if(!x || typeof x !== "object") return "";
+  for(const s of [x.detail, x.error, x.reason]) if(typeof s === "string" && s) return s;
+  return "";
+}
+/* **CORRECTED 2026-08-04 — UI-37, D-195, AND THE CORRECTION IS THE WHOLE ITEM.**
+   As written, this function had TWO branches for THREE answers. `apiQ` — unlike
+   `rec` — does not throw on `ok:false`, and `api` never looks at the HTTP
+   status, so a REFUSAL from `op=verify` arrived here as an ordinary value with
+   no `published` field, fell into the `else`, and told an uncredentialed reader
+   "NOT PUBLISHED. No published part answers to that hash." The plane had
+   declined the question; the surface answered it. That is the record asserting
+   something it does not know, standing on the one surface whose entire purpose
+   is that a stranger can check us without our cooperation.
+   IT WAS REACHABLE BY A CLICK, not in theory: the container row below composes
+   its hash as `bundle_sha || ""`, an empty hash is not 64 hex, and the control
+   plane refuses it at HTTP 400 in its own words.
+   AND THE SENTENCE WAS UNUSUALLY CONVINCING, which is why this is written out
+   rather than quietly patched. Its second clause EXPLAINS why the two cases are
+   deliberately indistinguishable — which is TRUE of a real not-published answer
+   and FALSE of a refusal. So that clause is not deleted; it is moved to the one
+   branch where it is true, and it now only ever renders on an answer that
+   actually said `published:false`.
+   THE FIX IS A SELECTION AND NOT A NEW SENTENCE, which is the shape UI-30 set
+   at the login gate: this surface chooses between things the plane said and
+   writes no word of its own about the record. The branch is taken on
+   `published === true` / `published === false` — a POSITIVE shape test, not the
+   absence of a field — because an absent `published` is exactly what a refusal
+   and a malformed answer both look like.
+   WHY THE FIX IS HERE AND NOT IN `apiQ`, decided on the evidence and recorded
+   so nobody re-opens it blind. Making `apiQ` throw on `ok:false` the way `rec`
+   does DOES NOT CLOSE THIS DEFECT. `index.mjs` section 7a answers
+   `json({ ok: true, ...out.result })`, and when the Durable Object throws,
+   `out.result` is `undefined` — spreading it is a no-op — so that arm reaches
+   this surface as `{ok:true}` with no `published`, an HTTP 200, and no
+   `ok:false` for any seam to throw on. A shape test catches it; a throwing seam
+   does not. The second reason is that each public read needs to say something
+   different in its own place: `pubOpen` deliberately handles `ok:false` inline
+   so it can keep a heading and a way back, and converting that into a throw
+   would replace a considered surface with a generic error pane. `apiQ` is
+   therefore UNCHANGED and its three callers keep their error paths. */
 async function pubVerify(sha, into){
   const el = $(into);
   if(el) el.innerHTML = ` <span class="subj-how">asking the record&hellip;</span>`;
   try{
     const v = await apiQ("verify", { sha256: sha });
     if(!el) return v;
-    if(v && v.published){
+    if(v && v.published === true){
       const m = (v.matches || [])[0] || {};
       el.innerHTML = ` <span class="served yes">PUBLISHED.</span> <span class="subj-how">The record answers for this hash: it names ${esc(m.path || "a part")} (${esc(m.kind || "part")}) in ${esc(m.bundle_id || "a published bundle")}, published ${esc(String(m.published || "").slice(0, 10))}. Nothing about this answer required a credential.</span>`;
-    }else{
+    }else if(v && v.published === false){
       el.innerHTML = ` <span class="served no">NOT PUBLISHED.</span> <span class="subj-how">No published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately.</span>`;
+    }else{
+      /* THE PLANE DECLINED, so this surface says nothing whatever about the
+         record: what it reports is the state of the EXCHANGE, which it observed,
+         followed by the plane's own words where there are any. When there are
+         none it falls through to the same fallback the `catch` branch uses,
+         rather than minting a second sentence for the same silence. */
+      const said = planeSaid(v);
+      el.innerHTML = ` <span class="served no">NOT ANSWERED.</span> <span class="subj-how">Nothing here says whether a published part answers to that hash, because the question was not answered${said ? `. The record's own words: <b>${esc(said)}</b>` : `, and the record did not say why`}.</span>`;
     }
     return v;
   }catch(e){
-    if(el) el.innerHTML = ` <span class="served no">Could not ask.</span> <span class="subj-how">${esc((e && (e.error || e.reason)) || "the record did not answer")}</span>`;
+    if(el) el.innerHTML = ` <span class="served no">Could not ask.</span> <span class="subj-how">${esc(planeSaid(e) || "the record did not answer")}</span>`;
     return null;
   }
 }

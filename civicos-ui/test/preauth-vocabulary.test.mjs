@@ -318,6 +318,65 @@
  * and every reading in this chain is worth what it is worth because nothing on
  * the surface moved while it was taken. The state is measured, asserted and
  * routed instead.
+ *
+ * ============================================================
+ * UI-37, 2026-08-04 — THE DEFECT ABOVE IS FIXED, AND THIS FILE'S PIN OF IT IS
+ * CORRECTED RATHER THAN EXEMPTED. D-195 CLOSED.
+ * ============================================================
+ * WHAT WAS WRONG, in one sentence: `pubVerify` had TWO branches for THREE
+ * answers, so "the plane said no" and "the plane would not say" were one
+ * sentence — and the sentence a stranger got was the substantive one.
+ *
+ * THE SWEEP FOUND MORE THAN THE ITEM NAMED, twice over, and both findings are
+ * why the brief asked for a sweep instead of a fix:
+ *   THREE REFUSALS, not one. Beside `op=verify`'s malformed-hash arm there is
+ *     `unknown op` — what any surface deployed ahead of its plane receives, and
+ *     `civicos-ui` ships on its own schedule — and, worse, an answer that is not
+ *     an answer AND NOT `ok:false` EITHER: section 7a returns
+ *     `json({ok:true, ...out.result})` without checking `out.ok`, so a Durable
+ *     Object failure arrives as `{ok:true}` at HTTP 200 with nothing in it.
+ *     **That last one settled the item's open design question.** Making `apiQ`
+ *     throw on `ok:false` the way `rec` does would have sailed straight past it
+ *     and left the surface still saying NOT PUBLISHED, so the fix is a POSITIVE
+ *     SHAPE TEST at each site and `apiQ` is unchanged with all three of its
+ *     callers keeping their own error paths.
+ *   THREE SITES, not one. Both sibling public reads on this page had the same
+ *     collapse. `pubList` read `(r && r.published) || []`, so a refusal produced
+ *     "This group has not published any case files yet" — a claim about the
+ *     ENTIRE published record, which is worse than the one this item was routed
+ *     for. `pubOpen` printed `<h1>Not published</h1>` over every refusal while
+ *     reading only `detail`, so the two arms that carry `error` had their words
+ *     dropped and replaced by this surface's own negative.
+ *
+ * AND THE SIXTH STATE IS THE ONE NOBODY WOULD HAVE ADDED: the TRUE NEGATIVE,
+ * driven with a well-formed hash the record genuinely does not hold. A surface
+ * that stops calling a refusal a negative must not start calling a negative a
+ * refusal, and arm (q) shows that failure is one character away.
+ *
+ * THE SENTENCE WAS NOT DELETED. Its second clause — "a hash that was never
+ * ratified and a hash that never existed are the same answer here, deliberately"
+ * — is TRUE of a real not-published answer and FALSE of a refusal, and that is
+ * precisely what made the whole sentence convincing where it did not belong. It
+ * moved to the branch where it is true and is pinned VERBATIM there.
+ *
+ * THE READING: 11 scenarios -> 15; 19 surfaces -> 22; 35,835 -> 38,468
+ * characters; 13 terms -> 13; 67 -> 68 occurrences; 57 -> 58 visible.
+ * **THE SUBJECT: 11 PLANE-SOURCED ROWS -> 11. ONE NEW SOURCE ON ONE EXISTING
+ * TERM**, `sha256` at `case-address-at-load #v-refused`, which is `op=verify`'s
+ * own refusal rendered instead of swallowed. No new term enters the subject.
+ * Plane wording that this item DID put in front of a stranger and that the
+ * instrument cannot pin — the `unknown op` refusal on three surfaces, and the
+ * store's own NOT_PUBLISHED sentence — is named at `DEC49_SUBJECT` rather than
+ * left to be discovered, because "we added plane wording and the subject did not
+ * move" is a claim a reader should distrust until it is itemised.
+ *
+ * THE FOUR NEW SCENARIOS MOVE NO NUMBER IN THE REPORT, measured rather than
+ * asserted: this file against the FINAL app.html with all four hidden gives
+ * 54/54 green, 11 scenarios, 22 surfaces, 36,527 characters, 13 terms, 68
+ * occurrences and 58 visible — the same 68/58 as the full run, and the subject
+ * arm PASSES. So they add 2,110 characters of harvest and four assertions, and
+ * everything that moved in the vocabulary report came from the FIX on surfaces
+ * this walk already covered.
  */
 import vm from "vm"; import fs from "fs"; import path from "path";
 import { webcrypto } from "crypto";
@@ -333,7 +392,15 @@ function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL",
 
 /* The switches the negative-control arms are reached through. Nothing on disk is
    mutated by any of them. */
+/* `UI31_HIDE` TAKES A COMMA LIST AS OF UI-37, 2026-08-04, and a bare name still
+   means exactly what it always did — every arm recorded by UI-31, UI-34 and
+   UI-36 runs unchanged. It was widened for ONE reason: UI-37 adds four scenarios,
+   and the only honest way to show that the instrument itself did not move is to
+   hide all four at once and diff the report against UI-36's. A control that can
+   only be run one scenario at a time cannot make that statement. */
 const HIDE            = process.env.UI31_HIDE || "";
+const HIDDEN          = new Set(HIDE.split(",").map(s => s.trim()).filter(Boolean));
+const HID             = k => HIDDEN.has(k);
 const EMPTY_TERMS     = !!process.env.UI31_EMPTY_TERMS;
 const NO_PLANE_RANGES = !!process.env.UI31_NO_PLANE_RANGES;
 
@@ -504,12 +571,87 @@ ok("the plane's own refusal for op=verify is readable from here and is the contr
    + JSON.stringify(VERIFY_REFUSAL),
    VERIFY_REFUSAL.length > 20 && /verify/.test(VERIFY_REFUSAL) && /sha256/.test(VERIFY_REFUSAL));
 
+/* ============================================================
+   THE REST OF THE REFUSAL SET — UI-37, 2026-08-04
+   ============================================================
+   UI-37 was routed naming ONE refusal (`op=verify`'s malformed-hash arm) and
+   told to sweep `index.mjs` for the others rather than trust that count. It
+   found TWO MORE that reach these surfaces, and both are read textually out of
+   the plane exactly as the first one is, so neither is a fixture anybody typed:
+
+   (2) `unknown op`. Every op in this file's reach passes the OPS-table lookup at
+       the top of `fetch`, and a name that is not in the table is refused at 400.
+       This is NOT hypothetical on these surfaces and that is the whole reason it
+       is driven: `civicos-ui` is a separately deployed worker that carries no
+       version number and whose deploy is explicitly NOT gated on a plane release
+       (`kickoffs/UI.md`), so a surface talking to a plane older than itself is
+       the NORMAL condition, not an edge case. The three public reads are also
+       the ops most likely to be newer than the instance a stranger reaches,
+       because they are the ones a stranger reaches.
+
+   (3) THE ANSWER THAT IS NOT AN ANSWER AND IS NOT `ok:false` EITHER, and it is
+       the arm that decides this item's design question. Section 7a answers
+       `json({ ok: true, ...out.result }, 200)`. When the Durable Object throws
+       it returns `{ok:false, error:<stack>}` at 500 with NO `result`, and
+       spreading `undefined` is a no-op — so what leaves the control plane is
+       `{ok:true}`, HTTP 200, with no `published`, no `sha256` and no `matches`.
+       A seam that threw on `ok:false` would sail straight past it and the
+       surface would still have rendered NOT PUBLISHED. That is the measured
+       reason `apiQ` was left alone and the fix is a POSITIVE SHAPE TEST at each
+       site; it is asserted below rather than argued, and the spread is read out
+       of index.mjs so the assertion is about the plane and not about a belief. */
+function planeUnknownOpRefusal(){
+  const m = /if \(!spec\) return json\(\{ ok: false, error: "((?:[^"\\]|\\.)*)"/.exec(INDEX_SRC);
+  return m ? JSON.parse('"' + m[1] + '"') : "";
+}
+const UNKNOWN_OP_REFUSAL = planeUnknownOpRefusal();
+ok("the plane's own refusal for an op it does not have is readable from here too — "
+   + JSON.stringify(UNKNOWN_OP_REFUSAL) + " — which is what a surface deployed ahead of its plane gets, "
+   + "and civicos-ui's deploy is not gated on a plane release",
+   UNKNOWN_OP_REFUSAL.length > 5 && /op/.test(UNKNOWN_OP_REFUSAL));
+/* THE NON-ANSWER'S MECHANISM, PINNED IN THE PLANE'S OWN SOURCE. If section 7a
+   ever learns to check `out.ok` the arm below stops being reachable, and this
+   assertion is what tells the next session that — rather than leaving a drive in
+   place that quietly stopped meaning anything. */
+const SEVENA_SPREAD = /if \(op === "verify"\)[\s\S]{0,900}?return json\(\{ ok: true, \.\.\.out\.result \}, 200\);/
+  .test(INDEX_SRC);
+ok("MEASURED IN THE PLANE'S SOURCE: op=verify answers `json({ ok: true, ...out.result }, 200)` without "
+   + "looking at `out.ok`, so a Durable Object failure reaches this surface as {ok:true} at HTTP 200 with "
+   + "no `published` — an unanswerable question wearing a successful envelope, and the arm a throwing "
+   + "transport seam could never have caught",
+   SEVENA_SPREAD);
+/* AND THE TRUE NEGATIVE FOR A CASE, READ THE SAME WAY. `op=publishedcase`'s
+   genuine "the published projection does not hold that" is the STORE's own
+   answer and carries the store's own sentence; the surface must keep rendering
+   it as the negative it is. Read textually so this arm cannot drift from the
+   sentence the plane actually sends, which is the whole reason the arm exists —
+   the two directions of this collapse are told apart by `reason`, and a
+   hand-typed `reason` would agree with its source at zero cost. */
+function planeCaseNotPublished(){
+  const m = /return \{ ok: false, reason: "(NOT_PUBLISHED)",\s*\n\s*detail: "((?:[^"\\]|\\.)*)"\s*\n?\s*\+ "((?:[^"\\]|\\.)*)"\s*\n?\s*\+ "((?:[^"\\]|\\.)*)" \};/.exec(STORE_SRC);
+  return m ? { ok:false, reason:m[1], detail: JSON.parse('"' + m[2] + m[3] + m[4] + '"') } : null;
+}
+const CASE_NOT_PUBLISHED = planeCaseNotPublished();
+ok("the store's own NOT_PUBLISHED answer for op=publishedcase is readable from here, whole — "
+   + JSON.stringify(CASE_NOT_PUBLISHED && CASE_NOT_PUBLISHED.detail),
+   !!CASE_NOT_PUBLISHED && CASE_NOT_PUBLISHED.reason === "NOT_PUBLISHED"
+   && CASE_NOT_PUBLISHED.detail.length > 100 && /published projection/.test(CASE_NOT_PUBLISHED.detail));
+
 /* The two public ops. Wire-shaped: `op=publishedmanifest` is WRAPPED (index.mjs
    re-wraps it explicitly), `op=publishedcase` is FLAT (its own handler), which
    is what `check-mock-envelope.mjs`'s wire map says and what its arm B judges
    these answers against. */
 const CASE_ID = "CASE-2026-0001", FIND_ID = "FIND-2026-0001";
 const SHA = "a".repeat(64), MAN = "b".repeat(64), CAP = "c".repeat(64);
+/* UI-37's three extra hashes, all WELL-FORMED — that is the point of them. The
+   surface's old test was "did an answer arrive with a truthy `published`", which
+   makes a refusal, a broken answer and a genuine absence one thing; these are the
+   three the surface must now tell apart while asking the plane the same
+   syntactically valid question every time.
+   `UNKNOWN` is a hash the published projection genuinely does not hold — the TRUE
+   NEGATIVE, which must keep reading as one. `NONE` draws the `unknown op` refusal
+   and `NOANS` draws the empty success; see the mock. */
+const UNKNOWN = "f".repeat(64), NONE = "e".repeat(64), NOANS = "d".repeat(64);
 const MANIFEST_ANSWER = {
   ok:true, scope:"published",
   published:[{ bundle_id:FIND_ID, edition:1, title:"Was the sewer transfer authorised?", bundle_sha:SHA,
@@ -601,8 +743,40 @@ function makePlane(mode){
        it carries the plane's own sentence beside its one code (REC-41). */
     if(op === "login")
       return W(say({ ok:false, reason:REFUSAL_CODE, detail:REFUSAL_SENTENCE }));
-    if(op === "publishedmanifest") return W(say(MANIFEST_ANSWER));
-    if(op === "publishedcase")     return R(say(CASE_ANSWER));
+    /* THE TWO SIBLING PUBLIC READS, IN THEIR REFUSAL AND THEIR TRUE-NEGATIVE
+       STATES TOO — UI-37, 2026-08-04. UI-37's brief required a check of whether
+       the siblings on this page had `pubVerify`'s collapse; they did, so they
+       are driven the same way and each is driven in BOTH directions, because a
+       surface that stops calling a refusal a negative must not start calling a
+       negative a refusal.
+         `manifestArm:"unknownop"` — the plane does not have the op (an older
+            instance than the surface reaching it).
+         `manifestArm:"nonanswer"` — the control plane's own re-wrap,
+            `json({ok:true, result:(await r.json()).result})`, when the Durable
+            Object threw and there is no `result`: HTTP 200, no `ok:false`, and
+            nothing to read.
+         `manifestArm:"empty"`     — the plane ANSWERED and this group has
+            genuinely published nothing. The true negative, which must keep
+            reading as one.
+         `caseArm:"unknownop"`     — as above.
+         `caseArm:"notpublished"`  — the STORE's own NOT_PUBLISHED, wrapped by
+            index.mjs at 404. The true negative for a case. */
+    if(op === "publishedmanifest"){
+      if(opts.manifestArm === "unknownop")
+        return { ok:false, status:400, json:async()=>say({ ok:false, error:UNKNOWN_OP_REFUSAL, op }) };
+      if(opts.manifestArm === "nonanswer")
+        return { ok:true, status:200, json:async()=>({ ok:true, result:undefined }) };
+      if(opts.manifestArm === "empty")
+        return W(say({ ok:true, scope:"published", published:[], cases:[], caseMembers:[] }));
+      return W(say(MANIFEST_ANSWER));
+    }
+    if(op === "publishedcase"){
+      if(opts.caseArm === "unknownop")
+        return { ok:false, status:400, json:async()=>say({ ok:false, error:UNKNOWN_OP_REFUSAL, op }) };
+      if(opts.caseArm === "notpublished")
+        return { ok:false, status:404, json:async()=>say({ ok:false, ...CASE_NOT_PUBLISHED }) };
+      return R(say(CASE_ANSWER));
+    }
     /* `op=verify` — FLAT (`index.mjs` op==="verify": json({ok:true, ...out.result})),
        which is what check-mock-envelope's wire map says and what its arm B judges
        this answer against. THREE ANSWERS, because the op has three and the
@@ -623,6 +797,19 @@ function makePlane(mode){
         const refused = say({ ok:false, error:VERIFY_REFUSAL });
         return { ok:false, status:400, json:async()=>refused };
       }
+      /* THE OTHER TWO REFUSALS UI-37's SWEEP FOUND, keyed by SENTINEL HASHES so
+         all four of `op=verify`'s states are driven inside the SAME scenario and
+         this item does not enlarge the measurement basis on the surface it is
+         actually about. Both are WELL-FORMED hashes: what makes them refusals is
+         what the plane does with them, not their shape, which is the distinction
+         the surface got wrong.
+           NONE — an older plane that does not have the op at all (400).
+           NOANS — the Durable Object threw and section 7a's `{ok:true,
+             ...out.result}` spread handed the caller an empty success (200). No
+             `ok:false`, so no transport seam could throw on it. */
+      if(sha === NONE) return { ok:false, status:400,
+        json:async()=>say({ ok:false, error:UNKNOWN_OP_REFUSAL, op }) };
+      if(sha === NOANS) return { ok:true, status:200, json:async()=>({ ok:true }) };
       const m = VERIFY_MATCHES.get(sha);
       return R(say({ ok:true, published:!!m, sha256:sha, matches:m ? [{ ...m }] : [] }));
     }
@@ -706,7 +893,7 @@ function harvest(ctx){
    the walk by name. */
 const SCENARIOS = [];
 async function scenario(key, label, spec){
-  if(HIDE === key) return;                       // NEGATIVE CONTROL (a)
+  if(HID(key)) return;                            // NEGATIVE CONTROL (a)
   const rec = { key, label, controls:spec.controls || [], address:spec.address || null,
                 pubControls:spec.pubControls || [], caseControls:spec.caseControls || [],
                 surfaces:new Map(), said:[] };
@@ -837,10 +1024,10 @@ const unesc = s => String(s).replace(/&quot;/g,'"').replace(/&#39;/g,"'")
   .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&");
 await scenario("case-address-at-load", "a published case address, opened by a stranger", {
   controls:[], address:"#case/", hash:"#case/" + CASE_ID, mode:CASE_MODE,
-  caseControls:HIDE === "case-verify" ? [] : ["pubVerify", "pubBytes"],
+  caseControls:HID("case-verify") ? [] : ["pubVerify", "pubBytes"],
   drive:async(ctx)=>{
     await settle();
-    if(HIDE === "case-verify") return;                    // NEGATIVE CONTROL (j)
+    if(HID("case-verify")) return;                        // NEGATIVE CONTROL (j)
     /* The address resolves through two awaits before the page exists, so the
        drive waits for the page rather than assuming a turn count. The bound is
        the point: a page that never arrives leaves `sites` empty and the walk
@@ -863,6 +1050,22 @@ await scenario("case-address-at-load", "a published case address, opened by a st
     const refusalCall = verifySites[0].replace(/\('[0-9a-f]*'/, "(''")
                                       .replace(/,'[^']*'\)$/, ",'#v-refused')");
     CASE_CALLS_DRIVEN.push(refusalCall); await vm.runInContext(refusalCall, ctx);
+    /* THE OTHER THREE ANSWERS `op=verify` CAN GIVE — UI-37, 2026-08-04. Each is
+       the PAGE'S OWN call site with only the hash and the container swapped, so
+       what runs is what a click runs; nothing about the call is re-typed here.
+       Every one of these hashes is WELL-FORMED, which is what makes the set a
+       test of the surface's judgement rather than of its input validation:
+         UNKNOWN — the plane answers, and answers `published:false`. THE TRUE
+           NEGATIVE. It must still read as NOT PUBLISHED, or this item has
+           merely collapsed the pair in the other direction.
+         NONE    — the plane refuses because it does not have the op.
+         NOANS   — the plane hands back an empty success with nothing in it. */
+    for(const [hash, box] of [[UNKNOWN, "#v-notpublished"], [NONE, "#v-unknownop"], [NOANS, "#v-nonanswer"]]){
+      const call = verifySites[0].replace(/\('[0-9a-f]*'/, "('" + hash + "'")
+                                 .replace(/,'[^']*'\)$/, ",'" + box + "')");
+      CASE_CALLS_DRIVEN.push(call); await vm.runInContext(call, ctx);
+    }
+    await settle();
     /* AND THE `catch` BRANCH: the plane goes away between the page being drawn
        and the reader clicking. The call is one of the page's own, redirected to
        its own container so the success reading above is not overwritten. */
@@ -895,6 +1098,53 @@ await scenario("case-address-at-load", "a published case address, opened by a st
 await scenario("published-verify-panel", "the Verify pane, opened from the published rail by a stranger", {
   controls:[], pubControls:["pubVerifyPanel"],
   drive:async(ctx)=>{ ctx.__enterPublished(true); ctx.__pubVerifyPanel(); await settle(); },
+});
+
+/* ============================================================
+   12-15 THE TWO SIBLING PUBLIC READS, EACH IN BOTH DIRECTIONS
+   — ADDED BY UI-37, 2026-08-04, AND THEY ENLARGE THE MEASUREMENT BASIS ON
+   PURPOSE. 11 SCENARIOS -> 15.
+   ============================================================
+   WHY THEY EXIST. UI-37's brief required a sweep for whether the sibling public
+   reads on this page shared `pubVerify`'s collapse. THEY DID, and the index's
+   was the worse of the two: `pubList` read `(r && r.published) || []`, so a
+   REFUSAL produced the empty state — "This group has not published any case
+   files yet" — a substantive claim about the ENTIRE published record, made to a
+   stranger, out of an answer the plane never gave. `pubOpen` had the milder
+   form: it knew a refusal when it saw one and then printed `<h1>Not published</h1>`
+   over every one of them, while reading only `detail` and therefore DROPPING the
+   words of the two arms that carry `error`.
+   WHY EACH IS DRIVEN TWICE. The correction has an obvious failure mode in the
+   opposite direction — a surface so careful about refusals that it stops
+   reporting a real absence — and the true negative is exactly what nobody would
+   think to check after fixing the false one. So the index is driven both refused
+   AND genuinely EMPTY, and the case is driven both refused AND genuinely
+   NOT_PUBLISHED, with the store's own sentence read out of store.mjs.
+   WHY THEY ARE SCENARIOS AND THE THREE NEW VERIFY ARMS ARE NOT. `harvest()` runs
+   once at the end of a drive, so a second render into `#pl` or `#pub-body` would
+   OVERWRITE the success reading that scenario exists to take. The verify panes
+   each have their own container, so all four of `op=verify`'s states fit inside
+   `case-address-at-load` and the basis does not move for them. The basis DOES
+   move for these four, that is a change to what every number in the report below
+   is counted over, and it is stated in MEASUREMENTS.md with its date rather than
+   absorbed — UI-34's rule, applied to a bigger step than UI-34's.
+   `UI31_HIDE` takes a comma list so all four can be hidden at once and the
+   instrument shown not to have moved. */
+await scenario("published-index-refused", "the published index, when the plane refuses", {
+  controls:[], pubControls:[], mode:{ manifestArm:"unknownop" },
+  drive:async(ctx)=>{ ctx.__enterPublished(); await settle(); },
+});
+await scenario("published-index-empty", "the published index, when this group has published nothing", {
+  controls:[], pubControls:[], mode:{ manifestArm:"empty" },
+  drive:async(ctx)=>{ ctx.__enterPublished(); await settle(); },
+});
+await scenario("case-address-refused", "a published case address, when the plane refuses", {
+  controls:[], address:null, hash:"#case/" + CASE_ID, mode:{ caseArm:"unknownop" },
+  drive:async(ctx)=>{ for(let i = 0; i < 20; i++) await settle(); },
+});
+await scenario("case-address-not-published", "a published case address the record does not hold", {
+  controls:[], address:null, hash:"#case/" + CASE_ID, mode:{ caseArm:"notpublished" },
+  drive:async(ctx)=>{ for(let i = 0; i < 20; i++) await settle(); },
 });
 
 /* ============================================================
@@ -1003,7 +1253,14 @@ const EXPECT_SURFACES = ["#content","#g-err","#m-grp","#m-handle","#m-idstr",
                          "#p-gid","#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED,
                          "#v-c-" + FIND_ID, "#v-f-" + FIND_ID, "#v-man",
                          "#v-part-" + SHA.slice(0, 12), "#v-part-" + CAP.slice(0, 12),
-                         "#v-refused", "#v-unreachable"];
+                         "#v-refused", "#v-unreachable",
+                         /* UI-37, 2026-08-04 — the three answers `op=verify` can
+                            give that UI-36's drive never asked for: a well-formed
+                            hash the record genuinely does not hold (the TRUE
+                            negative), an older plane that does not have the op,
+                            and the empty success section 7a produces when the
+                            Durable Object throws. */
+                         "#v-notpublished", "#v-unknownop", "#v-nonanswer"];
 {
   const missing = EXPECT_SURFACES.filter(s => !ALL_SURFACES.includes(s));
   const extra   = ALL_SURFACES.filter(s => !EXPECT_SURFACES.includes(s));
@@ -1098,19 +1355,33 @@ if(S("case-address-at-load"))
      !!CASE_ANSWER.verification.detail
      && textOf("case-address-at-load", "#pub-body").includes(esc(CASE_ANSWER.verification.detail)));
 /* ============================================================
-   THE VERIFY CONTROL, IN ALL FOUR OF ITS STATES — UI-36, 2026-08-04
+   THE VERIFY CONTROL, IN ALL SIX OF ITS STATES — UI-36, 2026-08-04
+   EXTENDED FROM FOUR TO SIX BY UI-37, 2026-08-04
    ============================================================
    `pubVerify` is the only PUBLIC OP a pre-authentication surface CALLS on the
    reader's behalf. Everything else on these surfaces is either the page the
-   plane drew at load or the surface's own prose. So its four states are pinned
-   one by one, and two of the four are findings rather than confirmations. */
-if(S("case-address-at-load") && HIDE !== "case-verify"){
+   plane drew at load or the surface's own prose. So its states are pinned one by
+   one, and under UI-36 two of the four were findings rather than confirmations.
+   WHY THERE ARE NOW SIX. UI-37 was routed naming ONE refusal and instructed to
+   sweep `index.mjs` rather than trust that count. The sweep found three refusals
+   reaching this control, not one, and the two extra ones are not decoration:
+   `unknown op` is what a surface deployed ahead of its plane gets and civicos-ui
+   ships on its own schedule, and the EMPTY SUCCESS from section 7a's
+   `{ok:true, ...out.result}` spread is the arm that settled how the defect had to
+   be fixed — it carries no `ok:false` at all, so a transport seam that threw on
+   `ok:false` would have sailed straight past it and left the surface still
+   telling a stranger NOT PUBLISHED. The sixth state is the one nobody would
+   think to add after fixing the other five: THE TRUE NEGATIVE, driven with a
+   well-formed hash the record genuinely does not hold, because a surface that
+   stops calling a refusal a negative must not start calling a negative a
+   refusal. */
+if(S("case-address-at-load") && !HID("case-verify")){
   const sc = S("case-address-at-load");
   const asked = sc.calls.filter(c => c.op === "verify");
   ok("REACH: the case page's own Verify buttons were driven AS THE PAGE WROTE THEM — " + CASE_CALLS_DRIVEN.length
      + " call sites evaluated verbatim, " + asked.length + " of them reaching op=verify, EVERY ONE with no "
      + "credential on the wire (a public op asked by somebody holding nothing is the product claim)",
-     CASE_CALLS_DRIVEN.length === 11 && asked.length === 7 && asked.every(c => c.token === null)
+     CASE_CALLS_DRIVEN.length === 14 && asked.length === 10 && asked.every(c => c.token === null)
      && sc.calls.every(c => c.token === null));
   /* (1) THE SUCCESS BRANCH, WHICH IS WHY THIS ITEM EXISTS. The plane names the
      part, its kind and the bundle it sits in, and the surface prints all three
@@ -1125,39 +1396,65 @@ if(S("case-address-at-load") && HIDE !== "case-verify"){
      + "(DEC-8: a surface may render what it received and may never compose or translate it)",
      /PUBLISHED\./.test(okPane) && okPane.includes(esc(m.path)) && okPane.includes(esc(m.kind))
      && okPane.includes(esc(m.bundle_id)));
-  /* (2) THE NOT-PUBLISHED BRANCH is this surface's OWN sentence: the plane
-     answers `published:false` and says nothing else, so every word a reader gets
-     here was written by app.html. Pinned so that a plane sentence arriving here
-     later is visible as a CHANGE rather than absorbed. */
-  ok("REACH: and when the plane answers a well-formed hash it does not know, every word the reader "
-     + "gets is this surface's own — the plane says only published:false",
-     VERIFY_MATCHES.size === 3);
-  /* (3) THE REFUSAL, AND IT IS A DEFECT PINNED AS IT STANDS RATHER THAN FIXED
-     HERE — read this before changing it.
-     `op=verify` REFUSES a malformed hash in the control plane's own words
-     ("verify requires sha256=…"), and `apiQ` — unlike `rec` — does NOT throw on
-     `ok:false`, so the refusal arrives as an ordinary value with `published`
-     undefined and falls into the NOT-PUBLISHED branch. The reader is therefore
-     told "No published part answers to that hash", which is a SUBSTANTIVE
-     CLAIM ABOUT THE RECORD, when what actually happened is that the plane
-     declined to answer the question. That is the record claiming more than it
-     can support (CLAUDE.md's worst class of defect) on the one surface whose
-     entire purpose is "check this without us", and it is reachable by a click:
-     the container row fills its hash from `bundle_sha || ""`.
-     THIS ITEM DOES NOT CHANGE THE SURFACE — DEC-49 is open and every reading in
-     this chain is worth what it is worth because the surface was not touched
-     while it was taken. So the state is MEASURED and pinned, and the fix is
-     routed. WHEN IT IS FIXED, THIS IS THE ASSERTION TO CORRECT, with the date
-     and the reason, never to exempt. */
+  /* (2) THE NOT-PUBLISHED BRANCH, AND UI-37 CORRECTED HOW IT IS CHECKED — read
+     the reason, because the old form would have passed while wrong.
+     **AS UI-36 WROTE IT, THIS ARM ASSERTED `VERIFY_MATCHES.size === 3`.** That
+     is a statement about the FIXTURE, not about the surface: it says three
+     hashes were put in a map. Nothing in it drove the branch, nothing in it read
+     a pane, and it would have stayed green through every change UI-37 makes —
+     including a version that collapsed the true negative INTO the refusal, which
+     is the exact opposite error and the one this item is most at risk of
+     introducing. It is CORRECTED to a drive (2026-08-04), never exempted: a
+     well-formed hash the published projection genuinely does not hold is asked,
+     and the pane is harvested and read.
+     WHAT MUST BE TRUE OF IT, and both halves matter. The sentence must still be
+     the negative — the plane said `published:false`, so saying so is reporting
+     what it said. AND its second clause must survive verbatim: "a hash that was
+     never ratified and a hash that never existed are the same answer here,
+     deliberately" is TRUE of this answer, and it was the honest half of the
+     sentence that D-195 found standing over refusals. UI-37 moved it here rather
+     than deleting it, which is the whole difference between fixing this defect
+     and blunting the surface. */
+  const notPublishedPane = textOf("case-address-at-load", "#v-notpublished");
+  ok("REACH, AND IT IS THE OTHER DIRECTION OF THE COLLAPSE: a WELL-FORMED hash the published projection "
+     + "does not hold is answered published:false, and it STILL reads as the negative it is — with the "
+     + "clause that explains why an unratified hash and a nonexistent one are one answer kept VERBATIM, "
+     + "because that clause is true HERE and was false where D-195 found it",
+     /NOT PUBLISHED\./.test(notPublishedPane)
+     && /No published part answers to that hash/.test(notPublishedPane)
+     && /never ratified and a hash that never existed are the same answer here, deliberately/
+        .test(notPublishedPane)
+     && !notPublishedPane.includes(VERIFY_REFUSAL)
+     && !/NOT ANSWERED/.test(notPublishedPane)
+     && sc.calls.some(c => c.op === "verify"));
+  /* (3) THE REFUSAL.
+     **CORRECTED 2026-08-04 BY UI-37, WHICH IS WHAT THIS ASSERTION ASKED FOR AT
+     THE SITE — read the previous form before assuming this one is routine.**
+     UI-36 wrote this arm to pin a DEFECT and said so here: `op=verify` refuses a
+     malformed hash in the control plane's own words, `apiQ` — unlike `rec` — does
+     not throw on `ok:false`, so the refusal arrived as an ordinary value with
+     `published` undefined, fell into the NOT-PUBLISHED branch, and told an
+     uncredentialed reader "No published part answers to that hash". The old
+     assertion therefore required the pane to say NOT PUBLISHED and required the
+     plane's refusal to be ABSENT from it. **Every one of those requirements is
+     now exactly backwards**, which is why a pin written to hold a defect has to
+     be corrected the day the defect goes and can never be exempted: left alone
+     it would have gone red for the fix and green for the bug.
+     WHAT IS PINNED NOW: the pane says the question was NOT ANSWERED, it does not
+     say NOT PUBLISHED, and it carries the plane's own refusal sentence WHOLE —
+     neither edited nor re-spelled, which is DEC-8 and is also why this arm is a
+     new row in DEC49_SUBJECT below. Reachable by a click, unchanged: the
+     container row still fills its hash from `bundle_sha || ""`, and that is
+     pinned separately from app.html's source directly below. */
   const refusedPane = textOf("case-address-at-load", "#v-refused");
-  ok("MEASURED, AND IT IS A DEFECT THIS ITEM PINS RATHER THAN FIXES: the plane REFUSED the question in "
-     + "its own words (" + JSON.stringify(VERIFY_REFUSAL) + ") and the reader is told the RECORD has no "
-     + "such hash. The refusal reaches this surface and is dropped — apiQ does not throw on ok:false, so "
-     + "a declined question and a genuine absence are one sentence here",
-     /NOT PUBLISHED\./.test(refusedPane)
-     && /No published part answers to that hash/.test(refusedPane)
-     && !refusedPane.includes(VERIFY_REFUSAL)
-     && !/verify requires/.test(refusedPane));
+  ok("CORRECTED 2026-08-04 (UI-37, D-195) FROM THE ASSERTION THAT PINNED THE DEFECT: the plane REFUSED "
+     + "the question in its own words (" + JSON.stringify(VERIFY_REFUSAL) + ") and the reader is now told "
+     + "the QUESTION was not answered, in the plane's own sentence rendered WHOLE — not that the RECORD "
+     + "has no such hash. A declined question and a genuine absence are two sentences here",
+     /NOT ANSWERED\./.test(refusedPane)
+     && refusedPane.includes(esc(VERIFY_REFUSAL))
+     && !/NOT PUBLISHED\./.test(refusedPane)
+     && !/No published part answers to that hash/.test(refusedPane));
   /* And the call that produces it is one the page COMPOSES, read out of
      app.html rather than supposed: the container row's hash falls back to the
      empty string when the plane's `verification` block names a finding the case
@@ -1180,6 +1477,57 @@ if(S("case-address-at-load") && HIDE !== "case-verify"){
      + "`e.error || e.reason` has no value to render, because apiQ rejects only with a transport error",
      /Could not ask\./.test(gonePane) && /the record did not answer/.test(gonePane)
      && !gonePane.includes(VERIFY_REFUSAL));
+  /* (5) THE SECOND REFUSAL UI-37's SWEEP FOUND — `unknown op`, which is what a
+     surface reaching a plane older than itself is told. It is driven because
+     `civicos-ui` carries no version number and its deploy is explicitly NOT
+     gated on a plane release (`kickoffs/UI.md`), so a stranger's browser talking
+     to an instance that predates `op=verify` is an ordinary Tuesday. The plane's
+     wording here is terse and it is still the plane's; the surface renders it
+     and adds nothing about the record. */
+  const unknownPane = textOf("case-address-at-load", "#v-unknownop");
+  ok("REACH: the SECOND refusal — a plane that does not have the op at all (" + JSON.stringify(UNKNOWN_OP_REFUSAL)
+     + "), which is what a surface deployed ahead of its plane receives — reads as NOT ANSWERED carrying "
+     + "the plane's own word, and never as a statement about the record",
+     /NOT ANSWERED\./.test(unknownPane) && unknownPane.includes(esc(UNKNOWN_OP_REFUSAL))
+     && !/NOT PUBLISHED\./.test(unknownPane)
+     && !/No published part answers to that hash/.test(unknownPane));
+  /* (6) THE THIRD, AND IT IS THE ARM THAT DECIDED THE DESIGN. Section 7a spreads
+     `out.result` into a `{ok:true}` envelope without checking `out.ok`, so a
+     Durable Object failure arrives here as HTTP 200, `{ok:true}`, no
+     `published`, no `matches` and NO `ok:false` anywhere for a transport seam to
+     throw on. **This is the measured reason `apiQ` was left unchanged**: making
+     it throw on `ok:false` the way `rec` does would not have closed this arm,
+     and the surface would still have told a stranger NOT PUBLISHED. The pane has
+     no plane sentence to render, so it says only what this surface can honestly
+     observe — that it has no answer — and it invents no reason for one.
+     WHEN THE PLANE IS FIXED, this arm's fixture stops matching the plane and the
+     SEVENA_SPREAD assertion near the top of this file is what says so. */
+  const nonAnswerPane = textOf("case-address-at-load", "#v-nonanswer");
+  ok("REACH, AND IT IS WHY THE FIX IS A SHAPE TEST RATHER THAN A THROWING SEAM: an answer that is not an "
+     + "answer and is not ok:false either — {ok:true} at HTTP 200, section 7a's spread of an absent "
+     + "`result` — reads as NOT ANSWERED with NO reason invented for it, where a seam throwing on "
+     + "ok:false would have passed it through to NOT PUBLISHED",
+     /NOT ANSWERED\./.test(nonAnswerPane)
+     && /the record did not say why/.test(nonAnswerPane)
+     && !/The record's own words/.test(nonAnswerPane)
+     && !/NOT PUBLISHED\./.test(nonAnswerPane)
+     && !/No published part answers to that hash/.test(nonAnswerPane));
+  /* AND THE SEAM IS PINNED AS UNCHANGED, from app.html's own source. UI-37's
+     judgement was to fix at the three sites rather than in `apiQ`, and a later
+     reader must be able to see that `apiQ` still does not throw — otherwise the
+     reasoning recorded at `pubVerify` describes a file that no longer exists.
+     The sweep's REACH is asserted as a DELTA rather than as an absolute count
+     (REC-48's lesson, and the sixth time this discipline was needed): what is
+     pinned is that `apiQ` has exactly the three callers this item swept and that
+     none of them lost its own error path. */
+  const APIQ_CALLERS = [...APP_SRC.matchAll(/apiQ\("([a-z]+)"/g)].map(m => m[1]).sort();
+  ok("SWEEP: `apiQ` is UNCHANGED and still does not throw on ok:false — it opens the envelope and returns "
+     + "the value, exactly as before — and its callers are the " + APIQ_CALLERS.length + " this item swept ["
+     + APIQ_CALLERS.join(", ") + "], each keeping its own error path rather than being routed into one "
+     + "generic catch",
+     /async function apiQ\(op, params\)\{\n  const j = await api\(op, null, params\|\|\{\}\);\n  return \(j && j\.result !== undefined\) \? j\.result : j;\n\}/.test(APP_SRC)
+     && APIQ_CALLERS.length === 3
+     && APIQ_CALLERS.join(",") === "publishedcase,publishedmanifest,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the
@@ -1194,6 +1542,59 @@ if(S("published-verify-panel"))
      /Check this without us/.test(textOf("published-verify-panel", "#pub-body"))
      && /Verifying what you are reading/.test(textOf("published-verify-panel", "#pub-body"))
      && S("published-verify-panel").calls.every(c => c.token === null));
+
+/* ============================================================
+   THE TWO SIBLING PUBLIC READS, EACH IN BOTH DIRECTIONS — UI-37, 2026-08-04
+   ============================================================
+   UI-37's brief required a sweep for whether the siblings on this page shared
+   `pubVerify`'s collapse. Both did. These four arms are the sweep's result made
+   permanent, and each pair is a pair on purpose: the false negative and the
+   true one are told apart by ONE field of the plane's answer, and an item that
+   fixed the first while breaking the second would have moved the lie rather than
+   removed it. */
+if(S("published-index-refused")){
+  const pane = textOf("published-index-refused", "#pl");
+  ok("REACH, AND IT IS THE WORSE OF THE TWO SIBLINGS: the published INDEX, refused by the plane, no longer "
+     + "tells a stranger that this group has published nothing — a claim about the ENTIRE record made out "
+     + "of an answer that was never given. It renders the plane's own word (" + JSON.stringify(UNKNOWN_OP_REFUSAL)
+     + ") and says what it cannot say",
+     pane.includes(esc(UNKNOWN_OP_REFUSAL))
+     && !/has not published any case files yet/.test(pane)
+     && /cannot say what this group has published/.test(pane)
+     && S("published-index-refused").calls.every(c => c.token === null));
+}
+if(S("published-index-empty")){
+  const pane = textOf("published-index-empty", "#pl");
+  ok("REACH: and a group that genuinely HAS published nothing still reads as exactly that — the plane "
+     + "answered, the answer was an empty list, and the empty state is the truth about it. The two must "
+     + "not collapse in this direction either",
+     /has not published any case files yet/.test(pane)
+     && !pane.includes(esc(UNKNOWN_OP_REFUSAL))
+     && !/cannot say what this group has published/.test(pane)
+     && /verify it against its published hash/.test(pane));
+}
+if(S("case-address-refused")){
+  const pane = textOf("case-address-refused", "#pub-body");
+  ok("REACH: a published case ADDRESS opened against a plane that refuses no longer gets the heading "
+     + "\"Not published\" — the plane declined the question and the page says so, carrying the refusal's "
+     + "own words, which the old branch dropped entirely because it read only `detail` and this arm "
+     + "carries `error`",
+     /Not answered/.test(pane) && pane.includes(esc(UNKNOWN_OP_REFUSAL))
+     && !/<h1>Not published<\/h1>/.test(pane)
+     && !/No published edition answers to that\./.test(pane)
+     && S("case-address-refused").calls.every(c => c.token === null));
+}
+if(S("case-address-not-published")){
+  const pane = textOf("case-address-not-published", "#pub-body");
+  ok("REACH: and the STORE's own NOT_PUBLISHED still reads as \"Not published\", with the store's own "
+     + "sentence rendered WHOLE and its bare reason code kept off a stranger's screen because the plane "
+     + "sent prose beside it (UI-30's rule: the sentence when there is one, the bare reason when there "
+     + "is not, never a blank and never a translation)",
+     /<h1>Not published<\/h1>/.test(pane)
+     && pane.includes(esc(CASE_NOT_PUBLISHED.detail))
+     && !/Not answered/.test(pane)
+     && !/NOT_PUBLISHED/.test(pane));
+}
 /* And the walk is not thin: a harvest of a few hundred characters would satisfy
    every assertion above while measuring almost nothing. */
 {
@@ -1484,8 +1885,44 @@ for(const [term, e] of ordered){
    long, so `CASE`, `FIND` (and, surface-authored, `NOT`) have nowhere to be
    suppressed from. The rule is unchanged and the measurement is unchanged; the
    granularity of the surfaces it now runs over is what moved. */
+/* ============================================================
+   UPDATED DELIBERATELY AGAIN BY UI-37, 2026-08-04 — AND THE HONEST HEADLINE IS
+   THAT THE SUBJECT BARELY MOVED. 11 TERMS -> 11 TERMS, ONE NEW SOURCE ON ONE
+   EXISTING TERM. THIS IS NOT A RE-BASELINE AND IT IS NOT A GROWTH EITHER; IT IS
+   THE MEASUREMENT, AND SAYING SO PRECISELY IS THE POINT.
+   ============================================================
+   WHAT CHANGED, AND IT IS EXACTLY ONE ROW:
+     `sha256` gains `case-address-at-load #v-refused` as a PLANE source. UI-37
+        makes the surface render `op=verify`'s refusal instead of swallowing it,
+        and that refusal is "verify requires sha256=<64 lowercase hex>" — so the
+        plane's own sentence now stands in front of an uncredentialed reader on
+        one more surface, carrying a term the subject already contained from
+        `#pub-body`. NO NEW TERM ENTERS THE SUBJECT.
+   WHAT THIS ITEM ADDED THAT DID *NOT* REACH THE SUBJECT, stated because "we
+   added plane wording and the subject did not move" is the kind of claim a
+   reader is right to distrust:
+     - the `unknown op` refusal now renders on THREE surfaces (`#v-unknownop`,
+       `published-index-refused #pl`, `case-address-refused #pub-body`). It is
+       genuinely plane wording on a pre-authentication surface and Bob should
+       know it is there — it simply contains none of the 74 inherited terms and
+       trips neither structural rule, so the instrument has nothing to pin. That
+       is a fact about the sweep's vocabulary, not evidence the wording is
+       harmless, and it is named here rather than left to be discovered.
+     - the store's own NOT_PUBLISHED sentence now renders whole at
+       `case-address-not-published #pub-body`, replacing a surface-authored
+       stand-in. Same finding: real plane prose, no tracked term in it.
+     - `NOT_PUBLISHED`, the bare reason CODE, briefly DID reach the subject while
+       this item was being written, because the first version of `planeSaid`
+       joined `reason` with `detail`. It was corrected to prefer the plane's
+       PROSE and keep the bare code only when the plane sent nothing else —
+       UI-30's rule — so a SCREAMING_SNAKE wire code does not stand in front of a
+       stranger when a sentence was available. Recorded because the instrument
+       caught it and because the near-miss is the argument for the instrument. */
 const DEC49_SUBJECT = {
-  "sha256":              ["case-address-at-load #pub-body"],
+  "sha256":              ["case-address-at-load #pub-body",
+                          /* NEW SOURCE 2026-08-04, UI-37 — op=verify's own refusal,
+                             rendered instead of swallowed (D-195) */
+                          "case-address-at-load #v-refused"],
   "op=":                 ["case-address-at-load #pub-body"],
   "bundle.md":           ["case-address-at-load #pub-body",
                           /* NEW 2026-08-04, UI-36 — op=verify echoing the part's path */
@@ -1549,4 +1986,4 @@ const REPORT_ONLY = !process.env.UI31_ENFORCE;
 }
 
 if(fails.length){ console.error(`preauth-vocabulary: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, the VERIFY PANE opened from the published rail, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, THE PUBLISHED MASTHEAD'S OWN CONTROLS, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); DEC-49'S SUBJECT — the ELEVEN plane-sourced rows, eight until UI-36 drove op=verify — PINNED BY TERM AND BY SOURCE, so any movement in them FAILS rather than being reported (UI-34: the hard constraint every item on these surfaces inherits was checked by hand until now); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half: 13 terms -> 9, all EIGHT plane-sourced rows unchanged. UI-34 (2026-08-04) ENLARGED THE BASIS BY ONE SCENARIO, deliberately and alone: 10 scenarios -> 11, 33,535 -> 34,375 characters, 55 -> 57 occurrences and 45 -> 47 visible, the whole delta being 'sha256' x30(26) -> x32(28) on its SURFACE half from the verify pane's own prose, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE. UI-36 (2026-08-04) DROVE op=verify, THE PUBLIC OP NOBODY HAD ASKED: 12 surfaces -> 19, 34,375 -> 35,835 characters, 9 terms -> 13, 57 -> 67 occurrences and 47 -> 57 visible, scenarios UNCHANGED at 11 — and DEC-49'S SUBJECT GREW 8 ROWS -> 11, every movement named at DEC49_SUBJECT ('manifest' NEW, the plane's kind VALUE as a word; 'CASE' NEW, the acronym rule on the plane's real minted id prefix; 'FIND' NEW, the same rule on the fixture's own id spelling and labelled as such; 'bundle.md' +3 SOURCES as op=verify echoes the part path). The instrument itself is UNCHANGED, proved by running this file with the new drive hidden and diffing UI-34's report to CHARACTER-IDENTICAL; NEGATIVE CONTROL: RUN, thirteen arms, all re-run against the FINAL file — (a) UI31_HIDE=<scenario> hides a member-facing surface and the harness fails NAMING what it stopped covering (three hidings: public-record 4/46, design-preview 3/47, case-address-at-load 8/40 which ALSO takes walk 1c's whole subject away — 0 call sites discovered, so a walk that covers nothing FAILS here instead of passing everything — and trips the subject arm) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 5/48 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 2/48 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/48 naming all thirteen (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 13 terms to 14 naming the gate as the author, 48/48 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 3/48 FAIL: the REACH arm names the act, the ATTRIBUTION arm names the consequence, and the DEC-49 SUBJECT arm names all four terms that VANISHED (g) the same overstep on the case page, verification.detail through .replace("this instance","this group") — 2/48 FAIL, the subject arm reporting 'this instance' now ARRIVING only from refused-signin #g-err (h) UI-34'S OWN — UI31_HIDE=published-verify-panel, 2/47 naming the scenario and pubVerifyPanel as an uncredentialed control nobody drives (i) a THIRD link planted on the published rail, 2/48 naming pubExpandForPrint in walk 1b and as undriven (j) UI-36'S OWN — UI31_HIDE=case-verify hides the verify DRIVE and 3/42 FAIL, naming pubVerify and pubBytes as controls on an uncredentialed page that NO scenario drives, the seven verify surfaces that stopped being covered, and the subject collapsing back to its pre-item state (manifest, CASE, FIND VANISHED and bundle.md losing three sources) — which is exactly the state this file was in before this item (k) UI-36'S DEC-8 ARM — pubVerify's SUCCESS branch translates the plane's own matches[0].path ("bundle.md" -> "the finding's own write-up"), 2/48 FAIL: the REACH arm names the act and the SUBJECT arm names the consequence generically, without anybody having anticipated the field (l) **THE ARM THAT MOVED NOTHING, AND IT IS A FINDING RATHER THAN A GAP** — pubVerify's ERROR branch translates its "e.error || e.reason" expression, the same DEC-8 overstep one branch over: 48/48 GREEN and the report CHARACTER-IDENTICAL, because that expression can never hold a plane string (apiQ rejects only with a transport error), which is why the refusal assertion above pins a defect instead (m) a SIXTH control planted on the case page, 2/48 naming pubShout in walk 1c and as undriven, so a new control on the page a stranger arrives on cannot arrive unmeasured — app.html restored byte-identically after every on-disk arm, sha256 333b4d7f… before and after`);
+console.log(`preauth-vocabulary: ${n} assertions, all green — every surface a member can see BEFORE authenticating is walked (the gate as served, its token panel, its address field, a refused sign-in, an unreachable plane, an empty token, the public record, the design preview, the VERIFY PANE opened from the published rail, and both published addresses resolved at load by app.html's own top-level code); the walk's own reach asserted by name and by count against the gate's markup, THE PUBLISHED MASTHEAD'S OWN CONTROLS, the load-time router's address shapes and the sibling suites' own sweeps; the plane's own sentences pinned VERBATIM at the gate AND on the case page (DEC-8, and UI-33's arm (g) is why the second one exists); DEC-49'S SUBJECT — the ELEVEN plane-sourced rows, eight until UI-36 drove op=verify — PINNED BY TERM AND BY SOURCE, so any movement in them FAILS rather than being reported (UI-34: the hard constraint every item on these surfaces inherits was checked by hand until now); and the plane vocabulary standing on those surfaces REPORTED with its exact terms, each occurrence attributed to the plane or to this surface — reported and not failed, because DEC-49 is open and a guard that failed would force a surface to invent a translation DEC-8 forbids. UI-33 (2026-08-04) closed the SURFACE-AUTHORED half: 13 terms -> 9, all EIGHT plane-sourced rows unchanged. UI-34 (2026-08-04) ENLARGED THE BASIS BY ONE SCENARIO, deliberately and alone: 10 scenarios -> 11, 33,535 -> 34,375 characters, 55 -> 57 occurrences and 45 -> 47 visible, the whole delta being 'sha256' x30(26) -> x32(28) on its SURFACE half from the verify pane's own prose, with EVERY PLANE-SOURCED ROW UNCHANGED IN NUMBER AND IN SOURCE. UI-36 (2026-08-04) DROVE op=verify, THE PUBLIC OP NOBODY HAD ASKED: 12 surfaces -> 19, 34,375 -> 35,835 characters, 9 terms -> 13, 57 -> 67 occurrences and 47 -> 57 visible, scenarios UNCHANGED at 11 — and DEC-49'S SUBJECT GREW 8 ROWS -> 11, every movement named at DEC49_SUBJECT ('manifest' NEW, the plane's kind VALUE as a word; 'CASE' NEW, the acronym rule on the plane's real minted id prefix; 'FIND' NEW, the same rule on the fixture's own id spelling and labelled as such; 'bundle.md' +3 SOURCES as op=verify echoes the part path). The instrument itself is UNCHANGED, proved by running this file with the new drive hidden and diffing UI-34's report to CHARACTER-IDENTICAL; NEGATIVE CONTROL: RUN, thirteen arms, all re-run against the FINAL file — (a) UI31_HIDE=<scenario> hides a member-facing surface and the harness fails NAMING what it stopped covering (three hidings: public-record 4/46, design-preview 3/47, case-address-at-load 8/40 which ALSO takes walk 1c's whole subject away — 0 call sites discovered, so a walk that covers nothing FAILS here instead of passing everything — and trips the subject arm) (b) UI31_EMPTY_TERMS=1 neuters the term harvest, 5/48 (c) UI31_NO_PLANE_RANGES=1 breaks the attribution so the plane's own sentence would be blamed on this surface, 2/48 (d) UI31_ENFORCE=1 runs the reporting arm AS the failing arm DEC-49's answer will make it, 1/48 naming all thirteen (e) ON DISK, app.html's gate hint gains "capture_sha" and the report grows 13 terms to 14 naming the gate as the author, 48/48 green (f) THE HARD CONSTRAINT'S OWN ARM — signIn() translates the plane's refusal ("a salted derivation" -> "a scrambled copy"), 3/48 FAIL: the REACH arm names the act, the ATTRIBUTION arm names the consequence, and the DEC-49 SUBJECT arm names all four terms that VANISHED (g) the same overstep on the case page, verification.detail through .replace("this instance","this group") — 2/48 FAIL, the subject arm reporting 'this instance' now ARRIVING only from refused-signin #g-err (h) UI-34'S OWN — UI31_HIDE=published-verify-panel, 2/47 naming the scenario and pubVerifyPanel as an uncredentialed control nobody drives (i) a THIRD link planted on the published rail, 2/48 naming pubExpandForPrint in walk 1b and as undriven (j) UI-36'S OWN — UI31_HIDE=case-verify hides the verify DRIVE and 3/42 FAIL, naming pubVerify and pubBytes as controls on an uncredentialed page that NO scenario drives, the seven verify surfaces that stopped being covered, and the subject collapsing back to its pre-item state (manifest, CASE, FIND VANISHED and bundle.md losing three sources) — which is exactly the state this file was in before this item (k) UI-36'S DEC-8 ARM — pubVerify's SUCCESS branch translates the plane's own matches[0].path ("bundle.md" -> "the finding's own write-up"), 2/48 FAIL: the REACH arm names the act and the SUBJECT arm names the consequence generically, without anybody having anticipated the field (l) **THE ARM THAT MOVED NOTHING, AND IT IS A FINDING RATHER THAN A GAP** — pubVerify's ERROR branch translates its "e.error || e.reason" expression, the same DEC-8 overstep one branch over: 48/48 GREEN and the report CHARACTER-IDENTICAL, because that expression can never hold a plane string (apiQ rejects only with a transport error), which is why the refusal assertion above pins a defect instead (m) a SIXTH control planted on the case page, 2/48 naming pubShout in walk 1c and as undriven, so a new control on the page a stranger arrives on cannot arrive unmeasured — app.html restored byte-identically after every on-disk arm, sha256 333b4d7f… before and after. UI-37 (2026-08-04) FIXED THE DEFECT UI-36 PINNED (D-195) AND CORRECTED THE PIN: 11 scenarios -> 15, 19 surfaces -> 22, 35,835 -> 38,637 characters, 13 terms -> 13, 67 -> 68 occurrences, 57 -> 58 visible, and DEC-49'S SUBJECT 11 ROWS -> 11 with ONE NEW SOURCE on one existing term ('sha256' at case-address-at-load #v-refused, op=verify's own refusal rendered instead of swallowed) - no new term enters the subject, and the plane wording this item added that the instrument CANNOT pin ('unknown op' on three surfaces, the store's NOT_PUBLISHED sentence) is itemised at DEC49_SUBJECT rather than left to be found. THE SWEEP FOUND THREE REFUSALS WHERE THE ITEM NAMED ONE and THREE SITES WHERE IT NAMED ONE; the third refusal - section 7a's {ok:true, ...out.result} spread over an absent result, HTTP 200 with no ok:false - is why apiQ is UNCHANGED and the fix is a positive shape test at each site, since a seam throwing on ok:false could never have caught it. THE FOUR NEW SCENARIOS MOVE NO NUMBER IN THE REPORT, MEASURED: this file against the FINAL app.html with all four hidden gives 54/54 green, 11 scenarios, 22 surfaces, 36,527 characters, 13 terms, 68 occurrences, 58 visible - the same 68/58 as the full run - and the subject arm PASSES, so the four add 2,110 characters and four assertions and nothing else. NEGATIVE CONTROL: RUN, six more arms, every one on disk against the FINAL file with app.html restored BYTE-IDENTICALLY (sha256 74cc1646… before and after each) - (n) THE ITEM'S OWN, D-195 restored exactly as it shipped (the truthy test back, the third branch deleted) -> 4 of 58 FAIL, naming ALL THREE refusals rendered as a substantive negative AND the DEC-49 subject arm noticing the plane's sentence VANISHED from #v-refused; the true-negative arm stays green, which is what makes the four failures specific (q) THE OTHER DIRECTION, one character - the published:false branch made unreachable so a GENUINE absence is reported as a question nobody answered -> 1 of 58 here AND publishedcase.test.mjs fails too, a second suite catching it independently (o) the published INDEX's collapse restored -> 2 fails in two suites: this file naming the refusal, and auth-surface's own NEG-CONTROL (a) - which is the finding that D-173's 'honest-looking blank screen' WAS this exact sentence (p) the case ADDRESS's collapse restored (one heading over every refusal, only 'detail' read) -> 1 of 58 (s) THE DEC-8 OVERSTEP one branch over from UI-36's arm (k) - the surface TRANSLATES the refusal it now renders ('64 lowercase hex' -> 'a proper fingerprint') -> 2 of 58: the refusal arm names the act and the SUBJECT arm names the consequence (r) THE INSTRUMENT'S OWN - app.html reverted to the PRE-ITEM COMMIT 1cbc70f (the defect back) with the four new scenarios hidden -> 4 of 54, the walk returns to 11 scenarios and the report to 70 occurrences / 60 visible, so the new arms are answering the surface and not themselves. **AND THIS ARM HAD TO BE CORRECTED MID-RUN, REPORTED RATHER THAN SMOOTHED:** it first reverted to HEAD, which stopped being the pre-item state the moment this item's own commit landed, and it quietly fell from 4 of 54 to 1 of 54 - a control that reverts to a moving target measures nothing, and the only reason it was caught is that the arm was re-run after a later edit instead of being trusted from its first result. BATTERY UNMOVED and it is measured, not assumed: 98/98 at 5,544 assertions with UI-37 applied, and 98/98 at 5,544 with the whole change stashed - no bio-plane file is touched by this item`);
