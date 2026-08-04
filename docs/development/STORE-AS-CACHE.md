@@ -492,7 +492,103 @@ judgment, and nobody could later say whose.
    qualifier construct, and the research is independent evidence for solving it once.
    It stays PARKED until Bob reopens it; this document only records the corroboration.
 
-## THE MODEL, consolidated — six layers, and which of them exist
+## THE MODEL, REBUILT ON THREE AXES — Bob's correction, 2026-08-04
+
+The six-layer table below was written from a DOCUMENT perspective and Bob named the
+defect:
+
+> *"Documents are what's harvested. But from those documents we extract content… Route
+> one is the query compiler… Route two is the meaning layer's own reads — concerns,
+> connections, resolutions, progressions — over tables the query compiler cannot see…
+> As important as finding missing documents is extracting, connecting, and creating
+> meaning from what's in the documents."*
+
+**FACT CHECK — the two routes are real and the numbers are close.** Measured against
+source 2026-08-04:
+
+- **Route 1, the query compiler**: `FIELDS` in `query.mjs` projects **34** filterable
+  fields (Bob recalled 25 — the set has grown), and `FTS_COLUMNS` is exactly **five**:
+  `title`, `body`, `meta`, `locator`, `authority`. Confirmed as stated.
+- **Route 2, the meaning tables**: `readings` (`schema.mjs:663`), `reading_refs` (:682),
+  `resolutions` (:850), `connections` (:907), `inquiry_basis` (:1181) — **none reachable
+  by the query compiler.**
+- **THE NUANCE THAT MATTERS MORE THAN THE COUNT, and it makes the defect worse than Bob
+  stated it:** route 1 *appears* to cover meaning because it projects SCALAR SUMMARIES of
+  it onto the bundle row — `capture` → `inquiry_capture_strength`, `connection` →
+  `inquiry_connection_strength`, `legs` → `inquiry_basis_count`, `resolution` →
+  `action_resolution`. So a member can filter by a finding's STRENGTH and never reach the
+  legs that produced it. **The projection creates a false sense of coverage**: the meaning
+  layer is visible as a number and unreachable as a structure.
+
+### The correction: this is ONE PATTERN AT THREE ALTITUDES, not six stacked layers
+
+A "miss" is not one thing. It means something different — with different cost, different
+failure mode, and a different repair — depending on which axis you are short on.
+
+| | **DOCUMENT axis** | **CONTENT axis** | **MEANING axis** |
+| --- | --- | --- | --- |
+| The question | do we hold the bytes? | have we extracted what is IN the bytes? | have we resolved and connected what was extracted? |
+| A miss repairs by | **FETCH** — external | **EXTRACT** — compute over bytes held | **DERIVE** — compute over content held |
+| Cost of a miss | seconds; governed; bounded by 6 connections; may fail PERMANENTLY (source gone) | CPU; in-plane or a fleet member; retryable; deterministic per engine version | cheap and DO-local; depends on the entity axis |
+| Who can repair it | only the outside world | us, alone | us, alone |
+| Already read-through? | partly (`op=acquire`, fallback) | partly (PDF tiering, escalation to the pdf-worker) | **YES, and unnamed** — REC-5's `connection_dirty` watermark sweeping on the DO alarm |
+| Its frontier today | `deferred` links (derived) + member leads (MISSING, D-194) | documents held but unextracted, or extracted at a tier below what is now available | `connection_dirty` — it EXISTS |
+| Its four states | `NEVER_LOOKED` / `LOOKED_ABSENT` / `LOOKED_INDETERMINATE` / `PRESENT` | `NOT_EXTRACTED` / `PARTIAL` / `EXTRACTED` / `UNEXTRACTABLE` | `UNRESOLVED` / `RESOLVED` / `UNDETERMINED` |
+
+**Three things fall out of the table, and each one is already half-built:**
+
+1. **D-129's split IS the content axis's state model.** Its own example is exactly this
+   distinction: a scanned PDF with no text layer is `UNEXTRACTABLE` — permanently, a
+   property of the document — while a PDF over the Worker envelope is `NOT_EXTRACTED`, a
+   limit of our run that a later run lifts. CPDF-5's measured buckets (fully 29%, partial
+   21%, tier-2 required 36%, OCR-only 14%) are that state column, counted.
+2. **The meaning axis ALREADY DOES read-through, and nobody called it that.** D-122 was
+   *"connections are only derived by an explicit `op=connect` and nothing calls it
+   automatically"*; REC-5 closed it with a bounded, self-terminating, idempotent sweep on
+   the REC-1 alarm driven by a `connection_dirty` watermark. **That is incremental view
+   maintenance — the Noria pattern the research surfaced — running in production at the
+   meaning layer while the document layer still waits for a member to click.**
+3. **The content axis has a cache-invalidation key the other two do not: THE ENGINE
+   VERSION.** Re-fetching a document yields the same bytes and proves nothing (the
+   costs-nothing rule). But re-EXTRACTING the same bytes under a better engine yields
+   genuinely more content — which is exactly what D-183's CALIBRATION construct exists to
+   track. **So D-183 is not an OCR detail; it is the content axis's staleness rule**, and
+   it is the one place in this whole design where re-deriving from data we already hold is
+   a legitimate, non-costs-nothing improvement.
+
+### What this changes about the build order
+
+The earlier order (observations → authored frontier → measure → planning) was
+document-axis work throughout. Corrected:
+
+- **The OBSERVATION record is shared across all three axes** and gets more valuable for
+  it: *extracted at tier 1 on this date under this engine*, *derived a connection at this
+  watermark*, and *fetched and unchanged* are the same shape of fact. Build it once,
+  write to it from three places.
+- **The content axis is the cheapest place to start and the most immediately valuable**,
+  because the documents are already held. Every unextracted document is a miss we can
+  repair with no outside dependency, no politeness budget and no 6-connection ceiling —
+  and the office-formats and OCR work already queued IS this axis.
+- **A missing-information report must name its axis.** *"We have nothing on Y"* is three
+  different claims: we never fetched anything about Y; we hold documents about Y we have
+  not read; we have read them and derived no connection. The member's next move differs in
+  each case, and today the record cannot tell them apart.
+
+### Where AI actually sits, given the above
+
+Bob's exploratory/discovery services rest on the MEANING axis, not the document axis. The
+document axis is plumbing — fetch, hash, store. **What an AI overview reads is content and
+meaning**, and both are behind route 2, which no query surface reaches. So the ordering
+consequence is blunt: **an AI overview built on route 1 today would be reading titles,
+frontmatter and five text columns and calling it understanding.** The extraction and
+connection work is not a prerequisite in the scheduling sense; it is the SUBJECT MATTER.
+
+## THE EARLIER SIX-LAYER TABLE — document-axis only, kept as the acquisition half
+
+> **NAMING, corrected 2026-08-04:** these were first written as `L0`–`L6`, which
+> COLLIDES with the content framework's own layer numbering (where `L3` is CONTENT and
+> `L7` is the finding — see D-164). They are named, not numbered, from here on, and the
+> three AXES above are the primary model; this table is the DOCUMENT axis expanded.
 
 Asked directly by Bob 2026-08-04: *"Do we have a model and architecture that we can build
 upon?"* **The model is settled and coherent. The architecture is one decomposition away,
@@ -500,32 +596,32 @@ and this section is the part that was missing.**
 
 | Layer | What it is | State today |
 | --- | --- | --- |
-| **L0 · SOURCES** | the civic web, and the member's own knowledge (tips, shoe leather) | outside the system, by definition |
-| **L1 · ACQUISITION** | read-through entry: fetch, governor, archive fallback | **EXISTS** — `op=acquire`, the per-host governor, the two-hop archive chain |
-| **L2 · THE RECORD** | write-once, content-addressed bytes + provenance | **EXISTS** — register, `capture_sha`, R2, the provenance chain |
-| **L3 · OBSERVATIONS** | every LOOK, including the ones that returned nothing new | **MISSING** — the zero-payload record (WARC `revisit` shape) and the empty-search record |
-| **L4 · THE FRONTIER** | what is known-or-believed-to-exist and not held, with its state | **HALF EXISTS** — `deferred` links are the derived half; the AUTHORED half (leads) is absent (D-194) |
-| **L5 · PLANNING** | objective + context → proposed areas to explore | **MISSING** — and it is a PROPOSAL surface, never an actor |
-| **L6 · ANALYSIS** | inquiries, findings, basis, publication | **EXISTS ENTIRE** — this is what the rest serves |
+| **SOURCES** | the civic web, and the member's own knowledge (tips, shoe leather) | outside the system, by definition |
+| **ACQUISITION** | read-through entry: fetch, governor, archive fallback | **EXISTS** — `op=acquire`, the per-host governor, the two-hop archive chain |
+| **THE RECORD** | write-once, content-addressed bytes + provenance | **EXISTS** — register, `capture_sha`, R2, the provenance chain |
+| **OBSERVATIONS** | every LOOK, including the ones that returned nothing new | **MISSING** — the zero-payload record (WARC `revisit` shape) and the empty-search record |
+| **THE FRONTIER** | what is known-or-believed-to-exist and not held, with its state | **HALF EXISTS** — `deferred` links are the derived half; the AUTHORED half (leads) is absent (D-194) |
+| **PLANNING** | objective + context → proposed areas to explore | **MISSING** — and it is a PROPOSAL surface, never an actor |
+| **ANALYSIS** | inquiries, findings, basis, publication | **EXISTS ENTIRE** — this is what the rest serves |
 
 ### The one architectural decision the whole thing rests on
 
 **THE RECORD AND THE OBSERVATION LOG ARE SEPARATE, WITH DIFFERENT LIFECYCLES.**
 
-- **L2, the record**, is write-once and content-addressed. A capture is bytes plus the
+- **THE RECORD**, is write-once and content-addressed. A capture is bytes plus the
   provenance of how they arrived. It never evicts, never updates, and a citation resolves
   to it forever.
-- **L3, the observation log**, is append-only EVENTS ABOUT LOOKING: we fetched and it was
+- **THE OBSERVATION LOG**, is append-only EVENTS ABOUT LOOKING: we fetched and it was
   unchanged; we fetched and it had changed; we looked and it was gone; we looked and could
   not tell; we searched for a thing a member named and found nothing.
 
 **Keeping them separate is what makes absence recordable without polluting the record.**
-Fold L3 into L2 and every failed look becomes either a phantom capture or nothing at all —
+Fold the observation log into the record and every failed look becomes either a phantom capture or nothing at all —
 which is exactly the dead end this document opened with (*archives record absence; caches
 retry it away*). It is also what lets a HIT be cheap: an observation that produced no new
-bytes costs one L3 row and zero L2 bytes, which is the WARC `revisit` economy.
+bytes costs one observation row and zero record bytes, which is the WARC `revisit` economy.
 
-**And L3 plus L4 are the same table seen from two angles.** A frontier entry IS a thing
+**And the observation log and the frontier are the same table seen from two angles.** A frontier entry IS a thing
 sought together with its current state (`NEVER_LOOKED` · `LOOKED_ABSENT` ·
 `LOOKED_INDETERMINATE` · `PRESENT`) and the observation that last set it. The four-state
 model is not a separate feature; it is the frontier's state column.
@@ -550,7 +646,7 @@ model is not a separate feature; it is the frontier's state column.
 
 1. **The harvest rate**, on a real objective against Oakland's corpus. The
    focused-crawling authors' own gate: below roughly 30–40% relevant, a focused crawler is
-   worse than an ordinary one. This decides whether L5 is worth building at all.
+   worse than an ordinary one. This decides whether PLANNING is worth building at all.
 2. **The DO storage curve per captured document**, against the 10 GB per-object ceiling
    (D-190). Decides when the record must shard, and that is cheaper to know before L1 grows
    by design.
@@ -558,10 +654,10 @@ model is not a separate feature; it is the frontier's state column.
 
 ### The order to build in
 
-L3 first (it is small, it makes absence recordable, and every other layer writes to it),
-then L4's authored half (D-194, designed WITH D-184 since both are member knowledge the
-record cannot hold), then measure, then L5 only if the harvest rate clears its gate.
-**L2 changes not at all**, which is the strongest evidence the framing is right: a
+OBSERVATIONS first (it is small, it makes absence recordable, and every other layer writes to it),
+then the FRONTIER's authored half (D-194, designed WITH D-184 since both are member knowledge the
+record cannot hold), then measure, then PLANNING only if the harvest rate clears its gate.
+**THE RECORD changes not at all**, which is the strongest evidence the framing is right: a
 reframing that required rewriting the record would have been the wrong reframing.
 
 ## The one-line version, for a reader who reads nothing else
