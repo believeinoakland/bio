@@ -221,7 +221,32 @@ function uploadForm(meta, source) {
   return fd;
 }
 
-async function uploadInstall(token, acct, slug, secrets, release) {
+/* REC-26 / D-102 again: the instance name IS the worker name, so a Worker's
+   binding to ITSELF names the same `slug` the group already chose. This is what
+   the plane's `#monitorConfigured()` looks for, and without it BOTH monitoring
+   consumers — CAP-3's archive fallback and REC-26's monitor cadence — contribute
+   no wake and hold no alarm: built, tested, and wired to nothing on every
+   installed instance (MACHINE-PROCESSES.md §0). A loopback service binding is the
+   only way a Durable Object can reach its own control plane, which is how those
+   consumers fire the SAME ops a caller uses (D-112: one path, no drift).
+
+   THE CREDENTIAL, decided 2026-08-04 (DIST-1) and deliberately NOT a new secret:
+   the plane's `#monitorToken()` is `env.MONITOR_TOKEN || env.ADMIN_TOKEN`, but its
+   `classify()` recognises only ADMIN_TOKEN / MEMBER_TOKEN / PROBE_TOKEN. Binding a
+   MONITOR_TOKEN here — and nothing else — would make every tick SELECT a token the
+   plane then refuses, while `#monitorConfigured()` stayed true: an armed alarm
+   firing 401s forever, which is worse than the ADMIN_TOKEN it replaced. The scoped
+   credential is the right end state and is a DELEGATION to RECORD in CLAIMS.md
+   (2026-08-04 DIST → RECORD); it must land in the plane FIRST. Until then the
+   daemon runs on the ADMIN_TOKEN the installer already binds, which is exactly
+   what the plane falls back to. */
+const selfBinding = (slug) => ({ type: "service", name: "SELF", service: slug });
+
+/* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
+   the script the same PUT creates, and nothing here can prove Cloudflare accepts
+   that self-reference without a real install, which is deploy-gated. So the
+   install degrades rather than failing — see the retry in runInstall. */
+async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
   const meta = {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
@@ -240,6 +265,7 @@ async function uploadInstall(token, acct, slug, secrets, release) {
       { type: "secret_text", name: "PROBE_TOKEN", text: secrets.probe },
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
+      ...(opts.noSelf ? [] : [selfBinding(slug)]),
     ],
     /* SQLite backend is the irreversible choice, made correctly, once. */
     migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
@@ -275,7 +301,20 @@ async function uploadUpdate(token, acct, slug, withR2, release) {
         { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
         { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ] : []),
+      /* REC-26: bound on UPDATE as well as install, and for the same reason as
+         INSTANCE_NAME above — every copy installed before this existed has no
+         SELF binding, so its monitoring consumers are dormant right now, and its
+         next update arms them with no action from the operator. Unlike the
+         INSTANCE_NAME case there is nothing cosmetic about it: an instance
+         without this binding never re-checks a source it was asked to monitor. */
+      selfBinding(slug),
     ],
+    /* `service` is deliberately NOT in keep_bindings: the line above binds it
+       explicitly, and an explicit binding is what heals the older copies that
+       have none — inheritance cannot create what was never there. THE COROLLARY
+       IS A TRAP: if the explicit binding above is ever removed, "service" MUST be
+       added here in the same change, or an update will silently DELETE the
+       binding from a working instance and re-inert its monitoring. */
     keep_bindings: ["secret_text", "durable_object_namespace", ...(withR2 ? [] : ["r2_bucket"])],
   };
   return cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
@@ -461,10 +500,27 @@ async function runInstall(emit, code, saved) {
   emit.step("install", "Installing the software into your account");
   try { await uploadInstall(token, acct.id, slug, secrets, release); emit.ok("install"); }
   catch (e) {
-    emit.no("install");
-    return emit.fail("The software did not install",
-      "Your account was reachable but the install was refused, so there is nothing left behind to clean up.",
-      "Detail: " + e.message);
+    /* An install carries a service binding to the script this very upload
+       creates. That self-reference cannot be rehearsed here — the only way to
+       know Cloudflare accepts it is a real install, which is deploy-gated — so
+       the ONE thing it must not do is cost a group their copy. Retry once
+       without it: a copy that installs and monitors nothing is recoverable (the
+       update path binds SELF, so their next update arms it), and a copy that
+       never installed is not. Same doctrine as the storage arm of the update:
+       an install is never refused over something it can complete later. */
+    let degraded = false;
+    try { await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true }); degraded = true; }
+    catch { /* the original refusal is the one worth reporting */ }
+    if (!degraded) {
+      emit.no("install");
+      return emit.fail("The software did not install",
+        "Your account was reachable but the install was refused, so there is nothing left behind to clean up.",
+        "Detail: " + e.message);
+    }
+    emit.ok("install", "Your copy is installed. One optional part — the part that lets it re-check "
+      + "documents on its own schedule — was refused by Cloudflare and was left out, so nothing else "
+      + "was held up. Running the updater on this copy later turns it on. (Cloudflare said: "
+      + e.message + ")");
   }
 
   emit.step("addr", "Turning on your web address");
