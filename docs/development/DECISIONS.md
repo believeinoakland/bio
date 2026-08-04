@@ -2456,6 +2456,30 @@ recommendation: mint the class. The unattended daemon path is exactly where a
   existing instance breaks.
 reversal cost: low before instances carry the token; after, removing the class
   re-inerts monitoring on updated instances until a second update rebinds.
+### DEC-39 · open
+raised: 2026-08-04 · CONDUCT (lifted from REC-38's report)
+for: bob
+question: The co-attestation honesty fence — "a co-attestation raises Grade B toward
+  evidentiary weight; it never reaches Grade A" — is member-facing wording that is a
+  CLAIM ABOUT WHAT THE RECORD ASSERTS, and it currently lives only in the surface's
+  own sentence. Should the plane publish fence wording for the attest act (the
+  DEC-29(b) prompt treatment — the sentence travels WITH the control), and if so,
+  what does it say?
+why it is Bob's: the sentence states what an attestation is worth, which is grade
+  doctrine — the R2/DEC-4 neighbourhood — and a wrong sentence here overclaims or
+  underclaims on every capture a member co-attests.
+provisional: the surface keeps its current sentence (unchanged since UI-2's era);
+  the plane publishes the attest LABEL (REC-38) and no fence wording; UI-24's rider
+  renders the published label and deliberately does NOT invent fence wording.
+alternative: let the surface keep authoring it indefinitely — rejected as the
+  provisional's end-state because it is the last member-facing claim about the
+  record's semantics that the record does not own.
+recommendation: publish it via the prompt mechanism REC-16 built (one act publishes
+  a prompt today; the machinery exists), with wording Bob confirms — the current
+  surface sentence is a reasonable draft but it is a doctrine statement and should
+  be his.
+reversal cost: nil before publication; after, the usual wording-migration (the
+  drift guard names it).
 ## Answered, awaiting enactment
 
 _(none)_

@@ -713,3 +713,15 @@ reversal if a later reader wants RECONCILED §3.1's rename literally.
   `AGREE` — UI-19 is the written consumer and renders unproven as STATED, never a
   grade (DEC-14's clause riding the item).
 - **Version:** I3 5.6.0 → **5.7.0** in `INTERFACES.md`.
+
+## IC-15 · I3: `capture_acts` + two vocabularies · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-38 — op=affordances gains a
+  top-level `capture_acts` block (label/needs/mode/rung for the capture-directed
+  acts, decorated by the same one function; `weight: null` stated), and
+  `vocabularies` gains `action_basis_kinds` + `correspondence_directions` by import.
+  Additive; nothing existing renamed or reshaped.
+- **Consumers:** UI. CONDUCT answers per the IC-12 mechanics, naming the proxy:
+  `AGREE` — UI-19's consumers verified lighting up off the real export with no UI
+  edit; UI-24's rider consumes the attest label next.
+- **Version:** I3 5.7.0 → **5.8.0** in `INTERFACES.md`.
