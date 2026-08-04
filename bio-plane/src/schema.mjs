@@ -1184,7 +1184,11 @@ CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at)
 -- testimony (a member's signed grade-D account), or hunch (DEC-15): an
 -- authored connection grade, the ONLY authored grade permitted above D,
 -- requiring an author and a date in the document, visible as a hunch from the
--- moment it is made, and BIAS DEBT until cleared (BIO_Declared_Bias_v0_1.md).
+-- moment it is made, and HUNCH DEBT until cleared (BIO_Declared_Bias_v0_1.md).
+-- D-188 / DEC-46 (d): HUNCH DEBT, not "bias debt". A hunch is the ONE kind of
+-- declared bias that DISQUALIFIES publication (DEC-20); ordinary bias debt is
+-- DISCLOSED and travels with the published case. Calling this "bias debt" is
+-- what made Bob re-read his own ruling as a contradiction on 2026-08-04.
 --
 -- inquiry_basis_target is the reverse index: "which inquiries rest on this
 -- document" (E2, and REC-17's re-evaluation obligation) is ONE indexed lookup.
@@ -1395,6 +1399,25 @@ CREATE INDEX IF NOT EXISTS published_edges_to ON published_edges(to_bundle);
 --                 byte-check compares THIS against the previous edition of
 --                 THIS CASE. The scope statement is deliberately NOT under
 --                 that byte-check, and the reasoning is at C-21.1's site.
+--   bias_acknowledgement
+--                 REC-47 / DEC-46 (a). The publisher's AUTHORED acknowledgement
+--                 of the bias this edition's case was produced under -- fresh
+--                 per edition, never prefilled, and UNDER C-21.1's byte-check
+--                 alongside completeness rather than exempt alongside scope.
+--                 The discriminator between the two rules is recorded once, at
+--                 C-21.1's site, because these three fields now sit side by
+--                 side under two different rules and the next reader will ask.
+--                 DEC-20 is why this is a DISCLOSURE and not a gate: ordinary
+--                 declared bias never blocks publication and travels with every
+--                 published case. Only an uncleared HUNCH disqualifies, and
+--                 that refusal is publishpreflight's (UNCLEARED_HUNCH), not
+--                 this column's. This field states the lens; it never judges it.
+--                 The bias MANIFEST -- computed and stamped, DEC-46's other
+--                 half -- is NOT here and is not built: the bias object type
+--                 is still absent from the check catalogue (D-84), so no
+--                 bundle exists to compute one from. The two are different
+--                 things travelling together, and only the AUTHORED half of
+--                 the pair can be built today.
 --
 -- ratified_at is NULL until the edition is COMPLETE -- until every member
 -- finding has been ratified. That is a real state and it is stated rather than
@@ -1406,6 +1429,7 @@ CREATE TABLE IF NOT EXISTS published_cases (
   edition      INTEGER NOT NULL,
   scope        TEXT,
   completeness TEXT,
+  bias_acknowledgement TEXT,
   opened       TEXT NOT NULL,
   ratified_at  TEXT,
   manifest_sha TEXT,

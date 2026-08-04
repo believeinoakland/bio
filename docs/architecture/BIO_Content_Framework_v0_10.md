@@ -1146,12 +1146,19 @@ is the whole of the assistant's obligation.
 
 ### Bias debt and the ageing machinery are the same shape
 
-Bias debt says: the lens changed, so this analysis owes a re-run, and it may not
-advance or be ratified until the debt is settled. §8.2's temporal expectations say: this
-stage is due and has not arrived. Both are an obligation with a clock, attached to an
-object, blocking a state transition, and settleable in batches. They should share
-mechanism rather than growing two schedulers, and Step 7 of the plan is where that is
-decided.
+Bias debt says: the lens changed, so this analysis owes a re-run. §8.2's temporal
+expectations say: this stage is due and has not arrived. Both are an obligation with a
+clock, attached to an object, and settleable in batches. They should share mechanism
+rather than growing two schedulers, and Step 7 of the plan is where that is decided.
+
+> **CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"and it may not advance or be
+> ratified until the debt is settled"*, and listed *blocking a state transition* among
+> the shared properties. **Ordinary bias debt blocks nothing** — it is DISCLOSED and
+> travels with the work; only an uncleared HUNCH refuses publication. **The shared shape
+> D-86 identified survives untouched**, because blocking was never the load-bearing part
+> of it: an obligation with a clock, attached to an object, settleable in batches is
+> still one mechanism with two consumers. What differs is what each consumer DOES when
+> the clock runs out — the temporal half blocks, the bias half surfaces.
 
 ## 13.1 Evidence accrues to bias statements
 
@@ -1215,33 +1222,50 @@ Three properties keep it honest:
 
 ### Decay is loud and never blocking
 
-The question this raised: bias debt BLOCKS, since a work product carrying it cannot
-advance its state or be ratified until settled. Should a statement whose measure has
-collapsed block the analysis resting on it?
+> **CORRECTED 2026-08-05 (DEC-20, D-188, DEC-46 (d)). This section was written
+> against the blanket rule that ordinary bias debt BLOCKS. It does not, and has
+> not since 2026-08-02.** Only **HUNCH DEBT** disqualifies. The section's
+> argument survives intact — decay is loud and never blocking, because nothing
+> was DECIDED — but its contrast partner was wrong, and the table below is
+> corrected to three rows rather than two. The reasoning is now sharper, not
+> weaker: what makes something blocking is not that a lens changed, it is that a
+> member asserted a GRADE the evidence does not yet support.
+
+The question this raised: HUNCH DEBT blocks, since a work product carrying an uncleared
+hunch cannot be ratified for publication until it is cleared. Should a statement whose
+measure has collapsed block the analysis resting on it?
 
 No, and the principle two paragraphs up already decided it. **The measure never edits
 the statement**, and a measure that may not edit a statement certainly may not block
 work resting on one. Invariant 8 is the general form.
 
-The asymmetry with bias debt is exact and worth seeing clearly, because it looks
-arbitrary until it does not:
+The asymmetry is exact and worth seeing clearly, because it looks arbitrary until it
+does not — and it takes THREE rows, not two, which is the correction DEC-20 forces:
 
-| | what changed | who changed it | blocks? |
+| | what changed | who changed it | blocks publication? |
 | --- | --- | --- | --- |
-| **bias debt** | the lens | the group, by an authored act | yes: the block enforces the group's own decision |
-| **measure decay** | the world | nobody | no: nothing has been decided |
+| **HUNCH DEBT** | a GRADE, asserted ahead of its evidence | the member, by an authored act | **yes**: publishing over it states a strength that is not true |
+| **bias debt** | the lens | the group, by an authored act | **no**: it is DISCLOSED and travels with the case |
+| **measure decay** | the world | nobody | **no**: nothing has been decided |
 
-Bias debt blocks because a member amended the lens and the block is what makes that
-amendment mean something. Nothing has been decided when a measure decays. An
+**The discriminator is not "was it authored" — rows 1 and 2 are both authored acts.
+It is whether the thing left unsettled makes the record CLAIM MORE THAN IT CAN
+SUPPORT.** A hunch does: it carries a grade the evidence has not earned, so a case
+published over one overclaims, and that is the half of this project's threat model it
+treats as dangerous. A changed lens does not: it frames interpretation, and a reader
+told what the lens was can apply or discount it for themselves at no cost. Measure
+decay does not either, and for a further reason: nobody decided anything, and an
 institution improving its behaviour is not an act by the group and must not be able to
 freeze the group's in-flight work.
 
 The path from decay to a block therefore runs THROUGH a person, which is exactly right:
 the measure reports; a member reads it and amends or retires the statement; that
-amendment is an authored act; and it generates bias debt in the ordinary way, which
-blocks. The machine never blocks on its own, and a group that looks at a collapsed
-measure and decides to keep the statement anyway has done something legitimate and
-recorded, not something it needs permission for.
+amendment is an authored act; and it generates bias debt in the ordinary way — which is
+DISCLOSED on the work and shown to the reader rather than blocking it. If the amendment
+leaves some connection resting on a hunch, THAT is what refuses publication, by name.
+The machine never blocks on its own, and a group that looks at a collapsed measure and
+decides to keep the statement anyway has done something legitimate and recorded, not
+something it needs permission for.
 
 ### This is the legitimate form of what a verdict would be
 

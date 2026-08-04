@@ -206,7 +206,31 @@ humans apply by hand, evidence items need source attribution the system can
 match, which anchored citations were already going to carry (an evidence item
 is an anchored selection within a document, attributed to a source).
 
-## Bias debt
+## Bias debt, and HUNCH DEBT
+
+> **READ THIS FIRST — the two terms are not the same and the difference decides
+> what may be published (DEC-20, Bob, 2026-08-02; vocabulary corrected 2026-08-05
+> per DEC-46 (d), D-188).**
+>
+> - **BIAS DEBT is DISCLOSED.** A lens changed, so some analysis owes a re-run.
+>   It marks the work, TRAVELS with it, is shown to the reader, and **does not
+>   block publication or ratification.**
+> - **HUNCH DEBT is DISQUALIFYING.** A hunch is a connection graded ahead of its
+>   evidence. It **must be cleared before publication**, refused by name
+>   (`op=publishpreflight` → `UNCLEARED_HUNCH`).
+>
+> The principle underneath, which the old blanket rule did not have: **a hunch
+> inflates a GRADE, and ordinary bias only frames interpretation.** A declared
+> standing position is a lens a reader can apply or discount for themselves, and
+> it costs the reader nothing to be told. A case published over an uncleared
+> hunch states a strength that is not true.
+>
+> **WHY THIS BANNER EXISTS.** The section below once said, flatly, that *a work
+> product carrying bias debt cannot be ratified for publication*. On 2026-08-04
+> **Bob re-read that sentence as contradicting the doctrine — and Bob authored
+> the ruling.** If the person who decided it misreads the text, every later
+> reader will. So: say **HUNCH DEBT** wherever the disqualifying rule is meant,
+> and reserve *bias debt* for the general disclosed class.
 
 When a bias is added or changed, existing analysis is not silently stale and
 not retroactively invalidated: it is marked as carrying **bias debt**, meaning
@@ -218,9 +242,13 @@ been re-evaluated under. Debt is tracked per work product, is visible wherever
 the work is consulted, and is cleared by re-running the evaluation (or the
 analysis, where the change reaches it) under the current set. Tracking is
 continuous; settlement is BATCHABLE, so a group can accumulate changes and
-re-run in one pass rather than being stalled by every amendment. A work
+re-run in one pass rather than being stalled by every amendment. ~~A work
 product carrying bias debt cannot advance its workproduct_state or be ratified
-for publication until the debt is settled.
+for publication until the debt is settled.~~ **STRUCK 2026-08-05 (D-188), and
+struck rather than deleted because this exact sentence is the one Bob re-read as
+a contradiction — a reader who remembers it must be able to see that it is gone
+and why.** It is replaced by the amendment immediately below: only HUNCH DEBT
+disqualifies; ordinary bias debt is disclosed and travels.
 
 **AMENDED 2026-08-02 by Bob (DEC-20). The blanket rule above is REPLACED: only a
 HUNCH blocks publication.** *"Not all bias needs to be cleared before a piece is
@@ -243,7 +271,15 @@ does NOT block ratification. Uncleared HUNCH debt refuses publication, by name,
 before any signature exists (`op=publishpreflight` → `UNCLEARED_HUNCH`). The
 workproduct_state half of the old rule is likewise narrowed to hunches.
 
-### RULED 2026-08-01: a HUNCH is temporary declared bias, and it is bias debt
+### RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT
+
+> *Heading corrected 2026-08-05 (D-188 / DEC-46 (d)). It read "and it is bias
+> debt", which is true only in the loose sense that a hunch IS a declared bias —
+> and false in the sense every reader takes from this document, where "bias
+> debt" is the disclosed class that does not block. The hunch is the
+> DISQUALIFYING kind. Bob's quotation below is left exactly as he said it,
+> because a quotation is evidence and is not edited; the vocabulary note after
+> it is what reconciles his words with the term this document now uses.*
 
 Bob, 2026-08-01 (DEC-15). **Exploration and discovery are distinct processes from
 publishing**, and the investigative phase needs something the publishing phase must
@@ -260,6 +296,11 @@ not tolerate:
 > However — and this is important — a hunch is bias debt. It must be cleared before a
 > finding can be published. A published case must pass the gate of sound and credible
 > without any hunch connections."*
+
+*(Bob's words, 2026-08-01, unedited. Where he says "a hunch is bias debt", this
+document now says **HUNCH DEBT** — D-188 / DEC-46 (d). His rule is unchanged;
+only the term for it is made unambiguous, because the general term had come to
+mean the class that does NOT block.)*
 
 **A hunch is a connection asserted by a member ahead of its evidence.** It is declared
 bias in the exact sense this document already defines — a disposition of the
@@ -278,10 +319,20 @@ ageing into a fact because nobody re-read the leg, and the defence is that it ne
 stops announcing itself.
 
 **And it needs no new gate, which is why this ruling sits in THIS section.** The
-paragraph above already ends: *a work product carrying bias debt cannot advance its
-workproduct_state or be ratified for publication until the debt is settled.* That was
-written for a bias statement CHANGING and leaving old analysis owed a re-run. It states
-Bob's rule exactly, reached by registering the hunch as what it is.
+blocking sentence struck above — *a work product carrying bias debt cannot advance its
+workproduct_state or be ratified for publication until the debt is settled* — was
+written for a bias statement CHANGING and leaving old analysis owed a re-run, and
+registering the hunch as a kind of declared bias made it reach Bob's rule for free.
+
+> **CORRECTED 2026-08-05 (D-188 / DEC-46 (d)), and this paragraph is where the
+> whole confusion started.** The sentence it leans on has since been STRUCK by
+> DEC-20: ordinary bias debt does NOT block, so it can no longer carry the hunch
+> rule on its back. **The hunch rule survives intact and is now stated in its own
+> right rather than inherited** — uncleared HUNCH DEBT refuses publication, by
+> name, before any signature exists. The "no new gate" claim also still holds:
+> the gate is `op=publishpreflight` → `UNCLEARED_HUNCH`, which exists. What
+> changed is that the rule is now written down as its own rule, so nobody has to
+> derive the disqualifying case from a sentence about the disclosed one.
 
 **What CLEARING means follows from the same paragraph rather than needing its own
 ruling.** Debt is *cleared by re-running the evaluation under the current set*. Retiring
@@ -304,6 +355,66 @@ registering a hunch as a first-class statement in the bias manifest needs
 `object_type: bias`, which the check catalogue does not yet carry (D-84). So the
 leg-level `grade_source` and the publication refusal ship with the claim layer, where
 they bite; the manifest registration lands with D-84.
+
+## The bias acknowledgement, authored at export
+
+**RULED 2026-08-04 by Bob (DEC-46 (2)); BUILT 2026-08-05 by REC-47.**
+
+> *"Inclusion of a bias must be acknowledged and signed off on at the time of
+> export by the publisher (not a pre-check checkbox)."*
+
+**A published case carries the bias it was produced under as a fact a reader
+weighs.** This is DEC-20's *"bias is public and accompanies every published case
+produced under that bias"*, made operative — and it is a DISCLOSURE, never a
+bar. Nothing reads which bias is named; nothing refuses a case for carrying one.
+
+**TWO THINGS TRAVEL TOGETHER AND THEY ARE NOT THE SAME THING.**
+
+| | what it is | how it is produced |
+| --- | --- | --- |
+| the bias **MANIFEST** | the lens itself — bundle ids, revisions, a hash of the effective statement set | **computed and stamped** by the plane |
+| the bias **ACKNOWLEDGEMENT** | the publisher's account of what that lens did to *this edition's* findings | **AUTHORED** by the member, in the ceremony |
+
+Only the acknowledgement is built today. The manifest waits on `object_type:
+bias` (D-84), without which there is no bundle to compute one from.
+
+**The rules, as shipped:**
+
+- **Authored, never prefilled.** A machine credential is refused
+  (`MACHINE_CANNOT_PUBLISH`); an absent acknowledgement is refused by name
+  (`NO_BIAS_ACKNOWLEDGEMENT`). A pre-flight checkbox would be the checkbox these
+  gates exist to refuse.
+- **Fresh per edition, under C-21.1's byte-check.** Reprinting the previous
+  edition's sentence is refused (`BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD`),
+  because it is evidence nobody looked.
+- **In the signed bytes, and in the container.** It is written into EVERY member
+  finding before the sha is taken, so a stranger holding one finding — or the
+  zip, once this instance is gone — can read the lens without our cooperation.
+- **One per case per edition.** A case is scoped to the project that gathered
+  its findings, and one project is one effective bias; two members who signed
+  different acknowledgements are refused (`CASE_ASSERTION_DIVERGED`), never
+  reconciled. Findings produced under *different* source biases are DEC-46 (3)'s
+  case and land as separate projects.
+
+**WHY IT IS BYTE-CHECKED WHEN THE CASE'S SCOPE STATEMENT IS NOT**, since the two
+now sit side by side under different rules. The test is not *could this
+legitimately stay the same* — it is **what the field is a claim about.** A
+statement of FACT ABOUT THE CASE (its scope; the manifest) does not move between
+editions, and holding it to a difference manufactures one — *a gate that
+pressures someone into inventing one is a bug in the gate*. An AUTHOR'S CLAIM
+ABOUT THIS EDITION'S MATERIAL (completeness, the subject justification, this
+acknowledgement) is a fresh act each time, because the material is what changed.
+
+Nobody is ever asked to invent a change in their bias. *"The lens is unchanged,
+and here is what it means for the findings added since edition 1"* is a true
+sentence a publisher can write. And the failure modes are not symmetric: a stale
+scope misdescribes the question, while a stale acknowledgement asserts that the
+publisher weighed their own lens against material they never looked at — a claim
+about an act that did not happen, which is the overclaiming half of this
+project's threat model.
+
+The full reasoning is at `checkCompletenessFreshness` in
+`bio-plane/checks/bio-checks.mjs`, beside the rule it discriminates from.
 
 ## Differential traversal and the cross-group rerun
 

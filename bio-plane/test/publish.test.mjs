@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (REC-14's four, each broken ALONE and restored; 74 pass when whole; ALL RE-RUN 2026-08-04 after the REC-31 merge, same results) (a) C-21.1 IS A CHECKBOX — in checks/bio-checks.mjs checkCompletenessFreshness replace `if (now[k] != null && was[k] != null && now[k] === was[k]) {` with `if (false) {`, AND in src/store.mjs publishCase() replace the matching `if (now[k] != null && prior.completeness[k] != null && ...)` with `if (false)` -> 69 pass, 5 FAIL (65 before the REC-31 merge, same five assertions): the headline "a second edition carrying edition 2's STATEMENT verbatim is REFUSED" reports `undefined` because op=publish ACCEPTED it and the edition landed, the next two then report ILLEGAL_TRANSITION (the case is already published on a carried-forward assertion), and "the CATALOG names C-21.1" reports 0 — the gate finds nothing wrong with that document either, so nothing downstream would ever notice. Both halves must go together, as REC-13 found: breaking one alone leaves the other refusing. (b) THE AXES COMPOSED, two variants, because which probe flips depends on which scalar the bug composes. (b1) checkInheritedLeg `const on = frozen[axis]` -> `const on = frozen.capture` -> 69 pass, 1 FAIL: PROBE 2 (inheriting CONNECTION B from a case whose frozen connection is C) is ACCEPTED, got [true,null,[]] where [false,"BASIS_REFUSED",["C-21.2"]] was wanted. (b2) compose to the WEAKEST letter instead (`const on = worst(frozen.capture, frozen.connection)`) -> 69 pass, 1 FAIL, the OPPOSITE one: PROBE 3, the LEGAL leg inheriting capture B at the frozen capture grade, is REFUSED. Two "must refuse" probes alone would have missed (b2) entirely; the four probes are why either variant is caught. (c) THE UPSERT RETURNS — in src/store.mjs publish() replace `ON CONFLICT(bundle_id,edition) DO NOTHING` with an UPDATE of every column, force `const ed = 1`, and guard both edition refusals with `if (false)` -> 61 pass, 9 FAIL: "edition 1 KEEPS its own signature" reports edition 2's sha in edition 1's row, "BOTH editions are readable" reports ONE row, and "edition 1's completeness statement is still exactly what was signed" reports edition 2's statement. D-144 reproduced exactly — a reader who relied on edition 1's attestation finds edition 2's in its place. (d) THE MIGRATION LOSES THE RECORD — in src/store.mjs #migrate delete the `INSERT INTO published_bundles ... SELECT ... FROM published_bundles_preeditions` copy-forward -> 72 pass, 1 FAIL: "the legacy row SURVIVES the re-key" reports 0 editions, i.e. every case a group had already published, with its signature and its attestor, gone at the next boot. Restore after each. */
+/* NEGATIVE CONTROL: (REC-14's four PLUS REC-47's two. **88 pass when whole** — 74 -> 88, the +14 being REC-47's (two refusal arms, two byte-in-the-signed-document arms, one gate-side entry-requirement arm, the carried-forward arm with its own refusal NAME, the publishes-anyway complement, and the catalog arms). REC-14's four were NOT re-run 2026-08-05 by rec47-agent: each of them neuters C-21.1 or the edition refusals WHOLESALE (`if (false)`), so their counts move with the suite's size rather than with their subject, and the honest statement is that they are RECORDED AT THE SIZE THEY WERE MEASURED AT (74) and are re-runnable in one step. REC-47's two were RUN 2026-08-05 against THIS file. Every file restored BYTE-IDENTICALLY, sha256 compared before and after each arm and equal to: src/store.mjs 95332d64f73e115445eb77f73eae887ab1c24eddad7dbbf5b40019ecc4b32dab, src/index.mjs 5202ffcb3ea9f2034cc210495190e37533fdf97a10e3b1f89454a069924a86bd, checks/bio-checks.mjs a2be732cb76b5234e1b7d35beff46bacd4528cf3b6a94389e286afebeb082214.)  ==== REC-47's TWO, RUN 2026-08-05 ====  (e) THE BIAS BYTE-CHECK IS A CHECKBOX — THE ITEM'S OWN CONTROL, and it is REC-14's arm (a) at the field this item added. In checks/bio-checks.mjs checkCompletenessFreshness DELETE the line `    bias_acknowledgement: 'bias_acknowledgement',` from LABEL, AND in src/store.mjs publishCase() delete `, bias_acknowledgement: "the bias acknowledgement"` from its LABEL -> **79 pass, 8 FAIL**. PRESENCE IS STILL REQUIRED IN BOTH GATES UNDER THIS ARM, which is the whole point: the ceremony still demands an acknowledgement and now accepts last edition's reprinted verbatim, so what is left is a checkbox. The headline arm reports `[true,null,null,null,null]` where it wanted the refusal — op=publish ACCEPTED the carried-forward sentence — and `the case did NOT move` reports "published", i.e. the edition LANDED on it. The two catalog arms report 0 C-21.1 findings, so nothing downstream would ever notice either. Note the CASCADE, which is worth reading rather than dismissing as noise: because the carried-forward publish SUCCEEDS it consumes edition 3, so the legitimate publication after it then fails too — a suite reading only the first failure would misdiagnose this as an edition bug. (f) THE ENTRY REQUIREMENT IS ONE-SIDED — in checks/bio-checks.mjs checkPublishedExtension replace `if (biasAcknowledgementOf(fm) === null || fm.bias_acknowledgement.trim() === '') {` with `if (false) {`, leaving the STORE's NO_BIAS_ACKNOWLEDGEMENT refusal standing -> **87 pass, 1 FAIL**: `a published document with NO bias acknowledgement is refused BY THE GATE` reports 0 findings. The act still refuses, so an arm that only drove op=publish would stay green — and hand-written bytes through op=promote are exactly the route that skips the act. One-sided checks are what REC-13 found and REC-14 recorded; this is that lesson held at the new field. Restore after each.  ==== REC-14's FOUR (2026-08-04 numbers, suite size 74) ==== (a) C-21.1 IS A CHECKBOX — in checks/bio-checks.mjs checkCompletenessFreshness replace `if (now[k] != null && was[k] != null && now[k] === was[k]) {` with `if (false) {`, AND in src/store.mjs publishCase() replace the matching `if (now[k] != null && prior.completeness[k] != null && ...)` with `if (false)` -> 69 pass, 5 FAIL (65 before the REC-31 merge, same five assertions): the headline "a second edition carrying edition 2's STATEMENT verbatim is REFUSED" reports `undefined` because op=publish ACCEPTED it and the edition landed, the next two then report ILLEGAL_TRANSITION (the case is already published on a carried-forward assertion), and "the CATALOG names C-21.1" reports 0 — the gate finds nothing wrong with that document either, so nothing downstream would ever notice. Both halves must go together, as REC-13 found: breaking one alone leaves the other refusing. (b) THE AXES COMPOSED, two variants, because which probe flips depends on which scalar the bug composes. (b1) checkInheritedLeg `const on = frozen[axis]` -> `const on = frozen.capture` -> 69 pass, 1 FAIL: PROBE 2 (inheriting CONNECTION B from a case whose frozen connection is C) is ACCEPTED, got [true,null,[]] where [false,"BASIS_REFUSED",["C-21.2"]] was wanted. (b2) compose to the WEAKEST letter instead (`const on = worst(frozen.capture, frozen.connection)`) -> 69 pass, 1 FAIL, the OPPOSITE one: PROBE 3, the LEGAL leg inheriting capture B at the frozen capture grade, is REFUSED. Two "must refuse" probes alone would have missed (b2) entirely; the four probes are why either variant is caught. (c) THE UPSERT RETURNS — in src/store.mjs publish() replace `ON CONFLICT(bundle_id,edition) DO NOTHING` with an UPDATE of every column, force `const ed = 1`, and guard both edition refusals with `if (false)` -> 61 pass, 9 FAIL: "edition 1 KEEPS its own signature" reports edition 2's sha in edition 1's row, "BOTH editions are readable" reports ONE row, and "edition 1's completeness statement is still exactly what was signed" reports edition 2's statement. D-144 reproduced exactly — a reader who relied on edition 1's attestation finds edition 2's in its place. (d) THE MIGRATION LOSES THE RECORD — in src/store.mjs #migrate delete the `INSERT INTO published_bundles ... SELECT ... FROM published_bundles_preeditions` copy-forward -> 72 pass, 1 FAIL: "the legacy row SURVIVES the re-key" reports 0 editions, i.e. every case a group had already published, with its signature and its attestor, gone at the next boot. Restore after each. */
 /* REC-14: the `published` state — EDITIONS, the completeness assertion, and the
  * gates that stop it being a checkbox.
  *
@@ -346,12 +346,30 @@ const JUST1 = "We put the four claims to the City Administrator on 2026-06-20 an
 const EX1 = [{ target: INFO_LEFTOUT, description: "the FY2023 comparison memo",
                reason: "a records request for it is still outstanding with the City Clerk" },
              { description: "any 2019 council minutes", reason: "not requested; outside the period at issue" }];
+/* REC-47 / DEC-46 (a): the AUTHORED bias acknowledgement. Written the way a
+   member would actually write one — it names the lens and says what it did to
+   THIS edition's material, which is the thing C-21.1 holds fresh. Deliberately
+   NOT a hunch: DEC-20 is that ordinary declared bias is DISCLOSED and never
+   blocks publication, so a case that acknowledges a standing position must
+   PUBLISH, and this suite's happy path is what asserts that. */
+const BACK1 = "This group holds a declared position that municipal fund transfers should be adopted in public "
+  + "session, and edition 1 reads the FY2024 record through it.";
 
 /* ================================================= 1. the act and its refusals */
 console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything moves ---");
 {
+  /* CORRECTED 2026-08-05, REC-47 / DEC-46 (a). `base` gains
+     `biasAcknowledgement`, and every assertion below that reads a refusal OTHER
+     than NO_BIAS_ACKNOWLEDGEMENT depends on it: op=publish now refuses a
+     missing acknowledgement among the presence checks, so without this the
+     three arms below (two BAD_EXCLUSION, one ILLEGAL_TRANSITION) would report
+     NO_BIAS_ACKNOWLEDGEMENT and would silently stop testing their own subject.
+     They are CORRECTED rather than exempted: each still demands exactly the
+     refusal it always demanded, reached by supplying the field the ceremony now
+     requires. */
   const base = { target: INQ_CASE, statement: STMT1, excluded: EX1,
-                 subjectPosition: "sought_and_answered", subjectJustification: JUST1 };
+                 subjectPosition: "sought_and_answered", subjectJustification: JUST1,
+                 biasAcknowledgement: BACK1 };
   t("a machine credential cannot publish: the completeness assertion and the declared position are a named member's",
     (await publish("mem-rec14", base)).reason, "MACHINE_CANNOT_PUBLISH");
   t("no statement is refused BY NAME — a case silent about its own limits claims to cover everything",
@@ -362,6 +380,13 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
     (await publish(PILAR, { ...base, subjectPosition: "" })).reason, "NO_SUBJECT_POSITION");
   t("a position with no justification is refused: a declared position with no reasoning is the checkbox",
     (await publish(PILAR, { ...base, subjectJustification: "" })).reason, "NO_SUBJECT_JUSTIFICATION");
+  /* REC-47 / DEC-46 (a): REFUSED BY NAME, which is the item's own acceptance
+     clause. What is refused is publishing SILENTLY about the lens — not
+     publishing under one. */
+  t("a MISSING bias acknowledgement is refused BY NAME (REC-47 / DEC-46 (a))",
+    (await publish(PILAR, { ...base, biasAcknowledgement: "" })).reason, "NO_BIAS_ACKNOWLEDGEMENT");
+  t("and the refusal says the acknowledgement is a DISCLOSURE, not a bar — declaring a bias never blocks a case (DEC-20)",
+    /never a bar/.test((await publish(PILAR, { ...base, biasAcknowledgement: "" })).detail ?? ""), true);
   t("an exclusion row naming NEITHER a target nor prose is refused (C-9)",
     (await publish(PILAR, { ...base, excluded: [{ reason: "because" }] })).reason, "BAD_EXCLUSION");
   t("an exclusion row with no reason is refused: what was left out and why are two statements",
@@ -385,6 +410,13 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
      /^ {2}subject_justification: /m.test(md)], [true, true, true]);
   t("the canonical heading carries the assertion for a person to read",
     md.includes("## What This Excludes"), true);
+  /* REC-47: IN THE BYTES THE MEMBER SIGNS, beside the case scope and for the
+     same reason — a stranger holding this one finding must be able to read the
+     bias the case was produced under without contacting this instance. */
+  t("the bias acknowledgement is IN the bytes that will be signed, verbatim as authored",
+    md.includes(`bias_acknowledgement: "${BACK1}"`), true);
+  t("the case PUBLISHES while carrying a declared bias — DISCLOSED, never disqualifying (DEC-20)",
+    [ok.ok, ok.bias_acknowledgement], [true, BACK1]);
   /* CORRECTED 2026-08-04, REC-44 / DEC-44. This used to read `ok.strength` — a
      frozen pair at the top of the ANSWER — and that was right only while a case
      was assumed to be exactly one inquiry (D-187: nobody chose that shape). A
@@ -409,6 +441,15 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
     [/^division_parent: null$/m.test(md), /^division_siblings: \[\]$/m.test(md)], [true, true]);
   t("the published document AUDITS CLEAN against the catalog",
     await errorsOf(INQ_CASE, md, undefined, await earnedFor(INQ_CASE)), []);
+  /* REC-47: THE ENTRY REQUIREMENT AT THE GATE, not only at the act. The store
+     refused a missing acknowledgement above; the CATALOG must refuse it too,
+     because a one-sided check is a check the other side has to catch (REC-13's
+     finding, REC-14's precedent) — and hand-written bytes reaching op=promote
+     are the route that skips the act entirely. */
+  t("a published document with NO bias acknowledgement is refused BY THE GATE, naming C-2.8",
+    (await errorsOf(INQ_CASE, md.replace(/^bias_acknowledgement: .*$/m, 'bias_acknowledgement: ""'),
+                    undefined, await earnedFor(INQ_CASE)))
+      .filter((e) => e.startsWith("C-2.8") && e.includes("bias_acknowledgement")).length, 1);
   t("op=affordances stops publishing `publish` once it is published, and the store agrees",
     [actIds(await affordances(INQ_CASE)).includes("publish"),
      (await publish(PILAR, base)).reason], [false, "ILLEGAL_TRANSITION"]);
@@ -423,7 +464,16 @@ console.log("\n--- 2. DEC-13: the gate is the DECLARATION — never contact, nev
     subjectPosition: "not_sought",
     subjectJustification: "We did not give notice: the City has treated this group as hostile and notice "
                         + "here would let the record be revised before it is captured. We say so rather than "
-                        + "leave it unsaid." });
+                        + "leave it unsaid.",
+    /* CORRECTED 2026-08-05, REC-47: this act now needs an acknowledgement to
+       reach its own subject at all. It is worth writing a REAL one here rather
+       than filler, because this block's whole point is that the plane carries
+       what a group declares and never weighs it — and a group operating under
+       an adversarial posture toward its subject has exactly the kind of
+       standing position DEC-20 says a reader is entitled to be told about and
+       to discount for themselves. */
+    biasAcknowledgement: "This group's declared position is that this City's records practice is obstructive, "
+                       + "and that position is why the signature question was pursued at all." });
   t("a case that DELIBERATELY gave no notice publishes exactly as one that sought comment",
     [notSought.ok, notSought.edition, notSought.completeness.subject_position], [true, 1, "not_sought"]);
   t("an EMPTY exclusion list is legal and is a claim in its own right",
@@ -520,8 +570,15 @@ console.log("\n--- 5. DEC-12: reopened, concluded again, published at edition 2 
   const STMT2 = "This case covers the FY2024 transfer and, as of edition 2, the FY2023 comparison memo.";
   const JUST2 = "We put the revised claims to the City Administrator again on 2026-07-05 and print the reply.";
   const EX2 = [{ description: "any 2019 council minutes", reason: "still not requested; outside the period" }];
+  /* CORRECTED 2026-08-05, REC-47: edition 2 authors its OWN acknowledgement.
+     Not because the lens changed — it did not, and it says so — but because
+     what the lens MEANS for this edition's material is a fresh claim. This is
+     the sentence C-21.1's new arm exists to make a member write. */
+  const BACK2 = "The same declared position on public adoption is in force, unchanged; edition 2 applies it to "
+    + "the FY2023 comparison memo, which arrived after edition 1 closed.";
   const e2 = await publish(PILAR, { target: INQ_CASE, statement: STMT2, excluded: EX2,
-    subjectPosition: "sought_and_answered", subjectJustification: JUST2 });
+    subjectPosition: "sought_and_answered", subjectJustification: JUST2,
+    biasAcknowledgement: BACK2 });
   t("the second publication is EDITION 2, and the edition is server-stamped from the published record",
     [e2.ok, e2.edition], [true, 2]);
   /* CORRECTED 2026-08-04, REC-44 / DEC-44: the declared bar is a fact about the
@@ -563,29 +620,77 @@ console.log("\n--- 6. C-21.1: a completeness claim carried forward unchanged is 
   const STMT2 = "This case covers the FY2024 transfer and, as of edition 2, the FY2023 comparison memo.";
   const JUST2 = "We put the revised claims to the City Administrator again on 2026-07-05 and print the reply.";
   const EX2 = [{ description: "any 2019 council minutes", reason: "still not requested; outside the period" }];
+  /* REC-47: edition 2's acknowledgement, repeated here verbatim so the
+     carried-forward arm below can offer it back. It must match block 5's BACK2
+     byte for byte or the arm would be testing nothing — the failure mode a
+     carried-forward test has when the "carried" value is not actually the
+     previous edition's. */
+  const BACK2 = "The same declared position on public adoption is in force, unchanged; edition 2 applies it to "
+    + "the FY2023 comparison memo, which arrived after edition 1 closed.";
   const FRESH_S = "This case covers the FY2024 transfer, the FY2023 comparison memo and the clerk's index.";
   const FRESH_J = "We put the corrected claims to the City Administrator on 2026-07-07 and print the reply.";
+  const FRESH_B = "The declared position on public adoption still stands and is unchanged; for edition 3 it "
+    + "bears on the clerk's index, which is the first source here the group did not itself request.";
   const FRESH_X = [{ target: INFO_LEFTOUT, description: "the FY2023 comparison memo",
                      reason: "it arrived after edition 2 and is named here rather than folded in unexamined" },
                    { description: "any 2019 council minutes", reason: "outside the period, restated for edition 3" }];
-
+  /* CORRECTED 2026-08-05, REC-47: each of the three arms below gains
+     `biasAcknowledgement: FRESH_B`. Without it every one of them would be
+     refused NO_BIAS_ACKNOWLEDGEMENT and would report a PASS-shaped failure —
+     the refusal name would be wrong but the test would still be asserting
+     "publishing was refused", which is the checkbox failure mode one level up
+     from the one this suite exists to catch. Each arm again isolates exactly
+     ONE carried-forward field. */
   t("a second edition carrying edition 2's STATEMENT verbatim is REFUSED, naming the field",
     (await publish(PILAR, { target: INQ_CASE, statement: STMT2, excluded: FRESH_X,
-      subjectPosition: "sought_and_answered", subjectJustification: FRESH_J }))
+      subjectPosition: "sought_and_answered", subjectJustification: FRESH_J,
+      biasAcknowledgement: FRESH_B }))
       .reason, "COMPLETENESS_CARRIED_FORWARD");
   t("carrying the JUSTIFICATION forward verbatim is refused too — the position may repeat, its reasoning may not",
     (await publish(PILAR, { target: INQ_CASE, statement: FRESH_S, excluded: FRESH_X,
-      subjectPosition: "sought_and_answered", subjectJustification: JUST2 }))
+      subjectPosition: "sought_and_answered", subjectJustification: JUST2,
+      biasAcknowledgement: FRESH_B }))
       .reason, "COMPLETENESS_CARRIED_FORWARD");
   t("and carrying the EXCLUSION LIST forward byte-identical is refused",
     (await publish(PILAR, { target: INQ_CASE, statement: FRESH_S, excluded: EX2,
-      subjectPosition: "sought_and_answered", subjectJustification: FRESH_J }))
+      subjectPosition: "sought_and_answered", subjectJustification: FRESH_J,
+      biasAcknowledgement: FRESH_B }))
       .reason, "COMPLETENESS_CARRIED_FORWARD");
+  /* ============ REC-47 / DEC-46 (a): THE ITEM'S OWN ARM ============
+     A CARRIED-FORWARD BIAS ACKNOWLEDGEMENT MUST FAIL, under its OWN refusal
+     name. Every other field here is freshly authored, so the ONLY thing wrong
+     with this republication is that the group reprinted last edition's sentence
+     about its own lens — which is evidence nobody looked.
+
+     It gets its own reason name rather than sharing COMPLETENESS_CARRIED_FORWARD
+     because they are two different mistakes: one reprints what the case left
+     out, the other reprints the group's account of the bias it was made under,
+     and a caller told only "carried forward" would not know which. The CHECK is
+     C-21.1 in both cases, which is what `check` asserts. */
+  const carried = await publish(PILAR, { target: INQ_CASE, statement: FRESH_S, excluded: FRESH_X,
+    subjectPosition: "sought_and_answered", subjectJustification: FRESH_J,
+    biasAcknowledgement: BACK2 });
+  t("THE ITEM: a republication reprinting edition 2's BIAS ACKNOWLEDGEMENT byte-identical is REFUSED",
+    [carried.ok, carried.reason, carried.field, carried.check, carried.prior],
+    [false, "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD", "bias_acknowledgement", "C-21.1", 2]);
+  t("and the refusal explains what must be fresh — the lens may be unchanged, the account of it may not",
+    /never carried forward/.test(carried.detail ?? "") && /THIS edition/.test(carried.detail ?? ""), true);
+  t("the case did NOT move on the refused republication: nothing is half-published",
+    await stateOf(INQ_CASE), "concluded");
+  /* AND THE COMPLEMENT, which is what stops this arm being satisfied by a gate
+     that simply refuses everything: an acknowledgement that SAYS the lens is
+     unchanged, in this edition's own words, PUBLISHES. DEC-20 — declaring a
+     standing bias never blocks a case, and a gate that made it hard to publish
+     under an unchanged lens would be pressuring a member into inventing a
+     change, which is the bug REC-44 refused to build for the scope statement. */
   /* The STAMPS are deliberately not compared: `at` is the server's clock and
      always differs, so checking it is an equality that costs nothing to
      produce, and `author` may legitimately be the same member twice. */
   const ok3 = await publish(PILAR, { target: INQ_CASE, statement: FRESH_S, excluded: FRESH_X,
-    subjectPosition: "sought_and_answered", subjectJustification: FRESH_J });
+    subjectPosition: "sought_and_answered", subjectJustification: FRESH_J,
+    biasAcknowledgement: FRESH_B });
+  t("an acknowledgement that STATES the lens is unchanged, in this edition's own words, publishes",
+    [ok3.ok, ok3.bias_acknowledgement], [true, FRESH_B]);
   t("the same POSITION and the same AUTHOR are legal on a fresh assertion — the stamps are not the claim",
     [ok3.ok, ok3.edition, ok3.completeness?.subject_position, ok3.completeness?.author],
     [true, 3, "sought_and_answered", "pilar"]);
@@ -597,12 +702,29 @@ console.log("\n--- 6. C-21.1: a completeness claim carried forward unchanged is 
      loosened — C-21.1 must still fire exactly once on the stale statement and not
      at all on the fresh one — but it is now asked at the altitude the claim lives
      at, and a registry keyed on the finding would silently stop firing. */
+  /* CORRECTED 2026-08-05, REC-47: the injected registry row now carries
+     `bias_acknowledgement` BESIDE `completeness` and not inside it. That
+     placement is the assertion — the two are different claims (DEC-46, the lens
+     versus the limits), and a registry that nested one in the other would let
+     the catalog arm pass while the store and the gate disagreed about where the
+     value lives. */
   const caseReg = { [ok3.caseId]: { latest: 2, editions: { 2: { edition: 2,
+    bias_acknowledgement: BACK2,
     completeness: { statement: STMT2, subject_justification: JUST2,
       excluded: JSON.stringify(EX2.map((r) => [null, r.description, r.reason])) } } } } };
   const stale = (await imageOf(INQ_CASE)).replace(FRESH_S, STMT2);
   t("the CATALOG names C-21.1 on a published edition whose statement is the previous edition's",
     (await errorsOf(INQ_CASE, stale, {}, undefined, caseReg)).filter((e) => e.startsWith("C-21.1")).length, 1);
+  /* REC-47: THE GATE'S HALF OF THE ITEM. The store refused this above; the
+     catalog must refuse it too, because a one-sided check is a check the other
+     side has to catch (REC-13's finding, REC-14's precedent). These are the
+     bytes a member would be asked to sign. */
+  const staleBias = (await imageOf(INQ_CASE)).replace(FRESH_B, BACK2);
+  t("the CATALOG names C-21.1 on an edition whose BIAS ACKNOWLEDGEMENT is the previous edition's",
+    (await errorsOf(INQ_CASE, staleBias, {}, undefined, caseReg)).filter((e) => e.startsWith("C-21.1")).length, 1);
+  t("and the C-21.1 finding NAMES the field, so the member knows which sentence to rewrite",
+    (await errorsOf(INQ_CASE, staleBias, {}, undefined, caseReg))
+      .some((e) => e.startsWith("C-21.1") && e.includes("bias_acknowledgement")), true);
   t("and the freshly authored edition draws no C-21.1 finding at all",
     (await errorsOf(INQ_CASE, await imageOf(INQ_CASE), {}, undefined, caseReg)).filter((e) => e.startsWith("C-21.1")), []);
   await ratify(INQ_CASE);

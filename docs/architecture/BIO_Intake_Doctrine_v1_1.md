@@ -632,5 +632,10 @@ that a document appears to be what it claims to be, and no bias statement
 changes what may be captured or verified. Declared bias
 (BIO_Declared_Bias_v0_1.md) binds ABOVE this doctrine, at evidence, analysis
 and conclusions; its one touch on this document's territory is at ratification
-for publication, where a work product must carry its bias manifest and no
-unsettled bias debt.
+for publication, where a work product must carry its bias manifest, an authored
+**bias acknowledgement** (DEC-46 (a), REC-47), and no unsettled **HUNCH DEBT**.
+
+> *Corrected 2026-08-05 (D-188 / DEC-46 (d)). This read "no unsettled bias
+> debt", which is the pre-DEC-20 blanket rule and reads as forbidding what the
+> doctrine requires: ordinary bias debt is DISCLOSED and travels with a
+> published case. Only an uncleared HUNCH refuses ratification for publication.*

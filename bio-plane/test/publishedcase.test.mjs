@@ -307,7 +307,12 @@ const JUST1 = "We put the four claims to the City Administrator on 2026-06-20 an
 const e1 = await publish(VERA, { target: CASE, statement: STMT1,
   excluded: [{ target: INFO_LEFTOUT, description: "the FY2023 comparison memo",
                reason: "a records request for it is still outstanding with the City Clerk" }],
-  subjectPosition: "sought_and_answered", subjectJustification: JUST1 });
+  subjectPosition: "sought_and_answered", subjectJustification: JUST1,
+  /* ADDED 2026-08-05, REC-47 / DEC-46 (a): op=publish now requires an authored
+     bias acknowledgement. This suite is not its subject — the fixture supplies
+     a real one so the read paths below can assert that the disclosure TRAVELS. */
+  biasAcknowledgement: "This group holds a declared position that fund transfers should be adopted in "
+                     + "public session; edition 1 reads the FY2024 record through it." });
 if (!e1.ok) throw new Error(`publish edition 1: ${JSON.stringify(e1)}`);
 const SHA1 = await shaOf(CASE);
 const rat1 = await ratify(CASE);
@@ -483,9 +488,13 @@ console.log("\n--- 4. DEC-34: the container is a zip, served by the MANIFEST's h
      forbidden composition arriving at case altitude. DEC-34's properties are
      unchanged and are still asserted below: every part by sha256, the manifest
      answerable by its own hash, tamper-EVIDENT and never tamper-proof. */
+  /* CORRECTED 2026-08-05, REC-47: `bio-case-container/2` -> `/3`. The container
+     gained `bias_acknowledgement` (DEC-46 (a)) and the version moved with it,
+     so a reader can tell a container that declared nothing from one written
+     before the field existed. The pin still demands an exact version. */
   t("the manifest itself answers by its own hash, to anyone",
     [m.status, manifest.format, manifest.case, manifest.edition],
-    [200, "bio-case-container/2", e1.caseId, 1]);
+    [200, "bio-case-container/3", e1.caseId, 1]);
   t("the manifest names the case's SCOPE and carries EVERY finding, each with its own signature and its own pair",
     [typeof manifest.scope, manifest.findings.map((x) => x.bundle_id),
      manifest.findings.every((x) => x.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----")),
@@ -565,7 +574,11 @@ console.log("\n--- 5. DEC-12: edition 2 publishes and edition 1 stays fetchable 
   const e2 = await publish(VERA, { target: CASE, statement: STMT2,
     excluded: [{ description: "any 2019 council minutes", reason: "outside the period at issue" }],
     subjectPosition: "sought_and_answered",
-    subjectJustification: "We put the revised claims to the City Administrator on 2026-07-05 and print the reply." });
+    subjectJustification: "We put the revised claims to the City Administrator on 2026-07-05 and print the reply.",
+    /* ADDED 2026-08-05, REC-47: FRESH for edition 2 — C-21.1 refuses a reprint
+       of edition 1's, which is exactly what this fixture must not trip over. */
+    biasAcknowledgement: "The same declared position on public adoption is unchanged; edition 2 applies it "
+                       + "to the FY2023 comparison memo." });
   const SHA2 = await shaOf(CASE);
   const rat2 = await ratify(CASE);
   t("edition 2 publishes and ratifies", [e2.ok, e2.edition, rat2.ok, rat2.edition], [true, 2, true, 2]);
@@ -631,7 +644,10 @@ console.log("\n--- 6. R4: a published child NAMES its parent and its siblings an
     statement: "This case covers the authorisation question only; the signature question is its sibling.",
     excluded: [{ description: "the signature question", reason: "it is the sibling case and is not weighed here" }],
     subjectPosition: "sought_no_answer",
-    subjectJustification: "We put the authorisation claim to the City Administrator on 2026-07-10 and had no reply." });
+    subjectJustification: "We put the authorisation claim to the City Administrator on 2026-07-10 and had no reply.",
+    /* ADDED 2026-08-05, REC-47. */
+    biasAcknowledgement: "The group's declared position on public adoption applies to the authorisation "
+                       + "question, and this child case is read through it." });
   if (!pk.ok) throw new Error(`publish child: ${JSON.stringify(pk)}`);
   const KID_SHA = await shaOf(KID_A);
   const ratK = await ratify(KID_A);

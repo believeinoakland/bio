@@ -15,7 +15,7 @@
  * design; DEC-15 is the ruling that closed the fork, and it closed it by saying
  * the fork was false: EARNED and AUTHORED are not two answers, they are two
  * PHASES of one lifecycle. During `open` a connection grade may be authored —
- * that is a HUNCH, and it is bias debt. The EARNED path this item builds is what
+ * that is a HUNCH, and it is HUNCH DEBT. The EARNED path this item builds is what
  * a hunch is CLEARED INTO.
  *
  * THE RULE, and it is the recogniser's own precedent moved up one layer
@@ -27,7 +27,7 @@
  *   resolution       connection  the RECORD (earned)  A/B/C, never D
  *   capture          capture     the RECORD (earned)  no stronger than B
  *   testimony        connection  a MEMBER             D and nothing else
- *   hunch            connection  a MEMBER             any, bias debt (DEC-15)
+ *   hunch            connection  a MEMBER             any, HUNCH DEBT (DEC-15)
  *
  * Enforced by the WRITE PATH, through the ONE catalog function both gates run
  * (`checkInquiryBasis` -> `checkEarnedLeg`), because an equality a caller can
@@ -48,7 +48,7 @@
  *      never mints a D at this layer either.
  *   4. THE CLEARED HUNCH (DEC-15). A leg authored as a hunch, then cleared by
  *      re-promotion, reads `resolution` at the grade the record earns, carries no
- *      bias debt on the axis, and the HUNCH'S AUTHOR AND DATE ARE STILL IN THE
+ *      hunch debt on the axis, and the HUNCH'S AUTHOR AND DATE ARE STILL IN THE
  *      RECORD — in the prior revision's bytes, which `op=image` serves. Nothing
  *      silently vanishes.
  *   5. THE CAPTURE AXIS IS NEVER AUTHORED. It is earned from the capture record:
@@ -457,7 +457,7 @@ console.log("\n--- 4. DEC-15's lifecycle: a hunch is CLEARED INTO the earned pat
   t("the axis reads at the hunch's grade — treating it as undetermined would destroy the traversability",
     [debtBefore.state, debtBefore.grade], ["graded", "B"]);
 
-  /* PHASE TWO: clearing it. Bias debt is cleared by RE-RUNNING the evaluation
+  /* PHASE TWO: clearing it. HUNCH DEBT is cleared by RE-RUNNING the evaluation
      under the current set — the leg is re-stated with the source that accounts
      for it, and what the record earns is A, not the B the hunch guessed. */
   const clearedMd = inquiryMd(HUNCH_CASE, { question: "Does the memo concern the ordinance?",
@@ -467,11 +467,11 @@ console.log("\n--- 4. DEC-15's lifecycle: a hunch is CLEARED INTO the earned pat
   const cleared = await promote(HUNCH_CASE, clearedMd, "inquiry", { base: sha(hunchMd) });
   t("THE ITEM: the hunch is CLEARED by re-promotion, and the write is accepted", cleared.ok !== false, true);
   const after = await legOf(HUNCH_CASE, DOC_A);
-  t("the leg now reads 'resolution' — the bias debt is SETTLED, not merely relabelled",
+  t("the leg now reads 'resolution' — the HUNCH DEBT is SETTLED, not merely relabelled",
     [after?.grade ?? null, after?.grade_source ?? null], ["A", "resolution"]);
   t("the cleared leg states the grade the record actually earns, which is not the grade the hunch guessed",
     [after?.grade, before?.grade], ["A", "B"]);
-  t("NO HUNCH REMAINS ON THE AXIS: nothing load-bearing is still carrying bias debt",
+  t("NO HUNCH REMAINS ON THE AXIS: nothing load-bearing is still carrying HUNCH DEBT",
     (await hunchLegs(HUNCH_CASE)).length, 0);
 
   /* AND NOTHING SILENTLY VANISHES. The record is append-only: the hunch's own

@@ -1480,8 +1480,21 @@ BIO_Bundle_Skill_Composite_Design v1.5. Supersedes v1.2.*
 ## Cross-reference: declared bias and workproduct_state (July 27, 2026)
 
 When declared bias lands (BIO_Declared_Bias_v0_1.md), one rule joins this
-document's family: a work product carrying unsettled BIAS DEBT (its cited bias
-manifest differs from the current effective set) cannot advance
-workproduct_state and cannot be ratified for publication until the debt is
-settled by re-running its evaluations under the current set. Recorded here now
-so the state-rules corpus and the bias corpus cannot drift apart.
+document's family: a work product carrying unsettled **HUNCH DEBT** — a
+connection graded ahead of its evidence (DEC-15) — cannot be ratified for
+publication until it is cleared by re-running its evaluations under the current
+set. Recorded here now so the state-rules corpus and the bias corpus cannot
+drift apart.
+
+> **CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"a work product carrying
+> unsettled BIAS DEBT (its cited bias manifest differs from the current
+> effective set) cannot advance workproduct_state and cannot be ratified for
+> publication"*. **Both halves were narrowed to hunches by DEC-20 on
+> 2026-08-02.** Ordinary bias debt — the manifest differing from the current
+> effective set — is DISCLOSED and travels with the work; it blocks no state
+> transition and no ratification. The reason the two are treated differently: a
+> hunch inflates a GRADE, so publishing over one states a strength that is not
+> true, while ordinary bias only frames interpretation and disclosure fully
+> answers it. **The drift this row was written to prevent is exactly the drift
+> that happened** — the state-rules corpus went on asserting the blanket rule
+> for three days after the bias corpus stopped.
