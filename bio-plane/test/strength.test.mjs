@@ -159,6 +159,15 @@ const promoteOn = (c) => (id, text, type, base = null) => c("/promote", {
   meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
           current_state: type === "inquiry" ? "open" : "collected",
           created: NOW, last_updated: LATER },
+  /* REC-18, 2026-08-04: an INFORMATION bundle REGISTERS a capture. A
+     capture-axis grade is EARNED from the capture record now, so a document
+     with no registered bytes has nothing for the axis to measure and the leg
+     claiming one is refused. One sha per bundle — `register.capture_sha` is the
+     table's primary key, so a shared sha would move the row rather than add
+     one. */
+  register: type === "information"
+    ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
+    : [],
 });
 const promote = promoteOn(call), promoteP = promoteOn(callp);
 const strength = (id) => call(`/strength?id=${id}`);
@@ -180,8 +189,22 @@ const UNGR1 = "INFO-2026-0900-ungraded-1"; // no grade at all
 const UNGR2 = "INFO-2026-0900-ungraded-2";
 for (const d of [CAP_B, CAP_C, CON_A, CON_D, UNGR1, UNGR2]) await promote(d, infoMd(d), "information");
 
-const g = (target, grade, axis, source = "resolution", extra = {}) =>
-  ({ target, role: "supports", grade, axis, source, ...extra });
+/* CORRECTED 2026-08-04 (REC-18), never exempted, and every GRADE in every
+   fixture below is unchanged — this suite is about the ARITHMETIC (two axes, two
+   populations, the weakest member of each) and the arithmetic does not care
+   where a grade came from. What changed is that `grade_source` stopped being a
+   label a fixture could pick: `resolution` is now EARNED against the inquiry's
+   subject entity and admits only the CONNECTION axis, and none of these
+   questions names a subject. So the default source follows the AXIS — `capture`
+   on the capture axis, EARNED from the capture each document now registers, and
+   `hunch` on the connection axis, which is the honest name for an authored
+   connection grade and the only authored source permitted above D (DEC-15),
+   carrying the author and date a hunch must announce itself by. The explicit
+   `testimony` legs below are untouched: they were always a member's act. */
+const HUNCH = { author: "suite", date: "2026-08-04" };
+const g = (target, grade, axis, source = axis === "capture" ? "capture" : "hunch", extra = {}) =>
+  ({ target, role: "supports", grade, axis, source,
+     ...(source === "hunch" ? HUNCH : {}), ...extra });
 const bare = (target, role = "supports") => ({ target, role });
 
 console.log("--- 1. a mixed basis reads TWO strengths, each naming its own weakest leg (DEC-21) ---");

@@ -446,6 +446,16 @@ const OPS = {
      op=reevaluations' — so REC-19's totality guard SEES the op and its
      NON_ACTS row states why a read is not an act on an object. */
   inquirystrength: { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-18: what the RECORD earns for each candidate basis leg, GATED. It is
+     part of the earned rule rather than a convenience beside it: op=promote
+     refuses a leg whose earned grade is not the value the record holds, and a
+     member with no way to LEARN that value is a member the refusal pressures
+     into guessing — "a gate that pressures someone into inventing one is a bug
+     in the gate" (CLAUDE.md). The refusal and this answer come from ONE store
+     function, so they cannot disagree. Member class and above on
+     op=inquirystrength's reasoning exactly, and the viewer is stamped
+     server-side below. NEEDS entry of null with a NON_ACTS row, same shape. */
+  earnedbasis: { classes: ["admin", "member", "probe"],          mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1077,6 +1087,14 @@ const NEEDS = {
      from, and a read that is silently absent from both registries is exactly how
      REC-25's six ungated reads accumulated.) */
   inquirystrength:  null,
+  /* REC-18: NO CAPABILITY, on op=inquirystrength's reasoning exactly. Asking
+     what the record already earned for a document is reading the record, not
+     shaping it — the WRITE that puts the earned grade on a leg is op=promote,
+     which carries `contribute` and is where the capability belongs. A view-only
+     member weighing a case needs to see what its legs rest on precisely as a
+     contributor does. Present rather than absent so REC-19's totality guard
+     sees it; named in NON_ACTS with its reason. */
+  earnedbasis:      null,
   /* REC-21 / D-125: NO CAPABILITY, and the reason IS the doctrine rather than a
      convenience. `contribute` is the corpus-shaping surface — it is what
      separates a member who may change what the record says from one who may only
@@ -3389,6 +3407,13 @@ export default {
            path judge against the same published record. Passing nothing here
            does not soften the gate, it blinds it. */
         publishedRegistry: facts.publishedRegistry,
+        /* REC-18: and the third — what each basis target EARNS from the record
+           (resolutions against the question's subject entity; the capture
+           record for the capture axis). Same reasoning, same source: an earned
+           grade is computed by the record, so a gate that cannot see the record
+           cannot confirm one, and threading it here is what makes the gate and
+           op=promote's write path judge an earned leg identically. */
+        earnedRegistry: facts.earnedRegistry,
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
@@ -3733,6 +3758,12 @@ export default {
            with every other retrieval read; the store fails closed on an absent
            stamp and withholds the answer as an absent bundle's. */
         || op === "inquirystrength"
+        /* REC-18: its subject is an inquiry and its answer names the bundles a
+           basis rests on, so it is stamped with every other retrieval read. The
+           store fails closed on an absent stamp, withholds an invisible inquiry
+           as an absent one, and drops an invisible target with no id and no
+           count. */
+        || op === "earnedbasis"
         || QUEUE_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);

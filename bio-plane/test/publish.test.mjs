@@ -123,13 +123,23 @@ const shaOf = async (id) => ((await GET("op=list&token=mem-rec14")).result || []
   .find((b) => b.bundle_id === id)?.bundle_sha;
 const stateOf = async (id) => ((await GET("op=list&token=mem-rec14")).result || [])
   .find((b) => b.bundle_id === id)?.current_state;
-const errorsOf = async (id, text, registry) => {
+/* CORRECTED 2026-08-04 (REC-18), never exempted. `earned` joins `registry` as a
+   second fact the pure catalog cannot read out of the bundle — an EARNED grade
+   is computed from the record's `resolutions` and capture rows, so a checker
+   that can see only these bytes refuses the leg rather than passing it. Asking
+   the plane for it (op=earnedbasis) rather than hand-building the shape is
+   deliberate: the op answers from the SAME store function op=promote enforces
+   with, so "audits clean" is measured against the enforcer and not against a
+   fixture's idea of it. */
+const errorsOf = async (id, text, registry, earned) => {
   const { findings } = await checkBundle({ folderName: id,
     files: new Map([["bundle.md", text]]),
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
-    resolveTarget: () => true, publishedRegistry: registry });
+    resolveTarget: () => true, publishedRegistry: registry, earnedRegistry: earned });
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
+const earnedFor = async (id, tok = PILAR) =>
+  rP(await GET(`op=earnedbasis&token=${tok}&id=${id}`));
 
 /* ---- keys and roster ---- */
 const dir = mkdtempSync(join(tmpdir(), "publish-"));
@@ -168,6 +178,9 @@ const legLines = (legs) => legs.length
       ...(l.grade !== undefined ? [`    grade: ${l.grade}`] : []),
       ...(l.axis ? [`    grade_axis: ${l.axis}`] : []),
       ...(l.source ? [`    grade_source: ${l.source}`] : []),
+      /* REC-18: a hunch announces itself with an author and a date (DEC-15). */
+      ...(l.author ? [`    author: ${l.author}`] : []),
+      ...(l.date ? [`    date: ${l.date}`] : []),
       ...(l.edition !== undefined ? [`    target_edition: ${l.edition}`] : [])])]
   : [];
 
@@ -225,13 +238,23 @@ const projectMd = (id, { refs = [], bar = null } = {}) => ["---",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
 let snapSeq = 0;
+/* REC-18, 2026-08-04: an INFORMATION bundle promoted here now REGISTERS a
+   capture. It is not decoration and it is not a workaround — a capture-axis
+   grade is EARNED from the capture record, so a document with no registered
+   bytes has nothing for that axis to be measuring and a leg claiming one is
+   refused. The old fixture promoted documents with `register: []` and then
+   authored capture grades over them, which is precisely the shape the earned
+   rule exists to refuse. Registering makes the fixture what it always claimed
+   to be: a captured document. */
 const promote = async (id, md, type, state, tok = PILAR, base = null) => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
     bundleId: id, base, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
-    register: [],
+    register: type === "information"
+      ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
+      : [],
   }));
   return r;
 };
@@ -275,8 +298,21 @@ await mustPromote(INFO_LEFTOUT, infoMd(INFO_LEFTOUT), "information", "collected"
    doctrine (CAPTURE-FIDELITY: grade B is what a direct capture is worth);
    connection legitimately does, which is exactly why one letter can never stand
    for both. */
-const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "resolution" },
-                   { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" }];
+/* CORRECTED 2026-08-04 (REC-18), never exempted, and the frozen pair is
+   UNCHANGED at (capture B, connection C) — which is the point, because this
+   suite is about the pair and not about the ladder. What changed is where each
+   letter comes from. `resolution` used to be a label a fixture could pick; it is
+   now EARNED and admits only A/B/C against the inquiry's subject entity, and
+   this question names none. So: the CAPTURE leg says `capture`, and it earns B
+   from the capture the promote helper now registers — the doctrine's own value
+   ("grade B is what a direct capture by this instance is worth; it is not grade
+   A and this surface will not say it is"). The CONNECTION leg says `hunch`,
+   which is the honest name for an authored connection grade and the only
+   authored source permitted above D, carrying the author and date DEC-15
+   requires. */
+const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
+                   { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
+                     author: "pilar", date: "2026-08-04" }];
 await mustPromote(INQ_CASE, inquiryMd(INQ_CASE, { question: "Was the sewer transfer authorised?",
   refs: [INFO_CAP, INFO_CONN], legs: CASE_LEGS }), "inquiry", "open");
 await mustPromote(INQ_THIN, inquiryMd(INQ_THIN, { question: "Who signed the memo?",
@@ -339,7 +375,8 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
                   { axis: "connection", state: "graded", grade: "C", weakest: INFO_CONN }]);
   t("R4's division disclosure is RESERVED in the shape now, so it does not change under readers later",
     [/^division_parent: null$/m.test(md), /^division_siblings: \[\]$/m.test(md)], [true, true]);
-  t("the published document AUDITS CLEAN against the catalog", await errorsOf(INQ_CASE, md), []);
+  t("the published document AUDITS CLEAN against the catalog",
+    await errorsOf(INQ_CASE, md, undefined, await earnedFor(INQ_CASE)), []);
   t("op=affordances stops publishing `publish` once it is published, and the store agrees",
     [actIds(await affordances(INQ_CASE)).includes("publish"),
      (await publish(PILAR, base)).reason], [false, "ILLEGAL_TRANSITION"]);

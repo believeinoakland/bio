@@ -260,6 +260,26 @@ export class Store extends DurableObject {
       ["bundles", "inquiry_connection_strength", "TEXT"],
       ["bundles", "inquiry_connection_state", "TEXT"],
       ["bundles", "inquiry_basis_count", "INTEGER"],
+      /* REC-18 / DATA-MODEL D1(b): the registry ENTITY this question is about,
+         and it is the whole of the subject-entity linkage — one nullable
+         projection column, no new table, no join row, no ordinal.
+         WHY A COLUMN AND NOT A TABLE. D4's reasoning for giving inquiry_basis
+         its own table was that a basis needs an ORDINAL (one document, two
+         legs) and a place to put a GRADE. A subject has neither: it is one
+         optional scalar fact about one bundle, exactly the shape S-10's
+         projection columns exist for, and a table would be a second place to
+         state it with nothing extra to hold.
+         WHY NOT `refs`. refs targets are BUNDLE ids and an ENT- key is not one;
+         widening the universal edge projection to carry registry keys is the
+         blast-radius argument D4 already made about grades on edges.
+         DERIVED from bundle.md's `subject_entity`, written in the same
+         transaction as inquiry_basis by the same discipline (D-21). Nullable
+         and additive: a question with no subject entity has none, and DEC-15
+         states exactly what that costs — no A/B/C on its connection axis.
+         NOT INDEXED, on REC-17's stated reasoning: it is read BY bundle_id
+         (the primary key) while building a write's earned registry, and no
+         seek anybody makes is on its value. */
+      ["bundles", "inquiry_subject_entity", "TEXT"],
       /* REC-17 / P-64: the REVERSE of a `supersedes` edge, so R7's obligation
          is a LOOKUP and not a graph walk. `refs` answers "what does this
          document supersede" because the edge lives on the SUPERSEDING
@@ -3483,7 +3503,13 @@ export class Store extends DurableObject {
       supersedesEdgeFindings(cf, findings);
       divisionDisclosureFindings(cf, findings);
       checkInquiryBasis(cf, findings, this.publishedRegistryFor(pl.id,
-        pl.legs.map((l) => l.target).filter((t) => typeof t === "string")));
+        pl.legs.map((l) => l.target).filter((t) => typeof t === "string")),
+        /* REC-18: the earned registry for the CHILD, judged before the parent
+           moves exactly as every other rule here is. A child inherits the
+           parent's subject_entity through the copied frontmatter, so an
+           apportioned earned leg is re-confirmed against the record rather than
+           carried across on trust. */
+        this.earnedRegistryForDoc(cf, pl.legs));
       const errs = findings.filter((x) => x.severity === "error");
       if (errs.length)
         return { ok: false, reason: "CHILD_REFUSED", target, child: pl.id,
@@ -4288,6 +4314,21 @@ export class Store extends DurableObject {
       const { findings } = await checkBundle({
         folderName: row.bundle_id, files, elidedPaths: elided,
         sha256, sha512, resolveTarget: (id) => known.has(id),
+        /* REC-18: the audit sweep runs INSIDE the store, so it is one of the
+           three places that CAN confirm an earned grade — and it must, because
+           checkEarnedLeg refuses a leg it cannot confirm rather than passing it.
+           Blinding the sweep would make every earned leg in a healthy corpus
+           report as an offender, which is the "audit clean before you call
+           anything done" gate failing on correct data. Built per bundle rather
+           than once for the page: the subject entity is per inquiry, so there is
+           no shared registry to build. Two indexed reads, and only for a bundle
+           that has basis rows at all. */
+        earnedRegistry: (() => {
+          const targets = this.#rows(
+            `SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, row.bundle_id).map((r) => r.target_id);
+          return targets.length
+            ? this.earnedBasisRegistry(this.#subjectEntityOf(row.bundle_id), targets) : null;
+        })(),
       });
       const errs = findings.filter((f) => f.severity === "error");
       if (!errs.length) { clean++; continue; }
@@ -4805,12 +4846,48 @@ export class Store extends DurableObject {
            so an over-strong inherited grade is refused at the write and not
            only at the gate — the checkGatheringGrammar precedent, and the
            reason the rule lives in ONE catalog function that both sides run. */
+        /* REC-18: and the EARNED registry beside it, injected on identical
+           terms — what `resolutions` and `register` hold about the targets this
+           basis names is the record, not this document, so the write path is
+           where an earned grade can be confirmed at all. This is the enforcement
+           point for D1(b): a caller states the grade the record earns or the
+           write is refused, in either direction. */
         checkInquiryBasis(basisFm, bf, this.publishedRegistryFor(bundleId,
-          basisLegs.map((l) => l.target).filter((t) => typeof t === "string")));
+          basisLegs.map((l) => l.target).filter((t) => typeof t === "string")),
+          this.earnedRegistryForDoc(basisFm, basisLegs));
         const errs = bf.filter((x) => x.severity === "error");
         if (errs.length)
+          /* REC-18: `repairs` now travels with the refusal, as it already does
+             through runGate. DEC-8 is that the PLANE publishes the refusal
+             contract and the surface renders it — and for an EARNED grade the
+             repair is the whole of the remedy ("state grade A; op=earnedbasis
+             answers what each target earns before you write it"). Dropping it
+             left a member told they were wrong and not told what right was,
+             which is the shape of gate that pressures someone into guessing.
+             ADDITIVE: an existing caller reading only check+detail is unaffected. */
           return { ok: false, reason: "BASIS_REFUSED",
-                   findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
+                   findings: errs.map((x) => ({ check: x.check, detail: x.message,
+                                                ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+      }
+      /* REC-18: an inquiry naming a SUBJECT ENTITY that does not resolve in this
+         store is refused, on op=promote's own supersedes-target precedent a few
+         lines below — an id that points a reader at nothing while claiming this
+         question is about it. The catalog checks the SHAPE (ENT-YYYY-NNNN, a
+         pure fact about the bytes); only the store can say whether the registry
+         holds it. REPLAY IS EXEMPT for the same reason every shape arm is: the
+         record's history must be holdable verbatim, and an entity purged later
+         must not make an old promotion unreplayable. */
+      if (isInquiry && docFmW && !pkg.replay && typeof docFmW.subject_entity === "string"
+          && docFmW.subject_entity.trim() !== "") {
+        const se = docFmW.subject_entity.trim();
+        if (!this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, se))
+          return { ok: false, reason: "SUBJECT_REFUSED", target: se,
+                   findings: [{ check: "C-2.8",
+                     detail: `subject_entity '${se}' does not resolve in this store: an inquiry naming its `
+                           + `subject names an entry in the SUBJECT REGISTRY, and this one names a key no `
+                           + `entity has. Register the subject with op=entitycreate, or omit subject_entity `
+                           + `— an inquiry may name no subject, and then no leg of it earns an A/B/C `
+                           + `connection grade (DEC-15).` }] };
       }
       /* REC-16 / R4: THE SUPERSESSION EDGE AND THE DIVISION DISCLOSURE, checked
        * at the WRITE, on exactly the basis arm's reasoning above — the catalog's
@@ -5103,7 +5180,14 @@ export class Store extends DurableObject {
          leg raised in an inquiry BENEATH this one does not re-promote this
          document, so the columns go stale by design and strengthOf() is what
          anything needing the truth calls. */
-      this.#writeStrengthProjection(bundleId, isInquiry);
+      this.#writeStrengthProjection(bundleId, isInquiry,
+        /* REC-18: the declared subject, projected from the SAME parsed bytes the
+           earned registry was built from a moment ago — never re-parsed, so the
+           value enforced at the write and the value the gate later reads are one
+           value. Empty string normalises to NULL: "named nothing" and "named the
+           empty string" are the same fact and the column states it once. */
+        basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim()
+          ? basisFm.subject_entity.trim() : null);
 
       for (const c of register)
         this.sql.exec(
@@ -5988,6 +6072,145 @@ export class Store extends DurableObject {
         byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
     }
     return byCapture;
+  }
+
+  /* ===================== REC-18 · THE EARNED BASIS GRADES ==================
+   *
+   * DATA-MODEL D1(b), as DEC-15 closed it: a document leg's CONNECTION grade is
+   * EARNED — the strongest resolution of that document's captures to the
+   * inquiry's SUBJECT ENTITY — and its CAPTURE grade is earned from the capture
+   * record. Both are computed HERE, server-side, and the write path refuses a
+   * leg stating anything else (checkEarnedLeg). The rule is the recogniser's own,
+   * moved up one layer: "the RECOGNISER never mints a D; the model holds it so a
+   * member can testify, never the machine" (schema.mjs:739-743).
+   *
+   * ONE FUNCTION, THREE CONSUMERS, and that is deliberate: op=promote's write
+   * path, the ratification gate, and op=earnedbasis (the read a surface uses to
+   * fill a leg in BEFORE writing it) all call this. A member who cannot learn
+   * what a leg earns is a member the refusal pressures into inventing one, which
+   * is the failure mode CLAUDE.md names about gates.
+   */
+
+  /* The inquiry's declared subject, from the DOCUMENT and not from the column.
+     The projection is a cache like every other; the bytes are the authority,
+     and at promote time the column has not been written yet. */
+  #subjectEntityOf(bundleId) {
+    const row = this.#one(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, bundleId);
+    return row && row.inquiry_subject_entity ? row.inquiry_subject_entity : null;
+  }
+
+  /* THE CAPTURE-AXIS CEILING, and it is doctrine rather than a tuning knob.
+     "Grade B is what a direct capture by this instance is worth; it is not
+     Grade A and this surface will not say it is" (SB-EVIDENCE 908-910, R2-g
+     CONFORMS). Grade A needs a chain-of-custody web archive, which
+     CAPTURE-FIDELITY.md states plainly is out of a Worker's reach and is NOT
+     CLAIMED. So the earned capture grade tops out at B, and the day a group can
+     produce a WACZ this is one arm, not a redesign. */
+  static EARNED_CAPTURE_CEILING = "B";
+
+  /** The earned registry for one inquiry over one set of basis targets.
+   *
+   *  CONNECTION: the strongest resolution of each target document's captures to
+   *  the subject entity, through #strongestResolutionsFor — the SAME collapse
+   *  op=concerns, op=connect and op=thread make, reused rather than restated so
+   *  a leg's grade cannot drift from the grade that document appears at in the
+   *  reverse index. A/B/C ONLY: a grade-D resolution is a member's testimony
+   *  (op=resolvetestify), so a document known to concern the subject only by
+   *  testimony earns NOTHING here and its leg is testimony, with its own author
+   *  and date. That is the machine-never-mints-a-D rule holding at this layer
+   *  too, and it is why the D rows are dropped rather than passed through.
+   *
+   *  CAPTURE: whether the record holds registered captures for that document.
+   *  Read from `register`, which is what op=promote writes when a bundle's
+   *  bytes are registered — the capture record itself, never a caller's claim.
+   *
+   *  Bounded by the TARGETS asked about (a basis, or a caller's list) and not by
+   *  the corpus, and it runs two indexed reads per call rather than a probe per
+   *  leg — publishedRegistryFor's shape and for its reason. */
+  earnedBasisRegistry(subjectEntity, targetIds = []) {
+    const ids = [...new Set((Array.isArray(targetIds) ? targetIds : [])
+      .filter((t) => typeof t === "string" && t))];
+    const ent = subjectEntity
+      ? this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, subjectEntity)
+      : null;
+    const out = { subject_entity: subjectEntity || null,
+                  subject_label: ent ? ent.label : null,
+                  subject_known: !!ent,
+                  earned: { connection: {}, capture: {} } };
+    if (!ids.length) return out;
+    const want = new Set(ids);
+    if (subjectEntity) {
+      /* Collapse per CAPTURE first (the established collapse), then take the
+         strongest of a document's captures — a document may hold several, and
+         D1(b)'s words are "the strongest resolution of that document's
+         CAPTURES". Doing it in this order rather than one max over the raw rows
+         keeps the two steps visible and keeps the per-capture step the shared
+         one. */
+      const perCapture = this.#strongestResolutionsFor(subjectEntity);
+      for (const c of perCapture.values()) {
+        if (!c.bundle_id || !want.has(c.bundle_id)) continue;
+        /* A/B/C ONLY. The machine never mints a D. */
+        if (!["A", "B", "C"].includes(c.grade)) continue;
+        const cur = out.earned.connection[c.bundle_id];
+        if (!cur || Store.#GRADE_RANK[c.grade] > Store.#GRADE_RANK[cur.grade])
+          out.earned.connection[c.bundle_id] = { grade: c.grade, capture_sha: c.capture_sha, captures: 0 };
+      }
+      for (const c of perCapture.values())
+        if (c.bundle_id && out.earned.connection[c.bundle_id]) out.earned.connection[c.bundle_id].captures++;
+      for (const [id, e] of Object.entries(out.earned.connection))
+        /* mode 'value': `resolutions` holds the grade ITSELF, so the leg must
+           state this letter and no other. */
+        e.mode = "value",
+        e.why = `${id} resolves to ${subjectEntity}${ent ? ` (${ent.label})` : ""} at grade ${e.grade} — the `
+              + `strongest of the ${e.captures} capture(s) of that document the recogniser matched to this `
+              + `subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the `
+              + `document is.`;
+    }
+    const marks = ids.map(() => "?").join(",");
+    /* THE CAPTURE RECORD IS BOTH PLACES A CAPTURE LANDS, and asking only one of
+       them would earn nothing for half the corpus. `register` holds the captures
+       a promotion REGISTERED against a bundle's files; `readings` holds the ones
+       a captured document's provenance carried. A document acquired through
+       op=acquire has both; one intaken with a provenance document has only the
+       second. The union is what "the record holds bytes for this document"
+       actually means. */
+    for (const r of this.#rows(
+      `SELECT bundle_id, count(*) AS n FROM (
+         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${marks})
+         UNION
+         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${marks})
+       ) GROUP BY bundle_id`, ...ids, ...ids)) {
+      if (!r.n) continue;
+      out.earned.capture[r.bundle_id] = {
+        /* mode 'ceiling', and the difference from the connection axis is not a
+           softening — it is the record being honest about what it holds. There
+           is no per-document capture grade column anywhere in this schema, so
+           the record cannot say "this document's capture is worth C"; what it
+           CAN say is that it holds bytes for the document and what the strongest
+           capture this plane produces is worth. A leg may not claim more than
+           that (which is what makes grade A unreachable rather than merely
+           discouraged); a weaker letter is the member's account of a poorer
+           route and stays theirs. */
+        mode: "ceiling",
+        grade: Store.EARNED_CAPTURE_CEILING, captures: r.n,
+        why: `${r.bundle_id} holds ${r.n} capture(s) in the record, so the strongest capture grade it can `
+           + `earn is ${Store.EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
+           + `receipt.`,
+        ceiling: `Grade A is not reachable on the capture axis at all: it needs a chain-of-custody web `
+               + `archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).` };
+    }
+    return out;
+  }
+
+  /* The registry as the WRITE PATH and the GATE need it: the subject this
+     document declares, over the targets this document's basis names. Takes the
+     frontmatter because at promote time the bytes are the only authority — the
+     projection column is written from them a few lines later. */
+  earnedRegistryForDoc(fm, legs) {
+    const subject = fm && typeof fm.subject_entity === "string" && fm.subject_entity
+      ? fm.subject_entity : null;
+    return this.earnedBasisRegistry(subject,
+      (Array.isArray(legs) ? legs : []).map((l) => l && l.target).filter((t) => typeof t === "string"));
   }
 
   /* A missing stage is a FINDING only when the group's definition says the stage is expected
@@ -8657,16 +8880,26 @@ export class Store extends DurableObject {
      the composed scalar DEC-21 forbids, and a column is where one would grow.
      The STATE column beside each grade is what keeps `unrated` distinguishable
      from `undetermined` and both distinguishable from "never projected", which
-     one nullable grade column cannot do. */
-  #writeStrengthProjection(bundleId, isInquiry) {
+     one nullable grade column cannot do.
+
+     REC-18 adds `inquiry_subject_entity` to this write, and it is NOT a cache in
+     the same sense as the four columns above: it is a straight projection of one
+     authored scalar, like every S-10 column, and it goes stale only when the
+     document changes — which re-promotes and re-writes it. It is written HERE
+     rather than in #writeProjection because it is inquiry-only and this is the
+     inquiry projection writer; #writeProjection runs for every object type and
+     would have to learn a type test to hold it. */
+  #writeStrengthProjection(bundleId, isInquiry, subjectEntity = null) {
     if (!isInquiry) return null;
     const s = this.strengthOf(bundleId);
     const n = this.#one(`SELECT count(*) AS c FROM inquiry_basis WHERE bundle_id=?`, bundleId).c;
     this.sql.exec(
       `UPDATE bundles SET inquiry_capture_strength=?, inquiry_capture_state=?,
-              inquiry_connection_strength=?, inquiry_connection_state=?, inquiry_basis_count=?
+              inquiry_connection_strength=?, inquiry_connection_state=?, inquiry_basis_count=?,
+              inquiry_subject_entity=?
          WHERE bundle_id=?`,
-      s.capture.grade, s.capture.state, s.connection.grade, s.connection.state, n, bundleId);
+      s.capture.grade, s.capture.state, s.connection.grade, s.connection.state, n,
+      subjectEntity || null, bundleId);
     return s;
   }
 
@@ -10269,6 +10502,15 @@ export class Store extends DurableObject {
          path see the same published record. */
       publishedRegistry: this.publishedRegistryFor(bundleId,
         this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, bundleId).map((r) => r.target_id)),
+      /* REC-18: what each basis target EARNS, so an earned grade is confirmed at
+         the ratification gate and not only at the write. Both gates run the one
+         catalog function over the one registry shape, which is the whole reason
+         checkInquiryBasis is a catalog export rather than two implementations.
+         The subject comes from the PROJECTION here (the document is already
+         promoted and the column is current), where promote reads it from the
+         bytes because the column has not been written yet. */
+      earnedRegistry: this.earnedBasisRegistry(this.#subjectEntityOf(bundleId),
+        this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, bundleId).map((r) => r.target_id)),
     };
   }
 
@@ -10542,6 +10784,61 @@ export class Store extends DurableObject {
     const list = (Array.isArray(ids) ? ids : String(ids || "").split(","))
       .map((s) => String(s || "").trim()).filter(Boolean).slice(0, 200);
     return { ok: true, registry: this.publishedRegistryFor(null, list) };
+  }
+
+  /** REC-18: op=earnedbasis — WHAT THE RECORD EARNS for each candidate leg,
+   *  BEFORE the leg is written.
+   *
+   *  THIS OP IS PART OF THE RULE, not a convenience beside it. The write path
+   *  refuses a leg whose earned grade is not the one the record holds; a member
+   *  with no way to LEARN that value is a member the refusal pressures into
+   *  guessing, and "a gate that pressures someone into inventing one is a bug in
+   *  the gate" is CLAUDE.md's own sentence about exactly this shape. So the
+   *  enforcement and the answer come from ONE function (`earnedBasisRegistry`)
+   *  and cannot disagree: what this read reports is what the write will accept.
+   *
+   *  Answers for the inquiry's OWN subject entity, over the targets asked about
+   *  — the caller's list, or the basis the inquiry already carries. It states
+   *  what is NOT earned as plainly as what is: a target absent from
+   *  `earned.connection` earns no A/B/C, and the honest leg for it is testimony
+   *  (grade D, with an author and a date) or no grade at all.
+   *
+   *  D-15: viewer-gated like every other read that can name a bundle, and it
+   *  fails closed on an absent viewer. TWO POSTURES, REC-30's: the OWNING
+   *  inquiry invisible -> the whole answer withheld as an absent one; a TARGET
+   *  the viewer may not see -> dropped from the registry, with the fact that
+   *  something was dropped stated and NO id and NO count leaked. */
+  earnedBasis({ id, targets = null, viewer = null } = {}) {
+    if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
+    if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    const b = this.#one(`SELECT object_type, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, id);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    if (normalizeType(b.object_type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target: id,
+               detail: `${id} is a ${normalizeType(b.object_type)}. An earned basis grade is a fact about `
+                     + `an INQUIRY's legs — what each candidate target earns against the question's subject `
+                     + `— and only an inquiry has a basis.` };
+    const asked = targets
+      ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, 200)
+      : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id)
+          .map((r) => r.target_id);
+    const visible = asked.filter((t) => this.#viewerSees(t, viewer));
+    const withheld = visible.length !== asked.length;
+    const reg = this.earnedBasisRegistry(b.inquiry_subject_entity || null, visible);
+    return { ok: true, bundleId: id, ...reg, asked: visible,
+             /* Stated, never silently shortened — and with no id and no count,
+                because the count IS the leak (op=backlinks' posture). */
+             ...(withheld ? { out_of_view: true } : {}),
+             detail: reg.subject_entity
+               ? `${id} names ${reg.subject_entity}${reg.subject_label ? ` (${reg.subject_label})` : ""} as its `
+               + `subject. A target listed under earned.connection may be written as a leg with `
+               + `grade_source: resolution AT THAT GRADE and no other; one listed under earned.capture may be `
+               + `written with grade_source: capture at that grade. A target absent from a list earns nothing `
+               + `on that axis — the honest leg is testimony (grade D, with an author and a date) or no grade `
+               + `at all, which suspends the axis and names the leg rather than pretending to a number.`
+               : `${id} names NO subject entity, so no leg of it earns an A/B/C connection grade. That is a `
+               + `stated position, not a defect (DEC-15): the capture axis still earns from the capture `
+               + `record, and a connection a member can account for is testimony at grade D.` };
   }
 
   /* REC-14 / P8's justifying query, and the reason inquiry_exclusions exists as
@@ -12387,6 +12684,14 @@ export class Store extends DurableObject {
            dependent on. */
         inquirystrength: () => this.inquiryStrength({ id: url.searchParams.get("id"),
                                                       viewer: url.searchParams.get("viewer") }),
+        /* REC-18: what each candidate leg EARNS, before it is written. GATED —
+           `viewer` is stamped by the control plane and an absent one fails
+           closed. It answers from `earnedBasisRegistry`, which is the SAME
+           function op=promote and the ratification gate enforce with, so this
+           read and that refusal cannot disagree. */
+        earnedbasis: () => this.earnedBasis({ id: url.searchParams.get("id"),
+                                              targets: url.searchParams.get("targets"),
+                                              viewer: url.searchParams.get("viewer") }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),

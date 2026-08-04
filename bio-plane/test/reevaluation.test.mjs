@@ -179,6 +179,9 @@ const legLines = (legs) => legs.length
       ...(l.grade !== undefined ? [`    grade: ${l.grade}`] : []),
       ...(l.axis ? [`    grade_axis: ${l.axis}`] : []),
       ...(l.source ? [`    grade_source: ${l.source}`] : []),
+      /* REC-18: a hunch announces itself with an author and a date (DEC-15). */
+      ...(l.author ? [`    author: ${l.author}`] : []),
+      ...(l.date ? [`    date: ${l.date}`] : []),
       ...(l.edition !== undefined ? [`    target_edition: ${l.edition}`] : [])])]
   : [];
 
@@ -227,7 +230,14 @@ const promote = async (id, md, type, state, tok = PILAR, base = null) =>
     meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
-    register: [],
+    /* REC-18, 2026-08-04: an INFORMATION bundle REGISTERS a capture. A
+       capture-axis grade is now EARNED from the capture record, so a document
+       with no registered bytes has nothing for that axis to measure and the leg
+       claiming one is refused. One sha per bundle, because `register.capture_sha`
+       is the table's primary key. */
+    register: type === "information"
+      ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
+      : [],
   }));
 const mustPromote = async (...a) => {
   const r = await promote(...a);
@@ -261,9 +271,22 @@ await mustPromote(INQ_MOVED, inquiryMd(INQ_MOVED, {
    (capture B, connection C) and the moved leg is NOT the determining member on
    either axis — which is what lets block 5 show that superseding it changes
    NOTHING about either strength, rather than changing nothing visible. */
-const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "resolution" },
-                   { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" },
-                   { target: INQ_MOVED, grade: "B", axis: "connection", source: "resolution" }];
+/* CORRECTED 2026-08-04 (REC-18), never exempted, and every GRADE is unchanged —
+   the pair stays (capture B, connection C) and the moved leg stays a
+   non-determining connection B, because this suite is about the obligation and
+   not about the ladder. What changed is where each letter comes from:
+   `resolution` is now EARNED against the inquiry's subject entity (this question
+   names none), so the capture leg says `capture` and earns B from the capture
+   the promote helper now registers, and the two connection legs say `hunch` —
+   the honest name for an authored connection grade, the only authored source
+   above D, carrying the author and date DEC-15 requires. The third leg's target
+   is an INQUIRY, which earns nothing from the recogniser in any case: an inquiry
+   is not a captured document. */
+const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
+                   { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
+                     author: "pilar", date: "2026-08-04" },
+                   { target: INQ_MOVED, grade: "B", axis: "connection", source: "hunch",
+                     author: "pilar", date: "2026-08-04" }];
 await mustPromote(INQ_CASE, inquiryMd(INQ_CASE, {
   question: "Did the City transfer sewer funds without authority?",
   refs: [INFO_CAP, INFO_CONN, INQ_MOVED], legs: CASE_LEGS }), "inquiry", "open");
@@ -361,8 +384,11 @@ console.log("\n--- 2. D-5, the terminal arm and the reversible arm on the SAME q
     [r.count, r.obligations[0]?.bundle_id ?? null, r.obligations[0]?.target_state ?? null],
     [1, INQ_CASE, "deferred"]);
   t("it names the MOVED LEG by ordinal, role and axis — not merely the dependent",
+    /* grade_source CORRECTED 2026-08-04 (REC-18): the leg is the same leg and
+       the obligation is the same obligation — an authored connection grade is
+       now spelled `hunch`, which is what it always was. */
     r.obligations[0]?.legs ?? [], [{ ord: 2, role: "supports", grade: "B",
-                              grade_axis: "connection", grade_source: "resolution",
+                              grade_axis: "connection", grade_source: "hunch",
                               target_edition: null }]);
   t("the REUSED triple: flag, since and source, in the reeval_pending vocabulary already in the schema",
     [r.obligations[0]?.reeval?.flag ?? null, r.obligations[0]?.reeval?.source ?? null,

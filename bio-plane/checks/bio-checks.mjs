@@ -1642,7 +1642,30 @@ function checkInquiryExtension(ctx, findings) {
      on a child, so the document has to be able to carry BOTH halves of that:
      the division itself, and the account of where every leg went. */
   if (fm.current_state === 'divided') checkDividedExtension(fm, findings);
-  checkInquiryBasis(fm, findings, ctx.publishedRegistry);
+  /* REC-18 / DATA-MODEL D1(b): THE SUBJECT ENTITY, and it is one OPTIONAL
+     scalar rather than a block, a list or a table.
+     - OPTIONAL because DEC-15 rules exactly what its absence costs: "an inquiry
+       with no subject entity simply has no A/B/C available to it, which is
+       honest." Requiring it would make the price a GATE, and a gate that
+       pressures a member into naming a subject they have not established is the
+       bug CLAUDE.md names about the publication fence.
+     - A SCALAR, singular, because the earned grade is "the strongest resolution
+       of that document's captures to THE inquiry's subject entity". With a list,
+       "strongest across all subjects" would let an A earned about a tangential
+       subject be laundered into a leg about the question's real one. A question
+       with two subjects is two questions, and the record already has an act for
+       that (op=inquirydivide, REC-16).
+     - NO JUSTIFICATION FIELD, unlike entity_relations. A declared relation is
+       CONSTITUTIVE — the group fixing what its own statements mean — and D-83
+       requires it justified and cited. Naming what a question is about asserts
+       nothing about the world and carries no grade; it is addressing. */
+  if (fm.subject_entity !== undefined && fm.subject_entity !== null && fm.subject_entity !== '') {
+    if (typeof fm.subject_entity !== 'string' || !ENTITY_ID_RE.test(fm.subject_entity)) {
+      findings.push(f('C-2.8', 'error', `subject_entity '${String(fm.subject_entity).slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
+        ['point subject_entity at an entry in the subject registry (op=entitycreate / op=entitybyalias), or omit it — an inquiry may name no subject, and then no leg of it earns an A/B/C connection grade (DEC-15)']));
+    }
+  }
+  checkInquiryBasis(fm, findings, ctx.publishedRegistry, ctx.earnedRegistry);
 }
 
 /** REC-16 / DEC-28 / R4: what a `divided` parent must be able to say.
@@ -1927,8 +1950,30 @@ export const BASIS_GRADES = ['A', 'B', 'C', 'D'];
 export const GRADE_AXES = ['capture', 'connection'];
 /* 'inherited' joins with REC-14: a leg resting on a PUBLISHED case does not
    earn its grade and does not author it — it takes the grade that case froze
-   when the group signed it, on the same axis, and says so. */
-export const GRADE_SOURCES = ['resolution', 'testimony', 'hunch', 'inherited'];
+   when the group signed it, on the same axis, and says so.
+
+   'capture' joins with REC-18, and it is the CAPTURE-axis twin of 'resolution'.
+   Before it, the four sources above were all sources for a CONNECTION grade and
+   the capture axis had no honest name to give — so a capture-axis grade on an
+   INFO- leg was AUTHORED outright, with nothing between a member and typing A
+   for bytes that arrived like any other. R2-g is the landed doctrine it now
+   enforces: "Grade B is what a direct capture by this instance is worth; it is
+   not Grade A and this surface will not say it is". Both EARNED sources are
+   computed server-side and REFUSED when a caller's value differs from what the
+   record holds — an equality a caller can hand us is one a caller can invent
+   (CLAUDE.md). */
+export const GRADE_SOURCES = ['resolution', 'testimony', 'hunch', 'inherited', 'capture'];
+
+/* REC-18: the two EARNED sources, named once so no arm below spells them and
+   the store's registry builder and this grammar cannot drift about which is
+   which. A caller may WRITE either — what a caller may not do is write a VALUE
+   the record did not earn, which is what the arms in checkEarnedLeg enforce. */
+export const EARNED_GRADE_SOURCES = ['resolution', 'capture'];
+/* Which axis each earned source is a source FOR. A resolution is the framework's
+   §8.1 CONNECTION grade and nothing else; a capture grade is a property of an
+   INFORMATION object (DEC-21) and nothing else. Stated as data rather than as
+   two hand-written conditionals so the pairing has one home. */
+export const EARNED_SOURCE_AXIS = { resolution: 'connection', capture: 'capture' };
 
 /* REC-11: the basis[] leg grammar, ONE function consulted by BOTH the checker
  * (via checkInquiryExtension above) and the store's op=promote write path —
@@ -1950,7 +1995,7 @@ export const GRADE_SOURCES = ['resolution', 'testimony', 'hunch', 'inherited'];
  * permitted above D). Duplicate targets are LEGAL by design — D4: a basis
  * legitimately cites one document for two legs, which is why this table has
  * an ordinal and refs could not carry it. */
-export function checkInquiryBasis(fm, findings, publishedRegistry) {
+export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
   const legs = fm?.basis;
   if (legs === undefined || legs === null) return;   // no basis is a legal open inquiry
   if (!Array.isArray(legs)) {
@@ -2044,6 +2089,27 @@ export function checkInquiryBasis(fm, findings, publishedRegistry) {
         ['grade this leg on the connection axis — a leg to another inquiry is a connection',
          'move the capture grade onto the INFO- leg it is actually about']));
     }
+    /* REC-18: THE CAPTURE AXIS IS NEVER AUTHORED, and this arm is what closes
+       it. Together with checkEarnedLeg's axis pairing (which refuses
+       `resolution` here, because a resolution is a §8.1 CONNECTION grade), the
+       capture axis now admits exactly two sources: `capture`, EARNED from the
+       capture record, and `inherited`, taken from a published case's frozen
+       capture axis. Neither is a member's assertion.
+       WHY THE AUTHORED SOURCES ARE REFUSED RATHER THAN TOLERATED. A capture
+       grade states HOW THE BYTES REACHED US (SB-EVIDENCE 602-607) — a fact
+       about this record's own machinery, which the record holds and a member
+       does not. Testimony is a member's account of a CONNECTION they can vouch
+       for; a hunch is a member's provisional CONNECTION. Neither can be an
+       account of a fetch. Left tolerated, the one thing this record must never
+       do — claim more than it can support — was a member typing `A` beside a
+       document, against the landed doctrine that grade A is not reachable at
+       all here (CAPTURE-FIDELITY.md; index.mjs's own capture note). */
+    if (leg.grade_axis === 'capture' && graded
+        && (leg.grade_source === 'testimony' || leg.grade_source === 'hunch')) {
+      findings.push(f('C-2.8', 'error', `basis[${i}] states a capture-axis grade with grade_source '${leg.grade_source}': a capture grade says how the BYTES REACHED US, which is a fact this record holds about its own machinery and not one a member can assert. ${leg.grade_source === 'testimony' ? 'Testimony is a member\'s account of a connection' : 'A hunch is a member\'s provisional connection'}, and neither is an account of a fetch`,
+        ['use grade_source: capture — the capture axis is EARNED from the capture record, and op=earnedbasis says what it earns',
+         'or move this grade onto the connection axis, where testimony and hunches belong']));
+    }
     if (leg.grade_source === 'hunch') {
       if (typeof leg.author !== 'string' || leg.author.trim() === '') {
         findings.push(f('C-2.8', 'error', `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
@@ -2055,10 +2121,146 @@ export function checkInquiryBasis(fm, findings, publishedRegistry) {
     if (leg.grade_source === 'testimony' && graded && leg.grade !== 'D') {
       findings.push(f('C-2.8', 'error', `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade D at no other value — a hunch is the only authored grade permitted above D (DEC-15)`));
     }
+    /* REC-18, the OTHER half of the same rule and it is what makes "always D"
+       mean something. The arm above refuses a testimony leg that states A/B/C;
+       this one refuses a testimony leg that states NOTHING. A grade_source with
+       no grade claims to account for a grade that is not there, and for
+       testimony it is worse than incoherent: the leg would sit in the record
+       carrying a member's name and date beside no assertion, which reads as an
+       ungraded (INERT, DEC-18) leg while looking like an act. `inherited` has
+       been refused for exactly this since REC-14 (checkInheritedLeg below);
+       this extends the same refusal to the two sources that can stand alone.
+       An honestly undetermined leg states NO grade AND NO grade_source. */
+    if ((leg.grade_source === 'testimony' || EARNED_GRADE_SOURCES.includes(leg.grade_source)) && !graded) {
+      findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source '${leg.grade_source}' with no grade: a source is an account of where a grade came from, and there is no grade here to account for`,
+        ['state the grade this source produced', `or drop grade_source — an undetermined leg states neither, and is read as present and not yet load-bearing (DEC-18)`]));
+    }
     if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
       findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
     }
+    checkEarnedLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
+  }
+}
+
+/** REC-18 / DATA-MODEL D1(b) / DEC-15: THE EARNED RULE, PER AXIS.
+ *
+ *  A grade a caller can hand us is a grade a caller can invent, and CLAUDE.md
+ *  is explicit that such a thing is not evidence. So the two grades the RECORD
+ *  can compute for itself are computed by the record, and a leg claiming one
+ *  must state the value the record actually holds — refused otherwise, in
+ *  EITHER direction. Not "no stronger than", which is `inherited`'s rule and is
+ *  right there because DEC-12 gives the member a real choice (which edition to
+ *  rest on) and a weaker grade can be an honest consequence of it. There is no
+ *  such choice here: an earned grade is a FACT about the record at the moment
+ *  of the write, and a leg stating anything else states a non-fact about how it
+ *  was established, which is precisely what grade means (SB-EVIDENCE 602-607:
+ *  "grade tracks how the bytes reached us, never how credible the document is").
+ *
+ *  THE SPLIT THIS ENFORCES, and it is the recogniser precedent moved up one
+ *  layer (schema.mjs:739-743 — "the RECOGNISER never mints a D; the model holds
+ *  it so a member can testify, never the machine"):
+ *    - `resolution`  EARNED, connection axis, A/B/C — the strongest resolution
+ *                    of that document's captures to the inquiry's SUBJECT
+ *                    ENTITY. Never D: a D resolution is itself a member's
+ *                    testimony (op=resolvetestify), so a leg resting on one is
+ *                    testimony and says so, with its own author and date.
+ *    - `capture`     EARNED, capture axis — what the record holds about how the
+ *                    bytes arrived. B for a document this instance captured;
+ *                    A is not reachable and is refused by name, because a
+ *                    chain-of-custody web archive is out of a Worker's reach
+ *                    and is not claimed (CAPTURE-FIDELITY.md, R2-e/R2-g).
+ *    - `testimony`   a MEMBER'S act, always D, author and date carried.
+ *    - `hunch`       a member's act, authored above D, bias debt until cleared
+ *                    (DEC-15) — and the earned path is what it is cleared INTO.
+ *
+ *  THE SUBJECT-ENTITY PRICE IS REAL AND IS STATED (DEC-15). An inquiry that
+ *  names no subject entity has no A/B/C available to it on the connection axis.
+ *  That is not a gate to be got past by inventing one: the leg states no grade,
+ *  the axis suspends and names it (R1), and the case reads as what it is.
+ *
+ *  AN ABSENT REGISTRY IS NOT A WAY THROUGH, and the posture is checkInheritedLeg's
+ *  exactly: the pure checker over a filesystem cannot see `resolutions` or
+ *  `register`, so it says so rather than passing the leg. Every path a real
+ *  caller has — the ratification gate and the store's own write path — injects
+ *  the registry. */
+function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
+  const src = leg.grade_source;
+  if (!EARNED_GRADE_SOURCES.includes(src)) return;
+  /* The no-grade case already produced its own finding in the loop above; a
+     second complaint about one broken leg helps nobody. */
+  if (!graded) return;
+  if (!registry) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle`,
+      ['run this through the ratification gate or op=promote, which read the record',
+       'or state the grade as testimony (grade D, with an author and a date) if it is a member\'s account']));
+    return;
+  }
+  const wantAxis = EARNED_SOURCE_AXIS[src];
+  /* REC-31's arm already refuses a capture-axis grade on an inquiry leg and says
+     it better (the axis has no referent, which is the deeper fault). Silent here
+     rather than adding a second complaint about one broken leg — the same
+     discipline the loop above takes with an unusable target. */
+  if (leg.grade_axis === 'capture' && targetType === 'inquiry' && src !== 'capture') return;
+  if (leg.grade_axis !== wantAxis) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source '${src}' on the ${leg.grade_axis} axis: ${src === 'resolution' ? 'a resolution IS the framework\'s §8.1 connection grade and grades nothing else' : 'a capture grade is a property of an information object and measures how the bytes arrived (DEC-21)'}, so it can only be a source for a ${wantAxis} grade`,
+      [`set grade_axis: ${wantAxis} on basis[${i}]`,
+       `or state where this ${leg.grade_axis}-axis grade actually came from`]));
+    return;
+  }
+  /* A leg to another INQUIRY earns nothing: an inquiry has no captures and no
+     resolutions, so there is no record fact to compute from. Stated for
+     `resolution` only — the capture-axis-on-an-inquiry case already has its own
+     finding above (REC-31's arm), and it says the same thing better. */
+  if (src === 'resolution' && targetType === 'inquiry') {
+    findings.push(f('C-2.8', 'error', `basis[${i}] claims an EARNED resolution grade on an inquiry leg: a resolution matches a captured document's reading to a registry entity, and an inquiry is not a captured document — there is nothing here for the recogniser to have graded`,
+      ['rest this leg on the INFO- document that carries the reference',
+       'or, if the target is a published case, inherit its frozen connection grade (grade_source: inherited)']));
+    return;
+  }
+  if (src === 'resolution' && !registry.subject_entity) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] claims an EARNED resolution grade, but this inquiry names no subject_entity: an earned connection grade is the strongest resolution of the target's captures TO THE INQUIRY'S SUBJECT, and with no subject named there is nothing to have resolved to (DATA-MODEL D1(b))`,
+      ['add subject_entity: ENT-YYYY-NNNN naming the registry entry this question is about',
+       'or state no grade at all — an inquiry with no subject entity has no A/B/C available to it, and that is honest (DEC-15)']));
+    return;
+  }
+  const earned = registry.earned && registry.earned[wantAxis]
+    ? registry.earned[wantAxis][leg.target] : null;
+  if (!earned || !earned.grade) {
+    findings.push(f('C-2.8', 'error', src === 'resolution'
+      ? `basis[${i}] states an EARNED resolution grade of ${leg.grade} for ${leg.target}, but the record holds no A/B/C resolution of that document to ${registry.subject_entity}: nothing was earned here. The recogniser never mints a D, so a document known to concern the subject only by a member's testimony earns nothing either — that leg is testimony and says so`
+      : `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but the record holds no registered capture for that document: there are no bytes here whose arrival this grade could be measuring`,
+      src === 'resolution'
+        ? ['resolve the document to the subject with op=resolve, then state the grade it earned',
+           'or state this leg as testimony (grade D, with an author and a date)']
+        : ['state no capture grade — an uncaptured document is undetermined on the capture axis, and undetermined is stated (CLAUDE.md)']));
+    return;
+  }
+  /* TWO COMPARISONS, because the record holds two DIFFERENT KINDS OF FACT and
+     pretending otherwise would be the laundering this rule exists to stop.
+     - mode 'value' (the CONNECTION axis): `resolutions` holds the grade itself,
+       so the leg must state THAT VALUE and nothing else, in either direction. A
+       weaker letter is not modesty, it is a false statement about how the leg
+       was established, which is exactly what a grade means.
+     - mode 'ceiling' (the CAPTURE axis): the record holds whether it has bytes
+       for this document and what the STRONGEST capture this plane can produce is
+       worth — it does NOT hold a per-document capture grade, because no such
+       column exists. So the rule is the honest half: no leg may claim MORE than
+       the ceiling (which makes grade A structurally unreachable, per the
+       doctrine), and a weaker grade is admitted as the member's account of a
+       poorer route. The residual — that B-or-weaker is still authored — is
+       stated as debt rather than hidden behind a comparison that looks stricter
+       than the record can support. */
+  if (earned.mode === 'ceiling') {
+    if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(earned.grade)) {
+      findings.push(f('C-2.8', 'error', `basis[${i}] states a capture grade of ${leg.grade} for ${leg.target}, which is STRONGER than the ${earned.grade} the record can earn for it. ${earned.why} ${earned.ceiling ?? ''}`,
+        [`state grade: ${earned.grade} or weaker on basis[${i}] — op=earnedbasis answers what each target earns before you write it`]));
+    }
+    return;
+  }
+  if (earned.grade !== leg.grade) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED ${wantAxis} grade of ${leg.grade} for ${leg.target}, but the record earns ${earned.grade}: an earned grade is computed by the record and a caller does not hand it to us in either direction. ${earned.why}`,
+      [`state grade: ${earned.grade} on basis[${i}] — op=earnedbasis answers what each target earns before you write it`]));
   }
 }
 
@@ -3845,6 +4047,18 @@ export async function checkBundle(input, opts = {}) {
        has — the ratification gate and the store's own write path — injects it,
        which is what keeps the absence from being a way through. */
     publishedRegistry: input.publishedRegistry || null,
+    /* REC-18: the second fact the catalog cannot get from the bundle, and it is
+       injected on exactly the same terms and for the same reason. What
+       `resolutions` holds about this bundle's basis targets, and what `register`
+       holds about their captures, is the record — not this document — so a
+       checker over a filesystem has no way to compute an earned grade and says
+       so rather than passing the leg (checkEarnedLeg). Shape:
+         { subject_entity, subject_label, earned: {
+             connection: { <target>: {grade, why, ...} },
+             capture:    { <target>: {grade, why, ceiling?} } } }
+       Absent means the caller cannot see the record (the cli, the migrate tool).
+       Every path a real caller has injects it. */
+    earnedRegistry: input.earnedRegistry || null,
     sha512: input.sha512 || null,
     fm: null,
     body: ''
