@@ -46,29 +46,62 @@ const LATIN1 = new TextDecoder("latin1");
  * The size guard
  * ------------------------------------------------------------------ */
 
-/* PROVISIONAL — picked, not measured. COFF-6 measures the real bound on real
- * Oakland documents (size distribution vs the workerd envelope) and replaces
- * this number; the name says so, so no reader mistakes it for a measurement
- * (CLAUDE.md: a number that was not measured is labelled as what it is).
- * Until then: a container over this bound gets full central-directory and
- * metadata treatment but full text extraction is refused as a STATED
+/* MEASURED — COFF-6 (MEASUREMENTS.md, 2026-08-03, the real Oakland office
+ * corpus) replaced the provisional 32 MiB CONTAINER bound, and the METRIC
+ * changed with the number: container size is a bad proxy in BOTH directions
+ * (an 84.8 MB all-images deck carries 630 KB of text XML; a 9.1 MB workbook
+ * inflates to 63.6 MB of sheet XML). What extraction actually costs is the
+ * TEXT-BEARING PARTS' uncompressed size, and the ZIP central directory
+ * DECLARES it before any inflation — so the guard reads the declared
+ * uncompressed sizes of the text parts, summed by `declaredTextBytes` below,
+ * costs one directory walk, and cannot be gamed by a compression bomb (a
+ * LYING declared size surfaces later as readPart's `size_mismatch`, which
+ * aborts into the same stated refusal, never a silent partial).
+ *
+ * 20 MiB passes 86 of the 88 measured Oakland documents with 28 % headroom
+ * over the worst docx; the two excluded police stop-data workbooks are the
+ * NAMED test cases for STREAMING-TO-64-MiB, which is DEFERRED (COFF-6's
+ * landed line) and deliberately not built here.
+ *
+ * A document over this bound gets full central-directory and metadata
+ * treatment but full text extraction is refused as a STATED
  * `text-undetermined`, never silently truncated. */
-export const PROVISIONAL_OOXML_SIZE_BOUND_BYTES = 32 * 1024 * 1024;
+export const MEASURED_OOXML_TEXT_BOUND_BYTES = 20 * 1024 * 1024; // 20,971,520
+
+/** Sum the DECLARED UNCOMPRESSED sizes of the container's text-bearing parts
+ *  (which parts are text-bearing is the format entry's knowledge, passed as a
+ *  predicate over normalized part names) straight from the central directory —
+ *  BEFORE any inflation, per the COFF-6 metric. Returns `{ total, parts }` so
+ *  an over-bound refusal can name what it measured. */
+export function declaredTextBytes(container, isTextPart) {
+  let total = 0;
+  const parts = [];
+  for (const e of container.entries) {
+    const name = normalizePartName(e.name);
+    if (!isTextPart(name)) continue;
+    total += e.uncompressedSize;
+    parts.push({ name, declared: e.uncompressedSize });
+  }
+  return { total, parts };
+}
 
 /** The size-guard plumbing every format entry calls before full extraction.
- *  Returns `{ ok:true }` under the bound; over it, a stated undetermined
- *  marker carrying WHY, the sizes, and the fact that the bound is provisional
- *  — shaped so a format entry can carry it into its I2 text output verbatim. */
-export function sizeGuard(byteLength, bound = PROVISIONAL_OOXML_SIZE_BOUND_BYTES) {
-  if (!(byteLength > bound)) return { ok: true };
+ *  `declaredBytes` is the SUMMED DECLARED UNCOMPRESSED size of the document's
+ *  text-bearing parts (from `declaredTextBytes`) — NOT the container size,
+ *  which COFF-6 measured to be a bad proxy in both directions. Returns
+ *  `{ ok:true }` under the bound; over it, a stated undetermined marker
+ *  carrying WHY, the sizes, the metric and the bound's name — shaped so a
+ *  format entry can carry it into its I2 text output verbatim. */
+export function sizeGuard(declaredBytes, bound = MEASURED_OOXML_TEXT_BOUND_BYTES) {
+  if (!(declaredBytes > bound)) return { ok: true };
   return {
     ok: false,
     text: "undetermined",
     why: "over_size_bound",
-    size: byteLength,
+    size: declaredBytes,
     bound,
-    boundName: "PROVISIONAL_OOXML_SIZE_BOUND_BYTES",
-    provisional: true, // COFF-6 measures the real bound
+    boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES",
+    metric: "declared_uncompressed_text_part_bytes", // summed from the central directory, before inflation
   };
 }
 

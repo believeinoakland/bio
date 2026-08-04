@@ -45,6 +45,7 @@
 
 import { extractPdfStructure } from "./pdfstructure.mjs";
 import { docxEntry } from "./docx.mjs";
+import { xlsxEntry } from "./formats-xlsx.mjs";
 
 /* Registration order is dispatch order within a pass: the first entry whose
    detect() answers wins that pass. Kept insertion-ordered by Map. */
@@ -195,3 +196,7 @@ registerFormat({
    {kind:"doc-para"} references (IC-1), <w:t> text in body order, and the
    DEC-5 evidentiary envelope (tracked changes, comments, core properties). */
 registerFormat(docxEntry);
+
+/* The XLSX entry (COFF-3) — defined in formats-xlsx.mjs, registered here and
+   NOWHERE else: adding the format costs this one call (the D-70 property). */
+registerFormat(xlsxEntry);

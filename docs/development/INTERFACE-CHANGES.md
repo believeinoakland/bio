@@ -294,3 +294,40 @@ integration, one version line). COFF-3 and COFF-5 CONFIRM the envelope from thei
 own as-built code when they land, inventing no variants; a drift is a COUNTER here,
 not a silent fork. When FRAMEWORK next wakes it may re-open either entry before
 building against 1.1.0.
+
+### IC-2 · CONFIRMED by COFF-3 (xlsx) · 2026-08-03
+
+The XLSX entry (`bio-plane/src/formats-xlsx.mjs`, pinned by
+`bio-plane/test/formats-xlsx.test.mjs`) emits the ACCEPTED `evidentiary`
+envelope from as-built code — same key, same fields
+(`container`/`kinds`/`items`/`undetermined`/`counts`), every item carrying the
+required `kind` tag and an IC-1 `source` or explicit null. For the record, the
+history: COFF-3 and COFF-4 ran concurrently and this worker's initial filing (a
+variant keyed `evidence`, with `format`/`metadata` fields) collided with the
+accepted one; COFF-4 landed FIRST, so per the first-lander rule the variant was
+DELETED before ever reaching main and the xlsx emit was conformed to the
+accepted shape — a drift resolved at the protocol file, not a silent fork.
+
+The xlsx kind vocabulary, from code:
+
+    { kind:"formula",      source:{kind:"sheet-cell",ref:"Summary!B14",…},
+      formula:"SUM(B2:B13)", value:"4200000" }
+        // <f> held BESIDE its cached <v> — two named fields, never collapsed;
+        // the TEXT stream carries the value (what the sheet displays), the
+        // derivation lives here; value null when the file carries none
+    { kind:"hidden-sheet", sheet, state:"hidden"|"veryHidden", source:null }
+    { kind:"hidden-rows",  sheet, rows:[…1-based], count, source:null }
+    { kind:"hidden-cols",  sheet, cols:[{min,max}], count, source:null }
+    { kind:"core-properties", creator, lastModifiedBy, revision, revisionNumber,
+      created, modified, title, source:null }
+        // the SAME kind, with the SAME fields, DOCX emits — deliberately: the
+        // provenance-adjacent metadata is one vocabulary, not a per-format field
+
+The pageless text degenerate form is confirmed too: `text()` emits
+`{ ok, container:"xlsx", document, sheets:[{sheet, name, hidden, text,
+undetermined}], undetermined, counts }` — the per-unit list named for what the
+unit IS (docx's `paragraphs[]`, xlsx's `sheets[]`), hidden sheets included AND
+flagged; over the COFF-6 bound the sizeGuard marker is carried VERBATIM inside
+`undetermined[]`, exactly as docx.mjs carries it. Negative controls re-run
+against the conformed shape and recorded in the suite's NEGATIVE CONTROL line.
+No variant remains; COFF-5 confirms next.
