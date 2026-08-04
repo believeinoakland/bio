@@ -2947,6 +2947,87 @@ recommendation: (b) then (a) — measure who is still on the fallback before rem
 reversal cost: low either way while the fallback stands; high if it is removed before
   the fleet is visible.
 
+### DEC-44 · answered
+raised: 2026-08-04 · session BOB (Bob asked for a FACT CHECK of his own statement, and the
+  repository contradicts it — in his favour)
+for: bob
+question: Is a published case ONE finding or MANY? Bob: *"A published case is one or more
+  findings (not just one). So a project with multiple standings can be published together
+  as a single case with sufficient scope to address all issues that brought the various
+  inquiries together under a single project in the first place."*
+why it is Bob's: it is the definition of the artifact the whole M10 rung produces, and
+  what a group puts its name on.
+provisional: the SHIPPED behaviour, which is one-inquiry-per-case, continues; nothing is
+  in production (every instance is a development instance) so nothing is stranded.
+**FACT CHECK — Bob is RIGHT about the requirement and the BUILD DISAGREES WITH HIM.**
+  Measured 2026-08-04 against the source, not recalled:
+  - `store.mjs:3539` refuses with, verbatim: *"publishing publishes ONE case: pass
+    target=<inquiry id>"*. `publishCase({ target })` takes a single inquiry id.
+  - `published` is a state of an INQUIRY (`STATES.inquiry`, reachable only from
+    `concluded`); `published_bundles` is keyed `(bundle_id, edition)`.
+  - `index.mjs:3667` builds the container as `case: body.bundleId` — ONE bundle — and its
+    own comment says *"THE CONTAINER IS THE BUNDLE'S PORTABLE FORM, not a new object: the
+    parts listed here ARE the bundle's files."*
+  - `MILESTONES.md:428`, M10's acceptance: *"a concluded inquiry is published"* — singular.
+  So the built model is **one published case = exactly one concluded inquiry**, and it was
+  never argued for; it was assumed by every item in the chain and nobody wrote it down as a
+  choice.
+**AND THE WORKAROUND IS CLOSED BY DEC-32, RULED THIS SAME DAY**, which is what turns this
+  from a preference into an inconsistency. The obvious escape is composition: a PARENT
+  inquiry whose basis cites the child inquiries. But DEC-32's falsifier-count test says a
+  finding holds ONE proposition with ONE falsifier, and distinct propositions are distinct
+  inquiries. A project's several findings are, by construction, several propositions with
+  several falsifiers. **So they cannot be collapsed into one parent inquiry without
+  authoring a conclusion that is not really one proposition** — precisely the overclaim
+  DEC-32 exists to prevent. The two rulings are consistent only if a case is a CONTAINER
+  OVER FINDINGS rather than a synonym for one.
+  A second measured consequence: a published child *"NAMES its parent and siblings (serve
+  neither)"* (UI-18). So even under composition the container carries the parent's bundle
+  and merely NAMES the others — a stranger holding the zip cannot read the findings it
+  points at without returning to the instance, which defeats the read-it-without-our-
+  cooperation premise S9 exists for.
+response: **ADOPTED — a case is a CONTAINER OVER ONE OR MORE FINDINGS**, scoped to the
+  project's own question. Bob's statement stands and the build is corrected to it.
+  determinations that follow, and they are mine under delegation:
+  1. **The FINDING stays the unit of truth; the CASE becomes the unit of PUBLICATION.**
+     Each finding keeps its own conclusion, falsifier, basis and its own derived pair of
+     strengths. A case does NOT compose a super-conclusion over them and MUST NOT derive a
+     single case-level strength — that would be R2's forbidden composition at a new
+     altitude, and it is exactly the "one letter" the project has refused four times.
+  2. **The case carries an authored SCOPE STATEMENT** — Bob's *"sufficient scope to address
+     all issues that brought the various inquiries together"*. Authored, never derived from
+     the findings' titles, and it sits beside the existing completeness statement rather
+     than replacing it: completeness says what was left OUT, scope says what the case is
+     ABOUT. A reader needs both and they are not the same claim.
+  3. **The container carries EVERY included finding's bundle, in full.** Naming is not
+     enough (see the measured note above) — a stranger must be able to check every finding
+     the case rests on without contacting the instance.
+  4. **Editions stay over the CONTAINER** (DEC-12, unchanged), which is now the natural
+     home for them: adding, removing or revising a finding produces a new edition of the
+     case, and prior editions keep answering.
+  5. **A one-finding case remains legal and is the degenerate case**, so nothing built is
+     wasted and the common early use is unchanged.
+  6. **DEC-40's determination 4 is CORRECTED BY THIS ENTRY**: I wrote *"an imported
+     published case is A FINDING"*, which inherited the singular assumption. It should read
+     **the findings it carries** — each arriving as a finding, re-graded in its new context,
+     none inheriting standing. The principle is unchanged; the arity was wrong.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; DEC-34's artifact-form thread and DEC-40's determination
+  4 take the correction; `MILESTONES.md` M10's acceptance is corrected from *"a concluded
+  inquiry is published"* to a case carrying one or more concluded findings.
+for CONDUCT to enact: this reshapes DONE items (REC-14, REC-22, UI-18) and is a
+  CORRECTION, not new scope — record it that way. `published_bundles`' `(bundle_id,
+  edition)` key needs a case identity distinct from a bundle id, plus the case→findings
+  membership; the container's `case`/`parts[]` carry every member finding; `publishCase`
+  takes a SET and its ONE-case refusal string is rewritten; C-21.1's completeness check and
+  the new scope statement are per CASE per edition, while C-21.2's per-axis inheritance
+  stays per FINDING. **Nothing is in production** (every instance is a development
+  instance), so this is a schema correction rather than a migration. Negative control the
+  suites cannot have today: publish a case of two findings whose strengths differ, and the
+  harness must FAIL if any surface, rendering or export presents a single case-level
+  strength.
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_

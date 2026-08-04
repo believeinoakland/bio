@@ -174,6 +174,57 @@ wording, UI-24's rider widens to "renders the published label AND fence, inventi
 and the existing Grade-A negative control is RETARGETED at the published source rather than
 deleted. **See D-184**, which the same exchange surfaced and this does not fix.
 
+### 2026-08-04 · BOB · DEC-44 — A CASE IS ONE OR **MORE** FINDINGS; the build assumed one and nobody chose it
+
+Bob asked for a FACT CHECK of his own definition and **the repository contradicted him —
+in his favour**. Measured against source, not recalled:
+
+- `store.mjs:3539`, verbatim: *"publishing publishes ONE case: pass target=<inquiry id>"*.
+- `published` is a state of an INQUIRY (`STATES.inquiry`); `published_bundles` is keyed
+  `(bundle_id, edition)`; `index.mjs:3667` builds the container as `case: body.bundleId`
+  with its own comment *"the parts listed here ARE the bundle's files"*.
+- `MILESTONES.md:428` said *"a concluded inquiry is published"* — corrected in this commit.
+
+**One-case-one-inquiry was never argued for. It was assumed by every item in the chain.**
+
+**AND DEC-32, RULED THE SAME DAY, CLOSES THE ESCAPE HATCH — which is what makes this an
+inconsistency rather than a preference.** The obvious workaround is a parent inquiry citing
+the children as basis legs. DEC-32's falsifier-count test forbids it: a finding is ONE
+proposition with ONE falsifier, and a project's several findings are several propositions
+with several falsifiers. Collapsing them into one parent conclusion is precisely the
+overclaim DEC-32 exists to prevent. **The two rulings are consistent only if a case is a
+CONTAINER OVER FINDINGS.** Second measured consequence: a published child *"NAMES its
+parent and siblings (serve neither)"* (UI-18), so even under composition a stranger holding
+the zip cannot read the findings it points at without coming back to the instance —
+defeating the read-without-our-cooperation premise the published surface exists for.
+
+**This is a CORRECTION to DONE items (REC-14, REC-22, UI-18), not new scope. Record it that
+way.** Nothing is in production — every instance is a development instance — so it is a
+schema correction, not a migration.
+
+- **The FINDING stays the unit of truth; the CASE becomes the unit of PUBLICATION.** Each
+  finding keeps its own conclusion, falsifier, basis and its own derived PAIR of strengths.
+  **A case MUST NEVER derive a single case-level strength** — that is R2's forbidden
+  composition at a new altitude, and it is the one trap in this work.
+- **An authored SCOPE STATEMENT** (Bob's *"sufficient scope to address all the issues"*),
+  beside the completeness statement, never derived from the findings' titles. Completeness
+  says what was left OUT; scope says what the case is ABOUT. Different claims, both needed.
+- **The container carries EVERY member finding's bundle in full.** Naming is not enough.
+- **Editions stay over the CONTAINER** (DEC-12 unchanged) — adding, removing or revising a
+  finding makes a new edition; priors keep answering. A ONE-finding case stays legal as the
+  degenerate case, so nothing built is wasted.
+- Shape work: a case identity distinct from a bundle id, plus case→findings membership;
+  `publishCase` takes a SET and its ONE-case refusal string is rewritten; C-21.1 and the
+  scope statement are per CASE per edition, C-21.2's per-axis inheritance stays per FINDING.
+- **NEGATIVE CONTROL the suites cannot have today:** publish a case of two findings whose
+  strengths differ, and the harness must FAIL if any surface, rendering or export presents a
+  single case-level strength.
+
+**AND A CORRECTION TO MY OWN RULING FROM EARLIER TODAY:** DEC-40's determination 4 says *"an
+imported published case is A FINDING"*. That inherited the singular assumption and now reads
+**the findings it carries** — each arriving as a finding, re-graded in its new context, none
+inheriting standing. The principle is unchanged; the arity was wrong. DEC-44 carries the fix.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
