@@ -1171,3 +1171,125 @@ the plane with ZERO dependency — a central-directory walk plus
 `DecompressionStream("deflate-raw")`. The same finding class as `FlateDecode` making
 PDF phase 1 dependency-free. The primitive is also already exercised in shipped code:
 `pdfstructure.mjs:77` inflates through `DecompressionStream("deflate-raw")` today.
+
+## 2026-08-03, session COFF-6 (measurement worker): the real Oakland office corpus
+
+COFF-6 — the measurement that SETS COFF-2's extraction bound, sizes the evidentiary
+extras, and answers the legacy-format and ODF questions empirically. Measurement only;
+no product code.
+
+**Instrument.** `tools/measure-office-corpus.py` (python3 stdlib: `zipfile` +
+`xml.etree`, magic-bytes classification), run 2026-08-03. Classification is by BYTES,
+never extension: `PK\x03\x04` + `[Content_Types].xml` + a flavour part = OOXML;
+`PK` + ODF `mimetype` = ODF; `D0 CF 11 E0 A1 B1 1A E1` = OLE2; `PK` with neither =
+plain ZIP. The sampling method is part of the instrument (`census` / `sample` /
+`analyze` / `control` modes; sample seed 20260803 fixed, so the draw is reproducible).
+
+**What was sampled, exactly.** Two sources in Oakland's orbit, both public, fetched
+politely (0.25–0.4 s pacing):
+
+1. **The full population of `www.oaklandca.gov` document assets**: the site's asset
+   store is the S3 bucket `cao-94612` (every `oaklandca.gov/files/assets/...` URL
+   serves from it) and it answers public `ListObjectsV2`, so the extension, size and
+   upload-date census below is the WHOLE population — 43,282 keys, 44 list requests —
+   not a sample. From it, a stratified random download of 40 docx + 30 xlsx + 12
+   pptx/pptm + 6 doc + 4 xls + 1 ppt (93 files; one 84.8 MB pptx initially skipped by
+   a politeness cap, fetched separately), plus a DELIBERATE tail probe: the top-3
+   docx and top-3 xlsx by container size.
+2. **Oakland Legistar** (`webapi.legistar.com/v1/oakland`): every attachment of the
+   200 most-recently-modified matters (715 attachments, census 2026-08-03) and of 50
+   matters introduced 2015-H1/2016-H1 (77 attachments).
+
+**Stated bias.** The bucket holds what the city uploaded since the 2018 site
+migration (upload dates run 2018-10-31 .. 2025-06-17); older publications are
+underrepresented except as re-uploads. Artefact frequencies come from the
+oaklandca.gov population only, because Legistar contributes no office files at all
+(next paragraph). The random sample is stratified per extension, not size-weighted.
+
+### Format prevalence — the legacy and ODF answers
+
+| Where | pdf | OOXML (docx/xlsx/pptx/pptm) | legacy OLE2 (doc/xls/ppt) | ODF | docm/xlsm | rtf |
+| --- | --- | --- | --- | --- | --- | --- |
+| oaklandca.gov assets (n=43,282, population) | 27,783 | **762** (389/289/83/1) | **139** (88/50/1) | **0** | 0 | 2 |
+| Legistar recent (715 att.) | 715 | 0 | 0 | 0 | 0 | 0 |
+| Legistar 2015-16 (77 att.) | 77 | 0 | 0 | 0 | 0 | 0 |
+
+- Legacy OLE2 is **0.32 % of all published assets** and **15.4 % of office documents**
+  (139 of 901). It is not fossil traffic: 9 legacy files were uploaded 2024-01 or
+  later, the newest 2025-05-21. Legistar's attachment pipeline emits PDF exclusively —
+  792 of 792 across both eras.
+- **ODF is ZERO in 43,282 assets.** Not one odt/ods/odp.
+- All 11 sampled legacy-extension files verified OLE2 by magic; all 82
+  OOXML-extension sample files verified OOXML by bytes — in this corpus the extension
+  census is trustworthy.
+
+**Recommendation, legacy deferral: KEEP DEFERRED.** 139 mostly-small forms (median
+74 KB) do not justify an OLE2 container reader; the honest interim stands — capture
+the bytes, record content `undetermined`. The trigger for revisiting should be a
+group actually needing one inspected, not prevalence, because prevalence is now
+measured and low. **ODF: do not build.** Keep the design accommodation (same
+container shape, near-free) but no registry entry until one is observed in the wild.
+
+### Size distribution (population, from the bucket listing) — and the bound
+
+| | n | p50 | p75 | p90 | p95 | p99 | max |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| docx | 389 | 44,941 | 149,666 | 444,278 | 909,871 | 6,101,140 | 11,283,396 |
+| xlsx | 289 | 64,349 | 247,405 | 1,519,758 | 3,997,853 | 7,739,671 | 15,423,523 |
+| pptx | 83 | 3,553,267 | 19,550,530 | 37,770,309 | 51,519,813 | 84,779,570 | 84,779,570 |
+
+**Container size is a bad proxy for extraction cost in BOTH directions** — measured
+on the 88 distinct downloaded OOXML files by summing the central directory's declared
+uncompressed sizes of the text-bearing parts (document.xml / sheets+sharedStrings /
+slides+notesSlides):
+
+- The 84.8 MB pptx (the population maximum) carries only **629,670 bytes** of text
+  XML — it is images.
+- The 9.1 MB `Stop-Data_2019-Public-Release.xlsx` inflates to **63,593,960 bytes** of
+  sheet XML (7.0×); its 2020 sibling to 52,082,120. Worst docx: 16,380,261 (from a
+  7.8 MB container).
+
+**Recommended bound (COFF-2 ships this provisionally): 20 MiB (20,971,520 bytes) of
+DECLARED UNCOMPRESSED text-part bytes per document**, summed from the ZIP central
+directory — which is readable BEFORE any inflation, so the guard costs one directory
+walk and cannot be gamed by a compression bomb (the declared size, not the container
+size, is what the bound reads; a lying declared size surfaces as an inflation
+overrun, which must also abort into the same refusal). Sensitivity, measured:
+
+| bound on text-XML bytes | passes (of 88 measured, incl. the deliberate tail) | excluded |
+| --- | --- | --- |
+| 16 MiB | 86 | stop-data 2019+2020; 397 KB headroom over worst docx — too thin |
+| **20 MiB** | **86** | **stop-data 2019+2020 only; 28 % headroom over worst docx** |
+| 64 MiB | 88 | nothing — but a 63.6 MB parse in a 128 MB isolate is the envelope |
+
+Over-bound documents are recorded `text-undetermined` with the reason, never
+truncated (OFFICE-FORMATS.md's rule). The two police stop-data workbooks are the
+NAMED test cases for raising the bound later: if COFF-2's extractor proves
+memory-flat (streaming, not DOM), 64 MiB admits the entire measured population and
+they are exactly the documents an accountability group wants. A container-size guard
+is NOT recommended as the primary bound — it would pass the 63.6 MB-XML workbook
+(9.1 MB container) while refusing the all-images 84.8 MB deck whose text costs 630 KB.
+
+### Per-artefact frequency (random sample: 40 docx, 30 xlsx, 12 pptx/pptm)
+
+| artefact | docx | xlsx | pptx |
+| --- | --- | --- | --- |
+| external hyperlinks (≥1) | 17/40 (total 195; max 64/doc) | 7/30 (total 1,063; max 489/doc) | 5/12 (total 19) |
+| formulas | — | **18/30** (median 17, max 38,831 `<f>` per doc) | — |
+| tracked changes | **7/40** (3,256 ins/del runs total) | — | — |
+| comments | 1/40 | **11/30** (354 total) | 1/12 (7) |
+| hidden sheets | — | **3/30** (11 sheets) | — |
+| speaker-notes parts | — | — | 7/12 (substantive text >20 chars: 4/12) |
+
+Across the whole random OOXML sample: 29/82 documents carry at least one external
+hyperlink, 1,277 external links total. The evidentiary extras are REAL in this
+corpus, not hypothetical: a sixth of the docx population carries tracked changes the
+published file still contains, a tenth of spreadsheets hides sheets, and 60 % of
+spreadsheets carry live formulas — the derivation evidence a PDF of the same sheet
+destroys.
+
+**NEGATIVE CONTROL (run 2026-08-03):** `tools/measure-office-corpus.py control`
+builds a plain ZIP (one `readme.txt` member) renamed to `.xlsx`; the classifier
+reports `(zip, None)` — NOT OOXML, not counted. PASS. The same run is repeatable in
+one step; the mode exits 1 if the masquerade is ever counted.
+
