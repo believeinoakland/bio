@@ -91,9 +91,19 @@ function makeCtx(plane){
   return ctx;
 }
 
+/* CORRECTED 2026-08-04 (UI-14). `proposalsFrom` and `proposalCardHtml` no longer
+   exist: the D-79 aggregation moved INTO THE PLANE (op=queue emits one FINDING
+   per (progression, stage) out of proposalsFeed) and the Proposals screen's card
+   was replaced by the queue row. The exports below follow the code — `__row` is
+   the queue's item renderer and `__asProp` is the act context taken from a
+   FINDING — and the assertions that used to prove a browser-side aggregation now
+   prove the row RENDERS THE PRODUCER'S OWN COUNT rather than recomputing one.
+   Everything from §P down is unchanged: the three affordances, the required
+   reason, the never-prefilled fields and op=promote are the same acts on the
+   same shapes, reached from a different surface. */
 const EXPORTS = ";globalThis.__PLANE=PLANE;"
-  + "globalThis.__from=proposalsFrom;globalThis.__card=proposalCardHtml;globalThis.__badge=proposalDerivedBadgeHtml;"
-  + "globalThis.__q=proposalQuestion;globalThis.__pfDisp=proposalDisposePreflight;globalThis.__pfAdopt=proposalAdoptPreflight;"
+  + "globalThis.__row=queueItemHtml;globalThis.__asProp=queueFindingAsProposal;globalThis.__badge=proposalDerivedBadgeHtml;"
+  + "globalThis.__ctxLine=proposalContext;globalThis.__pfDisp=proposalDisposePreflight;globalThis.__pfAdopt=proposalAdoptPreflight;"
   + "globalThis.__openAct=openProposalAct;globalThis.__actVal=proposalActValidate;globalThis.__doDisp=doProposalDispose;"
   + "globalThis.__openAdopt=openProposalAdopt;globalThis.__adoptVal=proposalAdoptValidate;globalThis.__doAdopt=doProposalAdopt;"
   + "globalThis.__setProps=(a)=>{PROPOSALS_LAST=a;};globalThis.__ADOPT_KINDS=PROP_ADOPT_KINDS;";
@@ -108,60 +118,85 @@ function boot(source, plane){
 
 const SRC = appScript();
 
-/* the derived instance reads, exactly the op=instance shape (FW-9): a missing
-   REQUIRED stage surfaces as a finding. THREE procurement instances share ONE
-   missing 'solicitation' stage — the D-79 case: one check across three instances. */
-const INSTANCES = [
-  { progression_key:"procurement", progression_label:"Procurement", entity_id:"ENT-1", entity_label:"Recology Hauling Contract",
-    findings:[ { kind:"missing_predecessor", stage_key:"solicitation", stage_label:"RFP / RFQ / IFB", required:"usually", grade:"A", grade_determined:true } ] },
-  { progression_key:"procurement", progression_label:"Procurement", entity_id:"ENT-2", entity_label:"Waste Management Contract",
-    findings:[ { kind:"missing_predecessor", stage_key:"solicitation", stage_label:"RFP / RFQ / IFB", required:"usually", grade:"C", grade_determined:true } ] },
-  { progression_key:"procurement", progression_label:"Procurement", entity_id:"ENT-3", entity_label:"GreenTeam Contract",
-    findings:[ { kind:"missing_predecessor", stage_key:"solicitation", stage_label:"RFP / RFQ / IFB", required:"usually", grade:"A", grade_determined:true },
-               /* a SECOND, different missing stage on this instance — a distinct question */
-               { kind:"missing_predecessor", stage_key:"contract", stage_label:"signed agreement", required:"always", grade:"A", grade_determined:true } ] },
-];
+/* A FINDING as op=queue publishes it — the shape REC-20 landed and REC-32 kept:
+   one item per (progression, stage), ALREADY aggregated by the plane, carrying
+   `basis.n` (the instance count), the weakest grade across those instances, and
+   the producer's own summary and detail sentences. The three procurement
+   instances that used to arrive here as three instance reads are now the
+   producer's `n: 3`; the second, different missing stage is a SECOND item, which
+   is what "one check is one question" looks like from this side of the wire. */
+const FIND_SOLIC = {
+  id:"FINDING::procurement::solicitation", class:"FINDING", kind:"missing_predecessor",
+  case:{ state:"determined", ungrouped:false, reasons:[], depth_bound:6, ancestors:[
+    { id:"INQ-2026-0400", type:"inquiry", title:"Was the award competitively bid?",
+      state:"open", terminal:false, depth:1 }] },
+  subject:{ kind:"progression_stage", id:null, progression_key:"procurement",
+            stage_key:"solicitation", bundles:["INFO-2026-0400"] },
+  summary:"Procurement: the 'RFP / RFQ / IFB' stage is usually required and absent",
+  detail:"3 instances of this progression reach 'RFP / RFQ / IFB' without it",
+  basis:{ source:"proposalsFeed", progression_key:"procurement", stage_key:"solicitation",
+          kinds:["missing_predecessor"], n:3, grade:"C", grade_determined:true,
+          overdue_count:0, surfaced_by:"machine",
+          detail:"a finding is DERIVED (D-79): the record's own question, aggregated one per "
+               + "(progression, stage), graded the weakest instance and never averaged." },
+  age:{ state:"undetermined", reason:"derived_on_read",
+        detail:"a derived finding is recomputed at read time and has no creation instant" },
+  assignee:null, assignee_role:null,
+  options:[{ id:"release", label:"Release to verified", weight:"reasoned", needs:"contribute",
+             mode:"session", rung:"reasoned" }],
+};
+const FIND_CONTRACT = { ...FIND_SOLIC,
+  id:"FINDING::procurement::contract",
+  subject:{ ...FIND_SOLIC.subject, stage_key:"contract" },
+  summary:"Procurement: the 'signed agreement' stage is always required and absent",
+  detail:"1 instance of this progression reaches 'signed agreement' without it",
+  basis:{ ...FIND_SOLIC.basis, stage_key:"contract", n:1, grade:"A" } };
+const FIND_UNDET = { ...FIND_SOLIC, id:"FINDING::p::s",
+  basis:{ ...FIND_SOLIC.basis, grade:null, grade_determined:false } };
 
-const plane = makePlane({ instances:INSTANCES });
+const plane = makePlane({});
 const ctx = boot(SRC, plane);
 
 /* ============================================================
-   D-79 — AGGREGATE, DO NOT DROWN. proposalsFrom is pure; prove it directly.
+   D-79 — AGGREGATE, DO NOT DROWN. The rule is the PLANE'S now; what this suite
+   holds the SURFACE to is that it renders the producer's own count and never
+   recomputes one, and that one check is one row rather than N.
    ============================================================ */
-const props = ctx.__from(INSTANCES);
-ok("D-79: three instances of ONE missing check become ONE proposal with N instances, not three items",
-   props.some(p => p.stage_key==="solicitation" && p.n===3 && p.instances.length===3));
-ok("D-79: a DIFFERENT missing stage is its OWN proposal, not merged into the first",
-   props.some(p => p.stage_key==="contract" && p.n===1));
-ok("D-79: exactly two proposals emerge (one per distinct check), not four (one per finding)",
-   props.length===2);
-const solic = props.find(p => p.stage_key==="solicitation");
-ok("the aggregated proposal names its progression and stage", solic.progression_key==="procurement" && solic.stage_key==="solicitation");
-ok("the biggest pattern sorts first (drowning is many small items; this is one big question)", props[0].stage_key==="solicitation");
-/* the strength grade is the WEAKEST across instances (a case is only as strong as its weakest link) */
-ok("the proposal's grade is the WEAKEST across its instances (A,C,A -> C), never the strongest",
-   solic.grade==="C" && solic.grade_determined===true);
-/* undetermined is honest: one undetermined instance makes the group's grade undetermined, never guessed */
-const undetProps = ctx.__from([{ progression_key:"p", entity_id:"E", findings:[
-  { kind:"missing_predecessor", stage_key:"s", required:"always", grade:"A", grade_determined:true },
-  { kind:"missing_predecessor", stage_key:"s", required:"always", grade:null, grade_determined:false } ] }]);
-ok("undetermined is HONEST: any undetermined instance makes the aggregate grade undetermined, never a guess",
-   undetProps[0].grade===null && undetProps[0].grade_determined===false);
+const props = [FIND_SOLIC, FIND_CONTRACT].map(ctx.__asProp);
+const solic = props[0];
+ok("D-79: the act context is keyed by the producer's aggregation key, not by a bundle id",
+   solic.key==="procurement::solicitation");
+ok("D-79: one check is ONE row — two distinct missing stages are two rows, never four",
+   props.length===2 && props[1].key==="procurement::contract");
+const card = ctx.__row(FIND_SOLIC);
+ok("D-79: the row states the producer's own instance count and says it is grouped as ONE item",
+   /<b>3<\/b> instance[s]? of this one check, grouped as ONE item rather than 3/.test(card));
+ok("D-79: the count is the RECORD's — the surface makes no count of its own",
+   ctx.__asProp(FIND_SOLIC).n===3 && ctx.__asProp(FIND_CONTRACT).n===1);
+/* the strength grade is the WEAKEST across instances (a case is only as strong as
+   its weakest link) — computed by the plane, carried on the basis, rendered here. */
+ok("the finding's grade is the producer's weakest-instance grade, rendered unmodified",
+   solic.grade==="C" && solic.grade_determined===true && /Grade C/.test(card));
+/* undetermined is honest and is STATED, never filled in with a letter. */
+ok("undetermined is HONEST: an undetermined aggregate grade renders as undetermined, never a guess",
+   ctx.__asProp(FIND_UNDET).grade===null && ctx.__asProp(FIND_UNDET).grade_determined===false
+   && /Strength: <b>undetermined<\/b>/.test(ctx.__row(FIND_UNDET))
+   && !/Grade [ABCD]/.test(ctx.__row(FIND_UNDET).split("Strength")[1] || ""));
 
 /* ============================================================
    D-82 — THE PROPOSAL LOOKS DERIVED, and NEVER like an established fact.
    ============================================================ */
-const card = ctx.__card(solic);
-ok("D-82: the card is marked SURFACED BY THE RECORD (surfaced_by machine, REC-3's distinction)",
+ok("D-82: the row is marked SURFACED BY THE RECORD (surfaced_by machine, REC-3's distinction)",
    /Surfaced by the record/i.test(card));
-ok("D-82: the card says nobody has yet judged it worth pursuing (the exact thing a member must know)",
+ok("D-82: the row says nobody has yet judged it worth pursuing (the exact thing a member must know)",
    /Nobody has yet decided it is worth pursuing/i.test(card) || /not yet judged/i.test(card));
-ok("D-82: the card frames it as a QUESTION the record raised, not an established finding",
+ok("D-82: the row frames it as a QUESTION the record raised, not an established finding",
    /a question the record raised, not an established finding/i.test(card));
 ok("D-82: the grade is shown as HOW it was established, never as credibility or as fact",
    /Grade C/.test(card) && /not how much to trust it/i.test(card) && /not a judgment that the question matters/i.test(card));
-ok("D-82: the question is rendered (the member reads the record's own words)",
-   card.includes(ctx.__q(solic)) && /Why do these 3 procurement/i.test(card));
+ok("D-82: the record's OWN sentence is what the member reads, verbatim, not one composed here",
+   card.includes("the 'RFP / RFQ / IFB' stage is usually required and absent")
+   && card.includes("3 instances of this progression reach"));
 
 /* ============================================================
    §P — EXACTLY THREE affordances: adopt / defer / dismiss, and only three.
@@ -170,8 +205,32 @@ ok("EXACTLY three affordances are offered: adopt, defer, dismiss",
    card.includes('data-prop-adopt') && card.includes('data-prop-defer') && card.includes('data-prop-dismiss'));
 const actBtns = (card.match(/data-prop-(adopt|defer|dismiss)=/g)||[]).length;
 ok("there are precisely THREE act controls on the card, no fourth", actBtns===3);
+/* CORRECTED 2026-08-04 (UI-14). The old sweep ran over the WHOLE card, and it
+   was right when the card was the whole surface: there was nothing else on it,
+   so any fourth verb anywhere was a fourth affordance on the proposal.
+   The queue row is not the whole surface. It carries, beside the three, the
+   PRODUCER'S OWN `options[]` — REC-19's derivation of what may be done to the
+   object the finding is about, the same answer op=affordances gives, labels and
+   rungs verbatim. "Release to verified" appearing there is the record publishing
+   an act on a DOCUMENT, not a fourth thing to do to the proposal, and a sweep
+   that cannot tell those apart would force this surface to censor the producer —
+   which is the DEC-8 failure in reverse. So the sweep is scoped to the ENTRY
+   CONTROLS, where §P's rule actually lives, and a second assertion holds the
+   options block to being the producer's and nothing else. */
+const entry = card.slice(card.indexOf('class="q-entry-acts"'));
 for(const forbidden of ["Publish", "Release", "Ratify", "Sign", "Endorse", "Retire", "Delete"])
-  ok(`the proposal offers no ${forbidden} affordance (only the three)`, !new RegExp(">[^<]*"+forbidden).test(card));
+  ok(`the proposal's own controls offer no ${forbidden} affordance (only the three)`,
+     !new RegExp(">[^<]*"+forbidden).test(entry));
+/* A finding's subject is a progression STAGE, not a bundle, so there is no
+   document for the option to open — and a control that cannot work is rendered
+   as a stated fact rather than as a greyed button (Q12: absent, never disabled). */
+const optLabels = [...card.matchAll(/class="q-opt(?:-flat)?"[^>]*>([^<]*)</g)].map(m=>m[1]);
+ok("every label in the options block is one the PRODUCER published, verbatim — none is composed here",
+   optLabels.length===1 && optLabels[0]==="Release to verified");
+ok("an option with no document behind it is stated, never rendered as a disabled control",
+   !/disabled/.test(card));
+ok("and the options block says whose acts they are, so it is not read as a fourth affordance",
+   /What the record publishes as doable here/.test(card));
 
 /* ============================================================
    DEFER / DISMISS — a reason is REQUIRED and NEVER prefilled (pre-flight, pure).
@@ -191,7 +250,7 @@ ctx.__openAct(solic.key, "deferred");
 const els = ctx.__els;
 const dlg0 = els.get("#dlg")._html;
 ok("CHOOSE: the dialog offers both dispositions (defer & dismiss)", /Defer/.test(dlg0) && /Dismiss/.test(dlg0));
-ok("the dialog shows the record's question as CONTEXT, not as the member's claim", dlg0.includes(ctx.__q(solic)));
+ok("the dialog shows the record's question as CONTEXT, not as the member's claim", dlg0.includes(ctx.__ctxLine(solic)));
 ok("AUTHOR: the reason field is never prefilled (placeholder only)", dlg0.includes("placeholder=") && /id="pa-reason"[^>]*>\s*<\/textarea>/.test(dlg0));
 ok("the pre-flight is painted before the act runs", /what it will refuse/i.test(els.get("#pa-pf")._html));
 ok("the commit button is disabled until the pre-flight clears", els.get("#pa-go").disabled===true);
@@ -267,7 +326,7 @@ ctx.__setProps(props);
 ctx.__openAdopt(solic.key);
 const adlg = els.get("#dlg")._html;
 ok("ADOPT dialog shows the record's question as CONTEXT, labelled 'not to copy'",
-   /not to copy/i.test(adlg) && adlg.includes(ctx.__q(solic)));
+   /not to copy/i.test(adlg) && adlg.includes(ctx.__ctxLine(solic)));
 ok("ADOPT: the title and statement fields are never prefilled (placeholders only)",
    /id="ad-title"[^>]*placeholder=/.test(adlg) && /id="ad-statement"[^>]*placeholder=[^>]*>\s*<\/textarea>/.test(adlg));
 ok("ADOPT: the statement field carries NO machine-authored default value (never prefilled — J is absolute)",
@@ -307,7 +366,7 @@ const BROKEN = SRC.replace(
   'function proposalDerivedBadgeHtml(p){ return ""; /* NEGATIVE CONTROL: the visibly-a-proposal marker removed */ }');
 ok("the negative-control mutation actually changed the source", BROKEN !== SRC);
 const ctxNC = boot(BROKEN, makePlane({}));
-const cardNC = ctxNC.__card(ctxNC.__from(INSTANCES).find(p=>p.stage_key==="solicitation"));
+const cardNC = ctxNC.__row(FIND_SOLIC);
 ok("NEG-CONTROL: with the marker removed, the card NO LONGER says 'Surfaced by the record'",
    !/Surfaced by the record/i.test(cardNC));
 ok("NEG-CONTROL: with the marker removed, the card NO LONGER says nobody has yet judged it — it reads as an established finding",
