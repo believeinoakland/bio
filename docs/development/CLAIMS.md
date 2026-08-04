@@ -944,3 +944,5 @@ accepts-when: `node civicos-ui/test/run.mjs` green with a queue harness showing 
 landed: left for CONDUCT.
 FOLLOW-ON, NAMED AND NOT STUBBED: **SELECTION SCOPING — S1's states Q10, Q11 and Q12** (selecting several queue items, acting on a selection, and the scope a selection carries across surfaces). Nothing in this item reserves a control, a class or a data attribute for it, because a control that does nothing is worse than an absent one (§5's present-and-refused). It wants its own item: the plane already has a selection lease (`op=select`/`op=selection`) that UI-21's finder is built against, and whether a queue selection is THAT lease or a second, lighter thing is the design question, not a rendering detail.
 released:
+
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker 8b1e77c). Verified: UI harness all green, battery 90/90 (4744). The second-feed provisional recorded as D-176 rather than a delegation (triggers named); the act-proposal sweep correction accepted (censoring the plane is DEC-8 in reverse). No DEC.
