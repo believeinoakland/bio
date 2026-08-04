@@ -930,9 +930,20 @@ const RAIL = [
 function buildRail(w){
   const isAdmin = !!w.administer;
   const items = RAIL.filter(r=>!r.admin || isAdmin);   // capability a member lacks is ABSENT, not greyed
+  /* F-6/F-7, UI-15, 2026-08-04. The rail's Add entry used to render for every
+     credential, including one that can only READ — so the single most prominent
+     control on the screen took a member to a page whose whole content was an
+     apology for the control they had just been offered. Membership Architecture
+     v2 §5: a capability a member does not hold is ABSENT from their interface,
+     not present and refused. The admin filter above had this right all along;
+     the button did not. In PREVIEW there is no credential to ask, and preview's
+     own contract is that it shows the real shell — so it shows the entry, and
+     `canContribute` refuses at the page, which is preview's honest state rather
+     than a claim about a member. */
+  const mayAdd = PLANE.preview || (w.capabilities||[]).includes("contribute");
   $("#rail").innerHTML =
     items.map(r=>`<div class="nav" data-go="${r.id}" title="${r.label}"><svg class="g" viewBox="0 0 20 20"><use href="#${r.icon}"/></svg><span class="lbl">${r.label}</span><span class="count" id="cnt-${r.id}"></span></div>`).join("")
-    + `<button class="add" onclick="go('add')" title="Add something new"><svg width="16" height="16"><use href="#i-add"/></svg><span class="lbl">Add something new</span></button>`
+    + (mayAdd ? `<button class="add" onclick="go('add')" title="Add something new"><svg width="16" height="16"><use href="#i-add"/></svg><span class="lbl">Add something new</span></button>` : "")
     + `<div class="spacer"></div>`
     + `<div class="pub-link" onclick="enterPublished()" title="View the public record"><svg width="16" height="16"><use href="#i-external"/></svg><span class="lbl">View the public record</span></div>`;
   try{ if(localStorage.getItem("civicos.rail")==="min") $("#work").classList.add("railmin"); }catch(_){}
@@ -2008,8 +2019,14 @@ function mdFor(id, type, state, title, body, now, hasDoc, src){
      basis, and a basis this function invented would be the same lie one field
      down. The gate now names the gap until a member fills it, and the control
      that lets them fill it — the radio pair with no third option and no
-     default — is UI-19's. `action_kind` and `risk_tier` are placeholders too
-     and are UI-15's to replace; they are left deliberately, not overlooked.
+     default — is UI-19's. `action_kind` and `risk_tier` are placeholders too.
+     CORRECTED 2026-08-04 (UI-15): this comment said they were UI-15's to
+     replace. UI-15 took the other road and made `action` ABSENT from the type
+     list until UI-19 lands, so no member reaches this arm from THIS surface
+     and there is nothing here to replace them with; they belong to UI-19 with
+     the counterparty pair. The arm stays because mdFor is also the writer the
+     conformance suite drives per type, and because an `action` bundle already
+     in the record is still read and revised through this function.
      (The literal string itself is deliberately not repeated in this comment:
      counterparty.test.mjs asserts, over this file's SOURCE, that it appears
      nowhere — so a future edit that pastes it back fails there rather than at
@@ -9356,12 +9373,42 @@ function attestRefusalHtml(e){
    the grading scheme exists to prevent.
    ============================================================ */
 /* One vocabulary. `inquiry` replaces `focus` here — the type a question is
-   written as, whatever phase it later reaches. The `action` entry is left in
-   place deliberately: making it ABSENT until UI-19 gives mdFor member-authored
-   values is UI-15's scope, not this item's. */
+   written as, whatever phase it later reaches.
+
+   `action` is ABSENT, 2026-08-04 (UI-15, the amendment REC-23 forced). It was
+   offered here until now. REC-23 made the counterparty three-valued and stopped
+   the intake surfaces writing a placeholder into it, which is the honest gate —
+   and the consequence is that a fresh action written from THIS form leaves the
+   catalog with exactly one error, C-2.10 naming the counterparty nobody
+   authored. Offering a type whose every instance is refused at the gate is
+   present-and-refused, the same class as F-6 one line down. There is no control
+   here that could fix it: the honest `undetermined` state needs an AUTHORED
+   basis and this form has nowhere to author one.
+
+   UI-19 RESTORES IT. That item builds the action page and gives the member the
+   radio pair — a named counterparty, or undetermined with a reason they wrote —
+   and `mdFor` takes its values from the member instead of from a default. When
+   it lands, this entry comes back and conformance.test.mjs's action arm flips
+   back to zero errors. Nothing else about `action` is removed: mdFor, PREFIX,
+   FIRST_STATE, the state machine and every rendering path keep it, because
+   actions already in the record must still be read. */
 const ADD_TYPES = [["information","Something the record should hold"],["inquiry","A question worth pursuing"],
-                   ["project","A line of work"],["action","Something to do"]];
+                   ["project","A line of work"]];
 let ADD_BUSY = false;
+/* How many driven passes the capture runs before the record question is put to
+   the member. RESTORED 2026-08-04 (D-132): this declaration was deleted on
+   2026-07-30 along with the dialog it bounded, while the two references to it
+   survived — so from that day the ordinary ceilinged capture threw a raw
+   ReferenceError through addGo's catch and the frame U8 was built to give the
+   member never once appeared.
+
+   It is not a platform constant and must not be read as one: the measured limit
+   is 51 external subrequests per invocation (MEASUREMENTS.md, 2026-07-29) and a
+   pass spends up to 42 of them, so eight passes is several hundred supporting
+   files. What this number actually bounds is how long the surface keeps a member
+   watching a progress line before it stops and asks them the one question that
+   is theirs. Eight is the value the surface shipped with. */
+const ADD_TICKS = 8;
 /* When the source has published a CHANGED version of something the record already
    holds, both belong in the record and the new one should say which it follows. */
 let CHANGED_FROM = null;
@@ -9369,6 +9416,22 @@ let CHANGED_FROM = null;
 function canContribute(){
   return !!(PLANE.session && PLANE.me && PLANE.me.session
             && (PLANE.me.capabilities||[]).includes("contribute"));
+}
+/* F-6, UI-15, 2026-08-04. Read from whoami rather than kept as a second copy of
+   the rules, and it FAILS CLOSED: no whoami answer yet means the option is
+   absent, not offered on the chance it will be allowed. setup.mjs has done it
+   this way since :463 and this surface simply had not. */
+function canDo(cap){
+  return !!(PLANE.me && (PLANE.me.capabilities||[]).includes(cap));
+}
+/* Membership Architecture v2 §5, exactly: a capability a member does not hold is
+   ABSENT from their interface. `project` was offered to every contribute holder
+   and refused at submit by the plane's own capability gate — the member picked a
+   kind, wrote a title and a body, pressed the button and was told no. The plane
+   still refuses it, because a hidden control is a courtesy and not a boundary;
+   the absence is the part §5 asks for. */
+function addTypesFor(){
+  return ADD_TYPES.filter(([v]) => v !== "project" || canDo("create_projects"));
 }
 
 async function renderAdd(){
@@ -9385,7 +9448,7 @@ async function renderAdd(){
       Nothing here is public: publishing is a separate act with its own signature.</p>
     <label class="fld" for="a-type">What kind of thing is this?</label>
     <select class="txt" id="a-type" style="max-width:320px" onchange="addTypeSync()">
-      ${ADD_TYPES.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("")}</select>
+      ${addTypesFor().map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("")}</select>
     <label class="fld" for="a-title">Title</label>
     <input class="txt" id="a-title" placeholder="what this is about" oninput="addValidate()">
     <label class="fld" for="a-body">What do you know?</label>
@@ -9636,105 +9699,61 @@ async function addCapture(locator, authority, wantSubs){
     addSay(`<p class="count-line">Collecting the rest of the page &middot; ${out} to go&hellip;</p>`);
   }
 }
-/* An unfinished capture is NOT a question for the member.
-   The document itself is captured whole and hashed; what is missing is some of
-   the design files the page needs to look the way the source served it, and the
-   reason is that this runtime will not make more outbound requests right now.
-   That is a logistics problem, and putting it to a member as a choice between
-   "record it as unfinished" and "write nothing" asks them to arbitrate a
-   subrequest ceiling. So it is recorded, honestly labelled, and picked up later:
-   the bundle says on its own page that it is unfinished and offers to continue,
-   and nothing is lost either way because the bytes already fetched are in the
-   store under their hashes. */
+
+/* THE ONE CHOICE, and why it is back — UI-15, 2026-08-04.
+
+   This frame was built for U8, deleted on 2026-07-30 under Bob's correction
+   ("the audience is non-technical and the workflow exists to keep members out of
+   logistics"), and replaced by a function that recorded the unfinished capture
+   without asking. That correction was RIGHT about the frame it saw. The frame it
+   saw said "this runtime will not make more outbound requests", which is asking
+   somebody researching a sewer fund to arbitrate a platform limit, and it
+   deserved to go along with the two other dialogs deleted the same day.
+
+   What is restored is NOT that frame. The complication is classified and never
+   named — this box does not say why the collecting stopped, because that is ours
+   and a member cannot act on it. What is put to them is the one question the
+   machine may not answer for them: WHAT THE RECORD MAY CLAIM. A capture whose
+   supporting files are short is not the same object as a whole one, and writing
+   it in silently means the record acquires a bundle nobody chose to create. That
+   is the overclaiming class this project's primary threat model is aimed at, and
+   it is a member's call in the same way the archive's grade C is theirs at A7.
+
+   The asymmetry is the whole design: two honest options, and the dishonest third
+   one is not on the screen at all. `SB-EVIDENCE.md` A4 is the specification and
+   the words below are its words. The vocabulary guard over this HTML is asserted
+   in add-surface.test.mjs alongside the form's, so the classification cannot
+   quietly leak back in as an explanation. */
 function addIncomplete(acq, outstanding, ticks){
-  return Promise.resolve({ ok: true, doc: acq.document, snap: acq.snapshot || null,
-    partial: { outstanding, ticks } });
-}
-
-/* ---- the document may already be in the record, and usually will be ----
-
-   RULED by Bob: a re-capture producing a document the record already holds is the
-   REGULAR case, not an exception. Monitoring exists to look at a document again,
-   so the ordinary result of looking is "unchanged".
-
-   Nothing below asks the member anything. Whether two captures are the same
-   document is a technical question with a technical answer, and a member came
-   here to put a document into a case, not to adjudicate ASP.NET page state. The
-   classifier decides and the surface reports the outcome in one plain sentence.
-
-   Handled correctly also means not writing a second bundle for one document.
-   C-18.3's ring-once rule says identical content is corroboration on ONE register
-   entry and never two, and it compares hashes within a single bundle, so nothing
-   stops the duplicate at write time except the writer declining to make it. What
-   a confirmation IS worth is not a bundle: it advances the observed interval on
-   the address, which is the evidence the contemporaneity machinery consumes. */
-async function heldMatch(sha256, locator, contentType, name){
-  const search = async (q) => {
-    try{
-      const r = await rec("search", { q });
-      const hits = (r.result && (r.result.hits || r.result)) || r.hits || [];
-      return Array.isArray(hits) ? hits : [];
-    }catch(_){ return []; }
-  };
-  /* The cheap key first: identical bytes are a question the store already
-     answers, and no comparison is needed to know the answer. */
-  if(sha256){
-    const exact = (await search(`hash:sha256:${sha256}`))[0];
-    if(exact) return { bundle: exact, identical: true, changed: false, artifacts: [] };
-  }
-  if(!locator) return null;
-  /* Then the address, because the hash MISSES on any page that rebuilds part of
-     itself. Measured: two fetches of a Legistar calendar three seconds apart
-     share no hash and differ only in page state, so a hash-only check lets the
-     record grow a second bundle for one document with nothing complaining. */
-  for(const o of await search(`locator:"${String(locator).replace(/"/g,"")}"`)){
-    const p = await getProjection(o.bundle_id).catch(()=>null);
-    const heldSha = String((p && p.content_hash) || "").replace(/^sha256:/, "");
-    if(!/^[0-9a-f]{64}$/.test(heldSha)) continue;
-    if(heldSha === sha256) return { bundle: o, identical: true, changed: false, artifacts: [] };
-    const held = await fetchCapture(heldSha), fresh = await fetchCapture(sha256);
-    if(!held.ok || held.sha !== heldSha || !fresh.ok) continue;
-    /* Profile the document, then ask the profile. Which kind of page this is
-       decides what counts as a change: page state on a WebForms page is not one,
-       a new headline on a listing is, and a new item in a nav bar is not. */
-    const text = new TextDecoder("utf-8", { fatal:false }).decode(fresh.bytes);
-    const id = identify({ text, locator, headers: {}, sha256: digestOf });
-    const v = await compare(held.bytes, fresh.bytes, id.handler,
-      { text, locator, headers: {}, sha256: digestOf, confidence: id.confidence });
-    /* changed and undetermined both mean the record should hold this too: an
-       undetermined verdict is the system declining to claim the substance is the
-       same, and declining is not the same as saying it is. */
-    if(v.evidentiary_change === false)
-      return { bundle: o, identical: false, changed: false, verdict: v.verdict,
-               artifacts: v.artifacts, profile: id.handler.key };
-    return { bundle: o, identical: false, changed: true, verdict: v.verdict,
-             artifacts: v.artifacts, profile: id.handler.key, proceed: true };
-  }
-  return null;
-}
-async function addCapture(locator, authority, wantSubs){
-  let session = null, acq = null, ticks = 0;
-  for(;;){
-    ticks++;
-    addSay(ticks === 1
-      ? `<p class="count-line">Fetching the document from the source&hellip;</p>`
-      : `<p class="count-line">Collecting the rest of the page&hellip;</p>`);
-    try{
-      acq = await recPost("acquire", { locator, authority, ...(wantSubs?{subresources:true}:{}), ...(session?{continue:session}:{}) });
-    }catch(e){ return { ok:false, why: acquireWhy(e) }; }
-    if(!acq.document) return { ok:false, why: acquireWhy(acq) };
-    const snap = acq.snapshot || null;
-    if(!wantSubs || !snap || snap.complete) return { ok:true, doc: acq.document, snap };
-    session = snap.continuation && snap.continuation.session;
-    const out = Number(snap.outstanding||0);
-    if(!session || ticks >= ADD_TICKS){
-      /* The capture cannot be finished under this runtime's ceiling right now.
-         The choice is the member's and both options are honest; what is not on
-         offer is calling it complete. */
-      return await addIncomplete(acq, out, ticks);
-    }
-    addSay(`<p class="count-line">Collecting the rest of the page &middot; ${out} to go&hellip;</p>`);
-  }
+  const n = Number(outstanding||0);
+  return new Promise((resolve)=>{
+    addSay("");
+    $("#dlg").innerHTML =
+      `<h2>We cannot finish collecting this page right now.</h2>
+       <p class="what">The document itself is complete and checked.
+         ${n === 1 ? "One of the files" : `${n} of the files`} that make the page look the way the
+         source served it ${n === 1 ? "has" : "have"} not arrived.</p>
+       <p class="what">This is ours to solve, not yours. What we need from you is what the record
+         should say.</p>
+       <div class="set">
+         <div class="it"><b>Record it as the unfinished capture it is.</b> What is still missing is
+           named on the document's own page, and anyone can finish it later. Nothing already
+           collected is lost.</div>
+         <div class="it"><b>Write nothing.</b> Nothing enters the record, and nothing is lost: the
+           address is still there to try again.</div>
+       </div>
+       <p class="what">Recording it as complete is not on offer.</p>
+       <div class="row-btns"><button class="btn ghost" id="ai-no">Write nothing</button>
+         <button class="btn" id="ai-yes">Record it as unfinished</button></div>`;
+    $("#dlg-wrap").classList.remove("hidden");
+    let settled = false;
+    const settle = (r) => { if(settled) return; settled = true; closeDialog(); resolve(r); };
+    const yes = $("#ai-yes"), no = $("#ai-no");
+    if(yes) yes.addEventListener("click", () => settle(
+      { ok: true, doc: acq.document, snap: acq.snapshot || null, partial: { outstanding: n, ticks } }));
+    if(no) no.addEventListener("click", () => settle(
+      { ok: false, why: "Nothing was written, and nothing was lost. The address is still there to try again." }));
+  });
 }
 
 /* THE CRUMB SURVIVES THE ERROR (UI-11).

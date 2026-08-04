@@ -215,11 +215,21 @@ table.rec tr.row:hover td{background:#F6F7F2}
   public: the working record has never been published and cannot be read by
   anyone without a password.</p>
   <label for="n-type">What kind of thing is this?</label>
+  <!-- The Action option is ABSENT, 2026-08-04 (UI-15, the amendment REC-23
+       forced). REC-23 stopped both intake surfaces writing a placeholder
+       counterparty, which is the honest gate; the consequence is that an action
+       written from this form leaves the catalog with exactly one error, C-2.10
+       naming the counterparty nobody authored. Offering a kind whose every
+       instance is refused is present-and-refused, which Membership Architecture
+       v2 section 5 forbids, and there is no control on this page that could
+       author the honest undetermined state (it needs a written basis). UI-19
+       builds that control and RESTORES this option; conformance.test.mjs's
+       action arm flips back to zero errors in the same turn. mdFor keeps its
+       action arm: actions already in the record are still revised here. -->
   <select id="n-type">
     <option value="information">Information</option>
     <option value="inquiry">Question</option>
     <option value="project">Project</option>
-    <option value="action">Action</option>
   </select>
   <label for="n-title" id="n-title-label">Title</label>
   <input id="n-title" placeholder="what this is about">
