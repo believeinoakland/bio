@@ -101,7 +101,7 @@ t("no op is both an act and a NON_ACT",
   [...ACT_IDS].filter((k) => k in NON_ACTS), []);
 t("every published act is a real op in the OPS table",
   [...ACT_IDS].filter((k) => !opsKeys.includes(k)), []);
-t("every published act carries a NEEDS entry (all six are mutating session acts)",
+t("every published act carries a NEEDS entry (all seven are mutating session acts)",
   [...ACT_IDS].filter((k) => !needsKeys.includes(k)), []);
 
 console.log("\n--- structural: vocabularies and rungs are the enforcing tables, not copies ---");
@@ -198,10 +198,15 @@ const RUTH = lg.token;
 /* ------------------------------------------------------- catalogue + gates */
 console.log("\n--- the catalogue call: the full act table and the vocabularies, once ---");
 const cat = await affordances(null);
-t("no target -> the whole catalogue: six acts, each with id/label/weight/needs/mode/rung",
+/* Superseded 2026-08-03 (REC-13): six acts became SEVEN when `conclude` was
+   published. The old count was not wrong when written — it was the whole
+   catalogue then — and correcting it rather than loosening it is the point:
+   this assertion exists so a published act cannot appear or vanish without a
+   turn saying so, and a `>= 6` would have made it stop doing that. */
+t("no target -> the whole catalogue: seven acts, each with id/label/weight/needs/mode/rung",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung"].every((k) => k in a))],
-  [true, 6, true]);
+  [true, 7, true]);
 t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the seven action kinds",
   [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
   [["deferred", "dismissed"], 7]);
@@ -304,6 +309,12 @@ const F = "FOCUS-2026-0001-rec19";
 const F2 = "FOCUS-2026-0002-rec19";
 await promote(F, focusMd(F, "surfaced"), "focus", "surfaced");
 await promote(F2, focusMd(F2, "elevated"), "focus", "elevated");
+/* This list became LOAD-BEARING at REC-13. `conclude` is published for an
+   inquiry offering the `concluded` edge, and a legacy focus document's row
+   says `inquiry` (promote projects the NORMALIZED type) while its own machine
+   has no `concluded` in it — so the derivation only answers `{dispose}` here
+   because it consults vocabFor over the DECLARED spelling. Conclude's own
+   suite proves the store refuses the same document by name. */
 t("a surfaced focus publishes exactly {dispose}; the disposition TARGETS come from the vocabulary, not a UI copy",
   actIds(await affordances(F)), ["dispose"]);
 const affF2 = await affordances(F2);

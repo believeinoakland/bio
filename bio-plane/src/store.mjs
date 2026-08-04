@@ -8,7 +8,12 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             the catalog, so the store's view and the checker's view cannot
             disagree (the same reason this file already imports the catalog's
             parser); the title derivation is C-16's ONE rule, stated once. */
-         normalizeType, LEGACY_TYPE_ALIASES, STATES, OBJECT_TYPES,
+         /* REC-13: vocabFor is the catalog's OWN vocabulary lookup — declared
+            spelling first, normalized type as the fallback. op=conclude asks a
+            VOCABULARY question ("which state machine governs this document"),
+            so it goes through the map like every other consulting site rather
+            than reaching into STATES by a raw key. */
+         normalizeType, LEGACY_TYPE_ALIASES, STATES, OBJECT_TYPES, vocabFor,
          /* REC-11: the basis leg grammar is the catalog's ONE function, run
             here at the write (the checkGatheringGrammar precedent) and by the
             checker, so a malformed leg never lands and the two views cannot
@@ -748,14 +753,25 @@ export class Store extends DurableObject {
     /* A project's OWN citation edges by status, from its document — the same
        source cite/sever read (the projection carries no status). */
     const citesOut = { confirmed: 0, severed: 0 };
+    /* The document is read for a project's own edge statuses, and (REC-13) for
+       the DECLARED object_type. `bundles.object_type` is the NORMALIZED type —
+       promote projects it through normalizeType — so the row alone cannot
+       answer a VOCABULARY question, and the derivation would consult the
+       inquiry machine for a legacy focus document whose own machine has no
+       `concluded` in it. That is precisely how a published act and the store's
+       refusal come to disagree, which DEC-8 forbids. Reported as a separate
+       fact rather than replacing object_type: membership questions still want
+       the normalized answer. */
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    const docFm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
     if (b.object_type === "project") {
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-      const refs = md && md.content !== null ? parseFrontmatter(md.content).data?.references : null;
+      const refs = docFm.references;
       for (const r of (Array.isArray(refs) ? refs : []))
         if (r && typeof r === "object" && r.rel === "cites")
           citesOut[r.status === "severed" ? "severed" : "confirmed"]++;
     }
     return { ok: true, target: b.bundle_id, object_type: b.object_type,
+             declared_type: typeof docFm.object_type === "string" ? docFm.object_type : b.object_type,
              current_state: b.current_state, criticality: b.criticality ?? null,
              cites_in: citesIn, cites_out: citesOut };
   }
@@ -2072,6 +2088,182 @@ export class Store extends DurableObject {
              weight: "refuse", drift: sel.drift };
   }
 
+  /* REC-13: CONCLUDING an inquiry. open|surfaced -> concluded, on op=release's
+   * shape and with its four properties carried over deliberately.
+   *
+   * NOT SELECTION-BACKED, and that is the one place this departs from release.
+   * Release's argument is a batch judgement about homogeneous material; a
+   * CONCLUSION is one authored answer to one question, and the same sentence
+   * cannot be the answer to twelve of them. A bulk conclude would be the
+   * checkbox the whole construct exists to refuse, so this op takes ONE target
+   * and reports `weight: "single"` — no set is applied, and op=affordances
+   * publishes that same word (the suite cross-checks the two).
+   *
+   * The properties that DO carry over:
+   * 1. A NAMED MEMBER authors it. The author stamp arrives from the session;
+   *    a machine credential's stamp is `token:<class>` and is refused BY SHAPE
+   *    (MACHINE_CANNOT_CONCLUDE, the MACHINE_CANNOT_RELEASE precedent above).
+   *    A machine may SURFACE a question — D-78 stamps surfaced_by: agent and
+   *    DEC-24 lets it PURSUE what a member authored — and it may never author
+   *    the answer. That asymmetry is the whole of what "less narrative" means
+   *    when the narrator is ours.
+   * 2. THE TEXT IS CALLER-SUPPLIED AND NEVER PREFILLED. `conclusion` and
+   *    `falsifier` are required parameters refused when absent, exactly as
+   *    acknowledgment and mitigation are. Nothing is derived, defaulted or
+   *    proposed: a falsifier the plane wrote is not a falsifier the group
+   *    accepted.
+   * 3. NOTHING CONCLUDED HERE AUDITS DIRTY. C-2.8's concluded-state entry
+   *    requirements are checked BEFORE the state moves, so this op never mints
+   *    a bundle the catalog immediately rejects. The basis is read from the
+   *    DOCUMENT (D-21: inquiry_basis is a projection of it, never a second
+   *    place to state it).
+   *
+   * NO OWNER GATE AND NO BALLOT (DEC-30). Any holder of `contribute` may
+   * conclude, and the act is ATTRIBUTED — the member's name is in the
+   * state_history entry and in the Session Log. Concluding is not ownership of
+   * the question; a group that disagrees reopens it, which is what the
+   * concluded -> open edge is for.
+   *
+   * THE MACHINE IS THE CATALOG'S. Edge legality comes from vocabFor(STATES, …)
+   * over the DECLARED object_type, so a legacy focus/problem document — whose
+   * own vocabulary has no `concluded` and whose heading set has no
+   * `## Conclusion` to put one in — is refused ILLEGAL_TRANSITION rather than
+   * quietly given a state its contract never had. Modernizing such a document
+   * is a promotion, and then it concludes like any other. */
+  conclude({ target, conclusion = "", falsifier = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE",
+               detail: "a conclusion is a named member's assertion about what the record shows. A machine "
+                     + "credential may SURFACE a question, gather what it rests on and prepare the answer, "
+                     + "and may never author the conclusion. Sign in as a member." };
+    const concl = String(conclusion ?? "").trim();
+    const fals = String(falsifier ?? "").trim();
+    if (!concl)
+      return { ok: false, reason: "NO_CONCLUSION",
+               detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the "
+                     + "concluded state, so a conclusion with nothing in it would produce a bundle the "
+                     + "catalog rejects. An undetermined answer is stated as undetermined, never left blank." };
+    if (!fals)
+      return { ok: false, reason: "NO_FALSIFIER",
+               detail: "a conclusion states what would OVERTURN it. Without that the finding cannot be "
+                     + "checked by anyone, including its author, and a record that cannot be checked claims "
+                     + "more than it can support." };
+    for (const [name, v] of [["conclusion", concl], ["falsifier", fals]])
+      if (v.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
+        return { ok: false, reason: `BAD_${name.toUpperCase()}`,
+                 detail: `${name} is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a `
+                       + `quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+
+    if (!target)
+      return { ok: false, reason: "NO_TARGET",
+               detail: "a conclusion answers ONE question: pass target=<inquiry id>" };
+    /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
+       inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
+       absent one, so the refusal discloses nothing. */
+    const gate = viewerPredicate(viewer);
+    /* The `b` alias is not cosmetic: viewerPredicate's participation arm is
+       written against `b.object_type` / `b.bundle_id`, so a statement without
+       it throws rather than filtering. affordanceFacts takes the same shape. */
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
+               detail: "concluding answers a question, and only an inquiry carries one." };
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+    let text = liveMd.content;
+    const fm = parseFrontmatter(text).data || {};
+
+    /* THE MAP RULE: the machine is looked up through the catalog's own
+       vocabFor over the DECLARED spelling, never STATES.inquiry by a raw key.
+       A legacy focus/problem document is judged by the contract it was
+       authored under, which has no `concluded` in it. */
+    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
+    const legalFrom = (spec?.edges?.[b.current_state]) || [];
+    if (!legalFrom.includes("concluded"))
+      return { ok: false, reason: "ILLEGAL_TRANSITION", to: "concluded", target,
+               from: b.current_state, object_type: fm.object_type ?? b.object_type,
+               detail: "this is not a legal move in the catalog's state table for this document's own "
+                     + "vocabulary. An inquiry concludes from open (or its `surfaced` alias); something "
+                     + "deferred or dismissed is reopened first, and a legacy focus/problem document has "
+                     + "no concluded state at all until its frontmatter is modernized." };
+
+    /* Entry requirement 3, checked against the DOCUMENT before anything moves.
+       DEC-22: zero legs is legal while OPEN — that is a standing objective —
+       and is exactly what may not be concluded. */
+    const legs = Array.isArray(fm.basis) ? fm.basis : [];
+    if (legs.length < 1)
+      return { ok: false, reason: "NO_BASIS", target,
+               detail: "a conclusion rests on something. An open inquiry may hold a claim with no legs at "
+                     + "all — a standing objective the group means to pursue — but concluding one that "
+                     + "rests on nothing would put the record's name to an assertion nothing supports. "
+                     + "Add a basis[] leg (and the same target in references[]) first." };
+
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const withHistory = Store.#appendStateHistory(text, {
+      timestamp: when, from_state: b.current_state, to_state: "concluded",
+      blurb: concl, author: who });
+    if (!withHistory)
+      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+               detail: "this document's state_history block cannot be extended in place, and a conclusion "
+                     + "recording no transition would leave prior_state pointing at a history the document "
+                     + "does not carry (C-4.2)" };
+    text = withHistory;
+    text = Store.#setScalar(text, "prior_state", b.current_state);
+    text = Store.#setScalar(text, "current_state", "concluded");
+    /* setOrAdd, not set: an inquiry authored before this state existed carries
+       neither key, and #setScalar alone returns the text UNCHANGED for an
+       absent key — which would move the state and leave the requirement
+       unmet, minting exactly the bundle the catalog rejects. */
+    text = Store.#setOrAddScalar(text, "conclusion", `"${concl}"`);
+    text = Store.#setOrAddScalar(text, "falsifier", `"${fals}"`);
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    /* C-13.2: last_updated moving requires a Session Log entry, and DEC-30's
+       attribution lives here — who concluded is part of the record even though
+       no one owns the question. */
+    const entry = `### Session ${when} | Concluded | ${who}\n`
+                + `Trigger: op=conclude on ${target}\n`
+                + `Changes: state ${b.current_state} to concluded.\n`
+                + `Conclusion: ${concl}\n`
+                + `Falsifier: ${fals}\n`;
+    const at = text.indexOf("## Session Log");
+    if (at < 0) text += "\n## Session Log\n\n" + entry;
+    else {
+      const nxt = text.indexOf("\n## ", at + 1);
+      const cutAt = nxt === -1 ? text.length : nxt + 1;
+      text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
+    }
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+              title: fm.title, current_state: "concluded", prior_state: b.current_state,
+              created: fm.created, last_updated: when,
+              criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    return { ok: true, target, from: b.current_state, to: "concluded",
+             conclusion: concl, falsifier: fals, basis_legs: legs.length,
+             author: who, at: when, weight: "single" };
+  }
+
   /* Rewrite the `status` and `note` of specific `cites` entries in place,
      touching nothing else. Walks the references block entry by entry, tracking
      which target the current entry belongs to, and edits only the two lines of
@@ -2393,6 +2585,24 @@ export class Store extends DurableObject {
       if (lines[i].startsWith(key + ":")) { lines[i] = `${key}: ${value}`; return lines.join("\n"); }
     }
     return text;
+  }
+
+  /* #setScalar for a key that may not be there yet (REC-13). It returns the
+     text UNCHANGED when the key is absent, which is right for the fields every
+     document already carries (current_state, prior_state, last_updated) and
+     wrong for a field a NEW state introduces: an inquiry authored before
+     `concluded` existed carries no `conclusion:` line, and silently not
+     writing one would move the state while leaving its own entry requirement
+     unmet — the bundle the catalog then rejects. Absent, the key is opened
+     immediately before the closing fence, the #spliceReferences convention. */
+  static #setOrAddScalar(text, key, value) {
+    const set = Store.#setScalar(text, key, value);
+    if (set !== text) return set;
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return text;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return text;
+    return [...lines.slice(0, end), `${key}: ${value}`, ...lines.slice(end)].join("\n");
   }
 
   /* Splice new entries into the `references` block, touching nothing else.
@@ -7978,6 +8188,14 @@ export class Store extends DurableObject {
         dispose: () => this.dispose({ handle: url.searchParams.get("handle"),
           to: url.searchParams.get("to"), reason: url.searchParams.get("reason"),
           viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),
+          author: url.searchParams.get("author") }),
+        /* REC-13. No `handle` and no `owner`: concluding is not a set
+           application (see conclude() above), so it takes the ONE target and
+           the viewer/author stamps the control plane sets. */
+        conclude: () => this.conclude({ target: url.searchParams.get("target"),
+          conclusion: url.searchParams.get("conclusion"),
+          falsifier: url.searchParams.get("falsifier"),
+          viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         expertisedeclare: () => this.expertiseDeclare(body || {}),
         expertiseconfirm: () => this.expertiseConfirm(body || {}),

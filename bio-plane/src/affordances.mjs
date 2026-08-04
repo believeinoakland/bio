@@ -85,26 +85,39 @@ export const RUNGS = {
 
 /* One legal-edge lookup, over the IMPORTED table, THROUGH the catalog's own
  * vocabulary machinery (REC-10's normalisation, fifth consulting site): the
- * type reaches here already normalized, and vocabFor resolves it — declared
- * spelling first, normalized fallback — so a legacy-spelled fact and a
- * canonical one answer identically, and the state-alias handling (`surfaced`
- * a legal alias of `open`) is the TABLE'S OWN, never a copy here. */
-const edgesFrom = (type, state) => (vocabFor(STATES, type)?.edges?.[state]) || [];
+ * state-alias handling (`surfaced` a legal alias of `open`) is the TABLE'S OWN,
+ * never a copy here.
+ *
+ * CORRECTED BY REC-13, and the correction is the MAP RULE itself. This took the
+ * already-NORMALIZED type, which defeated the whole point of vocabFor: that
+ * function resolves the DECLARED spelling first precisely because the inquiry
+ * collapse CHANGED the vocabulary, and a legacy focus/problem document is
+ * judged by the contract it was authored under. Handing it `inquiry` for a
+ * `focus` document asked the wrong machine. It was invisible while the two
+ * machines agreed on every state an act cared about; `concluded` is the first
+ * state they DISAGREE about, and the defect it would have produced is the one
+ * DEC-8 exists to forbid — op=affordances publishing `conclude` for a document
+ * the store then refuses ILLEGAL_TRANSITION, a pre-flight disagreeing with the
+ * refusal it fronts. So the DECLARED type is what reaches the map, and
+ * `object_type` (normalized) still answers the membership questions below. */
+const edgesFrom = (f) =>
+  (vocabFor(STATES, f.declared_type ?? f.object_type)?.edges?.[f.current_state]) || [];
 
-/* The facts shape is store.mjs affordanceFacts(): object_type, current_state,
- * cites_in {confirmed[], severed[]} (edges INTO an information target, read the
- * way retire reads them — severed is not live), cites_out {confirmed, severed}
- * (a project's own citation edges by status). */
+/* The facts shape is store.mjs affordanceFacts(): object_type (NORMALIZED, for
+ * membership), declared_type (the document's own spelling, for vocabulary —
+ * REC-13), current_state, cites_in {confirmed[], severed[]} (edges INTO an
+ * information target, read the way retire reads them — severed is not live),
+ * cites_out {confirmed, severed} (a project's own citation edges by status). */
 export const ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
   { id: "release", label: "Release (verify)", weight: "refuse", types: ["information"],
-    applies: (f, ty) => ty === "information" && edgesFrom(ty, f.current_state).includes("verified") },
+    applies: (f, ty) => ty === "information" && edgesFrom(f).includes("verified") },
   /* S-11 step 4. verified -> retired, AND nothing with a live cites edge: the
      same predicate the store's CITED refusal runs (#citesInto). A severed edge
      is a recorded decision to stop relying, so it does not block. */
   { id: "retire", label: "Retire", weight: "refuse", types: ["information"],
-    applies: (f, ty) => ty === "information" && edgesFrom(ty, f.current_state).includes("retired")
+    applies: (f, ty) => ty === "information" && edgesFrom(f).includes("retired")
                      && f.cites_in.confirmed.length === 0 },
   /* S-11 step 3. An inquiry (né focus/problem — the type reaches here through
      normalizeType, so all three spellings land on this arm) may be
@@ -112,7 +125,21 @@ export const ACTS = [
      disposition SET itself is in VOCABULARIES. */
   { id: "dispose", label: "Dispose (defer or dismiss)", weight: "refuse", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry"
-                     && DISPOSITIONS.some((d) => edgesFrom(ty, f.current_state).includes(d)) },
+                     && DISPOSITIONS.some((d) => edgesFrom(f).includes(d)) },
+  /* REC-13. An inquiry whose machine offers the `concluded` edge — `open`, and
+     its `surfaced` alias, and nothing else. Weight `single`, the first act
+     published that is NOT selection-backed: one conclusion answers one
+     question, so there is no set to apply and no set-application weight to
+     report (store.mjs conclude() carries the reasoning; the suite cross-checks
+     the word against what the op itself returns). NO RUNG: no document assigns
+     one, and RUNGS carries only the seven that are sourced — inventing
+     "reasoned" here because it feels reasoned is exactly the guessing this
+     file refuses. The entry requirements (a conclusion, a falsifier, at least
+     one basis leg) and the named-member rule are ACT-TIME refusals the store
+     words itself, the release precedent: publishing the act says the state
+     machine permits the move, not that this caller's parameters will pass. */
+  { id: "conclude", label: "Conclude", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("concluded") },
   /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
      because the store's own guards are type-only on both: any information
      bundle may be cited (cite checks NOT_INFORMATION and nothing about state —

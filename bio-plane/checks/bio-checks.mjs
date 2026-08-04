@@ -111,22 +111,38 @@ export const STATES = {
     legal: ['collected', 'verified', 'retired'],
     edges: { collected: ['verified'], verified: ['retired'], retired: [] }
   },
-  /* The INQUIRY machine (REC-10). `open`, `deferred` and `dismissed` ONLY
-     this turn: `concluded`, `published` and `divided` arrive with REC-13/14/16
-     TOGETHER WITH their entry requirements, so no state is ever legal before
-     its gate exists. `surfaced` is a LEGAL ALIAS of `open` (DATA-MODEL §2.7's
-     recommendation): rewriting it would invent an authored fact and set
-     current_state disagreeing with the document's own state_history (C-4.2),
-     so it stays legal, appears wherever `open` appears, and the drift stays
-     visible. `open` is legal[0] deliberately — setup.mjs derives FIRST_STATE
-     from it. */
+  /* The INQUIRY machine (REC-10, extended by REC-13). `published` and
+     `divided` still wait for REC-14/16, and they arrive TOGETHER WITH their
+     entry requirements, so no state is ever legal before its gate exists —
+     which is why `concluded` lands here in the same turn as
+     checkInquiryExtension's concluded arm below and op=conclude in the store.
+     `surfaced` is a LEGAL ALIAS of `open` (DATA-MODEL §2.7's recommendation):
+     rewriting it would invent an authored fact and set current_state
+     disagreeing with the document's own state_history (C-4.2), so it stays
+     legal, appears wherever `open` appears — INCLUDING the new conclude edge,
+     because refusing to conclude an inquiry merely because it spells its open
+     state the old way would be the trap the alias exists to avoid — and the
+     drift stays visible. `open` is legal[0] deliberately — setup.mjs derives
+     FIRST_STATE from it.
+
+     REC-13's edges, and only these: `open <-> concluded` both ways (a
+     conclusion is revisable — reopening is how a group says the answer did
+     not hold), and `concluded -> deferred|dismissed`, because a conclusion
+     nobody publishes STILL AGES (D-79: a finding that silently stops being
+     worked on is indistinguishable from one never made). Deliberately NOT
+     added: `deferred -> concluded` and `dismissed -> concluded`. Concluding
+     something the group set down means picking it back up first, and the
+     machine already carries deferred/dismissed -> open for exactly that.
+     `concluded -> surfaced` follows the table's own convention, where every
+     existing edge into `open` names the alias beside it. */
   inquiry: {
-    legal: ['open', 'deferred', 'dismissed', 'surfaced'],
+    legal: ['open', 'deferred', 'dismissed', 'surfaced', 'concluded'],
     edges: {
-      open: ['deferred', 'dismissed'],
-      surfaced: ['deferred', 'dismissed'],
+      open: ['deferred', 'dismissed', 'concluded'],
+      surfaced: ['deferred', 'dismissed', 'concluded'],
       deferred: ['open', 'surfaced', 'dismissed'],
-      dismissed: ['open', 'surfaced', 'deferred']
+      dismissed: ['open', 'surfaced', 'deferred'],
+      concluded: ['open', 'surfaced', 'deferred', 'dismissed']
     }
   },
   /* The LEGACY focus machine, kept whole (elevated included) because a
@@ -1295,10 +1311,10 @@ function checkRecheckCoverage(ctx, findings) {
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /* C-2.8, renamed from checkFocusExtension by REC-10. Keeps surfaced_by and
-   disposition_reason exactly as the focus contract had them; the per-state
-   entry requirements (conclusion, falsifier, completeness, division) arrive
-   with REC-13/14/16 TOGETHER WITH their states. REC-11 adds the basis[] leg
-   grammar via checkInquiryBasis below. */
+   disposition_reason exactly as the focus contract had them; REC-11 adds the
+   basis[] leg grammar via checkInquiryBasis below, and REC-13 the CONCLUDED
+   entry requirements. `completeness` (published) and the division fields
+   arrive with REC-14/16, each with its state. */
 function checkInquiryExtension(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
   const fm = ctx.fm;
@@ -1308,6 +1324,36 @@ function checkInquiryExtension(ctx, findings) {
   if (['deferred', 'dismissed'].includes(fm.current_state)) {
     if (typeof fm.disposition_reason !== 'string' || fm.disposition_reason.trim() === '') {
       findings.push(f('C-2.8', 'error', `${fm.current_state} state requires a non-empty disposition_reason`));
+    }
+  }
+  /* REC-13: the `concluded` ENTRY REQUIREMENTS, modelled on C-2.7's `verified`
+     arm above — the state is not a label a document may simply wear, it is a
+     claim the document has to be able to carry.
+     - a CONCLUSION, because `concluded` with nothing concluded is a state
+       change wearing an answer's clothes;
+     - a FALSIFIER, because a finding that names nothing which would overturn
+       it is a narrative rather than a result, and "less narrative" is a
+       constraint on US (CLAUDE.md's stance). This is the requirement the
+       item's negative control removes;
+     - AT LEAST ONE BASIS LEG. DEC-22 is exactly what bounds this: an `open`
+       inquiry may hold a claim with ZERO legs — a STANDING OBJECTIVE, legal
+       and readable and never auto-anything — so the requirement fires HERE
+       and only here. A conclusion resting on nothing is the overclaim this
+       repository's primary threat model is about.
+     An UNDETERMINED conclusion is stated as such in the prose, never faked to
+     pass this gate; what is refused is silence, not uncertainty. */
+  if (fm.current_state === 'concluded') {
+    if (typeof fm.conclusion !== 'string' || fm.conclusion.trim() === '') {
+      findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty conclusion',
+        ['author the conclusion, or move the inquiry back to open']));
+    }
+    if (typeof fm.falsifier !== 'string' || fm.falsifier.trim() === '') {
+      findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty falsifier: a conclusion that names nothing which would overturn it cannot be checked by anyone, including its author',
+        ['state what evidence would falsify this conclusion']));
+    }
+    if (!Array.isArray(fm.basis) || fm.basis.length < 1) {
+      findings.push(f('C-2.8', 'error', 'concluded state requires at least one basis leg: an open inquiry may rest on nothing (a standing objective), a conclusion may not',
+        ['add a basis[] leg naming what the conclusion rests on, and the same target in references[]']));
     }
   }
   checkInquiryBasis(fm, findings);

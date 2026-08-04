@@ -360,6 +360,15 @@ const OPS = {
      Doctrine section 4, C-18.1), and the author stamp below is `token:<class>`
      for a machine, which the store refuses by shape. */
   release:         { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-13: CONCLUDING an inquiry, open -> concluded. Release's shape and
+     release's class list for release's reason — a machine class REACHES it and
+     is refused by the store (MACHINE_CANNOT_CONCLUDE) rather than being absent,
+     fail closed, because "a machine may surface a question and may never author
+     the conclusion" is a rule about who the caller IS and is enforced on the
+     author stamp below. Unlike its state-action siblings it takes a single
+     `target` rather than a selection: one conclusion answers one question, and
+     a bulk conclude would be the checkbox the construct exists to refuse. */
+  conclude:        { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -608,7 +617,14 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
    rather than an edge's, so it takes the same server-side viewer, owner and
    author stamps the edge actions take: a caller that could name the viewer
    could dispose Problems it cannot see. */
-const STATE_ACTIONS = ["dispose", "retire", "release"];
+/* REC-13 adds `conclude`. It belongs in THIS array rather than a fourth list
+   because it needs exactly what the array confers — both SESSION_OPS lists, the
+   server-side viewer stamp and the server-side author stamp — and a second list
+   would be one more place for the two session sets to drift apart, which is the
+   defect class this file keeps naming. It is not selection-backed, so the
+   `owner` stamp below is inert for it (nothing reads it); that costs nothing and
+   is cheaper than a list that exists to omit one parameter. */
+const STATE_ACTIONS = ["dispose", "retire", "release", "conclude"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue"];
@@ -736,6 +752,17 @@ const NEEDS = {
      not by a capability, because capabilities gate sessions and the rule here
      is about who a session IS. */
   release:          "contribute",
+  /* REC-13: concluding rides `contribute` like every other corpus write, and
+     NO FIFTH CAPABILITY TOKEN IS MINTED. CAPABILITIES.md §4 is explicit that a
+     fifth would break the pattern and would need §5 reopened, and the strength
+     of a claim is not a permission question — a group does not hold a
+     "conclude" right distinct from the right to write the record. DEC-30 fixes
+     the rest: no owner gate and no ballot, so any contribute holder may
+     conclude and the act is attributed in the state_history and the Session
+     Log. The named-member requirement is enforced by the store on the author
+     stamp, exactly as release's is, because capabilities gate SESSIONS and the
+     rule here is about who a session IS. */
+  conclude:         "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
