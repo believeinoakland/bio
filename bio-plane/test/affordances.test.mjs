@@ -25,8 +25,9 @@
  *   NON_ACTS with its reason — the totality assertion parses NEEDS out of the
  *   index.mjs source (the capability suite's own technique) and fails NAMING
  *   the op, which is the negative control above. The disposition vocabulary is
- *   asserted identical to the array the store's dispose() actually enforces,
- *   and the action_kind vocabulary identical to the array C-2.10 enforces.
+ *   the ONE array: store.mjs imports it (REC-11's folded chore — the old pin
+ *   of two identical literals is superseded, corrected below), and the
+ *   action_kind vocabulary is identical to the array C-2.10 enforces.
  *
  *   DECLARED, NOT GUESSED. rung is null for every op no document assigns one
  *   (cite above all); the seven sourced rungs are the only ones RUNGS carries.
@@ -104,12 +105,16 @@ t("every published act carries a NEEDS entry (all six are mutating session acts)
   [...ACT_IDS].filter((k) => !needsKeys.includes(k)), []);
 
 console.log("\n--- structural: vocabularies and rungs are the enforcing tables, not copies ---");
-/* The disposition set the store's dispose() actually enforces, read from its
-   source: the write path holds its own array this wave (REC-10's ground), so
-   the two are pinned identical here until they can be unified. */
-const disposeLits = storeSrc.match(/const DISPOSITIONS = \[([^\]]*)\]/);
-t("the published disposition set is EXACTLY the one dispose() enforces",
-  disposeLits && disposeLits[1].match(/"[a-z_]+"/g).map((s) => s.slice(1, -1)), DISPOSITIONS);
+/* Superseded 2026-08-03 (REC-11's folded chore): the old assertion pinned
+   dispose()'s LITERAL copy of the disposition set identical to the published
+   one — right while two arrays existed, wrong once REC-11 flipped the
+   direction and made store.mjs IMPORT the published set. The pin's subject
+   (a second array that could drift) no longer exists by design, so the
+   corrected assertion is structural: the import is present and no literal
+   copy survives anywhere in the write path for it to drift against. */
+t("dispose() enforces the PUBLISHED set: store.mjs imports DISPOSITIONS from affordances.mjs and keeps no literal copy",
+  /import \{ DISPOSITIONS \} from "\.\/affordances\.mjs"/.test(storeSrc)
+    && !/const DISPOSITIONS = \[/.test(storeSrc), true);
 t("the published action_kind vocabulary IS the array C-2.10 enforces (one import, no copy)",
   VOCABULARIES.action_kind, ACTION_KINDS);
 t("action_kind is the seven-value suite",

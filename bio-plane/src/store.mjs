@@ -8,9 +8,17 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             the catalog, so the store's view and the checker's view cannot
             disagree (the same reason this file already imports the catalog's
             parser); the title derivation is C-16's ONE rule, stated once. */
-         normalizeType, LEGACY_TYPE_ALIASES, STATES,
-         deriveInquiryTitle, inquiryQuestionOf } from "../checks/bio-checks.mjs";
+         normalizeType, LEGACY_TYPE_ALIASES, STATES, OBJECT_TYPES,
+         /* REC-11: the basis leg grammar is the catalog's ONE function, run
+            here at the write (the checkGatheringGrammar precedent) and by the
+            checker, so a malformed leg never lands and the two views cannot
+            drift. */
+         deriveInquiryTitle, inquiryQuestionOf, checkInquiryBasis } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
+/* The disposition set is the PUBLISHED one (op=affordances), imported so there
+   is ONE array — the REC-19 landing left a literal copy in dispose() with the
+   suite pinning the two identical; REC-11's folded chore flips the direction. */
+import { DISPOSITIONS } from "./affordances.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
@@ -1623,7 +1631,11 @@ export class Store extends DurableObject {
    * produces a bundle the catalog rejects. Refusing here is the difference
    * between refusing a write and writing something that fails its own checks. */
   dispose({ handle, to, reason = "", viewer = null, owner = null, author = null } = {}) {
-    const DISPOSITIONS = ["deferred", "dismissed"];
+    /* DISPOSITIONS is the PUBLISHED set, imported from affordances.mjs
+       (REC-11's folded chore). This method held its own literal copy from the
+       REC-19 wave's separate claims, with the affordances suite pinning the
+       two arrays identical; the import is what makes that pin unnecessary —
+       one array, no drift to pin against. */
     /* Legal transitions, IMPORTED from the catalog's own table (REC-10). The
        comment here used to claim exactly that over a literal second copy of
        the machine; DATA-MODEL.md §2.7 caught the claim being false, and this
@@ -2739,6 +2751,11 @@ export class Store extends DurableObject {
     if (Array.isArray(pkg.refs) && pkg.refs.length)
       return { ok: false, reason: "REFS_IN_PAYLOAD",
                detail: "references are read from bundle.md frontmatter, not from the promote payload; remove the refs field" };
+    /* REC-11: the same D-21 discipline for basis legs, from birth rather than
+       after a drift has already cost something. The document is authoritative. */
+    if (Array.isArray(pkg.basis) && pkg.basis.length)
+      return { ok: false, reason: "BASIS_IN_PAYLOAD",
+               detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field" };
     if (!bundleId || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
     return this.ctx.storage.transactionSync(() => {
       const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
@@ -2875,6 +2892,54 @@ export class Store extends DurableObject {
                    findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
       }
 
+      /* REC-11: an inquiry's basis[] is validated at the WRITE, before anything
+       * lands — the same reasoning as the gathering grammar above, and by the
+       * CATALOG'S OWN function, so the store's view and the checker's view are
+       * one rule. Shape refusals honour the replay exemption exactly as the
+       * gathering check does (the record's history must be holdable verbatim);
+       * the SELF and CYCLE refusals below do not, because acyclicity is a
+       * structural invariant of the store itself — a faithfully replayed
+       * history was acyclic when it was written, so an honest replay never
+       * meets them.
+       */
+      const isInquiry = normalizeType(meta.object_type) === "inquiry";
+      const basisMd = files.find((f) => f.path === "bundle.md");
+      const basisFm = isInquiry && basisMd && typeof basisMd.text === "string"
+        ? parseFrontmatter(basisMd.text).data : null;
+      const basisLegs = basisFm && Array.isArray(basisFm.basis)
+        ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
+      if (basisFm && basisFm.basis !== undefined && basisFm.basis !== null && !pkg.replay) {
+        const bf = [];
+        checkInquiryBasis(basisFm, bf);
+        const errs = bf.filter((x) => x.severity === "error");
+        if (errs.length)
+          return { ok: false, reason: "BASIS_REFUSED",
+                   findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
+      }
+      if (basisLegs.length) {
+        /* R3: the basis graph is a DAG, enforced HERE, at the write that would
+         * close the cycle — before REC-11 the record's only acyclicity
+         * protection was a side effect of op=cite refusing non-information
+         * members, and this table is what removes that refusal's reach. The
+         * refusal NAMES THE PATH it found, because "cycle refused" without the
+         * path leaves the member to re-derive the walk the store just did.
+         */
+        for (const leg of basisLegs) {
+          if (leg.target === bundleId)
+            return { ok: false, reason: "SELF_BASIS", path: [bundleId, bundleId],
+                     detail: `${bundleId} cannot rest on itself: a question is not evidence for its own answer` };
+        }
+        const inqTargets = [...new Set(basisLegs
+          .filter((l) => typeof l.target === "string"
+                      && normalizeType(OBJECT_TYPES[l.target.split("-")[0]]) === "inquiry")
+          .map((l) => l.target))];
+        const cycle = this.#basisCyclePath(bundleId, inqTargets);
+        if (cycle)
+          return { ok: false, reason: "BASIS_CYCLE", path: cycle,
+                   detail: `this write would close a cycle: ${cycle.join(" -> ")}. `
+                         + `An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.` };
+      }
+
       // history is append-only: snapshot the outgoing live state first
       /* A creation records a manifest entry with the empty-string SHA as its
          base and no snapshot, because there is no prior state to snapshot.
@@ -2982,6 +3047,36 @@ export class Store extends DurableObject {
         if (!t || typeof t !== "object" || typeof t.target !== "string") continue;
         this.sql.exec(`INSERT OR REPLACE INTO refs (bundle_id,target_id,kind) VALUES (?,?,?)`,
           bundleId, t.target, typeof t.rel === "string" ? t.rel : "");
+      }
+
+      /* REC-11: inquiry_basis, projected WHOLE from basis[] in this SAME
+         transaction as refs and by the same delete-then-insert discipline, so
+         it is a projection of the document and never a second place to state
+         it (D-21). The legs were validated above, before anything landed;
+         target_type is denormalised from the id prefix through the catalog's
+         own map so the walk never re-derives it. ord is the leg's position in
+         basis[], which is what makes a leg ADDRESSABLE and lets one document
+         be cited for two legs (D4 — the reason refs could not carry this). */
+      this.sql.exec(`DELETE FROM inquiry_basis WHERE bundle_id=?`, bundleId);
+      if (isInquiry) {
+        for (let i = 0; i < basisLegs.length; i++) {
+          const leg = basisLegs[i];
+          if (typeof leg.target !== "string") continue; // replay of a malformed shape: unprojectable
+          this.sql.exec(
+            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at)
+             VALUES (?,?,?,?,?,?,?,?,?,?)`,
+            bundleId, i, leg.target,
+            /* '' rather than NULL on a replayed malformed shape, mirroring the
+               refs projection's kind fallback: the columns are NOT NULL. */
+            normalizeType(OBJECT_TYPES[leg.target.split("-")[0]]) ?? "",
+            typeof leg.role === "string" ? leg.role : "",
+            leg.grade ?? null, leg.grade_axis ?? null, leg.grade_source ?? null,
+            typeof leg.note === "string" ? leg.note : null,
+            /* The document's own authored date (required on a hunch), never the
+               server's clock: delete-then-insert re-projects every promotion,
+               so a server stamp here would silently re-date every leg. */
+            leg.date != null ? String(leg.date) : null);
+        }
       }
 
       for (const c of register)
@@ -4510,8 +4605,9 @@ export class Store extends DurableObject {
       detail: "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')" };
     /* deferred (parked, returnable) or dismissed (declined). Both age the proposal out of the open
        feed. Elevating/adopting is a DIFFERENT act (op=promote authors a focus) and is not a
-       disposition here — the same line op=dispose draws between a disposition and elevation. */
-    const DISPOSITIONS = ["deferred", "dismissed"];
+       disposition here — the same line op=dispose draws between a disposition and elevation.
+       The vocabulary is the PUBLISHED set imported from affordances.mjs (REC-11's folded
+       chore): one array for every disposition surface, so none can drift. */
     const st = typeof to === "string" ? to.trim() : (typeof state === "string" ? state.trim() : "");
     if (!DISPOSITIONS.includes(st))
       return { ok: false, reason: "NOT_A_DISPOSITION", to: st || null, dispositions: DISPOSITIONS,
@@ -4646,6 +4742,63 @@ export class Store extends DurableObject {
     };
   }
 
+  /* REC-11 / R3: would writing edges bundleId -> each of `targets` close a
+   * cycle in the basis graph? The graph is the inquiry-typed rows of
+   * inquiry_basis; by induction every prior write kept it acyclic, so a cycle
+   * through the NEW edges exists iff bundleId is reachable FROM one of the
+   * targets along stored edges. Depth-first with a visited set, so the walk is
+   * bounded by the store's edge count and needs no depth bound here (REC-12's
+   * read-time walk carries one because IT must answer under a budget; a write
+   * guard over an acyclic store terminates by construction). bundleId's own
+   * outgoing edges are irrelevant: this promotion REPLACES them, and the walk
+   * stops the moment it reaches bundleId anyway.
+   *
+   * Returns the full cycle path [bundleId, target, ..., bundleId] for the
+   * refusal to name, or null. */
+  #basisCyclePath(bundleId, targets) {
+    for (const t of targets) {
+      const path = [bundleId, t];
+      const found = this.#basisReach(t, bundleId, new Set([t]), path);
+      if (found) return found;
+    }
+    return null;
+  }
+  #basisReach(from, goal, seen, path) {
+    const next = this.#rows(
+      `SELECT target_id FROM inquiry_basis WHERE bundle_id=? AND target_type='inquiry' ORDER BY ord`, from);
+    for (const r of next) {
+      if (r.target_id === goal) return [...path, goal];
+      if (seen.has(r.target_id)) continue;
+      seen.add(r.target_id);
+      const found = this.#basisReach(r.target_id, goal, seen, [...path, r.target_id]);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  /* REC-11: read a bundle's basis legs back, in document order — the ord that
+     makes a leg addressable. A read of the PROJECTION; bundle.md stays the
+     authority. */
+  basisFor(bundleId) {
+    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "basis requires ?id=" };
+    const legs = this.#rows(
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at
+       FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, bundleId);
+    return { ok: true, bundleId, legs };
+  }
+
+  /* REC-11: "which inquiries rest on this document" — E2's question and
+     REC-17's re-evaluation obligation — as ONE indexed lookup on
+     inquiry_basis_target, never a graph walk. Answers for an INFO- target and
+     for an INQ- target alike, because a leg to an inquiry is the same edge. */
+  restingOn(targetId) {
+    if (!targetId) return { ok: false, reason: "NO_ID", detail: "restson requires ?id=" };
+    const dependents = this.#rows(
+      `SELECT bundle_id, ord, role, grade, grade_axis, grade_source
+       FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, targetId);
+    return { ok: true, targetId, dependents };
+  }
+
   /* Eviction. The store is append-only by doctrine, so removal is deliberate,
      never implicit, and admin-only at the control plane. Two modes: one bundle
      with its whole lineage, or everything.
@@ -4687,9 +4840,18 @@ export class Store extends DurableObject {
        purge takes them all. Leaving it out would let a whole-store purge report scope ALL while a
        discharge survived, the D-113 silent-leftover; hygiene.test.mjs holds this list against
        schema.mjs. */
+    /* REC-11: `inquiry_basis` is DERIVED from the corpus — a projection of each
+       inquiry's basis[] frontmatter, exactly as refs is of references[] — and
+       carries bundle_id, so it clears in BOTH arms via this list. Leaving it out
+       would let a whole-store purge report scope ALL while an inquiry's legs
+       survived, the D-113 silent-leftover; hygiene.test.mjs holds this list
+       against schema.mjs. A per-bundle purge clears only the purged inquiry's
+       OWN legs; legs elsewhere that TARGET it stay, honestly unresolvable, the
+       same way refs to a purged bundle read as C-6.2 findings rather than
+       silently vanishing. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
                     "readings", "reading_refs", "resolutions", "progression_instances",
-                    "progression_exceptions"];
+                    "progression_exceptions", "inquiry_basis"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -7553,6 +7715,14 @@ export class Store extends DurableObject {
            parts so ratification can re-fetch them; `recordreuseverdicts` commits
            the outcomes the control plane produced; `reuseverdicts` reads them
            (also surfacing the free posthoc verdicts by source_capture). */
+        /* REC-11: the basis projection, read back. `basis` is a bundle's legs
+           in document order; `restson` is the reverse index — which inquiries
+           rest on this document (or on this inquiry), ONE indexed lookup on
+           inquiry_basis_target. DO-internal reads for the battery and for
+           REC-12's derivation; E2/REC-17 give them their control-plane
+           surfaces. */
+        basis: () => this.basisFor(url.searchParams.get("id")),
+        restson: () => this.restingOn(url.searchParams.get("id")),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),
