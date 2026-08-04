@@ -950,7 +950,12 @@ const REL_VOCAB = ['cites', 'relates_to', 'elevated_into', 'initiates', 'derived
 const SOURCE_ASSERTED_RELS = ['links_to'];
 const EDGE_STATUS = ['proposed', 'confirmed', 'severed'];
 
-function sectionText(body, heading) {
+/* Exported for REC-22: the public read path renders `## Conclusion`,
+   `## What Would Falsify This` and `## What This Excludes` out of the published
+   bytes, and it must slice them exactly the way the catalog does. One parser,
+   because a reader and a gate disagreeing about where a section ends is a
+   disagreement about what the group published. */
+export function sectionText(body, heading) {
   const idx = body.indexOf(heading);
   if (idx < 0) return null;
   const next = body.indexOf('\n## ', idx + 1);

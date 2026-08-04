@@ -695,6 +695,21 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "published it, which is the deliberate act of making it public; gating it would gate the thing "
       + "the doorbell exists to serve. Its sibling op=excludedby is gated precisely BECAUSE it does join "
       + "the live table — the difference between the two is the whole test.",
+    /* REC-22's two, classified by REC-22 and NOT by this sweep's author — the
+       sweep's own instruction was that the published-projection class must not
+       get gated when it lands, and these are the ops it was written about. */
+    publishedcase: "PUBLISHED PROJECTION, and credential-free BY DESIGN (REC-22). It reads "
+      + "published_bundles, published_edges and the PUBLISHED bucket and NOTHING else — asserted "
+      + "structurally in publishedcase.test.mjs block 7: no join to `bundles`, no current_state, and no "
+      + "viewer parameter, because there is no working material for a predicate to filter. A SERVE edge is "
+      + "admitted only when its target is itself published; a division's parent and siblings are NAMED and "
+      + "never served (R4), and a name-only edge carries an id and a kind and nothing else. Gating this "
+      + "would gate the thing the doorbell exists to serve.",
+    publishedbytes: "PUBLISHED PROJECTION (REC-22): streams from the published bucket if and ONLY if a "
+      + "published_shas row names the hash, and answers BY HASH and never by path, so the corpus cannot "
+      + "be walked. A sha that was never ratified 404s identically to one that never existed. The guard is "
+      + "not redundant with the bucket boundary and the suite proves it: an object planted in the published "
+      + "bucket that no published_shas row names is still refused.",
     /* names no bundle: there is no identity in the answer to gate */
     stats: "COUNTS ONLY, an operator surface. A count that names nothing is not identity — and the "
       + "counts REC-25 did gate were the TOTALS OF AN ENUMERATION, where a total bigger than the "

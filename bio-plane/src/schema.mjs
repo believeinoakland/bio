@@ -1200,6 +1200,48 @@ CREATE TABLE IF NOT EXISTS group_strength_bar (
   author     TEXT NOT NULL,
   at         TEXT NOT NULL
 );
+-- REC-22 / R4: the PUBLISHED GRAPH. One row per edge OUT of a published
+-- bundle, written by the publishing act (Store.publish, the committer op=ratify
+-- calls) from the RATIFIED BYTES' own references[] and division disclosure --
+-- never from a caller and never from the working refs table, which changes
+-- under the published record every time somebody promotes.
+--
+-- TWO DISCLOSURE CLASSES, and the distinction is the whole table:
+--
+--   serve  the target is ITSELF published, so the public surface may hand over
+--          its edition, its title and its bundle_sha, and a reader can fetch
+--          those bytes by hash. Restricted to published targets, which is what
+--          stops the published graph naming working material.
+--   name   the id may be NAMED and nothing more. R4's disclosure obligation --
+--          "a published child names its parent and its siblings" -- lands here,
+--          and it had to: a divided parent is TERMINAL and can never be
+--          published, and a sibling may not be, so BUILD-ORDER's original
+--          "restricted to targets that are themselves published" made R4's
+--          disclosure impossible on the exact surface R4 was written for
+--          (RECONCILED R4-e/R4-g). A name row carries an id and nothing else --
+--          no title, no state, no sha, nothing fetchable.
+--
+-- The published column is the instant the edge was published, exactly as in
+-- published_shas. The PK is (from_bundle, to_bundle, kind) as specified, so a
+-- second edition re-asserting the same edge is idempotent rather than doubled;
+-- the class of an existing row is refreshed on re-publication, because whether
+-- a target is published is a fact about the record and not about the edition.
+--
+-- DERIVED, and therefore in BOTH arms of op=purge (D-113) unlike its published
+-- siblings: every row here is recomputable from bytes that answer forever
+-- (published_shas keeps the case's own bundle.md, which carries references[]
+-- and the division disclosure inside the hash the group signed), so a purge
+-- that cleared it destroys an index and never a fact. published_bundles and
+-- published_shas are exempt precisely because nothing else holds what they hold.
+CREATE TABLE IF NOT EXISTS published_edges (
+  from_bundle TEXT NOT NULL,
+  to_bundle   TEXT NOT NULL,
+  kind        TEXT NOT NULL,
+  disclosure  TEXT NOT NULL,
+  published   TEXT NOT NULL,
+  PRIMARY KEY (from_bundle, to_bundle, kind)
+);
+CREATE INDEX IF NOT EXISTS published_edges_to ON published_edges(to_bundle);
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
