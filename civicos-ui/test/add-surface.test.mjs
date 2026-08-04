@@ -18,11 +18,41 @@
  *   3. A capture that cannot be finished is never presented as a capture: the
  *      member is asked, and recording it complete is not among the options.
  *   4. Writing is capability-shaped. A credential that cannot write gets no
- *      form, rather than a form that fails on submit.
+ *      form, rather than a form that fails on submit — and a type it cannot
+ *      write, or that nothing here can write honestly, is not in the list.
+ *
+ * NEGATIVE CONTROL: six, all RUN 2026-08-04 (UI-15), each restored
+ * byte-identical afterwards and the harness re-run green (113 assertions).
+ *
+ *  (a) THE ITEM'S OWN CONTROL. Delete the `const ADD_TICKS = 8;` declaration in
+ *      civicos-ui/app.html (beside `ADD_BUSY`, ~:9411) -> `ReferenceError:
+ *      ADD_TICKS is not defined at Object.addCapture (:8985)`, thrown out of the
+ *      driven loop and killing the process. That is D-132 verbatim: the raw
+ *      error every member got through addGo's catch on every ceilinged capture
+ *      from 2026-07-30 until this item, and it proves this file reaches the
+ *      ceiling path rather than calling `addIncomplete` directly the way the
+ *      superseded version did. The runtime arm is ordered BEFORE the static
+ *      ADD_TICKS line-count assertions for exactly this reason — with the order
+ *      reversed the control trips a string check and never reaches the code.
+ *  (b) VACUITY control on the same arm: make op=acquire answer `complete: true`
+ *      on the first pass -> `TypeError: Cannot read properties of undefined` at
+ *      the frame read, i.e. the A4 assertions fail for ABSENCE of the frame
+ *      rather than having passed on a frame that was always there.
+ *  (c) F-7: make the rail's Add entry unconditional again -> FAIL "a read-only
+ *      credential is offered no Add entry in the rail at all".
+ *  (d) F-6: have `addTypesFor` return ADD_TYPES unfiltered -> FAIL "a member
+ *      without create_projects is not offered the project kind".
+ *  (e) the amendment, app.html half: put `action` back into ADD_TYPES -> FAIL
+ *      "the Add surface offers no `action` kind ...". (This is the assertion
+ *      UI-19 deliberately flips back when it ships the counterparty pair.)
+ *  (f) the amendment, plane half: put the Action option back into setup.mjs's
+ *      `#n-type` -> FAIL "the plane's own setup page does not offer it either".
  */
 import { appScript } from "./extract.mjs";
+import fs from "fs";
 import vm from "vm";
 import { createHash, webcrypto } from "crypto";
+import { SETUP_HTML } from "../../bio-plane/src/setup.mjs";
 import { STATES, HEADINGS, OBJECT_TYPES, normalizeType } from "../../bio-plane/checks/bio-checks.mjs";
 import { checkBundle } from "../../bio-plane/checks/bio-checks.mjs";
 
@@ -68,8 +98,10 @@ ctx.globalThis = ctx;
 vm.createContext(ctx);
 vm.runInContext(appScript() + `;globalThis.__X={mdFor,docFiles,registerFor,schemaFor,reviseText,acquireWhy,
   FIRST_STATE,HEADINGS,SCHEMA_OF,PREFIX,ADD_TYPES,typeLabel,renderAdd,addValidate,addIncomplete,
-  canContribute,heldMatch,PLANE};`, ctx);
+  canContribute,canDo,addTypesFor,addCapture,buildRail,heldMatch,PLANE};`, ctx);
 const G = ctx.__X;
+const SRC = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
+const lines = (re) => SRC.split("\n").filter(l => re.test(l)).length;
 
 /* ---- 2. the tables are the catalog's ---- */
 const catalogFirst = Object.fromEntries(Object.entries(STATES).map(([t, s]) => [t, s.legal[0]]));
@@ -197,18 +229,88 @@ const twice = G.reviseText(revised, "ruth", "2026-07-31T09:00:00Z", "Again");
 ok("a second revision does not remove the first's entry",
    /Continued an unfinished capture by bob/.test(twice) && /Again by ruth/.test(twice));
 
-/* ---- 3. an unfinished capture is not a question ----
-   RULED by Bob: these are technical complications and the workflow exists to keep
-   members out of them. An earlier version of this surface put the subrequest
-   ceiling to the member as a choice between recording an unfinished capture and
-   writing nothing. That asked somebody researching a sewer fund to arbitrate a
-   platform limit, so it is gone: the capture is recorded, honestly labelled on its
-   own page, and finished later. */
-const inc = await G.addIncomplete({ document: document_, snapshot: { outstanding: 4, complete: false } }, 4, 8);
-ok("an unfinished capture proceeds without asking", inc.ok === true);
-ok("carrying the document that WAS captured whole", inc.doc === document_);
-ok("and what is still missing, so the page can say so", inc.partial.outstanding === 4);
-ok("no dialog was raised at all", !els.has("#dlg") || !/not finished/i.test(els.get("#dlg").innerHTML));
+/* ---- 3. the ceiling: driven, then the ONE choice (D-132 · SB-EVIDENCE A4) ----
+
+   CORRECTED 2026-08-04 (UI-15), never exempted. This section asserted the
+   OPPOSITE until today — "an unfinished capture proceeds without asking", "no
+   dialog was raised at all" — on the 2026-07-30 ruling that deleted the frame.
+   Why the old assertions were wrong is not that the ruling was: the frame that
+   ruling saw explained the platform limit to the member and asked them to
+   arbitrate it, and it deserved to go. What replaced it decided, on the
+   member's behalf, that a capture missing part of itself may enter the record —
+   and that is not a logistics question, it is the record claiming to hold
+   something nobody chose to create. The restored frame classifies the
+   complication and never names it (the vocabulary guard below is asserted over
+   the frame's own HTML, not just the form's) and puts only the record question.
+
+   And the reason the old assertions could stand unchallenged is D-132 itself:
+   they called `addIncomplete` directly. NOTHING in this file had ever reached
+   it the way a member does, through `addCapture`'s continuation loop — which is
+   exactly where `ADD_TICKS` was undeclared and where every real ceilinged
+   capture died. This arm drives the loop. */
+/* The RUNTIME arm runs FIRST, deliberately, and the static counts follow it.
+   Under the negative control the point is to see the raw `ReferenceError` come
+   out of `addCapture` — the member's own failure — rather than a tidy static
+   assertion tripping first and hiding whether this file reaches the path at all.
+   That ordering IS the control's evidence.
+
+   op=acquire answers incomplete WITH a continuation every time, so the loop
+   stops on the surface's own bound rather than on the source running out of
+   work: what is under test is the ceiling path, not a short page. */
+let acquires = 0;
+ctx.recPost = async (op) => {
+  if (op !== "acquire") return { ok: true, result: {} };
+  acquires++;
+  return { document: document_,
+           snapshot: { complete: false, outstanding: 9, continuation: { session: "s-" + acquires } } };
+};
+const settle = () => new Promise(r => setTimeout(r, 5));
+const pending = G.addCapture(document_.locator, document_.authority, true);
+await settle();
+const frame = els.get("#dlg").innerHTML;
+ok("the capture is DRIVEN before anything is asked", acquires === 8);
+ok("and the member is asked only once it cannot be finished", /cannot finish collecting/i.test(frame));
+ok("the document that WAS captured whole is named as complete", /document itself is complete/i.test(frame));
+ok("the count of what is outstanding is stated", /9 of the files/.test(frame));
+ok("the problem is claimed as ours, not handed over as theirs", /ours to solve, not yours/i.test(frame));
+ok("and what is asked is what the RECORD should say", /what the record\s+should say/i.test(frame));
+ok("option one records it as the unfinished capture it is",
+   /Record it as the unfinished capture it is/.test(frame));
+ok("option two writes nothing, and says nothing is lost either way",
+   /Write nothing/.test(frame) && /nothing is lost/i.test(frame));
+ok("and the third option is refused IN WORDS, not merely omitted",
+   frame.includes("Recording it as complete is not on offer."));
+ok("exactly two controls are offered",
+   (frame.match(/<button/g) || []).length === 2);
+/* The vocabulary guard over the FRAME. Constraint 3: the complication is
+   classified and never named, so no explanation of the platform can leak back
+   in here as a courtesy. */
+for (const word of ["subrequest", "runtime", "manifest", "register", "corroboration", "sha256",
+                    "content_hash", "content-addressed", "op=", "C-18", "Durable", "ceiling"])
+  ok(`the ceiling frame does not say "${word}"`, !frame.includes(word));
+
+const chose = await (async () => { els.get("#ai-yes").click(); return pending; })();
+ok("choosing to record it yields the capture, marked unfinished", chose.ok === true);
+ok("carrying the document that WAS captured whole", chose.doc === document_);
+ok("and what is still missing, so the page can say so", chose.partial.outstanding === 9);
+ok("the frame is dismissed once answered", els.get("#dlg").innerHTML === "");
+
+acquires = 0;
+const pending2 = G.addCapture(document_.locator, document_.authority, true);
+await settle();
+const nothing = await (async () => { els.get("#ai-no").click(); return pending2; })();
+ok("choosing to write nothing does NOT return a capture", nothing.ok === false);
+ok("and nothing is carried forward to be written", nothing.doc === undefined);
+ok("and the member is told nothing was written and nothing lost",
+   /Nothing was written/.test(nothing.why) && /nothing was lost/i.test(nothing.why));
+
+/* The static half of D-132/D-133, over this file's own source, so a future edit
+   that reintroduces either defect fails HERE rather than on a member's screen. */
+ok("ADD_TICKS is declared, and exactly once", lines(/^\s*const ADD_TICKS\s*=/) === 1);
+ok("and every line that mentions it is that declaration or its one use (D-132/D-133)",
+   lines(/ADD_TICKS/) === 2);
+ok("the two functions D-133 found duplicated are each declared exactly once now",
+   lines(/^async function heldMatch\(/) === 1 && lines(/^async function addCapture\(/) === 1);
 
 /* ---- 4. writing is capability-shaped ---- */
 G.PLANE.session = null; G.PLANE.me = { session: false, capabilities: [] };
@@ -218,11 +320,49 @@ const noForm = els.get("#content").innerHTML;
 ok("and gets no form at all rather than one that fails on submit",
    !/id="a-title"/.test(noForm) && /cannot write to it/i.test(noForm));
 ok("it is told what it would need", /contribute/.test(noForm));
+/* F-7 (UI-15): the rail's Add entry is ABSENT for a credential that cannot
+   write, rather than a prominent button whose page is an apology for it. */
+G.buildRail({ capabilities: [] });
+ok("a read-only credential is offered no Add entry in the rail at all",
+   !/Add something new/.test(els.get("#rail").innerHTML));
+ok("and still gets the rest of the rail", /data-go="record"/.test(els.get("#rail").innerHTML));
+G.buildRail({ capabilities: ["contribute"] });
+ok("a member holding contribute gets it", /Add something new/.test(els.get("#rail").innerHTML));
+
 G.PLANE.session = "s"; G.PLANE.me = { session: true, capabilities: ["contribute"] };
 ok("a member holding contribute can", G.canContribute() === true);
 await G.renderAdd();
 const form = els.get("#content").innerHTML;
 ok("and gets the form", /id="a-title"/.test(form) && /id="a-loc"/.test(form));
+
+/* F-6 (UI-15): `project` was offered to every contribute holder and refused at
+   submit by the plane's capability gate. Membership Architecture v2 section 5:
+   absent, not present-and-refused — the shape setup.mjs has had since :463. */
+ok("a member without create_projects is not offered the project kind",
+   !/value="project"/.test(form));
+ok("and is still offered the kinds they can write",
+   /value="information"/.test(form) && /value="inquiry"/.test(form));
+G.PLANE.me = { session: true, capabilities: ["contribute", "create_projects"] };
+await G.renderAdd();
+const formP = els.get("#content").innerHTML;
+ok("a member WITH create_projects is offered it", /value="project"/.test(formP));
+ok("the surface reads the capability from whoami rather than keeping its own copy",
+   G.canDo("create_projects") === true && G.addTypesFor().some(([v]) => v === "project"));
+G.PLANE.me = { session: true, capabilities: ["contribute"] };
+
+/* The amendment REC-23 forced (UI-15, 2026-08-04): `action` is ABSENT from BOTH
+   intake surfaces until UI-19 gives the member the counterparty pair. REC-23's
+   honest gate leaves a fresh action exactly-one-error at C-2.10, so offering the
+   kind is present-and-refused — the same class as F-6 four lines up. This is the
+   assertion UI-19 flips back when it restores the option. */
+ok("the Add surface offers no `action` kind while nothing here can author a counterparty",
+   !G.ADD_TYPES.some(([v]) => v === "action"));
+await G.renderAdd();
+ok("and none reaches the rendered form", !/value="action"/.test(els.get("#content").innerHTML));
+ok("the plane's own setup page does not offer it either — both intake surfaces or neither",
+   !/<option value="action"/.test(SETUP_HTML));
+ok("while the writer keeps its action arm, because actions already in the record are still revised",
+   /action_kind: other/.test(G.mdFor("ACT-2026-0001-x", "action", "planned", "T", "B", NOW)));
 ok("the grade is stated before anything is written, and stated as B",
    /Grade B/.test(form) && /hashed at receipt/.test(form));
 ok("with Grade A named as what this surface cannot claim", /Grade A needs a chain-of-custody/.test(form));
