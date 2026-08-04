@@ -41,6 +41,15 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             a local copy of the words — the MAP RULE — so a frequency the catalog
             gains cannot fall through to a default interval unnoticed. */
          MONITOR_FREQ,
+         /* REC-24: the ACTION half of the catalog, imported for the same reason
+            the basis grammar is — the store runs the catalog's own functions at
+            the write, so a malformed action basis or correspondence entry
+            neither lands nor audits clean. `consequenceState` is DEC-14's
+            outcome/impact line, computed by one function so the write path, the
+            read and the gate cannot disagree about whether a claim is proven;
+            `respondsToEdgeFindings` governs the relation REC-24 (g) produces. */
+         ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
+         correspondenceFindings, respondsToEdgeFindings, consequenceState,
          divisionDisclosureFindings } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -306,6 +315,29 @@ export class Store extends DurableObject {
          would serve no seek anybody makes. REC-12's state columns are
          unindexed for the same reason and its comment says so. */
       ["bundles", "inquiry_superseded_by", "TEXT"],
+      /* REC-24 (e): the ACTION's six projection columns — the first projection
+         columns in this table whose subject is the outward ask rather than the
+         question. Additive and nullable exactly like every column above: a
+         bundle that is not an action simply has none, and an action promoted
+         before these existed has none until its next promotion re-derives them.
+         action_kind / action_risk_tier / action_counterparty_state /
+         action_resolution are pure facts about the document, cached here so the
+         Actions rail can filter without opening every bundle.
+         THE TWO CLOCK COLUMNS ARE A CACHE AND THE READ IS THE AUTHORITY, which
+         is REC-12's rule about a stored strength said about a stored deadline.
+         action_clock_next is the earliest PENDING clock date, which is a fact
+         about the bytes and does not rot. action_clock_overdue is that date
+         compared against the clock AT PROMOTION TIME, and it goes stale the
+         moment the wall advances past it while nobody promotes — so
+         projection() derives overdue ON READ against the injectable clock
+         (REC-8's shape) and this column exists for the FILTER, never for the
+         answer a reader is shown. */
+      ["bundles", "action_kind", "TEXT"],
+      ["bundles", "action_risk_tier", "INTEGER"],
+      ["bundles", "action_counterparty_state", "TEXT"],
+      ["bundles", "action_resolution", "TEXT"],
+      ["bundles", "action_clock_next", "TEXT"],
+      ["bundles", "action_clock_overdue", "INTEGER"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -344,9 +376,17 @@ export class Store extends DurableObject {
        ask to be monitored" on EVERY reconcile of the one alarm, which without an
        index is a full scan of the corpus on a question whose answer is a small
        subset of it. */
+    /* REC-24 adds three of the six action columns: "every open CPRA request",
+       "every action awaiting a response", "everything overdue" are the Actions
+       rail's own three seeks (P-52), and a filter on an unindexed column is a
+       full scan whose cost grows with the corpus. The other three
+       (action_risk_tier, action_counterparty_state, action_clock_next) are read
+       WITH a row rather than sought across the corpus, so they are unindexed for
+       REC-12's stated reason: an index nobody seeks on is cost with no reader. */
     for (const c of ["schema_id", "produced_mode", "source_authority", "source_status",
                      "monitor_enabled", "monitor_frequency", "reeval_flag", "annotations_open",
-                     "inquiry_capture_strength", "inquiry_connection_strength"])
+                     "inquiry_capture_strength", "inquiry_connection_strength",
+                     "action_kind", "action_resolution", "action_clock_overdue"])
       this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
     this.sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles(fts_id)`);
 
@@ -544,13 +584,22 @@ export class Store extends DurableObject {
      document says. Returns nulls rather than guesses when frontmatter does not
      parse: a wrong value in a filterable column is worse than an absent one,
      because a filter silently under-reports and the member cannot tell. */
-  static projectionOf(bundleMdText) {
+  /* REC-24 (e)/(f): `nowMs` is threaded in for ONE column, action_clock_overdue,
+     and it is threaded rather than read from a wall clock here because this
+     function is static and pure and must stay that way — the caller
+     (#writeProjection) passes the store's own injectable clock, so a suite that
+     pins BIO_NOW_MS pins the cached flag too. The column is still a CACHE: see
+     the ALTER list above, and projection() derives the answer a reader sees. */
+  static projectionOf(bundleMdText, nowMs = Date.now()) {
     const empty = {
       schema_id: null, produced_mode: null, capability_tier: null,
       source_locator: null, source_authority: null, source_retrieved: null,
       source_status: null, content_hash: null, monitor_enabled: null,
       monitor_frequency: null, monitor_last_checked: null, annotations_open: null,
-      reeval_flag: null, reeval_since: null, reeval_source: null, fm_json: null,
+      reeval_flag: null, reeval_since: null, reeval_source: null,
+      action_kind: null, action_risk_tier: null, action_counterparty_state: null,
+      action_resolution: null, action_clock_next: null, action_clock_overdue: null,
+      fm_json: null,
     };
     if (typeof bundleMdText !== "string") return empty;
     let fm = null;
@@ -584,21 +633,60 @@ export class Store extends DurableObject {
       reeval_flag: rpObj ? bool(rp.flag) : bool(rp),
       reeval_since: rpObj ? s(rp.since) : null,
       reeval_source: rpObj ? s(rp.source) : null,
+      /* REC-24 (e). Only an ACTION projects these; every other type leaves them
+         NULL, which is what "this bundle is not an action" says in a column. */
+      action_kind: fm.object_type === "action" ? s(fm.action_kind) : null,
+      action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier) : null,
+      action_counterparty_state: fm.object_type === "action" ? s(nested("counterparty", "state")) : null,
+      action_resolution: fm.object_type === "action" ? s(fm.resolution) : null,
+      action_clock_next: fm.object_type === "action" ? Store.actionClockNext(fm) : null,
+      action_clock_overdue: fm.object_type === "action"
+        ? (Store.actionOverdue(fm, nowMs) ? 1 : 0) : null,
       fm_json: JSON.stringify(fm),
     };
+  }
+
+  /* REC-24 (f): the clock, read from the DOCUMENT and never from a second
+     store. The next PENDING deadline is the earliest date on a clock[] entry
+     still marked pending — a `met` or `waived` entry has been answered and a
+     date already recorded `overdue` is not the NEXT one. Pure over the
+     frontmatter, so the projection writer, the read-time derivation and any
+     later consumer compute one number by construction rather than by agreement. */
+  static actionClockNext(fm) {
+    const pending = (Array.isArray(fm?.clock) ? fm.clock : [])
+      .filter((e) => e && typeof e === "object" && e.status === "pending"
+                  && typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date))
+      .map((e) => e.date)
+      .sort();
+    return pending.length ? pending[0] : null;
+  }
+
+  /* Overdue is DERIVED, here, from the same two facts every caller has: the
+     document's own pending dates and an instant. Never stored as the answer.
+     A date is overdue when the day AFTER it has begun — a deadline of the 14th
+     is met by anything on the 14th — so the comparison is against the end of
+     that calendar day in UTC, which is the same convention C-11.1's
+     "silently past-due" arm uses (`e.date < today`). */
+  static actionOverdue(fm, nowMs) {
+    const next = Store.actionClockNext(fm);
+    if (!next) return false;
+    const today = new Date(Number(nowMs)).toISOString().slice(0, 10);
+    return next < today;
   }
 
   static PROJECTION_COLS = [
     "schema_id", "produced_mode", "capability_tier", "source_locator",
     "source_authority", "source_retrieved", "source_status", "content_hash",
     "monitor_enabled", "monitor_frequency", "monitor_last_checked",
-    "annotations_open", "reeval_flag", "reeval_since", "reeval_source", "fm_json",
+    "annotations_open", "reeval_flag", "reeval_since", "reeval_source",
+    "action_kind", "action_risk_tier", "action_counterparty_state",
+    "action_resolution", "action_clock_next", "action_clock_overdue", "fm_json",
   ];
 
   /* Write the projection for one bundle. Called inside promote's transaction, so
      the projection can never be a revision behind the document. */
   #writeProjection(bundleId, bundleMdText) {
-    const p = Store.projectionOf(bundleMdText);
+    const p = Store.projectionOf(bundleMdText, this.#nowMs(null));
     const set = Store.PROJECTION_COLS.map((c) => `${c}=?`).join(", ");
     this.sql.exec(
       `UPDATE bundles SET ${set} WHERE bundle_id=?`,
@@ -715,19 +803,85 @@ export class Store extends DurableObject {
    *  that reaches this read without a server-stamped identity sees nothing
    *  rather than everything. An invisible bundle answers EXACTLY as an absent
    *  one (null), because "hidden" said out loud is half the leak. */
-  projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = 200, viewer = null } = {}) {
+  projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = 200, viewer = null,
+               nowMs = null } = {}) {
     const cols = ["b.bundle_id", "b.object_type", "b.group_id", "b.title", "b.current_state",
                   "b.prior_state", "b.created", "b.last_updated", "b.criticality",
                   "b.bundle_sha", ...Store.PROJECTION_COLS.map((c) => "b." + c)].join(", ");
     const gate = viewerPredicate(viewer);
-    if (bundleId) return this.#one(
-      `SELECT ${cols} FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, bundleId, ...gate.args);
+    if (bundleId) {
+      const row = this.#one(
+        `SELECT ${cols} FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, bundleId, ...gate.args);
+      /* REC-24 (f)/(g): the ACTION's derived block, computed ON READ against the
+         injectable clock and attached to the single-bundle answer only — this is
+         the O3 action page's read, and the corpus-wide arms below are the
+         retrieval filter, which reads the CACHED columns by design.
+         WHY DERIVED HERE RATHER THAN SERVED FROM THE COLUMN. A stored overdue
+         flag is true when it was written and says nothing about now: an action
+         whose deadline passed on Tuesday while nobody promoted it still reads
+         `overdue: 0` forever. That is exactly the way a stored strength goes
+         stale (REC-12), and the answer a reader is shown must not be able to be
+         wrong in the direction of "nothing is late here". */
+      return row && normalizeType(row.object_type) === "action"
+        ? { ...row, action: this.#actionDerived(row, nowMs) }
+        : row;
+    }
     if (jsonPath !== null && jsonEquals !== null)
       return this.#rows(
         `SELECT ${cols} FROM bundles b WHERE json_extract(b.fm_json, ?) = ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
         jsonPath, jsonEquals, ...gate.args, limit);
     return this.#rows(`SELECT ${cols} FROM bundles b WHERE (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
                       ...gate.args, limit);
+  }
+
+  /** REC-24 (f)/(g): everything about ONE action that is DERIVED rather than
+   *  stored — the clock's verdict at a named instant, DEC-14's consequence
+   *  state, the ledger, the legs, and what responded.
+   *
+   *  THE CLOCK IS THE ITEM'S POINT. `overdue` is computed here against
+   *  #nowMs — the same injectable seam REC-8's overdue scan uses (an explicit
+   *  as-of `now=`, then env BIO_NOW_MS, then the wall) — so the same store and
+   *  the same bytes answer `false` before the deadline and `true` after it with
+   *  nothing written in between. The cached column is reported beside it as
+   *  `overdue_cached` rather than hidden, because an auditor comparing the two
+   *  is reading exactly the staleness this design accepts on the filter and
+   *  refuses on the answer.
+   *
+   *  THE CONSUMER OF `responds_to` IS HERE, and it is one indexed lookup over
+   *  `refs_target` rather than a walk: "what came back" is the question the
+   *  action page exists to answer, and op=actioncorrespond is what writes the
+   *  edge onto the captured reply. */
+  #actionDerived(row, nowMs = null) {
+    let fm = {};
+    try { fm = row && row.fm_json ? (JSON.parse(row.fm_json) || {}) : {}; } catch { fm = {}; }
+    const now = this.#nowMs(nowMs);
+    const next = Store.actionClockNext(fm);
+    const ledger = this.#rows(
+      `SELECT ord, direction, at, medium, party, artifact_bundle_id, artifact_sha, account, author, recorded_at
+         FROM correspondence WHERE bundle_id=? ORDER BY ord`, row.bundle_id);
+    const legs = this.#rows(
+      `SELECT ord, target_id, target_type, kind, note, at FROM action_basis WHERE bundle_id=? ORDER BY ord`,
+      row.bundle_id);
+    return {
+      kind: row.action_kind ?? null,
+      risk_tier: row.action_risk_tier ?? null,
+      counterparty_state: row.action_counterparty_state ?? null,
+      resolution: row.action_resolution ?? null,
+      clock_next: next,
+      /* DERIVED, at `now`. The column beside it is the filter's cache. */
+      clock_overdue: Store.actionOverdue(fm, now),
+      clock_overdue_cached: row.action_clock_overdue === null || row.action_clock_overdue === undefined
+        ? null : !!row.action_clock_overdue,
+      as_of: new Date(now).toISOString(),
+      basis: legs,
+      correspondence: ledger,
+      /* DEC-14, derived by the catalog's own function so no reader composes it. */
+      consequence: consequenceState(fm),
+      /* REC-24 (g)'s CONSUMER: the documents that point back at this action. */
+      responses: this.#rows(
+        `SELECT bundle_id FROM refs WHERE target_id=? AND kind='responds_to' ORDER BY bundle_id`,
+        row.bundle_id).map((r) => r.bundle_id),
+    };
   }
 
   /** EXPLAIN QUERY PLAN for representative filters, so a test can assert the
@@ -1748,6 +1902,13 @@ export class Store extends DurableObject {
      line per field. */
   static RELEASE_ACK_MAX = 500;
   static EDGE_NOTE_MAX = 480;
+  /* REC-24: how long op=actioncorrespond holds the courtesy lock while it
+     rewrites one document. Short on purpose — the op is a single append with no
+     human step inside it, so a lease outliving the call would block the next
+     writer for no reason. It is a COURTESY: promote's CAS on `base` is what
+     actually prevents a lost update, and this only stops two members
+     interleaving two accounts of the same exchange. */
+  static CORRESPOND_LEASE_MS = 30000;
 
   /** Move `cites` edges between statuses for every member of a selection.
    *
@@ -2655,6 +2816,439 @@ export class Store extends DurableObject {
     return { ok: true, target, from: b.current_state, to: "concluded",
              conclusion: concl, falsifier: fals, basis_legs: legs.length,
              author: who, at: when, weight: "single" };
+  }
+
+  /* REC-24 (c): MOVING AN ACTION THROUGH ITS OWN STATE MACHINE — the first op
+   * in this plane whose subject is an action at all.
+   *
+   * WHY IT EXISTS. `STATES.action` has carried five states and seven edges since
+   * the catalog was written, and NOTHING wrote them: SB-OUTPUT §4 measured the
+   * whole diagram as dashed, with the creation of the bundle the only node that
+   * ran. An act the table permits and no caller can perform is the state machine
+   * lying, which is exactly what REC-31 said about `deferred -> open`.
+   *
+   * THE EDGE TABLE IS THE CATALOG'S AND THERE IS NO SECOND COPY. This is the
+   * NAMED hazard of this item, not a general principle: `op=dispose` held its own
+   * literal copy of the disposition set until REC-10 rewired it, and the whole
+   * cost of that copy was that the publication and the refusal could disagree
+   * about what was legal. So legality here comes from `vocabFor(STATES, …)` over
+   * the DECLARED object_type — the MAP RULE, sixth consulting site — and this
+   * method contains no state list of its own. Grep it: the only strings from the
+   * action vocabulary in this file below are the four RESOLUTIONS, which are
+   * C-2.10's and are imported nowhere because they are checked by the catalog
+   * itself a moment later (see the resolution arm).
+   *
+   * THE REASON IS REQUIRED AND NEVER PREFILLED, op=reopen's rule and for its
+   * reason: an action moving is the group deciding to send something outside the
+   * system, or deciding it is finished, and a move with no account of why cannot
+   * be checked by anyone including its author. Nothing is derived, defaulted or
+   * proposed.
+   *
+   * A NAMED MEMBER MOVES IT. The author stamp arrives from the session and a
+   * machine credential's is `token:<class>`, refused BY SHAPE. This follows
+   * MACHINE_CANNOT_CONCLUDE / _RELEASE / _REOPEN and it is the same judgement:
+   * an action is the one construct that reaches OUTSIDE this system and touches
+   * people who never agreed to be in it, so a scheduler must not be able to
+   * advance one. A machine may surface, gather and prepare (D-78, DEC-24); it
+   * may not decide that the group is now asking somebody for something.
+   *
+   * WHAT IT DELIBERATELY DOES NOT DO: it does not touch the clock. A clock entry
+   * that has fallen past due is a REAL finding about the document (C-11.1) and
+   * this op neither suppresses it nor quietly marks it met — that would be the
+   * machine authoring the answer to the question the deadline asked. Overdue is
+   * DERIVED on read (see #actionDerived) and what to do about it is the member's. */
+  actionMove({ target, to, reason = "", resolution = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return { ok: false, reason: "MACHINE_CANNOT_MOVE_ACTION",
+               detail: "moving an action is a named member's decision to reach outside this system, or to "
+                     + "declare that reaching out is finished. A machine credential may prepare an action and "
+                     + "may never advance one. Sign in as a member." };
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON",
+               detail: "an action moves for a stated reason, authored by the member moving it and never "
+                     + "prefilled. A state change with no account of why cannot be checked by anyone." };
+    if (why.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON",
+               detail: `reason is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a `
+                     + `backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one action moves at a time: pass target=<action id>" };
+
+    /* REC-25 / D-15: the same fail-closed viewer gate every read takes; an
+       invisible action answers exactly as an absent one. */
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
+               detail: "only an action has an action's state machine." };
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this action has no readable bundle.md, so its state cannot be moved" };
+    let text = liveMd.content;
+    const fm = parseFrontmatter(text).data || {};
+
+    /* THE MAP RULE. The declared spelling first, so a document is judged by the
+       contract it was authored under and not by the type its id prefix implies. */
+    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
+    const legal = spec?.legal || [];
+    if (!legal.includes(to))
+      return { ok: false, reason: "BAD_TARGET_STATE", to, target, legal,
+               detail: `an action's state is one of ${legal.join(", ")}` };
+    const legalFrom = (spec?.edges?.[b.current_state]) || [];
+    if (!legalFrom.includes(to))
+      return { ok: false, reason: "ILLEGAL_TRANSITION", to, target, from: b.current_state,
+               object_type: fm.object_type ?? b.object_type, legal_from: legalFrom,
+               detail: "this is not a legal move in the catalog's state table for this document's own "
+                     + "vocabulary. The table is the catalog's and this op holds no copy of it." };
+
+    /* C-2.10's entry requirement for `resolved`, checked BEFORE anything moves so
+       this op never mints a bundle the catalog immediately rejects (conclude's
+       fourth property). The four words are the catalog's; they are compared
+       here and enforced again by C-2.10 on the document that lands. */
+    const RESOLUTIONS = ["complied", "denied", "escalated", "withdrawn"];
+    const res = String(resolution ?? "").trim();
+    if (to === "resolved" && !RESOLUTIONS.includes(res))
+      return { ok: false, reason: "NO_RESOLUTION", target, legal: RESOLUTIONS,
+               detail: "an action that is resolved says HOW it resolved: one of "
+                     + `${RESOLUTIONS.join(", ")}. C-2.10 requires it in the resolved state, so a move `
+                     + "without one would produce a bundle the catalog rejects." };
+    if (to !== "resolved" && res)
+      return { ok: false, reason: "RESOLUTION_WITHOUT_RESOLVING", target, to,
+               detail: "a resolution describes how an action ENDED; supplying one on a move to "
+                     + `${to} would record an outcome the action has not reached.` };
+
+    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const withHistory = Store.#appendStateHistory(text, {
+      timestamp: when, from_state: b.current_state, to_state: to, blurb: why, author: who });
+    if (!withHistory)
+      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+               detail: "this document's state_history block cannot be extended in place, and a move recording "
+                     + "no transition would leave prior_state pointing at a history the document does not "
+                     + "carry (C-4.2)" };
+    text = withHistory;
+    text = Store.#setScalar(text, "prior_state", b.current_state);
+    text = Store.#setScalar(text, "current_state", to);
+    /* setOrAdd, not set: an action authored before this op existed carries no
+       `resolution` key at all, and #setScalar alone would move the state and
+       leave the requirement unmet — the bundle the catalog then rejects (the
+       REC-13 lesson, verbatim). */
+    if (to === "resolved") text = Store.#setOrAddScalar(text, "resolution", res);
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    const entry = `### Session ${when} | Action ${b.current_state} to ${to} | ${who}\n`
+                + `Trigger: op=actionmove on ${target}\n`
+                + `Changes: state ${b.current_state} to ${to}.`
+                + `${to === "resolved" ? ` Resolution: ${res}.` : ""}\n`
+                + `Reason: ${why}\n`;
+    text = Store.#appendSessionLog(text, entry);
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+              title: fm.title, current_state: to, prior_state: b.current_state,
+              created: fm.created, last_updated: when, criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    return { ok: true, target, from: b.current_state, to, reason: why,
+             ...(to === "resolved" ? { resolution: res } : {}),
+             author: who, at: when, weight: "single" };
+  }
+
+  /* REC-24 (d): APPENDING ONE ENTRY TO AN ACTION'S CORRESPONDENCE LEDGER.
+   *
+   * APPEND ONLY, AND THAT IS THE WHOLE DESIGN. This op adds an entry and can
+   * never rewrite one: a correspondence entry that changed is ITSELF A FACT, so
+   * a correction is a new dated entry saying so and the earlier statement stays
+   * where it was. #spliceCorrespondence appends after the block's last line and
+   * touches nothing else, exactly as #spliceBasis does for legs.
+   *
+   * LEASE THEN PROMOTE. The courtesy lock is taken under the acting member
+   * before the document is rewritten, so two members recording what came back at
+   * the same moment do not silently lose one entry — and promote's CAS on `base`
+   * is still the integrity mechanism, because a lease is a courtesy and not a
+   * guarantee (D-61's own wording).
+   *
+   * CAPTURE OR TESTIFY, REFUSED HERE AND AT THE GATE. The entry carries the
+   * bytes we hashed OR a named member's account, never neither and never both.
+   * It is refused at this op so the member is told before anything is written,
+   * and again by C-2.10 over the document that lands, and again at promote where
+   * the hash is resolved against the register — three gates, one rule, in the
+   * one construct where "we have it in writing" and "somebody remembers it" are
+   * different kinds of evidence and must not be able to be confused.
+   *
+   * AND THE NON-RESPONSE IS A FIRST-CLASS ENTRY (DEC-13). A refusal to reply is
+   * a dated first-party fact about the body and is frequently the more useful
+   * one, so it is RECORDED with the date it was due rather than left as an
+   * absence a reader has to infer. It takes the testimony arm by construction:
+   * nothing arrived, so there are no bytes to hash.
+   *
+   * THE PRODUCER OF `responds_to` IS HERE. A RECEIVED entry whose artifact
+   * resolves to a bundle in this store writes a responds_to edge on THAT
+   * document, pointing back at this action — the direction SB-OUTPUT's A10 row
+   * specifies, and the reason the relation is no longer a string the vocabulary
+   * merely tolerates. Idempotent: an edge already there is not written twice. */
+  actionCorrespond({ target, direction = "", at = "", medium = "", party = "",
+                     artifactSha = "", account = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return { ok: false, reason: "MACHINE_CANNOT_CORRESPOND",
+               detail: "a correspondence entry is a named member's statement that this exchange happened — "
+                     + "and on the testimony arm it IS the evidence. A machine credential may capture bytes "
+                     + "and may not testify to an exchange. Sign in as a member." };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one entry at a time: pass target=<action id>" };
+    if (!CORRESPONDENCE_DIRECTIONS.includes(direction))
+      return { ok: false, reason: "BAD_DIRECTION", legal: CORRESPONDENCE_DIRECTIONS, direction,
+               detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came `
+                     + "is recorded as no_response with the date it was due, not omitted (DEC-13)." };
+    const day = String(at ?? "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
+      return { ok: false, reason: "BAD_DATE", at: day,
+               detail: "every entry in this ledger is dated YYYY-MM-DD, including a non-response, which is "
+                     + "dated by when the reply was due" };
+    const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
+    const acct = String(account ?? "").trim();
+    if (sha && acct)
+      return { ok: false, reason: "CAPTURE_AND_TESTIMONY", target,
+               detail: "an entry carries the captured bytes OR a named account, never both: what comes back "
+                     + "is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader "
+                     + "would quote instead of the thing the group can defend." };
+    if (!sha && !acct)
+      return { ok: false, reason: "NEITHER_CAPTURE_NOR_TESTIMONY", target,
+               detail: "an entry carries either an artifact_sha that resolves in the register or an account "
+                     + "with an author. Neither is an entry that asserts an exchange and offers no way to "
+                     + "check that it happened." };
+    if (sha && !/^[0-9a-f]{64}$/.test(sha))
+      return { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" };
+    if (sha && direction === "no_response")
+      return { ok: false, reason: "NO_RESPONSE_HAS_NO_BYTES", target,
+               detail: "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named "
+                     + "account with its date (DEC-13)." };
+    for (const [name, v] of [["account", acct], ["medium", String(medium ?? "")], ["party", String(party ?? "")]])
+      if (v.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
+        return { ok: false, reason: `BAD_${name.toUpperCase()}`,
+                 detail: `${name} is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a quote, `
+                       + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
+               detail: "a correspondence ledger belongs to an action: it records what that ask sent and what "
+                     + "came back." };
+    /* Resolved here as well as at promote, so the member is told which half of
+       the capture-or-testify choice failed rather than being handed a write
+       refusal after the lease was taken. */
+    if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
+      return { ok: false, reason: "UNREGISTERED_ARTIFACT", target, artifact_sha: sha,
+               detail: "this hash names no capture in this store. Capture the artifact first (op=capture), or "
+                     + "record a named account instead — those are the two honest ways to hold an exchange." };
+
+    /* THE COURTESY LOCK, under the acting member. */
+    const lease = this.acquireLease(target, who, Store.CORRESPOND_LEASE_MS);
+    if (!lease.ok)
+      return { ok: false, reason: "LEASE_HELD", target, heldBy: lease.heldBy, until: lease.until,
+               detail: "another member is writing to this action right now. The ledger is append-only, so a "
+                     + "second writer would not lose an entry — but it would interleave two accounts of the "
+                     + "same exchange with no way to tell which was written first." };
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this action has no readable bundle.md, so nothing can be appended to it" };
+    const fm = parseFrontmatter(liveMd.content).data || {};
+    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const ord = (Array.isArray(fm.correspondence) ? fm.correspondence : []).length;
+    const entryFm = {
+      direction, at: day,
+      ...(String(medium ?? "").trim() ? { medium: String(medium).trim() } : {}),
+      ...(String(party ?? "").trim() ? { party: String(party).trim() } : {}),
+      ...(sha ? { artifact_sha: sha } : {}),
+      ...(acct ? { account: acct } : {}),
+      /* SERVER-STAMPED. Present on both arms — who put this entry on the record
+         is part of the record even when the record is bytes. */
+      author: who,
+      recorded_at: when,
+    };
+    let text = Store.#spliceCorrespondence(liveMd.content, entryFm);
+    if (!text)
+      return { ok: false, reason: "UNSPLICEABLE_CORRESPONDENCE", target,
+               detail: "this action's correspondence block is not in a shape this grammar can extend in "
+                     + "place. Appending never rewrites the rest of the document, so nothing was written." };
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    text = Store.#appendSessionLog(text,
+      `### Session ${when} | Correspondence ${direction} | ${who}\n`
+      + `Trigger: op=actioncorrespond on ${target}\n`
+      + `Changes: correspondence[${ord}] recorded, dated ${day}`
+      + `${String(party ?? "").trim() ? `, with ${String(party).trim()}` : ""}.\n`
+      + `Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who}`}\n`);
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+              title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
+              created: fm.created, last_updated: when, criticality: fm.criticality ?? null },
+    });
+    /* THE LOCK IS GIVEN BACK, and this is not tidiness. The lease exists to
+       stop two members interleaving two accounts of ONE exchange inside one
+       write; the write is over. Leaving it to expire would lock the ledger for
+       the rest of the TTL against the second member recording what they heard,
+       which is the opposite of what an append-only ledger is for — and the
+       member would be told "another member is writing to this action right now"
+       when nobody is. Released whether the promote succeeded or failed, for the
+       same reason: a refused write holds nothing worth protecting. */
+    this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+    if (!promoted.ok) return { ...promoted, target };
+
+    /* REC-24 (g)'s PRODUCER. Only on a RECEIVED entry: a SENT artifact is our
+       own letter and responds to nothing. */
+    const responded = direction === "received" && sha
+      ? this.#respondsToInto(sha, target, who) : null;
+    return { ok: true, target, ord, direction, at: day, author: who, recorded_at: when,
+             held_as: sha ? "capture" : "testimony",
+             ...(sha ? { artifact_sha: sha } : { account: acct }),
+             ...(responded ? { responds_to: responded } : {}),
+             weight: "single" };
+  }
+
+  /* REC-24 (g): write the `responds_to` edge onto the CAPTURED REPLY, pointing
+     back at the action it answered. The edge lives on the responding document
+     because that is what the relation says — this document is what came back —
+     and because refs is a projection of the CITING document's own frontmatter,
+     so an edge stated anywhere else would be a second place the relationship
+     lives (D-21).
+     Returns null when the capture is not part of a bundle in this store, which
+     is a legitimate state rather than a failure: bytes may be registered against
+     a bundle that has since been purged, and the ledger entry stands on its own
+     hash either way. Idempotent by inspection, so re-recording does not
+     duplicate an edge. */
+  #respondsToInto(captureSha, actionId, who) {
+    const reg = this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, captureSha);
+    if (!reg || !reg.bundle_id || reg.bundle_id === actionId) return null;
+    const doc = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha, f.content
+         FROM bundles b JOIN files f ON f.bundle_id=b.bundle_id AND f.path='bundle.md'
+        WHERE b.bundle_id=?`, reg.bundle_id);
+    if (!doc || doc.content === null) return null;
+    const fm = parseFrontmatter(doc.content).data || {};
+    const refs = Array.isArray(fm.references) ? fm.references : [];
+    if (refs.some((r) => r && typeof r === "object" && r.rel === "responds_to" && r.target === actionId))
+      return { bundle_id: doc.bundle_id, already: true };
+    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    let text = Store.#spliceReferences(doc.content,
+      [{ rel: "responds_to", target: actionId, status: "confirmed", note: "" }]);
+    if (!text) return null;
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    text = Store.#appendSessionLog(text,
+      `### Session ${when} | Recorded as a response | ${who}\n`
+      + `Trigger: op=actioncorrespond on ${actionId}\n`
+      + `Changes: responds_to edge added to ${actionId}.\n`);
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      doc.bundle_id))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const p = this.promote({
+      bundleId: doc.bundle_id, base: doc.bundle_sha,
+      snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? doc.object_type, group: fm.group || "believe-in-oakland",
+              title: fm.title, current_state: fm.current_state ?? doc.current_state,
+              prior_state: fm.prior_state ?? null, created: fm.created, last_updated: when,
+              criticality: fm.criticality ?? null },
+    });
+    return p.ok ? { bundle_id: doc.bundle_id, already: false } : { bundle_id: doc.bundle_id, refused: p.reason };
+  }
+
+  /* One Session Log appender for THIS item's three writers (actionMove,
+     actionCorrespond and the responds_to producer), so they cannot disagree
+     about where an entry goes. It is written as a helper rather than open-coded
+     a third time; conclude, reopen and cite still carry their own identical
+     copies of this five-line splice, which is a real duplication and is stated
+     rather than quietly inherited — moving them onto this helper is a cleanup
+     with no behaviour in it and is not this item's to make. */
+  static #appendSessionLog(text, entry) {
+    const at = text.indexOf("## Session Log");
+    if (at < 0) return text + "\n## Session Log\n\n" + entry;
+    const nxt = text.indexOf("\n## ", at + 1);
+    const cut = nxt === -1 ? text.length : nxt + 1;
+    return text.slice(0, cut) + entry + "\n" + text.slice(cut);
+  }
+
+  /* REC-24 (d): APPEND one entry to the `correspondence` block, touching nothing
+     else — #spliceBasis line for line, and a twin rather than a generalisation
+     for the reason stated there: the ELEMENT shapes differ, and a parameterised
+     splicer would hide that behind an option in a grammar with no serializer.
+     A KEY IS RENDERED ONLY IF THE ENTRY CARRIES IT, so an entry held as
+     testimony carries no artifact_sha at all rather than an empty one — the
+     capture-or-testify choice is visible in the bytes and not only in a table.
+     Values are emitted quoted where they are prose (account, medium, party) and
+     bare where they are tokens, matching what the restricted grammar's parser
+     reads back. */
+  static #spliceCorrespondence(text, e) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const block = [
+      `  - direction: ${e.direction}`,
+      `    at: ${e.at}`,
+      ...(e.medium ? [`    medium: "${e.medium}"`] : []),
+      ...(e.party ? [`    party: "${e.party}"`] : []),
+      ...(e.artifact_sha ? [`    artifact_sha: ${e.artifact_sha}`] : []),
+      ...(e.account ? [`    account: "${e.account}"`] : []),
+      `    author: ${e.author}`,
+      `    recorded_at: "${e.recorded_at}"`,
+    ];
+    let ci = -1;
+    for (let i = 1; i < end; i++) if (/^correspondence:/.test(lines[i])) { ci = i; break; }
+    if (ci === -1)
+      return [...lines.slice(0, end), "correspondence:", ...block, ...lines.slice(end)].join("\n");
+    const rest = lines[ci].slice("correspondence:".length).trim();
+    if (rest === "[]")
+      return [...lines.slice(0, ci), "correspondence:", ...block, ...lines.slice(ci + 1)].join("\n");
+    if (rest !== "") return null;
+    let last = ci;
+    for (let i = ci + 1; i < end; i++) {
+      if (lines[i].trim() === "") continue;
+      if (/^\s/.test(lines[i])) { last = i; continue; }
+      break;
+    }
+    return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
 
   /* REC-31: REOPENING an inquiry the group SET DOWN. deferred|dismissed ->
@@ -5241,6 +5835,85 @@ export class Store extends DurableObject {
        * REPLAY IS EXEMPT from the shape arms, the gathering-grammar precedent:
        * the record's own history contains documents written before this rule
        * existed and must be holdable verbatim. */
+      /* REC-24: THE ACTION ARM, and it is the inquiry basis arm above line for
+       * line — the catalog's own functions run at the WRITE, so the store's view
+       * and the checker's view are ONE rule and a malformed action neither lands
+       * nor audits clean. Replay is exempt from the shape arms for exactly the
+       * reason every shape arm here is: the record's own history must be
+       * holdable verbatim, and it contains actions written before these rules.
+       *
+       * THREE REFUSALS AND NOT ONE, because they are three different failures
+       * and a member needs to be told which one they hit: the LEGS
+       * (ACTION_BASIS_REFUSED — including DEC-13's request_for_comment naming no
+       * inquiries), the LEDGER (CORRESPONDENCE_REFUSED — capture-or-testify),
+       * and RESOLUTION (a leg or a hash that points at nothing in this store,
+       * which only the store can see). */
+      const isAction = normalizeType(meta.object_type) === "action";
+      if (isAction && docFmW && !pkg.replay) {
+        const af = [];
+        actionBasisFindings(docFmW, af);
+        const aerrs = af.filter((x) => x.severity === "error");
+        if (aerrs.length)
+          return { ok: false, reason: "ACTION_BASIS_REFUSED",
+                   findings: aerrs.map((x) => ({ check: x.check, detail: x.message,
+                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+        const cf2 = [];
+        correspondenceFindings(docFmW, cf2);
+        const cerrs = cf2.filter((x) => x.severity === "error");
+        if (cerrs.length)
+          return { ok: false, reason: "CORRESPONDENCE_REFUSED",
+                   findings: cerrs.map((x) => ({ check: x.check, detail: x.message,
+                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+        for (const leg of (Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [])) {
+          if (!leg || typeof leg.target !== "string") continue;
+          if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target))
+            return { ok: false, reason: "ACTION_BASIS_REFUSED", target: leg.target,
+                     findings: [{ check: "C-2.10",
+                       detail: `action_basis target '${leg.target}' does not resolve in this store: an action `
+                             + `that names why it exists names something that exists, or it points a reader at `
+                             + `nothing while claiming a reason` }] };
+        }
+        /* THE HALF THE CATALOG DELIBERATELY CANNOT DO. `register` is the trust
+           root — the only thing that proves bytes — and a hash that resolves in
+           it is the whole of what "captured, not summarised" means. A pure check
+           over one document cannot see that table, so the capture-or-testify
+           choice is only half structural until here. */
+        for (const e of (Array.isArray(docFmW.correspondence) ? docFmW.correspondence : [])) {
+          if (!e || typeof e.artifact_sha !== "string" || !e.artifact_sha.trim()) continue;
+          const sha = e.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase();
+          if (!this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
+            return { ok: false, reason: "CORRESPONDENCE_REFUSED", artifact_sha: sha,
+                     findings: [{ check: "C-2.10",
+                       detail: `correspondence artifact_sha '${sha.slice(0, 16)}...' does not resolve in the `
+                             + `register: an entry claiming captured bytes names bytes this store holds, or it `
+                             + `is testimony and says so with an account and an author (DEC-13)`,
+                       repairs: ["capture the artifact first (op=capture), then record its sha",
+                                 "or record a named account instead"] }] };
+        }
+      }
+      /* REC-24 (g): the new relation is governed at the write on the supersedes
+         precedent — shape from the catalog, resolution from the store, because
+         an edge asserting "this is what came back" that points at nothing
+         asserts an exchange that did not happen. Its OWN refusal reason, not
+         folded into SUPERSESSION_REFUSED: they are different edges and a member
+         told the wrong one is worse off than one told nothing. */
+      if (docFmW && !pkg.replay) {
+        const rf = [];
+        respondsToEdgeFindings(docFmW, rf);
+        const rerrs = rf.filter((x) => x.severity === "error");
+        if (rerrs.length)
+          return { ok: false, reason: "RESPONDS_TO_REFUSED",
+                   findings: rerrs.map((x) => ({ check: x.check, detail: x.message,
+                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+        for (const r of (Array.isArray(docFmW.references) ? docFmW.references : [])) {
+          if (!r || typeof r !== "object" || r.rel !== "responds_to") continue;
+          if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
+            return { ok: false, reason: "RESPONDS_TO_REFUSED", target: r.target,
+                     findings: [{ check: "C-6.1",
+                       detail: `responds_to target '${r.target}' does not resolve in this store: this document `
+                             + `claims to be what came back from an ask that is not here` }] };
+        }
+      }
       if (docFmW && !pkg.replay) {
         const sf = [];
         supersedesEdgeFindings(docFmW, sf);
@@ -5474,6 +6147,62 @@ export class Store extends DurableObject {
                server's clock: delete-then-insert re-projects every promotion,
                so a server stamp here would silently re-date every leg. */
             leg.date != null ? String(leg.date) : null);
+        }
+      }
+      /* REC-24 (a)/(b): action_basis and correspondence, projected WHOLE from
+         the action's own action_basis[] and correspondence[] in this SAME
+         transaction and by the same delete-then-insert discipline as
+         inquiry_basis above — projections of the document, never a second place
+         to state it (D-21). Both were validated before anything landed.
+         target_type is denormalised from the id prefix through the catalog's own
+         map so no reader re-derives it; `at` is the DOCUMENT's own authored date
+         and never the server's, because delete-then-insert re-projects on every
+         promotion and a server stamp here would silently re-date the record's
+         whole correspondence history every time anything else changed.
+         `recorded_at` is different and IS a stamp: it is when the entry was
+         written, carried in the document by op=actioncorrespond, so it survives
+         re-projection unchanged. */
+      this.sql.exec(`DELETE FROM action_basis WHERE bundle_id=?`, bundleId);
+      this.sql.exec(`DELETE FROM correspondence WHERE bundle_id=?`, bundleId);
+      if (normalizeType(meta.object_type) === "action" && docFmW) {
+        const alegs = Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [];
+        for (let i = 0; i < alegs.length; i++) {
+          const leg = alegs[i];
+          if (!leg || typeof leg.target !== "string") continue; // replayed malformed shape: unprojectable
+          this.sql.exec(
+            `INSERT INTO action_basis (bundle_id,ord,target_id,target_type,kind,note,at)
+             VALUES (?,?,?,?,?,?,?)`,
+            bundleId, i, leg.target,
+            normalizeType(OBJECT_TYPES[leg.target.split("-")[0]]) ?? "",
+            typeof leg.kind === "string" ? leg.kind : "",
+            typeof leg.note === "string" ? leg.note : null,
+            leg.date != null ? String(leg.date) : null);
+        }
+        const entries = Array.isArray(docFmW.correspondence) ? docFmW.correspondence : [];
+        for (let i = 0; i < entries.length; i++) {
+          const e = entries[i];
+          if (!e || typeof e !== "object") continue;   // replayed malformed shape: unprojectable
+          const sha = typeof e.artifact_sha === "string" && e.artifact_sha.trim()
+            ? e.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
+          /* The bundle the captured artifact lives in, resolved from the trust
+             root rather than restated by the document — so the ledger can NAME
+             the INFO- bundle a reply became without the author copying an id
+             that could be wrong. */
+          const reg = sha ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, sha) : null;
+          this.sql.exec(
+            `INSERT INTO correspondence
+               (bundle_id,ord,direction,at,medium,party,artifact_bundle_id,artifact_sha,account,author,recorded_at)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+            bundleId, i,
+            typeof e.direction === "string" ? e.direction : "",
+            e.at != null ? String(e.at) : "",
+            typeof e.medium === "string" ? e.medium : null,
+            typeof e.party === "string" ? e.party : null,
+            reg ? reg.bundle_id : (typeof e.artifact_bundle_id === "string" ? e.artifact_bundle_id : null),
+            sha,
+            typeof e.account === "string" && e.account.trim() ? e.account : null,
+            typeof e.author === "string" && e.author.trim() ? e.author : null,
+            typeof e.recorded_at === "string" ? e.recorded_at : null);
         }
       }
       /* REC-14 / C-9: inquiry_exclusions, projected WHOLE from
@@ -8473,6 +9202,9 @@ export class Store extends DurableObject {
       entities: n("entities"), entityAliases: n("entity_aliases"), entityRelations: n("entity_relations"),
       /* FW-7: the recogniser's resolutions, reported so a purge can PROVE it took them. */
       resolutions: n("resolutions"),
+      /* REC-24: the action loop's two projections, reported so a purge can PROVE
+         it cleared them (D-113) rather than assert it. */
+      actionBasis: n("action_basis"), correspondence: n("correspondence"),
       /* FW-8: the derived connections and the member-declared progression definitions,
          reported so a whole-store purge can PROVE it cleared them (D-113). */
       connections: n("connections"), progressionDefs: n("progression_defs"),
@@ -9314,9 +10046,21 @@ export class Store extends DurableObject {
        whatever this table says. Clearing it destroys an index, never a fact.
        Its column is from_bundle rather than bundle_id, so it cannot ride TABLES
        and takes an explicit DELETE in each arm below. */
+    /* REC-24: `action_basis` and `correspondence` are DERIVED from the corpus in
+       exactly the sense inquiry_basis is — projections of an action's own
+       action_basis[] and correspondence[] — and both carry bundle_id, so they
+       clear in BOTH arms via this list. Leaving either out would let a
+       whole-store purge report scope ALL while an action's reasons or its
+       correspondence ledger survived, the D-113 silent-leftover;
+       hygiene.test.mjs holds this list against schema.mjs. A per-bundle purge
+       clears only the purged action's own rows; a `responds_to` edge FROM a
+       captured reply INTO a purged action goes with `refs`, and a leg elsewhere
+       that targets it stays honestly unresolvable, the same way refs to a purged
+       bundle read as C-6.2 findings rather than silently vanishing. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
                     "readings", "reading_refs", "resolutions", "progression_instances",
-                    "progression_exceptions", "inquiry_basis", "inquiry_exclusions"];
+                    "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
+                    "action_basis", "correspondence"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -13189,7 +13933,26 @@ export class Store extends DurableObject {
           jsonPath: url.searchParams.get("jsonPath"),
           jsonEquals: url.searchParams.get("jsonEquals"),
           viewer: url.searchParams.get("viewer"),
+          /* REC-24 (f): the as-of instant for the derived action clock, the same
+             seam op=proposals and op=sourcereach opened. Absent, the derivation
+             uses env BIO_NOW_MS and then the wall clock (#nowMs). */
+          nowMs: url.searchParams.get("now"),
         }),
+        /* REC-24 (c)/(d). No `handle` and no selection: one action moves at a
+           time and one entry is recorded at a time, so both take the ONE target
+           and the viewer/author stamps the control plane sets. */
+        actionmove: () => this.actionMove({ target: url.searchParams.get("target"),
+          to: url.searchParams.get("to"), reason: url.searchParams.get("reason"),
+          resolution: url.searchParams.get("resolution"),
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
+        actioncorrespond: () => this.actionCorrespond({ target: url.searchParams.get("target"),
+          direction: url.searchParams.get("direction"), at: url.searchParams.get("at"),
+          medium: url.searchParams.get("medium"), party: url.searchParams.get("party"),
+          artifactSha: url.searchParams.get("artifact_sha"),
+          account: url.searchParams.get("account"),
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
         /* Retrieval. `viewer` is stamped by the control plane and is never taken
            from the caller's own parameters there; here it is simply read, and an
            absent one compiles to the deny predicate. */

@@ -80,6 +80,22 @@ export const FIELDS = {
   capture:        { col: "inquiry_capture_strength",    type: "text", upper: true },
   connection:     { col: "inquiry_connection_strength", type: "text", upper: true },
   legs:           { col: "inquiry_basis_count",         type: "number" },
+  /* REC-24 (e): the ACTION's six, and they are what makes the Actions rail
+     (P-52) a filter rather than a list. `overdue:true` is the one to be careful
+     about and the comment is here rather than on the column: it filters the
+     CACHED flag, computed when the document was last promoted, so a corpus-wide
+     query answers "what was late as of each action's last write" and NOT "what
+     is late now". The action page's own read derives the answer against the
+     injectable clock (store.mjs #actionDerived), which is the authority — the
+     same relationship REC-12's cached strength has with strengthOf(). A filter
+     that is a little behind is a filter; an ANSWER that is behind is a record
+     saying nothing is late when something is. */
+  actionkind:     { col: "action_kind",                 type: "text", lower: true },
+  risk:           { col: "action_risk_tier",            type: "number" },
+  addressee:      { col: "action_counterparty_state",   type: "text", lower: true },
+  resolution:     { col: "action_resolution",           type: "text", lower: true },
+  due:            { col: "action_clock_next",           type: "time" },
+  overdue:        { col: "action_clock_overdue",        type: "bool" },
 };
 
 /* The text columns of the FTS5 table, in table order. `meta` carries the

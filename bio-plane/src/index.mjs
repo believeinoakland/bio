@@ -406,6 +406,22 @@ const OPS = {
      of arrays and a query string cannot express one honestly (op=publish's
      precedent exactly). */
   inquirydivide:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-24 (c)/(d): THE TWO OPS THAT OPERATE AN ACTION — the first ops in this
+     table whose subject is an action at all. `STATES.action` has carried five
+     states and seven edges since the catalog was written and nothing wrote them,
+     so IMPACTING had zero reachable processes.
+     Conclude's class list for conclude's reason: a machine class REACHES both
+     and is refused BY THE STORE (MACHINE_CANNOT_MOVE_ACTION,
+     MACHINE_CANNOT_CORRESPOND) rather than being absent from the table, so the
+     refusal says what is wrong instead of saying "requires a credential you
+     have". An action reaches OUTSIDE this system and touches people who never
+     agreed to be in it, and testimony about an exchange is somebody's — neither
+     is a scheduler's to author.
+     One `target` each, like conclude and reopen: one action moves at a time and
+     one entry is appended at a time, and a bulk version of either would be the
+     checkbox these constructs exist to refuse. */
+  actionmove:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  actioncorrespond:{ classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -773,6 +789,18 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
    each leg went, including every leg that cuts against the case — which is the
    same reason publish's stamp must be the server's. */
 const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "publish", "inquirydivide"];
+/* REC-24: the two ACTION acts, as their own array rather than folded into
+   STATE_ACTIONS. They need exactly what that array confers — both SESSION_OPS
+   lists, the server-side viewer stamp and the server-side author stamp — and
+   op=actionmove would sit there honestly. op=actioncorrespond would NOT: it
+   moves no state, and a reader of that array would then be reading a list whose
+   name had stopped being true. The `owner` stamp STATE_ACTIONS also sets is
+   inert for both (neither is selection-backed), so nothing is lost by naming
+   them separately and one thing is kept: the name of each list still says what
+   is in it. The author is the member whose name goes on the state_history entry
+   and, on the testimony arm of a correspondence entry, on the evidence itself —
+   which is the strictest reason in this file for a stamp to be the server's. */
+const ACTION_ACTIONS = ["actionmove", "actioncorrespond"];
 /* REC-14 / DEC-17: declaring the group's default required strength is a
    session act whose AUTHOR is part of the declaration — "you can lower your own
    bar; you cannot do it quietly" — so it takes the author stamp without being a
@@ -861,13 +889,13 @@ const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
-                   ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
+                   ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
                    ...DECLARATION_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
-                   ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS,
+                   ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
                    ...DECLARATION_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
@@ -948,6 +976,23 @@ const NEEDS = {
      conclude's and reopen's are, because capabilities gate SESSIONS and the
      rule here is about who a session IS. */
   inquirydivide:    "contribute",
+  /* REC-24: BOTH ACTION OPS RIDE `contribute`, and NO NEW CAPABILITY TOKEN is
+     minted — the item says so and the reasoning is the one every act above
+     already runs on. Membership §5's four rights are the whole set; a fifth
+     would need §5 reopened, and there is nothing here a fifth would express
+     that `contribute` does not: moving an action and recording what came back
+     are corpus writes, and a view-only member does neither.
+     It is tempting to argue the OUTWARD reach deserves its own right — an
+     action touches people outside the system. It would be the wrong mechanism:
+     what bounds that reach is the RISK TIER on the object and the counterparty
+     that must be named or honestly undetermined (REC-23), both of which are
+     properties of the act being composed. A capability is a property of the
+     SESSION and could not see either. The named-member requirement is enforced
+     by the store on the author stamp, as release's, conclude's and reopen's
+     are, because capabilities gate sessions and this rule is about who a
+     session IS. */
+  actionmove:       "contribute",
+  actioncorrespond: "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -3751,6 +3796,10 @@ export default {
                                 "strengthbarof"];
     if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
         || STATE_ACTIONS.includes(op)
+        /* REC-24: both action acts read the bundle behind the fail-closed gate
+           before they write it, so an action the caller may not see refuses
+           NO_SUCH_BUNDLE identically to an absent one. */
+        || ACTION_ACTIONS.includes(op)
         || op === "list" || op === "index" || op === "projection" || op === "image"
         || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations"
         /* REC-34: the gated read of the derived pair. Its subject is a bundle
@@ -3821,7 +3870,14 @@ export default {
        browser cannot write history as someone else, and a machine credential
        says plainly that it was a machine rather than borrowing a person's name.
        A caller-supplied `author` is overwritten, not honoured. */
-    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op))
+    /* REC-24 adds the two action acts to the author stamp, and the correspondence
+       arm is the strictest instance of the impostor rule in this file: on the
+       testimony half, the author IS the evidence — "who says this exchange
+       happened" is the whole of what the record holds when there are no bytes —
+       so a caller naming it would be a caller signing somebody else's name to a
+       claim about a real party outside this system. */
+    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op)
+        || DECLARATION_ACTIONS.includes(op))
       inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is

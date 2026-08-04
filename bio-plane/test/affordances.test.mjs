@@ -131,8 +131,14 @@ t("dispose() enforces the PUBLISHED set: store.mjs imports DISPOSITIONS from aff
     && !/const DISPOSITIONS = \[/.test(storeSrc), true);
 t("the published action_kind vocabulary IS the array C-2.10 enforces (one import, no copy)",
   VOCABULARIES.action_kind, ACTION_KINDS);
-t("action_kind is the seven-value suite",
-  ACTION_KINDS, ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "other"]);
+/* CORRECTED 2026-08-05 (REC-24), never exempted. The old assertion pinned SEVEN
+   values and was right until DEC-13 ruled that a case put to its subject for
+   comment is a KIND of action rather than a note on one — so the suite gains
+   `request_for_comment` and this assertion states eight. The pin itself is the
+   point and is unchanged: the published vocabulary is the array C-2.10
+   enforces, so a kind added in one place cannot go unpublished in the other. */
+t("action_kind is the eight-value suite (DEC-13 adds request_for_comment)",
+  ACTION_KINDS, ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"]);
 
 /* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES, and this pair of assertions is
    the drift guard itself rather than a description of it.
@@ -265,10 +271,13 @@ const cat = await affordances(null);
    must STATE the disclosure the division will make, published on the act
    because a surface renders what it received (DEC-8) and must not compose a
    prompt of its own. */
-t("no target -> the whole catalogue: ten acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-08-05 (REC-24): TWELVE. The count is the totality check's
+   companion — every op in NEEDS is an act here or a NON_ACT with a reason — so
+   it moves whenever an object-directed op is added, and REC-24 added two. */
+t("no target -> the whole catalogue: twelve acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 10, true]);
+  [true, 12, true]);
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and for `inquirydivide` it is
    the published wording — so a surface that has the control necessarily has the
@@ -278,9 +287,11 @@ t("no target -> the whole catalogue: ten acts, each with id/label/weight/needs/m
 t("exactly one act carries a PROMPT, and it is the divide act's published wording (DEC-29(b))",
   cat.result.catalog.filter((a) => a.prompt !== null).map((a) => [a.id, a.prompt === DIVIDE_PROMPT]),
   [["inquirydivide", true]]);
-t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the seven action kinds",
+/* CORRECTED 2026-08-05 (REC-24): eight kinds, for the reason stated at the
+   ACTION_KINDS pin above. */
+t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the eight action kinds",
   [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
-  [["deferred", "dismissed"], 7]);
+  [["deferred", "dismissed"], 8]);
 
 /* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES OVER THE WIRE, and then held
    against WHAT THE STORE ACTUALLY REFUSES.
@@ -466,12 +477,33 @@ t("the empty list is honest: disposing the elevated focus is refused ILLEGAL_TRA
   [dispF2.ok, dispF2.reason], [false, "ILLEGAL_TRANSITION"]);
 
 /* --------------------------------------------------------------- action */
-console.log("\n--- an action bundle: EMPTY, stated — nothing operates one until REC-24 ---");
+/* CORRECTED 2026-08-05 (REC-24), never exempted, and the old assertion was
+   RIGHT when it was written rather than superseded by taste. It held that an
+   action publishes an EMPTY act list, because nothing in this plane operated an
+   action and inventing a control for an op that did not exist would have been
+   the forbidden surface-side map moved one layer down. REC-24 built the two
+   ops, so the empty list stopped being the honest answer and became a lie of
+   omission: a member looking at an action would see no way to move it while
+   `op=actionmove` sat in the ops table refusing nobody.
+   What the corrected assertion holds is the SAME property in the new state —
+   the published set is exactly what the store will accept — which is why the
+   two acts are then ATTEMPTED below and the refusals checked. */
+console.log("\n--- an action bundle: the two acts REC-24 built, and the refusals behind them ---");
 const ACTN = "ACTN-2026-0001-rec19";
 await promote(ACTN, actnMd(ACTN), "action", "planned");
 const affActn = await affordances(ACTN);
-t("an action bundle publishes an empty act list (REC-24 builds its ops); inventing one here would be the forbidden map",
-  [affActn.ok, actIds(affActn)], [true, []]);
+t("an action publishes the two acts that operate it (REC-24)",
+  [affActn.ok, actIds(affActn)], [true, ["actioncorrespond", "actionmove"]]);
+/* DEC-8 both ways, in the same run and on the same object: what is published is
+   what the store accepts, and what the store refuses is refused for a reason a
+   surface renders rather than computes. A machine credential REACHES both and
+   is refused by shape, which is the fail-closed direction. */
+const mvNoReason = rP(await GET(`op=actionmove&token=mem-rec19&target=${encodeURIComponent(ACTN)}&to=active`));
+t("op=actionmove is reachable and refuses a machine credential BY NAME (not by absence)",
+  mvNoReason.reason, "MACHINE_CANNOT_MOVE_ACTION");
+const corr = rP(await GET(`op=actioncorrespond&token=mem-rec19&target=${encodeURIComponent(ACTN)}&direction=sent&at=2026-07-01&account=x`));
+t("op=actioncorrespond is reachable and refuses a machine credential BY NAME",
+  corr.reason, "MACHINE_CANNOT_CORRESPOND");
 
 /* ----------------------------------------- rung honesty across everything */
 console.log("\n--- rung honesty: null wherever no document assigns one ---");

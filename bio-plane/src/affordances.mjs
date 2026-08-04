@@ -42,9 +42,14 @@
  * is a bundle in a given state — the selection-backed set the S-10/S-11 ladder
  * built. Ops that act on captures, entities, tasks, members, selections or the
  * roster are NON_ACTS with their reasons; several are real acts on OTHER kinds
- * of objects and later items fold them in (REC-24 the action ops, REC-15 the
- * publication pre-flight). An `action` bundle honestly publishes NO acts today:
- * nothing operates it until REC-24, and an empty list is the true answer.
+ * of objects and later items fold them in (REC-15 the publication pre-flight).
+ *
+ * CORRECTED 2026-08-05 BY REC-24, and stated rather than quietly reworded: this
+ * header used to say that an `action` bundle honestly publishes NO acts,
+ * because nothing operated one and an empty list was the true answer. It no
+ * longer is. `op=actionmove` and `op=actioncorrespond` are object-directed acts
+ * on an action, derived below from the SAME imported state table every other act
+ * reads, and an action now publishes both.
  */
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
@@ -388,6 +393,30 @@ export const ACTS = [
      THE LABEL IS TYPE-NEUTRAL NOW, because one act publishing itself as "in a
      project" on a question would be the publication disagreeing with the op it
      fronts — the disagreement this file exists to prevent. */
+  /* REC-24 (c). An action whose own machine offers ANY onward state — which is
+     everything except `resolved` and `abandoned`, and the table says so rather
+     than this file listing them. ONE condition and no second: the entry
+     requirements (an authored reason; a resolution when the target state is
+     `resolved`) are ACT-TIME refusals the store words itself, the release
+     precedent carried through conclude and reopen — publishing the act says the
+     state machine permits a move, not that this caller's parameters will pass.
+     Weight `single`: one action moves at a time and there is no set to apply.
+     NO RUNG. It is tempting to write `reasoned` because a reason is required,
+     and that is exactly the guess RUNGS refuses: no document assigns this act a
+     rung, and FW-14 owns the assignment. */
+  { id: "actionmove", label: "Move this action", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && edgesFrom(f).length > 0 },
+  /* REC-24 (d). Recording what was sent, what came back, or that nothing did.
+     Published for an action in ANY state, and the breadth is deliberate: the
+     store's own guard is the object's TYPE and nothing else, so narrowing here
+     would be this file inventing a rule the plane does not enforce (the cite
+     precedent). A resolved action can still have a late reply recorded against
+     it — the exchange happened, and the ledger is the record of it — and a
+     planned one can record a first approach.
+     Weight `single`: the ledger is append-only, one entry at a time. NO RUNG,
+     for actionmove's reason. */
+  { id: "actioncorrespond", label: "Record correspondence", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" },
   { id: "cite", label: "Cite material into a case or a question", weight: "report",
     types: ["information", "project", "inquiry"],
     applies: (f, ty) => ty === "information" || ty === "project" || ty === "inquiry" },
