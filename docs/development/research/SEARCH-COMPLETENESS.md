@@ -429,6 +429,57 @@ should shape its surfaces:
   Relotius lesson is that what carries no checkable assertion escapes the mechanism
   entirely.
 
+## SIGNIFICANCE OVERRIDES COUNT — the constraint a statistical rule cannot satisfy
+
+The clearest statement of why BIO must not ship a bare stopping number, from the
+*Diisocyanates* special master refusing to impose one:
+
+> *"**it would be arbitrary to impose rigid stopping criteria.** For example, if more than
+> 10% of the documents in the last few batches were technically responsive, it might
+> nevertheless be reasonable to stop if… those responsive documents were **all invoices of
+> marginal value to the litigation**."*
+
+**A count cannot see significance, and significance is what actually decides whether to
+keep looking.** The same order's operative rule is a *presumptive, rebuttable*
+batch-richness criterion — stop when the last two batches run below ~10% responsive —
+**expressly overridable in both directions "on the basis of the significance of the
+documents."** Note it is a RICHNESS criterion, not a recall threshold: it measures what the
+search is still turning up, not how much of the world it has covered.
+
+That is the shape BIO should copy if it ever automates a stop: **a presumption a member can
+override with a reason, never a gate.** It composes with everything else here — the member
+authors, the machine informs, and the override is recorded.
+
+## THE MOST CURRENT ANSWER: an AI making the calls changes nothing yet
+
+Two 2026 decisions bracket where this actually stands, and they matter because BIO is
+building the assistant case:
+
+- ***Schulte v. LinkedIn*** (N.D. Cal., July 2026) — the producing party used **Relativity
+  aiR, an LLM, "to make final responsiveness calls."** Plaintiffs asked the court to compel
+  disclosure of **elusion estimates, document error rate, and the number of human
+  validators. The court refused**, treating GenAI review as TAR under the existing ESI
+  order and holding the one-line disclosure "more than satisfie[d]" it: *"Without a more
+  specific showing of why LinkedIn's production is deficient, the number of documents in
+  the target population alone does not warrant the requested discovery on discovery."*
+  **A court presented squarely with an LLM deciding relevance declined to require any
+  validation metric at all.**
+- ***James v. Cerebras*** (N.D. Cal., July 2026) — the most detailed AI-review protocol yet
+  entered, **by stipulation rather than holding**, and therefore the best available template
+  rather than a standard. It requires the model's identity, version and hosting
+  environment; **disclosure of all prompts, templates and instruction sets, with any later
+  modification served in REDLINE within three business days**; validation at 95%/±2% over
+  the excluded set; explicit **checks for hallucination and misclassification**; and an
+  *"expectation that elusion shall not exceed 3%"* — which, note, triggers a
+  **meet-and-confer, not a violation.**
+
+**The lesson for BIO is the asymmetry.** Where the law imposes nothing, the parties who
+actually care negotiate **prompt-level disclosure and change tracking**. That is the
+direction of travel, and it is the same shape BIO already reached independently: a machine
+proposal must LOOK derived (D-82), name what produced it, and record when it changed.
+BIO's advantage is that it can carry that in the record by construction rather than by
+stipulation between adversaries.
+
 ## Recommendation
 
 **Do not build a completeness metric. Build a completeness RECORD.** Specifically:
@@ -446,13 +497,17 @@ should shape its surfaces:
    the project's own statement of how good is good enough, authored before the work, and
    *"you can lower your own bar, you cannot do it quietly."* That is the field's answer
    (enough is relative to stakes) with better accountability than the courts get.
-5. **Adopt the adversarial steps the post-mortems recommend rather than a count.** In four
+5. **If a stop is ever automated, make it a PRESUMPTION a member overrides with a reason,
+   never a gate** — and prefer a RICHNESS signal (what the search is still turning up) over
+   a recall claim (how much of the world it covered). Significance must be able to overrule
+   the number in both directions.
+6. **Adopt the adversarial steps the post-mortems recommend rather than a count.** In four
    of five documented failures the written sourcing rules were formally SATISFIED — the
    rules that held were countable (source counts, review existed, contact attempted) and
    the failures were uncountable (independence, adversarial contact, chain of custody,
    non-denial read as confirmation). Both rigorous inquiries recommended **veto authority
    and mandatory adversarial steps**, not higher counts.
-6. **If a validation sample is ever built, copy *In re Broiler Chickens***: partition into
+7. **If a validation sample is ever built, copy *In re Broiler Chickens***: partition into
    produced / human-excluded / machine-excluded, sample all three, combine into ONE BLIND
    sample with no indication of origin, and have it assessed by someone who did not do the
    original work. And carry its own caveat: *"the absolute number in its own right shall
