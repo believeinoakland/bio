@@ -3172,6 +3172,91 @@ for CONDUCT to enact: import is UNBUILT and this is design-ahead, so it lands as
   (the never-prefill rule, and C-2.9's non-empty `objective` must never be satisfied by
   words nobody in the importing group wrote).
 enacted: 2026-08-04 · CONDUCT — landed as SCOPE on M6's interchange half in MILESTONES.md (import is unbuilt; design-ahead, not a correction), carrying the whole path verbatim: findings arrive projectless with the source's bias manifest as a fact, a destination offered per finding, the projectless lens STATED, regrade against the destination's effective bias with the structured diff and its causal chain shown BEFORE the association commits, the regrade's honest limit displayed with the diff, and the never-prefill bar on authoring an objective or bias statement (C-2.9 must never be satisfied by words nobody in the importing group wrote). DEC-40's determination 4 (an imported case is a finding with no inherited standing) sits with it. Reasoning in this entry and MILESTONES M6.
+### DEC-46 · answered
+raised: 2026-08-04 · session BOB (Bob, correcting five things about bias in the import
+  discussion — one of which he flagged as a contradiction)
+for: bob
+question: Five, taken together: (1) is there a contradiction between *bias debt must clear
+  before publication* and *bias is integral to a published case*? (2) how is a published
+  case's bias acknowledged? (3) must import land in a project so the imported bias has a
+  home? (4) is cross-bias comparison a capability worth building? (5) must UI surfaces show
+  that a project carries its own bias?
+why it is Bob's: doctrine about what publication asserts, and about whether one group's
+  lens may be adopted into another instance.
+provisional: import is unbuilt; bias bundles are unbuilt (D-84); nothing is blocked.
+**(1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20,
+  2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published. The
+  only bias type that must be clear before publication is hunches"* and *"Bias is public and
+  accompanies every published case produced under that bias."* The principle recorded there:
+  **bias debt is DISCLOSED; HUNCH debt is DISQUALIFYING — because a hunch inflates a GRADE
+  and ordinary bias only frames interpretation.** So the two statements were never in
+  tension. **BUT THE FACT THAT BOB RE-READ THEM AS CONTRADICTORY IS ITSELF THE FINDING, and
+  he wrote the ruling** — the VOCABULARY is the hazard: *"bias debt must clear before
+  publication"* reads as *"bias must clear"* to anyone who does not already know that here
+  `debt` means specifically a hunch. Recorded as **D-188**, the D-156 class (one word, two
+  meanings, caught while it is still free).
+response: **ALL FIVE ADOPTED; (3) OVERRULES MY OWN DEC-45 DETERMINATION 2, correctly.**
+  **(2) THE BIAS ACKNOWLEDGEMENT IS AUTHORED AT EXPORT, NOT A PRE-CHECK.** Bob: *"inclusion
+  of a bias must be acknowledged and signed off on at the time of export by the publisher
+  (not a pre-check checkbox)."* This is DEC-13's shape applied one construct over: the
+  publisher AUTHORS an acknowledgement of the bias the case was produced under, in the
+  ceremony, fresh per edition, never prefilled — exactly as the completeness statement and
+  the subject position already are (REC-14). A pre-flight checkbox would be the checkbox
+  those gates exist to refuse. The bias MANIFEST is computed and stamped; the
+  ACKNOWLEDGEMENT is authored, and the two are different things travelling together.
+  **(3) IMPORT LANDS IN A NEW PROJECT, AND MY PROJECTLESS-BY-DEFAULT ANSWER WAS WRONG.**
+  Bob: *"the import process needs to notify the user that the import must be done in the
+  context of a new project so that the imported bias has a place to land."* DEC-45's
+  determination 2 said findings arrive projectless and the travelling manifest preserves the
+  lens. **The manifest preserves the lens as a RECORD and does not make it USABLE, which is
+  the half I missed.** The manifest is *"the list of (bias bundle id, revision) in force plus
+  a hash of the computed effective statement set"* — and those bundle ids belong to the
+  SOURCE instance. The importing instance holds no such bundles, so the manifest alone is a
+  dangling reference: it proves what lens was used and cannot re-run it. **Regrade needs the
+  STATEMENTS, and statements live in bias bundles adopted at instance or project level.
+  Adopting a foreign group's bias at INSTANCE level would re-lens the whole instance — so
+  PROJECT level is the only correct home, and it must be a NEW project so the import cannot
+  quietly alter an existing project's effective bias for work already in it.**
+  and this RECONCILES with DEC-45's per-finding association rather than replacing it:
+  - **IMPORT** lands the case's findings in a NEW project carrying the imported bias — the
+    lens arrives intact and regrade against it is computable locally.
+  - **SUBSEQUENT association** of a finding with an EXISTING project is a separate, authored
+    act, and THAT is where regrade fires and shows what moves. DEC-45's per-finding
+    destination survives as the second step, not the first.
+  - A case whose findings were produced under DIFFERENT source biases needs one landing
+    project PER distinct source bias, or the imported lenses would be merged into one and
+    the diff would be computed against a lens nobody used.
+  **(4) CROSS-BIAS COMPARISON IS A CAPABILITY, NOT A DIAGNOSTIC.** Bob: *"The ability to
+  compare the conclusions of a set of findings using different bias is a capability that's
+  useful, and indeed valuable."* Recorded so it is not built as an import-time side effect:
+  REGRADE is a first-class member capability over any finding set and any two effective
+  biases, and import is one CALLER of it. Its honest limit travels with every use — *"it
+  cannot synthesize the analysis a different group would have written under a different
+  lens"* — because a clean diff means the analysis that EXISTS survives, not that the
+  finding survives the new lens intact.
+  **(5) A PROJECT'S OWN BIAS MUST BE VISIBLE ON ITS SURFACES.** MEASURED: today the UI's
+  only notion of declared bias is hunch legs — `civicos-ui/app.html:12776`, verbatim:
+  *"DECLARED BIAS is the HUNCH legs and nothing else"* — and D-84 records that
+  `object_type: bias` is absent from the check catalogue, so a bias bundle cannot be
+  written at all. So this is a requirement on unbuilt work rather than a defect in shipped
+  work, and stating it now is what stops the project surfaces being built bias-blind and
+  retrofitted. Recorded as **D-189**.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; `BIO_Declared_Bias_v0_1.md` takes the export-time
+  acknowledgement and the import-landing rule; D-188 (the vocabulary) and D-189 (the
+  surfaces).
+for CONDUCT to enact: (a) **REC-14's publish block gains the AUTHORED bias acknowledgement**,
+  fresh per edition, never prefilled, beside the completeness statement and subject position;
+  its negative control is the one those two already have — a carried-forward acknowledgement
+  must fail. (b) **M6's import scope changes**: import lands in a NEW project per distinct
+  source bias, states that it is doing so and why, and may not merge an imported lens into an
+  existing project; DEC-45's per-finding association becomes the SECOND step, where regrade
+  fires. (c) **REGRADE is named as a member capability** on M4/M10's bias work rather than as
+  an import detail. (d) D-188's vocabulary correction is a documentation pass — say HUNCH
+  DEBT where the rule means hunches, and reserve *bias debt* for the general class. (e) D-189
+  rides with the project surfaces whenever the bias bundle lands (D-84 first).
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_

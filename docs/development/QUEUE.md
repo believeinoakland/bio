@@ -274,6 +274,58 @@ must never be satisfied by words nobody in the importing group wrote.
 **Nothing in the bias doctrine needed changing to support any of this**, which is the
 strongest evidence the construct was right.
 
+### 2026-08-04 · BOB · DEC-46 — five bias corrections, and one of them OVERRULES yesterday's DEC-45
+
+**No contradiction existed, and that is the first finding.** Bob flagged *"bias debt must
+clear before publication"* against *"bias is integral to a published case"* as a conflict.
+**DEC-20 already ruled it on 2026-08-02, in his own words** — only a HUNCH blocks; ordinary
+declared bias is disclosed and TRAVELS. The recorded principle: *bias debt is DISCLOSED;
+hunch debt is DISQUALIFYING, because a hunch inflates a GRADE and ordinary bias only frames
+interpretation.* **But the author of the ruling re-read his own text as contradictory, which
+is the evidence that the VOCABULARY is broken** — `debt` means specifically *hunch* in that
+sentence and nothing says so. **D-188**, the D-156 class, free right now: no table, op or
+surface names either sense. Fix is a documentation pass — say HUNCH DEBT where the
+disqualifying rule is meant.
+
+**DEC-45's determination 2 is OVERRULED — import lands in a NEW PROJECT, not projectless.**
+I wrote that the travelling bias manifest preserves the source lens, so findings could arrive
+projectless. **It preserves the lens as a RECORD and does not make it USABLE — that is the
+half I missed.** The manifest is *"(bias bundle id, revision) plus a hash of the computed
+effective statement set"*, and those bundle ids belong to the SOURCE instance. The importing
+instance holds no such bundles, so the manifest alone is a **dangling reference**: it proves
+which lens was used and cannot re-run it. Regrade needs the STATEMENTS; statements live in
+bias bundles adopted at instance or project level; adopting a foreign group's bias at
+INSTANCE level would re-lens the entire instance. **So project level is the only correct
+home, and it must be a NEW project so an import cannot quietly alter an existing project's
+effective bias for work already in it.**
+
+This RECONCILES with DEC-45's per-finding association rather than discarding it — it makes
+it the second step:
+- **IMPORT** → a NEW project per DISTINCT source bias, carrying the imported lens intact so
+  regrade is computable locally. (Per distinct bias, because merging two source lenses into
+  one landing project would compute every later diff against a lens nobody ever used.)
+- **THEN** association of a finding with an EXISTING project is a separate authored act, and
+  that is where regrade fires and shows what moves.
+
+**Three more, all adopted:**
+- **The bias acknowledgement is AUTHORED AT EXPORT, never a pre-check checkbox** (Bob).
+  DEC-13's shape one construct over: the publisher authors it in the ceremony, fresh per
+  edition, never prefilled — beside the completeness statement and the subject position in
+  REC-14's publish block, and carrying the same negative control (a carried-forward
+  acknowledgement must FAIL). The manifest is COMPUTED and stamped; the ACKNOWLEDGEMENT is
+  AUTHORED. Two different things travelling together.
+- **REGRADE is a first-class member capability, not an import side effect** — comparing a
+  finding set's conclusions under two effective biases is valuable in its own right, and
+  import is merely one CALLER. Place it on the bias work, not inside M6. Its honest limit
+  travels with every use: it cannot synthesise the analysis a different group would have
+  written, so a clean diff means the analysis that EXISTS survives.
+- **A project's own bias must be VISIBLE on its surfaces** — **D-189**. MEASURED: the UI's
+  only notion of declared bias today is hunch legs (`app.html:12776`, verbatim: *"DECLARED
+  BIAS is the HUNCH legs and nothing else"*), and D-84 records that `object_type: bias` does
+  not exist in the catalogue so a bias bundle cannot be written at all. A requirement on
+  UNBUILT work — stating it now is what stops the project surfaces being built bias-blind and
+  retrofitted, which is the same reason the import ruling had to arrive before import does.
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
