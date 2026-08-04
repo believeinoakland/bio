@@ -322,6 +322,14 @@ export class Store extends DurableObject {
          would serve no seek anybody makes. REC-12's state columns are
          unindexed for the same reason and its comment says so. */
       ["bundles", "inquiry_superseded_by", "TEXT"],
+      /* REC-42 / DEC-32: the OR branch a basis leg belongs to. Additive and
+         nullable exactly like every column above, and here that is not merely
+         convenient — it is THE CORRECTNESS REQUIREMENT. A leg written before
+         this column existed reads NULL, falls into the one implicit ground, and
+         derives the SAME weakest-leg answer it derived before: a basis nobody
+         structured can never become stronger by an upgrade. Independent
+         sufficiency is only ever reached by an affirmative, attributed act. */
+      ["inquiry_basis", "ground", "TEXT"],
       /* REC-24 (e): the ACTION's six projection columns — the first projection
          columns in this table whose subject is the outward ask rather than the
          question. Additive and nullable exactly like every column above: a
@@ -3699,6 +3707,40 @@ export class Store extends DurableObject {
                 `    population: ${a.population}`,
                 `    detail: "${Store.#fmSafe(a.detail)}"`];
       }));
+    /* REC-42 / DEC-32 clause (e): WHAT IS FROZEN IS THE STRUCTURED RESULT.
+       The pair above already carries the composed answer — MIN over necessary
+       legs, MAX over independently sufficient grounds — because it comes from
+       strengthOf(). This block freezes the BRANCHES THEMSELVES, and the reason
+       is DEC-32's own third containment: OR takes the maximum, so a member has
+       a standing incentive to bundle a weak ground beside a strong one, and
+       "these were independently sufficient" is a claim ANY READER CAN TEST —
+       but only if the published bytes say which legs were in which branch and
+       what each branch reached on its own. A frozen grade with no visible
+       structure would be exactly the unverifiable claim this record refuses.
+
+       TWO TOP-LEVEL KEYS rather than one nested block, and the split is forced
+       by the restricted frontmatter grammar rather than chosen: a block is a
+       map of scalars or an array of objects, never a map holding an array of
+       objects. The precedent is REC-14's own `completeness` /
+       `completeness_excluded` and REC-16's `division` /
+       `division_apportionment`, for exactly the same reason.
+
+       WRITTEN ONLY WHEN THE BASIS WAS STRUCTURED. For an unstructured basis the
+       axis objects above ARE the whole truth — one branch, every leg necessary
+       — and a one-row block restating them would be a second place to state one
+       fact (D-21). Its PRESENCE is the signal that a member authored grounds. */
+    const frozenGrounds = Store.STRENGTH_AXES.flatMap((axis) =>
+      (pair[axis].grounds ?? []).map((g) => [axis, g]));
+    if (frozenGrounds.length)
+      text = Store.#setOrAddBlock(text, "published_strength_grounds",
+        frozenGrounds.flatMap(([axis, g]) => [
+          `  - axis: ${axis}`,
+          `    ground: ${g.ground === null ? "null" : `"${Store.#fmSafe(String(g.ground))}"`}`,
+          `    state: ${g.state}`,
+          `    grade: ${g.grade ?? "null"}`,
+          `    weakest: ${g.weakest ? g.weakest.target_id : "null"}`,
+          `    load_bearing: ${g.load_bearing}`,
+          `    population: ${g.population}`]));
     text = Store.#setOrAddBlock(text, "required_strength", [
       `  declared: ${bar.declared}`,
       `  source: ${bar.source}`,
@@ -5792,7 +5834,14 @@ export class Store extends DurableObject {
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis)
         ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
-      if (basisFm && basisFm.basis !== undefined && basisFm.basis !== null && !pkg.replay) {
+      /* REC-42: `|| grounds` so the two gates stay ONE rule. A document may
+         carry a grounds[] block with no basis at all, and the catalog checks it
+         (an assertion of independent sufficiency over no legs); without this the
+         write path would silently accept what the checker refuses, which is the
+         drift the single-function discipline exists to prevent. */
+      if (basisFm && !pkg.replay
+          && ((basisFm.basis !== undefined && basisFm.basis !== null)
+              || (basisFm.grounds !== undefined && basisFm.grounds !== null))) {
         const bf = [];
         /* REC-14: C-21.2 runs HERE too, with the published projection injected,
            so an over-strong inherited grade is refused at the write and not
@@ -6162,8 +6211,8 @@ export class Store extends DurableObject {
           const leg = basisLegs[i];
           if (typeof leg.target !== "string") continue; // replay of a malformed shape: unprojectable
           this.sql.exec(
-            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at)
-             VALUES (?,?,?,?,?,?,?,?,?,?)`,
+            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
             bundleId, i, leg.target,
             /* '' rather than NULL on a replayed malformed shape, mirroring the
                refs projection's kind fallback: the columns are NOT NULL. */
@@ -6174,7 +6223,16 @@ export class Store extends DurableObject {
             /* The document's own authored date (required on a hunch), never the
                server's clock: delete-then-insert re-projects every promotion,
                so a server stamp here would silently re-date every leg. */
-            leg.date != null ? String(leg.date) : null);
+            leg.date != null ? String(leg.date) : null,
+            /* REC-42: the OR branch, projected exactly as authored and NEVER
+               invented. Absent, empty or non-string is NULL — the implicit
+               single ground — because the one direction this projection must
+               never take is INTO structure: a leg nobody grouped must land
+               where the weakest-leg rule still holds. checkInquiryBasis has
+               already refused any label with no attributed `grounds[]` row, at
+               this write and in the catalog, so a label that reaches here was
+               asserted by a named member. */
+            typeof leg.ground === "string" && leg.ground.trim() ? leg.ground.trim() : null);
         }
       }
       /* REC-24 (a)/(b): action_basis and correspondence, projected WHOLE from
@@ -9528,7 +9586,7 @@ export class Store extends DurableObject {
   basisFor(bundleId) {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "basis requires ?id=" };
     const legs = this.#rows(
-      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
        FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, bundleId);
     return { ok: true, bundleId, legs };
   }
@@ -9830,11 +9888,27 @@ export class Store extends DurableObject {
    * authority: a stored strength goes stale the moment a leg is raised, and
    * `resolutions` grades are explicitly improvable.
    *
-   * SINGLE-BASIS ARITHMETIC (DEC-32, still open): the basis is one flat
-   * conjunction of legs, so an axis is its weakest load-bearing member. No
-   * grounds, no OR-branches, no plurality machinery is built here — when
-   * DEC-32 closes, the shape it adds is a partition ABOVE this function, and
-   * this stays the within-branch rule. */
+   * CORRECTED 2026-08-05 (REC-42), never exempted. This paragraph read
+   * "SINGLE-BASIS ARITHMETIC (DEC-32, still open): the basis is one flat
+   * conjunction of legs, so an axis is its weakest load-bearing member", and it
+   * was right while DEC-32 was open and is WRONG now that it is answered. Bob
+   * ruled: a basis carries the RELATIONSHIP between its legs, and strength is
+   * the MINIMUM over AND-related legs and the MAXIMUM over OR-related branches.
+   * The old paragraph's own prediction held exactly — the partition sits ABOVE
+   * the within-branch rule and the within-branch rule is untouched — so what
+   * changed is the composition and not the measurement:
+   *
+   *   A GROUND is an AND of its legs and is no stronger than the weakest of
+   *   them. THE GROUNDS are OR-related — each independently sufficient for the
+   *   SAME conclusion — so the axis takes the STRONGEST of them. Both axes are
+   *   composed separately, over their own populations, exactly as before.
+   *
+   * AND THE DEFAULT IS AND, which is a correctness requirement rather than a
+   * compatibility choice: a leg with no authored ground is NECESSARY, an
+   * unstructured basis is still its weakest leg to the byte, and independent
+   * sufficiency is only ever reached by an affirmative, attributed act
+   * (checkGrounds in the catalog, enforced at both gates). #axisResult carries
+   * the composition and #groundResult the within-branch rule. */
 
   /* Named once so no site spells an axis and none can drift. */
   static STRENGTH_AXES = ["capture", "connection"];
@@ -9864,73 +9938,214 @@ export class Store extends DurableObject {
   static #namedMember(m) {
     return { bundle_id: m.bundle_id, ord: m.ord, target_id: m.target_id, role: m.role,
              grade: m.grade ?? null, grade_source: m.grade_source ?? null, via: m.via,
+             /* REC-42: present ONLY when the leg carries an authored ground, on
+                the same rule as `inherited_from` below — a named member of an
+                unstructured basis reads exactly as it did before DEC-32, which
+                is the property the correction is required to preserve. */
+             ...(m.ground ? { ground: m.ground } : {}),
              ...(m.inherited_from ? { inherited_from: m.inherited_from } : {}),
              ...(m.through ? { through: m.through } : {}),
              ...(m.why ? { why: m.why } : {}) };
   }
 
-  /* One axis's answer, from its own population. Three states and no fourth:
-       graded       — the axis rests on at least one graded member; the grade
-                      is the weakest of them and that member is NAMED.
-       unrated      — no member of this axis carries a grade (DEC-18's
-                      boundary case). Not a low score and not a failure.
-       undetermined — the walk could not finish a branch within its depth
-                      bound (R3). UNKNOWN is not ABSENT: an unfinished branch
-                      might be weaker than everything we can see, so the axis
-                      states that it has no computed strength and names the
-                      depth. R1's shape, not an error. */
-  static #axisResult(axis, members, exhausted) {
-    /* DEFENCE 2 of 2, the NAMING half of DEC-18: membership of the load-bearing
-       population is decided HERE, by the presence of a grade, and the inert
-       members are named rather than dropped. Breaking this alone leaves the
-       arithmetic right and the record dishonest, which is why it has its own
-       negative control.
+  /* ONE GROUND's answer, over the members of ONE axis that belong to it.
+     REC-42/DEC-32: this is R1's original arithmetic, unchanged and moved one
+     level down. A GROUND is an AND of its legs — every leg in it is necessary
+     — so it is NO STRONGER THAN THE WEAKEST of them, and a leg the walk could
+     not finish leaves THE WHOLE GROUND `undetermined`, because a necessary link
+     whose value is unknown could be weaker than anything visible beside it.
 
-       THE TWO DEFENCES SHARE ONE INVARIANT and are deliberately not made
-       independent of it: `loadBearing` is non-empty EXACTLY when #weakestOf can
-       find a member, because both ask `grade != null`. So breaking either one
-       is LOUD — the graded branch below dereferences the weakest it was
-       promised, and an axis that claims a load-bearing population it cannot
-       describe fails at the write rather than publishing a strength nobody can
-       check. A defensive fallback here would turn that into a quiet wrong
-       answer, which is the failure mode this record cares about most. */
+     D-160 GOVERNS THE VOCABULARY HERE, and it needs saying because DEC-32 and
+     REC-42 both state this rule using the RETIRED word — the one that means the
+     OPPOSITE thing in SB-OUTPUT §5.1 and is deliberately not spelled anywhere
+     in this file. Read both entries' word for what an unfinished leg does to
+     its branch as `undetermined`, which is what this code and this record call
+     it, and their word for a branch nothing established as UNRATED.
+     strength.test.mjs holds this whole region against the retired spelling, so
+     a comment quoting it would be an occurrence of it (D-160's own precedent).
+
+     `ground` is the authored label, or NULL for the IMPLICIT ground that every
+     unstructured basis has and that legacy legs land in.
+
+     DEFENCE 2 of 2, the NAMING half of DEC-18: membership of the load-bearing
+     population is decided HERE, by the presence of a grade, and the inert
+     members are named rather than dropped. Breaking this alone leaves the
+     arithmetic right and the record dishonest, which is why it has its own
+     negative control.
+
+     THE TWO DEFENCES SHARE ONE INVARIANT and are deliberately not made
+     independent of it: `loadBearing` is non-empty EXACTLY when #weakestOf can
+     find a member, because both ask `grade != null`. So breaking either one
+     is LOUD — the graded branch below dereferences the weakest it was
+     promised, and a ground that claims a load-bearing population it cannot
+     describe fails at the write rather than publishing a strength nobody can
+     check. A defensive fallback here would turn that into a quiet wrong
+     answer, which is the failure mode this record cares about most. */
+  static #groundResult(ground, members, exhausted) {
     const isLoadBearing = (m) => m.grade != null;
     const inert = members.filter((m) => !isLoadBearing(m)).map(Store.#namedMember);
     const loadBearing = members.filter(isLoadBearing);
-    if (exhausted.length) {
-      return { axis, state: "undetermined", grade: null, determined: false,
-               weakest: null, load_bearing: loadBearing.length, population: members.length,
-               not_load_bearing: inert,
-               depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
-               undetermined_at: exhausted.map(Store.#namedMember),
-               detail: `this ${axis} axis has NO computed strength: the basis walk reached its `
-                     + `depth bound of ${Store.QUEUE_ANCESTOR_DEPTH} at `
-                     + `${exhausted.map((e) => e.target_id).join(", ")}, so what lies below is `
-                     + `unknown rather than absent. This is what we do not know, not a low score.` };
-    }
-    if (!loadBearing.length) {
-      return { axis, state: "unrated", grade: null, determined: false,
-               weakest: null, load_bearing: 0, population: members.length,
-               not_load_bearing: inert, depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
-               detail: members.length
-                 ? `UNRATED on ${axis}: no leg on this axis carries an established grade, so this `
-                 + `conclusion rests on nothing established here. Not load-bearing: `
-                 + `${inert.map((m) => m.target_id).join(", ")}.`
-                 : `UNRATED on ${axis}: this inquiry rests on nothing on this axis.` };
-    }
+    if (exhausted.length)
+      return { ground, state: "undetermined", grade: null, weakest: null,
+               load_bearing: loadBearing.length, population: members.length,
+               not_load_bearing: inert, undetermined_at: exhausted.map(Store.#namedMember) };
+    if (!loadBearing.length)
+      return { ground, state: "unrated", grade: null, weakest: null,
+               load_bearing: 0, population: members.length, not_load_bearing: inert };
     /* Called over the FULL population, not over the pre-filtered one, so the
        null short-circuit in #weakestOf is genuinely load-bearing rather than
        decorative — two independent defences, each one breakable on its own. */
     const w = Store.#weakestOf(members);
-    return { axis, state: "graded", grade: w.grade, determined: true,
-             weakest: Store.#namedMember(w), load_bearing: loadBearing.length,
-             population: members.length, not_load_bearing: inert,
+    return { ground, state: "graded", grade: w.grade, weakest: Store.#namedMember(w),
+             load_bearing: loadBearing.length, population: members.length,
+             not_load_bearing: inert };
+  }
+
+  /* One axis's answer, composed from its GROUNDS. Three states and no fourth:
+       graded       — the axis rests on at least one graded member; the grade
+                      is derived below and the member that SETS it is NAMED.
+       unrated      — no member of this axis carries a grade (DEC-18's
+                      boundary case). Not a low score and not a failure.
+       undetermined — a NECESSARY part of the answer could not be finished
+                      within the depth bound (R3). UNKNOWN is not ABSENT: an
+                      unfinished branch might be weaker than everything we can
+                      see, so the axis states that it has no computed strength
+                      and names the depth. R1's shape, not an error.
+     ==================== REC-42 · THE AND/OR ARITHMETIC =====================
+     DEC-32, Bob: "sometimes the weakest is the claim's strength, and other
+     times it's not. The difference is really whether the relationship between
+     legs is AND or OR." So this axis is composed of at most TWO PARTS and it is
+     the MINIMUM of them, because both are NECESSARY to the conclusion:
+
+       THE IMPLICIT PART — every leg carrying NO ground label. Unlabelled means
+       nobody said this leg could be done without, so it is treated as
+       NECESSARY: one AND-group, weakest leg, exactly REC-12's landed rule.
+
+       THE OR PART — the labelled grounds, each an independently sufficient
+       basis for the SAME conclusion, composed by MAXIMUM: a conclusion
+       established at B on one ground is established at B, and a weaker ground
+       offered beside it weakens nothing.
+
+     WHY THE UNLABELLED LEGS ARE AND-ed RATHER THAN MADE A BRANCH OF THEIR OWN,
+     and this is the correctness requirement rather than a preference (DEC-32's
+     anti-gaming keystone). A basis nobody structured MUST NOT SILENTLY BECOME
+     STRONGER. If the unlabelled legs were their own OR branch, a basis with no
+     structure at all would be a single branch — arithmetically identical — but
+     a HALF-structured one would hand independent sufficiency to legs no member
+     ever claimed it for, by omission. Under this rule the two degenerate cases
+     are exact: nothing labelled reads weakest-leg, as it always did; everything
+     labelled reads MAX over grounds; and the mixed case reads the conservative
+     minimum of both. The DEFAULT IS AND, in the arithmetic itself and not only
+     in the write-time refusal, so it holds even for a row that reached the
+     projection around the gate (the same posture the no-referent arm takes).
+
+     THE UNKNOWN COMPOSES ONE LEVEL UP (DEC-18's pattern applied to grounds): a
+     leg the walk could not finish leaves its GROUND undetermined, and the AXIS
+     is undetermined only when a NECESSARY part is unknown — the implicit part,
+     or the OR part with EVERY branch undetermined. An undetermined branch
+     beside a graded one is NAMED and the graded branch still carries the
+     finding. Ignoring it can only UNDERSTATE
+     the axis (the unknown branch could have been stronger, never weaker, since
+     the OR takes the max), which is the direction this record errs in.
+
+     Q14's CONTRADICTION CASE IS NOT MODELLED HERE and must not be read into
+     this: grounds AGREE on the conclusion. Two conclusions disagreeing is a
+     different thing and is undesigned. */
+  static #axisResult(axis, members, exhausted) {
+    /* THE PARTITION, in first-appearance (document) order. */
+    const keys = [];
+    const bucket = new Map();
+    const at = (k) => {
+      if (!bucket.has(k)) { keys.push(k); bucket.set(k, { members: [], exhausted: [] }); }
+      return bucket.get(k);
+    };
+    for (const m of members) at(m.ground ?? null).members.push(m);
+    for (const e of exhausted) at(e.ground ?? null).exhausted.push(e);
+    if (!keys.length) at(null);        /* a zero-leg inquiry: one empty implicit ground */
+    const grounds = keys.map((k) => Store.#groundResult(k, bucket.get(k).members, bucket.get(k).exhausted));
+    const structured = keys.some((k) => k !== null);
+
+    const implicit = grounds.find((g) => g.ground === null) ?? null;
+    const branches = grounds.filter((g) => g.ground !== null);
+    const gradedBranches = branches.filter((g) => g.state === "graded");
+    const openBranches = branches.filter((g) => g.state === "undetermined");
+    /* THE OR PART, as one part: the STRONGEST branch. Undetermined only when
+       EVERY branch is — one graded branch carries it. */
+    const best = gradedBranches.length
+      ? gradedBranches.reduce((a, g) => Store.#GRADE_RANK[g.grade] > Store.#GRADE_RANK[a.grade] ? g : a)
+      : null;
+    const orPart = !branches.length ? null
+      : best ? { state: "graded", grade: best.grade, weakest: best.weakest }
+      : openBranches.length ? { state: "undetermined" }
+      : { state: "unrated" };
+
+    const parts = [...(implicit ? [implicit] : []), ...(orPart ? [orPart] : [])];
+    const inert = grounds.flatMap((g) => g.not_load_bearing);
+    const allExhausted = grounds.flatMap((g) => g.undetermined_at ?? []);
+    const loadBearing = grounds.reduce((n, g) => n + g.load_bearing, 0);
+    const population = grounds.reduce((n, g) => n + g.population, 0);
+    const withGrounds = (o) => structured ? { ...o, grounds } : o;
+    const nlb = inert.map((m) => m.target_id).join(", ");
+    /* Named branches, so a sentence can point at the ones a reader must check
+       or must be told are unfinished. A NULL label never reaches these. */
+    const label = (g) => `"${g.ground}"`;
+
+    /* A NECESSARY PART IS UNKNOWN. The implicit legs, or every branch. */
+    if (parts.some((p) => p.state === "undetermined")) {
+      return withGrounds({ axis, state: "undetermined", grade: null, determined: false,
+               weakest: null, load_bearing: loadBearing, population,
+               not_load_bearing: inert,
+               depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
+               undetermined_at: allExhausted,
+               detail: `this ${axis} axis has NO computed strength: `
+                     + (structured && branches.length && !implicit
+                         ? `EVERY one of the ${branches.length} grounds it rests on is undetermined, and `
+                         : structured
+                         ? `a leg every ground needs is undetermined, and `
+                         : ``)
+                     + `the basis walk reached its `
+                     + `depth bound of ${Store.QUEUE_ANCESTOR_DEPTH} at `
+                     + `${allExhausted.map((e) => e.target_id).join(", ")}, so what lies below is `
+                     + `unknown rather than absent. This is what we do not know, not a low score.` });
+    }
+    /* NOTHING ESTABLISHED ANYWHERE. An unrated ground is INERT exactly as an
+       ungraded leg is (DEC-18): it neither floors the axis nor unrates it. */
+    const gradedParts = parts.filter((p) => p.state === "graded");
+    if (!gradedParts.length) {
+      return withGrounds({ axis, state: "unrated", grade: null, determined: false,
+               weakest: null, load_bearing: 0, population,
+               not_load_bearing: inert, depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
+               detail: population
+                 ? `UNRATED on ${axis}: no leg on this axis carries an established grade`
+                 + (structured ? ` on any of the ${branches.length} grounds` : ``)
+                 + `, so this conclusion rests on nothing established here. Not load-bearing: `
+                 + `${nlb}.`
+                 : `UNRATED on ${axis}: this inquiry rests on nothing on this axis.` });
+    }
+    /* THE MINIMUM OF THE NECESSARY PARTS. With no labelled ground there is one
+       part and this is R1's weakest leg, unchanged. */
+    const setter = gradedParts.reduce((a, p) => Store.#GRADE_RANK[p.grade] < Store.#GRADE_RANK[a.grade] ? p : a);
+    const w = setter.weakest;
+    const orSets = orPart && setter === orPart;
+    return withGrounds({ axis, state: "graded", grade: setter.grade, determined: true,
+             weakest: w, load_bearing: loadBearing,
+             population, not_load_bearing: inert,
              depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
-             detail: `${axis} ${w.grade} — no stronger than the weakest ${axis} it rests on, `
-                   + `which is ${w.target_id}`
+             detail: (orSets
+                 ? `${axis} ${setter.grade} — the STRONGEST of the ${branches.length} independently `
+                 + `sufficient grounds this conclusion rests on, which is ${label(best)}, and no stronger `
+                 + `than the weakest ${axis} WITHIN that ground, which is ${w.target_id}`
+                 : `${axis} ${setter.grade} — no stronger than the weakest ${axis} it rests on, `
+                 + `which is ${w.target_id}`)
                    + (w.through ? ` (through ${w.through})` : "")
-                   + `. ${inert.length ? `Present and not yet load-bearing: `
-                   + `${inert.map((m) => m.target_id).join(", ")}.` : ""}`.trimEnd() };
+                   + `.`
+                   + (structured && !orSets && implicit
+                       ? ` That leg is needed by every ground, so no ground can be stronger than it.` : ``)
+                   + (openBranches.length
+                       ? ` ${openBranches.length} further ground${openBranches.length === 1 ? " is" : "s are"} `
+                       + `UNDETERMINED and could only be stronger, never weaker: `
+                       + `${openBranches.map(label).join(", ")}.` : ``)
+                   + ` ${inert.length ? `Present and not yet load-bearing: ${nlb}.` : ""}`.trimEnd() });
   }
 
   /* The walk. Reads REC-11's projection through basisFor() — the read seam —
@@ -9953,8 +10168,15 @@ export class Store extends DurableObject {
       /* MAP RULE: the type consultation goes through the catalog's own
          normalizeType, never a raw key and never a local alias copy. */
       const isInquiry = normalizeType(leg.target_type) === "inquiry";
+      /* REC-42: the leg's GROUND travels on every member it produces — its own
+         and, below, the pair it inherits from a sub-inquiry — because both are
+         the same leg's contribution and belong to the same branch of THIS
+         argument. NULL is the implicit ground and is what a leg written before
+         DEC-32 reads: the relationship a member never authored is never
+         invented here. */
       const site = { bundle_id: bundleId, ord: leg.ord, target_id: leg.target_id,
-                     role: leg.role, grade_source: leg.grade_source ?? null };
+                     role: leg.role, grade_source: leg.grade_source ?? null,
+                     ground: leg.ground ?? null };
       /* THE LEG'S OWN GRADE, admitted to the population of the axis it is
          RECORDED ON (R2-b: the axis is the leg's own fact, not a function of
          target_type). A leg carrying a connection grade is inert on capture
@@ -10182,6 +10404,16 @@ export class Store extends DurableObject {
       weakest: axis.weakest ? named(axis.weakest) : axis.weakest,
       not_load_bearing: (axis.not_load_bearing ?? []).map(named),
       ...(axis.undetermined_at ? { undetermined_at: axis.undetermined_at.map(named) } : {}),
+      /* REC-42: THE PER-GROUND BREAKDOWN GETS THE SAME SWEEP, and it is not a
+         formality — a ground names its OWN weakest leg and its own inert and
+         unfinished members, so an id withheld from the axis and left standing
+         one level down would be the same leak by another field. The ground
+         LABEL is authored on the visible subject inquiry itself, so it is a
+         record fact here and is never touched. */
+      ...(axis.grounds ? { grounds: axis.grounds.map((g) => ({ ...g,
+            weakest: g.weakest ? named(g.weakest) : g.weakest,
+            not_load_bearing: (g.not_load_bearing ?? []).map(named),
+            ...(g.undetermined_at ? { undetermined_at: g.undetermined_at.map(named) } : {}) })) } : {}),
       detail: prose(axis.detail) };
     /* No count of what was withheld — the count is the leak (REC-25's rule,
        #queueAncestors' `out_of_view` posture, strengthBarOf's exactly). The

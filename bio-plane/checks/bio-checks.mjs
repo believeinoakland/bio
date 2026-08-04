@@ -1983,6 +1983,46 @@ function checkPublishedExtension(fm, findings) {
       }
     }
   }
+  /* REC-42 / DEC-32 clause (e): IF THE BASIS WAS STRUCTURED, THE FROZEN RESULT
+     IS THE STRUCTURED ONE. A published case whose legs name grounds took a
+     MAXIMUM over branches to reach the grade above, and that claim is only
+     checkable by a reader if the bytes say which branch reached what. Absent
+     here is not silence, it is the structure being invisible under a grade the
+     structure produced — so it is refused, with the same reasoning that makes
+     completeness_excluded's FIELD required even when the list is empty.
+     Not required when nothing was grouped: an unstructured case's two axis
+     objects already are the whole truth, and a one-row restatement would be a
+     second place to state one fact (D-21). */
+  const grouped = Array.isArray(fm.basis)
+    && fm.basis.some((l) => l && typeof l === 'object' && typeof l.ground === 'string' && l.ground !== '');
+  const frozenGrounds = Array.isArray(fm.published_strength_grounds) ? fm.published_strength_grounds : null;
+  if (grouped && !frozenGrounds) {
+    findings.push(f('C-2.8', 'error', 'published state requires published_strength_grounds when the basis names grounds: the grade above is the STRONGEST ground rather than the weakest leg, and "these grounds were each independently sufficient" is a claim a reader can only test if the case says which legs were in which branch and what each branch reached',
+      ['publish through op=publish, which freezes the per-ground breakdown beside the pair']));
+  } else if (grouped) {
+    for (let i = 0; i < frozenGrounds.length; i++) {
+      const g = frozenGrounds[i];
+      if (!g || typeof g !== 'object') {
+        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}] is not an object`));
+        continue;
+      }
+      if (!GRADE_AXES.includes(g.axis)) {
+        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}].axis '${g.axis}' is not one of: ${GRADE_AXES.join(', ')} — the branches are composed PER AXIS and both axes are frozen separately (DEC-21)`));
+      }
+      if (!STRENGTH_STATES.includes(g.state)) {
+        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}].state '${g.state}' is not one of: ${STRENGTH_STATES.join(', ')}`));
+      } else if (g.state === 'graded' && !BASIS_GRADES.includes(g.grade)) {
+        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}] is graded but carries no grade`));
+      } else if (g.state !== 'graded' && g.grade != null) {
+        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}] is ${g.state} and still carries grade '${g.grade}': a suspended ground states what is unknown, and an unrated one states that nothing on it is established — neither is a grade`));
+      }
+    }
+    for (const label of new Set(fm.basis.filter((l) => l && typeof l.ground === 'string' && l.ground).map((l) => l.ground))) {
+      if (!frozenGrounds.some((g) => g && g.ground === label)) {
+        findings.push(f('C-2.8', 'error', `published_strength_grounds names no row for ground '${label}': every branch the basis carries is frozen on every axis, because a branch missing from the frozen result is one no reader can check`));
+      }
+    }
+  }
   /* DEC-17 as amended. The bar the GROUP set for its own work, stamped beside
      what the case reached. Absent gates nothing and must SAY so. */
   const rq = (typeof fm.required_strength === 'object' && fm.required_strength) || null;
@@ -2085,6 +2125,13 @@ export const EARNED_GRADE_SOURCES = ['resolution', 'capture'];
    two hand-written conditionals so the pairing has one home. */
 export const EARNED_SOURCE_AXIS = { resolution: 'connection', capture: 'capture' };
 
+/* REC-42 / DEC-32: a ground LABEL. Deliberately narrow — it is an identifier a
+   member picks so two legs can say they belong together, not prose, and it
+   appears inside derived sentences and inside frontmatter scalars. No quotes,
+   no colons, no newlines, so nothing it names can break the block it is written
+   in or smuggle punctuation into a sentence a reader trusts. */
+export const GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
+
 /* REC-11: the basis[] leg grammar, ONE function consulted by BOTH the checker
  * (via checkInquiryExtension above) and the store's op=promote write path —
  * the checkGatheringGrammar precedent — so a malformed leg never lands and the
@@ -2107,7 +2154,12 @@ export const EARNED_SOURCE_AXIS = { resolution: 'connection', capture: 'capture'
  * an ordinal and refs could not carry it. */
 export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
   const legs = fm?.basis;
-  if (legs === undefined || legs === null) return;   // no basis is a legal open inquiry
+  /* REC-42: the grounds block is checked EVEN WITH NO BASIS. No basis is a
+     legal open inquiry (DEC-22's standing objective), but a grounds[] block
+     over no legs asserts independent sufficiency for nothing, and leaving it
+     unchecked here would make "author the structure first" a way to leave an
+     assertion in the record with nothing under it. */
+  if (legs === undefined || legs === null) { checkGrounds(fm, [], findings); return; }
   if (!Array.isArray(legs)) {
     findings.push(f('C-2.8', 'error', `basis is not an array`));
     return;
@@ -2250,6 +2302,132 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     }
     checkEarnedLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
+  }
+  checkGrounds(fm, legs, findings);
+}
+
+/** REC-42 / DEC-32: THE RELATIONSHIP BETWEEN LEGS, and the act that asserts it.
+ *
+ *  Bob ruled the arithmetic: *"sometimes the weakest is the claim's strength,
+ *  and other times it's not. The difference is really whether the relationship
+ *  between legs is AND or OR."* So a leg may name a GROUND, legs sharing a
+ *  ground are AND-related (the ground is no stronger than its weakest leg), and
+ *  the grounds are OR-related (the finding is as strong as its STRONGEST
+ *  ground, because each is independently sufficient for the same conclusion).
+ *
+ *  THIS FUNCTION EXISTS BECAUSE OR TAKES THE MAXIMUM. Every other grammar arm
+ *  in this file guards a claim that can only be as strong as what it rests on;
+ *  a ground label is the one thing a member can write that makes a finding
+ *  STRONGER. DEC-32's anti-gaming keystone is therefore a correctness
+ *  requirement rather than a preference: **an unstructured basis stays
+ *  weakest-leg, and independent sufficiency is only ever reached by an
+ *  AFFIRMATIVE, ATTRIBUTED act.** Hence the `grounds[]` block — one row per
+ *  label, carrying the NAME of the member who asserts that ground stands on its
+ *  own and the DATE they asserted it, which is the same accountability shape as
+ *  the conclusion itself. A label with no row is refused: strengthening by
+ *  omission, by default, or by a member not understanding a question is exactly
+ *  what must be impossible.
+ *
+ *  TWO TOP-LEVEL KEYS, forced by the restricted frontmatter grammar rather than
+ *  chosen: `ground` is a scalar ON THE LEG (the partition) and `grounds` is an
+ *  array of objects (the act), because the grammar cannot carry a map holding an
+ *  array of objects. Exactly REC-14's `completeness`/`completeness_excluded` and
+ *  REC-16's `division`/`division_apportionment` split, for the same reason.
+ *
+ *  THE PARTITION IS TOTAL OR ABSENT. If ANY leg names a ground, EVERY leg
+ *  must. A half-labelled basis would leave legs nobody grouped sitting beside
+ *  branches somebody did, and the honest reading of an unlabelled leg —
+ *  necessary, so binding on every branch — is not what a member who labelled
+ *  half a basis is likely to have meant. Refused here rather than guessed. (The
+ *  derivation still treats an unlabelled leg as NECESSARY if one ever reaches it
+ *  around this gate; the arithmetic's default is AND too, and the two defences
+ *  are separate on purpose.)
+ *
+ *  WHAT IS DELIBERATELY NOT HERE. No per-ground FALSIFIER: DEC-32 is explicit
+ *  that minting one per ground reads as more honest and is less — it converts
+ *  one checkable compound falsifier (*every ground fails*) into several partial
+ *  ones, none of which refutes the finding. No per-ground grade: a ground's
+ *  strength is DERIVED from its legs and never authored. And no AND/OR
+ *  vocabulary reaches any member-facing surface — that is UI-27's elicitation
+ *  half, which asks the member about CONSEQUENCES and derives this structure
+ *  from their answers.
+ *
+ *  Q14's contradiction case stays SEPARATE and UNDESIGNED: grounds AGREE on the
+ *  conclusion, and two conclusions disagreeing is a different thing entirely.
+ *  Nothing here should be read as modelling it. */
+function checkGrounds(fm, legs, findings) {
+  const rows = fm?.grounds;
+  const labelled = [];        // [i, label] for every leg that names a ground
+  let unlabelled = 0;
+  legs.forEach((leg, i) => {
+    if (!leg || typeof leg !== 'object') return;
+    const g = leg.ground;
+    if (g === undefined || g === null || g === '') { unlabelled++; return; }
+    if (typeof g !== 'string' || !GROUND_LABEL_RE.test(g)) {
+      findings.push(f('C-2.8', 'error', `basis[${i}].ground '${String(g).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_', naming the branch of the argument this leg belongs to`));
+      return;
+    }
+    labelled.push([i, g]);
+  });
+  if (rows === undefined || rows === null) {
+    if (labelled.length) {
+      findings.push(f('C-2.8', 'error', `basis leg${labelled.length === 1 ? '' : 's'} ${labelled.map(([i]) => i).join(', ')} name${labelled.length === 1 ? 's' : ''} a ground with no grounds[] block: grounds compose DISJUNCTIVELY, so a finding takes its STRONGEST ground rather than its weakest leg — and that is only ever reached by an affirmative, attributed act. Nothing may become stronger because a field was written and nobody signed for it`,
+        ['author a grounds[] row per label, naming the member who asserts that ground is independently sufficient and the date',
+         'or drop the ground labels — an unstructured basis is no stronger than its weakest leg, which is the conservative reading']));
+    }
+    return;
+  }
+  if (!Array.isArray(rows)) {
+    findings.push(f('C-2.8', 'error', 'grounds is not an array'));
+    return;
+  }
+  const declared = new Map();          // label -> row index
+  rows.forEach((r, i) => {
+    if (!r || typeof r !== 'object' || Array.isArray(r)) {
+      findings.push(f('C-2.8', 'error', `grounds[${i}] is not an object`));
+      return;
+    }
+    const label = r.ground;
+    if (typeof label !== 'string' || !GROUND_LABEL_RE.test(label)) {
+      findings.push(f('C-2.8', 'error', `grounds[${i}].ground '${String(label).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`));
+      return;
+    }
+    if (declared.has(label)) {
+      findings.push(f('C-2.8', 'error', `grounds[${i}] declares '${label}' a second time: one ground, one assertion, one member answering for it`));
+      return;
+    }
+    declared.set(label, i);
+    if (typeof r.asserted_by !== 'string' || r.asserted_by.trim() === ''
+        || NON_MEMBER_AUTHORS.includes(String(r.asserted_by).toLowerCase())) {
+      findings.push(f('C-2.8', 'error', `grounds[${i}].asserted_by '${r.asserted_by}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's`,
+        ['name the member asserting that this ground is independently sufficient']));
+    }
+    if (!ISO_TS_RE.test(String(r.at || ''))) {
+      findings.push(f('C-2.8', 'error', `grounds[${i}] requires 'at' as an ISO timestamp (got '${r.at}'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`));
+    }
+    if (r.statement !== undefined && r.statement !== null && typeof r.statement !== 'string') {
+      findings.push(f('C-2.8', 'error', `grounds[${i}].statement is not a string`));
+    }
+  });
+  /* THE PARTITION IS TOTAL OR ABSENT. */
+  if (labelled.length && unlabelled) {
+    findings.push(f('C-2.8', 'error', `${unlabelled} basis leg${unlabelled === 1 ? '' : 's'} carr${unlabelled === 1 ? 'ies' : 'y'} no ground while ${labelled.length} do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at`,
+      ['give every leg a ground — a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion',
+       'or remove the grounds and let the basis read as its weakest leg']));
+  }
+  /* A LABEL WITH NO ASSERTION, and its mirror. */
+  for (const [i, label] of labelled) {
+    if (!declared.has(label)) {
+      findings.push(f('C-2.8', 'error', `basis[${i}].ground '${label}' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for`,
+        [`add a grounds[] row for '${label}' with asserted_by and at`]));
+    }
+  }
+  const carried = new Set(labelled.map(([, l]) => l));
+  for (const [label, i] of declared) {
+    if (!carried.has(label)) {
+      findings.push(f('C-2.8', 'error', `grounds[${i}] declares '${label}', which no basis leg belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own`,
+        [`give at least one basis leg 'ground: ${label}'`, 'or remove the row']));
+    }
   }
 }
 

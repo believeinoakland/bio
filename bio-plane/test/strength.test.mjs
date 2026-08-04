@@ -1,7 +1,23 @@
 /* NEGATIVE CONTROL: (run 2026-08-04, five arms in src/store.mjs, each broken ALONE and restored; 42 pass when whole) (a) STRONGEST-LEG COMPOSITION — #weakestOf: `Store.#GRADE_RANK[m.grade] < Store.#GRADE_RANK[weakest.grade]` -> `>` -> 6 fail, both weak-link assertions first ("CAPTURE reads C", "CONNECTION reads D" now read B and A) and the inheritance and cached-query assertions after them. (b) A NULL IN THE RANK COMPARISON — #weakestOf's body replaced by the reuse R1 forbids, `if (weakest === null) { weakest = m; continue; } if (Store.#weakerGrade(m.grade, weakest.grade) === m.grade) weakest = m;` -> 16 fail: every chain reads `null` because `|| 0` ranks the unknown at 0, BELOW D (rank 1) and below a member's signed testimony, and the source assertion "the derivation never calls #weakerGrade" names the reuse itself. (c) COMPOSING THE AXES — #strengthWalk: `const onAxis = leg.grade_axis === axis` -> `const onAxis = true` (one letter joins both populations) -> 11 fail, naming the axes mixed: "the CAPTURE axis never reads a CONNECTION leg's grade (capture composed with connection)" and its mirror, plus the disjoint-population counts. (d) THE DEPTH BOUND REMOVED — #strengthWalk: `if (depth + 1 > bound) {` -> `if (false) {` -> the over-depth chain reads a grade instead of `undetermined` (4 fail) and the store-constructed cycle DOES NOT TERMINATE: the Durable Object answers `RangeError: Maximum call stack size exceeded` from basisFor inside #strengthWalk instead of a result — R3's "our machinery breaking rather than a refusal naming the offender", measured. (e) AN UNGRADED LEG RANKED IN THE POPULATION — #axisResult: `const isLoadBearing = (m) => m.grade != null` -> `() => true` -> 8 fail: the ungraded legs vanish from every not_load_bearing list ("EVERY ungraded leg is named, one or MANY" gets []), the population counts move, and promote itself throws where an axis claims a load-bearing population #weakestOf cannot describe. Restored after each; battery 79/79 green. */
 /* REC-12: STRENGTH at inquiry altitude — a PAIR over two POPULATIONS, over a
  * bounded DAG. RECONCILED.md §3.1 (REC-12) read WITH §1.1's amendment block
- * and §1.2's; DEC-21, DEC-18, D-160, DEC-15 and DEC-32's provisional folded in.
+ * and §1.2's; DEC-21, DEC-18, D-160 and DEC-15 folded in.
+ *
+ * CORRECTED 2026-08-05 (REC-42), never exempted. This header read "DEC-32's
+ * provisional folded in" — the provisional being that a basis is ONE FLAT
+ * CONJUNCTION, so an axis is its weakest load-bearing member. Bob has since
+ * answered DEC-32 and the flat model is known WRONG as a general rule: a basis
+ * carries the RELATIONSHIP between its legs, and strength is the MINIMUM over
+ * AND-related legs and the MAXIMUM over independently sufficient GROUNDS.
+ *
+ * NOT ONE ASSERTION IN THIS FILE CHANGED, and that is the finding rather than
+ * luck. Every basis here is UNSTRUCTURED, and DEC-32's ruling makes the
+ * unstructured case the conservative one BY REQUIREMENT: legs nobody grouped
+ * are necessary, so weakest-leg is still exactly what this file measures. What
+ * this header can no longer say is that weakest-leg is the WHOLE rule — it is
+ * the within-branch rule, and REC-42's grounds.test.mjs holds the composition
+ * ABOVE it, including the control that makes an unstructured basis stronger and
+ * fails here as well as there.
  *
  * What is asserted, each in the direction that fails:
  *   1. TWO MEASUREMENTS OVER TWO POPULATIONS (DEC-21). A mixed basis reads TWO
