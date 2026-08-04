@@ -901,13 +901,21 @@ output is attributed to that party) and its SHAPE is decided provisionally in
 which needs no new reference granularity. Scope this area against that shape when a
 slot frees.
 
-## DIST — DORMANT, and it has grown a backlog
+## DIST — ACTIVE (promoted 2026-08-04 into the slot RECORD freed; DIST-1 first — it makes M1 live on deployed instances)
 Batches releases from a green `main`; the deploy step is gated to Bob. New standing
 work from the topology decision: D-115 (the installer installs ONE Worker and the
 topology now has a fleet), D-116 (version authority must span the fleet, or D-106's
 drift class returns multiplied), D-107 (no scripted installer deploy with read-back),
 D-54 (the installer does not detect the Workers plan). Activate when a fleet member is
 close to shipping, and not after it ships. NEW 2026-08-04: the REC-26 delegation (CLAIMS.md) — uploadInstall AND uploadUpdate meta.bindings gain { type: service, name: SELF, service: slug } so archive-monitor and monitor-cadence arm on deployed instances; a scoped MONITOR_TOKEN is the better credential than the ADMIN_TOKEN fallback.
+
+### DIST-1 · queued
+milestone: M1
+scope: **The REC-26 delegation — the installer binds `SELF` so the monitoring consumers arm on deployed instances.** `newgroup/src/index.mjs`: `uploadInstall`'s `meta.bindings` AND `uploadUpdate`'s gain `{ type: "service", name: "SELF", service: slug }` (the INSTANCE_NAME/R2 precedent — update-path too, so instances installed earlier get it on their next update); check whether `keep_bindings` needs `"service"`. ALSO decide and implement the credential: REC-26's `#monitorToken()` falls back to `ADMIN_TOKEN`; a scoped `MONITOR_TOKEN` is the better answer (least privilege — the daemon needs acquire/monitor, not admin) — if you mint it, the installer binds it and `tokens.mjs`'s denylist discipline applies. NO DEPLOY: the deploy and live-verify are gated to Bob; land tested code and state the gated half plainly.
+behind-interface: I4
+depends-on: none
+accepts-when: `cd newgroup && npm test` (or the installer's own suite — discover it) green with the bindings asserted in both upload paths' built config; `cd bio-plane && npm run test:battery` green (the plane is untouched or only the token fallback narrows); negative control — remove the update-path binding and the suite fails naming an already-installed instance that would never receive SELF.
+added: 2026-08-04 · CONDUCT (from REC-26's delegation)
 
 ## UI — ACTIVE (promoted 2026-08-04 into the slot RECORD freed as it drained; UI-10 first — every other UI item depends on it)
 `civicos-ui/**`; the member surfaces of M8, per `UI-PLAN.md` and the interaction
