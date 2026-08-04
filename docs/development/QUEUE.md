@@ -579,7 +579,7 @@ accepts-when: battery green with fixture round-trips for all three flavours; a
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
 landed: 7404f21 (worker a20e3ec) — bio-plane/src/ooxml.mjs, pure zero-dependency (CD-as-authority walk, deflate-raw inflate with length+crc32 verified, OPC name normalization, [Content_Types].xml flavour gate requiring declared type AND part present, uniform .rels walker, core-props extraction, size-guard with NAMED 32 MiB provisional for COFF-6). ooxml.test.mjs 97/97 hermetic; battery 68/68 (3301); --strict exit 0. NC RUN (neuter flavour discrimination → 13/97 fail incl. plain-ZIP). Vocabulary note for COFF-1's I7 confirmation: format "zip" (no [Content_Types].xml) vs "undetermined"+why is a deliberate split — confirm or amend when writing I7 from code.
 
-### COFF-3 · queued
+### COFF-3 · done
 milestone: M2
 scope: **The XLSX registry entry.** FIRST, one mechanical enactment from COFF-6: replace ooxml.mjs's PROVISIONAL_OOXML_SIZE_BOUND_BYTES (32 MiB container) with the MEASURED bound — 20 MiB of DECLARED UNCOMPRESSED text-part bytes summed from the central directory before inflation (MEASUREMENTS.md 2026-08-03; the metric changed, not just the number), keeping the over-bound → text-undetermined marker. Streaming-to-64-MiB is DEFERRED (see COFF-6's landed line), do not build it. Structure:
   `xl/worksheets/_rels/sheetN.xml.rels` → I2 partitions through the ONE
@@ -604,6 +604,7 @@ accepts-when: battery green with a real Oakland workbook fixture yielding
   `<f>` into `<v>` and the suite fails naming the formula/value distinction,
   AND strip the hidden flag and the suite fails.
 added: 2026-08-03 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: (merge on main, worker c57b909) — COFF-6's bound enacted FIRST: MEASURED_OOXML_TEXT_BOUND_BYTES = 20 MiB of declared uncompressed text-part bytes (metric AND number changed; declaredTextBytes() enacts it at one place; streaming-to-64-MiB NOT built, deferred). formats-xlsx.mjs: sheet-cell references (Summary!B14) per IC-1; rels joined to per-sheet hyperlink cells through the ONE linkWrapper; formulas held BESIDE cached values as two named fields on one evidence item; hidden rows/columns/sheets flagged AND hidden sheets as first-class findings; over-bound → full structure/metadata with the lost cell-join STATED, text refused with the guard marker verbatim. IC-2: variant filing (evidence key) DELETED at reconciliation, never reached main; CONFIRMED under the accepted evidentiary envelope with the xlsx kind vocabulary; core-properties carried as an item kind matching docx.mjs as built. formats-xlsx.test.mjs 75 assertions; battery 71/71 (3540); --strict exit 0. NCs RE-RUN on the conformed shape (collapse f into v → 3/75 fail by name; strip hidden flag → 6/75 fail by name; restored). One cross-claim correction reviewed and accepted at integration: formats-docx.test.mjs:351's provisional-bound pin corrected-with-comment to the measured constant — the property under test (the marker NAMES its bound) unchanged.
 
 ### COFF-4 · done
 milestone: M2
