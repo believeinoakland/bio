@@ -2398,8 +2398,7 @@ for CONDUCT to enact: **REC-11 and REC-12 are the load-bearing pair.** REC-12's 
   and restructuring-after-seeing-strength recorded and attributed rather than blocked.
   Q14's contradiction case stays SEPARATE and stays undesigned — grounds agree on the
   conclusion; contradiction is two conclusions disagreeing.
-enacted:
-
+enacted: 2026-08-04 · CONDUCT — REC-42 queued to CORRECT the shipped flat-AND basis (the relationship on inquiry_basis; MIN over AND legs / MAX over OR branches per axis; the AND default as a correctness requirement so independent sufficiency needs an affirmative attributed act; R1 composing one level up; every flat-shape pin corrected with dates and REC-14 freezing the structured result) and UI-27's sibling elicitation half folded into the UI wave's scope note — no AND/OR vocabulary on any surface, the consequence question per leg, the derived falsifier shown back, structure authored BEFORE strength is shown, restructuring-after-seeing recorded and attributed rather than blocked. Q14's contradiction case recorded as SEPARATE and UNDESIGNED. Reasoning in this entry and QUEUE.md (REC-42).
 ### DEC-33 · answered
 raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)
 for: bob
@@ -2712,7 +2711,7 @@ for CONDUCT to enact: publish the fence wording with the attest act through REC-
   which Bob's example surfaced and which this wording does not fix: a member's FIRSTHAND
   observation has no home as a basis leg, so the likely failure is a member citing the
   newspaper for a fact they personally witnessed.
-enacted:
+enacted: 2026-08-04 · CONDUCT — REC-43 queued (publish the fence with the attest act through REC-16's prompt mechanism, imported from where the rule is enforced, Bob's sentence verbatim) and UI-28 queued (the surface stops authoring it: ATTEST_YIELDS_GRADE and the hand-written block render the publication; the existing negative control RETARGETED, never exempted, so it still fails on any Grade A claim). D-184's firsthand-observation gap noted as NOT fixed by the wording and left on its row. Reasoning in this entry and QUEUE.md (REC-43/UI-28).
 ### DEC-40 · answered
 raised: 2026-08-04 · CONDUCT (lifted from UI-18's report)
 for: bob
@@ -2790,8 +2789,7 @@ for CONDUCT to enact: **THIS SUPERSEDES SHIPPED CODE — UI-18 landed the four-s
   indistinguishable from the case is the misrepresentation vector this ruling exists to
   close. (e) Carry determination 4 to whoever builds IMPORT (M6's interchange half): a
   published case imported elsewhere is a finding and gets no inherited standing.
-enacted:
-
+enacted: 2026-08-04 · CONDUCT — UI-27 queued as a CORRECTION to shipped code (UI-18's four stances removed; a reader-supplied pair of floors defaulting none/none; every filtered rendering carrying its filter in DEC-34's header and never presented, printed or hash-described as 'the case'; an unfiltered one saying so; the determining/suspending-leg protection unchanged; the NEW strip-the-filter-line negative control the current suite cannot have). Determination 4 carried to the IMPORT half: recorded on M6's interchange note so whoever builds it inherits that a published case imported elsewhere is a finding with no standing. Reasoning in this entry and QUEUE.md (UI-27).
 ### DEC-41 · answered
 raised: 2026-08-04 · CONDUCT (lifted from UI-18's report)
 for: bob
@@ -2849,8 +2847,7 @@ for CONDUCT to enact: the manifest's reserved `layout.note` join becomes REAL �
   before signing, since it changes what the artifact IS. The plane's current assertion that
   no page-shaped artifact is produced there is SUPERSEDED and its suite corrected, never
   exempted.
-enacted:
-
+enacted: 2026-08-04 · CONDUCT — SEQUENCED WITH CPDF-12 rather than beside it (both want page-shaped output from workerd; two renderers would repeat D-164): CPDF-12's scope gains the real layout.note join — a server-side renderer producing PDFs that join parts[] with their hashes in published_shas, every page carrying DEC-34's header plus DEC-40's filter line, the manifest gaining an explicit import_only flag stated by the ceremony BEFORE signing. REC-22's shipped no-page-shaped-artifact assertion is recorded as SUPERSEDED and its suite is to be corrected, never exempted. Reasoning in this entry and QUEUE.md (CPDF-12).
 ### DEC-42 · answered
 raised: 2026-08-04 · session BOB (from CPDF-11's NO-GO and a re-reading of CPDF-9)
 for: bob
@@ -2924,7 +2921,6 @@ for CONDUCT to enact: (1) **D-54 changes character** — the installer no longer
   `DEBT.md` and `MILESTONES.md`; `CIVICOS_UI_STATE.md`'s entry is dated history and is
   deliberately NOT rewritten. (5) The free-tier-rot warning in `CAPTURE-SCALING.md` INVERTS
   and must not be lost — see D-185.
-enacted:
 enacted: 2026-08-04 · CONDUCT — all four items: (1) D-54 re-scoped as DIST-3 (the installer REQUIRES and VERIFIES Paid by provoking the platform, and REFUSES rather than half-installing — refusing IS the fix); (2) CPDF-12 re-scoped tesseract-fleet-member-first with the deployed wasm CPU probe plus the unmeasured memory figure, carrying the extraction-not-rasterisation observation to be verified across the corpus before a renderer is built; (3) CPDF-10's in-account engine becomes tesseract pending that probe, external unfunded; (4) D-185's row carries the do-not-delete ruling. The paid-upgrade entry enacted into the same CPDF-12 scope (the plan measured, the runtime GO still to be earned). Reasoning in DEC-42, QUEUE.md (CPDF-10/12, DIST-3) and the corrected documents the BOB session listed.
 
 ### DEC-43 · open
