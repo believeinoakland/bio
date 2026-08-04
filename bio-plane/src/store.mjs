@@ -13519,12 +13519,20 @@ export class Store extends DurableObject {
     const v = Number(this.env && this.env.MONITOR_TICK_MS);
     return Number.isFinite(v) && v >= 0 ? v : Store.MONITOR_TICK_MS;
   }
-  /* The archive arm of op=acquire is admin/probe only. A dedicated MONITOR_TOKEN
-     is preferred so the monitoring surface can be scoped and rotated on its own;
-     ADMIN_TOKEN is the fallback, because monitoring writes the real record's
-     reachability, not scratch. */
+  /* REC-33 / DEC-37, and the ORDER is the whole mechanism. `DAEMON_TOKEN` is the
+     scoped credential this unattended path was minted for: classify() admits it
+     to exactly op=monitor and the archive arm of op=acquire, which is precisely
+     what the two consumers below call, so a leak of it is a monitoring nuisance
+     rather than the total instance compromise a leaked ADMIN_TOKEN is.
+     `ADMIN_TOKEN` IS RETAINED AS THE FALLBACK and that is not tidiness: an
+     instance installed before this class existed has no DAEMON_TOKEN binding,
+     and dropping the fallback would silently inert its monitoring at the next
+     update. It stays until the installer half has bound the new credential
+     everywhere and something can prove it. Neither is scratch-confined, because
+     monitoring writes the REAL record's reachability — which is why PROBE_TOKEN
+     was never the answer here. */
   #monitorToken() {
-    return (this.env && (this.env.MONITOR_TOKEN || this.env.ADMIN_TOKEN)) || null;
+    return (this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN)) || null;
   }
   #monitorConfigured() {
     return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorToken());

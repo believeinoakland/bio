@@ -149,9 +149,24 @@ export const GATE_MARK = "/*viewer-gate*/";
    20,000 bundles against the probe's 5ms. A predicate on rows already selected
    is the same guarantee at a fraction of the cost, and it is still exactly one
    compilation point because every statement below takes its WHERE from here. */
+/* REC-33 / DEC-37: `class:daemon` is RECOGNISED here, and the alternative was
+   not "narrower" — it was INERT. op=monitor reads the bundle image it must diff
+   against by stamping `class:${cls}` on its own inner request, and this function
+   fails closed on anything it does not recognise, so leaving `daemon` out would
+   have made every tick answer ABSENT for every bundle: a class that authenticates
+   and can do nothing, which is worse than the ADMIN_TOKEN fallback it replaces
+   and is exactly DIST-1's armed-alarm trap arriving by a different door.
+   It joins the machine classes rather than getting a predicate of its own for
+   the reason stated below — a machine credential has no person behind it and so
+   no participation to check — and what actually bounds it is the op table, which
+   admits it to two verbs. Recognising it here grants it nothing it cannot reach.
+   Stamping some OTHER class's name on the daemon's inner read was considered and
+   refused: an inner URL that lies about who is asking is the impostor hole
+   REC-29 closed, and it would have put a second, disagreeing answer to "who is
+   this" one function away from the only one that is allowed to exist. */
 export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
-  const m = /^(class:(admin|member|probe)|member:([A-Za-z0-9._:-]{1,128})|admin)$/.exec(v);
+  const m = /^(class:(admin|member|probe|daemon)|member:([A-Za-z0-9._:-]{1,128})|admin)$/.exec(v);
   if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY" };
 
   /* D-15 SATISFIED HERE, and nowhere else. Membership Architecture 7.9.
