@@ -1616,83 +1616,101 @@ export default {
         const c = (await (await stub.fetch(`http://do/publishedcase?${q}`)).json()).result;
         if (!c || !c.ok) return json({ ok: false, ...(c || { reason: "NOT_PUBLISHED" }) }, 404);
 
-        /* D-1: THE BODY COMES FROM THE SAME BYTES AS THE FROZEN STRENGTH. The
-           document is fetched from the published bucket by the edition's own
-           bundle_sha, so what a reader is shown and what the group signed cannot
-           be two different documents — which is precisely the overclaim D-1
-           refuses (rendering a frozen strength beside a live working body). An
-           unreadable body is STATED as unavailable with its reason; it is never
-           substituted from the working corpus, which would be the same overclaim
-           by a shorter route. */
-        const md = await pubBytes(c.bundle_sha);
-        const text = md ? new TextDecoder().decode(md) : null;
-        const fm = text ? (parseFrontmatter(text).data || {}) : null;
-        const body = text
-          ? { state: "published", from_sha: c.bundle_sha,
-              question: sectionText(text, "## Question"),
-              conclusion: sectionText(text, "## Conclusion"),
-              falsifies: sectionText(text, "## What Would Falsify This"),
-              excludes: sectionText(text, "## What This Excludes"),
-              /* BOTH, because the document says it in two places and they are not
-                 the same statement. The FRONTMATTER carries what op=conclude
-                 authored and what the catalog gates — that is the conclusion of
-                 record. The SECTION carries the prose beside it, which is where a
-                 division writes its account and where a person reads. Returning
-                 only one of them would either drop the gated claim or drop the
-                 explanation; a renderer needs to know which is which. */
-              authored: { conclusion: typeof fm?.conclusion === "string" ? fm.conclusion : null,
-                          falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null },
-              detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds "
-                    + "the case to; the section fields are the prose printed beside it in the signed bytes." }
-          : { state: "unavailable", from_sha: c.bundle_sha,
-              reason: typeof env.PUBLISHED?.get === "function" ? "OBJECT_MISSING" : "NO_PUBLISHED_STORE",
-              detail: "this instance cannot hand over the bytes of that edition, so its conclusion is not "
-                    + "rendered here. It is NOT read from the working record instead: the frozen strength "
-                    + "and the rendered body must come from the same bytes." };
+        /* REC-44 / DEC-44: RENDERED PER FINDING, PLURAL. This surface used to
+           render one body, one basis and one frozen pair because a case was
+           assumed to be one inquiry. A case is a container over one or MORE
+           findings, so the body and the basis are rendered for EACH of them and
+           the frozen pair travels with the finding it belongs to. There is no
+           case-level `strength` anywhere in this answer and there must never be
+           one — composing two findings' strengths into one letter is R2's
+           forbidden composition arriving at case altitude, which is exactly what
+           DEC-44's own negative control exists to catch. */
+        const renderFinding = async (fnd) => {
+          /* D-1: THE BODY COMES FROM THE SAME BYTES AS THE FROZEN STRENGTH. The
+             document is fetched from the published bucket by the finding's own
+             bundle_sha, so what a reader is shown and what the group signed cannot
+             be two different documents — which is precisely the overclaim D-1
+             refuses (rendering a frozen strength beside a live working body). An
+             unreadable body is STATED as unavailable with its reason; it is never
+             substituted from the working corpus, which would be the same overclaim
+             by a shorter route. */
+          const md = await pubBytes(fnd.bundle_sha);
+          const text = md ? new TextDecoder().decode(md) : null;
+          const fm = text ? (parseFrontmatter(text).data || {}) : null;
+          const body = text
+            ? { state: "published", from_sha: fnd.bundle_sha,
+                question: sectionText(text, "## Question"),
+                conclusion: sectionText(text, "## Conclusion"),
+                falsifies: sectionText(text, "## What Would Falsify This"),
+                excludes: sectionText(text, "## What This Excludes"),
+                /* BOTH, because the document says it in two places and they are not
+                   the same statement. The FRONTMATTER carries what op=conclude
+                   authored and what the catalog gates — that is the conclusion of
+                   record. The SECTION carries the prose beside it, which is where a
+                   division writes its account and where a person reads. Returning
+                   only one of them would either drop the gated claim or drop the
+                   explanation; a renderer needs to know which is which. */
+                authored: { conclusion: typeof fm?.conclusion === "string" ? fm.conclusion : null,
+                            falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null },
+                detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds "
+                      + "the finding to; the section fields are the prose printed beside it in the signed bytes." }
+            : { state: "unavailable", from_sha: fnd.bundle_sha,
+                reason: typeof env.PUBLISHED?.get === "function" ? "OBJECT_MISSING" : "NO_PUBLISHED_STORE",
+                detail: "this instance cannot hand over the bytes of that edition, so its conclusion is not "
+                      + "rendered here. It is NOT read from the working record instead: the frozen strength "
+                      + "and the rendered body must come from the same bytes." };
 
-        /* THE BASIS LEGS, from the signed bytes, each one classified as a leg
-           this surface can SERVE or one it can only NAME. `served` is decided
-           against the published projection and nothing else, so a leg resting on
-           working material is named and never resolved; the cited EDITION's
-           frozen pair travels with it (DEC-12: a leg names an edition and does
-           not silently follow a newer one). */
-        const legs = Array.isArray(fm?.basis) ? fm.basis.filter((l) => l && typeof l.target === "string") : [];
-        let registry = {};
-        if (legs.length) {
-          const ids = [...new Set(legs.map((l) => l.target))];
-          const rt = (await (await stub.fetch(
-            `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`)).json()).result;
-          registry = (rt && rt.registry) || {};
-        }
-        const basis = legs.map((l) => {
-          const reg = registry[l.target] || null;
-          const named = l.target_edition != null ? String(l.target_edition) : null;
-          const cited = reg ? (named ? reg.editions[named] : reg.editions[String(reg.latest)]) : null;
-          return {
-            target: l.target, role: l.role ?? "supports",
-            grade: l.grade ?? null, grade_axis: l.grade_axis ?? null, grade_source: l.grade_source ?? null,
-            target_edition: l.target_edition ?? null,
-            served: !!cited,
-            cited_edition: cited
-              ? { edition: cited.edition, title: cited.title, bundle_sha: cited.bundle_sha,
-                  ratified_at: cited.ratified_at, capture: cited.capture, connection: cited.connection }
-              : null,
-            detail: cited
-              ? "this leg rests on a published edition, so it can be served from this surface."
-              : "this leg is NAMED and not served: what it rests on is not in the published record, so this "
-              + "surface can say the case cites it and can hand over nothing of it.",
-          };
-        });
+          /* THE BASIS LEGS, from the signed bytes, each one classified as a leg
+             this surface can SERVE or one it can only NAME. `served` is decided
+             against the published projection and nothing else, so a leg resting on
+             working material is named and never resolved; the cited EDITION's
+             frozen pair travels with it (DEC-12: a leg names an edition and does
+             not silently follow a newer one). A leg rests on a FINDING, never on a
+             case — C-21.2's altitude, which DEC-44 leaves exactly where it was. */
+          const legs = Array.isArray(fm?.basis) ? fm.basis.filter((l) => l && typeof l.target === "string") : [];
+          let registry = {};
+          if (legs.length) {
+            const ids = [...new Set(legs.map((l) => l.target))];
+            const rt = (await (await stub.fetch(
+              `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`)).json()).result;
+            registry = (rt && rt.registry) || {};
+          }
+          const basis = legs.map((l) => {
+            const reg = registry[l.target] || null;
+            const named = l.target_edition != null ? String(l.target_edition) : null;
+            const cited = reg ? (named ? reg.editions[named] : reg.editions[String(reg.latest)]) : null;
+            return {
+              target: l.target, role: l.role ?? "supports",
+              grade: l.grade ?? null, grade_axis: l.grade_axis ?? null, grade_source: l.grade_source ?? null,
+              target_edition: l.target_edition ?? null,
+              served: !!cited,
+              cited_edition: cited
+                ? { edition: cited.edition, title: cited.title, bundle_sha: cited.bundle_sha,
+                    ratified_at: cited.ratified_at, case_id: cited.case_id ?? null,
+                    capture: cited.capture, connection: cited.connection }
+                : null,
+              detail: cited
+                ? "this leg rests on a published finding, so it can be served from this surface."
+                : "this leg is NAMED and not served: what it rests on is not in the published record, so this "
+                + "surface can say the finding cites it and can hand over nothing of it.",
+            };
+          });
+          return { ...fnd, object_type: normalizeType(fm?.object_type) ?? null, body, basis,
+                   bytes: `op=publishedbytes&sha256=${fnd.bundle_sha}` };
+        };
+        const findings = [];
+        for (const fnd of c.findings || []) findings.push(await renderFinding(fnd));
 
-        return json({ ok: true, ...c, object_type: normalizeType(fm?.object_type) ?? null, body, basis,
+        return json({ ok: true, ...c, findings,
           verification: {
-            bytes: `op=publishedbytes&sha256=${c.bundle_sha}`,
             container: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}&format=zip` : null,
             manifest: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
+            findings: findings.map((f) => ({ bundle_id: f.bundle_id,
+                                             bytes: `op=publishedbytes&sha256=${f.bundle_sha}` })),
             detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the "
-                  + "manifest answers by its own sha256, and the signature covers the bundle sha. Nothing "
-                  + "here prevents a modified copy; everything here makes one detectable by anyone holding "
-                  + "it, without this instance's cooperation.",
+                  + "manifest answers by its own sha256, and EACH FINDING's signature covers that finding's "
+                  + "own bundle sha. Nothing here prevents a modified copy; everything here makes one "
+                  + "detectable by anyone holding it, without this instance's cooperation.",
           } }, 200);
       }
       /* 7b. Anyone, no token, no session. Size-capped, rate-limited, and
@@ -3638,6 +3656,9 @@ export default {
            path judge against the same published record. Passing nothing here
            does not soften the gate, it blinds it. */
         publishedRegistry: facts.publishedRegistry,
+        /* REC-44: C-21.1's fact moved to CASE altitude and travels in its own
+           registry, from the same one place that has the rows. */
+        publishedCaseRegistry: facts.publishedCaseRegistry,
         /* REC-18: and the third — what each basis target EARNS from the record
            (resolutions against the question's subject entity; the capture
            record for the capture axis). Same reasoning, same source: an earned
@@ -3698,8 +3719,29 @@ export default {
         author: ratifiedFm.completeness?.author ?? null,
         at: ratifiedFm.completeness?.at ?? null,
       } : null;
+      /* REC-44 / DEC-44: WHICH CASE THIS FINDING WAS PUBLISHED IN, AND WITH
+         WHOM — read out of the RATIFIED BYTES like the edition beside it, and
+         out of nothing else. op=publish wrote all three into every member's
+         document before the sha was taken, so the signature covers them: a case
+         identity, a scope statement or a roster that is not inside the hash the
+         member signed is one this plane would be asserting on their behalf. */
+      const caseId = isCase && typeof ratifiedFm.case_id === "string" && ratifiedFm.case_id !== "null"
+        ? ratifiedFm.case_id : null;
+      const caseFindings = caseId && Array.isArray(ratifiedFm.case_findings) ? ratifiedFm.case_findings : null;
+      const caseScope = caseId && typeof ratifiedFm.case_scope === "string" ? ratifiedFm.case_scope : null;
 
-      /* DEC-34: the CONTAINER's signed hash manifest. "Protected" means
+      /* DEC-34 as REC-44 corrects it: THE CONTAINER IS THE CASE'S, and it is
+         therefore NOT BUILT HERE. It used to be, because a case was assumed to
+         be one inquiry and the manifest could be assembled from the one
+         document this act ratifies. A case holds one or MORE findings, each
+         signed on its own bytes, so the container can only be assembled when
+         the LAST member of an edition lands — which is why it is built below,
+         after the store has said whether this ratification completed the
+         edition. Everything DEC-34 required is unchanged: every part named by
+         sha256, the manifest answerable by its own hash, and tamper-EVIDENT
+         rather than tamper-proof.
+
+         DEC-34: the CONTAINER's signed hash manifest. "Protected" means
          TAMPER-EVIDENT and the record must never claim otherwise -- a zip
          password is either broken encryption or a lock on the stranger this
          surface exists to serve, and a PDF's write-protect flag is advisory.
@@ -3722,33 +3764,6 @@ export default {
 
          EDITIONS ARE OVER THE CONTAINER (DEC-12): a new edition is a new
          manifest with a new hash, and earlier editions keep answering. */
-      const manifest = {
-        format: "bio-case-container/1",
-        case: body.bundleId,
-        title: ratifiedFm.title ?? null,
-        edition,
-        group: ratifiedFm.group ?? null,
-        bundle_sha: body.expectedSha,
-        gate_version: gate.gateVersion,
-        attestor: { member: attestor?.member_id ?? sessMember, key_b64: sv.keyB64 },
-        signature: { namespace: NS_RATIFY, statement: ratifyStatement(body.bundleId, body.expectedSha),
-                     armored: body.sig },
-        strength: frozenStrength,
-        required_strength: isCase ? (ratifiedFm.required_strength ?? null) : null,
-        parts: shas.map(({ text, ...part }) => part),
-        layout: { root: `${body.bundleId}/`, parts_at: "path", manifest_at: "MANIFEST.json",
-                  note: "the zip carries every part at its own path with this manifest at the root. Check "
-                      + "each part's sha256 against this list, then check this manifest's own sha256 and the "
-                      + "signature over bundle_sha. Renderings (REC-22) join parts[] as kind: rendering." },
-        verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here "
-              + "makes one detectable by anyone holding it, without this instance's cooperation.",
-      };
-      const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
-      const manifestSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", manifestBytes))]
-        .map((x) => x.toString(16).padStart(2, "0")).join("");
-      shas.push({ sha256: manifestSha, path: "MANIFEST.json", kind: "manifest",
-                  bytes: manifestBytes.length, text: JSON.stringify(manifest, null, 1) });
-
       /* REC-22 / R4: THE PUBLISHED GRAPH, read out of the RATIFIED BYTES and out
          of nothing else — not the caller's request, not the working `refs`
          table, which is a projection of whatever bundle.md says today and moves
@@ -3793,13 +3808,16 @@ export default {
           ...(isCase ? { edition } : {}), title: ratifiedFm.title ?? null,
           completeness: frozenCompleteness, strength: frozenStrength,
           required: isCase ? (ratifiedFm.required_strength ?? null) : null,
-          manifest, manifestSha, edges,
+          caseId, caseScope, caseFindings, group: ratifiedFm.group ?? null,
+          edges,
           shas: shas.map(({ text, ...s }) => s),
         }) }))).json()).result;
       if (!pub?.ok)
         return json({ ok: false, ...(pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub }),
                       store: storeName, tokenClass: cls },
-                    pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS") ? 409 : 500);
+                    pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS"
+                            || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED"
+                            || pub.reason === "CASE_ROSTER_EXCLUDES_SELF") ? 409 : 500);
 
       /* The fence: ratified bytes land content-addressed in the published
          bucket, so the published corpus is self-contained. Existing keys
@@ -3820,6 +3838,81 @@ export default {
           }
           copied++;
         }
+      }
+
+      /* REC-44 / DEC-34: THE CASE CONTAINER, assembled the moment the LAST
+         member finding of an edition is ratified and not before. A case is a
+         container over one or MORE findings, each signed on its own bytes, so
+         there is a real window in which a case edition EXISTS and cannot be
+         served whole; the store states that as `awaiting` rather than
+         pretending, and a manifest built earlier would name parts that are not
+         in the published store yet — the PART_MISSING refusal by construction.
+         DEC-44 determination 3 is what makes the assembly non-negotiable: a
+         stranger holding the zip must be able to check EVERY finding the case
+         rests on without contacting this instance, so naming them is not enough
+         and every member's parts are carried in full.
+         There is NO case-level strength here and there must never be one: each
+         finding carries its own frozen pair inside findings[], and one letter
+         over the case is R2's forbidden composition at case altitude. */
+      let container = null;
+      if (pub.case && pub.case.complete && !pub.case.manifest_sha) {
+        const cs = pub.case;
+        const manifest = {
+          format: "bio-case-container/2",
+          case: cs.caseId,
+          edition: cs.edition,
+          group: cs.group ?? null,
+          /* DEC-44 determination 2: what the case is ABOUT, authored by the
+             group. Beside it, what it left OUT. A reader needs both. */
+          scope: cs.scope ?? null,
+          completeness: cs.completeness ?? null,
+          ratified_at: cs.ratified_at,
+          /* EVERY MEMBER FINDING, each with its OWN signature, its OWN attestor
+             and its OWN frozen PAIR. The signature is per finding because the
+             FINDING is the unit of truth: what a member signed is one
+             document's bytes, and a case-level signature would be a signature
+             over something nobody reviewed. */
+          findings: cs.findings.map((f) => ({
+            bundle_id: f.bundle_id, title: f.title, edition: cs.edition,
+            bundle_sha: f.bundle_sha, ratified_at: f.ratified_at, gate_version: f.gate_version,
+            attestor: f.attestor,
+            signature: { namespace: NS_RATIFY, statement: ratifyStatement(f.bundle_id, f.bundle_sha),
+                         armored: f.sig_armored },
+            strength: f.strength, required_strength: f.required,
+            parts: f.parts.map((p) => `${f.bundle_id}/${p.path}`),
+          })),
+          /* The parts are NAMESPACED BY FINDING, and that is forced rather than
+             chosen: every finding carries a `bundle.md`, so a flat parts[]
+             would have two members claiming one path and the archive would say
+             two things about one name. */
+          parts: cs.findings.flatMap((f) => f.parts.map((p) => ({
+            path: `${f.bundle_id}/${p.path}`, finding: f.bundle_id,
+            sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null }))),
+          layout: { root: `${cs.caseId}/`, parts_at: "path", manifest_at: "MANIFEST.json",
+                    note: "the zip carries every part at <case>/<finding>/<path> with this manifest at the "
+                        + "root. Check each part's sha256 against this list, then check this manifest's own "
+                        + "sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) "
+                        + "join parts[] as kind: rendering." },
+          verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here "
+                + "makes one detectable by anyone holding it, without this instance's cooperation. Each "
+                + "finding is signed on its own bytes; there is no case-level strength, because composing "
+                + "several findings' strengths into one letter is a claim the evidence does not support.",
+        };
+        const mText = JSON.stringify(manifest, null, 1);
+        const mBytes = new TextEncoder().encode(mText);
+        const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))]
+          .map((x) => x.toString(16).padStart(2, "0")).join("");
+        const rec = (await (await stub.fetch(new Request("http://do/recordcasemanifest", {
+          method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
+                                                 manifest, manifestSha: mSha, bytes: mBytes.length }) }))).json()).result;
+        if (rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
+          const key = `${storeName}/published/${mSha}`;
+          if (!(await env.PUBLISHED.head(key))) await env.PUBLISHED.put(key, mBytes);
+        }
+        container = rec && rec.ok
+          ? { manifest_sha: mSha, parts: manifest.parts.length, findings: manifest.findings.length,
+              zip: `op=publishedbytes&sha256=${mSha}&format=zip` }
+          : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
       }
 
       /* CAP-4 / CAPTURE-SCALING item 6: re-fetch the reused parts at
@@ -3911,8 +4004,17 @@ export default {
                        and `graph` reports what the published edges did: how many the
                        surface may SERVE, how many it may only NAME, and how many
                        references were dropped for pointing at unpublished material. */
-                    container: { manifest_sha: manifestSha, parts: manifest.parts.length,
-                                 zip: `op=publishedbytes&sha256=${manifestSha}&format=zip` },
+                    ...(pub.caseId ? { caseId: pub.caseId,
+                                       case: { edition: pub.case?.edition ?? null,
+                                               complete: !!pub.case?.complete,
+                                               awaiting: pub.case?.awaiting ?? [],
+                                               findings: (pub.case?.findings ?? []).map((f) => f.bundle_id),
+                                               detail: pub.case?.detail ?? null } } : {}),
+                    container: container
+                      ?? (pub.case && pub.case.manifest_sha
+                        ? { manifest_sha: pub.case.manifest_sha,
+                            zip: `op=publishedbytes&sha256=${pub.case.manifest_sha}&format=zip` }
+                        : null),
                     graph: pub.edges ?? null,
                     existed: pub.existed, ratifiedAt: pub.ratifiedAt,
                     attestor: attestor?.member_id ?? null, gateVersion: gate.gateVersion,

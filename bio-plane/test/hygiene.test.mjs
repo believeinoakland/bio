@@ -270,6 +270,20 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     group_strength_bar:   "the group's declared default required evidentiary strength (DEC-17); a standing governance declaration about the group's own work, authored and dated like the roster, not derived from any document",
     published_bundles:    "public ratified projection; kept verifiable forever by doctrine, not torn down with the working store",
     published_shas:       "append-only published hashes; a hash once published stays verifiable forever (schema doctrine)",
+    /* REC-44 / DEC-44, and the exemption is the SAME judgement its two siblings
+       above already carry rather than a new one. published_cases holds what
+       nothing else holds — the authored scope, the completeness assertion and
+       the container's manifest for each edition of each published case — and
+       published_case_members holds the declared roster, which is the only thing
+       that can say a case edition was INCOMPLETE (published_bundles holds the
+       ratified subset and cannot). Both are the published projection, so a
+       purge of the working corpus must leave them standing for the same reason
+       it leaves published_bundles standing: a case once published answers
+       forever. published_edges is the counter-example that keeps this honest —
+       it IS purged, because every row of it is recomputable from bytes that
+       answer forever, and neither of these is. */
+    published_cases:      "published case projection (DEC-44): the authored scope, the completeness assertion and the container manifest per case per edition; nothing else holds them, and a case once published answers forever",
+    published_case_members: "the DECLARED case->findings roster per edition, from the members' own signed bytes; it is what says a case edition is incomplete, which published_bundles (the ratified subset) cannot",
     inbox:                "quarantined public intake; inbound submissions awaiting review, explicitly not the record and not corpus-derived",
     knock_rate:           "fixed-window knock rate accounting; transient, self-pruning as windows pass",
     capture_limits:       "measured per-runtime subrequest ceiling; a capability fact, relearned by being refused, not corpus-derived",

@@ -110,7 +110,14 @@ const divide = async (tok, { target, ...body }) =>
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`, body));
+/* REC-44 / DEC-44 (2026-08-04): op=publish now requires an authored `scope` —
+   a published case is a CONTAINER over one or more FINDINGS and states what
+   brought them together. The helper supplies a default so every assertion below
+   goes on measuring what it was written to measure; the NEW rule is asserted on
+   its own, by name, rather than by these calls happening to omit the field.
+   A body that sets `scope` (or `scope: ""`, to drive the refusal) wins. */
+const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
+  { scope: "Whether the signature question was properly handled, on the documents in hand.", ...body }));
 const affordances = async (target, tok = "mem-rec16") =>
   rP(await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(target)}`));
 const actIds = (r) => (r?.acts ?? []).map((a) => a.id).sort();

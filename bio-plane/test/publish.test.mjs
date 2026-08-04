@@ -109,7 +109,14 @@ const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
    route, and the literal `op=publish` uninterpolated so coverage credits it
    there (D-43: op=invitelook shipped with a ReferenceError while 1276
    store-level assertions passed). */
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`, body));
+/* REC-44 / DEC-44 (2026-08-04): op=publish now requires an authored `scope` —
+   a published case is a CONTAINER over one or more FINDINGS and states what
+   brought them together. The helper supplies a default so every assertion below
+   goes on measuring what it was written to measure; the NEW rule is asserted on
+   its own, by name, rather than by these calls happening to omit the field.
+   A body that sets `scope` (or `scope: ""`, to drive the refusal) wins. */
+const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
+  { scope: "Whether the signature question was properly handled, on the documents in hand.", ...body }));
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
@@ -132,11 +139,18 @@ const stateOf = async (id) => ((await GET("op=list&token=mem-rec14")).result || 
    deliberate: the op answers from the SAME store function op=promote enforces
    with, so "audits clean" is measured against the enforcer and not against a
    fixture's idea of it. */
-const errorsOf = async (id, text, registry, earned) => {
+/* CORRECTED 2026-08-04, REC-44 / DEC-44: the catalog now takes TWO published
+   registries, because C-21.1 asks a CASE question (what did the previous
+   edition of this case assert about its limits) and C-21.2 asks a FINDING
+   question (what did the case beneath this leg freeze, per axis). They are
+   injected separately and deliberately: one registry serving both altitudes is
+   the collapse DEC-44 corrects. */
+const errorsOf = async (id, text, registry, earned, caseRegistry) => {
   const { findings } = await checkBundle({ folderName: id,
     files: new Map([["bundle.md", text]]),
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
-    resolveTarget: () => true, publishedRegistry: registry, earnedRegistry: earned });
+    resolveTarget: () => true, publishedRegistry: registry, earnedRegistry: earned,
+    publishedCaseRegistry: caseRegistry });
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
 const earnedFor = async (id, tok = PILAR) =>
@@ -371,9 +385,26 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
      /^ {2}subject_justification: /m.test(md)], [true, true, true]);
   t("the canonical heading carries the assertion for a person to read",
     md.includes("## What This Excludes"), true);
-  t("BOTH frozen axis objects are stamped — never two letters, and never one",
-    ok.strength, [{ axis: "capture", state: "graded", grade: "B", weakest: INFO_CAP },
-                  { axis: "connection", state: "graded", grade: "C", weakest: INFO_CONN }]);
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44. This used to read `ok.strength` — a
+     frozen pair at the top of the ANSWER — and that was right only while a case
+     was assumed to be exactly one inquiry (D-187: nobody chose that shape). A
+     case is a container over one or MORE findings, so the pair belongs to the
+     FINDING and the act answers with findings[]. The old assertion is not
+     loosened: the same two axis objects are demanded, and its absence from the
+     case level is now asserted BESIDE it, because that absence is the rule. */
+  t("BOTH frozen axis objects are stamped PER FINDING — never two letters, and never one",
+    ok.findings[0].strength, [{ axis: "capture", state: "graded", grade: "B", weakest: INFO_CAP },
+                              { axis: "connection", state: "graded", grade: "C", weakest: INFO_CONN }]);
+  t("and the ACT reports NO case-level strength: one letter over a case is R2's forbidden composition at a new altitude",
+    "strength" in ok, false);
+  t("the case has an identity of its own, distinct from any bundle id, and it is in the bytes that will be signed",
+    [/^CASE-\d{4}-\d{4}$/.test(ok.caseId), ok.caseId !== INQ_CASE,
+     new RegExp(`^case_id: ${ok.caseId}$`, "m").test(md),
+     new RegExp(`^case_findings: \\[${INQ_CASE}\\]$`, "m").test(md),
+     /^case_scope: "/m.test(md)],
+    [true, true, true, true, true]);
+  t("a case with no authored scope is refused BY NAME: scope says what the case is ABOUT, completeness what it left OUT",
+    (await publish(PILAR, { ...base, target: INQ_THIN, scope: "" })).reason, "NO_SCOPE");
   t("R4's division disclosure is RESERVED in the shape now, so it does not change under readers later",
     [/^division_parent: null$/m.test(md), /^division_siblings: \[\]$/m.test(md)], [true, true]);
   t("the published document AUDITS CLEAN against the catalog",
@@ -493,8 +524,13 @@ console.log("\n--- 5. DEC-12: reopened, concluded again, published at edition 2 
     subjectPosition: "sought_and_answered", subjectJustification: JUST2 });
   t("the second publication is EDITION 2, and the edition is server-stamped from the published record",
     [e2.ok, e2.edition], [true, 2]);
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44: the declared bar is a fact about the
+     FINDING (DEC-17 makes it a property of the project doing the work, and the
+     work is the finding), so it is read from findings[] rather than from the top
+     of the answer. Values unchanged. */
   t("edition 2 carries the PROJECT's declared bar, stamped beside the derived pair",
-    [e2.required.source, e2.required.capture, e2.required.connection], ["project", "B", "B"]);
+    [e2.findings[0].required.source, e2.findings[0].required.capture, e2.findings[0].required.connection],
+    ["project", "B", "B"]);
   const rat2 = await ratify(INQ_CASE);
   t("edition 2 ratifies", [rat2.ok, rat2.edition], [true, 2]);
   const eds = await editionsOf(INQ_CASE);
@@ -556,14 +592,19 @@ console.log("\n--- 6. C-21.1: a completeness claim carried forward unchanged is 
   /* THE GATE runs C-21.1 again at ratification: the store's refusal above stops
      a member signing a document the gate would reject, and the gate is what
      catches anything that reached the bytes another way. */
-  const reg = { [INQ_CASE]: { latest: 2, editions: { 2: { edition: 2,
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44: the injected registry is keyed on the
+     CASE this document names, not on the document's own id. The assertion is not
+     loosened — C-21.1 must still fire exactly once on the stale statement and not
+     at all on the fresh one — but it is now asked at the altitude the claim lives
+     at, and a registry keyed on the finding would silently stop firing. */
+  const caseReg = { [ok3.caseId]: { latest: 2, editions: { 2: { edition: 2,
     completeness: { statement: STMT2, subject_justification: JUST2,
       excluded: JSON.stringify(EX2.map((r) => [null, r.description, r.reason])) } } } } };
   const stale = (await imageOf(INQ_CASE)).replace(FRESH_S, STMT2);
   t("the CATALOG names C-21.1 on a published edition whose statement is the previous edition's",
-    (await errorsOf(INQ_CASE, stale, reg)).filter((e) => e.startsWith("C-21.1")).length, 1);
+    (await errorsOf(INQ_CASE, stale, {}, undefined, caseReg)).filter((e) => e.startsWith("C-21.1")).length, 1);
   t("and the freshly authored edition draws no C-21.1 finding at all",
-    (await errorsOf(INQ_CASE, await imageOf(INQ_CASE), reg)).filter((e) => e.startsWith("C-21.1")), []);
+    (await errorsOf(INQ_CASE, await imageOf(INQ_CASE), {}, undefined, caseReg)).filter((e) => e.startsWith("C-21.1")), []);
   await ratify(INQ_CASE);
 }
 
@@ -700,8 +741,15 @@ console.log("\n--- 9. an EXISTING store migrates: every ratified row survives as
 )`;
   const from = SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_bundles");
   const OLD_SCHEMA = SCHEMA.slice(0, from) + OLD_PB + SCHEMA.slice(SCHEMA.indexOf(");", from) + 1);
-  t("the fixture really is the OLD shape: no edition column anywhere in its published_bundles",
-    /published_bundles[\s\S]{0,400}edition/.test(OLD_SCHEMA), false);
+  /* CORRECTED 2026-08-04, REC-44: read the STATEMENT rather than a window of
+     characters after the name. The old proximity regex was a proxy that stopped
+     being one when REC-44 added a published_cases comment further down the file
+     that legitimately says both "published_bundles" and "edition" in one
+     sentence. The claim is unchanged and is now checked directly: the fixture's
+     own CREATE TABLE for published_bundles has no edition column. */
+  const OLD_CREATE = OLD_SCHEMA.slice(OLD_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_bundles"));
+  t("the fixture really is the OLD shape: no edition column in its published_bundles statement",
+    /edition/.test(OLD_CREATE.slice(0, OLD_CREATE.indexOf(")"))), false);
 
   /* A subclass with ONE raw route, the strength-cycle-probe precedent: the row
      has to be written in the old column set, which the current committer

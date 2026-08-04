@@ -102,7 +102,14 @@ const sourcesOn = (r, bundleId) => owed(r, bundleId).flatMap((o) => o.causes.map
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`, body));
+/* REC-44 / DEC-44 (2026-08-04): op=publish now requires an authored `scope` —
+   a published case is a CONTAINER over one or more FINDINGS and states what
+   brought them together. The helper supplies a default so every assertion below
+   goes on measuring what it was written to measure; the NEW rule is asserted on
+   its own, by name, rather than by these calls happening to omit the field.
+   A body that sets `scope` (or `scope: ""`, to drive the refusal) wins. */
+const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
+  { scope: "Whether the signature question was properly handled, on the documents in hand.", ...body }));
 const divide = async (tok, { target, ...body }) =>
   rP(await POST(`op=inquirydivide&token=${tok}&target=${encodeURIComponent(target ?? "")}`, body));
 const reopen = async (tok, target, reason) =>
@@ -524,11 +531,19 @@ console.log("\n--- 6. DEC-12: a newer edition surfaces the obligation and recomp
   const rat2 = await ratify(INQ_CASE);
   t("(fixture) the case republishes at edition 2 and ratifies with its own signature",
     [pub2.ok, pub2.edition, rat2.ok, rat2.edition], [true, 2, true, 2]);
-  t("op=publish names the obligation the new edition raises, and only from edition 2 onward",
-    [pub2.reevaluation?.source ?? null, pub2.reevaluation?.edition ?? null,
-     (pub2.reevaluation?.raised ?? []).map((x) => x.bundle_id)], ["edition", 2, [INQ_DEPENDS]]);
+  /* CORRECTED 2026-08-04, REC-44 / DEC-44. The obligation is reported PER
+     FINDING and not at the case level, and it has to be: a basis leg rests on a
+     FINDING (one proposition, one falsifier — DEC-32), so what a new edition
+     moves under a dependent is a particular finding's frozen pair. The old
+     read was at the top of the answer, which was only ever correct because a
+     case was assumed to be exactly one inquiry (D-187). Same values demanded,
+     one altitude down. */
+  const f2 = pub2.findings[0];
+  t("op=publish names the obligation the new edition raises PER FINDING, and only from edition 2 onward",
+    [f2.reevaluation?.source ?? null, f2.reevaluation?.edition ?? null,
+     (f2.reevaluation?.raised ?? []).map((x) => x.bundle_id)], ["edition", 2, [INQ_DEPENDS]]);
   t("edition 1 is NOT what raised it: publishing edition 1 raised nothing, because nothing rested on a prior one",
-    "reevaluation" in pub1, false);
+    "reevaluation" in pub1.findings[0], false);
 
   const r = await reevals(INQ_CASE);
   t("the read reports the obligation on the dependent, with the edition it cited and the edition that now stands",
