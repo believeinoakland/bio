@@ -3422,8 +3422,22 @@ what reversing costs: little today and more each release. Two constants carry th
   sentences now; every act that learns a refusal detail adds one.
 **THE MEASUREMENT IS NOW IN, and this question should be answered against it rather than
   against an impression — `MEASUREMENTS.md`, "2026-08-04, UI-31: the plane vocabulary standing
-  on the PRE-AUTHENTICATION surfaces". **Headline, CURRENT as of 2026-08-04 after UI-33 and UI-34: 9 terms
-  on 4 surfaces, 47 occurrences in text a member reads, over 11 scenarios** — down from
+  on the PRE-AUTHENTICATION surfaces". **Headline, CURRENT as of 2026-08-04 after UI-36: 13 terms over 19
+  surfaces, 57 occurrences in text a member reads. YOUR SUBJECT GREW from EIGHT
+  plane-sourced rows to ELEVEN**, and one of the three matters more than the other two:
+  **`manifest` is the plane's `kind` VALUE printed as an English WORD** ("it names
+  MANIFEST.json (manifest) in CASE-2026-0001"). UI-33 had removed the surface-authored
+  `manifest` from these surfaces entirely; it is back, from the plane's side. **So the
+  subject you are ruling on now contains a word the PLANE CHOSE, not only hashes, file
+  paths and the login sentence** — which is a materially different question from the one
+  this entry opened with. The other two are `CASE` (the acronym rule catching the plane's
+  real minted id prefix) and `FIND` (the same rule on a FIXTURE's id spelling, labelled
+  as such at the pin — nothing in the plane mints FIND). All EIGHT original rows are
+  unchanged in number and source; nothing vanished. This growth was made visible on
+  purpose: UI-34 built a guard pinning the subject by term and by source, and UI-36 was
+  required to update it deliberately and name every new row rather than re-baseline it.
+  (Earlier readings, for the record: 13 terms / 5 surfaces / 56 at UI-31; 9 / 4 / 47 after
+  UI-33 and UI-34 closed the surface-authored half.)** — down from
   13 on 5 surfaces and 56 occurrences at UI-31's first reading, because UI-33 closed the
   surface-authored half without waiting on you. **The UNAVOIDABLE column never moved**, so
   none of the reasoning below is invalidated and your subject is the same eight plane-sourced
