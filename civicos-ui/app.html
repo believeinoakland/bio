@@ -900,11 +900,25 @@ const api = (op, body, params) => fetch(
    that back VERBATIM (`json(await r.json())`), so the wire shape is
    `{ok:true, result:{ok:true, role, token, expires}}` and `l.token` was
    `undefined` for every correct password. The refusal half was worse: a wrong
-   password comes back as `{ok:true, result:{ok:false, reason:"BAD_PASSWORD"}}`,
-   so `l.ok===false` never fired either and the gate showed the member the
-   ENVELOPE instead of the record's own reason. No harness reaches `signIn` or
-   `pubList` at all, which is why five sweeps had not found it — arm A of
-   `check-mock-envelope.mjs` is what finds this class without a harness.
+   password comes back as a REFUSAL INSIDE A SUCCESSFUL ENVELOPE, so
+   `l.ok===false` never fired either and the gate showed the member the
+   ENVELOPE instead of the record's own reason. No harness reached `signIn` or
+   `pubList` at all when this was written, which is why five sweeps had not
+   found it — arm A of `check-mock-envelope.mjs` is what finds this class
+   without a harness, and `test/auth-surface.test.mjs` (UI-24) has driven both
+   paths since.
+   CORRECTED 2026-08-04 (UI-30), and BOTH HALVES OF THE OLD WORDING WERE WRONG
+   RATHER THAN MERELY DATED. Its worked example spelled out one of the two
+   refusal reason codes REC-41 RETIRED — both of them went, because with
+   `op=bootstrap`'s roster closed a distinguishable refusal is the enumeration
+   surface that replaces it (the reasoning is at `store.mjs`
+   `Store.LOGIN_REFUSAL_DETAIL`). `op=login` now answers ONE code,
+   `SIGN_IN_REFUSED`, from every arm — and it answers a `detail` SENTENCE the
+   plane did not have before, which is what `signIn` renders below. The example
+   is left unspelled here on purpose: a wire code written into a comment is the
+   fourth copy of a string this file has no business holding, and it is exactly
+   the copy that went stale. The ENVELOPE point this comment exists to make is
+   unchanged and does not depend on which code rides inside it.
    `op=publishedmanifest` is wrapped too (index.mjs re-wraps it explicitly) and
    `pubList` was already reading `r.result.published` correctly; it goes through
    the seam now so no site is left deciding for itself. */
@@ -1102,7 +1116,19 @@ async function signIn(){
   try{
     const role = $("#g-handle").value.trim();
     const l = await apiR("login", { role, password: $("#g-pw").value });
-    if(!l || l.ok===false || !l.token){ teach($("#g-err"), l||{}); return; }
+    /* THE REFUSAL IS RENDERED IN THE PLANE'S OWN WORDS AND THIS SURFACE WRITES
+       NONE OF THEM (DEC-8: a surface may render a refusal it RECEIVED and may
+       never compose one). UI-30, 2026-08-04: `op=login` now sends a `detail`
+       SENTENCE beside its one reason code, so the sentence is what a member
+       reads. That is a SELECTION between two things the plane sent, not a
+       composition — and it is why the code is not shown beside it: the sentence
+       says everything the code says, in words, and `SIGN_IN_REFUSED` printed at
+       a sign-in gate is machine vocabulary a member is being made to decode.
+       WHEN NO SENTENCE ARRIVES the bare reason still stands, which is what this
+       gate did before the plane had one: an older plane, or a refusal from some
+       other layer, must not be silently blanked, and this surface has nothing
+       honest to put in its place. */
+    if(!l || l.ok===false || !l.token){ teach($("#g-err"), l && l.detail ? { detail:l.detail } : (l||{})); return; }
     PLANE.token = l.token; PLANE.session = true;
     await boot();
   }catch(e){ teach($("#g-err"), e); }
