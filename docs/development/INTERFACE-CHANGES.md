@@ -294,3 +294,28 @@ integration, one version line). COFF-3 and COFF-5 CONFIRM the envelope from thei
 own as-built code when they land, inventing no variants; a drift is a COUNTER here,
 not a silent fork. When FRAMEWORK next wakes it may re-open either entry before
 building against 1.1.0.
+
+### IC-2 · CONFIRM · 2026-08-03 · COFF-5 (PPTX), from as-built code
+
+The PPTX entry (`bio-plane/src/pptx.mjs`, pinned by `formats-pptx.test.mjs`)
+CONFIRMS the accepted envelope exactly as `docx.mjs` carries it — same top-level
+`evidentiary` sibling on the `ok:true` structure object, same
+`{container, kinds[], items[], undetermined[{part, why}], counts}` carriage,
+every item with the required `kind` tag and an IC-1 `source` (here the
+`slide-shape` arm) or null, docProps metadata as the same
+`{kind:"core-properties", ..., source:null}` item. No variant filed. Its kinds,
+from code:
+
+    { kind:"speaker-notes", slide:<1-based | null when the deck order is
+      unreadable — stated, never numbered off filenames>, part, text,
+      source:<slide-shape ref | null> }   // DEC-5: the notes are routinely
+                                          // more candid than the slide
+    { kind:"core-properties", ... }       // byte-for-byte the docx item shape
+
+The pageless text degenerate form is likewise CONFIRMED with the per-unit list
+named for what the unit IS: `text.slides[]` (`{slide, ref:"slide <n>", part,
+text}`) — and one property the DISTINCTION rule of COFF-5 adds on top:
+speaker notes are a SEPARATE unit list `text.speakerNotes[]` with their own
+refs (`"slide <n> (notes)"`) and their own `counts.notesChars`, never merged
+into `document` (the deck as presented) or any slide's text; the suite's
+negative control breaks exactly that merge and fails naming it.
