@@ -167,7 +167,14 @@ table.rec tr.row:hover td{background:#F6F7F2}
   <div class="card">
     <div class="kv"><span class="k">Software version</span><span class="v" id="p-version"></span></div>
     <div class="kv"><span class="k">Claimed</span><span class="v" id="p-claimed"></span></div>
-    <div class="kv"><span class="k">Roles with passwords</span><span class="v" id="p-roles"></span></div>
+    <!-- REC-41, 2026-08-05: the label read "Roles with passwords" and the value
+         has always been filled from WHO — the ONE role that is signed in, never
+         a roster. It was a label describing op=bootstrap's roles field over a
+         value that never came from it, and with that field now removed it could
+         never become true. Corrected to what the row actually shows rather than
+         deleted: a member seeing which identity this session holds is the point
+         of the row. -->
+    <div class="kv"><span class="k">Signed in as</span><span class="v" id="p-roles"></span></div>
     <div class="kv"><span class="k">Session expires</span><span class="v" id="p-expires"></span></div>
   </div>
   <div class="actions" style="margin:22px 0 6px">
@@ -472,10 +479,21 @@ $("#do-login").addEventListener("click", async ()=>{
     const who = $("#lwho").value.trim();
     const role = who ? "member:" + who : "admin";
     const l = await api("login", { role, password: $("#lpw").value });
+    /* REC-41, 2026-08-05. THIS BRANCH WAS THE DISCLOSURE, not a courtesy.
+       It read the refusal's reason code and answered NO_SUCH_ROLE with "No
+       member by that name has set a password on this copy yet." — which told
+       any anonymous visitor, on the instance's own front door and in plainer
+       words than the plane itself used, whether a guessed name holds a
+       credential here. op=login's two codes are now one (SIGN_IN_REFUSED) and
+       there is nothing left to branch on; this renders the plane's own
+       sentence, which names both possibilities and says the record does not
+       report which. DEC-8: a surface renders what it received and never
+       composes a refusal of its own. The fallback is kept for a refusal that
+       somehow arrives without a detail, and it is deliberately the LESS
+       specific of the two old strings. */
     if (!l.result || !l.result.ok) {
-      e.textContent = l.result && l.result.reason === "NO_SUCH_ROLE"
-        ? "No member by that name has set a password on this copy yet."
-        : "That name and password were not accepted."; return; }
+      e.textContent = (l.result && l.result.detail)
+        || "That name and password were not accepted."; return; }
     WHO = who || "admin";
     const b = await api("bootstrap");
     panel(l.result, b.consumedAt);

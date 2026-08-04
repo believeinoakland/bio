@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) disable the bootstrap-credential match in the claim op (guard `body.bootstrapToken !== env.ADMIN_TOKEN` with `false`, accepting any token) -> 2 assertions fail (the wrong-secret refusal path); restored, 18 pass. */
+/* NEGATIVE CONTROL for REC-41 IS NOT HERE, DELIBERATELY, and the reason is the one this project keeps re-learning: this suite claims a SINGLE admin, so an anonymous `op=bootstrap` answering an empty roster and one answering no roster at all are indistinguishable here — an outcome that costs nothing to produce is not evidence. The unauthenticated-disclosure sweep and its three controls live in `members.test.mjs`, which is the fixture that actually holds a roster (an `admin` credential plus `member:ruth` and `member:meilan`, three distinct password-set dates). The only REC-41 change in THIS file is the collapsed login reason code, pinned below. */
 /* The bootstrap handover: a Worker cannot rotate its own secret, so ADMIN_TOKEN
    is spent once for an operator-chosen password stored in the DO.
    Negative-control detail: disable the bootstrap-credential match in the claim op (guard `body.bootstrapToken !== env.ADMIN_TOKEN` with `false`, accepting any token) -> 2 assertions fail (the wrong-secret refusal path); restored, 18 pass. */
@@ -44,7 +45,14 @@ console.log("\n--- a spent bootstrap secret cannot re-claim ---");
 t("second claim refused", (await post("/api/?op=claim", { bootstrapToken: "BOOT-SECRET-ONE", password: "another-long-password" })).result.reason, "ALREADY_CLAIMED");
 
 console.log("\n--- login exchanges the password for a session ---");
-t("bad password refused", (await post("/api/?op=login", { password: "wrong-but-long-enough" })).result.reason, "BAD_PASSWORD");
+/* CORRECTED 2026-08-05 (REC-41), NOT EXEMPTED: this pinned `BAD_PASSWORD`.
+   op=login's two refusal codes are collapsed into one, because with
+   op=bootstrap's roster closed (above) a distinguishable refusal becomes the
+   enumeration surface that replaces it. The decision, its evidence and what it
+   does NOT claim are recorded at store.mjs `Store.LOGIN_REFUSAL_DETAIL`; the
+   four-arm equality and the D-57 wording pins live in members.test.mjs, which
+   is the suite with a real roster behind it. */
+t("bad password refused", (await post("/api/?op=login", { password: "wrong-but-long-enough" })).result.reason, "SIGN_IN_REFUSED");
 const li = await post("/api/?op=login", { password: "correct-horse-battery" });
 t("good password issues a token", li.result.ok, true);
 t("token is not the password", li.result.token === "correct-horse-battery", false);
