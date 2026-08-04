@@ -1,11 +1,17 @@
 # Area FRAMEWORK: content identification and the framework
 
 Refreshed 2026-07-31 to the parallel-development model (`PARALLELISM.md`,
-`CLAIMS.md`, `INTERFACES.md`). The old paste-ready kickoff block and its grant
-slots are gone. This remains a THIN file: it was written by another area when
-kickoffs were split, so it is not FRAMEWORK's own account of itself, and the
-first FRAMEWORK session should replace it wholesale at its close. Nothing here
-sets this area's plan — deciding that is the first thing a session does, with Bob.
+`CLAIMS.md`, `INTERFACES.md`).
+
+> **Head corrected 2026-08-03 by CONDUCT (the licensed supersession fix, rule 6):**
+> the paragraph that followed — "the first FRAMEWORK session should replace it
+> wholesale… deciding [the plan] is the first thing a session does, with Bob" and
+> the D-60 framing below — predates the FW-1…FW-10 queue run and FW-15, all long
+> landed. The area's plan comes from `QUEUE.md` (FW-13/FW-14 are queued behind
+> REC-11/REC-19; D-167 is the parked stack-axis note), not from a fresh
+> negotiation with Bob. A future FRAMEWORK session should still rewrite this file
+> as its own account at close — that instruction stands; the plan-setting one
+> does not.
 
 **Coordination:** before making a change another session must know about, read
 `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — the channels, which

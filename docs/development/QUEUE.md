@@ -724,7 +724,7 @@ landed: c7c57c9 — (a) post-hoc reuse verdicts on the change-case (zero request
 
 ---
 
-## FRAMEWORK — ACTIVE (promoted 2026-08-03 into the slot COFF-3 freed, for FW-15)
+## FRAMEWORK — DORMANT (FW-15 landed 2026-08-03; FW-13/FW-14 wait on REC-11/REC-19 — the slot returned to RECORD)
 
 ### FW-2 · done
 milestone: M3
@@ -834,13 +834,14 @@ depends-on: REC-19
 accepts-when: as `BUILD-ORDER.md` §2 (FW-14); plus the published rung vocabulary names `irreversible` at the top and no op publishes a rung its store behaviour contradicts; negative control — assign `reversible` to `op=retire` and the suite fails.
 added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
 
-### FW-15 · queued
+### FW-15 · done
 milestone: M3
 scope: **The L2→L3 wire — a PDF's text becomes a reading.** As `BUILD-ORDER.md` §2 (FW-15), carried forward verbatim per `RECONCILED.md` §3.3. From DEC-4's amendments: when CPDF-10 lands, this item's acceptance ALSO covers an OCR'd document reaching `reading_refs` (the clause activates with CPDF-10; the wire itself does not wait for it).
 behind-interface: I2
 depends-on: none
 accepts-when: as `BUILD-ORDER.md` §2 (FW-15) — a real Oakland agenda PDF with decodable Tier-1 text produces `readings` + `reading_refs`; an `undetermined` text yields a FAILED reading (`found: false`), never invented refs; negative control — bypass the wire and a document known to name three entities reads zero `reading_refs`.
 added: 2026-08-01 · BOB · enqueued 2026-08-03 · CONDUCT
+landed: (merge on main, worker 742d15a) — docprofile/readtext.mjs, the ONE entry point taking text from anywhere (bare string, I2 pages[], I2 paragraphs[]) through identify()/doctypeFor()/parse(); acquire's not-read-as-text branch wired through it for single-part captures via the FORMAT registry's own text surface (pdf Tier 1 with the existing needsTier2 escalation to the pdf-worker; docx/xlsx via text(parts)). Reading additively carries text_source:'layer'/text_tier/text_container — D-152's provenance discriminator in place before OCR exists. A REAL Legistar agenda packet (committed fixture, sha pinned) acquires to a readings row + 41 reading_refs findable by legislation number; an encrypted PDF reads found:false naming encrypted, never invented. Office paragraphs[] form PROVEN end-to-end (a real-shaped .docx acquires to 3 reading_refs). New measured doctype meeting-agenda (written from the real packet; MEASUREMENTS entry). reading-wire.test.mjs 55 assertions; battery 73/73 (3709) with COFF-5/7 merged; --strict exit 0. NC RUN (force the wire branch off → 33/55 fail incl. the named 3→0 readingref counts; restored). Named tactical cost, accepted: intake now pays the cross-worker hop for a Tier-2 PDF at acquire time when the fleet is installed. Stack-axis mislabel recorded as D-167. The OCR'd-document acceptance clause activates with CPDF-10, as queued.
 
 ## CONTENT-HTML — DORMANT
 Not yet carvable; see `kickoffs/CONTENT-HTML.md`. D-64 waits on the rendered-capture
