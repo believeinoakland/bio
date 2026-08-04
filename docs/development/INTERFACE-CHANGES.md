@@ -759,3 +759,15 @@ reversal if a later reader wants RECONCILED §3.1's rename literally.
 - **Consumers:** UI. CONDUCT answers per the IC-12 mechanics, naming the proxy:
   `AGREE` — no surface authenticates as a daemon; the class is the unattended path.
 - **Version:** I3 5.10.0 → **5.11.0** in `INTERFACES.md`.
+
+## IC-19 · I3: `op=inquiryground` · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-45 — one new mutating op
+  (`op=inquiryground`, contribute; authors/edits the grounds partition with
+  `asserted_by`/`at` server-stamped and caller values discarded), published as a
+  thirteenth act, and the **second** act to carry a `prompt` (REC-16's mechanism).
+  Additive; nothing renamed or reshaped.
+- **Consumers:** UI. CONDUCT answers per the IC-12 mechanics, naming the proxy:
+  `AGREE` — UI-27 is the written consumer and builds its elicitation against this act
+  rather than hand-writing frontmatter, which is why it was sequenced first.
+- **Version:** I3 5.11.0 → **5.12.0** in `INTERFACES.md`.

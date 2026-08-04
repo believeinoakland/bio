@@ -3172,6 +3172,30 @@ for CONDUCT to enact: import is UNBUILT and this is design-ahead, so it lands as
   (the never-prefill rule, and C-2.9's non-empty `objective` must never be satisfied by
   words nobody in the importing group wrote).
 enacted: 2026-08-04 · CONDUCT — landed as SCOPE on M6's interchange half in MILESTONES.md (import is unbuilt; design-ahead, not a correction), carrying the whole path verbatim: findings arrive projectless with the source's bias manifest as a fact, a destination offered per finding, the projectless lens STATED, regrade against the destination's effective bias with the structured diff and its causal chain shown BEFORE the association commits, the regrade's honest limit displayed with the diff, and the never-prefill bar on authoring an objective or bias statement (C-2.9 must never be satisfied by words nobody in the importing group wrote). DEC-40's determination 4 (an imported case is a finding with no inherited standing) sits with it. Reasoning in this entry and MILESTONES M6.
+### DEC-46 · open
+raised: 2026-08-04 · CONDUCT (lifted from REC-45's report)
+for: bob
+question: A GROUPED question cannot take a new leg. Once a basis names grounds,
+  REC-42's total-or-absent rule refuses `op=cite` — every leg must belong to a ground,
+  and a citing member is not asserting where the new leg belongs. Should a new leg
+  instead default to NECESSARY (unlabelled, i.e. AND, i.e. weakest-leg), or should
+  citing stay refused until the member ungroups, cites, and regroups with a reason?
+why it is Bob's: it decides whether adding evidence to a structured case is a
+  friction the member walks around or a moment the record makes them account for, and
+  DEC-32's whole containment is that independent sufficiency needs an affirmative act.
+provisional: as shipped — refused, with the route through REC-45's act (ungroup with
+  a reason → cite → regroup). Nothing is blocked; the route exists and is attributed.
+alternative: a new leg lands unlabelled and NECESSARY, which is REC-42's own default
+  and is equally conservative on the arithmetic (AND takes the weakest, so a new leg
+  can only weaken or leave unchanged) — but it lets a structured basis grow without
+  anyone saying where the evidence belongs.
+recommendation: leaning to the shipped refusal, because the whole point of the
+  partition is that someone asserted it; a leg that arrives outside every ground makes
+  the assertion quietly incomplete. But the friction is real and lands on the member
+  doing the most work, so it is worth his eye rather than my preference.
+reversal cost: low either way — one predicate at the cite path plus the suites that
+  pin it.
+
 ## Answered, awaiting enactment
 
 _(none)_
