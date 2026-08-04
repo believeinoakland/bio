@@ -1132,7 +1132,7 @@ const NON_BUNDLE_KINDS = ["annotation", "source"];
 const BASIS_ROLES = ["supports", "cuts_against"];
 const BASIS_GRADES = ["A", "B", "C", "D"];
 const GRADE_AXES = ["capture", "connection"];
-const GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited"];
+const GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited", "capture"]; /* capture added 2026-08-04 at REC-18's integration — the drift guard named it, which is the guard working */
 const STRENGTH_STATES = ["graded", "unrated", "undetermined"];
 /* THE MEMBER'S WORDS for each. A role is what the leg DOES to the conclusion;
    `cuts_against` is a leg like any other and is counted on its own axis exactly
@@ -1151,6 +1151,7 @@ const GRADE_SOURCE_WORD = {
   testimony:  "recorded as a member's testimony, with an author and a date",
   hunch:      "a member's HUNCH: declared bias, not yet established",
   inherited:  "inherited from the edition of the case this leg cites",
+  capture:    "earned from the record's own capture of this document",
 };
 const STRENGTH_STATE_WORD = { graded: "graded", unrated: "UNRATED", undetermined: "undetermined" };
 /*__CATALOG_END__*/

@@ -546,3 +546,23 @@ I3 5.3.0 → **5.4.0** (additive op + a widened published vocabulary); I5 gains 
 nullable column, so its version moves by its own additive rule. RECORD does not bump
 `INTERFACES.md` itself: this entry is the proposal, and the registry edit is CONDUCT's
 at integration.
+
+### IC-11 · RESPONSES · 2026-08-04
+
+- **UI: `AGREE` — answered AND migrated in one act at REC-18's integration.** UI was
+  live but between workers at integration time, so CONDUCT (holding main, where the
+  guard fired) applied the consumer's own two-line migration: `capture` joins the
+  guarded `GRADE_SOURCES` block with a dated comment, and `GRADE_SOURCE_WORD` gains
+  the member-facing sentence *"earned from the record's own capture of this
+  document"* — value language stating HOW, never how-credible, matching the other
+  four entries' register. `check-semantics.mjs` green in both directions after; the
+  guard firing and then passing is the mechanism the proposer named, working.
+- The `op=earnedbasis` and `repairs` halves are additive and taken without comment.
+
+### IC-11 · RESOLUTION · 2026-08-04 · ACCEPTED AND CHANGED
+
+Landed and migrated in the same integration; SETTLED for the sole consumer (the
+migration is the two lines above, asserted by its own guard). Version bumps: **I3
+5.3.0 → 5.4.0** (additive: `op=earnedbasis`, the `BASIS_REFUSED` `repairs` field, the
+`SUBJECT_REFUSED` refusal) and the catalog version already carries the vocabulary
+change (REC-18 bumped it in-code per the REC-14/REC-23 precedent).

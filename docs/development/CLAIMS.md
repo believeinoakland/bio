@@ -987,6 +987,8 @@ accepts-when: `cd bio-plane && npm run test:battery` green with earnedbasis.test
 landed: left for CONDUCT.
 released:
 
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker 541aedd). Verified post-outage from the main checkout: battery 91/91 (4799), --strict 126/126, UI harness green after the IC-11 two-line migration applied at integration (the guard fired by design). D-177/178/179 recorded; I3 → 5.4.0. No DEC.
+
 ## DELEGATION 2026-08-04 RECORD → UI
 from: rec18-agent / REC-18 (the earned basis grades)
 need: two lines in `civicos-ui/app.html` — add `"capture"` to `GRADE_SOURCES` (~:1135), and give it a `GRADE_SOURCE_WORD`. `civicos-ui/check-semantics.mjs` currently FAILS against the worktree catalog with the exact message pair: `GRADE_SOURCES has drifted from the catalog` and `GRADE_SOURCE_WORD has no member-facing word for 'capture'`. It is a guard, not a break: it exists so a new grade source cannot reach a member surface as a blank sentence, and it named the whole migration for you.
