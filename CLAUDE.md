@@ -188,10 +188,17 @@ measured state. The short version:
 2. The negative control for whatever you just added — RUN, and recorded in the
    suite's own `NEGATIVE CONTROL:` line so the next session can re-run it in one step
    instead of re-deriving how to break the subject.
-2a. `npm run test:coverage` — no NEW unreached op, and an op you added carries a
+2a. `node scripts/coverage.mjs --strict` — no NEW unreached op, and an op you added carries a
    control-plane assertion in the same turn. Coverage here is ops, checks and
    controls; line coverage is not measurable, because the plane runs inside workerd
    and not in the node harness.
+   **AND READ THE EXIT STATUS WITHOUT A PIPE.** `cmd | tail` reports TAIL's
+   status, not `cmd`'s, so a FAILED strict run reads as exit 0 — CONDUCT
+   recorded a false `exit 0` that way on 2026-08-04 and REC-49 caught it. Also
+   `npm run test:coverage --strict` does NOT pass the flag: npm swallows it
+   (`npm warn Unknown cli config "--strict"`) and the run is strict only
+   because the package script already carries it. When the answer must be
+   EVIDENCE, run the script directly and read `$?` with nothing piped after it.
 3. Build, sign, deploy (DIST only), and wait for the rollout gate.
 4. Live-verify **in your own instance's scratch namespace**, never the real
    record, and sweep it after.

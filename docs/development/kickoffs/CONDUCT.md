@@ -25,7 +25,12 @@ making a change another session must know about.**
    rule; the default is Opus 5.
 2. **When a worker reports:** VERIFY (full battery from the main checkout;
    re-run the negative control yourself for anything touching destructive or
-   security-sensitive code), then INTEGRATE on `main` (fetch-rebase; resolve
+   security-sensitive code; and run `node scripts/coverage.mjs --strict`
+   DIRECTLY, reading `$?` with nothing piped after it — `cmd | tail` reports
+   tail's status, so a failed strict run reads as exit 0, which is how CONDUCT
+   recorded a false `exit 0` on 2026-08-04 before REC-49 caught it; and
+   `npm run test:coverage --strict` does not pass the flag at all, npm swallows
+   it), then INTEGRATE on `main` (fetch-rebase; resolve
    `CLAIMS.md` / queue collisions; never force-push), record bookkeeping (release
    claims, route delegations into queues, register/annotate interfaces and DEBT),
    push, and spawn the area's next item.

@@ -34,8 +34,10 @@ defects here:
 Run it:
 
 ```bash
-cd bio-plane && npm run test:coverage
+cd bio-plane && node scripts/coverage.mjs --strict
 ```
+
+**AND READ THE EXIT STATUS WITHOUT A PIPE.** `cmd | tail` reports TAIL's status, not `cmd`'s, so a FAILED strict run reads as exit 0 — CONDUCT recorded a false `exit 0` that way on 2026-08-04 and REC-49 caught it. Also: `npm run test:coverage --strict` does NOT pass the flag (npm swallows it — `npm warn Unknown cli config "--strict"`); the run is strict only because the package script already carries it. When the answer must be evidence, run `node scripts/coverage.mjs --strict` directly and read `$?` with nothing piped after it.
 
 ## The measured floor, 2026-07-31
 
@@ -148,7 +150,7 @@ That moves onto the item as `accepts-when:`. An item is done when:
    nothing the suite could see. Test through the op AND at each enforcement layer
    the op fronts; a control that breaks one layer must fail against that layer's
    own assertion, not be absorbed by an earlier gate. (2026-08-04.)
-4. `npm run test:coverage` shows no NEW unreached op and no new undeclared control.
+4. `node scripts/coverage.mjs --strict` shows no NEW unreached op and no new undeclared control — run directly, exit status read with nothing piped after it (see the note above).
    A change that adds an op adds a control-plane assertion for it in the same turn.
 5. For anything destructive or security-sensitive, CONDUCT re-runs the control
    itself at integration rather than believing the worker's report.
