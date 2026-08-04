@@ -1136,7 +1136,71 @@ function teach(el, err){
    `Store.LOGIN_REFUSAL_DETAIL` verbatim, whole and unedited (DEC-8: a surface may
    render a refusal it RECEIVED and may never compose one).
    WHAT WAS KEPT AND WHY — "Member handle", and the argument is on
-   `pubVerifyPanel` below with the other two kept terms. */
+   `pubVerifyPanel` below with the other two kept terms.
+
+   ==========================================================================
+   UI-34, 2026-08-04 — THE DECISION ON THAT WORD, PRODUCT-WIDE. IT IS KEPT.
+   THIS IS THE RECORD OF A DECISION, NOT A NOTE ABOUT A PENDING ONE, AND IT IS
+   HERE SO THE NEXT READER DOES NOT RE-OPEN IT. Nothing below changes a member-
+   facing word; the whole of UI-34's part (a) is this argument and the guard that
+   holds it, `civicos-ui/test/identifier-vocabulary.test.mjs`.
+   UI-33 kept this word on the only ground a single-surface item had: it names
+   that identifier everywhere else in the product, so rewording it at the gate
+   alone gives a member one word before signing in and another after. That
+   reasoning says what the real question is — rename it EVERYWHERE or NOWHERE —
+   and UI-34 answered it. NOWHERE, for four reasons, in descending weight.
+   (1) IT IS THE PLANE'S FIELD NAME, NOT THIS SURFACE'S WORD. It stands 194 times
+   in `bio-plane/src/store.mjs` and is a declared parameter of thirteen store
+   methods, five of which are the roster acts this surface sends to. A member-
+   facing rename that does not also rename the wire gives the product two names
+   for one field — which is the defect UI-33's argument was protecting against,
+   moved one layer down and made harder to see. Renaming the wire is an I3 change
+   through INTERFACE-CHANGES.md, spanning the plane, the installer and the
+   battery, and nothing about a field label justifies it.
+   (2) NO CANDIDATE REPLACEMENT IS CORRECT AND TWO ARE ACTIVELY HARMFUL.
+   `username` and `member name` collide with a DISTINCT field that already
+   exists: `op=whoami` answers BOTH `handle` and `member`, and the masthead falls
+   back from one to the other, so they are not two words for one thing. Worse,
+   the members screen says in the same breath that "a cover is a label, not a
+   legal name" — this product deliberately separates the identifier from any
+   identity claim, and calling the identifier a NAME erodes that separation on
+   the one screen whose subject is who holds power. `member id` is more jargon
+   than what it replaces and is also false: `op=select`'s handle is machine-
+   minted, a member's is chosen and typed. `sign-in name` is right at the gate
+   and wrong on an invite form, where nobody is signing in.
+   (3) IT IS NOT OUR IMPLEMENTATION LEAKING. That is the line the four terms
+   UI-33 closed fell on the wrong side of: each named something INSIDE this
+   system that a member has no reason to have heard of. This one names a thing
+   the member chose, in the word every consumer product uses for it. The
+   vocabulary guard exists to catch our jargon reaching a member, not to launder
+   ordinary English, and a reword here would spend the member's attention to buy
+   nothing.
+   (4) THE OVERLOADING IS REAL AND IS ALREADY SOLVED THE RIGHT WAY, and a rename
+   would UNDO that. The wire calls two different things by this name: the member
+   identifier, and the selection lease (`op=select` answers one; `op=release` and
+   `op=dispose` take one). The surface already handles the second correctly by
+   never printing the word — `finderPaintSelection` labels it "The record's name
+   for this set". So the pattern in place is: the wire keeps ONE word, and a
+   surface names the thing in the reader's terms only where the reader's framing
+   differs from the wire's. At the NINE member-visible identifier sites the
+   framing does NOT differ — "Their handle" on an invite form asks for the string
+   that person signs in with. Renaming there would leave the wire's two senses
+   intact while the surface acquired a third word: more drift, not less.
+   NINE, AND THE COUNT ITSELF IS PART OF THE ANSWER. A careful read of this file
+   produced EIGHT; the ninth — `projectParticipantsHtml`'s column header,
+   `<th>Handle</th>` — was found by RUNNING the guard's complete-rename control,
+   not by reading. A bare capitalised word in a table header is invisible to an
+   inventory keyed on the phrasings a person searches for, and it is exactly the
+   site a rename would have left behind. Anybody who reopens this decision should
+   assume there is a tenth and let the control find it.
+   WHAT IS ENFORCED, AND IT IS NOT THIS ANSWER. The guard pins NO value. It
+   asserts that every member-visible site naming this identifier uses the SAME
+   word — so the decision it holds is "everywhere or nowhere", which is the
+   decision actually made. Rename all eight tomorrow and the guard stays green;
+   rename some and it fails NAMING the ones that did not move. A guard that
+   pinned the word would have converted a decision into cement, which nobody
+   made. Reopening this needs an argument against the four above, not a
+   preference — and the I3 change (1) names is where it would have to start. */
 $("#g-token-toggle").onclick = () => $("#g-token-wrap").classList.toggle("hidden");
 $("#g-base").oninput = e => PLANE.base = e.target.value.trim().replace(/\/$/,"");
 $("#g-pub").onclick = () => { PLANE.base = $("#g-base").value.trim().replace(/\/$/,""); enterPublished(); };
@@ -14277,13 +14341,23 @@ function pubBytes(sha){
    TWO REWORDED HERE, the same two the case page carried and for the same reason:
    "the manifest that lists them" and "without this instance continuing to exist".
    Both are this surface's own words; neither is a plane string; DEC-49 reaches
-   neither. **This function is NOT driven by any UI-31 scenario** — it needs a
-   click on the published rail — so these two occurrences are outside the measured
-   13 and rewording them moves no number in that report. They are done anyway
-   because they are the same defect one control away from the page that was
-   measured, and the reach gap is reported rather than papered over: adding a
-   scenario would change UI-31's own measurement basis, which is not this item's
-   to change.
+   neither.
+   **CORRECTED BY UI-34, 2026-08-04 — THIS FUNCTION IS NOW DRIVEN BY A SCENARIO,
+   and the sentence that stood here is superseded rather than deleted, because
+   the reason it was true is the finding.** UI-33 wrote: "this function is NOT
+   driven by any UI-31 scenario — it needs a click on the published rail — so
+   these two occurrences are outside the measured 13 and rewording them moves no
+   number in that report", and left it that way deliberately, since adding a
+   scenario would have moved UI-31's measurement basis mid-flight while DEC-49 is
+   being answered against it. UI-34 made that move on its own, alone, with the
+   reading taken before and after and both carried into MEASUREMENTS.md.
+   WHY NOBODY HAD DRIVEN IT, which is worth more than the scenario: UI-31's walk
+   discovers pre-authentication controls by reading `#gate`'s markup, and this
+   control is on `#pub`'s rail. The published space is entered with NO credential
+   — that is the product claim — and its masthead's own links were discovered by
+   nothing. `preauth-vocabulary.test.mjs` now walks that masthead the same way it
+   walks the gate, so a third link on this rail fails the suite until some
+   scenario opens it.
    THREE KEPT, DELIBERATELY.
      `sha256` — UI-31 counted 30 occurrences, most of them this surface's. It is
        KEPT because on this page it is not jargon standing in for a plain word: it
@@ -14300,16 +14374,23 @@ function pubBytes(sha){
        BROKEN address. The plane publishes the same string in `verification`, so
        the surface's own occurrences say what the plane says rather than a second
        spelling of it.
-     `handle` — KEPT, and this one is the closest call. It is the gate's field
-       label, "Member handle", 1 visible occurrence. Against rewording: it is the
-       name of that identifier EVERYWHERE in this product — the masthead, the
-       members roster, every project invite and removal form — so changing it at
-       the gate alone would give a member one word before signing in and a
-       different word after, which is worse than one mildly technical word used
-       consistently. It is also ordinary consumer vocabulary in a way
-       `MEMBER_TOKEN`, `CORS` and `R2` are not. Renaming it EVERYWHERE is a
-       product-vocabulary decision spanning surfaces in three other suites'
-       ground, so it is routed rather than taken here. */
+     `handle` — KEPT, and this one was the closest call. UI-33 kept it on the
+       ground that it names that identifier EVERYWHERE in this product, so
+       changing it at the gate alone would give a member one word before signing
+       in and a different word after — and routed the product-wide question
+       rather than taking it in passing. **UI-34 ANSWERED IT, 2026-08-04: KEPT,
+       PRODUCT-WIDE, and the four-part argument is recorded at the GATE in this
+       file** (search "UI-34, 2026-08-04 — THE DECISION ON THAT WORD"), where the
+       next reader meets the word first. The short form: it is the PLANE's field
+       name on thirteen store methods, so a surface-only rename would give the
+       product two names for one field; every candidate replacement is wrong and
+       two collide with the `member`/`cover` distinction this product depends on;
+       it is vocabulary the audience already holds rather than our implementation
+       leaking, unlike the four terms UI-33 closed; and the word's real
+       overloading — the selection lease also called a handle on the wire — is
+       already solved by never printing it, which a rename here would undo. The
+       DECISION is guarded by `civicos-ui/test/identifier-vocabulary.test.mjs`,
+       which pins that the word is used CONSISTENTLY and never pins the word. */
 function pubVerifyPanel(){
   $("#pub-body").innerHTML = `<div class="eyebrow">Verifying what you are reading</div>
     <h1>Check this without us</h1>
