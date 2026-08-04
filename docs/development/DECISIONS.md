@@ -2375,6 +2375,37 @@ for CONDUCT to enact: REC-14 gains the container form (manifest + signature + ed
   a rendering item gains the every-page brazening as an acceptance clause with the negative
   control "a page rendered without the header fails the harness". Sequencing unchanged —
   this shapes items already queued rather than adding one.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-14 carries the container form (zip + signed hash manifest, editions over the container); REC-22 serves it and its PDF renderings with the per-page header (case id, edition, authors, declared bias, both floors, hash, verification pointer) and the page-without-header negative control; UI-18 renders it. Tamper-EVIDENT, never claimed tamper-proof. Reasoning in QUEUE.md (REC-14/REC-22/UI-18).
+
+### DEC-35 · open
+raised: 2026-08-03 · CONDUCT (from CPDF-9's measurement and CPDF-10's placement note)
+for: bob
+question: Which external OCR service does CPDF-10 build against, on which account, at
+  whose cost? The measurement (MEASUREMENTS.md 2026-08-03) rules out both in-account
+  wasm placements by bundle size; the recommended first placement is an external
+  service, which means choosing a vendor, opening/funding an account, and putting a
+  credential in `.env` — a recurring cost and a named third party in every
+  transcription's provenance chain, both of which carry Bob's name.
+why it is Bob's: money (a paid service), and an external relationship — the record
+  will permanently name the service in the provenance of every OCR'd document. The
+  privacy half is already ruled (DEC-5: public records; DEC-4: this is not D-94's
+  egress question — we send a document out, we do not fetch one).
+provisional: CPDF-10 stays `queued`, not active — nothing blocks on the answer,
+  because FW-15 (its acceptance prerequisite) runs first regardless and the rest of
+  the board is full. No vendor is being evaluated in code; nothing is built against
+  a guessed API shape.
+alternative: skip the service and wait for the ocr-worker fleet-member end-state —
+  rejected as the FIRST step by the measurement's own gating (it needs a deployed
+  workerd CPU probe and a page-to-pixels renderer, neither of which exists), though
+  it remains the preferred end-state.
+recommendation: pick a service whose OCR output includes per-region confidence and
+  coordinates (the chain and the image-region anchor need both), whose terms permit
+  processing public government records, and whose identity+version can be pinned in
+  the provenance chain. The local tesseract fast-model floor it must beat: 99.96%
+  character accuracy, 90/90 digits, zero minted digits on the ground-truthed page.
+reversal cost: low before any corpus is transcribed; after that, re-running under a
+  different service produces different claims and every leg resting on the old ones
+  keeps naming the old service — which is by design, but makes switching noisy.
 
 ## Answered, awaiting enactment
 
@@ -2383,4 +2414,3 @@ _(none)_
 ## Enacted
 
 _(none — entries move here with their commit and the document carrying the reasoning)_
-enacted: 2026-08-03 · CONDUCT — 5318b53: REC-14 carries the container form (zip + signed hash manifest, editions over the container); REC-22 serves it and its PDF renderings with the per-page header (case id, edition, authors, declared bias, both floors, hash, verification pointer) and the page-without-header negative control; UI-18 renders it. Tamper-EVIDENT, never claimed tamper-proof. Reasoning in QUEUE.md (REC-14/REC-22/UI-18).

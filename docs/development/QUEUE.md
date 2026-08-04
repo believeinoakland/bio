@@ -38,7 +38,11 @@ genuinely independent. Enacted 2026-08-03 by CONDUCT:
 - Wave 2 is COFF-3/4/5 (mutually independent; two slots against three items —
   recommended order XLSX → DOCX → PPTX by evidentiary density; final sequencing is
   CONDUCT's). All three additionally wait on IC-1 RESOLVED — done 2026-08-03, see
-  `INTERFACE-CHANGES.md`.
+  `INTERFACE-CHANGES.md`. Slot rotation 2026-08-03 as the wave drained: COFF-3 and
+  COFF-4 landed; COFF-5 holds one slot; FRAMEWORK promoted into the other for FW-15
+  (the L2→L3 wire — prerequisite for CPDF-10's reading_refs acceptance, and the
+  highest-leverage independent item on the board). CPDF-10 additionally waits on
+  DEC-35 (the OCR service vendor/account — Bob's; provisional: it stays queued).
 - **The case-making run (REC-10 → REC-19 → REC-11 → …, the 2026-08-01 handover order)
   stays QUEUED under a now-DORMANT RECORD**, first in line when a slot frees or Bob
   reopens the thread. Its activation order inside RECORD is unchanged; DEC-8's
@@ -710,7 +714,7 @@ landed: c7c57c9 — (a) post-hoc reuse verdicts on the change-case (zero request
 
 ---
 
-## FRAMEWORK — DORMANT (pre-seeded; promoted when a RECORD slot frees)
+## FRAMEWORK — ACTIVE (promoted 2026-08-03 into the slot COFF-3 freed, for FW-15)
 
 ### FW-2 · done
 milestone: M3
