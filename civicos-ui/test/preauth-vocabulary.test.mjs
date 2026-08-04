@@ -806,9 +806,16 @@ for(const sc of SCENARIOS){
     }
   }
 }
-ok("the structural detector found SCREAMING_SNAKE identifiers on the pre-authentication surfaces, so the "
-   + "rule is live rather than decorative — " + [...new Set(HITS.filter(h=>h.kind==="structural").map(h=>h.term))].join(", "),
-   HITS.some(h => h.kind === "structural"));
+/* BOTH structural rules are asserted LIVE, separately. A rule that matched
+   nothing would be a rule nobody could tell was broken — it would sit in the
+   file looking like coverage and contribute none. */
+{
+  const struct = [...new Set(HITS.filter(h => h.kind === "structural").map(h => h.term))];
+  ok("both structural rules are live rather than decorative — found [" + struct.join(", ")
+     + "] (SCREAMING_SNAKE and the discriminated acronym rule must each match something, or a rule that "
+     + "stopped matching would look exactly like coverage)",
+     struct.some(t => t.includes("_")) && struct.some(t => !t.includes("_")));
+}
 /* THE ATTRIBUTION IS NON-DEGENERATE, and this is the assertion that catches a
    silently broken subtraction. If the plane ranges came back empty, every
    occurrence would read surface-authored and the report would blame the surface
