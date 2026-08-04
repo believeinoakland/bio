@@ -14,7 +14,14 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
-import { extractPdfStructure } from "./pdfstructure.mjs";
+/* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
+   pdfstructure.mjs is no longer imported here — it is the registry's pdf
+   entry, reached through getFormat("pdf").structure with byte-identical
+   output; the acquire-time subresource guard and the profile's format stamp
+   consult detectFormat. A new format costs one registerFormat() in
+   formats.mjs and NO edit here — the D-70 test, and formats.test.mjs holds
+   the evidence. */
+import { detectFormat, getFormat } from "./formats.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 /* docprofile is READ here, never copied. This is the FIRST plane consumer of it
    (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
@@ -1424,7 +1431,17 @@ export default {
       if (!obj)
         return json({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
       const bytes = new Uint8Array(await obj.arrayBuffer());
-      const structure = await extractPdfStructure(bytes);
+      /* COFF-1 (I7): dispatch through the FORMAT registry's pdf entry — the
+         same extractor as ever (pdfstructure.mjs IS the entry), byte-identical
+         output, but the registry is now the only place that knows it. The op
+         NAMES its format: it is op=PDFstructure, so it asks for "pdf" rather
+         than sniffing, and an absent entry is a NAMED server-side gap (501),
+         never a guess at some other extractor. */
+      const pdfEntry = getFormat("pdf");
+      if (!pdfEntry || typeof pdfEntry.structure !== "function")
+        return json({ ok: false, reason: "FORMAT_UNREGISTERED", format: "pdf",
+                      error: 'format "pdf" is not registered in the format registry (formats.mjs), so op=pdfstructure has no extractor to dispatch to' }, 501);
+      const structure = await pdfEntry.structure(bytes);
       /* A found object that is not a parseable PDF (NOT_A_PDF / NOT_BYTES) is a
          well-formed answer about ill-formed input, not a server fault: 422. The
          bytes existed and were read; the record simply does not hold a PDF at
@@ -1833,7 +1850,15 @@ export default {
          * stream. It costs one R2 read and it means the parser sees the bytes
          * the record actually holds, not a copy that was in flight beside them.
          * If those two ever differed, parsing the copy would hide it. */
-      const HTML_CT = ["text/html", "application/xhtml+xml"];
+      /* COFF-1 (I7): detection consults the FORMAT registry — the former
+         HTML_CT constant moved into the registry's html entry, where every
+         other format also lives. The consult is content-type-only at this
+         seam because the primary has deliberately not been read back yet
+         (that read happens inside the branch, and only once the guard has
+         admitted it); magic-byte detection happens where bytes exist, at the
+         profile stamp below. The subresource branch itself stays HTML-only
+         in behaviour: a page is the only thing with subresources, and the
+         guard admits exactly what it admitted before. */
       const SUB_PARSE_MAX = 8 * 1024 * 1024;
       /* Declared out here with subs, because the response literal below reads
          it and the capture branch is a nested block. It was declared inside
@@ -1844,7 +1869,7 @@ export default {
           subsSkipped = { reason: "TOO_LARGE_TO_PARSE", detail:
             "subresource capture reads the primary back into memory to parse it, so it is bounded to "
             + `${SUB_PARSE_MAX} bytes; this document is ${total}` };
-        else if (!HTML_CT.includes(ct))
+        else if (detectFormat(null, ct || null).format !== "html")
           subsSkipped = { reason: "NOT_HTML", content_type: ct || null, detail:
             "only an HTML page has subresources; the capture is unaffected and complete" };
         else {
@@ -2063,6 +2088,23 @@ export default {
         } catch { /* an unreadable primary is not a failed capture: the profile below
                      still records what the headers and the address say. */ }
       }
+      /* COFF-1 (I7): what the FORMAT registry's detect() found, stamped into
+         the profile ADDITIVELY (I1 §4c gains `format`, 1.3.0 — the FW-3/FW-4
+         precedent: a new sibling key, no existing field reshaped). Magic
+         bytes first: when FW-3 already read the primary back as text those
+         bytes are sniffed; when it did not (a PDF, a non-textual type), the
+         first KiB is range-read from R2 — detection needs a header, not the
+         document — and only a multipart or unreadable primary falls back to
+         the declared content type, with the absence stated in signals. */
+      let formatBytes = profileBytes;
+      if (!formatBytes && !multipart && total > 0) {
+        try {
+          const fobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`,
+            { range: { offset: 0, length: Math.min(1024, total) } });
+          if (fobj) formatBytes = new Uint8Array(await fobj.arrayBuffer());
+        } catch { /* detection falls back to the declared content type; detect()
+                     states in its signals that no bytes were available. */ }
+      }
       const profHeaders = {};
       for (const [hk, hv] of res.headers) profHeaders[hk.toLowerCase()] = hv;
       const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
@@ -2095,6 +2137,11 @@ export default {
            record decided the document is. */
         source_content_type: ct || null,
         profiled_from_text: !!profileText,
+        /* COFF-1 (I7): the FORMAT axis — { format, confidence, signals }
+           exactly as detectFormat returned it, `undetermined` first-class
+           when nothing matched. Advisory like the rest of the profile: it
+           records what the record THINKS the bytes are, never authority. */
+        format: detectFormat(formatBytes, ct || null),
       };
 
       /* CONSTRUCTS Step 2 (FW-4): COMPUTE and STORE the normalisation digests the

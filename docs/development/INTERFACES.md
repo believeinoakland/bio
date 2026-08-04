@@ -24,7 +24,7 @@ a lie.
 
 - **ID:** I1
 - **Owner:** `CAPTURE`
-- **Version:** 1.2.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0 2026-07-31, FW-3 — ADDITIVE: `op=acquire` writes a new sibling field `document.profile` (§4) recording docprofile's stack/content-type identification; 1.2.0 2026-07-31, FW-4 — ADDITIVE, non-breaking: `document.profile.digests` (§4c) records the COMPUTED normalisation digests (rendition, evidentiary; identity is the existing `capture_sha`, not restated); no existing field's name, shape or value domain changed, and C-18.1 tolerates the extra key — conformance.test.mjs stays green with real acquire documents carrying it)
+- **Version:** 1.3.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0 2026-07-31, FW-3 — ADDITIVE: `op=acquire` writes a new sibling field `document.profile` (§4) recording docprofile's stack/content-type identification; 1.2.0 2026-07-31, FW-4 — ADDITIVE, non-breaking: `document.profile.digests` (§4c) records the COMPUTED normalisation digests (rendition, evidentiary; identity is the existing `capture_sha`, not restated); no existing field's name, shape or value domain changed, and C-18.1 tolerates the extra key — conformance.test.mjs stays green with real acquire documents carrying it; 1.3.0 2026-08-03, COFF-1 — ADDITIVE, non-breaking, the FW-3/FW-4 precedent: `document.profile.format` (§4c) records what the FORMAT registry's `detect()` found (I7, `bio-plane/src/formats.mjs`) — `{format, confidence, signals}`, magic bytes first, content type second, `undetermined` first-class when nothing matched. No existing field reshaped; a consumer that ignores it keeps working — the whole battery's acquire-driving suites stayed green unedited)
 - **Consumers:** `CONTENT-HTML`, `CONTENT-PDF`, `FRAMEWORK` (the document page reads `document.profile`)
 - **Status:** STABLE
 
@@ -220,6 +220,7 @@ the generic type — `undetermined`, stated, never a guessed stack.
 | `boundary` | boolean | whether the handler normalises around a document boundary (e.g. `<main>`). |
 | `source_content_type` | string \| null | the server's own `Content-Type`, distinct from the recognised content TYPE. |
 | `profiled_from_text` | boolean | whether the bytes were read as text (false = profiled from headers + address only). |
+| `format` | object, below | **added 1.3.0 (COFF-1).** The FORMAT axis (I7): what the registry's `detect()` found — `{format, confidence, signals}` verbatim. Magic bytes FIRST (FW-3's text read-back is sniffed when it exists; otherwise the first KiB is range-read from R2), declared content type second; a multipart or unreadable primary falls to the content type with the absence stated in `signals`. `{format:"undetermined", confidence:"none", signals:[why]}` when nothing matched — stated, never guessed. Advisory like the rest of the profile; `profiled_from_text` is NOT set by the format sniff (a 1 KiB header read is not a text read). |
 | `at` / `note` | ISO8601 instant · string \| null | the profiling instant (equals `retrieved`) and any recogniser note. |
 
 **`document.profile.digests`** — the COMPUTED normalisation digests (1.2.0, FW-4,
@@ -853,7 +854,10 @@ The worker now EXISTS; the shape re-read from its code:
 - **ID:** I7
 - **Owner:** `CONTENT-OFFICE` (new area, proposed in the 2026-08-03 BOB INBOX entry;
   CONDUCT confirms ownership at activation)
-- **Version:** 0.1.0 — **PROVISIONAL**
+- **Version:** 1.0.0 — **CONFIRMED** 2026-08-03 by CONTENT-OFFICE (COFF-1) from the
+  code as built (`bio-plane/src/formats.mjs`); the drift corrections from the 0.1.0
+  paper shape are named under "Confirmed shape" below, resolved in favour of the code
+  as the Status section always said they would be
 - **Producers:** every format entry — HTML and PDF (moved on by COFF-1), the OOXML
   entries (COFF-3/4/5), ODF and later formats
 - **Consumers:** the plane's two dispatch sites — acquire-time detection and the
@@ -864,16 +868,44 @@ The worker now EXISTS; the shape re-read from its code:
 The uniform recogniser shape for the FORMAT axis, specified by
 `BIO_Content_Framework_v0_10.md` §4 and never exercised — D-70 records that the
 framework's a-new-axis-costs-a-registry-entry claim is an assertion, untested because
-no third axis has ever been added. Office formats are that test. One registry entry
-per format; once COFF-1 lands, the registry is the ONLY dispatch — no format-specific
-if-branch outside it, at either dispatch site.
+no third axis had ever been added. Office formats are that test. One registry entry
+per format; since COFF-1 landed (2026-08-03), the registry IS the only dispatch — no
+format-specific if-branch outside it, at either dispatch site.
 
-### The shape (from the design; to be CONFIRMED from code when COFF-1 lands)
+### Confirmed shape (from `bio-plane/src/formats.mjs` as built, COFF-1)
 
-    detect(bytes, contentType) -> { format, confidence, signals }   // magic bytes FIRST, content type second
-    parts(container)           -> named parts                       // container walk (ZIP central directory for OOXML/ODF)
-    structure(parts)           -> I2 links + element references (IC-1 kinds)
-    text(parts)                -> I2 text shape + what could NOT be decoded, stated
+    { format,                                                        // string, the registry key ("html", "pdf", ...)
+      detect(bytes, contentType) -> {format, confidence, signals} | null,  // REQUIRED; null = "not mine"
+      parts(container)           -> named parts             | null,  // container walk (ZIP central directory for OOXML/ODF)
+      structure(parts)           -> I2 links + element refs | null,  // IC-1 kinds
+      text(parts)                -> I2 text shape           | null } // what could NOT be decoded, stated
+
+    registerFormat(entry) / getFormat(format) / listFormats() / detectFormat(bytes, contentType)
+
+Drift from the 0.1.0 paper shape, corrected here from the code (the code wins):
+
+- **`detect` is the only REQUIRED function; the other three slots are explicit
+  `null` when a format has nothing for them**, and the null is a statement, not a
+  gap: HTML's `structure` is null because HTML structure is produced at ACQUIRE
+  time by the subresource walk (`subresources.mjs`), which needs live-fetch
+  context no read-time entry has; PDF's `parts` is null because a PDF is its own
+  container (`structure()` takes the assembled bytes); PDF's `text` is null
+  because Tier 1 text rides `structure()`'s own I2 output object
+  (`pdfstructure.mjs`'s do-not-fork rule, CPDF-4). COFF-2/3/4/5 are the first
+  real `parts`/`text` implementors.
+- **Magic-bytes-first is enforced by the REGISTRY, structurally, not by each
+  entry's discipline**: `detectFormat` runs TWO passes — every entry asked
+  `detect(bytes, null)` first, then every entry asked `detect(null, contentType)`
+  — so a byte signature always outranks a declared content type whatever an
+  individual entry does. A byte match answers `certain`; a content-type-only
+  match answers `likely` at best. Registration order is dispatch order within a
+  pass.
+- **No match is a STATED undetermined**: `detectFormat` returns
+  `{format:"undetermined", confidence:"none", signals:[why]}`, never null and
+  never a guess.
+- The registry is module-scoped in-memory dispatch (`unregisterFormat` exists for
+  the registry's own suite — teardown and negative control — and touches no
+  record state).
 
 Rules carried from the axes already built, not new inventions:
 
@@ -890,11 +922,16 @@ Rules carried from the axes already built, not new inventions:
 
 ### Status
 
-PROVISIONAL, registered 2026-08-03 by session BOB from the framework §4 design. The
-I1 precedent (write the interface from the code as it stands) is deliberately
-inverted here, and the reason is recorded so it is not read as drift: two items build
-AGAINST this contract in parallel (COFF-1 the registry, COFF-2 the container reader),
-and the paper contract is exactly what makes them independent of each other. COFF-1's
-landing confirms or amends this section from the code as built; any drift between
-this text and the landed shape is resolved in favour of the code, in this file, at
-that moment.
+CONFIRMED 1.0.0, 2026-08-03, by CONTENT-OFFICE (COFF-1) from the code as built —
+exactly the confirmation the PROVISIONAL registration (2026-08-03, session BOB, from
+the framework §4 design) scheduled: the paper contract existed so COFF-1 and COFF-2
+could build independently, and the code now wins on drift, with the corrections named
+in "Confirmed shape" above. The D-70 test PASSED: a test-only stub format registers
+through `registerFormat()` and is reachable through the same detect→structure
+pipeline with ZERO edits outside `formats.mjs` (`formats.test.mjs`), so framework
+§9's a-new-format-costs-a-registry-entry claim is a demonstrated property for the
+FORMAT axis. Both dispatch sites consult only the registry: the acquire-time
+subresource guard (content-type-only at that seam, because the primary is
+deliberately unread there; behaviour pinned HTML-only) and `op=pdfstructure` (asks
+for "pdf" BY NAME — the op names its format — and an absent entry is a 501
+`FORMAT_UNREGISTERED` naming the format, never a guess at another extractor).
