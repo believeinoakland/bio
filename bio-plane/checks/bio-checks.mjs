@@ -85,6 +85,12 @@ export const STATES = {
    the tables cannot drift apart. */
 STATES.problem = STATES.focus;
 
+/** The ACTION vocabulary (C-2.10's suite). EXPORTED for op=affordances
+ *  (REC-19): the plane publishes these so a surface never keeps a copy, and
+ *  checkActionExtension consumes this same array, so the gate and the
+ *  publication cannot drift apart. */
+export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'other'];
+
 
 // ---------------------------------------------------------------------------
 // Finding helper
@@ -1285,8 +1291,9 @@ function checkCitationRegister(ctx, findings) {
 function checkActionExtension(ctx, findings) {
   if (ctx.fm?.object_type !== 'action') return;
   const fm = ctx.fm;
-  const KINDS = ['cpra_request', 'grand_jury', 'controller_referral', 'public_comment', 'media', 'litigation_support', 'other'];
-  if (!KINDS.includes(fm.action_kind)) findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not in the suite`));
+  /* The suite lives at module level as ACTION_KINDS (exported for REC-19's
+     op=affordances) so the gate and the publication read one array. */
+  if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not in the suite`));
   if (![1, 2, 3].includes(fm.risk_tier)) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not 1, 2, or 3`));
   if (typeof fm.counterparty !== 'string' || fm.counterparty.trim() === '') {
     findings.push(f('C-2.10', 'error', 'counterparty is missing or empty'));

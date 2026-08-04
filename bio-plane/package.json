@@ -68,6 +68,7 @@
     "test:edges": "node test/edges.test.mjs",
     "test:membership": "node test/membership.test.mjs",
     "test:projects": "node test/projects.test.mjs",
+    "test:affordances": "node test/affordances.test.mjs",
     "test:battery": "node scripts/battery.mjs",
     "test:coverage": "node scripts/coverage.mjs --strict"
   },

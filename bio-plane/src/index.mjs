@@ -10,6 +10,12 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    It is the one bound between a member typing a URL and this Worker fetching it,
    so it must be the same function the checker uses on the queue. */
 import { isPublicHttpsLocator, parseFrontmatter, createSha256 } from "../checks/bio-checks.mjs";
+/* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
+   catalogue reads the legal-edge table from the check catalogue (exported,
+   never copied); `needs` and `mode` are composed HERE from NEEDS and
+   SESSION_OPS, the tables that actually gate the call, so the publication and
+   the gate cannot drift. */
+import { ACTS, RUNGS, VOCABULARIES, deriveActs } from "./affordances.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
@@ -297,6 +303,14 @@ const OPS = {
      query language. Section 5's "absent from their interface" is implementable
      only if the interface can ask. */
   whoami:              { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-19, standing doctrine DEC-8: what may be DONE to an object, published
+     by the plane so an act surface renders options it received and never
+     computes one — whoami's pattern for capabilities, searchfields' for the
+     query language, extended to the act construct. Reads the working corpus
+     (an object's state and edges), so member class and above, never public;
+     when REC-25 stamps the D-15 viewer gate onto the read paths this op should
+     take the same stamp. */
+  affordances:         { classes: ["admin", "member", "probe"], mutating: false },
   /* S-10 steps 2 to 4: the retrieval surface. It reads the WORKING corpus, so it
      is member class and above and never public, exactly like op=index and
      op=projection. There is no public token class to grant it to and there must
@@ -1164,6 +1178,57 @@ export default {
           ? "capabilities are set by an administrator and gate what this account may DO, not what it may see"
           : "a machine credential has no member behind it and therefore holds no capabilities; it is bounded "
           + "by the operation table and by namespace confinement instead",
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+
+    /* op=affordances (REC-19, DEC-8). THE plane-sourced act pre-flight: for
+       this object as it stands, which acts exist — each with the capability it
+       needs, how it is reached, its set-application weight and its declared
+       ladder rung — plus the object vocabularies, so a surface renders what it
+       received and keeps no copy of any of it.
+
+       Composed HERE, not in the store, deliberately: the store reports FACTS
+       (type, state, citation edges — through the same predicate retire's CITED
+       refusal runs), and the act metadata comes from NEEDS and SESSION_OPS in
+       this file plus the catalogue's exported state table. Nothing is asked of
+       the caller and nothing here mutates.
+
+       `rung` is DECLARED, never guessed: null wherever no document assigns one
+       (7 of 57 mutating ops have a source; FW-14 assigns the rest). An `action`
+       bundle returns an empty act list because nothing operates one until
+       REC-24, and an empty list is the honest answer. */
+    if (op === "affordances") {
+      const decorate = (a) => ({
+        id: a.id, label: a.label, weight: a.weight,
+        needs: NEEDS[a.id] ?? null,
+        mode: SESSION_OPS.member.has(a.id) ? "session"
+            : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
+        rung: RUNGS[a.id] ?? null,
+      });
+      const target = url.searchParams.get("target");
+      if (!target) {
+        /* No target: the whole catalogue and the vocabularies, the shape a
+           surface loads once — searchfields' precedent exactly. */
+        return json({ ok: true, result: {
+          target: null,
+          catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
+          vocabularies: VOCABULARIES,
+          detail: "pass target=<bundle id> for the acts available on that object right now; "
+                + "rung is null wherever no document assigns one (FW-14 assigns them)",
+        }, store: storeName, tokenClass: cls }, 200);
+      }
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const facts = (await (await st.fetch(
+        `http://do/affordancefacts?target=${encodeURIComponent(target)}`)).json()).result;
+      if (!facts || facts.ok !== true)
+        return json({ ok: false, ...(facts || { reason: "NO_FACTS" }),
+                      store: storeName, tokenClass: cls },
+                    facts && facts.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
+      return json({ ok: true, result: {
+        target: facts.target, object_type: facts.object_type,
+        current_state: facts.current_state,
+        acts: deriveActs(facts).map(decorate),
+        vocabularies: VOCABULARIES,
       }, store: storeName, tokenClass: cls }, 200);
     }
 
