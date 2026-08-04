@@ -3468,7 +3468,7 @@ NOTE: whichever way this goes, UI-31 (LANDED 2026-08-04) closed the measurement 
   UI-4's vocabulary guard covers no sign-in surface today, so this tension is currently
   UNMEASURED rather than accepted, and that part is mine and is not waiting on an answer.
 
-### DEC-48 · open
+### DEC-48 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-44's report)
 for: bob
 question: A NON-CASE ratification no longer produces a container. REC-44 separated the
@@ -3600,6 +3600,66 @@ recommendation: **THE VARIATION IS REAL AND ALREADY SUPPORTED — INDEXED ON THE
 reversal cost: nil now — bias bundles and `required_strength` are both unbuilt. Rising
   sharply if a per-role bar is ever implemented, because removing it later would look like
   raising a standard on a class of users.
+response: **BUILD THE INHALE — and Bob's reframe identifies the shared failure better than
+  the question that preceded it.** Bob, 2026-08-04: *"the flaw in varying standards is the
+  same as the flaw in bias. The danger in both is **claiming a standard you don't follow,
+  and denying a bias that you do have.** So having the ability to inhale an organization's
+  stated policy, thus turning it into a BIO enforced policy, is a big part of the
+  solution."*
+  **THE DECLARED/ENACTED GAP IS THE SHARED FAILURE, AND THIS SESSION MEASURED IT.** Blair &
+  Maron: attorneys STIPULATED they must reach 75% recall, sincerely believed they had, and
+  measured at ~20% — a declared standard, unmet, unnoticed, after iteration. TREC 2011:
+  teams estimating their own recall erred by up to +95 points, and the coordinators warned
+  this would *"terminate the review prematurely, due to the false belief that a high level
+  of recall had been achieved."* A stated standard nobody checks is not a standard; it is a
+  claim, and it fails silently. Bob's unification is correct: a bar and a bias differ in
+  mechanism (one gates, one discloses — see the analysis above) and are IDENTICAL in
+  failure mode.
+  **AND BIO ALREADY CLOSES THE GAP FOR THE BAR HALF — this is what makes the proposal
+  cheap.** `required_strength` is not an aspiration in a handbook; `BELOW_PROJECT_STRENGTH`
+  REFUSES at pre-flight. DEC-17's escape clause is already the anti-claiming device, in
+  those words: *"the escape is amending the project's declared bar, which is an authored,
+  dated, on-the-record act visible in the published case — **you can lower your own bar,
+  you cannot do it quietly.**"* That is *"claiming a standard you don't follow"* made
+  structurally impossible. The bias half has the same shape: the bias manifest is computed,
+  hashed and travels with publication, so a declared lens cannot be denied later.
+  three determinations that make the inhale safe, and they are mine under delegation:
+  1. **AN INHALED POLICY RENDERS AS TWO PARTS, AND THE SECOND IS PUBLISHED AS PROMINENTLY
+     AS THE FIRST: what BIO ENFORCES, and what it CANNOT.** This is not caution, it is the
+     research's central finding applied: the mechanisable parts of a policy are the
+     COUNTABLE ones, and in four of five documented verification failures **the countable
+     rules were formally satisfied while the uncountable properties failed.** So enforcing
+     the extractable half while silently dropping *"in a position to have direct
+     knowledge"* would deliver enforcement of precisely the part that does not protect,
+     wearing the authority of the whole policy. **A case saying "held to AP's standards"
+     must therefore also say which of AP's standards this system does not check.**
+  2. **INHALE MEANS PROPOSE FOR ADOPTION, NEVER INSTALL.** Adoption is an authored,
+     attributed act (DEC-46, D-90, D-82). Otherwise adopting a policy becomes a way to
+     LAUNDER a standard — *"we follow BBC standards"* with nobody in the group having
+     authored anything, which is the never-prefill violation wearing a compliance badge.
+  3. **THE INHALED POLICY BECOMES A PINNED, VERSIONED, CITABLE OBJECT — and this is the
+     real payoff rather than a side effect.** An external policy MOVES; a case published
+     under it must remain checkable after it moves. So an adopted policy is stored with its
+     source, its retrieval date and its content hash, and a published case names the
+     VERSION it was held to — the DEC-12 edition pattern and D-183's calibration pattern at
+     a third altitude. **That converts a moving external standard into something a reader
+     can check years later**, which is exactly what a policy in somebody's handbook can
+     never be. It also makes REGRADE meaningful across organisations: two lenses, both
+     pinned, both re-runnable.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; `research/SEARCH-COMPLETENESS.md` (the countable/
+  uncountable finding and the Blair & Maron and TREC 2011 measurements);
+  `BIO_Declared_Bias_v0_1.md` takes the adoption-is-authored rule.
+for CONDUCT to enact: this is DESIGN AHEAD — bias bundles do not exist (D-84) and
+  `required_strength` is unbuilt (D-155), so nothing is corrected and nothing is queued
+  yet. Record it as scope on the bias work: (a) an inhaled policy SPLITS into bars
+  (`required_strength`) and bias statements (scrutiny / inference / pattern), because one
+  document contains both and conflating them breaks the gate/disclose distinction; (b) the
+  unenforceable residue is a first-class published output, not a log line; (c) adoption is
+  authored and attributed, never installed; (d) the adopted policy is pinned with source,
+  date and hash, and a published case names the version it was held to. Sequence behind
+  D-84.
+enacted:
 
 ## Answered, awaiting enactment
 
