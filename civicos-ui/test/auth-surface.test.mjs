@@ -432,8 +432,11 @@ ok("and the document root says so",
     ok("op=publishedmanifest is not on it either — index.mjs re-wraps it explicitly",
        !/^\s*publishedmanifest\s*:/m.test(flatBlock[1]));
   }
-  ok("the guard names `apiR` as the seam for the untokened transport, which is what these two ops go through",
-     /API_SEAMS = new Set\(\["api", "apiR"\]\)/.test(guard));
+  /* CORRECTED 2026-08-04 at the UI-18/UI-24 merge: UI-18 added `apiQ` (the
+   published region's untokened seam) to the guard's set. The property under
+   test is unchanged — the untokened transports are named seams. */
+  ok("the guard names `apiR` and `apiQ` as the seams for the untokened transport",
+     /API_SEAMS = new Set\(\["api", "apiR", "apiQ"\]\)/.test(guard));
 }
 
 /* ============================================================
@@ -488,18 +491,29 @@ if(!CHILD){
      both come EARLIER in the file, so a plain replace mutates the wrong seam
      and the arm reports green having tested nothing (UI-22's instrument
      finding, applied). */
-  const head = SRC.indexOf("async function apiR(op, body){");
-  const tail = SRC.indexOf("}", SRC.indexOf("return (j && j.result !== undefined)", head));
-  const BROKEN = head >= 0 && tail > head
-    ? SRC.slice(0, head)
-      + SRC.slice(head, tail).replace("return (j && j.result !== undefined) ? j.result : j;", "return j;")
-      + SRC.slice(tail)
-    : SRC;
+  /* CORRECTED 2026-08-04 at the UI-18/UI-24 merge: pubList moved from `apiR`
+     to UI-18's `apiQ`, so the arm now breaks BOTH untokened seams — each splice
+     scoped to its own body per UI-22's instrument finding — or the published-
+     list half of the demonstrated harm silently stops being demonstrated. */
+  const breakSeam = (src, decl) => {
+    const h = src.indexOf(decl);
+    if (h < 0) return src;
+    const cut = src.indexOf("return (j && j.result !== undefined)", h);
+    const tl = src.indexOf("}", cut);
+    if (cut < 0 || tl <= h) return src;
+    return src.slice(0, h)
+      + src.slice(h, tl).replace("return (j && j.result !== undefined) ? j.result : j;", "return j;")
+      + src.slice(tl);
+  };
+  const BROKEN = breakSeam(breakSeam(SRC, "async function apiR(op, body){"), "async function apiQ(op, params){");
   ok("NEG-CONTROL (a): the mutation actually changed the source", BROKEN !== SRC);
-  ok("NEG-CONTROL (a): and it changed apiR, not one of the two seams above it",
+  /* CORRECTED 2026-08-04 with the widened splice: TWO envelope-opens go (apiR
+     and apiQ), and recR/recPostR's byte-identical returns stay — the scoping
+     property is unchanged, the count moved from -1 to -2. */
+  ok("NEG-CONTROL (a): and it changed apiR and apiQ, not the two rec seams above them",
      BROKEN.includes("async function apiR(op, body){\n  const j = await api(op, body);\n  return j;\n}")
      && (BROKEN.match(/return \(j && j\.result !== undefined\) \? j\.result : j;/g)||[]).length
-        === (SRC.match(/return \(j && j\.result !== undefined\) \? j\.result : j;/g)||[]).length - 1);
+        === (SRC.match(/return \(j && j\.result !== undefined\) \? j\.result : j;/g)||[]).length - 2);
   {
     const p = makePlane();
     const c = boot(BROKEN, p);
