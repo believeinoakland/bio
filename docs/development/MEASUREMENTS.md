@@ -2336,3 +2336,89 @@ driven, its answers are harvested, and its rows are in the subject. The three
 call-site paths its answers carry (`bundle.md`, `snapshots/memo.bin`,
 `MANIFEST.json`) are this fixture's, so a live instance's part paths may carry
 terms these do not.
+
+**SUPERSEDED IN PART BY UI-37, 2026-08-04 — and the part that is superseded is
+the SURFACE, not the reading.** Every number in this entry stands: it was taken
+against an app.html this item did not touch, which is exactly why it was worth
+taking. What no longer describes the shipped product is the DEFECT recorded
+above — UI-37 fixed it, and the assertion this entry says pins a defect has been
+corrected at the site. Read the next entry before quoting the refusal behaviour
+described here as current. One reading in this entry did move and it moved for a
+good reason: the plane-sourced source list for `sha256` now includes
+`case-address-at-load #v-refused`, because the refusal this entry found being
+SWALLOWED is now RENDERED.
+
+## 2026-08-04, UI-37: the same instrument after the refusal is rendered — and the subject barely moves
+
+**Why this entry is short where UI-36's was long: the interesting number is the
+one that did NOT move.** UI-37 fixed D-195 — a plane REFUSAL rendered as a
+substantive negative on the public verification surface — which necessarily puts
+plane wording in front of an uncredentialed reader where none stood before. The
+expectation going in was that DEC-49's subject would grow again. It did not, or
+barely: **11 plane-sourced rows -> 11, with ONE new SOURCE on one existing term.**
+
+**Instrument.** `civicos-ui/test/preauth-vocabulary.test.mjs`, in the harness
+`node civicos-ui/test/run.mjs` runs. The measurement itself — walk 3's term
+harvest, `planeRanges`, `countIn`, the HITS loop, the report and `REPORT_ONLY` —
+is UNCHANGED. `UI31_HIDE` was widened to take a comma list so the four new
+scenarios can be hidden together; that is a change to the CONTROL, not to the
+measurement.
+
+**THE BASIS MOVED AND IT IS STATED RATHER THAN ABSORBED (UI-34's rule, applied to
+a bigger step).** 11 scenarios -> 15. The four new ones drive the two SIBLING
+public reads on this page, each in BOTH directions — the published index refused
+and the published index genuinely empty, a case address refused and a case
+address the record genuinely does not hold.
+
+| reading | UI-36 | UI-37 |
+| --- | --- | --- |
+| scenarios | 11 | 15 |
+| surfaces walked | 19 | 22 |
+| characters harvested | 35,835 | 38,637 |
+| plane-vocabulary terms | 13 | 13 |
+| occurrences in rendered HTML | 67 | 68 |
+| occurrences a member READS | 57 | 58 |
+| DEC-49's plane-sourced rows | 11 | 11 |
+
+**THE FOUR NEW SCENARIOS MOVE NO NUMBER IN THE VOCABULARY REPORT, MEASURED.**
+Run against the FINAL app.html with all four hidden: 54/54 green, 11 scenarios,
+22 surfaces, 36,527 characters, 13 terms, **68 occurrences and 58 visible — the
+same figures as the full run** — and the DEC-49 subject arm PASSES. So the four
+add 2,110 characters of harvest and four assertions, and everything that moved in
+the report came from the FIX, on surfaces this walk already covered.
+
+### THE SUBJECT, ROW BY ROW
+
+- `sha256` gains `case-address-at-load #v-refused` as a PLANE source. That is
+  `op=verify`'s own refusal — "verify requires sha256=<64 lowercase hex>" —
+  rendered instead of swallowed. **It is the whole of the movement.**
+- Nothing vanished, nothing arrived, no other source moved. `manifest`, `CASE`,
+  `FIND` and `bundle.md`'s four sources are exactly as UI-36 left them.
+
+### WHAT THE INSTRUMENT CANNOT PIN, NAMED HERE RATHER THAN LEFT TO BE FOUND
+
+"We added plane wording to a pre-authentication surface and the subject did not
+move" is a claim a reader should distrust until it is itemised, so:
+
+- The control plane's `unknown op` refusal now renders on THREE pre-authentication
+  surfaces (`#v-unknownop`, the published index and a case address). It is real
+  plane wording standing in front of a stranger. It contains none of the 74
+  inherited terms and trips neither structural rule, so the sweep has nothing to
+  pin — a fact about the sweep's vocabulary, not evidence the wording is harmless.
+- The store's own `NOT_PUBLISHED` sentence now renders WHOLE at a case address the
+  record does not hold, replacing a surface-authored stand-in. Same finding.
+- `NOT_PUBLISHED`, the bare reason CODE, briefly DID reach the subject while this
+  item was being written, because the first version of the surface's selector
+  joined `reason` with `detail`. The instrument caught it. It was corrected to
+  prefer the plane's PROSE and keep the bare code only when the plane sent nothing
+  else — UI-30's rule — so a SCREAMING_SNAKE wire code does not stand in front of
+  a stranger when a sentence was available. Recorded because the near miss is the
+  argument for the guard.
+
+### WHAT THIS STILL DOES NOT ESTABLISH
+
+UI-31's limit is unchanged and UI-36's is unchanged: `op=publishedmanifest` and
+`op=publishedcase` are still driven from wire-shaped fixtures, so their
+plane-sourced column remains a lower bound. UI-37 drives their REFUSAL arms from
+sentences read textually out of `index.mjs` and `store.mjs`, which is stronger
+than a fixture for those arms and says nothing about their success answers.
