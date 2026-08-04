@@ -3290,6 +3290,42 @@ recommendation: leaning to the shipped refusal, because the whole point of the
 reversal cost: low either way — one predicate at the cite path plus the suites that
   pin it.
 
+### DEC-49 · open
+raised: 2026-08-04 · CONDUCT (lifted from UI-30's report; D-174's own trigger condition fired)
+for: bob
+question: WHO OWNS MEMBER-FACING REFUSAL WORDING — the plane, or the surface? D-174 has
+  watched this since 2026-08-04 with the disposition "raise to Bob if a member-facing
+  release approaches with the tension unresolved." The condition has now fired, and not
+  in a corner: REC-41 gave `op=login` its first refusal SENTENCE, UI-30 renders it under
+  DEC-8, and it now stands on the SIGN-IN GATE — the first screen a member ever meets.
+  The sentence says "no active credential", "a salted derivation", "its stored hash",
+  "this instance". Every word is true and the surface composed none of it.
+why it is Bob's: DEC-8 currently forbids the alternative outright — a surface may render
+  a refusal it received and may NEVER compute one — so a licensed translation layer is a
+  change to a ruling of yours, not a mechanism I can pick. It also decides what the
+  system SOUNDS like to someone who has not joined yet, and reversing it later means
+  revisiting every refusal path in the plane and every surface that renders one.
+provisional: as shipped. The plane's sentence renders verbatim at the gate, the surface
+  translates nothing and blanks nothing — the only state DEC-8 permits — and UI-30's
+  fallback keeps an older plane's bare reason rather than a blank.
+alternative: either (a) the PLANE learns member-facing wording, so `LOGIN_REFUSAL_DETAIL`
+  and its siblings are written for the member rather than for the operator and the
+  vocabulary guard runs against the plane's own strings; or (b) surfaces get a LICENSED
+  translation layer — a declared mapping from refusal code to member wording, with a
+  guard that every code a surface can receive has a translation, so an untranslated code
+  fails the harness instead of reaching a member.
+recommendation: (a). The refusal is the plane's statement about what it did, and one
+  wording means one thing said the same way to every surface, every instance and every
+  export — the D-164 "solve it once" shape. (b) puts the sentence in as many places as
+  there are surfaces and re-opens exactly the drift REC-43 just closed on the
+  co-attestation fence. I do not recommend leaving it provisional indefinitely: the
+  provisional is honest but it is not what a member should read at a sign-in gate.
+what reversing costs: little today and more each release. Two constants carry these
+  sentences now; every act that learns a refusal detail adds one.
+NOTE: whichever way this goes, UI-31 (queued) closes the measurement gap meanwhile —
+  UI-4's vocabulary guard covers no sign-in surface today, so this tension is currently
+  UNMEASURED rather than accepted, and that part is mine and is not waiting on an answer.
+
 ### DEC-48 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-44's report)
 for: bob
