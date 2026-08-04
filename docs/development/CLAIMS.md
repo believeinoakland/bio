@@ -1049,3 +1049,5 @@ expected: QUEUE.md UI-16 / `BUILD-ORDER.md` §2 (UI-16) — E4 THE PROJECT WORKS
 accepts-when: `node civicos-ui/test/run.mjs` green with a workspace harness where the ballot dialog is reached FROM THE WORKSPACE (not from a test), the denominator comes from `op=projectownerarith`'s `live` row, an uninvited member sees no trace of the project anywhere, an invited-not-joined member sees the skeleton and NOT the participant list, and no strength or grade appears on the page; `cd bio-plane && npm run test:battery` stays green. NEGATIVE CONTROLS run and recorded in the harness's `NEGATIVE CONTROL:` line — render an inquiry's grade in the workspace and the harness fails; render a surface-worded refusal (right code, invented sentence) and it fails; each restored byte-identical. No push — CONDUCT integrates.
 landed: left for CONDUCT.
 released:
+
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker b88fd8f). Verified: harness 26 suites green, battery 92/92 (4852) combined with REC-37. ballotPreflight and the routing gap folded into UI-22; the D-173 class sweep queued as UI-23; the withdrawn delegation accepted. No DEC.
