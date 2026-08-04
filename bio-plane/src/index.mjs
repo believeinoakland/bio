@@ -282,8 +282,22 @@ const OPS = {
   archivelookup:       { classes: ["admin", "member", "probe"], mutating: false },
   tasks:               { classes: ["admin", "member", "probe"], mutating: false },
   taskdrain:           { classes: ["admin", "member", "probe"], mutating: true  },
-  taskforward:         { classes: ["admin", "member", "probe"], mutating: true  },
-  taskresolve:         { classes: ["admin", "member", "probe"], mutating: true  },
+  /* REC-28 / D-151: NO PROBE CLASS on the two MEMBER verbs, and the class list is
+     the smaller half of that fix. A probe credential has no business forwarding
+     or resolving anything — it is the unattended prober, and these two verbs are
+     a person's acts — so the table stops advertising it and answers "forbidden
+     for token class".
+     What the class list CANNOT do is the reason the real fence is in the store:
+     `classes` is checked against the caller's CLASS, and a member/admin SESSION
+     arrives as exactly that class (index.mjs sets `cls = kind` from the session),
+     so "admin"/"member" must stay for the Tasks screen to work at all — and a
+     MEMBER_TOKEN or ADMIN_TOKEN machine credential is INDISTINGUISHABLE here from
+     the session it must admit. Both still REACH the ops and are refused by the
+     store BY SHAPE on the server-stamped actor (MACHINE_CANNOT_FORWARD /
+     MACHINE_CANNOT_RESOLVE), the same way release/conclude/reopen are. Removing
+     probe narrows who knocks; the act refusal is what answers the door. */
+  taskforward:         { classes: ["admin", "member"],          mutating: true  },
+  taskresolve:         { classes: ["admin", "member"],          mutating: true  },
   /* Section 8.1. Admin class ONLY, and additionally refused to a SESSION below:
      "the ADMIN_TOKEN-class credential" is not satisfied by a session belonging
      to an administrator, because a session is password-derived and the root of
@@ -3677,9 +3691,17 @@ export default {
     }
     /* D-98. Who forwarded a task and who resolved it are the two facts its
        history exists to hold, so neither is taken from the caller. A machine
-       credential says what it is rather than borrowing a person's name, and the
+       credential says what it is rather than borrowing a person's name.
+       CORRECTED 2026-08-04 (REC-28, D-151): this comment used to finish "and the
        store refuses a forward or a resolution that names no member, so a daemon
-       cannot close somebody's work. */
+       cannot close somebody's work" — true of the NO_ACTOR refusal it described
+       and NOT the guarantee it sounded like, because an UNASSIGNED task is
+       nobody's work and the store closed it happily for `token:probe`. The stamp
+       is what MAKES the store's act refusals possible and is unchanged: it is
+       precisely because a machine is honestly named `token:<class>` here that
+       taskForward/taskResolve can refuse it BY SHAPE (MACHINE_CANNOT_FORWARD /
+       MACHINE_CANNOT_RESOLVE). `taskdrain` keeps the stamp and no such refusal:
+       routing an event into a task is the daemon's job. */
     if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain") && passBody) {
       try {
         const b = JSON.parse(passBody);

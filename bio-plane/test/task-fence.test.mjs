@@ -17,7 +17,18 @@
  *     who it is with;
  *   - the ASSIGNEE succeeds; an ADMIN succeeds;
  *   - an `unassigned` task stays CLAIMABLE (D-98 routing keeps that path open),
- *     so a non-assignee, non-admin member may resolve it.
+ *     so a non-assignee, non-admin MEMBER may resolve it.
+ *
+ * NARROWED 2026-08-04 (REC-28, D-151), and this suite is why the narrowing was
+ * needed. The claimability rule above read "any caller", and every assertion here
+ * drove it with a member SESSION — so the suite proved the rule for people and
+ * said nothing about machines, while the code allowed both. A machine credential
+ * could RESOLVE an unassigned task and close an obligation with no member act.
+ * The rule is unchanged for the callers this suite tests; the missing half is
+ * `test/task-machine.test.mjs`, which refuses a `token:` actor at the ACT
+ * (MACHINE_CANNOT_RESOLVE / MACHINE_CANNOT_FORWARD) before this fence is reached.
+ * BOTH fences stand: this one answers *is this THIS member's task*, that one
+ * answers *is this a person at all*.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
@@ -168,7 +179,9 @@ try {
   console.log("\n--- an UNASSIGNED task stays CLAIMABLE per D-98 routing ---");
   /* nate is neither its assignee (it has none) nor an admin, yet routing intends
      an unassigned task to remain claimable/routable by hand. The fence must NOT
-     strand it. */
+     strand it. He is also, and this is the part the assertion below did not used
+     to say, A PERSON: a MACHINE credential reaching the same call is refused
+     MACHINE_CANNOT_RESOLVE at the act (REC-28/D-151, task-machine.test.mjs). */
   const nateClaims = (await POST(`op=taskresolve&${S_nate}`, { id: taskU, now: AT })).result;
   t("a non-assignee, non-admin member may resolve an unassigned task", [nateClaims.ok, nateClaims.status], [true, "resolved"]);
   const claimed = await rowOf(taskU);
