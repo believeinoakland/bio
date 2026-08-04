@@ -798,7 +798,21 @@ export class Store extends DurableObject {
        the normalized answer. */
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     const docFm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
-    if (b.object_type === "project") {
+    /* THE MAP RULE (REC-31's chore 2, closing the residual REC-20 found). This
+       is a MEMBERSHIP question — is this thing a project — so it goes through
+       the catalog's normalizeType, never a raw key. The raw comparison was
+       correct only by luck of there being no project alias TODAY: promote
+       projects the type through the same map and the boot normaliser rewrites
+       legacy rows, so `project` is what a row says now. But the alias table is
+       exactly the mechanism by which a rename arrives (problem -> focus ->
+       inquiry, twice already), and DATA-MODEL §2.7 measured what the last
+       un-normalized consulting site cost — a third name meant editing every
+       site that had not gone through the map. Through it, a fourth name is one
+       catalog entry and zero edits here; a legacy-spelled project takes this
+       arm and its own citation edges are counted, instead of silently
+       reporting zero and unpublishing sever/reinstate on a project that has
+       them. */
+    if (normalizeType(b.object_type) === "project") {
       const refs = docFm.references;
       for (const r of (Array.isArray(refs) ? refs : []))
         if (r && typeof r === "object" && r.rel === "cites")
@@ -2327,6 +2341,179 @@ export class Store extends DurableObject {
     return { ok: true, target, from: b.current_state, to: "concluded",
              conclusion: concl, falsifier: fals, basis_legs: legs.length,
              author: who, at: when, weight: "single" };
+  }
+
+  /* REC-31: REOPENING an inquiry the group SET DOWN. deferred|dismissed ->
+   * open, on op=conclude's shape and for op=conclude's reasons.
+   *
+   * WHY IT EXISTS. `deferred -> open` and `dismissed -> open` have been legal
+   * edges in the catalog's table since REC-10, and NO op wrote them: op=dispose
+   * only ever targets the disposition set. REC-13 made that a real hole rather
+   * than an untidiness — a deferred inquiry cannot be concluded (it is picked
+   * back up first, which is what the edge is for), so a question the group set
+   * down was unrecoverable except by hand-editing the document. An act the
+   * table permits and no caller can perform is the state machine lying.
+   *
+   * CONCLUDE'S PROPERTIES, CARRIED OVER, and each for its own reason:
+   * 1. A NAMED MEMBER reopens. The author stamp arrives from the session and a
+   *    machine credential's is `token:<class>`, refused BY SHAPE
+   *    (MACHINE_CANNOT_REOPEN, the MACHINE_CANNOT_RELEASE/CONCLUDE precedent).
+   *    A machine may SURFACE a question (D-78) and PURSUE what a member
+   *    authored (DEC-24); deciding that the group's own decision to set
+   *    something down no longer holds is a member's judgement about the
+   *    record, not a scheduler's.
+   * 2. THE REASON IS AUTHORED AND NEVER PREFILLED. Refused when absent, exactly
+   *    as dispose's is and as conclude's conclusion and falsifier are. Nothing
+   *    is derived or proposed: "reopened" with no account of why is a state
+   *    change wearing a decision's clothes, and the member who deferred it is
+   *    owed the argument. It lands in the state_history entry and the Session
+   *    Log, the two places this record keeps WHY.
+   * 3. NO OWNER GATE AND NO BALLOT (DEC-30). Any holder of `contribute`
+   *    reopens, and the act is ATTRIBUTED. Disagreeing with a disposition is
+   *    precisely the disagreement DEC-30 says is expressed by acting and
+   *    signing the act, not by a vote.
+   *
+   * THE MACHINE IS THE CATALOG'S, and there is NO SECOND EDGE SOURCE: legality
+   * is vocabFor(STATES, <declared type>) offering `open`, the same one table
+   * op=affordances publishes from. A legacy focus/problem document is refused
+   * ILLEGAL_TRANSITION — its own vocabulary has no `open` at all (its open
+   * state is spelled `surfaced`), and inventing the move would judge it by a
+   * contract it was not authored under.
+   *
+   * SCOPED TO THE DISPOSITION SET, DELIBERATELY. The FROM state must be in
+   * DISPOSITIONS — the one published array naming what "set down" means,
+   * imported here and by the act, so the publication and this refusal cannot
+   * disagree. `concluded -> open` is ALSO a legal edge and this op does not
+   * write it: DEC-12 makes reopening a conclusion an EDITION (the finding
+   * stays published, the case moves forward), and REC-14 builds that
+   * machinery. Reopening a conclusion here would produce an `open` inquiry
+   * still wearing its conclusion and falsifier with no edition recorded —
+   * exactly the overclaim the edition machinery exists to prevent — so it is
+   * refused BY NAME rather than by omission. */
+  reopen({ target, reason = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || who === "member" || /^token:/.test(who))
+      return { ok: false, reason: "MACHINE_CANNOT_REOPEN",
+               detail: "reopening is a named member's judgement that a question the group set down has to "
+                     + "be worked again. A machine credential may surface a question and pursue one, and "
+                     + "may not overturn the group's own disposition. Sign in as a member." };
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON",
+               detail: "reopening records WHY the disposition no longer holds. The member who deferred or "
+                     + "dismissed this gave their reason; reopening with none would replace an accounted "
+                     + "decision with an unaccountable one. Nothing here is prefilled." };
+    if (why.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON",
+               detail: `a reason is at most ${Store.EDGE_REASON_MAX} characters and cannot contain a quote, `
+                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET",
+               detail: "reopening picks up ONE question: pass target=<inquiry id>" };
+
+    /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
+       inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
+       absent one, so the refusal discloses nothing. */
+    const gate = viewerPredicate(viewer);
+    /* The `b` alias is load-bearing: viewerPredicate's participation arm is
+       written against `b.object_type` / `b.bundle_id` (see conclude above). */
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
+               detail: "reopening picks a question back up, and only an inquiry carries one." };
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return { ok: false, reason: "NO_DOCUMENT", target,
+               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+    let text = liveMd.content;
+    const fm = parseFrontmatter(text).data || {};
+
+    /* Set down, and only set down. Checked BEFORE the edge table so a
+       concluded inquiry — whose `open` edge IS legal — is told what it needs
+       rather than being told the move is illegal, which it is not. */
+    if (!DISPOSITIONS.includes(b.current_state))
+      return { ok: false, reason: "NOT_SET_DOWN", target, from: b.current_state, dispositions: DISPOSITIONS,
+               detail: "reopening picks up something the group SET DOWN: deferred or dismissed. An open "
+                     + "inquiry is already open, and a CONCLUDED one is revised by publishing a new "
+                     + "EDITION (DEC-12) rather than quietly reverting to open still wearing its "
+                     + "conclusion — that act arrives with the edition machinery, not here." };
+
+    /* THE MAP RULE: the machine is looked up through the catalog's own vocabFor
+       over the DECLARED spelling, never STATES.inquiry by a raw key. A legacy
+       focus/problem document has no `open` state at all — its open state is
+       spelled `surfaced` — so it is refused rather than given a state its
+       contract never had. */
+    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
+    const legalFrom = (spec?.edges?.[b.current_state]) || [];
+    if (!legalFrom.includes("open"))
+      return { ok: false, reason: "ILLEGAL_TRANSITION", to: "open", target,
+               from: b.current_state, object_type: fm.object_type ?? b.object_type,
+               detail: "this is not a legal move in the catalog's state table for this document's own "
+                     + "vocabulary. An inquiry reopens from deferred or dismissed; a legacy focus/problem "
+                     + "document has no `open` state at all until its frontmatter is modernized." };
+
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const withHistory = Store.#appendStateHistory(text, {
+      timestamp: when, from_state: b.current_state, to_state: "open",
+      blurb: why, author: who });
+    if (!withHistory)
+      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
+               detail: "this document's state_history block cannot be extended in place, and a reopening "
+                     + "recording no transition would leave prior_state pointing at a history the document "
+                     + "does not carry (C-4.2)" };
+    text = withHistory;
+    text = Store.#setScalar(text, "prior_state", b.current_state);
+    text = Store.#setScalar(text, "current_state", "open");
+    /* The disposition_reason is CLEARED, and the authored words are not lost:
+       the state_history entry dispose() wrote keeps them forever. Leaving the
+       scalar would hand every reader an OPEN inquiry still saying it is set
+       down for a reason that no longer applies — the current-state fields
+       describe where the document stands now, and the history describes where
+       it has been. #setScalar on an absent key is a no-op by design, so an
+       inquiry that never carried the field gains nothing. */
+    text = Store.#setScalar(text, "disposition_reason", `""`);
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    /* C-13.2: last_updated moving requires a Session Log entry, and DEC-30's
+       attribution lives here — who reopened, and why, is part of the record. */
+    const entry = `### Session ${when} | Reopened | ${who}\n`
+                + `Trigger: op=reopen on ${target}\n`
+                + `Changes: state ${b.current_state} to open. Reason: ${why}.\n`;
+    const at = text.indexOf("## Session Log");
+    if (at < 0) text += "\n## Session Log\n\n" + entry;
+    else {
+      const nxt = text.indexOf("\n## ", at + 1);
+      const cutAt = nxt === -1 ? text.length : nxt + 1;
+      text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
+    }
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+              title: fm.title, current_state: "open", prior_state: b.current_state,
+              created: fm.created, last_updated: when,
+              criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    /* `weight: "single"` for conclude's reason: one question is picked back up
+       at a time. A bulk reopen would be a checkbox reversing a set of separate
+       decisions with one sentence standing for all of them. */
+    return { ok: true, target, from: b.current_state, to: "open",
+             why, author: who, at: when, weight: "single" };
   }
 
   /* Rewrite the `status` and `note` of specific `cites` entries in place,
@@ -5964,8 +6151,17 @@ export class Store extends DurableObject {
            document, so a capture grade authored on an INQ- leg has no
            referent — it is named as not load-bearing rather than silently
            setting this axis, which would be a strength claimed about no
-           document at all. REC-11's write-time check does not refuse it
-           today; reported as a finding rather than invented here. */
+           document at all.
+           CORRECTED BY REC-31: this arm used to say "REC-11's write-time
+           check does not refuse it today", and that is no longer the gap it
+           describes — checkInquiryBasis now REFUSES the combination at the
+           write (C-2.8, one function consulted by both the catalog and
+           op=promote), so no new leg reaches this walk in that shape. The
+           handling stays, and stays load-bearing, for the reason the refusal
+           cannot cover: history is append-only, a replayed revision is exempt
+           from the shape checks by design, and a row written before the
+           refusal existed still reads. A derivation that met one and threw
+           would be the record failing to hold its own past. */
         const noReferent = axis === "capture" && isInquiry;
         if (noReferent && !onAxis) continue;
         members[axis].push({ ...site, via: "leg",
@@ -9288,6 +9484,12 @@ export class Store extends DurableObject {
         conclude: () => this.conclude({ target: url.searchParams.get("target"),
           conclusion: url.searchParams.get("conclusion"),
           falsifier: url.searchParams.get("falsifier"),
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
+        /* REC-31, conclude's shape exactly: ONE target, no handle and no
+           owner, with the viewer and author stamps the control plane sets. */
+        reopen: () => this.reopen({ target: url.searchParams.get("target"),
+          reason: url.searchParams.get("reason"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         expertisedeclare: () => this.expertiseDeclare(body || {}),

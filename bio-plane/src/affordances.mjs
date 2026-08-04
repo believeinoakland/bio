@@ -140,6 +140,28 @@ export const ACTS = [
      machine permits the move, not that this caller's parameters will pass. */
   { id: "conclude", label: "Conclude", weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("concluded") },
+  /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
+     back to `open`. TWO conditions and no third: the FROM state is in the
+     published DISPOSITIONS array — the one array that says what "set down"
+     means, the same one op=dispose writes INTO — and the catalog's edge table
+     offers `open` from there. There is NO SECOND EDGE SOURCE and no state
+     list local to this file; a legacy focus/problem document is excluded by
+     the table itself, because its own vocabulary spells its open state
+     `surfaced` and has no `open` edge at all.
+     WHY THE DISPOSITION SET AND NOT THE WHOLE EDGE TABLE: `concluded -> open`
+     is ALSO legal (REC-13 added it — a conclusion is revisable), and it is
+     NOT this act. DEC-12 makes reopening a conclusion an EDITION, and REC-14
+     builds that machinery; publishing `reopen` on a concluded inquiry would
+     put a control on the strip that reverts a published finding with no
+     edition recorded, which is the DEC-8 disagreement in the worse direction
+     — a publication the store then has to refuse. The store refuses it by
+     name (NOT_SET_DOWN) and this list does not offer it. Weight `single` and
+     rung null for conclude's reasons: one question is picked back up at a
+     time, and no document assigns this act a rung (FW-14's job, not a guess
+     made here). */
+  { id: "reopen", label: "Reopen", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && DISPOSITIONS.includes(f.current_state)
+                     && edgesFrom(f).includes("open") },
   /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
      because the store's own guards are type-only on both: any information
      bundle may be cited (cite checks NOT_INFORMATION and nothing about state —

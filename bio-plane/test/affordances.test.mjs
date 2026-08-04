@@ -101,7 +101,10 @@ t("no op is both an act and a NON_ACT",
   [...ACT_IDS].filter((k) => k in NON_ACTS), []);
 t("every published act is a real op in the OPS table",
   [...ACT_IDS].filter((k) => !opsKeys.includes(k)), []);
-t("every published act carries a NEEDS entry (all seven are mutating session acts)",
+/* Corrected 2026-08-04 (REC-31): "all seven" became all EIGHT with `reopen`.
+   The count in the label is not decoration — it is the thing a reader checks
+   against the catalogue assertion below. */
+t("every published act carries a NEEDS entry (all eight are mutating session acts)",
   [...ACT_IDS].filter((k) => !needsKeys.includes(k)), []);
 
 console.log("\n--- structural: vocabularies and rungs are the enforcing tables, not copies ---");
@@ -209,10 +212,15 @@ const cat = await affordances(null);
    catalogue then — and correcting it rather than loosening it is the point:
    this assertion exists so a published act cannot appear or vanish without a
    turn saying so, and a `>= 6` would have made it stop doing that. */
-t("no target -> the whole catalogue: seven acts, each with id/label/weight/needs/mode/rung",
+/* Superseded again 2026-08-04 (REC-31): SEVEN became EIGHT when `reopen` was
+   published — the act for the deferred|dismissed -> open edges the catalog has
+   carried since REC-10 with no op writing them. Corrected rather than
+   loosened, for the reason the REC-13 note above gives: this assertion exists
+   so a published act cannot appear or vanish without a turn saying so. */
+t("no target -> the whole catalogue: eight acts, each with id/label/weight/needs/mode/rung",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung"].every((k) => k in a))],
-  [true, 7, true]);
+  [true, 8, true]);
 t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the seven action kinds",
   [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
   [["deferred", "dismissed"], 7]);
