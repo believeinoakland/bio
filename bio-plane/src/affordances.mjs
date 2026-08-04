@@ -52,7 +52,8 @@
  * reads, and an action now publishes both.
  */
 
-import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
+import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
+         CORRESPONDENCE_DIRECTIONS, normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -203,6 +204,23 @@ export const VOCABULARIES = {
   entity_kinds: ENTITY_KINDS,
   relation_kinds: RELATION_KINDS,
   stage_requiredness: STAGE_REQUIREDNESS,
+  /* REC-38, UI-19's measured gap. The action loop's two closed vocabularies —
+     what a leg of an action's basis DOES (`rests_on` / `advances`, DEC-14), and
+     which way a correspondence entry went (`sent` / `received` / `no_response`,
+     DEC-13's non-response recorded as a fact rather than a silence). REC-24
+     built both ops and exported both arrays from the check catalogue; neither
+     reached here, and the cost was measured rather than argued: UI-19 could not
+     offer a basis leg at all, so `request_for_comment` — the ONE kind DEC-13
+     requires legs for — had to be filtered out of its own intake, and an action
+     could be authored with a counterparty and a kind and nothing it rests on.
+     Present-and-refused is what a published vocabulary prevents; absent-and-
+     stated is what a surface must do until there is one.
+     Imported from `bio-checks.mjs`, where C-2.10's own findings validate
+     against them (`actionBasisFindings`, `correspondenceFindings`) and where
+     store.mjs's BAD_DIRECTION refusal reads its `legal` list — the same
+     direction `action_kind` and `basis_roles` above already take. One array. */
+  action_basis_kinds: ACTION_BASIS_KINDS,
+  correspondence_directions: CORRESPONDENCE_DIRECTIONS,
 };
 
 /* The seven sourced rungs — BIO_Interaction_Constructs_v0_1.md via
@@ -216,9 +234,79 @@ export const RUNGS = {
   release:   "reasoned",   // Constructs:241
   sever:     "reasoned",   // Constructs:243
   reinstate: "reasoned",   // Constructs:243
-  attest:    "attested",   // Constructs:275 (a NON_ACT below until a later item)
+  attest:    "attested",   // Constructs:275 (a CAPTURE act — CAPTURE_ACTS below)
   ratify:    "attested",   // Constructs:275 (publication pre-flight is REC-15's)
 };
+
+/* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
+ * SHAPE IS THE WHOLE OF THIS ITEM'S DECISION — stated here rather than in a
+ * commit message, because the next session will meet the same fork.
+ *
+ * THE FORK. `attest` was the last act in this plane whose member-facing label
+ * was written by a surface: op=affordances published nothing for it, so
+ * civicos-ui spelled "Co-attest this capture" itself (UI-22 raised it rather
+ * than papering over it). Two ways to fix that. Promote `attest` into ACTS with
+ * an applies(), or publish a SEPARATE block for the capture-directed class.
+ *
+ * PROMOTING IT INTO `ACTS` WAS REJECTED, and not on taste — it would have been
+ * DISHONEST in the precise way this file exists to prevent:
+ *
+ *   (1) THE SUBJECT IS WRONG. Every entry in ACTS is an act on A BUNDLE IN A
+ *       GIVEN STATE; that is what the header says and what `deriveActs` is. The
+ *       subject of op=attest is a CAPTURE SHA. A capture is not in a state, has
+ *       no edges, and can be held by several bundles or by none.
+ *   (2) THE DERIVATION HAS NOTHING TO DERIVE FROM. `applies()` is handed
+ *       store.mjs's affordanceFacts — object_type, current_state, cites edges,
+ *       basis legs. No capture sha is in that shape and no bucket is reachable
+ *       from it. The only applies() writable over those facts is
+ *       `ty === "information"`, which is NOT what op=attest gates on: it gates
+ *       on evidence storage being configured (503), the sha being 64 hex
+ *       (BAD_SHA) and THE BYTES ACTUALLY BEING IN THE STORE (NO_SUCH_CAPTURE).
+ *       So an information bundle holding no capture would publish the act and
+ *       the op would refuse it — a pre-flight disagreeing with the refusal it
+ *       fronts, DEC-8's headline failure, arrived at by way of fixing a label.
+ *   (3) IT WOULD SPLIT A CLASS. `monitor` is capture-directed for the same
+ *       reason and would have stayed behind in NON_ACTS, so the two halves of
+ *       one doctrine would sit in two registries with no rule relating them.
+ *
+ * WHAT IS PUBLISHED INSTEAD, and why it costs nothing to be honest: a block
+ * beside `vocabularies` carrying id and LABEL for each capture-directed op —
+ * and NOTHING ELSE, because everything else already has a home. `needs`, `mode`
+ * and `rung` are composed at the control plane by `decorateAct`, the SAME
+ * function every act in ACTS goes through, reading NEEDS, SESSION_OPS and RUNGS
+ * — the tables that actually gate the call. That is what makes `RUNGS.attest`
+ * reachable: it has been correct and unpublished since REC-19 only because
+ * decorateAct ran over ACTS alone.
+ *
+ * SO THE LABEL IS THE ONLY NEW FACT, and it lives here for DISPOSITIONS' reason
+ * exactly — one array, no copy. A surface renders it; a surface does not write
+ * it.
+ *
+ * THESE STAY IN `NON_ACTS`. They are not object-directed acts and publishing
+ * their metadata does not make them ones; the totality guard over NEEDS is
+ * unchanged. What the suite adds is the OTHER totality — every NON_ACT whose
+ * reason begins `capture-directed:` appears here, and nothing else does — so a
+ * third capture-directed op cannot ship with no label either.
+ *
+ * NO PROMPT, deliberately. The co-attestation honesty fence ("this raises a
+ * Grade B capture TOWARD evidentiary weight and never reaches Grade A") is a
+ * real candidate for DEC-29(b)'s `prompt` treatment, and it is NOT invented
+ * here: no ruling attaches it to the act, the surface's own sentence is not a
+ * source, and guessing at one is what RUNGS refuses two blocks up. */
+export const CAPTURE_ACTS = [
+  /* op=attest. The verb is "co-attest" because the group is not the only
+     attestor: the plane asks an independent timestamp authority and stores what
+     it returns. The object is THE CAPTURE and the label says so — attesting the
+     bundle would be the claim we cannot make. */
+  { id: "attest", label: "Co-attest this capture" },
+  /* op=monitor. One tick: re-fetch the source's locator and compare what it
+     serves NOW against the bytes the provenance register says were captured
+     from it. The label names the comparison rather than promising a watch — a
+     tick is a check, and `unchanged` / `modified` / `removed` are its answers.
+     No rung: no document assigns one, and RUNGS carries only the sourced seven
+     (FW-14's job, not a guess made here). */
+  { id: "monitor", label: "Check this source against what was captured" },
+];
 
 /* One legal-edge lookup, over the IMPORTED table, THROUGH the catalog's own
  * vocabulary machinery (REC-10's normalisation, fifth consulting site): the
@@ -446,9 +534,15 @@ export const NON_ACTS = {
   capture: "substrate: byte movement, content-addressed",
   acquire: "substrate: the fetch layer (M2')",
   linkproject: "substrate: admits an observed link as an edge, keyed by capture",
-  /* Capture-directed: their subject is a capture sha, not a bundle's state. */
-  attest: "capture-directed: co-attestation of a capture's existence in time",
-  monitor: "capture-directed: the monitor tick on a captured source",
+  /* Capture-directed: their subject is a capture sha, not a bundle's state.
+     REC-38: NOT acts here, and their member-facing METADATA is published all
+     the same — CAPTURE_ACTS above carries the label, decorateAct adds the
+     needs/mode/rung from the same tables every act reads, and op=affordances
+     answers them in a `capture_acts` block beside the vocabularies. A reason
+     beginning "capture-directed:" is what makes an op a member of that block,
+     and the suite holds the two lists equal in both directions. */
+  attest: "capture-directed: co-attestation of a capture's existence in time (metadata published in capture_acts)",
+  monitor: "capture-directed: the monitor tick on a captured source (metadata published in capture_acts)",
   /* Keyed by entity / capture / progression — the framework surface, not a
      bundle-state act. */
   entitycreate: "registry write, keyed by entity",

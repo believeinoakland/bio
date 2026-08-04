@@ -1,5 +1,11 @@
 /* NEGATIVE CONTROL: STRUCTURAL, the item's own (REC-19) — add an op to NEEDS in src/index.mjs (e.g. `frobnicate: "contribute",`) WITHOUT adding it to the affordances derivation -> the totality assertion here fails NAMING `frobnicate` as the unpublished op; restored -> green. Recorded as run below in the suite header. */
 /* NEGATIVE CONTROL (REC-35, the vocabulary drift guard), three arms, all RUN 2026-08-04 and both source files restored byte-identical (sha256 verified): (a) in src/affordances.mjs replace `entity_kinds: ENTITY_KINDS` in VOCABULARIES with a literal copy of the same ten words -> "the three intent vocabularies … ARE the arrays" FAILS (45/46), and NOTE WHAT DOES NOT: the wire and the through-the-op assertions all PASS, because an identical copy agrees at zero cost — the identity pin is the whole of that control; (b) in src/store.mjs restore `static #ENTITY_KINDS = new Set([...ten literal words])` -> the no-literal-copy pin FAILS (45/46) and nothing else does, for the same reason; (c) the same literal PLUS one extra kind ("widget") -> the no-literal-copy pin AND "op=entitycreate REFUSES against exactly the published entity_kinds" both FAIL (44/46), naming the published list against the enforced one, and civicos-ui/test/intent-write.test.mjs fails with it (1 of 106) — the drift is caught from both ends. Restored -> 46/46. */
+/* NEGATIVE CONTROL (REC-38, the attest metadata + the two action-loop vocabularies), FOUR arms, all RUN 2026-08-05 and both source files restored BYTE-IDENTICAL (sha256 compared before and after: src/index.mjs 4232a3cf…, src/affordances.mjs 2bef3364…):
+   (c) THE ATTEST LABEL AS A LITERAL COPY — in src/index.mjs replace the catalogue arm's `capture_acts: CAPTURE_ACTS.map(decorate)` with an inline `[{ id:"attest", label:"Co-attest this capture", weight:null, needs:"contribute", mode:"session", rung:"attested", prompt:null }, ...]` (the surface-authored label moved one layer down, which is the failure this item exists to end) -> "index.mjs composes the block through the SAME decorateAct and keeps no literal label of its own" FAILS (62/63), and NOTE WHAT DOES NOT: every wire assertion PASSES, because an identical copy agrees at zero cost — the structural pin is the whole of that control, REC-35's finding restated on a LABEL instead of an array;
+   (d) ONE VOCABULARY AS A LITERAL COPY — in src/affordances.mjs replace `action_basis_kinds: ACTION_BASIS_KINDS` with `["rests_on","advances"]` -> the identity pin FAILS (62/63) and nothing else does, for the same zero-cost reason;
+   (d2) THE SAME LITERAL PLUS ONE EXTRA KIND ("widget") -> THREE FAIL (60/63) and they name both lists: the identity pin, the over-the-wire pin, and "the write path REFUSES a basis leg against exactly the published action_basis_kinds" — the publication is caught as a SUPERSET of what the store will accept, which is the DEC-8 disagreement in the shape that costs a member a control that does not work;
+   (e) THE CAPTURE-DIRECTED TOTALITY — delete the `monitor` entry from CAPTURE_ACTS, leaving its NON_ACTS reason untouched -> "every capture-directed NON_ACT has published metadata … both directions" FAILS naming ["monitor"], which is the guard that makes `attest`'s six-item history (correct, sourced, unreachable since REC-19) unable to repeat for a third op.
+   Restored -> 63/63. */
 /* op=affordances (REC-19, standing doctrine DEC-8): the plane publishes what may
  * be DONE to an object, so an act surface renders options it RECEIVED and never
  * computes one. whoami publishes capabilities, searchfields publishes the query
@@ -43,9 +49,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROMPT, deriveActs,
-         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS }
+         ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, CAPTURE_ACTS }
   from "../src/affordances.mjs";
-import { ACTION_KINDS } from "../checks/bio-checks.mjs";
+import { ACTION_KINDS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -172,6 +178,50 @@ t("RUNGS carries EXACTLY the seven documented assignments — nothing invented (
   Object.entries(RUNGS).sort(),
   [["attest", "attested"], ["dispose", "reasoned"], ["ratify", "attested"], ["reinstate", "reasoned"],
    ["release", "reasoned"], ["retire", "terminal"], ["sever", "reasoned"]].sort());
+
+/* REC-38 — UI-19's TWO MEASURED-ABSENT VOCABULARIES, the REC-35 pin applied to
+   the action loop's pair. IDENTITY and not equality, for REC-35's reason
+   restated once because it is the whole control: a literal copy of
+   ["rests_on","advances"] satisfies every deep comparison the day it is written
+   and drifts silently the day DEC-14 gains a third kind. This is NEGATIVE
+   CONTROL (d) below. */
+t("the two action-loop vocabularies published by op=affordances ARE the catalog's own arrays, not copies",
+  [VOCABULARIES.action_basis_kinds === ACTION_BASIS_KINDS,
+   VOCABULARIES.correspondence_directions === CORRESPONDENCE_DIRECTIONS], [true, true]);
+
+/* REC-38 — THE CAPTURE-DIRECTED ACTS' METADATA (UI-22's delegation), and these
+   four assertions are the shape decision made structural.
+
+   THE SECOND TOTALITY. The suite has always held that every op in NEEDS is an
+   act or a named NON_ACT. That guard cannot see the new failure: an op could be
+   correctly classified capture-directed and still ship with no member-facing
+   label, which is exactly the state `attest` was in from REC-19 until this item
+   — RUNGS.attest correct, sourced and UNREACHABLE, because decorateAct ran over
+   ACTS alone. So the NON_ACTS reason prefix `capture-directed:` is now
+   load-bearing: it is what makes an op a member of the published block, and the
+   two lists are held equal in BOTH directions so a third capture-directed op
+   can be neither unpublished nor invented.
+
+   AND THE BLOCK DECLARES NOTHING IT DOES NOT OWN. `needs`, `mode` and `rung`
+   have homes — NEEDS, SESSION_OPS, RUNGS — so CAPTURE_ACTS carries id and LABEL
+   and nothing else, and the control plane composes the rest through the SAME
+   decorateAct every act in ACTS goes through. The label is the one new fact and
+   `src/index.mjs` must hold no copy of it: that is the DISPOSITIONS pin's shape,
+   and it is NEGATIVE CONTROL (c). */
+const captureDirected = Object.entries(NON_ACTS)
+  .filter(([, reason]) => /^capture-directed:/.test(reason)).map(([k]) => k).sort();
+t("every capture-directed NON_ACT has published metadata, and the block names no op that is not one — both directions",
+  [captureDirected.filter((k) => !CAPTURE_ACTS.some((a) => a.id === k)),
+   CAPTURE_ACTS.map((a) => a.id).filter((k) => !captureDirected.includes(k))], [[], []]);
+t("the capture acts stay NON_ACTS: publishing metadata for one does not make it an act on a bundle",
+  CAPTURE_ACTS.filter((a) => ACT_IDS.has(a.id)).map((a) => a.id), []);
+t("CAPTURE_ACTS declares ONLY id and label — needs/mode/rung have homes and are never copied here",
+  [...new Set(CAPTURE_ACTS.flatMap((a) => Object.keys(a)))].sort(), ["id", "label"]);
+t("index.mjs composes the block through the SAME decorateAct and keeps no literal label of its own",
+  [/capture_acts: CAPTURE_ACTS\.map\(decorate\)/.test(indexSrc),
+   /import \{[^}]*\bCAPTURE_ACTS\b[^}]*\} from "\.\/affordances\.mjs"/.test(indexSrc),
+   CAPTURE_ACTS.some((a) => stripComments(indexSrc).includes(a.label))],
+  [true, true, false]);
 
 /* ------------------------------------------------------------- fixtures */
 const NOW = "2026-07-01T00:00:00Z";
@@ -337,6 +387,53 @@ for (const k of cat.result.vocabularies.entity_kinds) {
 }
 t("every PUBLISHED entity kind is one op=entitycreate actually accepts — the publication is not a superset",
   kindAccepted, cat.result.vocabularies.entity_kinds.map(() => true));
+
+/* REC-38 — THE CAPTURE ACTS OVER THE WIRE, and what makes RUNGS.attest reachable.
+
+   The block answers in the SAME producer shape every act does, because it goes
+   through the same decorateAct: a surface that can render an act can render
+   these without learning a second shape. What it proves here is the thing
+   UI-22's delegation was actually about — `attest` arrives with a LABEL the
+   plane wrote, the capability the gate will really ask for, and the `attested`
+   rung Constructs:275 assigned and nobody could read. `monitor` arrives beside
+   it with rung null, which is the honest answer and not an omission.
+
+   The label's DRIFT guard is the structural pin above (index.mjs holds no copy);
+   what this asserts is that what the module declares is what a caller receives. */
+t("op=affordances publishes the capture-directed acts, each in the producer's own act shape",
+  [cat.result.capture_acts.map((a) => a.id),
+   cat.result.capture_acts.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"]
+     .every((k) => k in a))],
+  [CAPTURE_ACTS.map((a) => a.id), true]);
+t("the LABEL a surface renders is the plane's own — UI-22's residue, and the last surface-authored act wording",
+  cat.result.capture_acts.map((a) => [a.id, a.label]), CAPTURE_ACTS.map((a) => [a.id, a.label]));
+t("RUNGS.attest is REACHABLE at last: attest publishes its sourced `attested` rung, the capability NEEDS names, and session mode",
+  cat.result.capture_acts.find((a) => a.id === "attest"),
+  { id: "attest", label: CAPTURE_ACTS.find((a) => a.id === "attest").label,
+    weight: null, needs: "contribute", mode: "session", rung: RUNGS.attest, prompt: null });
+t("monitor publishes rung null — no document assigns it one, and a capture act guesses no more than a bundle act does",
+  [cat.result.capture_acts.find((a) => a.id === "monitor").rung, "monitor" in RUNGS], [null, false]);
+/* WEIGHT IS null AND THE null IS STATED. `weight` is the SET-APPLICATION weight
+   an act's op hard-codes, and a capture act has no set: op=attest takes one sha
+   and op=monitor one bundle id, neither through a selection handle. Publishing
+   `single` here would be inventing a doctrine to fill a field; dropping the key
+   would let a surface read `undefined` and guess. Every act in ACTS still
+   carries a real one, which is the other half of this assertion. */
+t("a capture act publishes weight null — no selection, no set-application weight — while every bundle act still carries a real one",
+  [cat.result.capture_acts.map((a) => a.weight),
+   cat.result.catalog.every((a) => typeof a.weight === "string")],
+  [cat.result.capture_acts.map(() => null), true]);
+/* THE ONE SOURCED RUNG STILL UNREACHABLE, named rather than left to be
+   rediscovered: `ratify` is the publication act, its pre-flight is the deferred
+   op=publishpreflight (REC-15), and until that lands nothing publishes it. This
+   assertion FAILS if a later item makes ratify reachable and does not say so,
+   and fails if a sourced rung quietly stops being published. */
+const publishedRungIds = new Set([...ACT_IDS, ...CAPTURE_ACTS.map((a) => a.id)]);
+t("every sourced rung now reaches a member EXCEPT ratify, whose pre-flight is REC-15's deferred op",
+  Object.keys(RUNGS).filter((k) => !publishedRungIds.has(k)), ["ratify"]);
+t("the two action-loop vocabularies reach a caller OVER THE WIRE, exactly as published",
+  [cat.result.vocabularies.action_basis_kinds, cat.result.vocabularies.correspondence_directions],
+  [ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS]);
 /* CORRECTED 2026-08-04 (REC-14), never exempted. The old assertion said every
    act needs `contribute`, which was true while every act was a corpus-shaping
    one. `publish` is not: concluding says what the record shows, publishing puts
@@ -375,6 +472,16 @@ t("each act carries its needs (the capability the gate will actually ask for)",
 t("release's rung is its sourced `reasoned`; cite's is null — published distinctly from weight (C-6)",
   affA0.result.acts.map((a) => [a.id, a.rung, a.weight]).sort(),
   [["cite", null, "report"], ["release", "reasoned", "refuse"]].sort());
+/* REC-38. The capture block is DELIBERATELY NOT narrowed by the target, and
+   this is the honest half of the shape decision rather than a convenience.
+   Whether a capture can be attested turns on the BYTES BEING IN THE STORE
+   (op=attest answers NO_SUCH_CAPTURE otherwise) — a fact affordanceFacts does
+   not carry and this handler must not guess at. So the same block answers on
+   every shape, as metadata a surface renders beside a capture it already holds;
+   deriving one against a bundle's state would be the publication disagreeing
+   with the refusal it fronts, which is the whole reason attest is not in ACTS. */
+t("the target-shaped answer carries the SAME capture_acts block — metadata, never a derivation about this object",
+  affA0.result.capture_acts, cat.result.capture_acts);
 
 /* retire is UNPUBLISHED for a collected bundle — and the store agrees by name. */
 const hA1 = await selectIds([A], RUTH);
@@ -504,6 +611,49 @@ t("op=actionmove is reachable and refuses a machine credential BY NAME (not by a
 const corr = rP(await GET(`op=actioncorrespond&token=mem-rec19&target=${encodeURIComponent(ACTN)}&direction=sent&at=2026-07-01&account=x`));
 t("op=actioncorrespond is reachable and refuses a machine credential BY NAME",
   corr.reason, "MACHINE_CANNOT_CORRESPOND");
+
+/* REC-38 — THE TWO VOCABULARIES HELD AGAINST WHAT THE PLANE ACTUALLY REFUSES,
+   which is REC-35's second instrument and exists because the identity pin
+   cannot do this job. The pin proves the PUBLICATION is the catalog's array; it
+   cannot prove the two ENFORCEMENT sites read that same array, because one is a
+   check-catalogue function and the other a store guard, and a private reading
+   is invisible from here. So each is asked with the field that trips exactly
+   its check, and the refusal's own sentence — written from the set it validates
+   against — is compared to what was published. If publication and enforcement
+   ever hold different words, these two say so and name both lists.
+
+   The two sites are deliberately DIFFERENT LAYERS, because that is where REC-24
+   put them: a basis leg's kind is judged AT THE WRITE (store.mjs's action arm
+   runs the catalogue's own `actionBasisFindings` before anything lands, so the
+   store's view and C-2.10's view are one rule and a malformed action neither
+   lands nor audits clean), and a correspondence direction is an OP-TIME refusal
+   in actionCorrespond. Both refusals are asked for here rather than the check
+   catalogue being called in-process, because a function this harness imports
+   proves nothing about what a caller meets. */
+const oneOfColon = (s) => {
+  const m = /\bone of:?\s*([^.(]+)/.exec(String(s || ""));
+  return m ? m[1].trim().split(/\s*,\s*/) : null;
+};
+const BADACT = "ACTN-2026-0002-rec19";
+const badBasisMd = actnMd(BADACT).replace("  name: City Clerk\n---",
+  `  name: City Clerk\naction_basis:\n  - target: ${A}\n    kind: __not_a_basis_kind__\n---`);
+const badBasis = rP(await POST(`op=promote&token=mem-rec19`, {
+  bundleId: BADACT, base: null, snapKey: "20260701T000000Z_aaaa1111", author: "seed",
+  meta: { object_type: "action", group: "believe-in-oakland", title: `t ${BADACT}`,
+          current_state: "planned", created: NOW, last_updated: NOW },
+  files: [{ path: "bundle.md", text: badBasisMd, bytes: badBasisMd.length, sha256: sha(badBasisMd) }],
+  register: [],
+}));
+const kindFinding = (badBasis.findings || []).find((f) => /is not one of/.test(f.detail || ""));
+t("the write path REFUSES a basis leg against exactly the published action_basis_kinds (the catalogue's own sentence, not a copy)",
+  [badBasis.reason, kindFinding?.check, oneOfColon(kindFinding?.detail)],
+  ["ACTION_BASIS_REFUSED", "C-2.10", cat.result.vocabularies.action_basis_kinds]);
+const badDir = rP(await GET(
+  `op=actioncorrespond&token=${RUTH}&target=${encodeURIComponent(ACTN)}&direction=__not_a_direction__&at=2026-07-01&account=x`));
+t("op=actioncorrespond REFUSES against exactly the published correspondence_directions, and publishes the legal set with it",
+  [badDir.reason, badDir.legal, oneOfColon(badDir.detail)],
+  ["BAD_DIRECTION", cat.result.vocabularies.correspondence_directions,
+   cat.result.vocabularies.correspondence_directions]);
 
 /* ----------------------------------------- rung honesty across everything */
 console.log("\n--- rung honesty: null wherever no document assigns one ---");
