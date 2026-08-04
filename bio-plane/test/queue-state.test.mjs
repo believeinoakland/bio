@@ -37,14 +37,27 @@
  *     record raises its OWN event which reaches EVERY ancestor entry — including
  *     the entry of the member who muted conditions on that very case.
  *
- * CONDITION HAS NO PRODUCER IN THIS PLANE (HOLE-1, declared in
- * QUEUE_CLASSES_DEFERRED and pinned by queue.test.mjs), and REC-21 does not
- * build one — emitting a stub would be the second half of a bridge. So the
- * CONDITION-side clauses are held against `suppressedBy`, which is the function
- * queueFeed itself calls and not a restatement of it (the deriveActs precedent),
- * while every clause that CAN be exercised on live items is driven through
- * op=queue with real member sessions. The two halves meet in negative control
- * (b), where the same admission point provably hides a real item.
+ * CONDITION HAD NO PRODUCER when this suite was written (HOLE-1), and REC-21
+ * did not build one — emitting a stub would have been the second half of a
+ * bridge. So the CONDITION-side clauses are held against `suppressedBy`, which
+ * is the function queueFeed itself calls and not a restatement of it (the
+ * deriveActs precedent), while every clause that CAN be exercised on live items
+ * is driven through op=queue with real member sessions. The two halves meet in
+ * negative control (b), where the same admission point provably hides a real
+ * item.
+ *
+ * CORRECTED 2026-08-04 (REC-32). CONDITION now HAS a producer — three kinds,
+ * derived on read in queueFeed — so the sentence above is history rather than
+ * fact, and `QUEUE_CLASSES_DEFERRED` is empty. This suite's clauses are NOT
+ * rewritten to use them, and that is deliberate rather than lazy: holding
+ * `suppressedBy` directly is the ONLY way to exercise a kind whose generator
+ * does not exist (eight of the eleven still do not), and a member may lawfully
+ * mute one — so the decision must stay testable independently of what the feed
+ * happens to emit today. The live-item half of the same clauses — a muted kind
+ * hidden for one member only, a NEW kind on the same case still surfacing, an
+ * OBLIGATION on that case untouched — now runs through op=queue on REAL items
+ * in queue-conditions.test.mjs, which is the "KNOWN TENSION" line of REC-21's
+ * landing being discharged. Read the two together.
  */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

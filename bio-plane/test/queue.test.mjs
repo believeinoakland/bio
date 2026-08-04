@@ -290,9 +290,25 @@ t("the ONE contract shape is on BOTH classes, key for key",
      .filter((k) => !(k in ob)),
    ["id", "class", "kind", "case", "summary", "detail", "basis", "age", "assignee", "options"]
      .filter((k) => !(k in find))], [[], []]);
-t("CONDITION is DECLARED deferred (HOLE-1) and never stubbed into the feed",
-  [Object.keys(qc.classes_deferred), qc.items.some((i) => i.class === "CONDITION")],
-  [["CONDITION"], false]);
+/* CORRECTED 2026-08-04 (REC-32). The old assertion was
+     `[Object.keys(qc.classes_deferred), items.some(CONDITION)] === [["CONDITION"], false]`
+   and it was RIGHT when REC-20 landed: the class had no producer (HOLE-1), so
+   it was declared absent rather than stubbed. REC-32 built three generators —
+   governor-holding-host, partial-capture-outstanding, capture-completed-unattended
+   — so `classes_deferred` is now EMPTY and asserting it still names CONDITION
+   would be pinning a deferral that no longer exists. What survives unchanged is
+   the rule the old pin was really defending: this producer emits no CONDITION
+   item it has no fact for. THIS corpus holds none of the three facts — no host
+   is in cool-off, no capture session is parked, and no document was authored by
+   a person and then revised by a machine — so the honest count here is zero,
+   and it is zero because there is nothing to say rather than because the class
+   does not exist. queue-conditions.test.mjs builds the facts and holds the
+   other side. */
+t("CONDITION is a DECLARED class now (REC-32) and nothing is deferred any more",
+  [qc.classes, Object.keys(qc.classes_deferred)],
+  [["OBLIGATION", "FINDING", "CONDITION"], []]);
+t("and this corpus holds none of the three facts, so the feed emits none — absent, never stubbed",
+  [qc.items.some((i) => i.class === "CONDITION"), qc.counts.condition], [false, 0]);
 t("refers_to points at the SUBJECT and `case` is a different column — the two are never collapsed",
   [ob.subject.id, ob.basis.refers_to, ob.case.ancestors.some((a) => a.id === INFO88)],
   [INFO88, INFO88, false]);
