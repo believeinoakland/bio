@@ -391,3 +391,22 @@ negative control breaks exactly that merge and fails naming it.
 - **Version:** I3 2.0.0 → **3.0.0** in `INTERFACES.md` — major, same reasoning as
   IC-3: an additive label here would teach the registry to lie, and this registry's
   honesty is the product.
+
+## IC-5 · I3: fifteen read ops become viewer-dependent (the D-15 sweep) · PROPOSED, ACCEPTED AND CHANGED 2026-08-03 (one act, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-30 — op=dangling, tasks, queue,
+  reading, readingref, resolutions, concerns, connections, instance, exceptions,
+  audit, searchindexcheck, projectownerarith, strengthbarof (and excludedby, gated at
+  REC-14's own landing) now answer by the viewer's position: subject rows about
+  invisible bundles are withheld without a count; back-references are redacted to
+  null while the row's record facts stand. The DO envelope's `ms` field is REMOVED.
+  For machine credentials, administrators and participants the answers are
+  byte-identical; **the break is for a member session reading about a project it was
+  never invited to — which was the leak.**
+- **Consumers:** UI (dormant). CONDUCT answers per step 3, in writing, naming that it
+  did so: `AGREE` — the UI reads these answers for display and rebuilds no gated
+  join; the one UI-side walk this class feeds (reverseRefs) is already scheduled for
+  deletion by UI-21 against op=backlinks. Nothing read `ms` (measured across five
+  trees).
+- **Version:** I3 3.0.0 → **4.0.0** in `INTERFACES.md` — major, the IC-3/IC-4
+  standard: answers changing for a class of callers is a break however desirable.
