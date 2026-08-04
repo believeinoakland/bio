@@ -227,6 +227,24 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .intent-sub{margin-top:14px;padding-top:10px;border-top:1px solid var(--rule)}
 .intent-sub h3{font-family:var(--font-fact);font-size:13px;font-weight:600;color:var(--ink);margin:0}
 .intent-sec{margin-top:8px}
+/* UI-19: O3 the action page. One column on --paper (the working record's own
+   background, inherited — nothing here re-declares it), and the ledger is a
+   stack of DATED ROWS rather than a conversation, because each entry is
+   separately either bytes or testimony. --signal is used in exactly two places
+   and both are the plane's own derived overdue verdict; nothing on this page
+   colours anything it computed itself. */
+.act-overdue{margin:14px 0 0;padding:11px 14px;border-left:3px solid var(--signal);background:var(--signal-tint);color:var(--signal-dk);font-size:13.5px;line-height:1.55;border-radius:var(--r-2)}
+.act-cp{margin-top:0}
+.act-cp-who{font-family:var(--font-fact);font-size:14px;font-weight:600;color:var(--ink)}
+.act-clock{margin:8px 0 0;padding:9px 12px;border-left:2px solid var(--rule);background:var(--paper-2);border-radius:var(--r-2)}
+.act-clock.overdue{border-left-color:var(--signal);background:var(--signal-tint)}
+.act-clock-when{font-family:var(--font-fact);font-size:13px;color:var(--ink)}
+.act-clock-why{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+.act-led{margin:8px 0 0;padding:10px 13px;border:var(--hair);background:var(--card);border-radius:var(--r-2)}
+.act-led-head{font-family:var(--font-fact);font-size:13px;color:var(--ink)}
+.act-led-body{font-size:13px;color:var(--ink);margin-top:5px;line-height:1.55}
+.act-led-held{font-family:var(--font-fact);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-right:6px}
+.act-unproven{border-left:3px solid var(--rule)}
 /* UI-9: a progression finding under an instance the document sits in */
 .docprog-finding{margin:8px 0 0;padding:8px 11px;border-left:2px solid var(--rule);background:var(--paper-2);border-radius:var(--r-2)}
 .docprog-finding.overdue{border-left-color:#d6a48c;background:var(--tint-note)}
@@ -984,7 +1002,13 @@ async function boot(){
   /* UI-11: an address in the bar is an address. A member who reloaded on a
      question's page, or was handed its link, lands back on it rather than on
      Home with the url still claiming otherwise. */
-  if(!routeFromHash()) go("queue", true);
+  /* UI-19: THREE real addresses now, asked in turn. `projectRouteFromHash` was
+     written by UI-16 and never reached from boot, so a member who reloaded on a
+     project workspace landed on the queue with the url still claiming otherwise
+     — the exact defect UI-11 added this line to prevent, one surface over.
+     Fixed here because this is the line being edited, and reported rather than
+     left as a comment nobody runs. */
+  if(!routeFromHash() && !projectRouteFromHash() && !actionRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -999,6 +1023,10 @@ const RAIL = [
   {id:"subjects", icon:"i-focus",    label:"Subjects"},
   {id:"progressions",icon:"i-monitor",label:"Progressions"},
   {id:"inquiries",icon:"i-focus",    label:"Questions"},
+  /* P-52, UI-19. The IMPACTING verb had no entry in the rail at all: an action
+     could only be reached by knowing its id. `op=list` and `op=search` have
+     always returned actions; nothing here asks the plane for anything new. */
+  {id:"actions",  icon:"i-external", label:"Actions"},
   {id:"projects", icon:"i-projects", label:"Projects"},
   {id:"review",   icon:"i-review",   label:"Review"},
   {id:"monitoring",icon:"i-monitor", label:"Monitoring"},
@@ -1047,7 +1075,8 @@ function navLabel(p){
   if(!p) return "";
   if(p.type==="bundle") return "the document";
   if(p.type==="inquiry") return "the question";
-  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
+  if(p.type==="action") return "the action";
+  const t = {record:"The record",queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring",members:"Members & keys",add:"Add"};
   return t[p.key]||p.key;
 }
 function navSync(){ const b=$("#mback"); if(b) b.classList.toggle("hidden", !NAVSTACK.length || PLANE.preview); }
@@ -1066,6 +1095,7 @@ async function navBackDo(){
   if(p.type==="bundle") await openBundle(p.key, true);
   else if(p.type==="inquiry") await openInquiry(p.key, true);   // UI-11's route is a place you can come back to
   else if(p.type==="project") await openProjectWorkspace(p.key, true);   // UI-16's, the same reason
+  else if(p.type==="action") await openAction(p.key, true);              // UI-19's, the same reason
   else {
     await go(p.key, true);
     if(p.key==="search" && p.q){
@@ -1098,9 +1128,9 @@ async function go(screen, fromNav){
   LIST_SORT = { col:null, dir:1 }; LIST_REPAINT = null;
   c.scrollTop = 0;
   if(PLANE.preview){
-    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
+    const titles={queue:"The queue",home:"The queue",tasks:"The queue",proposals:"The queue",record:"The record",search:"Search",subjects:"Subjects",progressions:"Progressions",inquiries:"Questions",actions:"Actions",projects:"Projects",review:"Review",monitoring:"Monitoring & developments",members:"Members & keys",add:"Add something new"};
     c.innerHTML = `<h1 class="rec">${esc(titles[screen]||"")}</h1>${previewNote()}`+
-      (["record","inquiries","projects","review","members"].includes(screen)
+      (["record","inquiries","actions","projects","review","members"].includes(screen)
         ? `<table class="rec"><thead><tr><th>Item</th><th>State</th><th>Updated</th></tr></thead><tbody><tr><td colspan="3" class="empty">Connect to load.</td></tr></tbody></table>` : "");
     return;
   }
@@ -1116,6 +1146,12 @@ async function go(screen, fromNav){
        page — so the screen has a renderer of its own. `renderFiltered` itself
        still serves Questions and is UI-21's to delete. */
     projects: renderProjects,
+    /* P-52, UI-19. Actions come out of `op=list` like every other type; the
+       screen exists because the verb had no home, not because the read is new.
+       A row opens `#action/<id>` rather than the document page — an action is a
+       thing being DONE, with a counterparty, a clock and a ledger, and none of
+       those live on a bundle view. */
+    actions: ()=>renderFiltered("actions","action","Actions","What this group has asked of somebody outside it, who it was addressed to, what the clock says, and what came back. An action is the one construct here that reaches people who never agreed to be in this record."),
     review: renderReview, monitoring: renderMonitoring, members: renderMembers, add: renderAdd, bundle: null
   };
   if(R[screen]) await R[screen]();
@@ -1513,7 +1549,7 @@ function recordRows(list, showType){
   if(showType===undefined) showType = true;
   return list.map(b=>{
     const crux = b.criticality==="crucial" ? " "+sealFor("crit","crucial") : "";
-    return `<tr class="row" data-id="${esc(b.bundle_id)}">
+    return `<tr class="row" data-id="${esc(b.bundle_id)}" data-type="${esc(b.object_type||"")}">
       <td class="item"><span class="ttl">${esc(b.title||b.bundle_id)}</span>${crux}</td>
       ${showType?`<td class="ty" style="white-space:nowrap;color:var(--muted);font-size:12.5px">${esc(typeLabel(b.object_type, b.current_state))}</td>`:""}
       <td class="st">${sealFor("state", b.current_state, b.object_type)}</td>
@@ -1521,7 +1557,17 @@ function recordRows(list, showType){
     </tr>`;
   }).join("");
 }
-function wireRows(){ $("#content").querySelectorAll("tr.row").forEach(r=>r.onclick=()=>openBundle(r.dataset.id)); }
+/* UI-19: a row carries THE RECORD'S OWN type, and an action row opens the
+   action page. Nothing is inferred from the id's shape (UI-22's rule for the
+   queue, the same rule here), and every other type routes exactly where it did
+   — questions and projects included, whose row destinations are a separate
+   question this item deliberately does not move. */
+function rowOpen(id, type){
+  if(!id) return;
+  if(type && normalizeType(type) === "action") return openAction(id);
+  return openBundle(id);
+}
+function wireRows(){ $("#content").querySelectorAll("tr.row").forEach(r=>r.onclick=()=>rowOpen(r.dataset.id, r.dataset.type)); }
 
 /* Sortable list headers: click sorts ascending, click again flips. Plane
    order until the reader asks otherwise; state resets per screen. */
@@ -2082,12 +2128,26 @@ function stamp(){
 /* Fifteen core fields, because C-2.2 fires once per missing one; the canonical
    heading set for the type, because C-3.1 refuses both a missing heading and an
    unexpected one; the per-type extension fields each type's own check requires. */
-function mdFor(id, type, state, title, body, now, hasDoc, src){
+function mdFor(id, type, state, title, body, now, hasDoc, src, act){
+  /* UI-19: a carried REFERENCE, and it is the honest half of a measured gap.
+     The overdue act on an action's page opens a question "resting on this
+     action and its clock" — and the catalog REFUSES that leg by name (C-2.8:
+     a leg rests on information or on another inquiry, nothing else), measured
+     2026-08-05 against `checkBundle` itself rather than assumed. What the
+     record DOES hold is the reference edge, so that is what is written, the
+     surface says which of the two it is, and the missing half is a delegation
+     rather than a leg this function invents a role for. */
+  const refs = (act && Array.isArray(act.refs) ? act.refs : []).filter(r=>r && r.target);
   const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
     "produced_by:","  mode: assisted","  capability_tier: session",
-    "group: believe-in-oakland","references: []","state_history: []",
+    "group: believe-in-oakland",
+    ...(refs.length
+      ? ["references:", ...refs.flatMap(r=>[`  - target: ${r.target}`, `    rel: ${r.rel||"cites"}`,
+                                            "    status: confirmed"])]
+      : ["references: []"]),
+    "state_history: []",
     "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
     "  source: null","visuals: []"];
   if(type === "information") fm.push(
@@ -2110,26 +2170,79 @@ function mdFor(id, type, state, title, body, now, hasDoc, src){
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if(type === "project") fm.push("objective: "+JSON.stringify(title));
-  /* D-130 / REC-23: the counterparty placeholder USED TO BE PUSHED HERE, and it
-     satisfied C-2.10 by being a non-empty string — so every action this surface
-     wrote asserted a counterparty it did not have. Nothing replaces it, because
-     nothing here can: the honest `undetermined` state requires an AUTHORED
-     basis, and a basis this function invented would be the same lie one field
-     down. The gate now names the gap until a member fills it, and the control
-     that lets them fill it — the radio pair with no third option and no
-     default — is UI-19's. `action_kind` and `risk_tier` are placeholders too.
-     CORRECTED 2026-08-04 (UI-15): this comment said they were UI-15's to
-     replace. UI-15 took the other road and made `action` ABSENT from the type
-     list until UI-19 lands, so no member reaches this arm from THIS surface
-     and there is nothing here to replace them with; they belong to UI-19 with
-     the counterparty pair. The arm stays because mdFor is also the writer the
-     conformance suite drives per type, and because an `action` bundle already
-     in the record is still read and revised through this function.
-     (The literal string itself is deliberately not repeated in this comment:
+  /* D-130 / REC-23 / UI-19, 2026-08-05. THE PLACEHOLDER IS GONE AND SO IS THE
+     GAP IT LEFT. Until now this arm pushed only `action_kind` and `risk_tier`
+     and the counterparty was ABSENT — the honest state of a surface with no
+     control to author one, and the reason UI-15 removed `action` from
+     ADD_TYPES rather than offer a type whose every instance the gate refused.
+     UI-19 gives the member the control (the REC-23 radio pair: a named
+     counterparty, or not determined yet WITH a written basis — no third
+     option and no default), so the values arrive here FROM THE MEMBER and
+     nothing on this path is invented.
+
+     `act` IS THE MEMBER'S OWN ANSWERS and nothing else:
+       act.kind          one token from the plane's published `action_kind`
+       act.counterparty  {state:"named", name} | {state:"undetermined", basis}
+       act.basis         legs the member POINTED AT: [{target, kind, note?}]
+       act.clock         deadlines the member authored: [{text, description,
+                         date, basis}] — every one carrying its because
+     CALLED WITHOUT `act` THIS ARM STILL WRITES NO COUNTERPARTY, deliberately
+     and permanently: mdFor is also the writer the conformance suites drive per
+     type, and what those suites must keep proving is that the machine does not
+     invent an addressee to get past its own gate. An unauthored action still
+     draws exactly C-2.10, which is the honest one error; an authored one draws
+     none. Both directions are asserted (conformance.test.mjs, add-surface).
+
+     risk_tier STAYS 1 AND IS NOT A MEMBER CONTROL, and the reason is named
+     rather than left to be rediscovered: C-2.10 admits 1, 2 or 3 and NOTHING
+     PUBLISHES member-facing words for them (they are not in op=affordances'
+     vocabularies, and BIO_Case_Making calls the ladder "that repertoire's
+     first draft"). A chooser here would be this surface deciding what tiers 2
+     and 3 MEAN, which is the option map DEC-8 forbids; 1 is the floor and the
+     record has no undetermined value on this axis to state instead. Reported
+     to CONDUCT as the residue of D-130's class that REC-23 did not reach.
+     (The old placeholder literal is deliberately not repeated in this comment:
      counterparty.test.mjs asserts, over this file's SOURCE, that it appears
      nowhere — so a future edit that pastes it back fails there rather than at
      a ratification months later.) */
-  if(type === "action") fm.push("action_kind: other","risk_tier: 1");
+  if(type === "action"){
+    const a = act || {};
+    const cp = a.counterparty || null;
+    fm.push("action_kind: " + (a.kind || "other"), "risk_tier: 1");
+    /* THE STATE THE MEMBER CHOSE IS WRITTEN EVEN WHEN THE FIELD BESIDE IT IS
+       EMPTY, and that is deliberate rather than sloppy: a member who answered
+       "not determined yet" and wrote no basis has made a choice and left a
+       requirement unmet, and the record's own words for that are C-2.10's —
+       "undetermined is first-class and must be STATED". Dropping the block
+       instead would hand them the vaguer refusal (the counterparty is missing)
+       for a question they had actually answered. Nothing is invented either
+       way: the empty field stays empty and the gate names it. */
+    if(cp && cp.state === "named")
+      fm.push("counterparty:", "  state: named",
+              ...(String(cp.name||"").trim() ? ["  name: " + JSON.stringify(String(cp.name).trim())] : []));
+    else if(cp && cp.state === "undetermined")
+      fm.push("counterparty:", "  state: undetermined",
+              ...(String(cp.basis||"").trim() ? ["  basis: " + JSON.stringify(String(cp.basis).trim())] : []));
+    for(const [i,l] of (Array.isArray(a.basis)?a.basis:[]).entries()){
+      if(i===0) fm.push("action_basis:");
+      fm.push("  - target: " + l.target, "    kind: " + l.kind,
+              ...(String(l.note||"").trim() ? ["    note: " + JSON.stringify(String(l.note).trim())] : []));
+    }
+    for(const [i,c] of (Array.isArray(a.clock)?a.clock:[]).entries()){
+      if(i===0) fm.push("clock:");
+      fm.push("  - text: " + JSON.stringify(String(c.text||"").trim()),
+              "    description: " + JSON.stringify(String(c.description||"").trim()),
+              "    date: " + String(c.date||"").trim(),
+              "    basis: " + JSON.stringify(String(c.basis||"").trim()),
+              /* `pending` is not a judgement about the deadline: it is the only
+                 status a deadline nobody has answered yet can carry, and the
+                 catalog derives overdue from the DATE rather than from this
+                 word (C-11.1 refuses a past date still marked pending, which is
+                 why a clock authored into the past is the member's to fix and
+                 not this function's to relabel). */
+              "    status: pending");
+    }
+  }
   fm.push("---","");
   const out = fm.slice();
   (vocabFor(HEADINGS, type)||["## Summary"]).forEach((h,i)=>{ out.push(h,""); if(i===0) out.push(body,""); });
@@ -5494,6 +5607,515 @@ function projectRouteFromHash(){
 try{ window.addEventListener("hashchange", ()=>{ if(!PROJ_HASH_LOCK) projectRouteFromHash(); }); }catch(_){}
 /*__PROJECT_WORKSPACE_END__*/
 
+/*__ACTION_PAGE_START__*/
+/* ============================================================
+   UI-19 · O3 THE ACTION PAGE — the outward ask, and what came back.
+
+   THE LAST UNHOMED VERB. Bob's path is questioning, exploring, discovering,
+   documenting and IMPACTING, and until REC-24 the last of those had zero
+   reachable processes: an action bundle could be written and nothing could ever
+   be done with one. REC-24 built the plane half; this is the surface, and the
+   route `#action/<id>` is a real address that survives a reload.
+
+   ONE COLUMN, `--paper`, AND THE CORRESPONDENCE IS A DATED LEDGER AND NOT A
+   CHAT. That is a claim about evidence and not about layout: a chat is a stream
+   whose entries are read as one conversation, and each entry here is separately
+   either BYTES THE GROUP CAN PRODUCE or a NAMED MEMBER'S TESTIMONY, which are
+   different kinds of evidence and must never be able to be confused (DEC-13).
+   Every entry therefore carries its date, its direction, its author and which
+   of the two halves it is, on its own row.
+
+   WHAT IT READS, and every one is a plane read through `recR`/`actAsk` — this
+   region opens no envelope by hand and never did (D-173's class was closed
+   before this region existed, so it is built on the seams rather than swept
+   onto them):
+     op=projection   the row, `fm_json`, AND REC-24's DERIVED `action` BLOCK:
+                     basis, correspondence, consequence, clock_next,
+                     clock_overdue + clock_overdue_cached, as_of, responses
+     op=image        the document as authored — the plan, and the clock entries'
+                     own words (the derived block carries the VERDICT on the
+                     clock, not the entries)
+     op=affordances  which acts exist on this action as it stands
+     op=whoami       the one credential sentence (Q12), through PLANE.me
+
+   WHAT IT NEVER DOES:
+     - decide whether anything is overdue. `action.clock_overdue` is DERIVED ON
+       READ by the plane at an instant it names (`as_of`), and the cached column
+       is reported beside it. A surface that compared a date to `Date.now()`
+       would be a second implementation of the item's whole point, and would be
+       wrong in a Worker anyway (a Worker cannot time itself).
+     - grade a consequence. `consequence.state: unproven` is a STATED STATE on
+       the R1 shape — no grade, `determined:false` — and it renders as the
+       plane's own words about what has not been established. Never a letter,
+       never a low one: a low grade would say we established it weakly.
+     - word a refusal. DEC-8: every refusal sentence on this page came back over
+       the wire. The two flows below take DIFFERENT shapes, and WHICH shape is a
+       MEASUREMENT of the store's check order (UI-20's rule), recorded at each.
+   ============================================================ */
+let ACTION = null;
+let ACTION_HASH_LOCK = false;
+
+/* THE PROBE'S OWN VALUE, and it is never written anywhere. `op=actionmove`
+   checks, in this order: the author is a member; the REASON is present and
+   well-formed; the target resolves; the target state is in the vocabulary; the
+   edge is in the catalog's table; and LAST, the resolution. So the field that is
+   both withholdable and last is `resolution` — replace it with something the
+   store cannot accept and every refusal ABOVE it arrives in the plane's own
+   words and order, while the call can never reach the write. This is UI-13's
+   INTENT_HOLD shape and UI-20's ordering rule applied to a third op, and it is a
+   MEASUREMENT of store.mjs `actionMove()` rather than an assumption: a cleared
+   pre-flight is literally RESOLUTION_WITHOUT_RESOLVING (or NO_RESOLUTION when
+   the move IS a resolution), which are the two refusals a resolution can draw. */
+const ACT_MOVE_HOLD = "__preflight__";
+
+/* The dialog every act flow in this file already uses — `#dlg` inside
+   `#dlg-wrap`, closed by `closeDialog` — reached through one helper so this
+   region opens it the same way `openConclude` and `openDisposeDialog` do rather
+   than growing a second modal with its own behaviour. */
+function actDlg(html){
+  const box = $("#dlg"); if(!box) return;
+  box.innerHTML = html;
+  $("#dlg-wrap").classList.remove("hidden");
+}
+
+async function openAction(id, fromNav){
+  if(!fromNav) navRemember();
+  CUR = { type:"action", key:id };
+  setActive("actions"); liveStop();
+  const crumb = recordCrumb(id, ` &rsaquo; <span>the action</span>`);
+  $("#content").innerHTML = `${crumb}<p class="count-line">Loading&hellip;</p>`;
+  try{
+    if(typeof location !== "undefined" && location.hash !== undefined && location.hash !== "#action/"+id){
+      ACTION_HASH_LOCK = true; try{ location.hash = "#action/"+id; }finally{ ACTION_HASH_LOCK = false; }
+    }
+  }catch(_){}
+  try{
+    const [img, proj] = await Promise.all([getImage(id, true), getProjection(id)]);
+    if(!img){ $("#content").innerHTML = errPane({error:"This action was not found."}, crumb); return; }
+    const { fm, body } = splitFm(typeof img["bundle.md"]==="string" ? img["bundle.md"] : "");
+    let fmj = null; try{ fmj = proj && proj.fm_json ? JSON.parse(proj.fm_json) : null; }catch(_){}
+    const otype = fm.object_type || (proj&&proj.object_type) || "action";
+    if(normalizeType(otype) !== "action"){
+      $("#content").innerHTML = errPane({error:`${id} is not an action, so it has no counterparty, no clock and no correspondence. Open it as a document instead.`}, crumb);
+      return;
+    }
+    const state = fm.current_state || (proj&&proj.current_state) || vocabFor(FIRST_STATE, otype);
+    const title = fm.title || (proj&&proj.title) || id;
+    /* REC-24's derived block. ABSENT is a real answer — a plane that predates
+       the item, or a projection not yet backfilled — and it is said rather than
+       filled in, because an empty ledger and an unavailable one are different
+       facts about this ask. */
+    const der = (proj && proj.action && typeof proj.action === "object") ? proj.action : null;
+    const actsR = await actsFor(id);
+    ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
+    ACTION = { id, title, state, fm, fmj, der, mv:null, corr:null };
+
+    const planText = mdSectionOf(body, (vocabFor(HEADINGS, otype)||[])[0]);
+    $("#content").innerHTML = `${crumb}
+      <div class="trow"><h1 class="rec">${esc(title)}</h1></div>
+      <p class="lede">${sealFor("state", state, otype)} <span class="mono">${esc(state)}</span>${
+        der && der.kind ? ` &middot; ${esc(humanKind(der.kind))}` : ""}</p>
+      ${credentialSentence(PLANE.me, "action")}
+      ${actionOverdueHtml(der)}
+      <h2 class="sec">Who this is addressed to</h2>
+      ${actionCounterpartyHtml(fmj, der)}
+      <h2 class="sec">The ask, as authored</h2>
+      ${planText ? `<div class="card"><div class="prose">${mdLite(planText)}</div></div>`
+                 : `<div class="empty">This action's own words are not in the document. Nothing is shown in their place.</div>`}
+      <h2 class="sec">Why we are asking</h2>
+      <p class="subj-note">Every finding and question this ask rests on or advances, in the order it was recorded, as rows the record holds &mdash; each one pointed at, never retyped.</p>
+      ${actionBasisHtml(der)}
+      <h2 class="sec">The clock</h2>
+      <p class="subj-note">Every deadline carries the statute, the order, or the commitment it comes from. A date with no basis would be the record asserting a deadline it invented.</p>
+      ${actionClockHtml(fmj, der)}
+      <h2 class="sec">What was sent, and what came back</h2>
+      <p class="subj-note">A dated ledger and not a conversation. Each entry is either bytes this group can produce or a named member's account of an exchange &mdash; two different kinds of evidence, never mixed into one entry.</p>
+      ${actionLedgerHtml(der)}
+      <h2 class="sec">What came of it</h2>
+      ${actionConsequenceHtml(der)}
+      <h2 class="sec">What responded to this</h2>
+      ${actionResponsesHtml(der)}
+      ${actBarHtml(id, title, actsR, { noun:"action" })}`;
+  }catch(e){ $("#content").innerHTML = errPane(e, crumb); }
+}
+
+/* THE OVERDUE NOTE, and the ONE act it opens. Rendered when and only when the
+   plane's derived answer says so, at the instant the plane names. When the
+   record and its own cache disagree the disagreement is SHOWN rather than
+   reconciled here: the derived answer is the answer and the column is a filter's
+   cache, which is exactly the staleness REC-24 accepts on one and refuses on the
+   other. */
+function actionOverdueHtml(der){
+  if(!der || der.clock_overdue !== true) return "";
+  const stale = der.clock_overdue_cached === false
+    ? ` The record's own filter has not caught up with this yet; the answer above was derived from the document, and the filter is a cache.` : "";
+  return `<div class="act-overdue">
+    <b>Overdue.</b> The deadline this action set has passed with nothing recorded against it${
+      der.clock_next?` &mdash; ${esc(der.clock_next)}`:""}. Derived when this page was read, at <span class="mono">${esc(der.as_of||"")}</span>.${stale}
+    <div class="rv-bar" style="margin:10px 0 0"><button class="btn ghost" onclick="openNonResponseInquiry()">Record the non-response as a finding&hellip;</button></div>
+  </div>`;
+}
+
+function actionCounterpartyHtml(fmj, der){
+  const cp = (fmj && fmj.counterparty && typeof fmj.counterparty === "object") ? fmj.counterparty : null;
+  const st = (cp && cp.state) || (der && der.counterparty_state) || null;
+  if(st === "named")
+    return `<div class="card act-cp"><div class="act-cp-who">${esc((cp&&cp.name)||"")}</div>${
+      cp && cp.entity_id ? `<div class="ln">Registered subject <span class="mono">${esc(cp.entity_id)}</span></div>` : ""}</div>`;
+  if(st === "undetermined")
+    return `<div class="card act-cp"><div class="act-cp-who">Not determined yet</div>
+      <div class="prose">${esc((cp&&cp.basis)||"")}</div>
+      <p class="subj-note">This action will not be sent while this is undetermined.</p></div>`;
+  /* Neither: the document carries no counterparty at all. Said, not guessed —
+     an action written before REC-23, or one the gate has not seen. */
+  return `<div class="empty">This action's document names no counterparty and does not say that it is undetermined. The record does not know who it is addressed to, and nothing is shown in place of that.</div>`;
+}
+
+function actionBasisHtml(der){
+  const legs = (der && Array.isArray(der.basis)) ? der.basis : null;
+  if(!legs) return `<div class="empty">The record did not answer with this action's basis.</div>`;
+  if(!legs.length) return `<div class="empty">This action names nothing it rests on or advances. An ask with no stated reason is a fact about the ask, and the record keeps it that way rather than supplying one.</div>`;
+  return legs.map(l=>`<div class="linkrow" onclick="openBundle(${esc(JSON.stringify(String(l.target_id)))})">
+    <span class="lt">${esc(l.target_id)}</span>
+    <span class="ln">${esc(typeLabel(l.target_type))} &middot; ${esc(humanKind(l.kind))}${
+      l.note?` &middot; ${esc(l.note)}`:""}</span></div>`).join("");
+}
+
+/* THE ENTRIES ARE THE DOCUMENT'S; THE VERDICT IS THE PLANE'S. `clock_next` and
+   `clock_overdue` come from the derived block; the words, the date and the
+   because come from the frontmatter the member authored. Nothing here compares
+   a date to anything. */
+function actionClockHtml(fmj, der){
+  const rows = (fmj && Array.isArray(fmj.clock)) ? fmj.clock : [];
+  if(!rows.length) return `<div class="empty">This action sets no deadline.</div>`;
+  const next = der && der.clock_next;
+  const over = der && der.clock_overdue === true;
+  return rows.map(c=>{
+    const isNext = next && c.date === next;
+    return `<div class="act-clock${isNext && over ? " overdue" : ""}">
+      <div class="act-clock-when"><span class="mono">${esc(c.date||"")}</span> &middot; ${esc(c.text||"")}${
+        c.status?` &middot; ${esc(c.status)}`:""}</div>
+      <div class="ln">${esc(c.description||"")}</div>
+      <div class="act-clock-why">Because: ${esc(c.basis||"")}</div>
+    </div>`;
+  }).join("");
+}
+
+function actionLedgerHtml(der){
+  const rows = (der && Array.isArray(der.correspondence)) ? der.correspondence : null;
+  if(!rows) return `<div class="empty">The record did not answer with this action's ledger.</div>`;
+  if(!rows.length) return `<div class="empty">Nothing has been sent and nothing has come back yet.</div>`;
+  return rows.map(e=>{
+    const held = e.artifact_sha
+      ? `<span class="act-led-held">Captured</span> <span class="mono">${esc(String(e.artifact_sha).slice(0,16))}&hellip;</span>${
+          e.artifact_bundle_id?` in <a onclick="openBundle(${esc(JSON.stringify(String(e.artifact_bundle_id)))})">${esc(e.artifact_bundle_id)}</a>`:""}`
+      : `<span class="act-led-held">Testimony</span> ${esc(e.account||"")}`;
+    return `<div class="act-led">
+      <div class="act-led-head"><span class="mono">${esc(e.at||"")}</span> &middot; ${esc(humanKind(e.direction||""))}${
+        e.party?` &middot; ${esc(e.party)}`:""}${e.medium?` &middot; ${esc(e.medium)}`:""}</div>
+      <div class="act-led-body">${held}</div>
+      <div class="ln">Recorded by ${esc(e.author||"")}${e.recorded_at?` on ${esc(String(e.recorded_at).slice(0,10))}`:""}</div>
+    </div>`;
+  }).join("");
+}
+
+/* DEC-14, RENDERED AS THE PLANE DERIVED IT. `unproven` is a state and never a
+   grade: the word STATED is what this surface shows, the plane's own `detail`
+   is what explains it, and there is no letter, no bar and no score anywhere in
+   this function. `established` and `recorded` render the same way, because a
+   consequence is a claim the record judged and not a thing this page scores. */
+function actionConsequenceHtml(der){
+  const c = der && der.consequence;
+  if(!c || !c.claim) return `<div class="empty">This action records no consequence.</div>`;
+  const unproven = c.state === "unproven";
+  return `<div class="card${unproven?" act-unproven":""}">
+    <div class="act-cp-who">${esc(humanKind(c.claim))}${unproven?` &middot; STATED`:""}</div>
+    ${c.description?`<div class="prose">${esc(c.description)}</div>`:""}
+    ${c.at?`<div class="ln"><span class="mono">${esc(c.at)}</span></div>`:""}
+    ${c.detail?`<div class="act-clock-why">${esc(c.detail)}</div>`:""}
+    ${Array.isArray(c.evidence)&&c.evidence.length
+      ? `<div class="ln">Resting on ${c.evidence.map(x=>`<span class="mono">${esc(x)}</span>`).join(", ")}</div>` : ""}
+  </div>`;
+}
+
+function actionResponsesHtml(der){
+  const rows = (der && Array.isArray(der.responses)) ? der.responses : [];
+  if(!rows.length) return `<div class="empty">Nothing in the record points back at this action as a response to it.</div>`;
+  return rows.map(r=>`<div class="linkrow" onclick="openBundle(${esc(JSON.stringify(String(r)))})">
+    <span class="lt">${esc(r)}</span><span class="ln">responds to this action</span></div>`).join("");
+}
+
+/* ---------------------------------------------------------------
+   THE MOVE FLOW — the PROBE shape, and the measurement that chose it.
+
+   store.mjs `actionMove()` judges the AUTHORED REASON before it resolves the
+   target and long before it reads the resolution, so the withheld-field
+   pre-flight UI-12 built for `conclude` works here with the hold moved to the
+   LAST field instead of the target: the probe carries everything real and a
+   resolution the store cannot accept, so it gets the plane's own first
+   outstanding refusal, in the plane's order and words, and cannot commit.
+
+   THE OPTIONS COME OUT OF THE PLANE'S REFUSALS TOO. `BAD_TARGET_STATE` carries
+   `legal` (every state an action may hold) and `NO_RESOLUTION` carries `legal`
+   (the four ways an action ends); `ILLEGAL_TRANSITION` carries `legal_from`.
+   So this surface offers no state, no resolution and no edge of its own — it
+   asks and renders, which is DEC-8 through the mechanism UI-13's landing ruled
+   standing for a vocabulary the plane enforces and does not publish.
+   --------------------------------------------------------------- */
+async function openActionMove(id, title, act){
+  ACTION.mv = { id, title, act, to:"", reason:"", resolution:"", states:[], pf:null, busy:false, done:null };
+  /* THE OPTIONS PROBE. `to` is the hold, so the store answers BAD_TARGET_STATE
+     with its own legal set and this call cannot reach anything else. */
+  const a = await actAsk("actionmove", { target:id, to:ACT_MOVE_HOLD,
+                                         reason:ACT_MOVE_HOLD, resolution:ACT_MOVE_HOLD });
+  const r = a.accepted ? null : a.refusal;
+  ACTION.mv.states = (r && Array.isArray(r.legal)) ? r.legal.slice() : [];
+  actionMovePaint();
+}
+/* Both RETURN the probe, so a caller that must know the pre-flight has answered
+   can await it. A control that fired and forgot would leave the commit's
+   presence depending on a race, and the commit's presence is the refusal. */
+function actionMoveTo(v){ ACTION.mv.to = v; ACTION.mv.resolution = ""; return actionMoveProbe(); }
+function actionMoveReason(v){ ACTION.mv.reason = v; return actionMoveProbe(); }
+/* Choosing a resolution RE-ASKS rather than deciding here that the pre-flight
+   is now satisfied. The probe still carries the hold and still comes back
+   NO_RESOLUTION — what changed is that the member has now chosen one, so the
+   only refusal left is the one the probe itself creates. */
+function actionMoveRes(v){ ACTION.mv.resolution = v; return actionMoveProbe(); }
+async function actionMoveProbe(){
+  const m = ACTION.mv; if(!m) return;
+  const a = await actAsk("actionmove", { target:m.id, to:m.to, reason:m.reason,
+                                         resolution:ACT_MOVE_HOLD });
+  /* FAIL CLOSED. A plane that ACCEPTS a call carrying a resolution it cannot
+     accept has not behaved, and the surface says so about ITS OWN PROBE rather
+     than about the record — UI-12's one stated exception, unreachable while the
+     plane behaves and driven by the harness so it is not merely assumed safe. */
+  m.pf = a.accepted
+    ? { clear:false, guard:true }
+    : { clear: actionMoveCleared(a.refusal, m), refusal:a.refusal };
+  actionMovePaint();
+}
+/* CLEARED means the plane got all the way to the resolution and stopped there,
+   which is the only place this probe can stop when nothing else is wrong. */
+function actionMoveCleared(r, m){
+  if(!r) return false;
+  if(r.reason === "RESOLUTION_WITHOUT_RESOLVING") return true;
+  if(r.reason === "NO_RESOLUTION") return !!m.resolution;
+  return false;
+}
+function actionMovePaint(){
+  const m = ACTION.mv; if(!m) return;
+  if(m.done){
+    actDlg(`<h3>${esc(m.act.label)}</h3>
+      <p class="lede">${esc(m.done.from)} &rarr; ${esc(m.done.to)}${m.done.resolution?` &middot; ${esc(m.done.resolution)}`:""}, recorded by ${esc(m.done.author||"")}.</p>
+      <div class="rv-bar"><button class="btn" onclick="closeDialog();openAction(${esc(JSON.stringify(m.id))})">Back to the action</button></div>`);
+    return;
+  }
+  const pf = m.pf;
+  /* The resolution chooser exists only when the PLANE asked for one, and its
+     options are the plane's own `legal` set on that refusal. */
+  const resLegal = (pf && pf.refusal && pf.refusal.reason === "NO_RESOLUTION"
+                    && Array.isArray(pf.refusal.legal)) ? pf.refusal.legal : null;
+  actDlg(`<h3>${esc(m.act.label)}</h3>
+    ${m.act.prompt?`<p class="lede">${esc(m.act.prompt)}</p>`:""}
+    <label class="fld" for="am-to">Where it goes</label>
+    ${m.states.length
+      ? `<select class="txt" id="am-to" style="max-width:320px" onchange="actionMoveTo(this.value)">
+          <option value="">Choose one&hellip;</option>
+          ${m.states.map(s=>`<option value="${esc(s)}"${s===m.to?" selected":""}>${esc(humanKind(s))}</option>`).join("")}</select>`
+      : `<div class="empty">The record did not say which states this action may hold, so this surface offers none rather than inventing them.</div>`}
+    <label class="fld" for="am-why">Why it is moving</label>
+    <textarea class="txt" id="am-why" style="min-height:80px" oninput="actionMoveReason(this.value)">${esc(m.reason)}</textarea>
+    ${resLegal
+      ? `<label class="fld" for="am-res">How it ended</label>
+         <select class="txt" id="am-res" style="max-width:320px" onchange="actionMoveRes(this.value)">
+           <option value="">Choose one&hellip;</option>
+           ${resLegal.map(s=>`<option value="${esc(s)}"${s===m.resolution?" selected":""}>${esc(humanKind(s))}</option>`).join("")}</select>` : ""}
+    ${pf && pf.guard
+      ? `<div class="intent-pf"><div class="intent-ref"><div class="intent-ref-why">This surface's own pre-flight did not behave and nothing was sent. Nothing has been written.</div><div class="intent-ref-code mono">PREFLIGHT_NOT_REFUSED</div></div></div>`
+      : (pf && !pf.clear ? `<div class="intent-pf">${actRefusalHtml(pf.refusal)}</div>` : "")}
+    <div class="rv-bar">
+      ${pf && pf.clear ? `<button class="btn" ${m.busy?"disabled":""} onclick="doActionMove()">${esc(m.act.label)}</button>` : ""}
+      <button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`);
+}
+async function doActionMove(){
+  const m = ACTION.mv; if(!m || m.busy) return;
+  m.busy = true; actionMovePaint();
+  const a = await actAsk("actionmove", { target:m.id, to:m.to, reason:m.reason,
+                                         ...(m.resolution ? { resolution:m.resolution } : {}) });
+  m.busy = false;
+  if(!a.accepted){ m.pf = { clear:false, refusal:a.refusal }; actionMovePaint(); return; }
+  IMG_CACHE.delete(m.id); PROJ_CACHE.delete(m.id); RECORD_CACHE = null;
+  m.done = a.result || {};
+  actionMovePaint();
+}
+
+/* ---------------------------------------------------------------
+   THE CORRESPONDENCE FLOW — the NO-REFUSAL shape, and the measurement.
+
+   store.mjs `actionCorrespond()` judges the TARGET SECOND, before every
+   authored field, so a call with the target withheld answers NO_TARGET and
+   nothing else: there is no field that is both withholdable and last. Worse for
+   a probe, the last caller field it consults (`artifact_sha`, resolved against
+   the register) is followed immediately by `acquireLease`, which WRITES. UI-20's
+   ordering rule therefore puts this op on the other side: NO PRE-FLIGHT. The
+   commit control is ABSENT until the entry is complete — an absent control
+   asserts nothing — and everything that survives to commit is worded by the
+   plane.
+
+   THE DIRECTIONS ARE STILL THE PLANE'S. `BAD_DIRECTION` carries `legal`, and it
+   is judged immediately after the target with nothing written before it, so one
+   deliberately-refused call publishes the set. `no_response` is in it, and that
+   is the whole reason it is read from the plane rather than typed here: a
+   refusal to reply is a dated first-party fact about the body (DEC-13) and it
+   is the direction a surface inventing its own list would leave out.
+   --------------------------------------------------------------- */
+async function openActionCorrespond(id, title, act){
+  ACTION.corr = { id, title, act, dir:"", at:"", party:"", medium:"", arm:"",
+                  doc:"", account:"", dirs:[], busy:false, refusal:null, done:null };
+  const a = await actAsk("actioncorrespond", { target:id, direction:ACT_MOVE_HOLD });
+  const r = a.accepted ? null : a.refusal;
+  ACTION.corr.dirs = (r && Array.isArray(r.legal)) ? r.legal.slice() : [];
+  actionCorrPaint();
+}
+function actionCorrSet(k, v){ ACTION.corr[k] = v; actionCorrPaint(); }
+function actionCorrArm(which){ ACTION.corr.arm = which; ACTION.corr.doc = ""; ACTION.corr.account = ""; actionCorrPaint(); }
+/* WHAT THIS FORM HAS COLLECTED — not a rule about the record. The record's rule
+   is capture-or-testify and C-2.10 states it in its own words at the gate; what
+   is expressed here is only that a control with nothing in it has nothing to
+   send. */
+function actionCorrReady(){
+  const c = ACTION.corr;
+  if(!c.dir || !c.at) return false;
+  if(c.arm === "capture") return !!c.doc;
+  if(c.arm === "account") return !!c.account.trim();
+  return false;
+}
+function actionCorrPaint(){
+  const c = ACTION.corr; if(!c) return;
+  if(c.done){
+    actDlg(`<h3>${esc(c.act.label)}</h3>
+      <p class="lede">Entry ${esc(String(c.done.ord))} recorded, dated ${esc(c.done.at||"")}, held as ${esc(c.done.held_as||"")}, by ${esc(c.done.author||"")}.${
+        c.done.responds_to ? ` The reply now points back at this action from its own document.` : ""}</p>
+      <div class="rv-bar"><button class="btn" onclick="closeDialog();openAction(${esc(JSON.stringify(c.id))})">Back to the action</button></div>`);
+    return;
+  }
+  const docs = (Array.isArray(RECORD_CACHE) ? RECORD_CACHE : [])
+    .filter(b=>b && normalizeType(b.object_type)==="information");
+  actDlg(`<h3>${esc(c.act.label)}</h3>
+    ${c.act.prompt?`<p class="lede">${esc(c.act.prompt)}</p>`:""}
+    <label class="fld" for="ax-dir">Which way it went</label>
+    ${c.dirs.length
+      ? `<select class="txt" id="ax-dir" style="max-width:320px" onchange="actionCorrSet('dir',this.value)">
+          <option value="">Choose one&hellip;</option>
+          ${c.dirs.map(d=>`<option value="${esc(d)}"${d===c.dir?" selected":""}>${esc(humanKind(d))}</option>`).join("")}</select>`
+      : `<div class="empty">The record did not say which directions this ledger accepts, so this surface offers none rather than inventing them.</div>`}
+    <label class="fld" for="ax-at">The date</label>
+    <input class="txt" id="ax-at" style="max-width:200px" placeholder="YYYY-MM-DD" value="${esc(c.at)}" oninput="actionCorrSet('at',this.value)">
+    <label class="fld" for="ax-party">Who, if the entry names anybody</label>
+    <input class="txt" id="ax-party" value="${esc(c.party)}" oninput="actionCorrSet('party',this.value)">
+    <label class="fld" for="ax-med">How it travelled</label>
+    <input class="txt" id="ax-med" value="${esc(c.medium)}" placeholder="e.g. email, post, phone" oninput="actionCorrSet('medium',this.value)">
+    <p class="subj-note">An entry holds either the bytes this group can produce or a named member's account of the exchange. Two different kinds of evidence, and one entry carries one of them.</p>
+    <label class="ckline"><input type="radio" name="ax-arm" onchange="actionCorrArm('capture')"${c.arm==="capture"?" checked":""}> A document the record already holds</label>
+    ${c.arm==="capture" ? `<div style="margin:0 0 10px 26px">
+      <select class="txt" id="ax-doc" style="max-width:520px" onchange="actionCorrSet('doc',this.value)">
+        <option value="">Point at the capture&hellip;</option>
+        ${docs.map(b=>`<option value="${esc(b.bundle_id)}"${b.bundle_id===c.doc?" selected":""}>${esc(b.title||b.bundle_id)} &mdash; ${esc(b.bundle_id)}</option>`).join("")}</select>
+      </div>` : ""}
+    <label class="ckline"><input type="radio" name="ax-arm" onchange="actionCorrArm('account')"${c.arm==="account"?" checked":""}> Your own account of it</label>
+    ${c.arm==="account" ? `<div style="margin:0 0 10px 26px">
+      <textarea class="txt" id="ax-acct" style="min-height:80px" oninput="actionCorrSet('account',this.value)">${esc(c.account)}</textarea>
+      <p class="subj-note">Recorded as your testimony, under your name, with today's date. The record never writes one of these for you.</p>
+      </div>` : ""}
+    ${c.refusal ? actRefusalHtml(c.refusal) : ""}
+    <div class="rv-bar">
+      ${actionCorrReady() ? `<button class="btn" ${c.busy?"disabled":""} onclick="doActionCorrespond()">${esc(c.act.label)}</button>` : ""}
+      <button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`);
+}
+async function doActionCorrespond(){
+  const c = ACTION.corr; if(!c || c.busy) return;
+  c.busy = true; c.refusal = null; actionCorrPaint();
+  let sha = "";
+  if(c.arm === "capture"){
+    /* The hash comes from the RECORD'S OWN projection of the document the
+       member pointed at, never typed and never derived here: a hash a caller
+       can hand us is a hash a caller can invent, and the store resolves it
+       against the register anyway. */
+    let p = null;
+    try{ p = await getProjection(c.doc); }catch(_){ p = null; }
+    sha = String((p && p.content_hash) || "").replace(/^sha256:/, "");
+  }
+  const a = await actAsk("actioncorrespond", {
+    target:c.id, direction:c.dir, at:c.at,
+    ...(c.party?{ party:c.party }:{}), ...(c.medium?{ medium:c.medium }:{}),
+    ...(sha?{ artifact_sha:sha }:{}), ...(c.arm==="account"?{ account:c.account }:{}) });
+  c.busy = false;
+  if(!a.accepted){ c.refusal = a.refusal; actionCorrPaint(); return; }
+  IMG_CACHE.delete(c.id); PROJ_CACHE.delete(c.id); RECORD_CACHE = null;
+  c.done = a.result || {};
+  actionCorrPaint();
+}
+
+/* THE ONE ACT AN OVERDUE ACTION OFFERS, what it deliberately is not, and the
+   MEASURED GAP it runs into.
+
+   BUILD-ORDER: "record the non-response as a finding — which opens an inquiry
+   whose basis includes this action and its clock and DOES NOT DRAFT THE
+   FINDING." The second half is honoured absolutely: this writes NOT ONE WORD of
+   the question. A surface that drafted "The City did not respond within the
+   statutory window" would be the machine authoring the finding a member is
+   supposed to make, which is the move the record refuses everywhere else.
+
+   THE FIRST HALF IS PLANE WORK THAT DOES NOT EXIST, measured 2026-08-05 against
+   `checkBundle` itself rather than assumed, and named here the way UI-11 named
+   its own: C-2.8 refuses a question's basis leg pointing at an ACTION — "a leg
+   rests on information or on another inquiry, nothing else" — while the same
+   document carrying the action as a `references[]` edge draws ZERO findings. So
+   the carry is the REFERENCE, the difference is stated to the member rather than
+   papered over, and the missing half goes back as a delegation. Dressing a
+   reference up as a basis leg would be exactly D-129: a surface gap rendered as
+   the record's own answer. */
+function openNonResponseInquiry(){
+  const a = ACTION; if(!a) return;
+  const c = (a.fmj && Array.isArray(a.fmj.clock) ? a.fmj.clock : [])
+    .find(x=>x && x.date === (a.der && a.der.clock_next)) || null;
+  actDlg(`<h3>Record the non-response as a finding</h3>
+    <p class="lede">This opens a question of your own about the silence. It writes none of the question:
+      what the silence means is yours to say.</p>
+    <div class="card">
+      <div class="act-cp-who">${esc(a.title)}</div>
+      <div class="ln"><span class="mono">${esc(a.id)}</span></div>
+      ${c ? `<div class="act-clock-why"><span class="mono">${esc(c.date||"")}</span> &middot; ${esc(c.text||"")} &mdash; Because: ${esc(c.basis||"")}</div>` : ""}
+    </div>
+    <p class="subj-note">The action is carried across as a REFERENCE of the new question, which is what the
+      record holds today: a question's basis may rest on a document or on another question, and an action is
+      neither, so nothing here claims the question rests on it.</p>
+    <div class="rv-bar">
+      <button class="btn" onclick="closeDialog();nonResponseGo()">Write the question</button>
+      <button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`);
+}
+/* The intake, opened with the reference carried and the question EMPTY. The
+   carry is a pointer, never prose. */
+let NONRESPONSE_FROM = null;
+function nonResponseGo(){
+  NONRESPONSE_FROM = ACTION ? { id:ACTION.id, title:ACTION.title } : null;
+  go("add");
+}
+
+/* The route. `#action/<id>` is a real address: it survives a reload and can be
+   handed to another member, who gets the plane's answer for THEIR credential. */
+function actionRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#action\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  openAction(m[1]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!ACTION_HASH_LOCK) actionRouteFromHash(); }); }catch(_){}
+/*__ACTION_PAGE_END__*/
+
 
 /*__CONCLUDE_ACT_START__*/
 /* ============================================================
@@ -5643,12 +6265,17 @@ function actRungHtml(act){
    and this is the turn that proves it: four flows arrived and nothing above
    this line changed except the two names that said "conclude" when they meant
    "the act bar". */
+/* UI-19 added `actionmove` and `actioncorrespond` — the two acts REC-24 built,
+   and the same one-entry-per-act promise kept a second time: two flows arrived
+   on a new surface and nothing above this line changed at all. */
 const ACT_FLOW = {
   conclude:  (id, title, act) => openConclude(id, title, act),
   cite:      (id, title, act) => openCite(id, title, act),
   retire:    (id, title, act) => openRetire(id, title, act),
   sever:     (id, title, act) => openEdgeAct(id, title, act),
   reinstate: (id, title, act) => openEdgeAct(id, title, act),
+  actionmove:       (id, title, act) => openActionMove(id, title, act),
+  actioncorrespond: (id, title, act) => openActionCorrespond(id, title, act),
 };
 
 /* `elsewhere` is a set of act ids this PAGE carries in a section of its own, so
@@ -8054,6 +8681,7 @@ function queueOpen(id, type){
   const ty = type ? normalizeType(type) : null;
   if(ty === "project") return openProjectWorkspace(id);
   if(ty === "inquiry") return openInquiry(id);
+  if(ty === "action") return openAction(id);   // UI-19: an action is a thing being done, not a document
   return openBundle(id);
 }
 function queueWire(){
@@ -10076,25 +10704,25 @@ function attestRefusalHtml(e){
 /* One vocabulary. `inquiry` replaces `focus` here — the type a question is
    written as, whatever phase it later reaches.
 
-   `action` is ABSENT, 2026-08-04 (UI-15, the amendment REC-23 forced). It was
-   offered here until now. REC-23 made the counterparty three-valued and stopped
-   the intake surfaces writing a placeholder into it, which is the honest gate —
-   and the consequence is that a fresh action written from THIS form leaves the
-   catalog with exactly one error, C-2.10 naming the counterparty nobody
-   authored. Offering a type whose every instance is refused at the gate is
-   present-and-refused, the same class as F-6 one line down. There is no control
-   here that could fix it: the honest `undetermined` state needs an AUTHORED
-   basis and this form has nowhere to author one.
+   `action` IS BACK, 2026-08-05 (UI-19), and the round trip is worth keeping
+   because it is what the discipline looks like when it works. UI-15 removed it
+   on 2026-08-04: REC-23 had made the counterparty three-valued and stopped both
+   intake surfaces writing a placeholder into it, so a fresh action from this
+   form left the catalog with exactly one error — C-2.10 naming the counterparty
+   nobody authored — and offering a type whose every instance the gate refuses is
+   present-and-refused, the same class as F-6 one line down. The removal was
+   right and the note it left named its own condition: restore it when the member
+   has a control to author the counterparty with.
 
-   UI-19 RESTORES IT. That item builds the action page and gives the member the
-   radio pair — a named counterparty, or undetermined with a reason they wrote —
-   and `mdFor` takes its values from the member instead of from a default. When
-   it lands, this entry comes back and conformance.test.mjs's action arm flips
-   back to zero errors. Nothing else about `action` is removed: mdFor, PREFIX,
-   FIRST_STATE, the state machine and every rendering path keep it, because
-   actions already in the record must still be read. */
+   THAT CONTROL IS BELOW (`addActionPaneHtml`): REC-23's radio pair, a named
+   counterparty or NOT DETERMINED YET with a written basis, no third option and
+   no default. `mdFor` takes those values from the member, so an action written
+   here now draws ZERO findings and the conformance suites' action arms flip back
+   in the same turn — while an action written with NOTHING authored still draws
+   exactly C-2.10, because the machine that will not invent an addressee is the
+   whole point and both directions are asserted. */
 const ADD_TYPES = [["information","Something the record should hold"],["inquiry","A question worth pursuing"],
-                   ["project","A line of work"]];
+                   ["project","A line of work"],["action","Something to ask of somebody outside this group"]];
 let ADD_BUSY = false;
 /* How many driven passes the capture runs before the record question is put to
    the member. RESTORED 2026-08-04 (D-132): this declaration was deleted on
@@ -10135,8 +10763,191 @@ function addTypesFor(){
   return ADD_TYPES.filter(([v]) => v !== "project" || canDo("create_projects"));
 }
 
+/* ============================================================
+   UI-19 · THE OUTWARD ASK, AUTHORED AT INTAKE.
+
+   WHY EVERYTHING AN ACTION CLAIMS IS AUTHORED HERE AND NOT ON ITS PAGE, which
+   is the shape of the plane and not a preference: REC-24 gave the action loop
+   exactly TWO ops — `op=actionmove` and `op=actioncorrespond`. There is no op
+   that adds a basis leg, sets a clock, names a counterparty or records a
+   consequence after the fact. Those are frontmatter, and frontmatter arrives
+   through `op=promote`, which is this surface. So the ask is composed once, in
+   full, by the member making it; the action page READS it, moves it and records
+   what came back. A surface that let a member "add the reason later" would be
+   promising a write path the record does not have.
+
+   NOTHING BELOW HOLDS AN OPTION THE PLANE DID NOT PUBLISH. The kinds come from
+   `op=affordances`' `vocabularies.action_kind`. The relation kinds come from
+   `vocabularies.action_basis_kinds`, WHICH THE PLANE DOES NOT PUBLISH TODAY —
+   `ACTION_BASIS_KINDS` is exported by the check catalog and never reaches
+   `VOCABULARIES` — so the basis control is ABSENT and says so, in `intentChooser`'s
+   own shape, rather than this surface deciding what `rests_on` and `advances`
+   are called. The consequence is stated rather than worked around: with today's
+   plane an action can be authored with a counterparty and a kind and no legs,
+   which is legal for every kind EXCEPT `request_for_comment` — DEC-13 requires
+   that one to name the specific inquiries it disclosed — so `request_for_comment`
+   is filtered out of the chooser exactly while the surface cannot complete it.
+   Present-and-refused is what UI-15 removed from this form; it is not coming
+   back one field down. Publish the vocabulary and BOTH the picker and the kind
+   appear with no further change here, which is what the harness asserts.
+
+   THE COUNTERPARTY PAIR IS NOT AN OPTION MAP. `named` and `undetermined` are
+   the two halves of REC-23's shape — the member chooses between two sentences,
+   and the surface writes the token that shape defines, the same way it writes
+   `object_type` — not two entries in a vocabulary a surface could offer a third
+   of. BUILD-ORDER's clause is the specification: no third option, no default.
+   ============================================================ */
+let ADD_ACT = null;
+function addActReset(){
+  ADD_ACT = { kind:"", cp:"", cpName:"", cpBasis:"", basis:[], clock:[],
+              clockText:"", clockDesc:"", clockDate:"", clockBasis:"" };
+}
+/* The kinds this surface can COMPLETE. A kind whose entry requirements this
+   form cannot meet is absent, never offered-and-refused. */
+function addActKinds(){
+  const kinds = actVocab("action_kind");
+  return actVocab("action_basis_kinds").length ? kinds : kinds.filter(k => k !== "request_for_comment");
+}
+function addActBasisTargets(){
+  /* POINTING, NEVER RETYPING. The candidates are the record's own rows, and an
+     ACTION is not among them: the catalog refuses an action resting on an
+     action by name (DEC-14's circularity), so offering one would be offering a
+     refusal. */
+  return (Array.isArray(RECORD_CACHE) ? RECORD_CACHE : [])
+    .filter(b => b && normalizeType(b.object_type) !== "action");
+}
+function addActionPaneHtml(){
+  const kinds = addActKinds();
+  const relKinds = actVocab("action_basis_kinds");
+  const targets = addActBasisTargets();
+  const kindPick = kinds.length
+    ? `<select class="txt" id="ac-kind" style="max-width:360px" onchange="addActSync()">
+         <option value="">Choose one&hellip;</option>
+         ${kinds.map(k=>`<option value="${esc(k)}">${esc(humanKind(k))}</option>`).join("")}</select>`
+    : `<div class="empty">The record has not said which kinds of action it accepts, so this surface offers none rather than inventing one.</div>`;
+  const legRows = ADD_ACT.basis.length
+    ? ADD_ACT.basis.map((l,i)=>`<div class="linkrow"><span class="lt">${esc(l.title||l.target)}</span>
+        <span class="ln"><span class="mono">${esc(l.target)}</span> &middot; ${esc(humanKind(l.kind))}
+        <button class="btn ghost" style="margin-left:10px;padding:2px 8px;font-size:12px" onclick="addActBasisDrop(${i})">Remove</button></span></div>`).join("")
+    : `<div class="empty">This action names nothing it rests on or advances yet.</div>`;
+  const legPick = relKinds.length
+    ? `<div class="tk-picker">
+        <label class="fld" for="ac-bt">Point at what this rests on or advances</label>
+        <select class="txt" id="ac-bt" style="max-width:520px">
+          <option value="">Choose from the record&hellip;</option>
+          ${targets.map(b=>`<option value="${esc(b.bundle_id)}">${esc(b.title||b.bundle_id)} &mdash; ${esc(b.bundle_id)}</option>`).join("")}</select>
+        <label class="fld" for="ac-bk">What this leg does</label>
+        <select class="txt" id="ac-bk" style="max-width:320px">
+          <option value="">Choose one&hellip;</option>
+          ${relKinds.map(k=>`<option value="${esc(k)}">${esc(humanKind(k))}</option>`).join("")}</select>
+        <label class="fld" for="ac-bn">A note, if the leg needs one</label>
+        <input class="txt" id="ac-bn" placeholder="optional">
+        <div class="rv-bar" style="margin:10px 0 0"><button class="btn ghost" onclick="addActBasisAdd()">Add this leg</button></div>
+      </div>`
+    : `<div class="empty">The record has not said which relations a leg may carry, so this surface offers none rather than inventing one. An action written now names no legs, and the kinds that require them are not offered above.</div>`;
+  const clockRows = ADD_ACT.clock.length
+    ? ADD_ACT.clock.map((c,i)=>`<div class="linkrow"><span class="lt">${esc(c.text)} &middot; ${esc(c.date)}</span>
+        <span class="ln">Because: ${esc(c.basis)}
+        <button class="btn ghost" style="margin-left:10px;padding:2px 8px;font-size:12px" onclick="addActClockDrop(${i})">Remove</button></span></div>`).join("")
+    : `<div class="empty">No deadline yet.</div>`;
+  return `<div id="a-act">
+    <h2 class="sec" style="margin-top:26px">Who this is addressed to</h2>
+    <p class="lede" style="margin-top:0">An action reaches outside this group and touches somebody who never
+      agreed to be in it. The record either names them or says plainly that it does not know yet &mdash;
+      there is no third answer and nothing is filled in for you.</p>
+    <label class="ckline"><input type="radio" name="ac-cp" value="named" onchange="addActPick('named')"> A named counterparty</label>
+    <div id="ac-named" class="hidden" style="margin:0 0 10px 26px">
+      <label class="fld" for="ac-name">Who</label>
+      <input class="txt" id="ac-name" placeholder="e.g. City Clerk, Office of the City Auditor" oninput="addActSync()">
+    </div>
+    <label class="ckline"><input type="radio" name="ac-cp" value="undetermined" onchange="addActPick('undetermined')"> Not determined yet, and here is why</label>
+    <div id="ac-undet" class="hidden" style="margin:0 0 10px 26px">
+      <label class="fld" for="ac-basis">What is known so far, and what would settle it</label>
+      <textarea class="txt" id="ac-basis" style="min-height:70px" oninput="addActSync()"></textarea>
+    </div>
+    <p class="subj-note">This action will not be sent while this is undetermined.</p>
+
+    <h2 class="sec" style="margin-top:26px">What kind of ask this is</h2>
+    ${kindPick}
+
+    <h2 class="sec" style="margin-top:26px">Why we are asking</h2>
+    <p class="lede" style="margin-top:0">The findings and questions this ask rests on or advances. Each one is
+      pointed at in the record, never retyped: a reason written out by hand is a reason nothing else can follow.</p>
+    ${legRows}
+    ${legPick}
+
+    <h2 class="sec" style="margin-top:26px">The clock</h2>
+    <p class="lede" style="margin-top:0">A date with no basis is the record asserting a deadline it invented, so
+      every deadline carries the statute, the order, or the commitment it comes from.</p>
+    ${clockRows}
+    <div class="tk-picker">
+      <label class="fld" for="ac-ct">What is due</label>
+      <input class="txt" id="ac-ct" placeholder="e.g. City response due">
+      <label class="fld" for="ac-cd">What this deadline is, for a reader who was not in the room</label>
+      <input class="txt" id="ac-cd" placeholder="in your own words">
+      <label class="fld" for="ac-cdate">When</label>
+      <input class="txt" id="ac-cdate" placeholder="YYYY-MM-DD" style="max-width:200px">
+      <label class="fld" for="ac-cb">Because &mdash; where this date comes from</label>
+      <input class="txt" id="ac-cb" placeholder="the statute, the order, or the commitment">
+      <div class="rv-bar" style="margin:10px 0 0"><button class="btn ghost" onclick="addActClockAdd()">Add this deadline</button></div>
+    </div>
+  </div>`;
+}
+function addActPick(which){
+  if(!ADD_ACT) addActReset();
+  ADD_ACT.cp = which;
+  const n = $("#ac-named"), u = $("#ac-undet");
+  if(n) n.classList.toggle("hidden", which !== "named");
+  if(u) u.classList.toggle("hidden", which !== "undetermined");
+  addActSync();
+}
+function addActSync(){
+  if(!ADD_ACT) addActReset();
+  ADD_ACT.kind    = (($("#ac-kind")||{}).value || "").trim();
+  ADD_ACT.cpName  = (($("#ac-name")||{}).value || "").trim();
+  ADD_ACT.cpBasis = (($("#ac-basis")||{}).value || "").trim();
+  addValidate();
+}
+function addActBasisAdd(){
+  if(!ADD_ACT) addActReset();
+  const t = (($("#ac-bt")||{}).value||"").trim(), k = (($("#ac-bk")||{}).value||"").trim();
+  const note = (($("#ac-bn")||{}).value||"").trim();
+  if(!t || !k) return;
+  const row = addActBasisTargets().find(b=>b.bundle_id===t);
+  ADD_ACT.basis.push({ target:t, kind:k, note, title:(row&&row.title)||t });
+  addActRepaint();
+}
+function addActBasisDrop(i){ ADD_ACT.basis.splice(i,1); addActRepaint(); }
+function addActClockAdd(){
+  if(!ADD_ACT) addActReset();
+  const text = (($("#ac-ct")||{}).value||"").trim(), desc = (($("#ac-cd")||{}).value||"").trim();
+  const date = (($("#ac-cdate")||{}).value||"").trim(), basis = (($("#ac-cb")||{}).value||"").trim();
+  if(!text || !desc || !date || !basis) return;
+  ADD_ACT.clock.push({ text, description:desc, date, basis });
+  addActRepaint();
+}
+function addActClockDrop(i){ ADD_ACT.clock.splice(i,1); addActRepaint(); }
+/* Repaint keeps what the member already chose: the pane is re-rendered from
+   ADD_ACT, so the counterparty answer and the kind survive adding a leg. */
+function addActRepaint(){
+  const holder = $("#a-act"); if(!holder) return;
+  const kind = ADD_ACT.kind, cp = ADD_ACT.cp;
+  holder.outerHTML = addActionPaneHtml();
+  const k = $("#ac-kind"); if(k) k.value = kind;
+  if(cp) addActPick(cp);
+  const n = $("#ac-name"); if(n) n.value = ADD_ACT.cpName;
+  const b = $("#ac-basis"); if(b) b.value = ADD_ACT.cpBasis;
+  addValidate();
+}
+
 async function renderAdd(){
   setActive("");
+  addActReset();
+  /* The basis picker points at the record's own rows, so the record is loaded
+     before the form paints. It fails soft: a plane that cannot answer leaves
+     the picker with nothing to point at, which is an empty control and not an
+     invented one. */
+  try{ await loadRecord(); }catch(_){}
   if(!canContribute()){
     $("#content").innerHTML = `<h1 class="rec">Add something new</h1>
       <p class="lede">Writing into the record is a named member's act. This credential can read the
@@ -10144,12 +10955,21 @@ async function renderAdd(){
       <span class="mono">contribute</span> to capture a document or write down what you know.</p>`;
     return;
   }
+  /* UI-19: the carry from an overdue action's one act. It selects the question
+     type and shows WHAT is being carried and in which shape — a reference, not
+     a leg — and it writes nothing else. */
+  const carry = NONRESPONSE_FROM;
   $("#content").innerHTML = `<h1 class="rec">Add something new</h1>
     <p class="lede">This writes a bundle into the working record, in your name, at its first state.
       Nothing here is public: publishing is a separate act with its own signature.</p>
+    ${carry ? `<div class="card" id="a-carry"><div class="act-cp-who">Carried from an action that went unanswered</div>
+      <div class="ln"><span class="mono">${esc(carry.id)}</span> &middot; ${esc(carry.title)}</div>
+      <p class="subj-note">It will be written as a REFERENCE of this question. The record admits a document or
+        another question as something a question rests on, and an action is neither, so nothing here says this
+        question rests on it. The question itself is yours to write.</p></div>` : ""}
     <label class="fld" for="a-type">What kind of thing is this?</label>
     <select class="txt" id="a-type" style="max-width:320px" onchange="addTypeSync()">
-      ${addTypesFor().map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("")}</select>
+      ${addTypesFor().map(([v,l])=>`<option value="${v}"${carry&&v==="inquiry"?" selected":""}>${esc(l)}</option>`).join("")}</select>
     <label class="fld" for="a-title">Title</label>
     <input class="txt" id="a-title" placeholder="what this is about" oninput="addValidate()">
     <label class="fld" for="a-body">What do you know?</label>
@@ -10170,6 +10990,7 @@ async function renderAdd(){
         honestly claim. Grade A needs a chain-of-custody web archive, which a Worker cannot produce,
         and co-attestation is what raises B toward evidentiary weight.</div>
     </div>
+    ${addActionPaneHtml()}
     <div id="a-err" class="teach hidden"></div>
     <div id="a-prog"></div>
     <div class="rv-bar" style="margin:18px 0 0"><button class="btn" id="a-go" disabled onclick="addGo()">Add it to the record</button>
@@ -10181,7 +11002,22 @@ function addTypeSync(){
   /* Only Information carries a captured document: the @2 contract's register
      describes a captured document, and a question or a project has none. */
   const box = $("#a-doc"); if(box) box.classList.toggle("hidden", t !== "information");
+  const act = $("#a-act"); if(act) act.classList.toggle("hidden", t !== "action");
   addValidate();
+}
+/* THE ACTION'S OWN MINIMUM, and it is a statement about what this FORM has
+   collected, never a rule about the record: an absent control is not a computed
+   refusal (UI-22's reading). What makes an action conformant is C-2.10's, and
+   C-2.10 says it at the gate in its own words if anything gets past here. */
+function addActReady(){
+  if(!ADD_ACT) return { ok:false, why:"Say who this is addressed to." };
+  if(!ADD_ACT.kind) return { ok:false, why:"Say what kind of ask this is." };
+  if(ADD_ACT.cp === "named")
+    return ADD_ACT.cpName ? { ok:true } : { ok:false, why:"Name the counterparty." };
+  if(ADD_ACT.cp === "undetermined")
+    return ADD_ACT.cpBasis ? { ok:true }
+      : { ok:false, why:"Say what is known so far about who this is addressed to, and what would settle it." };
+  return { ok:false, why:"Say who this is addressed to: a named counterparty, or that it is not determined yet." };
 }
 function addValidate(){
   const t = ($("#a-type")||{}).value || "information";
@@ -10189,15 +11025,17 @@ function addValidate(){
   const body = (($("#a-body")||{}).value||"").trim();
   const loc = (($("#a-loc")||{}).value||"").trim();
   const auth = (($("#a-auth")||{}).value||"").trim();
+  const act = t === "action" ? addActReady() : { ok:true };
   let why = "";
   if(!title) why = "A title and a body are the minimum.";
   else if(!body) why = "Write something in the body: an empty record says nothing.";
   else if(t === "information" && loc && !/^https:\/\//i.test(loc)) why = "The address must be https on a public site.";
   else if(t === "information" && loc && !auth) why = "Say who issued the document as well as where it lives.";
+  else if(!act.ok) why = act.why;
   else why = loc ? `It will be captured at ${vocabFor(FIRST_STATE, t)}, Grade B, and appear in the record for review.`
                  : `It will be written at ${vocabFor(FIRST_STATE, t)}, with no document attached.`;
   const go = $("#a-go"), n = $("#a-n");
-  const ready = !!(title && body && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
+  const ready = !!(title && body && act.ok && (t !== "information" || !loc || (/^https:\/\//i.test(loc) && auth)));
   if(go) go.disabled = !ready || ADD_BUSY;
   if(n) n.textContent = why;
 }
@@ -10270,7 +11108,21 @@ async function addGo(){
       : body;
     const text = mdFor(id, type, vocabFor(FIRST_STATE, type), title, bodyText, now, !!doc,
       doc ? { locator: loc, authority: auth, retrieved: doc.retrieved || now,
-              content_hash: doc.capture && doc.capture.sha256 } : null);
+              content_hash: doc.capture && doc.capture.sha256 } : null,
+      /* UI-19: the member's own answers, and only on the action arm. Passed
+         whole rather than field by field so a value this form never collected
+         cannot be supplied from somewhere else on the way through. */
+      {
+        ...(type === "action" && ADD_ACT
+          ? { kind: ADD_ACT.kind,
+              counterparty: ADD_ACT.cp === "named" ? { state:"named", name: ADD_ACT.cpName }
+                          : ADD_ACT.cp === "undetermined" ? { state:"undetermined", basis: ADD_ACT.cpBasis }
+                          : null,
+              basis: ADD_ACT.basis, clock: ADD_ACT.clock }
+          : {}),
+        refs: (NONRESPONSE_FROM && normalizeType(type) === "inquiry")
+          ? [{ target: NONRESPONSE_FROM.id, rel:"cites" }] : [],
+      });
     const who = (PLANE.me && PLANE.me.member) || (PLANE.me && PLANE.me.handle) || "member";
     const files = await docFiles(text, doc, await sha256Text(text),
       snap && snap.render_file && snap.render_sha256 ? { [snap.render_file]: snap.render_sha256 } : null);
@@ -10296,12 +11148,27 @@ async function addGo(){
     if(!res || res.ok === false){
       const why = (res && (res.reason || res.error)) || "unknown";
       addSay("");
-      addErr(why === "GATE_REFUSED"
-        ? `The checks refused this bundle: ${esc((res.findings||[]).map(f=>f.check).join(", "))}. Nothing was written.`
+      /* DEC-8, 2026-08-05 (UI-19). This used to print the check IDS and throw
+         the plane's SENTENCES away — so a member whose action named no
+         counterparty was told "C-2.10" and nothing else, while the record had
+         written them a paragraph saying exactly which of the two honest answers
+         was missing and how to give it. Every refusal shape promote returns
+         carries `findings[].detail` (the gate, ACTION_BASIS_REFUSED,
+         CORRESPONDENCE_REFUSED, RESPONDS_TO_REFUSED), so the words are rendered
+         verbatim and nothing here composes a sentence about the record. The
+         repairs come back on the finding too and are the plane's, not ours. */
+      const fs = Array.isArray(res && res.findings) ? res.findings : [];
+      addErr(fs.length
+        ? `<b>The record refused this and nothing was written.</b>`
+          + fs.map(f=>`<div class="intent-ref"><div class="intent-ref-why">${esc(f.detail||f.message||"")}</div>`
+              + (Array.isArray(f.repairs)&&f.repairs.length
+                  ? `<ul>${f.repairs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "")
+              + (f.check?`<div class="intent-ref-code mono">${esc(f.check)}</div>`:"")+`</div>`).join("")
         : `Refused: ${esc(why)}. Nothing was written.`);
       return;
     }
     IMG_CACHE.delete(id); PROJ_CACHE.delete(id); RECORD_CACHE = null;
+    NONRESPONSE_FROM = null;   // the carry is spent; a second question is a second decision
     if(partial)
       addErr(`Saved. The document itself is complete and checked. A few of the files that make the `
         + `page look right have not arrived yet, so its page says so and offers to finish the job.`);

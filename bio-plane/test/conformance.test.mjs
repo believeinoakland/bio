@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) revert Store.snapPath to the non-canonical `_history/<snapKey>/<path>` layout (D-2) instead of the filename-suffix form -> 6 assertions fail (the snapshot-key-form and zero-C-12 / projection-conformant checks); restored, 49 pass. */
+/* NEGATIVE CONTROL, the UI-19 flip-back arm: (run 2026-08-05) in src/setup.mjs's mdFor action arm, have the machine supply a counterparty when the member answered none - `const cp = (act && act.counterparty) || { state:"named", name:"the department" };` -> 3 of 56 fail: "a new action bundle written with NOTHING authored still has exactly one error", "and it is C-2.10 naming the counterparty, because the machine invents no addressee", and "...and no counterparty block reaches the document on that path at all". THE FINDING WORTH KEEPING: the two AUTHORED arms stayed green under it, which is why this assertion is both directions rather than the zero-errors form it had before REC-23 - a suite that only proved an authored action passes would have gone green on an intake that had started inventing addressees, which is the exact defect D-130 named. Restored byte-identical, 56 pass. */
 /* The plane's projection, judged by the authoritative catalog.
  *
  * Negative-control detail: revert Store.snapPath to the non-canonical `_history/<snapKey>/<path>` layout (D-2) instead of the filename-suffix form -> 6 assertions fail (the snapshot-key-form and zero-C-12 / projection-conformant checks); restored, 49 pass.
@@ -193,30 +194,53 @@ console.log("\n--- the intake form writes conformant bundles ---");
     const errs = findings.filter((x) => x.severity === "error");
     for (const x of errs.slice(0, 4)) console.log(`         ${type}: ${x.check} ${x.message.slice(0, 110)}`);
     if (type === "action") {
-      /* Superseded 2026-08-04 (REC-23/D-130). This used to assert zero errors
-         for an action too, and it PASSED because mdFor wrote
-         `counterparty: to be named` and C-2.10 accepted any non-empty string.
-         The old assertion was therefore true of the bytes and false about the
-         record: what it certified as "conformant" was a bundle asserting a
-         counterparty nobody had. Corrected, never exempted — and deliberately
-         made SHARPER than "zero errors", because the one remaining finding is
-         the point of the item:
-           - the intake surface is still conformant in every other respect
-             (headings, core fields, action_kind, risk_tier, state legality),
-             so this still catches an intake regression the way it always did;
-           - the ONE error is C-2.10 naming the absent counterparty, which is
-             the honest state of a surface with no control to author one. The
-             machine will not invent a name and will not invent an
-             `undetermined` BASIS to get past its own gate — that is the
-             D-97 pressure this project removes rather than reproduces.
-         This assertion FLIPS BACK to zero errors when UI-19 gives the surface
-         the radio pair (a named counterparty, or undetermined with an authored
-         reason) and mdFor takes its values from the member. Until then, an
-         action bundle that gates clean is one whose counterparty a person
-         wrote. */
-      t("a new action bundle has exactly one error", errs.length, 1);
-      t("and it is C-2.10 naming the counterparty the surface cannot honestly author (UI-19 closes it)",
+      /* THE FLIP-BACK, 2026-08-05 (UI-19), and the history is kept because the
+         round trip is the evidence.
+
+         BEFORE REC-23 this asserted ZERO errors for an action, and it passed
+         because mdFor wrote `counterparty: to be named` and C-2.10 accepted any
+         non-empty string. That assertion was true of the bytes and false about
+         the record: what it certified as conformant was a bundle asserting a
+         counterparty nobody had. REC-23 corrected it to EXACTLY ONE error — the
+         honest state of an intake surface with no control to author one — and
+         wrote down the condition for flipping it back: a member control, and
+         mdFor taking its values from the member.
+
+         UI-19 built that control (setup.mjs's radio pair below the source
+         panel: a named counterparty, or NOT DETERMINED YET with a written
+         basis, no third option and no default), so the assertion is now BOTH
+         DIRECTIONS, which is stronger than either single form ever was:
+           - an action carrying what the member answered draws ZERO errors, so
+             an intake regression is still caught exactly as it always was; and
+           - an action carrying NOTHING still draws exactly C-2.10, so the
+             machine is proven not to invent an addressee — or an `undetermined`
+             BASIS — to get past its own gate. That is the D-97 pressure this
+             project removes rather than reproduces, and asserting only the
+             first would let a default satisfy this file forever.
+         The bare call is the one the loop already made; the two authored ones
+         are made here because this is where mdFor is driven per type. */
+      t("a new action bundle written with NOTHING authored still has exactly one error", errs.length, 1);
+      t("and it is C-2.10 naming the counterparty, because the machine invents no addressee",
         errs.length === 1 && errs[0].check === "C-2.10" && /counterparty block is missing/.test(errs[0].message), true);
+      t("...and no counterparty block reaches the document on that path at all",
+        /counterparty/.test(text), false);
+      for (const [label, act, pin] of [
+        ["a NAMED counterparty the member wrote",
+         { counterparty: { state: "named", name: "City Clerk" } }, /name: "City Clerk"/],
+        ["an UNDETERMINED counterparty with the basis the member wrote",
+         { counterparty: { state: "undetermined",
+            basis: "Which office holds the records has not been established; the records index would settle it." } },
+         /state: undetermined/],
+      ]) {
+        const authored = ui.mdFor(id, type, ui.FIRST_STATE[type], "Intake check",
+          "What the member wrote.", now, false, null, act);
+        const r = await checkBundle({ folderName: id, files: new Map([["bundle.md", authored]]),
+          sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+        const e2 = r.findings.filter((x) => x.severity === "error");
+        for (const x of e2.slice(0, 4)) console.log(`         action: ${x.check} ${x.message.slice(0, 110)}`);
+        t(`an action bundle carrying ${label} has zero errors`, e2.length, 0);
+        t("...and the document carries the member's own answer, not a placeholder", pin.test(authored), true);
+      }
       continue;
     }
     t(`a new ${type} bundle has zero errors`, errs.length, 0);

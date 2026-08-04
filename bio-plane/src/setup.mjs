@@ -215,21 +215,26 @@ table.rec tr.row:hover td{background:#F6F7F2}
   public: the working record has never been published and cannot be read by
   anyone without a password.</p>
   <label for="n-type">What kind of thing is this?</label>
-  <!-- The Action option is ABSENT, 2026-08-04 (UI-15, the amendment REC-23
-       forced). REC-23 stopped both intake surfaces writing a placeholder
-       counterparty, which is the honest gate; the consequence is that an action
-       written from this form leaves the catalog with exactly one error, C-2.10
-       naming the counterparty nobody authored. Offering a kind whose every
-       instance is refused is present-and-refused, which Membership Architecture
-       v2 section 5 forbids, and there is no control on this page that could
-       author the honest undetermined state (it needs a written basis). UI-19
-       builds that control and RESTORES this option; conformance.test.mjs's
-       action arm flips back to zero errors in the same turn. mdFor keeps its
-       action arm: actions already in the record are still revised here. -->
+  <!-- The Action option is BACK, 2026-08-05 (UI-19). It was removed on
+       2026-08-04 by UI-15 because REC-23 had stopped both intake surfaces
+       writing a placeholder counterparty, which is the honest gate, and the
+       consequence was that an action written from this form left the catalog
+       with exactly one error - C-2.10 naming the counterparty nobody authored.
+       Offering a kind whose every instance is refused is present-and-refused,
+       which Membership Architecture v2 section 5 forbids. The condition that
+       note set is now met: the fieldset below is REC-23's radio pair, a named
+       counterparty or NOT DETERMINED YET with a written basis, no third option
+       and no default, and mdFor takes the values from the member. An action
+       written here draws zero findings; one written with nothing authored still
+       draws exactly C-2.10, because this page will not invent an addressee to
+       get past its own gate. BOTH INTAKE SURFACES OR NEITHER: app.html carries
+       the same option and the same pair, and add-surface.test.mjs asserts the
+       two together so one cannot be changed without the other. -->
   <select id="n-type">
     <option value="information">Information</option>
     <option value="inquiry">Question</option>
     <option value="project">Project</option>
+    <option value="action">Action</option>
   </select>
   <label for="n-title" id="n-title-label">Title</label>
   <input id="n-title" placeholder="what this is about">
@@ -255,6 +260,34 @@ table.rec tr.row:hover td{background:#F6F7F2}
         can show what the page said. It is also public: anyone watching that archive can see that
         someone asked for this page. Leave it off if being seen to look would matter.</span></span>
       </label>
+    </div>
+  </div>
+  <!-- UI-19 / REC-23: WHO THIS IS ADDRESSED TO. An action reaches outside this
+       group and touches somebody who never agreed to be in it, so the record
+       either names them or says plainly that it does not know yet. TWO options
+       and no third, and NOTHING PRESELECTED - a default here would be this page
+       answering the question on the member's behalf, which is the placeholder
+       defect one field down and in a nicer coat. -->
+  <div id="n-act">
+    <div class="card">
+      <p style="margin:0 0 10px"><b>Who is this addressed to?</b> An action asks something of somebody
+      outside this group. The record either names them, or states that it does not know yet and says
+      what is known so far. There is no third answer and nothing is filled in for you.</p>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+        <input type="radio" name="n-cp" id="n-cp-named" value="named" style="width:auto;margin-top:4px">
+        <span>A named counterparty</span></label>
+      <div id="n-cp-name-box" hidden style="margin:6px 0 10px 26px">
+        <label for="n-cp-name">Who</label>
+        <input id="n-cp-name" placeholder="City Clerk, Office of the City Auditor">
+      </div>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+        <input type="radio" name="n-cp" id="n-cp-undet" value="undetermined" style="width:auto;margin-top:4px">
+        <span>Not determined yet, and here is why</span></label>
+      <div id="n-cp-basis-box" hidden style="margin:6px 0 10px 26px">
+        <label for="n-cp-basis">What is known so far, and what would settle it</label>
+        <textarea id="n-cp-basis" rows="4"></textarea>
+      </div>
+      <p class="hint">This action will not be sent while this is undetermined.</p>
     </div>
   </div>
   <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
@@ -721,7 +754,7 @@ const stamp = ()=>{
    and the per-type extension fields each type's own check requires. The first
    prose section carries what the member wrote, and the rest are present and
    empty, which is what the catalog asks for. */
-const mdFor = (id, type, state, title, body, now, hasDoc, src)=>{
+const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
   const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
@@ -746,20 +779,43 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src)=>{
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if (type === "project") fm.push("objective: "+JSON.stringify(title));
-  /* D-130 / REC-23: the counterparty placeholder USED TO BE PUSHED HERE TOO.
-     D-130 named only civicos-ui/app.html:1752; this is the SECOND emission
-     site, it is the one conformance.test.mjs actually exercises, and leaving it
-     would have left the defect open on the installer's own intake page.
-     Nothing replaces it: the honest undetermined state requires an AUTHORED
-     basis, and a basis this function invented would be the same lie one field
-     down. The gate names the gap until a member fills it. action_kind and
-     risk_tier are placeholders of the same family and are left for the item
-     that gives the surface real controls (UI-15/UI-19).
+  /* D-130 / REC-23 / UI-19, 2026-08-05. The counterparty placeholder used to be
+     pushed here too - D-130 named only civicos-ui/app.html, this was the SECOND
+     emission site and the one conformance.test.mjs exercises - and REC-23 took
+     it out, leaving the field ABSENT and the gate naming the gap. UI-19 gives
+     this page the radio pair, so the value arrives FROM THE MEMBER through
+     act.counterparty and nothing here invents one.
+
+     CALLED WITHOUT act THIS ARM STILL WRITES NO COUNTERPARTY, permanently and
+     on purpose: a bundle written by a caller that collected no answer draws
+     exactly C-2.10, which is the honest one error, and conformance.test.mjs
+     asserts BOTH directions so a future default cannot pass by inventing one.
+
+     action_kind is "other" HERE ONLY, and it is not a chooser this page hides:
+     "other" is the catalog's own token for an ask that is not one of the named
+     kinds, which is exactly what a page offering no kind control has been told.
+     The app's intake reads the published action_kind vocabulary and lets the
+     member say; this page is the installer's minimal intake and does not.
+     risk_tier stays 1 for the reason recorded beside app.html's arm: nothing
+     publishes member-facing words for tiers 2 and 3, so a chooser would be a
+     surface deciding what they MEAN.
      (No backticks in this comment: it lives inside the SETUP_HTML template
      literal, and a stray pair here parses fine under node --check and then
      fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
-  if (type === "action") fm.push(
-    "action_kind: other","risk_tier: 1");
+  if (type === "action") {
+    fm.push("action_kind: other","risk_tier: 1");
+    const cp = act && act.counterparty;
+    /* The state the member chose is written even when the field beside it is
+       empty: a member who answered "not determined yet" and wrote nothing has
+       left a requirement unmet, and C-2.10 says so precisely. Dropping the
+       block would hand them the vaguer refusal for a question they answered. */
+    if (cp && cp.state === "named")
+      fm.push("counterparty:","  state: named",
+              ...(String(cp.name || "").trim() ? ["  name: " + JSON.stringify(String(cp.name).trim())] : []));
+    else if (cp && cp.state === "undetermined")
+      fm.push("counterparty:","  state: undetermined",
+              ...(String(cp.basis || "").trim() ? ["  basis: " + JSON.stringify(String(cp.basis).trim())] : []));
+  }
   fm.push("---","");
   const heads = HEADINGS[type] || ["## Summary"];
   const out = fm.slice();
@@ -818,10 +874,26 @@ function acquireWhy(a){
    gate. */
 const deriveInquiryTitle = ${deriveInquiryTitle.toString()};
 const syncNewForm = ()=>{
-  const isQ = $("#n-type").value === "inquiry";
+  const t = $("#n-type").value;
+  const isQ = t === "inquiry";
   $("#n-title").hidden = isQ; $("#n-title-label").hidden = isQ;
   $("#n-body-label").textContent = isQ ? "What do you want to know?" : "What do you know?";
+  /* UI-19: the counterparty pair belongs to an action and to nothing else, and
+     a document has no source panel to fill in when it is one. */
+  if ($("#n-act")) $("#n-act").hidden = t !== "action";
+  if ($("#n-src")) $("#n-src").hidden = t === "action";
+  syncCounterparty();
 };
+/* The pair reveals exactly one field, and only after the member has answered.
+   Neither is shown by default, because a visible empty field is a suggestion. */
+const syncCounterparty = ()=>{
+  const named = $("#n-cp-named") && $("#n-cp-named").checked;
+  const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
+  if ($("#n-cp-name-box")) $("#n-cp-name-box").hidden = !named;
+  if ($("#n-cp-basis-box")) $("#n-cp-basis-box").hidden = !undet;
+};
+if ($("#n-cp-named")) $("#n-cp-named").addEventListener("change", syncCounterparty);
+if ($("#n-cp-undet")) $("#n-cp-undet").addEventListener("change", syncCounterparty);
 $("#n-type").addEventListener("change", syncNewForm);
 $("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; syncNewForm(); show("#s-new"); });
 $("#n-save").addEventListener("click", async ()=>{
@@ -833,6 +905,21 @@ $("#n-save").addEventListener("click", async ()=>{
   } else {
     if (!title) { e.textContent = "Give it a title."; return; }
     if (!body) { e.textContent = "Write something in the body."; return; }
+  }
+  /* UI-19: what THIS FORM has collected, never a rule about the record. C-2.10
+     is the rule and it says so in its own words at the gate if anything gets
+     past here; all this does is decline to send an action with the question
+     unanswered, because an empty control has nothing to send. */
+  let act = null;
+  if (type === "action") {
+    const named = $("#n-cp-named") && $("#n-cp-named").checked;
+    const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
+    const nm = ($("#n-cp-name") ? $("#n-cp-name").value.trim() : "");
+    const bs = ($("#n-cp-basis") ? $("#n-cp-basis").value.trim() : "");
+    if (!named && !undet) { e.textContent = "Say who this is addressed to, or that it is not determined yet."; return; }
+    if (named && !nm) { e.textContent = "Name the counterparty."; return; }
+    if (undet && !bs) { e.textContent = "Say what is known so far, and what would settle it."; return; }
+    act = { counterparty: named ? { state:"named", name:nm } : { state:"undetermined", basis:bs } };
   }
   $("#n-save").disabled = true;
   try {
@@ -864,7 +951,7 @@ $("#n-save").addEventListener("click", async ()=>{
       if (att.archive) doc.co_archive = att.archive;
     }
     const text = mdFor(id, type, state, title, body, now, !!doc,
-      doc && doc.capture ? { content_hash: doc.capture.sha256 } : null);
+      doc && doc.capture ? { content_hash: doc.capture.sha256 } : null, act);
     const r = await post("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },

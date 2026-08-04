@@ -42,11 +42,26 @@
  *      credential is offered no Add entry in the rail at all".
  *  (d) F-6: have `addTypesFor` return ADD_TYPES unfiltered -> FAIL "a member
  *      without create_projects is not offered the project kind".
- *  (e) the amendment, app.html half: put `action` back into ADD_TYPES -> FAIL
- *      "the Add surface offers no `action` kind ...". (This is the assertion
- *      UI-19 deliberately flips back when it ships the counterparty pair.)
- *  (f) the amendment, plane half: put the Action option back into setup.mjs's
- *      `#n-type` -> FAIL "the plane's own setup page does not offer it either".
+ *  (e) SUPERSEDED 2026-08-05 by UI-19 and REPLACED, not deleted: arm (e) used
+ *      to break the absence of `action` from ADD_TYPES. The option is back,
+ *      because the counterparty pair exists, so the arm that carries the same
+ *      weight now is THE MACHINE INVENTING ONE — in app.html's `mdFor`, give the
+ *      action arm a default counterparty
+ *        if(!cp) fm.push("counterparty:","  state: named","  name: the department");
+ *      -> RUN 2026-08-05: FAILS at "BUT an action with nothing authored still
+ *      draws exactly one error, and it is C-2.10 naming the counterparty".
+ *      THIS SUITE IS FAIL-FAST — `ok` at line 75 calls process.exit(1) on the
+ *      first failure — so it reports ONE and stops, and "the machine writes no
+ *      counterparty of its own on that path" is unreachable in that run rather
+ *      than green. Both are kept: they answer different questions about the
+ *      same text. WORTH KNOWING, and it is why both DIRECTIONS are asserted:
+ *      the two zero-findings assertions above are reached BEFORE the break's
+ *      site and stayed green under it — a suite that only checked that an
+ *      authored action passes would have gone green on a surface that had
+ *      started inventing addressees.
+ *  (f) the amendment, plane half: REMOVE the Action option from setup.mjs's
+ *      `#n-type` -> FAIL "the plane's own setup page offers it too — both
+ *      intake surfaces or neither".
  */
 import { appScript } from "./extract.mjs";
 import fs from "fs";
@@ -350,19 +365,88 @@ ok("the surface reads the capability from whoami rather than keeping its own cop
    G.canDo("create_projects") === true && G.addTypesFor().some(([v]) => v === "project"));
 G.PLANE.me = { session: true, capabilities: ["contribute"] };
 
-/* The amendment REC-23 forced (UI-15, 2026-08-04): `action` is ABSENT from BOTH
-   intake surfaces until UI-19 gives the member the counterparty pair. REC-23's
-   honest gate leaves a fresh action exactly-one-error at C-2.10, so offering the
-   kind is present-and-refused — the same class as F-6 four lines up. This is the
-   assertion UI-19 flips back when it restores the option. */
-ok("the Add surface offers no `action` kind while nothing here can author a counterparty",
-   !G.ADD_TYPES.some(([v]) => v === "action"));
+/* CORRECTED 2026-08-05 (UI-19), NEVER EXEMPTED, and the correction is the whole
+   round trip.
+
+   WHAT STOOD HERE, and why it was right when it was written: UI-15 asserted
+   that `action` was ABSENT from both intake surfaces. REC-23 had made the
+   counterparty three-valued and stopped both surfaces writing a placeholder, so
+   a fresh action left the catalog with exactly one error — C-2.10 naming a
+   counterparty nobody authored — and offering a kind whose every instance the
+   gate refuses is present-and-refused, the same class as F-6 four lines up. The
+   note UI-15 left named its own condition: restore it when a member has a
+   control to author the counterparty with.
+
+   WHAT REPLACES IT: that control exists (UI-19's radio pair), so the option is
+   back and the assertion is now the one that MATTERS — not that the option
+   exists, but that BOTH DIRECTIONS hold. An action written with the member's
+   answers draws ZERO findings from the real catalog; an action written with
+   NOTHING authored still draws exactly C-2.10, because the machine that will not
+   invent an addressee to get past its own gate is the property this file is
+   actually here to protect. Asserting only the first would let a future edit
+   satisfy the gate by inventing a name and stay green. */
+ok("the Add surface offers the action kind again, now that a member can author its counterparty",
+   G.ADD_TYPES.some(([v]) => v === "action"));
 await G.renderAdd();
-ok("and none reaches the rendered form", !/value="action"/.test(els.get("#content").innerHTML));
-ok("the plane's own setup page does not offer it either — both intake surfaces or neither",
-   !/<option value="action"/.test(SETUP_HTML));
-ok("while the writer keeps its action arm, because actions already in the record are still revised",
-   /action_kind: other/.test(G.mdFor("ACT-2026-0001-x", "action", "planned", "T", "B", NOW)));
+ok("and it reaches the rendered form", /value="action"/.test(els.get("#content").innerHTML));
+ok("the plane's own setup page offers it too — both intake surfaces or neither",
+   /<option value="action"/.test(SETUP_HTML));
+
+/* THE CONFORMANCE FLIP-BACK, on this side of the seam. The same writer, the
+   same catalog, the difference being only what the member answered. */
+const AUTHORED = { kind: "cpra_request", counterparty: { state: "named", name: "City Clerk" },
+                   basis: [], clock: [] };
+const UNDET = { kind: "cpra_request",
+                counterparty: { state: "undetermined",
+                                basis: "The request was addressed to the department; which office holds "
+                                     + "the records has not been established. The records index would settle it." },
+                basis: [], clock: [] };
+const actionErrs = async (act) => {
+  const id = "ACTN-2026-0800-records-request";
+  const text = G.mdFor(id, "action", G.FIRST_STATE.action, "Records request",
+                       "Ask for the transfer ledger.", NOW, false, null, act);
+  const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
+    sha256, sha512, resolveTarget: () => true });
+  return { text, errs: findings.filter((x) => x.severity === "error") };
+};
+const named = await actionErrs(AUTHORED);
+for (const e of named.errs) console.log(`         action(named): ${e.check}: ${String(e.message).slice(0, 140)}`);
+ok("an action carrying a NAMED counterparty the member wrote passes the catalog with zero findings",
+   named.errs.length === 0);
+ok("and the name in the document is the member's, not a placeholder",
+   /state: named/.test(named.text) && /name: "City Clerk"/.test(named.text));
+const undet = await actionErrs(UNDET);
+for (const e of undet.errs) console.log(`         action(undetermined): ${e.check}: ${String(e.message).slice(0, 140)}`);
+ok("an action stating that the counterparty is UNDETERMINED, with the basis the member wrote, also passes",
+   undet.errs.length === 0);
+ok("and it states the undetermined rather than inventing a name",
+   /state: undetermined/.test(undet.text) && !/name:/.test(undet.text.split("counterparty:")[1].split("---")[0]));
+const bare = await actionErrs(null);
+ok("BUT an action with nothing authored still draws exactly one error, and it is C-2.10 naming the counterparty",
+   bare.errs.length === 1 && bare.errs[0].check === "C-2.10"
+   && /counterparty block is missing/.test(bare.errs[0].message));
+ok("the machine writes no counterparty of its own on that path — no name, no basis, no placeholder",
+   !/counterparty/.test(bare.text));
+ok("and the writer still keeps its action arm, because actions already in the record are still revised",
+   /action_kind: /.test(bare.text) && /risk_tier: 1/.test(bare.text));
+
+/* THE OVERDUE ACT'S CARRY, and the measured gap it works around. C-2.8 refuses
+   a question's basis leg pointing at an ACTION ("a leg rests on information or
+   on another inquiry, nothing else"), so the carry is a REFERENCE. Asserted in
+   the direction that fails: the reference is written, the basis is NOT, and the
+   result clears the real catalog. */
+{
+  const id = "INQ-2026-0810-why-no-reply";
+  const text = G.mdFor(id, "inquiry", G.FIRST_STATE.inquiry, "Why no reply", "What the silence means.",
+                       NOW, false, null, { refs: [{ target: "ACTN-2026-0800-records-request", rel: "cites" }] });
+  const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
+    sha256, sha512, resolveTarget: () => true });
+  const errs = findings.filter((x) => x.severity === "error");
+  for (const e of errs) console.log(`         carry: ${e.check}: ${String(e.message).slice(0, 140)}`);
+  ok("a question carrying an action as a REFERENCE clears the catalog", errs.length === 0);
+  ok("the action is in references[] and the question rests on nothing",
+     /target: ACTN-2026-0800-records-request/.test(text) && !/^basis:/m.test(text));
+}
 ok("the grade is stated before anything is written, and stated as B",
    /Grade B/.test(form) && /hashed at receipt/.test(form));
 ok("with Grade A named as what this surface cannot claim", /Grade A needs a chain-of-custody/.test(form));
