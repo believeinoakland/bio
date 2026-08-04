@@ -598,7 +598,7 @@ and handed to CONDUCT through the BOB INBOX.
 | **D-127 case-making is undesigned, and it is what the system is for** | RECORD · UI | **M9 · M10** — the rungs this pass adds |
 | D-128 declared-versus-observed flow is the analytic product | FRAMEWORK · RECORD | M4 · consequence half M10 (REC-24) |
 | D-129 `undetermined` conflates *cannot determine* and *positively none* | RECORD | M8 · a field beside the reason |
-| D-130 `counterparty: to be named` passes C-2.10 | RECORD · UI | M7 · REC-23 (UI half UI-15) |
+| D-130 `counterparty: to be named` passes C-2.10 | RECORD · UI | M7 · REC-23 CLOSED (rendering half UI-19; ADD_TYPES absence UI-15 — corrected 2026-08-04, the row had said UI-15 for the rendering while QUEUE/BUILD-ORDER say UI-19) |
 | D-131 a raw NUL byte makes `store.mjs` invisible to `grep` | RECORD | M0 · REC-27 |
 | D-132 `ADD_TICKS` used twice, declared nowhere | UI | M8 · UI-15 |
 | D-133 two Add-surface functions declared twice | UI | M8 · UI-15 |
