@@ -369,6 +369,14 @@ const OPS = {
      `target` rather than a selection: one conclusion answers one question, and
      a bulk conclude would be the checkbox the construct exists to refuse. */
   conclude:        { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-31: REOPENING an inquiry the group set down, deferred|dismissed ->
+     open. Conclude's class list for conclude's reason — a machine class
+     REACHES it and is refused by the store (MACHINE_CANNOT_REOPEN) rather
+     than being absent, fail closed, because overturning the group's own
+     disposition is a rule about who the caller IS and is enforced on the
+     author stamp below. One `target`, like conclude: one question is picked
+     back up at a time. */
+  reopen:          { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -650,7 +658,11 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
    defect class this file keeps naming. It is not selection-backed, so the
    `owner` stamp below is inert for it (nothing reads it); that costs nothing and
    is cheaper than a list that exists to omit one parameter. */
-const STATE_ACTIONS = ["dispose", "retire", "release", "conclude"];
+/* REC-31 adds `reopen` for exactly REC-13's reason above: it needs what this
+   array confers — both SESSION_OPS lists, the server-side viewer stamp and the
+   server-side author stamp — and nothing else. Like conclude it is not
+   selection-backed, so the `owner` stamp is inert for it. */
+const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue"];
@@ -798,6 +810,15 @@ const NEEDS = {
      stamp, exactly as release's is, because capabilities gate SESSIONS and the
      rule here is about who a session IS. */
   conclude:         "contribute",
+  /* REC-31: reopening rides `contribute` like every other corpus write, and
+     mints no capability of its own. Disagreeing with a disposition is not a
+     separate right a group grants — CAPABILITIES.md §4 is explicit that a
+     fifth token would need §5 reopened — and DEC-30 fixes the rest: no owner
+     gate, no ballot, the act attributed in the state_history and the Session
+     Log. The named-member requirement is enforced by the store on the author
+     stamp, as release's and conclude's are, because capabilities gate SESSIONS
+     and the rule here is about who a session IS. */
+  reopen:           "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence

@@ -1408,10 +1408,16 @@ export function checkInquiryBasis(fm, findings) {
       continue;
     }
     const t = leg.target;
+    /* Hoisted out of the else below by REC-31: the capture-axis arm at the end
+       of this loop asks the SAME question (what does this leg rest on), and a
+       second derivation of it here would be a second answer waiting to
+       disagree. Null while the target is unusable, so the arm below stays
+       silent rather than adding a second complaint about one broken leg. */
+    let targetType = null;
     if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
       findings.push(f('C-2.8', 'error', `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical bundle id`));
     } else {
-      const tt = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
+      const tt = targetType = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
       if (tt !== 'information' && tt !== 'inquiry') {
         findings.push(f('C-2.8', 'error', `basis[${i}].target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else`));
       } else if (!refTargets.has(t)) {
@@ -1441,6 +1447,30 @@ export function checkInquiryBasis(fm, findings) {
       if (!GRADE_SOURCES.includes(leg.grade_source)) {
         findings.push(f('C-2.8', 'error', `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(', ')})`));
       }
+    }
+    /* REC-31, from REC-12's landing. CAPTURE RANGES OVER DOCUMENTS (DEC-21):
+       it measures how directly the record holds the bytes of an information
+       object. An inquiry is not a document — it has no capture, no fidelity
+       and nothing to have been captured FROM — so a capture-axis grade
+       authored on an INQ- leg is a grade about no referent, and the record
+       must not hold a strength claim about a thing that cannot have one.
+       REFUSED HERE, at the leg's own grammar, which is BOTH gates at once:
+       this one function is consulted by the catalog (checkInquiryExtension)
+       and by the store's op=promote write path, so a leg like this cannot
+       land and cannot audit clean either. Stated as the axis being wrong
+       rather than the target: a leg to another inquiry is perfectly gradable
+       — on CONNECTION, which is what a leg to an inquiry is an edge of.
+       Why refuse rather than derive around it: REC-12's #strengthWalk names
+       such a leg not load-bearing on capture, which was the honest reading
+       while nothing refused the combination, but the axis was still AUTHORED
+       and the derivation was quietly deciding it meant nothing. The
+       derivation KEEPS that arm (history is append-only and a replayed
+       revision may carry such a row), and this refusal is what stops new
+       ones. */
+    if (leg.grade_axis === 'capture' && targetType === 'inquiry') {
+      findings.push(f('C-2.8', 'error', `basis[${i}] states a capture-axis grade on an inquiry leg: capture is a property of an information object (DEC-21) and an inquiry is not one, so this grade has no referent`,
+        ['grade this leg on the connection axis — a leg to another inquiry is a connection',
+         'move the capture grade onto the INFO- leg it is actually about']));
     }
     if (leg.grade_source === 'hunch') {
       if (typeof leg.author !== 'string' || leg.author.trim() === '') {
