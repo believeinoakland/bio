@@ -1293,3 +1293,199 @@ builds a plain ZIP (one `readme.txt` member) renamed to `.xlsx`; the classifier
 reports `(zip, None)` — NOT OOXML, not counted. PASS. The same run is repeatable in
 one step; the mode exits 1 if the masquerade is ever counted.
 
+
+## 2026-08-03, thread CONTENT-PDF: is OCR reachable at all? — bundle, CPU, accuracy and text-layer provenance on a real scanned Oakland exhibit (D-152, DEC-4 as twice amended, CPDF-9)
+
+The measurement that gates CPDF-10's whole design. Bob overruled the
+accept-the-limit recommendation: image-only PDFs must be extracted AND
+investigated, so before anything is designed, this measures whether OCR is
+reachable at all — bundle against the Worker limit, CPU against the isolate
+ceiling, character accuracy (DIGITS separately) on a real scan, and whether a
+machine-generated text layer is detectable from metadata. It commits no product
+code and holds no slot. **Grade VALUES are not set here and this measurement
+must not be read as permission** — fidelity bounds the capture axis, no machine
+mints the grade, member attestation is the only route to the top; those are
+already doctrine.
+
+**Instrument.** `bio-plane/test/ocr-measure-probe.mjs` (a probe, NOT in the
+battery: it npm-installs the engines into an OS temp dir and changes nothing in
+the repo; `--provenance` adds the metadata sample). Engines: **tesseract.js
+7.0.0** with **tesseract.js-core 7.0.0** (the runtime instrument — runs on
+node) and **tesseract-wasm 0.11.0** (artifact-size instrument; both wrap
+upstream Tesseract compiled to WASM). Trained models: the tesseract.js default
+**eng 4.0.0_best_int** and **tessdata_fast eng** (tesseract-ocr/tessdata_fast).
+Machine: node v26.5.0, darwin/arm64. All timings are a **NODE PROXY, not
+Worker CPU** (a Worker cannot time itself — the D-56 rule), calibrated into the
+enforced ceiling's own currency by running `cpu.mjs`'s `burn()` on the same
+machine. Every number below was produced by the committed probe on 2026-08-03.
+
+### The named document — a real scanned Oakland exhibit
+
+**`legistar-attach-15721260.pdf`** — Oakland Legistar staff-report attachment
+(`oakland.legistar.com View.ashx?M=F&ID=15721260&GUID=8F04A287-4A49-44DC-83B7-29FAD97140C2`),
+939,552 B, CPDF-5's doc 14 ("scanned CCITT fax, 0 fonts"). Verified image-only
+with pypdf 6.14.2 before use, and re-verified by the probe on every run: 4
+pages, **zero fonts, zero extractable text**, each page one full-page 3300×2550
+scan at 300 dpi (`/Rotate 270`; pages 1/4 JPEG `DCTDecode`, pages 2/3 CCITT G4
+`CCITTFaxDecode`). It is a scanned City Council resolution awarding a paving
+contract — typewritten body, stamps and signatures, dense in exactly the digits
+that matter: three bid amounts to the cent, dates, and five CEQA section
+numbers. DocInfo carries **empty `/Producer` and `/Creator`** — only
+CreationDate/ModDate.
+
+### 1. Bundle size against the Worker limit — the engine fits nowhere useful in-account except alone
+
+Actual artifact bytes, measured with esbuild-independent byte counts (the WASM
+binary is the payload; no build step shrinks it):
+
+| Artifact | Raw | Gzip-9 |
+| --- | --- | --- |
+| tesseract-wasm 0.11.0 `tesseract-core.wasm` (SIMD) | 1,839,004 | 729,254 |
+| tesseract-wasm 0.11.0 `lib.js` glue | 97,684 | 25,476 |
+| eng traineddata, **tessdata_fast** (smallest usable) | 4,113,088 | 1,967,599 |
+| **minimal deployable OCR payload (engine + glue + eng fast)** | **6,049,776** | **2,722,329** |
+| tesseract.js-core 7.0.0 `tesseract-core-simd-lstm.wasm` (for reference) | 2,857,601 | 1,055,812 |
+| eng **4.0.0_best_int** (tesseract.js's default model; the accuracy champion below is NOT this) | — | 2,952,873 (CDN gz, vendor-served) |
+
+Against the **3 MB post-gzip Free-worker limit (the VENDOR'S figure**, as
+labelled at the CPDF-1 entry; 3,145,728 B):
+
+- **Into `pdf-worker` (I6): DOES NOT FIT.** 578,121 gz (measured at CPDF-6)
+  + 2,722,329 = 3,300,450 gz — **over by ~155 KB**. OCR cannot join the
+  existing fleet member.
+- **Into the plane: fits arithmetically and is ruled out anyway.** 181,887 gz
+  + 2,722,329 = 2,904,216 — 92.3% of the whole budget, leaving ~241 KB for all
+  future plane growth; and the unpdf lesson applies doubly (a bare specifier
+  broke 21 suites; tesseract.js additionally spawns worker threads and fetches
+  its model at runtime).
+- **A DEDICATED third fleet member fits, barely: 2,722,329 gz = 86.5% of its
+  own 3 MB budget**, ~423 KB headroom, one language, no unpdf. Moving the
+  traineddata to R2 (read at init: one Cloudflare-service subrequest, 4.1 MB
+  into memory per cold start) shrinks the shipped bundle to **754,730 gz
+  (0.72 MB)** — comfortable, at the price of a cold-start fetch.
+- The model the accuracy run below crowns (tessdata_fast) is the ONLY variant
+  that ships: the tesseract.js default best_int model is 2,952,873 gz — 94% of
+  a Worker budget before any engine bytes.
+
+### 2. CPU per page — the same order as the ENFORCED per-invocation ceiling, not comfortably under it
+
+Node-proxy medians (5 warm runs/page), calibrated: **40,000,000 reference
+iterations (`cpu.mjs` `burn()`) = 1,536 ms on this machine (26,036 iter/ms)**.
+The enforced Free ceiling was measured 2026-07-29 by `op=cpuprobe` as **40M
+iterations fit, killed during the next 2M** — so the ceiling's currency
+converts on this machine to ~1.54 s of single-thread work per invocation.
+
+| Page (content) | best_int ms | ≈ ref-iter | tessdata_fast ms | ≈ ref-iter |
+| --- | --- | --- | --- | --- |
+| 1 (JPEG, cover, stamps) | 2,064 | ~54M | 1,421 | ~37M |
+| 2 (CCITT, dense text) | 1,760 | ~46M | 1,054 | ~27M |
+| 3 (CCITT, dense text) | 1,602 | ~42M | 953 | ~25M |
+| 4 (JPEG, signatures) | 935 | ~24M | 646 | ~17M |
+| engine init (wasm + model) | 846 | — | 93 | — |
+
+**Reading: one 300-dpi page costs ~17–54M reference-iteration equivalents
+against a measured kill window of ~40–42M per invocation.** Not the two orders
+of magnitude the documented 10 ms would suggest — the enforced ceiling is the
+one that matters (the whole argument of this file) — but not clearance either:
+a multi-page document in one invocation is OVER; a single page per invocation
+is AT the ceiling's order, model- and content-dependent. Caveats, stated
+plainly: this is a same-machine, same-V8 calibration, and an LCG loop and
+wasm OCR stress different silicon, so it is a **CPU-ORDER figure only**;
+authoritative Worker CPU needs a deployed wasm probe walked in reference
+iterations (the `op=cpuprobe` pattern) before any in-account design is drawn.
+Memory is also unmeasured (a 3300×2550 RGBA frame is 33.6 MB against the
+128 MB isolate).
+
+### 3. Character accuracy on the real exhibit — digits separately, and the one error that matters
+
+Ground truth: PDF page 2 (CCITT G4, the dense resolution page), transcribed by
+a human reader from the 300-dpi scan during this session, digit strings
+adjudicated at 2× zoom, embedded in the probe. 2,687 characters, **90 digit
+characters, 17 number tokens** (bid amounts to the cent, dates, CEQA section
+numbers). Normalization: curly→straight quotes, whitespace collapsed;
+Levenshtein alignment.
+
+| Model | Char accuracy | GT digits correct | Digits MINTED | The actual errors |
+| --- | --- | --- | --- | --- |
+| eng 4.0.0_best_int | 99.93% (2 edits/2,687) | 90/90 (100%) | **1** | `$`→`5`, `l`→`{` |
+| eng tessdata_fast | **99.96%** (1 edit/2,687) | 90/90 (100%) | 0 | `s`→`S` |
+
+**The finding that decides doctrine: the risk is not accuracy, it is what the
+rare error looks like.** best_int's single substantive error read
+`($26,181,434.00)` as `(526,181,434.00)` — a dollar sign minted into a digit,
+turning a $26M bid into a plausible-looking 526-million figure that no
+spell-check flags and a skimming human misses. 99.93% character accuracy and
+100% of ground-truth digits correct, and the record would still have carried a
+20× wrong number. This is the attestation-ceiling case made by measurement:
+per-region confidence and never-machine-attested digits are load-bearing, not
+caution. (Tesseract's own confidence DID signal the hard page: 77–78 on the
+signature/stamp page vs 92–95 on typescript — a usable per-page floor signal.
+Accuracy on the stamps/handwriting themselves was not ground-truthed; the
+ABBYY overlays below show what it looks like: garbage.)
+
+### 4. NEGATIVE CONTROL — RUN: a blank page yields nothing
+
+Both models OCR'd a blank white 3300×2550 page (same dimensions as the scan):
+**`text=""`, confidence 0, zero words, both runs** (~67 ms). The engine does
+not hallucinate on empty input — the one failure mode that would put invented
+text in the record is absent. The probe exits non-zero if this ever regresses.
+
+### 5. Text-layer provenance — the machine-generated layer IS detectable, and Oakland's certified resolutions all have one
+
+`--provenance`: 14 PDF attachments across the 5 most recently modified Legistar
+matters (web API), DocInfo `/Producer` + `/Creator` read with pypdf (plus, in
+this session's wider 19-doc sweep, XMP `CreatorTool` — it never disagreed):
+
+- **3 of 14 name OCR software: `Creator: ABBYY FineReader Engine 11`** — and
+  the three are exactly the City Clerk's **enacted certified resolutions
+  ("89484 CMS", "89498 CMS", "89518 CMS")**: full-page 300-dpi JBIG2 scans with
+  an OCR text overlay. The overlay is somebody else's unverified transcription,
+  garbage included — page 1 of 89518 CMS's layer reads
+  `2022 NOV 23 AM 9* 59 p|{ £0OFFICE OF THE CITY CLERK` where the stamp is.
+  Today that text is indistinguishable in our pipeline from publisher-authored
+  text; one metadata read fixes that (DEC-4's third amendment, confirmed real
+  on the first sample taken).
+- The remaining 11 name authoring software (Word, Acrobat
+  Distiller/PDFMaker/Sign, Quartz, Crystal Reports for Legistar agendas) — no
+  false positives for the scanner/OCR pattern.
+- The named scanned exhibit itself carries **no metadata at all** (empty
+  Producer/Creator): a wholly image-only scan may say nothing about its
+  scanner — and needs no metadata to be caught, because 0 fonts/no text layer
+  already detects it structurally (CPDF-5). Detection is therefore two cheap
+  reads that compose: **structure catches the layerless scan; metadata catches
+  the machine-made text layer.**
+
+### 6. Recommendation across the FOUR placements (facts first; values are CONDUCT/Bob's)
+
+1. **In-plane Tier 1: ruled out.** 92.3% of the plane's whole bundle budget,
+   ~one full invocation-ceiling of CPU per page shared with capture's own
+   work, and the unpdf/battery incompatibility class, worse.
+2. **The pdf-worker fleet member (I6): ruled out as-is** — over the member's
+   bundle limit by ~155 KB even with the smallest model.
+3. **External SERVICE: the only placement reachable today**, and priced as
+   Bob's amendment demands: the transcription becomes a **third-party claim we
+   cannot re-run** once the service changes its model, so the `text_source`
+   chain must pin **service identity and date** exactly as it would pin engine
+   and version; the captured bytes also leave the sovereign account, which is
+   a consequence to state, not hide. Service accuracy was NOT measured here;
+   **the pinned local engine's 99.96%/100%-digits is the floor a service must
+   beat to justify that cost.**
+4. **Service-plus-AI post-processing: not as a default chain.** Raw engine
+   output on this document class leaves almost nothing for an AI step to add —
+   and the one observed error ($→5) is precisely the class a post-processor
+   would silently "fix", the output-looks-better-than-input hazard CPDF-10's
+   chain rule exists for. If a chain ever carries an `ai(...)` step it records
+   it as weakening, per the already-stated doctrine.
+
+**Recommendation: run CPDF-10 against the external-service placement first**
+(chain names the service and date; digits never machine-attested; per-region
+confidence kept), **and hold a dedicated `ocr-worker` fleet member as the
+preferred end-state** — a pinned, re-runnable, first-party tesseract
+(2.72 MB gz alone, or 0.72 MB with the model in R2) keeps the transcription
+inside the sovereign account and out of the third-party-claim trap — **gated
+on two things that do not exist yet**: a deployed workerd probe of wasm OCR
+against the enforced ceiling in reference iterations (single-page-per-
+invocation is borderline on today's proxy), and the page-to-pixels path (scan
+images are DCT/CCITT/JBIG2 streams; pdf.js's renderer wants a canvas workerd
+does not have — the renderer item CPDF-9's placement was to name goes with
+that gate, not before it).
