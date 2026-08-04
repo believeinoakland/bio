@@ -1,5 +1,7 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. Three arms in full below, each RUN. */
-/* REC-48's THREE ARMS, in full:
+/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. The three arms are below IN THIS SAME DECLARATION, each RUN.
+   (run 2026-08-04, M0-9) FOUR ARMS ON THE REGISTER ITSELF, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (scripts/control-register.mjs caeac36b…, scripts/coverage.mjs a5df1b87…, test/acquire.test.mjs e065c8e0…, test/hygiene.test.mjs f66974ac…, test/capture.test.mjs e71bf8b8…); whole = this suite 384 pass, register 98 of 98 at 246 arms. (a) HIDE A SUITE'S DECLARATION ENTIRELY — replace every control marker in acquire.test.mjs -> `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped EXITS 1, reports 97 of 98 and NAMES acquire.test.mjs under "No declared control"; arms 246 -> 241, exactly that suite's five. (b) TRUNCATE A MULTI-ARM BLOCK — cut this suite's own declaration from 8 lines to 5 by dropping arms (i), (ii) and (iii) -> the register reports this declaration at 6 arms instead of 9 and the total at 243 instead of 246, while --strict STAYS exit 0. That is the design and not a miss: arms are REPORTED and never gated, so the visible drop is the whole mechanism by which a shrinking control gets noticed. (c) PUT THE 60-LINE HEAD WINDOW BACK into scripts/control-register.mjs -> this suite 381 pass, 3 FAIL, and the three are exactly the window arms ("a control declared past line 60 is found", "...on the line it was actually written on", "a declaration straddling line 60 is read WHOLE"). (d) MAKE THE DETECTOR FIRST-LINE-ONLY -> this suite 377 pass, 7 FAIL, and the REAL-CORPUS arm bites alongside the fixtures: "the tree itself declares at least one MULTI-LINE control" reports []. The register's total falls to 234 arms, which is EXACTLY what the old detector reported over this same tree — so (d) reproduces the defect this item closed rather than merely resembling it. ONE PROPERTY WORTH KNOWING BEFORE THE NEXT SESSION RE-RUNS THESE: the register's arm TOTAL is a function of the declarations' own prose, so writing this record into a declaration moves the total upward — the four totals above are as measured at the moment each arm ran, and it is the DELTAS that the controls establish. Never compare an absolute total across two edits of the register's own text.
+   SHAPE RESTORED BY M0-9 (2026-08-04), and it is the point rather than tidying. REC-48 wrote the arms as a continuation of this block, `coverage.mjs` then reported BOTH this suite and acquire.test.mjs as declaring NO CONTROL — its detector could not read past the marker's own line — and the arms were moved into a second comment the register never saw, so the register quoted a summary while the evidence sat outside it. The detector now reads the whole block (scripts/control-register.mjs) and is itself asserted at the foot of this suite; the arms are back where they belong. A declaration ends at its comment's close or at a blank line, so keep this paragraph unbroken and it stays one declaration.
+   REC-48's THREE ARMS, in full:
    (run 2026-08-04, REC-48) THE SWEEP THAT SAYS NO SURFACE SPELLS A CAPTURE GRADE LETTER, three arms, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/index.mjs 16cf4e2f..., src/store.mjs 7c1ed3aa..., src/cdx.mjs a9e5912c..., checks/bio-checks.mjs d8da7b9d...); whole = 369 pass. Each arm ALSO reports what the suite that OWNS the mutated sentence did, because that contrast is the point.
    (i) THE THIRD STATEMENT PUT BACK — replace `note: ACQUIRE_GRADE_NOTE,` in src/index.mjs with the sentence hand-typed -> 367 pass, 2 FAIL, detector (A) and detector (B) both naming `index.mjs:1822 "Grade B"` and `"Grade A"`, WHILE acquire.test.mjs STAYS 79/79 GREEN. A copy identical to the composition satisfies every behavioural and wire assertion at zero cost; only this sweep can see it, which is why it exists one altitude above the three suites that own the sentences.
    (ii) THE FOURTH STATEMENT PUT BACK — hand-type `Grade A` into op=earnedbasis's `ceiling:` sentence in src/store.mjs -> 367 pass, 2 FAIL naming `store.mjs:5191 "Grade A"`, WHILE earnedbasis.test.mjs STAYS 54/54 GREEN. Same shape on the sentence REC-48's own scope had not counted, which is how it was found.
@@ -33,6 +35,10 @@ import { join } from "node:path";
    refuses a leg claiming more than the ceiling. This suite states them no more
    than the plane does — the sweep below is narrowed BY the rule, not beside it. */
 import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
+/* M0-9: the negative-control register's detector, imported from the instrument
+   itself rather than reimplemented here — a second copy would agree with the
+   first at zero cost and prove nothing about what coverage.mjs actually reads. */
+import { readControl, CONTROL_MARKER } from "../scripts/control-register.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 let pass = 0, fail = 0;
@@ -502,6 +508,118 @@ console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
       .map((h) => `${f}:${h.line} ${JSON.stringify(h.what)}`));
   t(`(B) no module spells the capture rule's own letters (${RULE_LETTERS.join("/")}) beside "grade", in any case (found: ${JSON.stringify(offendersB)})`,
     offendersB, []);
+}
+
+/* ---- the negative-control REGISTER's own detector, asserted (M0-9) ----------
+ * `scripts/coverage.mjs` is the instrument CONDUCT verifies every landing with,
+ * and the register is the part of it that answers "which suites have actually
+ * been controlled". It was believed rather than tested, and it was wrong in the
+ * generous direction twice over: a declaration whose arms continued onto a second
+ * line matched NOTHING and the suite read as declaring NO CONTROL (REC-48 hit
+ * exactly this and got past it by moving its arms into a second comment the
+ * register never saw), and a declaration that did match was recorded first line
+ * only, so a five-arm control entered the register as one arm — fully green while
+ * quoting a fraction of what it checked.
+ *
+ * This suite is the right altitude for it for the same reason the sweep above is:
+ * it reads its siblings as text, needs no runtime, and sits one level above the
+ * thing it measures. It is here rather than in a suite of its own deliberately —
+ * a 99th suite would move the register's own denominator, and an instrument whose
+ * test changes the number it reports is the worst kind to reason about.
+ *
+ * ITS OWN REACH IS ASSERTED, because a detector that finds nothing passes
+ * everything (UI-30 in an instrument, REC-49's arm that first fired zero, and
+ * REC-48's reach assertion that was WRONG when first written because it compared
+ * a planted count to 1 instead of to a delta). Every arm below is either a DELTA
+ * against the same source with one thing changed, or a read of the REAL corpus —
+ * never an absolute count that a deaf detector could also satisfy. */
+console.log("\n--- the negative-control register's own detector (M0-9) ---");
+{
+  const lines = (n, what) => Array(n).fill(what).join("\n");
+  const arm = (k) => `   (${k}) break ${k} -> ${k} fails`;
+  /* EVERY fixture builds its marker from the instrument's OWN exported constant
+     and never as a literal. A literal here would put real declarations into THIS
+     suite's source, and a register that reads its own test's fixtures is how a
+     number quietly stops meaning what it says — the same class of accident this
+     item exists to close. It also keeps the marker spelled in exactly one place. */
+  const decl = (rest) => `${CONTROL_MARKER} ${rest}`;
+
+  /* PAST THE OLD 60-LINE HEAD WINDOW, and the delta that proves it was read. */
+  const deep = lines(200, "/* header prose */") + "\n/* " + decl("break X -> Y fails") + " */\n";
+  const deepFound = readControl(deep);
+  t("a control declared past line 60 is found", deepFound != null, true);
+  t("...on the line it was actually written on", deepFound && deepFound.line > 60, true);
+  t("...and the same source with its marker hidden reads as NO control (the delta)",
+    readControl(deep.replaceAll(CONTROL_MARKER, "NEGATIVE CONTROL(hidden):")), null);
+
+  /* STRADDLING line 60: the window used to record whatever fell inside it and
+     call the suite controlled — a fragment, silently. */
+  const straddle = lines(58, "/* x */")
+    + "\n/* " + decl("three arms") + "\n" + ["a", "b", "c"].map(arm).join("\n") + " */\n";
+  const straddled = readControl(straddle);
+  t("a declaration straddling line 60 is read WHOLE, not truncated at the window",
+    [straddled.arms, straddled.text.includes("(c) break c")], [3, true]);
+
+  /* EVERY ARM. The marker line here states no arm at all, so a first-line-only
+     detector reports 0 and this is not satisfiable by accident. The truncation is
+     a DELTA between two blocks, never a comparison against 1. */
+  const five = "/* " + decl("five arms, each RUN") + "\n" + ["a", "b", "c", "d", "e"].map(arm).join("\n") + " */\n";
+  const two = "/* " + decl("five arms, each RUN") + "\n" + ["a", "b"].map(arm).join("\n") + " */\n";
+  t("every arm of a five-arm block is counted, though the marker line states none",
+    readControl(five).arms, 5);
+  t("truncating that block to two arms drops the count by exactly the three removed",
+    readControl(five).arms - readControl(two).arms, 3);
+
+  /* WHERE A DECLARATION ENDS, asserted in BOTH directions: it must reach past the
+     marker's own line, and it must NOT swallow the paragraph after it. One
+     without the other is half an answer. */
+  const withProse = "/* Header.\n *\n * " + decl("break X -> Y fails")
+    + "\n *   (b) break Z -> W fails\n *\n * UNRELATED PARAGRAPH, not part of the control.\n */\n";
+  const extent = readControl(withProse);
+  t("a declaration inside a header reaches its continuation lines",
+    extent.text.includes("break Z"), true);
+  t("...and stops at the blank comment line, before unrelated prose",
+    extent.text.includes("UNRELATED PARAGRAPH"), false);
+
+  /* The other comment form, and its end. */
+  const slashes = "// " + decl("break X -> Y fails") + "\n//   (b) break Z -> W fails\nconst after = 1;\n";
+  t("a declaration written as a // run is read to the end of the run and no further",
+    [readControl(slashes).arms, readControl(slashes).text.includes("const after")], [2, false]);
+
+  /* NEVER THE SUM. Most suites state their control twice — prose in the header and
+     the one-line register entry — and they are the same control; crediting both
+     would be the generous direction wearing a different hat. */
+  const twice = "/* " + decl("break X -> Y fails") + "\n   (b) break Z -> W fails */\n"
+    + "/* " + decl("break X -> Y fails") + " */\n";
+  t("a control stated twice is recorded once at its fullest, never summed",
+    readControl(twice).arms, 2);
+
+  /* ---- and now on the REAL corpus, which is what the register actually reads. */
+  const registry = readdirSync(DIR).filter((f) => f.endsWith(".test.mjs"))
+    .map((f) => ({ f, c: readControl(readFileSync(join(DIR, f), "utf8")) }));
+  const read = registry.filter((r) => r.c);
+
+  t(`the register scan reaches the whole battery, not a file or two (${registry.length} suites)`,
+    registry.length >= 90, true);
+
+  /* THE DELTA ON REAL DATA: hide the marker in one real suite's source and that
+     suite alone leaves the register. An absolute count would be satisfied by a
+     detector that had stopped reading. */
+  const victimSrc = readFileSync(join(DIR, "capture.test.mjs"), "utf8");
+  t("the register reads capture.test.mjs's declaration out of its real source",
+    readControl(victimSrc) != null, true);
+  t("...and reads none once its marker is hidden, so the read above is a measurement",
+    readControl(victimSrc.replaceAll(CONTROL_MARKER, "NEGATIVE CONTROL(hidden):")), null);
+
+  /* The corpus exercises the two capabilities this detector was fixed to have.
+     If either of these ever goes to zero, the fix is still in the code but nothing
+     in the tree proves it works — which is how the workaround got in. */
+  const arms = read.reduce((n, r) => n + r.c.arms, 0);
+  const multiLine = read.filter((r) => r.c.lines > 1).map((r) => r.f);
+  t(`the register reads more arms than suites (${arms} arms across ${read.length} registered suites), so it is not stopping at one per suite`,
+    arms > read.length, true);
+  t(`the tree itself declares at least one MULTI-LINE control, so the block read is exercised by the corpus and not only by fixtures (${JSON.stringify(multiLine)})`,
+    multiLine.length > 0, true);
 }
 
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);

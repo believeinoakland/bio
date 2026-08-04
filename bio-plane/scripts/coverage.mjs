@@ -27,9 +27,15 @@
  *      nobody could answer which suites had been controlled and when. A suite
  *      declares its control in a header line and this instrument keeps the register.
  *
- * A suite declares its negative control with one line anywhere in its first 60 lines:
+ * A suite declares its negative control in a comment ANYWHERE in the file:
  *
  *     NEGATIVE CONTROL: <what to break> -> <what must then fail>
+ *
+ * and the declaration may run to as many lines and as many arms as it needs. The
+ * detector lives in `scripts/control-register.mjs` so the battery can test it —
+ * M0-9, after a version of it read a five-arm block as one arm and read two
+ * elaborate blocks as no control at all. Read that module's header before
+ * changing anything about where a declaration starts, ends, or how arms count.
  *
  * Exit code is 0 unless --strict is passed, under which any op unreachable through
  * the control plane, any check never named, or any suite with no declared control
@@ -39,6 +45,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { readControl } from "./control-register.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = join(ROOT, ".."); // the fleet lives BESIDE the plane, not inside it.
@@ -127,11 +134,12 @@ const checkRows = CHECKS.map((c) => ({
   named: new RegExp(c.replace(".", "\\.")).test(allText),
 }));
 
-const NEG = /NEGATIVE CONTROL:\s*(.+?)\s*(?:\*\/|$)/;
+/* M0-9: the whole file, the whole block, every arm — see control-register.mjs.
+   `arms` is REPORTED and never gated; the floor is still "declares one". */
 const controlRows = battery.map(({ file, src }) => {
-  const head = src.split("\n").slice(0, 60).join("\n");
-  const m = head.match(NEG);
-  return { suite: file, control: m ? m[1].trim() : null };
+  const c = readControl(src);
+  return { suite: file, control: c ? c.text : null, arms: c ? c.arms : 0,
+           declaredAtLine: c ? c.line : null, declarationLines: c ? c.lines : 0 };
 });
 
 /* ------------------------------------------------------------------ fleet */
@@ -168,7 +176,7 @@ function discoverFleet() {
     try { suites = readdirSync(join(dir, meta.testDir || "test")).filter((f) => f.endsWith(".test.mjs")); } catch { /* none */ }
     const suiteSrcs = suites.map((f) => ({ file: f, src: readText(join(dir, meta.testDir || "test", f)) }));
     const allSuiteText = suiteSrcs.map((s) => s.src).join("\n");
-    const control = suiteSrcs.some((s) => NEG.test(s.src.split("\n").slice(0, 60).join("\n")));
+    const control = suiteSrcs.some((s) => readControl(s.src) != null);
     const ops = surfaceOps.map((op) => ({ op, reached: surfaceCalled(op, allSuiteText) }));
     members.push({ name: meta.name || name, dir: name, ops, control, suites: suites.length, hasSurface: surfBody != null });
   }
@@ -214,10 +222,18 @@ if (JSON_OUT) {
   console.log(`  C-20.1 defect class exactly: the audit was clean because it was not looking.`);
   if (unnamed.length) console.log(`\n    ${unnamed.map((r) => r.check).join(" ")}`);
 
+  const arms = controlRows.reduce((n, r) => n + r.arms, 0);
+  const fullest = controlRows.reduce((a, b) => (b.arms > a.arms ? b : a), controlRows[0] || { arms: 0 });
   console.log(`\nNEGATIVE CONTROLS  ${controlRows.length - uncontrolled.length} of ${controlRows.length} suites declare one `
-    + `(${pct(controlRows.length - uncontrolled.length, controlRows.length)}%)`);
+    + `(${pct(controlRows.length - uncontrolled.length, controlRows.length)}%) · `
+    + `${arms} arms stated across the register · fullest ${fullest.arms} (${fullest.suite})`);
+  console.log(`  An arm is one stated "break this -> that must then fail" transition. The count is`);
+  console.log(`  REPORTED, never gated: the floor is still that a suite declares a control at all.`);
+  console.log(`  It is here so a declaration that got SHORTER is visible — a register that reads`);
+  console.log(`  green while quoting a fraction of what was checked is the generous direction (M0-9).`);
   if (uncontrolled.length) {
-    console.log(`\n  No declared control — add one line in the first 60 lines:`);
+    console.log(`\n  No declared control — add one, in a comment anywhere in the file, over as many`);
+    console.log(`  lines and arms as it needs:`);
     console.log(`    NEGATIVE CONTROL: <what to break> -> <what must then fail>`);
     for (const r of uncontrolled) console.log(`    ${r.suite}`);
   }

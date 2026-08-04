@@ -118,11 +118,12 @@ still completes green.
 
 The discipline exists and has never had a ledger, so nobody could answer *which*
 suites have been controlled, or when, or what broke. The register is now mechanical:
-a suite declares its control in a comment inside its first 60 lines, and the
-instrument keeps the tally.
+a suite declares its control in a comment **anywhere in the file**, over **as many
+lines and as many arms as it needs**, and the instrument keeps the tally.
 
 ```
 NEGATIVE CONTROL: <what to break in the subject> -> <what must then fail>
+   (b) <the next arm> -> <what that one broke>
 ```
 
 For example, for `reachability.test.mjs`, whose control is already recorded in prose
@@ -132,6 +133,38 @@ in D-104: `NEGATIVE CONTROL: let a governed refusal fall through to the failure 
 Declaring it is not running it. The line records **what was run and what it broke**,
 so a later session can re-run it in one step instead of re-deriving how to break the
 subject. Backfilling all 42 is one queued item; a new suite declares one at birth.
+
+**M0-9 corrected this section, and the correction is the point rather than a
+detail.** It used to say *inside its first 60 lines*, and the detector behind it
+(`/NEGATIVE CONTROL:\s*(.+?)\s*(?:\*\/|$)/` over a 60-line head window) had three
+measured failure modes, all in the generous direction:
+
+1. **A declaration whose arms continued onto a second line matched NOTHING**, so the
+   suite read as declaring *no control at all*. `.` does not cross a newline and there
+   was no `m` flag. This is what took the strict run from exit 0 to exit 1 at 96 of
+   98 when REC-48 gave two suites a **longer, better** control block — and REC-48 got
+   past it by moving its arms into a second comment the register never saw, which is a
+   convention holding an instrument up. (The re-measurement at integration blamed the
+   head window instead; that was wrong, and it is corrected here because the wrong
+   cause yields the wrong fix.)
+2. **The 60-line window** was a real defect too, just not that one: a marker past line
+   60 was invisible, and a declaration straddling line 60 was recorded as whatever
+   fragment fell inside — silently, while still counting as controlled. One suite in
+   the tree (`readingname.test.mjs`) had its fuller declaration outside the window all
+   along.
+3. **Only the first line was ever captured**, so a five-arm control entered the
+   register as one arm. `acquire.test.mjs` was registered with 2 of its 5 arms and
+   `hygiene.test.mjs` with 4 of its 9.
+
+The detector now lives in `bio-plane/scripts/control-register.mjs`, with its own
+header stating where a declaration ends (its comment's close, or a blank line — a
+declaration is a paragraph) and which one is recorded when a suite states its control
+twice (the fullest, **never the sum**). The register now also **reports the number of
+arms stated**, so a declaration that got shorter is visible; that count is reported and
+**never gated** — `--strict` still fails on exactly what it always failed on, a suite
+with no declaration at all. The detector's own reach is asserted at the foot of
+`hygiene.test.mjs`, on fixtures *and* on the real corpus, every arm a delta rather than
+an absolute count: a detector that finds nothing passes everything.
 
 ## What a queue item must satisfy before it is done
 
