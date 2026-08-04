@@ -6697,25 +6697,36 @@ export class Store extends DurableObject {
    * same honesty DEC-16 requires of an exhausted walk, for the same reason: a
    * quietly truncated home set is indistinguishable from nobody caring.
    *
-   * CONDITION IS DEFERRED, DECLARED, AND NOT STUBBED (HOLE-1). The class has no
-   * carrier and no producer in this plane; inventing one here would build the
-   * second half of a bridge. It is named in QUEUE_CLASSES_DEFERRED so the
-   * deferral is structural and a later item cannot forget it existed.
+   * CONDITION ARRIVED WITH REC-32 (2026-08-04), and HOLE-1 IS HALF CLOSED. It
+   * was deferred here — declared, never stubbed — until there was a real
+   * producer to declare, because emitting a stub would have built the second
+   * half of a bridge. Three of NOTIFICATIONS.md's catalogue entries now derive
+   * from facts the store ALREADY holds, on the same read and with no table and
+   * no stored state: see the REC-32 block below. The remaining catalogue kinds
+   * stay unbuilt, and that is a gap in the CATALOGUE (queuestate.mjs's
+   * vocabulary names all eleven) rather than a gap in this class.
    * ======================================================================== */
 
   /** The classes this producer EMITS. `class` is NOT NULL on the producer:
    *  queueFeed refuses to answer rather than hand a surface a classless item,
    *  which is the shape a `class TEXT NOT NULL` column would enforce if the
    *  feed were a table. It is not a table — it is derived on read — so the
-   *  constraint is enforced here, at the one place items are minted. */
-  static QUEUE_CLASSES = ["OBLIGATION", "FINDING"];
+   *  constraint is enforced here, at the one place items are minted.
+   *
+   *  THE ORDER IS THE RANK, and it is the doctrine's own: something a NAMED
+   *  PERSON must do outranks something the RECORD noticed, which outranks a
+   *  fact about OUR OWN MACHINERY. CONDITION is therefore last and was
+   *  appended rather than inserted (REC-32). */
+  static QUEUE_CLASSES = ["OBLIGATION", "FINDING", "CONDITION"];
   /** Declared, not stubbed. A class with no producer is named with the reason
-   *  it is absent, so "not built yet" is distinguishable from "forgotten". */
-  static QUEUE_CLASSES_DEFERRED = {
-    CONDITION: "HOLE-1: the CONDITION class has no carrier and no producer in this plane "
-             + "(NOTIFICATIONS.md scopes mute and acknowledge to it, and REC-21 owns that half). "
-             + "Emitting a stub would build the second half of a bridge, so it is declared absent.",
-  };
+   *  it is absent, so "not built yet" is distinguishable from "forgotten".
+   *
+   *  EMPTY as of REC-32, and the mechanism STAYS. CONDITION was its only entry
+   *  and it has a producer now, so the entry was REMOVED rather than reworded —
+   *  a deferral that outlives its own hole is a lie the next reader has to
+   *  disprove. The block remains because the next class that arrives without a
+   *  carrier must be declarable the same way. */
+  static QUEUE_CLASSES_DEFERRED = {};
   /** R3's depth bound, applied to the ancestor walk. The basis graph is a DAG
    *  enforced at write (REC-11), so a walk terminates by construction — but
    *  "terminates" is not "terminates inside a Durable Object's CPU budget",
@@ -6736,6 +6747,28 @@ export class Store extends DurableObject {
    *  aggregated proposal spans N instances and therefore N documents; deriving
    *  acts over all of them would make one queue read O(corpus). */
   static QUEUE_OPTION_SUBJECTS_MAX = 8;
+  /** REC-32. How many SUBJECT documents one CONDITION may gather before the
+   *  gathering itself is reported `undetermined`.
+   *
+   *  Only `governor-holding-host` needs it: a held host is a fact about a HOST,
+   *  and the documents it concerns are every document captured from that host,
+   *  which on a real municipal instance is the whole corpus. R3's discipline
+   *  applies unchanged — a derivation carries a bound, and EXHAUSTING the bound
+   *  is REPORTED (`subject_bound` joins the case set's reasons and the set
+   *  reads `undetermined`) rather than silently truncating the homes. Sixteen:
+   *  twice the option bound, because a home set is cheaper than an affordances
+   *  derivation and a case set that is undetermined for a two-document instance
+   *  would be undetermined for no reason at all. */
+  static QUEUE_CONDITION_SUBJECTS_MAX = 16;
+  /** REC-32 / REC-2 / D-61. The prefix `index.mjs` stamps on `author` (and on
+   *  `leases.actor`) for a MACHINE credential — `token:<class>` — deleting any
+   *  caller-supplied value first, so it is unforgeable and NAMED rather than
+   *  anonymous. It is the only durable trace this store holds of an unattended
+   *  writer, and it is what `capture-completed-unattended` reads. The literal
+   *  lives at the trust boundary in index.mjs; this constant is the reader's
+   *  copy, and the suite parses index.mjs's own source to prove the two agree
+   *  rather than trusting that they do. */
+  static QUEUE_MACHINE_AUTHOR_PREFIX = "token:";
 
   /** One step UP the graph from a node: the edges an ancestor is reached by.
    *
@@ -6893,6 +6926,328 @@ export class Store extends DurableObject {
     return [...byId.values()];
   }
 
+  /* ================== REC-32 · the CONDITION half of the feed ==============
+   *
+   * WHAT A CONDITION IS, and it is the reason this class exists separately: a
+   * fact about OUR OWN MACHINERY rather than about the world (NOTIFICATIONS.md,
+   * "The classes"). An overdue set of minutes is evidence about a public body;
+   * a governor holding a host is a limitation of our own run. Merging them
+   * would let our plumbing dilute the record's findings, which is the one thing
+   * the three-class split exists to prevent.
+   *
+   * DERIVED ON READ, NO TABLE, NO STORED STATE — the REC-20 precedent, and here
+   * it is not a shortcut but the only correct shape. Every one of these facts is
+   * ALREADY state on the producing subsystem's own row: the governor's
+   * `cooloff_until`, the capture session's existence and expiry, the manifest's
+   * author. A stored copy would be a second record of one fact and would go
+   * stale the instant the fact resolved — which is exactly the failure this
+   * item's negative control produces on purpose.
+   *
+   * SO RESOLUTION NEEDS NO MECHANISM. A condition clears when its underlying
+   * fact stops being true, for EVERY member at once, because there is nothing
+   * per-member to clear: the hold expires, the session is dropped, a member
+   * authors the document again. That is DEC-16's one-state-N-homes rule
+   * inherited rather than re-implemented, and it is why muting (personal) and
+   * resolving (shared) can sit on the same item without colliding.
+   *
+   * THREE KINDS, AND THEY ARE THE THREE WHOSE DATA IS ALREADY HERE. The
+   * catalogue names eleven CONDITION kinds (queuestate.mjs holds the
+   * vocabulary, transcribed from NOTIFICATIONS.md and still the single
+   * authority). These three are built because their producing subsystems
+   * already write the fact down; the other eight wait on producers that do not
+   * exist yet, and nothing here invents one. NOTHING IS COUPLED TO A MONITOR
+   * TICK: a later capture-fact producer adds kinds, it does not change these.
+   *
+   * THE VIEWER POSTURE IS REC-30'S, arm for arm:
+   *   - a condition ABOUT A BUNDLE the viewer may not see is WITHHELD WHOLE and
+   *     with no count, the posture an OBLIGATION about an invisible subject
+   *     takes — a count here would say a project exists;
+   *   - a condition about something that is NOT a bundle (a host, an
+   *     unregistered capture) stands for every member, because it names no
+   *     bundle to withhold; what is gated is which DOCUMENTS sit behind it;
+   *   - the homes come from #queueAncestors, so an ancestor the viewer may not
+   *     see is `undetermined`/`out_of_view` and never silently dropped.
+   * ======================================================================== */
+
+  /** The home set for a condition, with the ONE extra way a condition's walk can
+   *  come back incomplete that an obligation's cannot.
+   *
+   *  An obligation and a finding both start from a bounded, known set of
+   *  subjects. A condition about a HOST does not: the documents it concerns are
+   *  every document captured from that host. So the subject gathering carries
+   *  R3's discipline too — a bound, and an EXHAUSTED bound reported as
+   *  `subject_bound` rather than as a quietly shorter home set. Same rule as
+   *  `depth_bound`, same reason, and deliberately a DIFFERENT word, because
+   *  "we stopped walking up" and "we stopped gathering subjects" are different
+   *  facts and a surface should be able to say which happened. */
+  #conditionHomes(subjectIds, viewer, bounded = false) {
+    const homes = this.#queueAncestors(subjectIds, viewer);
+    if (!bounded) return homes;
+    return { ...homes, state: "undetermined", ungrouped: false,
+             reasons: [...new Set([...homes.reasons, "subject_bound"])].sort() };
+  }
+
+  /** Which documents in this record came from a HOST, viewer-gated and bounded.
+   *
+   *  `captured_locators` is the store's own index of "what we retrieved from
+   *  what address", written unconditionally for every capture, and `register`
+   *  is the trust root that says which bundle those bytes were registered
+   *  under. The join is the honest path from a host to the documents a member
+   *  is actually working on; site_assets would answer a narrower question (what
+   *  a host SERVED as furniture) and reuse_verdicts a narrower one still.
+   *
+   *  GLOB rather than LIKE, and on purpose: `_` is a LIKE wildcard and a legal
+   *  hostname character, so LIKE would silently widen the match, while GLOB's
+   *  metacharacters (`*?[`) cannot appear in a hostname at all. Four patterns
+   *  because normalizeAddress keeps the scheme and keeps a non-default port. */
+  #conditionBundlesForHost(host, viewer) {
+    const cap = Store.QUEUE_CONDITION_SUBJECTS_MAX;
+    if (typeof host !== "string" || !host) return { ids: [], bounded: false };
+    const seen = this.#bundleGate("r.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT DISTINCT r.bundle_id FROM captured_locators cl
+         JOIN register r ON r.capture_sha = cl.capture_sha
+        WHERE (cl.address_norm GLOB ? OR cl.address_norm GLOB ?
+            OR cl.address_norm GLOB ? OR cl.address_norm GLOB ?)
+          AND (${seen.sql})
+        ORDER BY r.bundle_id LIMIT ?`,
+      `https://${host}/*`, `http://${host}/*`,
+      `https://${host}:*`, `http://${host}:*`,
+      ...seen.args, cap + 1);
+    const ids = rows.map((r) => r.bundle_id);
+    return { ids: ids.slice(0, cap), bounded: ids.length > cap };
+  }
+
+  /** `governor-holding-host` (D-103, and D-95 which built the governor).
+   *
+   *  THE FACT IS THE GOVERNOR'S OWN, read at the same predicate the governor
+   *  itself admits on: `cooloff_until > now` is the exact test `governorAdmit`
+   *  applies before refusing with `cooling_off`, and the one index.mjs applies
+   *  before stopping a page's remaining subresources. This derivation does not
+   *  restate the rule, it asks it.
+   *
+   *  WHY IT EARNS AN ITEM AT ALL (NOTIFICATIONS.md rule 4 — a CONDITION is
+   *  status until a member can change it): because the member's conclusion
+   *  changes. "The source is down" and "we are pacing ourselves" are different
+   *  facts about the world and about us, and D-104 is explicit that they must be
+   *  distinguishable. A member who cannot tell them apart will either wait for
+   *  a source that is fine or chase a publisher who did nothing.
+   *
+   *  IT RESOLVES BY THE HOLD ENDING, and for everyone at once. There is no act
+   *  to take and none is offered: `options[]` are the acts available on the
+   *  DOCUMENTS behind it, derived exactly as every other item's are. */
+  #conditionsGovernorHolding(viewer, now) {
+    const out = [];
+    for (const r of this.#rows(
+      `SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`, now)) {
+      const subj = this.#conditionBundlesForHost(r.host, viewer);
+      const refusedAt = Number(r.last_refusal_at);
+      out.push({
+        id: `CONDITION::governor-holding-host::${r.host}`,
+        class: "CONDITION",
+        kind: "governor-holding-host",
+        case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
+        subject: { kind: "host", id: null, host: r.host,
+                   bundles: subj.ids.slice(0, Store.QUEUE_OPTION_SUBJECTS_MAX) },
+        summary: `our own pacing is holding ${r.host}: captures from it are PACED, not broken`,
+        detail: `the per-host governor is in cool-off for ${r.host} for another `
+              + `${Math.max(0, r.cooloff_until - now)}ms after `
+              + `${r.refusals} consecutive refusal${r.refusals === 1 ? "" : "s"}`
+              + (r.last_refusal_status ? ` (last status ${r.last_refusal_status})` : "")
+              + ". Nothing about the source is being claimed here.",
+        basis: { source: "host_governor", host: r.host,
+                 cooloff_until: r.cooloff_until, retry_in_ms: Math.max(0, r.cooloff_until - now),
+                 refusals: r.refusals, last_refusal_status: r.last_refusal_status ?? null,
+                 last_refusal_at: Number.isFinite(refusedAt) ? refusedAt : null,
+                 appetite_per_min: r.appetite_per_min ?? null,
+                 granted: r.granted, refused_total: r.refused_total,
+                 detail: "a condition is a fact about OUR OWN machinery (D-103/D-95): this instance's "
+                       + "governor is holding the host, which is distinguishable from the source being "
+                       + "unreachable and must not be read as evidence about the publisher. It clears "
+                       + "for every member when the hold expires; there is no act that ends it." },
+        age: Number.isFinite(refusedAt) && refusedAt > 0
+          ? { state: "determined", since: new Date(refusedAt).toISOString(),
+              ms: Math.max(0, now - refusedAt) }
+          : { state: "undetermined", reason: "no_refusal_instant",
+              detail: "the governor row is in cool-off but carries no instant for the refusal that "
+                    + "started it, so how long this has been true is not derivable" },
+        assignee: null,
+        assignee_role: null,
+        options: this.#queueOptions(subj.ids, viewer),
+      });
+    }
+    return out;
+  }
+
+  /** `partial-capture-outstanding` (CAPTURE-SCALING; the subresource ceiling).
+   *
+   *  THE FACT IS THE LEDGER'S OWN. `capture_sessions` is a work list with an
+   *  expiry: a row exists exactly when a capture ran out of subrequest budget
+   *  with support material still outstanding, and the capture path DROPS it the
+   *  moment nothing is left. So "a capture did not finish" is the existence of
+   *  an unexpired row and nothing else.
+   *
+   *  THIS READ DOES NOT PRUNE. `saveCaptureSession` and `loadCaptureSession`
+   *  delete expired rows on the way past, which is right for a write path and
+   *  wrong for this one: op=queue REPORTS and never mutates. An expired session
+   *  is filtered by the same instant comparison instead, in the same stamp
+   *  format those two methods write.
+   *
+   *  WHAT IT IS ABOUT. The primary capture is COMPLETE from the first tick and
+   *  its bytes are in the store; what is outstanding is support material. If
+   *  those bytes were registered under a bundle, that bundle is the subject and
+   *  the ordinary viewer posture applies — invisible subject, withheld whole. If
+   *  they were not, the session names no bundle at all (the intake doctrine's
+   *  own words), so there is nothing to withhold and the item stands ungrouped
+   *  about a capture rather than about a document. */
+  #conditionsPartialCapture(viewer, now) {
+    const out = [];
+    const nowIso = new Date(now).toISOString().split(".")[0] + "Z";
+    const redact = this.#bundleRedactor(viewer);
+    for (const r of this.#rows(
+      `SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, nowIso)) {
+      const reg = this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, r.primary_sha);
+      const bundleId = reg ? reg.bundle_id : null;
+      /* REC-30: a condition about a bundle this viewer may not see is withheld
+         WHOLE and with no count. The count is the leak. */
+      if (bundleId && redact(bundleId) === null) continue;
+      let outstanding = null, discovered = null, spent = null, parsed = true;
+      try {
+        const s = JSON.parse(r.state);
+        outstanding = Array.isArray(s.queue) ? s.queue.length : null;
+        discovered = Number.isFinite(s.discovered) ? s.discovered : null;
+        spent = Number.isFinite(s.spent) ? s.spent : null;
+      } catch { parsed = false; }
+      const createdMs = Date.parse(r.created);
+      out.push({
+        id: `CONDITION::partial-capture-outstanding::${r.session}`,
+        class: "CONDITION",
+        kind: "partial-capture-outstanding",
+        case: this.#conditionHomes(bundleId ? [bundleId] : [], viewer),
+        subject: bundleId
+          ? { kind: "bundle", id: bundleId, capture_sha: r.primary_sha, locator: r.locator }
+          : { kind: "capture", id: null, capture_sha: r.primary_sha, locator: r.locator },
+        summary: `the capture of ${r.locator} did not finish: support material is still outstanding`,
+        detail: "the primary document is captured and its bytes are in the store; the platform's "
+              + "subrequest ceiling was reached before its support material was fetched, and the "
+              + `remainder is parked for another tick (tick ${r.ticks}, expires ${r.expires}).`,
+        basis: { source: "capture_sessions", session: r.session, locator: r.locator,
+                 primary_sha: r.primary_sha, bundle_id: bundleId, ticks: r.ticks,
+                 created: r.created, updated: r.updated, expires: r.expires,
+                 outstanding: parsed ? outstanding : null,
+                 discovered: parsed ? discovered : null, spent: parsed ? spent : null,
+                 state_readable: parsed,
+                 detail: "the ledger is SCRATCH and not record: it names a work list with an expiry, "
+                       + "the primary capture is complete from the first tick, and the row is dropped "
+                       + "by the capture path itself when nothing is left. It therefore clears for "
+                       + "every member when the capture finishes or the session expires." },
+        age: Number.isFinite(createdMs)
+          ? { state: "determined", since: r.created, ms: Math.max(0, now - createdMs) }
+          : { state: "undetermined", reason: "unparseable_created",
+              detail: "the session row carries a created stamp this producer cannot read as an instant" },
+        assignee: null,
+        assignee_role: null,
+        options: bundleId ? this.#queueOptions([bundleId], viewer) : [],
+      });
+    }
+    return out;
+  }
+
+  /** `capture-completed-unattended` (D-61, closed by REC-2).
+   *
+   *  THE FACT IS THE MANIFEST'S OWN, and REC-2 is what made it exist. Before
+   *  REC-2 an unattended writer could not take a lease at all, so a daemon
+   *  could not finish a capture a member walked away from; REC-2's answer was a
+   *  NAMED machine actor, `token:<class>`, stamped by the control plane with the
+   *  caller's own value deleted first. That stamp lands on `manifest.author`,
+   *  and it is the only durable trace of an unattended write anywhere in this
+   *  store.
+   *
+   *  THE CONDITION IS THE SEQUENCE, NOT THE STAMP. A document written only ever
+   *  by a machine was never walked away from by anybody — the whole intake path
+   *  runs on a machine credential. What D-61 describes is a PERSON's document
+   *  finished by a daemon, so the test is: the LATEST snapshot was machine
+   *  written, and an EARLIER one was authored by a person. Both halves are
+   *  required and the basis names both.
+   *
+   *  IT RESOLVES WHEN THE MEMBER COMES BACK — that is, when a person authors the
+   *  document again and the latest snapshot is theirs. Shared, like every other
+   *  condition here, because it is a property of the manifest and not of a
+   *  reader.
+   *
+   *  ORDERING, and the one place this derivation does not simply copy an
+   *  existing idiom. #revisionKind reads the latest manifest entry as
+   *  `ORDER BY created DESC, snap_key DESC`, and `created` is the DOCUMENT's own
+   *  time (promote records meta.last_updated, never the wall clock — C-12.1
+   *  depends on that). The tiebreak here is `rowid DESC`, the store's own write
+   *  order, because `snap_key` is an opaque caller-chosen string and its lexical
+   *  order is not a clock: two snapshots stamped at the same instant would
+   *  otherwise be ordered by a hash. Same first key, a truthful second one. */
+  #conditionsCaptureUnattended(viewer, now) {
+    const out = [];
+    const machine = `${Store.QUEUE_MACHINE_AUTHOR_PREFIX}*`;
+    const seen = this.#bundleGate("m.bundle_id", viewer);
+    for (const b of this.#rows(
+      `SELECT DISTINCT m.bundle_id FROM manifest m
+         JOIN bundles bb ON bb.bundle_id = m.bundle_id
+        WHERE m.author GLOB ? AND (${seen.sql}) ORDER BY m.bundle_id`,
+      machine, ...seen.args)) {
+      const latest = this.#one(
+        `SELECT snap_key, kind, base, author, created, writer, operation FROM manifest
+          WHERE bundle_id=? ORDER BY created DESC, rowid DESC LIMIT 1`, b.bundle_id);
+      if (!latest || !String(latest.author || "").startsWith(Store.QUEUE_MACHINE_AUTHOR_PREFIX))
+        continue;                       // a person wrote last: the member came back
+      const started = this.#one(
+        `SELECT snap_key, author, created FROM manifest
+          WHERE bundle_id=? AND author IS NOT NULL AND author <> '' AND NOT (author GLOB ?)
+          ORDER BY created, rowid LIMIT 1`, b.bundle_id, machine);
+      if (!started) continue;           // never a person's document: nobody walked away
+      const createdMs = Date.parse(latest.created);
+      const title = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, b.bundle_id);
+      out.push({
+        id: `CONDITION::capture-completed-unattended::${b.bundle_id}`,
+        class: "CONDITION",
+        kind: "capture-completed-unattended",
+        case: this.#conditionHomes([b.bundle_id], viewer),
+        subject: { kind: "bundle", id: b.bundle_id },
+        summary: `${title && title.title ? title.title : b.bundle_id} was completed by an unattended `
+               + `writer after ${started.author} left it`,
+        detail: `${started.author} authored this document and an unattended writer (${latest.author}) `
+              + "wrote the most recent revision, which is the shape D-61 describes: a capture a member "
+              + "walked away from has completed. Nothing is claimed about whether the result is right.",
+        basis: { source: "manifest", bundle_id: b.bundle_id,
+                 completed_by: latest.author, completed_snap_key: latest.snap_key,
+                 completed_created: latest.created, completed_kind: latest.kind,
+                 writer: latest.writer ?? null, operation: latest.operation ?? null,
+                 started_by: started.author, started_snap_key: started.snap_key,
+                 started_created: started.created,
+                 detail: "the machine writer is NAMED, never anonymous: index.mjs deletes any "
+                       + "caller-supplied author and stamps token:<class> for a machine credential "
+                       + "(REC-2, closing D-61), so this is the record's own trace of an unattended "
+                       + "write and not an inference. It clears for every member when a person "
+                       + "authors the document again." },
+        age: Number.isFinite(createdMs)
+          ? { state: "determined", since: latest.created, ms: Math.max(0, now - createdMs) }
+          : { state: "undetermined", reason: "unparseable_created",
+              detail: "the manifest entry carries a created stamp this producer cannot read as an instant" },
+        assignee: null,
+        assignee_role: null,
+        options: this.#queueOptions([b.bundle_id], viewer),
+      });
+    }
+    return out;
+  }
+
+  /** The three generators, in catalogue order, and the ONE place a CONDITION
+   *  item is minted. Every one of them is a pure read. */
+  #queueConditions(viewer, now) {
+    return [
+      ...this.#conditionsGovernorHolding(viewer, now),
+      ...this.#conditionsPartialCapture(viewer, now),
+      ...this.#conditionsCaptureUnattended(viewer, now),
+    ];
+  }
+
   /** op=queue: the member's ONE feed.
    *
    *  `member` and `viewer` are BOTH stamped server-side at index.mjs and are
@@ -7025,6 +7380,14 @@ export class Store extends DurableObject {
       });
     }
 
+    /* ------------------------------------------ CONDITION · REC-32
+       The three generators, derived on read from the producing subsystems' own
+       facts. They are pushed BEFORE the mute loop deliberately: the admission
+       decision is asked of every item whatever its class, and CONDITION is the
+       only class a member may ever mute, so this is the first read in which
+       that machinery does anything on a live item. */
+    items.push(...this.#queueConditions(viewer, now));
+
     /* ------------------------------------------- REC-21 · the PERSONAL half
        ONE admission point, consulted for EVERY item whatever its class, over
        queuestate.mjs's pure decision. The class fence is at the WRITE (queueMute
@@ -7053,11 +7416,23 @@ export class Store extends DurableObject {
        the constraint a column would carry is enforced here, at the one place
        an item is minted — and it REFUSES rather than emitting a classless item,
        because a surface that receives one has no honest way to render it. */
-    for (const it of items)
+    for (const it of items) {
       if (!Store.QUEUE_CLASSES.includes(it.class))
         return { ok: false, reason: "NO_CLASS", id: it.id ?? null,
                  detail: "every queue item carries a class from " + Store.QUEUE_CLASSES.join(" | ")
                        + "; this producer refuses to emit one that does not" };
+      /* REC-32, the same constraint one level down and for the same reason.
+         queuestate.mjs's vocabulary is the SINGLE authority on what a CONDITION
+         kind is — it is what the mute's write fence refuses against — so a
+         generator here that emitted a kind the catalogue does not name would
+         produce an item no member could ever mute, silently. It is refused at
+         the mint instead, by name. */
+      if (it.class === "CONDITION" && classOfKind(it.kind) !== "CONDITION")
+        return { ok: false, reason: "NO_CONDITION_KIND", id: it.id ?? null, kind: it.kind ?? null,
+                 detail: "a CONDITION item's kind must be one queuestate.mjs's catalogue names as a "
+                       + "CONDITION (the same vocabulary op=queuemute's fence refuses against); this "
+                       + "producer refuses to emit a kind no member could mute" };
+    }
 
     /* Obligations first — something a named person must do outranks something
        the record noticed — then stable on id so the feed does not shuffle. */
@@ -7092,6 +7467,9 @@ export class Store extends DurableObject {
       counts: {
         obligation: out.filter((i) => i.class === "OBLIGATION").length,
         finding: out.filter((i) => i.class === "FINDING").length,
+        /* REC-32. Additive: REC-20's two counts are untouched and a reader that
+           knows nothing about conditions still gets the same numbers. */
+        condition: out.filter((i) => i.class === "CONDITION").length,
         ungrouped: out.filter((i) => i.case.ungrouped).length,
         case_undetermined: out.filter((i) => i.case.state === "undetermined").length,
         suppressed: suppressed.length,
