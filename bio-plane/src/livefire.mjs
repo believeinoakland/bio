@@ -110,7 +110,13 @@ export async function livefire(env, storeName) {
   {
     /* PUBLIC_TOKEN is absent: there is no public token class. A value left in
        that binding authenticates nothing, so there is no credential to vet. */
-    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"];
+    /* REC-33: DAEMON_TOKEN joins the list. The filter below is over CONFIGURED
+       tokens, so an instance running monitoring on the ADMIN_TOKEN fallback is
+       unaffected — and an instance that HAS bound the daemon credential gets the
+       same two hardenings applied to it, which is the point: the credential that
+       sits unattended longest is the one a published or stub value would hurt
+       most. */
+    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"];
     const configured = names.filter((n) => typeof env[n] === "string" && env[n].length > 0);
     const published = [];
     for (const n of configured) {

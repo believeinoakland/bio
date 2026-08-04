@@ -205,6 +205,11 @@ export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
  *   admin   every op, including promotion against the live store
  *   member  read, lease, allocid, promote within the member's group
  *   probe   read-only ops, plus writes confined to the scratch namespace
+ *   daemon  the UNATTENDED PATH, and nothing else: op=monitor and the archive
+ *           arm of op=acquire, against the LIVE store. Not scratch-confined,
+ *           because what it does is write the real record's reachability. See
+ *           `classify()` for DEC-37's reasoning and why it is named for the
+ *           path rather than for either of its two consumers.
  *
  * There is deliberately no public class. A credential handed to the public is
  * not a credential: to be public it must be widely distributed, and once
@@ -502,7 +507,12 @@ const OPS = {
   /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
      and no bundle state, because the doctrine is explicit that no intake path
      writes live state and the daemon and the member are writers like any other. */
-  acquire:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* REC-33: `daemon` is admitted HERE so the class can reach the op at all, and
+     is then confined to the ARCHIVE ARM inside the handler — the direct arm
+     refuses it by name. The confinement cannot live in this table, which knows
+     only the op, so the two halves are asserted together in
+     test/daemon-token.test.mjs: admitted here, refused there. */
+  acquire:    { classes: ["admin", "member", "probe", "daemon"], mutating: true  },
   /* Co-attestation. Asks a timestamp authority to attest that a capture existed
      at a claimed instant, which is the one part of provenance a group cannot
      fabricate for itself. */
@@ -510,7 +520,10 @@ const OPS = {
   /* The monitor. Checks whether a monitored source still serves what was
      captured and records the answer as a mechanical monitor-tick, inside the
      field set C-20.1 holds that operation to. */
-  monitor:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* REC-33: the FIRST of the daemon class's two verbs, and the whole of it —
+     op=monitor is admitted wholesale because the op IS the unattended job; it
+     has no second arm to confine the class to. */
+  monitor:    { classes: ["admin", "member", "probe", "daemon"], mutating: true  },
   /* A conformance pass over the whole store, run inside the Durable Object where
      the images already are. Read-only, paginated, and resumable by cursor. */
   audit:      { classes: ["admin", "member", "probe"],           mutating: false },
@@ -1247,11 +1260,44 @@ async function sha256Hex(v) {
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
+/* REC-33 / DEC-37. THE FOURTH CLASS, and what it is a class OF.
+ *
+ * Bob, 2026-08-04: "Sounds like we need a daemon token" — and the NAME is the
+ * ruling, not decoration. The entry that raised this proposed `MONITOR_TOKEN`;
+ * it was renamed because this credential drives TWO verbs, op=monitor and the
+ * archive arm of op=acquire, and naming it for one of its consumers would have
+ * invited the next unattended consumer either to mis-scope itself under a
+ * monitor name or to mint a FIFTH class. THE CLASS IS THE UNATTENDED PATH, NOT
+ * THE MONITOR. A later unattended consumer belongs here.
+ *
+ * WHY IT EXISTS AT ALL. Every monitor tick and every archive fallback on every
+ * installed instance authenticated as ADMIN_TOKEN — the root of trust §8.1
+ * builds every membership rule on — to do two narrow things. That credential is
+ * bound into an instance's configuration and sits there unattended
+ * indefinitely: the place a credential lives longest and travels furthest.
+ * Today a leak there is total instance compromise; scoped, it is a monitoring
+ * nuisance.
+ *
+ * WIDEN BY DECISION, NOT BY DRIFT. It is admitted to EXACTLY the two verbs it
+ * needs today (OPS.monitor, and op=acquire's archive arm only — the direct arm
+ * refuses it below), and the totality of that reach is asserted structurally
+ * over this table in test/daemon-token.test.mjs, so an op that admits `daemon`
+ * later fails that suite until somebody answers for it.
+ *
+ * ADMIN_TOKEN REMAINS THE FALLBACK in Store's `#monitorToken()`, so an instance
+ * installed before this class existed keeps monitoring rather than arming an
+ * alarm that 401s forever — DIST-1's constraint, and the reason the plane
+ * learns the class BEFORE any installer binds it.
+ *
+ * Ordered after admin deliberately: if an operator ever set both bindings to
+ * the same value, the caller gets the WIDER class it already holds rather than
+ * a silent, surprising narrowing. */
 async function classify(token, env) {
   if (!token) return null;
   if (token === env.ADMIN_TOKEN && (await liveToken(env.ADMIN_TOKEN))) return "admin";
   if (token === env.MEMBER_TOKEN && (await liveToken(env.MEMBER_TOKEN))) return "member";
   if (token === env.PROBE_TOKEN && (await liveToken(env.PROBE_TOKEN))) return "probe";
+  if (token === env.DAEMON_TOKEN && (await liveToken(env.DAEMON_TOKEN))) return "daemon";
   return null;
 }
 
@@ -1262,6 +1308,14 @@ async function classify(token, env) {
    REFUSAL, not by silent redirection: a caller that believes it addressed the
    live store must be told it did not, rather than quietly succeeding somewhere
    else. Defaulting with no store parameter is scratch. */
+/* REC-33: THE DAEMON CLASS IS DELIBERATELY NOT CONFINED HERE, and the absence
+   is the decision rather than an omission. Confining it to scratch is precisely
+   what makes PROBE_TOKEN the wrong credential for this job: monitoring writes
+   the REAL record's reachability and the archive fallback files the REAL
+   record's bytes, and a rehearsal of that in a different Durable Object records
+   nothing anyone will ever read. So the daemon class falls through to the
+   default and addresses `bio` like an operator does. What bounds it is the op
+   table — two verbs — and not the namespace. */
 function scopeFor(cls, url) {
   const asked = url.searchParams.get("store");
   if (cls === "probe") return asked && asked !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked)}` } : { name: SCRATCH };
@@ -1905,6 +1959,16 @@ export default {
           ADMIN_TOKEN: await liveToken(env.ADMIN_TOKEN),
           MEMBER_TOKEN: await liveToken(env.MEMBER_TOKEN),
           PROBE_TOKEN: await liveToken(env.PROBE_TOKEN),
+          /* REC-33: REPORTED, and deliberately NOT required below. An instance
+             that predates this class runs monitoring on the ADMIN_TOKEN
+             fallback and is HEALTHY; making the binding required would fail
+             every already-installed instance's own health check for holding the
+             posture it shipped with. Absence is a first-class state here, the
+             same way R2's is — and reporting it is what lets an operator SEE
+             whether the fallback is what is carrying their monitoring. */
+          DAEMON_TOKEN: (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN.length > 0)
+            ? await liveToken(env.DAEMON_TOKEN)
+            : "not configured",
         },
         r2Configured,
         schemaChars: SCHEMA.length,
@@ -2243,6 +2307,20 @@ export default {
       if (typeof env.CAPTURES?.put !== "function")
         return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
       const body = await req.json().catch(() => null);
+      /* REC-33: THE DAEMON CLASS'S CONFINEMENT, and it belongs here rather than
+         in the OPS table because the table knows only the op while the scope
+         Bob ruled is one ARM of it. The class was minted for the archive
+         fallback; the DIRECT arm is ordinary acquisition and a daemon
+         credential has no business filing bytes it was not sent for. Refused by
+         name, loudly, rather than by omission, so an operator who binds the
+         wrong credential into an intake script learns which credential is
+         wrong. Widen this by DECISION — the totality of the class's reach is
+         asserted in test/daemon-token.test.mjs. */
+      if (cls === "daemon" && body?.via !== "archive.org")
+        return json({ ok: false, reason: "NOT_PERMITTED", op, cls,
+          detail: "the daemon class reaches op=acquire only through the archive fallback "
+                + "(via: \"archive.org\"). Direct acquisition is a member's or an operator's act, and the "
+                + "unattended credential is scoped to the two verbs the monitoring path needs." }, 403);
       /* D-112. An archive-sourced capture names the DOCUMENT and lets the plane
          find the replay address, rather than being handed one. The lookup runs
          HERE, inside the same call that will file the bytes, for two reasons:
@@ -2260,7 +2338,10 @@ export default {
            is outside what the ruling permits, and the narrower surface also
            keeps a UI from growing a button that loads somebody else's
            infrastructure. The DIRECT arm of acquire is unaffected. */
-        if (cls !== "admin" && cls !== "probe")
+        /* REC-33 / DEC-37: "an operator or daemon credential" is now literally
+           true — the daemon class this sentence already described exists, and
+           it joins admin and probe here. This is one of its exactly two verbs. */
+        if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
           return json({ ok: false, reason: "NOT_PERMITTED", op, via: "archive.org",
             detail: "the archive fallback is a monitoring path: it runs under an operator or daemon credential, "
                   + "never a member's. Capture the document directly, or ask an administrator to run the fallback." }, 403);
