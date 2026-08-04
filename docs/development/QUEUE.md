@@ -908,7 +908,7 @@ drift class returns multiplied), D-107 (no scripted installer deploy with read-b
 D-54 (the installer does not detect the Workers plan). Activate when a fleet member is
 close to shipping, and not after it ships.
 
-## UI — DORMANT (pre-seeded with the case-making surfaces; its UI-1…UI-9 run is done; promoted when a RECORD slot frees)
+## UI — ACTIVE (promoted 2026-08-04 into the slot RECORD freed as it drained; UI-10 first — every other UI item depends on it)
 `civicos-ui/**`; the member surfaces of M8, per `UI-PLAN.md` and the interaction
 constructs **v0.2** (`BIO_Interaction_Constructs_v0_1.md` — the count came down to TWO
 constructs + a weight ladder + the TASK/QUEUE attention layer; MILESTONES M8 build-order:
