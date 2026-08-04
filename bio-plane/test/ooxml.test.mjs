@@ -22,7 +22,7 @@
 /* NEGATIVE CONTROL: in discriminate(), right after the readContainer ok-check, insert `return { ok:true, format: flavours[0].flavour, mainPart:null, confidence:"high", signals }` (skipping the [Content_Types].xml + main-part discrimination) -> the plain-ZIP assertion fails (zip expected, docx got), with the renamed-ZIP, declared-main-part-absent, OPC-unrecognized and xlsx/pptx discrimination assertions. RUN 2026-08-03: 13 of 97 failed; the container-walk, round-trip, rels, core-props and size-guard assertions still passed; restored -> 97 pass 0 fail. */
 
 import {
-  PROVISIONAL_OOXML_SIZE_BOUND_BYTES, sizeGuard, crc32 as modCrc32,
+  MEASURED_OOXML_TEXT_BOUND_BYTES, declaredTextBytes, sizeGuard, crc32 as modCrc32,
   hasZipMagic, normalizePartName, readContainer, readPart,
   CONTENT_TYPES_PART, parseContentTypes, partContentType,
   OOXML_FLAVOURS, discriminate,
@@ -344,17 +344,47 @@ console.log("\n--- docProps/core.xml: the evidentiary metadata (DEC-5), absence 
 
 console.log("\n--- the size guard: over the bound is a STATED text-undetermined, never silent truncation ---");
 {
+  /* CORRECTED for COFF-3's enactment of COFF-6 (MEASUREMENTS.md 2026-08-03).
+   * The original assertions here pinned PROVISIONAL_OOXML_SIZE_BOUND_BYTES —
+   * a picked 32 MiB CONTAINER bound flagged `provisional:true`. That was
+   * wrong once measured, on the METRIC and not just the number: container
+   * size is a bad proxy in both directions (the 84.8 MB all-images deck vs
+   * the 9.1 MB workbook holding 63.6 MB of sheet XML), so the guard now
+   * reads 20 MiB of DECLARED UNCOMPRESSED TEXT-PART bytes summed from the
+   * central directory before inflation, and the marker names the measured
+   * constant and the metric instead of a provisional flag. */
+  t("the measured bound is 20 MiB of declared uncompressed text-part bytes",
+    MEASURED_OOXML_TEXT_BOUND_BYTES, 20971520);
   t("under the bound passes", sizeGuard(1024), { ok: true });
-  t("exactly at the bound passes (over means OVER)", sizeGuard(PROVISIONAL_OOXML_SIZE_BOUND_BYTES).ok, true);
-  const over = sizeGuard(PROVISIONAL_OOXML_SIZE_BOUND_BYTES + 1);
+  t("exactly at the bound passes (over means OVER)", sizeGuard(MEASURED_OOXML_TEXT_BOUND_BYTES).ok, true);
+  const over = sizeGuard(MEASURED_OOXML_TEXT_BOUND_BYTES + 1);
   t("one byte over is refused", over.ok, false);
   t("as text-undetermined", over.text, "undetermined");
   t("with the reason named", over.why, "over_size_bound");
-  t("carrying both sizes", [over.size, over.bound], [PROVISIONAL_OOXML_SIZE_BOUND_BYTES + 1, PROVISIONAL_OOXML_SIZE_BOUND_BYTES]);
-  t("NAMING the constant so nobody mistakes it for a measurement", over.boundName, "PROVISIONAL_OOXML_SIZE_BOUND_BYTES");
-  t("and flagged provisional until COFF-6 measures", over.provisional, true);
+  t("carrying both sizes", [over.size, over.bound], [MEASURED_OOXML_TEXT_BOUND_BYTES + 1, MEASURED_OOXML_TEXT_BOUND_BYTES]);
+  t("NAMING the measured constant", over.boundName, "MEASURED_OOXML_TEXT_BOUND_BYTES");
+  t("and NAMING the metric — declared uncompressed text-part bytes, not container size",
+    over.metric, "declared_uncompressed_text_part_bytes");
   const custom = sizeGuard(200, 100);
-  t("the bound is a parameter (COFF-6 swaps the number, not the plumbing)", [custom.ok, custom.bound], [false, 100]);
+  t("the bound stays a parameter (a future re-measurement swaps the number, not the plumbing)",
+    [custom.ok, custom.bound], [false, 100]);
+
+  /* The metric's own plumbing: declared sizes summed from the CENTRAL
+   * DIRECTORY (before inflation), over the caller's text-part predicate. */
+  const wb = ooxmlFixture("xlsx", [
+    { name: "xl/worksheets/sheet1.xml", data: "<worksheet><sheetData/></worksheet>" },
+    { name: "xl/sharedStrings.xml", data: "<sst><si><t>hello</t></si></sst>" },
+    { name: "xl/media/image1.png", data: Buffer.from([0x89, 0x50, 0x4e, 0x47]), store: true },
+  ]);
+  const c = readContainer(wb);
+  const isText = (n) => /^xl\/(worksheets\/sheet\d+\.xml|sharedStrings\.xml)$/.test(n);
+  const d = declaredTextBytes(c, isText);
+  t("declaredTextBytes sums ONLY the text parts, from declared uncompressed sizes",
+    d.total, "<worksheet><sheetData/></worksheet>".length + "<sst><si><t>hello</t></si></sst>".length);
+  t("naming each part it measured", d.parts.map((p) => p.name).sort(),
+    ["xl/sharedStrings.xml", "xl/worksheets/sheet1.xml"]);
+  t("and the image contributed nothing (the COFF-6 finding: text cost, not container cost)",
+    d.parts.some((p) => p.name.includes("media")), false);
 }
 
 console.log("\n--- the module's crc32 agrees with the independent one here ---");
