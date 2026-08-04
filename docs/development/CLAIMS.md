@@ -1321,3 +1321,5 @@ expected: QUEUE.md REC-33 under DEC-37 (Bob: MINT IT, `DAEMON_TOKEN` not `MONITO
 accepts-when: as QUEUE.md REC-33. `npm run test:battery` green; `npm run test:coverage --strict` exit 0; NEGATIVE CONTROL run and recorded in the suite's own `NEGATIVE CONTROL:` line — grant the daemon class one op beyond its two and the suite names it — every file restored byte-identical after each arm. No push — CONDUCT integrates. DECISIONS.md is NOT written by this session.
 landed:
 released:
+
+released: 2026-08-04 — landed on main by CONDUCT (merge of worker e63d6cb). THE MISSING VERIFICATION RUN BY CONDUCT after the disk cleared: battery 95/95 (5088), --strict 129/129 + 95/95 controls — the worker's 81/95 was all runtime-start failures under ENOSPC, zero failed assertions, now confirmed. The viewerPredicate addition and the DENY read posture accepted with their reasoning; DEC-43 raised; DIST-2 queued; IC-18, I3 → 5.11.0. No other DEC.

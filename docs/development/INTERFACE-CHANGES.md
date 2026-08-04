@@ -747,3 +747,15 @@ reversal if a later reader wants RECONCILED §3.1's rename literally.
   `AGREE` — `teach()` renders the new sentences with no edit; the two suite riders
   ride UI-25's batch.
 - **Version:** I3 5.9.0 → **5.10.0** in `INTERFACES.md`.
+
+## IC-18 · I3: the `daemon` class + `op=acquire`'s arm confinement · PROPOSED, ACCEPTED AND CHANGED 2026-08-04 (one act, additive, recorded post-hoc from as-built code)
+
+- **Interface:** I3 (plane → UI). **The change:** REC-33/DEC-37 — a fourth credential
+  class (`daemon`, from DAEMON_TOKEN) admitted to exactly `op=monitor` and
+  `op=acquire`'s archive arm, with a new named refusal `NOT_PERMITTED` when a daemon
+  credential reaches acquire's DIRECT arm. Additive for every existing caller: no
+  class loses reach, no string is renamed, and the ADMIN_TOKEN fallback keeps every
+  installed instance working.
+- **Consumers:** UI. CONDUCT answers per the IC-12 mechanics, naming the proxy:
+  `AGREE` — no surface authenticates as a daemon; the class is the unattended path.
+- **Version:** I3 5.10.0 → **5.11.0** in `INTERFACES.md`.

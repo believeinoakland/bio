@@ -2766,6 +2766,30 @@ for CONDUCT to enact: (1) **D-54 changes character** — the installer no longer
   and must not be lost — see D-185.
 enacted:
 
+### DEC-43 · open
+raised: 2026-08-04 · CONDUCT (lifted from REC-33's report)
+for: bob
+question: When does `#monitorToken()`'s ADMIN_TOKEN fallback retire, and what tells us
+  it is safe to? The fallback is what stops installed instances breaking when the
+  plane learns the daemon class before any installer binds it (DEC-37's own
+  sequencing). It is also a silent, permanent licence for root-of-trust monitoring:
+  an instance that never binds DAEMON_TOKEN keeps spending ADMIN_TOKEN forever and
+  NOTHING reports it except an operator reading op=selftest.
+why it is Bob's: it decides whether DEC-37's containment is real in the field or
+  advisory. The fleet-visibility half is D-116's version-authority problem wearing a
+  credential, and the posture is his.
+provisional: the fallback stays (nothing breaks, containment is opt-in per instance).
+alternative: (a) sunset it when DIST-2 lands and instances have had one update cycle;
+  (b) keep it but make the fleet visible — a report of which instances still run on
+  the fallback, so the gap is a number rather than a hope; (c) leave it indefinitely
+  and accept the ruling is advisory in the field.
+recommendation: (b) then (a) — measure who is still on the fallback before removing
+  it, because removing it blind re-inerts monitoring on any instance that missed the
+  update, which is the failure DIST-1's constraint exists to prevent, arriving from
+  the other side.
+reversal cost: low either way while the fallback stands; high if it is removed before
+  the fleet is visible.
+
 ## Answered, awaiting enactment
 
 _(none)_
