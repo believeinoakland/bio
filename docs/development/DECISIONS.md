@@ -2326,6 +2326,52 @@ RECOMMENDATION SHARPENED 2026-08-04, at Bob's request ("you're more tuned into t
   What I would NOT do: mint a separate falsifier per ground. It reads as more honest and is
   less — it converts one checkable compound falsifier into several partial ones, none of
   which refutes the finding, and a reader who breaks one would reasonably believe they had.
+BOB'S CONSTRAINT, 2026-08-04, and it governs the BUILD rather than the meaning: *"the
+  average CivicOS [member] doesn't have a philosophy degree. So the nuances of multiple
+  claims and falsifiers will be lost on the average user. So the system needs to support the
+  user through the experience so that what they end up with is correct and proper. The flip
+  side… we don't want a user to be able to game the system by packaging the legs across
+  different claims to beneficially raise or lower the strength to match their bias."*
+  **BOTH HALVES ARE SATISFIED BY ONE MOVE: the member is never asked for the STRUCTURE,
+  only for CONSEQUENCES, and the structure is derived from their answers.** The elicitation
+  design, decided by this session as mechanism (Bob's 2026-07-31 delegation) and binding on
+  REC-11/REC-12 and the UI-11/UI-12 surfaces:
+  1. **NEVER show AND / OR / disjunction / grounds — not even as tooltips.** The vocabulary
+     is the analyst's, not the member's, and a member who must learn it to state a finding
+     will state a worse finding.
+  2. **ASK ONE CONSEQUENCE QUESTION PER LEG, in the member's own terms:** *"If this turned
+     out to be wrong, would your answer still hold?"* Anyone can answer that about their own
+     reasoning without vocabulary. "No, my answer falls" → the leg is NECESSARY (AND). "Yes,
+     because of these others" → it is INDEPENDENTLY SUFFICIENT with them (an OR branch).
+     The relationship Bob ruled is ENTAILED by the answers; it is never asked for.
+  3. **SHOW THE DERIVED FALSIFIER BACK, in plain words, and let them correct it.** *"Your
+     answer fails only if ALL of these fail: …"* versus *"…fails if ANY of these fails: …"*.
+     **Reading a falsifier is enormously easier than authoring a structure**, and it is the
+     one check that catches a mis-elicited structure: a member who reads it and says "no,
+     that's not right" has just corrected the model without knowing the model exists.
+  4. **THE DEFAULT IS AND, AND THAT IS THE ANTI-GAMING KEYSTONE.** An unstructured basis
+     stays implicit-AND — weakest leg — which is the CONSERVATIVE direction. Independent
+     sufficiency must be affirmatively claimed, per branch. So strengthening a finding by
+     repackaging requires an ACT that carries the member's name; it can never happen by
+     omission, by default, or by a member simply not understanding the question.
+  5. **THE STRUCTURE IS AUTHORED BEFORE THE STRENGTH IS SHOWN.** This is the ordering rule
+     and it is the difference between a design that resists bias and one that invites it: a
+     member shown the grade first will reorganise legs against it, exactly as a prefilled
+     justification invites a rationalisation (the J-construct's never-prefill rule, one
+     construct over). Consequence first, arithmetic second.
+  6. **RESTRUCTURING AFTER SEEING THE STRENGTH IS LEGAL, RECORDED AND ATTRIBUTED** — never
+     blocked. A member may legitimately realise their structure was wrong. The defence is
+     visibility, not prohibition: it is a revision with an authored reason, and the system
+     may NOTICE the pattern (a weak leg moved into its own branch immediately after a
+     strength drop) and surface it to the member and the reader. Derived informs, authored
+     binds (D-90) — a machine may not refuse the act and must not hide it.
+  7. **AND THE READER IS THE FINAL CHECK, which is what makes this safe to ship**: the
+     published case shows each branch and its legs, so "these were independently sufficient"
+     is a claim ANY reader can test against the legs themselves. Bias survives a private
+     judgment; it does not survive a published structure with the member's name on it.
+  **Falsifiable, per the constructs doctrine:** if members routinely answer the consequence
+  question one way and then correct the derived falsifier, the elicitation is wrong and the
+  question needs rewording — measure it on the first real inquiries rather than predicting it.
 
 ### DEC-33 · answered
 raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)
@@ -2483,7 +2529,7 @@ for CONDUCT to enact: queue CPDF-11 (in the BOB INBOX 2026-08-04); fund no exter
   measurement" — the provenance-chain and image-region requirements are unchanged.
 enacted: 2026-08-04 · CONDUCT — the inbox entry drained: CPDF-11 queued and spawned out of band (measurement, no slot, nothing funded); CPDF-10's placement re-based in place (in-account default pending GO; external the escalation tier; confidence-where-supplied with the forbidden pseudo-confidence and the earnable measured self-refusal recorded); the renderer named as CPDF-12 behind CPDF-11's verdict. Reasoning in DEC-35 itself, research/OCR-SERVICE-SURVEY.md's Cloudflare section, and QUEUE.md (CPDF-10/11/12).
 
-### DEC-36 · open
+### DEC-36 · answered
 raised: 2026-08-03 · CONDUCT (lifted from REC-20's report — the worker built the instruction and named the tension)
 for: bob
 question: When a queue item's ancestor set includes a case the member CANNOT SEE, the
@@ -2506,7 +2552,24 @@ recommendation: keep the shipped behaviour. The existence bit leaks structure on
   complete one) on the exact surface members open by habit. If Bob rules the other
   way, reversal is one predicate and migrates nothing.
 reversal cost: one predicate, no migration, no stored state either way.
-### DEC-37 · open
+response: **ADOPTED — keep the shipped behaviour.** Bob, 2026-08-04: *"Let's go with
+  CONDUCT's recommendation."* The member learns that their item participates in
+  something not visible to them, and nothing else — no id, no title, no state, no
+  count. D-15's fence yields exactly one bit, and only to members already invited to
+  something touching the item; full silence would resurrect DEC-16's named failure (a
+  truncated set indistinguishable from a complete one) on the surface members open by
+  habit. The two rulings are reconciled by scope rather than by one overriding the
+  other: D-15 governs IDENTITY and DETAIL (absolute), DEC-16 governs COMPLETENESS
+  (the fact that something is missing is stated, never the thing itself).
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; the contract behaviour REC-20 shipped stands
+  unchanged, so nothing migrates.
+for CONDUCT to enact: no code change — record the ruling against REC-20's
+  `out_of_view` behaviour so a later session does not read it as an unresolved
+  tension and "fix" it toward silence. Add the scope reconciliation above to
+  `BIO_Interaction_Constructs_v0_1.md`'s QUEUE section beside DEC-16's doctrine.
+enacted:
+### DEC-37 · answered
 raised: 2026-08-04 · CONDUCT (lifted from DIST-1's report)
 for: bob
 question: Is a scoped MONITOR_TOKEN worth opening a FOURTH token class in the plane's
@@ -2532,6 +2595,30 @@ recommendation: mint the class. The unattended daemon path is exactly where a
   existing instance breaks.
 reversal cost: low before instances carry the token; after, removing the class
   re-inerts monitoring on updated instances until a second update rebinds.
+response: **MINT IT.** Bob, 2026-08-04: *"Sounds like we need a daemon token."*
+  **AND HIS NAMING IS ADOPTED OVER THE ENTRY'S — `DAEMON_TOKEN`, not
+  `MONITOR_TOKEN`**, and it is not cosmetic: the credential drives the archive arm of
+  `op=acquire` as well as `op=monitor`, so naming it for one of its two consumers
+  would have invited the next unattended consumer to either mis-scope itself under a
+  monitor name or mint a FIFTH class. The class is the UNATTENDED PATH, not the
+  monitor. Scope it to exactly the two verbs it needs today and widen by decision, not
+  by drift.
+  The reasoning that carries it: this credential is bound into every installed
+  instance's configuration and sits there unattended indefinitely — the place a
+  credential lives longest and travels furthest. Today a leak there is total instance
+  compromise; scoped, it is a monitoring nuisance. That containment is worth one
+  well-understood widening of an auth surface that is otherwise deliberately narrow.
+  ADMIN_TOKEN stays as a FALLBACK so no installed instance breaks (REC-33's recipe),
+  and DIST-1's constraint is binding: the installer must never bind a token the plane
+  cannot classify — an armed alarm firing 401s forever is worse than the fallback, so
+  the plane learns the class BEFORE any installer binds it.
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry and REC-33's scope.
+for CONDUCT to enact: unblock REC-33; rename its `MONITOR_TOKEN` to `DAEMON_TOKEN`
+  throughout, with the two-consumer reasoning above recorded at `classify()` so the
+  next unattended consumer knows the class is the PATH and not the verb; sequence the
+  plane's recognition of the class BEFORE the installer binds it (DIST-1).
+enacted:
 ### DEC-39 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-38's report)
 for: bob
