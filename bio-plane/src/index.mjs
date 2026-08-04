@@ -9,8 +9,12 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    public hosts only, no credentials in the authority, no bare IPs, no localhost.
    It is the one bound between a member typing a URL and this Worker fetching it,
    so it must be the same function the checker uses on the queue. */
+/* REC-50: `EARNED_CAPTURE_CEILING` arrives on the same import for the same
+   reason — op=acquire STAMPS the direct-fetch capture grade, and the letter it
+   stamps is the ceiling `checkEarnedLeg` enforces rather than a copy that
+   happens to agree. One value, read where it is refused. */
 import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
-         completenessFields, sectionText } from "../checks/bio-checks.mjs";
+         completenessFields, sectionText, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
 /* REC-22 / DEC-34: the container serialiser. The manifest REC-14 writes carries
    a `layout` block that says how the parts assemble; this module reads it and
    writes the zip, so nothing about the container's shape is decided twice. */
@@ -3279,8 +3283,30 @@ export default {
             /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
                is one more party between us and the publisher, so it grades
                below a direct capture of the same document even though the
-               bytes may be identical and the method just as careful. */
-            grade: via === "archive.org" ? "C" : "B",
+               bytes may be identical and the method just as careful.
+               *
+               REC-50: THE DIRECT-FETCH LETTER IS THE ENFORCED CEILING, so it is
+               that value and not a copy of it. `EARNED_CAPTURE_CEILING` is what
+               `checkEarnedLeg` refuses a capture leg for exceeding, and R2-g's
+               doctrine — "Grade B is what a direct capture by this instance is
+               worth" — is a statement ABOUT this stamp. A typed letter here
+               agreed with the rule at zero cost and would have drifted silently
+               the moment the ceiling moved, handing a caller a grade the gate
+               will not accept: the same defect REC-43 closed on the attest
+               fence and REC-48 on this op's own `note:`, one field over.
+               *
+               THE ARCHIVE-SOURCED LETTER IS DELIBERATELY STILL TYPED, and that
+               is open BY DECISION rather than by oversight. Naming it would
+               assert what an archive-sourced capture EARNS and whether that is
+               a ceiling or a fixed grade — a second capture-axis doctrine
+               value, which is a ruling and not a worker's or CONDUCT's to make
+               by writing a constant (QUEUE.md REC-50). What IS already ruled is
+               the ORDERING stated at the top of this comment, and
+               acquire.test.mjs pins that the typed letter still ranks strictly
+               below the ceiling — so if the ceiling ever moves onto or past it,
+               the suite says so by name instead of the record quietly claiming
+               an archive capture is worth as much as a direct one. */
+            grade: via === "archive.org" ? "C" : EARNED_CAPTURE_CEILING,
             /* WHO SERVED US THESE BYTES, which is not who issued the document.
                Bob, 2026-07-31: recording that the capture came through the
                Internet Archive is proper even while the CONTENT authority is
