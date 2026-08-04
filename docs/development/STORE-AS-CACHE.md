@@ -117,6 +117,136 @@ precisely the case CPDF-5 measured for PDFs (Tier 1 partial at ~88%) and the cas
 over-envelope document lands in. Recorded below as a widening of D-129 rather than a new
 row, since it is the same defect seen with better resolution.
 
+## The acquisition side: what the caching literature says, and the one exact precedent
+
+### Cloudflare already made this substitution, and documented why
+
+**Always Online does not serve from Cloudflare's own cache when an origin is unreachable
+— it serves from the Internet Archive**, and the documented reason is precisely the
+distinction this file is built on: *"The Internet Archive does not consider your origin
+server's cache-control header"* — **because the Internet Archive archives rather than
+caches content.**
+
+Two details make it the closest precedent available. It fires only on origin-unreachable
+conditions (520–527), **not** on a 404 or 500 from a live origin — so it distinguishes
+*the origin is gone* from *the origin answered negatively*. **BIO's archive fallback
+already draws that exact line**, gating on a source going dark rather than on an error
+response. The design was right and now has a production precedent behind it.
+
+Scale of the problem, peer-reviewed: Klein et al., *Scholarly Context Not Found: One in
+Five Articles Suffers from Reference Rot* (PLOS ONE 9(12), 2014) — over 1M references
+across 3.5M articles; one in five STM articles affected, seven in ten among those citing
+the web. **They separate LINK ROT (the URI stops resolving) from CONTENT DRIFT (the URI
+resolves and the content changed)** — two different states, and BIO needs both.
+
+### DNS is the only system that fully separates the four states — and its authority rule is BIO's doctrine
+
+RFC 2308 grades negative answers by confidence and gives each a different retention rule:
+
+| State | DNS form | Retention rule |
+| --- | --- | --- |
+| the name does not exist | NXDOMAIN | SOA-derived; *"one to three hours… work well"*, over a day *"problematic"* |
+| exists, but not this record | NODATA | same |
+| **we asked and could not tell** | SERVFAIL | **MUST NOT cache longer than 5 minutes** |
+| the server was unreachable | dead server | **MUST NOT be deemed dead longer than 5 minutes** |
+
+**And §5 is the sentence that matters most for this project: *"Negative responses without
+SOA records SHOULD NOT be cached."*** The SOA is the proof of AUTHORITY that turns a
+negative answer into a FINDING rather than an absence of finding. An absence with no
+authority attached **is not recordable at all**.
+
+That is BIO's own doctrine arrived at independently by a standards body in 1998: *an
+equality that costs nothing to produce is not evidence*, and *undetermined must be
+STATED*. A "we looked and found nothing" that cannot say WHO said so is exactly the
+costs-nothing outcome the record already refuses.
+
+HTTP encodes the same confidence split more weakly: **410 is *we looked, it is
+deliberately gone*; 404 is *we looked, it is not here, and we do not know why*; 5xx is
+*we could not tell*; and no cache entry at all is *we have not looked*** — for which HTTP
+has no wire representation, which is exactly the conflation BIO must avoid.
+
+**So the state model is FOUR, not two:** `NEVER_LOOKED` · `LOOKED_ABSENT` ·
+`LOOKED_INDETERMINATE` · `PRESENT`. D-129 has two; SWH's crawl statuses add `partial`;
+this adds the retention grading and the authority rule.
+
+**Graded retention, following RFC 2308 and CloudFront:** definitive absence may be held
+for hours; ambiguous absence for minutes; **an indeterminate result must never inherit a
+definitive lifetime.** CloudFront's error-caching floor is 10 s; Google Cloud CDN
+publishes 120 s for 404/410/451 and 60 s for 405/501.
+
+### HTTP deliberately gave up the field BIO needs, so BIO must invent it
+
+RFC 9111 §5.5 **obsoleted the `Warning` header**, including `110 Response is stale`, *"as
+it is not widely generated or surfaced to users."* And §5.1: *"lack of an Age header
+field does not imply the origin was contacted."*
+
+**So there is no standard way to say "this is what I hold, I last verified it on this
+date, and I have not been able to reach the source since."** That is precisely what an
+evidence record must say. Memento's `Memento-Datetime` is the closest published
+semantic — *"constitutes a promise that the resource state reflected in the response will
+no longer change"* — and it is an assertion about a past observation rather than a
+permission to assume currency. BIO's `capture_sha` plus its provenance chain already make
+that promise; what is missing is the LAST-VERIFIED half.
+
+### Content addressing removes the invalidation obligation, NOT the capacity obligation
+
+A tempting inference to avoid, and the research names the counter-example. Bazel's Remote
+Execution API addresses every blob by digest **and still says *"The lifetime of entries in
+the CAS is implementation specific"***, with `FindMissingBlobs` existing so clients can
+detect evicted blobs and re-upload; the common server does plain LRU. Permanently valid
+key, still-evictable storage.
+
+**No source anywhere states that content addressing makes eviction optional.** Systems
+that refuse to evict replace eviction with **reachability** (Nix GC roots, git refs) or
+**explicit intent** (IPFS pins, S3 Object Lock legal holds) — never with infinite storage.
+And the anti-pattern to refuse by name: nginx's `inactive` evicts cached data *"regardless
+of their freshness"* after ten minutes without access. An archive must never inherit that
+from a caching proxy.
+
+**LOCKSS is the model to point at** (Maniatis et al., SOSP '03, best paper): *"a large
+number of independent, low-cost, persistent web caches that cooperate to detect and repair
+damage to their content by voting in opinion polls"* — **a cache in mechanism, an archive
+in policy**, with an explicitly multi-decade adversary model. That phrase is the whole
+recommendation of this document in five words.
+
+### Bounding the objective-driven fetcher — and the gate it must pass
+
+The focused-crawling literature gives BIO a measurable go/no-go rather than an opinion.
+Chakrabarti et al. (WWW8, 1999) report **harvest rates of 30–40%** and state the test
+plainly: *"This harvest ratio must be high, otherwise the focused crawler would spend a
+lot of time merely eliminating irrelevant pages, and it may be better to use an ordinary
+crawler instead."* Cho, Garcia-Molina & Page (WWW7, 1998) define the driving query
+directly: *"A query Q drives the crawling process."*
+
+**Diminishing returns are steep and measured.** Chrome caps speculative prefetch at
+50 (eager) / 2 (conservative, FIFO) and says outright that *"over-speculation has a clear
+cost to users."* Google Search's own deployment: prefetching the top two results improved
+LCP by 67 ms; extending past the top two returned **7–9× less** and was not enabled on
+mobile at all.
+
+**Noria (OSDI '18) is the closest architectural analogue** — a declared query creates and
+incrementally maintains its own materialisation, and operators lacking state issue an
+**upquery** upstream to derive exactly the missing records. That is read-through driven by
+a declaration rather than by traffic, which is what Bob is describing.
+
+**And the warming hazard, measured at Facebook:** warming a cold cache from a *warm peer*
+rather than the origin produced items that could stay *"indefinitely inconsistent"*, fixed
+only by a two-second hold-off that the authors describe candidly as probabilistic. Any
+BIO path that populates from another instance rather than the source inherits this, and
+must state the residual rather than claim it away.
+
+### Two rules from the security literature that apply to addressing
+
+- **"Avoid ever rewriting the cache key. Instead, rewrite the actual request"** (Kettle,
+  *Web Cache Entanglement*, 2020) — key-derivation is where cache bugs live. Web Cache
+  Deception (USENIX Security 2020, 340 vulnerable sites in the Alexa top 5K) is a
+  key-derivation bug, not a content bug: the cache and the origin disagree about what a
+  URL means.
+- **A poisoned negative answer propagates further than a poisoned positive one.** RFC 8020
+  lets one NXDOMAIN prove an entire subtree absent, and gates that inference on DNSSEC
+  validation for exactly this reason. If BIO ever generalises an absence ("nothing exists
+  under this path"), the generalisation needs the same authority gate.
+
 ## Four findings that bear on things BIO has already built
 
 These came out of the survey and are not part of the cache question, but they are about
@@ -220,14 +350,38 @@ to design the capability with the bias construct (DEC-46) rather than after it.
 
 1. **Adopt the framing as READ-THROUGH ACQUISITION OVER A WRITE-ONCE ARCHIVE**, with the
    four non-import rules above written as doctrine. Costs nothing; prevents the expensive
-   misreading.
-2. **Widen D-129 to the SWH state set** (`not_found` / `failed` / `partial` / `full`
-   equivalents). `partial` is the state BIO most needs and already meets in practice.
+   misreading. LOCKSS's shape is the one-line statement of it: **a cache in mechanism, an
+   archive in policy.**
+2. **Widen D-129 to FOUR STATES with GRADED RETENTION, and adopt the authority rule.**
+   `NEVER_LOOKED` · `LOOKED_ABSENT` · `LOOKED_INDETERMINATE` · `PRESENT`, plus SWH's
+   `partial`. Definitive absence may be held for hours, ambiguous for minutes, and **an
+   indeterminate result must never inherit a definitive lifetime**. And RFC 2308 §5's
+   rule, which is BIO's own doctrine in another vocabulary: **an absence with no authority
+   attached is not recordable** — it is the costs-nothing outcome the record already
+   refuses.
 3. **Add the zero-payload OBSERVATION record** (WARC `revisit` shape), generalising the
    `reused_from` and CAP-4 outcomes into one construct that always keeps the
-   back-reference to the original capture and its date.
-4. **Measure before designing the objective-driven fetcher** — corpus size, the DO
-   storage curve against the 10 GB ceiling, and the real cost per miss in Class A writes.
-5. The element-reference / content-extent work (D-164, D-123, D-161, D-163) is the SWH
+   back-reference to the original capture and its date. **And add the LAST-VERIFIED
+   half**, because HTTP obsoleted the header that would have carried it: the record must
+   be able to say *held since T1, last verified T2, source unreachable since T3*.
+4. **Measure before designing the objective-driven fetcher**, and the literature supplies
+   the gate rather than an opinion: **the harvest rate**. Below roughly 30–40% relevant
+   fetches, a focused crawler is worse than an ordinary one, by its authors' own test.
+   Measure alongside it: corpus size, the DO storage curve against the 10 GB ceiling, and
+   cost per miss in Class A writes. **Cap the speculative queue from the first version** —
+   every system that ships goal-driven warming caps it, and Google Search's own numbers
+   show a 7–9× drop-off past the highest-confidence candidates.
+5. **Never populate from another instance without a hold-off and a stated residual.**
+   Facebook measured *"indefinitely inconsistent"* items from warm-peer population. Any
+   BIO import or mirror path inherits this.
+6. The element-reference / content-extent work (D-164, D-123, D-161, D-163) is the SWH
    qualifier construct, and the research is independent evidence for solving it once.
    It stays PARKED until Bob reopens it; this document only records the corroboration.
+
+## The one-line version, for a reader who reads nothing else
+
+**Cloudflare's Always Online already made this exact substitution and documented the
+reason: when the origin is gone it serves from the Internet Archive rather than from its
+own cache, *because the Internet Archive archives rather than caches*.** That is the whole
+finding. Bob's framing is right about the read path and must not be allowed to reach the
+retention policy.
