@@ -42,7 +42,11 @@ import { createHash } from "node:crypto";
    `cloudflare:workers` — so they load in the node harness, which is the
    precedent REC-43 set for the attest fence. */
 import { acquireGradeNote, ACQUIRE_GRADE_NOTE, ATTEST_FENCE } from "../src/affordances.mjs";
-import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
+/* REC-50: `BASIS_GRADES` joins them — the array `checkEarnedLeg` compares
+   against, so the ordering this suite pins between the two stamped letters is
+   the record's own ranking rather than a second statement of it. */
+import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
+         BASIS_GRADES } from "../checks/bio-checks.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -110,10 +114,110 @@ console.log("\n--- the grade is honest ---");
    as long as the op has existed. The literal wire pin is KEPT — it is the claim
    that this plane says B today, and it is what would catch a silent doctrine
    move — and the pins that were doing nothing are replaced by the ones that make
-   the sentence a FUNCTION of the rule. */
+   the sentence a FUNCTION of the rule.
+   KEPT AND RE-JUSTIFIED 2026-08-04 (REC-50), because its job changed under it.
+   While the plane STAMPED "B" this pin and the one below it said the same thing
+   twice; now that the stamp is `EARNED_CAPTURE_CEILING` it is the only assertion
+   in the battery that still witnesses the VALUE — what this plane answers a
+   caller TODAY — while the one below witnesses the RELATION to the rule. A
+   doctrine move is supposed to fail here, loudly and by name, and be answered by
+   a session correcting it with a reason rather than by a field that followed the
+   move silently. */
 t("acquire claims the ceiling letter and never the one above it", a.document.capture.grade, "B");
 t("and the letter it claims is the one the gate ENFORCES, not a copy that agrees today",
   a.document.capture.grade, EARNED_CAPTURE_CEILING);
+
+/* THE STAMPED GRADE IS COMPOSED FROM THE ENFORCED RULE, WHICH IS REC-50 — and
+ * this block is the pin that BITES, because the two wire pins above cannot see
+ * the difference between a composition and a hand-typed letter that agrees with
+ * it today. REC-43 measured that on the attest fence and REC-48 measured it
+ * again on this op's own `note:`: an identical copy satisfies every behavioural
+ * assertion at zero cost, and only a STRUCTURAL pin can tell them apart. Nor
+ * does hygiene.test.mjs's sweep reach this one — that sweep looks for a letter
+ * beside the WORD "Grade", and a bare `"B"` in a ternary spells no word. So the
+ * pin is here, and it reads the plane's own source at the site.
+ *
+ * NEGATIVE CONTROL ARMS FOR REC-50 are recorded at the foot of this block, and
+ * they are HERE rather than in this file's `NEGATIVE CONTROL:` header because a
+ * concurrent worker (M0-9) holds that header block; the arms are one grep away
+ * and CONDUCT folds them in at integration.
+ *
+ * THE ARCHIVE-SOURCED LETTER IS NOT CLOSED HERE, AND THAT IS THE POINT OF
+ * STATING IT. `op=acquire` stamps two letters. The direct-fetch one IS the
+ * ceiling by definition, so composing it names no new doctrine. The
+ * archive-sourced one is a SECOND capture-axis doctrine value — what an
+ * archive-sourced capture EARNS, and whether that is a ceiling or a fixed grade
+ * — and minting a constant for it would settle a question that is Bob's ruling
+ * (QUEUE.md REC-50 says so in as many words; REC-48 left the same question open
+ * one axis over for the same reason). It therefore stays a typed literal, ON
+ * PURPOSE, and the assertions below say SO EXPLICITLY so that the next reader
+ * knows it is open by decision and not by oversight.
+ *
+ * What is already RULED about it is the ORDERING — "grade tracks directness,
+ * never technique", an archive hop is one more party between us and the
+ * publisher — so the ordering is what this suite pins, and pinning it is not a
+ * ruling because it asserts no value. It is also what makes the doctrine move
+ * VISIBLE: move the ceiling and the composed letter follows while the typed one
+ * does not, and the record would claim an archive-sourced capture is worth as
+ * much as a direct one. That failure is the measurement this item leaves behind
+ * in place of a constant it must not write. */
+{
+  const indexSrc = readFileSync(SRC, "utf8");
+  /* Both arms of the stamp, read as WRITTEN: an identifier or a quoted letter. */
+  const STAMP = /grade:\s*via === "archive\.org"\s*\?\s*("?[A-Za-z_$][\w$]*"?)\s*:\s*("?[A-Za-z_$][\w$]*"?)\s*,/;
+  const m = STAMP.exec(indexSrc);
+
+  /* ITS OWN REACH FIRST. An extraction that silently matched nothing would make
+     every assertion below vacuous — the zero-cost-equality failure arriving in
+     the INSTRUMENT rather than in the subject (REC-41 hit exactly this). So the
+     reader is shown to fire on a planted control AND on the real source, and the
+     source is shown to be the whole file rather than an empty read. */
+  const PLANT = 'grade: via === "archive.org" ? "Z" : "Y",';
+  t("the stamp reader fires on a planted control and finds the real site in src/index.mjs",
+    [indexSrc.length > 100000, STAMP.test(PLANT), m !== null], [true, true, true]);
+
+  const archiveArm = m ? m[1] : "", directArm = m ? m[2] : "";
+  t("the DIRECT-FETCH arm interpolates the enforced ceiling and spells no letter of its own",
+    [directArm, /^"[A-Z]"$/.test(directArm)], ["EARNED_CAPTURE_CEILING", false]);
+  t("and index.mjs takes that symbol from the module where the refusal is computed",
+    /import \{[\s\S]*?\bEARNED_CAPTURE_CEILING\b[\s\S]*?\} from "\.\.\/checks\/bio-checks\.mjs"/.test(indexSrc),
+    true);
+
+  const archiveLetter = archiveArm.replace(/"/g, "");
+  t("the ARCHIVE-SOURCED arm is still a TYPED letter, which is OPEN BY DECISION and not by oversight — naming it is a ruling",
+    /^"[A-Z]"$/.test(archiveArm), true);
+  t(`and the typed archive letter ${JSON.stringify(archiveLetter)} still ranks strictly BELOW the enforced ceiling ${JSON.stringify(EARNED_CAPTURE_CEILING)} — grade tracks directness (RULED)`,
+    [BASIS_GRADES.includes(archiveLetter),
+     BASIS_GRADES.indexOf(archiveLetter) > BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING)],
+    [true, true]);
+}
+/* REC-50's NEGATIVE CONTROL ARMS (run 2026-08-04, rec50-agent), each broken
+   ALONE with every file restored BYTE-IDENTICALLY and sha256 compared before and
+   after, and ALL RE-RUN against the final files. Whole suite = 84.
+   (d) THE ITEM'S OWN — hand-type the letter back: `: EARNED_CAPTURE_CEILING` ->
+       `: "B"` in src/index.mjs, an identical copy that agrees today -> 83 pass,
+       1 FAIL, and it is the STRUCTURAL pin ALONE. Both wire pins pass. And
+       hygiene.test.mjs STAYS 369/0 — REC-48's sweep cannot see this copy,
+       because a bare `"B"` in a ternary spells no word for it to find beside a
+       letter. That is why this pin had to be written here and at this altitude,
+       and it is the third measurement of REC-35's finding on a third subject.
+   (e) THAT LITERAL KEPT AND THE RULE MOVED — `EARNED_CAPTURE_CEILING = 'C'` in
+       checks/bio-checks.mjs -> 81 pass, 3 FAIL (hygiene 368/1 and earnedbasis
+       50/4 alongside). This is what the copy COSTS: the plane hands a caller a
+       capture stamped B while `checkEarnedLeg` refuses any leg above C — the
+       record overclaiming on the capture's own grade, which is worse than the
+       sentence ABOUT the grade that REC-43 and REC-48 closed.
+   (f) THE COMPOSED STAMP UNDER THE SAME MOVED RULE — REC-48's arm (c) exactly,
+       re-run against this item's file -> 82 pass, 2 FAIL, and REC-48's ONE
+       remaining failure ("the letter it claims is the one the gate ENFORCES")
+       is GONE. It is the evidence this item closed what it claimed: run the
+       same arm on the tree before this change and it fires; run it after and it
+       does not. What fails INSTEAD is exactly what should: the today-value
+       witness above, which is supposed to fail on a doctrine move so a session
+       corrects it deliberately, and the archive-ordering pin — naming the typed
+       archive letter that did NOT follow the ceiling and now claims an
+       archive-sourced capture is worth as much as a direct one. That second
+       failure IS the open ruling, made to speak instead of being remembered. */
 t("the note still says in words why the grade above the ceiling is unavailable",
   /chain-of-custody/.test(a.note), true);
 
