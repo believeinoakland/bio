@@ -86,7 +86,7 @@
  * source-level sweep keeps the retired codes out of the whole package. The
  * corrected reasoning is at `PLANE_WORDS` below, where the old one stood.
  *
- * NEGATIVE CONTROL, FOUR ARMS. Arms (a)-(c) are ALSO run mechanically below in
+ * NEGATIVE CONTROL, FIVE ARMS — (a)-(d) RUN 2026-08-04 (UI-30) and (e) RUN 2026-08-04 (UI-32). Arms (a)-(c) are ALSO run mechanically below in
  * their own VM context built from a mutated copy of the source — nothing on
  * disk is touched by those, so there is no restore to get wrong. EVERY ARM WAS
  * ALSO RUN ONCE ON DISK, 2026-08-04 (UI-30), against the FINAL file, which is
@@ -151,6 +151,20 @@
  *       thing. The mutation is the smallest one that reproduces the defect this
  *       item found — a retired wire string surviving in a file no harness runs.
  *
+ *   (e) RESTORE THE CONTENT-FALSE MOCK — UI-32's, and it is UI-30's own lesson
+ *       one field further in. Put the `capture_acts` fixture back the way it
+ *       stood: `label` hand-typed and `prompt:null` for the attest act.
+ *       ON-DISK RUN 2026-08-04: **2 of 73 FAIL**, and the measurement is the
+ *       71 THAT DO NOT. A fixture answering a shape the plane cannot send for
+ *       this act — `attest` has carried a `prompt` since REC-43 — was invisible
+ *       to every assertion in this file, because this suite renders no attest
+ *       surface. The two that fail are the new content pin and the guard's own
+ *       probe child re-running this suite behind it. That is D-173's family
+ *       stated exactly: a mock must answer the wire CONTENT, not merely the
+ *       wire SHAPE, and the only thing that catches the difference is reading
+ *       the field off the PUBLICATION instead of typing it.
+ *       `auth-surface.test.mjs` restored byte-identical, sha256 12c78c52… .
+ *
  * Run alone: `node test/auth-surface.test.mjs`.
  */
 import vm from "vm"; import fs from "fs"; import path from "path"; import os from "os";
@@ -158,6 +172,12 @@ import { webcrypto } from "crypto";
 import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
 import { appScript } from "./extract.mjs";
+/* UI-32: the act catalogue this suite hands the surface is the RECORD'S, read
+   off the same array `op=affordances` maps over. `affordances.mjs` reaches no
+   `cloudflare:workers` binding, so a node harness can import it — UI-28's
+   finding, and the reason this correction costs two lines instead of a textual
+   read of the plane's source. */
+import { CAPTURE_ACTS, ATTEST_FENCE } from "../../bio-plane/src/affordances.mjs";
 
 const SELF = fileURLToPath(import.meta.url);
 /* Set when this file is re-run by its own coverage/NC arms, so the child does
@@ -327,13 +347,44 @@ const RETIRED_LOGIN_CODES = [["BAD", "PASSWORD"], ["NO", "SUCH", "ROLE"]].map(p 
      found.length === 0);
 }
 
-/* THE ACT CATALOGUE `boot()` loads. Only the fields boot's own path touches. */
+/* THE ACT CATALOGUE `boot()` loads. Only the fields boot's own path touches.
+ *
+ * CORRECTED 2026-08-04 BY UI-32, NEVER EXEMPTED, and it is the SAME defect this
+ * suite's own header was corrected for by UI-30 — one field further in. What
+ * stood here hand-typed `label:"Co-attest this capture"` and answered
+ * `prompt:null` for the attest act. Both were content the RECORD publishes: the
+ * label has been on `capture_acts` since REC-38, and REC-43 put the honesty
+ * fence there as `prompt` under DEC-39, so on the wire this act has carried a
+ * prompt since before UI-28 shipped. `prompt:null` is not a shape the plane can
+ * send for `attest` at all.
+ *
+ * IT WAS GREEN, AND ONLY BECAUSE THIS SUITE RENDERS NO ATTEST SURFACE. That is
+ * exactly D-173's family and UI-30's finding in this file: a mock must answer
+ * the wire CONTENT, not merely the wire SHAPE — a mock that is shape-correct and
+ * content-false passes until the day some assertion here needs the field, and
+ * then it fails somewhere that has nothing to do with the lie. `attestFence()`
+ * answers "" on a null prompt and every entry point checks it, so a surface
+ * booted against this mock would have offered the act with no fence, or removed
+ * the control, and this suite would have called that the application's
+ * behaviour.
+ *
+ * SO THE CONTENT COMES FROM THE PUBLICATION. `id`, `label` and `prompt` are read
+ * off `CAPTURE_ACTS`, which is the array `op=affordances` actually maps over;
+ * the four decorated fields are index.mjs's `decorateAct` tables and stay
+ * literal here, because those are what a fixture is for. */
+const PUBLISHED_ATTEST = CAPTURE_ACTS.find(a => a.id === "attest");
 const AFFORDANCES = {
   target: null, catalog: [], vocabularies: { dispositions:["deferred","dismissed"] },
-  capture_acts: [{ id:"attest", label:"Co-attest this capture", weight:null, needs:"contribute",
-                   mode:"session", rung:"attested", prompt:null }],
+  capture_acts: [{ id: PUBLISHED_ATTEST.id, label: PUBLISHED_ATTEST.label,
+                   weight:null, needs:"contribute", mode:"session", rung:"attested",
+                   prompt: PUBLISHED_ATTEST.prompt ?? null }],
   detail: "pass target=<bundle id> for the acts available on that object right now",
 };
+ok("the act catalogue this suite hands the surface answers the wire CONTENT, not merely its shape",
+   AFFORDANCES.capture_acts[0].label === PUBLISHED_ATTEST.label
+   && AFFORDANCES.capture_acts[0].prompt === ATTEST_FENCE);
+ok("and the record does publish a prompt for this act, so the null it used to answer was unsendable",
+   typeof ATTEST_FENCE === "string" && ATTEST_FENCE.length > 200);
 
 /* `op=queue` / `op=tasks` — boot lands on the queue, so they are asked. Empty
    feeds: this suite's subject is the door, not what is behind it. */

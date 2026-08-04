@@ -20,9 +20,18 @@
  *   4. Writing is capability-shaped. A credential that cannot write gets no
  *      form, rather than a form that fails on submit — and a type it cannot
  *      write, or that nothing here can write honestly, is not in the list.
+ *   5. THIS SURFACE STATES NO CAPTURE GRADE, and no file under `civicos-ui/`
+ *      states the doctrine behind one (UI-32, 2026-08-04). The form used to
+ *      open "Grade B." and close "co-attestation is what raises B toward
+ *      evidentiary weight" — the FOURTH hand-written statement of a rule the
+ *      plane owns, at a site whose act is not co-attestation, and a PREDICTION
+ *      besides, since it painted before the address was typed. The reasoning
+ *      for what replaced it is on `ADD_CAPTURE_TEACH` in app.html; the absence
+ *      is enforced tree-wide by THE SWEEP at the foot of this file, whose
+ *      detectors are composed from the enforced rule and the published
+ *      sentences so that this suite spells no grade letter of its own either.
  *
- * NEGATIVE CONTROL: six, all RUN 2026-08-04 (UI-15), each restored
- * byte-identical afterwards and the harness re-run green (113 assertions).
+ * NEGATIVE CONTROL: eleven, six RUN 2026-08-04 (UI-15) and five more RUN 2026-08-04 (UI-32), each arm mutating ONE file, restored byte-identical afterwards with sha256 compared, and re-run against the FINAL files (144 assertions).
  *
  *  (a) THE ITEM'S OWN CONTROL. Delete the `const ADD_TICKS = 8;` declaration in
  *      civicos-ui/app.html (beside `ADD_BUSY`, ~:9411) -> `ReferenceError:
@@ -62,14 +71,68 @@
  *  (f) the amendment, plane half: REMOVE the Action option from setup.mjs's
  *      `#n-type` -> FAIL "the plane's own setup page offers it too — both
  *      intake surfaces or neither".
+ *
+ *  --- UI-32's five, over the capture-grade doctrine and the sweep -------------
+ *
+ *  (g) MOVE THE RULE ITSELF, and it is the arm the whole item exists to make
+ *      true: `EARNED_CAPTURE_CEILING` B -> C in bio-plane/checks/bio-checks.mjs,
+ *      the PLANE ALONE, no UI edit -> the WHOLE HARNESS STAYS GREEN, 33/33
+ *      exit 0, with act-attest 83/83 and this suite 144/144. The member is
+ *      reading the new letters while it does: the publication recomposes to
+ *      "it strengthens a Grade C capture … It never reaches Grade B" and
+ *      act-attest asserts the dialog carries that whole. The sweep moves WITH
+ *      the rule rather than against it — its raw-hit count goes 11 files to 13,
+ *      because `Grade C` in the surface's §8.1 comments becomes a capture
+ *      letter the moment the rule says so, which is the difference between a
+ *      detector that is a FUNCTION of the doctrine and one that is a copy of it.
+ *  (h) RESTORE THE SPELLED LETTER to the teach block ("<b>Grade B.</b> The
+ *      plane fetches …") -> FAIL "THE FOURTH STATEMENT IS GONE: the form spells
+ *      no capture-grade letter at all". This suite is FAIL-FAST, so it stops
+ *      there and the sweep's own verdict on app.html is unreachable in that run
+ *      rather than green — which is why (h2) exists.
+ *  (h2) THE SAME DEFECT AT A RENDERED SITE NO FORM ASSERTION READS: the glossary's
+ *      RFC 3161 entry gains "which yields Grade A" -> FAIL "NO CAPTURE-GRADE
+ *      LETTER IS SPELLED ANYWHERE OUTSIDE test/ — app.html spells Grade A (1x)",
+ *      naming the file and the string. A fifth statement does not have to be
+ *      written where the fourth one was.
+ *  (i) THE ARM THAT EARNS DETECTOR (B) ITS EXISTENCE, and it is REC-48's arm (e)
+ *      one tree over. Put the doctrine back with NO `Grade` word at all — the
+ *      teach block gains "and co-attestation raises B toward evidentiary
+ *      weight" -> FAIL "NOR DOES ANY FILE UNDER civicos-ui/ RESTATE THE
+ *      DOCTRINE'S OWN PROSE — app.html restates the doctrine: 'co attestation
+ *      raises b' / 'attestation raises b toward' / 'raises b toward
+ *      evidentiary'". Detector (A) is SILENT throughout, and so is every
+ *      rendered-letter assertion above: only (B) can see it.
+ *  (j) NEUTER THE WALK — `walk(ROOT).filter(() => false)` -> FAIL "REACH: the
+ *      walk reads the whole package — 0 files, 0 of them outside test/". A walk
+ *      that covers nothing passes everything, and this project has been bitten
+ *      by that five times; the arm is here so nobody has to take the sweep's
+ *      reach on trust.
+ *  (l) A FIFTH STATEMENT IN A FILE NO HARNESS RUNS: "Captures are written at
+ *      Grade B here." appended to civicos-ui/README.md -> FAIL "NO CAPTURE-GRADE
+ *      LETTER IS SPELLED ANYWHERE OUTSIDE test/ — README.md spells Grade B
+ *      (1x)". Both of UI-30's stale copies were sitting in files no harness ran,
+ *      which is the whole reason the walk covers the package rather than the
+ *      surface.
  */
 import { appScript } from "./extract.mjs";
 import fs from "fs";
+import path from "path";
 import vm from "vm";
 import { createHash, webcrypto } from "crypto";
 import { SETUP_HTML } from "../../bio-plane/src/setup.mjs";
 import { STATES, HEADINGS, OBJECT_TYPES, normalizeType } from "../../bio-plane/checks/bio-checks.mjs";
 import { checkBundle } from "../../bio-plane/checks/bio-checks.mjs";
+/* THE CAPTURE DOCTRINE, IMPORTED FROM WHERE IT IS ENFORCED AND WHERE IT IS
+   PUBLISHED (UI-32, 2026-08-04). Neither module reaches `cloudflare:workers`,
+   which is UI-28's finding and is why this suite can hold the rule itself
+   rather than a copy of it: `EARNED_CAPTURE_CEILING` is the letter
+   `checkEarnedLeg` refuses a leg above, `UNREACHABLE_CAPTURE_GRADE` is the rank
+   immediately over it, and the two published sentences are what the record
+   actually says. Everything below is a FUNCTION of these four values, so this
+   file spells no grade letter of its own anywhere. */
+import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../bio-plane/checks/bio-checks.mjs";
+import { ATTEST_FENCE, ACQUIRE_GRADE_NOTE } from "../../bio-plane/src/affordances.mjs";
 
 /* The render companion's bytes, so the rendition can be read back and verified. */
 const COMPANION = new TextEncoder().encode("<!doctype html><html><body>companion</body></html>");
@@ -77,6 +140,50 @@ const SERVE = new Map();
 
 let n = 0;
 const ok = (label, cond) => { if (!cond) { console.error("FAIL " + label); process.exit(1); } n++; };
+
+/* ============================================================
+   THE INSTRUMENTS, DERIVED FROM THE RULE AND GUARDED BEFORE THEY ARE USED
+   (UI-32, 2026-08-04 — UI-28's subtraction, one surface on).
+
+   `CAPTURE_LETTERS` is the pair the capture axis owns, taken from the exports.
+   `PUBLICATIONS` are the two sentences the record actually says about them.
+
+   THE SUBTRACTION IS NOT OPTIONAL AND UI-28 MEASURED WHY: the publication NAMES
+   the unreachable grade IN ORDER TO DENY IT, so a plain "does this say Grade
+   <unreachable>" test fires on the correct page. Every reader below therefore
+   subtracts the publications first and judges only the REMAINDER — what is left
+   after the record has been given credit for its own words.
+   ============================================================ */
+const CAPTURE_LETTERS = [EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE].map(String);
+const PUBLICATIONS = [ATTEST_FENCE, ACQUIRE_GRADE_NOTE].map(s => String(s).replace(/\s+/g, " ").trim());
+const LETTER_RE = () => new RegExp("\\bGrade\\s+[" + CAPTURE_LETTERS.join("") + "]\\b", "g");
+const stripTags = h => String(h == null ? "" : h).replace(/<[^>]*>/g, " ")
+  .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&")
+  .replace(/&mdash;/g, "—").replace(/&hellip;/g, "…")
+  .replace(/\s+/g, " ").trim();
+const minusPublications = t => { let s = String(t); for (const p of PUBLICATIONS) s = s.split(p).join(" ");
+  return s.replace(/\s+/g, " ").trim(); };
+/* Every capture-grade letter a member could READ in a piece of rendered HTML,
+   after the record's own sentences are subtracted. */
+const gradeLettersIn = html => minusPublications(stripTags(html)).match(LETTER_RE()) || [];
+
+ok("INSTRUMENT: the enforced ceiling and the rank above it are single distinct letters",
+   /^[A-Z]$/.test(CAPTURE_LETTERS[0]) && /^[A-Z]$/.test(CAPTURE_LETTERS[1])
+   && CAPTURE_LETTERS[0] !== CAPTURE_LETTERS[1]);
+ok("INSTRUMENT: both publications are non-empty plain prose carrying no markup",
+   PUBLICATIONS.length === 2 && PUBLICATIONS.every(p => p.length > 80 && !/[<>]/.test(p)));
+ok("INSTRUMENT: and each of them names BOTH letters, which is why the subtraction exists",
+   PUBLICATIONS.every(p => CAPTURE_LETTERS.every(L => p.includes("Grade " + L))));
+/* THE DETECTOR IS ALIVE, proved on text this file builds rather than on the
+   subject — an assertion of absence made with a dead reader passes forever. */
+ok("INSTRUMENT: the reader FINDS a spelled letter when one is there",
+   gradeLettersIn("<p>this capture is <b>Grade " + EARNED_CAPTURE_CEILING + "</b> today</p>").length === 1);
+ok("INSTRUMENT: and the subtraction leaves the record's OWN sentence unremarked",
+   gradeLettersIn("<p>" + PUBLICATIONS[0] + "</p>").length === 0
+   && gradeLettersIn("<p>" + PUBLICATIONS[1] + "</p>").length === 0);
+ok("INSTRUMENT: while a claim standing BESIDE the publication is still found",
+   gradeLettersIn("<p>" + PUBLICATIONS[0] + " and this one is Grade "
+                  + UNREACHABLE_CAPTURE_GRADE + ".</p>").length === 1);
 
 /* ---- load the UI runtime ---- */
 const els = new Map();
@@ -447,9 +554,49 @@ ok("and the writer still keeps its action arm, because actions already in the re
   ok("the action is in references[] and the question rests on nothing",
      /target: ACTN-2026-0800-records-request/.test(text) && !/^basis:/m.test(text));
 }
-ok("the grade is stated before anything is written, and stated as B",
-   /Grade B/.test(form) && /hashed at receipt/.test(form));
-ok("with Grade A named as what this surface cannot claim", /Grade A needs a chain-of-custody/.test(form));
+/* CORRECTED 2026-08-04 BY UI-32, NEVER EXEMPTED, and the reason is the whole
+   item. These two asserted that the Add form STATES the capture doctrine in its
+   own letters — "stated as B", and "Grade A needs a chain-of-custody" matched
+   against a string this file typed out. Both passed for the reason REC-43
+   measured and REC-48 reproduced: two copies of the same sentence agree at zero
+   cost, forever, including on the day the enforced rule moves out from under
+   both of them. And neither could have noticed what was actually wrong with the
+   subject — that a form which paints BEFORE the address is typed was promising
+   a member what grade a capture that has not happened would carry.
+
+   The property being guarded is not weakened, it is turned around: this surface
+   never states what a capture is worth. What it must do instead — say what the
+   plane will DO with the address, and which parts of it are recorded as
+   separate claims — is asserted positively, so the block cannot be emptied to
+   satisfy the absence. The reasoning is on `ADD_CAPTURE_TEACH` in app.html; the
+   absence is enforced tree-wide by THE SWEEP at the foot of this file. */
+ok("the form says what the plane will DO with the address, before anything is written",
+   /fetches what the address serves/.test(form) && /hashes the bytes/.test(form));
+ok("and names the address, the instant and the issuer as SEPARATE claims rather than one",
+   /separate claims/.test(form) && /who you say issued it/.test(form));
+ok("it settles nothing it cannot settle: neither the document's truth nor its issuer's standing",
+   /whether the document is true/.test(form) && /right one to have asked/.test(form));
+ok("and what the capture is WORTH is deferred to the record, stated as the record's own determination",
+   /the record's own determination/.test(form) && /once there is a capture to judge/.test(form));
+ok("THE FOURTH STATEMENT IS GONE: the form spells no capture-grade letter at all",
+   gradeLettersIn(form).length === 0);
+/* DRIVEN, not read off the painted default: `#a-n` only reaches the sentence
+   that used to carry the letter once a document address and an issuer are both
+   present, so a check made against the freshly rendered form would have been
+   green against a line that never said it. */
+{
+  els.get("#a-type").value = "information";
+  els.get("#a-title").value = "The sewer contract, as published";
+  els.get("#a-body").value  = "What the published document says about the fund.";
+  els.get("#a-loc").value   = "https://city.example/agenda.pdf";
+  els.get("#a-auth").value  = "City of Oakland, Public Works Department";
+  G.addValidate();
+  const said = String(els.get("#a-n").textContent || "");
+  ok("REACH: the live validity line reached the sentence that used to carry the letter",
+     /It will be captured at/.test(said) && /appear in the record/.test(said));
+  ok("nor does it predict one on the way to the button — that line states the STATE and no grade",
+     gradeLettersIn(said).length === 0);
+}
 
 /* A refusal by the host is named as the host's act. */
 ok("a source refusal says the site refused, not that the record failed",
@@ -474,5 +621,196 @@ const formHtml = els.get("#content").innerHTML;
 for(const word of ["subrequest", "runtime", "manifest", "register", "corroboration", "sha256",
                    "content_hash", "content-addressed", "op=", "C-18", "Durable", "ceiling"])
   ok(`the Add form does not say "${word}"`, !formHtml.includes(word));
+
+/* ============================================================
+   THE SWEEP — SO A FIFTH STATEMENT CANNOT BE ADDED SILENTLY (UI-32, 2026-08-04).
+
+   REC-48 built this over `bio-plane/src/`. Four hand-written statements of the
+   capture doctrine had already been found one at a time, and the fourth was
+   found only because somebody swept for the CLASS instead of trusting a count
+   of three. This is the same sweep over the OTHER tree, which is where the
+   fourth lived, and it walks EVERY file under `civicos-ui/` — including the
+   ones no harness runs, because that is where UI-30 found both of its stale
+   copies sitting.
+
+   TWO DETECTORS, and each catches what the other cannot.
+
+   (A) THE SPELLED LETTER, over every file that is NOT a suite. `Grade <L>` for
+       the two letters the capture rule owns, taken from the exports so the
+       sweep's subject is a function of the rule rather than a second copy of
+       it. In the surface this is a total rule and can afford to be: EVERY
+       legitimate grade in this application is INTERPOLATED from a value the
+       plane sent (`Grade ${esc(...)}`, at eleven sites), so a letter spelled
+       out in the surface is by construction this surface stating doctrine.
+
+   (B) THE DOCTRINE'S PROSE, over the whole tree including the suites. Because a
+       statement can be made without the word: "co-attestation raises B toward
+       evidentiary weight" carries no `Grade` at all and (A) is silent on it —
+       which is REC-48's arm (e), one tree over. The phrases come from the
+       PUBLICATIONS THEMSELVES, narrowed to their GRADE-BEARING CLAUSES, so this
+       file holds no doctrine of its own and the detector moves when the record
+       does.
+
+   A STATED LIMIT RATHER THAN AN EXEMPTION LIST, and it is REC-48's, re-measured
+   here. Detector (A) is deliberately NOT run over `test/`: eight suites pin
+   `Grade <L>` on plane-supplied values from the §8.1 RESOLUTION axis and the
+   CONNECTION axis, which are different doctrines that happen to share the
+   capture axis's letters, and a sweep that fired on them would have to be
+   weakened until it found nothing. Those pins are OUT OF THIS SWEEP'S SUBJECT
+   and are not exempted from it. What guards a suite instead is (B) plus the
+   fact that a zero-cost pin — the defect this whole line of items keeps
+   correcting, and the one that stood at :451 of this file until today —
+   restates its subject's own words BY DEFINITION, which is exactly what (B)
+   reads.
+   ============================================================ */
+{
+  const ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+  const walk = d => fs.readdirSync(d, { withFileTypes:true }).flatMap(e => {
+    if(e.name === "node_modules" || e.name.startsWith(".")) return [];
+    const p = path.join(d, e.name);
+    return e.isDirectory() ? walk(p) : [p];
+  });
+  const FILES = walk(ROOT);
+  const rel = f => path.relative(ROOT, f);
+  const isSuite = f => rel(f).startsWith("test" + path.sep);
+
+  /* The comment forms this tree actually writes. The line-comment strip is
+     ANCHORED TO LINE START on purpose and REC-48 paid for the lesson: an
+     unanchored `//` strip eats everything after `https:` inside a string
+     literal, and the sweep would then reach far less than it claims while
+     reporting the same green. */
+  const stripComments = s => s
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/^[ \t]*\/\/.*$/gm, " ");
+
+  /* (B)'s subject: the publications' GRADE-BEARING CLAUSES ONLY. The fence's
+     first two parts are about timestamps and secondhand reports, and phrases
+     from them stand legitimately all over the attest region and the glossary —
+     taking the whole publication would have fired 26 times on correct prose and
+     forced the detector to be weakened. A clause is grade-bearing if it names
+     `Grade <L>`, or carries one of the rule's letters BARE (which is how the
+     "raises <ceiling> toward evidentiary weight" clause qualifies, and it is the
+     clause (A) cannot see). Single-letter English words are excluded from the
+     bare test — otherwise the article "a" makes every sentence grade-bearing —
+     and nothing is lost by it, asserted below. */
+  const ENGLISH_SINGLE_LETTER_WORDS = ["A", "I"];
+  const clauses = PUBLICATIONS
+    .flatMap(p => p.split(/(?<=[.;:])\s+|\s+—\s+/))
+    .filter(c => LETTER_RE().test(c)
+              || CAPTURE_LETTERS.filter(L => !ENGLISH_SINGLE_LETTER_WORDS.includes(L))
+                   .some(L => new RegExp("\\b" + L + "\\b").test(c)));
+  const NGRAM = 4;
+  const words = s => String(s).replace(/&[a-z]+;/g, " ").replace(/[^A-Za-z]+/g, " ")
+    .toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const gramsOf = s => { const w = words(s), out = [];
+    for(let i = 0; i + NGRAM <= w.length; i++) out.push(w.slice(i, i + NGRAM).join(" ")); return out; };
+  const DOCTRINE = new Set(clauses.flatMap(gramsOf));
+  const doctrineIn = t => [...new Set(gramsOf(t).filter(g => DOCTRINE.has(g)))];
+
+  const readable = f => { try { return fs.readFileSync(f, "utf8"); } catch(_) { return null; } };
+  const subject = f => minusPublications(stripComments(readable(f) || ""));
+
+  /* ---- REACH, BEFORE ANY ABSENCE IS BELIEVED --------------------------------
+     A walk that covers nothing passes everything, and this project has now been
+     bitten by that five times: UI-30 in an instrument, REC-49 with an arm that
+     first fired zero, UI-28's guarded region read, REC-48's reach assertion
+     which was WRONG when first written, and UI-31's surface that was covered on
+     paper. Every claim this sweep makes is measured before it is made. */
+  const SURFACE = FILES.filter(f => !isSuite(f));
+  const SUITES  = FILES.filter(isSuite);
+  ok(`REACH: the walk reads the whole package — ${FILES.length} files, `
+     + `${SURFACE.length} of them outside test/`,
+     FILES.length > 30 && SURFACE.length >= 5 && SUITES.length >= 25);
+  ok("REACH: and it names the surface itself, this suite, and the two guards, rather than a subset it happened to find",
+     [ "app.html", "worker.template.mjs", "check-semantics.mjs", "check-mock-envelope.mjs",
+       path.join("test", "add-surface.test.mjs"), path.join("test", "act-attest.test.mjs") ]
+       .every(want => FILES.some(f => rel(f) === want)));
+  const BYTES = FILES.reduce((a, f) => a + (readable(f) || "").length, 0);
+  const APP = FILES.find(f => rel(f) === "app.html");
+  ok(`REACH: it reads BYTES and not just names — ${BYTES} characters, `
+     + `${(readable(APP) || "").length} of them the surface's own`,
+     BYTES > 1e6 && (readable(APP) || "").length > 5e5);
+  /* THE STRIPPER CANNOT HAVE SWALLOWED THE REGION A STATEMENT WOULD LIVE IN.
+     If `stripComments` returned "" — or ate the template literals, which an
+     unanchored line-comment strip does — every absence below would be trivially
+     true. So the subject text is asserted to still hold the surface's own live
+     prose at the exact site this item corrected. */
+  const appSubject = subject(APP);
+  ok(`REACH: the stripper leaves the surface's live prose intact — `
+     + `${appSubject.length} characters survive of ${(readable(APP) || "").length}`,
+     appSubject.length > 3e5
+     && appSubject.includes("fetches what the address serves")
+     && appSubject.includes("the record's own determination"));
+  /* AND IT REACHES THE LINES WHERE THE DOCTRINE IS ACTUALLY DISCUSSED. The RAW
+     sources DO carry the letters — in comments, in corrected-pin history, in
+     other axes' pins — so a walk finding nothing raw would be a walk that never
+     opened the files. Measured as a fact, not assumed. */
+  const rawHits = FILES.filter(f => LETTER_RE().test(readable(f) || ""));
+  ok(`REACH: the same detector over the RAW sources DOES match — ${rawHits.length} files`,
+     rawHits.length >= 5 && rawHits.some(f => rel(f) === "app.html"));
+  /* (B)'s subject is real and derived. */
+  ok(`INSTRUMENT: ${clauses.length} grade-bearing clauses yield ${DOCTRINE.size} doctrine phrases`,
+     clauses.length >= 4 && DOCTRINE.size >= 15);
+  ok("INSTRUMENT: and the clause set names BOTH letters, so neither half of the doctrine is unwatched",
+     CAPTURE_LETTERS.every(L => clauses.some(c => c.includes("Grade " + L))));
+  ok("INSTRUMENT: dropping the English article loses no clause that names a grade in the doctrine's own term",
+     PUBLICATIONS.flatMap(p => p.split(/(?<=[.;:])\s+|\s+—\s+/)).filter(c => LETTER_RE().test(c))
+       .every(c => clauses.includes(c)));
+  /* THE PLANTED CONTROL, IN EVERY FILE, AS A DELTA. Absolute counts are wrong
+     here and REC-48 shipped that mistake before catching it: a file that
+     already has hits reads as deaf when the control is compared to 1. */
+  {
+    /* THE CONTROL IS THE RECORD'S OWN CLAUSE, LIFTED, not a sentence typed
+       here — and that is not tidiness. A control typed out would BE a fifth
+       statement, sitting in the file whose job is to forbid them, and detector
+       (B) would find it: a sweep that fails on itself gets weakened until it
+       finds nothing. Lifting the clause also keeps the control a function of
+       the rule, so it still fires the day the doctrine moves. */
+    const planted = clauses.find(c => c.includes("Grade " + UNREACHABLE_CAPTURE_GRADE)
+                                   && words(c).length > NGRAM);
+    ok("INSTRUMENT: the planted control is the publication's own grade-bearing clause, held by nobody here",
+       typeof planted === "string" && PUBLICATIONS.some(p => p.includes(planted)));
+    const deafLetter = [], deafProse = [];
+    for(const f of FILES){
+      const base = subject(f);
+      const salted = minusPublications(base + " " + planted);
+      if((salted.match(LETTER_RE()) || []).length <= (base.match(LETTER_RE()) || []).length) deafLetter.push(rel(f));
+      if(doctrineIn(salted).length <= doctrineIn(base).length) deafProse.push(rel(f));
+    }
+    ok("REACH: a planted statement fires BOTH detectors in EVERY file's own text — "
+       + (deafLetter.length || deafProse.length
+            ? `DEAF: letters[${deafLetter.join(" ")}] prose[${deafProse.join(" ")}]`
+            : `all ${FILES.length} files live`),
+       deafLetter.length === 0 && deafProse.length === 0);
+  }
+
+  /* ---- (A) THE SURFACE SPELLS NO CAPTURE-GRADE LETTER ----------------------- */
+  {
+    const found = [];
+    for(const f of SURFACE){
+      const hits = subject(f).match(LETTER_RE()) || [];
+      if(hits.length) found.push(`${rel(f)} spells ${[...new Set(hits)].join(" and ")} (${hits.length}x)`);
+    }
+    ok("NO CAPTURE-GRADE LETTER IS SPELLED ANYWHERE OUTSIDE test/ — "
+       + (found.length ? found.join(" · ") : `none, over ${SURFACE.length} files`),
+       found.length === 0);
+  }
+
+  /* ---- (B) NOBODY HOLDS THE DOCTRINE'S PROSE, SUITES INCLUDED --------------- */
+  {
+    const found = [];
+    for(const f of FILES){
+      const hits = doctrineIn(subject(f));
+      if(hits.length) found.push(`${rel(f)} restates the doctrine: "${hits.slice(0, 3).join('" / "')}"`);
+    }
+    ok("NOR DOES ANY FILE UNDER civicos-ui/ RESTATE THE DOCTRINE'S OWN PROSE — "
+       + (found.length ? found.join(" · ") : `none, over ${FILES.length} files and ${DOCTRINE.size} phrases`),
+       found.length === 0);
+  }
+  console.log(`  sweep: ${FILES.length} files (${SURFACE.length} outside test/), ${BYTES} characters read, `
+            + `${clauses.length} grade-bearing clauses -> ${DOCTRINE.size} phrases; `
+            + `raw letter hits in ${rawHits.length} files, none surviving the strip outside test/`);
+}
 
 console.log(`add-surface: ${n} assertions, all green`);
