@@ -349,6 +349,7 @@ AMENDED AGAIN 2026-08-02. Bob: *"The sequence pixels → ocr → ai is only part
   machine-generated** (producer metadata routinely names the scanner or OCR software), because
   the record should be able to say *this text came from the publisher's own OCR* rather than
   presenting it as authored text. That is measurable, it is cheap, and nothing today looks.
+enacted: 2026-08-03 · CONDUCT — 5318b53: CPDF-9 and CPDF-10 enqueued with both 2026-08-02 amendments folded in (four placements incl. the service and service+AI chain; text_source as a CHAIN each step of which can only weaken; the attestation ceiling reachable from both paths; the digits measurement; text-layer-provenance detection); FW-15 carries the OCR-reaches-reading_refs clause. Grade doctrine (fidelity bounds the CAPTURE axis, no machine mints the grade) is stated in the item scopes so the measurement cannot be read as permission. Reasoning in QUEUE.md (CPDF-9/CPDF-10) and this entry.
 
 ### DEC-5 · answered
 raised: 2026-07-31 · CONDUCT (lifted from CAP-3's report)
@@ -399,7 +400,7 @@ for CONDUCT to enact: D-122's disposition changes from DOCTRINE to M2 — it is 
   build work, not an open question. `OFFICE-FORMATS.md` step 6 is UNGATED and moves
   from last to alongside steps 3–4, since the evidentiary extras are no longer a
   follow-on. Add the entity-axis link to M4's absorbs list.
-enacted:
+enacted: 2026-08-03 · CONDUCT — 5318b53: the office-formats debt row (D-124, the renumbered D-122) already reads M2 · open, ruled; OFFICE-FORMATS.md step 6 UNGATED in place (runs alongside steps 3–4, carried by COFF-3/4/5's evidentiary cores); the entity-axis link added to M4's absorbs list in MILESTONES.md. Reasoning in OFFICE-FORMATS.md and D-124.
 
 ### DEC-6 · answered
 raised: 2026-07-31 · FRAMEWORK (FW-6, the SUBJECT REGISTRY slice)
@@ -461,6 +462,7 @@ reasoning recorded in: docs/architecture/BIO_Declared_Bias_v0_1.md, "RULED 2026-
 for CONDUCT to enact: nothing in the queue and no code change. FW-6 shipped the deciding
   behaviour already; this ruling makes the union table the answer rather than a provisional,
   and removes a gate a future bias-statement slice would otherwise have felt obliged to add.
+enacted: 2026-08-03 · CONDUCT — nothing in the queue and no code change, as the entry itself rules: FW-6 shipped the deciding behaviour. Recorded so a later session does not quietly reverse it. Reasoning in this entry and the FW-6 landing note in QUEUE.md.
 
 ### DEC-7 · answered
 raised: 2026-07-31 · RECORD (REC-4, the TASK-ACTOR FENCE)
@@ -523,6 +525,7 @@ for CONDUCT to enact: **REC-28**, handed over in the BOB INBOX — a small RECOR
   and corrects the `#refuseNotYours` comment, which currently states the guarantee the code
   does not make. It supersedes nothing and blocks nothing; it is placed on M8 beside the
   queue work that will make these two verbs member-visible for the first time.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-28 enqueued verbatim from the handover (refuse at the ACT on the MACHINE_CANNOT_RELEASE precedent; keep the fence; leave taskdrain alone). Reasoning in QUEUE.md (REC-28) and D-151.
 
 ### DEC-8 · answered
 raised: 2026-07-31 · UI (UI-2, the first ACT — focus disposition)
@@ -590,6 +593,7 @@ for CONDUCT to enact: nothing new in the queue — REC-19 and REC-15 already car
   each acquire "renders no refusal it computed itself" as an acceptance clause, and UI-10's
   D-138 half (make `check-semantics.mjs` read `bio-checks.mjs`) is what keeps the interim
   honest until REC-19 lands.
+enacted: 2026-08-03 · CONDUCT — 5318b53: the plane-sourced pre-flight doctrine is stated on REC-19's scope (no act surface before it exists); the renders-no-refusal-it-computed-itself clause added to UI-12, UI-14, UI-16, UI-19 and UI-20's acceptance; UI-10 carries the D-138 half (check-semantics.mjs must read bio-checks.mjs) as not optional. Reasoning in QUEUE.md (REC-19, UI-10/12/14/16/19/20).
 
 ### DEC-9 · answered
 raised: 2026-07-31 · FRAMEWORK (FW-9, progression instances + the missing-predecessor finding)
@@ -656,6 +660,7 @@ for CONDUCT to enact: nothing in the queue and no code change — FW-10 already 
   enactment is that `unless_exception` is now SETTLED rather than provisional, so a later
   session must not quietly return it to silence, and any surface rendering the finding must
   name the discharge route rather than a "not yet checked" caveat.
+enacted: 2026-08-03 · CONDUCT — nothing in the queue and no code change, as the entry itself rules: FW-10 already ships the confirmed behaviour. Recorded against quiet reversal. Reasoning in this entry.
 
 ### DEC-11 · answered
 renumbered: 2026-07-31 · CONDUCT — this entry collided with the daemon-credential DEC-5 above (BOB-session and CONDUCT numbered independently); renumbered DEC-5→DEC-11, content unchanged.
@@ -738,7 +743,7 @@ response: DUPLICATE of DEC-5, which Bob ANSWERED on 2026-08-01 — read that ent
   open entries for the same SUBJECT before adding one, and the BOB session (which
   triages) is where a duplicate should be caught.
 decided: 2026-08-01 · Bob, via DEC-5
-enacted:
+enacted: 2026-08-03 · CONDUCT — duplicate of DEC-5, closed without separate enactment; DEC-5's enacted line carries the work. The register lesson (scan open entries for the same SUBJECT before adding one) stands recorded here.
 
 ### DEC-10 · answered
 raised: 2026-07-31 · record-agent-8 (REC-8, CONSTRUCTS Step 7)
@@ -868,7 +873,7 @@ for CONDUCT to enact: DEC-10's provisional stands as the DERIVATION layer (overd
   still derived on read, still mints nothing per instance); what is added on top is the
   relevance filter, the routing, and the preference state in D-125. Place under M4
   beside the progression work, with the inbox half under M8.
-enacted:
+enacted: 2026-08-03 · CONDUCT — 5318b53: the provisional stands as the derivation layer (overdue derived on read, nothing minted per instance); the relevance/routing/preference layer is queued as REC-20 and REC-21 under M8, reshaped by DEC-16 (the EVENT is the unit of state; every-ancestor grouping). Reasoning in QUEUE.md (REC-20/REC-21) and BIO_Interaction_Constructs_v0_1.md's QUEUE section.
 
 ### DEC-12 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q1)
@@ -944,6 +949,7 @@ for CONDUCT to enact: REC-14 changes materially and the amendment is in the BOB 
   enumerates editions rather than one row per bundle. REC-22's public index and UI-18's case
   page become edition-aware (a hash resolves to its edition; prior editions stay readable).
   D-144's disposition changes from defect-to-fix to feature-to-build under M10.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-14 re-based on editions (published not terminal; published_bundles re-keyed (bundle_id, edition), appends; D-144 closes as a feature; a citing leg names its edition); REC-22 enumerates and serves editions; REC-17 surfaces the re-evaluation obligation on a new edition; REC-16's PUBLISHED_CANNOT_DIVIDE stands. Reasoning in QUEUE.md item scopes and RECONCILED §4 Q1 (settled in place).
 
 ### DEC-13 · answered
 raised: 2026-08-01 · BOB (from PROBLEM-DOMAIN.md, the first externally-sourced pass)
@@ -1037,6 +1043,7 @@ for CONDUCT to enact: three amendments in the BOB INBOX. REC-14's completeness b
   subject-response declaration as a required, authored, never-prefilled element. REC-24 gains
   `request_for_comment` and the named-inquiries link. UI-17's ceremony gains the stage, ordered
   BEFORE signing, since authoring it changes the sha. `D-153` records the AUDIENCES correction.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-14's completeness block gains the declared-and-justified subject position (the gate is the declaration, never contact, never a favourable answer); REC-24 gains request_for_comment naming the specific inquiries disclosed, the authored window, captured-not-summarised returns; UI-17's stage recorded on its deferred scope (before signing — it changes the sha). AUDIENCES.md carries the H4/H6 correction pointer. Reasoning in QUEUE.md (REC-14/REC-24) and D-153.
 
 ### DEC-14 · answered
 raised: 2026-08-01 · BOB (from PROBLEM-DOMAIN.md)
@@ -1111,6 +1118,7 @@ reasoning recorded in: this entry, and DEBT D-128's consequence half, whose delt
 for CONDUCT to enact: REC-24's consequence half gains the outcome/impact split and the
   unproven state; the amendment is in the BOB INBOX. No new item — it is a constraint on one
   already queued.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-24 carries the outcome/impact split (impact requires a basis leg on evidence that is not our own action; unproven is a stated state, never a fifth grade); UI-19 renders it. Reasoning in QUEUE.md (REC-24/UI-19).
 
 ### DEC-15 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q4 — the only Tier-1 question that
@@ -1226,6 +1234,7 @@ for CONDUCT to enact: amendments in the BOB INBOX to REC-11 (`grade_source` admi
   UI-11 and UI-12 (a hunch leg is visibly a hunch, and the strength panel says the case cannot
   publish while one stands). D-154 records the construct. No new item: every piece lands inside
   one already queued, which is the same result the reconciliation pass found for R1–R4.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-11 admits grade_source: hunch (author+date, only authored grade above D, bias debt); REC-12 composes a hunch normally; REC-15 (deferred) carries UNCLEARED_HUNCH; REC-18 unblocked from the ruling (blocked on UI-13 alone, builds the earned path a hunch clears into); UI-11 shows a hunch as a hunch from the moment it is made. Manifest registration sequenced behind D-84 (M4) as the entry directs. Reasoning in BIO_Declared_Bias_v0_1.md (bias debt) and QUEUE.md item scopes.
 
 ### DEC-16 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q3 — your own DEC-10 ruling, whose
@@ -1349,6 +1358,7 @@ for CONDUCT to enact: amendments in the BOB INBOX. REC-20's `case` is populated 
   entry** — that is the load-bearing shape change. REC-21's mute stays personal and structurally
   distinct from resolution, which is now more important rather than less. UI-14 shows one event
   under several cases, resolves once, and renders the attribution rather than a gap.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-20's case populated with every ancestor over an R3-bounded walk, exhausted → undetermined, state on the EVENT; REC-21 asserts the record-act/preference boundary plus the change-is-itself-an-event rule; UI-14 renders one event under several cases, resolved-by-X, never a gap. The unpopulated-column provisional retired. Reasoning in BIO_Interaction_Constructs_v0_1.md's QUEUE section and QUEUE.md item scopes.
 
 ### DEC-17 · answered
 raised: 2026-08-01 · BOB (from the reconciliation pass, Q2 — a claim three research files
@@ -1472,6 +1482,7 @@ for CONDUCT to enact: amendments in the BOB INBOX — `project` frontmatter gain
   `BELOW_PROJECT_STRENGTH` naming the axis; REC-14 stamps the declared bar into the ratified
   bytes beside the derived strength, so a reader sees both in the same frozen artifact; UI-18
   renders them together. D-155 records it.
+enacted: 2026-08-03 · CONDUCT — 5318b53, as amended: REC-14 stamps the group-default/project-override required_strength pair into the ratified bytes beside the derived strengths (absent bar gates nothing and says so); REC-15 (deferred) carries BELOW_PROJECT_STRENGTH naming the axis; UI-18 renders declared bar beside reached strength, prominently. Reasoning in QUEUE.md (REC-14/UI-18) and RECONCILED §4 Q2 (settled in place).
 
 ### DEC-18 · answered
 raised: 2026-08-02 · Bob, in the review of the study document
@@ -1508,6 +1519,7 @@ response: **AN UNGRADED LEG IS INERT, NOT UNRATING.** Bob, 2026-08-02: *"An ungr
   no established grade, in which case every such leg will be named."* Every ungraded leg is
   named, always — one or many — which is what keeps "inert" from meaning "invisible".
 decided: 2026-08-02 · Bob
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-12's comparator EXCLUDES an ungraded leg from the population (inert, named, not load-bearing; UNRATED as the boundary case); UI-11 renders it so. D-159's watch (no fourth defence before use shows need) stands. Reasoning in RECONCILED §1.1's amendment block and QUEUE.md (REC-12/UI-11).
 
 ### DEC-19 · answered
 raised: 2026-08-02 · Bob, in the review of the study document
@@ -1554,6 +1566,7 @@ response: **AN ATTESTATION MUST BE REVERSIBLE, BECAUSE PEOPLE MAKE MISTAKES.** B
   it. The rung ladder's top rung is IRREVERSIBLE again, with the correction path stated beside
   it rather than instead of it.
 decided: 2026-08-02 · Bob
+enacted: 2026-08-03 · CONDUCT — 5318b53, as amended: FW-14's ladder top rung reads IRREVERSIBLE with the correction path beside it (correction always moves forward; below it, attested acts cannot be undone SILENTLY); UI-17a states it; O1's full ceremony inherits it on waking. Reasoning in QUEUE.md (FW-14/UI-17a) and this entry.
 
 ### DEC-20 · answered
 raised: 2026-08-02 · Bob, in the review of the study document
@@ -1587,6 +1600,7 @@ response: **ONLY A HUNCH BLOCKS. OTHER BIAS DEBT IS DISCLOSED AND TRAVELS.** Bob
   a promotion from a property of the manifest to a stated guarantee of publication, and the
   published case must SHOW it rather than merely cite it.
 decided: 2026-08-02 · Bob
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-15's deferred scope carries the rule (op=publishpreflight refuses UNCLEARED_HUNCH and nothing else on bias grounds; the manifest SHOWN in the artifact). BIO_Declared_Bias_v0_1.md's blocking paragraph was amended in place by the BOB session. Reasoning there and in QUEUE.md (REC-15).
 
 ### DEC-21 · answered
 raised: 2026-08-02 · Bob, in the review of the study document
@@ -1641,6 +1655,7 @@ response: **THEY ARE NOT COMBINED — AND R2'S MECHANISM IS WRONG WHILE ITS CONC
   independent, they range over different populations, so a single shared floor was never
   expressible in the first place.
 decided: 2026-08-02 · Bob (definitions) · session BOB (derivation)
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-12 computes two measurements over two POPULATIONS (capture over documents reached, connection over edges; a leg is an edge carrying both grades). Confirms Q6's pair-of-floors independently (UI-18). Reasoning in BIO_Case_Making_v0_1.md §R2 and QUEUE.md (REC-12).
 
 ### DEC-22 · answered
 raised: 2026-08-03 · Bob, in the review of the study document
@@ -1683,6 +1698,7 @@ response: **A HUNCH IS AN ASSUMPTION — and an unsupported claim is one, and it
     AUTHORED is directed by the member's own words. The engine's work lands under
     DISCOVERING, driven by the claim.
 decided: 2026-08-03 · Bob
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-13 permits a claim with no legs as a standing objective (entry conditions for concluded unchanged); the machine-pursuit half is DEC-24's doctrine, parked with the S-item decompositions until Bob resumes the thread. Reasoning in QUEUE.md (REC-13) and this entry.
 
 ### DEC-23 · answered
 raised: 2026-08-03 · Bob, in the review of the study document
@@ -1729,6 +1745,7 @@ response: **CONTENT IS THE UNIT THE RECORD POINTS AT, and a whole document is si
   hidden, per DEC-4: machine-produced text must never be indistinguishable from publisher text.
   Capture grade stays a property of the DOCUMENT; how content was extracted is its own fact.
 decided: 2026-08-03 · Bob
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-11 and REC-18 carry the leg-points-at-CONTENT ruling as a named provisional (target stays an INFO-/INQ- id until D-164's parked content-extent primitive resumes; no second reference vocabulary meanwhile); IC-1's resolution records the same constraint on the element-reference union. D-164's supersession of D-161/D-163/D-123's framing stands. Reasoning in this entry, D-164, and INTERFACE-CHANGES.md IC-1.
 
 ### DEC-24 · answered
 raised: 2026-08-03 · Bob, in the review of the study document
@@ -1815,6 +1832,7 @@ response: **AI IS PART OF THE SYSTEM DEFINITION NOW, AND THE BOUNDARY IS: THE MA
   the evidence and how it connects. A candidate sentence would be answer-shaped. **Show the
   reasoning; never the sentence.**
 decided: 2026-08-03 · Bob
+enacted: 2026-08-03 · CONDUCT — 5318b53: the four roles and four boundary rules are doctrine, recorded here and referenced from REC-13's pursue path; no role is decomposed into items (deliberately — architecture is later, and the S-item decompositions are parked with Bob's thread). Nothing queued contradicts a rule; a machine credential is refusable on every authored act already queued (REC-13, REC-28, CPDF-10's attestation). Reasoning in this entry.
 
 ### DEC-25 · deferred
 raised: 2026-08-03 · session BOB, from Bob's action-plan ruling
@@ -1849,6 +1867,7 @@ response: **DEFERRED.** Bob, 2026-08-03: *"I also need to defer DEC-25 for now."
   and it is the kind of harm this project's stance exists to refuse. Enact the deferral with
   that constraint attached, not as a bare "not now".
 decided: 2026-08-03 · Bob
+enacted: 2026-08-03 · CONDUCT — the deferral stands with its constraint ATTACHED, not bare: the never-published provisional runs; if ever answered the other way it applies PROSPECTIVELY only (plans are written under a privacy promise, and retroactive publication would betray it). S11 stays parked with Bob's thread; the trigger is in this entry. Reasoning in this entry.
 
 
 ### DEC-26 · answered
@@ -1896,6 +1915,7 @@ response: **AGREED, AND THE DESIGN ALREADY CONTAINS THE PRINCIPLE.** Bob, 2026-0
   pre-flight refuses when its step is not `established`, naming the premise and the shortfall,
   which is where DEC-17's project-declared strength first does mechanical work.
 decided: 2026-08-03 · Bob
+enacted: 2026-08-03 · CONDUCT — nothing queued yet: S11 is parked with Bob's thread, and the support-status labelling (established / short of the standard / hypothetical) plus the act-gate rule enter S11's decomposition when it resumes. Recorded so the build session finds the gate at the ACT, not at the reasoning. Reasoning in this entry.
 
 ### DEC-27 · answered
 raised: 2026-08-03 · Bob, in the review of the study document
@@ -2041,6 +2061,7 @@ response: **ADOPT.** Bob, 2026-08-03: *"Just as most full featured UXs include a
   is bound by the same mechanism that binds every other surface, which is why a general-purpose
   prompt with wide reach does not widen the system's attack surface in the way one might expect.
 decided: 2026-08-03 · Bob
+enacted: 2026-08-03 · CONDUCT — nothing queued yet: S12 and its wizard are parked with Bob's thread; the assistant holds no copy of the rules (asks the plane, bound by DEC-8, no new trust boundary) and that constraint is recorded for its decomposition. Reasoning in this entry.
 
 ### DEC-28 · answered
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q8 / SB-CORE §5, working the open questions at
@@ -2083,6 +2104,7 @@ reasoning recorded in: this entry; RECONCILED §4 Q8 is marked settled by it in 
 for CONDUCT to enact: a scope note on REC-16 — `divided` ships as a terminal STATE written by
   `op=inquirydivide`, its reason is the act's reason, and `disposition_reason` is untouched.
   Nothing else changes; SB-CORE already drew it this way.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-16 ships divided as a terminal STATE written by op=inquirydivide, the reason is the act's reason, disposition_reason untouched. Reasoning in QUEUE.md (REC-16) and this entry.
 
 ### DEC-29 · answered
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q7 — CRITIQUE D-7's two halves R4 does not
@@ -2126,6 +2148,7 @@ decided: 2026-08-03 · Bob
 reasoning recorded in: this entry (the recommendation carries the full argument).
 for CONDUCT to enact: REC-16 gains the prompt-wording clause as an acceptance item; RECONCILED
   §4 Q7 marked settled by this entry.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-16 keeps one authored reason per division and gains the prompt-states-the-disclosure acceptance clause. RECONCILED §4 Q7 settled in place. Reasoning in QUEUE.md (REC-16).
 
 ### DEC-30 · answered
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q10 — four files, one question)
@@ -2161,6 +2184,7 @@ reasoning recorded in: this entry.
 for CONDUCT to enact: REC-16 ships author-scoped as already planned, now settled rather than
   provisional; REC-13's conclude path gains no owner gate and no ballot. RECONCILED §4 Q10
   marked settled by this entry.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-16 author-scoped as SETTLED; REC-13's conclude gains no owner gate and no ballot. Reasoning in QUEUE.md (REC-16/REC-13).
 
 ### DEC-31 · deferred
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q14 third bullet; AUDIENCES rows 13–14)
@@ -2203,6 +2227,7 @@ for CONDUCT to enact: record the H4 extension (addressed renderings carry hash, 
   and both floors in-band) in AUDIENCES.md §8's rule, so the first session to build any
   outward rendering inherits it. RECONCILED §4 Q14's delivery bullet marked deferred by this
   entry.
+enacted: 2026-08-03 · CONDUCT — 5318b53: deferred on its trigger (first group asking for addressed non-public delivery), and the BOUND rule is recorded now — addressed renderings carry hash, date, author and both floors in-band — on UI-18's scope beside H4 (the AUDIENCES.md header pointer names it). Reasoning in this entry and QUEUE.md (UI-18).
 
 ### DEC-32 · open
 raised: 2026-08-03 · session BOB (Bob's overlapping-utility example,
@@ -2298,6 +2323,7 @@ reasoning recorded in: this entry.
 for CONDUCT to enact: UI-17 and REC-15 move to DEFERRED with this entry as the reason; a
   small UI item for the S8 placeholder is added where UI-17 sat; REC-14/REC-22/UI-18 are
   unaffected. Kickoffs naming UI-17 as next-up must be corrected in the same pass.
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-15 and UI-17 moved to blocked with this ruling as the reason and Bob-reopens-the-thread as the trigger; UI-17a queued in UI-17's place (entry point stating what publication is, operator-run for now, Q12 narration); REC-14, REC-22 and UI-18 stay queued — they are not the process. No kickoff names UI-17 as next-up (checked). Reasoning in QUEUE.md (REC-15/UI-17/UI-17a).
 
 ### DEC-34 · answered
 raised: 2026-08-03 · Bob, in session (on S9, the published case)
@@ -2357,3 +2383,4 @@ _(none)_
 ## Enacted
 
 _(none — entries move here with their commit and the document carrying the reasoning)_
+enacted: 2026-08-03 · CONDUCT — 5318b53: REC-14 carries the container form (zip + signed hash manifest, editions over the container); REC-22 serves it and its PDF renderings with the per-page header (case id, edition, authors, declared bias, both floors, hash, verification pointer) and the page-without-header negative control; UI-18 renders it. Tamper-EVIDENT, never claimed tamper-proof. Reasoning in QUEUE.md (REC-14/REC-22/UI-18).
