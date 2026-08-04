@@ -143,6 +143,14 @@ sub-document attribution. An authority-undetermined capture may be held and may
 not be PUBLISHED.
 - `render.of`: the sha256 of the served shell, so the pair is inseparable
 
+> **SUPERSEDED IN ITS PREMISE 2026-08-04 (DEC-42): Workers Paid IS now a
+> requirement**, so the collision this section resolves no longer exists in either
+> direction. The section is kept because its MEASUREMENTS are still correct and its
+> Free-vs-Paid table below is the evidence DEC-42 rests on — in particular the CPU
+> line (10 ms → 30 s), which is what unblocks a tesseract OCR fleet member. Read the
+> free-tier figures as history: they describe a configuration no supported instance
+> runs under, and the installer now refuses it (D-54, D-185).
+
 ## There is no collision: rendering is available on the free tier
 
 An earlier version of this document said Browser Rendering is paid-only and that

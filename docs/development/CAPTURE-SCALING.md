@@ -273,7 +273,38 @@ legitimate form of that, because it probes deliberately TO failure and records
 the failure rather than inferring a limit from its absence. A run that completes
 without hitting the limit tells us only that the ceiling is at least this high.
 
-## Workers Paid is an optimisation, never a requirement
+## Workers Paid is an optimisation, never a requirement — SUPERSEDED 2026-08-04 (DEC-42)
+
+> **SUPERSEDED by DEC-42, 2026-08-04. Workers Paid IS a requirement.** The section
+> below is kept unedited because its reasoning is still right about the thing it was
+> protecting; what changed is a PREMISE, and the premise was never measured until now.
+>
+> The ruling protected a group that could install with NO financial relationship to
+> Cloudflare. **That group does not exist.** An instance already requires a Cloudflare
+> account and a payment method on it, and R2 already bills beyond its free allowance as
+> the record grows. So the real change is **$0/month plus a card → $5/month plus a
+> card**, not free → paid. Bob took the inventory himself and ruled on it: *"So now
+> we're saying a new instance needs all that AND a $5/month charge. Okay, that's the
+> reality."*
+>
+> A registered domain is NOT among the prerequisites — measured 2026-08-04 against
+> `newgroup/src/index.mjs:324`, which provisions a `workers.dev` prefix on a fresh
+> account. A custom domain is an option, never a requirement.
+>
+> What the $5 buys is in DEC-42; the line that forced it is **CPU per invocation, 10 ms
+> → 30 s**, which unblocks a tesseract fleet member measured at 99.96% character
+> accuracy, 90/90 digits and ZERO minted digits — the floor every other OCR candidate is
+> scored against, and a classic engine supplying the per-word confidence and coordinates
+> that DEC-35 required and Moondream failed to deliver.
+>
+> **The "developing on Paid will rot the free-tier path" warning below does not
+> disappear — it INVERTS, and that is D-185.** Free is no longer a supported
+> configuration, so the code that exists to survive it (resumable sessions, the
+> 50-subrequest ceiling, the 10 ms CPU discipline) is now defending against limits no
+> supported instance runs under. Deleting it would be the wrong reading: it is the
+> INSTALLER's job to refuse a Free account honestly, and the frugality is cheap to keep
+> and expensive to rebuild. What must not happen is the project quietly believing it is
+> still free-tier-viable while nothing exercises that path.
 
 RULED by Bob: he is willing to put his own account on Workers Paid, and is
 cautious about making it a requirement for production instances.

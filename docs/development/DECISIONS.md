@@ -2691,6 +2691,81 @@ recommendation: the browser path likely satisfies the ruling's INTENT (a reader 
   rendering" is a stronger claim about a forwarded file — genuinely his to weigh.
 reversal cost: none while the join stays reserved.
 
+### DEC-42 · answered
+raised: 2026-08-04 · session BOB (from CPDF-11's NO-GO and a re-reading of CPDF-9)
+for: bob
+question: Does an instance REQUIRE the group's own Workers Paid plan ($5/month)? This
+  reverses the standing ruling *"Workers Paid is an optimisation, never a requirement"*
+  (`CAPTURE-SCALING.md`), which was made to protect the sovereign installer's promise
+  that a community organisation can run its own record without expensing a subscription.
+why it is Bob's: it changes what every future group must PAY to run an instance —
+  effects on people outside the project, and the sovereignty promise carries his name.
+provisional: nothing was blocked; Free remained the requirement while the question stood.
+alternative: hold Free as the requirement and pay for it in engineering — build the page
+  renderer, prove Moondream's composed shape at n>>1, and accept a generative engine
+  capped at C with no per-region confidence; or fund an external OCR service and put a
+  second vendor account, a card and a third-party name in every group's install and in
+  every transcription's provenance chain.
+recommendation: REQUIRE Paid. The measurements had made Free the more expensive choice in
+  every currency except the $5.
+response: **ACCEPTED — Paid becomes a requirement.** Bob, 2026-08-04, and the reasoning
+  is his inventory rather than the OCR result: *"I would certainly like a new instance to
+  be free, but let's take inventory of what's already needed before this decision"* — a
+  Cloudflare account, a card on the account, R2 within the free realm but with real
+  charges beyond it. *"So now we're saying a new instance needs all that AND a $5/month
+  charge. Okay, that's the reality."*
+  **THE RULING RESTS ON A MEASURED INVENTORY, NOT ON WANTING THE FEATURE**, and that is
+  why it is not a reversal of the sovereignty doctrine but a correction of a premise it
+  rested on. The original ruling protected a group that could install with NO financial
+  relationship to Cloudflare. That group does not exist: an instance already needs an
+  account and a payment method, and R2 already bills beyond its free allowance as the
+  record grows. The honest description of the change is **$0/month plus a card becomes
+  $5/month plus a card** — not free becomes paid.
+  ONE CORRECTION TO THE INVENTORY, measured this turn rather than accepted: **a registered
+  domain is NOT required.** `newgroup/src/index.mjs:324` (`ensureSubdomain`) provisions a
+  `workers.dev` prefix on a fresh account and deploys to `<slug>.<sub>.workers.dev`. A
+  custom domain is an option a group may take, never a prerequisite. The prerequisite list
+  is therefore: a Cloudflare account · a payment method · Workers Paid · R2 (free tier,
+  billed past it). Workers Paid is also independent of the zone plan — it is NOT unlocked
+  by Cloudflare Pro and does not require it (`CLIENT-RENDERED.md`).
+what the $5 actually buys, and it is why this was the cheap answer:
+  - **CPU per invocation 10 ms → 30 s default, 5 min maximum.** This is the line that was
+    blocking the best engine on the table. CPDF-9 measured tesseract at **99.96% character
+    accuracy, 90/90 digits, ZERO minted** — it IS the floor every other candidate is scored
+    against — and a dedicated fleet member FITS (0.72 MB gzip with the model read from R2).
+    It was never blocked on size; it was blocked on the ~17–54M reference-iterations per
+    page against a Free kill window of ~40–42M. **My previous report to Bob said WASM OCR
+    was ruled out on bundle size. That was wrong** — it was true only of the two placements
+    DEC-35 named (in-plane, and inside the existing pdf-worker), and the measurement
+    plainly records that a third dedicated member fits. Corrected here rather than quietly.
+  - Worker size 3 MB → 10 MB · external subrequests 50 → 10,000 · requests 100k/day → no
+    daily cap · cron triggers 5 → 250 · Browser Run 10 min/day → 10 hr/month.
+  - At realistic instance scale the $5 is FLAT: a group capturing ~500 documents/month with
+    ~14% scanned is ~70 OCR pages ≈ 105,000 CPU-ms against 30,000,000 included — 0.35%.
+    Ten times that volume is ~3.5%. Nothing realistic approaches the included allowances.
+  - And it is a CLASSIC engine, so it supplies the per-word confidence and coordinates
+    DEC-35 named as constraints and Moondream failed — the anchor that CPDF-11 measured as
+    FAIL (2 of 24 box-checks; a confident box for a figure not on the page).
+decided: 2026-08-04 · Bob
+reasoning recorded in: this entry; `CAPTURE-SCALING.md` (the superseded ruling, corrected
+  in place with its original reasoning kept); `CLIENT-RENDERED.md`; DEBT D-54 and D-185.
+for CONDUCT to enact: (1) **D-54 changes character** — the installer no longer merely
+  DETECTS the plan, it REQUIRES Paid, verifies it, and refuses to complete honestly rather
+  than installing something quietly degraded (the D-106 class this protects against).
+  (2) **CPDF-12 is re-scoped again**: the renderer/composed-shape probes are no longer the
+  in-account route's only hope — measure the TESSERACT FLEET MEMBER first (a deployed wasm
+  CPU probe walked in reference iterations under Paid, per CPDF-9's own "authoritative
+  Worker CPU needs a deployed wasm probe" caveat), and note that for the image-only class
+  a page is typically ONE embedded image, so image EXTRACTION may serve where rasterising
+  was assumed — verify across the corpus before building a renderer. (3) **CPDF-10's
+  placement is now in-account tesseract**, pending that probe; the external tier stays
+  unfunded. (4) Correct every document carrying the superseded ruling — done in this
+  session's commit for `CAPTURE-SCALING.md`, `CLIENT-RENDERED.md`, `kickoffs/CAPTURE.md`,
+  `DEBT.md` and `MILESTONES.md`; `CIVICOS_UI_STATE.md`'s entry is dated history and is
+  deliberately NOT rewritten. (5) The free-tier-rot warning in `CAPTURE-SCALING.md` INVERTS
+  and must not be lost — see D-185.
+enacted:
+
 ## Answered, awaiting enactment
 
 _(none)_

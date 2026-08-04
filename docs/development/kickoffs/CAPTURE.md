@@ -274,8 +274,18 @@ and the address is a comment on a canonical-ID citation. Element references are
 part of citations. undetermined is first-class and must be STATED. A superseded
 link offers the capture the record does hold, labelled. Re-fetch at ratification
 records the attempt and outcome, not success. Cascade may run unattended behind
-the ratification fence. site_chrome is derived. Workers Paid is an optimisation,
-never a requirement. JS-rendered content IS the content, at the SAME grade.
+the ratification fence. site_chrome is derived. JS-rendered content IS the
+content, at the SAME grade.
+
+**CORRECTED 2026-08-04 by session BOB (DEC-42): "Workers Paid is an optimisation,
+never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already
+needed a Cloudflare account and a payment method, and R2 already bills past its free
+allowance, so the change is $0+card → $5+card rather than free → paid. This area's
+frugality work (resumable sessions, the 50-subrequest ceiling, the 10 ms CPU
+discipline) is NOT to be deleted — see D-185: the installer now refuses a Free
+account honestly, and that code is cheap to keep and expensive to rebuild. What
+changed is which limits a SUPPORTED instance runs under, not whether careful capture
+is worth writing.
 
 ## Open, and named
 
