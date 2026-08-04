@@ -48,82 +48,65 @@ fine and the collision DEC-3 exists to prevent cannot occur — check `git workt
 and the tree's cleanliness rather than assuming either way.
 
 ```
-Kickoff: session BOB.
+Kickoff: session BOB, new focus.
 
-Read CLAUDE.md, then docs/development/kickoffs/BOB.md, and follow it.
+Read CLAUDE.md, then docs/development/kickoffs/BOB.md, and follow it. Run in YOUR OWN
+WORKTREE (`claude --worktree BOB`, or a desktop session pointed at one) — a DORMANT sibling
+session holds the main checkout with a clean, pushed tree. Fetch before anything.
 
-State of play, 2026-08-03 END OF DAY. The case-making / study thread is PAUSED BY BOB:
-"we're far enough along in the definition of the requirements, journey, processes, UX, and
-data model that we can put all of this aside for a time and turn our focus elsewhere."
-Do not resume that thread unless Bob does. The prior session went DORMANT, not closed.
+State of play, 2026-08-03 end of day.
+
+**THE MANDATE. Bob is turning focus AWAY from the case-making study to OTHER areas of the
+design, and this session's product is a DEVELOPMENT PLAN that can be communicated to
+CONDUCT** — decisions worked with Bob, decomposed into scoped items with interfaces and
+depends-on, handed through the BOB INBOX in QUEUE.md. Bob, verbatim: "we're far enough
+along in the definition of the requirements, journey, processes, UX, and data model that we
+can put all of this aside for a time and turn our focus elsewhere."
+
+**Do NOT reopen the paused thread.** Case-making, the study document, S11's state inventory
+and D-164's content-extent design are PARKED until Bob reopens them. The review document is
+current and published; leave it unless a decision this session takes belongs in its Part 4.
 
 YOUR FIRST JOB IS THE STANDING ONE: read DECISIONS.md and surface every `open` entry.
-**There is ONE: DEC-32** — may one finding hold several parallel claims. Read it IN PLACE
-before saying anything about it; it carries two clarifications from Bob and a sharpened
-test (COUNT THE FALSIFIERS: same proposition, one falsifier, several independent bases ->
-plurality inside one finding; different propositions -> different falsifiers -> separate
-inquiries composed by recursion). Bob also asked for and received the weakest-leg
-justification: min over NECESSARY legs, max over INDEPENDENTLY SUFFICIENT bases — one rule,
-two shapes. DEC-32 awaits his read of that answer.
+**There is ONE: DEC-32.** Read it in place. Its ARITHMETIC is now RULED by Bob — legs
+relate by AND or OR; weakest leg governs across AND, strongest branch across OR (weakest
+within a branch). Only the object shape awaits his confirmation (the falsifier-count test:
+one proposition/one falsifier -> parallel claims inside one finding; own falsifier -> its
+own inquiry, composed by recursion). Surface it in one line; do not re-argue it. Three
+deferred entries have named triggers (DEC-2, DEC-25, DEC-31) — do not pre-empt them. ~30
+answered entries await CONDUCT's enactment; that is CONDUCT's loop, not yours.
 
-**Register state: 34 decisions.** 30 answered awaiting CONDUCT's enactment (its loop, not
-yours to chase), 3 DEFERRED with named triggers — DEC-2 (root of trust; trigger: a real
-multi-member instance), DEC-25 (plan publication; trigger: a group asks; any reversal is
-PROSPECTIVE ONLY), DEC-31 (addressed non-public delivery; trigger: the first group that
-asks; the in-band rule is BOUND NOW — hash, date, author, both floors inside any addressed
-rendering).
+**YOUR FIRST WORKING MOVE: build Bob the map of candidate focus areas.** Read
+MILESTONES.md, QUEUE.md, DEBT.md and docs/architecture/ FRESH — measure, do not recall —
+and present the areas that are NOT the paused thread, each with: what it needs DECIDED
+(vs what is already answered), what deciding it unblocks, and your recommendation. Rank
+them; recommend one. Candidates you will likely find (VERIFY against the repo before
+presenting — this list is a pointer, not a survey): the entity axis (M4), the office-formats
+/ OCR measurement path (CPDF-9/10, DEC-4's four-way placement), capture resilience (CAP-3
+arming, D-120 egress diversity), M8 member-reachability and the interaction constructs,
+S12 the assistant (DEC-27, named not drawn), and distribution/installer hardening. Bob
+picks the focus; you then work it to decisions and decomposition exactly as BOB.md's
+closing protocol requires.
 
-WHAT THE CLOSING TURNS SETTLED (2026-08-03, all in DECISIONS.md; read before touching
-anything they govern):
-  - **DEC-28** `divided` is a terminal STATE, not a disposition (session).
-  - **DEC-29** division: one authored reason + total disclosure stands; the divide prompt
-    stays and its wording must state the disclosure (Bob).
-  - **DEC-30** division is author-scoped; concluding needs NO ballot — one name on every
-    judgment (Bob).
-  - **DEC-33** the publication ceremony PROCESS is deferred (Bob); UI-17 and REC-15 deferred,
-    an S8 PLACEHOLDER ships instead; REC-14/REC-22/UI-18 are NOT the process and stay.
-  - **DEC-34** the published case is a CONTAINER (zip + signed hash manifest + editions)
-    reduced also to PDF renderings, every page brazened with case/edition/authors/bias/
-    floors/hash. **The guarantee is TAMPER-EVIDENCE (answer-by-hash), never tamper-proofing
-    — PDF write-protect flags are advisory and must never be presented as the guarantee.**
-  - RECONCILED §4 is fully resolved except Q14's contradiction bullet (undesigned, honestly)
-    and Q14's intent-axis bullet (RECORD's call at build): Q8 -> DEC-28, Q9/Q12/Q13 settled
-    by design pass in place, Q7 -> DEC-29, Q10 -> DEC-30, delivery -> DEC-31.
-  - **S4 ruling of note: the finder fans out BOTH retrieval routes and only the cross-seam
-    FILTERED INTERSECTION is refused** (truncated-list intersection under-reports invisibly;
-    the fix is the plane-side join, HOLE-4). Bob likes the design.
-
-PARKED WORK, in order, waiting for Bob to reopen the thread:
-  1. **S11 state inventory** — specifiable NOW; the walkthrough is in
-     BIO_Case_Making_v0_1.md §6-6b (nothing gates it; DEC-25/D-165 only remove affordances).
-  2. **D-164 the content-extent primitive** — ruled by DEC-23, undesigned; folds
-     D-161/D-163/D-123. Solve ONCE.
-
-SESSION MECHANICS, unchanged and still binding:
-  - One session per tree (DEC-3). The dormant session sits in the MAIN checkout with a
-    clean, pushed tree; a NEW session takes `claude --worktree <NAME>`. On ANY resumption:
-    `git worktree list`, fetch/rebase, and re-read DECISIONS.md + QUEUE.md — CONDUCT may
-    have enacted 30 entries meanwhile and the world will have moved.
-  - The review document: source at docs/development/research/review-document.html, published
-    at https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef — edit the file,
-    verify, republish **passing `url:` or Bob's link silently breaks**. Favicon in use: 📋
-    (keep it stable). Verify diagrams first, every time:
-        MERMAID_DIR=/tmp/mmcheck node tools/mermaid-check.mjs \
-          docs/development/research/review-document.html
-    (install line is in the tool header if /tmp/mmcheck is gone). The in-app browser cannot
-    reach claude.ai; verify appearance via a localhost replica (launch.json `mmpreview`) and
-    content via WebFetch. Screenshots of the 50k-px page can come back blank — verify by DOM.
+MECHANICS, unchanged and binding:
+  - Decisions that are genuinely Bob's only (doctrine, his risk, outside effects); resolve
+    everything the repo answers; tactical calls are yours — never block on him.
+  - The review document: source docs/development/research/review-document.html, published at
+    https://claude.ai/code/artifact/7862c5d4-0454-429c-8b9c-00492b61e4ef — edit the file,
+    verify, republish **passing `url:`** or Bob's link silently breaks. Favicon 📋, keep it.
+    Before ANY republish: MERMAID_DIR=/tmp/mmcheck node tools/mermaid-check.mjs <file>
+    (install line in the tool header). The in-app browser cannot reach claude.ai — verify
+    content via WebFetch, appearance via the localhost `mmpreview` harness; screenshots of
+    the 50k-px page can come back blank, verify by DOM.
   - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges
-    labelled with the ACT; never mix, never hand-roll arrow semantics. Bob rejected two
+    labelled with the ACT. Never mix; never hand-roll arrow semantics. Bob rejected two
     drafts that ignored this.
-  - HOW BOB REVIEWS: as a reader who has not lived in the repo. Terms before definitions,
-    precise words used loosely, examples assuming the model, overloaded edges. **When he
-    asks a question, ANSWER IT — worked, not deflected.** His questions keep exposing real
-    defects ("what that really is is multiple claims" produced the falsifier-count test;
-    "why are those grades combined?" produced DEC-21).
+  - HOW BOB REVIEWS: as a reader who has not lived in the repo, and he is right nearly
+    every time. When he asks a question, ANSWER IT — worked, not deflected; his questions
+    keep exposing real defects ("what that really is is multiple claims" -> the
+    falsifier-count test; "why are those grades combined?" -> DEC-21).
   - Do not guess. Do not be lazy. Measure with python (ugrep skips store.mjs on a NUL byte,
-    D-131); read the repo rather than recalling it; re-read the review document against the
-    register periodically — ten decisions went missing from Part 4 once.
+    D-131). Read the repo rather than recalling it.
 
 Run `node tools/plancheck.mjs` before any handoff.
 ```

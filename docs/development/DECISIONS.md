@@ -2256,6 +2256,16 @@ CLARIFIED 2026-08-03 by Bob, twice, and the entry stays OPEN pending his read of
   legs are NOT all necessary (independent sufficient bases), which is exactly why the flat
   model needs this decision. One rule, two shapes: min over necessary legs, max over
   independently sufficient bases.
+RULED IN PART 2026-08-03 by Bob — THE ARITHMETIC IS SETTLED: *"The simple truth is that
+  sometimes the weakest is the claim's strength, and other times it's not. The difference is
+  really whether the relationship between legs is AND or OR."* So a claim's basis carries the
+  RELATIONSHIP, not just the legs: strength is the MINIMUM over AND-related legs and the
+  MAXIMUM over OR-related branches (minimum within each branch, since a branch is itself an
+  AND). What remains open is only the OBJECT SHAPE — whether the OR-branches are claims
+  inside one finding (one proposition, one falsifier) with separate inquiries reserved for
+  distinct propositions (the falsifier-count test), which awaits Bob's confirmation. Any
+  build touching REC-12's strength derivation must model the AND/OR relationship from the
+  start; a flat implicit-AND basis is now known to be wrong.
 
 ### DEC-33 · answered
 raised: 2026-08-03 · Bob, in session (on S8, the publication ceremony)
