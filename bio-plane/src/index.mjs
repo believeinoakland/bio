@@ -1422,6 +1422,93 @@ const json = (o, status = 200) =>
     status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
   });
 
+/* ======================================================================
+   REC-52: A FAILURE TO ANSWER IS NOT AN ANSWER, AND THE PLANE MUST NOT
+   CONVERT ITS OWN INTO A CLAIM ABOUT THE RECORD.
+   ======================================================================
+
+   THE DEFECT THIS CLOSES, stated once so the next reader does not have to
+   reconstruct it. The Durable Object answers in exactly one envelope:
+
+       { ok: true,  result: <whatever the method returned> }        // it answered
+       { ok: false, error: <stack> }                       500      // it threw
+       { ok: false, error: "unknown op: <op>" }            400      // no such method
+       { ok: false, reason: "BAD_JSON", detail: … }        400      // unreadable body
+
+   Twenty-four handlers in this file used to read `.result` off that envelope
+   WITHOUT LOOKING AT `ok`, and JavaScript makes both failure modes silent:
+
+     - `json({ ok: true, ...out.result })` spreads `undefined`, which is a
+       no-op, so what leaves the control plane is `{ok:true}` at HTTP 200 —
+       a SUCCESSFUL envelope carrying nothing. Section 7a (`op=verify`) was
+       the measured instance, and UI-37 could not fix its own defect by making
+       the transport throw on `ok:false` BECAUSE THERE WAS NO `ok:false` TO
+       THROW ON; the motivating case sailed straight past.
+
+     - `(c || { reason: "NOT_PUBLISHED" })` and `if (!v || !v.published)
+       return notFound()` turn an absent answer into a SUBSTANTIVE NEGATIVE:
+       the plane telling a stranger that the record does not hold that part,
+       when in fact the plane failed to ask. This is the defect this project
+       ranks worst — the record asserting something it does not know — and it
+       sits at the layer BENEATH every surface, where no surface can correct
+       it. A surface that faithfully renders what it received will faithfully
+       render a lie.
+
+   THE FIX IS A CHOKEPOINT, not twenty-four remembered checks, because a rule
+   that must be remembered at every site is a rule that will be forgotten at
+   the twenty-fifth. `doAnswer` is the ONLY place in this file that opens a
+   Durable Object envelope, and `test/plane-envelope.test.mjs` asserts that
+   structurally over the source rather than by convention.
+
+   `answered` is `ok === true` AND NOTHING ELSE. It is deliberately NOT
+   "result is present and non-empty": a store method may legitimately answer
+   `null`, `[]` or `{}`, and treating a real empty answer as a non-answer
+   would be this same collapse running in the opposite direction — which is
+   one character away and is asserted against in its own arm.
+
+   WHAT THE CALLER IS TOLD, and why it says so little. `storeSilent` reports
+   the state of the EXCHANGE and makes no statement about the record at all,
+   because there is none to make. It does NOT echo the Durable Object's
+   `error`: that field is a raw stack trace (`String(e && e.stack || e)`),
+   and every op below that can reach this refusal — verify, publishedcase,
+   publishedbytes, publishedmanifest, bootstrap — is reachable with NO
+   credential of any kind. An anonymous stack trace is a disclosure, and a
+   diagnostic a stranger cannot act on is not worth one. */
+const STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
+const STORE_SILENT_DETAIL =
+  "this instance could not consult its own record, so nothing here is a statement about the record. "
+  + "It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are "
+  + "answers, and this is the absence of one. The question stands unanswered; ask again.";
+
+/* Takes the Response (or a promise of one) from a Durable Object stub fetch and
+   returns `{ answered, result }`. A body that is not JSON at all is not an
+   answer either, which is why the parse is guarded rather than allowed to throw
+   into whatever catch happens to be nearest. */
+async function doAnswer(res) {
+  let out = null;
+  try { out = await (await res).json(); } catch { out = null; }
+  return (out && out.ok === true)
+    ? { answered: true, result: out.result }
+    : { answered: false, result: undefined };
+}
+
+/* 502 rather than 500: the control plane is intact and reachable — what failed
+   is the store BEHIND it, which is precisely the distinction this refusal
+   exists to draw. `op` is named so an operator reading a log knows which read
+   went silent without the answer implying anything about what it was reading. */
+const storeSilent = (op) =>
+  json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+
+/* Some of these reads happen INSIDE a per-item renderer that returns a rendered
+   object rather than a Response, so it has no way to refuse on its own behalf.
+   Rather than let it fabricate a rendering from an answer it never got, it
+   throws this and the handler that owns the Response turns it into the same
+   refusal. A sentinel class and not a bare string, so a genuine crash on the
+   same path is re-thrown instead of being reported as a polite silence. */
+class StoreSilent extends Error {
+  constructor(op) { super(`the store did not answer ${op}`); this.op = op; }
+}
+
 /* The R2 key for a capture's bytes (I1 §2): content-addressed under the store
    prefix. The ONE place this shape is written, so op=capture and op=pdfstructure
    read the identical object rather than two copies of the key drifting apart. */
@@ -1528,8 +1615,16 @@ export default {
         const sha = (url.searchParams.get("sha256") || "").toLowerCase();
         if (!/^[0-9a-f]{64}$/.test(sha))
           return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
-        const r = await stub.fetch(new Request(`http://do/verify?sha256=${sha}`));
-        const out = await r.json();
+        /* REC-52, SITE (a). This read used to be
+             `const out = await r.json(); return json({ ok: true, ...out.result }, 200);`
+           with no look at `out.ok`, so a store failure left the plane as an
+           HTTP 200 SUCCESS carrying nothing — no `published`, no `sha256`, no
+           `matches` — and D-197's public verification surface rendered that as
+           "NOT PUBLISHED … a hash that was never ratified and a hash that never
+           existed are the same answer here, deliberately", a sentence that is
+           true of a real absence and false of a silence. */
+        const out = await doAnswer(stub.fetch(new Request(`http://do/verify?sha256=${sha}`)));
+        if (!out.answered) return storeSilent("verify");
         return json({ ok: true, ...out.result }, 200);
       }
       /* Section 8.2. Anyone, no token, no session, and nothing to withhold.
@@ -1540,8 +1635,18 @@ export default {
          op=verify above does, which is the whole safety of an open endpoint:
          working material is never consulted, so there is nothing to leak. */
       if (op === "publishedmanifest") {
-        const r = await stub.fetch(new Request("http://do/publishedmanifest"));
-        return json({ ok: true, result: (await r.json()).result }, 200);
+        /* REC-52, and this one was NOT in the item's scope — the sweep found
+           it. The re-wrap read `result: (await r.json()).result`, so a store
+           failure produced `{ok:true, result:undefined}`, and `JSON.stringify`
+           DROPS an undefined value: `{ok:true}` at HTTP 200 again, by a
+           different route from section 7a's spread. This is the op that fills
+           the published INDEX, so the rendered consequence was the whole
+           record rather than one hash — which is the shape UI-37 measured as
+           the worst of its three. The WRAPPED envelope is preserved on the
+           success path (auth-surface.test.mjs pins that it is not flattened). */
+        const out = await doAnswer(stub.fetch(new Request("http://do/publishedmanifest")));
+        if (!out.answered) return storeSilent("publishedmanifest");
+        return json({ ok: true, result: out.result }, 200);
       }
 
       /* ===================================================================
@@ -1587,7 +1692,18 @@ export default {
              slip that nothing else in the plane would catch) and this guard is
              the only thing standing between an anonymous caller and the working
              corpus. */
-          const v = (await (await stub.fetch(`http://do/verify?sha256=${shaParam}`)).json()).result;
+          /* REC-52, a THIRD site the item did not name and the sweep found.
+             `!v` and `!v.published` used to be one test, so a store that never
+             answered fell into `notFound()` — and `notFound()` is not a shrug,
+             it is a CLAIM: "no published part answers to that hash … a hash
+             that was never ratified and a hash that never existed are the same
+             answer here, deliberately." That clause is exactly what makes the
+             sentence convincing, and it is true only of a real absence. The
+             two are now separated: a silence is a silence, and the guard below
+             keeps its whole meaning for the answers that reach it. */
+          const vOut = await doAnswer(stub.fetch(`http://do/verify?sha256=${shaParam}`));
+          if (!vOut.answered) return storeSilent("publishedbytes");
+          const v = vOut.result;
           const notFound = () => json({ ok: false, reason: "NOT_FOUND", sha256: shaParam,
             detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
                   + "never existed are the same answer here, deliberately." }, 404);
@@ -1649,8 +1765,27 @@ export default {
         if (id) q.set("id", id);
         if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
         if (/^[0-9a-f]{64}$/.test(shaParam)) q.set("sha256", shaParam);
-        const c = (await (await stub.fetch(`http://do/publishedcase?${q}`)).json()).result;
-        if (!c || !c.ok) return json({ ok: false, ...(c || { reason: "NOT_PUBLISHED" }) }, 404);
+        /* REC-52, SITE (b). This read used to be
+             `if (!c || !c.ok) return json({ ok: false, ...(c || { reason: "NOT_PUBLISHED" }) }, 404);`
+           — the plane MANUFACTURING a substantive claim about the record out
+           of a failure to answer. `NOT_PUBLISHED` is the store's own word for
+           a real absence, and it carries the store's own sentence with it
+           (store.mjs states it, and preauth-vocabulary.test.mjs reads it out
+           of there rather than typing a copy); minting the bare code here
+           produced a refusal that LOOKS like that answer and is not one.
+           THE STORE'S OWN `NOT_PUBLISHED` IS UNTOUCHED and still reaches the
+           caller verbatim on the branch below — the two must not collapse in
+           either direction, and both directions have their own arm. */
+        const cOut = await doAnswer(stub.fetch(`http://do/publishedcase?${q}`));
+        if (!cOut.answered) return storeSilent("publishedcase");
+        const c = cOut.result;
+        /* MEASURED, not assumed: `Store.publishedCase` returns an object on
+           every path — its own `{ok:false, reason:"NOT_PUBLISHED", detail}`
+           when nothing answers. So `!c` is a store that answered with nothing
+           at all, which is a silence wearing an answer's envelope and gets the
+           silence's reply rather than the record's. */
+        if (!c) return storeSilent("publishedcase");
+        if (!c.ok) return json({ ok: false, ...c }, 404);
 
         /* REC-44 / DEC-44: RENDERED PER FINDING, PLURAL. This surface used to
            render one body, one basis and one frozen pair because a case was
@@ -1707,8 +1842,21 @@ export default {
           let registry = {};
           if (legs.length) {
             const ids = [...new Set(legs.map((l) => l.target))];
-            const rt = (await (await stub.fetch(
-              `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`)).json()).result;
+            /* REC-52, a FIFTH site and the one that argues hardest for sweeping
+               rather than fixing the two the item named. `registry = (rt &&
+               rt.registry) || {}` meant a store that never answered produced an
+               EMPTY registry, and an empty registry makes every leg resolve to
+               `served: false` with the sentence "this leg is NAMED and not
+               served: what it rests on is not in the published record". That is
+               a substantive claim about the published record — the same defect
+               as site (b), reached by a `||` on a different line, and it would
+               have been rendered as a finding's own basis on the surface a
+               stranger arrives at. An empty registry is now only ever the
+               store's own answer. */
+            const rtOut = await doAnswer(stub.fetch(
+              `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`));
+            if (!rtOut.answered) throw new StoreSilent("publishedcase/publishedtargets");
+            const rt = rtOut.result;
             registry = (rt && rt.registry) || {};
           }
           const basis = legs.map((l) => {
@@ -1735,7 +1883,17 @@ export default {
                    bytes: `op=publishedbytes&sha256=${fnd.bundle_sha}` };
         };
         const findings = [];
-        for (const fnd of c.findings || []) findings.push(await renderFinding(fnd));
+        try {
+          for (const fnd of c.findings || []) findings.push(await renderFinding(fnd));
+        } catch (e) {
+          /* REC-52: a store silence inside the renderer refuses the WHOLE read
+             rather than serving a partially-rendered case, because a case
+             rendered from a registry that was never consulted asserts things
+             about its own basis that nobody checked. Anything else is re-thrown
+             untouched — a real crash must not arrive dressed as a silence. */
+          if (e instanceof StoreSilent) return storeSilent(e.op);
+          throw e;
+        }
 
         return json({ ok: true, ...c, findings,
           verification: {
@@ -1779,22 +1937,36 @@ export default {
         const win = Math.floor(Date.now() / KNOCK.windowMs);
         const ipHash = (await fingerprint(req.headers.get("cf-connecting-ip") || "unknown")) || "unknown";
         const knockId = `KNOCK-${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
-        const rec = await (await stub.fetch(new Request("http://do/knock", {
+        const rec = await doAnswer(stub.fetch(new Request("http://do/knock", {
           method: "POST", body: JSON.stringify({
             knockId, sha256: sha, bytes: bytes.length,
             content: r2 ? null : new TextDecoder().decode(bytes),
             inR2: r2, note: body.note, contact: body.contact,
             ipBucket: `ip:${ipHash}:${win}`, globalBucket: `all:${win}`,
             perIpLimit: KNOCK.perIp, globalLimit: KNOCK.global,
-          }) }))).json();
+          }) })));
+        /* REC-52: `if (!rec.result?.ok) return json({ ok:false, ...rec.result }, 429)`
+           sent a store silence back as a bare `{ok:false}` at HTTP 429 — the
+           TOO-MANY-REQUESTS status, which is itself a substantive claim: it
+           tells an anonymous member of the public that they knocked too often,
+           when in fact nobody counted. The rate refusal the store really sends
+           is unchanged and still arrives whole. */
+        if (!rec.answered) return storeSilent("knock");
         if (!rec.result?.ok) return json({ ok: false, ...rec.result }, 429);
         if (r2) await env.CAPTURES.put(`bio/inbox/${sha}`, bytes,
           { sha256: await crypto.subtle.digest("SHA-256", bytes) });
         return json({ ok: true, knockId, sha256: sha, bytes: bytes.length,
                       received: "Your material is in the group's inbox awaiting member review." }, 200);
       }
-      const r = await stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`));
-      const out = await r.json();
+      /* REC-52: the same spread as section 7a's. A store silence used to leave
+         a `{ok:true}` carrying the service name, the version and the bootstrap
+         flag and NOTHING the store knows — an instance answering "here is what
+         I am" while unable to say anything about itself. The installer and
+         `newgroup` both read this op (measured at newgroup/src/index.mjs:364
+         and :631), so the false success reached a caller deciding whether an
+         instance was ready. */
+      const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
+      if (!out.answered) return storeSilent("bootstrap");
       return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
                     bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...out.result }, 200);
     }
@@ -1814,8 +1986,17 @@ export default {
       const t = url.searchParams.get("token");
       if (t && /^[0-9a-f]{64}$/.test(t)) {
         const st = env.STORE.get(env.STORE.idFromName("bio"));
-        const r = await (await st.fetch(`http://do/session?t=${t}`)).json();
-        const sess = r?.result?.session;
+        /* REC-52, and this is the class arriving at the AUTHENTICATION path,
+           which is why it is converted rather than left as an internal read.
+           `r?.result?.session` swallowed a store silence into `undefined`, and
+           the code below then refuses the caller BY NAME — "this operation
+           requires a machine credential", or the generic session refusal. So a
+           store that could not be reached was reported to a signed-in member as
+           a fact about their credential. The record makes no claim about who
+           somebody is when it could not look. */
+        const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
+        if (!sOut.answered) return storeSilent("session");
+        const sess = sOut.result?.session;
         if (sess) {
           const kind = sess.role === "admin" ? "admin" : "member";
           /* Section 8.1, checked BEFORE the generic session refusal so the
@@ -1960,12 +2141,20 @@ export default {
          identity exactly as the passthrough reads take it below. An object the
          viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. */
       const affViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-      const facts = (await (await st.fetch(
-        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`)).json()).result;
-      if (!facts || facts.ok !== true)
-        return json({ ok: false, ...(facts || { reason: "NO_FACTS" }),
-                      store: storeName, tokenClass: cls },
-                    facts && facts.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
+      /* REC-52: `(facts || { reason: "NO_FACTS" })` is site (b)'s shape with a
+         different word — a store silence answering "there are no facts about
+         that object", which is a claim about the object. What the acts on an
+         object are is the whole of what this op is asked, so answering it out
+         of a failure to ask would put a wrong set of affordances in front of a
+         member. The store's own NO_SUCH_BUNDLE, and its 404, are untouched. */
+      const fOut = await doAnswer(st.fetch(
+        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`));
+      if (!fOut.answered) return storeSilent("affordances");
+      const facts = fOut.result;
+      if (!facts) return storeSilent("affordances");
+      if (facts.ok !== true)
+        return json({ ok: false, ...facts, store: storeName, tokenClass: cls },
+                    facts.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
       return json({ ok: true, result: {
         target: facts.target, object_type: facts.object_type,
         current_state: facts.current_state,
@@ -2015,9 +2204,16 @@ export default {
         const v = url.searchParams.get(k);
         if (v !== null) inner.searchParams.set(k, v);
       }
-      const r = (await (await st.fetch(inner.toString())).json()).result;
-      if (!r || r.ok !== true)
-        return json({ ok: false, ...(r || { reason: "NO_QUEUE" }), store: storeName, tokenClass: cls }, 400);
+      /* REC-52: `(r || { reason: "NO_QUEUE" })` — a store silence reported to a
+         member as a statement that there is no queue. It refused with `ok:false`
+         rather than a false success, so it is the milder half of the class and
+         it is still the plane inventing a word the store never said. */
+      const qOut = await doAnswer(st.fetch(inner.toString()));
+      if (!qOut.answered) return storeSilent("queue");
+      const r = qOut.result;
+      if (!r) return storeSilent("queue");
+      if (r.ok !== true)
+        return json({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);
       return json({ ok: true, result: {
         ...r,
         items: r.items.map((i) => ({ ...i, options: (i.options || []).map(decorateAct) })),
@@ -2027,7 +2223,15 @@ export default {
 
     if (op === "registeraudit") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const r = (await (await st.fetch("http://do/registeraudit")).json()).result;
+      /* REC-52: this one CRASHED rather than lied — `r.unresolved` on an absent
+         result throws a TypeError and the caller gets a platform 500 — so it is
+         the less dangerous half of the class. It is converted anyway, because
+         the answer below is a SOUNDNESS VERDICT about the register ("sound:
+         true") and an audit that reports on a register it could not read is the
+         worst possible place to be one line away from a false clean bill. */
+      const aOut = await doAnswer(st.fetch("http://do/registeraudit"));
+      if (!aOut.answered || !aOut.result) return storeSilent("registeraudit");
+      const r = aOut.result;
       const canProbe = typeof env.CAPTURES?.head === "function";
       const captured = [], unbacked = [], mismatched = [];
       for (const row of r.unresolved) {
@@ -2092,8 +2296,13 @@ export default {
         out.r2 = "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither";
       }
       try {
-        const r = await env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://x/stats");
-        out.store = (await r.json()).result;
+        /* REC-52: a store that ANSWERED `ok:false` reported `out.store =
+           undefined` and left `out.ok` TRUE — a deployment health check
+           reporting healthy because the failure it was looking for arrived in
+           the one shape it did not read. Only a thrown fetch was caught. */
+        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://x/stats"));
+        if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
+        else out.store = sOut.result;
       } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
       if (r2Configured) {
         try {
@@ -2154,9 +2363,16 @@ export default {
        refusal to find a ceiling with. */
     if (op === "runtime") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const obs = (await (await st.fetch("http://x/runtimeobservations")).json()).result;
-      const probe = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
-      const lim = (await (await st.fetch("http://x/capturelimit?runtime=subrequests")).json()).result;
+      /* REC-52: three unchecked reads feeding one `{ok:true}`. A store silence
+         made every one of them `undefined`, `JSON.stringify` dropped all three,
+         and the answer became `{ok:true, asymmetry:"…"}` — a MEASUREMENT op
+         reporting success while carrying no measurement, which is this class at
+         its most literal: an outcome that costs nothing to produce. */
+      const obsOut = await doAnswer(st.fetch("http://x/runtimeobservations"));
+      const probeOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
+      const limOut = await doAnswer(st.fetch("http://x/capturelimit?runtime=subrequests"));
+      if (!obsOut.answered || !probeOut.answered || !limOut.answered) return storeSilent("runtime");
+      const obs = obsOut.result, probe = probeOut.result, lim = limOut.result;
       return json({ ok: true, measured: obs, cpu_probe: probe, subrequests: lim,
         asymmetry: "a refused subrequest throws and is caught, so the subrequest ceiling is known by "
                  + "having hit it. Exceeding the CPU limit TERMINATES the isolate, so no run can "
@@ -2171,7 +2387,14 @@ export default {
        member's session. */
     if (op === "cpuprobe") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const before = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      /* REC-52: `before.highest_completed` threw on an absent result, so this
+         one crashed rather than lied. Converted for the same reason as
+         op=registeraudit — the answer it builds is a CEILING, and a ceiling
+         derived from a starting point nobody read is a number presented as a
+         measurement. */
+      const beforeOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
+      if (!beforeOut.answered || !beforeOut.result) return storeSilent("cpuprobe");
+      const before = beforeOut.result;
       const iters = Math.max(100000, Number(url.searchParams.get("iterations")) || 2000000);
       const budget = Math.max(50, Number(url.searchParams.get("budget_ms")) || 20000);
       const r = await cpuProbe({
@@ -2182,7 +2405,9 @@ export default {
             body: JSON.stringify({ step, elapsedMs: elapsed, iterations: iters }) });
         },
       });
-      const after = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      const afterOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
+      if (!afterOut.answered) return storeSilent("cpuprobe");
+      const after = afterOut.result;
       return json({ ok: true, run: r, state: after,
         note: "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not "
             + "return, the trail's highest step is the last one that fit and the ceiling lies just "
@@ -2197,8 +2422,14 @@ export default {
       if (!/^[0-9a-f]{64}$/.test(capture || ""))
         return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
       const bundle = url.searchParams.get("bundle");
-      const p = await (await st.fetch(`http://x/projectlinks?capture=${capture}`
-        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : ""))).json();
+      /* REC-52: op=linkproject WRITES — it projects a capture's links into
+         edges — and `json({ ok: true, ...p.result })` reported a store silence
+         as a successful projection carrying no counts. A write reported as
+         done when nothing was written is the worst member of this class after
+         the public reads, because the caller stops asking. */
+      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}`
+        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "")));
+      if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }
 
@@ -2208,7 +2439,11 @@ export default {
          shapes the rows, so this only forwards. */
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const host = url.searchParams.get("host");
-      const r = await (await st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`)).json();
+      /* REC-52: the same spread. An empty `{ok:true}` here reads as "the
+         governor is holding nothing", which is a claim about what the instance
+         is doing to other people's servers. */
+      const r = await doAnswer(st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
+      if (!r.answered) return storeSilent("governorstate");
       return json({ ok: true, ...r.result });
     }
 
@@ -2228,10 +2463,15 @@ export default {
         if (!Number.isFinite(appetite) || appetite <= 0)
           return json({ ok: false, reason: "BAD_APPETITE", detail: "appetite_per_min must be a positive number, or omit it to reset to the instance default" }, 400);
       }
-      const r = await (await st.fetch("http://x/governorconfig", {
+      /* REC-52, and this is the second WRITE in the class: an operator sets a
+         host's appetite, the store never records it, and the plane answers
+         `{ok:true}`. The operator then believes a courtesy limit is in force on
+         somebody else's server when none is. */
+      const r = await doAnswer(st.fetch("http://x/governorconfig", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ host, appetite_per_min: appetite }),
-      })).json();
+      }));
+      if (!r.answered) return storeSilent("governorconfig");
       return json({ ok: true, ...r.result });
     }
 
@@ -2240,13 +2480,20 @@ export default {
       const capture = url.searchParams.get("capture");
       const address = url.searchParams.get("address");
       if (address) {
-        const r = await (await st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`)).json();
+        /* REC-52: "what points at this address" answered `{ok:true}` with no
+           rows on a store silence, which a reader cannot tell from "nothing
+           points at it" — an absence at one level reported as an absence at the
+           next, which CLAUDE.md names as its own rule. */
+        const r = await doAnswer(st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`));
+        if (!r.answered) return storeSilent("links");
         return json({ ok: true, ...r.result });
       }
       if (!/^[0-9a-f]{64}$/.test(capture || ""))
         return json({ ok: false, reason: "NEED_CAPTURE_OR_ADDRESS",
           detail: "pass capture=<sha256> for a document's outbound links, or address=<url> for what points at it" }, 400);
-      const r = await (await st.fetch(`http://x/resolvelinks?capture=${capture}`)).json();
+      /* REC-52: same again for a document's outbound links. */
+      const r = await doAnswer(st.fetch(`http://x/resolvelinks?capture=${capture}`));
+      if (!r.answered) return storeSilent("links");
       return json({ ok: true, ...r.result });
     }
 
@@ -3529,7 +3776,15 @@ export default {
       /* REC-25: the store's image read fails closed without a viewer. The
          monitor is a machine caller acting as itself, so it reads at its own
          credential's scope, which D-15 deliberately leaves unfiltered. */
-      const img = (await (await stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`)}`)).json()).result;
+      /* REC-52: `!img` and `typeof img["bundle.md"] !== "string"` were one
+         test, so a store silence answered `ABSENT` at 404 — the plane telling a
+         caller that a bundle does not exist when it failed to look. `ABSENT` is
+         also deliberately the answer a bundle the viewer may not SEE gets
+         (REC-25's fail-closed read), which made the invented one especially
+         convincing. The two are separated; the fail-closed meaning is intact. */
+      const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
+      if (!imgOut.answered) return storeSilent("monitor");
+      const img = imgOut.result;
       if (!img || typeof img["bundle.md"] !== "string")
         return json({ ok: false, reason: "ABSENT", bundleId }, 404);
       const live = img["bundle.md"];
@@ -3628,7 +3883,7 @@ export default {
       const stamp = checked.replace(/[-:]/g, "") + "_" +
         [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
 
-      const promoted = await (await stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
+      const promoted = await doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
         bundleId, base: liveSha, snapKey: stamp, author: "bio-monitor",
         writer: "mechanical", operation: "monitor-tick",
         meta: { object_type: fm.object_type, group: fm.group || "believe-in-oakland",
@@ -3646,7 +3901,13 @@ export default {
           ...carried,
         ],
         register: [],
-      }) })).json();
+      }) }));
+      /* REC-52: a store silence produced `ok:false` at 409 with `reason` and
+         `detail` both undefined — a CONFLICT status over an empty refusal —
+         while the monitoring verdict above it (`status`, `note`, `seen`) was
+         still reported as though the tick had been recorded. The tick is
+         reported only when the store said it recorded one. */
+      if (!promoted.answered) return storeSilent("monitor/promote");
 
       return json({
         ok: !!promoted.result?.ok,

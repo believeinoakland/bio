@@ -609,17 +609,43 @@ ok("the plane's own refusal for an op it does not have is readable from here too
    + JSON.stringify(UNKNOWN_OP_REFUSAL) + " — which is what a surface deployed ahead of its plane gets, "
    + "and civicos-ui's deploy is not gated on a plane release",
    UNKNOWN_OP_REFUSAL.length > 5 && /op/.test(UNKNOWN_OP_REFUSAL));
-/* THE NON-ANSWER'S MECHANISM, PINNED IN THE PLANE'S OWN SOURCE. If section 7a
-   ever learns to check `out.ok` the arm below stops being reachable, and this
-   assertion is what tells the next session that — rather than leaving a drive in
-   place that quietly stopped meaning anything. */
-const SEVENA_SPREAD = /if \(op === "verify"\)[\s\S]{0,900}?return json\(\{ ok: true, \.\.\.out\.result \}, 200\);/
-  .test(INDEX_SRC);
-ok("MEASURED IN THE PLANE'S SOURCE: op=verify answers `json({ ok: true, ...out.result }, 200)` without "
-   + "looking at `out.ok`, so a Durable Object failure reaches this surface as {ok:true} at HTTP 200 with "
-   + "no `published` — an unanswerable question wearing a successful envelope, and the arm a throwing "
-   + "transport seam could never have caught",
-   SEVENA_SPREAD);
+/* THE NON-ANSWER'S MECHANISM, PINNED IN THE PLANE'S OWN SOURCE.
+ *
+ * CORRECTED 2026-08-05 (REC-52) AND NEVER EXEMPTED, exactly as UI-37 wrote it
+ * expecting. The old assertion required section 7a to STILL CARRY THE DEFECT:
+ *
+ *     /if \(op === "verify"\)[\s\S]{0,900}?return json\(\{ ok: true, \.\.\.out\.result \}, 200\);/
+ *
+ * and it was green for that reason. It was written honestly — UI-37 said at
+ * this site that the day 7a learned to check `out.ok`, the drive below would
+ * stop meaning anything and this pin was what would say so. That day is today.
+ * REC-52 closed the defect at eleven caller-facing sites, of which this was
+ * one, so the OLD assertion would now be RED FOR THE FIX and GREEN FOR THE BUG
+ * — which is the trap UI-36's refusal arm fell into whole, and the reason
+ * CLAUDE.md requires a superseded assertion to be corrected at the site rather
+ * than deleted or exempted.
+ *
+ * WHAT IT PINS NOW IS THE SAME PROPERTY WITH THE POLARITY THE OTHER WAY UP:
+ * section 7a CHECKS the envelope before it spreads it. So this arm goes RED
+ * the day the defect comes back, which is what a pin is for. The drive below
+ * KEEPS ITS SUBJECT AND IS NOT WEAKENED: `civicos-ui` deploys on its own
+ * schedule and is explicitly not gated on a plane release (`kickoffs/UI.md`),
+ * so a surface talking to a plane OLDER than itself is the normal condition —
+ * an empty `{ok:true}` from a pre-REC-52 plane is still something a stranger
+ * can be served today, and this surface must still refuse to read an absence
+ * out of it. The plane's own guarantee and the surface's own defence are two
+ * different assertions, and only the first one moved. */
+const SEVENA_GUARDED =
+  /if \(op === "verify"\)[\s\S]{0,2400}?const out = await doAnswer\([\s\S]{0,200}?if \(!out\.answered\) return storeSilent\("verify"\);/
+    .test(INDEX_SRC);
+const SEVENA_RAW_SPREAD =
+  /if \(op === "verify"\)[\s\S]{0,900}?const out = await r\.json\(\);\s*\n\s*return json\(\{ ok: true, \.\.\.out\.result \}, 200\);/
+    .test(INDEX_SRC);
+ok("MEASURED IN THE PLANE'S SOURCE: op=verify now OPENS the Durable Object envelope before it spreads "
+   + "it — `doAnswer` then `if (!out.answered) return storeSilent(\"verify\")` — so a store failure "
+   + "leaves the plane as a REFUSAL and no longer as {ok:true} at HTTP 200 with no `published`. This "
+   + "arm is red for the defect and green for the fix, which is the direction UI-36's pin had backwards",
+   SEVENA_GUARDED && !SEVENA_RAW_SPREAD);
 /* AND THE TRUE NEGATIVE FOR A CASE, READ THE SAME WAY. `op=publishedcase`'s
    genuine "the published projection does not hold that" is the STORE's own
    answer and carries the store's own sentence; the surface must keep rendering
