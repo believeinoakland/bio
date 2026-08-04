@@ -137,8 +137,22 @@ const FLAT_OPS = new Map(Object.entries({
   linkproject:    'index.mjs op==="linkproject" — json({ok:true, ...p.result})',
   governorstate:  'index.mjs op==="governorstate" — json({ok:true, ...r.result})',
   governorconfig: 'index.mjs op==="governorconfig" — json({ok:true, ...r.result})',
-  knock:          'index.mjs op==="knock" — json({ok:true, ...c, object_type, body, basis, verification})',
+  /* CORRECTED 2026-08-05 (UI-18), never exempted: this line carried
+     op=publishedcase's return literal against op=knock's name. The
+     CLASSIFICATION was right — knock builds its own answer and is flat — but
+     the evidence beside it named a different op, which is the one thing this
+     column exists to prevent, since the list is re-checkable only if each line
+     points at the handler it came from. */
+  knock:          'index.mjs op==="knock" — builds its own answer literal (ok, knockId, sha256, bytes, received)',
   verify:         'index.mjs op==="verify" — json({ok:true, ...out.result})',
+  /* UI-18. The public read path's case op has its own handler and FLATTENS:
+     `json({ ok:true, ...c, object_type, body, basis, verification })`. Its
+     sibling `op=publishedbytes` is not listed because it answers BYTES, not
+     JSON, on success — the probe only judges answers it can read as an object,
+     and a refusal is legitimately flat either way. `op=publishedmanifest` is
+     NOT here and must not be: index.mjs re-wraps it explicitly
+     (`json({ok:true, result: …})`), so wrapped is the correct expectation. */
+  publishedcase:  'index.mjs op==="publishedcase" — json({ok:true, ...c, object_type, body, basis, verification})',
 }));
 const wireShapeOf = op => FLAT_OPS.has(op) ? "flat" : "wrapped";
 
@@ -156,8 +170,15 @@ const SEAMS = new Set(["rec", "recPost", "recR", "recPostR", "actAsk", "intentAs
    missed D-173's sixth instance: `signIn` read `l.token` off `api("login")`'s
    envelope, so no correct password ever signed anybody in and no wrong one ever
    showed the plane's reason. Neither `signIn` nor `pubList` is reached by any
-   harness, so arm B could never have found it. Its seam is `apiR`. */
-const API_SEAMS = new Set(["api", "apiR"]);
+   harness, so arm B could never have found it. Its seam is `apiR`.
+
+   `apiQ` JOINED THIS FAMILY IN UI-18 and is the busier half now: the public case
+   surface reaches four `classes: null` ops with QUERY PARAMETERS and no
+   credential, and every one of those reads goes through it. It is a SEAM and not
+   a transport — it opens the envelope exactly as `apiR` does — so it belongs in
+   this set rather than under the call-site ban, and the day something calls
+   `api()` directly to sneak a parameter in, arm A names it. */
+const API_SEAMS = new Set(["api", "apiR", "apiQ"]);
 
 function armA(){
   const html = fs.readFileSync(APP, "utf8");
@@ -211,6 +232,10 @@ const SUITES_WITH_OP_TRAFFIC = [
   "act-attest.test.mjs", "act-ballot.test.mjs", "act-dispose.test.mjs", "act-proposal.test.mjs",
   "cite-act.test.mjs", "conclude-act.test.mjs", "document-page.test.mjs", "document-structure.test.mjs",
   "inquiry-page.test.mjs", "intent-write.test.mjs", "members-roster.test.mjs", "project-workspace.test.mjs",
+  /* UI-18. Pinned the day it landed rather than a release later: it is the only
+     suite that drives the CREDENTIAL-FREE ops, so if it goes quiet the three
+     public reads leave arm B's coverage entirely and nothing else notices. */
+  "publishedcase.test.mjs",
   "queue.test.mjs", "record-list.test.mjs", "release-flow.test.mjs", "seals-backrestore.test.mjs",
   "subject-view.test.mjs",
 ];

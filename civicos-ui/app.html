@@ -633,6 +633,84 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
   .pub-body{padding:26px 20px 50px}
   .pub-body h1{font-size:34px}
 }
+
+/* ============================================================
+   UI-18 · O2 THE PUBLISHED CASE.
+   The public reading surface: --sheet, --t-pub-body, no rail, no fence band,
+   no act bar. Everything below is either the case's own type or the brazening
+   DEC-34 and DEC-31 require on the artifact itself.
+   ============================================================ */
+.pub-back{font-size:13px;color:var(--muted);cursor:pointer}
+.pub-page{border-top:2px solid var(--ink);padding-top:10px;margin:0 0 38px}
+.pub-page:first-of-type{border-top:none;padding-top:0}
+/* THE PER-PAGE HEADER (DEC-34). Compact on screen, full weight on paper; the
+   facts are TEXT NODES, never generated content, because a header that a reader
+   cannot copy out with the page is not on the page. */
+.dec34{font-family:var(--font-fact);font-size:11px;line-height:1.55;color:var(--ink-soft);
+       border:1px solid var(--ink);padding:8px 10px;margin:0 0 20px;background:var(--card)}
+.dec34 b{font-weight:700;letter-spacing:var(--tr-caps);text-transform:uppercase;font-size:10px;color:var(--muted)}
+.dec34 .f{display:block}
+.dec34 .sha{word-break:break-all}
+/* THE IN-BAND BLOCK (DEC-31's bound rule + Q6's floors). It is the FIRST thing
+   in the artifact and it is never smaller than the body. */
+.pub-inband{border:2px solid var(--ink);padding:16px 18px;margin:0 0 26px;font-size:var(--t-pub-body)}
+.pub-inband h3{font-family:var(--font-record);font-size:19px;margin:0 0 8px}
+.pub-inband .floors{font-family:var(--font-fact);font-size:14px;margin:10px 0 0}
+.pub-inband .floors div{padding:2px 0}
+.pub-inband .bound{font-family:var(--font-fact);font-size:12px;color:var(--ink-soft);margin-top:12px;
+                   border-top:var(--hair);padding-top:10px;word-break:break-all}
+.pub-stances{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
+.pub-stances button{font:inherit;font-size:13px;padding:7px 13px;border-radius:var(--r-2);cursor:pointer;
+                    border:1px solid var(--verdigris-dk);background:var(--sheet);color:var(--ink)}
+.pub-stances button[aria-pressed="true"]{background:var(--verdigris);color:var(--sheet)}
+.pub-grade{font-family:var(--font-fact);font-size:12px;font-weight:700;letter-spacing:.03em;
+           border:1px solid var(--ink);padding:1px 7px;display:inline-block}
+.pub-axisrow{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;margin:6px 0}
+.pub-bar{font-family:var(--font-fact);font-size:12.5px;border-left:3px solid var(--verdigris-dk);
+         padding:4px 0 4px 10px;margin:8px 0}
+.pub-leg{border-top:var(--hair);padding:14px 0}
+.pub-leg .served{font-family:var(--font-fact);font-size:11px;letter-spacing:var(--tr-caps);text-transform:uppercase}
+.pub-leg .served.yes{color:var(--verdigris-dk)}
+.pub-leg .served.no{color:var(--signal-dk)}
+.pub-leg .mono,.pub-file .mono{font-family:var(--font-fact);font-size:12px;word-break:break-all}
+.pub-file{border-top:var(--hair);padding:9px 0;font-size:13.5px}
+.pub-drop{border:1px dashed var(--signal-dk);padding:10px 12px;margin:12px 0;font-size:14px}
+.pub-super{border:1px solid var(--signal-dk);background:var(--card);padding:12px 14px;margin:0 0 22px;font-size:14.5px}
+.pub-excl{white-space:pre-wrap;font-size:15px;border-left:3px solid var(--ink);padding-left:14px;margin:10px 0}
+.print-footer{font-family:var(--font-fact);font-size:10.5px;color:var(--muted);border-top:var(--hair);
+              padding-top:8px;margin-top:26px;word-break:break-all}
+.pub-page details{margin:8px 0}
+.pub-page details>summary{cursor:pointer;font-size:13.5px;color:var(--verdigris-dk)}
+
+/* ---------- PRINT, AND IT IS FIRST-CLASS ----------
+   THERE IS NO `display:none` IN THIS BLOCK AND THERE MUST NEVER BE ONE. A
+   qualifier that survives on screen and vanishes on paper is the forbidden
+   compression performed by a stylesheet, so this stylesheet may only ADD: it
+   expands, it un-collapses, it prints an address that was a click on screen,
+   and it repeats the footer. `publishedcase.test.mjs` reads this block and
+   fails on any hiding rule at all — that is the negative control's subject. */
+@media print{
+  @page{margin:16mm 14mm 20mm}
+  html,body{background:#fff}
+  /* The in-band block prints FIRST and at FULL SIZE. */
+  .pub-inband{font-size:var(--t-pub-body);break-inside:avoid;break-after:avoid}
+  .pub-page{break-before:page;border-top:2px solid #000}
+  .pub-page:first-of-type{break-before:auto}
+  .dec34{break-inside:avoid;font-size:10.5px}
+  /* Every collapsed leg expanded. The `open` attribute is set by
+     `pubExpandForPrint()` on beforeprint (CSS alone cannot open a <details>);
+     this is the belt to that braces. */
+  .pub-page details>summary{list-style:none}
+  .pub-page details>*{break-inside:avoid}
+  /* Every link becomes its full address and its sha, in mono. ADDED content,
+     never substituted — the anchor text stays exactly where it was. */
+  .pub-page a[data-addr]::after{content:" [" attr(data-addr) "]";font-family:var(--font-fact);font-size:10.5px}
+  .pub-page a[data-sha]::after{content:" [sha256:" attr(data-sha) "]";font-family:var(--font-fact);font-size:10.5px}
+  .pub-page a[data-addr][data-sha]::after{content:" [" attr(data-addr) " · sha256:" attr(data-sha) "]"}
+  /* The per-page footer: case id, case sha, rendering sha, date. */
+  .print-footer{position:fixed;bottom:0;left:0;right:0;background:#fff}
+  .pub-stances button{border:1px solid #000}
+}
 </style>
 </head>
 <body>
@@ -715,7 +793,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
       <div class="mono-square" id="p-mono">B</div>
       <div><div class="gname" id="p-gname">Believe in Oakland</div><div class="gid" id="p-gid">believeinoakland.org</div></div>
     </div>
-    <div class="links"><a onclick="pubList()" style="cursor:pointer">Case files</a><a onclick="pubList()" style="cursor:pointer">Verify</a></div>
+    <div class="links"><a onclick="pubList()" style="cursor:pointer">Case files</a><a onclick="pubVerifyPanel()" style="cursor:pointer">Verify</a><span id="p-back"></span></div>
   </div>
   <div class="pub-body" id="pub-body"></div>
 </div>
@@ -763,10 +841,27 @@ const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B
 
 const $ = s => document.querySelector(s);
 const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-/* The UNTOKENED transport, for the two endpoints reached before a session
-   exists: `op=login` and `op=publishedmanifest`. It is `rec`'s sibling and it
-   carries the same hazard, so it has the same seam — see `apiR` below. */
-const api = (op, body) => fetch(`${PLANE.base}/api/?op=${encodeURIComponent(op)}`,
+/* The UNTOKENED transport, for the endpoints reached before a session exists —
+   `op=login`, `op=publishedmanifest` — and, since UI-18, for the ones reached
+   WITHOUT ONE ON PURPOSE: `op=publishedcase`, `op=publishedbytes` and
+   `op=verify` are `classes: null` in the plane's OPS table, and the public case
+   surface must reach them holding nothing. It is `rec`'s sibling and it carries
+   the same hazard, so it has the same seam — `apiR` and `apiQ` below.
+
+   THE THIRD ARGUMENT IS UI-18's AND IT IS THE WHOLE OF WHAT CHANGED HERE. The
+   public reads take QUERY PARAMETERS (`id`, `edition`, `sha256`) and this
+   transport could only ever send `op`. It is optional and defaults to nothing,
+   so the op-only and the op-plus-body forms are byte-identical in behaviour to
+   what `signIn` and the old `pubList` already did — and the third argument is
+   named rather than shown, because arm A of `check-mock-envelope.mjs` reads
+   this file textually and a comment that spells a call IS a call to it.
+   What it must NEVER grow is a
+   `token` — an untokened transport that learns to carry a credential is no
+   longer evidence that the surface reached the plane holding nothing, and the
+   public-case harness asserts on the WIRE that no request from that surface
+   carries one. */
+const api = (op, body, params) => fetch(
+  `${PLANE.base}/api/?` + new URLSearchParams({ op, ...(params||{}) }),
   body ? {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)} : undefined).then(r=>r.json());
 /* D-173's SIXTH INSTANCE, FOUND AND FIXED 2026-08-05 (UI-23) while sweeping the
    sibling helpers, and it was live: `signIn` read `l.token` straight off
@@ -785,6 +880,19 @@ const api = (op, body) => fetch(`${PLANE.base}/api/?op=${encodeURIComponent(op)}
    the seam now so no site is left deciding for itself. */
 async function apiR(op, body){
   const j = await api(op, body);
+  return (j && j.result !== undefined) ? j.result : j;
+}
+/* THE CREDENTIAL-FREE READ SEAM (UI-18). `apiR`'s twin for the ops that take
+   query parameters rather than a POST body, and it exists as its own function
+   rather than as a fourth argument to `apiR` so that arm A of
+   `check-mock-envelope.mjs` has a NAME to allow: every public read on the
+   published-case surface goes through here, and nothing else in this file may
+   reach `api` at all. Shape-agnostic exactly as `recR` is — `op=publishedcase`
+   and `op=verify` are FLATTENED by their own handlers in index.mjs while
+   `op=publishedmanifest` is re-wrapped by its, and no call site should have to
+   know which is which. */
+async function apiQ(op, params){
+  const j = await api(op, null, params||{});
   return (j && j.result !== undefined) ? j.result : j;
 }
 async function rec(op, params={}){
@@ -1014,7 +1122,12 @@ async function boot(){
      — the exact defect UI-11 added this line to prevent, one surface over.
      Fixed here because this is the line being edited, and reported rather than
      left as a comment nobody runs. */
-  if(!routeFromHash() && !projectRouteFromHash() && !actionRouteFromHash()) go("queue", true);
+  /* UI-18: FOUR real addresses, and the PUBLISHED one is asked first. It is the
+     only one that resolves for a caller holding nothing, so it must resolve the
+     same way for a caller holding something — a member who reloads on a case
+     file lands back on the case file WITH THEIR SESSION, which is the dead end
+     BUILD-ORDER named when it asked for a URL space of its own. */
+  if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash() && !actionRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -5089,7 +5202,18 @@ function inquiryPair(fmj){
    with the other, never averaged, never scored, never drawn as a bar, and the
    grade rendered is the plane's own value — this function performs no
    comparison between grades at all. */
-function axisPanel(axis, a, legs){
+/* UI-18 added the OPTIONAL fourth argument and nothing else about this function
+   moved. On the working surface a target id is a LINK into the workspace; on the
+   published surface it is a NAME and must not be one, because half the ids this
+   page can print are material the public read path can only name and can hand
+   over nothing of — and a link that opens the workspace is also a link a
+   stranger cannot follow. The default keeps every existing call site byte-
+   identical in behaviour. */
+function axisTargetLink(id){
+  return `<a onclick="openBundle(${esc(JSON.stringify(String(id)))})" class="mono">${esc(String(id))}</a>`;
+}
+function axisPanel(axis, a, legs, opts){
+  const linkFn = (opts && typeof opts.link === "function") ? opts.link : axisTargetLink;
   const head = `<h3 style="font-family:var(--font-ui);font-size:14px;margin:18px 0 4px">${esc(AXIS_SHORT[axis])} &middot; ${esc(AXIS_WORD[axis].toLowerCase())}</h3>`;
   const state = STRENGTH_STATES.includes(a.state) ? a.state : null;
   const counts = (a.load_bearing != null && a.population != null)
@@ -5103,7 +5227,7 @@ function axisPanel(axis, a, legs){
     return head + `<div class="card" style="margin:0 0 12px">
       <div class="kv"><span class="k">${esc(AXIS_SHORT[axis])}</span><span class="v plain">
         <span class="subj-grade g-est">Grade ${esc(a.grade)}</span></span></div>
-      <div class="subj-how" style="margin-top:6px">No stronger than the weakest leg it rests on${a.weakest?`, which is <a onclick="openBundle(${esc(JSON.stringify(String(a.weakest)))})" class="mono">${esc(String(a.weakest))}</a>`:""}.</div>
+      <div class="subj-how" style="margin-top:6px">No stronger than the weakest leg it rests on${a.weakest?`, which is ${linkFn(a.weakest)}`:""}.</div>
       ${a.detail?`<div class="subj-how">${esc(a.detail)}</div>`:""}
       ${counts}</div>`;
   }
@@ -12245,28 +12369,736 @@ function errPane(e, crumbHtml){
   return `${crumbHtml||""}<div class="teach" style="margin:8px 0">${esc(msg)}</div>`;
 }
 
-/* ---------- Published space (op=publishedmanifest, public) ---------- */
-function enterPublished(){ $("#work").classList.remove("on"); $("#gate").classList.add("hidden"); $("#pub").classList.add("on"); document.documentElement.setAttribute("data-space","published"); $("#p-gname").textContent=GROUP.name; $("#p-gid").textContent=GROUP.idstr.slice(0,32); $("#p-mono").textContent=GROUP.mono; pubList(); }
-async function pubList(){
+/*__PUBLISHED_CASE_START__*/
+/* ============================================================
+   UI-18 · O2 THE PUBLISHED CASE — the surface UI-PLAN calls "the reason the
+   rest exists", and which until this item rendered a bundle id as its <h1>.
+
+   WHAT THIS IS. The only surface in the product a STRANGER meets, and the only
+   one that reads with NO CREDENTIAL OF ANY KIND. Every read below goes through
+   `apiQ`, the untokened seam, and reaches exactly four ops that the plane's OPS
+   table declares `classes: null` — `publishedmanifest`, `publishedcase`,
+   `publishedbytes`, `verify`. There is no token in this region to forget to
+   remove, which is the point: the harness asserts on the WIRE that not one
+   request this surface makes carries one.
+
+   THE ADDRESS IS REAL. `#published` and `#case/<id>[/e<N>]` are addresses: they
+   survive a reload, they can be handed to somebody who has never signed in, and
+   — the reason BUILD-ORDER asked for them — a signed-in member who goes to look
+   at the public record gets there and BACK without the reload that would have
+   cost them their session. `pubLeave()` is the way back and it exists only when
+   a credential is actually held.
+
+   THE FOUR AFFORDANCES THAT ARE FORBIDDEN, considered and absent, stated here
+   because "the report must say they were considered":
+     H7  A REPLY BOX FOR A SUBJECT. Refused. A subject's answer is evidence and
+         belongs in the record through capture, dated and hashed, where it can
+         be cited — not in a comment field beside the case where it is neither.
+         The case already discloses whether it was put to its subject and what
+         came back (`completeness.subject_position`), which is the honest form
+         of the same thing.
+     H2  NOTIFY ME. Refused. It converts a reader into a list, and a record
+         whose whole product is trustworthiness has no business holding one; the
+         editions index tells a reader what to come back and check, and a hash
+         they hold tells them whether anything moved.
+     H3  A VERIFIED-AUTHOR BADGE. Refused, and it is the most tempting of the
+         four. A badge is a claim about a PERSON that this surface cannot
+         establish; what it can establish is that a named key signed these
+         bytes, so the attestor, the key and the armored signature are printed
+         and the reader checks them. Identity is not a colour.
+     H1  REDACT / TAKE DOWN. Refused. Nothing here is unpublished (DEC-19 as
+         amended): correction moves FORWARD as a further edition, and a
+         withdrawal is another attested act with both editions still standing. A
+         control that appeared to remove a published edition would be a lie
+         about what this record does.
+   Their absence is asserted structurally by `publishedcase.test.mjs`, not left
+   to this comment.
+
+   WHAT THIS SURFACE NEVER COMPUTES. Every strength, every state and every
+   sentence about them comes from the plane's own frozen axis objects; the
+   declared bar comes from the plane's frozen `required_strength`; the
+   serve-or-name split comes from the plane's own `served` flag and its own
+   `serves[]`/`names[]` arrays. This file composes nothing out of two of them.
+   ============================================================ */
+
+/* Q6, SETTLED: A THRESHOLD IS A NAMED STANCE RESOLVING TO A PAIR OF INDEPENDENT
+   FLOORS, ONE PER AXIS, EVALUATED CONJUNCTIVELY.
+
+   Never one value applied to both — the axes move independently by what the
+   reader is doing with the case, and one value on both is R2's forbidden
+   composition performed by arithmetic. Never one axis named with the other left
+   out — that is the same composition performed by OMISSION, and it admits
+   arbitrary weakness silently, so `stanceFloors` resolves such a stance to
+   NOTHING rather than to a default. A floor of `none` is legitimate and must
+   render EXPLICITLY: an unstated floor reads as a satisfied one.
+
+   THE LABELS NAME WHAT THE READER IS DOING AND NEVER WHO THEY ARE
+   (`AUDIENCES.md` §0). "Citing this in a filing" is a thing a person does; "for
+   lawyers" is a thing a person is, and a surface that sorts its readers into
+   kinds has started deciding what kind of person deserves which evidence. */
+const FLOOR_VALUES = ["A", "B", "C", "D", "none"];
+const FLOOR_RANK = { A: 0, B: 1, C: 2, D: 3 };
+const THRESHOLDS = [
+  { key: "whole", label: "Reading the whole case",
+    doing: "Everything the case rests on, at whatever strength each leg was established. Nothing is held back and nothing is filtered out.",
+    floors: { capture: "none", connection: "none" } },
+  { key: "filing", label: "Citing this in a filing",
+    doing: "You are about to rest something of your own on this, so only legs established at the top of BOTH axes are shown as load-bearing.",
+    floors: { capture: "A", connection: "A" } },
+  { key: "own_records", label: "Checking this against records you already hold",
+    doing: "You hold authoritative copies yourself, so how directly WE hold a document matters less to you than how firmly the link between documents was established.",
+    floors: { capture: "none", connection: "B" } },
+  { key: "quoting", label: "Quoting this in something you publish",
+    doing: "You need the documents themselves held directly; the strength of the links is something you will describe in your own words rather than take from us.",
+    floors: { capture: "B", connection: "none" } },
+];
+function stanceOf(key){ return THRESHOLDS.find(s => s.key === key) || null; }
+/* THE RESOLUTION, and it is where Q6 is enforced rather than described. A
+   stance resolves ONLY to a complete pair of two independently declared floors.
+   Anything else — a missing axis, an unknown value — resolves to null, and a
+   null pair draws no rendering at all. */
+function stanceFloors(key){
+  const s = stanceOf(key);
+  if(!s || !s.floors) return null;
+  const out = {};
+  for(const ax of GRADE_AXES){
+    const v = s.floors[ax];
+    if(!FLOOR_VALUES.includes(v)) return null;
+    out[ax] = v;
+  }
+  return out;
+}
+function floorWord(f){
+  return f === "none"
+    ? "none — no floor on this axis, so every leg passes on it whatever it is graded"
+    : `grade ${f} or stronger`;
+}
+
+/* ---- the published surface's state. One case, one edition, one stance. ---- */
+const PUB = { id: null, edition: null, stance: "whole", data: null, renderSha: null, index: null };
+let PUB_HASH_LOCK = false;
+
+/* The plane's two frozen axis objects, keyed by axis. Returns null unless BOTH
+   are present: the shape of a case's strength is a PAIR, and half of one is not
+   a weaker answer, it is a different one. */
+function pubPair(c){
+  const rows = c && Array.isArray(c.strength) ? c.strength : null;
+  if(!rows) return null;
+  const out = {};
+  for(const a of rows) if(a && GRADE_AXES.includes(a.axis)) out[a.axis] = a;
+  return (out.capture && out.connection) ? out : null;
+}
+/* THE ONLY PRODUCER OF A STRENGTH MARK ON THIS SURFACE, and it is one function
+   so that "two strengths, never one" is structural. Every mark carries the axis
+   it belongs to as a data attribute AND names that axis in its own text, so a
+   composed letter cannot be drawn without the harness's sweep seeing an
+   unattributed mark. */
+function pubStateBadge(axis, a){
+  if(!GRADE_AXES.includes(axis)) return "";
+  const label = esc(AXIS_SHORT[axis]);
+  if(!a || !STRENGTH_STATES.includes(a.state))
+    return `<span class="pub-grade" data-axis="${esc(axis)}">${label} &middot; no state published</span>`;
+  if(a.state === "graded")
+    return `<span class="pub-grade" data-axis="${esc(axis)}">${label} ${esc(String(a.grade))}</span>`;
+  return `<span class="pub-grade" data-axis="${esc(axis)}">${label} ${esc(STRENGTH_STATE_WORD[a.state] || a.state)}</span>`;
+}
+function pubPairBadges(pair){
+  return `<span class="pub-axisrow">${GRADE_AXES.map(ax => pubStateBadge(ax, pair ? pair[ax] : null)).join("")}</span>`;
+}
+
+/* DEC-17 AS AMENDED: THE DECLARED BAR, BESIDE THE STRENGTH REACHED. A reader
+   building on another group's case is entitled to know the standard that case
+   was held to. An ABSENT bar renders as ABSENT and never as zero — the plane's
+   own sentence says so and is printed verbatim, because "an absent bar is not a
+   bar of zero" is exactly the sentence a renderer is tempted to shorten into a
+   dash. */
+function pubBarHtml(c){
+  const b = c && c.required ? c.required : null;
+  if(!b || b.declared !== true)
+    return `<div class="pub-bar" data-bar="absent"><b>Declared required strength: NONE WAS DECLARED.</b>
+      ${esc(b && b.detail ? b.detail : "No required evidentiary strength was declared for this case, so nothing here was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard.")}</div>`;
+  return `<div class="pub-bar" data-bar="declared"><b>Declared required strength, set in advance:
+      ${esc(AXIS_SHORT.capture)} ${esc(b.capture || "not set")} &middot; ${esc(AXIS_SHORT.connection)} ${esc(b.connection || "not set")}.</b>
+      ${esc(b.detail || "")}</div>`;
+}
+
+/* THE QUALIFIERS (H5, D-8/C-15). A threshold may drop CLAIMS. It may never drop
+   a leg that DETERMINED either published strength, nor a leg that LEFT AN AXIS
+   UNRATED — because under the collapse the case's strength IS its weakest leg, so
+   dropping the determining leg drops the thing that produced the qualifier the
+   rendering still prints, and the reader is shown a strength with no leg that
+   could have produced it. `undetermined` therefore never needs a position in
+   the threshold order at all.
+
+   D-160 IS ABSOLUTE AND IT REACHES THIS ITEM'S OWN VOCABULARY. QUEUE.md and
+   RECONCILED both describe this class of leg with the word that was RETIRED,
+   because it means the OPPOSITE in SB-OUTPUT §5.1 and `check-semantics.mjs`
+   fails on any occurrence of it in this file. The rule is unchanged and the
+   word is not: the boundary case is UNRATED, and the leg is one that LEFT AN
+   AXIS UNRATED.
+
+   Such a leg is any ungraded leg while an axis reads UNRATED or
+   undetermined. The FROZEN pair does not carry `not_load_bearing` (the
+   frontmatter block writes axis, state, grade, weakest, load_bearing,
+   population and detail), so the set is taken from the basis itself — which is
+   the conservative direction: it keeps more legs, and the rule here is one
+   qualifier too many rather than one too few. */
+function pubQualifiers(c){
+  const ids = new Set(), why = new Map();
+  const pair = pubPair(c);
+  const legs = (c && Array.isArray(c.basis)) ? c.basis : [];
+  if(!pair) return { ids, why };
+  for(const ax of GRADE_AXES){
+    const a = pair[ax];
+    if(!a) continue;
+    if(a.state === "graded" && a.weakest != null){
+      const id = String(a.weakest);
+      ids.add(id);
+      why.set(id, `it determined this case's ${AXIS_SHORT[ax].toLowerCase()} strength — the case is no stronger than this leg`);
+    }
+    if(a.state === "unrated" || a.state === "undetermined"){
+      for(const l of legs){
+        if(!l || l.grade != null || !l.target) continue;
+        const id = String(l.target);
+        ids.add(id);
+        why.set(id, `it is one of the legs that left the ${AXIS_SHORT[ax].toLowerCase()} axis reading ${STRENGTH_STATE_WORD[a.state] || a.state}`);
+      }
+    }
+  }
+  return { ids, why };
+}
+
+/* THE CONJUNCTIVE EVALUATION. Each axis's floor is applied to the legs of THAT
+   axis and to nothing else; the two are never mixed and neither is ever used as
+   a default for the other. */
+function pubThreshold(c, floors){
+  const legs = (c && Array.isArray(c.basis)) ? c.basis : [];
+  const quals = pubQualifiers(c);
+  const kept = [], dropped = [];
+  for(const l of legs){
+    const id = String(l.target || "");
+    if(quals.ids.has(id)){ kept.push({ leg: l, qualifier: true, why: quals.why.get(id) || "" }); continue; }
+    const ax = l.grade_axis;
+    if(!GRADE_AXES.includes(ax)){
+      /* No axis, so no floor can be applied to it. Kept, and SAID — a leg
+         dropped because nothing could be measured about it is a leg dropped by
+         the renderer's convenience. */
+      kept.push({ leg: l, qualifier: false, why: "this leg names no axis, so neither floor applies to it and it is not dropped" });
+      continue;
+    }
+    const floor = floors[ax];
+    if(floor === "none"){ kept.push({ leg: l, qualifier: false, why: "" }); continue; }
+    if(l.grade == null){ dropped.push({ leg: l, reason: `it carries no grade, and this rendering asks for ${floorWord(floor)} on the ${AXIS_SHORT[ax].toLowerCase()} axis` }); continue; }
+    if(FLOOR_RANK[l.grade] <= FLOOR_RANK[floor]) kept.push({ leg: l, qualifier: false, why: "" });
+    else dropped.push({ leg: l, reason: `it is ${AXIS_SHORT[ax].toLowerCase()} ${l.grade}, and this rendering asks for ${floorWord(floor)}` });
+  }
+  /* AN AXIS THAT IS NOT GRADED SATISFIES ONLY `none`. Stated as its own fact rather than
+     performed by silently emptying the axis. */
+  const axisFails = [];
+  const pair = pubPair(c);
+  if(pair) for(const ax of GRADE_AXES){
+    const a = pair[ax];
+    if(!a || a.state === "graded") continue;
+    if(floors[ax] !== "none")
+      axisFails.push({ axis: ax, state: a.state,
+        detail: `The ${AXIS_SHORT[ax].toLowerCase()} axis reads ${STRENGTH_STATE_WORD[a.state] || a.state}, and this rendering asks for ${floorWord(floors[ax])} on it. An axis that is not graded satisfies a floor of none and no other floor, so this case does not meet this stance on this axis. Nothing is hidden because of it: the legs that left the axis reading ${STRENGTH_STATE_WORD[a.state] || a.state} are qualifiers and are printed below.` });
+  }
+  const cutsDropped = dropped.filter(d => d.leg && d.leg.role === "cuts_against");
+  return { kept, dropped, cutsDropped, axisFails, qualifiers: quals };
+}
+
+/* ---- who authored this, and what bias the case declared about itself ---- */
+function pubAuthors(c){
+  const names = [];
+  if(c && c.attestor && c.attestor.member) names.push(String(c.attestor.member) + " (attested)");
+  if(c && c.completeness && c.completeness.author && String(c.completeness.author) !== String(c.attestor && c.attestor.member))
+    names.push(String(c.completeness.author) + " (completeness)");
+  return names.length ? names.join(", ") : "not named in the published bytes";
+}
+/* DECLARED BIAS is the HUNCH legs and nothing else: a hunch is declared bias,
+   recorded openly from the moment it is made. "None declared" is a real answer
+   and is printed as one. */
+function pubDeclaredBias(c){
+  const legs = (c && Array.isArray(c.basis)) ? c.basis : [];
+  const h = legs.filter(l => l && l.grade_source === "hunch").map(l => String(l.target));
+  return h.length ? `${h.length} declared hunch${h.length === 1 ? "" : "es"} — ${h.join(", ")}` : "none declared";
+}
+
+/* DEC-34: THE PER-PAGE HEADER. Case id, edition, authors, declared bias, both
+   floors, hash, verification pointer — on EVERY page-shaped artifact, without
+   exception. `pubPage()` below is the only way to make one, and it always
+   stamps; the harness counts pages against stamps in both directions so a page
+   cannot appear without a header and a header cannot be counted twice.
+
+   TAMPER-EVIDENT, NEVER TAMPER-PROOF. Nothing on this page prevents a modified
+   copy. Everything on it makes one detectable by anyone holding it, without
+   this instance's cooperation — which is the stronger property and the only one
+   we can honestly claim. */
+function dec34Header(c, floors, stance){
+  const st = stanceOf(stance);
+  const floorLine = floors
+    ? `${esc(AXIS_SHORT.capture)}: ${esc(floorWord(floors.capture))} &middot; ${esc(AXIS_SHORT.connection)}: ${esc(floorWord(floors.connection))}`
+    : `THIS RENDERING RESOLVED NO PAIR OF FLOORS AND MUST NOT BE READ AS FILTERED`;
+  return `<div class="dec34" data-dec34="1">
+    <span class="f"><b>Case</b> ${esc(c.bundleId)} &middot; <b>Edition</b> ${esc(String(c.edition))} of ${esc(String(c.latest_edition))} &middot; ${esc((c.ratified_at || "").slice(0, 10))}</span>
+    <span class="f"><b>Authors</b> ${esc(pubAuthors(c))}</span>
+    <span class="f"><b>Declared bias</b> ${esc(pubDeclaredBias(c))}</span>
+    <span class="f"><b>Rendered for</b> ${esc(st ? st.label : "no stance")} &middot; <b>Floors</b> ${floorLine}</span>
+    <span class="f sha"><b>Hash</b> sha256:${esc(c.bundle_sha || "")}</span>
+    <span class="f"><b>Verify</b> ${esc((c.verification && c.verification.bytes) || "op=verify&sha256=<the hash above>")} &mdash; tamper-EVIDENT, never tamper-proof</span>
+  </div>`;
+}
+/* A PAGE-SHAPED ARTIFACT. One section, one header, always. */
+function pubPage(c, floors, stance, inner){
+  return `<section class="pub-page">${dec34Header(c, floors, stance)}${inner}</section>`;
+}
+
+/* DEC-31's BOUND RULE + H4: THE IN-BAND BLOCK. Hash, date, author and BOTH
+   floors, plus the threshold this rendering was drawn at and the exclusions the
+   case itself declared — inside the artifact, in EVERY rendering, without
+   exception, because files get forwarded and a threshold stated in a covering
+   note travels no further than the note does.
+
+   IT IS TEXT. Not a tooltip, not generated content, not an attribute: a reader
+   who selects this page and pastes it somewhere else takes the block with them,
+   which is the only test of "in-band" that means anything. */
+function pubInbandHtml(c, floors, stance){
+  const st = stanceOf(stance);
+  let rows = [];
+  try{ rows = JSON.parse((c.completeness && c.completeness.excluded) || "[]"); }catch(_){ rows = []; }
+  const excl = Array.isArray(rows) && rows.length
+    ? `<ul style="margin:8px 0 0;padding-left:20px">${rows.map(r => `<li>${esc(r && r[0] ? r[0] + " — " : "")}${esc((r && r[1]) || "")}: ${esc((r && r[2]) || "")}</li>`).join("")}</ul>`
+    : `<p style="margin:8px 0 0">The case declares that nothing material was excluded.</p>`;
+  return `<div class="pub-inband">
+    <h3>What you are reading, and what has been left out of it</h3>
+    <p><b>Rendered for: ${esc(st ? st.label : "no stance")}.</b> ${esc(st ? st.doing : "")}</p>
+    <div class="floors">
+      <div><b>Floor applied to ${esc(AXIS_SHORT.capture)} (${esc(AXIS_WORD.capture.toLowerCase())}):</b> ${esc(floors ? floorWord(floors.capture) : "NONE RESOLVED")}</div>
+      <div><b>Floor applied to ${esc(AXIS_SHORT.connection)} (${esc(AXIS_WORD.connection.toLowerCase())}):</b> ${esc(floors ? floorWord(floors.connection) : "NONE RESOLVED")}</div>
+      <div>The two floors are independent and are applied together. Neither is a default for the other, and neither was derived from the other.</div>
+    </div>
+    <p style="margin-top:12px"><b>What this case says it does not cover.</b> ${esc((c.completeness && c.completeness.statement) || "The published bytes carry no completeness statement.")}</p>
+    ${excl}
+    <div class="bound">
+      Case ${esc(c.bundleId)}, edition ${esc(String(c.edition))}.
+      Hash sha256:${esc(c.bundle_sha || "")}.
+      Ratified ${esc(c.ratified_at || "an unrecorded date")}.
+      Author ${esc(pubAuthors(c))}.
+      Floors: ${esc(AXIS_SHORT.capture)} ${esc(floors ? floors.capture : "none resolved")}, ${esc(AXIS_SHORT.connection)} ${esc(floors ? floors.connection : "none resolved")}.
+    </div>
+  </div>`;
+}
+
+/* REC-17's BANNER, AND IT SAYS WHICH NUMBER IT SHOWS. REC-17's landed line
+   records the finding this exists for: a dependent's DERIVED pair follows a
+   republished case forward while the frozen inherited grade does not, so a
+   banner that only said "a newer edition exists" would leave a reader guessing
+   which of the two numbers is on the page in front of them. It is THE EDITION'S
+   OWN FROZEN PAIR, always, and the banner says so.
+
+   AND IT COMES FROM `published_bundles` + THE FROZEN BYTES, NEVER FROM
+   `op=reevaluations`: that op is member-class, and a public banner that needed
+   a credential would either not render for the reader it is for, or would be a
+   credentialled read wearing a public page's clothes. Everything here is in
+   `op=publishedcase`'s own answer. */
+function pubSupersessionHtml(c){
+  const eds = Array.isArray(c.editions) ? c.editions : [];
+  const newer = eds.filter(e => Number(e) > Number(c.edition));
+  if(!newer.length){
+    return `<div class="pub-super" data-super="latest">You are reading edition ${esc(String(c.edition))}, which is the newest edition of this case. The two strengths shown on this page are edition ${esc(String(c.edition))}'s own frozen pair, signed with these bytes.</div>`;
+  }
+  return `<div class="pub-super" data-super="superseded"><b>A newer edition of this case exists.</b>
+    You are reading edition ${esc(String(c.edition))}; edition${newer.length === 1 ? "" : "s"} ${esc(newer.join(", "))} ${newer.length === 1 ? "was" : "were"} published later.
+    Edition ${esc(String(c.edition))} has not been withdrawn and still answers: an edition is a separate document and every published one stands.
+    <b>The two strengths on this page are edition ${esc(String(c.edition))}'s OWN FROZEN PAIR</b> — the numbers signed with these bytes. They are not edition ${esc(String(c.latest_edition))}'s, and nothing here has been recomputed on your behalf.
+    ${newer.map(e => `<a class="pub-back" onclick="pubOpen('${esc(c.bundleId)}', ${esc(String(e))})">Read edition ${esc(String(e))}</a>`).join(" ")}</div>`;
+}
+
+/* ---- one basis leg, and the SERVE / NAME split rendered as two things ----
+   `ratify` copies the files of the bundle being ratified and a cited document
+   is a DIFFERENT bundle, so a leg this surface can hand over and a leg it can
+   only name are not the same object with a flag. The plane decides which is
+   which (`served`), against the published projection and nothing else. */
+function pubLegHtml(entry, ord){
+  const l = entry.leg || {};
+  const id = String(l.target || "");
+  const role = ROLE_WORD[l.role] || "is recorded against this";
+  const axis = GRADE_AXES.includes(l.grade_axis) ? AXIS_SHORT[l.grade_axis] : null;
+  const how = GRADE_SOURCE_WORD[l.grade_source] || "recorded with no account of where it came from";
+  const grade = l.grade == null
+    ? `<span class="pub-grade" data-axis="${esc(l.grade_axis || "capture")}">${esc(axis || AXIS_SHORT.capture)} no grade — not load-bearing (DEC-18)</span>`
+    : pubStateBadge(l.grade_axis, { state: "graded", grade: l.grade });
+  const cited = l.cited_edition || null;
+  const read = l.served && cited
+    ? `<div class="mono"><span class="served yes">This surface can SERVE it.</span>
+         Edition ${esc(String(cited.edition))} &middot; ${esc(cited.title || "untitled")} &middot; ratified ${esc((cited.ratified_at || "").slice(0, 10))}<br>
+         <a data-addr="op=publishedbytes&amp;sha256=${esc(cited.bundle_sha)}" data-sha="${esc(cited.bundle_sha)}" onclick="pubBytes('${esc(cited.bundle_sha)}')">read the bytes this leg rests on</a>
+         &middot; <button class="btn ghost" onclick="pubVerify('${esc(cited.bundle_sha)}','#v-leg-${ord}')">Verify this hash</button>
+         <span id="v-leg-${ord}"></span></div>
+       ${cited.capture || cited.connection ? `<div class="pub-axisrow">${pubStateBadge("capture", cited.capture)}${pubStateBadge("connection", cited.connection)}</div><div class="subj-how">The pair above is the pair frozen into the EDITION THIS LEG NAMES, not the newest edition of it.</div>` : ""}`
+    : `<div class="mono"><span class="served no">This surface can only NAME it.</span>
+         ${esc(l.detail || "what this leg rests on is not in the published record, so this surface can say the case cites it and can hand over nothing of it.")}
+         There is no address and no hash to offer for it here.</div>`;
+  /* `data-kept` IS LOAD-BEARING AND WAS ADDED BECAUSE THE FIRST NEGATIVE
+     CONTROL FOUND THE HARNESS MEASURING NOTHING. A dropped leg is NAMED in the
+     dropped list — that is the whole rule — so "the id appears on the page"
+     stays true whether the leg was kept or dropped, and an assertion built on
+     it passed while the determining leg was being filtered out. The kept set
+     and the dropped set are marked apart in the markup so the difference is
+     readable rather than inferred. */
+  return `<div class="pub-leg" data-kept="1" data-leg="${esc(id)}">
+    <div><b>Leg ${ord + 1}</b> &middot; <span class="mono">${esc(id)}</span> &middot; ${esc(role)}${axis ? ` &middot; graded on the ${esc(axis.toLowerCase())} axis` : ""}</div>
+    <div class="pub-axisrow">${grade}<span class="subj-how">${esc(how)}.</span></div>
+    ${entry.qualifier ? `<div class="subj-how"><b>Always present at every threshold:</b> ${esc(entry.why || "")}. A rendering may drop a claim; it may never drop a qualifier.</div>` : (entry.why ? `<div class="subj-how">${esc(entry.why)}.</div>` : "")}
+    ${read}
+  </div>`;
+}
+
+/* ============================================================
+   THE INDEX — over EDITIONS, per DEC-12. An edition is a separate document and
+   edition 1 keeps answering after edition 2 lands, so the index enumerates
+   editions rather than cases and every row states which edition it is.
+   ============================================================ */
+function pubManifestOf(row){
+  try{ return typeof row.manifest === "string" ? JSON.parse(row.manifest) : (row.manifest || null); }
+  catch(_){ return null; }
+}
+async function pubList(fromNav){
+  PUB.id = null; PUB.edition = null;
+  if(!fromNav) pubSetHash("#published");
+  pubPaintBack();
   const body = $("#pub-body");
-  body.innerHTML = `<div class="eyebrow">The published record</div><p class="pub-lead">Ratified case files, readable and verifiable by anyone.</p><div class="pub-list" id="pl">Loading&hellip;</div>`;
+  body.innerHTML = `<div class="eyebrow">The published record</div>
+    <h1>Case files</h1>
+    <p class="pub-lead">Every ratified edition this group has published, readable and verifiable by anyone, with no account and no credential. An edition is a separate document: a newer one joins the older, and never replaces it.</p>
+    <div class="pub-list" id="pl">Loading&hellip;</div>`;
   try{
-    const r = await apiR("publishedmanifest");
-    const pub = (r&&r.published)||[];
+    const r = await apiQ("publishedmanifest");
+    const pub = (r && r.published) || [];
+    PUB.index = pub;
+    const top = new Map();
+    for(const p of pub) top.set(p.bundle_id, Math.max(Number(p.edition || 1), Number(top.get(p.bundle_id) || 0)));
     $("#pl").innerHTML = pub.length
-      ? pub.map(p=>`<div class="pf" onclick="pubOpen('${esc(p.bundle_id)}')"><div class="t">${esc(p.title||p.bundle_id)}</div><div class="m">${esc(p.bundle_id)} · ratified ${esc((p.ratified_at||"").slice(0,10))} · sha256:${esc((p.bundle_sha||"").slice(0,16))}…</div></div>`).join("")
+      ? pub.map(p => {
+          const m = pubManifestOf(p);
+          const pair = pubPair({ strength: m && m.strength });
+          const bar = m && m.required_strength && m.required_strength.declared === true
+            ? `bar: ${esc(AXIS_SHORT.capture)} ${esc(m.required_strength.capture || "not set")} · ${esc(AXIS_SHORT.connection)} ${esc(m.required_strength.connection || "not set")}`
+            : `bar: none declared`;
+          const latest = Number(top.get(p.bundle_id) || p.edition);
+          const sup = Number(p.edition) < latest
+            ? `<span class="served no">superseded by edition ${esc(String(latest))}, which is a separate document — this row's pair is edition ${esc(String(p.edition))}'s own</span>`
+            : `<span class="served yes">newest edition</span>`;
+          /* THE INDEX ROW CARRIES BOTH STRENGTHS. R1/R2: a row that carried one
+             would be the composition this whole surface refuses, arriving in
+             the place a reader is most likely to quote. A published bundle that
+             is not a case carries no frozen pair at all, and that is SAID
+             rather than filled in. */
+          const strength = pair
+            ? pubPairBadges(pair)
+            : `<span class="subj-how">This published bundle carries no frozen strength pair: it is not a case file, and no pair is invented for it here.</span>`;
+          return `<div class="pf" onclick="pubOpen('${esc(p.bundle_id)}', ${esc(String(p.edition))})">
+            <div class="t">${esc(p.title || p.bundle_id)}</div>
+            <div class="m">${esc(p.bundle_id)} &middot; edition ${esc(String(p.edition))} &middot; ratified ${esc((p.ratified_at || "").slice(0, 10))} &middot; sha256:${esc((p.bundle_sha || "").slice(0, 16))}&hellip;</div>
+            <div style="margin-top:7px">${strength}</div>
+            <div class="m">${bar} &middot; ${sup}</div>
+          </div>`;
+        }).join("")
       : `<div class="empty">This group has not published any case files yet. When it ratifies one, it appears here, and anyone can verify it against its published hash without the group's cooperation.</div>`;
   }catch(e){ $("#pl").innerHTML = errPane(e); }
 }
-function pubOpen(id){
-  $("#pub-body").innerHTML = `<div class="eyebrow">Case file · published</div><h1>${esc(id)}</h1>
-    <p class="pub-lead">The published case-file body is served from the published projection. Rendering the full public reading surface is gap G1 in the UI design; the manifest and per-hash verification are live now.</p>
-    <div class="pub-verify"><p>Anyone may confirm every document here against its published hash, without our cooperation.</p><button class="btn ghost">Verify</button></div>
-    <p style="margin-top:20px"><a onclick="pubList()" style="cursor:pointer">&larr; All case files</a></p>`;
+
+/* ============================================================
+   THE CASE, IN FULL.
+   ============================================================ */
+async function pubOpen(id, edition, fromNav){
+  PUB.id = id; PUB.edition = (edition == null || edition === "") ? null : Number(edition);
+  if(!fromNav) pubSetHash("#case/" + id + (PUB.edition ? "/e" + PUB.edition : ""));
+  pubPaintBack();
+  $("#pub-body").innerHTML = `<div class="eyebrow">Case file &middot; published</div><p class="count-line">Loading&hellip;</p>`;
+  try{
+    const params = { id };
+    if(PUB.edition) params.edition = String(PUB.edition);
+    const c = await apiQ("publishedcase", params);
+    if(!c || c.ok === false){
+      $("#pub-body").innerHTML = `<div class="eyebrow">Case file</div><h1>Not published</h1>
+        <p class="pub-lead">${esc(c && c.detail ? c.detail : "No published edition answers to that.")}</p>
+        <p><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
+      return;
+    }
+    PUB.data = c;
+    PUB.edition = Number(c.edition);
+    await pubPaint();
+  }catch(e){ $("#pub-body").innerHTML = errPane(e); }
 }
+function pubStance(key){
+  if(!stanceOf(key)) return;
+  PUB.stance = key;
+  pubPaint();
+}
+/* THE RENDERING'S OWN HASH, over the facts that MAKE it this rendering: the
+   case, its edition, the bytes it was drawn from, and the two floors applied.
+   Deliberately not a hash of the markup — markup changes when a stylesheet
+   does, and what a reader needs to name is the rendering DECISION, which is
+   what the footer prints beside the case's own sha. */
+async function pubRenderSha(c, stance, floors){
+  const src = [c.bundleId, c.edition, c.bundle_sha, stance,
+               floors ? floors.capture : "unresolved", floors ? floors.connection : "unresolved"].join("|");
+  try{
+    const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(src));
+    return [...new Uint8Array(d)].map(x => x.toString(16).padStart(2, "0")).join("");
+  }catch(_){ return null; }
+}
+async function pubPaint(){
+  const c = PUB.data;
+  if(!c) return;
+  const floors = stanceFloors(PUB.stance);
+  PUB.renderSha = await pubRenderSha(c, PUB.stance, floors);
+  $("#pub-body").innerHTML = pubCaseHtml(c, floors, PUB.stance);
+}
+
+function pubSelectorHtml(stance){
+  return `<div class="eyebrow">What are you doing with this case?</div>
+    <p class="subj-note">Every option below is a thing a reader DOES. None of them is a kind of person, and this page never asks who you are. Each carries its own pair of floors — one for each axis, applied together — and the pair is printed inside whatever you take away.</p>
+    <div class="pub-stances">${THRESHOLDS.map(s => `<button aria-pressed="${s.key === stance ? "true" : "false"}" onclick="pubStance('${esc(s.key)}')">${esc(s.label)}</button>`).join("")}</div>`;
+}
+
+function pubCaseHtml(c, floors, stance){
+  /* Q6 ENFORCED AT THE DRAW. A stance that did not resolve to a complete pair
+     draws NO case at all. It is the only honest outcome: a page that renders
+     legs under a rendering whose floors nobody can name has performed a filter
+     it cannot account for, which is precisely the silent weakness the pair
+     exists to prevent. */
+  if(!floors)
+    return `${pubSelectorHtml(stance)}
+      <div class="pub-inband"><h3>This rendering was not drawn.</h3>
+      <p>The stance selected did not resolve to a pair of independent floors — one for the ${esc(AXIS_SHORT.capture.toLowerCase())} axis and one for the ${esc(AXIS_SHORT.connection.toLowerCase())} axis. A rendering with one axis left unconstrained admits arbitrary weakness without saying so, and a rendering that applies one value to both axes has composed two measurements into one. Neither is drawn here.</p></div>
+      <p><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
+
+  const th = pubThreshold(c, floors);
+  const pair = pubPair(c);
+  const namedLink = (idv) => `<span class="mono">${esc(String(idv))}</span>`;
+
+  /* PAGE 1 — the rendering block first, at full size, then the conclusion. */
+  const p1 = pubPage(c, floors, stance,
+    `${pubSupersessionHtml(c)}
+     ${pubInbandHtml(c, floors, stance)}
+     <h1>${esc(c.title || c.bundleId)}</h1>
+     <h2>The question</h2>
+     <div class="pub-excl">${esc((c.body && c.body.question) || "The published bytes carry no question section.")}</div>
+     <h2>The conclusion</h2>
+     <div class="pub-excl">${esc((c.body && c.body.authored && c.body.authored.conclusion) || (c.body && c.body.conclusion) || "The published bytes carry no conclusion.")}</div>
+     ${c.body && c.body.conclusion && c.body.authored && c.body.authored.conclusion && c.body.conclusion !== c.body.authored.conclusion
+        ? `<p class="subj-note">The conclusion of record is the one the gate holds this case to. The prose the group printed beside it follows.</p><div class="pub-excl">${esc(c.body.conclusion)}</div>` : ""}
+     ${c.body && c.body.state !== "published"
+        ? `<div class="pub-drop"><b>The body of this edition could not be served.</b> ${esc(c.body.detail || "")} It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes.</div>` : ""}`);
+
+  /* PAGE 2 — both strengths, and the declared bar beside them. */
+  const p2 = pubPage(c, floors, stance,
+    `<h2>How strong this is</h2>
+     <p class="lede">A case does not have <i>a</i> strength. It has two, and they are never combined, averaged or scored against each other: how directly the record holds the DOCUMENTS it reaches, and how strongly the LINKS between them were established. A conclusion is no stronger than the weakest leg on each, separately.</p>
+     ${pair ? pubPairBadges(pair) : ""}
+     ${pubBarHtml(c)}
+     ${pair ? GRADE_AXES.map(ax => axisPanel(ax, pair[ax], (c.basis || []).map(l => ({ ...l, target: l.target })), { link: namedLink })).join("")
+            : `<div class="empty">This edition published no frozen strength pair, and this page invents neither half of one.</div>`}
+     ${th.axisFails.map(f => `<div class="pub-drop" data-axisfail="${esc(f.axis)}">${esc(f.detail)}</div>`).join("")}`);
+
+  /* PAGE 3 — the basis chain, and what this rendering dropped. */
+  const p3 = pubPage(c, floors, stance,
+    `<h2>What it rests on</h2>
+     <p class="subj-note">Every leg below carries how it was established and, where the published record holds what it rests on, an address and a hash. A leg this surface can SERVE and a leg it can only NAME are two different things and are drawn as two different things.</p>
+     ${th.kept.length ? th.kept.map((e, i) => pubLegHtml(e, i)).join("") : `<div class="empty">This rendering keeps no leg. That is a fact about the threshold, not about the case.</div>`}
+     ${th.cutsDropped.length ? `<div class="pub-drop" data-cutsdropped="1"><b>Dropped by this threshold, and named because ${th.cutsDropped.length === 1 ? "it cuts" : "they cut"} AGAINST the conclusion:</b>
+        ${th.cutsDropped.map(d => `<div><span class="mono">${esc(String(d.leg.target))}</span> — ${esc(d.reason)}.</div>`).join("")}
+        A leg that cuts against a conclusion is never dropped quietly: reading a case with the evidence against it filtered out and no notice of it is the one way this page could mislead without stating a single falsehood.</div>` : ""}
+     ${th.dropped.length ? `<details><summary>${esc(String(th.dropped.length))} leg${th.dropped.length === 1 ? "" : "s"} dropped by this threshold — named, with the reason</summary>
+        ${th.dropped.map(d => `<div class="pub-leg" data-dropped="1" data-leg="${esc(String(d.leg.target))}"><span class="mono">${esc(String(d.leg.target))}</span> &middot; ${esc(ROLE_WORD[d.leg.role] || "recorded against this")} &middot; dropped because ${esc(d.reason)}.</div>`).join("")}
+        </details>` : `<p class="subj-note">This threshold dropped nothing.</p>`}
+     <h2>What would overturn this</h2>
+     <div class="pub-excl">${esc((c.body && c.body.authored && c.body.authored.falsifier) || (c.body && c.body.falsifies) || "The published bytes carry no falsifier.")}</div>`);
+
+  /* PAGE 4 — the exclusions verbatim, and the division disclosure. */
+  const p4 = pubPage(c, floors, stance,
+    `<h2>What this excludes</h2>
+     <p class="subj-note">Printed verbatim from the signed bytes, with the member who wrote it and the date it was written.
+       Written by ${esc((c.completeness && c.completeness.author) || "an unnamed member")} on ${esc((c.completeness && c.completeness.at) || "an unrecorded date")}.</p>
+     <div class="pub-excl">${esc((c.body && c.body.excludes) || "The published bytes carry no What This Excludes section.")}</div>
+     <p class="subj-note">Position on putting this case to its subject: ${esc((c.completeness && c.completeness.subject_position) || "not stated")}. ${esc((c.completeness && c.completeness.subject_justification) || "")}</p>
+     ${pubDivisionHtml(c)}`);
+
+  /* PAGE 5 — the material, the editions, and the verification. */
+  const p5 = pubPage(c, floors, stance,
+    `<h2>The material</h2>
+     <p class="subj-note">Every part of this edition, with its own sha256 and its own length. Each answers by hash and by hash only.</p>
+     ${(c.files || []).map(f => `<div class="pub-file">${esc(f.path)} &middot; ${esc(f.kind || "file")} &middot; ${esc(f.bytes == null ? "length not recorded" : String(f.bytes) + " bytes")}
+        <div class="mono"><a data-addr="op=publishedbytes&amp;sha256=${esc(f.sha256)}" data-sha="${esc(f.sha256)}" onclick="pubBytes('${esc(f.sha256)}')">sha256:${esc(f.sha256)}</a>
+        &middot; <button class="btn ghost" onclick="pubVerify('${esc(f.sha256)}','#v-file-${esc(f.sha256).slice(0, 12)}')">Verify</button><span id="v-file-${esc(f.sha256).slice(0, 12)}"></span></div></div>`).join("")}
+     <h2>Editions</h2>
+     <p class="subj-note">Each edition is a separate document with its own signature, its own attestor and its own frozen pair. Every one of them still answers.</p>
+     ${(c.edition_index || []).map(e => `<div class="pub-file">Edition ${esc(String(e.edition))} &middot; ratified ${esc((e.ratified_at || "").slice(0, 10))}
+        &middot; <a class="pub-back" onclick="pubOpen('${esc(c.bundleId)}', ${esc(String(e.edition))})">read it</a>
+        <div class="mono">sha256:${esc(e.bundle_sha)}</div></div>`).join("")}
+     <h2>Check this yourself</h2>
+     <p class="subj-note">${esc((c.verification && c.verification.detail) || "")}</p>
+     <div class="pub-verify"><p>Anyone may confirm this edition against its published hash, without this group's cooperation and without an account.</p>
+       <button class="btn" onclick="pubVerify('${esc(c.bundle_sha)}','#v-case')">Verify this edition</button></div>
+     <div id="v-case"></div>
+     <div class="metagrid">
+       <dt>Attested by</dt><dd>${esc((c.attestor && c.attestor.member) || "not named")}</dd>
+       <dt>Signing key</dt><dd class="mono">${esc((c.attestor && c.attestor.key_b64) || "").slice(0, 44)}&hellip;</dd>
+       <dt>Gate version</dt><dd class="mono">${esc(String(c.gate_version || ""))}</dd>
+       <dt>Signature</dt><dd class="mono">${esc((c.sig_armored || "").split("\n")[0] || "")}</dd>
+       <dt>Container</dt><dd class="mono">${esc((c.verification && c.verification.container) || "no container published for this edition")}</dd>
+     </div>`);
+
+  return `${pubSelectorHtml(stance)}${p1}${p2}${p3}${p4}${p5}
+    ${pubFooterHtml(c, floors, stance)}
+    <p style="margin-top:20px"><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
+}
+
+/* R4: A PUBLISHED CHILD NAMES ITS PARENT AND ITS SIBLINGS AND SERVES NEITHER.
+   A reader who can see one half of a divided question is entitled to know the
+   other half exists. The parent is terminal and can never be published; a
+   sibling may not be. So these are ids and kinds and nothing else — no title,
+   no state, no sha, nothing fetchable — and the page says that is deliberate. */
+function pubDivisionHtml(c){
+  const d = c.division || {};
+  const sibs = Array.isArray(d.siblings) ? d.siblings : [];
+  if(!d.parent && !sibs.length)
+    return `<h2>Division</h2><p class="subj-note" data-division="none">This case was not divided out of a larger question: the published record names no parent and no sibling for it.</p>`;
+  return `<h2>Division</h2>
+    <div class="pub-drop" data-division="named">
+      <b>This case is one half of a question that was divided.</b>
+      ${d.parent ? `<div>Parent: <span class="mono">${esc(d.parent)}</span></div>` : ""}
+      ${sibs.length ? `<div>Sibling${sibs.length === 1 ? "" : "s"}: ${sibs.map(s => `<span class="mono">${esc(s)}</span>`).join(", ")}</div>` : ""}
+      <div>${esc(d.detail || "a division's parent and siblings are NAMED and never served.")}</div>
+      <div>They are NAMED here and this surface can hand over nothing of them: no title, no state, no hash, no address. Knowing the other half exists is the disclosure; being able to read it is not something this page can offer.</div>
+    </div>`;
+}
+
+/* THE PER-PAGE FOOTER: case id, case sha, rendering sha, date. `position:fixed`
+   in the print stylesheet is what makes it per-PAGE; it is a real element with
+   real text on screen too, because a footer that exists only in a stylesheet is
+   a footer nobody can copy. */
+function pubFooterHtml(c, floors, stance){
+  return `<div class="print-footer" data-footer="1">
+    Case ${esc(c.bundleId)} &middot; edition ${esc(String(c.edition))} &middot;
+    case sha256:${esc(c.bundle_sha || "")} &middot;
+    rendering sha256:${esc(PUB.renderSha || "not computed")} &middot;
+    ${esc((c.ratified_at || "").slice(0, 10))} &middot;
+    floors ${esc(AXIS_SHORT.capture)} ${esc(floors ? floors.capture : "unresolved")} / ${esc(AXIS_SHORT.connection)} ${esc(floors ? floors.connection : "unresolved")}
+  </div>`;
+}
+
+/* ---- the Verify button, wired to op=verify ---- */
+async function pubVerify(sha, into){
+  const el = $(into);
+  if(el) el.innerHTML = ` <span class="subj-how">asking the record&hellip;</span>`;
+  try{
+    const v = await apiQ("verify", { sha256: sha });
+    if(!el) return v;
+    if(v && v.published){
+      const m = (v.matches || [])[0] || {};
+      el.innerHTML = ` <span class="served yes">PUBLISHED.</span> <span class="subj-how">The record answers for this hash: it names ${esc(m.path || "a part")} (${esc(m.kind || "part")}) in ${esc(m.bundle_id || "a published bundle")}, published ${esc(String(m.published || "").slice(0, 10))}. Nothing about this answer required a credential.</span>`;
+    }else{
+      el.innerHTML = ` <span class="served no">NOT PUBLISHED.</span> <span class="subj-how">No published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately.</span>`;
+    }
+    return v;
+  }catch(e){
+    if(el) el.innerHTML = ` <span class="served no">Could not ask.</span> <span class="subj-how">${esc((e && (e.error || e.reason)) || "the record did not answer")}</span>`;
+    return null;
+  }
+}
+/* The bytes, by hash and only by hash. There is no path to walk. */
+function pubBytes(sha){
+  try{ window.open(`${PLANE.base}/api/?op=publishedbytes&sha256=${encodeURIComponent(sha)}`, "_blank"); }catch(_){}
+}
+function pubVerifyPanel(){
+  $("#pub-body").innerHTML = `<div class="eyebrow">Verifying what you are reading</div>
+    <h1>Check this without us</h1>
+    <p class="pub-lead">Every part of every published edition is named by its own sha256, the manifest that lists them answers by its own sha256, and the signature covers the bundle's hash. Nothing here prevents somebody making a modified copy; everything here makes one detectable by anyone holding it, without this group's cooperation and without this instance continuing to exist. That is tamper-EVIDENT, and we do not claim tamper-proof.</p>
+    <p class="subj-note">Open any case file and every hash on it carries a Verify control beside it, which asks the record the same question you could ask it yourself.</p>
+    <p><a class="pub-back" onclick="pubList()">&larr; All case files</a></p>`;
+}
+
+/* ---- PRINT: every collapsed leg expanded. CSS cannot open a <details>, so the
+   one thing print needs from script it gets here, and it only ever OPENS. ---- */
+function pubExpandForPrint(){
+  try{
+    const all = document.querySelectorAll("#pub-body details");
+    for(const d of all) d.open = true;
+  }catch(_){}
+}
+try{ window.addEventListener("beforeprint", pubExpandForPrint); }catch(_){}
+
+/* ---- the space, and the address ---- */
+function pubSetHash(h){
+  try{
+    if(typeof location === "undefined" || location.hash === undefined || location.hash === h) return;
+    PUB_HASH_LOCK = true;
+    try{ location.hash = h; }finally{ PUB_HASH_LOCK = false; }
+  }catch(_){}
+}
+/* THE WAY BACK, and it exists only when a credential is actually held. This is
+   the dead end BUILD-ORDER named: the published space had no address and no
+   return, so a signed-in member who came to look at the public record could get
+   back only by reloading — and the session lives in memory, so the reload cost
+   them the session. Nothing here reloads. */
+function pubPaintBack(){
+  const el = $("#p-back");
+  if(!el) return;
+  el.innerHTML = PLANE.token
+    ? `<a onclick="pubLeave()" style="cursor:pointer">Back to the working record</a>`
+    : "";
+}
+function pubLeave(){
+  if(!PLANE.token) return;
+  $("#pub").classList.remove("on");
+  $("#work").classList.add("on");
+  document.documentElement.setAttribute("data-space", "working");
+  PUB.id = null; PUB.edition = null;
+  pubSetHash("#queue");
+  go("queue", true);
+}
+function enterPublished(fromNav){
+  $("#work").classList.remove("on");
+  $("#gate").classList.add("hidden");
+  $("#pub").classList.add("on");
+  document.documentElement.setAttribute("data-space", "published");
+  $("#p-gname").textContent = GROUP.name;
+  $("#p-gid").textContent = GROUP.idstr.slice(0, 32);
+  $("#p-mono").textContent = GROUP.mono;
+  pubPaintBack();
+  if(!fromNav) pubList();
+}
+/* `#published` and `#case/<id>[/e<N>]` are REAL ADDRESSES: they survive a
+   reload, they can be handed to somebody holding nothing, and they are asked
+   FIRST at boot so a signed-in member who reloads on a case file lands back on
+   it with their session intact. */
+function publishedRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  if(/^#published\/?$/.test(h)){ enterPublished(); return true; }
+  const m = /^#case\/([A-Za-z0-9._-]+)(?:\/e(\d+))?$/.exec(h);
+  if(!m) return false;
+  enterPublished(true);
+  pubOpen(m[1], m[2] ? Number(m[2]) : null, true);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!PUB_HASH_LOCK) publishedRouteFromHash(); }); }catch(_){}
+/*__PUBLISHED_CASE_END__*/
 
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}
+/* UI-18: A PUBLISHED ADDRESS RESOLVES FOR SOMEBODY HOLDING NOTHING. `boot()`
+   asks the same router, but `boot()` cannot run without a credential — and the
+   whole claim of this surface is that a stranger reads a case with none. So the
+   address is asked here too, before the gate is ever shown; the four ops it
+   reaches are the four the plane declares `classes: null`. */
+try{
+  const h0 = String((typeof location !== "undefined" && location.hash) || "");
+  if(/^#(published\/?$|case\/)/.test(h0)) publishedRouteFromHash();
+}catch{}
 </script>
 </body>
 </html>
