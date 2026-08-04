@@ -95,7 +95,9 @@ const C = block("CATALOG", ["LEGACY_TYPE_ALIASES", "normalizeType", "vocabFor", 
   "TYPE_LABEL", "NON_BUNDLE_KINDS",
   /* UI-11: REC-11/REC-12's basis and strength vocabulary. */
   "BASIS_ROLES", "BASIS_GRADES", "GRADE_AXES", "GRADE_SOURCES", "STRENGTH_STATES",
-  "ROLE_WORD", "AXIS_WORD", "AXIS_SHORT", "GRADE_SOURCE_WORD", "STRENGTH_STATE_WORD"]);
+  "ROLE_WORD", "AXIS_WORD", "AXIS_SHORT", "GRADE_SOURCE_WORD", "STRENGTH_STATE_WORD",
+  /* UI-16: the project readiness ladder. */
+  "WORKPRODUCT_STATES", "WORKPRODUCT_WORD"]);
 const S = block("SEMANTICS", ["SEMANTICS"]).SEMANTICS;
 
 /* The canonical types: what OBJECT_TYPES maps its prefixes onto, deduplicated.
@@ -167,6 +169,26 @@ else {
     if (!known.includes(schema))
       bad(`SCHEMA_OF.${t} is '${schema}', which the catalog does not know (it knows ${known.join(", ")})`);
 }
+
+/* UI-16 · WORKPRODUCT_STATES: the project readiness ladder the workspace
+   renders. C-2.9's legal set is a LOCAL inside `checkProjectExtension` rather
+   than an export, so it is read from the source textually — the same shape and
+   the same stated caveat as the knownSchemas pin above. The order matters as
+   well as the membership: the ladder is drawn in it, so a catalog that reorders
+   the rungs must reorder them here too. */
+const wsm = /const WS = \[([^\]]*)\]/.exec(catalogSrc);
+if (!wsm) bad("could not read the catalog's workproduct_state list (WS in checkProjectExtension) — the extraction needs updating");
+else {
+  const ws = [...wsm[1].matchAll(/'([^']+)'|"([^"]+)"/g)].map((m) => m[1] || m[2]);
+  if (J(C.WORKPRODUCT_STATES) !== J(ws))
+    bad(`WORKPRODUCT_STATES has drifted from the catalog's C-2.9 ladder.\n       catalog:  ${J(ws)}\n       app.html: ${J(C.WORKPRODUCT_STATES)}`);
+  for (const s of ws)
+    if (!C.WORKPRODUCT_WORD[s])
+      bad(`WORKPRODUCT_WORD has no member-facing word for the readiness rung '${s}'`);
+}
+for (const k of Object.keys(C.WORKPRODUCT_WORD))
+  if (!C.WORKPRODUCT_STATES.includes(k))
+    bad(`WORKPRODUCT_WORD.${k} is not one of the catalog's readiness rungs`);
 
 /* TYPE_LABEL may name kinds that are not bundle types (a search hit's
    annotation or source), and nothing else. */

@@ -1,23 +1,45 @@
 /* UI-7 — THE MEMBERS & GOVERNANCE ROSTER (read-only, the READ-ONLY half of U11).
  *
- * Drives the member surface over three read ops (I3), consumed never reshaped:
+ * Drives the member surface over two read ops (I3), consumed never reshaped:
  *   op=memberlist       — the roster: each member's handle/cover, their CLASS
  *                         (admin|member) read STRAIGHT from the op's `role`,
  *                         standing, and capabilities;
  *   op=adminarith       — the Section 4.7 consensus/majority DENOMINATOR
  *                         (live + the scaling table), shown as "N of M", never
- *                         "pending";
- *   op=projectownerarith— the TWO-OWNER DIVERGENCE table (REUSED through UI-3's
- *                         ballotDivergenceHtml);
- *   op=projectparticipants (per project, over op=list) — who OWNS which project,
- *                         a read op=memberlist does not expose.
+ *                         "pending".
  *
  * Proves UI-7's accepts-when: the roster lists members with their roles from
- * op=memberlist and shows the governance denominators from the arithmetic op,
- * plus the two-owner divergence, the per-member ownership, and the FOUNDER
- * reconciliation (op=adminarith counts an administrator op=memberlist has no row
- * for — the ADMIN_TOKEN holder — and the surface states that rather than showing
- * inconsistent numbers). READ-ONLY: no act op is ever sent.
+ * op=memberlist and shows the governance denominator from the arithmetic op,
+ * plus the FOUNDER reconciliation (op=adminarith counts an administrator
+ * op=memberlist has no row for — the ADMIN_TOKEN holder — and the surface states
+ * that rather than showing inconsistent numbers). READ-ONLY: no act op is ever
+ * sent.
+ *
+ * CORRECTED 2026-08-04 by UI-16, never exempted, and the two corrections are
+ * different in kind:
+ *
+ *   (a) TWO ASSERTION GROUPS ARE DELETED BECAUSE THEIR SUBJECT IS DELETED —
+ *       the two-owner DIVERGENCE table and the per-member OWNERSHIP column.
+ *       The divergence MOVED to the project workspace, beside the ballot that
+ *       consumes it: here it was rendered over `op=projectownerarith` with NO
+ *       projectId, so its `live` row was null and the screen showed a
+ *       denominator for no project and with no act anywhere near it. The
+ *       ownership column was a client-side fan-out — one op=projectparticipants
+ *       per project, capped at 80 — answering, partially, a question the
+ *       workspace now answers exactly in ONE call. Both are asserted in
+ *       `project-workspace.test.mjs`, so nothing that was tested has stopped
+ *       being tested; and this file now asserts their ABSENCE, so the fan-out
+ *       cannot come back unnoticed.
+ *
+ *   (b) THE `adminarith` MOCK WAS WRONG AND THE SUITE AGREED WITH IT (D-173).
+ *       It answered UNWRAPPED, while every Durable-Object answer arrives as
+ *       `{ok:true, result:<the store's own return>}`. The surface read
+ *       `adminArith.live` off the ENVELOPE, so against every real plane this
+ *       screen's whole governance panel rendered "the administrator arithmetic
+ *       could not be read with this account" — and 37 assertions passed,
+ *       because the mock was shaped like the bug. The mock is wrapped, like
+ *       op=memberlist's beside it always was, and the surface reads through
+ *       `recR`.
  *
  * NEGATIVE CONTROL: break the ROLE WIRING in app.html — make memberRole() return
  * a constant instead of the op's `role` field (e.g. change `return m && m.role;`
@@ -44,15 +66,6 @@ function adminMath(n){
   const votesNeeded = Math.floor(n/2)+1, eligibleVoters = Math.max(0, n-1);
   return { administrators:n, votesNeeded, eligibleVoters, possible: votesNeeded<=eligibleVoters };
 }
-function ownerMath(n){
-  if(n<=1) return { owners:n, votesNeeded:0, eligibleVoters:0, targetMayVote:false, possible:false,
-                    why:"one owner is the floor, so the last owner is not removable" };
-  if(n===2) return { owners:2, votesNeeded:2, eligibleVoters:2, targetMayVote:true, possible:true,
-                     why:"both owners must agree, the departing one included: resignation with the other's assent" };
-  const votesNeeded = Math.floor(n/2)+1, eligibleVoters = n-1;
-  return { owners:n, votesNeeded, eligibleVoters, targetMayVote:false, possible: votesNeeded<=eligibleVoters,
-           why:"a majority of all owners, the target counted in the denominator and not voting" };
-}
 const NINE = [1,2,3,4,5,6,7,8,9];
 
 /* ---- the roster. Two ACTIVE administrator rows (alice, dave), one active
@@ -70,18 +83,6 @@ const MEMBERS = [
     capabilities:[], invite_pending:1 },
 ];
 const ADMIN_ARITH = { ok:true, table: NINE.map(adminMath), live: adminMath(3) };   // 3 counted, 2 rows -> founder=1
-const OWNER_ARITH = { ok:true, table: NINE.map(ownerMath), live:null, projectId:null };
-const RECORD = [
-  { bundle_id:"PROJ-1", object_type:"project",     title:"Sewer Fund inquiry" },
-  { bundle_id:"PROJ-2", object_type:"project",     title:"Zoning watch" },
-  { bundle_id:"INFO-1", object_type:"information",  title:"A council minute" },
-];
-const PARTICIPANTS = {
-  "PROJ-1": { ok:true, projectId:"PROJ-1", participants:[
-    { handle:"alice", owner:1, state:"active" }, { handle:"bob", owner:0, state:"active" } ] },
-  "PROJ-2": { ok:true, projectId:"PROJ-2", participants:[
-    { handle:"dave", owner:1, state:"active" } ] },
-};
 
 const CALLS = [];
 function mockFetch(u){
@@ -89,11 +90,13 @@ function mockFetch(u){
   const op = url.searchParams.get("op");
   const R = o => ({ ok:true, json:async()=>o });
   CALLS.push({ op, projectId:url.searchParams.get("projectId") });
+  /* WRAPPED, both of them. The Durable Object answers `{ok:true, result:<the
+     store's own return>}` and the control plane adds `store`/`tokenClass`
+     around that, so a mock that answers the store's return BARE is a mock
+     shaped like the D-173 bug rather than like the plane. */
   if(op==="memberlist")         return R({ ok:true, result:{ members: MEMBERS } });
-  if(op==="adminarith")         return R(ADMIN_ARITH);
-  if(op==="projectownerarith")  return R(OWNER_ARITH);
-  if(op==="list")               return R({ ok:true, result: RECORD });
-  if(op==="projectparticipants")return R(PARTICIPANTS[url.searchParams.get("projectId")] || { ok:false, reason:"NO_SUCH_PROJECT" });
+  if(op==="adminarith")         return R({ ok:true, result: ADMIN_ARITH });
+  if(op==="list")               return R({ ok:true, result: [] });
   return R({ ok:false, reason:"unexpected op "+op });
 }
 
@@ -166,18 +169,19 @@ ok("the impossible-at-two row is shown as not removable, from the op",
 ok("the founder reconciliation states the counted-but-unlisted administrator",
    /the founding administrator holds the group/.test(gov) && gov.includes("<b>1</b> administrator"));
 
-/* ---- (3) the TWO-OWNER DIVERGENCE, REUSED from UI-3's ballotDivergenceHtml ---- */
-ok("op=projectownerarith was called for the ownership divergence", CALLS.some(c=>c.op==="projectownerarith"));
-ok("the two-owner divergence is shown from the op's table",
-   gov.includes("the divergence") && gov.includes("incl. the departing owner"));
-ok("the divergence uses the plane's own words for the n=2 row",
-   gov.includes("resignation with the other") || gov.includes("both owners must agree"));
-
-/* ---- (4) per-member PROJECT OWNERSHIP via op=projectparticipants over the record ---- */
-ok("op=list was read to enumerate projects for ownership", CALLS.some(c=>c.op==="list"));
-ok("op=projectparticipants was called per project", CALLS.filter(c=>c.op==="projectparticipants").length>=2);
-ok("a member's owned project is shown on the roster", list.includes("Sewer Fund inquiry"));
-ok("the second owner's project is shown too", list.includes("Zoning watch"));
+/* ---- (3) WHAT THIS SCREEN NO LONGER DOES (UI-16). Both were deleted with
+   their subject, and their absence is asserted here so neither returns by
+   accident: a fan-out is the kind of thing a later session re-adds to answer a
+   question that already has an exact answer somewhere else. ---- */
+ok("the project-ownership DIVERGENCE is not rendered here — it moved to the workspace",
+   !gov.includes("the divergence") && !gov.includes("incl. the departing owner"));
+ok("op=projectownerarith is NOT called from the members screen",
+   !CALLS.some(c=>c.op==="projectownerarith"));
+ok("the per-project fan-out is gone: op=projectparticipants is never called here",
+   !CALLS.some(c=>c.op==="projectparticipants"));
+ok("the roster has no Owns column", !/<th>Owns<\/th>/.test(list));
+ok("the surface still SAYS where the ownership arithmetic lives, rather than dropping it silently",
+   /workspace/.test(gov));
 
 /* ---- READ-ONLY: no act op is ever sent from this surface ---- */
 const ACT_OPS = ["projectownerremove","memberadd","memberset","adminremove","adminendorse","signeradd","signerset","attest","promote"];
@@ -189,4 +193,4 @@ for(const word of ["op=", "capture_sha", "member_id", "entity_id", "projectId",
   ok(`the members surface never says "${word}"`, !html.includes(word));
 
 if(fails.length){ console.error(`members-roster: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`members-roster: ${n} assertions, all green — roster-roles-from-op, admin-denominator-N-of-M, founder-reconciliation, two-owner-divergence-reused, per-member-ownership, read-only`);
+console.log(`members-roster: ${n} assertions, all green — roster-roles-from-op, admin-denominator-N-of-M (envelope-opened), founder-reconciliation, the moved divergence and the deleted fan-out asserted ABSENT, read-only`);

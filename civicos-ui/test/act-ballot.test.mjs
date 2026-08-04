@@ -60,10 +60,23 @@ function ownerMath(nn){
 }
 const arithTable = () => [1,2,3,4,5,6,7,8,9].map(ownerMath);
 
-/* ---- the mock plane: records every op, mirrors the three ballot ops ---- */
+/* ---- the mock plane: records every op, mirrors the three ballot ops ----
+   CORRECTED 2026-08-04 by UI-16, never exempted, and this correction is the
+   reason the dialog could not have worked the day it was written (D-173).
+   Every Durable-Object answer arrives WRAPPED — `{ok:true, result:<the store's
+   own return>}`, with `store`/`tokenClass` added around it by the control plane
+   — and a store REFUSAL is a VALUE inside that envelope, carried on HTTP 200,
+   never a throw. This mock answered the three project ops BARE and answered a
+   refusal as a non-ok HTTP response, so it was shaped exactly like the surface's
+   two mistakes: `arith.live` and `pp.participants` read off the envelope, and a
+   `catch` arm for VOTES_SHORT that no real plane could ever enter. 47
+   assertions passed against it, including the receipt the act exists to show.
+   The mock now answers what the plane answers, and the surface reads through
+   `actAsk`, which opens the envelope and carries a refusal back as a refusal. */
 function makePlane(cfg){
   const CALLS = [];
   const R = o => ({ ok:true, json:async()=>o });
+  const W = o => R({ ok:true, result:o, store:"bio", tokenClass:"member" });
   function fetch(u, opts){
     const url = new URL(u, "https://plane.test");
     const op = url.searchParams.get("op");
@@ -71,14 +84,12 @@ function makePlane(cfg){
     let body = null; try{ body = opts && opts.body ? JSON.parse(opts.body) : null; }catch(_){}
     CALLS.push({ op, method:(opts&&opts.method)||"GET", body, params });
     if(op==="projectownerarith")
-      return R({ ok:true, projectId:params.projectId, table:arithTable(), live: ownerMath(cfg.owners.length) });
+      return W({ ok:true, projectId:params.projectId, table:arithTable(), live: ownerMath(cfg.owners.length) });
     if(op==="projectparticipants")
-      return R({ ok:true, projectId:params.projectId,
+      return W({ ok:true, projectId:params.projectId,
                  participants: cfg.owners.map(h=>({ handle:h, owner:1, state:"joined" })) });
-    if(op==="projectownerremove"){
-      const r = cfg.removeResult ? cfg.removeResult(params) : { ok:true };
-      return (r.ok===false) ? { ok:false, json:async()=>r } : R(r);
-    }
+    if(op==="projectownerremove")
+      return W(cfg.removeResult ? cfg.removeResult(params) : { ok:true });
     return R({ ok:false, reason:"unexpected op "+op });
   }
   return { CALLS, fetch };
@@ -295,7 +306,10 @@ const FIVE = ["alice","bob","carol","dan","eve"];   // me = alice
 /* ============================================================
    THE VOCABULARY GUARD — no plane-internal jargon reaches the member through
    the ballot's authored chrome. (A REAL plane refusal is rendered verbatim by
-   ballotRefusalHtml, a separate intentional path, exactly as dispose/release.)
+   `actRefusalHtml` — UI-12's one plumbing for every act. CORRECTED 2026-08-04
+   by UI-16: this used to name `ballotRefusalHtml`, which was deleted because it
+   composed a sentence of its own — "The plane refused, and cast no vote" —
+   whenever the plane's answer carried no words, which is what DEC-8 forbids.)
    ============================================================ */
 {
   const plane = makePlane({ owners:FIVE, removeResult:()=>({ ok:true }) });
