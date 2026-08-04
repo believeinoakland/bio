@@ -4870,6 +4870,79 @@ async function actsFor(target){
 function actNamed(acts, id){ return (acts||[]).find(a=>a && a.id === id) || null; }
 /*__ACT_SOURCE_END__*/
 
+/*__PUBLICATION_ENTRY_START__*/
+/* ============================================================
+   S8 · THE PUBLICATION ENTRY POINT (UI-17a) — A STATEMENT, NOT A CEREMONY.
+
+   WHAT THIS IS AND WHY IT IS SO SMALL. DEC-33 (Bob, 2026-08-03) DEFERRED the
+   publication process: *"The publication process is very involved. Defer
+   anything related to the process, though create a placeholder surface."* So
+   UI-17, the five-step ceremony, and REC-15, its dry-run, are not built and are
+   not built HERE either. What ships in their place is this: an entry point that
+   says what publication IS, and says that publishing currently runs through the
+   group's operator. That second half is the honest narration of an ABSENT
+   CAPABILITY, which is the thing DEC-33 asked for by name — not a control, not
+   a greyed control, and not silence.
+
+   THE ONE THING THIS FILE MUST NOT DO, stated where the next session will read
+   it before adding a button: THERE IS NO `ACT_FLOW` ENTRY FOR `publish` AND
+   NOTHING HERE CALLS `op=publish`. Not a submit, not a pre-flight, not a
+   signature step, not a disabled preview of one. The ceremony is UI-17's and it
+   is asleep; wiring a control here would ship a fifth of it under a name that
+   says it is only an explanation.
+
+   HOW IT RECONCILES WITH THE ACT STRIP, which is the part worth reading twice.
+   REC-14 landed and `op=affordances` now publishes `publish` as a REAL ACT on a
+   concluded inquiry (`{ id:"publish", label:"Publish (author the case)" }`). The
+   act therefore EXISTS on the strip and this surface does not suppress it —
+   suppressing an act the record publishes is exactly the thing `actBarHtml`'s
+   header refuses, because an act nobody can see is an act nobody remembers
+   asking for. What happens instead is that the strip's EXISTING `elsewhere`
+   mechanism points at this section: the act is named under the producer's own
+   label, no control is rendered for it anywhere, and the reader is sent to the
+   explanation. The routing is the whole of the reconciliation.
+
+   PLANE-SOURCED WHERE IT IS THE PLANE'S. The act's LABEL and its PROMPT are
+   rendered verbatim from `op=affordances` and are never re-worded here; the
+   prompt is rendered only if the plane offers one (it does not today, and an
+   absent prompt renders nothing rather than a sentence written on the plane's
+   behalf — DEC-29(b)'s rule read in the honest direction).
+
+   THE DOCTRINE HALF IS DEC-19 AS AMENDED (Bob, 2026-08-03): *"Publishing IS an
+   irreversible act! It's (one of?) the only irreversible acts."* — with the
+   mechanism unchanged and both halves standing. Correction is ALWAYS possible
+   and it always moves FORWARD: a further edition is a separate document and
+   every edition that was published still stands; a withdrawal is ANOTHER
+   ATTESTED ACT and both stand. Nothing is ever unpublished. That is the top
+   rung's promise and it is what this section states, because a member who is
+   about to ask their operator to publish should have read it first.
+
+   WHEN IT RENDERS: exactly when the record publishes the act. Not on a question
+   the record does not offer it for — a page that explained publication on an
+   open question would be asserting that publication is available there. And it
+   renders THE SAME for every credential: it is a statement about the record and
+   not a control, so a credential that cannot act reads every word of it. Q12's
+   one credential sentence is the surface's, rendered once by `openInquiry`, and
+   nothing here narrates a control or greys one.
+   ============================================================ */
+function publicationEntryHtml(r){
+  const act = (r && r.ok) ? actNamed(r.acts, "publish") : null;
+  if(!act) return "";
+  /* The producer's own words, rendered unmodified, and only if it sent them. */
+  const prompt = (typeof act.prompt === "string" && act.prompt.trim())
+    ? `<p class="subj-note">${esc(act.prompt)}</p>` : "";
+  return `<h2 class="sec">Publishing this case</h2>
+    <p class="subj-note">The record publishes this act on this question under its own name for it: <b>${esc(act.label)}</b>. This section explains what that act is. It does not carry it.</p>
+    ${prompt}
+    <div class="card"><div class="prose">
+      <p><b>Publishing is the one act here that cannot be taken back.</b> A published case goes across the fence: its bytes keep answering to anyone who holds them, checkable against the published hash without this group&rsquo;s help, and this group cannot make them stop.</p>
+      <p><b>A case is corrected by publishing again.</b> A further edition is a separate document, and every edition that was ever published still stands &mdash; so a reader who relied on the first can still see exactly what they relied on, and can now also see what came after it.</p>
+      <p><b>A withdrawal is itself an act on the record</b> &mdash; dated, attributed and signed like the publication it withdraws &mdash; and both stand. Correction always moves forward. Nothing is unpublished, and nothing is undone quietly.</p>
+      <p><b>Publishing runs through the group&rsquo;s operator today.</b> The member-facing process for it has not been built, so there is no way to publish from this page and none is shown here. Ask the person who runs this record for the group. This section says so rather than leaving the question unanswered.</p>
+    </div></div>`;
+}
+/*__PUBLICATION_ENTRY_END__*/
+
 /*__INQUIRY_PAGE_START__*/
 /* ============================================================
    S3 · THE INQUIRY PAGE (UI-11), READ-ONLY.
@@ -5148,6 +5221,13 @@ async function openInquiry(id, fromNav){
     ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
     const rels = (back && Array.isArray(back.backlinks)) ? back.backlinks : [];
 
+    /* UI-17a. The publication entry point renders only where the record itself
+       publishes the `publish` act, and `elsewhere` is DERIVED from whether it
+       rendered — never from a list written down here (UI-20's rule). So the act
+       strip says where the explanation lives instead of calling the act
+       uncarried, and no control for it exists on either side. */
+    const pubEntry = publicationEntryHtml(actsR);
+
     const questionPane = questionText
       ? `<div class="card"><div class="prose">${mdLite(questionText)}</div></div>`
       : `<div class="empty">This question's own words are not in the document. Nothing is shown in their place.</div>`;
@@ -5171,7 +5251,8 @@ async function openInquiry(id, fromNav){
       <p class="subj-note">Every leg the question rests on, in the order it was recorded, with what it does to the conclusion and how its grade was established. A leg that cuts against the conclusion is a leg like any other and is counted on its own axis exactly as a supporting one is — the record keeps what it found, not only what it hoped for.</p>
       ${legsPane}
       ${strengthPanels(pair, legs)}
-      ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR)}
+      ${pubEntry}
+      ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR, pubEntry ? { elsewhere:["publish"] } : undefined)}
       <h2 class="sec">What would falsify it</h2>
       ${falsifyText
         ? `<div class="card"><div class="prose">${mdLite(falsifyText)}</div></div>`
