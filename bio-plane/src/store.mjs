@@ -7635,11 +7635,44 @@ export class Store extends DurableObject {
     return { ok: true, memberId: m.member_id, handle: h };
   }
 
-  memberList() {
-    /* Cover AND handle together, which only an administrator sees. Every op that
-       reaches this is admin-only at the control plane. */
+  memberList({ administer } = {}) {
+    /* THE COVER↔HANDLE PROJECTION (Membership Architecture v1 §3 and v2 §3,
+       identical and unambiguous: "Pairing. Only administrators see cover and
+       handle together"), and it is a PROJECTION rather than a refusal, because
+       the same section says "Members and the public see handles". A member
+       legitimately needs this roster — the participant list of a project, the
+       author of a promotion, the attestor of a ratification — so the answer is
+       the handle roster with the pairing withheld, never a closed door.
+       D-157, MEASURED 2026-08-02: before this, an ordinary member's session and
+       the shared MEMBER_TOKEN each received `handle` AND `cover` for every
+       member, byte-identical to the administrator's view, while three comments
+       in this source said the op was admin-only.
+
+       THE STAKE, said here because this is the line that keeps it. schema.mjs
+       on `members.cover`: the cover-and-handle split exists precisely so that a
+       roster seized or subpoenaed does not deanonymise the group. A handle is
+       already public — the record shows it. A cover is the administrator's
+       private label for a person. Either one alone is inert; TOGETHER they are
+       the map from the public record back to the people in it, and withholding
+       that map from everyone who is not an administrator is the whole mechanism.
+       This is the rare defect whose blast radius is OUTSIDE the project: the
+       people in the roster are the ones it costs.
+
+       `cover` is therefore NOT SELECTED for a caller who does not administer.
+       The key is ABSENT from the row, not null and not blank — a key that is
+       present and empty still confirms to whoever is asking that a pairing
+       exists to be compelled.
+
+       FAIL CLOSED. `administer` is stamped by the CONTROL PLANE from the
+       credential that authenticated (index.mjs, beside the D-15 viewer stamp)
+       and is never taken from the request, the same impostor rule `viewer`,
+       `author`, `by` and `owner` follow. Anything that is not the affirmative
+       stamp — absent, blank, a caller's invention, a direct-DO route that
+       forgot it — yields the handle roster, so a bypass of the stamp loses the
+       pairing rather than leaking it. */
+    const pairs = administer === true || administer === "1";
     return { members: this.#rows(
-      `SELECT member_id, cover, handle, role, status, capabilities, created, updated,
+      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, capabilities, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
        FROM members ORDER BY member_id`).map((r) => ({ ...r, capabilities: this.#capsOf(r),
          /* D-51: served from `member_expertise`, not from the dead column on
@@ -9446,11 +9479,18 @@ export class Store extends DurableObject {
         memberadd: () => this.memberAdd(body || {}),
         enroll: () => this.enroll(body || {}),
         invitelook: () => this.inviteLook(body || {}),
-        memberlist: () => this.memberList(),
+        memberlist: () => this.memberList({ administer: url.searchParams.get("administer") }),
         memberset: () => this.memberSet(body || {}),
-        /* The membership model's member half. All admin-only at the control
-           plane: memberlist pairs cover with handle, which only an
-           administrator sees, and the rest are section 4 governance. */
+        /* The membership model's member half. `memberadd`, `memberset`,
+           `membercaps`, `adminendorse` and `adminremove` are admin-only at the
+           control plane — section 4 governance. `memberlist` is NOT, and the
+           comment that used to say so here was one of the three self-
+           contradicting sites D-157 names: it is admin/member/probe, because
+           §3 gives members and the public the HANDLE roster. What is
+           administrator-only is the cover↔handle PAIRING, and that is enforced
+           by the projection in memberList() above, off the `administer` stamp
+           this line passes through — a class ACL cannot express it, because the
+           op is legitimately reachable by callers who must not see the pairing. */
         membercaps: () => this.memberCaps(body || {}),
         adminendorse: () => this.adminEndorse(body || {}),
         adminremove: () => this.adminRemove(body || {}),
