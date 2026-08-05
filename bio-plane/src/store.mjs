@@ -13900,6 +13900,42 @@ export class Store extends DurableObject {
                 the reader weighs it; this plane never does. */
              bias_acknowledgement: c.bias_acknowledgement ?? null,
              completeness: c.completeness ? JSON.parse(c.completeness) : null,
+             /* `opened` STAYS, DECIDED 2026-08-05 (REC-58) — a decision, not an
+                omission, which is what that item was raised to leave here.
+                It is the instant the case edition was opened, off the
+                `published_cases` row this method already reads.
+
+                IT IS COMPUTED HERE AND PUBLISHED NOWHERE, and both halves are
+                deliberate. REC-58 re-measured the consumers across the whole
+                repository — 228 files, 7,804,893 characters, both embeds of the
+                bundled plane excluded structurally and the GENERATOR kept in —
+                and found ZERO reads outside this file. The only reads that
+                exist are this method reading its own SQL row.
+
+                So why keep it. Removing it would not retire a publication,
+                because there is none to retire: both callers of this method
+                pick their fields by name (`publishedCase()` since IC-22, and
+                the control plane on `publish()`'s side, twice). What removal
+                WOULD do is delete a real recorded fact from the one accessor
+                whose job is to answer "what IS this case edition" — REC-44 put
+                it here precisely so the ratify path and the public read cannot
+                disagree about the answer, and a future consumer that needs the
+                instant work began should find it here rather than re-deriving
+                it from SQL at a second site.
+
+                WHAT THIS IS NOT: it is not a claim that the field is wanted.
+                Nothing wants it today, and that is stated rather than dressed
+                up. It is the narrower claim that an unconsumed COMPUTATION on
+                the internal accessor costs a reader nothing, while an
+                unconsumed PUBLICATION costs them a field they must reason
+                about — which is the distinction IC-22 acted on and this keeps.
+
+                THE FENCE IS THE PART THAT MATTERS, and it is pinned rather than
+                trusted: `test/case-opened.test.mjs` asserts that each of the
+                three consumers NAMES its fields and that none spreads this
+                state, and holds "computed here AND published nowhere" as ONE
+                assertion — so deleting this key and publishing it both fail,
+                and the decided state is the only one that passes. */
              opened: c.opened, ratified_at: c.ratified_at ?? null,
              manifest_sha: c.manifest_sha ?? null,
              complete, awaiting, findings,
@@ -14200,12 +14236,34 @@ export class Store extends DurableObject {
                 which is the instant the record can actually stand behind.
                 Removed rather than blanked, on REC-41's precedent: there is no
                 key in the answer for a later refactor to re-expose and a caller
-                cannot tell one was ever computed. `#caseEditionState` still
-                carries `opened` and STILL SHOULD — `op=publishcase` returns it
-                to the member who just published, which is a different op, a
-                different class and a different question; IC-22 is scoped to this
-                public read and says so rather than sweeping a sibling it did not
-                measure a need for. */
+                cannot tell one was ever computed.
+
+                CORRECTED 2026-08-05 (REC-58), AND THE CORRECTION IS THE WHOLE
+                OF THAT ITEM. This block used to finish: "`#caseEditionState`
+                still carries `opened` and STILL SHOULD — `op=publishcase`
+                returns it to the member who just published, which is a
+                different op, a different class and a different question". The
+                CONCLUSION was right and the REASON WAS FALSE. `op=publishcase`
+                dispatches to `publishCase()`, which computes no `opened`, reads
+                none and returns none — the only occurrence of the letters in
+                its whole body is the word "reopened" inside a refusal sentence.
+                No sibling op was being spared, because no sibling op publishes
+                it. REC-58 was queued off this sentence to sweep a site that
+                does not exist, which is why the sentence is corrected here
+                rather than quietly dropped: an item was spent on it.
+
+                WHERE IT ACTUALLY GOES, measured: `#caseEditionState` has TWO
+                callers. `publish()` — the ratification committer — returns the
+                state WHOLE as `case: caseState`, and that is an INTERNAL
+                Durable Object hop; the control plane then builds `op=ratify`'s
+                answer and the container manifest by NAMING their fields, and
+                `opened` is in neither list. This method is the other caller and
+                picks its fields likewise. So the field reaches no caller on any
+                op, and the risk it carries is not that it IS published but that
+                it BECOMES published — one `...state` spread in any of the three
+                and a field with zero measured demand is on the wire with nobody
+                having decided it. `test/case-opened.test.mjs` pins all three
+                picks and holds the pair as a RELATION. */
              completeness: state.completeness, ratified_at: state.ratified_at,
              complete: state.complete, awaiting: state.awaiting,
              ...(asked ? { asked } : {}),
