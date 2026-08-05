@@ -3865,7 +3865,18 @@ for CONDUCT to enact: DESIGN AHEAD — no AI reaches the plane today and nothing
   worth building"* because the threat model is self-directed overclaiming, and it is also the
   safest to build, since a role that only reads and raises needs the narrowest scope of the
   four.
-enacted:
+enacted: 2026-08-04 · CONDUCT — recorded as SCOPE rather than built, as the ruling directs: no
+  AI reaches the plane today, nothing is corrected, and an item enqueued against an unbuilt
+  assistant would be runnable-looking work that cannot run. All five determinations, the
+  mandatory negative control and the CHECK-role-first sequencing are written onto **D-199**,
+  a new row created for them — the row whose closer must read them, and the only place they
+  arrive in time. Reasoning in this entry; DEC-24 carries the boundary and the four roles,
+  DEC-27 the assistant, DEC-54 the policy role's extra constraint. **Determination (5) was
+  verified against source at enactment and it holds: REC-46 landed on 2026-08-04 and collapsed
+  eleven hand-typed machine checks into one predicate over the `token:<class>` stamp, so a
+  token stamping `token:ai` is already caught by every `MACHINE_CANNOT_*` refusal — that
+  refactor is what makes this cheap, and it is worth saying that the ruling and the refactor
+  met by luck rather than by plan.** Nothing queued; sequenced behind DEC-27.
 
 ## Answered, awaiting enactment
 
