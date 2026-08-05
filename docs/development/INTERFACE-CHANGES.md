@@ -1008,11 +1008,38 @@ else. It is stated plainly so that a later reader does not infer a security
 motive the measurement never supported.
 
 **`#caseEditionState` KEEPS `opened`, and that is scoping rather than an
-oversight.** `op=publishcase` returns it to the member who has just published
-(`case: caseState`). That is a different op, a different token class and a
+oversight.** ~~`op=publishcase` returns it to the member who has just published
+(`case: caseState`).~~ That is a different op, a different token class and a
 different question, and this proposal measured a need on neither. Sweeping it
 because the field has the same name would be changing a shape this proposal did
 not examine. It is reported as a follow-on instead.
+
+> **CORRECTION appended 2026-08-05 by CONDUCT — the struck sentence above is
+> FALSE, and it is corrected rather than deleted because an entire queue item was
+> spent on it.** `op=publishcase` does **not** return `opened` and never did: it
+> dispatches to `Store.publishCase()`, which computes no `opened`, reads none and
+> returns none — the only occurrence of those letters in that method's whole body
+> is the word *"reopened"* inside a refusal sentence, so a scanner that does not
+> blank string bodies reports the field present and agrees with the sentence.
+> `#caseEditionState`'s `opened` reaches `Store.publish()` (ratification) as an
+> **internal DO hop**, and the control plane then builds `op=ratify`'s answer by
+> naming five fields, of which `opened` is not one. `op=publish` is additionally
+> an **alias**: `DO_PATH` maps it to `publishcase`, so the op whose name matches
+> the spreading method is routed away from it.
+>
+> **The field was right and the OP was wrong — REC-41's exact lesson for the
+> third time**, and this sentence is how it propagated: REC-58 was queued on it
+> as its premise, and CONDUCT copied it into that item's scope without
+> re-measuring. The follow-on it promised was therefore a real item spent
+> establishing that there was nothing there. Nothing in IC-22's own change is
+> affected — the removal from `op=publishedcase` was measured correctly and
+> stands SETTLED. **What is corrected is a claim about a NEIGHBOURING op that the
+> proposal did not examine and should not have described.**
+>
+> REC-58 keeps the field (there is no publication to retire), pins all three
+> control-plane picks, and holds the state as a RELATION — computed here AND
+> published nowhere — which both deleting the computation and publishing the
+> field fail. The mechanical defence is queued as **M0-12**.
 
 ### 2 · WHY, AND THE MEASUREMENT IT RESTS ON
 
