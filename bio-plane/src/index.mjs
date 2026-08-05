@@ -4290,6 +4290,15 @@ export default {
              that stops existing the moment the instance does. */
           bias_acknowledgement: cs.bias_acknowledgement ?? null,
           completeness: cs.completeness ?? null,
+          /* REC-58, 2026-08-05: `ratified_at` and NOT `opened`, and the pair is
+             a decision rather than an accident of which fields were to hand.
+             `cs` is the whole case-edition state and carries both. The instant
+             the LAST member signed is what this container can stand behind; the
+             instant somebody started work is a fact about the working record,
+             and a stranger holding this zip has no way to check it and no stated
+             use for it. Named rather than spread, for the reason at the sibling
+             pick above: this artifact travels without this instance, so a field
+             that leaks into it cannot be withdrawn from the copies. */
           ratified_at: cs.ratified_at,
           /* EVERY MEMBER FINDING, each with its OWN signature, its OWN attestor
              and its OWN frozen PAIR. The signature is per finding because the
@@ -4492,6 +4501,17 @@ export default {
                        and `graph` reports what the published edges did: how many the
                        surface may SERVE, how many it may only NAME, and how many
                        references were dropped for pointing at unpublished material. */
+                    /* REC-58, 2026-08-05: THIS PICK IS A FENCE AND IS NAMED AS
+                       ONE, because it was doing the work with nothing saying
+                       so. `pub.case` is `#caseEditionState`'s WHOLE return,
+                       arriving over the internal `do/publish` hop, and it
+                       carries `opened` — the only route by which that field can
+                       leave the store. Five fields are forwarded and `opened` is
+                       not among them, so it stops here. KEEP THIS A PICK: a
+                       `...pub.case` would put an unconsumed field (re-measured
+                       at zero consumers by REC-58) on a public answer with
+                       nobody having decided to publish it. test/case-opened.test.mjs
+                       asserts both the named fields and the absence of a spread. */
                     ...(pub.caseId ? { caseId: pub.caseId,
                                        case: { edition: pub.case?.edition ?? null,
                                                complete: !!pub.case?.complete,

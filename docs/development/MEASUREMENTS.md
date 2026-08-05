@@ -2683,3 +2683,75 @@ consumers over an empty corpus is an outcome that costs nothing to produce. It i
 caught only by the PAIRED arm requiring the producer's own reads to still be
 found, and by the positive control requiring a key that IS read (`ratified_at`)
 to be found in `civicos-ui/app.html` on the same corpus.
+
+---
+
+## `case.opened` — WHICH OP PUBLISHES IT: none · 2026-08-05 · REC-58 (rec58-agent)
+
+**Instrument:** `bio-plane/test/case-opened.test.mjs`, in the standing battery, so
+it is RE-RUN rather than quoted. **Corpus MEASURED at 228 files / 7,817,469
+characters** (UI-40 measured 226 / 7,730,838 the day before; the corpus is printed
+on every run so a corpus that SHRANK is visible).
+
+**Exclusion rule, stated because a walk's exclusions are the walk:** the two files
+that embed the whole bundled plane as a string — `newgroup/src/release.mjs`
+(1,737,506 chars) and `release/bio-plane.bundled.mjs` (1,681,700) — are excluded
+**STRUCTURALLY, by what stands at byte 0**, and never by filename, because the next
+generated artifact will have a third name. **The GENERATOR is KEPT IN:**
+`newgroup/scripts/embed-release.mjs` contains the banner because it WRITES it, and
+an exclusion that tested for the banner *anywhere* would drop a real source file —
+UI-40's first version did exactly that, which is the dangerous direction: a
+consumer living in the generator would have been invisible while the answer still
+read "zero". Asserted as an arm, not as a comment.
+
+**THE FINDING, AND IT CONTRADICTS THE ITEM THAT COMMISSIONED IT.** REC-58 was
+queued to remove `case.opened` from `op=publishcase`. **`op=publishcase` does not
+publish it and never did.** It dispatches to `Store.publishCase()`, which computes
+no `opened`, reads none and returns none; the only occurrence of the letters in
+that method is the word **"reopened"** inside a refusal sentence — so a scanner
+that does not blank string bodies reports the field present and agrees with the
+item. This is REC-41's lesson a third time: **right about the FIELD, wrong about
+the OP.** IC-22 measured the field correctly and then wrote the wrong op into the
+comment it left behind; REC-58 inherited that comment as its premise.
+
+**Where it actually goes, measured:** `#caseEditionState()` returns `opened` and has
+exactly TWO callers. `Store.publish()` — the ratification committer — returns the
+state WHOLE (`case: caseState`), and that is an **INTERNAL Durable Object hop**:
+`http://do/publish` is fetched **exactly once** in the whole control plane, inside
+`if (op === "ratify")`. The control plane then builds `op=ratify`'s answer by naming
+five fields (`edition`, `complete`, `awaiting`, `findings`, `detail`) and the
+container manifest by naming its own list; `opened` is in **neither**.
+`Store.publishedCase()` is the other caller and picks its fields likewise (IC-22).
+And **`op=publish` is an ALIAS**: `DO_PATH` maps it to `publishcase`, so no op
+reaches the spreading method through the generic passthrough either.
+
+**So: ZERO consumers, and ZERO published surfaces.** `opened` is an unconsumed
+**COMPUTATION** on an internal accessor, not an unconsumed **PUBLICATION**. No
+`INTERFACE-CHANGES.md` entry was filed, because no published shape moves by a byte.
+**RULING: KEEP** — `published_cases.opened` is a real recorded fact and
+`#caseEditionState` is the one accessor whose job is to answer what a case edition
+is; the risk is not that the field IS published but that it BECOMES published, by
+one `...state` spread. All three picks are pinned, and the state is held as a
+RELATION (computed here AND published nowhere) so that deleting the computation and
+publishing the field both fail.
+
+**WHAT THIS DOES NOT ESTABLISH.** As UI-40 recorded, the walk reads property and
+computed access; a field consumed by DESTRUCTURING is not matched. It also does not
+prove the *control plane* would drop a field added to `#caseEditionState` later —
+only that it drops this one, by name.
+
+**THE TWO MEASUREMENTS THAT COST THE MOST, both about the instrument:**
+
+1. **The neutered walk reproduces UI-40's failure exactly.** With the corpus
+   emptied, the headline *"`opened` has ZERO consumers"* assertion **STILL PASSES**.
+   Caught only by the paired producer arm and the positive control on
+   `ratified_at`. Asserted in-suite so the failure mode cannot be lost.
+2. **The over-strictness arm found a defect in the instrument rather than
+   confirming it.** Deleting the case-level `ratified_at` from the container
+   manifest left the suite **fully green**, because the manifest's `findings:`
+   array maps each member to an object that also declares `ratified_at` and a
+   region-wide regex cannot tell the case's field from a member's. Replaced with a
+   depth-1 key reader; the arm now fails 2. **A source-level pin still cannot see a
+   field arriving by SPREAD** — that is caught only by the no-spread arm and by the
+   through-the-op drive in `multifinding.test.mjs`, which is why both instruments
+   exist.
