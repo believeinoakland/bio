@@ -79,32 +79,27 @@ _(drained by CONDUCT 2026-08-03 — the 2026-07-31 office-formats directive: `IN
 
 _(drained by CONDUCT 2026-08-03 — the 2026-08-01 case-making build order and every subsequent BOB entry through the 2026-08-03 session-dormancy note: all 35 RECONCILED §3 items plus REC-28, CPDF-9 and CPDF-10 are enqueued below with every DEC reshape folded into the item scopes (DEC-12/13/14 → REC-14/REC-24; DEC-15 → REC-11/12/15/18, UI-11; DEC-16 → REC-20/21, UI-14; DEC-17+amendment → REC-14, UI-18; DEC-18/21 + D-160 → REC-12, UI-11; DEC-19+amendment → FW-14, UI-17/17a; DEC-20 → REC-15; DEC-22 → REC-13; DEC-23/D-164 → REC-11/18 provisionals + IC-1's constraint; DEC-24 recorded as doctrine on REC-13's pursue path; DEC-28/29/30 → REC-16, REC-13; DEC-31 → UI-18; DEC-33 → REC-15/UI-17 blocked, UI-17a queued; DEC-34 → REC-14/REC-22/UI-18; DEC-4 as twice amended → CPDF-9/CPDF-10, FW-15). The superseded pointers sit atop BUILD-ORDER/SB-CORE/SB-EVIDENCE/SB-OUTPUT and the corrected-by-rulings pointer atop AUDIENCES.md. D-157 is enqueued as REC-29 (CONDUCT's slot call: small, self-contained, touches people outside the project); D-158 is recorded on REC-15's deferred scope. Activation: both slots RECORD — REC-10 then REC-19, per the handover's order. S11's state inventory and D-164's content-extent design stay PARKED with Bob's paused thread, deliberately not queued. DEC-32 remains the sole open register entry; its provisional (no grounds machinery) is noted on REC-11/REC-12. No entries outstanding.)_
 
-**BOB 2026-08-05 — DEC-60: the INVESTIGATIVE SESSION. An AI may formulate claims
-proactively; every write it makes is a suggestion.** Design and full reasoning in
-`docs/development/INVESTIGATIVE-SESSION.md`; verdict in DECISIONS.md DEC-60. **Nothing
-below is superseded and no in-flight work is affected** — this is all new capability, and
-effective strength still counts accepted legs only, so nothing published or queued changes
-meaning.
+**BOB 2026-08-05 — DEC-60 is RULED and RECORDED, and NOTHING IS HANDED OVER YET. Do not
+schedule IS-1 … IS-7.** An AI may formulate claims proactively and every write it makes is
+a suggestion (DECISIONS.md DEC-60; design in `docs/development/INVESTIGATIVE-SESSION.md`).
+**Bob's instruction, 2026-08-05: hold the handover until the investigative session is more
+fully architected.** The decomposition in §12 is a FIRST CUT and is explicitly not runnable
+— it is published so the architecture work has something to correct, not so it can be
+gated. A later BOB entry will hand it over when it is ready; until you see that entry,
+**there is no IS work in this inbox.**
 
-- **The decomposition is `INVESTIGATIVE-SESSION.md` §12 — IS-1 … IS-7**, each with its
-  interface and depends-on. Independence and ordering are yours as the gate, as usual.
-- **TWO ARE BLOCKED ON BOB AND MUST NOT BE SCHEDULED YET.** IS-1 (the state machine, and
-  the spine everything but IS-5 waits on) is blocked on **D-214** — whether `rejected` is a
-  state or an attached act. IS-7 (the bearing relation between claims) is blocked on
-  **D-212** — the contradiction/confirmation continuum's representation, where the hazard is
-  shipping a collapsing scalar under deadline (the R2 trap DEC-40 named). **D-215** is Bob's
-  too and gates IS-3's shape. All three are in DEBT.md, raised today, marked BOB's.
-- **IS-5 (the run's observation log, D-196's missing half) is RUNNABLE NOW** and depends on
-  nothing. It is also what makes every instrument in §10 measurable, so if a slot frees
-  before Bob answers, that is the piece.
-- **Placement is M4** on every row. If you disagree with the milestone, take it — you hold
-  the ladder.
-- **`ai`-class note:** IS-4 is the first `ai` scope with a MUTATING op. D-199's five
-  determinations hold unchanged and its row is updated to say so; `ASSISTANT-PILOT.md` §4
-  now carries a banner so nobody infers from the read-only pilot that the class is read-only.
-- **DEC-52 (open, yours to route) was SHARPENED not answered** — the entry now carries three
-  source facts verified today (`index.mjs:668`, `store.mjs:5119` vs `store.mjs:7685`) and the
-  derived-vs-constitutive split that argues against one blanket ruling over all six fields.
+Recorded here only because two things below might otherwise look changed and are not:
+
+- **Nothing existing is superseded and no in-flight work is affected.** Effective strength
+  still counts accepted legs only, so no queued item and nothing published changes meaning.
+- **`ai`-class note, informational:** the investigative session will be the first `ai` scope
+  with a MUTATING op. D-199's five determinations hold unchanged and its row now says so;
+  `ASSISTANT-PILOT.md` §4 carries a banner so nobody infers from the read-only pilot that
+  the class is read-only. Nothing to do about it today.
+- **DEC-52 (open, yours to route) was SHARPENED, not answered** — the entry now carries three
+  source facts verified 2026-08-05 (`index.mjs:668`, `store.mjs:5119` vs `store.mjs:7685`)
+  and the derived-vs-constitutive split that argues against one blanket ruling over all six
+  fields. That part IS usable now.
 
 ---
 

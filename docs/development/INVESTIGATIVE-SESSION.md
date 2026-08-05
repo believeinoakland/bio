@@ -155,21 +155,23 @@ so later evidence does not make a published edition dishonest. What survives is 
 is a member decision like any other: a run may surface **"this may warrant a new
 edition"** as one of its suggestions.
 
-## 7 · The net bias — used against itself
+## 7 · The net bias — the session says when it is agreeing with the project
 
-The net bias (project + instance) is the one input with real steering potential, and it
-has an inverse use that is better than withholding it.
+The net bias (project + instance) is the one input with real steering potential, and there
+is a use for it that is better than withholding it.
 
-Reasoning **with** the bias applies the lens silently — the thing DEC-46 forbade for
-import, where a travelling manifest may PRESERVE a lens and may not APPLY it. Reasoning
-**about** the bias lets the session state its own congeniality: *this claim aligns with the
-declared lens; here is what I looked for that would have cut against it, and what I
-found.*
+The session can use the declared bias **silently**, letting it shape what gets proposed.
+That is the lens being APPLIED, and it is what DEC-46 forbade for import: a travelling
+manifest may PRESERVE a lens and may not apply it.
 
-Same input, opposite effect, and it is the piece that makes this a bad-actor safeguard
-rather than a laundering path — a run that can name when it is agreeing with the house is
-doing something no member reviewing alone can do for themselves. **Proposed in this
-session and not yet ruled** (§9).
+Or it can use it **out loud**, attaching to a suggestion: *this agrees with the position
+the project has declared; here is what I went looking for that would have cut against it,
+and here is what I found.*
+
+Same input, opposite effect. The second turns the bias from something that could quietly
+steer the run into something a member can check — and it is a thing a member reviewing
+their own work cannot do for themselves, because nobody reliably notices when they are
+agreeing with themselves. **Proposed in this session and not yet ruled** (§9, D-215).
 
 ## 8 · Where the record is honest about volatility
 
