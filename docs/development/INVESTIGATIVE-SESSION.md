@@ -98,8 +98,20 @@ of them.
 
 ## 5 · The states, and the strength that rests on them
 
-**States: `suggested` → `considering` → `accepted`, plus `rejected`** (Bob, 2026-08-05;
-`rejected` recorded as the likely fourth and not yet final — see §9).
+**States: `suggested`, `considering`, `accepted`, `rejected`** — Bob, 2026-08-05, with
+three properties that are not obvious and are the whole of D-214's answer:
+
+- **`rejected` is BOTH an act AND a state of a suggested leg.** The leg remains a
+  suggestion; `rejected` is a state it is in, not a separate object and not a deletion. So
+  a rejected leg is still readable and still shows its basis. The rejection ACT is recorded
+  in its own right, which is what makes a pattern over rejections queryable — and that
+  pattern is where §1's third argument lives.
+- **`considering` and `rejected` are both REVERSIBLE.** This dissolves the hard part: a
+  rejected leg that new evidence would revive is simply un-rejected, so nothing needs a
+  terminal state and nothing is lost by rejecting early.
+- Therefore **the states are NOT a one-way ladder.** IS-1 must author the transition table
+  rather than assume it, and a reversal is itself a recorded member act — an un-rejection
+  is evidence about a member's attention exactly as the rejection was.
 
 **`considering` is the piece that makes the human gate observable.** The gate Bob names is
 evidentiary rigor matching the standard, rational reasoning including falsifying
@@ -189,24 +201,29 @@ in this session and not yet ruled** (§9).
 
 ## 9 · What is NOT settled
 
-1. **The bearing relation between claims.** Bob, 2026-08-05: *"Confirmation and
-   contradiction are 2 ends of a continuum… conclusions (findings) aren't uni-directional
-   either. I would even argue that there is no direction at all. There's just evidence and
-   rich analysis that supports some elements in some regards and runs counter in others."*
-   And: the relationship between claims must be capturable and expressible in all its
-   richness and subtlety. **The representation is open.** The shape that fits is D-164's —
-   an edge that points at a PART — since a claim-level flag flattens exactly the subtlety
-   being protected. Whether a DEGREE can be expressed without re-introducing a collapsing
-   scalar is unresolved and is the R2 trap DEC-40 and the strength-bar pair both hit.
+1. **Nothing can record that two claims disagree — and the strength arithmetic assumes
+   they never do.** The session is chartered to produce claims that may contradict each
+   other (§2), and today (a) no relationship between two claims is expressible at all, and
+   (b) DEC-32's arithmetic adds support up, so a contradictory pair with no relationship
+   recorded is treated as though the two REINFORCE each other. The run's most valuable
+   output — *the evidence points both ways and does not settle it* — would be stored in
+   the one shape that reads as *look how much support there is*.
+   Two things make it hard, both Bob's: it is **not a yes/no** (agreement and disagreement
+   are ends of one range), and it is **not even claim-to-claim** (one claim can support
+   part of another while cutting against a different part), so whatever records it must
+   point at PARTS of claims. **D-164 is the identical need one level down** — nothing can
+   point at a piece of a document either — so this should be that same primitive at claim
+   altitude, not a second one invented beside it. **The trap is R2**: the obvious way to
+   record "how much" is one number, and R2 exists to stop exactly that.
    → **D-212**
 2. **Leads for other inquiries have no home.** The session reads all project inquiries and
    writes only to the subject one, so evidence it finds bearing on inquiry B must be
    dropped. That is D-194's authored frontier with a producer generating them at volume.
    → **D-213**
-3. **Whether `rejected` is a state or an act attached to a suggestion.** Changes what a
-   later run reads. The rejection record is where the anti-omission safeguard lives.
-   → **D-214**
-4. **§7 (congeniality self-report) and §8 (declared context)** — proposed here, not ruled.
+3. ~~Whether `rejected` is a state or an act.~~ **ANSWERED 2026-08-05 by Bob — see §5.**
+   → **D-214, closed**
+4. **§7 (the session saying when it agrees with the project's declared bias) and §8 (a
+   suggestion carrying the conditions it was formed under)** — proposed here, not ruled.
    → **D-215**
 
 ## 10 · Instruments — measure from the first run
@@ -251,18 +268,24 @@ on independence and ordering.
 
 | piece | what it is | interface | depends on |
 | --- | --- | --- | --- |
-| **IS-1** | The claim/leg **state machine**: `suggested` / `considering` / `accepted` / `rejected`, every transition a member act, machine identity refused on all of them. Negative control: an `ai`-class credential is refused BY NAME on each transition. | I3 (store) | D-214 settled |
+| **IS-1** | The claim/leg **state machine**: the four states, every transition a member act, machine identity refused on all of them. **Transitions are NOT one-way** — `considering` and `rejected` both reverse (§5) — so the table is authored, and each reversal is recorded. Negative control: an `ai`-class credential is refused BY NAME on each transition. | I3 (store) | none (D-214 answered) |
 | **IS-2** | The **strength function's state argument**, defaulting to `accepted`; the return carries the state set that produced it. Effective strength unchanged for every existing caller. | I3 | IS-1 |
 | **IS-3** | The **suggest endpoint** — the session's single write, whose only possible output is a `suggested` object. Carries the run's declared context if D-215 lands. | I1 (plane ops) | IS-1 |
 | **IS-4** | The **`ai` credential's investigative scope**: reads across the project, writes only IS-3, declared in the record per D-199.2. Extends D-199 rather than replacing it. | I1 | IS-3 |
 | **IS-5** | The **observation log** for a run — where it searched, where it stopped, why. D-196's missing half. | I3 | none |
 | **IS-6** | The **instruments** of §10 as assertions, not dashboards: empty-run reachable, accepted/suggested ratio computable, rejection pattern queryable. | I3 | IS-1, IS-5 |
-| **IS-7** | The **bearing relation** between claims. **NOT RUNNABLE** — blocked on D-212. | I3 | D-212 settled |
+| **IS-7** | **Recording how two claims bear on each other** — the range from agreement to disagreement, pointing at parts of claims rather than whole ones. **NOT RUNNABLE** — blocked on D-212. | I3 | D-212 settled |
 
 **Sequencing note:** IS-1 is the spine and everything except IS-5 waits on it. IS-5 is
 independent today and is the piece that makes any of the rest measurable, so it is the
 natural first slot alongside IS-1. IS-7 must not be started before D-212 is settled — a
-representation chosen under deadline is exactly how a collapsing scalar gets shipped.
+representation chosen under schedule pressure is exactly how "how much" ends up collapsed
+into a single number, which is what R2 forbids.
+
+**NONE OF THIS IS HANDED TO CONDUCT YET.** Bob, 2026-08-05: hold the handover until the
+investigative session is more fully architected. This table is a FIRST CUT, published so
+the architecture work has something to correct — the `BOB INBOX` says so explicitly and
+instructs CONDUCT not to schedule any of it.
 
 ## 13 · Relationship to what is already ruled
 
