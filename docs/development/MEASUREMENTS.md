@@ -2455,3 +2455,59 @@ through `newgroup` still receives 0.55.0**. (2) `op=audit` is NOT clean — 10 `
 findings, recorded as D-200, and measured to be pre-existing record state rather than
 anything this deploy caused. (3) Durable-Object-routed ops can lag the Worker rollout, and
 no behavioural probe was run beyond the unauthenticated envelope above.
+
+## 2026-08-05 — REC-54 / D-200: the ten bundles that claim a route they cannot show
+
+Instrument: `op=audit` and `op=image` against the live plane (store `bio`), read-only;
+then the REAL derivation run over the REAL registers in a local Miniflare store, never
+against the record.
+
+**The live audit, re-measured before any change** (confirming 2026-08-04's figure):
+31 checked · 21 clean · **10 with errors, tally `{"C-18.9": 10}`**.
+
+**All ten have the `provenance_chain` key ABSENT, not empty.** This was measured rather
+than assumed, and it matters: the check collapsed *no chain recorded* and *a chain
+recorded and empty* into one message, so the audit could not have told the difference.
+Zero of the ten are the empty case.
+
+**What the register ALREADY held for each of the ten**, which is what made them
+reconstructible rather than lost:
+
+| what | count | note |
+| --- | --- | --- |
+| `locator` + `retrieved` + `capture.method` (the fetched route) | 9 | all `daemon-fetch`, `actor_class: daemon`, `grade: B` |
+| a `custody` block naming holder and instant (the member route) | 1 | `INFO-2026-5460`, `member-upload`, `grade: A`, `locator: "in hand"` |
+| an RFC3161 token from `freetsa.org` over the bytes | 10 | binds the BYTES to an instant, never the address |
+| a `co_archive` archive.org replay URL | 8 | **corroboration, NOT a hop** — see below |
+| documents per register | 1 each | no multi-document register among the ten |
+
+**The chain requirement POST-DATES the bundles, and that is the whole explanation.**
+The ten were captured 2026-07-19..22; C-18.9's chain arm was written 2026-07-31. The
+field was never populated because it did not exist when the bytes landed — while the
+FACTS a hop carries were recorded at capture time in the same register. This is why all
+ten reconstruct and none is lost, and it is a cohort fact rather than a lucky one.
+
+**`co_archive` is not a hop, and reading it as one would understate the route.** Eight
+of the ten carry an archive.org replay URL. It records that we ALSO asked an archive to
+keep a copy, not that the bytes REACHED US through one. Writing it as a second hop would
+state an archive-sourced capture — a WEAKER route than what happened — and would
+contradict the `grade: B` those same registers carry, B being what a direct capture by
+this instance earns (`EARNED_CAPTURE_CEILING`). The recorded grade is itself evidence the
+route was direct and single-hop.
+
+**The write path, measured:** `runGate` — the only thing that runs the check catalog —
+has exactly ONE call site in `src/index.mjs`, `op=ratify`. `op=release`, the other way an
+Information document reaches `verified`, checked three of C-2.7's entry requirements and
+never asked C-18.9's question at all.
+
+**Repair advice that names an impossible transition:** 5 occurrences in
+`checks/bio-checks.mjs` advise returning a bundle to `collected`;
+`STATES.information.edges.verified` is `["retired"]`, and C-4.2 refuses the transition by
+name. Recorded as D-203; the missing retraction route is D-204. (RENUMBERED at integration 2026-08-05: this worker allocated D-202/D-203 while the DIST session allocated D-202 for the declared-vs-deployed config gap and landed on main first, so the established collision protocol applies and the later allocation moves.)
+
+**Battery, measured in this worktree:** 100/100 at 5,664 before any edit; 101/101 at
+5,730 after. The +66 is ATTRIBUTED per suite by diffing per-suite counts, not estimated:
+`provenance-chain.test.mjs` +63 (new) and `hygiene.test.mjs` 423 -> 426 (its three
+per-file assertions over the new file). **No other suite moved by one assertion.**
+`node scripts/coverage.mjs --strict` run directly with `$?` read unpiped: exit 0,
+131/131 ops, 53/53 checks, 101/101 suites declaring a control, 300 arms.
