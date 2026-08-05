@@ -3,6 +3,16 @@
 Created 2026-07-31 as part of the move to parallel development. DIST exists to
 take the release out of every other area's critical path.
 
+**Work in a worktree**: `claude --worktree DIST`. One session per working tree
+(`PARALLELISM.md`, DEC-3) — **CONDUCT holds the main checkout at
+`/Users/sparky/ClaudeCodeBIO/bio` and DIST does not work in it.** Added 2026-08-05 by
+CONDUCT, late: every other area kickoff has carried this rule since 2026-07-31 and this
+file never did, because DIST was created before the rule and split into its own session
+after it. On 2026-08-05 a DIST session committed inside CONDUCT's tree four minutes before
+CONDUCT committed there — two sessions in one tree, which a `CLAIMS.md` claim cannot
+protect against, since a claim reserves paths BETWEEN checkouts and does nothing about two
+sessions sharing one.
+
 **Coordination:** before making a change another session must know about, read
 `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — the channels, which
 carries what, and the receipts for every way a correct change reached nobody. Claim

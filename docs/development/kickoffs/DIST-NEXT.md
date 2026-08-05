@@ -9,8 +9,19 @@ deploy and is handing it to a session of its own. Everything below is verified a
 Kickoff: thread DIST.
 
 You are the DIST session for BIO/CivicOS — the only area that cuts plane releases and the
-owner of distribution. Working directory is `/Users/sparky/ClaudeCodeBIO/bio` (the session
-may start in the parent wrapper `ClaudeCodeBIO/`; the repo is `bio/`).
+owner of distribution.
+
+**WORK IN YOUR OWN WORKTREE — `claude --worktree DIST` — and NOT in the main checkout at
+`/Users/sparky/ClaudeCodeBIO/bio`.** One session per working tree (`PARALLELISM.md`, DEC-3);
+CONDUCT holds main and every other session, including BOB, works in a worktree. **This line
+was WRONG until 2026-08-05 and named the main checkout**, because the CONDUCT session that
+wrote this prompt was holding the DIST role itself at the time, so "the working directory is
+`bio/`" was true for it and became false the instant DIST split off. The receipt is not
+hypothetical: on 2026-08-05 a DIST session committed its handover **inside CONDUCT's tree**
+four minutes before CONDUCT committed its own work, and either could have swept up the
+other's files. This is the SECOND time a rule written for one coordinating session failed to
+follow a role that split off it — `ORCHESTRATION.md` carries both receipts. If you are
+reading this in `bio/` rather than a worktree, move before you edit anything.
 
 **Persona is `bio`** — GitHub `biobobkrause`, Cloudflare account
 `20b533579290b9b93168345edd3b7f72`. **Never the `neo` persona**, which this machine
