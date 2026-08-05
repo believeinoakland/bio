@@ -3679,6 +3679,25 @@ enacted: 2026-08-04 · CONDUCT — recorded as SCOPE rather than built, exactly 
   Reasoning in this entry; `research/SEARCH-COMPLETENESS.md` carries the countable/
   uncountable finding, and `BIO_Declared_Bias_v0_1.md` takes the adoption-is-authored rule.
 
+### DEC-56 · open
+for: bob
+raised: 2026-08-05 · CONDUCT (from REC-54, which met the gap while dispositioning D-200 and routed it rather than deciding it)
+subject: When a provenance chain CANNOT be reconstructed, may the record un-say a verification — or must it carry the doubt at `verified`?
+
+**The gap is measured, not anticipated.** `op=reopen` takes an INQUIRY target only; `op=retire` moves `verified -> retired` and says in its own refusal *"There is no move back out of retired"*; `op=release` moves `collected -> verified` and is explicitly not repeatable. `STATES.information.edges` is `{ collected: ['verified'], verified: ['retired'] }`. **So when D-200 says a bundle whose chain cannot be reconstructed should be "moved BACK OFF verified", the plane offers no act that does it** — and the only available exit, `retire`, permanently withdraws the document, which asserts something quite different from *"we cannot show this route"*.
+
+**Why this is doctrine and not a mechanism call, which is why CONDUCT is not deciding it.** Retracting a verification is a statement about a GROUP'S OWN PAST ACT. A verification was an attested act by people; un-saying it is not the same kind of edit as fixing a field, and the question of whether the record may un-say it — or may only ever add to what it said — is the same question the IRREVERSIBLE rung (DEC-19) answers for publishing, one altitude down. It also bears on how a group looks to someone reading the record later, which is Bob's ground.
+
+the two shapes:
+  (a) a `verified -> collected` RETRACTION EDGE with a required authored reason. The document goes back to where it can be re-released once the route is shown. Cost: the record can un-say a verification, and a reader of the history must be able to tell a retraction from a document that was never verified — which means the edge is not enough on its own, the retraction must remain visible.
+  (b) a standing `undetermined` MARKER at `verified` that leaves the state alone: the document stays where the group put it, and the record carries, in the open, the fact that its route cannot be shown. Cost: a document sits at `verified` while the audit reports it — the state and the finding disagree on purpose, which has to be legible rather than look like a bug.
+
+provisional: NEITHER IS RUNNING, and nothing is blocked. All ten of D-200's bundles reconstructed from evidence recorded contemporaneously, so no live bundle needs the route today. REC-54 shipped the derivation and the refusal (`EVIDENCE_INSUFFICIENT`, stated as undetermined and never guessed), which is the honest behaviour under EITHER answer — a bundle that cannot be derived is REFUSED and named, rather than silently repaired. REC-56 corrects the four repair strings that currently advise the illegal transition, and is written to be honest under either answer so it does not wait on this.
+
+recommendation: **(b), the marker.** Retracting a verification restates a group's own past act, and the project's standing posture is that the record ADDS rather than un-says — correction moves forward (DEC-19). A marker also matches what is actually true in this situation: the bytes may well be fine and the ROUTE is what we cannot show, which is a statement about our evidence rather than about the document. And undetermined is already first-class here; this is that rule applied to a state rather than to a field.
+
+cost of reversal: **LOW NOW, HIGH ONCE EITHER SHIPS.** Nothing is built, no live bundle needs it, and `STATES` plus one op is the whole surface area. Once (a) ships, retraction edges exist in history and removing them means deciding what past retractions meant. Once (b) ships, markers are in the record and withdrawing the construct leaves documents whose doubt was recorded and then deleted — which is the worse of the two, because it is the record forgetting something it had said.
+
 ### DEC-55 · answered
 raised: 2026-08-04 · session BOB (Bob's question on integrating skilled AIs)
 for: bob
