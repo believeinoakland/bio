@@ -60,12 +60,43 @@ suite is green at 103/103 with 0.55.0 still embedded, which is correct until you
 `CAPTURE`, whose session ended 2026-07-31 and never released it — a baton held by a session
 that no longer exists is the stale-lock shape that file exists to make visible.
 
-## The one thing blocking a release, and it needs Bob
+## The one thing blocking a release — **NO LONGER TRUE, corrected 2026-08-05 by CONDUCT**
 
-**`BIO_RELEASE_SEED` is not on this machine** — the key is present in `.env` but empty, and
-no in-tree script references it, so the signer is genuinely out-of-tree as `DIST.md` says.
-Without it you cannot complete gate step 5, so you cannot write a truthful `RELEASE.json`
-or tag.
+**`BIO_RELEASE_SEED` IS on this machine and it is THE release key, not a new one.** The text
+below said it was absent and that is what the whole "deployed, not released" position rested
+on, so it is corrected here rather than left to be discovered. MEASURED 2026-08-05, and by
+USING the credential rather than printing it:
+
+- The key is present in `.env` with a **68-character** value — not empty, as this file said.
+- Its envelope is `BIOKEY-RAW1.bio-release.…`, exactly the documented format, and it decodes
+  to a **32-byte** Ed25519 seed.
+- **Its derived public half is byte-identical to the trust root pinned in
+  `newgroup/src/index.mjs:73` `ARMED_SIGNERS`.** So this is the EXISTING signer: it is not a
+  rotation, it needs no `ARMED_SIGNERS` edit, no `newgroup` rebuild and no redeploy — the
+  expensive path the paragraphs below rightly warn against is NOT the path you are on.
+- The value does not appear anywhere in tracked repo content, so `tokens.mjs`'s
+  publication denylist does not treat it as revoked.
+
+**What this does NOT establish, and you must:** that gate step 5 passes end to end. Deriving
+a public key proves the seed is the right one; it does not sign anything. Run the gate's own
+SSHSIG path with its **four negative controls — altered bytes, wrong namespace, wrong key,
+and the previous release's signature against the new bytes, all four of which must fail to
+verify** — before you write `RELEASE.json` or cut a tag. CONDUCT deliberately did not sign
+anything: signing is DIST's gated act and this session is not DIST.
+
+**Still genuinely open and still Bob's:** whether to cut the release at all. The live plane
+runs 0.56.0 while `release/RELEASE.json` says 0.55.0, so a group installing through
+`newgroup` still receives 0.55.0 — that gap is a decision about distribution, not a missing
+credential. And `op=audit` is not clean (D-200, now owned by REC-54), which your gate step 8
+requires; closing that gap is RECORD's work and it is running.
+
+The stale text is kept below because the format, the four controls and the rotation warning
+are all still correct and load-bearing — only the premise "the key is absent" was wrong.
+
+**`BIO_RELEASE_SEED` was recorded as not on this machine** — the key was present in `.env`
+but empty, and no in-tree script references it, so the signer is genuinely out-of-tree as
+`DIST.md` says. Without it you could not complete gate step 5, so you could not write a
+truthful `RELEASE.json` or tag.
 
 The format, from `docs/SESSION-KICKOFF.md:48`:
 `BIO_RELEASE_SEED=BIOKEY-RAW1.bio-release.<base64 of a 32-byte Ed25519 seed>` — the
